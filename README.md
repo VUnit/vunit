@@ -40,7 +40,7 @@ VUnit depends on a number of components as listed below. Full VUnit functionalit
 There are a number of ways to get started.
 
 *  Have a look at the examples under examples/. The examples in examples/logging and examples/check are tutorials that should be single-stepped in your simulator.
-*  The user guide will give an introduction on how VUnit is used with Python scripting and from the command line
+*  The [user guide](user_guide.md) will give an introduction on how VUnit is used with Python scripting and from the command line
 *  There are also various presentations of VUnit on [YouTube](https://www.youtube.com/channel/UCCPVCaeWkz6C95aRUTbIwdg)
 
 # Main Contributors
