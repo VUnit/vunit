@@ -1,0 +1,330 @@
+-- This Source Code Form is subject to the terms of the Mozilla Public
+-- License, v. 2.0. If a copy of the MPL was not distributed with this file,
+-- You can obtain one at http://mozilla.org/MPL/2.0/.
+--
+-- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+
+library ieee;
+use ieee.std_logic_1164.all;
+use std.textio.all;
+
+library vunit_lib;
+use vunit_lib.string_ops.all;
+use vunit_lib.lang.all;
+
+entity tb_string_ops is
+end entity tb_string_ops;
+
+architecture test_fixture of tb_string_ops is 
+  signal vunit_finished : boolean := false;
+
+  shared variable n_errors : natural := 0;
+  shared variable n_asserts : natural := 0;
+
+  procedure counting_assert (
+    constant expr : in boolean;
+    constant msg  : in string;
+    constant level : in severity_level := error) is
+  begin
+    n_asserts := n_asserts + 1;
+    if not expr then
+      assert false report msg severity level;
+      n_errors := n_errors + 1;      
+    end if;
+  end procedure counting_assert;
+begin
+  test_runner : process
+    procedure banner (
+      constant s : in string) is
+      variable dashes : string(1 to 256) := (others => '-');
+    begin
+      write(output, dashes(s'range) & LF & s & LF & dashes(s'range) & LF);
+    end banner;
+
+    -- Override "=" to make it work in Vivado (doesn't consider two empty
+    -- strings to be equal)
+    function "=" (
+      constant a : string;
+      constant b : string)
+      return boolean is
+
+      function bool_to_sign (
+        constant b : boolean)
+        return integer is
+      begin
+        if b then
+          return 1;
+        else
+          return -1;
+        end if;
+      end function bool_to_sign;
+      
+      variable ret_val : boolean := true;
+    begin
+      if a'length /= b'length then
+        ret_val := false;
+      else
+        for i in 1 to a'length loop
+          ret_val := a(a'left + bool_to_sign(a'ascending) * (i - 1)) =
+                     b(b'left + bool_to_sign(b'ascending) * (i - 1));
+          exit when not ret_val;
+        end loop;
+      end if;
+
+      return ret_val;      
+    end function "=";
+    variable args : report_call_args_t;
+    variable ascending_vector : std_logic_vector(3 to 11);
+    variable descending_vector : std_logic_vector(13 downto 5);
+    variable l : lines_t;
+    constant offset_string :string(10 to 16) := "foo bar";
+    constant reverse_string :string(16 downto 10) := "foo bar";
+  begin
+    ---------------------------------------------------------------------------
+    banner("Verify strip");
+    ---------------------------------------------------------------------------
+    counting_assert(strip("") = "", "Strip of empty string should return an empty string. Got """ & strip("") & """.");
+    counting_assert(strip(" a ") = "a", "Strip should remove spaces by default. Got """ & strip(" a ") & """.");
+    counting_assert(strip(" ") = "", "Strip of single char string should return an empty string. Got """ & strip(" ") & """.");    
+    counting_assert(strip(" b") = "b", "Strip should handle left-sided strip. Got """ & strip(" b") & """.");    
+    counting_assert(strip("c ") = "c", "Strip should handle right-sided strip. Got """ & strip("c ") & """.");    
+    counting_assert(strip("d") = "d", "Strip should not affect strings without specified chars in the end/begining. Got """ & strip("d") & """.");    
+    counting_assert(strip(" e f ") = "e f", "Strip should not affect specified characters within the string. Got """ & strip(" e f ") & """.");    
+    counting_assert(strip("  g  ") = "g", "Strip should remove multiple instances of specified characters. Got """ & strip("  g  ") & """.");    
+    counting_assert(strip("-* h-*i-**-", "*-") = " h-*i", "Strip should remove multiple specified characters. Got """ & strip("-* h-*i-**-", "*-") & """.");
+    counting_assert(strip(offset_string, "fo") = " bar", "Should handle offset strings. Got """ & strip(offset_string, "fo") & """.");
+    counting_assert(strip(reverse_string, "fo") = " bar", "Should handle reversed strings. Got """ & strip(reverse_string, "fo") & """.");        
+
+    ---------------------------------------------------------------------------
+    banner("Verify rstrip");
+    ---------------------------------------------------------------------------
+    counting_assert(rstrip("") = "", "rstrip of empty string should return an empty string. Got """ & rstrip("") & """.");
+    counting_assert(rstrip(" a ") = " a", "rstrip should remove spaces by default. Got """ & rstrip(" a ") & """.");
+    counting_assert(rstrip(" ") = "", "rstrip of single char string should return an empty string. Got """ & rstrip(" ") & """.");    
+    counting_assert(rstrip("d") = "d", "rstrip should not affect strings without specified chars in the end/begining. Got """ & rstrip("d") & """.");    
+    counting_assert(rstrip(" e f ") = " e f", "rstrip should not affect specified characters within the string. Got """ & rstrip(" e f ") & """.");    
+    counting_assert(rstrip("  g  ") = "  g", "rstrip should remove multiple instances of specified characters. Got """ & rstrip("  g  ") & """.");    
+    counting_assert(rstrip("-* h-*i-**-", "*-") = "-* h-*i", "rstrip should remove multiple specified characters. Got """ & rstrip("-* h-*i-**-", "*-") & """.");
+    counting_assert(rstrip(offset_string, "rab") = "foo ", "Should handle offset strings. Got """ & rstrip(offset_string, "rab") & """.");
+    counting_assert(rstrip(reverse_string, "rab") = "foo ", "Should handle reversed strings. Got """ & rstrip(reverse_string, "rab") & """.");        
+
+    ---------------------------------------------------------------------------
+    banner("Verify lstrip");
+    ---------------------------------------------------------------------------
+    counting_assert(lstrip("") = "", "lstrip of empty string should return an empty string. Got """ & lstrip("") & """.");
+    counting_assert(lstrip(" a ") = "a ", "lstrip should remove spaces by default. Got """ & lstrip(" a ") & """.");
+    counting_assert(lstrip(" ") = "", "lstrip of single char string should return an empty string. Got """ & lstrip(" ") & """.");    
+    counting_assert(lstrip("d") = "d", "lstrip should not affect strings without specified chars in the end/begining. Got """ & lstrip("d") & """.");    
+    counting_assert(lstrip(" e f ") = "e f ", "lstrip should not affect specified characters within the string. Got """ & lstrip(" e f ") & """.");    
+    counting_assert(lstrip("  g  ") = "g  ", "lstrip should remove multiple instances of specified characters. Got """ & lstrip("  g  ") & """.");    
+    counting_assert(lstrip("-* h-*i-**-", "*-") = " h-*i-**-", "lstrip should remove multiple specified characters. Got """ & lstrip("-* h-*i-**-", "*-") & """.");
+    counting_assert(lstrip(offset_string, "fo") = " bar", "Should handle offset strings. Got """ & lstrip(offset_string, "fo") & """.");
+    counting_assert(lstrip(reverse_string, "fo") = " bar", "Should handle reversed strings. Got """ & lstrip(reverse_string, "fo") & """.");        
+
+    ---------------------------------------------------------------------------
+    banner("Verify count");
+    ---------------------------------------------------------------------------
+    counting_assert(count("","a") = 0, "Empty string should return 0.");
+    counting_assert(count(" a b ") = 3, "Should count spaces by default.");
+    counting_assert(count(" a b ", "") = 6, "Should count an empty string between every character, at the beginning, and at the end.");
+    counting_assert(count("", "") = 1, "Should return 1 when counting empty string in empty string");
+    counting_assert(count("hello world or hello earth", "or") = 2, "Should handle multi-character substrings");    
+    counting_assert(count("hello world or hello earth", 'o') = 4, "Should handle character type inputs.");    
+    counting_assert(count("ababababa", "abab") = 2, "Should count non-overlapping occurences");
+    counting_assert(count(offset_string, "o") = 2, "Should handle offset strings.");
+    counting_assert(count(reverse_string, "o") = 2, "Should handle reversed strings.");
+    counting_assert(count("ababababa", "a", 2 ,6) = 2, "Should handle parts of input string");
+    counting_assert(count("aba", "a", 4 ,6) = 0, "Should not find anything outside of the string");
+    get_report_call_args(args);
+    counting_assert(get_report_call_count = 1, "A report should be generated");
+    counting_assert(args.level = error, "The report should be of error severtity");
+    counting_assert(args.msg.all = "Start position outside of string.", "The report should be ""Start position outside of string.""");
+    deallocate(args.msg);
+    counting_assert(count(offset_string, "a", 4 ,6) = 0, "Should not find anything outside of the string");
+    get_report_call_args(args);
+    counting_assert(get_report_call_count = 2, "A report should be generated");
+    counting_assert(args.level = error, "The report should be of error severtity");
+    counting_assert(args.msg.all = "Start position outside of string.", "The report should be ""Start position outside of string.""");
+    deallocate(args.msg);
+    counting_assert(count(reverse_string, "a", 12 ,4) = 0, "Should not find anything outside of the string");
+    get_report_call_args(args);
+    counting_assert(get_report_call_count = 3, "A report should be generated");
+    counting_assert(args.level = error, "The report should be of error severtity");
+    counting_assert(args.msg.all = "Stop position outside of string.", "The report should be ""Stop position outside of string.""");
+    deallocate(args.msg);
+    counting_assert(count("aba", "a", 3 ,1) = 0, "Should not find anything within a negative range");
+    get_report_call_args(args);
+    counting_assert(get_report_call_count = 4, "A report should be generated");
+    counting_assert(args.level = error, "The report should be of error severtity");
+    counting_assert(args.msg.all = "Negative range.", "The report should be ""Negative range.""");
+    deallocate(args.msg);
+    counting_assert(count("aba", "abab") = 0, "Should not find anything when substring is longer than the string");
+    get_report_call_args(args);
+    counting_assert(get_report_call_count = 4, "No report should be generated");
+    deallocate(args.msg);
+
+    ---------------------------------------------------------------------------
+    banner("Verify image");
+    ---------------------------------------------------------------------------
+    counting_assert(image("") = "", "Should return empty string on empty input vector.");
+    counting_assert(image("UX01ZWLH-") = "UX01ZWLH-", "Should handle every possible bit value");
+    ascending_vector := "UX01ZWLH-";
+    counting_assert(image(ascending_vector) = "UX01ZWLH-", "Should handle ascending vector range");
+    descending_vector := "UX01ZWLH-";
+    counting_assert(image(descending_vector) = "UX01ZWLH-", "Should handle descending vector range");
+    
+    ---------------------------------------------------------------------------
+    banner("Verify hex_image");
+    ---------------------------------------------------------------------------
+    counting_assert(hex_image("") = "x""""", "Should return empty hex string on empty input vector. Got " & hex_image("") & ".");
+    counting_assert(hex_image("1010") = "x""a""", "Should handle zeros and ones.");
+    counting_assert(hex_image("10101U10") = "x""aX""", "Should X out meta data groups.");
+    counting_assert(hex_image("1010101") = "x""55""", "Should handle vectors without nibble-sized length.");
+    ascending_vector := "10101U101";
+    counting_assert(hex_image(ascending_vector) = "x""15X""", "Should handle ascending vector range");
+    descending_vector := "10101U101";
+    counting_assert(hex_image(descending_vector) = "x""15X""", "Should handle descending vector range");
+
+    
+    ---------------------------------------------------------------------------
+    banner("Verify replace");
+    ---------------------------------------------------------------------------
+    counting_assert(replace("", 'a', 'b') = "", "Should return empty string on empty input string.");
+    counting_assert(replace("foo bar ozon", 'o', 'b') = "fbb bar bzbn", "Should replace all specified characters by default.");
+    counting_assert(replace("foo bar ozon", 'o', 'b', 2) = "fbb bar ozon", "Should replace first n specified characters if cnt is specified.");
+    counting_assert(replace("foo bar ozon", 'o', 'b', 0) = "foo bar ozon", "Should not replace if cnt = 0.");
+    counting_assert(replace("foo bar ozon", 'o', 'b', 10) = "fbb bar bzbn", "Should handle cnt > number of old characters.");
+    counting_assert(replace("foo bar ozon", 'o', "ab") = "fabab bar abzabn", "Should be able to replace character with string.");
+    counting_assert(replace("foo bar ozon", "oo", 'b') = "fb bar ozon", "Should be able to replace string with character.");
+    counting_assert(replace("foo bar ozon", "oo", "ab") = "fab bar ozon", "Should be able to replace substring with another.");
+    counting_assert(replace(offset_string, "oo", "ab") = "fab bar", "Should be able to replace offset string.");
+    counting_assert(replace(reverse_string, "oo", "ab") = "fab bar", "Should be able to replace reversed string.");
+    counting_assert(replace("cat anaconda cow", "anaconda", "snake") = "cat snake cow", "Should handle short uneffected endings.");
+
+    ---------------------------------------------------------------------------
+    banner("Verify title");
+    ---------------------------------------------------------------------------
+    counting_assert(title("") = "", "Should return empty string on empty input string.");
+    counting_assert(title("foo bar 17!") = "Foo Bar 17!", "Should only capitalize the first letter of words.");
+    counting_assert(title("Foo Bar") = "Foo Bar", "Should not affect already capitalized strings.");
+    counting_assert(title("foo" & HT & "bar" & CR & "zoo") = "Foo" & HT & "Bar" & CR & "Zoo", "Should handle tab and return whitespaces.");
+    counting_assert(title("foo    bar") = "Foo    Bar", "Should handle multiple whitespaces.");
+    counting_assert(title(offset_string) = "Foo Bar", "Should handle offset strings.");
+    counting_assert(title(reverse_string) = "Foo Bar", "Should handle reversed strings.");
+
+    ---------------------------------------------------------------------------
+    banner("Verify upper");
+    ---------------------------------------------------------------------------
+    counting_assert(upper("") = "", "Should return empty string on empty input string.");
+    counting_assert(upper("foo bar 17!") = "FOO BAR 17!", "Should upper all letters of words.");
+    counting_assert(upper("FOO BAR") = "FOO BAR", "Should not affect already upper strings.");
+    counting_assert(upper("foo" & HT & "bar" & CR & "zoo") = "FOO" & HT & "BAR" & CR & "ZOO", "Should handle tab and return whitespaces.");
+    counting_assert(upper(offset_string) = "FOO BAR", "Should handle offset strings.");
+    counting_assert(upper(reverse_string) = "FOO BAR", "Should handle reversed strings.");
+
+    ---------------------------------------------------------------------------
+    banner("Verify lower");
+    ---------------------------------------------------------------------------
+    counting_assert(lower("") = "", "Should return empty string on empty input string.");
+    counting_assert(lower("FOO BAR 17!") = "foo bar 17!", "Should lower all letters of words.");
+    counting_assert(lower("foo bar") = "foo bar", "Should not affect already lower strings.");
+    counting_assert(lower("FOO" & HT & "BAR" & CR & "ZOO") = "foo" & HT & "bar" & CR & "zoo", "Should handle tab and return whitespaces.");
+    counting_assert(lower(offset_string) = "foo bar", "Should handle offset strings.");
+    counting_assert(lower(reverse_string) = "foo bar", "Should handle reversed strings.");
+
+    ---------------------------------------------------------------------------
+    banner("Verify split");
+    ---------------------------------------------------------------------------
+    l := split("foo","");
+    counting_assert(l'length = 5, "Should return 5 substrings when splitting ""foo""");
+    counting_assert(l(0).all = "", "Should return """" as the first substring when splitting ""foo""");
+    counting_assert(l(1).all = "f", "Should return ""f"" as the 1st substring when splitting ""foo""");
+    counting_assert(l(2).all = "o", "Should return ""o"" as the 2nd substring when splitting ""foo""");
+    counting_assert(l(3).all = "o", "Should return ""o"" as the 3rd substring when splitting ""foo""");
+    counting_assert(l(4).all = "", "Should return """" as the 4th substring when splitting ""foo""");
+    deallocate(l);
+      
+    l := split("","");
+    counting_assert(l'length = 2, "Should return 2 substrings when splitting """"");
+    counting_assert(l(0).all = "", "Should return """" as the first substring when splitting """"");
+    counting_assert(l(1).all = "", "Should return """" as the 1st substring when splitting """"");
+    deallocate(l);
+
+    l := split("foo bar","q");
+    counting_assert(l'length = 1, "Should return 1 substring when separator is missing");
+    counting_assert(l(0).all = "foo bar", "Should return input string when separator is missing");
+    deallocate(l);
+    
+    l := split("","q");
+    counting_assert(l'length = 1, "Should return 1 substring when separator is missing");
+    counting_assert(l(0).all = "", "Should return input string when separator is missing");
+    deallocate(l);
+    
+    l := split("foo bar","b");
+    counting_assert(l'length = 2, "Should return 2 substrings when separator appears once.");
+    counting_assert(l(0).all = "foo ", "Should return ""foo "" as first substring when splitting ""foo bar"" with ""b""");
+    counting_assert(l(1).all = "ar", "Should return ""ar"" as second substring when splitting ""foo bar"" with ""b""");
+    deallocate(l);
+
+    l := split("foo bar","o");
+    counting_assert(l'length = 3, "Should return 3 substrings when separator appears twice.");
+    counting_assert(l(0).all = "f", "Should return ""f"" as first substring when splitting ""foo bar"" with ""o""");
+    counting_assert(l(1).all = "", "Should return """" as second substring when splitting ""foo bar"" with ""o""");
+    counting_assert(l(2).all = " bar", "Should return "" bar"" as third substring when splitting ""foo bar"" with ""o""");
+    deallocate(l);
+    
+    l := split("foo bar","f");
+    counting_assert(l'length = 2, "Should return 2 substrings when separator appears once.");
+    counting_assert(l(0).all = "", "Should return """" as first substring when splitting ""foo bar"" with ""f""");
+    counting_assert(l(1).all = "oo bar", "Should return ""oo bar"" as second substring when splitting ""foo bar"" with ""f""");
+    deallocate(l);
+    
+    l := split("foo bar","r");
+    counting_assert(l'length = 2, "Should return 2 substrings when separator appears once.");
+    counting_assert(l(0).all = "foo ba", "Should return ""foo ba"" as first substring when splitting ""foo bar"" with ""r""");
+    counting_assert(l(1).all = "", "Should return """" as second substring when splitting ""foo bar"" with ""r""");
+    deallocate(l);
+    
+    l := split("foo bar","foo");
+    counting_assert(l'length = 2, "Should return 2 substrings when separator appears once.");
+    counting_assert(l(0).all = "", "Should return """" as first substring when splitting ""foo bar"" with ""foo""");
+    counting_assert(l(1).all = " bar", "Should return "" bar"" as second substring when splitting ""foo bar"" with ""foo""");
+    deallocate(l);
+    
+    l := split("fooo bar","oo");
+    counting_assert(l'length = 2, "Should return 2 substrings when separator appears once.");
+    counting_assert(l(0).all = "f", "Should return ""f"" as first substring when splitting ""fooo bar"" with ""oo""");
+    counting_assert(l(1).all = "o bar", "Should return ""o bar"" as second substring when splitting ""fooo bar"" with ""oo""");
+    deallocate(l);
+    
+    l := split("foo bar","foo",0);
+    counting_assert(l'length = 1, "Should return 1 substrings when max count is 0.");
+    counting_assert(l(0).all = "foo bar", "Should return input when max count is zero.");
+    deallocate(l);
+    
+    l := split("foo bar","o",1);
+    counting_assert(l'length = 2, "Should return 2 substrings when max count is 1.");
+    counting_assert(l(0).all = "f", "Should return ""f"" as first substring when splitting ""foo bar"" with ""o"" and max count = 1.");
+    counting_assert(l(1).all = "o bar", "Should return ""o bar"" as second substring when splitting ""foo bar"" with ""o"" and max count = 1.");
+    deallocate(l);
+
+    l := split(offset_string,"b");
+    counting_assert(l'length = 2, "Should return 2 substrings when separator appears once.");
+    counting_assert(l(0).all = "foo ", "Should return ""foo "" as first substring when splitting ""foo bar"" with ""b""");
+    counting_assert(l(1).all = "ar", "Should return ""ar"" as second substring when splitting ""foo bar"" with ""b""");
+    deallocate(l);
+
+    l := split(reverse_string,"b");
+    counting_assert(l'length = 2, "Should return 2 substrings when separator appears once.");
+    counting_assert(l(0).all = "foo ", "Should return ""foo "" as first substring when splitting ""foo bar"" with ""b""");
+    counting_assert(l(1).all = "ar", "Should return ""ar"" as second substring when splitting ""foo bar"" with ""b""");
+    deallocate(l);
+    ---------------------------------------------------------------------------
+    banner("Test result");
+    ---------------------------------------------------------------------------
+    write(output, "Number of assertions: " & natural'image(n_asserts) & LF);
+    write(output, "Number of errors: " & natural'image(n_errors) & LF);
+    vunit_finished <= true;
+    wait;
+  end process;
+end test_fixture;
