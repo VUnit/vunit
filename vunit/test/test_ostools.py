@@ -22,6 +22,10 @@ class TestOSTools(TestCase):
             rmtree(self.tmp_dir)
         makedirs(self.tmp_dir)
 
+    def tearDown(self):
+        if exists(self.tmp_dir):
+            rmtree(self.tmp_dir)
+
     def make_file(self, file_name, contents):
         full_file_name = abspath(join(self.tmp_dir, file_name))
         with open(full_file_name, "w") as outfile:

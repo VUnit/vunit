@@ -24,6 +24,10 @@ class TestTestScanner(unittest.TestCase):
             rmtree(self.output_path)
         makedirs(self.output_path)
 
+    def tearDown(self):
+        if exists(self.output_path):
+            rmtree(self.output_path)
+
     def write_file(self, name, contents):
         with open(name, "w") as fwrite:
             fwrite.write(contents)

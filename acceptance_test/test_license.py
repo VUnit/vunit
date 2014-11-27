@@ -20,8 +20,6 @@ class TestLicense(unittest.TestCase):
             for f in files:
                 if 'preprocessed' in root:
                     continue
-                if basename(root) == 'test_scanner_out':
-                    continue
                 if splitext(f)[1] in ['.vhd', '.vhdl', '.py']:
                     with open(join(root, f)) as fp:
                         code = fp.read()
