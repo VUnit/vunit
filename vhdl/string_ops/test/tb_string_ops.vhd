@@ -10,7 +10,6 @@ use std.textio.all;
 
 library vunit_lib;
 use vunit_lib.string_ops.all;
-use vunit_lib.lang.all;
 
 entity tb_string_ops is
 end entity tb_string_ops;
@@ -73,7 +72,6 @@ begin
 
       return ret_val;      
     end function "=";
-    variable args : report_call_args_t;
     variable ascending_vector : std_logic_vector(3 to 11);
     variable descending_vector : std_logic_vector(13 downto 5);
     variable l : lines_t;
@@ -135,33 +133,10 @@ begin
     counting_assert(count(reverse_string, "o") = 2, "Should handle reversed strings.");
     counting_assert(count("ababababa", "a", 2 ,6) = 2, "Should handle parts of input string");
     counting_assert(count("aba", "a", 4 ,6) = 0, "Should not find anything outside of the string");
-    get_report_call_args(args);
-    counting_assert(get_report_call_count = 1, "A report should be generated");
-    counting_assert(args.level = error, "The report should be of error severtity");
-    counting_assert(args.msg.all = "Start position outside of string.", "The report should be ""Start position outside of string.""");
-    deallocate(args.msg);
     counting_assert(count(offset_string, "a", 4 ,6) = 0, "Should not find anything outside of the string");
-    get_report_call_args(args);
-    counting_assert(get_report_call_count = 2, "A report should be generated");
-    counting_assert(args.level = error, "The report should be of error severtity");
-    counting_assert(args.msg.all = "Start position outside of string.", "The report should be ""Start position outside of string.""");
-    deallocate(args.msg);
     counting_assert(count(reverse_string, "a", 12 ,4) = 0, "Should not find anything outside of the string");
-    get_report_call_args(args);
-    counting_assert(get_report_call_count = 3, "A report should be generated");
-    counting_assert(args.level = error, "The report should be of error severtity");
-    counting_assert(args.msg.all = "Stop position outside of string.", "The report should be ""Stop position outside of string.""");
-    deallocate(args.msg);
     counting_assert(count("aba", "a", 3 ,1) = 0, "Should not find anything within a negative range");
-    get_report_call_args(args);
-    counting_assert(get_report_call_count = 4, "A report should be generated");
-    counting_assert(args.level = error, "The report should be of error severtity");
-    counting_assert(args.msg.all = "Negative range.", "The report should be ""Negative range.""");
-    deallocate(args.msg);
     counting_assert(count("aba", "abab") = 0, "Should not find anything when substring is longer than the string");
-    get_report_call_args(args);
-    counting_assert(get_report_call_count = 4, "No report should be generated");
-    deallocate(args.msg);
 
     ---------------------------------------------------------------------------
     banner("Verify image");

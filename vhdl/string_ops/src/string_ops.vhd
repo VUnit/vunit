@@ -10,7 +10,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 use std.textio.all;
 use ieee.numeric_std.all;
-use work.lang.all;
 
 package string_ops is
   type line_vector is array (natural range <>) of line;
@@ -401,7 +400,6 @@ package body string_ops is
       if start = 0 then
         start_pos := s'left;
       elsif not in_range(s, start) then
-        lang_report("Start position outside of string.", error);
         return 0;
       else
         start_pos := start;
@@ -410,14 +408,12 @@ package body string_ops is
       if stop = 0 then
         stop_pos := s'right;
       elsif not in_range(s, stop) then
-        lang_report("Stop position outside of string.", error);
         return 0;
       else
         stop_pos := stop;
       end if;
 
       if offset(s, start_pos) > offset(s, stop_pos) then
-        lang_report("Negative range.", error);
         return 0;
       end if;
       
