@@ -48,7 +48,7 @@ class TestCsvLogs(unittest.TestCase):
         out_fp.close()
         csv_logs.write(out_fp.name)
                       
-        with open(out_fp.name) as f:
+        with open(out_fp.name, "r") as f:
             result = f.read()
         remove(out_fp.name)
         
