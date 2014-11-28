@@ -18,44 +18,51 @@ class TestExampleProjects(unittest.TestCase):
 
     def test_uart_example_project(self):
         path = join(dirname(__file__), "..", "examples")
-        check_call([sys.executable, join(path, "uart", "run.py"), 
-                    "--clean", 
+        check_call([sys.executable, join(path, "uart", "run.py"),
+                    "--clean",
                     "--output-path=%s" % self.output_path,
                     "--xunit-xml=%s" % self.report_file])
-        check_call([sys.executable, join(path, "uart", "run_with_preprocessing.py"), 
-                    "--clean", 
+        check_call([sys.executable, join(path, "uart", "run_with_preprocessing.py"),
+                    "--clean",
                     "--output-path=%s" % self.output_path,
                     "--xunit-xml=%s" % self.report_file])
 
     def test_logging_example_project(self):
         path = join(dirname(__file__), "..", "examples", "logging")
         check_call([sys.executable, join(path, "compile.py"),
-                    "--clean", 
+                    "--clean",
                     "--output-path=%s" % self.output_path,
                     "--xunit-xml=%s" % self.report_file])
 
     def test_check_example_project(self):
         path = join(dirname(__file__), "..", "examples", "check")
         check_call([sys.executable, join(path, "compile.py"),
-                    "--clean", 
+                    "--clean",
                     "--output-path=%s" % self.output_path,
                     "--xunit-xml=%s" % self.report_file])
 
     def test_generate_tests_example_project(self):
         path = join(dirname(__file__), "..", "examples", "generate_tests")
         check_call([sys.executable, join(path, "run.py"),
-                    "--clean", 
+                    "--clean",
+                    "--output-path=%s" % self.output_path,
+                    "--xunit-xml=%s" % self.report_file])
+
+    def test_array_example_project(self):
+        path = join(dirname(__file__), "..", "examples", "array")
+        check_call([sys.executable, join(path, "run.py"),
+                    "--clean",
                     "--output-path=%s" % self.output_path,
                     "--xunit-xml=%s" % self.report_file])
 
     def test_user_guide_example_project(self):
         path = join(dirname(__file__), "..", "examples", "user_guide")
         retcode = call([sys.executable, join(path, "run.py"),
-                        "--clean", 
+                        "--clean",
                         "--output-path=%s" % self.output_path,
                         "--xunit-xml=%s" % self.report_file])
         self.assertEqual(retcode, 1)
-        check_report(self.report_file, 
+        check_report(self.report_file,
                      [("passed", "lib.tb_example"),
                       ("passed", "lib.tb_example_many.test_pass"),
                       ("failed", "lib.tb_example_many.test_fail")])

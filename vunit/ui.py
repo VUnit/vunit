@@ -34,6 +34,9 @@ class VUnit:
     """
     The public interface of VUnit
     """
+
+    _builtin_vhdl_path = abspath(join(dirname(__file__), "..", "vhdl"))
+
     @classmethod
     def from_argv(cls, argv=None):
         """
@@ -417,7 +420,17 @@ class VUnit:
 
         library = self.add_library(library_name)
         for file_name in files:
-            library.add_source_files(abspath(join(dirname(__file__), "..", "vhdl", file_name)))
+            library.add_source_files(join(self._builtin_vhdl_path, file_name))
+
+    def add_array_util(self, library_name="vunit_lib"):
+        """
+        Add array utility package
+        """
+        if self._vhdl_standard != '2008':
+            raise RuntimeError("Array utility only supports vhdl 2008")
+
+        library = self.library(library_name)
+        library.add_source_files(join(self._builtin_vhdl_path, "array", "src", "array_pkg.vhd"))
 
     def add_osvvm(self, library_name="osvvm"):
         if not library_name in self._project._libraries:
@@ -425,7 +438,7 @@ class VUnit:
         else:
             library = self.library(library_name)
 
-        library.add_source_files(abspath(join(dirname(__file__), "..", "vhdl", "osvvm", "*.vhd")),
+        library.add_source_files(join(self._builtin_vhdl_path, "osvvm", "*.vhd"),
                                  preprocessors=[]) # No pre-processing at all
 
 class LibraryFacade:
