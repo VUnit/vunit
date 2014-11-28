@@ -114,6 +114,19 @@ class TestScanner:
         run_strings = [match.group(1)
                        for match in self._re_run_string.finditer(code)]
 
+        unique = set()
+        not_unique = set()
+        for run_string in run_strings:
+            if run_string in unique and run_string not in not_unique:
+                # @TODO line number information could be useful
+                logger.error('Duplicate test case "%s" in %s'
+                             % (run_string, file_name))
+                not_unique.add(run_string)
+            unique.add(run_string)
+
+        if len(not_unique) > 0:
+            raise TestScannerError
+
         for run_string in run_strings:
             if self._re_valid_run_string.match(run_string) is None:
                 logger.warning('Test name "%s" does not match %s in %s',
@@ -143,3 +156,6 @@ def tb_filter(entity):
     if file_ok and entity_ok:
         return True
     return False
+
+class TestScannerError(Exception):
+    pass

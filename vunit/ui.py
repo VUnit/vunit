@@ -21,7 +21,7 @@ from vunit.modelsim_interface import ModelSimInterface
 from vunit.project import Project
 from vunit.test_runner import TestRunner
 from vunit.test_report import TestReport
-from vunit.test_scanner import TestScanner, tb_filter
+from vunit.test_scanner import TestScanner, TestScannerError, tb_filter
 from vunit.test_configuration import TestConfiguration
 from vunit.exceptions import CompileError
 from vunit.location_preprocessor import LocationPreprocessor
@@ -224,6 +224,8 @@ class VUnit:
             # Ctrl-C
             exit(1)
         except CompileError:
+            exit(1)
+        except TestScannerError:
             exit(1)
         except:
             traceback.print_exc()
