@@ -1310,6 +1310,239 @@ package body check_pkg is
   end;
 
   -----------------------------------------------------------------------------
+  -- check_relation
+  -----------------------------------------------------------------------------
+  procedure check_relation(
+    variable checker   : inout checker_t;
+    constant expr      : in    boolean;
+    constant msg       : in    string      := "";
+    constant level     : in    log_level_t := dflt;
+    constant auto_msg  : in    string      := "";
+    constant line_num  : in    natural     := 0;
+    constant file_name : in    string      := "") is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_relation(checker, pass, expr, msg, level, auto_msg, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  procedure check_relation(
+    variable checker   : inout checker_t;
+    variable pass      : out   boolean;
+    constant expr      : in    boolean;
+    constant msg       : in    string      := "";
+    constant level     : in    log_level_t := dflt;
+    constant auto_msg  : in    string      := "";
+    constant line_num  : in    natural     := 0;
+    constant file_name : in    string      := "") is
+  begin
+    -- pragma translate_off
+    if auto_msg = "" and msg = "" then
+      check(checker, pass, expr, level => level, line_num => line_num, file_name => file_name);
+    elsif auto_msg = "" then
+      check(checker, pass, expr, msg, level, line_num, file_name);
+    elsif msg = "" then
+      check(checker, pass, expr, auto_msg, level, line_num, file_name);
+    else
+      check(checker, pass, expr, auto_msg & " " & msg, level, line_num, file_name);      
+    end if;
+    -- pragma translate_on
+  end;
+
+  procedure check_relation(
+    constant expr      : in boolean;
+    constant msg       : in string      := "";
+    constant level     : in log_level_t := dflt;
+    constant auto_msg  : in    string      := "";
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "") is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_relation(default_checker, pass, expr, msg, level, auto_msg, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  procedure check_relation(
+    variable pass      : out boolean;
+    constant expr      : in  boolean;
+    constant msg       : in  string      := "";
+    constant level     : in  log_level_t := dflt;
+    constant auto_msg  : in    string      := "";
+    constant line_num  : in  natural     := 0;
+    constant file_name : in  string      := "") is
+  begin
+    -- pragma translate_off
+    check_relation(default_checker, pass, expr, msg, level, auto_msg, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  impure function check_relation(
+    constant expr      : in  boolean;
+    constant msg       : in  string      := "";
+    constant level     : in  log_level_t := dflt;
+    constant auto_msg  : in    string      := "";
+    constant line_num  : in  natural     := 0;
+    constant file_name : in  string      := "")
+    return boolean is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_relation(default_checker, pass, expr, msg, level, auto_msg, line_num, file_name);
+    -- pragma translate_on
+    return pass;
+  end;
+
+  procedure check_relation(
+    variable checker   : inout checker_t;
+    constant expr      : in    std_ulogic;
+    constant msg       : in    string      := "";
+    constant level     : in    log_level_t := dflt;
+    constant auto_msg  : in    string      := "";
+    constant line_num  : in    natural     := 0;
+    constant file_name : in    string      := "") is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_relation(checker, pass, (expr = '1'), msg, level, auto_msg, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  procedure check_relation(
+    variable checker   : inout checker_t;
+    variable pass      : out   boolean;
+    constant expr      : in    std_ulogic;
+    constant msg       : in    string      := "";
+    constant level     : in    log_level_t := dflt;
+    constant auto_msg  : in    string      := "";
+    constant line_num  : in    natural     := 0;
+    constant file_name : in    string      := "") is
+  begin
+    -- pragma translate_off
+    check_relation(checker, pass, (expr = '1'), msg, level, auto_msg, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  procedure check_relation(
+    constant expr      : in std_ulogic;
+    constant msg       : in string      := "";
+    constant level     : in log_level_t := dflt;
+    constant auto_msg  : in    string      := "";
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "") is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_relation(default_checker, pass, (expr = '1'), msg, level, auto_msg, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  procedure check_relation(
+    variable pass      : out boolean;
+    constant expr      : in  std_ulogic;
+    constant msg       : in  string      := "";
+    constant level     : in  log_level_t := dflt;
+    constant auto_msg  : in    string      := "";
+    constant line_num  : in  natural     := 0;
+    constant file_name : in  string      := "") is
+  begin
+    -- pragma translate_off
+    check_relation(default_checker, pass, (expr = '1'), msg, level, auto_msg, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  impure function check_relation(
+    constant expr      : in  std_ulogic;
+    constant msg       : in  string      := "";
+    constant level     : in  log_level_t := dflt;
+    constant auto_msg  : in    string      := "";
+    constant line_num  : in  natural     := 0;
+    constant file_name : in  string      := "")
+    return boolean is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_relation(default_checker, pass, (expr = '1'), msg, level, auto_msg, line_num, file_name);
+    -- pragma translate_on
+    return pass;
+  end;
+
+  procedure check_relation(
+    variable checker   : inout checker_t;
+    constant expr      : in    bit;
+    constant msg       : in    string      := "";
+    constant level     : in    log_level_t := dflt;
+    constant auto_msg  : in    string      := "";
+    constant line_num  : in    natural     := 0;
+    constant file_name : in    string      := "") is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_relation(checker, pass, (expr = '1'), msg, level, auto_msg, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  procedure check_relation(
+    variable checker   : inout checker_t;
+    variable pass      : out   boolean;
+    constant expr      : in    bit;
+    constant msg       : in    string      := "";
+    constant level     : in    log_level_t := dflt;
+    constant auto_msg  : in    string      := "";
+    constant line_num  : in    natural     := 0;
+    constant file_name : in    string      := "") is
+  begin
+    -- pragma translate_off
+    check_relation(checker, pass, (expr = '1'), msg, level, auto_msg, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  procedure check_relation(
+    constant expr      : in bit;
+    constant msg       : in string      := "";
+    constant level     : in log_level_t := dflt;
+    constant auto_msg  : in    string      := "";
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "") is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_relation(default_checker, pass, (expr = '1'), msg, level, auto_msg, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  procedure check_relation(
+    variable pass      : out boolean;
+    constant expr      : in  bit;
+    constant msg       : in  string      := "";
+    constant level     : in  log_level_t := dflt;
+    constant auto_msg  : in    string      := "";
+    constant line_num  : in  natural     := 0;
+    constant file_name : in  string      := "") is
+  begin
+    -- pragma translate_off
+    check_relation(default_checker, pass, (expr = '1'), msg, level, auto_msg, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  impure function check_relation(
+    constant expr      : in  bit;
+    constant msg       : in  string      := "";
+    constant level     : in  log_level_t := dflt;
+    constant auto_msg  : in    string      := "";
+    constant line_num  : in  natural     := 0;
+    constant file_name : in  string      := "")
+    return boolean is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_relation(default_checker, pass, (expr = '1'), msg, level, auto_msg, line_num, file_name);
+    -- pragma translate_on
+    return pass;
+  end;
+
+  -----------------------------------------------------------------------------
   -- check_equal
   -----------------------------------------------------------------------------
   function equality_error_msg (

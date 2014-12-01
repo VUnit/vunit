@@ -20,6 +20,7 @@ class TestCheck(unittest.TestCase):
                    output_path=output_path,
                    vhdl_standard=vhdl_standard,
                    compile_builtins=False)
+        ui.enable_check_preprocessing()
             
         ui.add_builtins('vunit_lib', mock_log=True)
         ui.add_library(r'lib') 
@@ -30,10 +31,13 @@ class TestCheck(unittest.TestCase):
         elif vhdl_standard == '93':
             ui.add_source_files(join(vhdl_path, "test_count93.vhd"), 'lib')
 
+        if vhdl_standard == '2008':
+            ui.add_source_files(join(vhdl_path, "tb_check_relation.vhd"), 'lib')
+        else:
+            ui.add_source_files(join(vhdl_path, "tb_check_relation93_2002.vhd"), 'lib')
+
         for file_name in glob(join(vhdl_path, "tb_*.vhd")):
-            if basename(file_name) == "tb_synthesis.vhd":
-                # @TODO @Lars what is this and should we run it or remove it
-                # it does not even compile
+            if basename(file_name) == "tb_check_relation.vhd":
                 continue
             ui.add_source_files(file_name, 'lib')
 

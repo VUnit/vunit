@@ -25,6 +25,7 @@ from vunit.test_scanner import TestScanner, TestScannerError, tb_filter
 from vunit.test_configuration import TestConfiguration
 from vunit.exceptions import CompileError
 from vunit.location_preprocessor import LocationPreprocessor
+from vunit.check_preprocessor import CheckPreprocessor
 
 import logging
 logger = logging.getLogger(__name__)
@@ -138,6 +139,7 @@ class VUnit:
         self._persistent_sim = persistent_sim
         self._configuration = TestConfiguration()
         self._location_preprocessor = None
+        self._check_preprocessor = None
 
         self._create_output_path()
 
@@ -189,11 +191,14 @@ class VUnit:
     def _preprocess(self, library_name, file_name):
         # @TODO dependency checking etc...
 
-        if self._location_preprocessor is None:
+        if (library_name == 'vunit_lib') or ((self._location_preprocessor is None) and (self._check_preprocessor is None)):
             return file_name
 
         code = ostools.read_file(file_name)
-        code = self._location_preprocessor.run(code, basename(file_name))
+        if self._location_preprocessor:
+            code = self._location_preprocessor.run(code, basename(file_name))
+        if self._check_preprocessor:
+            code = self._check_preprocessor.run(code, basename(file_name))
 
         pp_file_name = join(self._preprocessed_path,
                             library_name, basename(file_name))
@@ -216,6 +221,12 @@ class VUnit:
         if not additional_subprograms is None:
             for subprogram in additional_subprograms:
                 self._location_preprocessor.add_subprogram(subprogram)
+
+    def enable_check_preprocessing(self):
+        """
+        Enable check preprocessing, must be called before adding any files
+        """
+        self._check_preprocessor = CheckPreprocessor()
 
     def main(self):
         """
