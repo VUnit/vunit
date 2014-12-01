@@ -122,7 +122,11 @@ class ModelSimInterface:
         tcl = """
 proc vunit_load {{}} {{
     {set_generic_str}
-    vsim -modelsimini {modelsimini} -quiet -t ps {pli_str} {set_generic_name_str} {library_name}.{entity_name}{architecture_suffix}
+
+    # Workaround -modelsimini flag not respected in some versions of modelsim
+    global env
+    set env(MODELSIM) "{modelsimini}"
+    vsim -modelsimini "{modelsimini}" -quiet -t ps {pli_str} {set_generic_name_str} {library_name}.{entity_name}{architecture_suffix}
 
     set no_finished_signal [catch {{examine -internal {{/vunit_finished}}}}]
     set no_test_runner_exit [catch {{examine -internal {{/run_base_pkg/runner.exit_without_errors}}}}]
