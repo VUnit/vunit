@@ -179,12 +179,15 @@ proc vunit_run {} {
     run -all
     set failed [expr [examine -internal ${exit_boolean}]!=TRUE]
     if {$failed} {
-        echo
-        echo "Stack trace result from 'tb' command"
-        echo [tb]
-        echo
-        echo "Surrounding code from 'see' command"
-        echo [see]
+        catch {
+            # tb command can fail when error comes from pli
+            echo
+            echo "Stack trace result from 'tb' command"
+            echo [tb]
+            echo
+            echo "Surrounding code from 'see' command"
+            echo [see]
+        }
     }
     return $failed
 }
