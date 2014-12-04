@@ -22,6 +22,10 @@ class TestExampleProjects(unittest.TestCase):
                     "--clean", 
                     "--output-path=%s" % self.output_path,
                     "--xunit-xml=%s" % self.report_file])
+        check_call([sys.executable, join(path, "uart", "run_with_location_preprocessing.py"), 
+                    "--clean", 
+                    "--output-path=%s" % self.output_path,
+                    "--xunit-xml=%s" % self.report_file])
 
     def test_logging_example_project(self):
         path = join(dirname(__file__), "..", "examples", "logging")
