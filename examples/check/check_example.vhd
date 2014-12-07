@@ -18,6 +18,7 @@ architecture test of check_example is
   signal status_ok : std_logic;
   signal clk : std_logic := '0';
   signal check_en : std_logic := '0';
+  shared variable counter : integer := 0;
 begin
   example_process: process is
     alias note is info_low2[string, string, natural, string];
@@ -82,11 +83,25 @@ begin
     begin
       return s;
     end function to_string;
+
+    impure function inc
+      return integer is
+    begin
+      counter := counter + 1;
+      return counter;
+    end function inc;
+
+    procedure set (
+      constant value : integer) is
+    begin
+      counter := value;
+    end procedure set;
     
     variable savings, price : cash_t;
     variable all_reports : logger_t;
     variable my_checker : checker_t;
     variable pass, found_errors : boolean;
+    variable cnt : integer;
 
     constant messages : messages_t := ("failed", "FAILED");
     constant use_upper_case : boolean := true;
@@ -194,17 +209,31 @@ begin
 
     info("The check preprocessor isn't a full parser so a number of assumption are made to make it work");
     info("   1. The expression given is an actual relation.");
-    info("   2. Only the relation parameter contains a top-level relational operator.");
+    info("   2. The relation must not contain calls to impure functions.");
+    info("   3. Only the relation parameter contains a top-level relational operator.");
 
     info("This is not a relation but a boolean expression that will fail. However, the preprocessor treats it like an equality and the generated error message will say that left = right = false, i.e. it shouldn't have failed");
     check_relation(false = false and false);
 
+    info("inc and set are two impure functions that increment and set the value of a counter respectively. The inc function returns the counter value after the increment.");
+    set(7);
+    check_relation(inc = 9, "This will give a confusing error message since the inc function is called twice. First when evaluating the relation and second when printing the value of the left side in the error message.");
+
+    info("One work-around is to extract the impure function call from the relation");
+    set(7);
+    cnt := inc;
+    check_relation(cnt = 9, "Now the error message makes sense.");    
+
+    info("in case your relation is an equality between two ""standard"" types you can use check_equal.");
+    set(7);
+    check_equal(inc, 9, "Also a correct error message.");
+    
     info("""="" has been defined on string to be the same as ""&"". This will confuse the parser. Not a very likely use case!");
     check_relation(msg => string'("Something ") = string'("failed!"), expr => 3 > 5);
     info("Relations not at the top level are safe but still unlikely."); 
     check_relation(msg => messages(use_upper_case = true), expr => 3 > 5);
     
-    info("Follow this rule and it tries to handle other tricky things such as embedded comments and strings containing relational operators");
+    info("Follow these rules and it tries to handle other tricky things such as embedded comments and strings containing relational operators");
     check_relation(len("""Heart"" => <3") = -- The string contains <, so does
                                             -- this comment
                    12, "Incorrect length of ""<3 message"".");
