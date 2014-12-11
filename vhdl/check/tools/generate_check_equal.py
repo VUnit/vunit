@@ -1,3 +1,9 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+
 from string import Template
 
 api_template = """  procedure check_equal(
@@ -87,7 +93,7 @@ impl_template = """  procedure check_equal(
   begin
     -- pragma translate_off
     check(checker, pass, got = expected,
-          equality_error_msg(to_string(got), to_string(expected), msg),
+          equality_error_msg($got_str, $expected_str, msg),
           level, line_num, file_name);
     -- pragma translate_on
   end;
@@ -164,58 +170,58 @@ test_template = """      elsif run("Test should pass on $left_type equal $right_
 combinations = [
                 ('unsigned', 'unsigned',
                  """unsigned'(X"A5")""", """unsigned'(X"A5")""",
-                 "to_unsigned(natural'left,32)", "to_unsigned(natural'left,32)",
-                 "to_unsigned(natural'right,32)", "to_unsigned(natural'right,32)",
+                 "to_unsigned(natural'left,31)", "to_unsigned(natural'left,31)",
+                 "to_unsigned(natural'right,31)", "to_unsigned(natural'right,31)",
                  """unsigned'(X"5A")""",
-                 '10100101', '01011010'),
+                 '1010_0101 (165)', '0101_1010 (90)'),
                 ('unsigned', 'natural',
                  """unsigned'(X"A5")""", "natural'(165)",
-                 "to_unsigned(natural'left,32)", "natural'left",
-                 "to_unsigned(natural'right,32)", "natural'right",
+                 "to_unsigned(natural'left,31)", "natural'left",
+                 "to_unsigned(natural'right,31)", "natural'right",
                  "natural'(90)",
-                 '10100101', '90'),
+                 '1010_0101 (165)', '90 (0101_1010)'),
                 ('natural', 'unsigned',
                  "natural'(165)", """unsigned'(X"A5")""",
-                 "natural'left", "to_unsigned(natural'left,32)",
-                 "natural'right", "to_unsigned(natural'right,32)",
+                 "natural'left", "to_unsigned(natural'left,31)",
+                 "natural'right", "to_unsigned(natural'right,31)",
                  """unsigned'(X"5A")""",
-                 '165', '01011010'),
+                 '165 (1010_0101)', '0101_1010 (90)'),
                 ('unsigned', 'std_logic_vector',
                  """unsigned'(X"A5")""", """std_logic_vector'(X"A5")""",
-                 "to_unsigned(natural'left,32)", "std_logic_vector(to_unsigned(natural'left,32))",
-                 "to_unsigned(natural'right,32)", "std_logic_vector(to_unsigned(natural'right,32))",
+                 "to_unsigned(natural'left,31)", "std_logic_vector(to_unsigned(natural'left,31))",
+                 "to_unsigned(natural'right,31)", "std_logic_vector(to_unsigned(natural'right,31))",
                  """std_logic_vector'(X"5A")""",
-                 '10100101', '01011010'),
+                 '1010_0101 (165)', '0101_1010 (90)'),
                 ('std_logic_vector', 'unsigned',
                  """std_logic_vector'(X"A5")""", """unsigned'(X"A5")""",
-                 "std_logic_vector(to_unsigned(natural'left,32))", "to_unsigned(natural'left,32)",
-                 "std_logic_vector(to_unsigned(natural'right,32))", "to_unsigned(natural'right,32)",
+                 "std_logic_vector(to_unsigned(natural'left,31))", "to_unsigned(natural'left,31)",
+                 "std_logic_vector(to_unsigned(natural'right,31))", "to_unsigned(natural'right,31)",
                  """unsigned'(X"5A")""",
-                 '10100101', '01011010'),
+                 '1010_0101 (165)', '0101_1010 (90)'),
                 ('std_logic_vector', 'std_logic_vector',
                  """std_logic_vector'(X"A5")""", """std_logic_vector'(X"A5")""",
-                 "std_logic_vector(to_unsigned(natural'left,32))", "std_logic_vector(to_unsigned(natural'left,32))",
-                 "std_logic_vector(to_unsigned(natural'right,32))", "std_logic_vector(to_unsigned(natural'right,32))",
+                 "std_logic_vector(to_unsigned(natural'left,31))", "std_logic_vector(to_unsigned(natural'left,31))",
+                 "std_logic_vector(to_unsigned(natural'right,31))", "std_logic_vector(to_unsigned(natural'right,31))",
                  """std_logic_vector'(X"5A")""",
-                 '10100101', '01011010'),
+                 '1010_0101 (165)', '0101_1010 (90)'),
                 ('signed', 'signed',
                  """signed'(X"A5")""", """signed'(X"A5")""",
                  "to_signed(integer'left,32)", "to_signed(integer'left,32)",
                  "to_signed(integer'right,32)", "to_signed(integer'right,32)",
                  """signed'(X"5A")""",
-                 '10100101', '01011010'),
+                 '1010_0101 (-91)', '0101_1010 (90)'),
                 ('signed', 'integer',
                  """signed'(X"A5")""", "integer'(-91)",
                  "to_signed(integer'left,32)", "integer'left",
                  "to_signed(integer'right,32)", "integer'right",
                  "integer'(90)",
-                 '10100101', "90"),
+                 '1010_0101 (-91)', "90 (0101_1010)"),
                 ('integer', 'signed',
                  "integer'(-91)", """signed'(X"A5")""",
                  "integer'left", "to_signed(integer'left,32)",
                  "integer'right", "to_signed(integer'right,32)",
                  """signed'(X"5A")""",
-                 '-91', '01011010'),
+                 '-91 (1010_0101)', '0101_1010 (90)'),
                 ('integer', 'integer',
                  "integer'(-91)", "integer'(-91)",
                  "integer'left", "integer'left",
@@ -252,14 +258,33 @@ for c in combinations:
     t = Template(api_template)
     api += t.substitute(got_type=c[0], expected_type=c[1])
 
-#print("API:\n\n" + api)
+print("API:\n\n" + api)
+
+def dual_format(base_type, got_or_expected):
+    if got_or_expected == 'got':
+        expected_or_got = 'expected'
+    else:
+        expected_or_got = 'got'
+
+    if base_type in ['unsigned', 'signed', 'std_logic_vector']:
+        return 'to_nibble_string(%s) & " (" & ' % got_or_expected + "to_integer_string(%s) & " % got_or_expected + '")"'
+    elif base_type == 'integer':
+        return 'to_string(%s) & " (" & ' % got_or_expected + "to_nibble_string(to_signed(%s, %s'length)) & " % (got_or_expected, expected_or_got) + '")"'
+    else:
+        return 'to_string(%s) & " (" & ' % got_or_expected + "to_nibble_string(to_unsigned(%s, %s'length)) & " % (got_or_expected, expected_or_got) + '")"'
 
 impl = ''
 for c in combinations:
     t = Template(impl_template)
-    impl += t.substitute(got_type=c[0], expected_type=c[1])
+    if (c[0] in ['unsigned', 'signed', 'std_logic_vector']) or (c[1] in ['unsigned', 'signed', 'std_logic_vector']):
+        got_str = dual_format(c[0], 'got')
+        expected_str = dual_format(c[1], 'expected')
+    else:
+        got_str = 'to_string(got)'
+        expected_str = 'to_string(expected)'
+    impl += t.substitute(got_type=c[0], expected_type=c[1], got_str=got_str, expected_str=expected_str)
 
-#print("Implementation:\n\n" + impl)
+print("Implementation:\n\n" + impl)
 
 test = """      if run("Test should handle comparsion of vectors longer than 32 bits") then
         get_checker_stat(stat);
@@ -270,13 +295,14 @@ test = """      if run("Test should handle comparsion of vectors longer than 32 
         verify_passed_checks(stat, 4);
 
         check_equal(unsigned'(X"A5A5A5A5A"), unsigned'(X"B5A5A5A5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 101001011010010110100101101001011010. Expected 101101011010010110100101101001011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).");
         check_equal(std_logic_vector'(X"A5A5A5A5A"), unsigned'(X"B5A5A5A5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 101001011010010110100101101001011010. Expected 101101011010010110100101101001011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).");
+
         check_equal(unsigned'(X"A5A5A5A5A"), std_logic_vector'(X"B5A5A5A5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 101001011010010110100101101001011010. Expected 101101011010010110100101101001011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).");
         check_equal(std_logic_vector'(X"A5A5A5A5A"), std_logic_vector'(X"B5A5A5A5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 101001011010010110100101101001011010. Expected 101101011010010110100101101001011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).");
 """
 natural_equal_natural = [('natural', 'natural',
                           "natural'(165)", "natural'(165)",

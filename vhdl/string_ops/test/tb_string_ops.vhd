@@ -7,6 +7,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use std.textio.all;
+use ieee.numeric_std.all;
 
 library vunit_lib;
 use vunit_lib.string_ops.all;
@@ -77,6 +78,7 @@ begin
     variable l : lines_t;
     constant offset_string :string(10 to 16) := "foo bar";
     constant reverse_string :string(16 downto 10) := "foo bar";
+    constant reversed_vector :unsigned(16 downto 4) := "1011010101001";
   begin
     ---------------------------------------------------------------------------
     banner("Verify strip");
@@ -294,6 +296,55 @@ begin
     counting_assert(l(0).all = "foo ", "Should return ""foo "" as first substring when splitting ""foo bar"" with ""b""");
     counting_assert(l(1).all = "ar", "Should return ""ar"" as second substring when splitting ""foo bar"" with ""b""");
     deallocate(l);
+
+    ---------------------------------------------------------------------------
+    banner("Verify to_integer_string");
+    ---------------------------------------------------------------------------
+    counting_assert(to_integer_string(unsigned'("")) = "0", "Should return 0 on empty input");
+    counting_assert(to_integer_string(unsigned'("0")) = natural'image(natural'low), "Should return correct value for minimum natural value.");
+    counting_assert(to_integer_string(unsigned'(X"7fffffff")) = natural'image(2**31 - 1), "Should return correct value for maximum natural value in 32-bit integer implementations.");
+    counting_assert(to_integer_string(unsigned'(X"80000000")) = "2147483648", "Should return correct value for minimum natural above what's covered by 32-bit integer implementations.");
+    counting_assert(to_integer_string(unsigned'(X"7b283d038f92b837d92f73a87380a")) = "39966790250241720040714860591790090", "Should handle really large values.");
+    counting_assert(to_integer_string(unsigned'(X"00000000000000000000000000000")) = "0", "Should handle long zeros.");
+
+    counting_assert(to_integer_string(std_logic_vector'("")) = "0", "Should return 0 on empty input");
+    counting_assert(to_integer_string(std_logic_vector'("0")) = natural'image(natural'low), "Should return correct value for minimum natural value.");
+    counting_assert(to_integer_string(std_logic_vector'(X"7fffffff")) = natural'image(2**31 - 1), "Should return correct value for maximum natural value in 32-bit integer implementations.");
+    counting_assert(to_integer_string(std_logic_vector'(X"80000000")) = "2147483648", "Should return correct value for minimum natural above what's covered by 32-bit integer implementations.");
+    counting_assert(to_integer_string(std_logic_vector'(X"7b283d038f92b837d92f73a87380a")) = "39966790250241720040714860591790090", "Should handle really large values.");
+    counting_assert(to_integer_string(std_logic_vector'(X"00000000000000000000000000000")) = "0", "Should handle long zeros.");
+
+    counting_assert(to_integer_string(signed'("")) = "0", "Should return 0 on empty input");
+    counting_assert(to_integer_string(signed'(X"80000000")) = integer'image(-2**31), "Should return correct value for minimum value in 32-bit integer implementations.");
+    counting_assert(to_integer_string(signed'(X"7fffffff")) = integer'image(2**31 - 1), "Should return correct value for maximum value in 32-bit integer implementations.");
+    counting_assert(to_integer_string(signed'("1" & X"7fffffff")) = "-2147483649", "Should return correct value for maximum integer below what's covered by 32-bit integer implementations.");
+    counting_assert(to_integer_string(signed'(X"080000000")) = "2147483648", "Should return correct value for minimum integer above what's covered by 32-bit integer implementations.");
+    counting_assert(to_integer_string(signed'(X"ab283d038f92b837d92f73a87380a")) = "-27533068910711039130181591688071158", "Should handle really small values.");
+    counting_assert(to_integer_string(signed'(X"7b283d038f92b837d92f73a87380a")) = "39966790250241720040714860591790090", "Should handle really large values.");
+    counting_assert(to_integer_string(signed'(X"00000000000000000000000000000")) = "0", "Should handle long zeros.");
+
+    ---------------------------------------------------------------------------
+    banner("Verify to_nibble_string");
+    ---------------------------------------------------------------------------
+    counting_assert(to_nibble_string(unsigned'("")) = "", "Should return empty string on empty input");
+    counting_assert(to_nibble_string(std_logic_vector'("")) = "", "Should return empty string on empty input");
+    counting_assert(to_nibble_string(signed'("")) = "", "Should return empty string on empty input");
+    counting_assert(to_nibble_string(unsigned'("1")) = "1", "Should handle inputs shorter than a nibble");
+    counting_assert(to_nibble_string(std_logic_vector'("1")) = "1", "Should handle inputs shorter than a nibble");
+    counting_assert(to_nibble_string(signed'("1")) = "1", "Should handle inputs shorter than a nibble");
+    counting_assert(to_nibble_string(unsigned'("1001")) = "1001", "Should handle single nibble");
+    counting_assert(to_nibble_string(std_logic_vector'("1001")) = "1001", "Should handle single nibble");
+    counting_assert(to_nibble_string(signed'("1001")) = "1001", "Should handle single nibble");
+    counting_assert(to_nibble_string(unsigned'("011010101001")) = "0110_1010_1001", "Should handle an input value that is a multiple of nibbles");
+    counting_assert(to_nibble_string(std_logic_vector'("011010101001")) = "0110_1010_1001", "Should handle an input value that is a multiple of nibbles");
+    counting_assert(to_nibble_string(signed'("011010101001")) = "0110_1010_1001", "Should handle an input value that is a multiple of nibbles");
+    counting_assert(to_nibble_string(unsigned'("1011010101001")) = "1_0110_1010_1001", "Should handle an input value that isn't a multiple of nibbles");
+    counting_assert(to_nibble_string(std_logic_vector'("1011010101001")) = "1_0110_1010_1001", "Should handle an input value that isn't a multiple of nibbles");
+    counting_assert(to_nibble_string(signed'("1011010101001")) = "1_0110_1010_1001", "Should handle an input value that isn't a multiple of nibbles");
+    counting_assert(to_nibble_string(reversed_vector) = "1_0110_1010_1001", "Should handle reversed and offset input vectors");
+    counting_assert(to_nibble_string(std_logic_vector(reversed_vector)) = "1_0110_1010_1001", "Should handle reversed and offset input vectors");
+    counting_assert(to_nibble_string(signed(reversed_vector)) = "1_0110_1010_1001", "Should handle reversed and offset input vectors");
+    
     ---------------------------------------------------------------------------
     banner("Test result");
     ---------------------------------------------------------------------------

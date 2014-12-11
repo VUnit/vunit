@@ -82,6 +82,24 @@ package string_ops is
     constant sep       : string;
     constant max_split : integer := -1)
     return lines_t;
+  function to_integer_string (
+    constant value : unsigned)
+    return string;
+  function to_integer_string (
+    constant value : signed)
+    return string;
+  function to_integer_string (
+    constant value : std_logic_vector)
+    return string;
+  function to_nibble_string (
+    constant value : unsigned)
+    return string;
+  function to_nibble_string (
+    constant value : std_logic_vector)
+    return string;
+  function to_nibble_string (
+    constant value : signed)
+    return string;
 end package;
 
 package body string_ops is
@@ -469,4 +487,109 @@ package body string_ops is
     write(ret_val(ret_val_index), s_int(previous_sep_index + 1 to s_int'length));
     return ret_val;
   end split;
+
+  function to_integer_string (
+    constant value : unsigned)
+    return string is
+    variable ret_val, reversed_ret_val : line;
+    variable last_digit, quotient : unsigned(value'length - 1 downto 0);
+  begin
+    if value = (value'range => '0') then
+      return "0";
+    end if;
+    
+    if value'length < 32 then
+      return integer'image(to_integer(value));
+    end if;
+
+    if reversed_ret_val /= null then
+      deallocate(reversed_ret_val);
+    end if;
+
+    quotient := value;
+    while quotient /= (quotient'range => '0') loop
+      last_digit := quotient mod 10;
+      quotient := quotient / 10;
+      write(reversed_ret_val, integer'image(to_integer(last_digit(3 downto 0))));
+    end loop;
+
+    if ret_val /= null then
+      deallocate(ret_val);
+    end if;
+
+    for i in reversed_ret_val.all'reverse_range loop
+      write(ret_val, reversed_ret_val.all(i));
+    end loop;
+
+    return ret_val.all;
+  end function to_integer_string;
+
+  function to_integer_string (
+    constant value : std_logic_vector)
+    return string is
+  begin
+    return to_integer_string(unsigned(value));
+  end;
+  
+  function to_integer_string (
+    constant value : signed)
+    return string is
+    variable value_internal: signed(value'length - 1 downto 0) := value;
+    variable value_internal_extended: signed(value'length downto 0);
+    constant minus_one: signed(value'length downto 0) := (others => '1');
+  begin
+    if value'length <= 32 then
+      return integer'image(to_integer(value));
+    end if;
+
+    if value_internal(value_internal'left) = '0' then
+      return to_integer_string(unsigned(value_internal(value_internal'left - 1 downto 0)));
+    end if;
+
+    -- Negate and use the function for unsigned. Extend one bit to ensure the
+    -- negated value fits.
+    value_internal_extended(value_internal'range) := value_internal;
+    value_internal_extended(value_internal_extended'left) := value_internal(value_internal'left);
+    value_internal_extended := not(value_internal_extended) + 1;
+
+    return "-" & to_integer_string(unsigned(value_internal_extended));
+  end function to_integer_string;
+
+  function to_nibble_string (
+    constant value : unsigned)
+    return string is
+    variable value_i : unsigned(value'length downto 1) := value;
+    variable ret_val : line;
+  begin
+    if ret_val /= null then
+      deallocate(ret_val);
+    end if;
+
+    for i in value_i'range loop
+      if (i mod 4 = 0) and (i /= value_i'left) then
+        write(ret_val, string'("_"));
+      end if;
+      write(ret_val, std_logic'image(value_i(i))(2));
+    end loop;
+
+    if ret_val = null then
+      return "";
+    end if;
+    return ret_val.all;
+  end function to_nibble_string;
+
+  function to_nibble_string (
+    constant value : std_logic_vector)
+    return string is
+  begin
+    return to_nibble_string(unsigned(value));
+  end function to_nibble_string;
+
+  function to_nibble_string (
+    constant value : signed)
+    return string is
+  begin
+    return to_nibble_string(unsigned(value));
+  end function to_nibble_string;
+
 end package body;

@@ -45,13 +45,14 @@ begin
         verify_passed_checks(stat, 4);
 
         check_equal(unsigned'(X"A5A5A5A5A"), unsigned'(X"B5A5A5A5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 101001011010010110100101101001011010. Expected 101101011010010110100101101001011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).");
         check_equal(std_logic_vector'(X"A5A5A5A5A"), unsigned'(X"B5A5A5A5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 101001011010010110100101101001011010. Expected 101101011010010110100101101001011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).");
+
         check_equal(unsigned'(X"A5A5A5A5A"), std_logic_vector'(X"B5A5A5A5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 101001011010010110100101101001011010. Expected 101101011010010110100101101001011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).");
         check_equal(std_logic_vector'(X"A5A5A5A5A"), std_logic_vector'(X"B5A5A5A5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 101001011010010110100101101001011010. Expected 101101011010010110100101101001011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).");
       elsif run("Test should pass on unsigned equal unsigned") then
         get_checker_stat(stat);
         check_equal(unsigned'(X"A5"), unsigned'(X"A5"));
@@ -59,8 +60,8 @@ begin
         counting_assert(pass, "Should return pass = true on passing check");
         pass := check_equal(unsigned'(X"A5"), unsigned'(X"A5"));
         counting_assert(pass, "Should return pass = true on passing check");        
-        check_equal(to_unsigned(natural'left,32), to_unsigned(natural'left,32));
-        check_equal(to_unsigned(natural'right,32), to_unsigned(natural'right,32));
+        check_equal(to_unsigned(natural'left,31), to_unsigned(natural'left,31));
+        check_equal(to_unsigned(natural'right,31), to_unsigned(natural'right,31));
         verify_passed_checks(stat, 5);
 
         get_checker_stat(check_equal_checker, stat);      
@@ -71,21 +72,21 @@ begin
         
       elsif run("Test should fail on unsigned not equal unsigned") then
         check_equal(unsigned'(X"A5"), unsigned'(X"5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90).");
         check_equal(unsigned'(X"A5"), unsigned'(X"5A"), "Extra info.");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010. Extra info.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90). Extra info.");
         check_equal(pass, unsigned'(X"A5"), unsigned'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90).");
         pass := check_equal(unsigned'(X"A5"), unsigned'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90).");
 
         check_equal(check_equal_checker, unsigned'(X"A5"), unsigned'(X"5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90).");
         check_equal(check_equal_checker, pass, unsigned'(X"A5"), unsigned'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");        
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90).");        
       elsif run("Test should pass on unsigned equal natural") then
         get_checker_stat(stat);
         check_equal(unsigned'(X"A5"), natural'(165));
@@ -93,8 +94,8 @@ begin
         counting_assert(pass, "Should return pass = true on passing check");
         pass := check_equal(unsigned'(X"A5"), natural'(165));
         counting_assert(pass, "Should return pass = true on passing check");        
-        check_equal(to_unsigned(natural'left,32), natural'left);
-        check_equal(to_unsigned(natural'right,32), natural'right);
+        check_equal(to_unsigned(natural'left,31), natural'left);
+        check_equal(to_unsigned(natural'right,31), natural'right);
         verify_passed_checks(stat, 5);
 
         get_checker_stat(check_equal_checker, stat);      
@@ -105,21 +106,21 @@ begin
         
       elsif run("Test should fail on unsigned not equal natural") then
         check_equal(unsigned'(X"A5"), natural'(90));
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 90.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 90 (0101_1010).");
         check_equal(unsigned'(X"A5"), natural'(90), "Extra info.");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 90. Extra info.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 90 (0101_1010). Extra info.");
         check_equal(pass, unsigned'(X"A5"), natural'(90));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 90.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 90 (0101_1010).");
         pass := check_equal(unsigned'(X"A5"), natural'(90));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 90.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 90 (0101_1010).");
 
         check_equal(check_equal_checker, unsigned'(X"A5"), natural'(90));
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 90.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 90 (0101_1010).");
         check_equal(check_equal_checker, pass, unsigned'(X"A5"), natural'(90));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 90.");        
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 90 (0101_1010).");        
       elsif run("Test should pass on natural equal unsigned") then
         get_checker_stat(stat);
         check_equal(natural'(165), unsigned'(X"A5"));
@@ -127,8 +128,8 @@ begin
         counting_assert(pass, "Should return pass = true on passing check");
         pass := check_equal(natural'(165), unsigned'(X"A5"));
         counting_assert(pass, "Should return pass = true on passing check");        
-        check_equal(natural'left, to_unsigned(natural'left,32));
-        check_equal(natural'right, to_unsigned(natural'right,32));
+        check_equal(natural'left, to_unsigned(natural'left,31));
+        check_equal(natural'right, to_unsigned(natural'right,31));
         verify_passed_checks(stat, 5);
 
         get_checker_stat(check_equal_checker, stat);      
@@ -139,57 +140,21 @@ begin
         
       elsif run("Test should fail on natural not equal unsigned") then
         check_equal(natural'(165), unsigned'(X"5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 165. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 165 (1010_0101). Expected 0101_1010 (90).");
         check_equal(natural'(165), unsigned'(X"5A"), "Extra info.");
-        verify_log_call(inc_count, "Equality check failed! Got 165. Expected 01011010. Extra info.");
+        verify_log_call(inc_count, "Equality check failed! Got 165 (1010_0101). Expected 0101_1010 (90). Extra info.");
         check_equal(pass, natural'(165), unsigned'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 165. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 165 (1010_0101). Expected 0101_1010 (90).");
         pass := check_equal(natural'(165), unsigned'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 165. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 165 (1010_0101). Expected 0101_1010 (90).");
 
         check_equal(check_equal_checker, natural'(165), unsigned'(X"5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 165. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 165 (1010_0101). Expected 0101_1010 (90).");
         check_equal(check_equal_checker, pass, natural'(165), unsigned'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 165. Expected 01011010.");        
-
-      elsif run("Test should pass on natural equal natural") then
-        get_checker_stat(stat);
-        check_equal(natural'(165), natural'(165));
-        check_equal(pass, natural'(165), natural'(165));
-        counting_assert(pass, "Should return pass = true on passing check");
-        pass := check_equal(natural'(165), natural'(165));
-        counting_assert(pass, "Should return pass = true on passing check");        
-        check_equal(natural'left, natural'left);
-        check_equal(natural'right, natural'right);
-        verify_passed_checks(stat, 5);
-
-        get_checker_stat(check_equal_checker, stat);      
-        check_equal(check_equal_checker, natural'(165), natural'(165));
-        check_equal(check_equal_checker, pass, natural'(165), natural'(165));
-        counting_assert(pass, "Should return pass = true on passing check");
-        verify_passed_checks(check_equal_checker,stat, 2);
-        
-      elsif run("Test should fail on natural not equal natural") then
-        check_equal(natural'(165), natural'(90));
-        verify_log_call(inc_count, "Equality check failed! Got 165. Expected 90.");
-        check_equal(natural'(165), natural'(90), "Extra info.");
-        verify_log_call(inc_count, "Equality check failed! Got 165. Expected 90. Extra info.");
-        check_equal(pass, natural'(165), natural'(90));
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 165. Expected 90.");
-        pass := check_equal(natural'(165), natural'(90));
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 165. Expected 90.");
-
-        check_equal(check_equal_checker, natural'(165), natural'(90));
-        verify_log_call(inc_count, "Equality check failed! Got 165. Expected 90.");
-        check_equal(check_equal_checker, pass, natural'(165), natural'(90));
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 165. Expected 90.");        
-
+        verify_log_call(inc_count, "Equality check failed! Got 165 (1010_0101). Expected 0101_1010 (90).");        
       elsif run("Test should pass on unsigned equal std_logic_vector") then
         get_checker_stat(stat);
         check_equal(unsigned'(X"A5"), std_logic_vector'(X"A5"));
@@ -197,8 +162,8 @@ begin
         counting_assert(pass, "Should return pass = true on passing check");
         pass := check_equal(unsigned'(X"A5"), std_logic_vector'(X"A5"));
         counting_assert(pass, "Should return pass = true on passing check");        
-        check_equal(to_unsigned(natural'left,32), std_logic_vector(to_unsigned(natural'left,32)));
-        check_equal(to_unsigned(natural'right,32), std_logic_vector(to_unsigned(natural'right,32)));
+        check_equal(to_unsigned(natural'left,31), std_logic_vector(to_unsigned(natural'left,31)));
+        check_equal(to_unsigned(natural'right,31), std_logic_vector(to_unsigned(natural'right,31)));
         verify_passed_checks(stat, 5);
 
         get_checker_stat(check_equal_checker, stat);      
@@ -209,21 +174,21 @@ begin
         
       elsif run("Test should fail on unsigned not equal std_logic_vector") then
         check_equal(unsigned'(X"A5"), std_logic_vector'(X"5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90).");
         check_equal(unsigned'(X"A5"), std_logic_vector'(X"5A"), "Extra info.");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010. Extra info.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90). Extra info.");
         check_equal(pass, unsigned'(X"A5"), std_logic_vector'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90).");
         pass := check_equal(unsigned'(X"A5"), std_logic_vector'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90).");
 
         check_equal(check_equal_checker, unsigned'(X"A5"), std_logic_vector'(X"5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90).");
         check_equal(check_equal_checker, pass, unsigned'(X"A5"), std_logic_vector'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");        
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90).");        
       elsif run("Test should pass on std_logic_vector equal unsigned") then
         get_checker_stat(stat);
         check_equal(std_logic_vector'(X"A5"), unsigned'(X"A5"));
@@ -231,8 +196,8 @@ begin
         counting_assert(pass, "Should return pass = true on passing check");
         pass := check_equal(std_logic_vector'(X"A5"), unsigned'(X"A5"));
         counting_assert(pass, "Should return pass = true on passing check");        
-        check_equal(std_logic_vector(to_unsigned(natural'left,32)), to_unsigned(natural'left,32));
-        check_equal(std_logic_vector(to_unsigned(natural'right,32)), to_unsigned(natural'right,32));
+        check_equal(std_logic_vector(to_unsigned(natural'left,31)), to_unsigned(natural'left,31));
+        check_equal(std_logic_vector(to_unsigned(natural'right,31)), to_unsigned(natural'right,31));
         verify_passed_checks(stat, 5);
 
         get_checker_stat(check_equal_checker, stat);      
@@ -243,21 +208,21 @@ begin
         
       elsif run("Test should fail on std_logic_vector not equal unsigned") then
         check_equal(std_logic_vector'(X"A5"), unsigned'(X"5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90).");
         check_equal(std_logic_vector'(X"A5"), unsigned'(X"5A"), "Extra info.");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010. Extra info.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90). Extra info.");
         check_equal(pass, std_logic_vector'(X"A5"), unsigned'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90).");
         pass := check_equal(std_logic_vector'(X"A5"), unsigned'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90).");
 
         check_equal(check_equal_checker, std_logic_vector'(X"A5"), unsigned'(X"5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90).");
         check_equal(check_equal_checker, pass, std_logic_vector'(X"A5"), unsigned'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");        
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90).");        
       elsif run("Test should pass on std_logic_vector equal std_logic_vector") then
         get_checker_stat(stat);
         check_equal(std_logic_vector'(X"A5"), std_logic_vector'(X"A5"));
@@ -265,8 +230,8 @@ begin
         counting_assert(pass, "Should return pass = true on passing check");
         pass := check_equal(std_logic_vector'(X"A5"), std_logic_vector'(X"A5"));
         counting_assert(pass, "Should return pass = true on passing check");        
-        check_equal(std_logic_vector(to_unsigned(natural'left,32)), std_logic_vector(to_unsigned(natural'left,32)));
-        check_equal(std_logic_vector(to_unsigned(natural'right,32)), std_logic_vector(to_unsigned(natural'right,32)));
+        check_equal(std_logic_vector(to_unsigned(natural'left,31)), std_logic_vector(to_unsigned(natural'left,31)));
+        check_equal(std_logic_vector(to_unsigned(natural'right,31)), std_logic_vector(to_unsigned(natural'right,31)));
         verify_passed_checks(stat, 5);
 
         get_checker_stat(check_equal_checker, stat);      
@@ -277,21 +242,21 @@ begin
         
       elsif run("Test should fail on std_logic_vector not equal std_logic_vector") then
         check_equal(std_logic_vector'(X"A5"), std_logic_vector'(X"5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90).");
         check_equal(std_logic_vector'(X"A5"), std_logic_vector'(X"5A"), "Extra info.");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010. Extra info.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90). Extra info.");
         check_equal(pass, std_logic_vector'(X"A5"), std_logic_vector'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90).");
         pass := check_equal(std_logic_vector'(X"A5"), std_logic_vector'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90).");
 
         check_equal(check_equal_checker, std_logic_vector'(X"A5"), std_logic_vector'(X"5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90).");
         check_equal(check_equal_checker, pass, std_logic_vector'(X"A5"), std_logic_vector'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");        
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 0101_1010 (90).");        
       elsif run("Test should pass on signed equal signed") then
         get_checker_stat(stat);
         check_equal(signed'(X"A5"), signed'(X"A5"));
@@ -311,21 +276,21 @@ begin
         
       elsif run("Test should fail on signed not equal signed") then
         check_equal(signed'(X"A5"), signed'(X"5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (-91). Expected 0101_1010 (90).");
         check_equal(signed'(X"A5"), signed'(X"5A"), "Extra info.");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010. Extra info.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (-91). Expected 0101_1010 (90). Extra info.");
         check_equal(pass, signed'(X"A5"), signed'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (-91). Expected 0101_1010 (90).");
         pass := check_equal(signed'(X"A5"), signed'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (-91). Expected 0101_1010 (90).");
 
         check_equal(check_equal_checker, signed'(X"A5"), signed'(X"5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (-91). Expected 0101_1010 (90).");
         check_equal(check_equal_checker, pass, signed'(X"A5"), signed'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 01011010.");        
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (-91). Expected 0101_1010 (90).");        
       elsif run("Test should pass on signed equal integer") then
         get_checker_stat(stat);
         check_equal(signed'(X"A5"), integer'(-91));
@@ -345,21 +310,21 @@ begin
         
       elsif run("Test should fail on signed not equal integer") then
         check_equal(signed'(X"A5"), integer'(90));
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 90.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (-91). Expected 90 (0101_1010).");
         check_equal(signed'(X"A5"), integer'(90), "Extra info.");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 90. Extra info.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (-91). Expected 90 (0101_1010). Extra info.");
         check_equal(pass, signed'(X"A5"), integer'(90));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 90.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (-91). Expected 90 (0101_1010).");
         pass := check_equal(signed'(X"A5"), integer'(90));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 90.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (-91). Expected 90 (0101_1010).");
 
         check_equal(check_equal_checker, signed'(X"A5"), integer'(90));
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 90.");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (-91). Expected 90 (0101_1010).");
         check_equal(check_equal_checker, pass, signed'(X"A5"), integer'(90));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 10100101. Expected 90.");        
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (-91). Expected 90 (0101_1010).");        
       elsif run("Test should pass on integer equal signed") then
         get_checker_stat(stat);
         check_equal(integer'(-91), signed'(X"A5"));
@@ -379,21 +344,21 @@ begin
         
       elsif run("Test should fail on integer not equal signed") then
         check_equal(integer'(-91), signed'(X"5A"));
-        verify_log_call(inc_count, "Equality check failed! Got -91. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got -91 (1010_0101). Expected 0101_1010 (90).");
         check_equal(integer'(-91), signed'(X"5A"), "Extra info.");
-        verify_log_call(inc_count, "Equality check failed! Got -91. Expected 01011010. Extra info.");
+        verify_log_call(inc_count, "Equality check failed! Got -91 (1010_0101). Expected 0101_1010 (90). Extra info.");
         check_equal(pass, integer'(-91), signed'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got -91. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got -91 (1010_0101). Expected 0101_1010 (90).");
         pass := check_equal(integer'(-91), signed'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got -91. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got -91 (1010_0101). Expected 0101_1010 (90).");
 
         check_equal(check_equal_checker, integer'(-91), signed'(X"5A"));
-        verify_log_call(inc_count, "Equality check failed! Got -91. Expected 01011010.");
+        verify_log_call(inc_count, "Equality check failed! Got -91 (1010_0101). Expected 0101_1010 (90).");
         check_equal(check_equal_checker, pass, integer'(-91), signed'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got -91. Expected 01011010.");        
+        verify_log_call(inc_count, "Equality check failed! Got -91 (1010_0101). Expected 0101_1010 (90).");        
       elsif run("Test should pass on integer equal integer") then
         get_checker_stat(stat);
         check_equal(integer'(-91), integer'(-91));
@@ -563,7 +528,41 @@ begin
         verify_log_call(inc_count, "Equality check failed! Got true. Expected false.");
         check_equal(check_equal_checker, pass, true, false);
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got true. Expected false."); 
+        verify_log_call(inc_count, "Equality check failed! Got true. Expected false.");        
+      elsif run("Test should pass on natural equal natural") then
+        get_checker_stat(stat);
+        check_equal(natural'(165), natural'(165));
+        check_equal(pass, natural'(165), natural'(165));
+        counting_assert(pass, "Should return pass = true on passing check");
+        pass := check_equal(natural'(165), natural'(165));
+        counting_assert(pass, "Should return pass = true on passing check");        
+        check_equal(natural'left, natural'left);
+        check_equal(natural'right, natural'right);
+        verify_passed_checks(stat, 5);
+
+        get_checker_stat(check_equal_checker, stat);      
+        check_equal(check_equal_checker, natural'(165), natural'(165));
+        check_equal(check_equal_checker, pass, natural'(165), natural'(165));
+        counting_assert(pass, "Should return pass = true on passing check");
+        verify_passed_checks(check_equal_checker,stat, 2);
+        
+      elsif run("Test should fail on natural not equal natural") then
+        check_equal(natural'(165), natural'(90));
+        verify_log_call(inc_count, "Equality check failed! Got 165. Expected 90.");
+        check_equal(natural'(165), natural'(90), "Extra info.");
+        verify_log_call(inc_count, "Equality check failed! Got 165. Expected 90. Extra info.");
+        check_equal(pass, natural'(165), natural'(90));
+        counting_assert(not pass, "Should return pass = false on failing check");
+        verify_log_call(inc_count, "Equality check failed! Got 165. Expected 90.");
+        pass := check_equal(natural'(165), natural'(90));
+        counting_assert(not pass, "Should return pass = false on failing check");
+        verify_log_call(inc_count, "Equality check failed! Got 165. Expected 90.");
+
+        check_equal(check_equal_checker, natural'(165), natural'(90));
+        verify_log_call(inc_count, "Equality check failed! Got 165. Expected 90.");
+        check_equal(check_equal_checker, pass, natural'(165), natural'(90));
+        counting_assert(not pass, "Should return pass = false on failing check");
+        verify_log_call(inc_count, "Equality check failed! Got 165. Expected 90.");        
       end if;
     end loop;
 
