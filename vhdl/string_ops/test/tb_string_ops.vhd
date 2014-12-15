@@ -302,21 +302,21 @@ begin
     ---------------------------------------------------------------------------
     counting_assert(to_integer_string(unsigned'("")) = "0", "Should return 0 on empty input");
     counting_assert(to_integer_string(unsigned'("0")) = natural'image(natural'low), "Should return correct value for minimum natural value.");
-    counting_assert(to_integer_string(unsigned'(X"7fffffff")) = natural'image(2**31 - 1), "Should return correct value for maximum natural value in 32-bit integer implementations.");
+    counting_assert(to_integer_string(unsigned'(X"7fffffff")) = natural'image(2147483647), "Should return correct value for maximum natural value in 32-bit integer implementations.");
     counting_assert(to_integer_string(unsigned'(X"80000000")) = "2147483648", "Should return correct value for minimum natural above what's covered by 32-bit integer implementations.");
     counting_assert(to_integer_string(unsigned'(X"7b283d038f92b837d92f73a87380a")) = "39966790250241720040714860591790090", "Should handle really large values.");
     counting_assert(to_integer_string(unsigned'(X"00000000000000000000000000000")) = "0", "Should handle long zeros.");
 
     counting_assert(to_integer_string(std_logic_vector'("")) = "0", "Should return 0 on empty input");
     counting_assert(to_integer_string(std_logic_vector'("0")) = natural'image(natural'low), "Should return correct value for minimum natural value.");
-    counting_assert(to_integer_string(std_logic_vector'(X"7fffffff")) = natural'image(2**31 - 1), "Should return correct value for maximum natural value in 32-bit integer implementations.");
+    counting_assert(to_integer_string(std_logic_vector'(X"7fffffff")) = natural'image(2147483647), "Should return correct value for maximum natural value in 32-bit integer implementations.");
     counting_assert(to_integer_string(std_logic_vector'(X"80000000")) = "2147483648", "Should return correct value for minimum natural above what's covered by 32-bit integer implementations.");
     counting_assert(to_integer_string(std_logic_vector'(X"7b283d038f92b837d92f73a87380a")) = "39966790250241720040714860591790090", "Should handle really large values.");
     counting_assert(to_integer_string(std_logic_vector'(X"00000000000000000000000000000")) = "0", "Should handle long zeros.");
 
     counting_assert(to_integer_string(signed'("")) = "0", "Should return 0 on empty input");
-    counting_assert(to_integer_string(signed'(X"80000000")) = integer'image(-2**31), "Should return correct value for minimum value in 32-bit integer implementations.");
-    counting_assert(to_integer_string(signed'(X"7fffffff")) = integer'image(2**31 - 1), "Should return correct value for maximum value in 32-bit integer implementations.");
+    counting_assert(to_integer_string(signed'(X"80000000")) = integer'image(-2147483648), "Should return correct value for minimum value in 32-bit integer implementations.");
+    counting_assert(to_integer_string(signed'(X"7fffffff")) = integer'image(2147483647), "Should return correct value for maximum value in 32-bit integer implementations.");
     counting_assert(to_integer_string(signed'("1" & X"7fffffff")) = "-2147483649", "Should return correct value for maximum integer below what's covered by 32-bit integer implementations.");
     counting_assert(to_integer_string(signed'(X"080000000")) = "2147483648", "Should return correct value for minimum integer above what's covered by 32-bit integer implementations.");
     counting_assert(to_integer_string(signed'(X"ab283d038f92b837d92f73a87380a")) = "-27533068910711039130181591688071158", "Should handle really small values.");
