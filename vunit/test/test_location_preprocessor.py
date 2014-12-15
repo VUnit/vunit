@@ -139,3 +139,15 @@ begin
 end;
 """
         self._verify_result(code, expected_result)
+    def test_that_asserts_with_severity_warning_error_or_failure_are_not_affected_despite_the_name_conflict_with_log_functions(self):
+        code = """
+assert False report "Failed" severity warning;
+assert False report "Failed" severity error;
+assert False report "Failed" severity failure;
+"""
+        expected_result = """
+assert False report "Failed" severity warning;
+assert False report "Failed" severity error;
+assert False report "Failed" severity failure;
+"""
+        self._verify_result(code, expected_result)

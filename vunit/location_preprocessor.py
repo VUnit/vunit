@@ -8,7 +8,7 @@ from re import compile, MULTILINE, DOTALL, split
 
 class LocationPreprocessor:
     def __init__(self):
-        self._subprograms = ['log', 'verbose_high2', 'verbose_high1', 'verbose',
+        self._subprograms_with_arguments = ['log', 'verbose_high2', 'verbose_high1', 'verbose',
                             'verbose_low1', 'verbose_low2', 'debug_high2', 'debug_high1',
                             'debug', 'debug_low1', 'debug_low2', 'info_high2', 'info_high1',
                             'info', 'info_low1', 'info_low2', 'warning_high2', 'warning_high1',
@@ -19,8 +19,12 @@ class LocationPreprocessor:
                             'check_stable', 'check_not_unknown', 'check_zero_one_hot',
                             'check_one_hot', 'check_next', 'check_sequence', 'lock_entry',
                             'lock_exit', 'unlock_entry', 'unlock_exit']
+        self._subprograms_without_arguments = []
+
     def add_subprogram(self, subprogram):
-        self._subprograms.append(subprogram)
+        self._subprograms_without_arguments.append(subprogram)
+        self._subprograms_with_arguments.append(subprogram)
+            
     @staticmethod
     def _find_closing_parenthesis(args):
         p = compile(r'\(|\)')
@@ -30,13 +34,14 @@ class LocationPreprocessor:
             if balance == 0:
                 return m.start()
     def run(self, code, file_name):
-        potential_subprogram_call_with_arguments_pattern = compile(r'[^a-zA-Z0-9_](?P<subprogram>' + '|'.join(self._subprograms) + \
+        potential_subprogram_call_with_arguments_pattern = compile(r'[^a-zA-Z0-9_](?P<subprogram>' + '|'.join(self._subprograms_with_arguments) + \
                                                                    ')\s*(?P<args>\()', MULTILINE)
-        potential_subprogram_call_without_arguments_pattern = compile(r'[^a-zA-Z0-9_](?P<subprogram>' + '|'.join(self._subprograms) + \
+        potential_subprogram_call_without_arguments_pattern = compile(r'[^a-zA-Z0-9_](?P<subprogram>' + '|'.join(self._subprograms_without_arguments) + \
                                                                       ')\s*;', MULTILINE)
         
         matches = list(potential_subprogram_call_with_arguments_pattern.finditer(code))
-        matches += list(potential_subprogram_call_without_arguments_pattern.finditer(code))
+        if self._subprograms_without_arguments != []:
+            matches += list(potential_subprogram_call_without_arguments_pattern.finditer(code))
         matches.sort(key = lambda match : match.start('subprogram'), reverse = True)
         
         already_fixed_file_name_pattern = compile(r'file_name\s*=>', MULTILINE)
