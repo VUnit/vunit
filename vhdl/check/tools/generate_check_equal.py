@@ -269,9 +269,9 @@ def dual_format(base_type, got_or_expected):
     if base_type in ['unsigned', 'signed', 'std_logic_vector']:
         return 'to_nibble_string(%s) & " (" & ' % got_or_expected + "to_integer_string(%s) & " % got_or_expected + '")"'
     elif base_type == 'integer':
-        return 'to_string(%s) & " (" & ' % got_or_expected + "to_nibble_string(to_signed(%s, %s'length)) & " % (got_or_expected, expected_or_got) + '")"'
+        return 'to_string(%s) & " (" & ' % got_or_expected + "to_nibble_string(to_sufficient_signed(%s, %s'length)) & " % (got_or_expected, expected_or_got) + '")"'
     else:
-        return 'to_string(%s) & " (" & ' % got_or_expected + "to_nibble_string(to_unsigned(%s, %s'length)) & " % (got_or_expected, expected_or_got) + '")"'
+        return 'to_string(%s) & " (" & ' % got_or_expected + "to_nibble_string(to_sufficient_unsigned(%s, %s'length)) & " % (got_or_expected, expected_or_got) + '")"'
 
 impl = ''
 for c in combinations:
@@ -303,6 +303,22 @@ test = """      if run("Test should handle comparsion of vectors longer than 32 
         verify_log_call(inc_count, "Equality check failed! Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).");
         check_equal(std_logic_vector'(X"A5A5A5A5A"), std_logic_vector'(X"B5A5A5A5A"));
         verify_log_call(inc_count, "Equality check failed! Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).");
+      elsif run("Test print full integer vector representation when check fails on comparison with vector too short to contain the integer") then
+        check_equal(unsigned'(X"A5"), natural'(256));
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 256 (1_0000_0000).");
+        check_equal(natural'(256), unsigned'(X"A5"));
+        verify_log_call(inc_count, "Equality check failed! Got 256 (1_0000_0000). Expected 1010_0101 (165).");
+        check_equal(unsigned'(X"A5"), natural'(2147483647));
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 2147483647 (111_1111_1111_1111_1111_1111_1111_1111).");
+
+        check_equal(signed'(X"A5"), integer'(-256));
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (-91). Expected -256 (1_0000_0000).");
+        check_equal(integer'(-256), signed'(X"A5"));
+        verify_log_call(inc_count, "Equality check failed! Got -256 (1_0000_0000). Expected 1010_0101 (-91).");
+        check_equal(signed'(X"05"), integer'(256));
+        verify_log_call(inc_count, "Equality check failed! Got 0000_0101 (5). Expected 256 (01_0000_0000).");
+        check_equal(signed'(X"A5"), integer'(-2147483648));
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (-91). Expected -2147483648 (1000_0000_0000_0000_0000_0000_0000_0000).");
 """
 natural_equal_natural = [('natural', 'natural',
                           "natural'(165)", "natural'(165)",

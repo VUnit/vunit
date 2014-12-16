@@ -53,6 +53,22 @@ begin
         verify_log_call(inc_count, "Equality check failed! Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).");
         check_equal(std_logic_vector'(X"A5A5A5A5A"), std_logic_vector'(X"B5A5A5A5A"));
         verify_log_call(inc_count, "Equality check failed! Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).");
+      elsif run("Test print full integer vector representation when check fails on comparison with vector too short to contain the integer") then
+        check_equal(unsigned'(X"A5"), natural'(256));
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 256 (1_0000_0000).");
+        check_equal(natural'(256), unsigned'(X"A5"));
+        verify_log_call(inc_count, "Equality check failed! Got 256 (1_0000_0000). Expected 1010_0101 (165).");
+        check_equal(unsigned'(X"A5"), natural'(2147483647));
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 2147483647 (111_1111_1111_1111_1111_1111_1111_1111).");
+
+        check_equal(signed'(X"A5"), integer'(-256));
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (-91). Expected -256 (1_0000_0000).");
+        check_equal(integer'(-256), signed'(X"A5"));
+        verify_log_call(inc_count, "Equality check failed! Got -256 (1_0000_0000). Expected 1010_0101 (-91).");
+        check_equal(signed'(X"05"), integer'(256));
+        verify_log_call(inc_count, "Equality check failed! Got 0000_0101 (5). Expected 256 (01_0000_0000).");
+        check_equal(signed'(X"A5"), integer'(-2147483648));
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (-91). Expected -2147483648 (1000_0000_0000_0000_0000_0000_0000_0000).");
       elsif run("Test should pass on unsigned equal unsigned") then
         get_checker_stat(stat);
         check_equal(unsigned'(X"A5"), unsigned'(X"A5"));
@@ -562,7 +578,7 @@ begin
         verify_log_call(inc_count, "Equality check failed! Got 165. Expected 90.");
         check_equal(check_equal_checker, pass, natural'(165), natural'(90));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 165. Expected 90.");        
+        verify_log_call(inc_count, "Equality check failed! Got 165. Expected 90.");              
       end if;
     end loop;
 

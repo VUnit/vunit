@@ -9,6 +9,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
+use ieee.numeric_std.all;
 use std.textio.all;
 use work.check_types_pkg.all;
 use work.check_base_pkg.all;
@@ -18,6 +19,7 @@ use work.string_ops.all;
 
 package body check_pkg is
   type boolean_vector is array (natural range <>) of boolean;
+  constant max_supported_num_of_bits_in_integer_implementation : natural := 256;
 
   procedure checker_init (
     constant default_level  : in log_level_t  := error;
@@ -1437,6 +1439,63 @@ package body check_pkg is
   begin
     return integer'image(data);
   end function to_string;
+
+  function max (
+    constant value_1 : integer;
+    constant value_2  : integer)
+    return integer is
+  begin
+    if value_1 > value_2 then
+      return value_1;
+    else
+      return value_2;
+    end if;
+  end max;
+
+  function required_num_of_unsigned_bits (
+    constant value : natural)
+    return natural is
+    variable max_value : natural := 0;
+    variable required_length : natural := 1;
+  begin
+    for i in 0 to max_supported_num_of_bits_in_integer_implementation - 2 loop
+      max_value := max_value + 2 ** i;
+      exit when max_value >= value;
+      required_length := required_length + 1;
+    end loop;
+
+    return required_length;
+  end required_num_of_unsigned_bits;
+
+  function to_sufficient_unsigned (
+    constant value      : natural;
+    constant min_length : natural)
+    return unsigned is
+  begin
+    return to_unsigned(value, max(min_length, required_num_of_unsigned_bits(value)));
+  end to_sufficient_unsigned;
+    
+  function to_sufficient_signed (
+    constant value      : integer;
+    constant min_length : natural)
+    return signed is
+    variable ret_val : signed(255 downto 0);
+    variable min_value : integer := -1;
+    variable max_value : natural := 0;
+    variable required_length : natural := 1;
+  begin
+    if value < 0 then
+      for i in 0 to max_supported_num_of_bits_in_integer_implementation - 1 loop
+        exit when min_value <= value;
+        min_value := min_value * 2;      
+        required_length := required_length + 1;
+      end loop;
+
+      return to_signed(value, max(min_length, required_length));
+    else
+      return signed(to_unsigned(natural(value), max(min_length, required_num_of_unsigned_bits(natural(value)) + 1)));
+    end if;
+  end to_sufficient_signed;
     
   procedure check_equal(
     constant got             : in unsigned;
@@ -1554,7 +1613,7 @@ package body check_pkg is
   begin
     -- pragma translate_off
     check(checker, pass, got = expected,
-          equality_error_msg(to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_string(expected) & " (" & to_nibble_string(to_unsigned(expected, got'length)) & ")", msg),
+          equality_error_msg(to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_string(expected) & " (" & to_nibble_string(to_sufficient_unsigned(expected, got'length)) & ")", msg),
           level, line_num, file_name);
     -- pragma translate_on
   end;
@@ -1630,7 +1689,7 @@ package body check_pkg is
   begin
     -- pragma translate_off
     check(checker, pass, got = expected,
-          equality_error_msg(to_string(got) & " (" & to_nibble_string(to_unsigned(got, expected'length)) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
+          equality_error_msg(to_string(got) & " (" & to_nibble_string(to_sufficient_unsigned(got, expected'length)) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
           level, line_num, file_name);
     -- pragma translate_on
   end;
@@ -2010,7 +2069,7 @@ package body check_pkg is
   begin
     -- pragma translate_off
     check(checker, pass, got = expected,
-          equality_error_msg(to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_string(expected) & " (" & to_nibble_string(to_signed(expected, got'length)) & ")", msg),
+          equality_error_msg(to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_string(expected) & " (" & to_nibble_string(to_sufficient_signed(expected, got'length)) & ")", msg),
           level, line_num, file_name);
     -- pragma translate_on
   end;
@@ -2086,7 +2145,7 @@ package body check_pkg is
   begin
     -- pragma translate_off
     check(checker, pass, got = expected,
-          equality_error_msg(to_string(got) & " (" & to_nibble_string(to_signed(got, expected'length)) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
+          equality_error_msg(to_string(got) & " (" & to_nibble_string(to_sufficient_signed(got, expected'length)) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
           level, line_num, file_name);
     -- pragma translate_on
   end;
@@ -2501,7 +2560,7 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
-  
+    
 end package body check_pkg;
 
 
