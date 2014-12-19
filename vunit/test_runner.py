@@ -23,6 +23,17 @@ class TestRunner:
         self._verbose = verbose
 
     def _run_test_suite(self, test_suite, num_tests):
+
+        def add_and_print_results(results, runtime):
+            time = runtime/len(test_suite.test_cases)
+            for test_name in test_suite.test_cases:
+                self._report.add_result(test_name,
+                                        results[test_name],
+                                        time,
+                                        output_file_name)
+                self._report.print_latest_status(total_tests=num_tests)
+            print()
+
         for test_name in test_suite.test_cases:
             self._print_test_case_banner(test_name)
 
@@ -31,13 +42,19 @@ class TestRunner:
         old_stderr = sys.stderr
 
         output_path = join(self._output_path, self._encode_path(test_suite.name))
-
-        if exists(output_path):
-            rmtree(output_path)
-        makedirs(output_path)
-
         output_file_name = join(output_path, "output.txt")
-        output_file = open(output_file_name, "w")
+
+        try:
+            # If we could not clean output path, fail all tests
+            if exists(output_path):
+                rmtree(output_path)
+            makedirs(output_path)
+            output_file = open(output_file_name, "w")
+        except:
+            traceback.print_exc()
+            results = self._fail_suite(test_suite)
+            add_and_print_results(results, 0.0)
+            return
 
         try:
             if self._verbose:
@@ -48,11 +65,9 @@ class TestRunner:
                 sys.stderr = TeeToFile([output_file])
 
             results = test_suite.run(output_path)
-        except Exception:
+        except:
             traceback.print_exc()
-            results = {}
-            for test_name in test_suite.test_cases:
-                results[test_name] = FAILED
+            results = self._fail_suite(test_suite)
         finally:
             sys.stdout = old_stdout
             sys.stderr = old_stderr
@@ -65,14 +80,13 @@ class TestRunner:
                     print(line, end="")
 
         runtime = ostools.get_time() - start
+        add_and_print_results(results, runtime)
+
+    def _fail_suite(self, test_suite):
+        " Return failure for all tests in suite "
+        results = {}
         for test_name in test_suite.test_cases:
-            time = runtime/len(test_suite.test_cases)
-            self._report.add_result(test_name,
-                                    results[test_name],
-                                    time,
-                                    output_file_name)
-            self._report.print_latest_status(total_tests=num_tests)
-        print()
+            results[test_name] = FAILED
         return results
 
     def _print_test_case_banner(self, test_case_name):
@@ -95,7 +109,7 @@ class TestRunner:
             print("Running %i tests" % num_tests)
 
         for test_suite in test_suites:
-            results = self._run_test_suite(test_suite, num_tests)
+            self._run_test_suite(test_suite, num_tests)
 
 class TeeToFile:
     def __init__(self, files):
