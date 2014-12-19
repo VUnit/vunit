@@ -55,8 +55,10 @@ class ModelSimInterface:
 
             if source_file.file_type == 'vhdl':
                 success = self.compile_vhdl_file(source_file.name, source_file.library.name, vhdl_standard)
-            else:
+            elif source_file.file_type == 'verilog':
                 success = self.compile_verilog_file(source_file.name, source_file.library.name)
+            else:
+                raise RuntimeError("Unkown file type: " + source_file.file_type)
 
             if not success:
                 raise CompileError("Failed to compile '%s'" % source_file.name)
@@ -73,7 +75,7 @@ class ModelSimInterface:
 
     def compile_verilog_file(self, source_file_name, library_name):
         try:
-            proc = Process(['vlog', '-quiet', '-modelsimini', self._modelsim_ini,
+            proc = Process(['vlog', '-sv', '-quiet', '-modelsimini', self._modelsim_ini,
                             '-work', library_name, source_file_name])
             proc.consume_output()
         except Process.NonZeroExitCode:

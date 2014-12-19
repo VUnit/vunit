@@ -71,9 +71,25 @@ class TestVunitEndToEnd(unittest.TestCase):
             ("failed", "lib.tb_same_sim_some_fail.Test 2"),
             ("skipped", "lib.tb_same_sim_some_fail.Test 3")])
 
+    def test_compile_verilog(self):
+        verilog_path = join(dirname(__file__), "verilog")
+        ui = VUnit(verbose=True,
+                   clean=True,
+                   output_path=self.output_path,
+                   xunit_xml=self.report_file,
+                   compile_only=True)
+        ui.add_library("lib")
+        ui.add_source_files(join(verilog_path, "*.v"), "lib")
+        ui.add_source_files(join(verilog_path, "*.sv"), "lib")
+        try:
+            ui.main()
+        except SystemExit as e:
+            self.assertEqual(e.code, 0)
+
     def create_ui(self, test_patterns=None, persistent_sim=True):
         vhdl_path = join(dirname(__file__), "vhdl")
         ui = VUnit(verbose=True,
+                   clean=True,
                    test_filter=make_test_filter(test_patterns),
                    output_path=self.output_path,
                    xunit_xml=self.report_file,

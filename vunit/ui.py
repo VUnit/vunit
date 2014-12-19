@@ -7,7 +7,7 @@
 from __future__ import print_function
 
 import argparse
-from os.path import dirname, exists, abspath, join, basename
+from os.path import dirname, exists, abspath, join, basename, splitext
 from os import makedirs, getcwd
 from shutil import rmtree
 from glob import glob
@@ -179,9 +179,12 @@ class VUnit:
         """
         Add source files matching wildcard pattern to library
         """
+
         for file_name in glob(pattern):
             file_name = self._preprocess(library_name, abspath(file_name))
-            self._project.add_source_file(file_name, library_name)
+            self._project.add_source_file(file_name,
+                                          library_name,
+                                          file_type=file_type_of(file_name))
 
     def _preprocess(self, library_name, file_name):
         # @TODO dependency checking etc...
@@ -424,3 +427,12 @@ class EntityFacade:
 
     def add_config(self, *args, **kwargs):
         self._config.add_config(*args, tb_name=self._name, **kwargs)
+
+def file_type_of(file_name):
+    _, ext = splitext(file_name)
+    if ext in (".vhd", ".vhdl"):
+        return "vhdl"
+    elif ext in (".v", ".sv"):
+        return "verilog"
+    else:
+        raise RuntimeError("Unknown file ending: " + ext)
