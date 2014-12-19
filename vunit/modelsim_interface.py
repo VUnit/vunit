@@ -113,7 +113,7 @@ class ModelSimInterface:
             proc = Process(['vmap','-modelsimini', self._modelsim_ini, library_name, path])
             proc.consume_output(callback=None)
 
-    def _create_load_function(self, library_name, entity_name, architecture_name, generics, pli):
+    def _create_load_function(self, library_name, entity_name, architecture_name, generics, pli, output_path):
         set_generic_str = "".join(('    set vunit_generic_%s {%s}\n' % (name, value) for name, value in generics.items()))
         set_generic_name_str = " ".join(('-g%s="${vunit_generic_%s}"' % (name, name) for name in generics))
         pli_str = " ".join("-pli {%s}" %  fix_path(name) for name in pli)
@@ -129,8 +129,7 @@ proc vunit_load {{}} {{
     # Workaround -modelsimini flag not respected in some versions of modelsim
     global env
     set env(MODELSIM) "{modelsimini}"
-    vsim -modelsimini "{modelsimini}" -quiet -t ps {pli_str} {set_generic_name_str} {library_name}.{entity_name}{architecture_suffix}
-
+    vsim -wlf "{wlf_file_name}" -modelsimini "{modelsimini}" -quiet -t ps {pli_str} {set_generic_name_str} {library_name}.{entity_name}{architecture_suffix}
     set no_finished_signal [catch {{examine -internal {{/vunit_finished}}}}]
     set no_test_runner_exit [catch {{examine -internal {{/run_base_pkg/runner.exit_without_errors}}}}]
 
@@ -148,7 +147,8 @@ proc vunit_load {{}} {{
            set_generic_name_str=set_generic_name_str,
            library_name=library_name,
            entity_name=entity_name,
-           architecture_suffix=architecture_suffix)
+           architecture_suffix=architecture_suffix,
+           wlf_file_name=join(output_path, "vsim.wlf"))
 
         return tcl
 
@@ -197,7 +197,7 @@ proc vunit_run {} {
 """ % (1 if fail_on_warning else 2)
 
 
-    def _create_common_script(self, library_name, entity_name, architecture_name, generics, pli, fail_on_warning=False):
+    def _create_common_script(self, library_name, entity_name, architecture_name, generics, pli, fail_on_warning, output_path):
         """
         Create tcl script with functions common to interactive and batch modes
         """
@@ -208,7 +208,7 @@ proc vunit_help {} {
     echo {vunit_run  - Run test, must do vunit_load first}
 }
 """
-        tcl += self._create_load_function(library_name, entity_name, architecture_name, generics, pli)
+        tcl += self._create_load_function(library_name, entity_name, architecture_name, generics, pli, output_path)
         tcl += self._create_run_function(fail_on_warning)
         return tcl
 
@@ -275,11 +275,14 @@ proc vunit_help {} {
     def simulate(self, output_path, library_name, entity_name, architecture_name=None, generics=None, pli=None, load_only=None, fail_on_warning=False):
         generics = {} if generics is None else generics
         pli = [] if pli is None else pli
-        common_file_name = abspath(join(output_path, "msim", "common.do"))
-        user_file_name = abspath(join(output_path, "msim", "user.do"))
-        batch_file_name = abspath(join(output_path, "msim", "batch.do"))
+        msim_output_path = abspath(join(output_path, "msim"))
+        common_file_name = join(msim_output_path, "common.do")
+        user_file_name = join(msim_output_path, "user.do")
+        batch_file_name = join(msim_output_path, "batch.do")
 
-        common_do = self._create_common_script(library_name, entity_name, architecture_name, generics, pli, fail_on_warning)
+        common_do = self._create_common_script(library_name, entity_name, architecture_name, generics, pli,
+                                               fail_on_warning=fail_on_warning,
+                                               output_path=msim_output_path)
         user_do = self._create_user_script(common_file_name)
         batch_do = self._create_batch_script(common_file_name, load_only)
         write_file(common_file_name, common_do)
