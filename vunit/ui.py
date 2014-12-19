@@ -175,13 +175,13 @@ class VUnit:
         " Globally set pli "
         self._configuration.set_generic(value, scope="")
 
-    def add_source_files(self, pattern, library_name):
+    def add_source_files(self, pattern, library_name, file_type='vhdl'):
         """
         Add source files matching wildcard pattern to library
         """
         for file_name in glob(pattern):
             file_name = self._preprocess(library_name, abspath(file_name))
-            self._project.add_source_file(file_name, library_name)
+            self._project.add_source_file(file_name, library_name, file_type)
 
     def _preprocess(self, library_name, file_name):
         # @TODO dependency checking etc...
@@ -395,8 +395,8 @@ class LibraryFacade:
         " Set pli within library "
         self._parent._configuration.set_pli(value, scope=self._library_name)
 
-    def add_source_files(self, pattern):
-        self._parent.add_source_files(pattern, self._library_name)
+    def add_source_files(self, pattern, file_type='vhdl'):
+        self._parent.add_source_files(pattern, self._library_name, file_type)
 
     def entity(self, entity_name):
         library = self._parent._project._libraries[self._library_name]
