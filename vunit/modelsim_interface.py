@@ -37,7 +37,8 @@ class ModelSimInterface:
         Create the vsim process
         """
 
-        self._vsim_process = Process(["vsim", "-c"])
+        self._vsim_process = Process(["vsim", "-c",
+                                      "-l", join(dirname(self._modelsim_ini), "transcript")])
         self._vsim_process.write("#VUNIT_RETURN\n")
         self._vsim_process.consume_output(OutputConsumer(silent=True))
 
@@ -231,8 +232,9 @@ proc vunit_help {} {
 
     def _run_batch_file(self, batch_file_name):
         try:
-            proc = Process(['vsim', '-quiet', '-c', '-do',
-                            "do %s" % fix_path(batch_file_name)])
+            proc = Process(['vsim', '-quiet', '-c',
+                            "-l", join(dirname(batch_file_name), "transcript"),
+                            '-do', "do %s" % fix_path(batch_file_name)])
             proc.consume_output()
         except Process.NonZeroExitCode:
             return False
