@@ -435,4 +435,4 @@ def file_type_of(file_name):
     elif ext in (".v", ".sv"):
         return "verilog"
     else:
-        raise RuntimeError("Unknown file ending: " + ext)
+        raise RuntimeError("Unknown file ending '%s' of %s" % (ext, file_name))
