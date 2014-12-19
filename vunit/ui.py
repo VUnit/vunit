@@ -425,8 +425,11 @@ class EntityFacade:
         " Set pli within entity "
         self._config.set_pli(value, scope=self._name)
 
-    def add_config(self, *args, **kwargs):
-        self._config.add_config(*args, tb_name=self._name, **kwargs)
+    def add_config(self, name, generics, post_check=None):
+        self._config.add_config(tb_name=self._name,
+                                name=name,
+                                generics=generics,
+                                post_check=post_check)
 
 def file_type_of(file_name):
     _, ext = splitext(file_name)
