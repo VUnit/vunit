@@ -9,6 +9,7 @@ from os.path import abspath, join, dirname, basename
 from glob import glob
 from vunit.ui import VUnit
 from common import has_modelsim
+from vunit.check_preprocessor import CheckPreprocessor
 
 @unittest.skipUnless(has_modelsim(), 'Requires modelsim')
 class TestCheck(unittest.TestCase):
@@ -20,7 +21,6 @@ class TestCheck(unittest.TestCase):
                    output_path=output_path,
                    vhdl_standard=vhdl_standard,
                    compile_builtins=False)
-        ui.enable_check_preprocessing()
             
         ui.add_builtins('vunit_lib', mock_log=True)
         ui.add_library(r'lib') 
@@ -32,9 +32,9 @@ class TestCheck(unittest.TestCase):
             ui.add_source_files(join(vhdl_path, "test_count93.vhd"), 'lib')
 
         if vhdl_standard == '2008':
-            ui.add_source_files(join(vhdl_path, "tb_check_relation.vhd"), 'lib')
+            ui.add_source_files(join(vhdl_path, "tb_check_relation.vhd"), 'lib', [CheckPreprocessor()])
         else:
-            ui.add_source_files(join(vhdl_path, "tb_check_relation93_2002.vhd"), 'lib')
+            ui.add_source_files(join(vhdl_path, "tb_check_relation93_2002.vhd"), 'lib', [CheckPreprocessor()])
 
         for file_name in glob(join(vhdl_path, "tb_*.vhd")):
             if basename(file_name) == "tb_check_relation.vhd":

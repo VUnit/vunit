@@ -22,7 +22,7 @@ class TestExampleProjects(unittest.TestCase):
                     "--clean", 
                     "--output-path=%s" % self.output_path,
                     "--xunit-xml=%s" % self.report_file])
-        check_call([sys.executable, join(path, "uart", "run_with_location_preprocessing.py"), 
+        check_call([sys.executable, join(path, "uart", "run_with_preprocessing.py"), 
                     "--clean", 
                     "--output-path=%s" % self.output_path,
                     "--xunit-xml=%s" % self.report_file])

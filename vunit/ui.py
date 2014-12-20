@@ -138,8 +138,9 @@ class VUnit:
         self._tb_filter = tb_filter
         self._persistent_sim = persistent_sim
         self._configuration = TestConfiguration()
-        self._location_preprocessor = None
-        self._check_preprocessor = None
+        self._internal_preprocessors = []
+        self._external_preprocessors = []
+        self._enabled_preprocessors = []
 
         self._create_output_path()
 
@@ -177,28 +178,34 @@ class VUnit:
         " Globally set pli "
         self._configuration.set_generic(value, scope="")
 
-    def add_source_files(self, pattern, library_name):
+    def add_source_files(self, pattern, library_name, preprocessors = None):
         """
         Add source files matching wildcard pattern to library
         """
 
         for file_name in glob(pattern):
-            file_name = self._preprocess(library_name, abspath(file_name))
+            file_name = self._preprocess(library_name, abspath(file_name), preprocessors)
             self._project.add_source_file(file_name,
                                           library_name,
                                           file_type=file_type_of(file_name))
 
-    def _preprocess(self, library_name, file_name):
+    def _preprocess(self, library_name, file_name, preprocessors):
         # @TODO dependency checking etc...
 
-        if (library_name == 'vunit_lib') or ((self._location_preprocessor is None) and (self._check_preprocessor is None)):
+        global_preprocessors = self._external_preprocessors + self._internal_preprocessors
+        if (len(global_preprocessors) == 0) and (preprocessors is None):
             return file_name
 
         code = ostools.read_file(file_name)
-        if self._location_preprocessor:
-            code = self._location_preprocessor.run(code, basename(file_name))
-        if self._check_preprocessor:
-            code = self._check_preprocessor.run(code, basename(file_name))
+        if preprocessors is not None:
+            enabled_preprocessors = []
+            for p in preprocessors:
+                if str(p) not in enabled_preprocessors:
+                    code = p.run(code, basename(file_name))
+                    enabled_preprocessors.append(str(p))
+        else:
+            for p in global_preprocessors:
+                code = p.run(code, basename(file_name))
 
         pp_file_name = join(self._preprocessed_path,
                             library_name, basename(file_name))
@@ -213,20 +220,40 @@ class VUnit:
         ostools.write_file(pp_file_name, code)
         return pp_file_name
 
+    def add_preprocessor(self, preprocessor):
+        """
+        Add a custom preprocessor to be used on all files, must be called before adding any files
+        """
+        if str(preprocessor) in self._enabled_preprocessors:
+            return
+        
+        self._external_preprocessors.append(preprocessor)
+        self._enabled_preprocessors.append(str(preprocessor))
+
     def enable_location_preprocessing(self, additional_subprograms=None):
         """
         Enable location preprocessing, must be called before adding any files
         """
-        self._location_preprocessor = LocationPreprocessor()
+        if '__location_preprocessor__' in self._enabled_preprocessors:
+            return
+        
+        p = LocationPreprocessor()
         if not additional_subprograms is None:
             for subprogram in additional_subprograms:
-                self._location_preprocessor.add_subprogram(subprogram)
+                p.add_subprogram(subprogram)
+
+        self._internal_preprocessors.append(p)
+        self._enabled_preprocessors.append('__location_preprocessor__')
 
     def enable_check_preprocessing(self):
         """
         Enable check preprocessing, must be called before adding any files
         """
-        self._check_preprocessor = CheckPreprocessor()
+        if '__check_preprocessor__' in self._enabled_preprocessors:
+            return
+
+        self._internal_preprocessors.append(CheckPreprocessor())
+        self._enabled_preprocessors.append('__check_preprocessor__')
 
     def main(self):
         """
@@ -409,8 +436,8 @@ class LibraryFacade:
         " Set pli within library "
         self._parent._configuration.set_pli(value, scope=self._library_name)
 
-    def add_source_files(self, pattern):
-        self._parent.add_source_files(pattern, self._library_name)
+    def add_source_files(self, pattern, preprocessors=None):
+        self._parent.add_source_files(pattern, self._library_name, preprocessors)
 
     def entity(self, entity_name):
         library = self._parent._project._libraries[self._library_name]
