@@ -148,7 +148,7 @@ proc vunit_load {{}} {{
            library_name=library_name,
            entity_name=entity_name,
            architecture_suffix=architecture_suffix,
-           wlf_file_name=join(output_path, "vsim.wlf"))
+           wlf_file_name=fix_path(join(output_path, "vsim.wlf")))
 
         return tcl
 
