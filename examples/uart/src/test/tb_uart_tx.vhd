@@ -54,7 +54,7 @@ begin
         if received_bytes(index) = integer'left then
           wait on received_bytes until received_bytes(index) /= integer'left;
         end if;
-        check_equal(received_bytes(index), bytes(i),
+        check_relation(received_bytes(index) = bytes(i),
               file_name => file_name,
               line_num => line_num);
         index := index + 1;

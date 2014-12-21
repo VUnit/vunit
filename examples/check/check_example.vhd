@@ -18,12 +18,93 @@ architecture test of check_example is
   signal status_ok : std_logic;
   signal clk : std_logic := '0';
   signal check_en : std_logic := '0';
+  shared variable counter : integer := 0;
 begin
   example_process: process is
     alias note is info_low2[string, string, natural, string];
+    type cash_t is record
+      dollars : natural;
+      cents   : natural range 0 to 99;
+    end record cash_t;
+    type messages_t is array (boolean range <>) of string(1 to 6);
+
+    function "-" (
+      constant l : cash_t;
+      constant r : cash_t)
+      return cash_t is
+      variable diff : cash_t;
+    begin
+      
+      if r.cents > l.cents then
+        diff.cents := 100 + l.cents - r.cents;
+        diff.dollars := l.dollars - r.dollars - 1;
+      else
+        diff.cents := l.cents - r.cents;
+        diff.dollars := l.dollars - r.dollars;
+      end if;
+
+      return diff;
+    end function;
+
+    function ">" (
+      constant l : cash_t;
+      constant r : cash_t)
+      return boolean is
+    begin
+      return ((l.dollars > r.dollars) or
+              ((l.dollars = r.dollars) and (l.cents >= r.cents)));
+    end function;
+
+    function to_string (
+      constant value : cash_t)
+      return string is
+    begin
+      return "$" & natural'image(value.dollars) & "." & natural'image(value.cents);
+    end function to_string;
+
+    function len (
+      constant s : string)
+      return integer is
+    begin
+      return s'length;
+    end function len;
+
+    function "=" (
+      constant l : string;
+      constant r : string)
+      return string is
+    begin
+      return l & r;
+    end function "=";
+
+    function to_string (
+      constant s : string)
+      return string is
+    begin
+      return s;
+    end function to_string;
+
+    impure function inc
+      return integer is
+    begin
+      counter := counter + 1;
+      return counter;
+    end function inc;
+
+    procedure set (
+      constant value : integer) is
+    begin
+      counter := value;
+    end procedure set;
+    
+    variable savings, price : cash_t;
     variable all_reports : logger_t;
     variable my_checker : checker_t;
     variable pass, found_errors : boolean;
+    variable cnt : integer;
+
+    constant messages : messages_t := ("failed", "FAILED");
+    constant use_upper_case : boolean := true;
   begin  -- process example_process
     logger_init(display_format => level);
     rename_level(info_low2, "note");
@@ -115,6 +196,50 @@ begin
 
     ---------------------------------------------------------------------------
 
+    info("Checks are often used to verify a relation, e.g. a = b.");
+    info("check_relation together with the check_preprocessor will do that check while automatically generate the error message.");
+    info("It works on any type as long as the relation operator and the to_string function are defined for that type.");
+    price := (99, 95);
+    savings := (120,00);
+    if check_relation(savings > price, "Can't afford it.") then
+      info("Buying one.");
+      savings := savings - price;
+      check_relation(savings > price, "Can't afford another one.");
+    end if;
+
+    info("The check preprocessor isn't a full parser so a number of assumption are made to make it work");
+    info("   1. The expression given is an actual relation.");
+    info("   2. The relation must not contain calls to impure functions.");
+    info("   3. Only the relation parameter contains a top-level relational operator.");
+
+    info("This is not a relation but a boolean expression that will fail. However, the preprocessor treats it like an equality and the generated error message will say that left = right = false, i.e. it shouldn't have failed");
+    check_relation(false = false and false);
+
+    info("inc and set are two impure functions that increment and set the value of a counter respectively. The inc function returns the counter value after the increment.");
+    set(7);
+    check_relation(inc = 9, "This will give a confusing error message since the inc function is called twice. First when evaluating the relation and second when printing the value of the left side in the error message.");
+
+    info("One work-around is to extract the impure function call from the relation");
+    set(7);
+    cnt := inc;
+    check_relation(cnt = 9, "Now the error message makes sense.");    
+
+    info("in case your relation is an equality between two ""standard"" types you can use check_equal.");
+    set(7);
+    check_equal(inc, 9, "Also a correct error message.");
+    
+    info("""="" has been defined on string to be the same as ""&"". This will confuse the parser. Not a very likely use case!");
+    check_relation(msg => string'("Something ") = string'("failed!"), expr => 3 > 5);
+    info("Relations not at the top level are safe but still unlikely."); 
+    check_relation(msg => messages(use_upper_case = true), expr => 3 > 5);
+    
+    info("Follow these rules and it tries to handle other tricky things such as embedded comments and strings containing relational operators");
+    check_relation(len("""Heart"" => <3") = -- The string contains <, so does
+                                            -- this comment
+                   12, "Incorrect length of ""<3 message"".");
+    
+    ---------------------------------------------------------------------------
+
     info("There are also a number of other check types which differ in how the error condition is calculated but apart from that can be used in the same way as check/check_true.");
     info("Just a brief description is given here.");
     info("check_equal - Automatically generates error messages with left and right values in checks of equality between two values. Several types and combinations thereof are supported.");
@@ -127,7 +252,7 @@ begin
     info("check_next - Checks that the input condition is true a specified number of clock cycles after a start event.");
     info("check_sequence - Checks that there sequence of events happens in the order specified.");
     
-    wait;
+    assert false report "End of example" severity failure;
   end process example_process;
 
   clk <= not clk after 5 ns;

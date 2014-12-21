@@ -14,6 +14,7 @@ sys.path.append(path_to_vunit)
 from vunit import VUnit
 
 ui = VUnit.from_argv()
+ui.enable_check_preprocessing()
 lib = ui.add_library("lib")
 lib.add_source_files(join(dirname(__file__), "check_example.vhd"))
 ui.main()

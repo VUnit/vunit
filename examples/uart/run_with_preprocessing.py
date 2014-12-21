@@ -64,6 +64,56 @@ ui = VUnit.from_argv()
 
 ui.enable_location_preprocessing(additional_subprograms=["check_received_bytes"])
 
+# Enable check preprocessor
+# ----------------------------
+#
+# The check preprocessor looks for check_relation calls, generates an error message for the
+# checked relation and then add that error message to the call. For example, if you have a call
+#
+# check_relation(number_of_received_bytes <= number_of_sent_bytes);
+#
+# and that relation fail you will have an error message looking something like this provided
+# that the location preprocessor is enabled as well
+#
+# <some simulation time>: ERROR in (<file name>:<line number>): Relation number_of_received_bytes <= 
+# number_of_sent_bytes failed! Left is 18. Right is 17.
+#
+# check_relation can work with any VHDL relation, equalities included. For this reason it's worth
+# pointing out the differences with the check_equal call:
+#
+# - check_relation may not work properly when the relation contains a call to an impure function.
+#   The reason is that this function is called twice, once when the relation is evaluated and once
+#   when the left and righthand values are calculated for the error messages. Use check_equal if it
+#   supports the operand type or assign the result of the impure function call to a variable before the check
+#   and then use the variable in the check_relation call
+#
+# - check_relation generates an error message. Calling
+#
+#   check_equal(number_of_received_bytes, number_of_sent_bytes)
+#   
+#   without any error message would give this error message:
+#
+#   <time and location>: Equality check failed! Got 11. Expected 12.
+#
+#   i.e. there is no information on the relation itself unless you add a message of your own
+#
+#   check_equal(number_of_received_bytes, number_of_sent_bytes, "Number of sent and received bytes doesn't match.")
+#
+#   which would give
+#
+#   <time and location>: Equality check failed! Got 11. Expected 12. Number of sent and received
+#   bytes doesn't match.
+#
+# - check_relation work with any operand type as long as the to_string function and the relational operator
+#   are defined for that type. check_equal can compare operands of integer, natural, signed, unsigned,
+#   std_logic_vector in relevant combinations (std_logic_vector is interpreted as unsigned). check_equal
+#   can also compare std_logic and boolean in all combinations.
+#
+# - check_relation requires the preprocessor to be useful. It will still pass/fail correctly without but
+#   the error message will just be "Check failed!"
+
+ui.enable_check_preprocessing()
+
 src_path = join(dirname(__file__), "src")
 
 uart_lib = ui.add_library("uart_lib")
