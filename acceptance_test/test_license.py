@@ -11,7 +11,7 @@ from re import compile
 
 class TestLicense(unittest.TestCase):
     def test_that_a_license_notice_exists_in_every_source_file(self):
-        license_notice = compile(r"""(?P<comment_start>#|--) This Source Code Form is subject to the terms of the Mozilla Public
+        license_notice = compile(r"""(?P<comment_start>#|--|//) This Source Code Form is subject to the terms of the Mozilla Public
 (?P=comment_start) License, v\. 2\.0\. If a copy of the MPL was not distributed with this file,
 (?P=comment_start) You can obtain one at http://mozilla\.org/MPL/2\.0/\.
 (?P=comment_start)
@@ -20,7 +20,7 @@ class TestLicense(unittest.TestCase):
             for f in files:
                 if 'preprocessed' in root:
                     continue
-                if splitext(f)[1] in ['.vhd', '.vhdl', '.py']:
+                if splitext(f)[1] in ['.vhd', '.vhdl', '.py', '.v', '.sv']:
                     with open(join(root, f)) as fp:
                         code = fp.read()
                         match = license_notice.search(code)
