@@ -134,10 +134,10 @@ if run("Test_2")
         error_calls = mock_logger.error.call_args_list
         self.assertEqual(len(error_calls), 2)
         self.assertTrue("Test_3" in str(error_calls[0]))
-        self.assertTrue(out("entity_arch.vhd") in str(error_calls[0]))
+        self.assertTrue(out("entity_arch.vhd") in error_calls[0][0][0])
 
         self.assertTrue("Test_2" in str(error_calls[1]))
-        self.assertTrue(out("entity_arch.vhd") in str(error_calls[1]))
+        self.assertTrue(out("entity_arch.vhd") in error_calls[1][0][0])
 
 
     def test_create_default_test_with_runner_cfg_generic(self):
