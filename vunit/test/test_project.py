@@ -218,7 +218,7 @@ end architecture;
 
         for file_name in ["file1.vhd", "file2.vhd", "file3.vhd"]:
             self.update(file_name)
-            self.assertIn(join("work_path", "%s.vunit_hash" % file_name), self.stub._files.keys())
+            self.assertIn(self.project._hash_file_name_of(self.get_source_file(file_name)), self.stub._files.keys())
 
     def test_should_not_recompile_updated_files(self):
         self.create_dummy_three_file_project()
@@ -272,7 +272,7 @@ end architecture;
         self.update("file3.vhd")
         self.assert_should_recompile([])
 
-        self.stub.remove_file(join("work_path", "file2.vhd.vunit_hash"))
+        self.stub.remove_file(self.project._hash_file_name_of(self.get_source_file("file2.vhd")))
         self.assert_should_recompile(["file2.vhd", "file3.vhd"])
 
     def create_dummy_three_file_project(self, update_file1=False):
@@ -325,6 +325,9 @@ end architecture;
     def add_source_file(self, library_name, file_name, contents):
         self.stub.write_file(file_name, contents)
         self.project.add_source_file(file_name, library_name)
+
+    def get_source_file(self, file_name):
+        return self.project._source_files[file_name]
 
     def update(self, file_name):
         self.project.update(self.project._source_files[file_name])
