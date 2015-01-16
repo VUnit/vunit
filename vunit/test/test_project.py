@@ -120,6 +120,21 @@ end entity;
         self.update("foo1_ent.vhd")
         self.assert_should_recompile(["foo_arch.vhd"])
         
+    def test_multiple_identical_file_names_with_different_path_in_same_library(self):
+        self.project.add_library("lib", "lib_path")
+        self.add_source_file("lib", join("a", "foo.vhd"), """
+entity a_foo is
+end entity;
+""")
+
+        self.add_source_file("lib", join("b", "foo.vhd"), """
+entity b_foo is
+end entity;
+""")
+        self.assert_should_recompile([join("a", "foo.vhd"), join("b", "foo.vhd")])
+        self.update(join("a", "foo.vhd"))
+        self.update(join("b", "foo.vhd"))
+        self.assert_should_recompile([])
 
     def test_finds_entity_architecture_dependencies(self):
         self.project.add_library("lib", "lib_path")
