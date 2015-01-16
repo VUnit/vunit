@@ -10,7 +10,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 import hashlib
-from os.path import join, basename
+from os.path import join, basename, dirname
 
 from vunit.dependency_graph import DependencyGraph
 from vunit.vhdl_parser import VHDLDesignFile
@@ -310,7 +310,8 @@ class Project:
 
     def _hash_file_name_of(self, source_file):
         library = self.get_library(source_file.library.name)
-        return join(library.directory, basename(source_file.name) + ".vunit_hash")
+        md5_prefix = hashlib.md5(dirname(source_file.name).encode()).hexdigest()
+        return join(library.directory, md5_prefix, basename(source_file.name) + ".vunit_hash")
 
     def update(self, source_file):
         new_md5 = source_file.md5()
