@@ -52,6 +52,6 @@ Olof Kraigher
 VUnit is released under the terms of [Mozilla Public
 License, v. 2.0](http://mozilla.org/MPL/2.0/).
 
-&copy; 2014 Lars Asplund, lars.anders.asplund@gmail.com.
+&copy; 2014-2015 Lars Asplund, lars.anders.asplund@gmail.com.
 
 
