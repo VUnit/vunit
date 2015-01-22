@@ -13,7 +13,8 @@ from fnmatch import fnmatch
 @unittest.skipUnless(has_modelsim(), "Requires modelsim")
 class TestVunitEndToEnd(unittest.TestCase):
     def setUp(self):
-        self.output_path = join(dirname(__file__), "end_to_end_out")
+        # Spaces in path intentional to verify that it is supported
+        self.output_path = join(dirname(__file__), "end to end out")
         self.report_file = join(self.output_path, "xunit.xml")
 
     def test_artificial_with_persistent(self):

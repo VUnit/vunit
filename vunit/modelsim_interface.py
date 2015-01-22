@@ -129,7 +129,7 @@ proc vunit_load {{}} {{
     # Workaround -modelsimini flag not respected in some versions of modelsim
     global env
     set env(MODELSIM) "{modelsimini}"
-    vsim -wlf "{wlf_file_name}" -modelsimini "{modelsimini}" -quiet -t ps {pli_str} {set_generic_name_str} {library_name}.{entity_name}{architecture_suffix}
+    vsim -wlf "{wlf_file_name}" -quiet -t ps {pli_str} {set_generic_name_str} {library_name}.{entity_name}{architecture_suffix}
     set no_finished_signal [catch {{examine -internal {{/vunit_finished}}}}]
     set no_test_runner_exit [catch {{examine -internal {{/run_base_pkg/runner.exit_without_errors}}}}]
 
@@ -326,4 +326,4 @@ class OutputConsumer:
 
 def fix_path(path):
     """ Modelsim does not like backslash """
-    return path.replace("\\", "/")
+    return path.replace("\\", "/").replace(" ", "\\ ")
