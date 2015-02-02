@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -306,6 +306,10 @@ begin
     counting_assert(to_integer_string(unsigned'(X"80000000")) = "2147483648", "Should return correct value for minimum natural above what's covered by 32-bit integer implementations.");
     counting_assert(to_integer_string(unsigned'(X"7b283d038f92b837d92f73a87380a")) = "39966790250241720040714860591790090", "Should handle really large values.");
     counting_assert(to_integer_string(unsigned'(X"00000000000000000000000000000")) = "0", "Should handle long zeros.");
+    counting_assert(to_integer_string(unsigned'("00LL11HH")) = "15", "Should handle weak bits");
+    counting_assert(to_integer_string(unsigned'("011110110010100000111101LLLL00111000HHHH1001001010111000001101111101100100101111011100111010100001110011100000001010")) = "39966790250241720040714860591790090", "Should handle really large values containing weak bits.");
+    counting_assert(to_integer_string(unsigned'("1000000-")) = "NaN", "Should return NaN on vectors containing metalogical values");
+    counting_assert(to_integer_string(unsigned'("1000000---000000000000000000000000000000000")) = "NaN", "Should return NaN on long vectors containing metalogical values");
 
     counting_assert(to_integer_string(std_logic_vector'("")) = "0", "Should return 0 on empty input");
     counting_assert(to_integer_string(std_logic_vector'("0")) = natural'image(natural'low), "Should return correct value for minimum natural value.");
@@ -313,7 +317,12 @@ begin
     counting_assert(to_integer_string(std_logic_vector'(X"80000000")) = "2147483648", "Should return correct value for minimum natural above what's covered by 32-bit integer implementations.");
     counting_assert(to_integer_string(std_logic_vector'(X"7b283d038f92b837d92f73a87380a")) = "39966790250241720040714860591790090", "Should handle really large values.");
     counting_assert(to_integer_string(std_logic_vector'(X"00000000000000000000000000000")) = "0", "Should handle long zeros.");
+    counting_assert(to_integer_string(std_logic_vector'("00LL11HH")) = "15", "Should handle weak bits");
+    counting_assert(to_integer_string(std_logic_vector'("011110110010100000111101LLLL00111000HHHH1001001010111000001101111101100100101111011100111010100001110011100000001010")) = "39966790250241720040714860591790090", "Should handle really large values containing weak bits.");
+    counting_assert(to_integer_string(std_logic_vector'("1000000-")) = "NaN", "Should return NaN on vectors containing metalogical values");
+    counting_assert(to_integer_string(std_logic_vector'("1000000---000000000000000000000000000000000")) = "NaN", "Should return NaN on long vectors containing metalogical values");
 
+    
     counting_assert(to_integer_string(signed'("")) = "0", "Should return 0 on empty input");
     counting_assert(to_integer_string(signed'(X"80000000")) = integer'image(-2147483648), "Should return correct value for minimum value in 32-bit integer implementations.");
     counting_assert(to_integer_string(signed'(X"7fffffff")) = integer'image(2147483647), "Should return correct value for maximum value in 32-bit integer implementations.");
@@ -322,6 +331,10 @@ begin
     counting_assert(to_integer_string(signed'(X"ab283d038f92b837d92f73a87380a")) = "-27533068910711039130181591688071158", "Should handle really small values.");
     counting_assert(to_integer_string(signed'(X"7b283d038f92b837d92f73a87380a")) = "39966790250241720040714860591790090", "Should handle really large values.");
     counting_assert(to_integer_string(signed'(X"00000000000000000000000000000")) = "0", "Should handle long zeros.");
+    counting_assert(to_integer_string(signed'("00LL11HH")) = "15", "Should handle weak bits");
+    counting_assert(to_integer_string(signed'("011110110010100000111101LLLL00111000HHHH1001001010111000001101111101100100101111011100111010100001110011100000001010")) = "39966790250241720040714860591790090", "Should handle really large values containing weak bits.");
+    counting_assert(to_integer_string(signed'("1000000-")) = "NaN", "Should return NaN on vectors containing metalogical values");
+    counting_assert(to_integer_string(signed'("1000000---000000000000000000000000000000000")) = "NaN", "Should return NaN on long vectors containing metalogical values");
 
     ---------------------------------------------------------------------------
     banner("Verify to_nibble_string");

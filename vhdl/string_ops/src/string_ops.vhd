@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -494,6 +494,10 @@ package body string_ops is
     variable ret_val, reversed_ret_val : line;
     variable last_digit, quotient : unsigned(value'length - 1 downto 0);
   begin
+    if is_x(std_logic_vector(value)) then
+      return "NaN";
+    end if;
+    
     if value = (value'range => '0') then
       return "0";
     end if;
@@ -538,6 +542,10 @@ package body string_ops is
     variable value_internal_extended: signed(value'length downto 0);
     constant minus_one: signed(value'length downto 0) := (others => '1');
   begin
+    if is_x(std_logic_vector(value)) then
+      return "NaN";
+    end if;
+
     if value'length <= 32 then
       return integer'image(to_integer(value));
     end if;
