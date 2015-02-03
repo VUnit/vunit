@@ -5,7 +5,7 @@
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 import unittest
-from os.path import join, normpath, splitext
+from os.path import join, normpath, splitext, abspath, commonprefix
 from os import walk
 from re import compile
 from subprocess import Popen, PIPE, STDOUT
@@ -23,6 +23,9 @@ class TestLicense(unittest.TestCase):
         for root, dirs, files in walk(normpath(join(__file__, '..', '..'))):
             for f in files:
                 if 'preprocessed' in root:
+                    continue
+                osvvm_directory = abspath(join('..', 'vhdl', 'osvvm'))
+                if commonprefix([osvvm_directory, abspath(join(root, f))]) == osvvm_directory:
                     continue
                 if splitext(f)[1] in ['.vhd', '.vhdl', '.py', '.v', '.sv']:
                     licensed_files.append(join(root, f))
