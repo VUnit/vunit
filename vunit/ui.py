@@ -226,7 +226,7 @@ class VUnit:
         """
         if str(preprocessor) in self._enabled_preprocessors:
             return
-        
+
         self._external_preprocessors.append(preprocessor)
         self._enabled_preprocessors.append(str(preprocessor))
 
@@ -236,7 +236,7 @@ class VUnit:
         """
         if '__location_preprocessor__' in self._enabled_preprocessors:
             return
-        
+
         p = LocationPreprocessor()
         if not additional_subprograms is None:
             for subprogram in additional_subprograms:
@@ -418,6 +418,15 @@ class VUnit:
         library = self.add_library(library_name)
         for file_name in files:
             library.add_source_files(abspath(join(dirname(__file__), "..", "vhdl", file_name)))
+
+    def add_osvvm(self, library_name="osvvm"):
+        if not library_name in self._project._libraries:
+            library = self.add_library(library_name)
+        else:
+            library = self.library(library_name)
+
+        library.add_source_files(abspath(join(dirname(__file__), "..", "vhdl", "osvvm", "*.vhd")),
+                                 preprocessors=[]) # No pre-processing at all
 
 class LibraryFacade:
     """
