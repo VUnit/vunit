@@ -5,7 +5,7 @@
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 import unittest
-from os.path import join, normpath, splitext, abspath, commonprefix
+from os.path import join, dirname, splitext, abspath, commonprefix
 from os import walk
 from re import compile
 from subprocess import Popen, PIPE, STDOUT
@@ -20,11 +20,12 @@ class TestLicense(unittest.TestCase):
 (?P=comment_start) Copyright \(c\) (?P<first_year>20\d\d)(-(?P<last_year>20\d\d))?, Lars Asplund lars\.anders\.asplund@gmail\.com""")
         log_date = compile(r'Date:\s*(?P<year>20\d\d)-\d\d-\d\d')
         licensed_files = []
-        for root, dirs, files in walk(normpath(join(__file__, '..', '..'))):
+        repo_root = abspath(join(dirname(__file__), '..'))
+        for root, dirs, files in walk(repo_root):
             for f in files:
                 if 'preprocessed' in root:
                     continue
-                osvvm_directory = abspath(join('..', 'vhdl', 'osvvm'))
+                osvvm_directory = abspath(join(repo_root, 'vhdl', 'osvvm'))
                 if commonprefix([osvvm_directory, abspath(join(root, f))]) == osvvm_directory:
                     continue
                 if splitext(f)[1] in ['.vhd', '.vhdl', '.py', '.v', '.sv']:
@@ -52,13 +53,10 @@ class TestLicense(unittest.TestCase):
                 match = license_notice.search(code)
                 self.assertIsNotNone(match, "Failed to find license notice in %s" % f)
                 if first_year == last_year:
-                    self.assertEqual(int(match.group('first_year')), first_year, 'Expected copyright year to be %d in %s' % (first_year, f)) 
+                    self.assertEqual(int(match.group('first_year')), first_year, 'Expected copyright year to be %d in %s' % (first_year, f))
                     self.assertIsNone(match.group('last_year'), 'Expected no copyright years range in %s' % join(root, f))
                 else:
                     self.assertIsNotNone(match.group('last_year'), 'Expected copyright year range %d-%d in %s' % (first_year, last_year, f))
-                    self.assertEqual(int(match.group('first_year')), first_year, 'Expected copyright year range to start with %d in %s' % (first_year, f)) 
+                    self.assertEqual(int(match.group('first_year')), first_year, 'Expected copyright year range to start with %d in %s' % (first_year, f))
                     self.assertEqual(int(match.group('last_year')), last_year, 'Expected copyright year range to end with %d in %s' % (last_year, f))
         print('\n')
-                            
-                        
-
