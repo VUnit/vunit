@@ -14,6 +14,7 @@ sys.path.append(path_to_vunit)
 from vunit import VUnit
 
 ui = VUnit.from_argv()
+ui.add_osvvm()
 
 # Enable location preprocessor
 # ----------------------------
@@ -75,7 +76,7 @@ ui.enable_location_preprocessing(additional_subprograms=["check_received_bytes"]
 # and that relation fail you will have an error message looking something like this provided
 # that the location preprocessor is enabled as well
 #
-# <some simulation time>: ERROR in (<file name>:<line number>): Relation number_of_received_bytes <= 
+# <some simulation time>: ERROR in (<file name>:<line number>): Relation number_of_received_bytes <=
 # number_of_sent_bytes failed! Left is 18. Right is 17.
 #
 # check_relation can work with any VHDL relation, equalities included. For this reason it's worth
@@ -90,7 +91,7 @@ ui.enable_location_preprocessing(additional_subprograms=["check_received_bytes"]
 # - check_relation generates an error message. Calling
 #
 #   check_equal(number_of_received_bytes, number_of_sent_bytes)
-#   
+#
 #   without any error message would give this error message:
 #
 #   <time and location>: Equality check failed! Got 11. Expected 12.

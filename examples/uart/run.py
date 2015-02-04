@@ -14,6 +14,7 @@ sys.path.append(path_to_vunit)
 from vunit import VUnit
 
 ui = VUnit.from_argv()
+ui.add_osvvm()
 
 src_path = join(dirname(__file__), "src")
 

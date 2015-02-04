@@ -11,6 +11,9 @@ use ieee.numeric_std.all;
 library vunit_lib;
 context vunit_lib.vunit_context;
 
+library osvvm;
+use osvvm.RandomPkg.all;
+
 library uart_lib;
 
 library tb_uart_lib;
@@ -21,7 +24,7 @@ entity tb_uart_tx is
     runner_cfg : runner_cfg_t := runner_cfg_default);
 end entity;
 
-architecture tb of tb_uart_tx is  
+architecture tb of tb_uart_tx is
   constant baud_rate : integer := 115200; -- bits / s
   constant clk_period : integer := 20; -- ns
   constant cycles_per_bit : integer := 50 * 10**6 / baud_rate;
@@ -32,37 +35,27 @@ architecture tb of tb_uart_tx is
   signal tvalid : std_Logic := '0';
   signal tdata : std_logic_vector(7 downto 0) := (others => '0');
 
-  signal received_bytes : integer_vector(0 to 127);
+  signal num_sent, num_recv : integer := 0;
+  shared variable rnd_stimuli, rnd_expected : RandomPType;
 begin
 
   main : process
     variable index : integer := 0;
-    procedure send(value : integer) is
+
+    procedure send is
     begin
       tvalid <= '1';
-      tdata <= std_logic_vector(to_unsigned(value, tdata'length));
+      tdata <= std_logic_vector(to_unsigned(rnd_stimuli.RandInt(0, 2**tdata'length-1), tdata'length));
       wait until tvalid = '1' and tready = '1' and rising_edge(clk);
+      num_sent <= num_sent + 1;
       tvalid <= '0';
       tdata <= (others => '0');
     end procedure;
 
-    procedure check_received_bytes(bytes : integer_vector;
-                                   line_num : natural := 0;
-                                   file_name : string := "") is 
+    procedure check_all_was_received is
     begin
-      for i in 0 to bytes'length-1 loop
-        if received_bytes(index) = integer'left then
-          wait on received_bytes until received_bytes(index) /= integer'left;
-        end if;
-        check_relation(received_bytes(index) = bytes(i),
-              file_name => file_name,
-              line_num => line_num);
-        index := index + 1;
-      end loop;
-      wait on received_bytes for 1 ms;
-      check_equal(received_bytes(index), integer'left, "Number of sent and received bytes doesn't match",
-            file_name => file_name,
-            line_num => line_num);
+      wait until num_recv = num_sent for 1 ms;
+      check_equal(num_recv, num_sent);
     end procedure;
 
     variable stat : checker_stat_t;
@@ -77,27 +70,32 @@ begin
     stop_level((debug, verbose), display_handler, filter);
     test_runner_setup(runner, runner_cfg);
 
+    -- Initialize to same seed to get same sequence
+    rnd_stimuli.InitSeed(rnd_stimuli'instance_name);
+    rnd_expected.InitSeed(rnd_stimuli'instance_name);
+
     while test_suite loop
       if run("test_send_one_byte") then
-        send(77);
-        check_received_bytes((0 => 77))   ;
+        send;
+        check_all_was_received;
       elsif run("test_send_two_bytes") then
-        send(11);
-        send(1);
-        check_received_bytes((11,1));
+        send;
+        check_all_was_received;
+        send;
+        check_all_was_received;
       elsif run("test_send_many_bytes") then
-        send(16#a5#);
-        send(16#5a#);
-        send(16#ff#);
-        check_received_bytes((16#a5#, 16#5a#, 16#ff#));
+        for i in 0 to 7 loop
+          send;
+        end loop;
+        check_all_was_received;
       end if;
     end loop;
 
     if not active_python_runner(runner_cfg) then
       get_checker_stat(stat);
       info(LF & "Result:" & LF & to_string(stat));
-    end if;    
-    
+    end if;
+
     test_runner_cleanup(runner);
     wait;
   end process;
@@ -105,16 +103,15 @@ begin
 
   uart_rx_behav : process
     variable data : integer;
-    variable index : integer := 0;
   begin
     uart_recv(data, tx, baud_rate);
-    received_bytes(index) <= data;
-    debug("Received " & to_string(data));
-    index := index + 1;
+    num_recv <= num_recv + 1;
+    report "Received " & to_string(data);
+    check_equal(data, rnd_expected.RandInt(0, 2**tdata'length-1));
   end process;
 
   clk <= not clk after (clk_period/2) * 1 ns;
-  
+
   dut : entity uart_lib.uart_tx
     generic map (
       cycles_per_bit => cycles_per_bit)
