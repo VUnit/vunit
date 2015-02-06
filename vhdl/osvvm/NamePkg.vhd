@@ -25,7 +25,7 @@
 --    06/2010:  0.1        Initial revision
 --    07/2014:  2014.07    Moved specialization required by CoveragePkg to CoveragePkg
 --                         Separated name handling from message handling to simplify naming
---    07/2014:  2014.07a   Removed initialized pointers which can lead to memory leaks.
+--    12/2014:  2014.07a   Removed initialized pointers which can lead to memory leaks.
 --
 --
 --  Copyright (c) 2010 - 2014 by SynthWorks Design Inc.  All rights reserved.
@@ -55,15 +55,19 @@ package NamePkg is
   type NamePType is protected
     procedure Set (NameIn : String) ;
     impure function Get return string ;
+    impure function GetOpt return string ;
     impure function IsSet return boolean ; 
     procedure Clear ; -- clear name
     procedure Deallocate ; -- effectively alias to clear name
   end protected NamePType ;
 
 end package NamePkg ;
-package body NamePkg is
-      
 
+--- ///////////////////////////////////////////////////////////////////////////
+--- ///////////////////////////////////////////////////////////////////////////
+--- ///////////////////////////////////////////////////////////////////////////
+
+package body NamePkg is
   type NamePType is protected body
   
     variable NamePtr   : line ;
@@ -86,6 +90,17 @@ package body NamePkg is
         return NamePtr.all ; 
       end if ; 
     end function Get ;
+
+    ------------------------------------------------------------
+    impure function GetOpt return string is
+    ------------------------------------------------------------
+    begin
+      if NamePtr = NULL then 
+        return NUL & "" ; 
+      else
+        return NamePtr.all ; 
+      end if ; 
+    end function GetOpt ;
 
     ------------------------------------------------------------
     impure function IsSet return boolean is 

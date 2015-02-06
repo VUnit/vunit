@@ -1,7 +1,7 @@
 --
 --  File Name:         MessagePkg.vhd
 --  Design Unit Name:  MessagePkg
---  Revision:          STANDARD VERSION,  revision 2014.01
+--  Revision:          STANDARD VERSION,  revision 2015.01
 --
 --  Maintainer:        Jim Lewis      email:  jim@synthworks.com
 --  Contributor(s):
@@ -25,9 +25,10 @@
 --    06/2010:  0.1        Initial revision
 --    07/2014:  2014.07    Moved specialization required by CoveragePkg to CoveragePkg
 --    07/2014:  2014.07a   Removed initialized pointers which can lead to memory leaks.
+--    01/2015:  2015.01    Removed initialized parameter from Get
 --
 --
---  Copyright (c) 2010 - 2014 by SynthWorks Design Inc.  All rights reserved.
+--  Copyright (c) 2010 - 2015 by SynthWorks Design Inc.  All rights reserved.
 --
 --  Verbatim copies of this source file may be used and
 --  distributed without restriction.
@@ -46,6 +47,8 @@
 --  If not download it from,
 --     http://www.perlfoundation.org/artistic_license_2_0
 --
+use work.OsvvmGlobalPkg.all ; 
+use work.AlertLogPkg.all ; 
 
 library ieee ;
 use ieee.std_logic_1164.all ;
@@ -58,7 +61,7 @@ package MessagePkg is
   type MessagePType is protected
 
     procedure Set (MessageIn : String) ;
-    impure function Get (ItemNumber : integer := 1) return string ; 
+    impure function Get (ItemNumber : integer) return string ; 
     impure function GetCount return integer ; 
     impure function IsSet return boolean ; 
     procedure Clear ; -- clear message
@@ -67,6 +70,11 @@ package MessagePkg is
   end protected MessagePType ;
 
 end package MessagePkg ;
+
+--- ///////////////////////////////////////////////////////////////////////////
+--- ///////////////////////////////////////////////////////////////////////////
+--- ///////////////////////////////////////////////////////////////////////////
+
 package body MessagePkg is
 
   -- Local Data Structure Types
@@ -102,18 +110,18 @@ package body MessagePkg is
     end procedure Set ; 
 
     ------------------------------------------------------------
-    impure function Get (ItemNumber : integer := 1) return string is
+    impure function Get (ItemNumber : integer) return string is
     ------------------------------------------------------------
     begin
       if MessageCount > 0 then 
         if ItemNumber >= 1 and ItemNumber <= MessageCount then 
           return MessagePtr(ItemNumber).all ; 
         else
-          report LF & "%% MessagePkg:MessagePType.GetMessage input value out of range" severity failure ; 
+          Alert(OSVVM_ALERTLOG_ID, "%% MessagePkg.Get input value out of range", FAILURE) ; 
           return "" ; -- error if this happens 
         end if ; 
       else 
-        report LF & "%% MessagePkg:MessagePType.GetMessage message is not set" severity failure ; 
+        Alert(OSVVM_ALERTLOG_ID, "%% MessagePkg.Get message is not set", FAILURE) ; 
         return "" ; -- error if this happens 
       end if ;
     end function Get ; 
@@ -153,7 +161,4 @@ package body MessagePkg is
     end procedure Clear ;
 
   end protected body MessagePType ;
-
 end package body MessagePkg ;
-
-

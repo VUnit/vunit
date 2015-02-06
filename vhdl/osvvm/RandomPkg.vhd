@@ -1,7 +1,7 @@
 --
 --  File Name :         RandomPkg.vhd
 --  Design Unit Name :  RandomPkg
---  Revision :          STANDARD VERSION,  revision 2014.01
+--  Revision :          STANDARD VERSION,  revision 2015.01
 --
 --  Maintainer :        Jim Lewis      email :  jim@synthworks.com
 --  Contributor(s) :
@@ -28,29 +28,24 @@
 --  Revision History :
 --    Date       Version    Description
 --    12/2006 :  0.1        Initial revision
---                          Numerous revisions for VHDL Testbenches and Verification
+--                          Numerous revisions for SynthWorks' Advanced VHDL Testbenches and Verification
 --    02/2009 :  1.0        First Public Released Version
 --    02/25/2009 1.1        Replaced reference to std_2008 with a reference to
 --                          ieee_proposed.standard_additions.all ;
 --    06/2010    1.2        Added Normal and Poisson distributions
---    03/2011    2.0        Major clean-up.
---                          Moved RandomParmType and control to here
+--    03/2011    2.0        Major clean-up. Moved RandomParmType and control to here
 --    07/2011    2.1        Bug fix to convenience functions for slv, unsigned, and signed.
 --    06/2012    2.2        Removed '_' in the name of subprograms FavorBig and FavorSmall
---                          to make more consistent with other subprogram names
---    04/2013    2013.04    Changed DistInt
---                             Now returns input array range.
---                             For literals, no impact. It still returns 0 to N-1 (the default array range)
---                             Impacts named constants, signals, or variables.
---                             Added error checking to weight values
+--    04/2013    2013.04    Changed DistInt.  Return array indices now match input
 --                          Better Min, Max error handling in Uniform, FavorBig, FavorSmall, Normal, Poisson
 --    5/2013     -          Removed extra variable declaration in functions RandInt and RandReal
 --    5/2013     2013.05    Big vector randomization added overloading RandUnsigned, RandSlv, and RandSigned
 --                          Added NULL_RANGE_TYPE to minimize null range warnings
 --    1/2014     2014.01    Added RandTime, RandReal(set), RandIntV, RandRealV, RandTimeV
 --                          Made sort, revsort from SortListPkg_int visible via aliases
+--    1/2015     2015.01    Changed Assert/Report to Alert
 --
---  Copyright (c) 2006 - 2014 by SynthWorks Design Inc.  All rights reserved.
+--  Copyright (c) 2006 - 2015 by SynthWorks Design Inc.  All rights reserved.
 --
 --  Verbatim copies of this source file may be used and
 --  distributed without restriction.
@@ -70,6 +65,8 @@
 --     http ://www.perlfoundation.org/artistic_license_2_0
 --
 
+use work.OsvvmGlobalPkg.all ; 
+use work.AlertLogPkg.all ; 
 use work.RandomBasePkg.all ;
 use work.SortListPkg_int.all ;
 
@@ -215,7 +212,6 @@ package RandomPkg is
       Exclude       : integer_vector := NULL_INTV
     ) return integer ;
 
-
     -- randomization with a range
     impure function RandInt (Min, Max : integer) return integer ;
     impure function RandReal(Min, Max : Real) return real ;
@@ -229,7 +225,6 @@ package RandomPkg is
     impure function RandTimeV (Min, Max : time ; Size : natural ; Unit : time := ns) return time_vector ;
     impure function RandTimeV (Min, Max : time ; Unique : natural ; Size : natural ; Unit : time := ns) return time_vector ;
 
-
     --  randomization with a range and exclude vector
     impure function RandInt (Min, Max : integer ; Exclude : integer_vector ) return integer ;
     impure function RandTime (Min, Max : time ; Exclude : time_vector ; Unit : time := ns) return time ;
@@ -240,7 +235,6 @@ package RandomPkg is
     impure function RandIntV (Min, Max : integer ; Exclude : integer_vector ; Unique : natural ; Size : natural) return integer_vector ;
     impure function RandTimeV (Min, Max : time ; Exclude : time_vector ; Size : natural ; Unit : in time := ns) return time_vector ;
     impure function RandTimeV (Min, Max : time ; Exclude : time_vector ; Unique : natural ; Size : natural ; Unit : in time := ns) return time_vector ;
-
 
     -- Randomly select a value within a set of values
     impure function RandInt ( A : integer_vector ) return integer ;
@@ -256,7 +250,6 @@ package RandomPkg is
     impure function RandTimeV (A : time_vector ; Size : natural) return time_vector ;
     impure function RandTimeV (A : time_vector ; Unique : natural ; Size : natural) return time_vector ;
 
-
     -- Randomly select a value within a set of values with exclude values (so can skip last or last n)
     impure function RandInt ( A, Exclude : integer_vector  ) return integer ;
     impure function RandReal ( A, Exclude : real_vector ) return real ;
@@ -271,7 +264,6 @@ package RandomPkg is
     impure function RandTimeV (A, Exclude : time_vector ; Size : natural) return time_vector ;
     impure function RandTimeV (A, Exclude : time_vector ; Unique : natural ; Size : natural) return time_vector ;
 
-
     -- Randomly select between 0 and N-1 based on the specified weight.
     -- where N = number values in weight array
     impure function DistInt ( Weight : integer_vector ) return integer ;
@@ -279,13 +271,11 @@ package RandomPkg is
     impure function DistUnsigned ( Weight : integer_vector ; Size  : natural ) return unsigned ;
     impure function DistSigned ( Weight : integer_vector ; Size  : natural ) return signed ;
 
-
     -- Distribution with just weights and with exclude values
     impure function DistInt ( Weight : integer_vector ; Exclude : integer_vector ) return integer ;
     impure function DistSlv ( Weight : integer_vector ; Exclude : integer_vector ; Size  : natural ) return std_logic_vector ;
     impure function DistUnsigned ( Weight : integer_vector ; Exclude : integer_vector ; Size  : natural ) return unsigned ;
     impure function DistSigned ( Weight : integer_vector ; Exclude : integer_vector ; Size  : natural ) return signed ;
-
 
     -- Distribution with weight and value
     impure function DistValInt ( A : DistType ) return integer ;
@@ -293,13 +283,11 @@ package RandomPkg is
     impure function DistValUnsigned ( A : DistType ; Size  : natural) return unsigned ;
     impure function DistValSigned ( A : DistType ; Size  : natural) return signed ;
 
-
     -- Distribution with weight and value and with exclude values
     impure function DistValInt ( A : DistType ; Exclude : integer_vector ) return integer ;
     impure function DistValSlv ( A : DistType ; Exclude : integer_vector ; Size  : natural) return std_logic_vector ;
     impure function DistValUnsigned ( A : DistType ; Exclude : integer_vector ; Size  : natural) return unsigned ;
     impure function DistValSigned ( A : DistType ; Exclude : integer_vector ; Size  : natural) return signed ;
-
 
     -- Large vector handling.
     impure function RandUnsigned (Size : natural) return unsigned ;
@@ -311,7 +299,6 @@ package RandomPkg is
     impure function RandUnsigned (Min, Max : unsigned) return unsigned ;
     impure function RandSlv (Min, Max : std_logic_vector) return std_logic_vector ;
     impure function RandSigned (Min, Max : signed) return signed ;
-
 
     -- Convenience Functions
     impure function RandReal return real ; -- 0.0 to 1.0
@@ -325,8 +312,10 @@ package RandomPkg is
 
 end RandomPkg ;
 
--- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
--- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--- ///////////////////////////////////////////////////////////////////////////
+--- ///////////////////////////////////////////////////////////////////////////
+--- ///////////////////////////////////////////////////////////////////////////
+
 package body RandomPkg is
 
   -----------------------------------------------------------------
@@ -482,10 +471,10 @@ package body RandomPkg is
 
   -----------------------------------------------------------------
   procedure read(variable L : inout line ; A : out RandomDistType ) is
-    variable good : boolean ;
+    variable ReadValid : boolean ;
   begin
-      read(L, A, good) ;
-      assert good report "read[line, RandomDistType] failed" severity error ;
+      read(L, A, ReadValid) ;
+      AlertIfNot( ReadValid, OSVVM_ALERTLOG_ID, "RandomPkg.read[line, RandomDistType] failed", FAILURE) ;
   end procedure read ;
 
 
@@ -529,10 +518,10 @@ package body RandomPkg is
 
   -----------------------------------------------------------------
   procedure read(variable L : inout line ; A : out RandomParmType ) is
-    variable good : boolean ;
+    variable ReadValid : boolean ;
   begin
-      read(L, A, good) ;
-      assert good report "read[line, RandomParmType] failed" severity error ;
+      read(L, A, ReadValid) ;
+      AlertIfNot( ReadValid, OSVVM_ALERTLOG_ID, "RandomPkg.read[line, RandomParmType] failed", FAILURE) ; 
   end procedure read ;
 
 
@@ -629,7 +618,7 @@ package body RandomPkg is
     impure function Uniform (Min, Max : in real) return real is
       variable rRandomVal : real ;
     begin
-      assert (Max >= Min) report "%%RandomPkg Uniform : Max < Min" severity FAILURE ;
+      AlertIf (Max < Min, OSVVM_ALERTLOG_ID, "RandomPkg.Uniform: Max < Min", FAILURE) ;
       Uniform(rRandomVal, RandomSeed) ;
       return scale(rRandomVal, Min, Max) ;
     end function Uniform ;
@@ -637,7 +626,7 @@ package body RandomPkg is
     impure function Uniform (Min, Max : integer) return integer is
       variable rRandomVal : real ;
     begin
-      assert (Max >= Min) report "%%RandomPkg Uniform : Max < Min" severity FAILURE ;
+      AlertIf (Max < Min, OSVVM_ALERTLOG_ID, "RandomPkg.Uniform: Max < Min", FAILURE) ;
       Uniform(rRandomVal, RandomSeed) ;
       return scale(rRandomVal, Min, Max) ;
     end function Uniform ;
@@ -668,7 +657,7 @@ package body RandomPkg is
     impure function FavorSmall (Min, Max : real) return real is
       variable rRandomVal : real ;
     begin
-      assert (Max >= Min) report "%%RandomPkg FavorSmall : Max < Min" severity FAILURE ;
+      AlertIf (Max < Min, OSVVM_ALERTLOG_ID, "RandomPkg.FavorSmall: Max < Min", FAILURE) ;
       Uniform(rRandomVal, RandomSeed) ;
       return scale(FavorSmall(rRandomVal), Min, Max) ; -- real
     end function FavorSmall ;
@@ -676,7 +665,7 @@ package body RandomPkg is
     impure function FavorSmall (Min, Max : integer) return integer is
       variable rRandomVal : real ;
     begin
-      assert (Max >= Min) report "%%RandomPkg FavorSmall : Max < Min" severity FAILURE ;
+      AlertIf (Max < Min, OSVVM_ALERTLOG_ID, "RandomPkg.FavorSmall: Max < Min", FAILURE) ;
       Uniform(rRandomVal, RandomSeed) ;
       return scale(FavorSmall(rRandomVal), Min, Max) ; -- integer
     end function FavorSmall ;
@@ -707,7 +696,7 @@ package body RandomPkg is
     impure function FavorBig (Min, Max : real) return real is
       variable rRandomVal : real ;
     begin
-      assert (Max >= Min) report "%%RandomPkg FavorBig : Max < Min" severity FAILURE ;
+      AlertIf (Max < Min, OSVVM_ALERTLOG_ID, "RandomPkg.FavorBig: Max < Min", FAILURE) ;
       Uniform(rRandomVal, RandomSeed) ;
       return scale(FavorBig(rRandomVal), Min, Max) ; -- real
     end function FavorBig ;
@@ -715,7 +704,7 @@ package body RandomPkg is
     impure function FavorBig (Min, Max : integer) return integer is
       variable rRandomVal : real ;
     begin
-      assert (Max >= Min) report "%%RandomPkg FavorBig : Max < Min" severity FAILURE ;
+      AlertIf (Max < Min, OSVVM_ALERTLOG_ID, "RandomPkg.FavorBig: Max < Min", FAILURE) ;
       Uniform(rRandomVal, RandomSeed) ;
       return scale(FavorBig(rRandomVal), Min, Max) ; -- integer
     end function FavorBig ;
@@ -754,7 +743,7 @@ package body RandomPkg is
     begin
       -- add this check to set parameters?
       if StdDeviation < 0.0 then
-        report "standard deviation must be >= 0.0" severity failure ;
+        Alert(OSVVM_ALERTLOG_ID, "RandomPkg.Normal: Standard deviation must be >= 0.0", FAILURE) ;
         return -1.0 ;
       end if ;
 
@@ -789,7 +778,7 @@ package body RandomPkg is
       variable rRandomVal : real ;
     begin
       if Max < Min then
-         report "%%RandomPkg Normal : Max < Min" severity FAILURE ;
+         Alert(OSVVM_ALERTLOG_ID, "RandomPkg.Normal: Max < Min", FAILURE) ;
       else
         loop
           rRandomVal := Normal (Mean, StdDeviation) ;
@@ -810,7 +799,7 @@ package body RandomPkg is
       variable iRandomVal : integer ;
     begin
       if Max < Min then
-         report "%%RandomPkg Normal : Max < Min" severity FAILURE ;
+        Alert(OSVVM_ALERTLOG_ID, "RandomPkg.Normal: Max < Min", FAILURE) ;
       else
         loop
           iRandomVal := integer(round(  Normal(Mean, StdDeviation)  )) ;
@@ -841,7 +830,7 @@ package body RandomPkg is
 
       -- add this check to set parameters?
       if Mean <= 0.0 or Bound <= 0.0 then
-        report "Poisson :  Mean < 0 or too large.  Mean = " & real'image(Mean) severity failure ;
+        Alert(OSVVM_ALERTLOG_ID, "RandomPkg.Poisson: Mean < 0 or too large.  Mean = " & real'image(Mean), FAILURE) ;
         return -1.0 ;
       end if ;
 
@@ -858,7 +847,7 @@ package body RandomPkg is
       variable rRandomVal : real ;
     begin
       if Max < Min then
-         report "%%RandomPkg Poisson : Max < Min" severity FAILURE ;
+        Alert(OSVVM_ALERTLOG_ID, "RandomPkg.Poisson: Max < Min", FAILURE) ;
       else
         loop
           rRandomVal := Poisson (Mean) ;
@@ -877,7 +866,7 @@ package body RandomPkg is
       variable iRandomVal : integer ;
     begin
       if Max < Min then
-         report "%%RandomPkg Poisson : Max < Min" severity FAILURE ;
+        Alert(OSVVM_ALERTLOG_ID, "RandomPkg.Poisson: Max < Min", FAILURE) ;
       else
         loop
           iRandomVal := integer(round(  Poisson (Mean)  )) ;
@@ -902,7 +891,7 @@ package body RandomPkg is
         when NORMAL =>          return Normal(RandomParm.Mean, RandomParm.StdDeviation, Min, Max) ;
         when POISSON =>         return Poisson(RandomParm.Mean, Min, Max) ;
         when others =>
-          report "RandomPkg :  distribution not implemented" severity failure ;
+          Alert(OSVVM_ALERTLOG_ID, "RandomPkg.RandInt: RandomParm.Distribution not implemented", FAILURE) ;
           return integer'low ;
       end case ;
     end function RandInt ;
@@ -920,7 +909,7 @@ package body RandomPkg is
         when NORMAL =>          return Normal(RandomParm.Mean, RandomParm.StdDeviation, Min, Max) ;
         when POISSON =>         return Poisson(RandomParm.Mean, Min, Max) ;
         when others =>
-          report "RandomPkg :  distribution not implemented" severity failure ;
+          Alert(OSVVM_ALERTLOG_ID, "RandomPkg.RandReal: Specified RandomParm.Distribution not implemented", FAILURE) ;
           return real(integer'low) ;
       end case ;
     end function RandReal ;
@@ -964,7 +953,7 @@ package body RandomPkg is
       -- if Unique = 0, it is more efficient to call RandIntV(Min, Max, Size)
       iUnique := Unique ; 
       if Max-Min+1 < Unique then
-        report "RandIntV / RandRealV / RandTimeV: Unique > number of values available" severity failure ;
+        Alert(OSVVM_ALERTLOG_ID, "RandomPkg.(RandIntV | RandRealV | RandTimeV): Unique > number of values available", FAILURE) ;
         iUnique := Max-Min+1 ; 
       end if ; 
       for i in result'range loop
@@ -1011,7 +1000,7 @@ package body RandomPkg is
         when NORMAL =>          return  Normal(RandomParm.Mean, RandomParm.StdDeviation, Min, Max, Exclude) ;
         when POISSON =>         return  Poisson(RandomParm.Mean, Min, Max, Exclude) ;
         when others =>
-          report "RandomPkg :  distribution not implemented" severity failure ;
+          Alert(OSVVM_ALERTLOG_ID, "RandomPkg.RandInt: Specified RandomParm.Distribution not implemented", FAILURE) ;
           return integer'low ;
       end case ;
     end function RandInt ;
@@ -1125,7 +1114,7 @@ package body RandomPkg is
       -- require A'length >= Unique
       iUnique := Unique ; 
       if A'length < Unique then
-        report "RandIntV: Unique > length of set of values" severity failure ;
+        Alert(OSVVM_ALERTLOG_ID, "RandomPkg.RandIntV: Unique > length of set of values", FAILURE) ;
         iUnique := A'length ; 
       end if ; 
       for i in result'range loop
@@ -1256,7 +1245,7 @@ package body RandomPkg is
       -- Require NewALength >= Unique
       iUnique := Unique ; 
       if NewALength < Unique then 
-        report "RandIntV: Unique > Length of Set A - Exclude" severity failure ;
+        Alert(OSVVM_ALERTLOG_ID, "RandomPkg.RandIntV: Unique > Length of Set A - Exclude", FAILURE) ;
         iUnique := NewALength ; 
       end if ; 
       -- Randomize using exclude list of Unique # of newly generated values
@@ -1291,7 +1280,7 @@ package body RandomPkg is
       -- Require NewALength >= Unique
       iUnique := Unique ; 
       if NewALength < Unique then 
-        report "RandRealV: Unique > Length of Set A - Exclude" severity failure ;
+        Alert(OSVVM_ALERTLOG_ID, "RandomPkg.RandRealV: Unique > Length of Set A - Exclude", FAILURE) ;
         iUnique := NewALength ; 
       end if ; 
       -- Randomize using exclude list of Unique # of newly generated values
@@ -1326,7 +1315,7 @@ package body RandomPkg is
       -- Require NewALength >= Unique
       iUnique := Unique ; 
       if NewALength < Unique then 
-        report "RandTimeV: Unique > Length of Set A - Exclude" severity failure ;
+        Alert(OSVVM_ALERTLOG_ID, "RandomPkg.RandTimeV: Unique > Length of Set A - Exclude", FAILURE) ;
         iUnique := NewALength ; 
       end if ; 
       -- Randomize using exclude list of Unique # of newly generated values
@@ -1351,8 +1340,7 @@ package body RandomPkg is
       for i in DistArray'range loop
         DistArray(i) := DistArray(i) + sum ;
         if DistArray(i) < sum then
-          report "DistInt failed : negative weight or sum > 31 bits"
-            severity failure ;
+          Alert(OSVVM_ALERTLOG_ID, "RandomPkg.DistInt: negative weight or sum > 31 bits", FAILURE) ;
           return DistArray'low ; -- allows debugging vs integer'left, out of range
         end if ;
         sum := DistArray(i) ;
@@ -1364,9 +1352,9 @@ package body RandomPkg is
             return i ;
           end if ;
         end loop ;
-        report "DistInt : randomization failed" severity failure ;
+        Alert(OSVVM_ALERTLOG_ID, "RandomPkg.DistInt: randomization failed", FAILURE) ;
       else
-        report "DistInt : No randomizatoin weights" severity failure ;
+        Alert(OSVVM_ALERTLOG_ID, "RandomPkg.DistInt: No randomization weights", FAILURE) ;
       end if ;
       return DistArray'low ; -- allows debugging vs integer'left, out of range
     end function DistInt ;
@@ -1554,7 +1542,7 @@ package body RandomPkg is
     impure function RandSigned (Max : signed) return signed is
     begin
       if max'length > 0 then
-        assert (Max >= 0) report "%%RandomPkg RandSigned : Max < 0" severity FAILURE ;
+        AlertIf (Max < 0, OSVVM_ALERTLOG_ID, "RandomPkg.RandSigned: Max < 0", FAILURE) ;
         return signed(RandUnsigned( unsigned(Max))) ;
       else
         return NULL_SV ; -- Null Array
@@ -1569,7 +1557,7 @@ package body RandomPkg is
         return RandUnsigned(Max-Min) + Min ;
       else
         if Len > 0 then
-          report "%%RandomPkg RandUnsigned : Max < Min" severity FAILURE ;
+          Alert(OSVVM_ALERTLOG_ID, "RandomPkg.RandUnsigned: Max < Min", FAILURE) ;
         end if ;
         return NULL_UV ;
       end if ;
@@ -1583,7 +1571,7 @@ package body RandomPkg is
         return RandSlv(Max-Min) + Min ;
       else
         if Len > 0 then
-          report "%%RandomPkg RandSlv : Max < Min" severity FAILURE ;
+          Alert(OSVVM_ALERTLOG_ID, "RandomPkg.RandSlv: Max < Min", FAILURE) ;
         end if ;
           return NULL_SlV ;
       end if ;
@@ -1597,7 +1585,7 @@ package body RandomPkg is
         return resize(RandSigned(resize(Max,LEN+1) - resize(Min,LEN+1)) + Min, LEN) ;
       else
         if Len > 0 then
-          report "%%RandomPkg RandSigned : Max < Min" severity FAILURE ;
+          Alert(OSVVM_ALERTLOG_ID, "RandomPkg.RandSigned: Max < Min", FAILURE) ;
         end if ;
         return NULL_SV ;
       end if ;
@@ -1615,8 +1603,6 @@ package body RandomPkg is
     impure function RandReal(Max : Real) return real is  -- 0.0 to Max
     begin
       return RandReal(0.0, Max) ;
-      -- assert Max >= 0.0 report "RandReal : Range Error" severity FAILURE ;
-      -- return RandReal * Max ;
     end function RandReal ;
 
     impure function RandInt (Max : integer) return integer is

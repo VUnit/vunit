@@ -1,7 +1,7 @@
 --
 --  File Name:         SortListPkg_int.vhd
 --  Design Unit Name:  SortListPkg_int
---  Revision:          STANDARD VERSION,  revision 2014.01
+--  Revision:          STANDARD VERSION,  revision 2015.01
 --
 --  Maintainer:        Jim Lewis      email:  jim@synthworks.com
 --  Contributor(s):
@@ -31,10 +31,11 @@
 --    5/2013     2013.05    No changes of substance. 
 --                          Deleted extra variable declaration in procedure remove
 --    1/2014     2014.01    Added RevSort.  Added AllowDuplicate paramter to Add procedure
+--    1/2015     2015.01    Changed Assert/Report to Alert
 --
 --
 --
---  Copyright (c) 2008 - 2014 by SynthWorks Design Inc.  All rights reserved.
+--  Copyright (c) 2008 - 2015 by SynthWorks Design Inc.  All rights reserved.
 --
 --  Verbatim copies of this source file may be used and
 --  distributed without restriction.
@@ -54,7 +55,9 @@
 --     http://www.perlfoundation.org/artistic_license_2_0
 --
 
-  use std.textio.all ;
+use work.OsvvmGlobalPkg.all ; 
+use work.AlertLogPkg.all ; 
+use std.textio.all ;
 
 library ieee ;
 use ieee.std_logic_1164.all ;
@@ -101,8 +104,11 @@ package SortListPkg_int is
   end protected SortListPType ;
 
 end SortListPkg_int ;
--- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
--- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+--- ///////////////////////////////////////////////////////////////////////////
+--- ///////////////////////////////////////////////////////////////////////////
+--- ///////////////////////////////////////////////////////////////////////////
+
 package body SortListPkg_int is
 
   function inside (constant E : ElementType; constant A : in ArrayofElementType) return boolean is
@@ -264,7 +270,7 @@ package body SortListPkg_int is
       variable CurPtr : ListPointerType ;
     begin
       if index > Count then
-        report "%%FAILURE:  SortListPType index out of range" severity failure ;
+        Alert(OSVVM_ALERTLOG_ID, "SortLIstPkg_int.get index out of range", FAILURE) ;
         return ElementType'left ;
       elsif HeadPointer = NULL then
         return ElementType'left ;
