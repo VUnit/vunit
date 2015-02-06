@@ -16,7 +16,7 @@ from vunit import VUnit
 ui = VUnit.from_argv()
 ui.add_osvvm()
 
-lib = ui.add_library('uart_lib')
+lib = ui.add_library('lib')
 lib.add_source_files(join(dirname(__file__), 'src', '*.vhd'))
 
 ui.main()

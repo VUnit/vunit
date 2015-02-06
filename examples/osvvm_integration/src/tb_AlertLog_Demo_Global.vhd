@@ -107,21 +107,28 @@ begin
       SetLogEnable(DEBUG, true);  -- Enable DEBUG Messages for all levels of the hierarchy
 
       -- Uncomment this line to justify alert and log reports  
-      -- SetAlertLogJustify ; 
-      for i in 1 to 5 loop
-        wait until Clk = '1';
-        if i = 4 then SetLogEnable(DEBUG, false); end if;  -- DEBUG Mode OFF
-        wait for 1 ns;
-        Alert("Tb.P1.E alert " & to_string(i) & " of 5");  -- ERROR by default
-        Log ("Tb.P1.D log   " & to_string(i) & " of 5", DEBUG);
+      -- SetAlertLogJustify ;
+
+      while test_suite loop
+        if run("Test failing alerts") then
+          for i in 1 to 5 loop
+            wait until Clk = '1';
+            if i = 4 then SetLogEnable(DEBUG, false); end if;  -- DEBUG Mode OFF
+            wait for 1 ns;
+            Alert("Tb.P1.E alert " & to_string(i) & " of 5");  -- ERROR by default
+            Log ("Tb.P1.D log   " & to_string(i) & " of 5", DEBUG);
+          end loop;
+          wait until Clk = '1';
+          wait until Clk = '1';
+          wait for 1 ns;
+          -- Report Alerts with expected errors expressed as a negative ExternalErrors value
+          ReportAlerts(Name => "AlertLog_Demo_Hierarchy with expected errors", ExternalErrors => -(failure => 0, error => 20, warning => 15));
+        elsif run("Test passing alerts") then
+          AlertIf(false, "This should not fail");
+        end if;
       end loop;
-      wait until Clk = '1';
-      wait until Clk = '1';
-      wait for 1 ns;
+      
       ReportAlerts;
-      print("");
-      -- Report Alerts with expected errors expressed as a negative ExternalErrors value
-      ReportAlerts(Name => "AlertLog_Demo_Hierarchy with expected errors", ExternalErrors => -(failure => 0, error => 20, warning => 15));
       TranscriptClose;
 
       test_runner_cleanup(runner, get_alert_statistics);
