@@ -63,6 +63,8 @@ use osvvm.OsvvmGlobalPkg.all;
 use osvvm.TranscriptPkg.all;
 use osvvm.AlertLogPkg.all;
 
+use work.common_pkg.all;
+
 --use work.TextUtilPkg.all ;
 
 entity tb_AlertLog_Demo_Global is
@@ -98,11 +100,7 @@ begin
       -- Uncomment this line to use a log file rather than OUTPUT
       -- TranscriptOpen("./Demo_Global.txt") ;   
 
-      -- The VUnit Python runner will recognize errors if they cause a simulator
-      -- stop in the same way it recognizes any premature (before
-      -- test_runner_cleanup) stop (VHDL assert, divison
-      -- by zero and so on) as an error. 
-      SetAlertStopCount(error, 0);
+      -- SetAlertStopCount(error, 0);
 
       SetAlertLogName("AlertLog_Demo_Global");
       wait for 0 ns;              -- make sure all processes have elaborated
@@ -126,7 +124,7 @@ begin
       ReportAlerts(Name => "AlertLog_Demo_Hierarchy with expected errors", ExternalErrors => -(failure => 0, error => 20, warning => 15));
       TranscriptClose;
 
-      test_runner_cleanup(runner);
+      test_runner_cleanup(runner, get_alert_statistics);
       wait;
     end process TbP1;
 
