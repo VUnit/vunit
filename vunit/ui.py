@@ -181,7 +181,7 @@ class VUnit:
         " Globally set pli "
         self._configuration.set_generic(value, scope="")
 
-    def add_source_files(self, pattern, library_name, preprocessors = None):
+    def add_source_files(self, pattern, library_name, preprocessors=None):
         """
         Add source files matching wildcard pattern to library
         """
@@ -195,23 +195,17 @@ class VUnit:
     def _preprocess(self, library_name, file_name, preprocessors):
         # @TODO dependency checking etc...
 
-        global_preprocessors = self._external_preprocessors + self._internal_preprocessors
-        if (len(global_preprocessors) == 0) and (preprocessors is None):
+        if preprocessors is None:
+            preprocessors = self._external_preprocessors + self._internal_preprocessors
+
+        if len(preprocessors) == 0:
             return file_name
 
         code = ostools.read_file(file_name)
-        if preprocessors is not None:
-            enabled_preprocessors = []
-            for p in preprocessors:
-                if str(p) not in enabled_preprocessors:
-                    code = p.run(code, basename(file_name))
-                    enabled_preprocessors.append(str(p))
-        else:
-            for p in global_preprocessors:
-                code = p.run(code, basename(file_name))
+        for p in preprocessors:
+            code = p.run(code, basename(file_name))
 
-        pp_file_name = join(self._preprocessed_path,
-                            library_name, basename(file_name))
+        pp_file_name = join(self._preprocessed_path, library_name, basename(file_name))
 
         idx = 1
         while ostools.file_exists(pp_file_name):
