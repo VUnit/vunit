@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 from re import compile, MULTILINE, DOTALL, split
 
@@ -15,7 +15,7 @@ class LocationPreprocessor:
                             'warning', 'warning_low1', 'warning_low2', 'error_high2',
                             'error_high1', 'error', 'error_low1', 'error_low2', 'failure_high2',
                             'failure_high1', 'failure', 'failure_low1', 'failure_low2', 'check',
-                            'check_true', 'check_false', 'check_implication',
+                            'check_failed', 'check_true', 'check_false', 'check_implication',
                             'check_stable', 'check_not_unknown', 'check_zero_one_hot',
                             'check_one_hot', 'check_next', 'check_sequence', 'check_relation',
                             'lock_entry', 'lock_exit', 'unlock_entry', 'unlock_exit']

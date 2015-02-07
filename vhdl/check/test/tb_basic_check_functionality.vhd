@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
 use vunit_lib.lang.all;
@@ -43,6 +43,7 @@ begin
     variable pass : boolean;
     variable my_checker : checker_t;
     variable stat, stat1, stat2 : checker_stat_t;
+    variable stat_before, stat_after : checker_stat_t;
     variable cfg : checker_cfg_t;
     variable cfg_export : checker_cfg_export_t;
     variable cnt : natural;
@@ -52,6 +53,7 @@ begin
 
     while test_suite loop    
       if run("Verify default checker basic functionality") then
+        stat_before := get_checker_stat;
         check(true);
         verify_num_of_log_calls(get_count);
         check(false);
@@ -74,6 +76,24 @@ begin
         inc_count;
         counting_assert(not pass, "Should return pass = false on failing check");
         counting_assert(get_logger_init_call_count = cnt, "Should not initialize loggers for basic functionality");
+        stat_after := get_checker_stat;
+        counting_assert(stat_after = stat_before + (9, 6, 3), "Expected 9 checks, 6 fail, and 3 pass but got " & to_string(stat_after - stat_before));
+
+      elsif run("Verify default check_passed and check_failed") then
+        stat_before := get_checker_stat;
+        check_passed;
+        verify_num_of_log_calls(get_count);
+        check_failed;
+        verify_log_call(inc_count, "Check failed!", error);
+        check_failed("Custom error message");
+        verify_log_call(inc_count, "Custom error message", error);
+        check_failed("Custom level", info);
+        verify_log_call(inc_count, "Custom level", info);
+        check_failed("Line and file name", info, 377, "some_file.vhd");
+        verify_log_call(inc_count, "Line and file name", info,
+                        expected_line_num => 377, expected_file_name => "some_file.vhd");
+        stat_after := get_checker_stat;
+        counting_assert(stat_after = stat_before + (5, 4, 1), "Expected 5 checks, 4 fail, and 1 pass but got " & to_string(stat_after - stat_before));
 
       elsif run("Verify default checker initialization") then
         default_checker_init_from_scratch(default_level => info);
@@ -97,6 +117,7 @@ begin
       elsif run("Verify custom checker basic functionality") then
         custom_checker_init_from_scratch(my_checker);
         verify_logger_init_call(inc_count(3), "", "error.csv", level, off, failure, ',', false);
+        get_checker_stat(my_checker, stat_before);
         check(my_checker, true);
         verify_num_of_log_calls(get_count);
         check(my_checker, false);
@@ -113,6 +134,26 @@ begin
         check(my_checker, pass, false);
         inc_count;
         counting_assert(not pass, "Should return pass = false on failing check");
+        get_checker_stat(my_checker, stat_after);
+        counting_assert(stat_after = stat_before + (7, 5, 2), "Expected 7 checks, 5 fail, and 2 pass but got " & to_string(stat_after - stat_before));
+
+      elsif run("Verify check_passed and check_failed with custom checker") then
+        custom_checker_init_from_scratch(my_checker);
+        verify_logger_init_call(inc_count(3), "", "error.csv", level, off, failure, ',', false);
+        get_checker_stat(my_checker, stat_before);
+        check_passed(my_checker);
+        verify_num_of_log_calls(get_count);
+        check_failed(my_checker);
+        verify_log_call(inc_count, "Check failed!", error);
+        check_failed(my_checker, "Custom error message");
+        verify_log_call(inc_count, "Custom error message", error);
+        check_failed(my_checker, "Custom level", info);
+        verify_log_call(inc_count, "Custom level", info);
+        check_failed(my_checker, "Line and file name", info, 377, "some_file.vhd");
+        verify_log_call(inc_count, "Line and file name", info,
+                        expected_line_num => 377, expected_file_name => "some_file.vhd");
+        get_checker_stat(my_checker, stat_after);
+        counting_assert(stat_after = stat_before + (5, 4, 1), "Expected 5 checks, 4 fail, and 1 pass but got " & to_string(stat_after - stat_before));
 
       elsif run("Verify custom checker initialization") then
         default_checker_init_from_scratch; -- Reset default checker initialization

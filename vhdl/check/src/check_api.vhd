@@ -5,7 +5,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -113,11 +113,40 @@ package check_pkg is
     constant stat2 : checker_stat_t)
     return checker_stat_t;
 
+  function "-" (
+    constant stat1 : checker_stat_t;
+    constant stat2 : checker_stat_t)
+    return checker_stat_t;
+
   -- pragma translate_off  
   function to_string (
     constant stat : checker_stat_t)
     return string;
   -- pragma translate_on
+
+  -----------------------------------------------------------------------------
+  -- check_passed
+  -----------------------------------------------------------------------------
+  procedure check_passed(
+    variable checker   : inout checker_t);
+  
+  procedure check_passed;
+  
+  -----------------------------------------------------------------------------
+  -- check_failed
+  -----------------------------------------------------------------------------
+  procedure check_failed(
+    variable checker   : inout checker_t;
+    constant msg       : in    string      := "Check failed!";
+    constant level     : in    log_level_t := dflt;
+    constant line_num  : in    natural     := 0;
+    constant file_name : in    string      := "");
+  
+  procedure check_failed(
+    constant msg       : in string      := "Check failed!";
+    constant level     : in log_level_t := dflt;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "");        
   
   -----------------------------------------------------------------------------
   -- check_true

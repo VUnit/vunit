@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -158,6 +158,19 @@ package body check_pkg is
     return sum;
   end function "+";
 
+  function "-" (
+    constant stat1 : checker_stat_t;
+    constant stat2 : checker_stat_t)
+    return checker_stat_t is
+    variable diff : checker_stat_t;
+  begin
+      diff.n_checks := stat1.n_checks - stat2.n_checks;
+      diff.n_passed := stat1.n_passed - stat2.n_passed;
+      diff.n_failed := stat1.n_failed - stat2.n_failed;
+
+    return diff;
+  end function "-";
+
   -- pragma translate_off
   function to_string (
     constant stat : checker_stat_t)
@@ -249,6 +262,51 @@ package body check_pkg is
       return false;
     end if;
   end start_condition;
+
+  -----------------------------------------------------------------------------
+  -- check_passed
+  -----------------------------------------------------------------------------
+  procedure check_passed(
+    variable checker   : inout checker_t) is
+  begin
+    -- pragma translate_off
+    check(checker, true);
+    -- pragma translate_on
+  end;
+  
+  procedure check_passed is
+  begin
+    -- pragma translate_off
+    check(true);
+    -- pragma translate_on
+  end;
+  
+  -----------------------------------------------------------------------------
+  -- check_failed
+  -----------------------------------------------------------------------------
+  procedure check_failed(
+    variable checker   : inout checker_t;
+    constant msg       : in    string      := "Check failed!";
+    constant level     : in    log_level_t := dflt;
+    constant line_num  : in    natural     := 0;
+    constant file_name : in    string      := "") is
+  begin
+    -- pragma translate_off
+    check(checker, false, msg, level, line_num, file_name);
+    -- pragma translate_on
+  end;
+  
+  procedure check_failed(
+    constant msg       : in string      := "Check failed!";
+    constant level     : in log_level_t := dflt;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "") is
+  begin
+    -- pragma translate_off
+    check(false, msg, level, line_num, file_name);
+    -- pragma translate_on
+  end;
+
   -----------------------------------------------------------------------------
   -- check_true
   -----------------------------------------------------------------------------
