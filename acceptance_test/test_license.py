@@ -28,6 +28,9 @@ class TestLicense(unittest.TestCase):
                 osvvm_directory = abspath(join(repo_root, 'vhdl', 'osvvm'))
                 if commonprefix([osvvm_directory, abspath(join(root, f))]) == osvvm_directory:
                     continue
+                osvvm_integration_example_directory = abspath(join(repo_root, 'examples', 'osvvm_integration', 'src'))
+                if commonprefix([osvvm_integration_example_directory, abspath(join(root, f))]) == osvvm_integration_example_directory:
+                    continue
                 if splitext(f)[1] in ['.vhd', '.vhdl', '.py', '.v', '.sv']:
                     licensed_files.append(join(root, f))
         i = 0
