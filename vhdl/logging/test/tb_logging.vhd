@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
 use vunit_lib.lang.all;
@@ -297,16 +297,48 @@ begin
     remove_filter(l2, f3);
     pass_source(l2, "pressure_sensor", (display_handler, file_handler), f3);
     error(l2,"Error should not pass", "some_sensor");
+    verify_num_of_write_calls(26);
     rename_level(l2, error, "test_level");
     error(l2,"Error should pass");
+    verify_num_of_write_calls(27);
     rename_level(l2, error, "error");
     remove_filter(l2, f3);
 
     write(entries(18), string'("2,0 ps,error,tb_logging.vhd,286,pressure_sensor,Error should pass"));
     write(entries(19), string'("3,0 ps,error,tb_logging.vhd,290,pressure_sensor,Error should pass"));
     write(entries(20), string'("4,0 ps,error,tb_logging.vhd,294,pressure_sensor,Error should not pass"));
-    write(entries(21), string'("5,0 ps,test_level,tb_logging.vhd,301,pressure_sensor,Error should pass"));
+    write(entries(21), string'("5,0 ps,test_level,tb_logging.vhd,302,pressure_sensor,Error should pass"));
     verify_log_file("pressure_sensor.csv", entries(18 to 21));
+
+    -- Source level filters
+    banner("Verify source level filters");
+    logger_init(l2, "pressure_sensor", "pressure_sensor.csv", raw, verbose_csv);
+
+    stop_source_level(l2, "temperature_sensor", error, display_handler, f1);
+    error(l2,"Error should pass");
+    verify_write_call(28, "Error should pass");
+
+    stop_source_level(l2, "pressure_sensor", warning, display_handler, f2);
+    error(l2,"Error should pass");
+    verify_write_call(29, "Error should pass");
+
+    stop_source_level(l2, "pressure_sensor", error, display_handler, f3);
+    error(l2,"Error should not pass");
+    verify_num_of_write_calls(29);
+    remove_filter(l2, f1);
+    remove_filter(l2, f2);
+    remove_filter(l2, f3);
+    pass_source_level(l2, "pressure_sensor", error, (display_handler, file_handler), f3);
+    error(l2,"Error should not pass", "some_sensor");
+    warning(l2,"Error should not pass");
+    error(l2,"Error should pass");
+    remove_filter(l2, f3);
+
+    write(entries(22), string'("6,0 ps,error,tb_logging.vhd,318,pressure_sensor,Error should pass"));
+    write(entries(23), string'("7,0 ps,error,tb_logging.vhd,322,pressure_sensor,Error should pass"));
+    write(entries(24), string'("8,0 ps,error,tb_logging.vhd,326,pressure_sensor,Error should not pass"));
+    write(entries(25), string'("9,0 ps,error,tb_logging.vhd,334,pressure_sensor,Error should pass"));
+    verify_log_file("pressure_sensor.csv", entries(22 to 25));
     
     -- Hierarchical source filters
     banner("Verify hierarchical source filters");
@@ -315,13 +347,13 @@ begin
 
     wait on test_component1_done, test_component2_done until test_component1_done and test_component2_done;
 
-    write(entries(22), string'("6,1000 ps,info,tb_logging.vhd,121,.tb_logging.test_component2.init,I'm test component 2"));
-    write(entries(23), string'("7,1000 ps,info,tb_logging.vhd,122,.tb_logging.test_component2.purpose,I'm logging time"));
-    write(entries(24), string'("8,1000 ps,info,tb_logging.vhd,124,.tb_logging.test_component2.clock.time,Time is 1000 ps"));
-    write(entries(25), string'("9,11000 ps,info,tb_logging.vhd,124,.tb_logging.test_component2.clock.time,Time is 11000 ps"));
-    write(entries(26), string'("10,21000 ps,info,tb_logging.vhd,124,.tb_logging.test_component2.clock.time,Time is 21000 ps"));
-    verify_log_file("log.csv", entries(22 to 26));
-
+    write(entries(26), string'("10,1000 ps,info,tb_logging.vhd,121,.tb_logging.test_component2.init,I'm test component 2"));
+    write(entries(27), string'("11,1000 ps,info,tb_logging.vhd,122,.tb_logging.test_component2.purpose,I'm logging time"));
+    write(entries(28), string'("12,1000 ps,info,tb_logging.vhd,124,.tb_logging.test_component2.clock.time,Time is 1000 ps"));
+    write(entries(29), string'("13,11000 ps,info,tb_logging.vhd,124,.tb_logging.test_component2.clock.time,Time is 11000 ps"));
+    write(entries(30), string'("14,21000 ps,info,tb_logging.vhd,124,.tb_logging.test_component2.clock.time,Time is 21000 ps"));
+    verify_log_file("log.csv", entries(26 to 30));
+    
     -- get_logger_cfg
     banner("Verify that get_logger_cfg can be called on an uninitialized logger");
     get_logger_cfg(uninitialized_logger, uninitialized_logger_cfg);

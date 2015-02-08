@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -72,16 +72,11 @@ package log_special_types_pkg is
     return logger_cfg_export_t;
 
     procedure add_filter (
-      variable filter       : out log_filter_t;
-      constant levels : in log_level_vector_t;
-      constant pass               : in boolean := false;
-      constant handlers       : in log_handler_vector_t);
-
-    procedure add_filter (
-      variable filter       : out log_filter_t;
-      constant src : in string;
-      constant pass               : in boolean := false;
-      constant handlers       : in log_handler_vector_t);
+      variable filter   : out log_filter_t;
+      constant levels   : in  log_level_vector_t := null_log_level_vector;
+      constant src      : in  string             := "";
+      constant pass     : in  boolean            := false;
+      constant handlers : in  log_handler_vector_t);
 
     procedure remove_filter (
       constant filter : in log_filter_t);
@@ -457,35 +452,18 @@ package body log_special_types_pkg is
   end;
 
   procedure add_filter (
-    variable filter       : out log_filter_t;
-    constant levels : in log_level_vector_t;
-    constant pass               : in boolean := false;
-    constant handlers       : in log_handler_vector_t) is
+    variable filter   : out log_filter_t;
+    constant levels   : in  log_level_vector_t := null_log_level_vector;
+    constant src      : in  string             := "";
+    constant pass     : in  boolean            := false;
+    constant handlers : in  log_handler_vector_t) is
     variable temp_filter : log_filter_t;
   begin
     temp_filter.id := id;
     id := id + 1;
-    temp_filter.filter_type := level_filter;
     temp_filter.pass_filter := pass;
     temp_filter.levels(1 to levels'length) := levels;
     temp_filter.n_levels := levels'length;
-    temp_filter.handlers(1 to handlers'length) := handlers;
-    temp_filter.n_handlers := handlers'length;
-    filter := temp_filter;
-    filter_list.append(temp_filter);
-  end;  
-
-  procedure add_filter (
-    variable filter       : out log_filter_t;
-    constant src : in string;
-    constant pass               : in boolean := false;
-    constant handlers       : in log_handler_vector_t) is
-    variable temp_filter : log_filter_t;
-  begin
-    temp_filter.id := id;
-    id := id + 1;
-    temp_filter.filter_type := source_filter;
-    temp_filter.pass_filter := pass;
     temp_filter.src := (others => NUL);
     temp_filter.src(src'range) := src;
     temp_filter.src_length := src'length;
@@ -493,8 +471,8 @@ package body log_special_types_pkg is
     temp_filter.n_handlers := handlers'length;    
     filter := temp_filter;
     filter_list.append(temp_filter);
-  end;  
-
+  end;
+  
   procedure remove_filter (
     constant filter : in log_filter_t) is
   begin
@@ -517,45 +495,46 @@ package body log_special_types_pkg is
     constant handler : in log_handler_t)
     return boolean is
     variable pass : boolean := true;
-    variable match : boolean := false;
+    variable match, level_match, source_match : boolean := false;
     variable filter : log_filter_t;
   begin
     list_loop :for i in 1 to filter_list.length loop
       filter := filter_list.get(i);
-      match := false;
       for h in 1 to filter.n_handlers loop
-        if filter.handlers(h) = handler then
-          match := true;
-        end if;
+        match := filter.handlers(h) = handler;
+        exit when match;
       end loop;
-      if match then
-        if (filter.filter_type = level_filter) then
-          match := false;
-          for l in 1 to filter.n_levels loop
-            if filter.levels(l) = level then
-              match := true;
-            end if;
-          end loop;
-          if (match and not filter.pass_filter) or (not match and filter.pass_filter) then
-            pass := false;
-          end if;
-        elsif replace(filter.src, ':', '.')(1) /= '.' then
-          if (filter.src(src'range) = src) and (filter.src_length = src'length) and not filter.pass_filter then
-            pass := false;
-          elsif ((filter.src(src'range) /= src) or (filter.src_length /= src'length))and filter.pass_filter then
-            pass := false;
+
+      next list_loop when not match;
+
+      level_match := (filter.n_levels = 0);
+      for l in 1 to filter.n_levels loop
+        level_match := filter.levels(l) = level;
+        exit when level_match;
+      end loop;
+
+      source_match := (filter.src_length = 0);        
+      if filter.src_length > 0 then
+        if replace(filter.src, ':', '.')(1) /= '.' then
+          if (filter.src(src'range) = src) and (filter.src_length = src'length) then
+            source_match := true;
           end if;
         else
           if filter.src_length <= src'length then
-            if (replace(src, ':', '.')(1 to filter.src_length) = replace(filter.src(1 to filter.src_length), ':', '.')) and not filter.pass_filter then
-              pass := false;
-            elsif (replace(src, ':', '.')(1 to filter.src_length) /= replace(filter.src(1 to filter.src_length), ':', '.')) and filter.pass_filter then
-              pass := false;
+            if (replace(src, ':', '.')(1 to filter.src_length) = replace(filter.src(1 to filter.src_length), ':', '.')) then
+              source_match := true;
             end if;
           end if;
         end if;
-        exit list_loop when pass = false;
       end if;
+
+      match := source_match and level_match;
+      if (match and not filter.pass_filter) or (not match and filter.pass_filter) then
+        pass := false;
+      end if;
+      
+      exit list_loop when pass = false;
+
     end loop;
     return pass;
   end pass_filters;

@@ -5,7 +5,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -231,6 +231,34 @@ package log_pkg is
   alias get_logger_cfg is base_get_logger_cfg[logger_t, logger_cfg_t];
   alias get_logger_cfg is base_get_logger_cfg[logger_t, logger_cfg_export_t];
 
+  procedure stop_source_level (
+    variable logger : inout logger_t;
+    constant source : in string;
+    constant level : in log_level_t;
+    constant handler       : in log_handler_t;
+    variable filter       : out log_filter_t);
+
+  procedure stop_source_level (
+    variable logger : inout logger_t;
+    constant source : in string;
+    constant levels : in log_level_vector_t;
+    constant handler       : in log_handler_t;
+    variable filter       : out log_filter_t);
+
+  procedure pass_source_level (
+    variable logger : inout logger_t;
+    constant source : in string;
+    constant level : in log_level_t;
+    constant handler       : in log_handler_t;
+    variable filter       : out log_filter_t);
+
+  procedure pass_source_level (
+    variable logger : inout logger_t;
+    constant source : in string;
+    constant levels : in log_level_vector_t;
+    constant handler       : in log_handler_t;
+    variable filter       : out log_filter_t);
+
   procedure stop_level (
     variable logger : inout logger_t;
     constant level : in log_level_t;
@@ -265,6 +293,34 @@ package log_pkg is
     variable logger : inout logger_t;
     constant source : in string;
     constant handler       : in log_handler_t;
+    variable filter       : out log_filter_t);
+
+  procedure stop_source_level (
+    variable logger : inout logger_t;
+    constant source : in string;
+    constant level : in log_level_t;
+    constant handler       : in log_handler_vector_t;
+    variable filter       : out log_filter_t);
+
+  procedure stop_source_level (
+    variable logger : inout logger_t;
+    constant source : in string;
+    constant levels : in log_level_vector_t;
+    constant handler       : in log_handler_vector_t;
+    variable filter       : out log_filter_t);
+
+  procedure pass_source_level (
+    variable logger : inout logger_t;
+    constant source : in string;
+    constant level : in log_level_t;
+    constant handler       : in log_handler_vector_t;
+    variable filter       : out log_filter_t);
+
+  procedure pass_source_level (
+    variable logger : inout logger_t;
+    constant source : in string;
+    constant levels : in log_level_vector_t;
+    constant handler       : in log_handler_vector_t;
     variable filter       : out log_filter_t);
 
   procedure stop_level (
@@ -508,6 +564,30 @@ package log_pkg is
   procedure get_logger_cfg (
     variable cfg : inout logger_cfg_export_t);
   
+  procedure stop_source_level (
+    constant source : in string;
+    constant level : in log_level_t;
+    constant handler       : in log_handler_t;
+    variable filter       : out log_filter_t);
+
+  procedure stop_source_level (
+    constant source : in string;
+    constant levels : in log_level_vector_t;
+    constant handler       : in log_handler_t;
+    variable filter       : out log_filter_t);
+
+  procedure pass_source_level (
+    constant source : in string;
+    constant level : in log_level_t;
+    constant handler       : in log_handler_t;
+    variable filter       : out log_filter_t);
+
+  procedure pass_source_level (
+    constant source : in string;
+    constant levels : in log_level_vector_t;
+    constant handler       : in log_handler_t;
+    variable filter       : out log_filter_t);
+
   procedure stop_level (
     constant level : in log_level_t;
     constant handler       : in log_handler_t;
@@ -536,6 +616,30 @@ package log_pkg is
   procedure pass_source (
     constant source : in string;
     constant handler       : in log_handler_t;
+    variable filter       : out log_filter_t);
+
+  procedure stop_source_level (
+    constant source : in string;
+    constant level : in log_level_t;
+    constant handler       : in log_handler_vector_t;
+    variable filter       : out log_filter_t);
+
+  procedure stop_source_level (
+    constant source : in string;
+    constant levels : in log_level_vector_t;
+    constant handler       : in log_handler_vector_t;
+    variable filter       : out log_filter_t);
+
+  procedure pass_source_level (
+    constant source : in string;
+    constant level : in log_level_t;
+    constant handler       : in log_handler_vector_t;
+    variable filter       : out log_filter_t);
+
+  procedure pass_source_level (
+    constant source : in string;
+    constant levels : in log_level_vector_t;
+    constant handler       : in log_handler_vector_t;
     variable filter       : out log_filter_t);
 
   procedure stop_level (

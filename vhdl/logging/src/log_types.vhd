@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -24,12 +24,11 @@ package log_types_pkg is
                        debug_high2, debug_high1, debug, debug_low1, debug_low2,
                        verbose_high2, verbose_high1, verbose, verbose_low1, verbose_low2);
   type log_level_vector_t is array (natural range <>) of log_level_t;
-  type log_filter_type_t is (level_filter, source_filter);
+  constant null_log_level_vector : log_level_vector_t(1 to 0) := (others => dflt);
   type log_handler_t is (display_handler, file_handler, d, f);
   type log_handler_vector_t is array (natural range <>) of log_handler_t;
   type log_filter_t is record
     id : natural;
-    filter_type : log_filter_type_t;
     pass_filter : boolean;
     handlers : log_handler_vector_t(1 to 2);
     n_handlers : natural;

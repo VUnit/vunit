@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -76,21 +76,12 @@ package body log_base_pkg is
   procedure base_add_filter (
     variable logger : inout logger_t;
     variable filter       : out log_filter_t;
-    constant levels : in log_level_vector_t;
+    constant levels : in log_level_vector_t := null_log_level_vector;
+    constant src : in string := "";
     constant pass               : in boolean := false;
     constant handlers       : in log_handler_vector_t) is    
   begin
-    logger.add_filter(filter, levels, pass, handlers);
-  end;
-
-  procedure base_add_filter (
-    variable logger : inout logger_t;
-    variable filter       : out log_filter_t;
-    constant src : in string;
-    constant pass               : in boolean := false;
-    constant handlers       : in log_handler_vector_t) is    
-  begin
-    logger.add_filter(filter, src, pass, handlers);
+    logger.add_filter(filter, levels, src, pass, handlers);
   end;
 
   procedure base_remove_filter (
