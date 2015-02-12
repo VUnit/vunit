@@ -57,7 +57,8 @@ class VUnit:
                    log_level=args.log_level,
                    test_filter=test_filter,
                    list_only=args.list,
-                   compile_only=args.compile)
+                   compile_only=args.compile,
+                   gui=args.gui)
 
     @classmethod
     def _create_argument_parser(cls):
@@ -95,6 +96,10 @@ class VUnit:
                            default=False,
                            help='Do not color output')
 
+        parser.add_argument('--gui', action='store_true',
+                           default=False,
+                           help='Open test case(s) in simulator gui')
+
         parser.add_argument('--log-level',
                             default="warning",
                             choices=["info", "error", "warning", "debug"])
@@ -114,7 +119,8 @@ class VUnit:
                  elaborate_only=False,
                  vhdl_standard='2008',
                  compile_builtins=True,
-                 persistent_sim=True):
+                 persistent_sim=True,
+                 gui=False):
 
         self._project = Project()
 
@@ -140,6 +146,7 @@ class VUnit:
 
         self._tb_filter = tb_filter
         self._persistent_sim = persistent_sim
+        self._gui = gui
         self._configuration = TestConfiguration()
         self._internal_preprocessors = []
         self._external_preprocessors = []
@@ -319,7 +326,8 @@ class VUnit:
     def _create_simulator_if(self):
         return ModelSimInterface(
             join(self._output_path, "modelsim.ini"),
-            persistent=self._persistent_sim)
+            persistent=self._persistent_sim and not self._gui,
+            gui=self._gui)
 
     @property
     def _preprocessed_path(self):

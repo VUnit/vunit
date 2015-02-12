@@ -14,10 +14,18 @@ import os
 from vunit.exceptions import CompileError
 
 class ModelSimInterface:
-    def __init__(self, modelsim_ini="modelsim.ini", persistent=False):
+    def __init__(self, modelsim_ini="modelsim.ini", persistent=False, gui=False):
         self._modelsim_ini = modelsim_ini
+
+        # Workarround for Microsemi 10.3a which does not 
+        # respect MODELSIM environment variable when set within .do script
+        # Microsemi bug reference id: dvt64978 
+        os.environ["MODELSIM"] = self._modelsim_ini
+
         self._create_modelsim_ini()
         self._vsim_process = None
+        self._gui = gui
+        assert not (persistent and gui)
 
         if persistent:
             self._create_vsim_process()
@@ -230,11 +238,18 @@ proc vunit_help {} {
         tcl += "vunit_help\n"
         return tcl
 
-    def _run_batch_file(self, batch_file_name):
+    def _run_batch_file(self, batch_file_name, gui=False):
         try:
-            proc = Process(['vsim', '-quiet', '-c',
-                            "-l", join(dirname(batch_file_name), "transcript"),
-                            '-do', "do %s" % fix_path(batch_file_name)])
+            args = ['vsim', '-quiet',
+                    "-l", join(dirname(batch_file_name), "transcript"),
+                    '-do', "do %s" % fix_path(batch_file_name)]
+            
+            if gui:
+                args.append('-gui')
+            else:
+                args.append('-c')
+
+            proc = Process(args)
             proc.consume_output()
         except Process.NonZeroExitCode:
             return False
@@ -289,7 +304,9 @@ proc vunit_help {} {
         write_file(user_file_name, user_do)
         write_file(batch_file_name, batch_do)
 
-        if self._vsim_process is None:
+        if self._gui:
+            success = self._run_batch_file(user_file_name, gui=True)
+        elif self._vsim_process is None:
             success = self._run_batch_file(batch_file_name)
         else:
             success = self._run_persistent(common_file_name, load_only)

@@ -33,7 +33,8 @@ cases.
 ```shell
 > python run.py -h
 usage: run.py [-h] [-l] [--compile] [--clean] [-o OUTPUT_PATH] [-x XUNIT_XML]
-              [-v] [--no-color] [--log-level {info,error,warning,debug}]
+              [-v] [--no-color] [--gui]
+              [--log-level {info,error,warning,debug}]
               [tests [tests ...]]
 
 VUnit command line tool.
@@ -53,6 +54,7 @@ optional arguments:
   -v, --verbose         Print test output immediately and not only when
                         failure
   --no-color            Do not color output
+  --gui                 Open test case(s) in simulator gui
   --log-level {info,error,warning,debug}
 ```
 
