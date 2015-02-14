@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 from string import Template
 
@@ -93,7 +93,7 @@ impl_template = """  procedure check_equal(
   begin
     -- pragma translate_off
     check(checker, pass, got = expected,
-          equality_error_msg($got_str, $expected_str, msg),
+          failed_expectation_msg("Equality check", $got_str, $expected_str, msg),
           level, line_num, file_name);
     -- pragma translate_on
   end;

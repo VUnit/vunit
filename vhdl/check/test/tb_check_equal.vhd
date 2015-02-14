@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -578,7 +578,7 @@ begin
         verify_log_call(inc_count, "Equality check failed! Got 165. Expected 90.");
         check_equal(check_equal_checker, pass, natural'(165), natural'(90));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Equality check failed! Got 165. Expected 90.");              
+        verify_log_call(inc_count, "Equality check failed! Got 165. Expected 90.");
       end if;
     end loop;
 

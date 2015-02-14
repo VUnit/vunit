@@ -1410,6 +1410,189 @@ package check_pkg is
     constant file_name       : in string      := "")
     return boolean;
 
+  -----------------------------------------------------------------------------
+  -- check_match
+  -----------------------------------------------------------------------------
+
+  procedure check_match(
+    constant got             : in unsigned;
+    constant expected        : in unsigned;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  procedure check_match(
+    variable pass            : out boolean;
+    constant got             : in unsigned;
+    constant expected        : in unsigned;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  procedure check_match(
+    variable checker         : inout checker_t;
+    variable pass            : out boolean;
+    constant got             : in unsigned;
+    constant expected        : in unsigned;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  procedure check_match(
+    variable checker         : inout checker_t;
+    constant got             : in unsigned;
+    constant expected        : in unsigned;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  impure function check_match(
+    constant got             : in unsigned;
+    constant expected        : in unsigned;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "")
+    return boolean;
+  
+  procedure check_match(
+    constant got             : in std_logic_vector;
+    constant expected        : in std_logic_vector;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  procedure check_match(
+    variable pass            : out boolean;
+    constant got             : in std_logic_vector;
+    constant expected        : in std_logic_vector;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  procedure check_match(
+    variable checker         : inout checker_t;
+    variable pass            : out boolean;
+    constant got             : in std_logic_vector;
+    constant expected        : in std_logic_vector;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  procedure check_match(
+    variable checker         : inout checker_t;
+    constant got             : in std_logic_vector;
+    constant expected        : in std_logic_vector;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  impure function check_match(
+    constant got             : in std_logic_vector;
+    constant expected        : in std_logic_vector;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "")
+    return boolean;
+  
+  procedure check_match(
+    constant got             : in signed;
+    constant expected        : in signed;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  procedure check_match(
+    variable pass            : out boolean;
+    constant got             : in signed;
+    constant expected        : in signed;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  procedure check_match(
+    variable checker         : inout checker_t;
+    variable pass            : out boolean;
+    constant got             : in signed;
+    constant expected        : in signed;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  procedure check_match(
+    variable checker         : inout checker_t;
+    constant got             : in signed;
+    constant expected        : in signed;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  impure function check_match(
+    constant got             : in signed;
+    constant expected        : in signed;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "")
+    return boolean;
+  
+  procedure check_match(
+    constant got             : in std_logic;
+    constant expected        : in std_logic;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  procedure check_match(
+    variable pass            : out boolean;
+    constant got             : in std_logic;
+    constant expected        : in std_logic;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  procedure check_match(
+    variable checker         : inout checker_t;
+    variable pass            : out boolean;
+    constant got             : in std_logic;
+    constant expected        : in std_logic;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  procedure check_match(
+    variable checker         : inout checker_t;
+    constant got             : in std_logic;
+    constant expected        : in std_logic;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  impure function check_match(
+    constant got             : in std_logic;
+    constant expected        : in std_logic;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "")
+    return boolean;
 end package;
 
 
