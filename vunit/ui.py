@@ -148,9 +148,9 @@ class VUnit:
         self._persistent_sim = persistent_sim
         self._gui = gui
         self._configuration = TestConfiguration()
-        self._internal_preprocessors = []
         self._external_preprocessors = []
-        self._enabled_preprocessors = []
+        self._location_preprocessor = None
+        self._check_preprocessor = None
 
         self._create_output_path()
 
@@ -203,7 +203,9 @@ class VUnit:
         # @TODO dependency checking etc...
 
         if preprocessors is None:
-            preprocessors = self._external_preprocessors + self._internal_preprocessors
+            preprocessors = [self._location_preprocessor, self._check_preprocessor]
+            preprocessors = [p for p in preprocessors if not p is None]
+            preprocessors = self._external_preprocessors + preprocessors
 
         if len(preprocessors) == 0:
             return file_name
@@ -228,36 +230,23 @@ class VUnit:
         """
         Add a custom preprocessor to be used on all files, must be called before adding any files
         """
-        if str(preprocessor) in self._enabled_preprocessors:
-            return
-
         self._external_preprocessors.append(preprocessor)
-        self._enabled_preprocessors.append(str(preprocessor))
 
     def enable_location_preprocessing(self, additional_subprograms=None):
         """
         Enable location preprocessing, must be called before adding any files
         """
-        if '__location_preprocessor__' in self._enabled_preprocessors:
-            return
-
         p = LocationPreprocessor()
         if not additional_subprograms is None:
             for subprogram in additional_subprograms:
                 p.add_subprogram(subprogram)
-
-        self._internal_preprocessors.append(p)
-        self._enabled_preprocessors.append('__location_preprocessor__')
+        self._location_preprocessor = p
 
     def enable_check_preprocessing(self):
         """
         Enable check preprocessing, must be called before adding any files
         """
-        if '__check_preprocessor__' in self._enabled_preprocessors:
-            return
-
-        self._internal_preprocessors.append(CheckPreprocessor())
-        self._enabled_preprocessors.append('__check_preprocessor__')
+        self._check_preprocessor = CheckPreprocessor()
 
     def main(self):
         """
