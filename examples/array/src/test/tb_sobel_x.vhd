@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -19,15 +19,15 @@ use osvvm.RandomPkg.all;
 entity tb_sobel_x is
   generic (
     runner_cfg : runner_cfg_t;
-    data_width : natural := 14;
-    output_path : string);
+    output_path : string;
+    tb_path : string);
 end entity;
 
 architecture tb of tb_sobel_x is
   signal clk : std_logic := '0';
   signal input_tvalid : std_logic := '0';
   signal input_tlast : std_logic := '0';
-  signal input_tdata : unsigned(data_width-1 downto 0) := (others => '0');
+  signal input_tdata : unsigned(14-1 downto 0) := (others => '0');
   signal output_tvalid : std_logic;
   signal output_tlast : std_logic;
   signal output_tdata : signed(input_tdata'length downto 0);
@@ -65,14 +65,8 @@ begin
       end loop;
     end procedure;
 
-    procedure test_one_image(width, height : natural) is
+    procedure run_test is
     begin
-      image.init_2d(width => width, height => height,
-                    bit_width => input_tdata'length,
-                    is_signed => false);
-      randomize(image);
-      sobel_x(image, result => reference_image);
-
       wait until rising_edge(clk);
       start <= true;
       wait until rising_edge(clk);
@@ -83,13 +77,31 @@ begin
                   rising_edge(clk));
     end procedure;
 
+    procedure test_random_image(width, height : natural) is
+    begin
+      image.init_2d(width => width, height => height,
+                    bit_width => input_tdata'length,
+                    is_signed => false);
+      randomize(image);
+      sobel_x(image, result => reference_image);
+      run_test;
+    end procedure;
+
   begin
     test_runner_setup(runner, runner_cfg);
     rnd.InitSeed(rnd'instance_name);
-    test_one_image(128, 64);
-    test_one_image(1, 13);
-    test_one_image(16, 1);
-    test_one_image(1, 1);
+    while test_suite loop
+      if run("test_random_data_against_model") then
+        test_random_image(128, 64);
+        test_random_image(1, 13);
+        test_random_image(16, 1);
+        test_random_image(1, 1);
+      elsif run("test_input_file_against_output_file") then
+        image.load_csv(tb_path & "input.csv");
+        reference_image.load_csv(tb_path & "output.csv");
+        run_test;
+      end if;
+    end loop;
     test_runner_cleanup(runner);
     wait;
   end process;
