@@ -41,7 +41,7 @@ There are a number of ways to get started.
 
 *  Have a look at the examples under [examples](examples). The examples in [logging](examples/logging) and [check](examples/check) are tutorials that should be single-stepped in your simulator.
 *  The [user guide](user_guide.md) will give an introduction on how VUnit is used with Python scripting and from the command line
-*  There are also various presentations of VUnit on [YouTube](https://www.youtube.com/channel/UCCPVCaeWkz6C95aRUTbIwdg)
+*  There are also various presentations of VUnit on [YouTube](https://www.youtube.com/channel/UCCPVCaeWkz6C95aRUTbIwdg). For example [an introduction to unit testing (6 min)](https://www.youtube.com/watch?v=PZuBqcxS8t4) and a [short introduction to VUnit (12 min)](https://www.youtube.com/watch?v=D8s_VLD91tw).
 
 # Main Contributors
 Lars Asplund  
