@@ -2,12 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 import logging
 logger = logging.getLogger(__name__)
 
-from os.path import basename, join, splitext
+from os.path import basename, dirname, join, splitext
 import re
 
 from vunit.test_list import TestList
@@ -52,13 +52,23 @@ class TestScanner:
             configurations = self._cfg.get_configurations(entity, architecture_name)
 
             def create_test_bench(config):
+                generics = config.generics.copy()
+
+                if "tb_path" in entity.generic_names:
+                    new_value = '%s/' % dirname(file_name).replace("\\", "/")
+                    if "tb_path" in generics:
+                        logger.warning("The 'tb_path' generic from a configuration of %s of was overwritten, old value was '%s', new value is '%s'",
+                                       dotjoin(entity.library_name, entity.name, config.name), generics["tb_path"], new_value)
+
+                    generics["tb_path"] = new_value
+
                 return TestBench(simulator_if=self._simulator_if,
                                  library_name=entity.library_name,
                                  architecture_name=architecture_name,
                                  entity_name=entity.name,
                                  fail_on_warning=fail_on_warning,
                                  has_output_path=has_output_path,
-                                 generics=config.generics,
+                                 generics=generics,
                                  pli=config.pli,
                                  elaborate_only=self._elaborate_only)
 
