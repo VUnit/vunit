@@ -1,5 +1,5 @@
 # VUnit User Guide
-# Python Interface
+## Python Interface
 
 The public interface of VUnit is exposed through the `VUnit` class
 that can be imported directly from the vunit module.
@@ -150,3 +150,17 @@ Some failed!
 ```
 
 The above example code can be found in `examples/user_guide/`.
+
+# Examples
+* `examples/user_guide/`
+  * The most minimal VUnit project covering the basics of this user guide.
+
+* `examples/uart/`
+  * A more realistic test bench of an UART to show VUnit usage on a typical module.
+  In addition to the normal `run.py` it also contains a `run_with_preprocessing.py` to demonstrate the benefit of    location and check preprocessing.
+
+* `examples/array/`
+  * Demonstrates the `array_t` data type of `array_pkg` which can be used to handle dynamically sized 1D, 2D and 3D data as well as storing and loading it from csv and raw files.
+
+* `examples/generate_tets` 
+  * Demonstrates generating multiple test runs of the same test bench with different generic values.
