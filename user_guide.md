@@ -166,6 +166,6 @@ There are many examples demonstrating more specific usage of VUnit listed below:
 * [generate_tests](examples/generate_tests) 
   * Demonstrates generating multiple test runs of the same test bench with different generic values.
 
-## Interacing with pre-compiled libraries
+## Interfacing with pre-compiled libraries
 The `add_library` method of the VUnit class is intended for libraries managed by VUnit.
 When interfacing with pre-compiled libraries such as `unisim` from Xilinx the `add_external_library` method can be used. Unlike the `add_library` method which only takes a logical library name for which VUnit will manage the compile location the `add_external_library` method also takes a search path to the pre-compiled library. External libraries are treated as black-boxes by VUnit and no dependency scanning will be performed.  
