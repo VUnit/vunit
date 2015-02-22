@@ -9,6 +9,7 @@ Create simulator instances
 """
 
 from vunit.modelsim_interface import ModelSimInterface
+from vunit.ghdl_interface import GHDLInterface
 from os.path import join, exists
 import os
 
@@ -23,7 +24,7 @@ class SimulatorFactory(object):
         """
         Return a list of supported simulator classes
         """
-        return [ModelSimInterface]
+        return [ModelSimInterface, GHDLInterface]
 
     @classmethod
     def available_simulators(cls):

@@ -106,6 +106,7 @@ class TestVunitArtificial(unittest.TestCase):
             ("failed", "lib.tb_same_sim_some_fail.Test 2"),
             ("skipped", "lib.tb_same_sim_some_fail.Test 3")])
 
+    @unittest.skipIf(simulator_is("ghdl"), "GHDL does not support verilog")
     def test_compile_verilog(self):
         verilog_path = join(dirname(__file__), "verilog")
         ui = VUnit.from_argv(argv=["--clean",

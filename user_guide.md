@@ -75,6 +75,13 @@ modelsim:
                         variables and signals
   --new-vsim            Do not re-use the same vsim process for running
                         different test cases (slower)
+
+ghdl:
+  GHDL specific flags
+
+  --gtkwave {vcd,ghw}   Save .vcd or .ghw and open in gtkwave
+  --gtkwave-args GTKWAVE_ARGS
+                        Arguments to pass to gtkwave
 ```
 
 ## VHDL Test Benches
@@ -221,6 +228,11 @@ vunit_run
 It is also possible to automatically run the test case in the gui while logging all signals and variables recursively using the `--gui=run` flag.
 After simulation the user can manually add objects of interest to the waveform viewer without re-running since everything has been logged.
 When running large designs this mode can be quite slow and it might be better to just do `--gui=load` and manually add a few signals of interest.
+
+## GHDL - Viewing signals in GTKWave
+Signals can be viewed in GTKWave when using the GHDL simulator and GTKWave executable is found in the `PATH` environment variable.
+The `--gtkwave={vcd,ghw}` flag is used to select the file format to use.
+The `--gtkwave-args` flag can be used to pass additional arguments to GTKWave, remember to wrap them in double quotes (`""`).
 
 ## Disabling warnings from IEEE packages
 Warnings from IEEE packages can be disabled in `run.py`:

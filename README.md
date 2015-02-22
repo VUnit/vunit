@@ -28,13 +28,20 @@ VUnit depends on a number of components as listed below. Full VUnit functionalit
 ## Operating systems
 * Windows
 * Linux
+* Mac OS X
 
 ## Python
 * Python 2.7
 * Python 3.3 or higher
 
 ## Simulators
-* Mentor Graphics ModelSim (tested with 10.1 - 10.3)
+* [Mentor Graphics ModelSim](http://www.mentor.com/products/fv/modelsim/)
+  * Tested with 10.1 - 10.3
+* [GHDL](https://sourceforge.net/projects/ghdl-updates/)
+  * Only VHDL 2008
+  * Only versions >= 0.33 dev (There is no official release yet, must be built from source)
+  * Tested with LLVM and mcode backends, gcc backend might work aswell.
+  * Integrated support for using [GTKWave](http://gtkwave.sourceforge.net/) to view waveforms.
 
 # Getting Started
 There are a number of ways to get started.
