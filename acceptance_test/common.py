@@ -2,19 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 from xml.etree import ElementTree
 
 import vunit.ostools as ostools
+from vunit.modelsim_interface import ModelSimInterface
 
 def has_modelsim():
-    try:
-        proc = ostools.Process(['vsim', '-c', '-help'])
-        proc.consume_output(callback=None)
-        return True
-    except:
-        return False
+    return ModelSimInterface.is_available()
 
 def check_report(report_file, tests):
     tree = ElementTree.parse(report_file)

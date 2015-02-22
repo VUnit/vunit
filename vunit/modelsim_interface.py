@@ -14,12 +14,27 @@ import os
 from vunit.exceptions import CompileError
 
 class ModelSimInterface:
+
+    name = "modelsim"
+
+    @staticmethod
+    def is_available():
+        """
+        Return True if ModelSim is installed
+        """
+        try:
+            proc = Process(['vsim', '-c', '-help'])
+            proc.consume_output(callback=None)
+            return True
+        except:
+            return False
+
     def __init__(self, modelsim_ini="modelsim.ini", persistent=False, gui=False):
         self._modelsim_ini = modelsim_ini
 
-        # Workarround for Microsemi 10.3a which does not 
+        # Workarround for Microsemi 10.3a which does not
         # respect MODELSIM environment variable when set within .do script
-        # Microsemi bug reference id: dvt64978 
+        # Microsemi bug reference id: dvt64978
         os.environ["MODELSIM"] = self._modelsim_ini
 
         self._create_modelsim_ini()
@@ -246,7 +261,7 @@ proc vunit_help {} {
             args = ['vsim', '-quiet',
                     "-l", join(dirname(batch_file_name), "transcript"),
                     '-do', "do %s" % fix_path(batch_file_name)]
-            
+
             if gui:
                 args.append('-gui')
             else:
