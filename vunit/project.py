@@ -15,6 +15,7 @@ from os.path import join, basename, dirname
 from vunit.dependency_graph import DependencyGraph
 from vunit.vhdl_parser import VHDLDesignFile
 import vunit.ostools as ostools
+import traceback
 
 class Library:
     def __init__(self, name, directory, is_external=False):
@@ -73,13 +74,17 @@ class SourceFile:
         code = ostools.read_file(self.name)
         self._md5 = hashlib.md5(code.encode()).hexdigest()
 
+        self.design_units = []
+        self.dependencies = []
+
         if self.file_type == 'vhdl':
-            design_file = VHDLDesignFile.parse(code)
-            self.design_units = self._find_design_units(design_file)
-            self.dependencies = self._find_dependencies(design_file)
-        else:
-            self.design_units = []
-            self.dependencies = []
+            try:
+                design_file = VHDLDesignFile.parse(code)
+                self.design_units = self._find_design_units(design_file)
+                self.dependencies = self._find_dependencies(design_file)
+            except:
+                traceback.print_exc()
+                logger.error("Failed to parse %s", name)
 
         for design_unit in self.design_units:
             if design_unit.is_primary:
