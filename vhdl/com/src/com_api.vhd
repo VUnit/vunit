@@ -7,5 +7,13 @@
 --
 -- Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
 
+library com_lib;
+use com_lib.com_types_pkg.all;
+
 package com_pkg is
+  impure function create_actor (
+    constant name : string := "")
+    return actor_t;
 end package;
+
+  

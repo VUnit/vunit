@@ -11,6 +11,7 @@ context vunit_lib.vunit_context;
 
 library com_lib;
 use com_lib.com_pkg.all;
+use com_lib.com_types_pkg.all;
 
 entity tb_com is
   generic (
@@ -27,10 +28,14 @@ begin
     test_runner_setup(runner, runner_cfg);
 
     while test_suite loop
-      if run("Test that an actor can be created") then
-        check_failed("Not implemented");
-      elsif run("Test that an actor can be destroyed") then
-        check_failed("Not implemented");
+      if run("Test that named actors can be created") then
+        check(create_actor("actor") /= null_actor_c, "Failed to create named actor");
+        check(create_actor("other actor") /= create_actor("another actor"), "Failed to create unique actors");
+      elsif run("Test that no name actors can be created") then
+        check(create_actor /= null_actor_c, "Failed to create no name actor");
+      elsif run("Test that two actors of the same name cannot be created") then
+        check(create_actor("actor") /= null_actor_c, "Failed to create named actor");
+        check(create_actor("actor") = null_actor_c, "Was allowed to create an actor duplicate");
       end if;
     end loop;
 
