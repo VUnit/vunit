@@ -77,7 +77,7 @@ class SourceFile:
             design_file = VHDLDesignFile.parse(code)
             self.design_units = self._find_design_units(design_file)
             self.dependencies = self._find_dependencies(design_file)
-            self.depending_components = design_file.components
+            self.depending_components = design_file.component_instantiations
         else:
             self.design_units = []
             self.dependencies = []
