@@ -240,7 +240,7 @@ class Project:
                 try:
                     primary_unit = library.primary_design_units[unit_name]
                 except KeyError:
-					logger.warning("failed to find a component '%s' in library '%s'",
+					logger.debug("failed to find a component '%s' in library '%s'",
 									unit_name, library.name)
                 else:
                     yield primary_unit.source_file    

@@ -313,6 +313,35 @@ xx     data => data);
 xx signal clk : std_logic;
 xx signal data : std_logic_vector(data_width-1 downto 0);
 """)
+    def test_getting_component_instantiations_from_design_file(self):
+        design_file = VHDLDesignFile.parse("""
+entity top is
+end entity;
+
+architecture arch of top is
+begin
+    labelFoo : component foo
+    generic map(WIDTH => 16)
+    port map(clk => '1',
+             rst => '0',
+             in_vec => record_reg.input_signal,
+             output => some_signal(UPPER_CONSTANT-1 downto LOWER_CONSTANT+1));
+             
+    label2Foo : foo2
+    port map(clk => '1',
+             rst => '0',
+             output => "00");
+    
+    label3Foo : foo3 port map (clk, rst, X"A");
+             
+end architecture;
+        
+""")   
+        component_instantiations = design_file.component_instantiations
+        self.assertEqual(len(component_instantiations), 3)
+        self.assertEqual(component_instantiations[0], "foo")
+        self.assertEqual(component_instantiations[1], "foo2")
+        self.assertEqual(component_instantiations[2], "foo3")
 
     def test_adding_generics_to_entity(self):
         entity = VHDLEntity("name")

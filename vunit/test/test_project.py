@@ -290,6 +290,57 @@ end architecture;
         self.stub.remove_file(self.project._hash_file_name_of(self.get_source_file("file2.vhd")))
         self.assert_should_recompile(["file2.vhd", "file3.vhd"])
 
+    def test_finds_component_instantiation_dependencies(self):
+        self.project.add_library("toplib", "work_path")
+        self.add_source_file("toplib", "top.vhd",
+"""
+entity top is
+end entity;
+
+architecture arch of top is
+begin
+    labelFoo : component foo
+    generic map(WIDTH => 16)
+    port map(clk => '1',
+             rst => '0',
+             in_vec => record_reg.input_signal,
+             output => some_signal(UPPER_CONSTANT-1 downto LOWER_CONSTANT+1));
+             
+    label2Foo : foo2
+    port map(clk => '1',
+             rst => '0',
+             output => "00");
+end architecture;
+""")
+        
+        self.project.add_library("libcomp1", "work_path")
+        self.add_source_file("libcomp1", "comp1.vhd",
+"""
+entity foo is
+end entity;
+
+architecture arch of foo is
+begin
+end architecture;
+""")
+        
+        self.project.add_library("libcomp2", "work_path")
+        self.add_source_file("libcomp2", "comp2.vhd",
+"""
+entity foo2 is
+end entity;
+
+architecture arch of foo is
+begin
+end architecture;
+""")
+        
+        self.assert_has_component("top.vhd", "foo")
+        self.assert_has_component("top.vhd", "foo2")
+        
+        self.assert_compiles_before("comp1.vhd", before="top.vhd")
+        self.assert_compiles_before("comp2.vhd", before="top.vhd")
+		
     def create_dummy_three_file_project(self, update_file1=False):
         self.project = Project()
         self.project.add_library("lib", "work_path")
@@ -391,6 +442,16 @@ end architecture;
                                       "architecture",
                                       name, False, entity_name)
         self.assertIsNotNone(unit)
+		
+    def assert_has_component(self, source_file_name, component_name):
+        foundComp = False        
+        for source_file in self.project._source_files.values():
+            for component in source_file.depending_components:
+                if component == component_name:
+                    foundComp = True
+                    
+        self.assertTrue(foundComp, "Did not find component " + component_name + " in " + source_file_name)
+
     def _find_design_unit(self,
                           source_file_name,
                           design_unit_type,
