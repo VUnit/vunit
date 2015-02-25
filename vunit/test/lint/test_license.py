@@ -32,6 +32,8 @@ class TestLicense(unittest.TestCase):
             for file_name in files:
                 if 'preprocessed' in root:
                     continue
+                if 'codecs' in root:
+                    continue
                 osvvm_directory = abspath(join(ROOT, 'vhdl', 'osvvm'))
                 if is_prefix_of(osvvm_directory, abspath(join(root, file_name))):
                     continue
