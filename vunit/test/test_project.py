@@ -330,7 +330,7 @@ end architecture;
 entity foo2 is
 end entity;
 
-architecture arch of foo is
+architecture arch of foo2 is
 begin
 end architecture;
 """)

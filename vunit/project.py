@@ -15,6 +15,7 @@ from os.path import join, basename, dirname
 from vunit.dependency_graph import DependencyGraph
 from vunit.vhdl_parser import VHDLDesignFile
 import vunit.ostools as ostools
+import traceback
 
 class Library:
     def __init__(self, name, directory, is_external=False):
@@ -73,15 +74,19 @@ class SourceFile:
         code = ostools.read_file(self.name)
         self._md5 = hashlib.md5(code.encode()).hexdigest()
 
+        self.design_units = []
+        self.dependencies = []
+        self.depending_components = []
+
         if self.file_type == 'vhdl':
-            design_file = VHDLDesignFile.parse(code)
-            self.design_units = self._find_design_units(design_file)
-            self.dependencies = self._find_dependencies(design_file)
-            self.depending_components = design_file.component_instantiations
-        else:
-            self.design_units = []
-            self.dependencies = []
-            self.depending_components = []
+            try:
+                design_file = VHDLDesignFile.parse(code)
+                self.design_units = self._find_design_units(design_file)
+                self.dependencies = self._find_dependencies(design_file)
+                self.depending_components = design_file.component_instantiations
+            except:
+                traceback.print_exc()
+                logger.error("Failed to parse %s", name)
 
         for design_unit in self.design_units:
             if design_unit.is_primary:
@@ -93,8 +98,8 @@ class SourceFile:
         
         if len(self.depending_components) != 0:
             logger.debug("The file '%s' has the following components:", self.name)
-			for component in self.depending_components:
-				logger.debug(component)
+            for component in self.depending_components:
+                logger.debug(component)
         else: logger.debug("The file '%s' has no components", self.name)
 
     def _find_dependencies(self, design_file):
@@ -236,14 +241,19 @@ class Project:
     def _find_component_design_unit_dependencies(self, source_file):
         
         for unit_name in source_file.depending_components:
+            foundComponentEntity = False
+            
             for library in self.get_libraries():
                 try:
                     primary_unit = library.primary_design_units[unit_name]
-                except KeyError:
-					logger.debug("failed to find a component '%s' in library '%s'",
-									unit_name, library.name)
+                except:
+                    continue
                 else:
-                    yield primary_unit.source_file    
+                    foundComponentEntity = True
+                    yield primary_unit.source_file
+            
+            if not foundComponentEntity:
+                logger.debug("failed to find a matching entity for component '%s' ", unit_name)
             
 
     def _create_dependency_graph(self):
