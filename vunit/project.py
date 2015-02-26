@@ -76,12 +76,14 @@ class SourceFile:
 
         self.design_units = []
         self.dependencies = []
+        self.depending_components = []
 
         if self.file_type == 'vhdl':
             try:
                 design_file = VHDLDesignFile.parse(code)
                 self.design_units = self._find_design_units(design_file)
                 self.dependencies = self._find_dependencies(design_file)
+                self.depending_components = design_file.component_instantiations
             except:
                 traceback.print_exc()
                 logger.error("Failed to parse %s", name)
@@ -93,6 +95,12 @@ class SourceFile:
                 logger.debug('Adding secondary design unit (package body) for package %s', design_unit.primary_design_unit)
             else:
                 logger.debug('Adding secondary design unit (%s) %s', design_unit.unit_type, design_unit.name)
+        
+        if len(self.depending_components) != 0:
+            logger.debug("The file '%s' has the following components:", self.name)
+            for component in self.depending_components:
+                logger.debug(component)
+        else: logger.debug("The file '%s' has no components", self.name)
 
     def _find_dependencies(self, design_file):
         # Find dependencies introduced by the use clause
@@ -107,6 +115,7 @@ class SourceFile:
             if library_name == "work": # Work means same library as current file
                 library_name = self.library.name
             result.append((library_name, entity))
+                        
         return result
 
     def _find_design_units(self, design_file):
@@ -229,6 +238,24 @@ class Project:
             else:
                 yield primary_unit.source_file
 
+    def _find_component_design_unit_dependencies(self, source_file):
+        
+        for unit_name in source_file.depending_components:
+            foundComponentEntity = False
+            
+            for library in self.get_libraries():
+                try:
+                    primary_unit = library.primary_design_units[unit_name]
+                except:
+                    continue
+                else:
+                    foundComponentEntity = True
+                    yield primary_unit.source_file
+            
+            if not foundComponentEntity:
+                logger.debug("failed to find a matching entity for component '%s' ", unit_name)
+            
+
     def _create_dependency_graph(self):
         def add_dependency(start, end):
             if start.name == end.name:
@@ -250,6 +277,7 @@ class Project:
 
         add_dependencies(self._find_other_design_unit_dependencies)
         add_dependencies(self._find_primary_secondary_design_unit_dependencies)
+        add_dependencies(self._find_component_design_unit_dependencies)
 
         return dependency_graph
 

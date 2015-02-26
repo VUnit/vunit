@@ -14,7 +14,8 @@ class VHDLDesignFile:
                  architectures=None,
                  instantiations=None,
                  libraries=None,
-                 contexts=None):
+                 contexts=None,
+                 component_instantiations=None):
         self.entities = [] if entities is None else entities
         self.packages = [] if packages is None else packages
         self.package_bodies = [] if package_bodies is None else package_bodies
@@ -22,6 +23,7 @@ class VHDLDesignFile:
         self.instantiations = [] if instantiations is None else instantiations
         self.libraries = {} if libraries is None else libraries
         self.contexts = [] if contexts is None else contexts
+        self.component_instantiations = [] if component_instantiations is None else component_instantiations
 
     @classmethod
     def parse(cls, code):
@@ -32,7 +34,8 @@ class VHDLDesignFile:
                    package_bodies=list(VHDLPackageBody.find(code)),
                    instantiations=list(cls._find_instantiations(code)),
                    libraries=cls._find_libraries(code),
-                   contexts=list(VHDLContext.find(code)))
+                   contexts=list(VHDLContext.find(code)),
+                   component_instantiations=list(cls._find_component_instantiations(code)))
         
     _entity_re = re.compile('[a-zA-Z]\w*\s*\:\s*entity\s+(?P<libName>[a-zA-Z]\w*)\.(?P<entityName>[a-zA-Z]\w*)', 
                             re.IGNORECASE)
@@ -40,6 +43,13 @@ class VHDLDesignFile:
     def _find_instantiations(cls, code):
         matches = cls._entity_re.findall(code)
         return [(library_name, unit_name) for library_name, unit_name in matches]
+
+    _component_re = re.compile('[a-zA-Z]\w*\s*\:\s*(?:component)?\s*(?:(?:[a-zA-Z]\w*)\.)?([a-zA-Z]\w*)\s*(?:generic|port) map\s*\([\s\w\=\>\,\.\)\(\+\-\'\"]*\);',
+                            re.IGNORECASE)
+    @classmethod
+    def _find_component_instantiations(cls, code):
+        matches = cls._component_re.findall(code)
+        return [comp_name for comp_name in matches]
 
     _library_re = re.compile(r"""
         (^|\A)                         # Beginning of line or start of string
