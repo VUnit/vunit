@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 import re
 
@@ -36,8 +36,8 @@ class VHDLDesignFile:
                    libraries=cls._find_libraries(code),
                    contexts=list(VHDLContext.find(code)),
                    component_instantiations=list(cls._find_component_instantiations(code)))
-        
-    _entity_re = re.compile('[a-zA-Z]\w*\s*\:\s*entity\s+(?P<libName>[a-zA-Z]\w*)\.(?P<entityName>[a-zA-Z]\w*)', 
+
+    _entity_re = re.compile('[a-zA-Z]\w*\s*\:\s*entity\s+(?P<libName>[a-zA-Z]\w*)\.(?P<entityName>[a-zA-Z]\w*)',
                             re.IGNORECASE)
     @classmethod
     def _find_instantiations(cls, code):
@@ -85,7 +85,7 @@ class VHDLDesignFile:
         libraries = {}
         for matches in cls._library_re.finditer(code):
             for library_name in get_ids(matches):
-                if not library_name in libraries:                    
+                if not library_name in libraries:
                     libraries[library_name] = set()
 
         for matches in cls._uses_re.finditer(code):

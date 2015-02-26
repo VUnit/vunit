@@ -2,8 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
-                    
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+
 from unittest import TestCase
 from vunit.vhdl_parser import (VHDLDesignFile,
                                VHDLInterfaceElement,
@@ -38,7 +38,7 @@ end package;
 
 entity entity2 is
 end entity;
-""")        
+""")
         entities = design_file.entities
         self.assertEqual(len(entities), 2)
         self.assertEqual(entities[0].identifier, "entity1")
@@ -78,7 +78,7 @@ context name1.is_identifier;
 """)
         self.assertEqual(len(design_file.libraries), 5)
         self.assertEqual(len(design_file.contexts), 0)
-        self.assertEqual(design_file.libraries, 
+        self.assertEqual(design_file.libraries,
                          {"ieee" : set([("numeric_std", "all"), ("std_logic_1164", "all")]),
                           "name1" : set([("foo", "all"), ("bla", "all"), ("is_identifier",)]),
                           "lib1" : set([("foo",)]),
@@ -117,11 +117,11 @@ end entity;
     def test_parsing_entity_with_ports(self):
         entity = self.parse_single_entity("""\
 entity name is
-   port (clk : in std_logic;     
+   port (clk : in std_logic;
          data : out std_logic_vector(11-1 downto 0));
 end entity;
 """)
-        
+
         self.assertEqual(entity.identifier, "name")
         self.assertEqual(entity.generics, [])
         self.assertNotEqual(entity.ports, [])
@@ -194,20 +194,20 @@ end context identifier;
     def test_converting_interface_element_to_string(self):
         iface_element = VHDLInterfaceElement("identifier",
                                              VHDLSubtypeIndication.parse("integer"),
-                                             "in",                                             
+                                             "in",
                                              "0")
-        self.assertEqual(str(iface_element), 
+        self.assertEqual(str(iface_element),
                          "identifier : in integer := 0")
 
         iface_element = VHDLInterfaceElement("identifier",
                                              VHDLSubtypeIndication.parse("integer"),
                                              "in")
-        self.assertEqual(str(iface_element), 
+        self.assertEqual(str(iface_element),
                          "identifier : in integer")
 
         iface_element = VHDLInterfaceElement("identifier",
                                              VHDLSubtypeIndication.parse("integer"))
-        self.assertEqual(str(iface_element), 
+        self.assertEqual(str(iface_element),
                          "identifier : integer")
 
 
@@ -254,7 +254,7 @@ xx end entity;
     def test_converting_entity_to_instantiation_string(self):
         entity = self._create_entity()
         self.assertEqual(entity.to_instantiation_str(name="name_inst",
-                                                     sindent="xx ", 
+                                                     sindent="xx ",
                                                      indent="  "),
 """\
 xx name_inst : name
@@ -291,11 +291,11 @@ xx     data => data);
 """\
   name_inst : name;
 """)
-    
+
     def test_converting_entity_to_instantiation_string_with_mapping(self):
         entity = self._create_entity()
         self.assertEqual(entity.to_instantiation_str(name="name_inst",
-                                                     mapping = {"clk" : "'1'", 
+                                                     mapping = {"clk" : "'1'",
                                                                 "data_width" : "foo = bar"}),
 """\
   name_inst : name
@@ -326,17 +326,17 @@ begin
              rst => '0',
              in_vec => record_reg.input_signal,
              output => some_signal(UPPER_CONSTANT-1 downto LOWER_CONSTANT+1));
-             
+
     label2Foo : foo2
     port map(clk => '1',
              rst => '0',
              output => "00");
-    
+
     label3Foo : foo3 port map (clk, rst, X"A");
-             
+
 end architecture;
-        
-""")   
+
+""")
         component_instantiations = design_file.component_instantiations
         self.assertEqual(len(component_instantiations), 3)
         self.assertEqual(component_instantiations[0], "foo")
@@ -399,13 +399,13 @@ end architecture;
                                           VHDLSubtypeIndication.parse("natural := 16"))
 
         clk = VHDLInterfaceElement("clk",
-                                   VHDLSubtypeIndication.parse("std_logic"), 
+                                   VHDLSubtypeIndication.parse("std_logic"),
                                    "in")
         data = VHDLInterfaceElement("data",
                                     VHDLSubtypeIndication.parse("std_logic_vector(data_width-1 downto 0)"),
                                     "out")
 
         entity = VHDLEntity(identifier="name",
-                            generics=[data_width], 
+                            generics=[data_width],
                             ports=[clk, data])
         return entity
