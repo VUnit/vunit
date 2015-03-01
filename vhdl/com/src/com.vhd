@@ -7,11 +7,45 @@
 -- Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
 
 package body com_pkg is
-  impure function create_actor (
+  impure function create (
     constant name : string := "")
     return actor_t is
   begin
     return null_actor_c;
-  end;    
+  end;
+  
+  impure function find (
+    constant name : string;
+    constant enable_deferred_creation : boolean := true)    
+    return actor_t is
+  begin
+    return null_actor_c;
+  end;
+
+  function deferred_creation (
+    constant actor : actor_t)
+    return boolean is
+  begin
+    return false;
+  end function deferred_creation;
+
+  procedure destroy (
+    variable actor_t : inout actor_t;
+    variable status  : out   actor_destroy_status_t) is
+  begin
+    status := unknown_error;
+  end;
+
+  procedure destroy_all is
+  begin
+  end;
+
+  impure function num_of_actors
+    return natural is
+  begin
+    return 0;
+  end;
+  
+  
 end package body com_pkg;
 

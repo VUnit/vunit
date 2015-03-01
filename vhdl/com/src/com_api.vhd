@@ -11,9 +11,22 @@ library com_lib;
 use com_lib.com_types_pkg.all;
 
 package com_pkg is
-  impure function create_actor (
+  impure function create (
     constant name : string := "")
     return actor_t;
+  impure function find (
+    constant name : string;
+    constant enable_deferred_creation : boolean := true)
+    return actor_t;
+  function deferred_creation (
+    constant actor : actor_t)
+    return boolean;
+  procedure destroy (
+    variable actor_t : inout actor_t;
+    variable status  : out   actor_destroy_status_t);
+  procedure destroy_all;
+  impure function num_of_actors
+    return natural;
 end package;
 
   
