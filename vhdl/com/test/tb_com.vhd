@@ -22,8 +22,9 @@ architecture test_fixture of tb_com is
 begin
   test_runner : process
     variable actor_to_be_found, actor_with_deferred_creation, actor_to_destroy,
-             actor_to_destroy_copy, actor_to_keep: actor_t;
+             actor_to_destroy_copy, actor_to_keep, actor, actor_duplicate: actor_t;
     variable actor_destroy_status : actor_destroy_status_t;
+    variable n_actors : natural;
   begin
     checker_init(display_format => verbose,
                  file_name => join(output_path(runner_cfg), "error.csv"),
@@ -33,12 +34,15 @@ begin
     while test_suite loop
       if run("Test that named actors can be created") then
         check(create("actor") /= null_actor_c, "Failed to create named actor");
+        check(num_of_actors = 1, "Expected one actor");
         check(create("other actor") /= create("another actor"), "Failed to create unique actors");
+        check(num_of_actors = 3, "Expected three actors");
       elsif run("Test that no name actors can be created") then
         check(create /= null_actor_c, "Failed to create no name actor");
       elsif run("Test that two actors of the same name cannot be created") then
-        check(create("actor") /= null_actor_c, "Failed to create named actor");
-        check(create("actor") = null_actor_c, "Was allowed to create an actor duplicate");
+        actor := create("actor2");
+        check(actor /= null_actor_c, "Failed to create named actor");
+        check(create("actor2") = actor, "Was allowed to create an actor duplicate");
       elsif run("Test that a created actor can be found") then
         actor_to_be_found := create("actor to be found");
         check(find("actor to be found", false) /= null_actor_c, "Failed to find created actor");
@@ -50,7 +54,9 @@ begin
       elsif run("Test that a created actor can be destroyed") then
         actor_to_destroy := create("actor to destroy");
         actor_to_keep := create("actor to keep");
+        n_actors := num_of_actors;
         destroy(actor_to_destroy, actor_destroy_status);
+        check(num_of_actors = n_actors - 1, "Expected one less actor");
         check(actor_destroy_status = destroy_ok, "Expected destroy status to be ok");
         check(actor_to_destroy = null_actor_c, "Destroyed actor should be nullified");
         check(find("actor to destroy", false) = null_actor_c, "A destroyed actor should not be found");
@@ -58,9 +64,12 @@ begin
       elsif run("Test that a non-existing actor cannot be destroyed") then
         actor_to_destroy := create("actor to destroy");
         actor_to_destroy_copy := actor_to_destroy;
+        n_actors := num_of_actors;
         destroy(actor_to_destroy, actor_destroy_status);
+        check(num_of_actors = n_actors - 1, "Expected one less actor");
         destroy(actor_to_destroy_copy, actor_destroy_status);
         check(actor_destroy_status = unknown_actor_error, "Expected destroy to fail with unknown actor error");
+        check(num_of_actors = n_actors - 1, "Expected no change in the number of actors");
       elsif run("Test that all actors can be destroyed") then
         destroy_all;
         actor_to_destroy := create("actor to destroy 2");

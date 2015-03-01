@@ -11,6 +11,29 @@ library com_lib;
 use com_lib.com_types_pkg.all;
 
 package com_pkg is
+  type messenger_t is protected
+    impure function find (
+      constant name : string;
+      constant enable_deferred_creation : boolean := true)    
+      return actor_t;
+    impure function internal_create (
+      constant name : string := "";
+      constant deferred_creation : in boolean := false)    
+      return actor_t;
+    impure function create (
+      constant name : string := "")
+      return actor_t;
+    impure function deferred_creation (
+      constant actor : actor_t)
+      return boolean;
+    procedure destroy (
+      variable actor : inout actor_t;
+      variable status  : out   actor_destroy_status_t);
+    procedure destroy_all;    
+    impure function num_of_actors
+      return natural;
+  end protected;
+  
   impure function create (
     constant name : string := "")
     return actor_t;
@@ -18,11 +41,11 @@ package com_pkg is
     constant name : string;
     constant enable_deferred_creation : boolean := true)
     return actor_t;
-  function deferred_creation (
+  impure function deferred_creation (
     constant actor : actor_t)
     return boolean;
   procedure destroy (
-    variable actor_t : inout actor_t;
+    variable actor : inout actor_t;
     variable status  : out   actor_destroy_status_t);
   procedure destroy_all;
   impure function num_of_actors

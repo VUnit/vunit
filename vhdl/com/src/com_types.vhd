@@ -10,4 +10,5 @@ package com_types_pkg is
   subtype actor_t is integer;
   constant null_actor_c : integer := integer'left;
   type actor_destroy_status_t is (destroy_ok, unknown_actor_error, unknown_error);
+  
 end package;
