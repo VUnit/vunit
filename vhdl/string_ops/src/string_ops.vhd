@@ -14,6 +14,7 @@ use ieee.numeric_std.all;
 package string_ops is
   type line_vector is array (natural range <>) of line;
   type lines_t is access line_vector;
+  
   function count (
     constant s : string;
     constant substring : string;
@@ -272,12 +273,14 @@ package body string_ops is
     constant new_segment : string;
     constant cnt : in natural := natural'high)
     return string is
+    constant max_string_length_c : natural := 16384;
     variable l : line;
+    variable str : string(1 to max_string_length_c);
+    variable len : natural;    
     variable replaced_substrings : natural := 0;
     variable i : natural;
     variable s_int : string(1 to s'length) := s;
   begin
-    deallocate(l);
     if count(s_int, old_segment) > 0 then
       i := 1;
       while i <= s_int'right - old_segment'length + 1 loop
@@ -296,7 +299,11 @@ package body string_ops is
       write(l, s_int);
     end if;
 
-    return l.all;
+    len := l.all'length;
+    assert len <= max_string_length_c report "Max string length after replace is " & natural'image(max_string_length_c) severity failure;
+    str(1 to len) := l.all;
+    deallocate(l);
+    return str(1 to len);
   end replace;
   
   function replace (
@@ -491,7 +498,10 @@ package body string_ops is
   function to_integer_string (
     constant value : unsigned)
     return string is
+    constant max_string_length_c : natural := 309; -- 1024-bit input    
     variable ret_val, reversed_ret_val : line;
+    variable ret_str : string(1 to max_string_length_c);
+    variable len : natural;
     variable last_digit, quotient : unsigned(value'length - 1 downto 0);
   begin
     if is_x(std_logic_vector(value)) then
@@ -506,10 +516,6 @@ package body string_ops is
       return integer'image(to_integer(value));
     end if;
 
-    if reversed_ret_val /= null then
-      deallocate(reversed_ret_val);
-    end if;
-
     quotient := value;
     while quotient /= (quotient'range => '0') loop
       last_digit := quotient mod 10;
@@ -517,15 +523,16 @@ package body string_ops is
       write(reversed_ret_val, integer'image(to_integer(last_digit(3 downto 0))));
     end loop;
 
-    if ret_val /= null then
-      deallocate(ret_val);
-    end if;
-
     for i in reversed_ret_val.all'reverse_range loop
       write(ret_val, reversed_ret_val.all(i));
     end loop;
+    deallocate(reversed_ret_val);
 
-    return ret_val.all;
+    len := ret_val.all'length;
+    assert len <= max_string_length_c report "Max integer string length is " & natural'image(max_string_length_c) severity failure;
+    ret_str(1 to len) := ret_val.all;
+    deallocate(ret_val);
+    return ret_str(1 to len);
   end function to_integer_string;
 
   function to_integer_string (
@@ -566,13 +573,12 @@ package body string_ops is
   function to_nibble_string (
     constant value : unsigned)
     return string is
+    constant max_string_length_c : natural := 1279;  -- 1024-bit input        
     variable value_i : unsigned(value'length downto 1) := value;
     variable ret_val : line;
+    variable ret_str : string(1 to max_string_length_c);
+    variable len : natural;
   begin
-    if ret_val /= null then
-      deallocate(ret_val);
-    end if;
-
     for i in value_i'range loop
       if (i mod 4 = 0) and (i /= value_i'left) then
         write(ret_val, string'("_"));
@@ -583,7 +589,12 @@ package body string_ops is
     if ret_val = null then
       return "";
     end if;
-    return ret_val.all;
+
+    len := ret_val.all'length;
+    assert len <= max_string_length_c report "Max nibble string length is " & natural'image(max_string_length_c) severity failure;
+    ret_str(1 to len) := ret_val.all;
+    deallocate(ret_val);
+    return ret_str(1 to len);
   end function to_nibble_string;
 
   function to_nibble_string (
