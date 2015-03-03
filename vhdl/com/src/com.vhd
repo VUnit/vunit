@@ -81,26 +81,7 @@ package body com_pkg is
         return actor;
       end if;
     end;
-  
-    impure function deferred_creation (
-      constant actor : actor_t)
-      return deferred_creation_status_t is
-      variable item : actor_list_item_ptr_t := actors;
-    begin
-      while item /= null loop
-        if item.actor = actor then
-          if item.deferred_creation then
-            return deferred;
-          else
-            return not_deferred;
-          end if;
-        end if;
-        item := item.next_item;
-      end loop;
-      
-      return unknown_actor_error;
-    end function deferred_creation;
-  
+    
     procedure destroy (
       variable actor : inout actor_t;
       variable status  : out   actor_destroy_status_t) is
@@ -182,13 +163,6 @@ package body com_pkg is
   begin
     return messenger.find(name, enable_deferred_creation);
   end;
-
-  impure function deferred_creation (
-    constant actor : actor_t)
-    return deferred_creation_status_t is
-  begin
-    return messenger.deferred_creation(actor);
-  end function deferred_creation;
 
   procedure destroy (
     variable actor : inout actor_t;

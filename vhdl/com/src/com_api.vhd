@@ -19,9 +19,6 @@ package com_pkg is
     impure function create (
       constant name : string := "")
       return actor_t;
-    impure function deferred_creation (
-      constant actor : actor_t)
-      return deferred_creation_status_t;
     procedure destroy (
       variable actor : inout actor_t;
       variable status  : out   actor_destroy_status_t);
@@ -39,9 +36,6 @@ package com_pkg is
     constant name : string;
     constant enable_deferred_creation : boolean := true)
     return actor_t;
-  impure function deferred_creation (
-    constant actor : actor_t)
-    return deferred_creation_status_t;
   procedure destroy (
     variable actor : inout actor_t;
     variable status  : out   actor_destroy_status_t);
