@@ -266,44 +266,47 @@ package body string_ops is
   begin
     return strip(str, chars, true, false);
   end lstrip;
-
+  
   function replace (
     constant s      : string;
     constant old_segment : string;
     constant new_segment : string;
     constant cnt : in natural := natural'high)
     return string is
-    constant max_string_length_c : natural := 16384;
-    variable l : line;
-    variable str : string(1 to max_string_length_c);
-    variable len : natural;    
+    constant n_occurences : natural := count(s, old_segment);
+    function string_length_after_replace return natural is
+      variable n_replacements : natural := n_occurences;
+    begin
+      if cnt < n_replacements  then
+        n_replacements := cnt;
+      end if;
+      return s'length + n_replacements * (new_segment'length - old_segment'length);
+    end;
+    variable ret_val : string(1 to string_length_after_replace);
     variable replaced_substrings : natural := 0;
-    variable i : natural;
+    variable i,j : natural := 1;
     variable s_int : string(1 to s'length) := s;
   begin
-    if count(s_int, old_segment) > 0 then
-      i := 1;
+    if n_occurences > 0 then
       while i <= s_int'right - old_segment'length + 1 loop
         if (s_int(i to i + old_segment'length - 1) = old_segment) and
            (replaced_substrings < cnt) then
-          write(l, new_segment);
+          ret_val(j to j + new_segment'length - 1) := new_segment;
           replaced_substrings := replaced_substrings + 1;
           i := i + old_segment'length;
+          j := j + new_segment'length;
         else
-          write(l, s_int(i));
+          ret_val(j) := s_int(i);
+          j := j + 1;
           i := i + 1;          
         end if;
       end loop;
-      write(l, s_int(i to s_int'right));
+      ret_val(j to j + s_int'right - i) := s_int(i to s_int'right);
     else
-      write(l, s_int);
+      ret_val := s_int;
     end if;
 
-    len := l.all'length;
-    assert len <= max_string_length_c report "Max string length after replace is " & natural'image(max_string_length_c) severity failure;
-    str(1 to len) := l.all;
-    deallocate(l);
-    return str(1 to len);
+    return ret_val;
   end replace;
   
   function replace (
@@ -498,10 +501,8 @@ package body string_ops is
   function to_integer_string (
     constant value : unsigned)
     return string is
-    constant max_string_length_c : natural := 309; -- 1024-bit input    
-    variable ret_val, reversed_ret_val : line;
-    variable ret_str : string(1 to max_string_length_c);
-    variable len : natural;
+    variable ret_val : string(1 to integer(0.302*value'length + 1.0));
+    variable index : integer := ret_val'right;
     variable last_digit, quotient : unsigned(value'length - 1 downto 0);
   begin
     if is_x(std_logic_vector(value)) then
@@ -520,19 +521,11 @@ package body string_ops is
     while quotient /= (quotient'range => '0') loop
       last_digit := quotient mod 10;
       quotient := quotient / 10;
-      write(reversed_ret_val, integer'image(to_integer(last_digit(3 downto 0))));
+      ret_val(index to index) := integer'image(to_integer(last_digit(3 downto 0)));
+      index := index - 1;
     end loop;
 
-    for i in reversed_ret_val.all'reverse_range loop
-      write(ret_val, reversed_ret_val.all(i));
-    end loop;
-    deallocate(reversed_ret_val);
-
-    len := ret_val.all'length;
-    assert len <= max_string_length_c report "Max integer string length is " & natural'image(max_string_length_c) severity failure;
-    ret_str(1 to len) := ret_val.all;
-    deallocate(ret_val);
-    return ret_str(1 to len);
+    return ret_val(index + 1 to ret_val'right);
   end function to_integer_string;
 
   function to_integer_string (
@@ -573,28 +566,20 @@ package body string_ops is
   function to_nibble_string (
     constant value : unsigned)
     return string is
-    constant max_string_length_c : natural := 1279;  -- 1024-bit input        
     variable value_i : unsigned(value'length downto 1) := value;
-    variable ret_val : line;
-    variable ret_str : string(1 to max_string_length_c);
-    variable len : natural;
+    variable ret_val : string(1 to (value'length + (value'length - 1)/4));
+    variable index : natural := 1;
   begin
     for i in value_i'range loop
       if (i mod 4 = 0) and (i /= value_i'left) then
-        write(ret_val, string'("_"));
+        ret_val(index) := '_';
+        index := index + 1;
       end if;
-      write(ret_val, std_logic'image(value_i(i))(2));
+      ret_val(index) := std_logic'image(value_i(i))(2);
+      index := index + 1;
     end loop;
 
-    if ret_val = null then
-      return "";
-    end if;
-
-    len := ret_val.all'length;
-    assert len <= max_string_length_c report "Max nibble string length is " & natural'image(max_string_length_c) severity failure;
-    ret_str(1 to len) := ret_val.all;
-    deallocate(ret_val);
-    return ret_str(1 to len);
+    return ret_val;
   end function to_nibble_string;
 
   function to_nibble_string (

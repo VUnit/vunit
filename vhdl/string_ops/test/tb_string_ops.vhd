@@ -167,6 +167,7 @@ begin
     banner("Verify replace");
     ---------------------------------------------------------------------------
     counting_assert(replace("", 'a', 'b') = "", "Should return empty string on empty input string.");
+    counting_assert(replace("foo bar", 'a', "") = "foo br", "Should be possible to replace segments with nothing");
     counting_assert(replace("foo bar ozon", 'o', 'b') = "fbb bar bzbn", "Should replace all specified characters by default.");
     counting_assert(replace("foo bar ozon", 'o', 'b', 2) = "fbb bar ozon", "Should replace first n specified characters if cnt is specified.");
     counting_assert(replace("foo bar ozon", 'o', 'b', 0) = "foo bar ozon", "Should not replace if cnt = 0.");
@@ -310,6 +311,7 @@ begin
     counting_assert(to_integer_string(unsigned'("011110110010100000111101LLLL00111000HHHH1001001010111000001101111101100100101111011100111010100001110011100000001010")) = "39966790250241720040714860591790090", "Should handle really large values containing weak bits.");
     counting_assert(to_integer_string(unsigned'("1000000-")) = "NaN", "Should return NaN on vectors containing metalogical values");
     counting_assert(to_integer_string(unsigned'("1000000---000000000000000000000000000000000")) = "NaN", "Should return NaN on long vectors containing metalogical values");
+    counting_assert(to_integer_string(unsigned'("1111101000")) = "1000", "Should return correct value for power of 10 values which are close to the maximum value that can be represented by the minimum binary vector for that value.");
 
     counting_assert(to_integer_string(std_logic_vector'("")) = "0", "Should return 0 on empty input");
     counting_assert(to_integer_string(std_logic_vector'("0")) = natural'image(natural'low), "Should return correct value for minimum natural value.");
