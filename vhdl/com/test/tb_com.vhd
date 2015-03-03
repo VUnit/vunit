@@ -12,7 +12,6 @@ context vunit_lib.vunit_context;
 library com_lib;
 use com_lib.com_pkg.all;
 use com_lib.com_types_pkg.all;
-use com_lib.foo.all;
 
 entity tb_com is
   generic (
@@ -33,6 +32,7 @@ begin
     test_runner_setup(runner, runner_cfg);
 
     while test_suite loop
+      reset_messenger;
       if run("Test that named actors can be created") then
         check(create("actor") /= null_actor_c, "Failed to create named actor");
         check(num_of_actors = 1, "Expected one actor");
@@ -47,11 +47,16 @@ begin
       elsif run("Test that a created actor can be found") then
         actor_to_be_found := create("actor to be found");
         check(find("actor to be found", false) /= null_actor_c, "Failed to find created actor");
-        check(deferred_creation(actor_to_be_found) = not_deferred, "The actor's creation should not be deferred");
+        check(num_of_deferred_creations = 0, "Expected no deferred creations");
       elsif run("Test that an actor not created is found and its creation is deferred") then
+        check(num_of_deferred_creations = 0, "Expected no deferred creations");
         actor_with_deferred_creation := find("actor with deferred creation");
         check(actor_with_deferred_creation /= null_actor_c, "Failed to find actor with deferred creation");
-        check(deferred_creation(actor_with_deferred_creation) = deferred, "The actor's creation should be deferred");
+        check(num_of_deferred_creations = 1, "Expected one deferred creations");
+      elsif run("Test that deferred creation can be suppressed when an actor is not found") then
+        actor_with_deferred_creation := find("actor with deferred creation2", false);
+        check(actor_with_deferred_creation = null_actor_c, "Didn't expect to find any actor");
+        check(num_of_deferred_creations = 0, "Expected no deferred creations");
       elsif run("Test that a created actor can be destroyed") then
         actor_to_destroy := create("actor to destroy");
         actor_to_keep := create("actor to keep");

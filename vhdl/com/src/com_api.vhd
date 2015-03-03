@@ -28,6 +28,8 @@ package com_pkg is
     procedure reset_messenger;    
     impure function num_of_actors
       return natural;
+    impure function num_of_deferred_creations
+      return natural;
   end protected;
   
   impure function create (
@@ -45,6 +47,8 @@ package com_pkg is
     variable status  : out   actor_destroy_status_t);
   procedure reset_messenger;
   impure function num_of_actors
+    return natural;
+  impure function num_of_deferred_creations
     return natural;
 end package;
 

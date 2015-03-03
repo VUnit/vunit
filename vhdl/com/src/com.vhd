@@ -148,6 +148,12 @@ package body com_pkg is
     begin
       return n_actors;
     end;
+
+    impure function num_of_deferred_creations
+      return natural is
+    begin
+      return 17;
+    end;
   
   end protected body;
 
@@ -193,6 +199,11 @@ package body com_pkg is
     return messenger.num_of_actors;
   end;
   
+  impure function num_of_deferred_creations
+    return natural is
+  begin
+    return 17;
+  end;
   
 end package body com_pkg;
 
