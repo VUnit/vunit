@@ -7,8 +7,11 @@
 -- Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
 
 package com_types_pkg is
-  subtype actor_t is integer;
-  constant null_actor_c : integer := integer'left;
+  type actor_t is record
+    id : integer;
+  end record actor_t;
+  constant null_actor_c : actor_t := (id => integer'left);
   type actor_destroy_status_t is (destroy_ok, unknown_actor_error, unknown_error);
+  type deferred_creation_status_t is (deferred, not_deferred, unknown_actor_error);
   
 end package;

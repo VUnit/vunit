@@ -16,20 +16,16 @@ package com_pkg is
       constant name : string;
       constant enable_deferred_creation : boolean := true)    
       return actor_t;
-    impure function internal_create (
-      constant name : string := "";
-      constant deferred_creation : in boolean := false)    
-      return actor_t;
     impure function create (
       constant name : string := "")
       return actor_t;
     impure function deferred_creation (
       constant actor : actor_t)
-      return boolean;
+      return deferred_creation_status_t;
     procedure destroy (
       variable actor : inout actor_t;
       variable status  : out   actor_destroy_status_t);
-    procedure destroy_all;    
+    procedure reset_messenger;    
     impure function num_of_actors
       return natural;
   end protected;
@@ -43,11 +39,11 @@ package com_pkg is
     return actor_t;
   impure function deferred_creation (
     constant actor : actor_t)
-    return boolean;
+    return deferred_creation_status_t;
   procedure destroy (
     variable actor : inout actor_t;
     variable status  : out   actor_destroy_status_t);
-  procedure destroy_all;
+  procedure reset_messenger;
   impure function num_of_actors
     return natural;
 end package;

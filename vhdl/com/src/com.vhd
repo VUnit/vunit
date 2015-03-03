@@ -23,9 +23,8 @@ package body com_pkg is
     variable next_actor_id : integer := 0;
     variable n_actors : natural := 0;
 
-    impure function find (
-      constant name : string;
-      constant enable_deferred_creation : boolean := true)    
+    impure function find_actor (
+      constant name : string)    
       return actor_t is
       variable item : actor_list_item_ptr_t := actors;
     begin
@@ -36,26 +35,17 @@ package body com_pkg is
         item := item.next_item;
       end loop;
 
-      if enable_deferred_creation then
-        return internal_create(name, true);
-      else
-        return null_actor_c;
-      end if;
+      return null_actor_c;
     end;
-            
-    impure function internal_create (
+
+    impure function create_actor (
       constant name : string := "";
       constant deferred_creation : in boolean := false)
       return actor_t is
       variable item : actor_list_item_ptr_t;
-      variable actor : actor_t := find(name, false);
     begin
-      if actor /= null_actor_c then
-        return actor;
-      end if;
-      
       item := new actor_list_item_t;
-      item.actor := next_actor_id;
+      item.actor.id := next_actor_id;
       write(item.name, name);
       item.deferred_creation := deferred_creation;
       item.next_item := actors;
@@ -66,29 +56,49 @@ package body com_pkg is
       
       return item.actor;
     end function;
-
+                                
+    impure function find (
+      constant name : string;
+      constant enable_deferred_creation : boolean := true)    
+      return actor_t is
+      variable actor : actor_t := find_actor(name);
+    begin
+      if (actor = null_actor_c) and enable_deferred_creation then
+        return create_actor(name, true);
+      else
+        return actor;
+      end if;
+    end;
+            
     impure function create (
       constant name : string := "")
       return actor_t is
-      variable item : actor_list_item_ptr_t;
-      variable actor : actor_t := find(name, false);
+      variable actor : actor_t := find_actor(name);
     begin
-      return internal_create(name);
-    end function;
+      if (actor = null_actor_c) then
+        return create_actor(name);
+      else
+        return actor;
+      end if;
+    end;
   
     impure function deferred_creation (
       constant actor : actor_t)
-      return boolean is
+      return deferred_creation_status_t is
       variable item : actor_list_item_ptr_t := actors;
     begin
       while item /= null loop
         if item.actor = actor then
-          return item.deferred_creation;
+          if item.deferred_creation then
+            return deferred;
+          else
+            return not_deferred;
+          end if;
         end if;
         item := item.next_item;
       end loop;
       
-      return false; -- TODO this is an error
+      return unknown_actor_error;
     end function deferred_creation;
   
     procedure destroy (
@@ -104,6 +114,7 @@ package body com_pkg is
           else
             actors := item.next_item;
           end if;
+          deallocate(item.name);
           deallocate(item);
           actor :=null_actor_c;
           n_actors := n_actors - 1;
@@ -116,7 +127,7 @@ package body com_pkg is
       status := unknown_actor_error;
     end;
 
-    procedure destroy_all is
+    procedure reset_messenger is
       variable item : actor_list_item_ptr_t := actors;
       variable previous_item : actor_list_item_ptr_t := null;
     begin
@@ -124,9 +135,12 @@ package body com_pkg is
       while item /= null loop
         previous_item := item;
         item := item.next_item;
+        deallocate(previous_item.name);
         deallocate(previous_item);
       end loop;
       n_actors := 0;
+      next_actor_id := 0;
+    -- TODO: Deallocate messages when implemented
     end;
 
     impure function num_of_actors
@@ -156,7 +170,7 @@ package body com_pkg is
 
   impure function deferred_creation (
     constant actor : actor_t)
-    return boolean is
+    return deferred_creation_status_t is
   begin
     return messenger.deferred_creation(actor);
   end function deferred_creation;
@@ -168,9 +182,9 @@ package body com_pkg is
     messenger.destroy(actor, status);
   end;
 
-  procedure destroy_all is
+  procedure reset_messenger is
   begin
-    messenger.destroy_all;
+    messenger.reset_messenger;
   end;
 
   impure function num_of_actors

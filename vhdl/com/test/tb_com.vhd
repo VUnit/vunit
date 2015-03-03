@@ -12,6 +12,7 @@ context vunit_lib.vunit_context;
 library com_lib;
 use com_lib.com_pkg.all;
 use com_lib.com_types_pkg.all;
+use com_lib.foo.all;
 
 entity tb_com is
   generic (
@@ -35,7 +36,7 @@ begin
       if run("Test that named actors can be created") then
         check(create("actor") /= null_actor_c, "Failed to create named actor");
         check(num_of_actors = 1, "Expected one actor");
-        check(create("other actor") /= create("another actor"), "Failed to create unique actors");
+        check(create("other actor").id /= create("another actor").id, "Failed to create unique actors");
         check(num_of_actors = 3, "Expected three actors");
       elsif run("Test that no name actors can be created") then
         check(create /= null_actor_c, "Failed to create no name actor");
@@ -46,11 +47,11 @@ begin
       elsif run("Test that a created actor can be found") then
         actor_to_be_found := create("actor to be found");
         check(find("actor to be found", false) /= null_actor_c, "Failed to find created actor");
-        check_false(deferred_creation(actor_to_be_found), "The actor's creation should not be deferred");
+        check(deferred_creation(actor_to_be_found) = not_deferred, "The actor's creation should not be deferred");
       elsif run("Test that an actor not created is found and its creation is deferred") then
         actor_with_deferred_creation := find("actor with deferred creation");
         check(actor_with_deferred_creation /= null_actor_c, "Failed to find actor with deferred creation");
-        check(deferred_creation(actor_with_deferred_creation), "The actor's creation should be deferred");
+        check(deferred_creation(actor_with_deferred_creation) = deferred, "The actor's creation should be deferred");
       elsif run("Test that a created actor can be destroyed") then
         actor_to_destroy := create("actor to destroy");
         actor_to_keep := create("actor to keep");
@@ -71,11 +72,11 @@ begin
         check(actor_destroy_status = unknown_actor_error, "Expected destroy to fail with unknown actor error");
         check(num_of_actors = n_actors - 1, "Expected no change in the number of actors");
       elsif run("Test that all actors can be destroyed") then
-        destroy_all;
+        reset_messenger;
         actor_to_destroy := create("actor to destroy 2");
         actor_to_destroy := create("actor to destroy 3");
         check(num_of_actors = 2, "Expected two actors");         
-        destroy_all;
+        reset_messenger;
         check(num_of_actors = 0, "Failed to destroy all actors"); 
       end if;
     end loop;
