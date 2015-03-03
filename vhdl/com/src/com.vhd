@@ -151,8 +151,17 @@ package body com_pkg is
 
     impure function num_of_deferred_creations
       return natural is
+      variable item : actor_list_item_ptr_t := actors;
+      variable n_deferred_actors : natural := 0;
     begin
-      return 17;
+      while item /= null loop
+        if item.deferred_creation then
+          n_deferred_actors := n_deferred_actors + 1;
+        end if;
+        item := item.next_item;
+      end loop;
+
+      return n_deferred_actors;
     end;
   
   end protected body;
@@ -202,7 +211,7 @@ package body com_pkg is
   impure function num_of_deferred_creations
     return natural is
   begin
-    return 17;
+    return messenger.num_of_deferred_creations;
   end;
   
 end package body com_pkg;
