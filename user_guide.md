@@ -165,6 +165,10 @@ There are many examples demonstrating more specific usage of VUnit listed below:
 
 * [generate_tests](examples/generate_tests) 
   * Demonstrates generating multiple test runs of the same test bench with different generic values.
+   
+* [vivado](examples/vivado)
+  * Demonstrates compiling and performing behavioral simulation of Vivado IPs with VUnit.
+  
 
 ## Interfacing with pre-compiled libraries
 The `add_library` method of the VUnit class is intended for libraries managed by VUnit.
