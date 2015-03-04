@@ -9,20 +9,24 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
+use std.textio.all;
+
 package com_types_pkg is
   type actor_t is record
-    id : integer;
+    id : natural;
   end record actor_t;
   type message_t is record
-    id : integer;
+    sender : actor_t;
+    payload : line;
   end record message_t;
-  constant null_actor_c : actor_t := (id => integer'left);
-  constant null_message_c : message_t := (id => integer'left);
-  -- TODO: destroy_ok -> ok
-  type actor_destroy_status_t is (destroy_ok, unknown_actor_error, unknown_error);
+  type message_ptr_t is access message_t;
+  constant null_actor_c : actor_t := (id => 0);
+  type actor_destroy_status_t is (ok, unknown_actor_error);
   type deferred_creation_status_t is (deferred, not_deferred, unknown_actor_error);
-  type send_status_t is (ok, send_error);
-  type message_status_t is (received, receive_timeout, receive_error);
+  type send_status_t is (ok, unknown_receiver_error, null_message_error);
+  type receive_status_t is (ok, timeout, deferred_receiver_error);
   subtype network_t is std_logic;
-  constant idle_network : std_logic := '0';
+  constant network_event : std_logic := '1';
+  constant idle_network : std_logic := 'Z';
+  constant max_timeout_c : time := 1000 hr; -- ModelSim can't handle time'high
 end package;

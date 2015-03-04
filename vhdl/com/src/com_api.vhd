@@ -7,8 +7,7 @@
 --
 -- Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
 
-library com_lib;
-use com_lib.com_types_pkg.all;
+use work.com_types_pkg.all;
 
 package com_pkg is
   signal net : network_t := idle_network;
@@ -27,20 +26,27 @@ package com_pkg is
     procedure reset_messenger;    
     impure function num_of_actors
       return natural;
+    impure function deferred (
+      constant actor : actor_t)
+      return boolean;  
     impure function num_of_deferred_creations
       return natural;
     procedure send (
-      signal net        : inout network_t;
       constant sender   : in    actor_t;
       constant receiver : in    actor_t;
       constant payload  : in    string;
       variable status   : out   send_status_t);
-    impure function get_payload (
-      constant msg : message_t)
+    impure function has_messages (
+      constant actor : actor_t)
+      return boolean;
+    impure function get_first_message_payload (
+      constant actor : actor_t)
       return string;
-    impure function get_status (
-      constant msg : message_t)
-      return message_status_t;
+    impure function get_first_message_sender (
+      constant actor : actor_t)
+      return actor_t;
+    procedure delete_first_envelope (
+      constant actor : in actor_t);
   end protected;
   
   impure function create (
@@ -69,15 +75,36 @@ package com_pkg is
     constant receiver : in    actor_t;
     constant payload  : in    string;
     variable status   : out   send_status_t);
-  procedure receive (
+  procedure send (
+    signal net        : inout network_t;
+    constant receiver : in    actor_t;
+    variable message  : inout message_ptr_t;
+    variable status   : out   send_status_t;
+    constant keep_message : in boolean := false);  
+  procedure wait_for_messages (
+    signal net        : in network_t;
+    constant receiver : in actor_t;
+    variable status : out receive_status_t;
+    constant receive_timeout : in time := max_timeout_c);
+  impure function has_messages (
+    constant actor : actor_t)
+    return boolean;
+  impure function get_message (
     constant receiver : actor_t;
-    variable msg : out message_t);
-  impure function get_payload (
-    constant msg : message_t)
-    return string;
-  impure function get_status (
-    constant msg : message_t)
-    return message_status_t;
+    constant delete_from_inbox : in boolean := true)
+    return message_ptr_t;
+  procedure receive (
+    signal net        : in network_t;
+    constant receiver : actor_t;
+    variable message : inout message_ptr_t;
+    variable status : out receive_status_t;
+    constant timeout : in time := max_timeout_c);  
+  function compose (
+    constant payload : string := "";
+    constant sender  : actor_t := null_actor_c)
+    return message_ptr_t;  
+  procedure delete (
+    variable message : inout message_ptr_t);  
 end package;
 
   
