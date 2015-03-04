@@ -13,18 +13,24 @@ library com_lib;
 use com_lib.com_pkg.all;
 use com_lib.com_types_pkg.all;
 
+use std.textio.all;
+
 entity tb_com is
   generic (
     runner_cfg : runner_cfg_t := runner_cfg_default);
 end entity tb_com;
 
 architecture test_fixture of tb_com is
+  signal hello_world_received : boolean := false;
 begin
   test_runner : process
     variable actor_to_be_found, actor_with_deferred_creation, actor_to_destroy,
-             actor_to_destroy_copy, actor_to_keep, actor, actor_duplicate: actor_t;
+             actor_to_destroy_copy, actor_to_keep, actor, actor_duplicate,
+             self, receiver, server: actor_t;
     variable actor_destroy_status : actor_destroy_status_t;
     variable n_actors : natural;
+    variable send_status : send_status_t;
+    variable msg : message_t;
   begin
     checker_init(display_format => verbose,
                  file_name => join(output_path(runner_cfg), "error.csv"),
@@ -33,11 +39,12 @@ begin
 
     while test_suite loop
       reset_messenger;
+      self := create("test runner");
       if run("Test that named actors can be created") then
         check(create("actor") /= null_actor_c, "Failed to create named actor");
-        check(num_of_actors = 1, "Expected one actor");
+        check(num_of_actors = 2, "Expected two actors");
         check(create("other actor").id /= create("another actor").id, "Failed to create unique actors");
-        check(num_of_actors = 3, "Expected three actors");
+        check(num_of_actors = 4, "Expected three actors");
       elsif run("Test that no name actors can be created") then
         check(create /= null_actor_c, "Failed to create no name actor");
       elsif run("Test that two actors of the same name cannot be created") then
@@ -82,11 +89,63 @@ begin
         actor_to_destroy := create("actor to destroy 3");
         check(num_of_actors = 2, "Expected two actors");         
         reset_messenger;
-        check(num_of_actors = 0, "Failed to destroy all actors"); 
+        check(num_of_actors = 0, "Failed to destroy all actors");
+      elsif run("Test that an actor can send a message to another actor") then
+        receiver := find("receiver");
+        send(net, receiver, "hello world", send_status);
+        check(send_status = ok, "Expected send to succeed");
+        wait until hello_world_received for 1 ns;
+        check(hello_world_received, "Expected ""hello world"" to be received at the server");
+      elsif run("Test that an actor can send a message in response to another message from an a priori unknown actor") then
+        server := find("server");
+        send(net, self, server, "request", send_status);
+        check(send_status = ok, "Expected send to succeed");
+        receive(self, msg);
+        check(get_payload(msg) = "request acknowledge", "Expected ""request acknowledge""");
+        check(get_status(msg) = received, "Bad receive status");
+      --elsif run("Test that an actor can send a message to itself") then
+      --elsif run("Test that an actor can poll for incoming messages") then
+      --elsif run("Test that an actor timing out on reception receives a no message status") then
+      --elsif run("Test that an actor can be synchronized with the reply of a previous request") then
+      --elsif run("Test that sending to a non-existing actor results in an error code") then
+      --elsif run("Test that an actor can send to an actor with deferred creation") then
+      --elsif run("Test that receiving from an actor with deferred creation results in an error code") then
+        
       end if;
     end loop;
 
     test_runner_cleanup(runner);
     wait;
   end process;
+
+  test_runner_watchdog(runner, 100 ms);
+  
+  receiver: process is
+    variable self : actor_t;
+    variable msg : message_t;
+  begin
+    self := create("receiver");
+    receive(self, msg);
+    if check(get_payload(msg) = "hello world", "Expected ""hello world""") and
+      check(get_status(msg) = received, "Bad receive status") then
+      hello_world_received <= true;
+    end if;
+    wait;
+  end process receiver;
+
+  server: process is
+    variable self, client : actor_t;
+    variable msg : message_t;
+    variable send_status : send_status_t;
+  begin
+    self := create("server");
+    receive(self, msg);
+    if check(get_payload(msg) = "request", "Expected ""request""") and
+      check(get_status(msg) = received, "Bad receive status") then
+      send(net, client, "request acknowledge", send_status);
+      check(send_status = ok, "Expected send to succeed");
+    end if;
+    wait;
+  end process server;
+
 end test_fixture;

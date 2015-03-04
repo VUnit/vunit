@@ -11,6 +11,8 @@ library com_lib;
 use com_lib.com_types_pkg.all;
 
 package com_pkg is
+  signal net : network_t := idle_network;
+  
   type messenger_t is protected
     impure function find (
       constant name : string;
@@ -27,6 +29,18 @@ package com_pkg is
       return natural;
     impure function num_of_deferred_creations
       return natural;
+    procedure send (
+      signal net        : inout network_t;
+      constant sender   : in    actor_t;
+      constant receiver : in    actor_t;
+      constant payload  : in    string;
+      variable status   : out   send_status_t);
+    impure function get_payload (
+      constant msg : message_t)
+      return string;
+    impure function get_status (
+      constant msg : message_t)
+      return message_status_t;
   end protected;
   
   impure function create (
@@ -44,6 +58,26 @@ package com_pkg is
     return natural;
   impure function num_of_deferred_creations
     return natural;
+  procedure send (
+    signal net        : inout network_t;
+    constant sender   : in    actor_t;
+    constant receiver : in    actor_t;
+    constant payload  : in    string;
+    variable status   : out   send_status_t);
+  procedure send (
+    signal net        : inout network_t;
+    constant receiver : in    actor_t;
+    constant payload  : in    string;
+    variable status   : out   send_status_t);
+  procedure receive (
+    constant receiver : actor_t;
+    variable msg : out message_t);
+  impure function get_payload (
+    constant msg : message_t)
+    return string;
+  impure function get_status (
+    constant msg : message_t)
+    return message_status_t;
 end package;
 
   

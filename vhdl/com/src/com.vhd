@@ -145,6 +145,30 @@ package body com_pkg is
       return n_deferred_actors;
     end;
   
+    procedure send (
+      signal net        : inout network_t;
+      constant sender   : in    actor_t;
+      constant receiver : in    actor_t;
+      constant payload  : in    string;
+      variable status   : out   send_status_t) is
+    begin
+      status := send_error;
+    end;
+
+    impure function get_payload (
+      constant msg : message_t)
+      return string is
+    begin
+      return "";
+    end;
+
+    impure function get_status (
+      constant msg : message_t)
+      return message_status_t is
+    begin
+      return receive_error;
+    end;
+  
   end protected body;
 
   shared variable messenger : messenger_t;
@@ -186,6 +210,47 @@ package body com_pkg is
     return natural is
   begin
     return messenger.num_of_deferred_creations;
+  end;
+
+  procedure send (
+    signal net        : inout network_t;
+    constant sender   : in    actor_t;
+    constant receiver : in    actor_t;
+    constant payload  : in    string;
+    variable status   : out   send_status_t) is
+  begin
+    messenger.send(net, sender, receiver, payload, status);
+  end;
+  
+  procedure send (
+    signal net        : inout network_t;
+    constant receiver : in    actor_t;
+    constant payload  : in    string;
+    variable status   : out   send_status_t) is
+    variable sender : actor_t := null_actor_c;
+  begin
+    messenger.send(net, sender, receiver, payload, status);    
+  end;
+
+  procedure receive (
+    constant receiver : actor_t;
+    variable msg : out message_t) is
+  begin
+    wait;
+  end;
+  
+  impure function get_payload (
+    constant msg : message_t)
+    return string is
+  begin
+    return messenger.get_payload(msg);
+  end;
+
+  impure function get_status (
+    constant msg : message_t)
+    return message_status_t is
+  begin
+    return messenger.get_status(msg);
   end;
   
 end package body com_pkg;
