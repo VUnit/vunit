@@ -292,7 +292,7 @@ package body com_pkg is
     signal net        : inout network_t;
     constant sender   : in    actor_t;
     constant receiver : in    actor_t;
-    constant payload  : in    string;
+    constant payload  : in    string := "";
     variable status   : out   send_status_t) is
     variable message : message_ptr_t;
   begin
@@ -303,7 +303,7 @@ package body com_pkg is
   procedure send (
     signal net        : inout network_t;
     constant receiver : in    actor_t;
-    constant payload  : in    string;
+    constant payload  : in    string := "";
     variable status   : out   send_status_t) is
     variable message : message_ptr_t;
   begin
@@ -415,5 +415,38 @@ package body com_pkg is
     end if;
   end procedure delete;
 
+  procedure subscribe (
+    constant subscriber : in  actor_t;
+    constant publisher : in  actor_t;
+    variable status    : out subscribe_status_t) is
+  begin
+    status := unknown_actor_error;
+  end procedure subscribe;
+
+  procedure publish (
+    signal net        : inout network_t;
+    constant sender   : in    actor_t;
+    constant payload  : in    string := "";
+    variable status   : out   publish_status_t) is
+  begin
+    status := unknown_receiver_error;
+  end;
+  
+  procedure publish (
+    signal net        : inout network_t;
+    constant payload  : in    string := "";
+    variable status   : out   publish_status_t) is
+  begin
+    status := unknown_receiver_error;
+  end;
+
+  procedure publish (
+    signal net        : inout network_t;
+    variable message  : inout message_ptr_t;
+    variable status   : out   publish_status_t;
+    constant keep_message : in boolean := false) is
+  begin
+    status := unknown_receiver_error;
+  end;
 end package body com_pkg;
 

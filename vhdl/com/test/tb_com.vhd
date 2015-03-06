@@ -21,17 +21,19 @@ entity tb_com is
 end entity tb_com;
 
 architecture test_fixture of tb_com is
-  signal hello_world_received, start_receiver, start_server : boolean := false;
+  signal hello_world_received, start_receiver, start_server, start_subscribers : boolean := false;
+  signal hello_subscriber_received : boolean_vector(1 to 2) := (false, false);
   signal test : boolean := false;
 begin
   test_runner : process
     variable actor_to_be_found, actor_with_deferred_creation, actor_to_destroy,
              actor_to_destroy_copy, actor_to_keep, actor, actor_duplicate,
-             self, receiver, server, deferred_actor: actor_t;
+             self, receiver, server, deferred_actor, publisher : actor_t;
     variable actor_destroy_status : actor_destroy_status_t;
     variable n_actors : natural;
     variable send_status : send_status_t;
     variable receive_status : receive_status_t;
+    variable publish_status : publish_status_t;
     variable message : message_ptr_t;
   begin
     checker_init(display_format => verbose,
@@ -162,6 +164,13 @@ begin
           check(message.payload.all = "", "Expected an empty message");
         end if;
         delete(message);
+      elsif run("Test that an actor can publish messages to multiple subscribers") then
+        publisher := create("publisher");
+        start_subscribers <= true;
+        publish(net, "hello subscribers", publish_status);
+        check(publish_status = ok, "Expected publish to succeed");
+        wait until hello_subscriber_received = (true, true) for 1 ns;
+        check(hello_subscriber_received = (true, true), "Expected ""hello subscribers"" to be received at the subscribers");
       end if;
     end loop;
 
@@ -204,4 +213,24 @@ begin
     wait;
   end process server;
 
+  subscribers: for i in 1 to 2 generate
+    process is
+      variable self, publisher : actor_t;
+      variable message : message_ptr_t;
+      variable receive_status : receive_status_t;
+      variable subscribe_status : subscribe_status_t;
+    begin
+      wait until start_subscribers;
+      self := create("subscriber " & integer'image(i));
+      publisher := find("publisher");
+      subscribe(self, publisher, subscribe_status);
+      receive(net, self, message, receive_status);
+      if check(message.payload.all = "hello subscriber", "Expected ""hello subscriber""") then
+        hello_subscriber_received(i) <= true;
+      end if;
+      delete(message);
+      wait;
+    end process;
+  end generate subscribers;
+  
 end test_fixture;

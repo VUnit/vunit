@@ -68,12 +68,12 @@ package com_pkg is
     signal net        : inout network_t;
     constant sender   : in    actor_t;
     constant receiver : in    actor_t;
-    constant payload  : in    string;
+    constant payload  : in    string := "";
     variable status   : out   send_status_t);
   procedure send (
     signal net        : inout network_t;
     constant receiver : in    actor_t;
-    constant payload  : in    string;
+    constant payload  : in    string := "";
     variable status   : out   send_status_t);
   procedure send (
     signal net        : inout network_t;
@@ -105,6 +105,24 @@ package com_pkg is
     return message_ptr_t;  
   procedure delete (
     variable message : inout message_ptr_t);  
+  procedure subscribe (
+    constant subscriber : in  actor_t;
+    constant publisher : in  actor_t;
+    variable status    : out subscribe_status_t);
+  procedure publish (
+    signal net        : inout network_t;
+    constant sender   : in    actor_t;
+    constant payload  : in    string := "";
+    variable status   : out   publish_status_t);
+  procedure publish (
+    signal net        : inout network_t;
+    constant payload  : in    string := "";
+    variable status   : out   publish_status_t);
+  procedure publish (
+    signal net        : inout network_t;
+    variable message  : inout message_ptr_t;
+    variable status   : out   publish_status_t;
+    constant keep_message : in boolean := false);
 end package;
 
   
