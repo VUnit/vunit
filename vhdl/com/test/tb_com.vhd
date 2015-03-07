@@ -13,6 +13,9 @@ library com_lib;
 use com_lib.com_pkg.all;
 use com_lib.com_types_pkg.all;
 
+library ieee;
+use ieee.std_logic_1164.all;
+
 use std.textio.all;
 
 entity tb_com is
@@ -22,19 +25,21 @@ end entity tb_com;
 
 architecture test_fixture of tb_com is
   signal hello_world_received, start_receiver, start_server, start_subscribers : boolean := false;
-  signal hello_subscriber_received : boolean_vector(1 to 2) := (false, false);
+  signal hello_subscriber_received : std_logic_vector(1 to 2) := "ZZ";
   signal test : boolean := false;
 begin
   test_runner : process
     variable actor_to_be_found, actor_with_deferred_creation, actor_to_destroy,
              actor_to_destroy_copy, actor_to_keep, actor, actor_duplicate,
-             self, receiver, server, deferred_actor, publisher : actor_t;
+             self, receiver, server, deferred_actor, publisher, subscriber : actor_t;
     variable actor_destroy_status : actor_destroy_status_t;
     variable n_actors : natural;
     variable send_status : send_status_t;
     variable receive_status : receive_status_t;
     variable publish_status : publish_status_t;
     variable message : message_ptr_t;
+    variable subscribe_status : subscribe_status_t;
+    variable unsubscribe_status : unsubscribe_status_t;
   begin
     checker_init(display_format => verbose,
                  file_name => join(output_path(runner_cfg), "error.csv"),
@@ -167,10 +172,52 @@ begin
       elsif run("Test that an actor can publish messages to multiple subscribers") then
         publisher := create("publisher");
         start_subscribers <= true;
-        publish(net, "hello subscribers", publish_status);
+        wait for 1 ns;
+        publish(net, publisher, "hello subscriber", publish_status);
         check(publish_status = ok, "Expected publish to succeed");
-        wait until hello_subscriber_received = (true, true) for 1 ns;
-        check(hello_subscriber_received = (true, true), "Expected ""hello subscribers"" to be received at the subscribers");
+        wait until hello_subscriber_received = "11" for 1 ns;
+        check(hello_subscriber_received = "11", "Expected ""hello subscribers"" to be received at the subscribers");
+      elsif run("Test that a subscriber can unsubscribe") then
+        subscribe(self, self, subscribe_status);
+        check(subscribe_status = ok, "Expected subscription to be ok");
+        publish(net, self, "hello subscriber", publish_status);
+        check(publish_status = ok, "Expected publish to succeed");        
+        receive(net, self, message, receive_status, 0 ns);
+        if check(receive_status = ok, "Expected no problems with receive") then
+          check(message.payload.all = "hello subscriber", "Expected a ""hello subscriber"" message");
+        end if;
+        unsubscribe(self, self, unsubscribe_status);
+        publish(net, self, "hello subscriber", publish_status);
+        check(publish_status = ok, "Expected publish to succeed");        
+        receive(net, self, message, receive_status, 0 ns);
+        check(receive_status = timeout, "Expected no message");
+      elsif run("Test that a destroyed subscriber is not addressed by the publisher") then
+        subscriber := create("subscriber");
+        subscribe(subscriber, self, subscribe_status);
+        check(subscribe_status = ok, "Expected subscription to be ok");
+        publish(net, self, "hello subscriber", publish_status);
+        check(publish_status = ok, "Expected publish to succeed");        
+        receive(net, subscriber, message, receive_status, 0 ns);
+        if check(receive_status = ok, "Expected no problems with receive") then
+          check(message.payload.all = "hello subscriber", "Expected a ""hello subscriber"" message");
+        end if;
+        destroy(subscriber, actor_destroy_status);
+        check(actor_destroy_status = ok, "Expected destroy status to be ok");
+        publish(net, self, "hello subscriber", publish_status);
+        check(publish_status = ok, "Expected publish to succeed. Got " & publish_status_t'image(publish_status) & ".");
+      elsif run("Test that an actor can only subscribe once to the same publisher") then
+        subscribe(self, self, subscribe_status);
+        check(subscribe_status = ok, "Expected subscription to be ok");
+        subscribe(self, self, subscribe_status);
+        check(subscribe_status = already_a_subscriber_error, "Multiple subscriptions should not be allowed");
+        publish(net, self, "hello subscriber", publish_status);
+        check(publish_status = ok, "Expected publish to succeed");        
+        receive(net, self, message, receive_status, 0 ns);
+        if check(receive_status = ok, "Expected no problems with receive") then
+          check(message.payload.all = "hello subscriber", "Expected a ""hello subscriber"" message");
+        end if;
+        receive(net, self, message, receive_status, 0 ns);
+        check(receive_status = timeout, "Expected no message");          
       end if;
     end loop;
 
@@ -226,7 +273,8 @@ begin
       subscribe(self, publisher, subscribe_status);
       receive(net, self, message, receive_status);
       if check(message.payload.all = "hello subscriber", "Expected ""hello subscriber""") then
-        hello_subscriber_received(i) <= true;
+        hello_subscriber_received(i) <= '1';
+        hello_subscriber_received(3 - i) <= 'Z';
       end if;
       delete(message);
       wait;

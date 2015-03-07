@@ -22,18 +22,25 @@ package body com_pkg is
     first_envelope       : envelope_ptr_t;
     last_envelope        : envelope_ptr_t;
   end record inbox_t;
+  type subscriber_item_t;
+  type subscriber_item_ptr_t is access subscriber_item_t;
+  type subscriber_item_t is record
+    actor          : actor_t;
+    next_item : subscriber_item_ptr_t;
+  end record subscriber_item_t;
   type actor_item_t is record
     actor : actor_t;
     name : line;
     deferred_creation : boolean;
     inbox : inbox_t;
+    subscribers : subscriber_item_ptr_t;
   end record actor_item_t;
   type actor_item_array_t is array (natural range <>) of actor_item_t;
   type actor_item_array_ptr_t is access actor_item_array_t;
 
   type messenger_t is protected body
     variable empty_inbox_c : inbox_t := (null, null);
-    variable null_actor_item_c : actor_item_t := (null_actor_c, null, false, empty_inbox_c);
+    variable null_actor_item_c : actor_item_t := (null_actor_c, null, false, empty_inbox_c, null);
     impure function init_actors
       return actor_item_array_ptr_t is
       variable ret_val : actor_item_array_ptr_t;
@@ -73,7 +80,7 @@ package body com_pkg is
         actors(i) := old_actors(i);
       end loop;
       deallocate(old_actors);
-      actors(actors'length - 1) := ((id => actors'length - 1), new string'(name), deferred_creation, empty_inbox_c);
+      actors(actors'length - 1) := ((id => actors'length - 1), new string'(name), deferred_creation, empty_inbox_c, null);
       
       return actors(actors'length - 1).actor;
     end function;
@@ -104,18 +111,30 @@ package body com_pkg is
 
       return actor;
     end;
-    
+
+    impure function unknown_actor (
+      constant actor : actor_t)
+      return boolean is
+    begin
+      if (actor.id = 0) or (actor.id > actors'length - 1) then
+        return true;
+      elsif actors(actor.id).actor = null_actor_c then
+        return true;
+      end if;
+
+      return false;
+    end function unknown_actor;
+
     procedure destroy (
       variable actor : inout actor_t;
       variable status  : out   actor_destroy_status_t) is
       variable envelope : envelope_ptr_t;
+      variable item : subscriber_item_ptr_t;
+      variable unsubscribe_status : unsubscribe_status_t;
     begin
-      if (actor.id >= actors'length) then
+      if unknown_actor(actor) then
         status := unknown_actor_error;
         return;
-      elsif actors(actor.id).actor = null_actor_c then
-        status := unknown_actor_error;
-        return;        
       end if;
 
       while actors(actor.id).inbox.first_envelope /= null loop
@@ -124,6 +143,17 @@ package body com_pkg is
         deallocate(envelope.message.payload);
         deallocate(envelope);
       end loop;
+
+      while actors(actor.id).subscribers /= null loop
+        item := actors(actor.id).subscribers;
+        actors(actor.id).subscribers := item.next_item;        
+        deallocate(item);
+      end loop;
+
+      for i in actors'range loop
+        unsubscribe(actor, actors(i).actor, unsubscribe_status);
+      end loop;
+      
       deallocate(actors(actor.id).name);
       actors(actor.id) := null_actor_item_c;
       actor            := null_actor_c;
@@ -181,10 +211,8 @@ package body com_pkg is
       variable status   : out   send_status_t) is
       variable envelope : envelope_ptr_t;
     begin
-      status := ok;      
-      if (receiver.id = 0) or (receiver.id > actors'length - 1) then
-        status := unknown_receiver_error;
-      elsif actors(receiver.id).actor = null_actor_c then
+      status := ok;
+      if unknown_actor(receiver) then
         status := unknown_receiver_error;
       end if;
 
@@ -244,6 +272,87 @@ package body com_pkg is
         end if;
       end if;
     end;
+
+  procedure subscribe (
+    constant subscriber : in  actor_t;
+    constant publisher : in  actor_t;
+    variable status    : out subscribe_status_t) is
+    variable new_subscriber, item : subscriber_item_ptr_t;
+  begin
+    if unknown_actor(subscriber) then
+      status := unknown_subscriber_error;
+    elsif unknown_actor(publisher) then
+      status := unknown_publisher_error;
+    end if;
+
+    item := actors(publisher.id).subscribers;
+    while item /= null loop
+      exit when item.actor = subscriber;
+      item := item.next_item;
+    end loop;
+    if item /= null then
+      status := already_a_subscriber_error;
+      return;
+    end if;
+
+    new_subscriber := new subscriber_item_t'(subscriber, actors(publisher.id).subscribers);
+    actors(publisher.id).subscribers := new_subscriber;
+    status := ok;
+  end procedure subscribe;
+
+  procedure unsubscribe (
+    constant subscriber : in  actor_t;
+    constant publisher : in  actor_t;
+    variable status    : out unsubscribe_status_t) is
+    variable item, previous_item : subscriber_item_ptr_t;
+  begin
+    if unknown_actor(subscriber) then
+      status := unknown_subscriber_error;
+    elsif unknown_actor(publisher) then
+      status := unknown_publisher_error;
+    end if;
+
+    status := not_a_subscriber_error;
+    item := actors(publisher.id).subscribers;
+    previous_item := null;
+    while item /= null loop
+      if item.actor = subscriber then
+        status := ok;
+        if previous_item = null then
+          actors(publisher.id).subscribers := item.next_item;
+        else
+          previous_item.next_item := item.next_item;
+        end if;
+        deallocate(item);
+        exit;
+      end if;
+      previous_item := item;
+      item := item.next_item;
+    end loop;
+  end procedure unsubscribe;
+
+  procedure publish (
+    constant sender   : in    actor_t;
+    constant payload  : in    string;
+    variable status   : out   publish_status_t) is
+    variable send_status : send_status_t := ok;
+    variable subscriber_item : subscriber_item_ptr_t;
+  begin
+    status := ok;
+    if unknown_actor(sender) then
+      status := unknown_publisher_error;
+      return;
+    end if;
+
+    subscriber_item := actors(sender.id).subscribers;
+    while subscriber_item /= null loop
+      send(sender, subscriber_item.actor, payload, send_status);
+      if send_status /= ok then
+        status := unknown_subscriber_error;
+      end if;
+      subscriber_item := subscriber_item.next_item;
+    end loop;
+  end;
   
   end protected body;
 
@@ -420,24 +529,26 @@ package body com_pkg is
     constant publisher : in  actor_t;
     variable status    : out subscribe_status_t) is
   begin
-    status := unknown_actor_error;
+    messenger.subscribe(subscriber, publisher, status);
   end procedure subscribe;
+
+  procedure unsubscribe (
+    constant subscriber : in  actor_t;
+    constant publisher : in  actor_t;
+    variable status    : out unsubscribe_status_t) is
+  begin
+    messenger.unsubscribe(subscriber, publisher, status);
+  end procedure unsubscribe;
 
   procedure publish (
     signal net        : inout network_t;
     constant sender   : in    actor_t;
     constant payload  : in    string := "";
     variable status   : out   publish_status_t) is
+    variable message : message_ptr_t;
   begin
-    status := unknown_receiver_error;
-  end;
-  
-  procedure publish (
-    signal net        : inout network_t;
-    constant payload  : in    string := "";
-    variable status   : out   publish_status_t) is
-  begin
-    status := unknown_receiver_error;
+    message := compose(payload, sender);
+    publish(net, message, status);    
   end;
 
   procedure publish (
@@ -446,7 +557,18 @@ package body com_pkg is
     variable status   : out   publish_status_t;
     constant keep_message : in boolean := false) is
   begin
-    status := unknown_receiver_error;
+    if message = null then
+      status := null_message_error;
+      return;
+    end if;
+    messenger.publish(message.sender, message.payload.all, status);
+    net <= network_event;
+    wait for 0 ns;
+    net <= idle_network;
+    if not keep_message then
+      delete(message);
+    end if;
   end;
+
 end package body com_pkg;
 

@@ -47,6 +47,18 @@ package com_pkg is
       return actor_t;
     procedure delete_first_envelope (
       constant actor : in actor_t);
+    procedure subscribe (
+      constant subscriber : in  actor_t;
+      constant publisher : in  actor_t;
+      variable status    : out subscribe_status_t);
+    procedure unsubscribe (
+      constant subscriber : in  actor_t;
+      constant publisher : in  actor_t;
+      variable status    : out unsubscribe_status_t);
+    procedure publish (
+      constant sender   : in    actor_t;
+      constant payload  : in    string;
+      variable status   : out   publish_status_t);
   end protected;
   
   impure function create (
@@ -109,13 +121,13 @@ package com_pkg is
     constant subscriber : in  actor_t;
     constant publisher : in  actor_t;
     variable status    : out subscribe_status_t);
+  procedure unsubscribe (
+    constant subscriber : in  actor_t;
+    constant publisher : in  actor_t;
+    variable status    : out unsubscribe_status_t);
   procedure publish (
     signal net        : inout network_t;
     constant sender   : in    actor_t;
-    constant payload  : in    string := "";
-    variable status   : out   publish_status_t);
-  procedure publish (
-    signal net        : inout network_t;
     constant payload  : in    string := "";
     variable status   : out   publish_status_t);
   procedure publish (
