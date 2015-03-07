@@ -127,10 +127,10 @@ package body com_pkg is
 
     procedure destroy (
       variable actor : inout actor_t;
-      variable status  : out   actor_destroy_status_t) is
+      variable status  : out   com_status_t) is
       variable envelope : envelope_ptr_t;
       variable item : subscriber_item_ptr_t;
-      variable unsubscribe_status : unsubscribe_status_t;
+      variable unsubscribe_status : com_status_t;
     begin
       if unknown_actor(actor) then
         status := unknown_actor_error;
@@ -160,7 +160,7 @@ package body com_pkg is
     end;
 
     procedure reset_messenger is
-      variable status  : actor_destroy_status_t;
+      variable status  : com_status_t;
     begin
       for i in actors'range loop
         if actors(i).actor /= null_actor_c then
@@ -208,7 +208,7 @@ package body com_pkg is
       constant sender   : in    actor_t;
       constant receiver : in    actor_t;
       constant payload  : in    string;
-      variable status   : out   send_status_t) is
+      variable status   : out   com_status_t) is
       variable envelope : envelope_ptr_t;
     begin
       status := ok;
@@ -276,7 +276,7 @@ package body com_pkg is
   procedure subscribe (
     constant subscriber : in  actor_t;
     constant publisher : in  actor_t;
-    variable status    : out subscribe_status_t) is
+    variable status    : out com_status_t) is
     variable new_subscriber, item : subscriber_item_ptr_t;
   begin
     if unknown_actor(subscriber) then
@@ -303,7 +303,7 @@ package body com_pkg is
   procedure unsubscribe (
     constant subscriber : in  actor_t;
     constant publisher : in  actor_t;
-    variable status    : out unsubscribe_status_t) is
+    variable status    : out com_status_t) is
     variable item, previous_item : subscriber_item_ptr_t;
   begin
     if unknown_actor(subscriber) then
@@ -334,8 +334,8 @@ package body com_pkg is
   procedure publish (
     constant sender   : in    actor_t;
     constant payload  : in    string;
-    variable status   : out   publish_status_t) is
-    variable send_status : send_status_t := ok;
+    variable status   : out   com_status_t) is
+    variable send_status : com_status_t := ok;
     variable subscriber_item : subscriber_item_ptr_t;
   begin
     status := ok;
@@ -375,7 +375,7 @@ package body com_pkg is
 
   procedure destroy (
     variable actor : inout actor_t;
-    variable status  : out   actor_destroy_status_t) is
+    variable status  : out   com_status_t) is
   begin
     messenger.destroy(actor, status);
   end;
@@ -402,7 +402,7 @@ package body com_pkg is
     constant sender   : in    actor_t;
     constant receiver : in    actor_t;
     constant payload  : in    string := "";
-    variable status   : out   send_status_t) is
+    variable status   : out   com_status_t) is
     variable message : message_ptr_t;
   begin
     message := compose(payload, sender);
@@ -413,7 +413,7 @@ package body com_pkg is
     signal net        : inout network_t;
     constant receiver : in    actor_t;
     constant payload  : in    string := "";
-    variable status   : out   send_status_t) is
+    variable status   : out   com_status_t) is
     variable message : message_ptr_t;
   begin
     message := compose(payload);
@@ -424,7 +424,7 @@ package body com_pkg is
     signal net        : inout network_t;
     constant receiver : in    actor_t;
     variable message  : inout message_ptr_t;
-    variable status   : out   send_status_t;
+    variable status   : out   com_status_t;
     constant keep_message : in boolean := false) is
     variable sender : actor_t := null_actor_c;
   begin
@@ -446,7 +446,7 @@ package body com_pkg is
   procedure wait_for_messages (
     signal net        : in network_t;
     constant receiver : in actor_t;
-    variable status : out receive_status_t;
+    variable status : out com_status_t;
     constant receive_timeout : in time := max_timeout_c) is
   begin
     if messenger.deferred(receiver) then
@@ -491,7 +491,7 @@ package body com_pkg is
     signal net        : in network_t;
     constant receiver : actor_t;
     variable message : inout message_ptr_t;
-    variable status : out receive_status_t;
+    variable status : out com_status_t;
     constant timeout : in time := max_timeout_c) is
   begin
     wait_for_messages(net, receiver, status, timeout);
@@ -527,7 +527,7 @@ package body com_pkg is
   procedure subscribe (
     constant subscriber : in  actor_t;
     constant publisher : in  actor_t;
-    variable status    : out subscribe_status_t) is
+    variable status    : out com_status_t) is
   begin
     messenger.subscribe(subscriber, publisher, status);
   end procedure subscribe;
@@ -535,7 +535,7 @@ package body com_pkg is
   procedure unsubscribe (
     constant subscriber : in  actor_t;
     constant publisher : in  actor_t;
-    variable status    : out unsubscribe_status_t) is
+    variable status    : out com_status_t) is
   begin
     messenger.unsubscribe(subscriber, publisher, status);
   end procedure unsubscribe;
@@ -544,7 +544,7 @@ package body com_pkg is
     signal net        : inout network_t;
     constant sender   : in    actor_t;
     constant payload  : in    string := "";
-    variable status   : out   publish_status_t) is
+    variable status   : out   com_status_t) is
     variable message : message_ptr_t;
   begin
     message := compose(payload, sender);
@@ -554,7 +554,7 @@ package body com_pkg is
   procedure publish (
     signal net        : inout network_t;
     variable message  : inout message_ptr_t;
-    variable status   : out   publish_status_t;
+    variable status   : out   com_status_t;
     constant keep_message : in boolean := false) is
   begin
     if message = null then

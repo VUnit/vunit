@@ -22,7 +22,7 @@ package com_pkg is
       return actor_t;
     procedure destroy (
       variable actor : inout actor_t;
-      variable status  : out   actor_destroy_status_t);
+      variable status  : out com_status_t);
     procedure reset_messenger;    
     impure function num_of_actors
       return natural;
@@ -35,7 +35,7 @@ package com_pkg is
       constant sender   : in    actor_t;
       constant receiver : in    actor_t;
       constant payload  : in    string;
-      variable status   : out   send_status_t);
+      variable status   : out   com_status_t);
     impure function has_messages (
       constant actor : actor_t)
       return boolean;
@@ -50,15 +50,15 @@ package com_pkg is
     procedure subscribe (
       constant subscriber : in  actor_t;
       constant publisher : in  actor_t;
-      variable status    : out subscribe_status_t);
+      variable status    : out com_status_t);
     procedure unsubscribe (
       constant subscriber : in  actor_t;
       constant publisher : in  actor_t;
-      variable status    : out unsubscribe_status_t);
+      variable status    : out com_status_t);
     procedure publish (
       constant sender   : in    actor_t;
       constant payload  : in    string;
-      variable status   : out   publish_status_t);
+      variable status   : out   com_status_t);
   end protected;
   
   impure function create (
@@ -70,7 +70,7 @@ package com_pkg is
     return actor_t;
   procedure destroy (
     variable actor : inout actor_t;
-    variable status  : out   actor_destroy_status_t);
+    variable status  : out   com_status_t);
   procedure reset_messenger;
   impure function num_of_actors
     return natural;
@@ -81,22 +81,22 @@ package com_pkg is
     constant sender   : in    actor_t;
     constant receiver : in    actor_t;
     constant payload  : in    string := "";
-    variable status   : out   send_status_t);
+    variable status   : out   com_status_t);
   procedure send (
     signal net        : inout network_t;
     constant receiver : in    actor_t;
     constant payload  : in    string := "";
-    variable status   : out   send_status_t);
+    variable status   : out   com_status_t);
   procedure send (
     signal net        : inout network_t;
     constant receiver : in    actor_t;
     variable message  : inout message_ptr_t;
-    variable status   : out   send_status_t;
+    variable status   : out   com_status_t;
     constant keep_message : in boolean := false);  
   procedure wait_for_messages (
     signal net        : in network_t;
     constant receiver : in actor_t;
-    variable status : out receive_status_t;
+    variable status : out com_status_t;
     constant receive_timeout : in time := max_timeout_c);
   impure function has_messages (
     constant actor : actor_t)
@@ -109,7 +109,7 @@ package com_pkg is
     signal net        : in network_t;
     constant receiver : actor_t;
     variable message : inout message_ptr_t;
-    variable status : out receive_status_t;
+    variable status : out com_status_t;
     constant timeout : in time := max_timeout_c);  
   function compose (
     constant payload : string := "";
@@ -120,20 +120,20 @@ package com_pkg is
   procedure subscribe (
     constant subscriber : in  actor_t;
     constant publisher : in  actor_t;
-    variable status    : out subscribe_status_t);
+    variable status    : out com_status_t);
   procedure unsubscribe (
     constant subscriber : in  actor_t;
     constant publisher : in  actor_t;
-    variable status    : out unsubscribe_status_t);
+    variable status    : out com_status_t);
   procedure publish (
     signal net        : inout network_t;
     constant sender   : in    actor_t;
     constant payload  : in    string := "";
-    variable status   : out   publish_status_t);
+    variable status   : out   com_status_t);
   procedure publish (
     signal net        : inout network_t;
     variable message  : inout message_ptr_t;
-    variable status   : out   publish_status_t;
+    variable status   : out   com_status_t;
     constant keep_message : in boolean := false);
 end package;
 

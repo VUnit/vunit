@@ -32,14 +32,9 @@ begin
     variable actor_to_be_found, actor_with_deferred_creation, actor_to_destroy,
              actor_to_destroy_copy, actor_to_keep, actor, actor_duplicate,
              self, receiver, server, deferred_actor, publisher, subscriber : actor_t;
-    variable actor_destroy_status : actor_destroy_status_t;
+    variable status : com_status_t;
     variable n_actors : natural;
-    variable send_status : send_status_t;
-    variable receive_status : receive_status_t;
-    variable publish_status : publish_status_t;
     variable message : message_ptr_t;
-    variable subscribe_status : subscribe_status_t;
-    variable unsubscribe_status : unsubscribe_status_t;
   begin
     checker_init(display_format => verbose,
                  file_name => join(output_path(runner_cfg), "error.csv"),
@@ -77,9 +72,9 @@ begin
         actor_to_destroy := create("actor to destroy");
         actor_to_keep := create("actor to keep");
         n_actors := num_of_actors;
-        destroy(actor_to_destroy, actor_destroy_status);
+        destroy(actor_to_destroy, status);
         check(num_of_actors = n_actors - 1, "Expected one less actor");
-        check(actor_destroy_status = ok, "Expected destroy status to be ok");
+        check(status = ok, "Expected destroy status to be ok");
         check(actor_to_destroy = null_actor_c, "Destroyed actor should be nullified");
         check(find("actor to destroy", false) = null_actor_c, "A destroyed actor should not be found");
         check(find("actor to keep", false) /= null_actor_c, "Actors other than the one destroyed must not be affected");
@@ -87,10 +82,10 @@ begin
         actor_to_destroy := create("actor to destroy");
         actor_to_destroy_copy := actor_to_destroy;
         n_actors := num_of_actors;
-        destroy(actor_to_destroy, actor_destroy_status);
+        destroy(actor_to_destroy, status);
         check(num_of_actors = n_actors - 1, "Expected one less actor");
-        destroy(actor_to_destroy_copy, actor_destroy_status);
-        check(actor_destroy_status = unknown_actor_error, "Expected destroy to fail with unknown actor error");
+        destroy(actor_to_destroy_copy, status);
+        check(status = unknown_actor_error, "Expected destroy to fail with unknown actor error");
         check(num_of_actors = n_actors - 1, "Expected no change in the number of actors");
       elsif run("Test that all actors can be destroyed") then
         reset_messenger;
@@ -103,8 +98,8 @@ begin
         start_receiver <= true;
         wait for 1 ns;
         receiver := find("receiver");
-        send(net, receiver, "hello world", send_status);
-        check(send_status = ok, "Expected send to succeed");
+        send(net, receiver, "hello world", status);
+        check(status = ok, "Expected send to succeed");
         wait until hello_world_received for 1 ns;
         check(hello_world_received, "Expected ""hello world"" to be received at the server");
       elsif run("Test that an actor can send a message in response to another message from an a priori unknown actor") then
@@ -112,29 +107,29 @@ begin
         wait for 1 ns;
         server := find("server");
         message := compose("request", self);        
-        send(net, server, message, send_status);
-        check(send_status = ok, "Expected send to succeed");
-        receive(net, self, message, receive_status);
-        if check(receive_status = ok, "Expected no receive problems") then
+        send(net, server, message, status);
+        check(status = ok, "Expected send to succeed");
+        receive(net, self, message, status);
+        if check(status = ok, "Expected no receive problems") then
           check(message.payload.all = "request acknowledge", "Expected ""request acknowledge""");
         end if;
         delete(message);
       elsif run("Test that an actor can send a message to itself") then
-        send(net, self, "hello", send_status);
-        check(send_status = ok, "Expected send to succeed");
-        receive(net, self, message, receive_status);
-        if check(receive_status = ok, "Expected no receive problems") then        
+        send(net, self, "hello", status);
+        check(status = ok, "Expected send to succeed");
+        receive(net, self, message, status);
+        if check(status = ok, "Expected no receive problems") then        
           check(message.payload.all = "hello", "Expected ""hello""");
         end if;
         delete(message);
       elsif run("Test that an actor can poll for incoming messages") then
-        receive(net, self, message, receive_status, 0 ns);
-        check(receive_status = timeout, "Expected timeout");
+        receive(net, self, message, status, 0 ns);
+        check(status = timeout, "Expected timeout");
         check(message = null, "Expected no message");
-        send(net, self, self, "hello again", send_status);
-        check(send_status = ok, "Expected send to succeed");
-        receive(net, self, message, receive_status, 0 ns);
-        if check(receive_status = ok, "Expected no problems with receive") then
+        send(net, self, self, "hello again", status);
+        check(status = ok, "Expected send to succeed");
+        receive(net, self, message, status, 0 ns);
+        if check(status = ok, "Expected no problems with receive") then
           check(message.payload.all = "hello again", "Expected ""hello again""");
           check(message.sender = self, "Expected message from myself");
         end if;
@@ -142,30 +137,30 @@ begin
       elsif run("Test that sending to a non-existing actor results in an error code") then
         actor_to_destroy := create("actor to destroy");
         actor_to_destroy_copy := actor_to_destroy;
-        destroy(actor_to_destroy, actor_destroy_status);
-        send(net, actor_to_destroy_copy, "hello void", send_status);
-        check(send_status = unknown_receiver_error, "Expected send to fail due to unknown receiver");
-        send(net, null_actor_c, "hello void", send_status);
-        check(send_status = unknown_receiver_error, "Expected send to fail due to unknown receiver");
+        destroy(actor_to_destroy, status);
+        send(net, actor_to_destroy_copy, "hello void", status);
+        check(status = unknown_receiver_error, "Expected send to fail due to unknown receiver");
+        send(net, null_actor_c, "hello void", status);
+        check(status = unknown_receiver_error, "Expected send to fail due to unknown receiver");
       elsif run("Test that an actor can send to an actor with deferred creation") then
         deferred_actor := find("deferred actor");
-        send(net, deferred_actor, "hello actor to be created", send_status);
-        check(send_status = ok, "Expected send to succeed");
+        send(net, deferred_actor, "hello actor to be created", status);
+        check(status = ok, "Expected send to succeed");
         deferred_actor := create("deferred actor");
-        receive(net, deferred_actor, message, receive_status);
-        if check(receive_status = ok, "Expected no problems with receive") then
+        receive(net, deferred_actor, message, status);
+        if check(status = ok, "Expected no problems with receive") then
           check(message.payload.all = "hello actor to be created", "Expected ""hello actor to be created""");
         end if;
         delete(message);
       elsif run("Test that receiving from an actor with deferred creation results in an error code") then
         deferred_actor := find("deferred actor");
-        receive(net, deferred_actor, message, receive_status);
-        check(receive_status = deferred_receiver_error, "Not allowed to send to a deferred actor");
+        receive(net, deferred_actor, message, status);
+        check(status = deferred_receiver_error, "Not allowed to send to a deferred actor");
       elsif run("Test that empty messages can be sent") then
-        send(net, self, "", send_status);
-        check(send_status = ok, "Expected send to succeed");
-        receive(net, self, message, receive_status);
-        if check(receive_status = ok, "Expected no problems with receive") then
+        send(net, self, "", status);
+        check(status = ok, "Expected send to succeed");
+        receive(net, self, message, status);
+        if check(status = ok, "Expected no problems with receive") then
           check(message.payload.all = "", "Expected an empty message");
         end if;
         delete(message);
@@ -173,51 +168,51 @@ begin
         publisher := create("publisher");
         start_subscribers <= true;
         wait for 1 ns;
-        publish(net, publisher, "hello subscriber", publish_status);
-        check(publish_status = ok, "Expected publish to succeed");
+        publish(net, publisher, "hello subscriber", status);
+        check(status = ok, "Expected publish to succeed");
         wait until hello_subscriber_received = "11" for 1 ns;
         check(hello_subscriber_received = "11", "Expected ""hello subscribers"" to be received at the subscribers");
       elsif run("Test that a subscriber can unsubscribe") then
-        subscribe(self, self, subscribe_status);
-        check(subscribe_status = ok, "Expected subscription to be ok");
-        publish(net, self, "hello subscriber", publish_status);
-        check(publish_status = ok, "Expected publish to succeed");        
-        receive(net, self, message, receive_status, 0 ns);
-        if check(receive_status = ok, "Expected no problems with receive") then
+        subscribe(self, self, status);
+        check(status = ok, "Expected subscription to be ok");
+        publish(net, self, "hello subscriber", status);
+        check(status = ok, "Expected publish to succeed");        
+        receive(net, self, message, status, 0 ns);
+        if check(status = ok, "Expected no problems with receive") then
           check(message.payload.all = "hello subscriber", "Expected a ""hello subscriber"" message");
         end if;
-        unsubscribe(self, self, unsubscribe_status);
-        publish(net, self, "hello subscriber", publish_status);
-        check(publish_status = ok, "Expected publish to succeed");        
-        receive(net, self, message, receive_status, 0 ns);
-        check(receive_status = timeout, "Expected no message");
+        unsubscribe(self, self, status);
+        publish(net, self, "hello subscriber", status);
+        check(status = ok, "Expected publish to succeed");        
+        receive(net, self, message, status, 0 ns);
+        check(status = timeout, "Expected no message");
       elsif run("Test that a destroyed subscriber is not addressed by the publisher") then
         subscriber := create("subscriber");
-        subscribe(subscriber, self, subscribe_status);
-        check(subscribe_status = ok, "Expected subscription to be ok");
-        publish(net, self, "hello subscriber", publish_status);
-        check(publish_status = ok, "Expected publish to succeed");        
-        receive(net, subscriber, message, receive_status, 0 ns);
-        if check(receive_status = ok, "Expected no problems with receive") then
+        subscribe(subscriber, self, status);
+        check(status = ok, "Expected subscription to be ok");
+        publish(net, self, "hello subscriber", status);
+        check(status = ok, "Expected publish to succeed");        
+        receive(net, subscriber, message, status, 0 ns);
+        if check(status = ok, "Expected no problems with receive") then
           check(message.payload.all = "hello subscriber", "Expected a ""hello subscriber"" message");
         end if;
-        destroy(subscriber, actor_destroy_status);
-        check(actor_destroy_status = ok, "Expected destroy status to be ok");
-        publish(net, self, "hello subscriber", publish_status);
-        check(publish_status = ok, "Expected publish to succeed. Got " & publish_status_t'image(publish_status) & ".");
+        destroy(subscriber, status);
+        check(status = ok, "Expected destroy status to be ok");
+        publish(net, self, "hello subscriber", status);
+        check(status = ok, "Expected publish to succeed. Got " & com_status_t'image(status) & ".");
       elsif run("Test that an actor can only subscribe once to the same publisher") then
-        subscribe(self, self, subscribe_status);
-        check(subscribe_status = ok, "Expected subscription to be ok");
-        subscribe(self, self, subscribe_status);
-        check(subscribe_status = already_a_subscriber_error, "Multiple subscriptions should not be allowed");
-        publish(net, self, "hello subscriber", publish_status);
-        check(publish_status = ok, "Expected publish to succeed");        
-        receive(net, self, message, receive_status, 0 ns);
-        if check(receive_status = ok, "Expected no problems with receive") then
+        subscribe(self, self, status);
+        check(status = ok, "Expected subscription to be ok");
+        subscribe(self, self, status);
+        check(status = already_a_subscriber_error, "Multiple subscriptions should not be allowed");
+        publish(net, self, "hello subscriber", status);
+        check(status = ok, "Expected publish to succeed");        
+        receive(net, self, message, status, 0 ns);
+        if check(status = ok, "Expected no problems with receive") then
           check(message.payload.all = "hello subscriber", "Expected a ""hello subscriber"" message");
         end if;
-        receive(net, self, message, receive_status, 0 ns);
-        check(receive_status = timeout, "Expected no message");          
+        receive(net, self, message, status, 0 ns);
+        check(status = timeout, "Expected no message");          
       end if;
     end loop;
 
@@ -230,11 +225,11 @@ begin
   receiver: process is
     variable self : actor_t;
     variable message : message_ptr_t;
-    variable receive_status : receive_status_t;
+    variable status : com_status_t;
   begin
     wait until start_receiver;
     self := create("receiver");
-    wait_for_messages(net, self, receive_status);
+    wait_for_messages(net, self, status);
     message := get_message(self);
     if check(message.payload.all = "hello world", "Expected ""hello world""") then
       hello_world_received <= true;
@@ -246,15 +241,14 @@ begin
   server: process is
     variable self : actor_t;
     variable message : message_ptr_t;
-    variable send_status : send_status_t;
-    variable receive_status : receive_status_t;
+    variable status : com_status_t;
   begin
     wait until start_server;
     self := create("server");
-    receive(net, self, message, receive_status);
+    receive(net, self, message, status);
     if check(message.payload.all = "request", "Expected ""request""") then
-      send(net, message.sender, "request acknowledge", send_status);
-      check(send_status = ok, "Expected send to succeed");
+      send(net, message.sender, "request acknowledge", status);
+      check(status = ok, "Expected send to succeed");
     end if;
     delete(message);
     wait;
@@ -264,14 +258,13 @@ begin
     process is
       variable self, publisher : actor_t;
       variable message : message_ptr_t;
-      variable receive_status : receive_status_t;
-      variable subscribe_status : subscribe_status_t;
+      variable status : com_status_t;
     begin
       wait until start_subscribers;
       self := create("subscriber " & integer'image(i));
       publisher := find("publisher");
-      subscribe(self, publisher, subscribe_status);
-      receive(net, self, message, receive_status);
+      subscribe(self, publisher, status);
+      receive(net, self, message, status);
       if check(message.payload.all = "hello subscriber", "Expected ""hello subscriber""") then
         hello_subscriber_received(i) <= '1';
         hello_subscriber_received(3 - i) <= 'Z';
