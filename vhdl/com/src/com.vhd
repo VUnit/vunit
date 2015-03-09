@@ -475,8 +475,10 @@ package body com_pkg is
     return message_ptr_t is
     variable message : message_ptr_t;
   begin
+    message := new message_t;
+    message.status := null_message_error;
     if messenger.has_messages(receiver) then
-      message := new message_t;
+      message.status := ok;
       message.sender := messenger.get_first_message_sender(receiver);
       write(message.payload, messenger.get_first_message_payload(receiver));
       if delete_from_inbox then
@@ -491,15 +493,18 @@ package body com_pkg is
     signal net        : in network_t;
     constant receiver : actor_t;
     variable message : inout message_ptr_t;
-    variable status : out com_status_t;
     constant timeout : in time := max_timeout_c) is
+    variable status : com_status_t;    
   begin
-    wait_for_messages(net, receiver, status, timeout);
     if message /= null then
       delete(message);
     end if;
+    wait_for_messages(net, receiver, status, timeout);
     if status = ok then
       message := get_message(receiver);
+    else
+      message := new message_t;
+      message.status := status;
     end if;
   end;
 

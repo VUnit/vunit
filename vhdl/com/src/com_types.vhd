@@ -12,15 +12,6 @@ use ieee.std_logic_1164.all;
 use std.textio.all;
 
 package com_types_pkg is
-  type actor_t is record
-    id : natural;
-  end record actor_t;
-  type message_t is record
-    sender : actor_t;
-    payload : line;
-  end record message_t;
-  type message_ptr_t is access message_t;
-  constant null_actor_c : actor_t := (id => 0);
   type com_status_t is (ok,
                         timeout,
                         null_message_error,
@@ -31,6 +22,16 @@ package com_types_pkg is
                         deferred_receiver_error,                        
                         already_a_subscriber_error,
                         not_a_subscriber_error);
+  type actor_t is record
+    id : natural;
+  end record actor_t;
+  type message_t is record
+    status : com_status_t;
+    sender : actor_t;
+    payload : line;
+  end record message_t;
+  type message_ptr_t is access message_t;
+  constant null_actor_c : actor_t := (id => 0);
   subtype network_t is std_logic;
   constant network_event : std_logic := '1';
   constant idle_network : std_logic := 'Z';

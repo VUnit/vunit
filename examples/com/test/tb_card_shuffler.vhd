@@ -68,7 +68,7 @@ begin
 
         send(net, self, scoreboard, get_status(52), status);
         wait_for_scoreboard_reply: loop 
-          receive(net, self, message, status);
+          receive(net, self, message);
           if msg_type(message.payload.all) = "get_status_reply" then
             check_false(decode(message.payload.all).checksum_match, "Identical deck after shuffling");
             exit wait_for_scoreboard_reply;
@@ -96,13 +96,13 @@ begin
   driver: process is
       variable self : actor_t;
       variable message : message_ptr_t;
-      variable status : com_status_t;
       variable msg : card_msg_t;
+      variable status : com_status_t;
   begin
       self := create("driver");
       subscribe(self, find("test runner"), status);
       loop 
-        receive(net, self, message, status);
+        receive(net, self, message);
         wait until rising_edge(clk);        
         if msg_type(message.payload.all) = "load" then
           msg := decode(message.payload.all);
@@ -148,7 +148,7 @@ begin
     subscribe(self, find("monitor"), status);
     subscribe(self, find("test runner"), status);
     loop 
-        receive(net, self, message, status);
+        receive(net, self, message);
         if msg_type(message.payload.all) = "reset_shuffler" then
           n_received := 0;
           n_loaded := 0;

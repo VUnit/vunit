@@ -109,27 +109,27 @@ begin
         message := compose("request", self);        
         send(net, server, message, status);
         check(status = ok, "Expected send to succeed");
-        receive(net, self, message, status);
-        if check(status = ok, "Expected no receive problems") then
+        receive(net, self, message);
+        if check(message.status = ok, "Expected no receive problems") then
           check(message.payload.all = "request acknowledge", "Expected ""request acknowledge""");
         end if;
         delete(message);
       elsif run("Test that an actor can send a message to itself") then
         send(net, self, "hello", status);
         check(status = ok, "Expected send to succeed");
-        receive(net, self, message, status);
-        if check(status = ok, "Expected no receive problems") then        
+        receive(net, self, message);
+        if check(message.status = ok, "Expected no receive problems") then        
           check(message.payload.all = "hello", "Expected ""hello""");
         end if;
         delete(message);
       elsif run("Test that an actor can poll for incoming messages") then
-        receive(net, self, message, status, 0 ns);
-        check(status = timeout, "Expected timeout");
-        check(message = null, "Expected no message");
+        receive(net, self, message, 0 ns);
+        check(message.payload = null, "Expected no message payload");        
+        check(message.status = timeout, "Expected timeout");
         send(net, self, self, "hello again", status);
         check(status = ok, "Expected send to succeed");
-        receive(net, self, message, status, 0 ns);
-        if check(status = ok, "Expected no problems with receive") then
+        receive(net, self, message, 0 ns);
+        if check(message.status = ok, "Expected no problems with receive") then
           check(message.payload.all = "hello again", "Expected ""hello again""");
           check(message.sender = self, "Expected message from myself");
         end if;
@@ -147,20 +147,20 @@ begin
         send(net, deferred_actor, "hello actor to be created", status);
         check(status = ok, "Expected send to succeed");
         deferred_actor := create("deferred actor");
-        receive(net, deferred_actor, message, status);
-        if check(status = ok, "Expected no problems with receive") then
+        receive(net, deferred_actor, message);
+        if check(message.status = ok, "Expected no problems with receive") then
           check(message.payload.all = "hello actor to be created", "Expected ""hello actor to be created""");
         end if;
         delete(message);
       elsif run("Test that receiving from an actor with deferred creation results in an error code") then
         deferred_actor := find("deferred actor");
-        receive(net, deferred_actor, message, status);
-        check(status = deferred_receiver_error, "Not allowed to send to a deferred actor");
+        receive(net, deferred_actor, message);
+        check(message.status = deferred_receiver_error, "Not allowed to send to a deferred actor");
       elsif run("Test that empty messages can be sent") then
         send(net, self, "", status);
         check(status = ok, "Expected send to succeed");
-        receive(net, self, message, status);
-        if check(status = ok, "Expected no problems with receive") then
+        receive(net, self, message);
+        if check(message.status = ok, "Expected no problems with receive") then
           check(message.payload.all = "", "Expected an empty message");
         end if;
         delete(message);
@@ -177,23 +177,23 @@ begin
         check(status = ok, "Expected subscription to be ok");
         publish(net, self, "hello subscriber", status);
         check(status = ok, "Expected publish to succeed");        
-        receive(net, self, message, status, 0 ns);
-        if check(status = ok, "Expected no problems with receive") then
+        receive(net, self, message, 0 ns);
+        if check(message.status = ok, "Expected no problems with receive") then
           check(message.payload.all = "hello subscriber", "Expected a ""hello subscriber"" message");
         end if;
         unsubscribe(self, self, status);
         publish(net, self, "hello subscriber", status);
         check(status = ok, "Expected publish to succeed");        
-        receive(net, self, message, status, 0 ns);
-        check(status = timeout, "Expected no message");
+        receive(net, self, message, 0 ns);
+        check(message.status = timeout, "Expected no message");
       elsif run("Test that a destroyed subscriber is not addressed by the publisher") then
         subscriber := create("subscriber");
         subscribe(subscriber, self, status);
         check(status = ok, "Expected subscription to be ok");
         publish(net, self, "hello subscriber", status);
         check(status = ok, "Expected publish to succeed");        
-        receive(net, subscriber, message, status, 0 ns);
-        if check(status = ok, "Expected no problems with receive") then
+        receive(net, subscriber, message, 0 ns);
+        if check(message.status = ok, "Expected no problems with receive") then
           check(message.payload.all = "hello subscriber", "Expected a ""hello subscriber"" message");
         end if;
         destroy(subscriber, status);
@@ -207,12 +207,12 @@ begin
         check(status = already_a_subscriber_error, "Multiple subscriptions should not be allowed");
         publish(net, self, "hello subscriber", status);
         check(status = ok, "Expected publish to succeed");        
-        receive(net, self, message, status, 0 ns);
-        if check(status = ok, "Expected no problems with receive") then
+        receive(net, self, message, 0 ns);
+        if check(message.status = ok, "Expected no problems with receive") then
           check(message.payload.all = "hello subscriber", "Expected a ""hello subscriber"" message");
         end if;
-        receive(net, self, message, status, 0 ns);
-        check(status = timeout, "Expected no message");          
+        receive(net, self, message, 0 ns);
+        check(message.status = timeout, "Expected no message");          
       end if;
     end loop;
 
@@ -245,7 +245,7 @@ begin
   begin
     wait until start_server;
     self := create("server");
-    receive(net, self, message, status);
+    receive(net, self, message);
     if check(message.payload.all = "request", "Expected ""request""") then
       send(net, message.sender, "request acknowledge", status);
       check(status = ok, "Expected send to succeed");
@@ -264,7 +264,7 @@ begin
       self := create("subscriber " & integer'image(i));
       publisher := find("publisher");
       subscribe(self, publisher, status);
-      receive(net, self, message, status);
+      receive(net, self, message);
       if check(message.payload.all = "hello subscriber", "Expected ""hello subscriber""") then
         hello_subscriber_received(i) <= '1';
         hello_subscriber_received(3 - i) <= 'Z';

@@ -109,7 +109,6 @@ package com_pkg is
     signal net        : in network_t;
     constant receiver : actor_t;
     variable message : inout message_ptr_t;
-    variable status : out com_status_t;
     constant timeout : in time := max_timeout_c);  
   function compose (
     constant payload : string := "";
