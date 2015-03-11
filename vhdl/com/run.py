@@ -21,6 +21,6 @@ com_lib = ui.add_library('com_lib')
 com_lib.add_source_files(join(dirname(__file__), 'src', '*.vhd'))
 
 tb_com_lib = ui.add_library('tb_com_lib')
-tb_com_lib.add_source_files(join(dirname(__file__), 'test', '*.vhd'))
+tb_com_lib.add_source_files(join(dirname(__file__), 'test', 'tb_com.vhd'))
 
 ui.main()

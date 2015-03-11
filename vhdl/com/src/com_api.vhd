@@ -34,8 +34,28 @@ package com_pkg is
     procedure send (
       constant sender   : in    actor_t;
       constant receiver : in    actor_t;
+      constant request_id : in message_id_t;
       constant payload  : in    string;
-      variable status   : out   com_status_t);
+      variable receipt   : out   receipt_t);
+    impure function has_reply_stash_message (
+      constant actor : actor_t;
+      constant request_id : message_id_t := no_message_id_c)
+      return boolean;
+    impure function get_reply_stash_message_payload (
+      constant actor : actor_t)
+      return string;
+    impure function get_reply_stash_message_sender (
+      constant actor : actor_t)
+      return actor_t;
+    impure function get_reply_stash_message_id (
+      constant actor : actor_t)
+      return message_id_t;
+    impure function find_and_stash_reply_message (
+      constant actor : actor_t;
+      constant request_id : message_id_t)
+      return boolean;    
+    procedure clear_reply_stash (
+      constant actor : actor_t);
     impure function has_messages (
       constant actor : actor_t)
       return boolean;
@@ -45,6 +65,9 @@ package com_pkg is
     impure function get_first_message_sender (
       constant actor : actor_t)
       return actor_t;
+    impure function get_first_message_id (
+      constant actor : actor_t)
+      return message_id_t;
     procedure delete_first_envelope (
       constant actor : in actor_t);
     procedure subscribe (
@@ -81,17 +104,36 @@ package com_pkg is
     constant sender   : in    actor_t;
     constant receiver : in    actor_t;
     constant payload  : in    string := "";
-    variable status   : out   com_status_t);
+    variable receipt   : out  receipt_t);
   procedure send (
     signal net        : inout network_t;
     constant receiver : in    actor_t;
     constant payload  : in    string := "";
-    variable status   : out   com_status_t);
+    variable receipt   : out  receipt_t);
   procedure send (
     signal net        : inout network_t;
     constant receiver : in    actor_t;
     variable message  : inout message_ptr_t;
-    variable status   : out   com_status_t;
+    variable receipt   : out  receipt_t;
+    constant keep_message : in boolean := false);  
+  procedure reply (
+    signal net        : inout network_t;
+    constant sender   : in    actor_t;
+    constant receiver : in    actor_t;
+    constant request_id : in message_id_t;
+    constant payload  : in    string := "";
+    variable receipt   : out  receipt_t);
+  procedure reply (
+    signal net        : inout network_t;
+    constant receiver : in    actor_t;
+    constant request_id : in message_id_t;
+    constant payload  : in    string := "";
+    variable receipt   : out  receipt_t);
+  procedure reply (
+    signal net        : inout network_t;
+    constant receiver : in    actor_t;
+    variable message  : inout message_ptr_t;
+    variable receipt   : out  receipt_t;
     constant keep_message : in boolean := false);  
   procedure wait_for_messages (
     signal net        : in network_t;
@@ -110,9 +152,16 @@ package com_pkg is
     constant receiver : actor_t;
     variable message : inout message_ptr_t;
     constant timeout : in time := max_timeout_c);  
+  procedure receive_reply (
+    signal net        : in network_t;
+    constant receiver : actor_t;
+    constant request_id : in message_id_t;
+    variable message : inout message_ptr_t;
+    constant timeout : in time := max_timeout_c);  
   function compose (
     constant payload : string := "";
-    constant sender  : actor_t := null_actor_c)
+    constant sender  : actor_t := null_actor_c;
+    constant request_id : in message_id_t := no_message_id_c)
     return message_ptr_t;  
   procedure delete (
     variable message : inout message_ptr_t);  

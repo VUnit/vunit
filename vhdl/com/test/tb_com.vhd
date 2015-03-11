@@ -24,7 +24,7 @@ entity tb_com is
 end entity tb_com;
 
 architecture test_fixture of tb_com is
-  signal hello_world_received, start_receiver, start_server, start_subscribers : boolean := false;
+  signal hello_world_received, start_receiver, start_server, start_server2, start_subscribers : boolean := false;
   signal hello_subscriber_received : std_logic_vector(1 to 2) := "ZZ";
   signal test : boolean := false;
 begin
@@ -33,8 +33,10 @@ begin
              actor_to_destroy_copy, actor_to_keep, actor, actor_duplicate,
              self, receiver, server, deferred_actor, publisher, subscriber : actor_t;
     variable status : com_status_t;
+    variable receipt, receipt2 : receipt_t;
     variable n_actors : natural;
     variable message : message_ptr_t;
+    variable reply_message : message_ptr_t;
   begin
     checker_init(display_format => verbose,
                  file_name => join(output_path(runner_cfg), "error.csv"),
@@ -98,8 +100,8 @@ begin
         start_receiver <= true;
         wait for 1 ns;
         receiver := find("receiver");
-        send(net, receiver, "hello world", status);
-        check(status = ok, "Expected send to succeed");
+        send(net, receiver, "hello world", receipt);
+        check(receipt.status = ok, "Expected send to succeed");
         wait until hello_world_received for 1 ns;
         check(hello_world_received, "Expected ""hello world"" to be received at the server");
       elsif run("Test that an actor can send a message in response to another message from an a priori unknown actor") then
@@ -107,16 +109,16 @@ begin
         wait for 1 ns;
         server := find("server");
         message := compose("request", self);        
-        send(net, server, message, status);
-        check(status = ok, "Expected send to succeed");
+        send(net, server, message, receipt);
+        check(receipt.status = ok, "Expected send to succeed");
         receive(net, self, message);
         if check(message.status = ok, "Expected no receive problems") then
           check(message.payload.all = "request acknowledge", "Expected ""request acknowledge""");
         end if;
         delete(message);
       elsif run("Test that an actor can send a message to itself") then
-        send(net, self, "hello", status);
-        check(status = ok, "Expected send to succeed");
+        send(net, self, "hello", receipt);
+        check(receipt.status = ok, "Expected send to succeed");
         receive(net, self, message);
         if check(message.status = ok, "Expected no receive problems") then        
           check(message.payload.all = "hello", "Expected ""hello""");
@@ -126,8 +128,8 @@ begin
         receive(net, self, message, 0 ns);
         check(message.payload = null, "Expected no message payload");        
         check(message.status = timeout, "Expected timeout");
-        send(net, self, self, "hello again", status);
-        check(status = ok, "Expected send to succeed");
+        send(net, self, self, "hello again", receipt);
+        check(receipt.status = ok, "Expected send to succeed");
         receive(net, self, message, 0 ns);
         if check(message.status = ok, "Expected no problems with receive") then
           check(message.payload.all = "hello again", "Expected ""hello again""");
@@ -138,14 +140,14 @@ begin
         actor_to_destroy := create("actor to destroy");
         actor_to_destroy_copy := actor_to_destroy;
         destroy(actor_to_destroy, status);
-        send(net, actor_to_destroy_copy, "hello void", status);
-        check(status = unknown_receiver_error, "Expected send to fail due to unknown receiver");
-        send(net, null_actor_c, "hello void", status);
-        check(status = unknown_receiver_error, "Expected send to fail due to unknown receiver");
+        send(net, actor_to_destroy_copy, "hello void", receipt);
+        check(receipt.status = unknown_receiver_error, "Expected send to fail due to unknown receiver");
+        send(net, null_actor_c, "hello void", receipt);
+        check(receipt.status = unknown_receiver_error, "Expected send to fail due to unknown receiver");
       elsif run("Test that an actor can send to an actor with deferred creation") then
         deferred_actor := find("deferred actor");
-        send(net, deferred_actor, "hello actor to be created", status);
-        check(status = ok, "Expected send to succeed");
+        send(net, deferred_actor, "hello actor to be created", receipt);
+        check(receipt.status = ok, "Expected send to succeed");
         deferred_actor := create("deferred actor");
         receive(net, deferred_actor, message);
         if check(message.status = ok, "Expected no problems with receive") then
@@ -157,8 +159,8 @@ begin
         receive(net, deferred_actor, message);
         check(message.status = deferred_receiver_error, "Not allowed to send to a deferred actor");
       elsif run("Test that empty messages can be sent") then
-        send(net, self, "", status);
-        check(status = ok, "Expected send to succeed");
+        send(net, self, "", receipt);
+        check(receipt.status = ok, "Expected send to succeed");
         receive(net, self, message);
         if check(message.status = ok, "Expected no problems with receive") then
           check(message.payload.all = "", "Expected an empty message");
@@ -212,7 +214,27 @@ begin
           check(message.payload.all = "hello subscriber", "Expected a ""hello subscriber"" message");
         end if;
         receive(net, self, message, 0 ns);
-        check(message.status = timeout, "Expected no message");          
+        check(message.status = timeout, "Expected no message");
+      elsif run("Test that each message gets an increasing message number") then
+        send(net, self, "", receipt);
+        check(receipt.id = 1, "Expected first receipt id to be 1");
+        send(net, self, "", receipt);
+        check(receipt.id = 2, "Expected second receipt id to be 2");
+        receive(net, self, message);
+        check(message.id = 1, "Expected first message id to be 1");
+        receive(net, self, message);
+        check(message.id = 2, "Expected second message id to be 2");
+        delete(message);
+      elsif run("Test that a client can wait for a specific request reply from a server even if it is not the first message to arrive") then
+        start_server2 <= true;
+        server := find("server2");
+        send(net, self, server, "request1", receipt);
+        send(net, self, server, "request2", receipt2);
+        receive_reply(net, self, receipt.id, reply_message);
+        check(reply_message.payload.all = "reply1", "Expected ""reply1""");
+        receive_reply(net, self, receipt2.id, reply_message);
+        check(reply_message.payload.all = "reply2", "Expected ""reply2""");
+        delete(reply_message);
       end if;
     end loop;
 
@@ -241,14 +263,14 @@ begin
   server: process is
     variable self : actor_t;
     variable message : message_ptr_t;
-    variable status : com_status_t;
+    variable receipt : receipt_t;
   begin
     wait until start_server;
     self := create("server");
     receive(net, self, message);
     if check(message.payload.all = "request", "Expected ""request""") then
-      send(net, message.sender, "request acknowledge", status);
-      check(status = ok, "Expected send to succeed");
+      send(net, message.sender, "request acknowledge", receipt);
+      check(receipt.status = ok, "Expected send to succeed");
     end if;
     delete(message);
     wait;
@@ -273,5 +295,27 @@ begin
       wait;
     end process;
   end generate subscribers;
+
+  server2: process is
+    variable self : actor_t;
+    variable request_message1, request_message2 : message_ptr_t;
+    variable receipt : receipt_t;
+  begin
+    wait until start_server2;
+    self := create("server2");
+    receive(net, self, request_message1);
+    check(request_message1.payload.all = "request1", "Expected ""request1""");
+    receive(net, self, request_message2);
+    check(request_message2.payload.all = "request2", "Expected ""request2""");    
+
+    reply(net, request_message2.sender, request_message2.id, "reply2", receipt);
+    check(receipt.status = ok, "Expected reply to succeed");
+    reply(net, request_message1.sender, request_message1.id, "reply1", receipt);
+    check(receipt.status = ok, "Expected reply to succeed");
+
+    delete(request_message1);
+    delete(request_message2);
+    wait;
+  end process server2;
   
 end test_fixture;

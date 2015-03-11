@@ -33,6 +33,7 @@ package body com_pkg is
     name : line;
     deferred_creation : boolean;
     inbox : inbox_t;
+    reply_stash : envelope_ptr_t;
     subscribers : subscriber_item_ptr_t;
   end record actor_item_t;
   type actor_item_array_t is array (natural range <>) of actor_item_t;
@@ -40,7 +41,7 @@ package body com_pkg is
 
   type messenger_t is protected body
     variable empty_inbox_c : inbox_t := (null, null);
-    variable null_actor_item_c : actor_item_t := (null_actor_c, null, false, empty_inbox_c, null);
+    variable null_actor_item_c : actor_item_t := (null_actor_c, null, false, empty_inbox_c, null, null);
     impure function init_actors
       return actor_item_array_ptr_t is
       variable ret_val : actor_item_array_ptr_t;
@@ -51,6 +52,7 @@ package body com_pkg is
       return ret_val;
     end function init_actors;
     variable actors : actor_item_array_ptr_t := init_actors;
+    variable next_message_id : message_id_t := no_message_id_c + 1;
 
     impure function find_actor (
       constant name : string)    
@@ -80,7 +82,7 @@ package body com_pkg is
         actors(i) := old_actors(i);
       end loop;
       deallocate(old_actors);
-      actors(actors'length - 1) := ((id => actors'length - 1), new string'(name), deferred_creation, empty_inbox_c, null);
+      actors(actors'length - 1) := ((id => actors'length - 1), new string'(name), deferred_creation, empty_inbox_c, null, null);
       
       return actors(actors'length - 1).actor;
     end function;
@@ -169,6 +171,7 @@ package body com_pkg is
       end loop;
       deallocate(actors);
       actors := init_actors;
+      next_message_id := no_message_id_c + 1;
     end;
 
     impure function num_of_actors
@@ -207,19 +210,25 @@ package body com_pkg is
     procedure send (
       constant sender   : in    actor_t;
       constant receiver : in    actor_t;
+      constant request_id : in message_id_t;
       constant payload  : in    string;
-      variable status   : out   com_status_t) is
+      variable receipt   : out  receipt_t) is
       variable envelope : envelope_ptr_t;
     begin
-      status := ok;
+      receipt.status := ok;
+      receipt.id := no_message_id_c;
       if unknown_actor(receiver) then
-        status := unknown_receiver_error;
+        receipt.status := unknown_receiver_error;
       end if;
 
-      if status = ok then
+      if receipt.status = ok then
+        receipt.id := next_message_id;
         envelope := new envelope_t;
         envelope.message.sender := sender;
+        envelope.message.id := next_message_id;
+        envelope.message.request_id := request_id;
         write(envelope.message.payload, payload);
+        next_message_id := next_message_id + 1;
         
         if actors(receiver.id).inbox.last_envelope /= null then
           actors(receiver.id).inbox.last_envelope.next_envelope := envelope;
@@ -236,6 +245,90 @@ package body com_pkg is
     begin
       return actors(actor.id).inbox.first_envelope /= null;
     end function has_messages;
+
+    impure function find_and_stash_reply_message (
+      constant actor : actor_t;
+      constant request_id : message_id_t)
+      return boolean is
+      variable envelope : envelope_ptr_t := actors(actor.id).inbox.first_envelope;
+      variable previous_envelope : envelope_ptr_t := null;
+    begin
+      while envelope /= null loop
+        if envelope.message.request_id = request_id then
+          actors(actor.id).reply_stash := envelope;
+          if previous_envelope /= null then
+            previous_envelope.next_envelope := envelope.next_envelope;
+          else
+            actors(actor.id).inbox.first_envelope := envelope.next_envelope;
+          end if;
+          if actors(actor.id).inbox.first_envelope = null then
+            actors(actor.id).inbox.last_envelope := null;
+          end if;
+          return true;
+        end if;
+        previous_envelope := envelope;
+        envelope := envelope.next_envelope;
+      end loop;
+
+      return false;
+    end function find_and_stash_reply_message;
+
+    procedure clear_reply_stash (
+      constant actor : in actor_t) is
+    begin
+      deallocate(actors(actor.id).reply_stash.message.payload);
+      deallocate(actors(actor.id).reply_stash);
+    end procedure clear_reply_stash;
+
+    impure function has_reply_stash_message (
+      constant actor : actor_t;
+      constant request_id : message_id_t := no_message_id_c)
+      return boolean is
+    begin
+      if request_id = no_message_id_c then
+        return actors(actor.id).reply_stash /= null;
+      elsif actors(actor.id).reply_stash /= null then
+        return actors(actor.id).reply_stash.message.request_id = request_id;
+      else
+        return false;
+      end if;
+    end function has_reply_stash_message;
+
+    impure function get_reply_stash_message_payload (
+      constant actor : actor_t)
+      return string is
+      variable envelope : envelope_ptr_t := actors(actor.id).reply_stash;
+    begin
+      if envelope /= null then
+        return envelope.message.payload.all;
+      else
+        return "";
+      end if;
+    end;
+
+    impure function get_reply_stash_message_sender (
+      constant actor : actor_t)
+      return actor_t is
+      variable envelope : envelope_ptr_t := actors(actor.id).reply_stash;
+    begin
+      if envelope /= null then
+        return envelope.message.sender;
+      else
+        return null_actor_c;
+      end if;
+    end;
+
+    impure function get_reply_stash_message_id (
+      constant actor : actor_t)
+      return message_id_t is
+      variable envelope : envelope_ptr_t := actors(actor.id).reply_stash;
+    begin
+      if envelope /= null then
+        return envelope.message.id;
+      else
+        return no_message_id_c;
+      end if;
+    end;
   
     impure function get_first_message_payload (
       constant actor : actor_t)
@@ -256,6 +349,17 @@ package body com_pkg is
         return actors(actor.id).inbox.first_envelope.message.sender;
       else
         return null_actor_c;
+      end if;
+    end;
+
+    impure function get_first_message_id (
+      constant actor : actor_t)
+      return message_id_t is
+    begin
+      if actors(actor.id).inbox.first_envelope /= null then
+        return actors(actor.id).inbox.first_envelope.message.id;
+      else
+        return no_message_id_c;
       end if;
     end;
 
@@ -335,7 +439,7 @@ package body com_pkg is
     constant sender   : in    actor_t;
     constant payload  : in    string;
     variable status   : out   com_status_t) is
-    variable send_status : com_status_t := ok;
+    variable receipt : receipt_t;
     variable subscriber_item : subscriber_item_ptr_t;
   begin
     status := ok;
@@ -346,8 +450,8 @@ package body com_pkg is
 
     subscriber_item := actors(sender.id).subscribers;
     while subscriber_item /= null loop
-      send(sender, subscriber_item.actor, payload, send_status);
-      if send_status /= ok then
+      send(sender, subscriber_item.actor, no_message_id_c, payload, receipt);
+      if receipt.status /= ok then
         status := unknown_subscriber_error;
       end if;
       subscriber_item := subscriber_item.next_item;
@@ -356,6 +460,8 @@ package body com_pkg is
   
   end protected body;
 
+  -----------------------------------------------------------------------------
+  
   shared variable messenger : messenger_t;
   
   impure function create (
@@ -402,38 +508,38 @@ package body com_pkg is
     constant sender   : in    actor_t;
     constant receiver : in    actor_t;
     constant payload  : in    string := "";
-    variable status   : out   com_status_t) is
+    variable receipt   : out  receipt_t) is
     variable message : message_ptr_t;
   begin
     message := compose(payload, sender);
-    send(net, receiver, message, status);    
+    send(net, receiver, message, receipt);    
   end;
   
   procedure send (
     signal net        : inout network_t;
     constant receiver : in    actor_t;
     constant payload  : in    string := "";
-    variable status   : out   com_status_t) is
+    variable receipt   : out  receipt_t) is
     variable message : message_ptr_t;
   begin
     message := compose(payload);
-    send(net, receiver, message, status);    
+    send(net, receiver, message, receipt);    
   end;
 
   procedure send (
     signal net        : inout network_t;
     constant receiver : in    actor_t;
     variable message  : inout message_ptr_t;
-    variable status   : out   com_status_t;
+    variable receipt   : out  receipt_t;
     constant keep_message : in boolean := false) is
     variable sender : actor_t := null_actor_c;
   begin
     if message = null then
-      status := null_message_error;
+      receipt.status := null_message_error;
       return;
     end if;
-    messenger.send(message.sender, receiver, message.payload.all, status);
-    if status = ok then
+    messenger.send(message.sender, receiver, no_message_id_c, message.payload.all, receipt);
+    if receipt.status = ok then
       net <= network_event;
       wait for 0 ns;
       net <= idle_network;
@@ -443,6 +549,53 @@ package body com_pkg is
     end if;
   end;
 
+  procedure reply (
+    signal net        : inout network_t;
+    constant sender   : in    actor_t;
+    constant receiver : in    actor_t;
+    constant request_id : in message_id_t;
+    constant payload  : in    string := "";
+    variable receipt   : out  receipt_t) is
+    variable message : message_ptr_t;
+  begin
+    message := compose(payload, sender, request_id);
+    reply(net, receiver, message, receipt);    
+  end;
+
+  procedure reply (
+    signal net        : inout network_t;
+    constant receiver : in    actor_t;
+    constant request_id : in message_id_t;
+    constant payload  : in    string := "";
+    variable receipt   : out  receipt_t) is
+    variable message : message_ptr_t;
+  begin
+    message := compose(payload, request_id => request_id);
+    reply(net, receiver, message, receipt);    
+  end;
+
+  procedure reply (
+    signal net        : inout network_t;
+    constant receiver : in    actor_t;
+    variable message  : inout message_ptr_t;
+    variable receipt   : out  receipt_t;
+    constant keep_message : in boolean := false) is 
+  begin
+    if message = null then
+      receipt.status := null_message_error;
+      return;
+    end if;
+    messenger.send(message.sender, receiver, message.request_id, message.payload.all, receipt);
+    if receipt.status = ok then
+      net <= network_event;
+      wait for 0 ns;
+      net <= idle_network;
+    end if;
+    if not keep_message then
+      delete(message);
+    end if;
+  end;
+  
   procedure wait_for_messages (
     signal net        : in network_t;
     constant receiver : in actor_t;
@@ -461,7 +614,31 @@ package body com_pkg is
       end if;
     end if;
   end procedure wait_for_messages;
-
+  
+  procedure wait_for_reply_stash_message (
+    signal net        : in network_t;
+    constant receiver : in actor_t;
+    constant request_id : in message_id_t;
+    variable status : out com_status_t;
+    constant receive_timeout : in time := max_timeout_c) is
+  begin
+    if messenger.deferred(receiver) then
+      status := deferred_receiver_error;
+    else
+      status := ok;
+      if messenger.has_reply_stash_message(receiver, request_id) then
+        return;
+      elsif messenger.find_and_stash_reply_message(receiver, request_id) then
+        return;
+      else
+        wait on net until messenger.find_and_stash_reply_message(receiver, request_id) for receive_timeout;
+        if not messenger.has_reply_stash_message(receiver, request_id) then
+          status := timeout;
+        end if;
+      end if;
+    end if;
+  end procedure wait_for_reply_stash_message;
+  
   impure function has_messages (
     constant actor : actor_t)
     return boolean is
@@ -479,6 +656,7 @@ package body com_pkg is
     message.status := null_message_error;
     if messenger.has_messages(receiver) then
       message.status := ok;
+      message.id := messenger.get_first_message_id(receiver);
       message.sender := messenger.get_first_message_sender(receiver);
       write(message.payload, messenger.get_first_message_payload(receiver));
       if delete_from_inbox then
@@ -488,6 +666,27 @@ package body com_pkg is
 
     return message;
   end function get_message;
+    
+  impure function get_reply_stash_message (
+    constant receiver : actor_t;
+    constant clear_reply_stash : in boolean := true)
+    return message_ptr_t is
+    variable message : message_ptr_t;
+  begin
+    message := new message_t;
+    message.status := null_message_error;
+    if messenger.has_reply_stash_message(receiver) then
+      message.status := ok;
+      message.id := messenger.get_reply_stash_message_id(receiver);
+      message.sender := messenger.get_reply_stash_message_sender(receiver);
+      write(message.payload, messenger.get_reply_stash_message_payload(receiver));
+      if clear_reply_stash then
+        messenger.clear_reply_stash(receiver);
+      end if;
+    end if;
+
+    return message;
+  end function get_reply_stash_message;
   
   procedure receive (
     signal net        : in network_t;
@@ -508,14 +707,36 @@ package body com_pkg is
     end if;
   end;
 
+  procedure receive_reply (
+    signal net        : in network_t;
+    constant receiver : actor_t;
+    constant request_id : in message_id_t;
+    variable message : inout message_ptr_t;
+    constant timeout : in time := max_timeout_c) is
+    variable status : com_status_t;    
+  begin
+    if message /= null then
+      delete(message);
+    end if;
+    wait_for_reply_stash_message(net, receiver, request_id, status, timeout);
+    if status = ok then
+      message := get_reply_stash_message(receiver);
+    else
+      message := new message_t;
+      message.status := status;
+    end if;
+  end;
+  
   function compose (
     constant payload : string := "";
-    constant sender  : actor_t := null_actor_c)
+    constant sender  : actor_t := null_actor_c;
+    constant request_id : in message_id_t := no_message_id_c)
     return message_ptr_t is
     variable message : message_ptr_t;
   begin
     message := new message_t;
     message.sender := sender;
+    message.request_id := request_id;
     write(message.payload, payload);
     return message;
   end function compose;

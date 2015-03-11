@@ -46,16 +46,16 @@ architecture test_fixture of tb_card_shuffler is
     end;
 begin
   test_runner : process
-    variable self, scoreboard : actor_t;
-    variable message : message_ptr_t;
+    variable self : actor_t;
+    variable reply : message_ptr_t;
     variable status : com_status_t;
+    variable receipt : receipt_t;
   begin
     checker_init(display_format => verbose,
                  file_name => join(output_path(runner_cfg), "error.csv"),
                  file_format => verbose_csv);    
     test_runner_setup(runner, runner_cfg);
     self := create("test runner");
-    scoreboard := find("scoreboard");
     while test_suite loop
       if run("Test that the cards in the deck are shuffled") then
         publish(net, self, reset_shuffler, status);
@@ -66,14 +66,9 @@ begin
           end loop;
         end loop;
 
-        send(net, self, scoreboard, get_status(52), status);
-        wait_for_scoreboard_reply: loop 
-          receive(net, self, message);
-          if msg_type(message.payload.all) = "get_status_reply" then
-            check_false(decode(message.payload.all).checksum_match, "Identical deck after shuffling");
-            exit wait_for_scoreboard_reply;
-          end if;
-        end loop;
+        send(net, self, find("scoreboard"), get_status(52), receipt);
+        receive_reply(net, self, receipt.id, reply);
+        check_false(decode(reply.payload.all).checksum_match, "Identical deck after shuffling");
       end if;
     end loop;
     test_runner_cleanup(runner);
@@ -138,7 +133,9 @@ begin
   scoreboard: process is
     variable self, client : actor_t;
     variable status : com_status_t;
+    variable receipt : receipt_t;    
     variable message : message_ptr_t;
+    variable client_request_id : message_id_t;
     variable status_point : integer := -1;
     variable n_received, n_loaded, index : natural;
     variable received_msg, load_msg : card_msg_t;
@@ -167,10 +164,11 @@ begin
         elsif msg_type(message.payload.all) = "get_status" then
           status_point := decode(message.payload.all).n_received;
           client := message.sender;
+          client_request_id := message.id;
         end if;
 
         if n_received = status_point then
-            send(net, client, get_status_reply(loaded_checksum = received_checksum), status);
+            reply(net, client, client_request_id, get_status_reply(loaded_checksum = received_checksum), receipt);
         end if;
     end loop;
     wait;
