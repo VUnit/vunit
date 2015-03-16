@@ -26,17 +26,21 @@ end entity tb_com;
 architecture test_fixture of tb_com is
   signal hello_world_received, start_receiver, start_server, start_server2, start_subscribers : boolean := false;
   signal hello_subscriber_received : std_logic_vector(1 to 2) := "ZZ";
-  signal test : boolean := false;
+  signal start_limited_inbox, limited_inbox_actor_done : boolean := false;
+  signal start_limited_inbox_subscriber : boolean := false;
 begin
   test_runner : process
     variable actor_to_be_found, actor_with_deferred_creation, actor_to_destroy,
              actor_to_destroy_copy, actor_to_keep, actor, actor_duplicate,
-             self, receiver, server, deferred_actor, publisher, subscriber : actor_t;
+             self, receiver, server, deferred_actor, publisher, subscriber,
+             limited_inbox, actor_with_max_inbox, actor_with_bounded_inbox,
+             deferred_actor_with_minimum_inbox: actor_t;
     variable status : com_status_t;
     variable receipt, receipt2 : receipt_t;
     variable n_actors : natural;
     variable message : message_ptr_t;
     variable reply_message : message_ptr_t;
+    variable t_start, t_stop : time;
   begin
     checker_init(display_format => verbose,
                  file_name => join(output_path(runner_cfg), "error.csv"),
@@ -56,7 +60,7 @@ begin
       elsif run("Test that two actors of the same name cannot be created") then
         actor := create("actor2");
         check(actor /= null_actor_c, "Failed to create named actor");
-        check(create("actor2") = actor, "Was allowed to create an actor duplicate");
+        check(create("actor2") = null_actor_c, "Was allowed to create an actor duplicate");
       elsif run("Test that a created actor can be found") then
         actor_to_be_found := create("actor to be found");
         check(find("actor to be found", false) /= null_actor_c, "Failed to find created actor");
@@ -70,6 +74,14 @@ begin
         actor_with_deferred_creation := find("actor with deferred creation2", false);
         check(actor_with_deferred_creation = null_actor_c, "Didn't expect to find any actor");
         check(num_of_deferred_creations = 0, "Expected no deferred creations");
+      elsif run("Test that a created actor get the correct inbox size") then
+        actor_with_max_inbox := create("actor with max inbox");
+        check(inbox_size(actor_with_max_inbox) = positive'high, "Expected maximum sized inbox");
+        actor_with_bounded_inbox := create("actor with bounded inbox", 23);
+        check(inbox_size(actor_with_bounded_inbox) = 23, "Expected inbox size = 23");
+        check(inbox_size(null_actor_c) = 0, "Expected no inbox on null actor");
+        check(inbox_size(find("actor to be created")) = 1, "Expected inbox size on actor with deferred creation to be one");
+        check(inbox_size(create("actor to be created", 42)) = 42, "Expected inbox size on actor with deferred creation to change to given value when created");
       elsif run("Test that a created actor can be destroyed") then
         actor_to_destroy := create("actor to destroy");
         actor_to_keep := create("actor to keep");
@@ -235,6 +247,55 @@ begin
         receive_reply(net, self, receipt2.id, reply_message);
         check(reply_message.payload.all = "reply2", "Expected ""reply2""");
         delete(reply_message);
+      elsif run("Test that a receiver is protected from flooding by creating a bounded inbox") then
+        start_limited_inbox <= true;
+        limited_inbox := find("limited inbox");
+        t_start := now;
+        send(net, limited_inbox, "First message", receipt);
+        t_stop := now;
+        check(t_stop - t_start = 0 ns, "Expected no blocking");
+        t_start := now;
+        send(net, limited_inbox, "Second message", receipt, 0 ns);
+        t_stop := now;
+        check(t_stop - t_start = 0 ns, "Expected no blocking");
+        check(receipt.status = full_inbox_error, "Exepcted full inbox error");
+        t_start := now;
+        send(net, limited_inbox, "Second message", receipt, 3 ns);
+        t_stop := now;
+        check(t_stop - t_start = 3 ns, "Expected 3 ns blocking");
+        check(receipt.status = full_inbox_error, "Exepcted full inbox error");
+        t_start := now;
+        send(net, limited_inbox, "Second message", receipt);
+        t_stop := now;
+        check(t_stop - t_start = 7 ns, "Expected a 7 ns blocking period");
+        receive(net, self, message);
+        t_start := now;
+        reply(net, limited_inbox, message.id, "reply1", receipt);
+        t_stop := now;
+        check(t_stop - t_start = 0 ns, "Expected no blocking");
+        receive(net, self, message);
+        t_start := now;
+        reply(net, limited_inbox, message.id, "reply2", receipt, 0 ns);
+        t_stop := now;
+        check(t_stop - t_start = 0 ns, "Expected no blocking");
+        check(receipt.status = full_inbox_error, "Exepcted full inbox error");
+        t_start := now;
+        reply(net, limited_inbox, message.id, "reply2", receipt, 7 ns);
+        t_stop := now;
+        check(t_stop - t_start = 7 ns, "Expected 7 ns blocking");
+        check(receipt.status = full_inbox_error, "Exepcted full inbox error");
+        t_start := now;
+        reply(net, limited_inbox, message.id, "reply2", receipt);
+        t_stop := now;
+        check(t_stop - t_start = 13 ns, "Expected a 20 ns blocking period");
+        wait until limited_inbox_actor_done;
+      elsif run("Test that publish skip sending messages to subscribers with full inboxes") then
+        start_limited_inbox_subscriber <= true;
+        wait for 1 ns;
+        publish(net, self, "hello subscribers", status);
+        check(status = ok, "Expected publish to pass");
+        publish(net, self, "hello subscribers", status);
+        check(status = full_inbox_error, "Expected publish to skip subscriber with full inbox");
       end if;
     end loop;
 
@@ -317,5 +378,42 @@ begin
     delete(request_message2);
     wait;
   end process server2;
-  
+
+  limited_inbox_actor: process is
+    variable self, test_runner : actor_t;
+    variable message : message_ptr_t;
+    variable status : com_status_t;
+    variable receipt1, receipt2 : receipt_t;
+  begin
+    wait until start_limited_inbox;
+    self := create("limited inbox", 1);
+    test_runner := find("test runner");
+    wait for 10 ns;
+    receive(net, self, message);
+    receive(net, self, message);
+    send(net, self, test_runner, "request1", receipt1);
+    send(net, self, test_runner, "request2", receipt2);
+    wait for 20 ns;
+    receive_reply(net, self, receipt1.id, message);
+    receive_reply(net, self, receipt2.id, message);
+    delete(message);
+    limited_inbox_actor_done <= true;
+    wait;
+  end process limited_inbox_actor;
+
+  limited_inbox_subscriber: process is
+    variable self, test_runner : actor_t;
+    variable message : message_ptr_t;
+    variable status : com_status_t;
+  begin
+    wait until start_limited_inbox_subscriber;
+    self := create("limited inbox subscriber", 1);
+    subscribe(self, find("test runner"), status);
+    wait for 10 ns;
+    receive(net, self, message);
+    wait;
+  end process limited_inbox_subscriber;
+
 end test_fixture;
+
+-- vunit_pragma run_all_in_same_sim

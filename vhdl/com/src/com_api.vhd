@@ -13,12 +13,16 @@ package com_pkg is
   signal net : network_t := idle_network;
   
   type messenger_t is protected
+    -----------------------------------------------------------------------------
+    -- Handling of actors
+    -----------------------------------------------------------------------------
+    impure function create (
+      constant name : string := "";
+      constant inbox_size : in positive := positive'high)
+      return actor_t;
     impure function find (
       constant name : string;
       constant enable_deferred_creation : boolean := true)    
-      return actor_t;
-    impure function create (
-      constant name : string := "")
       return actor_t;
     procedure destroy (
       variable actor : inout actor_t;
@@ -26,17 +30,52 @@ package com_pkg is
     procedure reset_messenger;    
     impure function num_of_actors
       return natural;
+    impure function num_of_deferred_creations
+      return natural;
+    impure function unknown_actor (
+      constant actor : actor_t)
+      return boolean;
     impure function deferred (
       constant actor : actor_t)
       return boolean;  
-    impure function num_of_deferred_creations
+    impure function inbox_is_full (
+      constant actor : actor_t)
+      return boolean;
+    impure function inbox_size (
+      constant actor : actor_t)
       return natural;
+
+    -----------------------------------------------------------------------------
+    -- Send related subprograms
+    -----------------------------------------------------------------------------
     procedure send (
       constant sender   : in    actor_t;
       constant receiver : in    actor_t;
       constant request_id : in message_id_t;
       constant payload  : in    string;
       variable receipt   : out   receipt_t);
+    procedure publish (
+      constant sender   : in    actor_t;
+      constant payload  : in    string;
+      variable status   : out   com_status_t);
+
+    -----------------------------------------------------------------------------
+    -- Receive related subprograms
+    -----------------------------------------------------------------------------
+    impure function has_messages (
+      constant actor : actor_t)
+      return boolean;
+    impure function get_first_message_payload (
+      constant actor : actor_t)
+      return string;
+    impure function get_first_message_sender (
+      constant actor : actor_t)
+      return actor_t;
+    impure function get_first_message_id (
+      constant actor : actor_t)
+      return message_id_t;
+    procedure delete_first_envelope (
+      constant actor : in actor_t);
     impure function has_reply_stash_message (
       constant actor : actor_t;
       constant request_id : message_id_t := no_message_id_c)
@@ -56,20 +95,6 @@ package com_pkg is
       return boolean;    
     procedure clear_reply_stash (
       constant actor : actor_t);
-    impure function has_messages (
-      constant actor : actor_t)
-      return boolean;
-    impure function get_first_message_payload (
-      constant actor : actor_t)
-      return string;
-    impure function get_first_message_sender (
-      constant actor : actor_t)
-      return actor_t;
-    impure function get_first_message_id (
-      constant actor : actor_t)
-      return message_id_t;
-    procedure delete_first_envelope (
-      constant actor : in actor_t);
     procedure subscribe (
       constant subscriber : in  actor_t;
       constant publisher : in  actor_t;
@@ -78,14 +103,15 @@ package com_pkg is
       constant subscriber : in  actor_t;
       constant publisher : in  actor_t;
       variable status    : out com_status_t);
-    procedure publish (
-      constant sender   : in    actor_t;
-      constant payload  : in    string;
-      variable status   : out   com_status_t);
+    
   end protected;
-  
+
+  -----------------------------------------------------------------------------
+  -- Handling of actors
+  -----------------------------------------------------------------------------
   impure function create (
-    constant name : string := "")
+    constant name : string := "";
+    constant inbox_size : in positive := positive'high)
     return actor_t;
   impure function find (
     constant name : string;
@@ -99,22 +125,32 @@ package com_pkg is
     return natural;
   impure function num_of_deferred_creations
     return natural;
+  impure function inbox_size (
+    constant actor : actor_t)
+    return natural;
+
+  -----------------------------------------------------------------------------
+  -- Send related subprograms
+  -----------------------------------------------------------------------------
   procedure send (
     signal net        : inout network_t;
     constant sender   : in    actor_t;
     constant receiver : in    actor_t;
     constant payload  : in    string := "";
-    variable receipt   : out  receipt_t);
+    variable receipt   : out  receipt_t;
+    constant timeout : in time := max_timeout_c);
   procedure send (
     signal net        : inout network_t;
     constant receiver : in    actor_t;
     constant payload  : in    string := "";
-    variable receipt   : out  receipt_t);
+    variable receipt   : out  receipt_t;
+    constant timeout : in time := max_timeout_c);
   procedure send (
     signal net        : inout network_t;
     constant receiver : in    actor_t;
     variable message  : inout message_ptr_t;
     variable receipt   : out  receipt_t;
+    constant timeout : in time := max_timeout_c;
     constant keep_message : in boolean := false);  
   procedure reply (
     signal net        : inout network_t;
@@ -122,19 +158,36 @@ package com_pkg is
     constant receiver : in    actor_t;
     constant request_id : in message_id_t;
     constant payload  : in    string := "";
-    variable receipt   : out  receipt_t);
+    variable receipt   : out  receipt_t;
+    constant timeout : in time := max_timeout_c);
   procedure reply (
     signal net        : inout network_t;
     constant receiver : in    actor_t;
     constant request_id : in message_id_t;
     constant payload  : in    string := "";
-    variable receipt   : out  receipt_t);
+    variable receipt   : out  receipt_t;
+    constant timeout : in time := max_timeout_c);
   procedure reply (
     signal net        : inout network_t;
     constant receiver : in    actor_t;
     variable message  : inout message_ptr_t;
     variable receipt   : out  receipt_t;
-    constant keep_message : in boolean := false);  
+    constant timeout : in time := max_timeout_c;
+    constant keep_message : in boolean := false);
+  procedure publish (
+    signal net        : inout network_t;
+    constant sender   : in    actor_t;
+    constant payload  : in    string := "";
+    variable status   : out   com_status_t);
+  procedure publish (
+    signal net        : inout network_t;
+    variable message  : inout message_ptr_t;
+    variable status   : out   com_status_t;
+    constant keep_message : in boolean := false);
+
+  -----------------------------------------------------------------------------
+  -- Receive related subprograms
+  -----------------------------------------------------------------------------
   procedure wait_for_messages (
     signal net        : in network_t;
     constant receiver : in actor_t;
@@ -148,23 +201,16 @@ package com_pkg is
     constant delete_from_inbox : in boolean := true)
     return message_ptr_t;
   procedure receive (
-    signal net        : in network_t;
+    signal net        : inout network_t;
     constant receiver : actor_t;
     variable message : inout message_ptr_t;
     constant timeout : in time := max_timeout_c);  
   procedure receive_reply (
-    signal net        : in network_t;
+    signal net        : inout network_t;
     constant receiver : actor_t;
     constant request_id : in message_id_t;
     variable message : inout message_ptr_t;
-    constant timeout : in time := max_timeout_c);  
-  function compose (
-    constant payload : string := "";
-    constant sender  : actor_t := null_actor_c;
-    constant request_id : in message_id_t := no_message_id_c)
-    return message_ptr_t;  
-  procedure delete (
-    variable message : inout message_ptr_t);  
+    constant timeout : in time := max_timeout_c);
   procedure subscribe (
     constant subscriber : in  actor_t;
     constant publisher : in  actor_t;
@@ -173,16 +219,17 @@ package com_pkg is
     constant subscriber : in  actor_t;
     constant publisher : in  actor_t;
     variable status    : out com_status_t);
-  procedure publish (
-    signal net        : inout network_t;
-    constant sender   : in    actor_t;
-    constant payload  : in    string := "";
-    variable status   : out   com_status_t);
-  procedure publish (
-    signal net        : inout network_t;
-    variable message  : inout message_ptr_t;
-    variable status   : out   com_status_t;
-    constant keep_message : in boolean := false);
+
+  -----------------------------------------------------------------------------
+  -- Message related subprograms
+  -----------------------------------------------------------------------------
+  function compose (
+    constant payload : string := "";
+    constant sender  : actor_t := null_actor_c;
+    constant request_id : in message_id_t := no_message_id_c)
+    return message_ptr_t;  
+  procedure delete (
+    variable message : inout message_ptr_t);  
 end package;
 
   
