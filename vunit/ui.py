@@ -412,6 +412,7 @@ class VUnit:
                   join("check", "src", "check_api.vhd"),
                   join("check", "src", "check_base_api.vhd"),
                   join("check", "src", "check_types.vhd"),
+                  join("run", "src", "stop_api.vhd"),
                   join("run", "src", "run.vhd"),
                   join("run", "src", "run_api.vhd"),
                   join("run", "src", "run_types.vhd"),
@@ -425,6 +426,11 @@ class VUnit:
         files +=  [join("dictionary", "src", "dictionary.vhd")]
 
         files +=  [join("path", "src", "path.vhd")]
+
+        if self._vhdl_standard == '2008':
+            files += [join("run", "src", "stop_body_2008.vhd")]
+        else:
+            files += [join("run", "src", "stop_body_dummy.vhd")]
 
         if self._vhdl_standard == '93':
             if mock_log:

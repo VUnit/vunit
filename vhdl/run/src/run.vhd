@@ -4,11 +4,12 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.dictionary.all;
+use work.vunit_stop_pkg.vunit_stop;
 
-package body run_pkg is  
+package body run_pkg is
   procedure test_runner_setup (
     signal runner : inout runner_sync_t;
     constant runner_cfg : in runner_cfg_t := runner_cfg_default) is
@@ -51,7 +52,7 @@ package body run_pkg is
         checker_init(stop_level => error);
       end if;
     end if;
-                
+
     set_phase(test_runner_setup);
     runner.phase <= test_runner_setup;
     runner.exit_without_errors <= false;
@@ -62,7 +63,7 @@ package body run_pkg is
     if selected_enabled_test_cases /= null then
       deallocate(selected_enabled_test_cases);
     end if;
-    
+
     if has_key(runner_cfg, "enabled_test_cases") then
       write(selected_enabled_test_cases, get(runner_cfg, "enabled_test_cases"));
     else
@@ -71,7 +72,7 @@ package body run_pkg is
     test_case_candidates := split(replace(selected_enabled_test_cases.all, ",,", "__comma__"), ",");
 
     set_cfg(runner_cfg);
-    
+
     set_run_all(strip(test_case_candidates(0).all) = "__all__");
     if get_run_all then
       set_num_of_test_cases(unknown_num_of_test_cases_c);
@@ -80,13 +81,13 @@ package body run_pkg is
       for i in 1 to test_case_candidates'length loop
         if strip(test_case_candidates(i - 1).all) /= "" then
           inc_num_of_test_cases;
-          
+
           set_test_case_name(get_num_of_test_cases, replace(strip(test_case_candidates(i - 1).all), "__comma__", ","));
         end if;
       end loop;
     end if;
     exit_gate(runner);
-    set_phase(test_suite_setup); 
+    set_phase(test_suite_setup);
     runner.phase <= test_suite_setup;
     wait for 0 ns;
     debug(runner_trace_logger, "Entering test suite setup phase.");
@@ -103,24 +104,29 @@ package body run_pkg is
     runner.phase <= test_runner_cleanup;
     wait for 0 ns;
     debug(runner_trace_logger, "Entering test runner cleanup phase.");
-    entry_gate(runner);    
-    exit_gate(runner);    
+    entry_gate(runner);
+    exit_gate(runner);
     set_phase(test_runner_exit);
     runner.phase <= test_runner_exit;
     wait for 0 ns;
     debug(runner_trace_logger, "Entering test runner exit phase.");
     get_checker_stat(stat);
     stat := stat + checker_stat;
-    runner.exit_without_errors <= (stat.n_failed = 0);    
-    
+    runner.exit_without_errors <= (stat.n_failed = 0);
+
     runner_init;
     runner.locks(test_runner_setup to test_runner_cleanup) <= (others => (false, false));
-    
+
     wait for 0 ns;
 
     if not disable_simulation_exit then
+      if runner.exit_without_errors then
+        vunit_stop(0);
+      else
+        vunit_stop(1);
+      end if;
       report "Test runner exit." severity failure;
-    end if;    
+    end if;
   end procedure test_runner_cleanup;
 
   impure function num_of_enabled_test_cases
@@ -128,7 +134,7 @@ package body run_pkg is
   begin
     return get_num_of_test_cases;
   end;
-  
+
   impure function enabled (
     constant name : string)
     return boolean is
@@ -137,7 +143,7 @@ package body run_pkg is
     if get_run_all then
       return true;
     end if;
-    
+
     for i in 1 to get_num_of_test_cases loop
       if get_test_case_name(i) = name then
         return true;
@@ -152,27 +158,27 @@ package body run_pkg is
     variable ret_val : boolean;
   begin
     init_test_case_iteration;
-    
+
     if get_test_suite_completed then
-      ret_val := false;    
+      ret_val := false;
     elsif get_run_all then
       ret_val := get_has_run_since_last_loop_check;
     else
       if get_test_suite_iteration > 0 then
         inc_active_test_case_index;
       end if;
-      
+
       ret_val := get_active_test_case_index <= get_num_of_test_cases;
     end if;
 
     clear_has_run_since_last_loop_check;
-    
+
     if ret_val then
       inc_test_suite_iteration;
       set_phase(test_case_setup);
       debug(runner_trace_logger, "Entering test case setup phase.");
     else
-      set_test_suite_completed;    
+      set_test_suite_completed;
       set_phase(test_suite_cleanup);
       debug(runner_trace_logger, "Entering test suite cleanup phase.");
     end if;
@@ -184,12 +190,12 @@ package body run_pkg is
     return boolean is
   begin
     if get_test_case_iteration = 0 then
-      set_phase(test_case); 
+      set_phase(test_case);
       debug(runner_trace_logger, "Entering test case phase.");
       inc_test_case_iteration;
       clear_test_case_exit_after_error;
       clear_test_suite_exit_after_error;
-      set_running_test_case("");      
+      set_running_test_case("");
       return true;
     else
       set_phase(test_case_cleanup);
@@ -224,7 +230,7 @@ package body run_pkg is
 
   begin
     if get_test_suite_completed then
-      set_running_test_case("");      
+      set_running_test_case("");
       return false;
     elsif get_run_all then
       if not has_run(name) then
@@ -239,7 +245,7 @@ package body run_pkg is
       return true;
     end if;
 
-    set_running_test_case("");      
+    set_running_test_case("");
     return false;
   end;
 
@@ -251,12 +257,12 @@ package body run_pkg is
     end if;
     return get_test_case_name(get_active_test_case_index);
   end;
-  
+
   impure function running_test_case
     return string is
   begin
     return get_running_test_case;
-  end;  
+  end;
 
   procedure test_runner_watchdog (
     signal runner                    : inout runner_sync_t;
@@ -278,7 +284,7 @@ package body run_pkg is
       set_test_suite_completed;
       set_phase(test_case_cleanup);
       debug(runner_trace_logger, "Entering test case cleanup phase.");
-      set_test_suite_exit_after_error;      
+      set_test_suite_exit_after_error;
     end if;
 
     return err;
@@ -325,8 +331,8 @@ package body run_pkg is
     runner.locks(phase).entry_is_locked <= true;
     wait for 0 ns;
     debug(runner_trace_logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase entry gate.", me, line_num, file_name);
-  end;    
-  
+  end;
+
   procedure unlock_entry (
     signal runner : out runner_sync_t;
     constant phase : in runner_phase_t;
@@ -349,8 +355,8 @@ package body run_pkg is
     runner.locks(phase).exit_is_locked <= true;
     wait for 0 ns;
     debug(runner_trace_logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase exit gate.", me, line_num, file_name);
-  end;    
-  
+  end;
+
   procedure unlock_exit (
     signal runner : out runner_sync_t;
     constant phase : in runner_phase_t;
@@ -376,27 +382,27 @@ package body run_pkg is
       debug(runner_trace_logger, "Waking up. Phase is " & replace(runner_phase_t'image(phase), "_", " ") & ".", me, line_num, file_name);
     end if;
   end;
-  
+
   procedure entry_gate (
     signal runner : inout runner_sync_t) is
   begin
     if runner.locks(get_phase).entry_is_locked then
-      debug(runner_trace_logger, "Halting on " & replace(runner_phase_t'image(get_phase), "_", " ") & " phase entry gate.");      
+      debug(runner_trace_logger, "Halting on " & replace(runner_phase_t'image(get_phase), "_", " ") & " phase entry gate.");
       wait on runner.locks until not runner.locks(get_phase).entry_is_locked for max_locked_time_c;
     end if;
     runner.phase <= get_phase;
     wait for 0 ns;
-    debug(runner_trace_logger, "Passed " & replace(runner_phase_t'image(get_phase), "_", " ") & " phase entry gate.");      
+    debug(runner_trace_logger, "Passed " & replace(runner_phase_t'image(get_phase), "_", " ") & " phase entry gate.");
   end procedure entry_gate;
-  
+
   procedure exit_gate (
     signal runner : in runner_sync_t) is
   begin
     if runner.locks(get_phase).exit_is_locked then
-      debug(runner_trace_logger, "Halting on " & replace(runner_phase_t'image(get_phase), "_", " ") & " phase exit gate.");      
+      debug(runner_trace_logger, "Halting on " & replace(runner_phase_t'image(get_phase), "_", " ") & " phase exit gate.");
       wait on runner.locks until not runner.locks(get_phase).exit_is_locked for max_locked_time_c;
     end if;
-    debug(runner_trace_logger, "Passed " & replace(runner_phase_t'image(get_phase), "_", " ") & " phase exit gate.");      
+    debug(runner_trace_logger, "Passed " & replace(runner_phase_t'image(get_phase), "_", " ") & " phase exit gate.");
   end procedure exit_gate;
 
   impure function active_python_runner (
@@ -430,7 +436,7 @@ package body run_pkg is
     else
       return "__all__";
     end if;
-    
+
   end;
-  
+
 end package body run_pkg;
