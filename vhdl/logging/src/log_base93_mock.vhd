@@ -8,7 +8,6 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.std_logic_unsigned.all;
 use std.textio.all;
 use work.lang.all;
 use work.string_ops.all;

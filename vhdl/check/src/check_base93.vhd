@@ -9,7 +9,6 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.std_logic_unsigned.all;
 use std.textio.all;
 use work.check_types_pkg.all;
 use work.log_base_pkg.all;
