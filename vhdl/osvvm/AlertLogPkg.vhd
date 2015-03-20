@@ -467,7 +467,6 @@ package body AlertLogPkg is
     ------------------------------------------------------------
     impure function GetAlertCount(AlertLogID : AlertLogIDType := ALERTLOG_BASE_ID) return AlertCountType is
     ------------------------------------------------------------
-      variable AlertCount : AlertCountType ; 
     begin
       return AlertLogPtr(AlertLogID).AlertCount ; 
     end function GetAlertCount ; 
@@ -475,7 +474,6 @@ package body AlertLogPkg is
     ------------------------------------------------------------
     impure function GetEnabledAlertCount(AlertLogID : AlertLogIDType := ALERTLOG_BASE_ID) return AlertCountType is
     ------------------------------------------------------------
-      variable AlertCount : AlertCountType ; 
     begin
       return GetEnabledAlertCount(AlertLogPtr(AlertLogID).AlertCount, AlertLogPtr(AlertLogID).AlertEnabled) ;
     end function GetEnabledAlertCount ; 
@@ -829,7 +827,6 @@ package body AlertLogPkg is
     -- suppress the resize and copy as a CovBin autosizes.
     procedure SetNumAlertLogIDs (NewNumAlertLogIDs : integer) is
     ------------------------------------------------------------
-      variable oldAlertLogPtr : AlertLogArrayPtrType ;
     begin
       if NewNumAlertLogIDs > NumAllocatedAlertLogIDs then 
         GrowAlertStructure(NewNumAlertLogIDs) ; 
@@ -840,7 +837,6 @@ package body AlertLogPkg is
     -- PT Local
     impure function GetNextAlertLogID return AlertLogIDType is
     ------------------------------------------------------------
-      variable NormNumAlertLogIDs : AlertLogIDType ;      
     begin
       NumAlertLogIDs := NumAlertLogIDs + 1 ; 
       if NumAlertLogIDs > NumAllocatedAlertLogIDs then

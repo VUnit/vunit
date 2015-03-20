@@ -1379,7 +1379,6 @@ package body CoveragePkg is
     ------------------------------------------------------------
     procedure SetWeightMode (A : WeightModeType;  Scale : real := 1.0) is
     ------------------------------------------------------------
-      variable buf : line ;
     begin
       WeightMode := A ;
       WeightScale := Scale ;
