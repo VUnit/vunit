@@ -8,7 +8,6 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.std_logic_unsigned.all;
 use work.log_types_pkg.all;
 
 package body log_base_pkg is
