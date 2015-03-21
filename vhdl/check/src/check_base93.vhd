@@ -5,7 +5,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -31,16 +31,16 @@ package body check_base_pkg is
     logger_init(checker.logger, default_src, file_name, display_format, file_format, stop_level, separator, append);
     -- pragma translate_on
   end base_init;
-  
+
   procedure base_check(
     variable checker   : inout checker_t;
     constant expr      : in      boolean;
     constant msg       : in      string      := "Check failed!";
     constant level     : in      log_level_t := dflt;
     constant line_num  : in    natural     := 0;
-    constant file_name : in    string      := "") is            
+    constant file_name : in    string      := "") is
   begin
-    -- pragma translate_off    
+    -- pragma translate_off
     checker.stat.n_checks := checker.stat.n_checks + 1;
     if (expr = false) then
       checker.stat.n_failed := checker.stat.n_failed + 1;
@@ -54,14 +54,14 @@ package body check_base_pkg is
     else
       checker.stat.n_passed := checker.stat.n_passed + 1;
     end if;
-    -- pragma translate_on    
+    -- pragma translate_on
   end;
 
   procedure base_get_checker_stat (
     variable checker : inout checker_t;
     variable stat    : out   checker_stat_t) is
   begin
-    -- pragma translate_off    
+    -- pragma translate_off
     stat := checker.stat;
     -- pragma translate_on
   end;
@@ -102,7 +102,7 @@ package body check_base_pkg is
     get_logger_cfg(checker.logger, cfg);
     -- pragma translate_on
   end;
-  
+
   procedure base_get_logger_cfg (
     variable checker : inout checker_t;
     variable cfg     : inout logger_cfg_export_t) is
@@ -122,6 +122,3 @@ package body check_base_pkg is
   end;
 
 end package body check_base_pkg;
-
-
-

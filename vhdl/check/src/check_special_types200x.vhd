@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -25,12 +25,12 @@ package check_special_types_pkg is
       constant stop_level : in log_level_t := failure;
       constant separator            : in character   := ',';
       constant append               : in boolean     := false);
-    
+
     procedure check(expr         :    boolean;
                     msg          :    string;
                     level        :    log_level_t := dflt;
                     line_num     : in natural     := 0;
-                    file_name    : in string      := "");        
+                    file_name    : in string      := "");
 
     impure function get_stat
       return checker_stat_t;
@@ -45,7 +45,7 @@ package check_special_types_pkg is
 
     impure function found_errors
       return boolean;
- 
+
   end protected checker_t;
 end package;
 
@@ -68,7 +68,7 @@ package body check_special_types_pkg is
       default_log_level := default_level;
       logger.init(default_src, file_name, default_display_mode, default_file_mode, stop_level, separator, append);
     end init;
-  
+
     procedure check(expr         :    boolean;
                     msg          :    string;
                     level        :    log_level_t := dflt;
@@ -122,4 +122,3 @@ package body check_special_types_pkg is
     end;
   end protected body checker_t;
 end package body check_special_types_pkg;
-
