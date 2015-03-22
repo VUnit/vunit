@@ -12,6 +12,7 @@ context vunit_lib.vunit_context;
 library com_lib;
 use com_lib.com_pkg.all;
 use com_lib.com_types_pkg.all;
+use com_lib.com_codec_pkg.all;
 
 library shuffler_lib;
 
@@ -36,14 +37,6 @@ architecture test_fixture of tb_card_shuffler is
   signal input_valid  : std_logic := '0';
   signal output_card  : std_logic_vector(5 downto 0);
   signal output_valid : std_logic;
-    impure function msg_type (
-      constant msg : string)
-      return string is
-      variable type_split : lines_t;
-    begin
-      type_split := split(msg, " ", 1);
-      return type_split(0).all;
-    end;
 begin
   test_runner : process
     variable self : actor_t;
@@ -99,14 +92,14 @@ begin
       loop 
         receive(net, self, message);
         wait until rising_edge(clk);        
-        if msg_type(message.payload.all) = "load" then
+        if get_first_element(message.payload.all) = "load" then
           msg := decode(message.payload.all);
           input_valid <= '1';
           input_card(5 downto 2) <= std_logic_vector(to_unsigned(rank_t'pos(msg.card.rank), 4));
           input_card(1 downto 0) <= std_logic_vector(to_unsigned(suit_t'pos(msg.card.suit), 2));
           wait until rising_edge(clk);
           input_valid <= '0';
-        elsif msg_type(message.payload.all) = "reset_shuffler" then
+        elsif get_first_element(message.payload.all) = "reset_shuffler" then
           rst <= '1';
           wait until rising_edge(clk);
           rst <= '0';
@@ -146,22 +139,22 @@ begin
     subscribe(self, find("test runner"), status);
     loop 
         receive(net, self, message);
-        if msg_type(message.payload.all) = "reset_shuffler" then
+        if get_first_element(message.payload.all) = "reset_shuffler" then
           n_received := 0;
           n_loaded := 0;
           received_checksum := 0;
           loaded_checksum := 0;
-        elsif msg_type(message.payload.all) = "load" then
+        elsif get_first_element(message.payload.all) = "load" then
           load_msg := decode(message.payload.all);
           index := rank_t'pos(load_msg.card.rank) * 4 +suit_t'pos(load_msg.card.suit);
           loaded_checksum := loaded_checksum + (index * n_loaded);
           n_loaded := n_loaded + 1;
-        elsif msg_type(message.payload.all) = "received" then
+        elsif get_first_element(message.payload.all) = "received" then
           received_msg := decode(message.payload.all);
           index := rank_t'pos(received_msg.card.rank) * 4 +suit_t'pos(received_msg.card.suit);
           received_checksum := received_checksum + (index * n_received);
           n_received := n_received + 1;
-        elsif msg_type(message.payload.all) = "get_status" then
+        elsif get_first_element(message.payload.all) = "get_status" then
           status_point := decode(message.payload.all).n_received;
           client := message.sender;
           client_request_id := message.id;

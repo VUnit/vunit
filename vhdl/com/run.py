@@ -14,6 +14,8 @@ sys.path.append(path_to_vunit)
 from vunit import VUnit
 
 ui = VUnit.from_argv()
+ui.enable_location_preprocessing()
+ui.enable_check_preprocessing()
 
 src_path = join(dirname(__file__), "src")
 
@@ -21,6 +23,6 @@ com_lib = ui.add_library('com_lib')
 com_lib.add_source_files(join(dirname(__file__), 'src', '*.vhd'))
 
 tb_com_lib = ui.add_library('tb_com_lib')
-tb_com_lib.add_source_files(join(dirname(__file__), 'test', 'tb_com.vhd'))
+tb_com_lib.add_source_files(join(dirname(__file__), 'test', 'tb_com*.vhd'))
 
 ui.main()
