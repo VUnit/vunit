@@ -250,9 +250,11 @@ class VHDLPackage(object):
     """
     Representation of a VHDL package
     """
-    def __init__(self, identifier, constant_declarations):
+    def __init__(self, identifier, constant_declarations, enumeration_types, record_types):
         self.identifier = identifier
         self.constant_declarations = constant_declarations
+        self.enumeration_types = enumeration_types
+        self.record_types = record_types
 
     _package_start_re = re.compile(r"""
         (^|\A)                # Beginning of line or start of string
@@ -293,7 +295,10 @@ class VHDLPackage(object):
         # Extract identifier
         identifier = cls._package_start_re.match(code).group('id')
         constant_declarations = cls._find_constant_declarations(code)
-        return cls(identifier, constant_declarations)
+        enumeration_types = [e for e in VHDLEnumerationType.find(code)]
+        record_types = [r for r in VHDLRecordType.find(code)]
+
+        return cls(identifier, constant_declarations, enumeration_types, record_types)
 
     @classmethod
     def _find_constant_declarations(cls, code):
@@ -769,6 +774,72 @@ class VHDLInterfaceElement(object):
             code += " := " + self.init_value
 
         return code
+
+
+class VHDLEnumerationType(object):
+    def __init__(self, identifier, literals):
+        self.identifier = identifier
+        self.literals = literals
+
+    _enum_declaration_re = re.compile(r"""
+        (^|\A)                      # Beginning of line or start of string
+        \s*
+        type
+        \s+
+        (?P<id>[a-zA-Z][\w]*)       # An identifier
+        \s+
+        is
+        \s*\(\s*
+        (?P<literals>[a-zA-Z][\w]* # First enumeration literal
+        (\s*,\s*[a-zA-Z][\w]*)*)   # More enumeration literals
+        \s*\)\s*;
+
+        """, re.MULTILINE | re.IGNORECASE | re.VERBOSE)
+
+    @classmethod
+    def find(cls, code):
+        for enum_type in cls._enum_declaration_re.finditer(code):
+            identifier = enum_type.group('id')
+            literals = [e.strip() for e in enum_type.group('literals').split(',')]
+            yield VHDLEnumerationType(identifier, literals)
+
+
+class VHDLElementDeclaration(object):
+    def __init__(self, identifier_list, subtype_indication):
+        self.identifier_list = identifier_list
+        self.subtype_indication = subtype_indication
+
+
+class VHDLRecordType(object):
+    def __init__(self, identifier, elements):
+        self.identifier = identifier
+        self.elements = elements
+
+    _record_declaration_re = re.compile(r"""
+        (^|\A)                      # Beginning of line or start of string
+        \s*
+        type
+        \s+
+        (?P<id>[a-zA-Z][\w]*)       # An identifier
+        \s+
+        is
+        \s+
+        record
+        (?P<elements>.*?)end\s+record""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
+
+    @classmethod
+    def find(cls, code):
+        for record_type in cls._record_declaration_re.finditer(code):
+            identifier = record_type.group('id')
+            elements = record_type.group('elements').split(';')
+            parsed_elements = []
+            for e in elements:
+                if ':' in e:
+                    identifier_list_and_subtype_indication = e.split(':')
+                    identifier_list = [i.strip() for i in identifier_list_and_subtype_indication[0].split(',')]
+                    subtype_indication = VHDLSubtypeIndication.parse(identifier_list_and_subtype_indication[1].strip())
+                    parsed_elements.append(VHDLElementDeclaration(identifier_list, subtype_indication))
+            yield VHDLRecordType(identifier, parsed_elements)
 
 
 def find_closing_delimiter(start, end, code):

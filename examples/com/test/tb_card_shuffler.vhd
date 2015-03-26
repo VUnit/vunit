@@ -8,11 +8,7 @@
 
 library vunit_lib;
 context vunit_lib.vunit_context;
-
-library com_lib;
-use com_lib.com_pkg.all;
-use com_lib.com_types_pkg.all;
-use com_lib.com_codec_pkg.all;
+context vunit_lib.com_context;
 
 library shuffler_lib;
 
@@ -23,7 +19,7 @@ use ieee.numeric_std.all;
 use std.textio.all;
 
 use work.msg_types_pkg.all;
-use work.codecs_pkg.all;
+use work.msg_codecs_pkg.all;
 
 entity tb_card_shuffler is
   generic (
