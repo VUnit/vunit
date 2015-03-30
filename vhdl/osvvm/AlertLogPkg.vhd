@@ -1,7 +1,7 @@
 --
 --  File Name:         AlertLogPkg.vhd
 --  Design Unit Name:  AlertLogPkg
---  Revision:          STANDARD VERSION,  revision 2015.01
+--  Revision:          STANDARD VERSION,  revision 2015.03
 --
 --  Maintainer:        Jim Lewis      email:  jim@synthworks.com
 --  Contributor(s):
@@ -26,6 +26,8 @@
 --  Revision History:
 --    Date       Version    Description
 --    01/2015:   2015.01    Initial revision
+--    02/2015    2015.03    Added:  AlertIfEqual, AlertIfNotEqual, AlertIfDiff, PathTail, 
+--                          ReportNonZeroAlerts, ReadLogEnables 
 --
 --
 --  Copyright (c) 2015 by SynthWorks Design Inc.  All rights reserved.
@@ -53,6 +55,10 @@ use std.textio.all ;
 use work.OsvvmGlobalPkg.all ; 
 use work.TranscriptPkg.all ;
 
+library IEEE ; 
+use ieee.std_logic_1164.all ; 
+use ieee.numeric_std.all ; 
+
 package AlertLogPkg is
 
   subtype  AlertLogIDType   is integer ;
@@ -64,13 +70,14 @@ package AlertLogPkg is
   subtype  LogIndexType     is LogType range DEBUG to INFO ;
   type     LogEnableType    is array (LogIndexType) of boolean ;
 
-  constant  ALERTLOG_BASE_ID        : AlertLogIDType := 0 ;
-  constant  ALERT_DEFAULT_ID        : AlertLogIDType := 1 ;
-  constant  LOG_DEFAULT_ID          : AlertLogIDType := 1 ;
-  constant  ALERTLOG_DEFAULT_ID     : AlertLogIDType :=  ALERT_DEFAULT_ID ; 
-  constant  OSVVM_ALERTLOG_ID       : AlertLogIDType := 2 ;
-  constant  ALERTLOG_ID_NOT_FOUND   : AlertLogIDType := -1 ;  -- alternately integer'right
-  constant  MIN_NUM_AL_IDS          : AlertLogIDType := 32 ; -- Number IDs initially allocated
+  constant  ALERTLOG_BASE_ID         : AlertLogIDType := 0 ;
+  constant  ALERT_DEFAULT_ID         : AlertLogIDType := 1 ;
+  constant  LOG_DEFAULT_ID           : AlertLogIDType := 1 ;
+  constant  ALERTLOG_DEFAULT_ID      : AlertLogIDType :=  ALERT_DEFAULT_ID ; 
+  constant  OSVVM_ALERTLOG_ID        : AlertLogIDType := 2 ;
+  constant  ALERTLOG_ID_NOT_FOUND    : AlertLogIDType := -1 ;  -- alternately integer'right
+  constant  ALERTLOG_ID_NOT_ASSIGNED : AlertLogIDType := -1 ;
+  constant  MIN_NUM_AL_IDS           : AlertLogIDType := 32 ; -- Number IDs initially allocated
 
   alias AlertLogOptionsType is work.OsvvmGlobalPkg.OsvvmOptionsType ; 
 
@@ -85,22 +92,76 @@ package AlertLogPkg is
   
   ------------------------------------------------------------
   -- Similar to assert, except condition is positive
-  procedure AlertIf( condition : boolean ; AlertLogID : AlertLogIDType ; Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIf( AlertLogID : AlertLogIDType ; condition : boolean ; Message : string ; Level : AlertType := ERROR )  ; 
   procedure AlertIf( condition : boolean ; Message : string ; Level : AlertType := ERROR ) ; 
-  impure function  AlertIf( condition : boolean ; AlertLogID : AlertLogIDType ; Message : string ; Level : AlertType := ERROR ) return boolean ; 
+  impure function  AlertIf( AlertLogID : AlertLogIDType ; condition : boolean ; Message : string ; Level : AlertType := ERROR ) return boolean ; 
   impure function  AlertIf( condition : boolean ; Message : string ; Level : AlertType := ERROR ) return boolean ; 
+
+  -- deprecated
+  procedure AlertIf( condition : boolean ; AlertLogID : AlertLogIDType ; Message : string ; Level : AlertType := ERROR )  ; 
+  impure function  AlertIf( condition : boolean ; AlertLogID : AlertLogIDType ; Message : string ; Level : AlertType := ERROR ) return boolean ; 
 
   ------------------------------------------------------------
   -- Direct replacement for assert
-  procedure AlertIfNot( condition : boolean ; AlertLogID : AlertLogIDType ; Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfNot( AlertLogID : AlertLogIDType ; condition : boolean ; Message : string ; Level : AlertType := ERROR )  ; 
   procedure AlertIfNot( condition : boolean ; Message : string ; Level : AlertType := ERROR ) ; 
-  impure function  AlertIfNot( condition : boolean ; AlertLogID : AlertLogIDType ; Message : string ; Level : AlertType := ERROR ) return boolean ; 
+  impure function  AlertIfNot( AlertLogID : AlertLogIDType ; condition : boolean ; Message : string ; Level : AlertType := ERROR ) return boolean ; 
   impure function  AlertIfNot( condition : boolean ; Message : string ; Level : AlertType := ERROR ) return boolean ; 
+
+  -- deprecated
+  procedure AlertIfNot( condition : boolean ; AlertLogID : AlertLogIDType ; Message : string ; Level : AlertType := ERROR )  ; 
+  impure function  AlertIfNot( condition : boolean ; AlertLogID : AlertLogIDType ; Message : string ; Level : AlertType := ERROR ) return boolean ; 
+  
+  ------------------------------------------------------------
+  -- overloading for common functionality
+  procedure AlertIfEqual( AlertLogID : AlertLogIDType ;  L, R : std_logic ;         Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfEqual( AlertLogID : AlertLogIDType ;  L, R : std_logic_vector ;  Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfEqual( AlertLogID : AlertLogIDType ;  L, R : unsigned ;          Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfEqual( AlertLogID : AlertLogIDType ;  L, R : signed ;            Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfEqual( AlertLogID : AlertLogIDType ;  L, R : integer ;           Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfEqual( AlertLogID : AlertLogIDType ;  L, R : real ;              Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfEqual( AlertLogID : AlertLogIDType ;  L, R : character ;         Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfEqual( AlertLogID : AlertLogIDType ;  L, R : string ;            Message : string ; Level : AlertType := ERROR )  ; 
+
+  procedure AlertIfEqual( L, R : std_logic ;        Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfEqual( L, R : std_logic_vector ; Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfEqual( L, R : unsigned ;         Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfEqual( L, R : signed ;           Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfEqual( L, R : integer ;          Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfEqual( L, R : real ;             Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfEqual( L, R : character ;        Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfEqual( L, R : string ;           Message : string ; Level : AlertType := ERROR )  ; 
+
+  procedure AlertIfNotEqual( AlertLogID : AlertLogIDType ;  L, R : std_logic ;        Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfNotEqual( AlertLogID : AlertLogIDType ;  L, R : std_logic_vector ; Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfNotEqual( AlertLogID : AlertLogIDType ;  L, R : unsigned ;         Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfNotEqual( AlertLogID : AlertLogIDType ;  L, R : signed ;           Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfNotEqual( AlertLogID : AlertLogIDType ;  L, R : integer ;          Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfNotEqual( AlertLogID : AlertLogIDType ;  L, R : real ;             Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfNotEqual( AlertLogID : AlertLogIDType ;  L, R : character ;        Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfNotEqual( AlertLogID : AlertLogIDType ;  L, R : string ;           Message : string ; Level : AlertType := ERROR )  ; 
+  
+  procedure AlertIfNotEqual( L, R : std_logic ;        Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfNotEqual( L, R : std_logic_vector ; Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfNotEqual( L, R : unsigned ;         Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfNotEqual( L, R : signed ;           Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfNotEqual( L, R : integer ;          Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfNotEqual( L, R : real ;             Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfNotEqual( L, R : character ;        Message : string ; Level : AlertType := ERROR )  ; 
+  procedure AlertIfNotEqual( L, R : string ;           Message : string ; Level : AlertType := ERROR )  ; 
+  ------------------------------------------------------------
+  -- Simple Diff for file comparisons
+  procedure AlertIfDiff (AlertLogID : AlertLogIDType ; Name1, Name2 : string; Message : string := "" ; Level : AlertType := ERROR ) ; 
+  procedure AlertIfDiff (Name1, Name2 : string; Message : string := "" ; Level : AlertType := ERROR ) ; 
+  procedure AlertIfDiff (AlertLogID : AlertLogIDType ; file File1, File2 : text; Message : string := "" ; Level : AlertType := ERROR ) ; 
+  procedure AlertIfDiff (file File1, File2 : text; Message : string := "" ; Level : AlertType := ERROR ) ; 
+
 
   ------------------------------------------------------------
   procedure SetAlertLogJustify ;
-  procedure ReportAlerts ( Name : string := OSVVM_STRING_INIT_PARM_DETECT ; AlertLogID : AlertLogIDType := ALERTLOG_BASE_ID ; ExternalErrors : AlertCountType := (others => 0) ) ;
   procedure ReportAlerts ( Name : String ; AlertCount : AlertCountType ) ;
+  procedure ReportAlerts ( Name : string := OSVVM_STRING_INIT_PARM_DETECT ; AlertLogID : AlertLogIDType := ALERTLOG_BASE_ID ; ExternalErrors : AlertCountType := (others => 0) ) ;
+  procedure ReportNonZeroAlerts ( Name : string := OSVVM_STRING_INIT_PARM_DETECT ; AlertLogID : AlertLogIDType := ALERTLOG_BASE_ID ; ExternalErrors : AlertCountType := (others => 0) ) ;
   procedure ClearAlerts ; 
   function "+" (L, R : AlertCountType) return AlertCountType ;
   function "-" (L, R : AlertCountType) return AlertCountType ;
@@ -122,7 +183,11 @@ package AlertLogPkg is
     Message      : string ;
     Level        : LogType := ALWAYS
   ) ; 
-  procedure Log( Message : string ; Level : LogType := ALWAYS) ; 
+  procedure Log( Message : string ; Level : LogType := ALWAYS) ;
+
+  impure function IsLoggingEnabled(AlertLogID : AlertLogIDType ; Level : LogType) return boolean ;
+  impure function IsLoggingEnabled(Level : LogType) return boolean ; 
+  
   
   ------------------------------------------------------------
   -- Accessor Methods
@@ -130,6 +195,7 @@ package AlertLogPkg is
   procedure InitializeAlertLogStruct ;
   procedure DeallocateAlertLogStruct ;
   impure function FindAlertLogID(Name : string ) return AlertLogIDType ;
+  impure function FindAlertLogID(Name : string ; ParentID : AlertLogIDType) return AlertLogIDType ;
   impure function GetAlertLogID(Name : string ; ParentID : AlertLogIDType := ALERTLOG_BASE_ID) return AlertLogIDType ;
   
   ------------------------------------------------------------
@@ -145,9 +211,9 @@ package AlertLogPkg is
 
   procedure SetLogEnable(Level : LogType ;  Enable : boolean) ; 
   procedure SetLogEnable(AlertLogID : AlertLogIDType ;  Level : LogType ;  Enable : boolean ; DescendHierarchy : boolean := TRUE) ;
-
-  impure function IsLoggingEnabled(AlertLogID : AlertLogIDType ; Level : LogType) return boolean ;
-  impure function IsLoggingEnabled(Level : LogType) return boolean ; 
+  
+  procedure ReportLogEnables ;
+  impure function GetAlertLogName(AlertLogID : AlertLogIDType) return string ;
   
   ------------------------------------------------------------
   procedure SetAlertLogOptions (
@@ -174,6 +240,14 @@ package AlertLogPkg is
   impure function GetAlertPassName return string ;
   impure function GetAlertFailName return string ;
   
+  -- File Reading Utilities
+  function IsLogEnableType (Name : String) return boolean ;
+  procedure ReadLogEnables (file AlertLogInitFile : text) ;
+  procedure ReadLogEnables (FileName : string) ;
+
+  -- String Helper Functions -- This should be in a more general string package
+  function PathTail (A : string) return string ; 
+
 end AlertLogPkg ;
 
 --- ///////////////////////////////////////////////////////////////////////////
@@ -206,8 +280,8 @@ package body AlertLogPkg is
     
     ------------------------------------------------------------
     procedure SetJustify ;
-    procedure ReportAlerts ( Name : string := OSVVM_STRING_INIT_PARM_DETECT ; AlertLogID : AlertLogIDType := ALERTLOG_BASE_ID ; ExternalErrors : AlertCountType := (0,0,0) ) ;
     procedure ReportAlerts ( Name : string ; AlertCount : AlertCountType ) ;
+    procedure ReportAlerts ( Name : string := OSVVM_STRING_INIT_PARM_DETECT ; AlertLogID : AlertLogIDType := ALERTLOG_BASE_ID ; ExternalErrors : AlertCountType := (0,0,0) ; ReportAll : boolean := TRUE ) ;
     procedure ClearAlerts ; 
     impure function GetAlertCount(AlertLogID : AlertLogIDType := ALERTLOG_BASE_ID) return AlertCountType ;
     impure function GetEnabledAlertCount(AlertLogID : AlertLogIDType := ALERTLOG_BASE_ID) return AlertCountType ;
@@ -237,6 +311,7 @@ package body AlertLogPkg is
     procedure SetAlertLogName(Name : string ) ;
     procedure SetNumAlertLogIDs (NewNumAlertLogIDs : integer) ;
     impure function FindAlertLogID(Name : string ) return AlertLogIDType ;
+    impure function FindAlertLogID(Name : string ; ParentID : AlertLogIDType) return AlertLogIDType ;
     impure function GetAlertLogID(Name : string ; ParentID : AlertLogIDType) return AlertLogIDType ;
     procedure Initialize(NewNumAlertLogIDs : integer := MIN_NUM_AL_IDS) ;
     procedure Deallocate ;
@@ -257,6 +332,9 @@ package body AlertLogPkg is
 
     impure function IsLoggingEnabled(AlertLogID : AlertLogIDType ;  Level : LogType) return boolean ; 
     
+    procedure ReportLogEnables ;
+    impure function GetAlertLogName(AlertLogID : AlertLogIDType) return string ;
+
     ------------------------------------------------------------
     -- Reporting Accessor
     procedure SetAlertLogOptions (
@@ -569,30 +647,32 @@ package body AlertLogPkg is
     ------------------------------------------------------------
       AlertLogID   : AlertLogIDType ;  
       Prefix       : string ;
-      IndentAmount : integer 
+      IndentAmount : integer ;
+      ReportAll    : boolean 
     ) is 
       variable buf : line ; 
     begin
       for i in AlertLogID+1 to NumAlertLogIDs loop 
         if AlertLogID = AlertLogPtr(i).ParentID then 
-          -- Write(buf, Prefix &  " " & AlertLogPtr(i).Name.all ) ;  
---          Write(buf, Prefix &  " " & justify(AlertLogPtr(i).Name.all, LEFT, ReportJustifyAmountVar - IndentAmount)) ;        
-          Write(buf, Prefix &  " "   & LeftJustify(AlertLogPtr(i).Name.all, ReportJustifyAmountVar - IndentAmount)) ;        
-          write(buf, "  Failures: "  & to_string(AlertLogPtr(i).AlertCount(FAILURE) ) ) ;
-          write(buf, "  Errors: "    & to_string(AlertLogPtr(i).AlertCount(ERROR) ) ) ;
-          write(buf, "  Warnings: "  & to_string(AlertLogPtr(i).AlertCount(WARNING) ) ) ;
-          WriteLine(buf) ; 
+          if ReportAll or SumAlertCount(AlertLogPtr(i).AlertCount) > 0 then 
+            Write(buf, Prefix &  " "   & LeftJustify(AlertLogPtr(i).Name.all, ReportJustifyAmountVar - IndentAmount)) ;        
+            write(buf, "  Failures: "  & to_string(AlertLogPtr(i).AlertCount(FAILURE) ) ) ;
+            write(buf, "  Errors: "    & to_string(AlertLogPtr(i).AlertCount(ERROR) ) ) ;
+            write(buf, "  Warnings: "  & to_string(AlertLogPtr(i).AlertCount(WARNING) ) ) ;
+            WriteLine(buf) ; 
+          end if ; 
           PrintChild(
             AlertLogID    => i, 
             Prefix        => Prefix & "  ", 
-            IndentAmount  => IndentAmount + 2
+            IndentAmount  => IndentAmount + 2,
+            ReportAll     => ReportAll
           ) ; 
         end if ; 
       end loop ; 
     end procedure PrintChild ; 
 
     ------------------------------------------------------------
-    procedure ReportAlerts ( Name : string := OSVVM_STRING_INIT_PARM_DETECT ; AlertLogID : AlertLogIDType := ALERTLOG_BASE_ID ; ExternalErrors : AlertCountType := (0,0,0) ) is
+    procedure ReportAlerts ( Name : string := OSVVM_STRING_INIT_PARM_DETECT ; AlertLogID : AlertLogIDType := ALERTLOG_BASE_ID ; ExternalErrors : AlertCountType := (0,0,0) ; ReportAll : boolean := TRUE) is
     ------------------------------------------------------------
       variable NumErrors : integer ; 
       variable NumDisabledErrors : integer ; 
@@ -627,7 +707,8 @@ package body AlertLogPkg is
         PrintChild(
           AlertLogID    => AlertLogID, 
           Prefix        => ReportPrefix & "  ", 
-          IndentAmount  => 2
+          IndentAmount  => 2,
+          ReportAll     => ReportAll
         ) ; 
       end if ; 
     end procedure ReportAlerts ; 
@@ -649,11 +730,11 @@ package body AlertLogPkg is
     ------------------------------------------------------------
     begin
       AlertLogPtr(ALERTLOG_BASE_ID).AlertCount := (0, 0, 0) ;
-      AlertLogPtr(ALERTLOG_BASE_ID).AlertStopCount := (integer'right, integer'right, 0) ;
+      AlertLogPtr(ALERTLOG_BASE_ID).AlertStopCount := (FAILURE => 0, ERROR => integer'right, WARNING => integer'right) ; 
 
-      for i in ALERTLOG_BASE_ID to NumAlertLogIDs loop 
+      for i in ALERTLOG_BASE_ID + 1 to NumAlertLogIDs loop 
         AlertLogPtr(i).AlertCount := (0, 0, 0) ; 
-        AlertLogPtr(ALERTLOG_BASE_ID).AlertStopCount := (integer'right, integer'right, integer'right) ;
+        AlertLogPtr(i).AlertStopCount := (FAILURE => integer'right, ERROR => integer'right, WARNING => integer'right) ; 
       end loop ; 
     end procedure ClearAlerts ; 
 
@@ -723,8 +804,13 @@ package body AlertLogPkg is
         LogEnabled   := (FALSE, FALSE, FALSE) ;
         AlertStopCount := (FAILURE => 0, ERROR => integer'right, WARNING => integer'right) ; 
       else
-        AlertEnabled := AlertLogPtr(ALERTLOG_BASE_ID).AlertEnabled ; 
-        LogEnabled   := AlertLogPtr(ALERTLOG_BASE_ID).LogEnabled ;
+        if ParentID < ALERTLOG_BASE_ID then
+          AlertEnabled := AlertLogPtr(ALERTLOG_BASE_ID).AlertEnabled ; 
+          LogEnabled   := AlertLogPtr(ALERTLOG_BASE_ID).LogEnabled ;
+        else
+          AlertEnabled := AlertLogPtr(ParentID).AlertEnabled ; 
+          LogEnabled   := AlertLogPtr(ParentID).LogEnabled ;
+        end if ; 
         AlertStopCount := (FAILURE => integer'right, ERROR => integer'right, WARNING => integer'right) ; 
       end if ; 
       AlertLogPtr(AlertLogID) := new AlertLogRecType'(
@@ -860,17 +946,35 @@ package body AlertLogPkg is
       end loop ;
       return ALERTLOG_ID_NOT_FOUND ; -- not found
     end function FindAlertLogID ;
-
+    
+    ------------------------------------------------------------
+    impure function FindAlertLogID(Name : string ; ParentID : AlertLogIDType) return AlertLogIDType is
+    ------------------------------------------------------------
+      variable CurParentID : AlertLogIDType ; 
+    begin
+      for i in ALERTLOG_BASE_ID to NumAlertLogIDs loop 
+        CurParentID := AlertLogPtr(i).ParentID ; 
+        if Name = AlertLogPtr(i).Name.all and 
+          (CurParentID = ParentID or CurParentID = ALERTLOG_ID_NOT_ASSIGNED or ParentID = ALERTLOG_ID_NOT_ASSIGNED)
+        then
+          return i ;
+        end if ; 
+      end loop ;
+      return ALERTLOG_ID_NOT_FOUND ; -- not found
+    end function FindAlertLogID ;
 
     ------------------------------------------------------------
     impure function GetAlertLogID(Name : string ; ParentID : AlertLogIDType) return AlertLogIDType is
     ------------------------------------------------------------
       variable ResultID : AlertLogIDType ; 
     begin
-      ResultID := FindAlertLogID(Name) ; 
+      ResultID := FindAlertLogID(Name, ParentID) ; 
       if ResultID /= ALERTLOG_ID_NOT_FOUND then 
         -- found it, set ParentID
-        AlertLogPtr(ResultID).ParentID := ParentID ; 
+        if AlertLogPtr(ResultID).ParentID = ALERTLOG_ID_NOT_ASSIGNED then 
+          AlertLogPtr(ResultID).ParentID := ParentID ; 
+        -- else -- do not update as ParentIDs are either same or input ParentID = ALERTLOG_ID_NOT_ASSIGNED
+        end if ; 
       else
         ResultID := GetNextAlertLogID ; 
         NewAlertLogRec(ResultID, Name, ParentID) ;
@@ -974,7 +1078,53 @@ package body AlertLogPkg is
         return AlertLogPtr(AlertLogID).LogEnabled(Level) ; 
       end if ; 
     end function IsLoggingEnabled ; 
+    
+    ------------------------------------------------------------
+    -- PT Local
+    procedure PrintLogLevels(
+    ------------------------------------------------------------
+      AlertLogID   : AlertLogIDType ;  
+      Prefix       : string ;
+      IndentAmount : integer 
+    ) is 
+      variable buf : line ; 
+    begin
+      write(buf, Prefix &  " "   & LeftJustify(AlertLogPtr(AlertLogID).Name.all, ReportJustifyAmountVar - IndentAmount)) ;        
+      for i in LogIndexType loop 
+        if AlertLogPtr(AlertLogID).LogEnabled(i) then 
+--          write(buf, " "  & to_string(AlertLogPtr(AlertLogID).LogEnabled(i)) ) ;
+          write(buf, " "  & to_string(i)) ;
+        end if ; 
+      end loop ; 
+      WriteLine(buf) ; 
+      for i in AlertLogID+1 to NumAlertLogIDs loop 
+        if AlertLogID = AlertLogPtr(i).ParentID then 
+          PrintLogLevels(
+            AlertLogID    => i, 
+            Prefix        => Prefix & "  ", 
+            IndentAmount  => IndentAmount + 2
+          ) ; 
+        end if ; 
+      end loop ; 
+    end procedure PrintLogLevels ; 
 
+    ------------------------------------------------------------
+    procedure ReportLogEnables is
+    ------------------------------------------------------------
+    begin
+      if ReportJustifyAmountVar <= 0 then
+        SetJustify ; 
+      end if ; 
+      PrintLogLevels(ALERTLOG_BASE_ID, "", 0) ; 
+    end procedure ReportLogEnables ; 
+
+    ------------------------------------------------------------
+    impure function GetAlertLogName(AlertLogID : AlertLogIDType) return string is
+    ------------------------------------------------------------
+    begin
+      return AlertLogPtr(AlertLogID).Name.all ;
+    end function GetAlertLogName ; 
+    
     ------------------------------------------------------------
     procedure SetAlertLogOptions (
     ------------------------------------------------------------
@@ -1081,6 +1231,47 @@ package body AlertLogPkg is
 --- ///////////////////////////////////////////////////////////////////////////
   
   ------------------------------------------------------------
+  -- package local
+  procedure EmptyOrCommentLine (
+  -- Better as Function, but not supported in VHDL functions
+  ------------------------------------------------------------
+    variable L     : InOut line ;
+    variable Empty : out   boolean
+  ) is
+    variable Valid : boolean ;
+    variable Char  : character ;
+    constant NBSP  : CHARACTER := CHARACTER'val(160);  -- space character
+  begin
+    Empty := TRUE ;
+
+    -- if line empty (null or 0 length), Empty = TRUE
+    if L = null or L.all'length = 0 then
+      return ;
+    end if ;
+
+    -- if line starts with '#', empty = TRUE
+    if L.all(1) = '#' then
+      return ;
+    end if ;
+
+    -- if line starts with '--', empty = TRUE
+    if L.all'length >= 2 and L.all(1) = '-' and L.all(2) = '-' then
+      return ;
+    end if ;
+
+    -- Otherwise, remove white space and check for end of line
+    -- Code borrowed from David Bishop, skip_whitespace
+    WhiteSpLoop : while L /= null and L.all'length > 0 loop
+      if (L.all(1) = ' ' or L.all(1) = NBSP or L.all(1) = HT) then
+        read (L, Char, Valid) ;
+      else
+        Empty := FALSE ;
+        exit WhiteSpLoop ;
+      end if ;
+    end loop WhiteSpLoop ;
+  end procedure EmptyOrCommentLine ;
+  
+  ------------------------------------------------------------
   procedure Alert( 
   ------------------------------------------------------------
     AlertLogID   : AlertLogIDType ; 
@@ -1099,12 +1290,20 @@ package body AlertLogPkg is
   end procedure alert ; 
   
   ------------------------------------------------------------
-  procedure AlertIf( condition : boolean ; AlertLogID  : AlertLogIDType ; Message : string ; Level : AlertType := ERROR ) is
+  procedure AlertIf( AlertLogID  : AlertLogIDType ; condition : boolean ; Message : string ; Level : AlertType := ERROR ) is
   ------------------------------------------------------------
   begin
     if condition then
       AlertLogStruct.Alert(AlertLogID , Message, Level) ; 
     end if ; 
+  end procedure AlertIf ; 
+
+  ------------------------------------------------------------
+  -- deprecated
+  procedure AlertIf( condition : boolean ; AlertLogID  : AlertLogIDType ; Message : string ; Level : AlertType := ERROR ) is
+  ------------------------------------------------------------
+  begin
+    AlertIf( AlertLogID, condition, Message, Level) ; 
   end procedure AlertIf ; 
 
   ------------------------------------------------------------
@@ -1118,13 +1317,21 @@ package body AlertLogPkg is
   
   ------------------------------------------------------------
   -- useful with exit conditions in a loop:  exit when alert( not ReadValid, failure, "Read Failed") ; 
-  impure function  AlertIf( condition : boolean ; AlertLogID  : AlertLogIDType ; Message : string ; Level : AlertType := ERROR ) return boolean is
+  impure function  AlertIf( AlertLogID  : AlertLogIDType ; condition : boolean ; Message : string ; Level : AlertType := ERROR ) return boolean is
   ------------------------------------------------------------
   begin
     if condition then
       AlertLogStruct.Alert(AlertLogID , Message, Level) ; 
     end if ; 
     return condition ; 
+  end function AlertIf ;  
+  
+  ------------------------------------------------------------
+  -- deprecated
+  impure function  AlertIf( condition : boolean ; AlertLogID  : AlertLogIDType ; Message : string ; Level : AlertType := ERROR ) return boolean is
+  ------------------------------------------------------------
+  begin
+    return AlertIf( AlertLogID, condition, Message, Level) ; 
   end function AlertIf ;  
   
   ------------------------------------------------------------
@@ -1138,12 +1345,20 @@ package body AlertLogPkg is
   end function AlertIf ;   
   
   ------------------------------------------------------------
-  procedure AlertIfNot( condition : boolean ; AlertLogID  : AlertLogIDType ; Message : string ; Level : AlertType := ERROR ) is
+  procedure AlertIfNot( AlertLogID  : AlertLogIDType ; condition : boolean ; Message : string ; Level : AlertType := ERROR ) is
   ------------------------------------------------------------
   begin
     if not condition then
       AlertLogStruct.Alert(AlertLogID, Message, Level) ; 
     end if ; 
+  end procedure AlertIfNot ; 
+
+  ------------------------------------------------------------
+  -- deprecated
+  procedure AlertIfNot( condition : boolean ; AlertLogID  : AlertLogIDType ; Message : string ; Level : AlertType := ERROR ) is
+  ------------------------------------------------------------
+  begin
+    AlertIfNot( AlertLogID, condition, Message, Level) ; 
   end procedure AlertIfNot ; 
 
   ------------------------------------------------------------
@@ -1157,13 +1372,21 @@ package body AlertLogPkg is
   
   ------------------------------------------------------------
   -- useful with exit conditions in a loop:  exit when alert( not ReadValid, failure, "Read Failed") ; 
-  impure function  AlertIfNot( condition : boolean ; AlertLogID  : AlertLogIDType ; Message : string ; Level : AlertType := ERROR ) return boolean is
+  impure function  AlertIfNot( AlertLogID  : AlertLogIDType ; condition : boolean ; Message : string ; Level : AlertType := ERROR ) return boolean is
   ------------------------------------------------------------
   begin
     if not condition then
       AlertLogStruct.Alert(AlertLogID, Message, Level) ; 
     end if ; 
     return not condition ; 
+  end function AlertIfNot ;  
+  
+  ------------------------------------------------------------
+  -- deprecated
+  impure function  AlertIfNot( condition : boolean ; AlertLogID  : AlertLogIDType ; Message : string ; Level : AlertType := ERROR ) return boolean is
+  ------------------------------------------------------------
+  begin
+    return AlertIfNot( AlertLogID, condition, Message, Level) ; 
   end function AlertIfNot ;  
   
   ------------------------------------------------------------
@@ -1175,7 +1398,366 @@ package body AlertLogPkg is
     end if ; 
     return not condition ; 
   end function AlertIfNot ;   
+    
+  -- With AlertLogID
+  ------------------------------------------------------------
+  procedure AlertIfEqual( AlertLogID : AlertLogIDType ; L, R : std_logic ;        Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L ?= R then
+      AlertLogStruct.Alert(AlertLogID, Message & " L = R,  L = " & to_string(L) & "   R = " & to_string(R), Level) ; 
+    end if ; 
+  end procedure AlertIfEqual ; 
   
+  ------------------------------------------------------------
+  procedure AlertIfEqual( AlertLogID : AlertLogIDType ; L, R : std_logic_vector ; Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L ?= R then
+      AlertLogStruct.Alert(AlertLogID, Message & " L = R,  L = " & to_string(L) & "   R = " & to_string(R), Level) ; 
+    end if ; 
+  end procedure AlertIfEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfEqual( AlertLogID : AlertLogIDType ; L, R : unsigned ;         Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L ?= R then
+      AlertLogStruct.Alert(AlertLogID, Message & " L = R,  L = " & to_string(L) & "   R = " & to_string(R), Level) ; 
+    end if ; 
+  end procedure AlertIfEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfEqual( AlertLogID : AlertLogIDType ; L, R : signed ;           Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L ?= R then
+      AlertLogStruct.Alert(AlertLogID, Message & " L = R,  L = " & to_string(L) & "   R = " & to_string(R), Level) ; 
+    end if ; 
+  end procedure AlertIfEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfEqual( AlertLogID : AlertLogIDType ; L, R : integer ;          Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L = R then
+      AlertLogStruct.Alert(AlertLogID, Message & " L = R,  L = " & to_string(L) & "   R = " & to_string(R), Level) ; 
+    end if ; 
+  end procedure AlertIfEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfEqual( AlertLogID : AlertLogIDType ; L, R : real ;             Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L = R then
+      AlertLogStruct.Alert(AlertLogID, Message & " L = R,  L = " & to_string(L, 4) & "   R = " & to_string(R, 4), Level) ; 
+    end if ; 
+  end procedure AlertIfEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfEqual( AlertLogID : AlertLogIDType ; L, R : character ;        Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L = R then
+      AlertLogStruct.Alert(AlertLogID, Message & " L = R,  L = " & L & "   R = " & R, Level) ; 
+    end if ; 
+  end procedure AlertIfEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfEqual( AlertLogID : AlertLogIDType ; L, R : string ;           Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L = R then
+      AlertLogStruct.Alert(AlertLogID, Message & " L = R,  L = " & L & "   R = " & R, Level) ; 
+    end if ; 
+  end procedure AlertIfEqual ; 
+
+  -- Without AlertLogID
+  ------------------------------------------------------------
+  procedure AlertIfEqual( L, R : std_logic ;        Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L ?= R then
+      AlertLogStruct.Alert(ALERT_DEFAULT_ID, Message & " L = R,  L = " & to_string(L) & "   R = " & to_string(R), Level) ; 
+    end if ; 
+  end procedure AlertIfEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfEqual( L, R : std_logic_vector ; Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L ?= R then
+      AlertLogStruct.Alert(ALERT_DEFAULT_ID, Message & " L = R,  L = " & to_string(L) & "   R = " & to_string(R), Level) ; 
+    end if ; 
+  end procedure AlertIfEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfEqual( L, R : unsigned ;         Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L ?= R then
+      AlertLogStruct.Alert(ALERT_DEFAULT_ID, Message & " L = R,  L = " & to_string(L) & "   R = " & to_string(R), Level) ; 
+    end if ; 
+  end procedure AlertIfEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfEqual( L, R : signed ;           Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L ?= R then
+      AlertLogStruct.Alert(ALERT_DEFAULT_ID, Message & " L = R,  L = " & to_string(L) & "   R = " & to_string(R), Level) ; 
+    end if ; 
+  end procedure AlertIfEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfEqual( L, R : integer ;          Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L = R then
+      AlertLogStruct.Alert(ALERT_DEFAULT_ID, Message & " L = R,  L = " & to_string(L) & "   R = " & to_string(R), Level) ; 
+    end if ; 
+  end procedure AlertIfEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfEqual( L, R : real ;             Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L = R then
+      AlertLogStruct.Alert(ALERT_DEFAULT_ID, Message & " L = R,  L = " & to_string(L, 4) & "   R = " & to_string(R, 4), Level) ; 
+    end if ; 
+  end procedure AlertIfEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfEqual( L, R : character ;        Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L = R then
+      AlertLogStruct.Alert(ALERT_DEFAULT_ID, Message & " L = R,  L = " & L & "   R = " & R, Level) ; 
+    end if ; 
+  end procedure AlertIfEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfEqual( L, R : string ;           Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L = R then
+      AlertLogStruct.Alert(ALERT_DEFAULT_ID, Message & " L = R,  L = " & L & "   R = " & R, Level) ; 
+    end if ; 
+  end procedure AlertIfEqual ; 
+
+  -- With AlertLogID
+  ------------------------------------------------------------
+  procedure AlertIfNotEqual( AlertLogID : AlertLogIDType ; L, R : std_logic ;        Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L ?/= R then
+      AlertLogStruct.Alert(AlertLogID, Message & " L /= R,  L = " & to_string(L) & "   R = " & to_string(R), Level) ; 
+    end if ; 
+  end procedure AlertIfNotEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfNotEqual( AlertLogID : AlertLogIDType ; L, R : std_logic_vector ; Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L ?/= R then
+      AlertLogStruct.Alert(AlertLogID, Message & " L /= R,  L = " & to_string(L) & "   R = " & to_string(R), Level) ; 
+    end if ; 
+  end procedure AlertIfNotEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfNotEqual( AlertLogID : AlertLogIDType ; L, R : unsigned ;         Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L ?/= R then
+      AlertLogStruct.Alert(AlertLogID, Message & " L /= R,  L = " & to_string(L) & "   R = " & to_string(R), Level) ; 
+    end if ; 
+  end procedure AlertIfNotEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfNotEqual( AlertLogID : AlertLogIDType ; L, R : signed ;           Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L ?/= R then
+      AlertLogStruct.Alert(AlertLogID, Message & " L /= R,  L = " & to_string(L) & "   R = " & to_string(R), Level) ; 
+    end if ; 
+  end procedure AlertIfNotEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfNotEqual( AlertLogID : AlertLogIDType ; L, R : integer ;          Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L /= R then
+      AlertLogStruct.Alert(AlertLogID, Message & " L /= R,  L = " & to_string(L) & "   R = " & to_string(R), Level) ; 
+    end if ; 
+  end procedure AlertIfNotEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfNotEqual( AlertLogID : AlertLogIDType ; L, R : real ;             Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L /= R then
+      AlertLogStruct.Alert(AlertLogID, Message & " L /= R,  L = " & to_string(L, 4) & "   R = " & to_string(R, 4), Level) ; 
+    end if ; 
+  end procedure AlertIfNotEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfNotEqual( AlertLogID : AlertLogIDType ; L, R : character ;        Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L /= R then
+      AlertLogStruct.Alert(AlertLogID, Message & " L /= R,  L = " & L & "   R = " & R, Level) ; 
+    end if ; 
+  end procedure AlertIfNotEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfNotEqual( AlertLogID : AlertLogIDType ; L, R : string ;           Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L /= R then
+      AlertLogStruct.Alert(AlertLogID, Message & " L /= R,  L = " & L & "   R = " & R, Level) ; 
+    end if ; 
+  end procedure AlertIfNotEqual ; 
+
+  -- Without AlertLogID
+  ------------------------------------------------------------
+  procedure AlertIfNotEqual( L, R : std_logic ;        Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L ?/= R then
+      AlertLogStruct.Alert(ALERT_DEFAULT_ID, Message & " L /= R,  L = " & to_string(L) & "   R = " & to_string(R), Level) ; 
+    end if ; 
+  end procedure AlertIfNotEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfNotEqual( L, R : std_logic_vector ; Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L ?/= R then
+      AlertLogStruct.Alert(ALERT_DEFAULT_ID, Message & " L /= R,  L = " & to_string(L) & "   R = " & to_string(R), Level) ; 
+    end if ; 
+  end procedure AlertIfNotEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfNotEqual( L, R : unsigned ;         Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L ?/= R then
+      AlertLogStruct.Alert(ALERT_DEFAULT_ID, Message & " L /= R,  L = " & to_string(L) & "   R = " & to_string(R), Level) ; 
+    end if ; 
+  end procedure AlertIfNotEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfNotEqual( L, R : signed ;           Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L ?/= R then
+      AlertLogStruct.Alert(ALERT_DEFAULT_ID, Message & " L /= R,  L = " & to_string(L) & "   R = " & to_string(R), Level) ; 
+    end if ; 
+  end procedure AlertIfNotEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfNotEqual( L, R : integer ;          Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L /= R then
+      AlertLogStruct.Alert(ALERT_DEFAULT_ID, Message & " L /= R,  L = " & to_string(L) & "   R = " & to_string(R), Level) ; 
+    end if ; 
+  end procedure AlertIfNotEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfNotEqual( L, R : real ;             Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L /= R then
+      AlertLogStruct.Alert(ALERT_DEFAULT_ID, Message & " L /= R,  L = " & to_string(L, 4) & "   R = " & to_string(R, 4), Level) ; 
+    end if ; 
+  end procedure AlertIfNotEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfNotEqual( L, R : character ;        Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L /= R then
+      AlertLogStruct.Alert(ALERT_DEFAULT_ID, Message & " L /= R,  L = " & L & "   R = " & R, Level) ; 
+    end if ; 
+  end procedure AlertIfNotEqual ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfNotEqual( L, R : string ;           Message : string ; Level : AlertType := ERROR )  is
+  ------------------------------------------------------------
+  begin
+    if L /= R then
+      AlertLogStruct.Alert(ALERT_DEFAULT_ID, Message & " L /= R,  L = " & L & "   R = " & R, Level) ; 
+    end if ; 
+  end procedure AlertIfNotEqual ; 
+
+  ------------------------------------------------------------
+  procedure AlertIfDiff (AlertLogID : AlertLogIDType ; Name1, Name2 : string; Message : string := "" ; Level : AlertType := ERROR ) is 
+  -- Open files and call AlertIfDiff[text, ...]    
+  ------------------------------------------------------------
+    file FileID1, FileID2 : text ; 
+    variable status1, status2 : file_open_status ; 
+  begin
+    file_open(status1, FileID1, Name1, READ_MODE) ; 
+    file_open(status2, FileID2, Name2, READ_MODE) ; 
+    if status1 = OPEN_OK and status2 = OPEN_OK then 
+      AlertIfDiff (AlertLogID, FileID1, FileID2, Message, Level) ; 
+    else 
+      if status1 /= OPEN_OK then
+        AlertLogStruct.Alert(AlertLogID , Message & " File, " & Name1 & ", did not open", Level) ; 
+      end if ; 
+      if status2 /= OPEN_OK then
+        AlertLogStruct.Alert(AlertLogID , Message & " File, " & Name2 & ", did not open", Level) ; 
+      end if ; 
+    end if; 
+  end procedure AlertIfDiff ; 
+  
+  ------------------------------------------------------------
+  procedure AlertIfDiff (Name1, Name2 : string; Message : string := "" ; Level : AlertType := ERROR ) is 
+  ------------------------------------------------------------
+  begin
+    AlertIfDiff (ALERT_DEFAULT_ID, Name1, Name2, Message, Level) ; 
+  end procedure AlertIfDiff ;     
+  
+  ------------------------------------------------------------
+  procedure AlertIfDiff (AlertLogID : AlertLogIDType ; file File1, File2 : text; Message : string := "" ; Level : AlertType := ERROR ) is 
+  -- Simple diff.    
+  ------------------------------------------------------------
+    variable Buf1, Buf2 : line ; 
+    variable File1Done, File2Done : boolean ; 
+    variable LineCount : integer := 0 ; 
+  begin
+    ReadLoop : loop
+      File1Done := EndFile(File1) ; 
+      File2Done := EndFile(File2) ;
+      exit ReadLoop when File1Done or File2Done ;
+
+      ReadLine(File1, Buf1) ; 
+      ReadLine(File2, Buf2) ;
+      LineCount := LineCount + 1 ; 
+
+      if Buf1.all /= Buf2.all then 
+        AlertLogStruct.Alert(AlertLogID , Message & " File miscompare on line " & to_string(LineCount), Level) ; 
+        exit ReadLoop ; 
+      end if ;     
+    end loop ReadLoop ;
+    if File1Done /= File2Done then
+      if not File1Done then
+        AlertLogStruct.Alert(AlertLogID , Message & " File1 longer than File2 " & to_string(LineCount), Level) ; 
+      end if ;
+      if not File2Done then
+        AlertLogStruct.Alert(AlertLogID , Message & " File2 longer than File1 " & to_string(LineCount), Level) ; 
+      end if ;
+    end if; 
+  end procedure AlertIfDiff ;   
+  
+  ------------------------------------------------------------
+  procedure AlertIfDiff (file File1, File2 : text; Message : string := "" ; Level : AlertType := ERROR ) is 
+  ------------------------------------------------------------
+  begin
+    AlertIfDiff (ALERT_DEFAULT_ID, File1, File2, Message, Level) ; 
+  end procedure AlertIfDiff ;   
+
   ------------------------------------------------------------
   procedure SetAlertLogJustify is
   ------------------------------------------------------------
@@ -1184,18 +1766,25 @@ package body AlertLogPkg is
   end procedure SetAlertLogJustify ; 
   
   ------------------------------------------------------------
-  procedure ReportAlerts ( Name : string := OSVVM_STRING_INIT_PARM_DETECT ; AlertLogID : AlertLogIDType := ALERTLOG_BASE_ID ; ExternalErrors : AlertCountType := (others => 0) ) is
-  ------------------------------------------------------------
-  begin
-    AlertLogStruct.ReportAlerts(Name, AlertLogID, ExternalErrors) ; 
-  end procedure ReportAlerts ; 
-
-  ------------------------------------------------------------
   procedure ReportAlerts ( Name : String ; AlertCount : AlertCountType ) is
   ------------------------------------------------------------
   begin
     AlertLogStruct.ReportAlerts(Name, AlertCount) ; 
   end procedure ReportAlerts ; 
+
+  ------------------------------------------------------------
+  procedure ReportAlerts ( Name : string := OSVVM_STRING_INIT_PARM_DETECT ; AlertLogID : AlertLogIDType := ALERTLOG_BASE_ID ; ExternalErrors : AlertCountType := (others => 0) ) is
+  ------------------------------------------------------------
+  begin
+    AlertLogStruct.ReportAlerts(Name, AlertLogID, ExternalErrors, TRUE) ; 
+  end procedure ReportAlerts ; 
+
+  ------------------------------------------------------------
+  procedure ReportNonZeroAlerts ( Name : string := OSVVM_STRING_INIT_PARM_DETECT ; AlertLogID : AlertLogIDType := ALERTLOG_BASE_ID ; ExternalErrors : AlertCountType := (others => 0) ) is
+  ------------------------------------------------------------
+  begin
+    AlertLogStruct.ReportAlerts(Name, AlertLogID, ExternalErrors, FALSE) ; 
+  end procedure ReportNonZeroAlerts ; 
 
   ------------------------------------------------------------
   procedure ClearAlerts is
@@ -1361,6 +1950,13 @@ package body AlertLogPkg is
   end function FindAlertLogID ;
   
   ------------------------------------------------------------
+  impure function FindAlertLogID(Name : string ; ParentID : AlertLogIDType) return AlertLogIDType is
+  ------------------------------------------------------------
+  begin
+    return AlertLogStruct.FindAlertLogID(Name, ParentID) ;
+  end function FindAlertLogID ;
+  
+  ------------------------------------------------------------
   impure function GetAlertLogID(Name : string ; ParentID : AlertLogIDType := ALERTLOG_BASE_ID) return AlertLogIDType is
   ------------------------------------------------------------
   begin
@@ -1423,8 +2019,22 @@ package body AlertLogPkg is
   ------------------------------------------------------------
   begin
     AlertLogStruct.SetLogEnable(AlertLogID, Level, Enable, DescendHierarchy) ;
-  end procedure SetLogEnable ;    
+  end procedure SetLogEnable ;  
 
+  ------------------------------------------------------------
+  procedure ReportLogEnables is
+  ------------------------------------------------------------
+  begin
+    AlertLogStruct.ReportLogEnables ; 
+  end ReportLogEnables ;
+  
+  ------------------------------------------------------------
+  impure function GetAlertLogName(AlertLogID : AlertLogIDType) return string is
+  ------------------------------------------------------------
+  begin
+    return AlertLogStruct.GetAlertLogName(AlertLogID) ; 
+  end GetAlertLogName ;
+  
   ------------------------------------------------------------
   procedure SetAlertLogOptions (
   ------------------------------------------------------------
@@ -1491,5 +2101,92 @@ package body AlertLogPkg is
   begin
     return AlertLogStruct.GetAlertFailName ; 
   end function GetAlertFailName ;
+  
+  ------------------------------------------------------------
+  function IsLogEnableType (Name : String) return boolean is
+  ------------------------------------------------------------
+  --   type LogType is (ALWAYS, DEBUG, FINAL, INFO) ;  -- NEVER
+  begin
+    if    Name = "DEBUG" then return TRUE ; 
+    elsif Name = "FINAL" then return TRUE ;
+    elsif Name = "INFO"  then return TRUE ; 
+    end if ; 
+    return FALSE ;
+  end function IsLogEnableType ; 
+
+  ------------------------------------------------------------
+  procedure ReadLogEnables (file AlertLogInitFile : text) is
+  --  Preferred Read format
+  --  Line 1:  instance1_name log_enable log_enable log_enable
+  --  Line 2:  instance2_name log_enable log_enable log_enable
+  --  when reading multiple log_enables on a line, they must be separated by a space
+  -- 
+  --- Also supports alternate format from Lyle/....
+  --  Line 1:  instance1_name
+  --  Line 2:  log enable
+  --  Line 3:  instance2_name
+  --  Line 4:  log enable
+  --
+  ------------------------------------------------------------
+    type     ReadStateType is (GET_ID, GET_ENABLE) ; 
+    variable ReadState     : ReadStateType := GET_ID ; 
+    variable buf           : line ;
+    variable Empty         : boolean ;
+    variable Name          : string(1 to 80) ;
+    variable NameLen       : integer ; 
+    variable AlertLogID    : AlertLogIDType ; 
+    variable NumEnableRead : integer ;
+    variable LogLevel      : LogType ;
+  begin
+    ReadState := GET_ID ; 
+    ReadLineLoop : while not EndFile(AlertLogInitFile) loop
+      ReadLine(AlertLogInitFile, buf) ; 
+      EmptyOrCommentLine(buf, Empty) ;
+      
+      ReadNameLoop : while not Empty loop 
+        case ReadState is
+          when GET_ID => 
+            sread(buf, Name, NameLen) ; 
+            exit ReadNameLoop when NameLen = 0 ; 
+            AlertLogID := GetAlertLogID(Name(1 to NameLen), ALERTLOG_ID_NOT_ASSIGNED) ;   
+            ReadState := GET_ENABLE ; 
+            NumEnableRead := 0 ;   
+            
+          when GET_ENABLE => 
+            sread(buf, Name, NameLen) ; 
+            exit ReadNameLoop when NameLen = 0 ; 
+            NumEnableRead := NumEnableRead + 1 ; 
+            exit ReadNameLoop when not IsLogEnableType(Name(1 to NameLen)) ;
+            LogLevel := LogType'value(Name(1 to NameLen)) ; 
+            SetLogEnable(AlertLogID, LogLevel, TRUE) ;
+        end case ; 
+      end loop ReadNameLoop ; 
+      -- if have read an enable, find next AlertLog Name
+      if NumEnableRead > 0 then 
+        ReadState := GET_ID ; 
+      end if ; 
+    end loop ReadLineLoop ; 
+  end procedure ReadLogEnables ;
+  
+  ------------------------------------------------------------
+  procedure ReadLogEnables (FileName : string) is
+  ------------------------------------------------------------
+    file AlertLogInitFile : text open READ_MODE is FileName ;
+  begin
+    ReadLogEnables(AlertLogInitFile) ;
+  end procedure ReadLogEnables ;
+  
+  ------------------------------------------------------------
+  function PathTail (A : string) return string is 
+  ------------------------------------------------------------
+    alias aA : string(1 to A'length) is A ;
+  begin
+    for i in aA'length - 1 downto 1 loop 
+      if aA(i) = ':' then 
+        return aA(i+1 to aA'length-1)  ; 
+      end if ; 
+    end loop ;
+    return aA ; 
+  end function PathTail ; 
  
 end package body AlertLogPkg ;

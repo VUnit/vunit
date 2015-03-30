@@ -58,8 +58,6 @@ library osvvm ;
   use osvvm.TranscriptPkg.all ;
   use osvvm.AlertLogPkg.all ;
 
---use work.TextUtilPkg.all ;
-
 entity AlertLog_Demo_Global is
 end AlertLog_Demo_Global ;
 architecture hierarchy of AlertLog_Demo_Global is

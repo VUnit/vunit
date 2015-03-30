@@ -485,8 +485,9 @@ class VUnit:
         else:
             library = self.library(library_name)
 
-        library.add_source_files(join(self._builtin_vhdl_path, "osvvm", "*.vhd"),
-                                 preprocessors=[]) # No pre-processing at all
+        for f in glob(join(self._builtin_vhdl_path, "osvvm", "*.vhd")):
+            if basename(f) != 'AlertLogPkg_body_BVUL.vhd':
+                library.add_source_files(f, preprocessors=[])
 
 class LibraryFacade:
     """
