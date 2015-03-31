@@ -32,7 +32,7 @@ class TestBench:
         if self._has_output_path:
             generics["output_path"] = '%s/' % output_path.replace("\\", "/")
 
-        if not extra_generics is None:
+        if extra_generics is not None:
             generics.update(extra_generics)
 
         return self._simulator_if.simulate(output_path,

@@ -62,7 +62,7 @@ class DependencyGraph:
             next_leafs = set()
             for node in leafs:
                 affected.add(node)
-                if not node in self._forward:
+                if node not in self._forward:
                     continue
 
                 for next_node in self._forward[node]:

@@ -15,7 +15,7 @@ class TestConfiguration:
         self._plis = {}
 
     def set_generic(self, name, value, scope=""):
-        if not scope in self._generics:
+        if scope not in self._generics:
             self._generics[scope] = {}
         self._generics[scope][name] = value
 
@@ -23,12 +23,11 @@ class TestConfiguration:
         self._plis[scope] = value
 
     def add_config(self, tb_name, name, generics, post_check=None):
-        if not tb_name in self._configs:
+        if tb_name not in self._configs:
             self._configs[tb_name] = {}
         self._configs[tb_name][name] = (generics, post_check)
 
     def get_configurations(self, entity, architecture_name):
-        file_name = entity.architecture_names[architecture_name]
         tb_name = "%s.%s" % (entity.library_name, entity.name)
 
         configs = self._get_configurations_for_tb(entity)
@@ -63,10 +62,11 @@ class TestConfiguration:
             configs = [("", global_generics.copy(), pli, None)]
         return configs
 
-    def _prune_generics(self, generics, generic_names):
+    @staticmethod
+    def _prune_generics(generics, generic_names):
         generics = generics.copy()
         for gname in list(generics.keys()):
-            if not gname in generic_names:
+            if gname not in generic_names:
                 del generics[gname]
         return generics
 
@@ -81,7 +81,6 @@ class TestConfiguration:
         return generics
 
     def _get_pli_for_tb(self, library_name, entity_name):
-        plis = []
         # Global
         plis = self._plis.get("", [])
         # Library

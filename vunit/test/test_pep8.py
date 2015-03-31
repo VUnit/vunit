@@ -16,4 +16,5 @@ class TestPep8(unittest.TestCase):
                     "--show-source",
                     "--show-pep8",
                     "--max-line-length=120",
+                    "--ignore=E402",
                     repo_root])

@@ -20,7 +20,6 @@ class TestDictionary(unittest.TestCase):
                    output_path=output_path,
                    vhdl_standard=vhdl_standard,
                    compile_builtins=False)
-
         ui.add_builtins('vunit_lib', mock_log=True)
         ui.add_library("lib")
         ui.add_source_files(join(vhdl_path, "dictionary", "test", "*.vhd"), "lib")

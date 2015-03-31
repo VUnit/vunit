@@ -30,7 +30,8 @@ class LinuxColorPrinter:
         text = self._ansi_wrap(text, fg, bg)
         output_file.write(text)
 
-    def _to_code(self, rgb):
+    @staticmethod
+    def _to_code(rgb):
         code = 0
         if 'r' in rgb:
             code += 1
@@ -45,16 +46,16 @@ class LinuxColorPrinter:
     def _ansi_wrap(self, text, fg, bg):
         codes = []
 
-        if not fg is None:
+        if fg is not None:
             codes.append(30 + self._to_code(fg))
 
-        if not bg is None:
+        if bg is not None:
             codes.append(40 + self._to_code(bg))
 
-        if not fg is None and 'i' in fg:
+        if fg is not None and 'i' in fg:
             codes.append(1)  # Bold
 
-        if not bg is None and 'i' in bg:
+        if bg is not None and 'i' in bg:
             codes.append(4)  # Underscore
 
         return "\033[" + ";".join(map(str, codes)) + "m" + text + "\033[0m"
@@ -93,7 +94,6 @@ class Win32ColorPrinter(LinuxColorPrinter):
     """
     Prints in color on windows
     """
-
     def __init__(self):
         self._stdout_handle = ctypes.windll.kernel32.GetStdHandle(-11)
         self._stderr_handle = ctypes.windll.kernel32.GetStdHandle(-12)
@@ -121,12 +121,12 @@ class Win32ColorPrinter(LinuxColorPrinter):
             output_file.flush()
             old_attr = self._get_text_attr(handle)
             attr = old_attr
-            if not fg is None:
+            if fg is not None:
                 attr &= 0xf0
                 attr |= self._decode_color(fg)
-            if not bg is None:
+            if bg is not None:
                 attr &= 0x0f
-                attr |= self._decode_color(bg)*16
+                attr |= self._decode_color(bg) * 16
             self._set_text_attr(handle, attr)
 
         output_file.write(text)
@@ -135,12 +135,14 @@ class Win32ColorPrinter(LinuxColorPrinter):
             output_file.flush()
             ctypes.windll.kernel32.SetConsoleTextAttribute(handle, old_attr)
 
-    def _get_text_attr(self, handle):
+    @staticmethod
+    def _get_text_attr(handle):
         csbi = CONSOLE_SCREEN_BUFFER_INFO()
         ctypes.windll.kernel32.GetConsoleScreenBufferInfo(handle, byref(csbi))
         return csbi.wAttributes
 
-    def _set_text_attr(self, handle, attr):
+    @staticmethod
+    def _set_text_attr(handle, attr):
         ctypes.windll.kernel32.SetConsoleTextAttribute(handle, attr)
 
     def _decode_color(self, color_str):
@@ -153,13 +155,15 @@ class Win32ColorPrinter(LinuxColorPrinter):
         return code
 
 
-class NoColorPrinter_:
-    def write(self, text, output_file=None, fg=None, bg=None):
+class _NoColorPrinter:
+
+    @staticmethod
+    def write(text, output_file=None):
         if output_file is None:
             output_file = sys.stdout
         output_file.write(text)
 
-NoColorPrinter = NoColorPrinter_()
+NoColorPrinter = _NoColorPrinter()
 if "win" in sys.platform:
     ColorPrinter = Win32ColorPrinter()
 else:

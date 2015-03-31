@@ -173,7 +173,8 @@ proc vunit_load {{}} {{
 
         return tcl
 
-    def _create_run_function(self, fail_on_warning=False):
+    @staticmethod
+    def _create_run_function(fail_on_warning=False):
         return """
 proc vunit_run {} {
     global BreakOnAssertion
@@ -233,7 +234,8 @@ proc vunit_help {} {
         tcl += self._create_run_function(fail_on_warning)
         return tcl
 
-    def _create_batch_script(self, common_file_name, load_only=False):
+    @staticmethod
+    def _create_batch_script(common_file_name, load_only=False):
         """
         Create tcl script to run in batch mode
         """
@@ -246,12 +248,14 @@ proc vunit_help {} {
         batch_do += "quit -f -code 0\n"
         return batch_do
 
-    def _create_user_script(self, common_file_name):
+    @staticmethod
+    def _create_user_script(common_file_name):
         tcl = "do %s\n" % fix_path(common_file_name)
         tcl += "vunit_help\n"
         return tcl
 
-    def _run_batch_file(self, batch_file_name, gui=False):
+    @staticmethod
+    def _run_batch_file(batch_file_name, gui=False):
         try:
             args = ['vsim', '-quiet',
                     "-l", join(dirname(batch_file_name), "transcript"),

@@ -27,7 +27,7 @@ class TestTestScanner(unittest.TestCase):
         self.output_path = join(dirname(__file__), "test_scanner_out")
 
         if exists(self.output_path):
-            rmtree(self.output_path)
+            rmtree(self.output_path, ignore_errors=True)
         makedirs(self.output_path)
 
     def tearDown(self):

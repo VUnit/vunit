@@ -90,7 +90,7 @@ class VUnit:
         if len(simulators) == 0:
             raise RuntimeError("No simulator detected")
         elif preferred_simulator is not None:
-            if not preferred_simulator in simulators:
+            if preferred_simulator not in simulators:
                 raise RuntimeError("%s: %r is not available. Available simulators are %r"
                                    % (description, preferred_simulator, simulators))
 
@@ -221,16 +221,20 @@ class VUnit:
         """
         Get reference to library
         """
-        if not library_name in self._project._libraries:
+        if library_name not in self._project._libraries:
             raise KeyError(library_name)
         return LibraryFacade(library_name, self)
 
     def set_generic(self, name, value):
-        " Globally set generic "
+        """
+        Globally set generic
+        """
         self._configuration.set_generic(name, value, scope="")
 
     def set_pli(self, value):
-        " Globally set pli "
+        """
+        Globally set pli
+        """
         self._configuration.set_generic(value, scope="")
 
     def add_source_files(self, pattern, library_name, preprocessors=None):
@@ -249,7 +253,7 @@ class VUnit:
 
         if preprocessors is None:
             preprocessors = [self._location_preprocessor, self._check_preprocessor]
-            preprocessors = [p for p in preprocessors if not p is None]
+            preprocessors = [p for p in preprocessors if p is not None]
             preprocessors = self._external_preprocessors + preprocessors
 
         if len(preprocessors) == 0:
@@ -282,7 +286,7 @@ class VUnit:
         Enable location preprocessing, must be called before adding any files
         """
         p = LocationPreprocessor()
-        if not additional_subprograms is None:
+        if additional_subprograms is not None:
             for subprogram in additional_subprograms:
                 p.add_subprogram(subprogram)
         self._location_preprocessor = p
@@ -395,7 +399,7 @@ class VUnit:
     def _post_process(self, report):
         report.print_str()
 
-        if not self._xunit_xml is None:
+        if self._xunit_xml is not None:
             xml = report.to_junit_xml_str()
             ostools.write_file(self._xunit_xml, xml)
 
@@ -481,7 +485,7 @@ class VUnit:
         library.add_source_files(join(self._builtin_vhdl_path, "array", "src", "array_pkg.vhd"))
 
     def add_osvvm(self, library_name="osvvm"):
-        if not library_name in self._project._libraries:
+        if library_name not in self._project._libraries:
             library = self.add_library(library_name)
         else:
             library = self.library(library_name)
@@ -500,12 +504,12 @@ class LibraryFacade:
         self._parent = parent
 
     def set_generic(self, name, value):
-        " Set generic within library "
+        """ Set generic within library """
         self._parent._configuration.set_generic(
             name, value, scope=self._library_name)
 
     def set_pli(self, value):
-        " Set pli within library "
+        """ Set pli within library """
         self._parent._configuration.set_pli(value, scope=self._library_name)
 
     def add_source_files(self, pattern, preprocessors=None):
@@ -513,7 +517,7 @@ class LibraryFacade:
 
     def entity(self, entity_name):
         library = self._parent._project._libraries[self._library_name]
-        if not entity_name in library._entities:
+        if entity_name not in library._entities:
             raise KeyError(entity_name)
 
         return EntityFacade("%s.%s" % (self._library_name, entity_name),
@@ -529,11 +533,11 @@ class EntityFacade:
         self._config = config
 
     def set_generic(self, name, value):
-        " Set generic within entity "
+        """ Set generic within entity """
         self._config.set_generic(name, value, scope=self._name)
 
     def set_pli(self, value):
-        " Set pli within entity "
+        """ Set pli within entity """
         self._config.set_pli(value, scope=self._name)
 
     def add_config(self, name, generics, post_check=None):

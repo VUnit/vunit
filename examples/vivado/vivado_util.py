@@ -56,13 +56,6 @@ def compile_unisim(library_path):
             compile_file(file_name, "unisim", library_path)
 
 
-def extract_compile_order(root, project_file):
-    """
-    Extract compile order of xci ip within vivado project file
-    """
-    return compile_order
-
-
 def compile_vivado_ip(root, project_file, unisim_library_path):
     """
     Compile xci ip within vivado project file

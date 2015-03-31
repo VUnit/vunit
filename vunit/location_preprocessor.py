@@ -46,7 +46,7 @@ class LocationPreprocessor:
             MULTILINE)
 
         matches = list(potential_subprogram_call_with_arguments_pattern.finditer(code))
-        if self._subprograms_without_arguments != []:
+        if self._subprograms_without_arguments:
             matches += list(potential_subprogram_call_without_arguments_pattern.finditer(code))
         matches.sort(key=lambda match: match.start('subprogram'), reverse=True)
 
