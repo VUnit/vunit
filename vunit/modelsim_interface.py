@@ -152,8 +152,12 @@ proc vunit_load {{}} {{
     # Workaround -modelsimini flag not respected in some versions of modelsim
     # however, Microsemi 10.3a corrupts the enviromnent variable (see dvt64978)
     if {{[string first "Microsemi vsim 10.3a" [vsimVersionString]] eq -1}} {{
-        global env
-        set env(MODELSIM) "{modelsimini}"
+
+        # ALTERA STARTER EDITION 10.3c (Altera 14.1 toolchain) also corrupts the environment variable
+        if {{[string first "ALTERA STARTER EDITION vsim 10.3c" [vsimVersionString]] eq -1}} {{
+            global env
+            set env(MODELSIM) "{modelsimini}"
+        }}
     }}
     vsim -wlf "{wlf_file_name}" -quiet -t ps {pli_str} {set_generic_name_str} {library_name}.{entity_name}{architecture_suffix}
     set no_finished_signal [catch {{examine -internal {{/vunit_finished}}}}]
