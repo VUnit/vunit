@@ -35,6 +35,7 @@ class ModelSimInterface:
         # Workarround for Microsemi 10.3a which does not
         # respect MODELSIM environment variable when set within .do script
         # Microsemi bug reference id: dvt64978
+        # Also a problem with ALTERA STARTER EDITION 10.3c
         os.environ["MODELSIM"] = self._modelsim_ini
 
         self._create_modelsim_ini()
@@ -148,17 +149,6 @@ class ModelSimInterface:
         tcl = """
 proc vunit_load {{}} {{
     {set_generic_str}
-
-    # Workaround -modelsimini flag not respected in some versions of modelsim
-    # however, Microsemi 10.3a corrupts the enviromnent variable (see dvt64978)
-    if {{[string first "Microsemi vsim 10.3a" [vsimVersionString]] eq -1}} {{
-
-        # ALTERA STARTER EDITION 10.3c (Altera 14.1 toolchain) also corrupts the environment variable
-        if {{[string first "ALTERA STARTER EDITION vsim 10.3c" [vsimVersionString]] eq -1}} {{
-            global env
-            set env(MODELSIM) "{modelsimini}"
-        }}
-    }}
     vsim -wlf "{wlf_file_name}" -quiet -t ps {pli_str} {set_generic_name_str} {library_name}.{entity_name}{architecture_suffix}
     set no_finished_signal [catch {{examine -internal {{/vunit_finished}}}}]
     set no_test_runner_exit [catch {{examine -internal {{/run_base_pkg/runner.exit_without_errors}}}}]
