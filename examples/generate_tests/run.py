@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 # Make vunit python module importable
 from os.path import join, dirname
@@ -13,6 +13,7 @@ sys.path.append(path_to_vunit)
 
 from itertools import product
 from vunit import VUnit
+
 
 def make_post_check(data_width, sign):
     """
@@ -40,22 +41,23 @@ def make_post_check(data_width, sign):
 
     return post_check
 
+
 def generate_data_width_and_sign_tests(entity):
-    """ 
+    """
     Generate test for entity by varying the data_width and sign generics
     """
 
-    for sign, data_width in product([False, True], range(1,5)):
+    for sign, data_width in product([False, True], range(1, 5)):
         # This configuration name is added as a suffix to the test bench name
         config_name = "data_width=%i,sign=%s" % (data_width, sign)
 
         # Add the configuration with a post check function to verify the output
         entity.add_config(name=config_name,
                           generics=dict(
-                              data_width=data_width, 
+                              data_width=data_width,
                               sign=sign),
                           post_check=make_post_check(data_width, sign))
-    
+
 
 test_path = join(dirname(__file__), "test")
 

@@ -2,13 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 import unittest
 from os.path import abspath, join, basename, dirname
 
 from vunit.ui import VUnit
 from common import has_modelsim
+
 
 @unittest.skipUnless(has_modelsim(), 'Requires modelsim')
 class TestLogging(unittest.TestCase):
@@ -19,15 +20,15 @@ class TestLogging(unittest.TestCase):
                    output_path=output_path,
                    vhdl_standard=vhdl_standard,
                    compile_builtins=False)
-        
-        ui.add_builtins('vunit_lib', mock_lang=True)            
+
+        ui.add_builtins('vunit_lib', mock_lang=True)
         ui.enable_location_preprocessing()
         lib = ui.add_library('lib')
         lib.add_source_files(join(vhdl_path, "test", "tb_logging.vhd"))
 
         try:
             ui.main()
-        except SystemExit as e:            
+        except SystemExit as e:
             self.assertEqual(e.code, 0)
 
     def test_logging_vhdl_93(self):

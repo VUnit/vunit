@@ -17,6 +17,7 @@ from vunit.vhdl_parser import remove_comments
 from vunit.test_suites import IndependentSimTestCase, SameSimTestSuite
 from vunit.test_configuration import dotjoin
 
+
 class TestScanner:
     """
     Scans a project for test benches
@@ -144,9 +145,9 @@ class TestScanner:
 
         return run_strings
 
-
     _re_pragma = re.compile(r'vunit_pragma\s+([a-zA-Z0-9_]+)', re.IGNORECASE)
     _valid_pragmas = ["run_all_in_same_sim", "fail_on_warning"]
+
     def find_pragmas(self, code, file_name):
         pragmas = []
         for match in self._re_pragma.finditer(code):
@@ -158,6 +159,7 @@ class TestScanner:
             pragmas.append(pragma)
         return pragmas
 
+
 def tb_filter(entity):
     " Filter entities with file name tb_* and entity_name tb_* "
     file_ok = basename(entity.file_name).startswith("tb_") or splitext(basename(entity.file_name))[0].endswith("_tb")
@@ -166,6 +168,7 @@ def tb_filter(entity):
     if file_ok and entity_ok:
         return True
     return False
+
 
 class TestScannerError(Exception):
     pass

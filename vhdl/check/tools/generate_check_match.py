@@ -50,13 +50,13 @@ api_template = """  procedure check_match(
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
     return boolean;
-  
+
 """
 
 impl_template = """  procedure check_match(
     constant got             : in $got_type;
     constant expected        : in $expected_type;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -71,7 +71,7 @@ impl_template = """  procedure check_match(
     variable pass            : out boolean;
     constant got             : in $got_type;
     constant expected        : in $expected_type;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -86,7 +86,7 @@ impl_template = """  procedure check_match(
     variable pass            : out boolean;
     constant got             : in $got_type;
     constant expected        : in $expected_type;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -102,7 +102,7 @@ impl_template = """  procedure check_match(
     variable checker         : inout checker_t;
     constant got             : in $got_type;
     constant expected        : in $expected_type;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -116,7 +116,7 @@ impl_template = """  procedure check_match(
   impure function check_match(
     constant got             : in $got_type;
     constant expected        : in $expected_type;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
@@ -128,7 +128,7 @@ impl_template = """  procedure check_match(
     -- pragma translate_on
     return pass;
   end;
-  
+
 """
 
 test_template = """      elsif run("Test should pass on $left_type matching $right_type") then
@@ -140,15 +140,15 @@ test_template = """      elsif run("Test should pass on $left_type matching $rig
         check_match(pass, $left_pass, $right_pass);
         counting_assert(pass, "Should return pass = true on passing check");
         pass := check_match($left_pass, $right_pass);
-        counting_assert(pass, "Should return pass = true on passing check");        
+        counting_assert(pass, "Should return pass = true on passing check");
         verify_passed_checks(stat, 6);
 
-        get_checker_stat(check_match_checker, stat);      
+        get_checker_stat(check_match_checker, stat);
         check_match(check_match_checker, $left_pass, $right_pass);
         check_match(check_match_checker, pass, $left_pass, $right_pass);
         counting_assert(pass, "Should return pass = true on passing check");
         verify_passed_checks(check_match_checker,stat, 2);
-        
+
       elsif run("Test should fail on $left_type not matching $right_type") then
         check_match($left_pass, $right_fail_dc);
         verify_log_call(inc_count, "Matching failed! Got $pass_str. Expected $fail_dc_str.");
@@ -165,30 +165,30 @@ test_template = """      elsif run("Test should pass on $left_type matching $rig
         verify_log_call(inc_count, "Matching failed! Got $pass_str. Expected $fail_str.");
         check_match(check_match_checker, pass, $left_pass, $right_fail);
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Matching failed! Got $pass_str. Expected $fail_str.");        
+        verify_log_call(inc_count, "Matching failed! Got $pass_str. Expected $fail_str.");
 """
 
 combinations = [
-                ('unsigned', 'unsigned',
-                 """unsigned'(X"A5")""", """unsigned'(X"A5")""",
-                 """unsigned'("1010----")""", """unsigned'("1010----")""",
-                 """unsigned'(X"5A")""", """unsigned'("0101----")""",
-                 '1010_0101 (165)', '0101_1010 (90)', '0101_---- (NaN)'),
-                ('std_logic_vector', 'std_logic_vector',
-                 """std_logic_vector'(X"A5")""", """std_logic_vector'(X"A5")""",
-                 """std_logic_vector'("1010----")""", """std_logic_vector'("1010----")""",
-                 """std_logic_vector'(X"5A")""", """std_logic_vector'("0101----")""",
-                 '1010_0101 (165)', '0101_1010 (90)', '0101_---- (NaN)'),
-                ('signed', 'signed',
-                 """signed'(X"A5")""", """signed'(X"A5")""",
-                 """signed'("1010----")""", """signed'("1010----")""",
-                 """signed'(X"5A")""", """signed'("0101----")""",
-                 '1010_0101 (-91)', '0101_1010 (90)', '0101_---- (NaN)'),
-                ('std_logic', 'std_logic',
-                 "'1'", "'1'",
-                 "'-'", "'-'",
-                 "'0'", "'0'",
-                 "1", "0", "0")]
+    ('unsigned', 'unsigned',
+     """unsigned'(X"A5")""", """unsigned'(X"A5")""",
+     """unsigned'("1010----")""", """unsigned'("1010----")""",
+     """unsigned'(X"5A")""", """unsigned'("0101----")""",
+     '1010_0101 (165)', '0101_1010 (90)', '0101_---- (NaN)'),
+    ('std_logic_vector', 'std_logic_vector',
+     """std_logic_vector'(X"A5")""", """std_logic_vector'(X"A5")""",
+     """std_logic_vector'("1010----")""", """std_logic_vector'("1010----")""",
+     """std_logic_vector'(X"5A")""", """std_logic_vector'("0101----")""",
+     '1010_0101 (165)', '0101_1010 (90)', '0101_---- (NaN)'),
+    ('signed', 'signed',
+     """signed'(X"A5")""", """signed'(X"A5")""",
+     """signed'("1010----")""", """signed'("1010----")""",
+     """signed'(X"5A")""", """signed'("0101----")""",
+     '1010_0101 (-91)', '0101_1010 (90)', '0101_---- (NaN)'),
+    ('std_logic', 'std_logic',
+     "'1'", "'1'",
+     "'-'", "'-'",
+     "'0'", "'0'",
+     "1", "0", "0")]
 
 api = ''
 for c in combinations:
@@ -196,6 +196,7 @@ for c in combinations:
     api += t.substitute(got_type=c[0], expected_type=c[1])
 
 print("API:\n\n" + api)
+
 
 def dual_format(base_type, got_or_expected):
     if got_or_expected == 'got':
@@ -228,6 +229,5 @@ test = ''
 for c in combinations:
     t = Template(test_template)
     test += t.substitute(left_type=c[0], right_type=c[1], left_pass=c[2], right_pass=c[3], left_pass_dc=c[4], right_pass_dc=c[5], right_fail=c[6], right_fail_dc=c[7], pass_str=c[8], fail_str=c[9], fail_dc_str=c[10])
-    
-print("Test:\n\n" + test)
 
+print("Test:\n\n" + test)

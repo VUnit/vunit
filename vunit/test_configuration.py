@@ -2,10 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 import logging
 logger = logging.getLogger(__name__)
+
 
 class TestConfiguration:
     def __init__(self):
@@ -48,7 +49,7 @@ class TestConfiguration:
         global_generics = self._prune_generics(global_generics, entity.generic_names)
         pli = self._get_pli_for_tb(entity.library_name, entity.name)
         configs = []
-        
+
         tb_name = "%s.%s" % (entity.library_name, entity.name)
         configs_for_tb_name = self._configs.get(tb_name, {})
         for config_name in sorted(configs_for_tb_name.keys()):
@@ -89,6 +90,7 @@ class TestConfiguration:
         plis = self._plis.get(library_name + "." + entity_name, plis)
         return plis
 
+
 class Configuration:
     def __init__(self,
                  name="",
@@ -113,4 +115,4 @@ class Configuration:
 
 def dotjoin(*args):
     """ string arguments joined by '.' unless empty string """
-    return ".".join(arg for arg in args if not arg=="")
+    return ".".join(arg for arg in args if not arg == "")

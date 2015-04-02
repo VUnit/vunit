@@ -13,9 +13,11 @@ from re import compile, MULTILINE
 from vunit.ui import VUnit
 from vunit.check_preprocessor import CheckPreprocessor
 
+
 class TestPreprocessor:
     def run(self, code, file_name):
         return '-- check_relation(a = b);\n' + code
+
 
 class VUnitfier:
     def __init__(self):
@@ -24,12 +26,14 @@ class VUnitfier:
     def run(self, code, file_name):
         return self._reportPattern.sub(r'\g<indent>log(\g<note>); -- VUnitfier preprocessor: Report turned off, keeping original code.', code)
 
+
 class ParentalControl:
     def __init__(self):
         self._fWordPattern = compile(r'f..k')
 
     def run(self, code, file_name):
         return self._fWordPattern.sub(r'[BEEP]', code)
+
 
 class TestUi(unittest.TestCase):
     def setUp(self):
@@ -54,7 +58,7 @@ end architecture;
         pass
 
     def _create_ui(self):
-        ui = VUnit(output_path = self._output_path)
+        ui = VUnit(output_path=self._output_path)
         ui.add_library('lib')
 
         return ui
@@ -62,8 +66,8 @@ end architecture;
     def _create_temp_files(self, n):
         f = [None] * n
         for i in range(n):
-            with NamedTemporaryFile(mode = 'w', suffix='.vhd', delete = False) as f[i]:
-                f[i].write(self._source.substitute(entity = 'foo%d' % i))
+            with NamedTemporaryFile(mode='w', suffix='.vhd', delete=False) as f[i]:
+                f[i].write(self._source.substitute(entity='foo%d' % i))
 
         return f
 
@@ -126,7 +130,6 @@ end architecture;
             self.assertEqual(g.read(), pp_source.substitute(entity='foo0', file=basename(f[0].name)))
 
         self._delete_temp_files(f)
-
 
     def test_locally_specified_preprocessors_should_be_used_instead_of_any_globally_defined_preprocessors(self):
         ui = self._create_ui()

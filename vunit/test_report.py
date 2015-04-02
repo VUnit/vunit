@@ -2,11 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 from vunit.color_printer import ColorPrinter
 from xml.etree import ElementTree
 from sys import version_info
+
 
 class TestReport:
     """
@@ -54,7 +55,6 @@ class TestReport:
                              len(failed),
                              total_tests,
                              result.name))
-
 
     def all_ok(self):
         """
@@ -138,6 +138,7 @@ class TestReport:
             xml = ElementTree.tostring(root, encoding="utf-8")
         return xml
 
+
 class TestStatus:
     def __init__(self, name):
         self._name = name
@@ -149,9 +150,11 @@ class TestStatus:
     def __repr__(self):
         return "TestStatus(%r)" % self._name
 
+
 PASSED = TestStatus("passed")
 SKIPPED = TestStatus("skipped")
 FAILED = TestStatus("failed")
+
 
 class TestResult:
     """

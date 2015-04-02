@@ -2,9 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 from vunit.test_report import (PASSED, FAILED)
+
 
 class TestList:
     def __init__(self):
@@ -30,6 +31,7 @@ class TestList:
     def __len__(self):
         return len(self._test_suites)
 
+
 class TestSuiteWrapper:
     def __init__(self, test_case):
         self._test_case = test_case
@@ -47,4 +49,4 @@ class TestSuiteWrapper:
 
     def run(self, output_path):
         test_ok = self._test_case.run(output_path)
-        return {self._test_case.name : PASSED if test_ok else FAILED}
+        return {self._test_case.name: PASSED if test_ok else FAILED}

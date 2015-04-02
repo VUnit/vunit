@@ -13,6 +13,7 @@ import os
 
 from vunit.exceptions import CompileError
 
+
 class ModelSimInterface:
 
     name = "modelsim"
@@ -51,7 +52,6 @@ class ModelSimInterface:
             self._send_command("quit")
             self._vsim_process.terminate()
             self._vsim_process = None
-
 
     def __del__(self):
         self._teardown()
@@ -107,8 +107,8 @@ class ModelSimInterface:
             return False
         return True
 
-
     _vmap_pattern = re.compile('maps to directory (?P<dir>.*?)\.')
+
     def create_library(self, library_name, path):
 
         if not file_exists(dirname(path)):
@@ -134,13 +134,13 @@ class ModelSimInterface:
             do_vmap = True
 
         if do_vmap:
-            proc = Process(['vmap','-modelsimini', self._modelsim_ini, library_name, path])
+            proc = Process(['vmap', '-modelsimini', self._modelsim_ini, library_name, path])
             proc.consume_output(callback=None)
 
     def _create_load_function(self, library_name, entity_name, architecture_name, generics, pli, output_path):
         set_generic_str = "".join(('    set vunit_generic_%s {%s}\n' % (name, value) for name, value in generics.items()))
         set_generic_name_str = " ".join(('-g%s="${vunit_generic_%s}"' % (name, name) for name in generics))
-        pli_str = " ".join("-pli {%s}" %  fix_path(name) for name in pli)
+        pli_str = " ".join("-pli {%s}" % fix_path(name) for name in pli)
         if architecture_name is None:
             architecture_suffix = ""
         else:
@@ -215,7 +215,6 @@ proc vunit_run {} {
     return $failed
 }
 """ % (1 if fail_on_warning else 2)
-
 
     def _create_common_script(self, library_name, entity_name, architecture_name, generics, pli, fail_on_warning, output_path):
         """
@@ -332,6 +331,7 @@ proc vunit_help {} {
         if self._vsim_process is not None:
             del self._vsim_process
 
+
 class OutputConsumer:
     """
     Consume output from modelsim and print with indentation
@@ -352,6 +352,7 @@ class OutputConsumer:
 
         if not self.silent:
             print(line)
+
 
 def fix_path(path):
     """ Modelsim does not like backslash """

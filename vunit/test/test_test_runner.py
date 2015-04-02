@@ -2,15 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
-                    
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+
 from __future__ import print_function
 
 import unittest
 from os.path import join, dirname, exists
 from shutil import rmtree
 
-try: 
+try:
     # Python 3.x (builtin)
     from unittest.mock import Mock
 except:
@@ -21,6 +21,7 @@ from vunit.test_runner import TestRunner
 from vunit.test_report import TestReport, PASSED, FAILED
 from vunit.test_list import TestList
 
+
 class TestTestRunner(unittest.TestCase):
     def setUp(self):
         self._tests = []
@@ -30,7 +31,7 @@ class TestTestRunner(unittest.TestCase):
             rmtree(self.output_path)
 
         self.report = TestReport()
-        self.runner = TestRunner(self.report, self.output_path)        
+        self.runner = TestRunner(self.report, self.output_path)
 
     def test_runs_testcases_in_order(self):
         test_case1 = self.create_test("test1", True)
@@ -59,6 +60,7 @@ class TestTestRunner(unittest.TestCase):
         test_list.add_test(test_case)
 
         output = "Output string, <xml>, </xml>\n"
+
         def side_effect(*args, **kwargs):
             print(output, end="")
             return True
@@ -78,7 +80,8 @@ class TestTestRunner(unittest.TestCase):
 
         test_case.run.side_effect = run_side_effect
         return test_case
-        
+
+
 class TestCaseMockSpec:
     name = None
     run = None

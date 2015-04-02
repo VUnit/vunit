@@ -11,6 +11,7 @@ from vunit.vhdl_parser import (VHDLDesignFile,
                                VHDLSubtypeIndication)
 from os.path import join, dirname
 
+
 class TestVHDLParser(TestCase):
 
     def test_parsing_empty(self):
@@ -79,12 +80,11 @@ context name1.is_identifier;
         self.assertEqual(len(design_file.libraries), 5)
         self.assertEqual(len(design_file.contexts), 0)
         self.assertEqual(design_file.libraries,
-                         {"ieee" : set([("numeric_std", "all"), ("std_logic_1164", "all")]),
-                          "name1" : set([("foo", "all"), ("bla", "all"), ("is_identifier",)]),
-                          "lib1" : set([("foo",)]),
-                          "lib2" : set([("bar",)]),
-                          "lib3" : set([("xyz",)])})
-
+                         {"ieee": set([("numeric_std", "all"), ("std_logic_1164", "all")]),
+                          "name1": set([("foo", "all"), ("bla", "all"), ("is_identifier",)]),
+                          "lib1": set([("foo",)]),
+                          "lib2": set([("bar",)]),
+                          "lib3": set([("xyz",)])})
 
     def test_parsing_entity_with_generics(self):
         entity = self.parse_single_entity("""\
@@ -112,7 +112,6 @@ end entity;
         self.assertEqual(generics[1].mode, None)
         self.assertEqual(generics[1].subtype_indication.code, "boolean")
         self.assertEqual(generics[1].subtype_indication.type_mark, "boolean")
-
 
     def test_parsing_entity_with_ports(self):
         entity = self.parse_single_entity("""\
@@ -210,7 +209,6 @@ end context identifier;
         self.assertEqual(str(iface_element),
                          "identifier : integer")
 
-
     def test_converting_entity_to_string(self):
         entity = self._create_entity()
         self.assertEqual(entity.to_str(sindent="xx ", indent="  "), """\
@@ -250,13 +248,11 @@ xx entity name is
 xx end entity;
 """)
 
-
     def test_converting_entity_to_instantiation_string(self):
         entity = self._create_entity()
         self.assertEqual(entity.to_instantiation_str(name="name_inst",
                                                      sindent="xx ",
-                                                     indent="  "),
-"""\
+                                                     indent="  "), """\
 xx name_inst : name
 xx   generic map (
 xx     data_width => data_width)
@@ -267,8 +263,7 @@ xx     data => data);
 
         entity = self._create_entity()
         entity.generics = []
-        self.assertEqual(entity.to_instantiation_str(name="name_inst"),
-"""\
+        self.assertEqual(entity.to_instantiation_str(name="name_inst"), """\
   name_inst : name
     port map (
       clk => clk,
@@ -277,8 +272,7 @@ xx     data => data);
 
         entity = self._create_entity()
         entity.ports = []
-        self.assertEqual(entity.to_instantiation_str(name="name_inst"),
-"""\
+        self.assertEqual(entity.to_instantiation_str(name="name_inst"), """\
   name_inst : name
     generic map (
       data_width => data_width);
@@ -287,17 +281,15 @@ xx     data => data);
         entity = self._create_entity()
         entity.ports = []
         entity.generics = []
-        self.assertEqual(entity.to_instantiation_str(name="name_inst"),
-"""\
+        self.assertEqual(entity.to_instantiation_str(name="name_inst"), """\
   name_inst : name;
 """)
 
     def test_converting_entity_to_instantiation_string_with_mapping(self):
         entity = self._create_entity()
         self.assertEqual(entity.to_instantiation_str(name="name_inst",
-                                                     mapping = {"clk" : "'1'",
-                                                                "data_width" : "foo = bar"}),
-"""\
+                                                     mapping={"clk": "'1'",
+                                                              "data_width": "foo = bar"}), """\
   name_inst : name
     generic map (
       data_width => foo = bar)
@@ -308,11 +300,11 @@ xx     data => data);
 
     def test_converting_entity_to_signal_declaration_string(self):
         entity = self._create_entity()
-        self.assertEqual(entity.to_signal_declaration_str(sindent="xx "),
-"""\
+        self.assertEqual(entity.to_signal_declaration_str(sindent="xx "), """\
 xx signal clk : std_logic;
 xx signal data : std_logic_vector(data_width-1 downto 0);
 """)
+
     def test_getting_component_instantiations_from_design_file(self):
         design_file = VHDLDesignFile.parse("""
 entity top is

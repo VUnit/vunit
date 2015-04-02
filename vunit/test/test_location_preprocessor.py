@@ -2,10 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 import unittest
 from vunit.location_preprocessor import LocationPreprocessor
+
 
 class TestCsvsub_progs(unittest.TestCase):
     def setUp(self):
@@ -16,7 +17,7 @@ class TestCsvsub_progs(unittest.TestCase):
     def _verify_result(self, code, expected_result):
         result = self._location_preprocessor.run(code, 'foo.vhd')
         self.assertEqual(result, expected_result)
-        
+
     def test_that_procedure_calls_are_found(self):
         code = """
 sub_prog("1");
@@ -26,7 +27,7 @@ sub_prog("1");
  sub_prog (" 5 ") ;
 sub_prog("6",
          "7");
- sub_prog; 
+ sub_prog;
 """
         expected_result = """
 sub_prog("1", line_num => 2, file_name => "foo.vhd");
@@ -36,9 +37,10 @@ sub_prog("1", line_num => 2, file_name => "foo.vhd");
  sub_prog (" 5 ", line_num => 6, file_name => "foo.vhd") ;
 sub_prog("6",
          "7", line_num => 7, file_name => "foo.vhd");
- sub_prog(line_num => 9, file_name => "foo.vhd"); 
+ sub_prog(line_num => 9, file_name => "foo.vhd");
 """
         self._verify_result(code, expected_result)
+
     def test_that_function_calls_are_found(self):
         code = """
 a:=sub_prog("1");
@@ -48,7 +50,7 @@ a:=sub_prog("1");
  e<=sub_prog (" 5 ") ;
 f  <=  sub_prog;
 g := h + sub_prog + 3; -- DOESN'T SUPPORT FUNCTION CALLS WITHOUT PARAMETERS NOT FOLLOWED BY SEMICOLON
-i := j * (sub_prog(1, 2) + 17) + 8; 
+i := j * (sub_prog(1, 2) + 17) + 8;
 k := l * (sub_prog(1,
                    2) + 17) + 8;
 """
@@ -60,11 +62,12 @@ a:=sub_prog("1", line_num => 2, file_name => "foo.vhd");
  e<=sub_prog (" 5 ", line_num => 6, file_name => "foo.vhd") ;
 f  <=  sub_prog(line_num => 7, file_name => "foo.vhd");
 g := h + sub_prog + 3; -- DOESN'T SUPPORT FUNCTION CALLS WITHOUT PARAMETERS NOT FOLLOWED BY SEMICOLON
-i := j * (sub_prog(1, 2, line_num => 9, file_name => "foo.vhd") + 17) + 8; 
+i := j * (sub_prog(1, 2, line_num => 9, file_name => "foo.vhd") + 17) + 8;
 k := l * (sub_prog(1,
                    2, line_num => 10, file_name => "foo.vhd") + 17) + 8;
 """
         self._verify_result(code, expected_result)
+
     def test_that_similar_sub_program_names_are_ignored(self):
         code = """
 another_sub_prog("6");
@@ -75,6 +78,7 @@ another_sub_prog("6");
 sub_prog_2;
 """
         self._verify_result(code, expected_result)
+
     def test_that_sub_program_declarations_are_ignored(self):
         code = """
 procedure sub_prog(foo1);
@@ -85,6 +89,7 @@ procedure sub_prog(foo1);
  function  sub_prog (foo3) ;
 """
         self._verify_result(code, expected_result)
+
     def test_that_sub_program_definitions_are_ignored(self):
         code = """
 procedure sub_prog(foo4) is
@@ -107,6 +112,7 @@ begin
 end;
 """
         self._verify_result(code, expected_result)
+
     def test_that_already_located_calls_are_left_untouched(self):
         code = """
 procedure sub_prog(foo4) is
@@ -139,6 +145,7 @@ begin
 end;
 """
         self._verify_result(code, expected_result)
+
     def test_that_asserts_with_severity_warning_error_or_failure_are_not_affected_despite_the_name_conflict_with_log_functions(self):
         code = """
 assert False report "Failed" severity warning;

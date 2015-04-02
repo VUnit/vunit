@@ -9,8 +9,10 @@ from xml.etree import ElementTree
 import vunit.ostools as ostools
 from vunit.modelsim_interface import ModelSimInterface
 
+
 def has_modelsim():
     return ModelSimInterface.is_available()
+
 
 def check_report(report_file, tests):
     tree = ElementTree.parse(report_file)
@@ -19,10 +21,10 @@ def check_report(report_file, tests):
     for test in root.iter("testcase"):
         status = "passed"
 
-        if test.find("skipped") != None:
+        if test.find("skipped") is not None:
             status = "skipped"
 
-        if test.find("failure") != None:
+        if test.find("failure") is not None:
             status = "failed"
         report[test.attrib["name"]] = status
 

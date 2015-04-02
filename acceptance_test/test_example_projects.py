@@ -2,13 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 import unittest
 from os.path import join, dirname
 from common import has_modelsim, check_report
 from subprocess import check_call, call
 import sys
+
 
 @unittest.skipUnless(has_modelsim(), "Requires modelsim")
 class TestExampleProjects(unittest.TestCase):

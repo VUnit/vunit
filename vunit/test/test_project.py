@@ -3,12 +3,13 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
-                    
+
 import unittest
 from os.path import join
 from .stub_ostools import OstoolsStub
 import vunit.project
 from vunit.project import Project
+
 
 class TestProject(unittest.TestCase):
     def setUp(self):
@@ -21,8 +22,7 @@ class TestProject(unittest.TestCase):
 
     def test_parses_entity_architecture(self):
         self.project.add_library("lib", "work_path")
-        self.add_source_file("lib", "file1.vhd",
-"""
+        self.add_source_file("lib", "file1.vhd", """\
 entity foo is
 end entity;
 
@@ -35,8 +35,7 @@ begin
 end architecture;
 """)
 
-        self.add_source_file("lib", "file2.vhd",
-"""
+        self.add_source_file("lib", "file2.vhd", """\
 architecture arch3 of foo is
 begin
 end architecture;
@@ -50,8 +49,7 @@ end architecture;
 
     def test_parses_entity_architecture_with_generics(self):
         self.project.add_library("lib", "work_path")
-        self.add_source_file("lib", "file1.vhd",
-"""
+        self.add_source_file("lib", "file1.vhd", """\
 entity foo is
   generic (
     testing_that_foo : boolean;
@@ -63,16 +61,14 @@ begin
 end architecture;
 """)
 
-        self.assert_has_entity("file1.vhd", "foo", 
+        self.assert_has_entity("file1.vhd", "foo",
                                generic_names=["testing_that_bar", "testing_that_foo"],
                                architecture_names=["arch"])
         self.assert_has_architecture("file1.vhd", "arch", "foo")
 
-
     def test_parses_package(self):
         self.project.add_library("lib", "work_path")
-        self.add_source_file("lib", "file1.vhd",
-"""
+        self.add_source_file("lib", "file1.vhd", """\
 package foo is
 end package;
 
@@ -82,7 +78,6 @@ end package body;
 """)
         self.assert_has_package("file1.vhd", "foo")
         self.assert_has_package_body("file1.vhd", "foo")
-
 
     def test_finds_entity_instantiation_dependencies(self):
         self.create_dummy_three_file_project()
@@ -119,7 +114,7 @@ end entity;
         self.stub.tick()
         self.update("foo1_ent.vhd")
         self.assert_should_recompile(["foo_arch.vhd"])
-        
+
     def test_multiple_identical_file_names_with_different_path_in_same_library(self):
         self.project.add_library("lib", "lib_path")
         self.add_source_file("lib", join("a", "foo.vhd"), """
@@ -293,8 +288,7 @@ end architecture;
     def test_finds_component_instantiation_dependencies(self):
         self.project = Project(depend_on_components=True)
         self.project.add_library("toplib", "work_path")
-        self.add_source_file("toplib", "top.vhd",
-"""
+        self.add_source_file("toplib", "top.vhd", """\
 entity top is
 end entity;
 
@@ -306,17 +300,16 @@ begin
              rst => '0',
              in_vec => record_reg.input_signal,
              output => some_signal(UPPER_CONSTANT-1 downto LOWER_CONSTANT+1));
-             
+
     label2Foo : foo2
     port map(clk => '1',
              rst => '0',
              output => "00");
 end architecture;
 """)
-        
+
         self.project.add_library("libcomp1", "work_path")
-        self.add_source_file("libcomp1", "comp1.vhd",
-"""
+        self.add_source_file("libcomp1", "comp1.vhd", """\
 entity foo is
 end entity;
 
@@ -324,10 +317,9 @@ architecture arch of foo is
 begin
 end architecture;
 """)
-        
+
         self.project.add_library("libcomp2", "work_path")
-        self.add_source_file("libcomp2", "comp2.vhd",
-"""
+        self.add_source_file("libcomp2", "comp2.vhd", """\
 entity foo2 is
 end entity;
 
@@ -335,10 +327,10 @@ architecture arch of foo2 is
 begin
 end architecture;
 """)
-        
+
         self.assert_has_component("top.vhd", "foo")
         self.assert_has_component("top.vhd", "foo2")
-        
+
         self.assert_compiles_before("comp1.vhd", before="top.vhd")
         self.assert_compiles_before("comp2.vhd", before="top.vhd")
 
@@ -347,8 +339,7 @@ end architecture;
         self.project.add_library("lib", "work_path")
 
         if update_file1:
-            self.add_source_file("lib", "file1.vhd",
-"""
+            self.add_source_file("lib", "file1.vhd", """\
 entity module1 is
 end entity;
 
@@ -357,8 +348,7 @@ begin
 end architecture;
 """)
         else:
-            self.add_source_file("lib", "file1.vhd",
-"""
+            self.add_source_file("lib", "file1.vhd", """\
 entity module1 is
 end entity;
 
@@ -367,8 +357,7 @@ begin
   report "Updated";
 end architecture;
 """)
-        self.add_source_file("lib", "file2.vhd",
-"""
+        self.add_source_file("lib", "file2.vhd", """\
 entity module2 is
 end entity;
 
@@ -378,8 +367,7 @@ begin
 end architecture;
 """)
 
-        self.add_source_file("lib", "file3.vhd",
-"""
+        self.add_source_file("lib", "file3.vhd", """\
 entity module3 is
 end entity;
 
@@ -423,7 +411,7 @@ end architecture;
                                       name)
         self.assertIsNotNone(unit)
 
-    def assert_has_entity(self, source_file_name, name, 
+    def assert_has_entity(self, source_file_name, name,
                           generic_names=None,
                           architecture_names=None):
         source_file = self.project._source_files[source_file_name]
@@ -445,12 +433,12 @@ end architecture;
         self.assertIsNotNone(unit)
 
     def assert_has_component(self, source_file_name, component_name):
-        found_comp = False        
+        found_comp = False
         for source_file in self.project._source_files.values():
             for component in source_file.depending_components:
                 if component == component_name:
                     found_comp = True
-                    
+
         self.assertTrue(found_comp, "Did not find component " + component_name + " in " + source_file_name)
 
     def _find_design_unit(self,

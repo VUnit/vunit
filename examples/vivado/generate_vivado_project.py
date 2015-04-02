@@ -8,6 +8,7 @@ from vivado_util import run_vivado
 from os.path import join, dirname, exists, normpath
 from shutil import rmtree
 
+
 def main():
     root = normpath(dirname(__file__))
     project_name = "myproject"

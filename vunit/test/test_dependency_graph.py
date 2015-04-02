@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 from vunit.dependency_graph import DependencyGraph
 import unittest
@@ -14,7 +14,7 @@ class TestDependencyGraph(unittest.TestCase):
             graph.add_node(n)
         for d in dependencies:
             graph.add_dependency(d[0], d[1])
-            
+
     def test_should_return_empty_compile_order_for_no_nodes(self):
         g = DependencyGraph()
         self.assertEqual(g.toposort(), [], 'Should return empty list')

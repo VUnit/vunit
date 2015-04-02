@@ -2,12 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 import unittest
 from os.path import abspath, join, dirname
 from vunit.ui import VUnit
 from common import has_modelsim
+
 
 @unittest.skipUnless(has_modelsim(), 'Requires modelsim')
 class TestArray(unittest.TestCase):

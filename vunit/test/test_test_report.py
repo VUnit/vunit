@@ -2,12 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
-                    
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+
 from unittest import TestCase
 from vunit.test_report import TestReport, PASSED, SKIPPED, FAILED
 from xml.etree import ElementTree
 from os.path import join, dirname
+
 
 class TestTestReport(TestCase):
     """
@@ -21,7 +22,6 @@ class TestTestReport(TestCase):
         self.output_file_name = join(dirname(__file__), "test_report_output.txt")
         with open(self.output_file_name, "w") as fwrite:
             fwrite.write(self.output_file_contents)
-        
 
     def report_to_str(self, report):
         """
@@ -32,11 +32,9 @@ class TestTestReport(TestCase):
         report.print_str()
         return self.printer.report_str
 
-
     def test_report_with_all_passed_tests(self):
         report = self._report_with_all_passed_tests()
-        self.assertEqual(self.report_to_str(report),
-"""\
+        self.assertEqual(self.report_to_str(report), """\
 {gi}pass{x} passed_test0 after 1.0 seconds
 {gi}pass{x} passed_test1 after 2.0 seconds
 
@@ -52,8 +50,7 @@ Total time 3.0 seconds
 
     def test_report_with_failed_tests(self):
         report = self._report_with_some_failed_tests()
-        self.assertEqual(self.report_to_str(report),
-"""\
+        self.assertEqual(self.report_to_str(report), """\
 {gi}pass{x} passed_test after 2.0 seconds
 {ri}fail{x} failed_test0 after 11.1 seconds
 {ri}fail{x} failed_test1 after 3.0 seconds
@@ -70,8 +67,7 @@ Total time 16.1 seconds
 
     def test_report_with_skipped_tests(self):
         report = self._report_with_some_skipped_tests()
-        self.assertEqual(self.report_to_str(report),
-"""\
+        self.assertEqual(self.report_to_str(report), """\
 {gi}pass{x} passed_test after 1.0 seconds
 {rgi}skip{x} skipped_test after 0.0 seconds
 {ri}fail{x} failed_test after 3.0 seconds
@@ -119,7 +115,6 @@ Total time 4.0 seconds
         self.assert_has_test(root, "passed_test0", time="1.0", status="passed")
         self.assert_has_test(root, "passed_test1", time="2.0", status="passed")
 
-
     def test_junit_report_with_some_failed_tests(self):
         report = self._report_with_some_failed_tests()
         root = ElementTree.fromstring(report.to_junit_xml_str())
@@ -141,12 +136,11 @@ Total time 4.0 seconds
     def _report_with_all_passed_tests(self):
         " @returns A report with all passed tests "
         report = self._new_report()
-        report.add_result("passed_test0", PASSED, time=1.0, 
+        report.add_result("passed_test0", PASSED, time=1.0,
                           output_file_name=self.output_file_name)
         report.add_result("passed_test1", PASSED, time=2.0,
                           output_file_name=self.output_file_name)
         return report
-
 
     def _report_with_some_failed_tests(self):
         " @returns A report with some failed tests "
@@ -158,7 +152,6 @@ Total time 4.0 seconds
         report.add_result("failed_test1", FAILED, time=3.0,
                           output_file_name=self.output_file_name)
         return report
-
 
     def _report_with_some_skipped_tests(self):
         " @returns A report with some skipped tests "
@@ -173,6 +166,7 @@ Total time 4.0 seconds
 
     def _new_report(self):
         return TestReport(self.printer)
+
 
 class StubPrinter:
     def __init__(self):

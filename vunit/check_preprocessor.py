@@ -2,10 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 from re import compile, MULTILINE
-        
+
+
 class CheckPreprocessor:
     def __init__(self):
         self._find_operators = compile(r'\?/=|\?<=|\?>=|\?<|\?>|\?=|/=|<=|>=|<|>|=', MULTILINE)
@@ -17,19 +18,19 @@ class CheckPreprocessor:
 
     def run(self, code, file_name):
         check_relation_pattern = compile(r'[^a-zA-Z0-9_](?P<call>check_relation)\s*(?P<parameters>\()', MULTILINE)
-        
+
         check_relation_calls = list(check_relation_pattern.finditer(code))
         check_relation_calls.reverse()
-         
+
         for c in check_relation_calls:
             relation, offset_to_point_before_closing_paranthesis = self._extract_relation(code, c)
             if relation:
                 auto_msg_parameter = ', auto_msg => %s' % relation.make_error_msg()
-                code = code[:c.end('parameters') + offset_to_point_before_closing_paranthesis] + \
-                            auto_msg_parameter + code[c.end('parameters') + offset_to_point_before_closing_paranthesis:]
+                code = (code[:c.end('parameters') + offset_to_point_before_closing_paranthesis] +
+                        auto_msg_parameter + code[c.end('parameters') + offset_to_point_before_closing_paranthesis:])
 
         return code
-    
+
     def _extract_relation(self, code, check):
         def end_of_parameter(token):
             return ((token.value == ',') and (token.level == 1)) or (token.level == 0)
@@ -43,26 +44,26 @@ class CheckPreprocessor:
                 # to be the expr parameter. This is a very reasonable assumption since
                 # the return types of normal relational operators are boolean, std_ulogic,
                 # or bit. The expr parameter is the only input of these types.
-                if not relation:  
+                if not relation:
                     if end_of_parameter(t):
                         relation = self._get_relation_from_parameter(parameter_tokens)
                         parameter_tokens = []
                         add_token = False
-                    
+
                 if t.level == 0:
                     break
             elif t.is_comment:
                 add_token = False
-                    
+
             if add_token:
                 parameter_tokens.append(t)
-             
+
             index += 1
-        
+
         if not relation:
-            raise SyntaxError('Failed to find relation in %s' % code[check.start('call') : check.end('parameters'
-                                                                                                     ) + index])
-                                                                                                             
+            raise SyntaxError('Failed to find relation in %s' %
+                              code[check.start('call'): check.end('parameters') + index])
+
         return relation, index - 1
 
     @staticmethod
@@ -73,9 +74,9 @@ class CheckPreprocessor:
                 if s[index] != "'":
                     break
                 n_quotes += 1
-                
+
             return (n_quotes % 2) == 0
-            
+
         code_section = Token.NORMAL
         level = 1
         index = 0
@@ -97,9 +98,9 @@ class CheckPreprocessor:
                     level += 1
                 elif c == ')':
                     level -= 1
-                    
+
                 next_code_section = code_section
-    
+
             elif code_section == Token.STRING:
                 if c == '"':
                     next_code_section = Token.NORMAL
@@ -112,15 +113,15 @@ class CheckPreprocessor:
             elif code_section == Token.BLOCK_COMMENT:
                 if s[index-1:index+1] == '*/':
                     next_code_section = Token.NORMAL
-            
+
             t.type = code_section
             t.level = level
             index += 1
-            
+
             yield t
-            
+
             code_section = next_code_section
-            
+
     def _get_relation_from_parameter(self, tokens):
         def find_top_level_match(matches, tokens, top_level=1):
             if matches:
@@ -156,35 +157,41 @@ class CheckPreprocessor:
                 right = expr[:o.end():-1].replace(')', '', top_level - 1).strip()[::-1]
 
             relation = Relation(left, o.group(), right)
-                
+
         return relation
-    
+
+
 class Token:
     NORMAL = 0
     STRING = 1
     CHARACTER_LITERAL = 2
     LINE_COMMENT = 3
     BLOCK_COMMENT = 4
-    
+
     def __init__(self, value):
         self.value = value
         self.type = None
         self.level = None
+
     @property
     def is_comment(self):
         return self.type in [self.LINE_COMMENT, self.BLOCK_COMMENT]
+
     @property
     def is_quote(self):
         return self.type in [self.CHARACTER_LITERAL, self.STRING]
-    
+
+
 class Relation:
     def __init__(self, left, op, right):
         self._left = left
         self._op = op
         self._right = right
+
     def make_error_msg(self):
-        return '"Relation %s %s %s failed! Left is " & to_string(%s) & ". Right is " & to_string(%s) & "."' % (self._left.replace('"', '""'),
-                                                                                                               self._op,
-                                                                                                               self._right.replace('"', '""'),
-                                                                                                               self._left,
-                                                                                                               self._right)
+        return ('"Relation %s %s %s failed! Left is " & to_string(%s) & ". Right is " & to_string(%s) & "."'
+                % (self._left.replace('"', '""'),
+                   self._op,
+                   self._right.replace('"', '""'),
+                   self._left,
+                   self._right))

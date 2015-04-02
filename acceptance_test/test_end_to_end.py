@@ -10,6 +10,7 @@ from vunit.ui import VUnit
 from common import has_modelsim, check_report
 from fnmatch import fnmatch
 
+
 @unittest.skipUnless(has_modelsim(), "Requires modelsim")
 class TestVunitEndToEnd(unittest.TestCase):
     def setUp(self):
@@ -107,9 +108,10 @@ class TestVunitEndToEnd(unittest.TestCase):
         except SystemExit:
             del ui
 
+
 def make_test_filter(patterns):
     def test_filter(name):
-        if patterns == None:
+        if patterns is None:
             return True
         return any(fnmatch(name, pattern) for pattern in patterns)
     return test_filter

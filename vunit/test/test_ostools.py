@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 from unittest import TestCase
 
@@ -13,6 +13,7 @@ from shutil import rmtree
 from os import makedirs
 from os.path import exists, dirname, join, abspath
 from time import time
+
 
 class TestOSTools(TestCase):
 
@@ -69,7 +70,6 @@ stderr.write("error\n")
         self.assertEqual(output, ["error"])
         self.assertEqual(process.output, "error\n")
 
-
     def test_output_is_parallel(self):
         python_script = self.make_file("run_timeout.py", r"""
 from time import sleep
@@ -83,4 +83,3 @@ sleep(1000)
         message = process._next()
         process.terminate()
         self.assertEqual(message, "message")
-

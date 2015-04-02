@@ -8,6 +8,7 @@ from subprocess import check_call
 from os.path import join, exists, abspath
 from os import makedirs
 
+
 def run_vivado(tcl_file_name, *args):
     """
     Run tcl script in vivado in batch mode.
@@ -18,6 +19,7 @@ def run_vivado(tcl_file_name, *args):
     print(cmd)
     check_call(cmd, shell=True)
 
+
 def create_library(library_name, library_path, cwd):
     """
     Create library, modelsim specific
@@ -26,12 +28,14 @@ def create_library(library_name, library_path, cwd):
     check_call(['vlib', '-unix', library_path])
     check_call(['vmap', library_name, abspath(library_path)], cwd=cwd)
 
+
 def compile_file(file_name, library_name, cwd):
     """
     Create file, modelsim specific
     """
     print("Compiling %s" % file_name)
     check_call(['vcom', '-quiet', '-work', library_name, abspath(file_name)], cwd=cwd)
+
 
 def compile_unisim(library_path):
     """
@@ -51,11 +55,13 @@ def compile_unisim(library_path):
                 continue
             compile_file(file_name, "unisim", library_path)
 
+
 def extract_compile_order(root, project_file):
     """
     Extract compile order of xci ip within vivado project file
     """
     return compile_order
+
 
 def compile_vivado_ip(root, project_file, unisim_library_path):
     """
@@ -71,7 +77,6 @@ def compile_vivado_ip(root, project_file, unisim_library_path):
         run_vivado(join(root, "tcl", "extract_compile_order.tcl"), project_file, compile_order_file)
         with open(compile_order_file, "r") as ifile:
             return [line.strip().split(",") for line in ifile.readlines()]
-
 
     if not exists(compiled_libraries_file):
         print("Compiling vivado project ip into %s ..." % abspath(compiled_ip_path))
@@ -105,6 +110,7 @@ def compile_vivado_ip(root, project_file, unisim_library_path):
         lines = ifile.read().splitlines()
         return [line.split(",") for line in lines]
 
+
 def add_vivado_ip(vu, root, project_file):
     """
     Add vivado (and compile if necessary) vivado ip to vunit project.
@@ -123,7 +129,7 @@ def add_vivado_ip(vu, root, project_file):
         print("Compiling unisim library into %s ..." % abspath(unisim_library_path))
         compile_unisim(unisim_library_path)
     else:
-        print("unisim library already exists in %s, skipping"  % abspath(unisim_library_path))
+        print("unisim library already exists in %s, skipping" % abspath(unisim_library_path))
 
     libraries = compile_vivado_ip(root, project_file, unisim_library_path)
     for library_name, library_path in libraries:

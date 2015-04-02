@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 import unittest
 from os.path import abspath, join, dirname, basename
@@ -10,6 +10,7 @@ from glob import glob
 from vunit.ui import VUnit
 from common import has_modelsim
 from vunit.check_preprocessor import CheckPreprocessor
+
 
 @unittest.skipUnless(has_modelsim(), 'Requires modelsim')
 class TestCheck(unittest.TestCase):
@@ -21,9 +22,9 @@ class TestCheck(unittest.TestCase):
                    output_path=output_path,
                    vhdl_standard=vhdl_standard,
                    compile_builtins=False)
-            
+
         ui.add_builtins('vunit_lib', mock_log=True)
-        ui.add_library(r'lib') 
+        ui.add_library(r'lib')
         ui.add_source_files(join(vhdl_path, "test_support.vhd"), 'lib')
         if vhdl_standard in ('2002', '2008'):
             ui.add_source_files(join(vhdl_path, "test_count.vhd"), 'lib')
@@ -43,7 +44,7 @@ class TestCheck(unittest.TestCase):
 
         try:
             ui.main()
-        except SystemExit as e:            
+        except SystemExit as e:
             self.assertEqual(e.code, 0)
 
     def test_check_vhdl_93(self):
@@ -54,4 +55,3 @@ class TestCheck(unittest.TestCase):
 
     def test_check_vhdl_2008(self):
         self.run_sim('2008')
-

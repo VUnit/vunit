@@ -17,6 +17,7 @@ from vunit.vhdl_parser import VHDLDesignFile
 import vunit.ostools as ostools
 import traceback
 
+
 class Library:
     def __init__(self, name, directory, is_external=False):
         self.name = name
@@ -66,6 +67,7 @@ class Library:
     def __hash__(self):
         return hash(self.name)
 
+
 class SourceFile:
     def __init__(self, name, library, file_type='vhdl'):
         self.name = name
@@ -95,27 +97,30 @@ class SourceFile:
                 logger.debug('Adding secondary design unit (package body) for package %s', design_unit.primary_design_unit)
             else:
                 logger.debug('Adding secondary design unit (%s) %s', design_unit.unit_type, design_unit.name)
-        
+
         if len(self.depending_components) != 0:
             logger.debug("The file '%s' has the following components:", self.name)
             for component in self.depending_components:
                 logger.debug(component)
-        else: logger.debug("The file '%s' has no components", self.name)
+        else:
+            logger.debug("The file '%s' has no components", self.name)
 
     def _find_dependencies(self, design_file):
         # Find dependencies introduced by the use clause
         result = []
         for library_name, uses in design_file.libraries.items():
-            if library_name == "work": # Work means same library as current file
+            if library_name == "work":
+                # Work means same library as current file
                 library_name = self.library.name
             for use in uses:
                 result.append((library_name, use[0]))
 
         for library_name, entity in design_file.instantiations:
-            if library_name == "work": # Work means same library as current file
+            if library_name == "work":
+                # Work means same library as current file
                 library_name = self.library.name
             result.append((library_name, entity))
-                        
+
         return result
 
     def _find_design_units(self, design_file):
@@ -150,6 +155,7 @@ class SourceFile:
     def md5(self):
         return self._md5
 
+
 class Entity:
     def __init__(self, name, source_file, generic_names=None):
         self.name = name
@@ -161,6 +167,7 @@ class Entity:
         self.source_file = source_file
         self.unit_type = 'entity'
         self.is_primary = True
+
 
 class DesignUnit:
     def __init__(self, name, source_file, unit_type, is_primary=True, primary_design_unit=None):
@@ -240,10 +247,10 @@ class Project:
                 yield primary_unit.source_file
 
     def _find_component_design_unit_dependencies(self, source_file):
-        
+
         for unit_name in source_file.depending_components:
             found_component_entity = False
-            
+
             for library in self.get_libraries():
                 try:
                     primary_unit = library.primary_design_units[unit_name]
@@ -252,10 +259,9 @@ class Project:
                 else:
                     found_component_entity = True
                     yield primary_unit.source_file
-            
+
             if not found_component_entity:
                 logger.debug("failed to find a matching entity for component '%s' ", unit_name)
-            
 
     def _create_dependency_graph(self):
         def add_dependency(start, end):
@@ -278,7 +284,7 @@ class Project:
 
         add_dependencies(self._find_other_design_unit_dependencies)
         add_dependencies(self._find_primary_secondary_design_unit_dependencies)
-        
+
         if self._depend_on_components:
             add_dependencies(self._find_component_design_unit_dependencies)
 
@@ -319,7 +325,7 @@ class Project:
 
         if not ostools.file_exists(md5_file_name):
             logger.debug("%s has no vunit_hash file at %s and must be recompiled",
-                                  source_file.name, md5_file_name)
+                         source_file.name, md5_file_name)
             return True
 
         old_md5 = ostools.read_file(md5_file_name)

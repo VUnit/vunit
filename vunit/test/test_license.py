@@ -11,6 +11,7 @@ from re import compile
 from datetime import datetime
 from subprocess import Popen, PIPE, STDOUT
 
+
 class TestLicense(unittest.TestCase):
     _re_license_notice = compile(r"""(?P<comment_start>#|--|//) This Source Code Form is subject to the terms of the Mozilla Public
 (?P=comment_start) License, v\. 2\.0\. If a copy of the MPL was not distributed with this file,
@@ -39,8 +40,8 @@ class TestLicense(unittest.TestCase):
             self._check_license(file_name)
 
     def _check_license(self, file_name):
-        proc = Popen(['git', 'log',  '--follow', '--date=short', file_name], \
-              bufsize=0, stdout=PIPE, stdin=PIPE, stderr=STDOUT, universal_newlines=True)
+        proc = Popen(['git', 'log',  '--follow', '--date=short', file_name],
+                     bufsize=0, stdout=PIPE, stdin=PIPE, stderr=STDOUT, universal_newlines=True)
         out, _ = proc.communicate()
         first_year = None
         last_year = None

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 from __future__ import print_function
 
@@ -22,22 +22,23 @@ import os
 import logging
 logger = logging.getLogger(__name__)
 
+
 class Process:
     """
     A simple process interface
     """
-    
+
     class NonZeroExitCode(Exception):
         pass
 
     def __init__(self, args, cwd=None):
         logger.debug("Starting process: '%s'" % (" ".join(args)))
         self._process = subprocess.Popen(
-            args, 
+            args,
             bufsize=0,
             cwd=cwd,
-            stdout=subprocess.PIPE, 
-            stdin=subprocess.PIPE, 
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             universal_newlines=True)
 
@@ -46,24 +47,23 @@ class Process:
         self._reader.start()
         self.output = ""
 
-
     def write(self, *args, **kwargs):
         " Write to stdin "
         if not self._process.stdin.closed:
             self._process.stdin.write(*args, **kwargs)
-        
+
     def _next(self):
         """
         @returns an interator of process output
         """
 
         if not self._reader.eof():
-            # Show what we received from standard output. 
+            # Show what we received from standard output.
             msg = self._queue.get()
 
             if msg is not None:
                 return msg
-                
+
         retcode = self._process.wait()
         return retcode
 
@@ -72,14 +72,14 @@ class Process:
         Consume the output of the process
         @param callback Called for each line of output
         @raises Process.NonZeroExitCode when the process does not exit with code zero
-        """        
+        """
 
         try:
             while True:
                 line = self._next()
                 if type(line) == int:
                     if line != 0:
-                        raise Process.NonZeroExitCode;
+                        raise Process.NonZeroExitCode
                     else:
                         break
                 else:
@@ -106,33 +106,36 @@ class Process:
     def __del__(self):
         self.terminate()
 
+
 class AsynchronousFileReader(threading.Thread):
     '''
     Helper class to implement asynchronous reading of a file
     in a separate thread. Pushes read lines on a queue to
     be consumed in another thread.
     '''
- 
+
     def __init__(self, fd, queue):
         threading.Thread.__init__(self)
         self._fd = fd
         self._queue = queue
- 
+
     def run(self):
         '''The body of the tread: read lines and put them on the queue.'''
         for line in iter(self._fd.readline, ''):
             self._queue.put(line[:-1])
         self._queue.put(None)
- 
+
     def eof(self):
         '''Check whether there is no more content to expect.'''
-        return not self.is_alive() and self._queue.empty()    
+        return not self.is_alive() and self._queue.empty()
+
 
 def read_file(file_name):
     """ To stub during testing """
     with open(file_name, "r") as file_to_read:
         data = file_to_read.read()
     return data
+
 
 def write_file(file_name, contents):
     """ To stub during testing """
@@ -147,13 +150,16 @@ def write_file(file_name, contents):
     with open(file_name, "w") as file_to_write:
         file_to_write.write(contents)
 
+
 def file_exists(file_name):
     """ To stub during testing """
     return exists(file_name)
 
+
 def get_modification_time(file_name):
     """ To stub during testing """
     return getmtime(file_name)
+
 
 def get_time():
     """ To stub during testing """

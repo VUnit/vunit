@@ -2,12 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 from os.path import join
 
 import vunit.ostools as ostools
 from vunit.test_report import (PASSED, SKIPPED, FAILED)
+
 
 class IndependentSimTestCase:
     def __init__(self, name, test_case, test_bench, has_runner_cfg=False, post_check_function=None):
@@ -26,9 +27,9 @@ class IndependentSimTestCase:
 
         if self._has_runner_cfg:
             runner_cfg = {
-                "enabled_test_cases" : self._test_case,
-                "output path" : output_path.replace("\\", "/") + "/",
-                "active python runner" : True,
+                "enabled_test_cases": self._test_case,
+                "output path": output_path.replace("\\", "/") + "/",
+                "active python runner": True,
             }
 
             generics["runner_cfg"] = encode_dict(runner_cfg)
@@ -73,13 +74,13 @@ class SameSimTestSuite:
 
     def run(self, output_path):
         runner_cfg = {
-            "enabled_test_cases" : ",".join(self._test_cases),
-            "output path" : output_path.replace("\\", "/") + "/",
-            "active python runner" : True,
+            "enabled_test_cases": ",".join(self._test_cases),
+            "output path": output_path.replace("\\", "/") + "/",
+            "active python runner": True,
         }
 
         generics = {
-            "runner_cfg" : encode_dict(runner_cfg),
+            "runner_cfg": encode_dict(runner_cfg),
         }
 
         passed = self._test_bench.run(output_path, generics)
@@ -131,6 +132,7 @@ class SameSimTestSuite:
             if not test_name in test_starts:
                 retval[self._full_name(test_name)] = SKIPPED
         return retval
+
 
 def encode_dict(dictionary):
     """

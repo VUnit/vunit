@@ -2,14 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
-                    
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+
 import unittest
 from os.path import join, dirname, exists
 from shutil import rmtree
 from os import makedirs
 
 from vunit.test_configuration import TestConfiguration, Configuration
+
 
 class TestTestConfiguration(unittest.TestCase):
 
@@ -25,7 +26,7 @@ class TestTestConfiguration(unittest.TestCase):
         entity = EntityStub()
         entity.name = "tb_entity"
         entity.library_name = "lib"
-        entity.architecture_names = {"arch" : out("arch.vhd")}
+        entity.architecture_names = {"arch": out("arch.vhd")}
         entity.generic_names = []
 
         self.assertEqual(self.cfg.get_configurations(entity, "arch"),
@@ -35,7 +36,7 @@ class TestTestConfiguration(unittest.TestCase):
         entity = EntityStub()
         entity.name = "tb_entity"
         entity.library_name = "lib"
-        entity.architecture_names = {"arch" : out("arch.vhd")}
+        entity.architecture_names = {"arch": out("arch.vhd")}
         entity.generic_names = ["global_generic"]
 
         self.assertEqual(self.cfg.get_configurations(entity, "arch"),
@@ -43,22 +44,22 @@ class TestTestConfiguration(unittest.TestCase):
 
         self.cfg.set_generic("global_generic", False, scope="")
         self.assertEqual(self.cfg.get_configurations(entity, "arch"),
-                         [Configuration("lib.tb_entity", generics={"global_generic" : False})])
+                         [Configuration("lib.tb_entity", generics={"global_generic": False})])
 
         self.cfg.set_generic("global_generic", True, scope="lib")
         self.cfg.set_generic("generic_not_present", True, scope="lib")
         self.assertEqual(self.cfg.get_configurations(entity, "arch"),
-                         [Configuration("lib.tb_entity", generics={"global_generic" : True})])
+                         [Configuration("lib.tb_entity", generics={"global_generic": True})])
 
         self.cfg.set_generic("global_generic", None, scope="lib.tb_entity")
         self.assertEqual(self.cfg.get_configurations(entity, "arch"),
-                         [Configuration("lib.tb_entity", generics={"global_generic" : None})])
+                         [Configuration("lib.tb_entity", generics={"global_generic": None})])
 
     def test_set_pli(self):
         entity = EntityStub()
         entity.name = "tb_entity"
         entity.library_name = "lib"
-        entity.architecture_names = {"arch" : out("arch.vhd")}
+        entity.architecture_names = {"arch": out("arch.vhd")}
         entity.generic_names = []
 
         self.assertEqual(self.cfg.get_configurations(entity, "arch"),
@@ -81,7 +82,7 @@ class TestTestConfiguration(unittest.TestCase):
         entity = EntityStub()
         entity.name = "tb_entity"
         entity.library_name = "lib"
-        entity.architecture_names = {"arch" : out("arch.vhd")}
+        entity.architecture_names = {"arch": out("arch.vhd")}
         entity.generic_names = ["value",
                                 "global_value"]
 
@@ -96,16 +97,18 @@ class TestTestConfiguration(unittest.TestCase):
 
         self.assertEqual(self.cfg.get_configurations(entity, "arch"),
                          [Configuration("lib.tb_entity.value=1",
-                                        generics={"value" : 1, "global_value" : "local value"}),
+                                        generics={"value": 1, "global_value": "local value"}),
                           Configuration("lib.tb_entity.value=2",
-                                        generics={"value" : 2, "global_value" : "local value"})])
+                                        generics={"value": 2, "global_value": "local value"})])
 
     def write_file(self, name, contents):
         with open(name, "w") as fwrite:
             fwrite.write(contents)
 
+
 def out(*args):
     return join(dirname(__file__), "test_configuration_out", *args)
+
 
 class EntityStub:
     pass
