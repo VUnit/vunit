@@ -268,11 +268,16 @@ def dual_format(base_type, got_or_expected):
         expected_or_got = 'got'
 
     if base_type in ['unsigned', 'signed', 'std_logic_vector']:
-        return 'to_nibble_string(%s) & " (" & ' % got_or_expected + "to_integer_string(%s) & " % got_or_expected + '")"'
+        return ('to_nibble_string(%s) & " (" & ' % got_or_expected +
+                "to_integer_string(%s) & " % got_or_expected + '")"')
     elif base_type == 'integer':
-        return 'to_string(%s) & " (" & ' % got_or_expected + "to_nibble_string(to_sufficient_signed(%s, %s'length)) & " % (got_or_expected, expected_or_got) + '")"'
+        return ('to_string(%s) & " (" & ' % got_or_expected +
+                "to_nibble_string(to_sufficient_signed(%s, %s'length)) & " % (got_or_expected, expected_or_got) +
+                '")"')
     else:
-        return 'to_string(%s) & " (" & ' % got_or_expected + "to_nibble_string(to_sufficient_unsigned(%s, %s'length)) & " % (got_or_expected, expected_or_got) + '")"'
+        return ('to_string(%s) & " (" & ' % got_or_expected +
+                "to_nibble_string(to_sufficient_unsigned(%s, %s'length)) & " % (got_or_expected, expected_or_got) +
+                '")"')
 
 impl = ''
 for c in combinations:
@@ -287,7 +292,8 @@ for c in combinations:
 
 print("Implementation:\n\n" + impl)
 
-test = """      if run("Test should handle comparsion of vectors longer than 32 bits") then
+test = """\
+      if run("Test should handle comparsion of vectors longer than 32 bits") then
         get_checker_stat(stat);
         check_equal(unsigned'(X"A5A5A5A5A"), unsigned'(X"A5A5A5A5A"));
         check_equal(std_logic_vector'(X"A5A5A5A5A"), unsigned'(X"A5A5A5A5A"));
@@ -296,30 +302,49 @@ test = """      if run("Test should handle comparsion of vectors longer than 32 
         verify_passed_checks(stat, 4);
 
         check_equal(unsigned'(X"A5A5A5A5A"), unsigned'(X"B5A5A5A5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).");
+        verify_log_call(inc_count, "Equality check failed! \
+Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). \
+Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).");
+
         check_equal(std_logic_vector'(X"A5A5A5A5A"), unsigned'(X"B5A5A5A5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).");
+        verify_log_call(inc_count, "Equality check failed! \
+Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). \
+Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).");
 
         check_equal(unsigned'(X"A5A5A5A5A"), std_logic_vector'(X"B5A5A5A5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).");
+        verify_log_call(inc_count, "Equality check failed! \
+Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). \
+Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).");
+
         check_equal(std_logic_vector'(X"A5A5A5A5A"), std_logic_vector'(X"B5A5A5A5A"));
-        verify_log_call(inc_count, "Equality check failed! Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).");
-      elsif run("Test print full integer vector representation when check fails on comparison with vector too short to contain the integer") then
+        verify_log_call(inc_count, "Equality check failed! \
+Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). \
+Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).");
+
+      elsif run("Test print full integer vector when fail on comparison with to short vector") then
+
         check_equal(unsigned'(X"A5"), natural'(256));
         verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 256 (1_0000_0000).");
+
         check_equal(natural'(256), unsigned'(X"A5"));
         verify_log_call(inc_count, "Equality check failed! Got 256 (1_0000_0000). Expected 1010_0101 (165).");
+
         check_equal(unsigned'(X"A5"), natural'(2147483647));
-        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 2147483647 (111_1111_1111_1111_1111_1111_1111_1111).");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). \
+Expected 2147483647 (111_1111_1111_1111_1111_1111_1111_1111).");
 
         check_equal(signed'(X"A5"), integer'(-256));
         verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (-91). Expected -256 (1_0000_0000).");
+
         check_equal(integer'(-256), signed'(X"A5"));
         verify_log_call(inc_count, "Equality check failed! Got -256 (1_0000_0000). Expected 1010_0101 (-91).");
+
         check_equal(signed'(X"05"), integer'(256));
         verify_log_call(inc_count, "Equality check failed! Got 0000_0101 (5). Expected 256 (01_0000_0000).");
+
         check_equal(signed'(X"A5"), integer'(-2147483648));
-        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (-91). Expected -2147483648 (1000_0000_0000_0000_0000_0000_0000_0000).");
+        verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (-91). \
+Expected -2147483648 (1000_0000_0000_0000_0000_0000_0000_0000).");
 """
 natural_equal_natural = [('natural', 'natural',
                           "natural'(165)", "natural'(165)",
@@ -330,6 +355,11 @@ natural_equal_natural = [('natural', 'natural',
 
 for c in combinations + natural_equal_natural:
     t = Template(test_template)
-    test += t.substitute(left_type=c[0], right_type=c[1], left_pass=c[2], right_pass=c[3], left_min=c[4], right_min=c[5], left_max=c[6], right_max=c[7], right_fail=c[8], pass_str=c[9], fail_str=c[10])
+    test += t.substitute(left_type=c[0], right_type=c[1],
+                         left_pass=c[2], right_pass=c[3],
+                         left_min=c[4], right_min=c[5],
+                         left_max=c[6], right_max=c[7],
+                         right_fail=c[8],
+                         pass_str=c[9], fail_str=c[10])
 
 print("Test:\n\n" + test)

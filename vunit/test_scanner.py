@@ -58,8 +58,10 @@ class TestScanner:
                 if "tb_path" in entity.generic_names:
                     new_value = '%s/' % dirname(file_name).replace("\\", "/")
                     if "tb_path" in generics:
-                        logger.warning("The 'tb_path' generic from a configuration of %s of was overwritten, old value was '%s', new value is '%s'",
-                                       dotjoin(entity.library_name, entity.name, config.name), generics["tb_path"], new_value)
+                        logger.warning(("The 'tb_path' generic from a configuration of %s of was overwritten, " %
+                                        dotjoin(entity.library_name, entity.name, config.name)) +
+                                       ("old value was '%s', new value is '%s'" %
+                                        (generics["tb_path"], new_value)))
 
                     generics["tb_path"] = new_value
 

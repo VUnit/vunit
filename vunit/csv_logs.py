@@ -11,7 +11,8 @@ from os.path import abspath
 
 class CsvLogs:
     def __init__(self, pattern='', field_names=None):
-        self._field_names = ['#', 'Time', 'Level', 'File', 'Line', 'Source', 'Message'] if not field_names else field_names
+        default_field_names = ['#', 'Time', 'Level', 'File', 'Line', 'Source', 'Message']
+        self._field_names = default_field_names if field_names is None else field_names
         self._entries = []
         self.add(pattern)
 

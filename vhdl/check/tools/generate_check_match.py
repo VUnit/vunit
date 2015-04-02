@@ -205,11 +205,16 @@ def dual_format(base_type, got_or_expected):
         expected_or_got = 'got'
 
     if base_type in ['unsigned', 'signed', 'std_logic_vector']:
-        return 'to_nibble_string(%s) & " (" & ' % got_or_expected + "to_integer_string(%s) & " % got_or_expected + '")"'
+        return ('to_nibble_string(%s) & " (" & ' % got_or_expected +
+                "to_integer_string(%s) & " % got_or_expected + '")"')
     elif base_type == 'integer':
-        return 'to_string(%s) & " (" & ' % got_or_expected + "to_nibble_string(to_sufficient_signed(%s, %s'length)) & " % (got_or_expected, expected_or_got) + '")"'
+        return ('to_string(%s) & " (" & ' % got_or_expected +
+                "to_nibble_string(to_sufficient_signed(%s, %s'length)) & " % (got_or_expected, expected_or_got) +
+                '")"')
     else:
-        return 'to_string(%s) & " (" & ' % got_or_expected + "to_nibble_string(to_sufficient_unsigned(%s, %s'length)) & " % (got_or_expected, expected_or_got) + '")"'
+        return ('to_string(%s) & " (" & ' % got_or_expected +
+                "to_nibble_string(to_sufficient_unsigned(%s, %s'length)) & " % (got_or_expected, expected_or_got) +
+                '")"')
 
 impl = ''
 for c in combinations:
@@ -228,6 +233,11 @@ test = ''
 
 for c in combinations:
     t = Template(test_template)
-    test += t.substitute(left_type=c[0], right_type=c[1], left_pass=c[2], right_pass=c[3], left_pass_dc=c[4], right_pass_dc=c[5], right_fail=c[6], right_fail_dc=c[7], pass_str=c[8], fail_str=c[9], fail_dc_str=c[10])
+    test += t.substitute(left_type=c[0], right_type=c[1],
+                         left_pass=c[2], right_pass=c[3],
+                         left_pass_dc=c[4], right_pass_dc=c[5],
+                         right_fail=c[6], right_fail_dc=c[7],
+                         pass_str=c[8], fail_str=c[9],
+                         fail_dc_str=c[10])
 
 print("Test:\n\n" + test)

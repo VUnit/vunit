@@ -72,5 +72,7 @@ class LocationPreprocessor:
                         line_num_association +
                         file_name_association + code[m.start('args') + closing_paranthesis_start:])
             else:
-                code = code[:m.end('subprogram')] + '(' + line_num_association[2:] + file_name_association + ')' + code[m.end('subprogram'):]
+                code = (code[:m.end('subprogram')] +
+                        '(' + line_num_association[2:] + file_name_association + ')' +
+                        code[m.end('subprogram'):])
         return code

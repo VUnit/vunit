@@ -15,5 +15,5 @@ class TestPep8(unittest.TestCase):
         check_call(["pep8",
                     "--show-source",
                     "--show-pep8",
-                    "--max-line-length=220",  # @TODO remove this
+                    "--max-line-length=120",
                     repo_root])

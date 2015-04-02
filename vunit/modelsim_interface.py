@@ -138,7 +138,8 @@ class ModelSimInterface:
             proc.consume_output(callback=None)
 
     def _create_load_function(self, library_name, entity_name, architecture_name, generics, pli, output_path):
-        set_generic_str = "".join(('    set vunit_generic_%s {%s}\n' % (name, value) for name, value in generics.items()))
+        set_generic_str = "".join(('    set vunit_generic_%s {%s}\n' % (name, value)
+                                   for name, value in generics.items()))
         set_generic_name_str = " ".join(('-g%s="${vunit_generic_%s}"' % (name, name) for name in generics))
         pli_str = " ".join("-pli {%s}" % fix_path(name) for name in pli)
         if architecture_name is None:
@@ -149,7 +150,7 @@ class ModelSimInterface:
         tcl = """
 proc vunit_load {{}} {{
     {set_generic_str}
-    vsim -wlf "{wlf_file_name}" -quiet -t ps {pli_str} {set_generic_name_str} {library_name}.{entity_name}{architecture_suffix}
+    vsim -wlf "{wlf_file_name}" -quiet -t ps {pli_str} {set_generic_name_str} {library_name}.{entity_name}{arch_suffix}
     set no_finished_signal [catch {{examine -internal {{/vunit_finished}}}}]
     set no_test_runner_exit [catch {{examine -internal {{/run_base_pkg/runner.exit_without_errors}}}}]
 
@@ -167,7 +168,7 @@ proc vunit_load {{}} {{
            set_generic_name_str=set_generic_name_str,
            library_name=library_name,
            entity_name=entity_name,
-           architecture_suffix=architecture_suffix,
+           arch_suffix=architecture_suffix,
            wlf_file_name=fix_path(join(output_path, "vsim.wlf")))
 
         return tcl
@@ -216,7 +217,8 @@ proc vunit_run {} {
 }
 """ % (1 if fail_on_warning else 2)
 
-    def _create_common_script(self, library_name, entity_name, architecture_name, generics, pli, fail_on_warning, output_path):
+    def _create_common_script(self, library_name, entity_name, architecture_name,
+                              generics, pli, fail_on_warning, output_path):
         """
         Create tcl script with functions common to interactive and batch modes
         """
@@ -298,7 +300,8 @@ proc vunit_help {} {
             self._create_vsim_process()
             return False
 
-    def simulate(self, output_path, library_name, entity_name, architecture_name=None, generics=None, pli=None, load_only=None, fail_on_warning=False):
+    def simulate(self, output_path, library_name, entity_name, architecture_name=None, generics=None, pli=None,
+                 load_only=None, fail_on_warning=False):
         generics = {} if generics is None else generics
         pli = [] if pli is None else pli
         msim_output_path = abspath(join(output_path, "msim"))

@@ -47,7 +47,8 @@ class VHDLDesignFile:
         return [(library_name, unit_name) for library_name, unit_name in matches]
 
     _component_re = re.compile(
-        '[a-zA-Z]\w*\s*\:\s*(?:component)?\s*(?:(?:[a-zA-Z]\w*)\.)?([a-zA-Z]\w*)\s*(?:generic|port) map\s*\([\s\w\=\>\,\.\)\(\+\-\'\"]*\);',
+        "[a-zA-Z]\w*\s*\:\s*(?:component)?\s*(?:(?:[a-zA-Z]\w*)\.)?([a-zA-Z]\w*)\s*"
+        "(?:generic|port) map\s*\([\s\w\=\>\,\.\)\(\+\-\'\"]*\);",
         re.IGNORECASE)
 
     @classmethod

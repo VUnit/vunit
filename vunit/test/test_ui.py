@@ -24,7 +24,8 @@ class VUnitfier:
         self._reportPattern = compile(r'^(?P<indent>\s*)report\s*(?P<note>"[^"]*")\s*;', MULTILINE)
 
     def run(self, code, file_name):
-        return self._reportPattern.sub(r'\g<indent>log(\g<note>); -- VUnitfier preprocessor: Report turned off, keeping original code.', code)
+        return self._reportPattern.sub(
+            r'\g<indent>log(\g<note>); -- VUnitfier preprocessor: Report turned off, keeping original code.', code)
 
 
 class ParentalControl:
@@ -111,7 +112,9 @@ end architecture;
         f = self._create_temp_files(1)
         ui.add_source_files(f[0].name, 'lib')
 
-        pp_source = Template("""-- check_relation(a = b, line_num => 1, file_name => "$file", auto_msg => "Relation a = b failed! Left is " & to_string(a) & ". Right is " & to_string(b) & ".");
+        pp_source = Template("""\
+-- check_relation(a = b, line_num => 1, file_name => "$file", \
+auto_msg => "Relation a = b failed! Left is " & to_string(a) & ". Right is " & to_string(b) & ".");
 
 library vunit_lib;
 context vunit_lib.vunit_context;
@@ -122,7 +125,8 @@ end entity;
 architecture arch of $entity is
 begin
     log("Hello World", line_num => 11, file_name => "$file");
-    check_relation(1 /= 2, line_num => 12, file_name => "$file", auto_msg => "Relation 1 /= 2 failed! Left is " & to_string(1) & ". Right is " & to_string(2) & ".");
+    check_relation(1 /= 2, line_num => 12, file_name => "$file", \
+auto_msg => "Relation 1 /= 2 failed! Left is " & to_string(1) & ". Right is " & to_string(2) & ".");
     report "Here I am!";
 end architecture;
 """)
@@ -158,6 +162,9 @@ end architecture;
 """)
         self.assertFalse(exists(join(ui._preprocessed_path, 'lib', basename(f[0].name))))
         with open(join(ui._preprocessed_path, 'lib', basename(f[1].name))) as h:
-            self.assertEqual(h.read(), pp_source.substitute(entity='foo1', report='log("Here I am!"); -- VUnitfier preprocessor: Report turned off, keeping original code.'))
+            expectd = pp_source.substitute(
+                entity='foo1',
+                report='log("Here I am!"); -- VUnitfier preprocessor: Report turned off, keeping original code.')
+            self.assertEqual(h.read(), expectd)
 
         self._delete_temp_files(f)

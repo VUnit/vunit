@@ -94,7 +94,8 @@ class SourceFile:
             if design_unit.is_primary:
                 logger.debug('Adding primary design unit (%s) %s', design_unit.unit_type, design_unit.name)
             elif design_unit.unit_type == 'package body':
-                logger.debug('Adding secondary design unit (package body) for package %s', design_unit.primary_design_unit)
+                logger.debug('Adding secondary design unit (package body) for package %s',
+                             design_unit.primary_design_unit)
             else:
                 logger.debug('Adding secondary design unit (%s) %s', design_unit.unit_type, design_unit.name)
 
@@ -139,7 +140,8 @@ class SourceFile:
             result.append(DesignUnit(architecture.identifier, self, 'architecture', False, architecture.entity))
 
         for body in design_file.package_bodies:
-            result.append(DesignUnit('package body for ' + body.identifier, self, 'package body', False, body.identifier))
+            result.append(DesignUnit('package body for ' + body.identifier,
+                                     self, 'package body', False, body.identifier))
 
         return result
 
@@ -189,7 +191,8 @@ class Project:
 
     def _validate_library_name(self, library_name):
         if library_name == "work":
-            logger.error("Cannot add library named work. work is a reference to the current library. http://www.sigasi.com/content/work-not-vhdl-library")
+            logger.error("Cannot add library named work. work is a reference to the current library. "
+                         "http://www.sigasi.com/content/work-not-vhdl-library")
             raise RuntimeError("Illegal library name 'work'")
 
     def add_library(self, logical_name, directory, allow_replacement=False, is_external=False):
