@@ -245,16 +245,16 @@ class VHDLArchitecture(object):
             entity_id = arch.group('entity_id')
             yield VHDLArchitecture(identifier, entity_id)
 
-
 class VHDLPackage(object):
     """
     Representation of a VHDL package
     """
-    def __init__(self, identifier, constant_declarations, enumeration_types, record_types):
+    def __init__(self, identifier, constant_declarations, enumeration_types, record_types, array_types):
         self.identifier = identifier
         self.constant_declarations = constant_declarations
         self.enumeration_types = enumeration_types
         self.record_types = record_types
+        self.array_types = array_types
 
     _package_start_re = re.compile(r"""
         (^|\A)                # Beginning of line or start of string
@@ -297,8 +297,9 @@ class VHDLPackage(object):
         constant_declarations = cls._find_constant_declarations(code)
         enumeration_types = [e for e in VHDLEnumerationType.find(code)]
         record_types = [r for r in VHDLRecordType.find(code)]
+        array_types = [a for a in VHDLArrayType.find(code)]
 
-        return cls(identifier, constant_declarations, enumeration_types, record_types)
+        return cls(identifier, constant_declarations, enumeration_types, record_types, array_types)
 
     @classmethod
     def _find_constant_declarations(cls, code):
@@ -840,6 +841,123 @@ class VHDLRecordType(object):
                     subtype_indication = VHDLSubtypeIndication.parse(identifier_list_and_subtype_indication[1].strip())
                     parsed_elements.append(VHDLElementDeclaration(identifier_list, subtype_indication))
             yield VHDLRecordType(identifier, parsed_elements)
+
+
+class VHDLArrayType(object):
+    def __init__(self, identifier, subtype_indication,
+                 range_type1=None, range_type2=None,
+                 range_left1=None, range_right1=None, range_left2=None, range_right2=None,
+                 range_attribute1=None, range_attribute2=None):
+        self.identifier = identifier
+        self.subtype_indication = subtype_indication
+        self.range_type1 = range_type1
+        self.range_type2 = range_type2
+        self.range_left1 = range_left1
+        self.range_right1 = range_right1
+        self.range_left2 = range_left2
+        self.range_right2 = range_right2
+        self.range_attribute1 = range_attribute1
+        self.range_attribute2 = range_attribute2
+
+    _constrained_ranges_re = re.compile(r"""
+        \s*(?P<range_left1>.+?)
+        \s+(to|downto)\s+
+        (?P<range_right1>.+?)\s*
+        (,
+        \s*(?P<range_left2>.+?)
+        \s+(to|downto)\s+
+        (?P<range_right2>.+?)\s*)?""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
+
+    _range_attribute_ranges_re = re.compile(r"""
+        \s*(?P<range_attribute>[a-zA-Z][\w]*'range)\s*""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
+
+    _unconstrained_ranges_re = re.compile(r"""
+        \s*(?P<range_type1>[a-zA-Z][\w]*)
+        \s+range\s+<>\s*
+        (,
+        \s*(?P<range_type2>[a-zA-Z][\w]*)
+        \s+range\s+<>\s*)?""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
+
+    _constrained_range_re = re.compile(r"""
+        \s*(?P<range_left>.+?)
+        \s+(to|downto)\s+
+        (?P<range_right>.+?)\s*""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
+
+    _range_attribute_range_re = re.compile(r"""
+        \s*(?P<range_attribute>[a-zA-Z][\w]*'range)\s*""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
+
+    _unconstrained_range_re = re.compile(r"""
+        \s*(?P<range_type>[a-zA-Z][\w]*)
+        \s+range\s+<>\s*""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
+
+    _array_declaration_re = re.compile(r"""
+        (^|\A)
+        \s*
+        type
+        \s+
+        (?P<id>[a-zA-Z][\w]*)
+        \s+
+        is
+        \s+
+        array
+        \s+\(
+        (?P<ranges>.*?)
+        \)\s+of\s+
+        (?P<subtype_indication>.*?)\s*;""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
+
+    @classmethod
+    def find(cls, code):
+        def split_ranges(ranges):
+            level = 0
+            index = 0
+            if ',' in ranges:
+                for c in ranges:
+                    if c == ',' and level == 0:
+                        return ranges[:index], ranges[index+1:]
+                        break
+                    elif c == '(':
+                        level += 1
+                    elif c == ')':
+                        level -= 1
+                    index += 1
+
+            return ranges, None
+
+        def parse_range(r):
+            if r is None:
+                return None, None, None, None
+
+            unconstrained_range = cls._unconstrained_range_re.match(r)
+            if unconstrained_range is not None:
+                range_type = unconstrained_range.group('range_type')
+                return range_type, None, None, None
+            else:
+                constrained_range = cls._constrained_range_re.match(r)
+                range_attribute = cls._range_attribute_range_re.match(r)
+                if constrained_range is not None:
+                    range_left = constrained_range.group('range_left')
+                    range_right = constrained_range.group('range_right')
+                    return None, range_left, range_right, None
+                elif range_attribute is not None:
+                    range_attribute = range_attribute.group('range_attribute')
+                    return None, None, None, range_attribute
+
+            return None, None, None, None
+
+        for array_type in cls._array_declaration_re.finditer(code):
+            identifier = array_type.group('id')
+            subtype_indication = VHDLSubtypeIndication.parse(array_type.group('subtype_indication'))
+
+            ranges = array_type.group('ranges')
+            range1, range2 = split_ranges(ranges)
+
+            range_type1, range_left1, range_right1, range_attribute1 = parse_range(range1)
+            range_type2, range_left2, range_right2, range_attribute2 = parse_range(range2)
+
+            yield VHDLArrayType(identifier, subtype_indication,
+                                range_type1, range_type2,
+                                range_left1, range_right1, range_left2, range_right2,
+                                range_attribute1, range_attribute2)
 
 
 def find_closing_delimiter(start, end, code):

@@ -35,4 +35,9 @@ package msg_types_pkg is
     msg_type : reply_msg_type_t;
     checksum_match : boolean;
   end record reply_msg_t;
+
+  type test_t is array (natural range <>) of card_msg_t;
+  type test2_t is array (natural range <>, integer range <>) of card_msg_t;
+  type test3_t is array (1 to 12) of card_msg_t;
+  type test4_t is array (1 to 12, 3 downto -1) of card_msg_t;
 end package msg_types_pkg;

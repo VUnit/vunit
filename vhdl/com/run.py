@@ -25,5 +25,7 @@ com_lib.add_source_files(join(dirname(__file__), 'src', '*.vhd'))
 
 tb_com_lib = ui.add_library('tb_com_lib')
 tb_com_lib.add_source_files(join(dirname(__file__), 'test', 'tb_com*.vhd'))
+tb_com_lib.add_source_files(join(dirname(__file__), 'test', 'custom_types.vhd'))
+tb_com_lib.generate_codecs('custom_types_pkg', 'custom_codec_pkg')
 
 ui.main()

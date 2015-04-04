@@ -209,6 +209,19 @@ package com_codec_pkg is
     constant element9 : string := "";
     constant element10 : string := "")
     return string;
+  function create_array_group (
+    constant arr : string;
+    constant range_left1 : string;
+    constant range_right1 : string;
+    constant is_ascending1 : boolean;
+    constant range_left2 : string := "";
+    constant range_right2 : string := "";
+    constant is_ascending2 : boolean := true)
+    return string;
+  function escape_special_characters (
+    constant data : string)
+    return string;
+
   -----------------------------------------------------------------------------
   -- Decoding support
   -----------------------------------------------------------------------------
@@ -232,6 +245,9 @@ package com_codec_pkg is
     return string;
   procedure deallocate_elements (
     variable elements : inout lines_t);
+  function unescape_special_characters (
+    constant code : string)
+    return string;
   
   -----------------------------------------------------------------------------
   -- Aliases
