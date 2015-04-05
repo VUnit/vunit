@@ -47,14 +47,9 @@ class ModelSimInterface:
         if persistent:
             self._create_vsim_process()
 
-    def _teardown(self):
-        if self._vsim_process is not None:
-            self._send_command("quit")
-            self._vsim_process.terminate()
-            self._vsim_process = None
-
     def __del__(self):
-        self._teardown()
+        if self._vsim_process is not None:
+            del self._vsim_process
 
     def _create_vsim_process(self):
         """
@@ -333,10 +328,6 @@ proc vunit_help {} {
 
     def load(self, output_path, library_name, entity_name, architecture_name=None, generics=None, pli=None):
         return self.simulate(output_path, library_name, entity_name, architecture_name, generics, pli, load_only=True)
-
-    def __del__(self):
-        if self._vsim_process is not None:
-            del self._vsim_process
 
 
 class OutputConsumer:
