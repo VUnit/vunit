@@ -235,7 +235,7 @@ class VUnit:
         """
         Globally set pli
         """
-        self._configuration.set_generic(value, scope="")
+        self._configuration.set_pli(value, scope="")
 
     def add_source_files(self, pattern, library_name, preprocessors=None):
         """
