@@ -42,7 +42,7 @@ class TestLicense(unittest.TestCase):
             self._check_license(file_name)
 
     def _check_license(self, file_name):
-        proc = Popen(['git', 'log',  '--follow', '--date=short', file_name],
+        proc = Popen(['git', 'log', '--follow', '--date=short', file_name],
                      bufsize=0, stdout=PIPE, stdin=PIPE, stderr=STDOUT, universal_newlines=True)
         out, _ = proc.communicate()
         first_year = None

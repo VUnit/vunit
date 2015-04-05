@@ -81,8 +81,8 @@ end architecture;
 ```
 
 From `tb_example.vhd` a single test case named `lib.tb_example` is
-created.  It is also possible to put multiple tests in a single test
-benchs that are each run in individual simulations. Putting multiple
+created.  It is also possible to put multiple tests in a single test  
+benches that are each run in individual simulations. Putting multiple
 tests in the same test bench is a good way to share a common test
 environment.
 

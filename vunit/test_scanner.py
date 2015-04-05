@@ -7,7 +7,7 @@
 import logging
 logger = logging.getLogger(__name__)
 
-from os.path import basename, dirname, join, splitext
+from os.path import basename, dirname, splitext
 import re
 
 from vunit.test_list import TestList
@@ -154,7 +154,7 @@ class TestScanner:
         pragmas = []
         for match in self._re_pragma.finditer(code):
             pragma = match.group(1)
-            if not pragma in self._valid_pragmas:
+            if pragma not in self._valid_pragmas:
                 logger.warning("Invalid pragma '%s' in %s",
                                pragma,
                                file_name)
@@ -163,7 +163,7 @@ class TestScanner:
 
 
 def tb_filter(entity):
-    " Filter entities with file name tb_* and entity_name tb_* "
+    """ Filter entities with file name tb_* and entity_name tb_* """
     file_ok = basename(entity.file_name).startswith("tb_") or splitext(basename(entity.file_name))[0].endswith("_tb")
     entity_ok = entity.name.startswith("tb_") or entity.name.endswith("_tb")
 

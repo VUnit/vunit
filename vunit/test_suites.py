@@ -129,7 +129,7 @@ class SameSimTestSuite:
             retval[self._full_name(test_name)] = PASSED
 
         for test_name in self._test_cases:
-            if not test_name in test_starts:
+            if test_name not in test_starts:
                 retval[self._full_name(test_name)] = SKIPPED
         return retval
 

@@ -37,12 +37,12 @@ class Library:
                 self.primary_design_units[design_unit.name] = design_unit
 
             if design_unit.unit_type == 'entity':
-                if not design_unit.name in self._architecture_names:
+                if design_unit.name not in self._architecture_names:
                     self._architecture_names[design_unit.name] = {}
                 self._entities[design_unit.name] = design_unit
 
             if design_unit.unit_type == 'architecture':
-                if not design_unit.primary_design_unit in self._architecture_names:
+                if design_unit.primary_design_unit not in self._architecture_names:
                     self._architecture_names[design_unit.primary_design_unit] = {}
 
                 file_name = design_unit.source_file.name
@@ -189,7 +189,8 @@ class Project:
         self._source_files_in_order = []
         self._depend_on_components = depend_on_components
 
-    def _validate_library_name(self, library_name):
+    @staticmethod
+    def _validate_library_name(library_name):
         if library_name == "work":
             logger.error("Cannot add library named work. work is a reference to the current library. "
                          "http://www.sigasi.com/content/work-not-vhdl-library")
@@ -197,7 +198,7 @@ class Project:
 
     def add_library(self, logical_name, directory, allow_replacement=False, is_external=False):
         self._validate_library_name(logical_name)
-        if not logical_name in self._libraries:
+        if logical_name not in self._libraries:
             library = Library(logical_name, directory, is_external=is_external)
             self._libraries[logical_name] = library
             logger.info('Adding library %s with path %s', logical_name, directory)
@@ -208,7 +209,7 @@ class Project:
             logger.info('Replacing library %s with path %s', logical_name, directory)
 
     def add_source_file(self, file_name, library_name, file_type='vhdl'):
-        logger.info('Adding source file %s to library %s',  file_name, library_name)
+        logger.info('Adding source file %s to library %s', file_name, library_name)
         self._validate_library_name(library_name)
         library = self._libraries[library_name]
         source_file = SourceFile(file_name, library, file_type)
@@ -216,7 +217,8 @@ class Project:
         self._source_files[file_name] = source_file
         self._source_files_in_order.append(file_name)
 
-    def _find_primary_secondary_design_unit_dependencies(self, source_file):
+    @staticmethod
+    def _find_primary_secondary_design_unit_dependencies(source_file):
         library = source_file.library
 
         for unit in source_file.design_units:
@@ -236,7 +238,7 @@ class Project:
             try:
                 library = self._libraries[library_name]
             except KeyError:
-                if not library_name in ("ieee", "std"):
+                if library_name not in ("ieee", "std"):
                     logger.warning("failed to find library '%s'", library_name)
                 continue
 
@@ -361,4 +363,4 @@ class Project:
     def update(self, source_file):
         new_md5 = source_file.md5()
         ostools.write_file(self._hash_file_name_of(source_file), new_md5)
-        logger.debug('Wrote %s md5=%s',  source_file.name, new_md5)
+        logger.debug('Wrote %s md5=%s', source_file.name, new_md5)

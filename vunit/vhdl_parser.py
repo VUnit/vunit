@@ -90,14 +90,14 @@ class VHDLDesignFile:
         libraries = {}
         for matches in cls._library_re.finditer(code):
             for library_name in get_ids(matches):
-                if not library_name in libraries:
+                if library_name not in libraries:
                     libraries[library_name] = set()
 
         for matches in cls._uses_re.finditer(code):
             for uses in get_ids(matches):
                 uses = uses.split(".")
                 library_name = uses[0]
-                if not library_name in libraries:
+                if library_name not in libraries:
                     libraries[library_name] = set()
                 libraries[library_name].add(tuple(uses[1:]))
         return libraries
@@ -393,7 +393,7 @@ class VHDLEntity:
 
         generic_codes = []
         for generic in self.generics:
-            generic_code = sindent + 2*indent + str(generic)
+            generic_code = sindent + (2 * indent) + str(generic)
             generic_codes.append(generic_code)
 
         if len(generic_codes) > 0:
@@ -403,7 +403,7 @@ class VHDLEntity:
 
         port_codes = []
         for port in self.ports:
-            port_code = sindent + 2*indent + str(port)
+            port_code = sindent + (2 * indent) + str(port)
             port_codes.append(port_code)
 
         if len(port_codes) > 0:
@@ -429,7 +429,7 @@ class VHDLEntity:
 
         generic_codes = []
         for generic in self.generics:
-            generic_code = sindent + 2*indent + generic.identifier
+            generic_code = sindent + 2 * indent + generic.identifier
             to_value = mapping.get(generic.identifier,
                                    generic.identifier)
             generic_code += " => " + to_value
@@ -443,7 +443,7 @@ class VHDLEntity:
 
         port_codes = []
         for port in self.ports:
-            port_code = sindent + 2*indent + port.identifier
+            port_code = sindent + 2 * indent + port.identifier
             to_value = mapping.get(port.identifier,
                                    port.identifier)
             port_code += " => " + to_value
@@ -598,8 +598,8 @@ class VHDLInterfaceElement:
 
         return cls(identifier, subtype_indication, mode, init_value)
 
-    @classmethod
-    def _is_mode(self, code):
+    @staticmethod
+    def _is_mode(code):
         if code in ('in', 'out', 'inout', 'buffer', 'linkage'):
             return True
         else:
@@ -627,9 +627,9 @@ def find_closing_delimiter(start, end, code):
     count = 1
     for delimiter in delimiters.finditer(code):
         if delimiter.group() == start:
-            count = count + 1
+            count += 1
         else:
-            count = count - 1
+            count -= 1
 
         if count == 0:
             return delimiter.end()

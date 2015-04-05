@@ -26,7 +26,7 @@ class TestRunner:
     def _run_test_suite(self, test_suite, num_tests):
 
         def add_and_print_results(results, runtime):
-            time = runtime/len(test_suite.test_cases)
+            time = runtime / len(test_suite.test_cases)
             for test_name in test_suite.test_cases:
                 self._report.add_result(test_name,
                                         results[test_name],
@@ -83,19 +83,22 @@ class TestRunner:
         runtime = ostools.get_time() - start
         add_and_print_results(results, runtime)
 
-    def _fail_suite(self, test_suite):
-        " Return failure for all tests in suite "
+    @staticmethod
+    def _fail_suite(test_suite):
+        """ Return failure for all tests in suite """
         results = {}
         for test_name in test_suite.test_cases:
             results[test_name] = FAILED
         return results
 
-    def _print_test_case_banner(self, test_case_name):
-        " Print a banner before running each testcase "
+    @staticmethod
+    def _print_test_case_banner(test_case_name):
+        """ Print a banner before running each testcase """
         print("running %s" % test_case_name)
 
-    def _encode_path(self, path):
-        " @TODO what if two tests named 'Test 1' and 'Test_1' ? "
+    @staticmethod
+    def _encode_path(path):
+        """ @TODO what if two tests named 'Test 1' and 'Test_1' ? """
         return path.replace(" ", "_")
 
     def run(self, test_suites):

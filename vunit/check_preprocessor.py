@@ -90,9 +90,9 @@ class CheckPreprocessor:
                     # character literals, e.g. std_logic'('1').
                     if even_quotes(s[index:]):
                         code_section = Token.CHARACTER_LITERAL
-                elif s[index:index+2] == '--':
+                elif s[index:index + 2] == '--':
                     code_section = Token.LINE_COMMENT
-                elif s[index:index+2] == '/*':
+                elif s[index:index + 2] == '/*':
                     code_section = Token.BLOCK_COMMENT
                 elif c == '(':
                     level += 1
@@ -111,7 +111,7 @@ class CheckPreprocessor:
                 if c == '\n':
                     next_code_section = Token.NORMAL
             elif code_section == Token.BLOCK_COMMENT:
-                if s[index-1:index+1] == '*/':
+                if s[index - 1:index + 1] == '*/':
                     next_code_section = Token.NORMAL
 
             t.type = code_section
