@@ -38,7 +38,7 @@ class VHDLDesignFile:
                    contexts=list(VHDLContext.find(code)),
                    component_instantiations=list(cls._find_component_instantiations(code)))
 
-    _entity_re = re.compile('[a-zA-Z]\w*\s*\:\s*entity\s+(?P<libName>[a-zA-Z]\w*)\.(?P<entityName>[a-zA-Z]\w*)',
+    _entity_re = re.compile(r'[a-zA-Z]\w*\s*\:\s*entity\s+(?P<libName>[a-zA-Z]\w*)\.(?P<entityName>[a-zA-Z]\w*)',
                             re.IGNORECASE)
 
     @classmethod
@@ -47,8 +47,8 @@ class VHDLDesignFile:
         return [(library_name, unit_name) for library_name, unit_name in matches]
 
     _component_re = re.compile(
-        "[a-zA-Z]\w*\s*\:\s*(?:component)?\s*(?:(?:[a-zA-Z]\w*)\.)?([a-zA-Z]\w*)\s*"
-        "(?:generic|port) map\s*\([\s\w\=\>\,\.\)\(\+\-\'\"]*\);",
+        r"[a-zA-Z]\w*\s*\:\s*(?:component)?\s*(?:(?:[a-zA-Z]\w*)\.)?([a-zA-Z]\w*)\s*"
+        r"(?:generic|port) map\s*\([\s\w\=\>\,\.\)\(\+\-\'\"]*\);",
         re.IGNORECASE)
 
     @classmethod

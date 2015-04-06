@@ -102,7 +102,7 @@ class ModelSimInterface:
             return False
         return True
 
-    _vmap_pattern = re.compile('maps to directory (?P<dir>.*?)\.')
+    _vmap_pattern = re.compile(r'maps to directory (?P<dir>.*?)\.')
 
     def create_library(self, library_name, path):
 

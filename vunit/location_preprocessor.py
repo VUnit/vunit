@@ -38,11 +38,11 @@ class LocationPreprocessor:
 
     def run(self, code, file_name):
         potential_subprogram_call_with_arguments_pattern = compile(
-            r'[^a-zA-Z0-9_](?P<subprogram>' + '|'.join(self._subprograms_with_arguments) + ')\s*(?P<args>\()',
+            r'[^a-zA-Z0-9_](?P<subprogram>' + '|'.join(self._subprograms_with_arguments) + r')\s*(?P<args>\()',
             MULTILINE)
 
         potential_subprogram_call_without_arguments_pattern = compile(
-            r'[^a-zA-Z0-9_](?P<subprogram>' + '|'.join(self._subprograms_without_arguments) + ')\s*;',
+            r'[^a-zA-Z0-9_](?P<subprogram>' + '|'.join(self._subprograms_without_arguments) + r')\s*;',
             MULTILINE)
 
         matches = list(potential_subprogram_call_with_arguments_pattern.finditer(code))
