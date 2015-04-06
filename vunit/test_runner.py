@@ -6,7 +6,7 @@
 
 from __future__ import print_function
 
-from os.path import join, exists
+from os.path import join, dirname, exists
 from os import makedirs
 from shutil import rmtree
 
@@ -24,39 +24,21 @@ class TestRunner:
         self._verbose = verbose
 
     def _run_test_suite(self, test_suite, num_tests):
-
-        def add_and_print_results(results, runtime):
-            time = runtime / len(test_suite.test_cases)
-            for test_name in test_suite.test_cases:
-                self._report.add_result(test_name,
-                                        results[test_name],
-                                        time,
-                                        output_file_name)
-                self._report.print_latest_status(total_tests=num_tests)
-            print()
+        start = ostools.get_time()
 
         for test_name in test_suite.test_cases:
             self._print_test_case_banner(test_name)
 
-        start = ostools.get_time()
-        old_stdout = sys.stdout
-        old_stderr = sys.stderr
-
-        output_path = join(self._output_path, self._encode_path(test_suite.name))
+        output_path = self._output_path_of(test_suite)
         output_file_name = join(output_path, "output.txt")
-
-        try:
-            # If we could not clean output path, fail all tests
-            if exists(output_path):
-                rmtree(output_path)
-            makedirs(output_path)
-            output_file = open(output_file_name, "w")
-        except:  # pylint: disable=bare-except
-            traceback.print_exc()
+        output_file = self._create_output_file(output_file_name)
+        if output_file is None:
             results = self._fail_suite(test_suite)
-            add_and_print_results(results, 0.0)
+            self._add_results(results, output_file_name, num_tests)
             return
 
+        old_stdout = sys.stdout
+        old_stderr = sys.stderr
         try:
             if self._verbose:
                 sys.stdout = TeeToFile([old_stderr, output_file])
@@ -65,7 +47,7 @@ class TestRunner:
                 sys.stdout = TeeToFile([output_file])
                 sys.stderr = TeeToFile([output_file])
 
-            results = test_suite.run(output_path)
+            results = test_suite.run(self._output_path_of(test_suite))
         except:  # pylint: disable=bare-except
             traceback.print_exc()
             results = self._fail_suite(test_suite)
@@ -74,14 +56,53 @@ class TestRunner:
             sys.stderr = old_stderr
             output_file.close()
 
+        self._maybe_print_output_if_not_verbose(results, output_file_name)
+        self._add_results(results, output_file_name, num_tests,
+                          runtime=ostools.get_time() - start)
+
+    def _create_output_file(self, output_file_name):
+        """
+        Remove parent folder of output file if it exists and re-create it
+        """
+        output_path = dirname(output_file_name)
+        try:
+            # If we could not clean output path, fail all tests
+            if exists(output_path):
+                rmtree(output_path)
+            makedirs(output_path)
+            return open(output_file_name, "w")
+        except:  # pylint: disable=bare-except
+            traceback.print_exc()
+        return None
+
+    def _maybe_print_output_if_not_verbose(self, results, output_file_name):
+        """
+        Print output after failure when not in verbose mode
+        """
         any_not_passed = any(value != PASSED for value in results.values())
         if (not self._verbose) and any_not_passed:
             with open(output_file_name, "r") as fread:
                 for line in fread:
                     print(line, end="")
 
-        runtime = ostools.get_time() - start
-        add_and_print_results(results, runtime)
+    def _add_results(self, results, output_file_name, num_tests, runtime=0.0):
+        """
+        Add results to test suite
+        """
+        time = runtime / len(results)
+        for test_name in results:
+            self._report.add_result(test_name,
+                                    results[test_name],
+                                    time,
+                                    output_file_name)
+            self._report.print_latest_status(total_tests=num_tests)
+        print()
+
+    def _output_path_of(self, test_suite):
+        """
+        Return output path of the test suite
+        """
+        return join(self._output_path, self._encode_path(test_suite.name))
 
     @staticmethod
     def _fail_suite(test_suite):

@@ -306,23 +306,21 @@ proc vunit_help {} {
         user_file_name = join(msim_output_path, "user.do")
         batch_file_name = join(msim_output_path, "batch.do")
 
-        common_do = self._create_common_script(library_name, entity_name, architecture_name, generics, pli,
-                                               fail_on_warning=fail_on_warning,
-                                               output_path=msim_output_path)
-        user_do = self._create_user_script(common_file_name)
-        batch_do = self._create_batch_script(common_file_name, load_only)
-        write_file(common_file_name, common_do)
-        write_file(user_file_name, user_do)
-        write_file(batch_file_name, batch_do)
+        write_file(common_file_name,
+                   self._create_common_script(library_name, entity_name, architecture_name, generics, pli,
+                                              fail_on_warning=fail_on_warning,
+                                              output_path=msim_output_path))
+        write_file(user_file_name,
+                   self._create_user_script(common_file_name))
+        write_file(batch_file_name,
+                   self._create_batch_script(common_file_name, load_only))
 
         if self._gui:
-            success = self._run_batch_file(user_file_name, gui=True)
+            return self._run_batch_file(user_file_name, gui=True)
         elif self._vsim_process is None:
-            success = self._run_batch_file(batch_file_name)
+            return self._run_batch_file(batch_file_name)
         else:
-            success = self._run_persistent(common_file_name, load_only)
-
-        return success
+            return self._run_persistent(common_file_name, load_only)
 
     def load(self, output_path, library_name, entity_name, architecture_name=None, generics=None, pli=None):
         return self.simulate(output_path, library_name, entity_name, architecture_name, generics, pli, load_only=True)

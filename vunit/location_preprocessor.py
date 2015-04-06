@@ -36,6 +36,10 @@ class LocationPreprocessor:
             if balance == 0:
                 return m.start()
 
+    _already_fixed_file_name_pattern = re.compile(r'file_name\s*=>', re.MULTILINE)
+    _already_fixed_line_num_pattern = re.compile(r'line_num\s*=>', re.MULTILINE)
+    _subprogram_declaration_start_backwards_pattern = re.compile(r'\s+(erudecorp|noitcnuf)')
+
     def run(self, code, file_name):
         potential_subprogram_call_with_arguments_pattern = re.compile(
             r'[^a-zA-Z0-9_](?P<subprogram>' + '|'.join(self._subprograms_with_arguments) + r')\s*(?P<args>\()',
@@ -50,12 +54,8 @@ class LocationPreprocessor:
             matches += list(potential_subprogram_call_without_arguments_pattern.finditer(code))
         matches.sort(key=lambda match: match.start('subprogram'), reverse=True)
 
-        already_fixed_file_name_pattern = re.compile(r'file_name\s*=>', re.MULTILINE)
-        already_fixed_line_num_pattern = re.compile(r'line_num\s*=>', re.MULTILINE)
-        subprogram_declaration_start_backwards_pattern = re.compile(r'\s+(erudecorp|noitcnuf)')
-
         for m in matches:
-            if subprogram_declaration_start_backwards_pattern.match(code[m.start():0:-1]):
+            if self._subprogram_declaration_start_backwards_pattern.match(code[m.start():0:-1]):
                 continue
             file_name_association = ', file_name => "' + file_name + '"'
             line_num_association = ', line_num => ' + str(1 + code[:m.start('subprogram')].count('\n'))
@@ -63,8 +63,8 @@ class LocationPreprocessor:
                 closing_paranthesis_start = self._find_closing_parenthesis(code[m.start('args'):])
 
                 args = code[m.start('args'): m.start('args') + closing_paranthesis_start]
-                already_fixed_file_name = already_fixed_file_name_pattern.search(args) is not None
-                already_fixed_line_num = already_fixed_line_num_pattern.search(args) is not None
+                already_fixed_file_name = self._already_fixed_file_name_pattern.search(args) is not None
+                already_fixed_line_num = self._already_fixed_line_num_pattern.search(args) is not None
                 file_name_association = file_name_association if not already_fixed_file_name else ''
                 line_num_association = line_num_association if not already_fixed_line_num else ''
 

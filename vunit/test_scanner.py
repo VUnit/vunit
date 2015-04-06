@@ -49,13 +49,10 @@ class TestScanner:
         Derive test cases from an architecture if there is one generic called
         runner_cfg
         """
-        has_runner_cfg = "runner_cfg" in entity.generic_names
         file_name = entity.architecture_names[architecture_name]
         code = ostools.read_file(file_name)
         pragmas = self.find_pragmas(code, file_name)
         should_run_in_same_sim = "run_all_in_same_sim" in pragmas
-        has_output_path = "output_path" in entity.generic_names
-        fail_on_warning = "fail_on_warning" in pragmas
         configurations = self._cfg.get_configurations(entity, architecture_name)
 
         def create_test_bench(config):
@@ -75,13 +72,13 @@ class TestScanner:
                              library_name=entity.library_name,
                              architecture_name=architecture_name,
                              entity_name=entity.name,
-                             fail_on_warning=fail_on_warning,
-                             has_output_path=has_output_path,
+                             fail_on_warning="fail_on_warning" in pragmas,
+                             has_output_path="output_path" in entity.generic_names,
                              generics=generics,
                              pli=config.pli,
                              elaborate_only=self._elaborate_only)
 
-        if has_runner_cfg:
+        if "runner_cfg" in entity.generic_names:
             run_strings = self.find_run_strings(code, file_name)
             if len(run_strings) == 0:
                 run_strings = [""]

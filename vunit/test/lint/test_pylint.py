@@ -19,7 +19,6 @@ class TestPylint(unittest.TestCase):
                     "--disable=too-many-public-methods",
                     "--disable=too-many-instance-attributes",
                     "--disable=too-many-arguments",
-                    "--disable=too-many-locals",
                     "--disable=relative-import",
                     "--disable=old-style-class",  # Not a problem for Python3
                     "--disable=protected-access",

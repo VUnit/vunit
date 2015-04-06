@@ -144,7 +144,7 @@ class VUnit:
 
         return parser
 
-    def __init__(self,
+    def __init__(self,  # pylint: disable=too-many-locals
                  output_path,
                  clean=False,
                  no_color=False,
@@ -174,8 +174,7 @@ class VUnit:
         self._verbose = verbose
         self._xunit_xml = xunit_xml
 
-        level = getattr(logging, log_level.upper())
-        logging.basicConfig(filename=None, format='%(levelname)7s - %(message)s', level=level)
+        self._configure_logging(log_level)
 
         self._test_filter = test_filter if test_filter is not None else lambda name: True
         self._list_only = list_only
@@ -201,6 +200,14 @@ class VUnit:
 
         if compile_builtins:
             self.add_builtins(library_name="vunit_lib")
+
+    @staticmethod
+    def _configure_logging(log_level):
+        """
+        Configure logging based on log_level string
+        """
+        level = getattr(logging, log_level.upper())
+        logging.basicConfig(filename=None, format='%(levelname)7s - %(message)s', level=level)
 
     def add_external_library(self, library_name, path):
         """
