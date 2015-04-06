@@ -12,7 +12,7 @@ from shutil import rmtree
 
 import traceback
 import vunit.ostools as ostools
-from vunit.test_report import TestResult, PASSED, FAILED
+from vunit.test_report import PASSED, FAILED
 
 import sys
 

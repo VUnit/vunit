@@ -5,8 +5,6 @@
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 from xml.etree import ElementTree
-
-import vunit.ostools as ostools
 from vunit.modelsim_interface import ModelSimInterface
 
 

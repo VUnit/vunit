@@ -6,7 +6,7 @@
 
 from __future__ import print_function
 
-from vunit.ostools import Process, write_file, file_exists, read_file
+from vunit.ostools import Process, write_file, file_exists
 import re
 from os.path import join, dirname, abspath
 import os

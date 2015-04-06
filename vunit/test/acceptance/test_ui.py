@@ -12,7 +12,6 @@ from os import remove
 import re
 from re import MULTILINE
 from vunit.ui import VUnit
-from vunit.check_preprocessor import CheckPreprocessor
 
 
 class TestPreprocessor:

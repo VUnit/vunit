@@ -5,14 +5,10 @@
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 from unittest import TestCase
-
-import subprocess
 from vunit.ostools import Process
-
 from shutil import rmtree
 from os import makedirs
 from os.path import exists, dirname, join, abspath
-from time import time
 
 
 class TestOSTools(TestCase):

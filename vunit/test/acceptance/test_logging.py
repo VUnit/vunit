@@ -5,7 +5,7 @@
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 import unittest
-from os.path import abspath, join, basename, dirname
+from os.path import abspath, join, dirname
 
 from vunit import ROOT
 from vunit.ui import VUnit

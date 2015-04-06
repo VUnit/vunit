@@ -5,7 +5,6 @@
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 import re
-from re import MULTILINE, DOTALL, split
 
 
 class LocationPreprocessor:
@@ -40,19 +39,19 @@ class LocationPreprocessor:
     def run(self, code, file_name):
         potential_subprogram_call_with_arguments_pattern = re.compile(
             r'[^a-zA-Z0-9_](?P<subprogram>' + '|'.join(self._subprograms_with_arguments) + r')\s*(?P<args>\()',
-            MULTILINE)
+            re.MULTILINE)
 
         potential_subprogram_call_without_arguments_pattern = re.compile(
             r'[^a-zA-Z0-9_](?P<subprogram>' + '|'.join(self._subprograms_without_arguments) + r')\s*;',
-            MULTILINE)
+            re.MULTILINE)
 
         matches = list(potential_subprogram_call_with_arguments_pattern.finditer(code))
         if self._subprograms_without_arguments:
             matches += list(potential_subprogram_call_without_arguments_pattern.finditer(code))
         matches.sort(key=lambda match: match.start('subprogram'), reverse=True)
 
-        already_fixed_file_name_pattern = re.compile(r'file_name\s*=>', MULTILINE)
-        already_fixed_line_num_pattern = re.compile(r'line_num\s*=>', MULTILINE)
+        already_fixed_file_name_pattern = re.compile(r'file_name\s*=>', re.MULTILINE)
+        already_fixed_line_num_pattern = re.compile(r'line_num\s*=>', re.MULTILINE)
         subprogram_declaration_start_backwards_pattern = re.compile(r'\s+(erudecorp|noitcnuf)')
 
         for m in matches:

@@ -5,7 +5,7 @@
 # Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
 
 import unittest
-from os.path import join, dirname, splitext, abspath, commonprefix
+from os.path import join, splitext, abspath, commonprefix
 from os import walk
 import re
 from datetime import datetime

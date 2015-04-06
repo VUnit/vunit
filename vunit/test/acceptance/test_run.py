@@ -5,7 +5,7 @@
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 import unittest
-from os.path import join, dirname, abspath
+from os.path import join, dirname
 from vunit.ui import VUnit
 from common import has_modelsim
 from vunit import ROOT

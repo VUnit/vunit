@@ -11,7 +11,7 @@ from os.path import join, dirname, exists
 from shutil import rmtree
 
 from vunit.test_runner import TestRunner
-from vunit.test_report import TestReport, PASSED, FAILED
+from vunit.test_report import TestReport
 from vunit.test_list import TestList
 
 from mock_2or3 import mock

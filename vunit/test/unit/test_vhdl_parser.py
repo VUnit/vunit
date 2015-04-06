@@ -9,7 +9,6 @@ from vunit.vhdl_parser import (VHDLDesignFile,
                                VHDLInterfaceElement,
                                VHDLEntity,
                                VHDLSubtypeIndication)
-from os.path import join, dirname
 
 
 class TestVHDLParser(TestCase):
