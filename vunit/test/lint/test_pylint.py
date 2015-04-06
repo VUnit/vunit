@@ -23,7 +23,6 @@ class TestPylint(unittest.TestCase):
                     "--disable=old-style-class",  # Not a problem for Python3
                     "--disable=protected-access",
                     "--disable=no-self-use",
-                    "--disable=attribute-defined-outside-init",
                     "--disable=no-init",
                     "--disable=locally-disabled",
                     "--disable=interface-not-implemented",

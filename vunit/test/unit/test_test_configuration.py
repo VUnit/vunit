@@ -23,21 +23,19 @@ class TestTestConfiguration(unittest.TestCase):
         makedirs(self.output_path)
 
     def test_has_default_configuration(self):
-        entity = EntityStub()
-        entity.name = "tb_entity"
-        entity.library_name = "lib"
-        entity.architecture_names = {"arch": out("arch.vhd")}
-        entity.generic_names = []
+        entity = EntityStub(name="tb_entity",
+                            library_name="lib",
+                            architecture_names={"arch": out("arch.vhd")},
+                            generic_names=[])
 
         self.assertEqual(self.cfg.get_configurations(entity, "arch"),
                          [Configuration("lib.tb_entity")])
 
     def test_set_generic(self):
-        entity = EntityStub()
-        entity.name = "tb_entity"
-        entity.library_name = "lib"
-        entity.architecture_names = {"arch": out("arch.vhd")}
-        entity.generic_names = ["global_generic"]
+        entity = EntityStub(name="tb_entity",
+                            library_name="lib",
+                            architecture_names={"arch": out("arch.vhd")},
+                            generic_names=["global_generic"])
 
         self.assertEqual(self.cfg.get_configurations(entity, "arch"),
                          [Configuration("lib.tb_entity")])
@@ -56,11 +54,10 @@ class TestTestConfiguration(unittest.TestCase):
                          [Configuration("lib.tb_entity", generics={"global_generic": None})])
 
     def test_set_pli(self):
-        entity = EntityStub()
-        entity.name = "tb_entity"
-        entity.library_name = "lib"
-        entity.architecture_names = {"arch": out("arch.vhd")}
-        entity.generic_names = []
+        entity = EntityStub(name="tb_entity",
+                            library_name="lib",
+                            architecture_names={"arch": out("arch.vhd")},
+                            generic_names=[])
 
         self.assertEqual(self.cfg.get_configurations(entity, "arch"),
                          [Configuration("lib.tb_entity")])
@@ -79,12 +76,11 @@ class TestTestConfiguration(unittest.TestCase):
                          [Configuration("lib.tb_entity", pli=["libfoo2.so"])])
 
     def test_add_config(self):
-        entity = EntityStub()
-        entity.name = "tb_entity"
-        entity.library_name = "lib"
-        entity.architecture_names = {"arch": out("arch.vhd")}
-        entity.generic_names = ["value",
-                                "global_value"]
+        entity = EntityStub(name="tb_entity",
+                            library_name="lib",
+                            architecture_names={"arch": out("arch.vhd")},
+                            generic_names=["value",
+                                           "global_value"])
 
         for value in range(1, 3):
             self.cfg.add_config("lib.tb_entity",
@@ -111,4 +107,8 @@ def out(*args):
 
 
 class EntityStub:
-    pass
+    def __init__(self, name, library_name, architecture_names, generic_names):
+        self.name = name
+        self.library_name = library_name
+        self.architecture_names = architecture_names
+        self.generic_names = generic_names
