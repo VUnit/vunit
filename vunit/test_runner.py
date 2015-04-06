@@ -51,7 +51,7 @@ class TestRunner:
                 rmtree(output_path)
             makedirs(output_path)
             output_file = open(output_file_name, "w")
-        except:
+        except: # pylint: disable=bare-except
             traceback.print_exc()
             results = self._fail_suite(test_suite)
             add_and_print_results(results, 0.0)
@@ -66,7 +66,7 @@ class TestRunner:
                 sys.stderr = TeeToFile([output_file])
 
             results = test_suite.run(output_path)
-        except:
+        except: # pylint: disable=bare-except
             traceback.print_exc()
             results = self._fail_suite(test_suite)
         finally:

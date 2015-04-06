@@ -58,7 +58,7 @@ class LinuxColorPrinter:
         if bg is not None and 'i' in bg:
             codes.append(4)  # Underscore
 
-        return "\033[" + ";".join(map(str, codes)) + "m" + text + "\033[0m"
+        return "\033[" + ";".join([str(code) for code in codes]) + "m" + text + "\033[0m"
 
 SHORT = c_short
 WORD = c_ushort

@@ -4,20 +4,21 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
-from re import compile, MULTILINE
+import re
 
 
 class CheckPreprocessor:
     def __init__(self):
-        self._find_operators = compile(r'\?/=|\?<=|\?>=|\?<|\?>|\?=|/=|<=|>=|<|>|=', MULTILINE)
-        self._find_quotes = compile(r'"|' + r"'", MULTILINE)
-        self._find_comments = compile(r'--|/\*|\*/', MULTILINE)
-        self._actual_formal = compile(r'=>(?P<actual>.*)', MULTILINE)
-        self._leading_paranthesis = compile(r'[\s(]*')
-        self._trailing_paranthesis = compile(r'[\s)]*')
+        self._find_operators = re.compile(r'\?/=|\?<=|\?>=|\?<|\?>|\?=|/=|<=|>=|<|>|=', re.MULTILINE)
+        self._find_quotes = re.compile(r'"|' + r"'", re.MULTILINE)
+        self._find_comments = re.compile(r'--|/\*|\*/', re.MULTILINE)
+        self._actual_formal = re.compile(r'=>(?P<actual>.*)', re.MULTILINE)
+        self._leading_paranthesis = re.compile(r'[\s(]*')
+        self._trailing_paranthesis = re.compile(r'[\s)]*')
 
-    def run(self, code, file_name):
-        check_relation_pattern = compile(r'[^a-zA-Z0-9_](?P<call>check_relation)\s*(?P<parameters>\()', MULTILINE)
+    def run(self, code, file_name):  # pylint: disable=unused-argument
+        check_relation_pattern = re.compile(r'[^a-zA-Z0-9_](?P<call>check_relation)\s*(?P<parameters>\()',
+                                            re.MULTILINE)
 
         check_relation_calls = list(check_relation_pattern.finditer(code))
         check_relation_calls.reverse()
@@ -68,6 +69,7 @@ class CheckPreprocessor:
 
     @staticmethod
     def _classify_tokens(s):
+        # pylint: disable=too-many-branches
         def even_quotes(s):
             n_quotes = 0
             for index in range(0, len(s), 2):
