@@ -9,30 +9,31 @@ from string import Template
 from tempfile import NamedTemporaryFile
 from os.path import join, dirname, basename, exists
 from os import remove
-from re import compile, MULTILINE
+import re
+from re import MULTILINE
 from vunit.ui import VUnit
 from vunit.check_preprocessor import CheckPreprocessor
 
 
 class TestPreprocessor:
-    def run(self, code, file_name):
+    def run(self, code, file_name):  # pylint: disable=unused-argument
         return '-- check_relation(a = b);\n' + code
 
 
 class VUnitfier:
     def __init__(self):
-        self._reportPattern = compile(r'^(?P<indent>\s*)report\s*(?P<note>"[^"]*")\s*;', MULTILINE)
+        self._reportPattern = re.compile(r'^(?P<indent>\s*)report\s*(?P<note>"[^"]*")\s*;', MULTILINE)
 
-    def run(self, code, file_name):
+    def run(self, code, file_name):   # pylint: disable=unused-argument
         return self._reportPattern.sub(
             r'\g<indent>log(\g<note>); -- VUnitfier preprocessor: Report turned off, keeping original code.', code)
 
 
 class ParentalControl:
     def __init__(self):
-        self._fWordPattern = compile(r'f..k')
+        self._fWordPattern = re.compile(r'f..k')
 
-    def run(self, code, file_name):
+    def run(self, code, file_name):   # pylint: disable=unused-argument
         return self._fWordPattern.sub(r'[BEEP]', code)
 
 

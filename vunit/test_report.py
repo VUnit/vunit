@@ -41,7 +41,7 @@ class TestReport:
 
     def print_latest_status(self, total_tests):
         result = self._last_test_result()
-        passed, failed, skipped = self._split()
+        passed, failed, _ = self._split()
         if result.passed:
             self._printer.write("pass", fg='gi')
         elif result.failed:
@@ -118,7 +118,7 @@ class TestReport:
         """
         Convert test report to a junit xml string
         """
-        passed, failures, skipped = self._split()
+        _, failures, skipped = self._split()
 
         root = ElementTree.Element("testsuite")
         root.attrib["name"] = "testsuite"
@@ -144,8 +144,7 @@ class TestStatus:
         self._name = name
 
     def __eq__(self, other):
-        return (type(self) == type(other) and
-                self._name == other._name)
+        return isinstance(other, type(self)) and self._name == other._name
 
     def __repr__(self):
         return "TestStatus(%r)" % self._name

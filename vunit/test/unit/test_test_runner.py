@@ -56,7 +56,7 @@ class TestTestRunner(unittest.TestCase):
 
         output = "Output string, <xml>, </xml>\n"
 
-        def side_effect(*args, **kwargs):
+        def side_effect(*args, **kwargs):  # pylint: disable=unused-argument
             print(output, end="")
             return True
 
@@ -69,7 +69,7 @@ class TestTestRunner(unittest.TestCase):
         test_case = mock.Mock(spec_set=TestCaseMockSpec)
         test_case.configure_mock(name=name)
 
-        def run_side_effect(*args, **kwargs):
+        def run_side_effect(*args, **kwargs):  # pylint: disable=unused-argument
             self._tests.append(name)
             return passed
 

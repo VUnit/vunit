@@ -59,10 +59,10 @@ class Library:
         return entities
 
     def __eq__(self, other):
-        if type(self) != type(other):
-            return False
-        else:
+        if isinstance(other, type(self)):
             return self.name == other.name
+        else:
+            return False
 
     def __hash__(self):
         return hash(self.name)
@@ -146,10 +146,10 @@ class SourceFile:
         return result
 
     def __eq__(self, other):
-        if type(self) != type(other):
-            return False
-        else:
+        if isinstance(other, type(self)):
             return self.name == other.name
+        else:
+            return False
 
     def __hash__(self):
         return hash(self.name)
@@ -259,7 +259,7 @@ class Project:
             for library in self.get_libraries():
                 try:
                     primary_unit = library.primary_design_units[unit_name]
-                except:
+                except KeyError:
                     continue
                 else:
                     found_component_entity = True

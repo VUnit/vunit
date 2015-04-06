@@ -7,25 +7,25 @@
 import unittest
 from os.path import join, dirname, splitext, abspath, commonprefix
 from os import walk
-from re import compile
+import re
 from datetime import datetime
 from subprocess import Popen, PIPE, STDOUT
 from vunit import ROOT
 
 
 class TestLicense(unittest.TestCase):
-    _re_license_notice = compile(
+    _re_license_notice = re.compile(
         r"(?P<comment_start>#|--|//) This Source Code Form is subject to the terms of the Mozilla Public" + "\n"
         r"(?P=comment_start) License, v\. 2\.0\. If a copy of the MPL was not distributed with this file," + "\n"
         r"(?P=comment_start) You can obtain one at http://mozilla\.org/MPL/2\.0/\." + "\n"
         r"(?P=comment_start)" + "\n"
         r"(?P=comment_start) Copyright \(c\) (?P<first_year>20\d\d)(-(?P<last_year>20\d\d))?, " +
         r"Lars Asplund lars\.anders\.asplund@gmail\.com")
-    _re_log_date = compile(r'Date:\s*(?P<year>20\d\d)-\d\d-\d\d')
+    _re_log_date = re.compile(r'Date:\s*(?P<year>20\d\d)-\d\d-\d\d')
 
     def test_that_a_valid_license_exists_in_source_files_and_that_global_licensing_information_is_correct(self):
         licensed_files = []
-        for root, dirs, files in walk(ROOT):
+        for root, _, files in walk(ROOT):
             for file_name in files:
                 if 'preprocessed' in root:
                     continue

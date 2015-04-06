@@ -15,7 +15,6 @@ from vunit.exceptions import CompileError
 
 
 class ModelSimInterface:
-
     name = "modelsim"
 
     @staticmethod
@@ -27,7 +26,7 @@ class ModelSimInterface:
             proc = Process(['vsim', '-c', '-help'])
             proc.consume_output(callback=None)
             return True
-        except:
+        except:  # pylint: disable=bare-except
             return False
 
     def __init__(self, modelsim_ini="modelsim.ini", persistent=False, gui=False):
@@ -157,8 +156,7 @@ proc vunit_load {{}} {{
     }}
     return 0
 }}
-""".format(modelsimini=fix_path(self._modelsim_ini),
-           pli_str=pli_str,
+""".format(pli_str=pli_str,
            set_generic_str=set_generic_str,
            set_generic_name_str=set_generic_name_str,
            library_name=library_name,

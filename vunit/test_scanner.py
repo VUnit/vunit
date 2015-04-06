@@ -41,78 +41,84 @@ class TestScanner:
         Derive test cases from an entity if there is one generic called
         runner_cfg
         """
-        has_runner_cfg = "runner_cfg" in entity.generic_names
-
         for architecture_name in sorted(entity.architecture_names):
-            file_name = entity.architecture_names[architecture_name]
-            code = ostools.read_file(file_name)
-            pragmas = self.find_pragmas(code, file_name)
-            should_run_in_same_sim = "run_all_in_same_sim" in pragmas
-            has_output_path = "output_path" in entity.generic_names
-            fail_on_warning = "fail_on_warning" in pragmas
-            configurations = self._cfg.get_configurations(entity, architecture_name)
+            self._create_tests_from_architecture(test_list, entity, architecture_name)
 
-            def create_test_bench(config):
-                generics = config.generics.copy()
+    def _create_tests_from_architecture(self, test_list, entity, architecture_name):
+        """
+        Derive test cases from an architecture if there is one generic called
+        runner_cfg
+        """
+        has_runner_cfg = "runner_cfg" in entity.generic_names
+        file_name = entity.architecture_names[architecture_name]
+        code = ostools.read_file(file_name)
+        pragmas = self.find_pragmas(code, file_name)
+        should_run_in_same_sim = "run_all_in_same_sim" in pragmas
+        has_output_path = "output_path" in entity.generic_names
+        fail_on_warning = "fail_on_warning" in pragmas
+        configurations = self._cfg.get_configurations(entity, architecture_name)
 
-                if "tb_path" in entity.generic_names:
-                    new_value = '%s/' % dirname(file_name).replace("\\", "/")
-                    if "tb_path" in generics:
-                        logger.warning(("The 'tb_path' generic from a configuration of %s of was overwritten, " %
-                                        dotjoin(entity.library_name, entity.name, config.name)) +
-                                       ("old value was '%s', new value is '%s'" %
-                                        (generics["tb_path"], new_value)))
+        def create_test_bench(config):
+            generics = config.generics.copy()
 
-                    generics["tb_path"] = new_value
+            if "tb_path" in entity.generic_names:
+                new_value = '%s/' % dirname(file_name).replace("\\", "/")
+                if "tb_path" in generics:
+                    logger.warning(("The 'tb_path' generic from a configuration of %s of was overwritten, " %
+                                    dotjoin(entity.library_name, entity.name, config.name)) +
+                                   ("old value was '%s', new value is '%s'" %
+                                    (generics["tb_path"], new_value)))
 
-                return TestBench(simulator_if=self._simulator_if,
-                                 library_name=entity.library_name,
-                                 architecture_name=architecture_name,
-                                 entity_name=entity.name,
-                                 fail_on_warning=fail_on_warning,
-                                 has_output_path=has_output_path,
-                                 generics=generics,
-                                 pli=config.pli,
-                                 elaborate_only=self._elaborate_only)
+                generics["tb_path"] = new_value
 
-            if has_runner_cfg:
-                run_strings = self.find_run_strings(code, file_name)
-                if len(run_strings) == 0:
-                    run_strings = [""]
+            return TestBench(simulator_if=self._simulator_if,
+                             library_name=entity.library_name,
+                             architecture_name=architecture_name,
+                             entity_name=entity.name,
+                             fail_on_warning=fail_on_warning,
+                             has_output_path=has_output_path,
+                             generics=generics,
+                             pli=config.pli,
+                             elaborate_only=self._elaborate_only)
 
-                if should_run_in_same_sim:
-                    for config in configurations:
-                        test_bench = create_test_bench(config)
-                        post_check = None if self._elaborate_only else config.post_check
-                        test_list.add_suite(
-                            SameSimTestSuite(name=config.name,
-                                             test_cases=run_strings,
-                                             test_bench=test_bench,
-                                             post_check_function=post_check))
-                else:
-                    for run_string in run_strings:
-                        for config in configurations:
-                            test_bench = create_test_bench(config)
-                            post_check = None if self._elaborate_only else config.post_check
-                            test_list.add_test(
-                                IndependentSimTestCase(
-                                    name=dotjoin(config.name, run_string),
-                                    test_case=run_string,
-                                    test_bench=test_bench,
-                                    has_runner_cfg=True,
-                                    post_check_function=post_check))
+        if has_runner_cfg:
+            run_strings = self.find_run_strings(code, file_name)
+            if len(run_strings) == 0:
+                run_strings = [""]
 
-            else:
+            if should_run_in_same_sim:
                 for config in configurations:
                     test_bench = create_test_bench(config)
                     post_check = None if self._elaborate_only else config.post_check
-                    test_list.add_test(
-                        IndependentSimTestCase(
-                            name=config.name,
-                            test_case=None,
-                            test_bench=test_bench,
-                            has_runner_cfg=False,
-                            post_check_function=post_check))
+                    test_list.add_suite(
+                        SameSimTestSuite(name=config.name,
+                                         test_cases=run_strings,
+                                         test_bench=test_bench,
+                                         post_check_function=post_check))
+            else:
+                for run_string in run_strings:
+                    for config in configurations:
+                        test_bench = create_test_bench(config)
+                        post_check = None if self._elaborate_only else config.post_check
+                        test_list.add_test(
+                            IndependentSimTestCase(
+                                name=dotjoin(config.name, run_string),
+                                test_case=run_string,
+                                test_bench=test_bench,
+                                has_runner_cfg=True,
+                                post_check_function=post_check))
+
+        else:
+            for config in configurations:
+                test_bench = create_test_bench(config)
+                post_check = None if self._elaborate_only else config.post_check
+                test_list.add_test(
+                    IndependentSimTestCase(
+                        name=config.name,
+                        test_case=None,
+                        test_bench=test_bench,
+                        has_runner_cfg=False,
+                        post_check_function=post_check))
 
     _valid_run_string_fmt = r'[A-Za-z0-9_\-\. ]+'
     _re_valid_run_string = re.compile(_valid_run_string_fmt + "$")
@@ -132,8 +138,8 @@ class TestScanner:
         for run_string in run_strings:
             if run_string in unique and run_string not in not_unique:
                 # @TODO line number information could be useful
-                logger.error('Duplicate test case "%s" in %s'
-                             % (run_string, file_name))
+                logger.error('Duplicate test case "%s" in %s',
+                             run_string, file_name)
                 not_unique.add(run_string)
             unique.add(run_string)
 

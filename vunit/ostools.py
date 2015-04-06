@@ -12,7 +12,7 @@ import threading
 try:
     # Python 3.x
     from queue import Queue
-except:
+except ImportError:
     # Python 2.7
     from Queue import Queue
 
@@ -32,7 +32,7 @@ class Process:
         pass
 
     def __init__(self, args, cwd=None):
-        logger.debug("Starting process: '%s'" % (" ".join(args)))
+        logger.debug("Starting process: '%s'", (" ".join(args)))
         self._process = subprocess.Popen(
             args,
             bufsize=0,
@@ -77,7 +77,7 @@ class Process:
         try:
             while True:
                 line = self._next()
-                if type(line) == int:
+                if isinstance(line, int):
                     if line != 0:
                         raise Process.NonZeroExitCode
                     else:

@@ -12,6 +12,23 @@ from os.path import join, dirname
 
 class TestPylint(unittest.TestCase):
     def test_pylint(self):
-        check_call(["pylint", "-E",
+        check_call(["pylint",
+                    "--disable=missing-docstring",
+                    "--disable=invalid-name",
+                    "--disable=too-few-public-methods",
+                    "--disable=too-many-public-methods",
+                    "--disable=too-many-instance-attributes",
+                    "--disable=too-many-arguments",
+                    "--disable=too-many-locals",
+                    "--disable=relative-import",
+                    "--disable=old-style-class",  # Not a problem for Python3
+                    "--disable=protected-access",
+                    "--disable=unused-import",
+                    "--disable=no-self-use",
+                    "--disable=attribute-defined-outside-init",
+                    "--disable=no-init",
+                    "--disable=locally-disabled",
+                    "--disable=interface-not-implemented",
+                    "--disable=duplicate-code",
                     "--rcfile=" + join(dirname(__file__), "pylintrc"),
                     join(ROOT, "vunit")])

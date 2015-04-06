@@ -129,11 +129,11 @@ if run("Test_2")
 
         error_calls = mock_logger.error.call_args_list
         self.assertEqual(len(error_calls), 2)
-        self.assertTrue("Test_3" in str(error_calls[0]))
-        self.assertTrue(out("entity_arch.vhd") in error_calls[0][0][0])
+        self.assertTrue("Test_3" in error_calls[0][0][1])
+        self.assertTrue(out("entity_arch.vhd") in error_calls[0][0][2])
 
-        self.assertTrue("Test_2" in str(error_calls[1]))
-        self.assertTrue(out("entity_arch.vhd") in error_calls[1][0][0])
+        self.assertTrue("Test_2" in str(error_calls[1][0][1]))
+        self.assertTrue(out("entity_arch.vhd") in error_calls[1][0][2])
 
     def test_create_default_test_with_runner_cfg_generic(self):
         project = ProjectStub()
@@ -173,7 +173,7 @@ if run("Test_2")
     def assert_has_tests(self, test_list, tests):
         self.assertEqual(len(test_list), len(tests))
         for t1, t2 in zip(test_list, tests):
-            if type(t2) is tuple:
+            if isinstance(t2, tuple):
                 name, test_cases = t2
                 self.assertEqual(t1.name, name)
                 self.assertEqual(t1._test_cases, list(test_cases))

@@ -42,7 +42,7 @@ stdout.write("bar\n")
 
         output = []
         process = Process(["python", python_script])
-        process.consume_output(lambda line: output.append(line))
+        process.consume_output(output.append)
         self.assertEqual(output, ["foo", "bar"])
         self.assertEqual(process.output, "foo\nbar\n")
 
@@ -55,7 +55,7 @@ exit(1)
         process = Process(["python", python_script])
         output = []
         self.assertRaises(Process.NonZeroExitCode,
-                          process.consume_output, lambda line: output.append(line))
+                          process.consume_output, output.append)
         self.assertEqual(output, ["error"])
         self.assertEqual(process.output, "error\n")
 
@@ -66,7 +66,7 @@ stderr.write("error\n")
 """)
         process = Process(["python", python_script])
         output = []
-        process.consume_output(lambda line: output.append(line))
+        process.consume_output(output.append)
         self.assertEqual(output, ["error"])
         self.assertEqual(process.output, "error\n")
 

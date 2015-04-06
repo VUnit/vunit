@@ -267,7 +267,7 @@ class VUnit:
 
         idx = 1
         while ostools.file_exists(pp_file_name):
-            logger.debug("Preprocessed file exists '%s', adding prefix" % pp_file_name)
+            logger.debug("Preprocessed file exists '%s', adding prefix", pp_file_name)
             pp_file_name = join(self._preprocessed_path,
                                 library_name, "%i_%s" % (idx, basename(file_name)))
             idx += 1
@@ -310,7 +310,7 @@ class VUnit:
             exit(1)
         except TestScannerError:
             exit(1)
-        except:
+        except:  # pylint: disable=bare-except
             traceback.print_exc()
             exit(1)
 

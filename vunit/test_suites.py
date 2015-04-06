@@ -122,7 +122,7 @@ class SameSimTestSuite:
         test_log = ostools.read_file(log_file)
         test_starts = []
         for test_name in self._test_cases:
-            if ("Test Runner,Test case: " + test_name) in test_log:
+            if "Test Runner,Test case: " + test_name in test_log:
                 test_starts.append(test_name)
 
         for test_name in test_starts[:-1]:
@@ -149,7 +149,7 @@ def encode_dict(dictionary):
 
 
 def encode_dict_value(value):
-    if type(value) is str:
+    if isinstance(value, str):
         return value
     else:
         return str(value).lower()

@@ -4,7 +4,8 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
-from re import compile, MULTILINE, DOTALL, split
+import re
+from re import MULTILINE, DOTALL, split
 
 
 class LocationPreprocessor:
@@ -29,7 +30,7 @@ class LocationPreprocessor:
 
     @staticmethod
     def _find_closing_parenthesis(args):
-        p = compile(r'\(|\)')
+        p = re.compile(r'\(|\)')
         balance = 0
         for m in p.finditer(args):
             balance += 1 if m.group() == '(' else -1
@@ -37,11 +38,11 @@ class LocationPreprocessor:
                 return m.start()
 
     def run(self, code, file_name):
-        potential_subprogram_call_with_arguments_pattern = compile(
+        potential_subprogram_call_with_arguments_pattern = re.compile(
             r'[^a-zA-Z0-9_](?P<subprogram>' + '|'.join(self._subprograms_with_arguments) + r')\s*(?P<args>\()',
             MULTILINE)
 
-        potential_subprogram_call_without_arguments_pattern = compile(
+        potential_subprogram_call_without_arguments_pattern = re.compile(
             r'[^a-zA-Z0-9_](?P<subprogram>' + '|'.join(self._subprograms_without_arguments) + r')\s*;',
             MULTILINE)
 
@@ -50,9 +51,9 @@ class LocationPreprocessor:
             matches += list(potential_subprogram_call_without_arguments_pattern.finditer(code))
         matches.sort(key=lambda match: match.start('subprogram'), reverse=True)
 
-        already_fixed_file_name_pattern = compile(r'file_name\s*=>', MULTILINE)
-        already_fixed_line_num_pattern = compile(r'line_num\s*=>', MULTILINE)
-        subprogram_declaration_start_backwards_pattern = compile(r'\s+(erudecorp|noitcnuf)')
+        already_fixed_file_name_pattern = re.compile(r'file_name\s*=>', MULTILINE)
+        already_fixed_line_num_pattern = re.compile(r'line_num\s*=>', MULTILINE)
+        subprogram_declaration_start_backwards_pattern = re.compile(r'\s+(erudecorp|noitcnuf)')
 
         for m in matches:
             if subprogram_declaration_start_backwards_pattern.match(code[m.start():0:-1]):

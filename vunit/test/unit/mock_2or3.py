@@ -8,7 +8,7 @@
 
 try:
     # Python 3.x (builtin)
-    import unittest.mock as mock  # pylint: disable=no-name-in-module
-except:
+    import unittest.mock as mock  # pylint: disable=import-error, no-name-in-module
+except ImportError:
     # Python 2.7 (needs separate install)
-    import mock as mock
+    import mock as mock  # pylint: disable=import-error
