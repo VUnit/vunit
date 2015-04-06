@@ -8,13 +8,14 @@ import unittest
 from os.path import abspath, join, dirname
 from vunit.ui import VUnit
 from common import has_modelsim
+from vunit import ROOT
 
 
 @unittest.skipUnless(has_modelsim(), 'Requires modelsim')
 class TestDictionary(unittest.TestCase):
     def run_sim(self, vhdl_standard):
         output_path = join(dirname(abspath(__file__)), 'dictionary_out')
-        vhdl_path = join(dirname(abspath(__file__)), '..', 'vhdl')
+        vhdl_path = join(ROOT, 'vhdl')
 
         ui = VUnit(clean=True,
                    output_path=output_path,
