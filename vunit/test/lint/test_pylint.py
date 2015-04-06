@@ -7,13 +7,11 @@
 import unittest
 from subprocess import check_call
 from vunit import ROOT
+from os.path import join, dirname
 
 
-class TestPep8(unittest.TestCase):
-    def test_pep8(self):
-        check_call(["pep8",
-                    "--show-source",
-                    "--show-pep8",
-                    "--max-line-length=120",
-                    "--ignore=E402",
-                    ROOT])
+class TestPylint(unittest.TestCase):
+    def test_pylint(self):
+        check_call(["pylint", "-E",
+                    "--rcfile=" + join(dirname(__file__), "pylintrc"),
+                    join(ROOT, "vunit")])
