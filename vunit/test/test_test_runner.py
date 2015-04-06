@@ -10,16 +10,11 @@ import unittest
 from os.path import join, dirname, exists
 from shutil import rmtree
 
-try:
-    # Python 3.x (builtin)
-    from unittest.mock import Mock
-except:
-    # Python 2.7 (needs separate install)
-    from mock import Mock
-
 from vunit.test_runner import TestRunner
 from vunit.test_report import TestReport, PASSED, FAILED
 from vunit.test_list import TestList
+
+from .mock_2or3 import mock
 
 
 class TestTestRunner(unittest.TestCase):
@@ -71,7 +66,7 @@ class TestTestRunner(unittest.TestCase):
         self.assertEqual(self.report.result_of("test").output, output)
 
     def create_test(self, name, passed):
-        test_case = Mock(spec_set=TestCaseMockSpec)
+        test_case = mock.Mock(spec_set=TestCaseMockSpec)
         test_case.configure_mock(name=name)
 
         def run_side_effect(*args, **kwargs):
