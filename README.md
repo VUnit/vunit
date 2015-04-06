@@ -4,7 +4,7 @@ VUnit is an open source unit testing framework for VHDL released under the terms
 
 # Project Mission
 
-The VUnit project mission is to apply best SW testing practises to the world of VHDL by providing the tools missing to adapt to such practises. The major missing piece is the unit testing framework, hence the name V(HDL)Unit. However, VUnit also provides supporting functionality not normally considered as a part of an unit testing framework. 
+The VUnit project mission is to apply best SW testing practises to the world of VHDL by providing the tools missing to adapt to such practises. The major missing piece is the unit testing framework, hence the name V(HDL)Unit. However, VUnit also provides supporting functionality not normally considered as a part of an unit testing framework.
 
 # Main Features
 * Builds on the commonly used [xUnit](http://en.wikipedia.org/wiki/XUnit) architecture.
@@ -43,11 +43,15 @@ There are a number of ways to get started.
 *  The [user guide](user_guide.md) will give an introduction on how VUnit is used with Python scripting and from the command line
 *  There are also various presentations of VUnit on [YouTube](https://www.youtube.com/channel/UCCPVCaeWkz6C95aRUTbIwdg). For example [an introduction to unit testing (6 min)](https://www.youtube.com/watch?v=PZuBqcxS8t4) and a [short introduction to VUnit (12 min)](https://www.youtube.com/watch?v=D8s_VLD91tw).
 
+# Contributing
+Contributing in the form of code, feedback, ideas or bug reports are welcome.
+Before contributing code read our [Development document](developing.md).
+
 # Main Contributors
-Lars Asplund  
+Lars Asplund
 Olof Kraigher
 
-# License 
+# License
 ## VUnit
 VUnit except for OSVVM (see below) is released under the terms of [Mozilla Public
 License, v. 2.0](http://mozilla.org/MPL/2.0/).
@@ -58,5 +62,3 @@ License, v. 2.0](http://mozilla.org/MPL/2.0/).
 OSVVM is redistributed with VUnit for your convenience and is located under [vhdl/osvvm](vhdl/osvvm). Derivative work is also located under [examples/osvvm\_integration/src](examples/osvvm_integration/src). These files are licensed under the terms of [ARTISTIC License](http://www.perlfoundation.org/artistic_license_2_0).
 
 &copy; 2010 - 2014 by SynthWorks Design Inc.  All rights reserved.
-
-
