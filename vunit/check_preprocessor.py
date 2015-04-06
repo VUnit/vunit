@@ -23,12 +23,13 @@ class CheckPreprocessor:
         check_relation_calls = list(check_relation_pattern.finditer(code))
         check_relation_calls.reverse()
 
-        for c in check_relation_calls:
-            relation, offset_to_point_before_closing_paranthesis = self._extract_relation(code, c)
+        for match in check_relation_calls:
+            relation, offset_to_point_before_closing_paranthesis = self._extract_relation(code, match)
             if relation:
                 auto_msg_parameter = ', auto_msg => %s' % relation.make_error_msg()
-                code = (code[:c.end('parameters') + offset_to_point_before_closing_paranthesis] +
-                        auto_msg_parameter + code[c.end('parameters') + offset_to_point_before_closing_paranthesis:])
+                code = (code[:match.end('parameters') + offset_to_point_before_closing_paranthesis] +
+                        auto_msg_parameter +
+                        code[match.end('parameters') + offset_to_point_before_closing_paranthesis:])
 
         return code
 
@@ -38,26 +39,26 @@ class CheckPreprocessor:
         parameter_tokens = []
         index = 1
         relation = None
-        for t in self._classify_tokens(code[check.start('parameters') + 1:]):
+        for token in self._classify_tokens(code[check.start('parameters') + 1:]):
             add_token = True
-            if t.type == Token.NORMAL:
+            if token.type == Token.NORMAL:
                 # The first found parameter containing a top-level relation is assumed
                 # to be the expr parameter. This is a very reasonable assumption since
                 # the return types of normal relational operators are boolean, std_ulogic,
                 # or bit. The expr parameter is the only input of these types.
                 if not relation:
-                    if end_of_parameter(t):
+                    if end_of_parameter(token):
                         relation = self._get_relation_from_parameter(parameter_tokens)
                         parameter_tokens = []
                         add_token = False
 
-                if t.level == 0:
+                if token.level == 0:
                     break
-            elif t.is_comment:
+            elif token.is_comment:
                 add_token = False
 
             if add_token:
-                parameter_tokens.append(t)
+                parameter_tokens.append(token)
 
             index += 1
 
@@ -68,12 +69,12 @@ class CheckPreprocessor:
         return relation, index - 1
 
     @staticmethod
-    def _classify_tokens(s):
+    def _classify_tokens(code):
         # pylint: disable=too-many-branches
-        def even_quotes(s):
+        def even_quotes(code):
             n_quotes = 0
-            for index in range(0, len(s), 2):
-                if s[index] != "'":
+            for index in range(0, len(code), 2):
+                if code[index] != "'":
                     break
                 n_quotes += 1
 
@@ -82,59 +83,59 @@ class CheckPreprocessor:
         code_section = Token.NORMAL
         level = 1
         index = 0
-        for c in s:
-            t = Token(c)
+        for char in code:
+            token = Token(char)
             if code_section == Token.NORMAL:
-                if c == '"':
+                if char == '"':
                     code_section = Token.STRING
-                elif c == "'":
+                elif char == "'":
                     # Used to avoid mixing up qualified expressions and
                     # character literals, e.g. std_logic'('1').
-                    if even_quotes(s[index:]):
+                    if even_quotes(code[index:]):
                         code_section = Token.CHARACTER_LITERAL
-                elif s[index:index + 2] == '--':
+                elif code[index:index + 2] == '--':
                     code_section = Token.LINE_COMMENT
-                elif s[index:index + 2] == '/*':
+                elif code[index:index + 2] == '/*':
                     code_section = Token.BLOCK_COMMENT
-                elif c == '(':
+                elif char == '(':
                     level += 1
-                elif c == ')':
+                elif char == ')':
                     level -= 1
 
                 next_code_section = code_section
 
             elif code_section == Token.STRING:
-                if c == '"':
+                if char == '"':
                     next_code_section = Token.NORMAL
             elif code_section == Token.CHARACTER_LITERAL:
-                if c == "'":
+                if char == "'":
                     next_code_section = Token.NORMAL
             elif code_section == Token.LINE_COMMENT:
-                if c == '\n':
+                if char == '\n':
                     next_code_section = Token.NORMAL
             elif code_section == Token.BLOCK_COMMENT:
-                if s[index - 1:index + 1] == '*/':
+                if code[index - 1:index + 1] == '*/':
                     next_code_section = Token.NORMAL
 
-            t.type = code_section
-            t.level = level
+            token.type = code_section
+            token.level = level
             index += 1
 
-            yield t
+            yield token
 
             code_section = next_code_section
 
     def _get_relation_from_parameter(self, tokens):
         def find_top_level_match(matches, tokens, top_level=1):
             if matches:
-                for m in matches:
-                    if not tokens[m.start()].is_quote and tokens[m.start()].level == top_level:
-                        return m
+                for match in matches:
+                    if not tokens[match.start()].is_quote and tokens[match.start()].level == top_level:
+                        return match
 
             return None
 
         relation = None
-        token_string = ''.join([t.value for t in tokens]).strip()
+        token_string = ''.join([token.value for token in tokens]).strip()
         actual_formal = find_top_level_match(self._actual_formal.finditer(token_string), tokens)
         if actual_formal:
             expr = actual_formal.group('actual')
@@ -149,16 +150,16 @@ class CheckPreprocessor:
         # enclosed with parenthesis.
         top_level = min([self._leading_paranthesis.match(expr).group().count('('),
                          self._trailing_paranthesis.match(expr[::-1]).group().count(')')]) + 1
-        o = find_top_level_match(self._find_operators.finditer(expr), tokens[start:], top_level)
-        if o:
+        top_level_match = find_top_level_match(self._find_operators.finditer(expr), tokens[start:], top_level)
+        if top_level_match:
             if top_level == 1:
-                left = expr[:o.start()].strip()
-                right = expr[o.end():].strip()
+                left = expr[:top_level_match.start()].strip()
+                right = expr[top_level_match.end():].strip()
             else:
-                left = expr[:o.start()].replace('(', '', top_level - 1).strip()
-                right = expr[:o.end():-1].replace(')', '', top_level - 1).strip()[::-1]
+                left = expr[:top_level_match.start()].replace('(', '', top_level - 1).strip()
+                right = expr[:top_level_match.end():-1].replace(')', '', top_level - 1).strip()[::-1]
 
-            relation = Relation(left, o.group(), right)
+            relation = Relation(left, top_level_match.group(), right)
 
         return relation
 
@@ -185,15 +186,15 @@ class Token:
 
 
 class Relation:
-    def __init__(self, left, op, right):
+    def __init__(self, left, operand, right):
         self._left = left
-        self._op = op
+        self._operand = operand
         self._right = right
 
     def make_error_msg(self):
         return ('"Relation %s %s %s failed! Left is " & to_string(%s) & ". Right is " & to_string(%s) & "."'
                 % (self._left.replace('"', '""'),
-                   self._op,
+                   self._operand,
                    self._right.replace('"', '""'),
                    self._left,
                    self._right))

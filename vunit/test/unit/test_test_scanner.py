@@ -107,7 +107,7 @@ if run("Test_3")
                               ["work.tb_entity.Test_1",
                                "work.tb_entity.Test_3"])
 
-    @mock.patch("vunit.test_scanner.logger")
+    @mock.patch("vunit.test_scanner.LOGGER")
     def test_duplicate_tests_cause_error(self, mock_logger):
         project = ProjectStub()
         work = project.add_library("work")
@@ -166,19 +166,15 @@ if run("Test_2")
         self.assert_has_tests(tests,
                               [("work.tb_entity", ("Test_1", "Test_2"))])
 
-    def assertCountEqual(self, values1, values2):
-        # Python 2.7 compatability
-        self.assertEqual(sorted(values1), sorted(values2))
-
     def assert_has_tests(self, test_list, tests):
         self.assertEqual(len(test_list), len(tests))
-        for t1, t2 in zip(test_list, tests):
-            if isinstance(t2, tuple):
-                name, test_cases = t2
-                self.assertEqual(t1.name, name)
-                self.assertEqual(t1._test_cases, list(test_cases))
+        for test1, test2 in zip(test_list, tests):
+            if isinstance(test2, tuple):
+                name, test_cases = test2
+                self.assertEqual(test1.name, name)
+                self.assertEqual(test1._test_cases, list(test_cases))
             else:
-                self.assertEqual(t1.name, t2)
+                self.assertEqual(test1.name, test2)
 
 
 class ProjectStub:

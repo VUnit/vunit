@@ -53,16 +53,16 @@ class TestCsvLogs(unittest.TestCase):
         out_fp.close()
         csv_logs.write(out_fp.name)
 
-        with open(out_fp.name, "r") as f:
-            result = f.read()
+        with open(out_fp.name, "r") as fread:
+            result = fread.read()
         remove(out_fp.name)
 
         return result
 
     def test_should_sort_several_csv_files(self):
-        c = CsvLogs(self._all_fields_files)
+        csvlogs = CsvLogs(self._all_fields_files)
 
-        result = self._write_to_file_and_read_back_result(c)
+        result = self._write_to_file_and_read_back_result(csvlogs)
         expected_result = """#,Time,Level,File,Line,Source,Message
 0,10 fs,info,bar.vhd,17,src1,This is an info entry.
 4,100 fs,info,zoo.vhd,17,src3,This is an info entry.
@@ -74,9 +74,9 @@ class TestCsvLogs(unittest.TestCase):
         self.assertEqual(result, expected_result)
 
     def test_should_sort_single_csv_file(self):
-        c = CsvLogs(self._log_files[0])
+        csvlogs = CsvLogs(self._log_files[0])
 
-        result = self._write_to_file_and_read_back_result(c)
+        result = self._write_to_file_and_read_back_result(csvlogs)
         expected_result = """#,Time,Level,File,Line,Source,Message
 0,10 fs,info,bar.vhd,17,src1,This is an info entry.
 10,20 ps,failure,foo.vhd,42,src2,This is a failure entry.
@@ -85,19 +85,19 @@ class TestCsvLogs(unittest.TestCase):
         self.assertEqual(result, expected_result)
 
     def test_should_sort_single_empty_csv_file(self):
-        c = CsvLogs(self._log_files[1])
+        csvlogs = CsvLogs(self._log_files[1])
 
-        result = self._write_to_file_and_read_back_result(c)
+        result = self._write_to_file_and_read_back_result(csvlogs)
         expected_result = """#,Time,Level,File,Line,Source,Message
 """
         self.assertEqual(result, expected_result)
 
     def test_should_be_possible_to_add_csv_files(self):
-        c = CsvLogs()
+        csvlogs = CsvLogs()
         for i in range(3):
-            c.add(self._log_files[i])
+            csvlogs.add(self._log_files[i])
 
-        result = self._write_to_file_and_read_back_result(c)
+        result = self._write_to_file_and_read_back_result(csvlogs)
         expected_result = """#,Time,Level,File,Line,Source,Message
 0,10 fs,info,bar.vhd,17,src1,This is an info entry.
 4,100 fs,info,zoo.vhd,17,src3,This is an info entry.
@@ -109,9 +109,9 @@ class TestCsvLogs(unittest.TestCase):
         self.assertEqual(result, expected_result)
 
     def test_should_sort_several_csv_files_with_non_default_fields(self):
-        c = CsvLogs(self._few_fields_files, ['#', 'Time', 'Level', 'Source', 'Message'])
+        csvlogs = CsvLogs(self._few_fields_files, ['#', 'Time', 'Level', 'Source', 'Message'])
 
-        result = self._write_to_file_and_read_back_result(c)
+        result = self._write_to_file_and_read_back_result(csvlogs)
         expected_result = """#,Time,Level,Source,Message
 0,10 fs,info,src1,This is an info entry.
 4,100 fs,info,src3,This is an info entry.

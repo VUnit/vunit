@@ -21,17 +21,17 @@ class CsvLogs:
 
     def add(self, pattern):
         for csv_file in [abspath(p) for p in glob(pattern)]:
-            with open(csv_file, "r") as f:
-                sample = f.readline()
-                f.seek(0)
+            with open(csv_file, "r") as fread:
+                sample = fread.readline()
+                fread.seek(0)
                 if len(sample) > 0:
                     dialect = Sniffer().sniff(sample)
-                    self._entries += DictReader(f, fieldnames=self._field_names, dialect=dialect)
+                    self._entries += DictReader(fread, fieldnames=self._field_names, dialect=dialect)
 
         self._entries.sort(key=lambda dictionary: int(dictionary['#']))
 
     def write(self, output_file):
-        with open(output_file, "w") as f:
-            csv_writer = DictWriter(f, delimiter=',', fieldnames=self._field_names, lineterminator="\n")
-            csv_writer.writerow({f: f for f in self._field_names})
+        with open(output_file, "w") as fwrite:
+            csv_writer = DictWriter(fwrite, delimiter=',', fieldnames=self._field_names, lineterminator="\n")
+            csv_writer.writerow({name: name for name in self._field_names})
             csv_writer.writerows(self._entries)

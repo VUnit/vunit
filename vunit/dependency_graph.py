@@ -20,9 +20,9 @@ class DependencyGraph:
 
             visited.add(node)
             if node in self._forward:
-                for n in self._forward[node]:
-                    if n in not_visited:
-                        visit(n)
+                for other_node in self._forward[node]:
+                    if other_node in not_visited:
+                        visit(other_node)
             not_visited.remove(node)
             sorted_nodes.append(node)
 

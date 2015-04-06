@@ -5,7 +5,7 @@
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 import logging
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 from os.path import basename, dirname, splitext
 import re
@@ -61,7 +61,7 @@ class TestScanner:
             if "tb_path" in entity.generic_names:
                 new_value = '%s/' % dirname(file_name).replace("\\", "/")
                 if "tb_path" in generics:
-                    logger.warning(("The 'tb_path' generic from a configuration of %s of was overwritten, " %
+                    LOGGER.warning(("The 'tb_path' generic from a configuration of %s of was overwritten, " %
                                     dotjoin(entity.library_name, entity.name, config.name)) +
                                    ("old value was '%s', new value is '%s'" %
                                     (generics["tb_path"], new_value)))
@@ -135,7 +135,7 @@ class TestScanner:
         for run_string in run_strings:
             if run_string in unique and run_string not in not_unique:
                 # @TODO line number information could be useful
-                logger.error('Duplicate test case "%s" in %s',
+                LOGGER.error('Duplicate test case "%s" in %s',
                              run_string, file_name)
                 not_unique.add(run_string)
             unique.add(run_string)
@@ -145,7 +145,7 @@ class TestScanner:
 
         for run_string in run_strings:
             if self._re_valid_run_string.match(run_string) is None:
-                logger.warning('Test name "%s" does not match %s in %s',
+                LOGGER.warning('Test name "%s" does not match %s in %s',
                                run_string, self._valid_run_string_fmt, file_name)
 
         return run_strings
@@ -158,7 +158,7 @@ class TestScanner:
         for match in self._re_pragma.finditer(code):
             pragma = match.group(1)
             if pragma not in self._valid_pragmas:
-                logger.warning("Invalid pragma '%s' in %s",
+                LOGGER.warning("Invalid pragma '%s' in %s",
                                pragma,
                                file_name)
             pragmas.append(pragma)

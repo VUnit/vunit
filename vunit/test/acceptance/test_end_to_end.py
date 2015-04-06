@@ -86,8 +86,8 @@ class TestVunitEndToEnd(unittest.TestCase):
         ui.add_source_files(join(verilog_path, "*.sv"), "lib")
         try:
             ui.main()
-        except SystemExit as e:
-            self.assertEqual(e.code, 0)
+        except SystemExit as ex:
+            self.assertEqual(ex.code, 0)
 
     def create_ui(self, test_patterns=None, persistent_sim=True):
         vhdl_path = join(dirname(__file__), "vhdl")

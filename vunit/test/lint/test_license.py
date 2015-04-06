@@ -56,8 +56,8 @@ class TestLicense(unittest.TestCase):
             first_year = datetime.now().year
             last_year = first_year
 
-        with open(file_name) as fp:
-            code = fp.read()
+        with open(file_name) as fread:
+            code = fread.read()
             match = self._re_license_notice.search(code)
             self.assertIsNotNone(match, "Failed to find license notice in %s" % file_name)
             if first_year == last_year:

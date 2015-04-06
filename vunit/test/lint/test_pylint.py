@@ -14,7 +14,6 @@ class TestPylint(unittest.TestCase):
     def test_pylint(self):
         check_call(["pylint",
                     "--disable=missing-docstring",
-                    "--disable=invalid-name",
                     "--disable=too-few-public-methods",
                     "--disable=too-many-public-methods",
                     "--disable=too-many-instance-attributes",

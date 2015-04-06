@@ -20,7 +20,7 @@ from os.path import exists, getmtime, dirname
 import os
 
 import logging
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class Process:
@@ -32,7 +32,7 @@ class Process:
         pass
 
     def __init__(self, args, cwd=None):
-        logger.debug("Starting process: '%s'", (" ".join(args)))
+        LOGGER.debug("Starting process: '%s'", (" ".join(args)))
         self._process = subprocess.Popen(
             args,
             bufsize=0,

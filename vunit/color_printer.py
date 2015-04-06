@@ -4,6 +4,8 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+# pylint: disable=invalid-name
+
 import sys
 import ctypes
 from ctypes import Structure, c_short, c_ushort, byref

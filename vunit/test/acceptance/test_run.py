@@ -25,8 +25,8 @@ class TestRun(unittest.TestCase):
                             "tb_run_lib")
         try:
             ui.main()
-        except SystemExit as e:
-            self.assertEqual(e.code, 0)
+        except SystemExit as ex:
+            self.assertEqual(ex.code, 0)
 
     def test_run_vhdl_93(self):
         self.run_sim('93')

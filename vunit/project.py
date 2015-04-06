@@ -7,7 +7,7 @@
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 import logging
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 import hashlib
 from os.path import join, basename, dirname
@@ -88,23 +88,23 @@ class SourceFile:
                 self.depending_components = design_file.component_instantiations
             except:  # pylint: disable=bare-except
                 traceback.print_exc()
-                logger.error("Failed to parse %s", name)
+                LOGGER.error("Failed to parse %s", name)
 
         for design_unit in self.design_units:
             if design_unit.is_primary:
-                logger.debug('Adding primary design unit (%s) %s', design_unit.unit_type, design_unit.name)
+                LOGGER.debug('Adding primary design unit (%s) %s', design_unit.unit_type, design_unit.name)
             elif design_unit.unit_type == 'package body':
-                logger.debug('Adding secondary design unit (package body) for package %s',
+                LOGGER.debug('Adding secondary design unit (package body) for package %s',
                              design_unit.primary_design_unit)
             else:
-                logger.debug('Adding secondary design unit (%s) %s', design_unit.unit_type, design_unit.name)
+                LOGGER.debug('Adding secondary design unit (%s) %s', design_unit.unit_type, design_unit.name)
 
         if len(self.depending_components) != 0:
-            logger.debug("The file '%s' has the following components:", self.name)
+            LOGGER.debug("The file '%s' has the following components:", self.name)
             for component in self.depending_components:
-                logger.debug(component)
+                LOGGER.debug(component)
         else:
-            logger.debug("The file '%s' has no components", self.name)
+            LOGGER.debug("The file '%s' has no components", self.name)
 
     def _find_dependencies(self, design_file):
         # Find dependencies introduced by the use clause
@@ -192,7 +192,7 @@ class Project:
     @staticmethod
     def _validate_library_name(library_name):
         if library_name == "work":
-            logger.error("Cannot add library named work. work is a reference to the current library. "
+            LOGGER.error("Cannot add library named work. work is a reference to the current library. "
                          "http://www.sigasi.com/content/work-not-vhdl-library")
             raise RuntimeError("Illegal library name 'work'")
 
@@ -201,15 +201,15 @@ class Project:
         if logical_name not in self._libraries:
             library = Library(logical_name, directory, is_external=is_external)
             self._libraries[logical_name] = library
-            logger.info('Adding library %s with path %s', logical_name, directory)
+            LOGGER.info('Adding library %s with path %s', logical_name, directory)
         else:
             assert allow_replacement
             library = Library(logical_name, directory, is_external=is_external)
             self._libraries[logical_name] = library
-            logger.info('Replacing library %s with path %s', logical_name, directory)
+            LOGGER.info('Replacing library %s with path %s', logical_name, directory)
 
     def add_source_file(self, file_name, library_name, file_type='vhdl'):
-        logger.info('Adding source file %s to library %s', file_name, library_name)
+        LOGGER.info('Adding source file %s to library %s', file_name, library_name)
         self._validate_library_name(library_name)
         library = self._libraries[library_name]
         source_file = SourceFile(file_name, library, file_type)
@@ -228,7 +228,7 @@ class Project:
             try:
                 primary_unit = library.primary_design_units[unit.primary_design_unit]
             except KeyError:
-                logger.warning("failed to find a primary design unit '%s' in library '%s'",
+                LOGGER.warning("failed to find a primary design unit '%s' in library '%s'",
                                unit.primary_design_unit, library.name)
             else:
                 yield primary_unit.source_file
@@ -239,14 +239,14 @@ class Project:
                 library = self._libraries[library_name]
             except KeyError:
                 if library_name not in ("ieee", "std"):
-                    logger.warning("failed to find library '%s'", library_name)
+                    LOGGER.warning("failed to find library '%s'", library_name)
                 continue
 
             try:
                 primary_unit = library.primary_design_units[unit_name]
             except KeyError:
                 if not library._is_external:
-                    logger.warning("failed to find a primary design unit '%s' in library '%s'",
+                    LOGGER.warning("failed to find a primary design unit '%s' in library '%s'",
                                    unit_name, library.name)
             else:
                 yield primary_unit.source_file
@@ -266,7 +266,7 @@ class Project:
                     yield primary_unit.source_file
 
             if not found_component_entity:
-                logger.debug("failed to find a matching entity for component '%s' ", unit_name)
+                LOGGER.debug("failed to find a matching entity for component '%s' ", unit_name)
 
     def _create_dependency_graph(self):
         def add_dependency(start, end):
@@ -276,7 +276,7 @@ class Project:
             is_new = dependency_graph.add_dependency(start, end)
 
             if is_new:
-                logger.info('Adding dependency: %s depends on %s', end.name, start.name)
+                LOGGER.info('Adding dependency: %s depends on %s', end.name, start.name)
 
         def add_dependencies(dependency_function):
             for source_file in self.get_source_files_in_order():
@@ -329,13 +329,13 @@ class Project:
         md5_file_name = self._hash_file_name_of(source_file)
 
         if not ostools.file_exists(md5_file_name):
-            logger.debug("%s has no vunit_hash file at %s and must be recompiled",
+            LOGGER.debug("%s has no vunit_hash file at %s and must be recompiled",
                          source_file.name, md5_file_name)
             return True
 
         old_md5 = ostools.read_file(md5_file_name)
         if old_md5 != md5:
-            logger.debug("%s has different hash than last time and must be recompiled",
+            LOGGER.debug("%s has different hash than last time and must be recompiled",
                          source_file.name)
             return True
 
@@ -346,11 +346,11 @@ class Project:
                 continue
 
             if ostools.get_modification_time(other_md5_file_name) > ostools.get_modification_time(md5_file_name):
-                logger.debug("%s has dependency compiled earlier and must be recompiled",
+                LOGGER.debug("%s has dependency compiled earlier and must be recompiled",
                              source_file.name)
                 return True
 
-        logger.debug("%s has same hash file and must not be recompiled",
+        LOGGER.debug("%s has same hash file and must not be recompiled",
                      source_file.name)
 
         return False
@@ -363,4 +363,4 @@ class Project:
     def update(self, source_file):
         new_md5 = source_file.md5()
         ostools.write_file(self._hash_file_name_of(source_file), new_md5)
-        logger.debug('Wrote %s md5=%s', source_file.name, new_md5)
+        LOGGER.debug('Wrote %s md5=%s', source_file.name, new_md5)

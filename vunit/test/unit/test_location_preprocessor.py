@@ -8,11 +8,10 @@ import unittest
 from vunit.location_preprocessor import LocationPreprocessor
 
 
-class TestCsvsub_progs(unittest.TestCase):
+class TestLocationPreprocessor(unittest.TestCase):
     def setUp(self):
         self._location_preprocessor = LocationPreprocessor()
         self._location_preprocessor.add_subprogram('sub_prog')
-        self.maxDiff = None
 
     def _verify_result(self, code, expected_result):
         result = self._location_preprocessor.run(code, 'foo.vhd')

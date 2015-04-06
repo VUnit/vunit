@@ -10,57 +10,59 @@ import unittest
 
 class TestDependencyGraph(unittest.TestCase):
     def _add_nodes_and_dependencies(self, graph, nodes, dependencies):
-        for n in nodes:
-            graph.add_node(n)
-        for d in dependencies:
-            graph.add_dependency(d[0], d[1])
+        for node in nodes:
+            graph.add_node(node)
+        for dep in dependencies:
+            graph.add_dependency(dep[0], dep[1])
 
     def test_should_return_empty_compile_order_for_no_nodes(self):
-        g = DependencyGraph()
-        self.assertEqual(g.toposort(), [], 'Should return empty list')
+        graph = DependencyGraph()
+        self.assertEqual(graph.toposort(), [], 'Should return empty list')
 
     def test_should_return_list_of_nodes_when_there_are_no_dependencies(self):
         nodes = ['a', 'b', 'c', 'd']
-        g = DependencyGraph()
-        self._add_nodes_and_dependencies(g, nodes, [])
-        result = g.toposort()
+        graph = DependencyGraph()
+        self._add_nodes_and_dependencies(graph, nodes, [])
+        result = graph.toposort()
         self.assertEqual(result.sort(), nodes.sort(), 'Should return the node list in any order')
 
     def test_should_sort_in_topological_order_when_there_are_dependencies(self):
         nodes = ['a', 'b', 'c', 'd', 'e', 'f']
         dependencies = [('a', 'b'), ('a', 'c'), ('b', 'd'), ('e', 'f')]
-        g = DependencyGraph()
-        self._add_nodes_and_dependencies(g, nodes, dependencies)
-        result = g.toposort()
-        for d in dependencies:
-            self.assertTrue(result.index(d[0]) < result.index(d[1]), "%s is not before %s" % d)
+        graph = DependencyGraph()
+        self._add_nodes_and_dependencies(graph, nodes, dependencies)
+        result = graph.toposort()
+        self._check_result(result, dependencies)
 
     def test_should_raise_runtime_error_exception_on_self_dependency(self):
         nodes = ['a', 'b', 'c', 'd']
         dependencies = [('a', 'b'), ('a', 'c'), ('b', 'd'), ('d', 'd')]
-        g = DependencyGraph()
-        self._add_nodes_and_dependencies(g, nodes, dependencies)
-        self.assertRaises(RuntimeError, g.toposort)
+        graph = DependencyGraph()
+        self._add_nodes_and_dependencies(graph, nodes, dependencies)
+        self.assertRaises(RuntimeError, graph.toposort)
 
     def test_should_raise_runtime_error_exception_on_long_circular_dependency(self):
         nodes = ['a', 'b', 'c', 'd']
         dependencies = [('a', 'b'), ('a', 'c'), ('b', 'd'), ('d', 'a')]
-        g = DependencyGraph()
-        self._add_nodes_and_dependencies(g, nodes, dependencies)
-        self.assertRaises(RuntimeError, g.toposort)
+        graph = DependencyGraph()
+        self._add_nodes_and_dependencies(graph, nodes, dependencies)
+        self.assertRaises(RuntimeError, graph.toposort)
 
     def test_should_resort_after_additions(self):
         nodes = ['a', 'b', 'c', 'd', 'e', 'f']
         dependencies = [('a', 'b'), ('a', 'c'), ('b', 'd'), ('e', 'f')]
-        g = DependencyGraph()
-        self._add_nodes_and_dependencies(g, nodes, dependencies)
-        g.toposort()
+        graph = DependencyGraph()
+        self._add_nodes_and_dependencies(graph, nodes, dependencies)
+        graph.toposort()
         dependencies = [('a', 'b'), ('a', 'c'), ('b', 'd'), ('e', 'f'), ('b', 'g')]
-        g.add_node('g')
-        g.add_dependency('b', 'g')
-        result = g.toposort()
-        for d in dependencies:
-            self.assertTrue(result.index(d[0]) < result.index(d[1]), "%s is not before %s" % d)
+        graph.add_node('g')
+        graph.add_dependency('b', 'g')
+        result = graph.toposort()
+        self._check_result(result, dependencies)
+
+    def _check_result(self, result, dependencies):
+        for dep1, dep2 in dependencies:
+            self.assertTrue(result.index(dep1) < result.index(dep2), "%s is not before %s" % (dep1, dep2))
 
 if __name__ == '__main__':
     unittest.main()

@@ -29,12 +29,12 @@ class LocationPreprocessor:
 
     @staticmethod
     def _find_closing_parenthesis(args):
-        p = re.compile(r'\(|\)')
+        pattern = re.compile(r'\(|\)')
         balance = 0
-        for m in p.finditer(args):
-            balance += 1 if m.group() == '(' else -1
+        for match in pattern.finditer(args):
+            balance += 1 if match.group() == '(' else -1
             if balance == 0:
-                return m.start()
+                return match.start()
 
     _already_fixed_file_name_pattern = re.compile(r'file_name\s*=>', re.MULTILINE)
     _already_fixed_line_num_pattern = re.compile(r'line_num\s*=>', re.MULTILINE)
@@ -54,25 +54,25 @@ class LocationPreprocessor:
             matches += list(potential_subprogram_call_without_arguments_pattern.finditer(code))
         matches.sort(key=lambda match: match.start('subprogram'), reverse=True)
 
-        for m in matches:
-            if self._subprogram_declaration_start_backwards_pattern.match(code[m.start():0:-1]):
+        for match in matches:
+            if self._subprogram_declaration_start_backwards_pattern.match(code[match.start():0:-1]):
                 continue
             file_name_association = ', file_name => "' + file_name + '"'
-            line_num_association = ', line_num => ' + str(1 + code[:m.start('subprogram')].count('\n'))
-            if 'args' in m.groupdict():
-                closing_paranthesis_start = self._find_closing_parenthesis(code[m.start('args'):])
+            line_num_association = ', line_num => ' + str(1 + code[:match.start('subprogram')].count('\n'))
+            if 'args' in match.groupdict():
+                closing_paranthesis_start = self._find_closing_parenthesis(code[match.start('args'):])
 
-                args = code[m.start('args'): m.start('args') + closing_paranthesis_start]
+                args = code[match.start('args'): match.start('args') + closing_paranthesis_start]
                 already_fixed_file_name = self._already_fixed_file_name_pattern.search(args) is not None
                 already_fixed_line_num = self._already_fixed_line_num_pattern.search(args) is not None
                 file_name_association = file_name_association if not already_fixed_file_name else ''
                 line_num_association = line_num_association if not already_fixed_line_num else ''
 
-                code = (code[:m.start('args') + closing_paranthesis_start] +
+                code = (code[:match.start('args') + closing_paranthesis_start] +
                         line_num_association +
-                        file_name_association + code[m.start('args') + closing_paranthesis_start:])
+                        file_name_association + code[match.start('args') + closing_paranthesis_start:])
             else:
-                code = (code[:m.end('subprogram')] +
+                code = (code[:match.end('subprogram')] +
                         '(' + line_num_association[2:] + file_name_association + ')' +
-                        code[m.end('subprogram'):])
+                        code[match.end('subprogram'):])
         return code

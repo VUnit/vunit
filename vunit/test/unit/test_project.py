@@ -388,7 +388,7 @@ end architecture;
         self.project.update(self.project._source_files[file_name])
 
     def assert_should_recompile(self, file_names):
-        self.assertCountEqual(file_names, [dep.name for dep in self.project.get_files_in_compile_order()])
+        self.assert_count_equal(file_names, [dep.name for dep in self.project.get_files_in_compile_order()])
 
     def assert_compiles_before(self, file_name, before):
         for src_file in self.project.get_files_in_compile_order():
@@ -420,8 +420,8 @@ end architecture;
 
         for entity in source_file.library.get_entities():
             if entity.name == name:
-                self.assertCountEqual(entity.generic_names, generic_names)
-                self.assertCountEqual(entity.architecture_names, architecture_names)
+                self.assert_count_equal(entity.generic_names, generic_names)
+                self.assert_count_equal(entity.architecture_names, architecture_names)
                 return
 
         self.assertFalse("Did not find entity " + name + "in " + source_file_name)
@@ -462,6 +462,6 @@ end architecture;
 
         return None
 
-    def assertCountEqual(self, values1, values2):
+    def assert_count_equal(self, values1, values2):
         # Python 2.7 compatability
         self.assertEqual(sorted(values1), sorted(values2))

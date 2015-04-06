@@ -8,19 +8,9 @@ import unittest
 from vunit.check_preprocessor import CheckPreprocessor
 
 
-def make_auto_msg(left, relation, right):
-    return ('"Relation %s %s %s failed! Left is " & to_string(%s) & ". Right is " & to_string(%s) & "."' %
-            (left.replace('"', '""'),
-             relation,
-             right.replace('"', '""'),
-             left,
-             right))
-
-
-class TestCsvsub_progs(unittest.TestCase):
+class TestCheckPreprocessor(unittest.TestCase):
     def setUp(self):
         self._check_preprocessor = CheckPreprocessor()
-        self.maxDiff = None
 
     def _verify_result(self, code, expected_result):
         result = self._check_preprocessor.run(code, 'foo.vhd')
@@ -178,3 +168,12 @@ check_relation(a ?>= b, auto_msg => %s);""" % (make_auto_msg("a", '=', 'b'),
                                                make_auto_msg("a", '?>', 'b'),
                                                make_auto_msg("a", '?>=', 'b'))
         self._verify_result(code, expected_result)
+
+
+def make_auto_msg(left, relation, right):
+    return ('"Relation %s %s %s failed! Left is " & to_string(%s) & ". Right is " & to_string(%s) & "."' %
+            (left.replace('"', '""'),
+             relation,
+             right.replace('"', '""'),
+             left,
+             right))

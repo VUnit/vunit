@@ -25,8 +25,8 @@ class TestPath(unittest.TestCase):
 
         try:
             ui.main()
-        except SystemExit as e:
-            self.assertEqual(e.code, 0)
+        except SystemExit as ex:
+            self.assertEqual(ex.code, 0)
 
     def test_path_vhdl_93(self):
         self.run_sim('93')

@@ -27,8 +27,8 @@ class TestArray(unittest.TestCase):
 
         try:
             vu.main()
-        except SystemExit as e:
-            self.assertEqual(e.code, 0)
+        except SystemExit as ex:
+            self.assertEqual(ex.code, 0)
 
     def test_array_vhdl_2008(self):
         self.run_sim('2008')

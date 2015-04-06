@@ -29,7 +29,7 @@ from vunit.location_preprocessor import LocationPreprocessor
 from vunit.check_preprocessor import CheckPreprocessor
 
 import logging
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class VUnit:
@@ -267,14 +267,14 @@ class VUnit:
             return file_name
 
         code = ostools.read_file(file_name)
-        for p in preprocessors:
-            code = p.run(code, basename(file_name))
+        for preprocessor in preprocessors:
+            code = preprocessor.run(code, basename(file_name))
 
         pp_file_name = join(self._preprocessed_path, library_name, basename(file_name))
 
         idx = 1
         while ostools.file_exists(pp_file_name):
-            logger.debug("Preprocessed file exists '%s', adding prefix", pp_file_name)
+            LOGGER.debug("Preprocessed file exists '%s', adding prefix", pp_file_name)
             pp_file_name = join(self._preprocessed_path,
                                 library_name, "%i_%s" % (idx, basename(file_name)))
             idx += 1
@@ -292,11 +292,11 @@ class VUnit:
         """
         Enable location preprocessing, must be called before adding any files
         """
-        p = LocationPreprocessor()
+        preprocessor = LocationPreprocessor()
         if additional_subprograms is not None:
             for subprogram in additional_subprograms:
-                p.add_subprogram(subprogram)
-        self._location_preprocessor = p
+                preprocessor.add_subprogram(subprogram)
+        self._location_preprocessor = preprocessor
 
     def enable_check_preprocessing(self):
         """
@@ -497,9 +497,9 @@ class VUnit:
         else:
             library = self.library(library_name)
 
-        for f in glob(join(self._builtin_vhdl_path, "osvvm", "*.vhd")):
-            if basename(f) != 'AlertLogPkg_body_BVUL.vhd':
-                library.add_source_files(f, preprocessors=[])
+        for file_name in glob(join(self._builtin_vhdl_path, "osvvm", "*.vhd")):
+            if basename(file_name) != 'AlertLogPkg_body_BVUL.vhd':
+                library.add_source_files(file_name, preprocessors=[])
 
 
 class LibraryFacade:
