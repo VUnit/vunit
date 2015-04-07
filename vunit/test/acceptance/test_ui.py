@@ -15,7 +15,8 @@ from vunit.ui import VUnit
 
 
 class TestPreprocessor:
-    def run(self, code, file_name):  # pylint: disable=unused-argument
+    @staticmethod
+    def run(code, file_name):  # pylint: disable=unused-argument
         return '-- check_relation(a = b);\n' + code
 
 
@@ -70,7 +71,8 @@ end architecture;
                 files[i].write(self._source.substitute(entity='foo%d' % i))
         return files
 
-    def _delete_temp_files(self, files):
+    @staticmethod
+    def _delete_temp_files(files):
         for file_obj in files:
             remove(file_obj.name)
 

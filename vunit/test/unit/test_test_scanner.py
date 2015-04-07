@@ -31,7 +31,8 @@ class TestTestScanner(unittest.TestCase):
         if exists(self.output_path):
             rmtree(self.output_path)
 
-    def write_file(self, name, contents):
+    @staticmethod
+    def write_file(name, contents):
         with open(name, "w") as fwrite:
             fwrite.write(contents)
 

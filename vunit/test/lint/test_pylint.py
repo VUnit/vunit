@@ -11,7 +11,8 @@ from os.path import join, dirname
 
 
 class TestPylint(unittest.TestCase):
-    def test_pylint(self):
+    @staticmethod
+    def test_pylint():
         check_call(["pylint",
                     "--disable=missing-docstring",
                     "--disable=too-few-public-methods",
@@ -21,7 +22,6 @@ class TestPylint(unittest.TestCase):
                     "--disable=relative-import",
                     "--disable=old-style-class",  # Not a problem for Python3
                     "--disable=protected-access",
-                    "--disable=no-self-use",
                     "--disable=no-init",
                     "--disable=locally-disabled",
                     "--disable=interface-not-implemented",

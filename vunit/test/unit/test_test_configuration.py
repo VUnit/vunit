@@ -97,7 +97,8 @@ class TestTestConfiguration(unittest.TestCase):
                           Configuration("lib.tb_entity.value=2",
                                         generics={"value": 2, "global_value": "local value"})])
 
-    def write_file(self, name, contents):
+    @staticmethod
+    def write_file(name, contents):
         with open(name, "w") as fwrite:
             fwrite.write(contents)
 

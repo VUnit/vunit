@@ -9,12 +9,6 @@ import unittest
 
 
 class TestDependencyGraph(unittest.TestCase):
-    def _add_nodes_and_dependencies(self, graph, nodes, dependencies):
-        for node in nodes:
-            graph.add_node(node)
-        for dep in dependencies:
-            graph.add_dependency(dep[0], dep[1])
-
     def test_should_return_empty_compile_order_for_no_nodes(self):
         graph = DependencyGraph()
         self.assertEqual(graph.toposort(), [], 'Should return empty list')
@@ -63,6 +57,13 @@ class TestDependencyGraph(unittest.TestCase):
     def _check_result(self, result, dependencies):
         for dep1, dep2 in dependencies:
             self.assertTrue(result.index(dep1) < result.index(dep2), "%s is not before %s" % (dep1, dep2))
+
+    @staticmethod
+    def _add_nodes_and_dependencies(graph, nodes, dependencies):
+        for node in nodes:
+            graph.add_node(node)
+        for dep in dependencies:
+            graph.add_dependency(dep[0], dep[1])
 
 if __name__ == '__main__':
     unittest.main()

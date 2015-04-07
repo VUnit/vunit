@@ -60,7 +60,8 @@ class TestRunner:
         self._add_results(results, output_file_name, num_tests,
                           runtime=ostools.get_time() - start)
 
-    def _create_output_file(self, output_file_name):
+    @staticmethod
+    def _create_output_file(output_file_name):
         """
         Remove parent folder of output file if it exists and re-create it
         """

@@ -382,7 +382,8 @@ end architecture;
         self.assertEqual(len(design_file.package_bodies), 1)
         return design_file.package_bodies[0]
 
-    def _create_entity(self):
+    @staticmethod
+    def _create_entity():
         """
         Helper function to create a VHDLEntity
         """

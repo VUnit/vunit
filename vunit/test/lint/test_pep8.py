@@ -10,7 +10,8 @@ from vunit import ROOT
 
 
 class TestPep8(unittest.TestCase):
-    def test_pep8(self):
+    @staticmethod
+    def test_pep8():
         check_call(["pep8",
                     "--show-source",
                     "--show-pep8",
