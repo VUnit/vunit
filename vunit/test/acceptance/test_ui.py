@@ -43,6 +43,7 @@ class ParentalControl:
 class TestUi(unittest.TestCase):
     def setUp(self):
         self._output_path = join(dirname(__file__), 'ui_out')
+        self._preprocessed_path = join(self._output_path, "preprocessed")
         self._source = Template("""
 library vunit_lib;
 context vunit_lib.vunit_context;
@@ -101,7 +102,7 @@ begin
     log("Here I am!"); -- VUnitfier preprocessor: Report turned of[BEEP]eeping original code.
 end architecture;
 """)
-        with open(join(ui._preprocessed_path, 'lib', basename(files[0].name))) as fread:
+        with open(join(self._preprocessed_path, 'lib', basename(files[0].name))) as fread:
             self.assertEqual(fread.read(), pp_source.substitute(entity='foo0', file=basename(files[0].name)))
 
         self._delete_temp_files(files)
@@ -133,7 +134,7 @@ auto_msg => "Relation 1 /= 2 failed! Left is " & to_string(1) & ". Right is " & 
     report "Here I am!";
 end architecture;
 """)
-        with open(join(ui._preprocessed_path, 'lib', basename(files[0].name))) as fread:
+        with open(join(self._preprocessed_path, 'lib', basename(files[0].name))) as fread:
             self.assertEqual(fread.read(), pp_source.substitute(entity='foo0', file=basename(files[0].name)))
 
         self._delete_temp_files(files)
@@ -163,8 +164,8 @@ begin
     $report
 end architecture;
 """)
-        self.assertFalse(exists(join(ui._preprocessed_path, 'lib', basename(files[0].name))))
-        with open(join(ui._preprocessed_path, 'lib', basename(files[1].name))) as fread:
+        self.assertFalse(exists(join(self._preprocessed_path, 'lib', basename(files[0].name))))
+        with open(join(self._preprocessed_path, 'lib', basename(files[1].name))) as fread:
             expectd = pp_source.substitute(
                 entity='foo1',
                 report='log("Here I am!"); -- VUnitfier preprocessor: Report turned off, keeping original code.')

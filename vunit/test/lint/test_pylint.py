@@ -20,7 +20,6 @@ class TestPylint(unittest.TestCase):
                     "--disable=too-many-instance-attributes",
                     "--disable=too-many-arguments",
                     "--disable=relative-import",
-                    "--disable=protected-access",
                     "--disable=locally-disabled",
                     "--disable=interface-not-implemented",
                     "--disable=old-style-class",  # Not a problem for Python3

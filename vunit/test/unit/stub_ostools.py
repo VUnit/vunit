@@ -11,6 +11,13 @@ class OstoolsStub:
         self._times = {}
         self._current_time = 0
 
+    @property
+    def file_names(self):
+        """
+        Return a list of all file names
+        """
+        return self._files.keys()
+
     def file_exists(self, file_name):
         return file_name in self._files
 

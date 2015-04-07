@@ -31,6 +31,13 @@ class Library:
         self._architecture_names = {}
         self._is_external = is_external
 
+    @property
+    def is_external(self):
+        """
+        External black box library, typically compiled outside of VUnit
+        """
+        return self._is_external
+
     def add_design_units(self, design_units):
         for design_unit in design_units:
             if design_unit.is_primary:
@@ -57,6 +64,12 @@ class Library:
             entity.architecture_names = self._architecture_names[entity.name]
             entities.append(entity)
         return entities
+
+    def has_entity(self, name):
+        """
+        Return true if entity with 'name' is in library
+        """
+        return name in self._entities
 
     def __eq__(self, other):
         if isinstance(other, type(self)):
@@ -245,7 +258,7 @@ class Project:
             try:
                 primary_unit = library.primary_design_units[unit_name]
             except KeyError:
-                if not library._is_external:
+                if not library.is_external:
                     LOGGER.warning("failed to find a primary design unit '%s' in library '%s'",
                                    unit_name, library.name)
             else:
@@ -314,6 +327,12 @@ class Project:
 
     def get_source_files_in_order(self):
         return [self._source_files[file_name] for file_name in self._source_files_in_order]
+
+    def get_source_file(self, file_name):
+        """
+        Get source file object by file name
+        """
+        return self._source_files[file_name]
 
     def get_libraries(self):
         return self._libraries.values()

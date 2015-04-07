@@ -143,8 +143,12 @@ class TestStatus:
     def __init__(self, name):
         self._name = name
 
+    @property
+    def name(self):
+        return self._name
+
     def __eq__(self, other):
-        return isinstance(other, type(self)) and self._name == other._name
+        return isinstance(other, type(self)) and self.name == other.name
 
     def __repr__(self):
         return "TestStatus(%r)" % self._name

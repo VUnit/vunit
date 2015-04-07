@@ -228,7 +228,7 @@ end architecture;
 
         for file_name in ["file1.vhd", "file2.vhd", "file3.vhd"]:
             self.update(file_name)
-            self.assertIn(self.project._hash_file_name_of(self.get_source_file(file_name)), self.stub._files.keys())
+            self.assertIn(self.hash_file_name_of(file_name), self.stub.file_names)
 
     def test_should_not_recompile_updated_files(self):
         self.create_dummy_three_file_project()
@@ -282,7 +282,7 @@ end architecture;
         self.update("file3.vhd")
         self.assert_should_recompile([])
 
-        self.stub.remove_file(self.project._hash_file_name_of(self.get_source_file("file2.vhd")))
+        self.stub.remove_file(self.hash_file_name_of("file2.vhd"))
         self.assert_should_recompile(["file2.vhd", "file3.vhd"])
 
     def test_finds_component_instantiation_dependencies(self):
@@ -381,11 +381,17 @@ end architecture;
         self.stub.write_file(file_name, contents)
         self.project.add_source_file(file_name, library_name)
 
+    def hash_file_name_of(self, file_name):
+        """
+        Get the hash file name of a file with 'file_name'
+        """
+        return self.project._hash_file_name_of(self.get_source_file(file_name))  # pylint: disable=protected-access
+
     def get_source_file(self, file_name):
-        return self.project._source_files[file_name]
+        return self.project.get_source_file(file_name)
 
     def update(self, file_name):
-        self.project.update(self.project._source_files[file_name])
+        self.project.update(self.get_source_file(file_name))
 
     def assert_should_recompile(self, file_names):
         self.assert_count_equal(file_names, [dep.name for dep in self.project.get_files_in_compile_order()])
@@ -414,7 +420,7 @@ end architecture;
     def assert_has_entity(self, source_file_name, name,
                           generic_names=None,
                           architecture_names=None):
-        source_file = self.project._source_files[source_file_name]
+        source_file = self.get_source_file(source_file_name)
         generic_names = [] if generic_names is None else generic_names
         architecture_names = [] if architecture_names is None else architecture_names
 
@@ -434,7 +440,7 @@ end architecture;
 
     def assert_has_component(self, source_file_name, component_name):
         found_comp = False
-        for source_file in self.project._source_files.values():
+        for source_file in self.project.get_source_files_in_order():
             for component in source_file.depending_components:
                 if component == component_name:
                     found_comp = True
@@ -448,7 +454,7 @@ end architecture;
                           is_primary=True,
                           primary_design_unit_name=None):
 
-        for source_file in self.project._source_files.values():
+        for source_file in self.project.get_source_files_in_order():
             for design_unit in source_file.design_units:
                 if design_unit.name != design_unit_name:
                     continue

@@ -76,6 +76,6 @@ sleep(1000)
 """)
 
         process = Process(["python", python_script])
-        message = process._next()
+        message = process.next_line()
         process.terminate()
         self.assertEqual(message, "message")

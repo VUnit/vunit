@@ -267,13 +267,13 @@ proc vunit_help {} {
 
     def _send_command(self, cmd):
         self._vsim_process.write("%s\n" % cmd)
-        self._vsim_process._next()
+        self._vsim_process.next_line()
         self._vsim_process.write("#VUNIT_RETURN\n")
         self._vsim_process.consume_output(OutputConsumer())
 
     def _read_var(self, varname):
         self._vsim_process.write("echo $%s #VUNIT_READVAR\n" % varname)
-        self._vsim_process._next()
+        self._vsim_process.next_line()
         self._vsim_process.write("#VUNIT_RETURN\n")
         consumer = OutputConsumer(silent=True)
         self._vsim_process.consume_output(consumer)

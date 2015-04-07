@@ -165,7 +165,7 @@ if run("Test_2")
 
         tests = self.test_scanner.from_project(project)
         self.assert_has_tests(tests,
-                              [("work.tb_entity", ("Test_1", "Test_2"))])
+                              [("work.tb_entity", ("work.tb_entity.Test_1", "work.tb_entity.Test_2"))])
 
     def assert_has_tests(self, test_list, tests):
         self.assertEqual(len(test_list), len(tests))
@@ -173,7 +173,7 @@ if run("Test_2")
             if isinstance(test2, tuple):
                 name, test_cases = test2
                 self.assertEqual(test1.name, name)
-                self.assertEqual(test1._test_cases, list(test_cases))
+                self.assertEqual(test1.test_cases, list(test_cases))
             else:
                 self.assertEqual(test1.name, test2)
 

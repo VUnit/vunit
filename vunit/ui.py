@@ -214,7 +214,7 @@ class VUnit:
         Add external black box library
         """
         self._project.add_library(library_name, abspath(path), is_external=True)
-        return LibraryFacade(library_name, self)
+        return self._create_library_facade(library_name)
 
     def add_library(self, library_name):
         """
@@ -222,15 +222,21 @@ class VUnit:
         """
         path = join(self._sim_specific_path, "libraries", library_name)
         self._project.add_library(library_name, abspath(path))
-        return LibraryFacade(library_name, self)
+        return self._create_library_facade(library_name)
 
     def library(self, library_name):
         """
         Get reference to library
         """
-        if library_name not in self._project._libraries:
+        if not self._project.has_library(library_name):
             raise KeyError(library_name)
-        return LibraryFacade(library_name, self)
+        return self._create_library_facade(library_name)
+
+    def _create_library_facade(self, library_name):
+        """
+        Create a Library object to be exposed to users
+        """
+        return LibraryFacade(library_name, self, self._project, self._configuration)
 
     def set_generic(self, name, value):
         """
@@ -492,7 +498,7 @@ class VUnit:
         library.add_source_files(join(self._builtin_vhdl_path, "array", "src", "array_pkg.vhd"))
 
     def add_osvvm(self, library_name="osvvm"):
-        if library_name not in self._project._libraries:
+        if not self._project.has_library(library_name):
             library = self.add_library(library_name)
         else:
             library = self.library(library_name)
@@ -506,29 +512,30 @@ class LibraryFacade:
     """
     User interface of a library
     """
-    def __init__(self, library_name, parent):
+    def __init__(self, library_name, parent, project, configuration):
         self._library_name = library_name
         self._parent = parent
+        self._project = project
+        self._configuration = configuration
 
     def set_generic(self, name, value):
         """ Set generic within library """
-        self._parent._configuration.set_generic(
-            name, value, scope=self._library_name)
+        self._configuration.set_generic(name, value, scope=self._library_name)
 
     def set_pli(self, value):
         """ Set pli within library """
-        self._parent._configuration.set_pli(value, scope=self._library_name)
+        self._configuration.set_pli(value, scope=self._library_name)
 
     def add_source_files(self, pattern, preprocessors=None):
         self._parent.add_source_files(pattern, self._library_name, preprocessors)
 
     def entity(self, entity_name):
-        library = self._parent._project._libraries[self._library_name]
-        if entity_name not in library._entities:
+        library = self._project.get_library(self._library_name)
+        if not library.has_entity(entity_name):
             raise KeyError(entity_name)
 
         return EntityFacade("%s.%s" % (self._library_name, entity_name),
-                            self._parent._configuration)
+                            self._configuration)
 
 
 class EntityFacade:

@@ -52,9 +52,9 @@ class Process:
         if not self._process.stdin.closed:
             self._process.stdin.write(*args, **kwargs)
 
-    def _next(self):
+    def next_line(self):
         """
-        @returns an interator of process output
+        Return either the next line or the exit code
         """
 
         if not self._reader.eof():
@@ -76,7 +76,7 @@ class Process:
 
         try:
             while True:
-                line = self._next()
+                line = self.next_line()
                 if isinstance(line, int):
                     if line != 0:
                         raise Process.NonZeroExitCode
