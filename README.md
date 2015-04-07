@@ -47,6 +47,9 @@ There are a number of ways to get started.
 Contributing in the form of code, feedback, ideas or bug reports are welcome.
 Before contributing code read our [Development document](developing.md).
 
+# Support
+Any bug reports, feature requests or questions about the usage of VUnit can be made by creating a [new issue](https://github.com/LarsAsplund/vunit/issues/new). The issue should be labeled accordingly using the built-in labels; *bug*, *enhancement* or *question*.
+
 # Main Contributors
 Lars Asplund
 Olof Kraigher
