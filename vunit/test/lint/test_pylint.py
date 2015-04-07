@@ -20,10 +20,10 @@ class TestPylint(unittest.TestCase):
                     "--disable=too-many-instance-attributes",
                     "--disable=too-many-arguments",
                     "--disable=relative-import",
-                    "--disable=old-style-class",  # Not a problem for Python3
                     "--disable=protected-access",
                     "--disable=locally-disabled",
                     "--disable=interface-not-implemented",
-                    "--disable=duplicate-code",
+                    "--disable=old-style-class",  # Not a problem for Python3
+                    "--ignore-imports=y",  # Ignore imports from code duplication check
                     "--rcfile=" + join(dirname(__file__), "pylintrc"),
                     join(ROOT, "vunit")])

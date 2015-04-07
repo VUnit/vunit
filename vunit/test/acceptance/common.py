@@ -31,3 +31,15 @@ def check_report(report_file, tests):
 
     num_tests = int(root.attrib["tests"])
     assert num_tests == len(tests)
+
+
+def assert_exit(function, code=0):
+    """
+    Assert that 'function' performs SystemExit with code
+    """
+    try:
+        function()
+    except SystemExit as ex:
+        assert ex.code == code
+    else:
+        assert False

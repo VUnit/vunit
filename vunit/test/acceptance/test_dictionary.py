@@ -7,28 +7,25 @@
 import unittest
 from os.path import abspath, join, dirname
 from vunit.ui import VUnit
-from common import has_modelsim
+from common import has_modelsim, assert_exit
 from vunit import ROOT
 
 
 @unittest.skipUnless(has_modelsim(), 'Requires modelsim')
 class TestDictionary(unittest.TestCase):
-    def run_sim(self, vhdl_standard):
+    @staticmethod
+    def run_sim(vhdl_standard):
         output_path = join(dirname(abspath(__file__)), 'dictionary_out')
-        vhdl_path = join(ROOT, 'vhdl')
+        src_path = join(ROOT, "vhdl", "dictionary")
 
         ui = VUnit(clean=True,
                    output_path=output_path,
                    vhdl_standard=vhdl_standard,
                    compile_builtins=False)
         ui.add_builtins('vunit_lib', mock_log=True)
-        ui.add_library("lib")
-        ui.add_source_files(join(vhdl_path, "dictionary", "test", "*.vhd"), "lib")
-
-        try:
-            ui.main()
-        except SystemExit as ex:
-            self.assertEqual(ex.code, 0)
+        lib = ui.add_library("lib")
+        lib.add_source_files(join(src_path, "test", "*.vhd"))
+        assert_exit(ui.main, code=0)
 
     def test_dictionary_vhdl_93(self):
         self.run_sim('93')
