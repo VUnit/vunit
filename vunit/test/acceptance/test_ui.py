@@ -15,6 +15,9 @@ from vunit.ui import VUnit
 
 
 class TestPreprocessor:
+    def __init__(self):
+        pass
+
     @staticmethod
     def run(code, file_name):  # pylint: disable=unused-argument
         return '-- check_relation(a = b);\n' + code

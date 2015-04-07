@@ -77,6 +77,6 @@ class TestTestRunner(unittest.TestCase):
         return test_case
 
 
-class TestCaseMockSpec:
+class TestCaseMockSpec:  # pylint: disable=no-init
     name = None
     run = None

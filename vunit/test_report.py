@@ -4,7 +4,7 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
-from vunit.color_printer import ColorPrinter
+from vunit.color_printer import COLOR_PRINTER
 from xml.etree import ElementTree
 from sys import version_info
 
@@ -13,7 +13,7 @@ class TestReport:
     """
     Collect reports from running testcases
     """
-    def __init__(self, printer=ColorPrinter):
+    def __init__(self, printer=COLOR_PRINTER):
         self._test_results = {}
         self._test_names_in_order = []
         self._printer = printer

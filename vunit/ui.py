@@ -16,8 +16,8 @@ import traceback
 from fnmatch import fnmatch
 
 import vunit.ostools as ostools
-from vunit.color_printer import (ColorPrinter,
-                                 NoColorPrinter)
+from vunit.color_printer import (COLOR_PRINTER,
+                                 NO_COLOR_PRINTER)
 from vunit.modelsim_interface import ModelSimInterface
 from vunit.project import Project
 from vunit.test_runner import TestRunner
@@ -167,9 +167,9 @@ class VUnit:
         self._clean = clean
 
         if no_color:
-            self._printer = NoColorPrinter
+            self._printer = NO_COLOR_PRINTER
         else:
-            self._printer = ColorPrinter
+            self._printer = COLOR_PRINTER
 
         self._verbose = verbose
         self._xunit_xml = xunit_xml

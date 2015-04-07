@@ -22,7 +22,6 @@ class TestPylint(unittest.TestCase):
                     "--disable=relative-import",
                     "--disable=old-style-class",  # Not a problem for Python3
                     "--disable=protected-access",
-                    "--disable=no-init",
                     "--disable=locally-disabled",
                     "--disable=interface-not-implemented",
                     "--disable=duplicate-code",

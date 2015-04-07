@@ -4,8 +4,6 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
-# pylint: disable=invalid-name
-
 import sys
 import ctypes
 from ctypes import Structure, c_short, c_ushort, byref
@@ -21,6 +19,9 @@ class LinuxColorPrinter:
     RED = 'r'
     INTENSITY = 'i'
     WHITE = RED + GREEN + BLUE
+
+    def __init__(self):
+        pass
 
     def write(self, text, output_file=None, fg=None, bg=None):
         """
@@ -62,34 +63,31 @@ class LinuxColorPrinter:
 
         return "\033[" + ";".join([str(code) for code in codes]) + "m" + text + "\033[0m"
 
-SHORT = c_short
-WORD = c_ushort
 
-
-class COORD(Structure):
+class Coord(Structure):
     """struct in wincon.h."""
     _fields_ = [
-        ("X", SHORT),
-        ("Y", SHORT)]
+        ("X", c_short),
+        ("Y", c_short)]
 
 
-class SMALL_RECT(Structure):
+class SmallRect(Structure):
     """struct in wincon.h."""
     _fields_ = [
-        ("Left", SHORT),
-        ("Top", SHORT),
-        ("Right", SHORT),
-        ("Bottom", SHORT)]
+        ("Left", c_short),
+        ("Top", c_short),
+        ("Right", c_short),
+        ("Bottom", c_short)]
 
 
-class CONSOLE_SCREEN_BUFFER_INFO(Structure):
+class ConsoleScreenBufferInfo(Structure):
     """struct in wincon.h."""
     _fields_ = [
-        ("dwSize", COORD),
-        ("dwCursorPosition", COORD),
-        ("wAttributes", WORD),
-        ("srWindow", SMALL_RECT),
-        ("dwMaximumWindowSize", COORD)]
+        ("dwSize", Coord),
+        ("dwCursorPosition", Coord),
+        ("wAttributes", c_ushort),
+        ("srWindow", SmallRect),
+        ("dwMaximumWindowSize", Coord)]
 
 
 class Win32ColorPrinter(LinuxColorPrinter):
@@ -97,6 +95,7 @@ class Win32ColorPrinter(LinuxColorPrinter):
     Prints in color on windows
     """
     def __init__(self):
+        LinuxColorPrinter.__init__(self)
         self._stdout_handle = ctypes.windll.kernel32.GetStdHandle(-11)
         self._stderr_handle = ctypes.windll.kernel32.GetStdHandle(-12)
 
@@ -139,7 +138,7 @@ class Win32ColorPrinter(LinuxColorPrinter):
 
     @staticmethod
     def _get_text_attr(handle):
-        csbi = CONSOLE_SCREEN_BUFFER_INFO()
+        csbi = ConsoleScreenBufferInfo()
         ctypes.windll.kernel32.GetConsoleScreenBufferInfo(handle, byref(csbi))
         return csbi.wAttributes
 
@@ -157,7 +156,9 @@ class Win32ColorPrinter(LinuxColorPrinter):
         return code
 
 
-class _NoColorPrinter:
+class NoColorPrinter:
+    def __init__(self):
+        pass
 
     @staticmethod
     def write(text, output_file=None):
@@ -165,8 +166,8 @@ class _NoColorPrinter:
             output_file = sys.stdout
         output_file.write(text)
 
-NoColorPrinter = _NoColorPrinter()
+NO_COLOR_PRINTER = NoColorPrinter()
 if "win" in sys.platform:
-    ColorPrinter = Win32ColorPrinter()
+    COLOR_PRINTER = Win32ColorPrinter()
 else:
-    ColorPrinter = LinuxColorPrinter()
+    COLOR_PRINTER = LinuxColorPrinter()
