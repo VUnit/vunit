@@ -4,30 +4,59 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Contains functionality to manage the configuration of tests
+"""
+
+
 import logging
 LOGGER = logging.getLogger(__name__)
 
 
 class TestConfiguration:
+    """
+    Maintain a global view of test configurations within different
+    scopes.
+
+    Global scope: ""
+    Library scope: "lib"
+    Entity scope: "lib.entity"
+
+    Specific scopes have priority over general scopes in case of conflict
+    """
     def __init__(self):
         self._generics = {}
         self._configs = {}
         self._plis = {}
 
     def set_generic(self, name, value, scope=""):
+        """
+        Set generic within scope
+        """
         if scope not in self._generics:
             self._generics[scope] = {}
         self._generics[scope][name] = value
 
     def set_pli(self, value, scope=""):
+        """
+        Set pli within scope
+        """
         self._plis[scope] = value
 
     def add_config(self, tb_name, name, generics, post_check=None):
+        """
+        Add a configuration for test bench entity with tb_name
+        specifyin the name of the configuration, its generic values as
+        well as a post_check function to be run after the simulation
+        """
         if tb_name not in self._configs:
             self._configs[tb_name] = {}
         self._configs[tb_name][name] = (generics, post_check)
 
     def get_configurations(self, entity, architecture_name):
+        """
+        Get all configurations for architecture_name of entity
+        """
         tb_name = "%s.%s" % (entity.library_name, entity.name)
 
         configs = self._get_configurations_for_tb(entity)
@@ -44,6 +73,9 @@ class TestConfiguration:
         return result
 
     def _get_configurations_for_tb(self, entity):
+        """
+        Helper function to get all configurations for entity
+        """
         global_generics = self._get_generics_for_tb(entity.library_name, entity.name)
         global_generics = self._prune_generics(global_generics, entity.generic_names)
         pli = self._get_pli_for_tb(entity.library_name, entity.name)
@@ -64,6 +96,9 @@ class TestConfiguration:
 
     @staticmethod
     def _prune_generics(generics, generic_names):
+        """
+        Prune generics not found in the list of generic_names
+        """
         generics = generics.copy()
         for gname in list(generics.keys()):
             if gname not in generic_names:
@@ -71,26 +106,35 @@ class TestConfiguration:
         return generics
 
     def _get_generics_for_tb(self, library_name, entity_name):
+        """
+        Get scope inferred generics for entity_name within library_namex
+        """
         generics = {}
         # Global
         generics.update(self._generics.get("", {}))
         # Library
         generics.update(self._generics.get(library_name, {}))
-        # Enitity
+        # Entity
         generics.update(self._generics.get(library_name + "." + entity_name, {}))
         return generics
 
     def _get_pli_for_tb(self, library_name, entity_name):
+        """
+        Get scope inferred pli for entity_name within library_namex
+        """
         # Global
         plis = self._plis.get("", [])
         # Library
         plis = self._plis.get(library_name, plis)
-        # Enitity
+        # Entity
         plis = self._plis.get(library_name + "." + entity_name, plis)
         return plis
 
 
 class Configuration:
+    """
+    Represents a configuration of a test bench
+    """
     def __init__(self,
                  name="",
                  generics=None,

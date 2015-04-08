@@ -4,6 +4,11 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Common functions re-used between test cases
+"""
+
+
 from xml.etree import ElementTree
 from vunit.modelsim_interface import ModelSimInterface
 
@@ -13,6 +18,9 @@ def has_modelsim():
 
 
 def check_report(report_file, tests):
+    """
+    Check an XML report_file for the exact occurrence of specific test results
+    """
     tree = ElementTree.parse(report_file)
     root = tree.getroot()
     report = {}

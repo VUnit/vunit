@@ -4,6 +4,11 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Tests the test scanner
+"""
+
+
 import unittest
 from os.path import join, dirname, exists
 from shutil import rmtree
@@ -16,6 +21,9 @@ from vunit.test.mock_2or3 import mock
 
 
 class TestTestScanner(unittest.TestCase):
+    """
+    Tests the test scanner
+    """
 
     def setUp(self):
         self.simulator_if = 'simulator_if'
@@ -179,10 +187,16 @@ if run("Test_2")
 
 
 class ProjectStub:
+    """
+    A stub of the Project class
+    """
     def __init__(self):
         self._libraries = []
 
     def add_library(self, library_name):
+        """
+        Add a library stub with library_name to the stubbed project
+        """
         library = LibraryStub(library_name)
         self._libraries.append(library)
         return library
@@ -192,6 +206,9 @@ class ProjectStub:
 
 
 class LibraryStub:
+    """
+    A stub of the Library class
+    """
     def __init__(self, name):
         self.name = name
         self._entities = []
@@ -214,6 +231,9 @@ class LibraryStub:
 
 
 class EntityStub:
+    """
+    A stub of the Entity class
+    """
     def __init__(self, name, library_name, file_name,
                  architecture_names, generic_names):
         self.name = name

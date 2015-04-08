@@ -4,6 +4,11 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Functionality to automatically create test suites from a project
+"""
+
+
 import logging
 LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +34,10 @@ class TestScanner:
         self._elaborate_only = elaborate_only
 
     def from_project(self, project, entity_filter=None):
+        """
+        Return a TestList with all test found within the project
+        entity_filter -- An optional filter function of entity objects
+        """
         test_list = TestList()
         for library in project.get_libraries():
             for entity in library.get_entities():
@@ -56,6 +65,9 @@ class TestScanner:
         configurations = self._cfg.get_configurations(entity, architecture_name)
 
         def create_test_bench(config):
+            """
+            Helper function to create a test bench given a config
+            """
             generics = config.generics.copy()
 
             if "tb_path" in entity.generic_names:
@@ -154,6 +166,9 @@ class TestScanner:
     _valid_pragmas = ["run_all_in_same_sim", "fail_on_warning"]
 
     def find_pragmas(self, code, file_name):
+        """
+        Return a list of all vunit pragmas parsed from the code
+        """
         pragmas = []
         for match in self._re_pragma.finditer(code):
             pragma = match.group(1)

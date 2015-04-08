@@ -4,6 +4,11 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Run the string_ops test cases
+"""
+
+
 import unittest
 from os.path import abspath, join, dirname
 from vunit.ui import VUnit
@@ -13,8 +18,15 @@ from vunit import ROOT
 
 @unittest.skipUnless(has_modelsim(), 'Requires modelsim')
 class TestStringOps(unittest.TestCase):
+    """
+    Run the string_ops test cases
+    """
+
     @staticmethod
     def run_sim(vhdl_standard):
+        """
+        Run the string_ops test cases using vhdl_standard
+        """
         output_path = join(dirname(abspath(__file__)), 'string_ops_out')
         src_path = join(ROOT, "vhdl", "string_ops")
 

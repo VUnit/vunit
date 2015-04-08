@@ -4,6 +4,11 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Verify that example projects run correctly
+"""
+
+
 import unittest
 from os.path import join, dirname
 from vunit.test.common import has_modelsim, check_report
@@ -14,6 +19,9 @@ from vunit import ROOT
 
 @unittest.skipUnless(has_modelsim(), "Requires modelsim")
 class TestExampleProjects(unittest.TestCase):
+    """
+    Verify that example projects run correctly
+    """
     def setUp(self):
         self.output_path = join(dirname(__file__), "example_project_out")
         self.report_file = join(self.output_path, "xunit.xml")

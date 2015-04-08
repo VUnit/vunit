@@ -4,6 +4,11 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Test the os-dependent functionality wrappers
+"""
+
+
 from unittest import TestCase
 from vunit.ostools import Process
 from shutil import rmtree
@@ -12,6 +17,9 @@ from os.path import exists, dirname, join, abspath
 
 
 class TestOSTools(TestCase):
+    """
+    Test the os-dependent functionality wrappers
+    """
 
     def setUp(self):
         self.tmp_dir = join(dirname(__file__), "test_ostools_tmp")
@@ -24,6 +32,10 @@ class TestOSTools(TestCase):
             rmtree(self.tmp_dir)
 
     def make_file(self, file_name, contents):
+        """
+        Create a file in the temporary directory with contents
+        Returns the absolute path to the file.
+        """
         full_file_name = abspath(join(self.tmp_dir, file_name))
         with open(full_file_name, "w") as outfile:
             outfile.write(contents)

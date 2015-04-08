@@ -4,8 +4,15 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Utility to stub ostools.py functionality
+"""
+
 
 class OstoolsStub:
+    """
+    Stub of a file system
+    """
     def __init__(self):
         self._files = {}
         self._times = {}

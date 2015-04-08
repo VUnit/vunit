@@ -4,6 +4,10 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Run the 'run' VHDL package tests
+"""
+
 import unittest
 from os.path import join, dirname
 from vunit.ui import VUnit
@@ -13,8 +17,14 @@ from vunit import ROOT
 
 @unittest.skipUnless(has_modelsim(), 'Requires modelsim')
 class TestRun(unittest.TestCase):
+    """
+    Run the 'run' VHDL package tests
+    """
 
     def run_sim(self, vhdl_standard):
+        """
+        Utility function to run the 'run' test compiled with vhdl_standard
+        """
         output_path = join(dirname(__file__), "run_out")
         ui = VUnit(clean=True, output_path=output_path,
                    vhdl_standard=vhdl_standard)

@@ -4,7 +4,10 @@
 #
 # Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
 
-# Wrapper arround mock to handle Python 3.x and 2.7
+"""
+Wrapper arround mock to handle Python 3.x and 2.7
+"""
+
 
 try:
     # Python 3.x (builtin)

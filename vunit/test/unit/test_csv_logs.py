@@ -4,6 +4,10 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Test csv log functionality
+"""
+
 import unittest
 from shutil import rmtree
 from os import remove
@@ -13,6 +17,10 @@ from os.path import join
 
 
 class TestCsvLogs(unittest.TestCase):
+    """
+    Test csv log functionality
+    """
+
     def setUp(self):
         self._log_files = []
         self._all_fields_dir = mkdtemp()
@@ -49,6 +57,12 @@ class TestCsvLogs(unittest.TestCase):
 
     @staticmethod
     def _write_to_file_and_read_back_result(csv_logs):
+        """
+        Create a temporary file just to write the csv log results to it
+        so that it can be read back and returned
+
+        @TODO skip writing the file to disk and stub it
+        """
         out_fp = NamedTemporaryFile(delete=False)
         out_fp.close()
         csv_logs.write(out_fp.name)

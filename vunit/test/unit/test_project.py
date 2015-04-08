@@ -4,6 +4,11 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Test the project functionality
+"""
+
+
 import unittest
 from os.path import join
 import vunit.project
@@ -12,6 +17,10 @@ from vunit.test.stub_ostools import OstoolsStub
 
 
 class TestProject(unittest.TestCase):
+    """
+    Test the Project class
+    """
+
     def setUp(self):
         self.stub = OstoolsStub()
         vunit.project.ostools = self.stub
@@ -328,13 +337,17 @@ begin
 end architecture;
 """)
 
-        self.assert_has_component("top.vhd", "foo")
-        self.assert_has_component("top.vhd", "foo2")
+        self.assert_has_component_instantiation("top.vhd", "foo")
+        self.assert_has_component_instantiation("top.vhd", "foo2")
 
         self.assert_compiles_before("comp1.vhd", before="top.vhd")
         self.assert_compiles_before("comp2.vhd", before="top.vhd")
 
     def create_dummy_three_file_project(self, update_file1=False):
+        """
+        Create a projected containing three dummy files
+        optionally only updating file1
+        """
         self.project = Project()
         self.project.add_library("lib", "work_path")
 
@@ -388,15 +401,24 @@ end architecture;
         return self.project._hash_file_name_of(self.get_source_file(file_name))  # pylint: disable=protected-access
 
     def get_source_file(self, file_name):
+        """
+        Wrapper arround project.get_source_file
+        """
         return self.project.get_source_file(file_name)
 
     def update(self, file_name):
+        """
+        Wrapper arround project.update
+        """
         self.project.update(self.get_source_file(file_name))
 
     def assert_should_recompile(self, file_names):
         self.assert_count_equal(file_names, [dep.name for dep in self.project.get_files_in_compile_order()])
 
     def assert_compiles_before(self, file_name, before):
+        """
+        Assert that the compile order of file_name is before the file named 'before'.
+        """
         for src_file in self.project.get_files_in_compile_order():
             self.update(src_file.name)
         self.assert_should_recompile([])
@@ -405,6 +427,9 @@ end architecture;
         self.assertIn(before, [dep.name for dep in self.project.get_files_in_compile_order()])
 
     def assert_has_package_body(self, source_file_name, package_name):
+        """
+        Assert that there is a package body with package_name withing source_file_name
+        """
         unit = self._find_design_unit(source_file_name,
                                       "package body",
                                       "package body for " + package_name,
@@ -412,6 +437,9 @@ end architecture;
         self.assertIsNotNone(unit)
 
     def assert_has_package(self, source_file_name, name):
+        """
+        Assert that there is a package with name withing source_file_name
+        """
         unit = self._find_design_unit(source_file_name,
                                       "package",
                                       name)
@@ -420,6 +448,10 @@ end architecture;
     def assert_has_entity(self, source_file_name, name,
                           generic_names=None,
                           architecture_names=None):
+        """
+        Assert that there is an entity with name withing source_file_name
+        that has architectures with architecture_names.
+        """
         source_file = self.get_source_file(source_file_name)
         generic_names = [] if generic_names is None else generic_names
         architecture_names = [] if architecture_names is None else architecture_names
@@ -433,12 +465,18 @@ end architecture;
         self.assertFalse("Did not find entity " + name + "in " + source_file_name)
 
     def assert_has_architecture(self, source_file_name, name, entity_name):
+        """
+        Assert that there is an architecture with name of entity_name within source_file_name
+        """
         unit = self._find_design_unit(source_file_name,
                                       "architecture",
                                       name, False, entity_name)
         self.assertIsNotNone(unit)
 
-    def assert_has_component(self, source_file_name, component_name):
+    def assert_has_component_instantiation(self, source_file_name, component_name):
+        """
+        Assert that there is a component instantion with component with source_file_name
+        """
         found_comp = False
         for source_file in self.project.get_source_files_in_order():
             for component in source_file.depending_components:
@@ -453,6 +491,9 @@ end architecture;
                           design_unit_name,
                           is_primary=True,
                           primary_design_unit_name=None):
+        """
+        Utility fnction to find and return a design unit
+        """
 
         for source_file in self.project.get_source_files_in_order():
             for design_unit in source_file.design_units:

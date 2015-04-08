@@ -134,7 +134,8 @@ bad-names=foo,bar,baz,toto,tutu,tata
 
 # Regular expression which should only match function or class names that do
 # not require a docstring.
-no-docstring-rgx=__.*__
+# TODO: Do not require docstring on test_ methods
+no-docstring-rgx=__.*__|test_.*
 
 # Minimum line length for functions/classes that require docstrings, shorter
 # ones are exempt.

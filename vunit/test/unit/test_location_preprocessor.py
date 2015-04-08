@@ -4,11 +4,20 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Test the location preprocessor
+"""
+
+
 import unittest
 from vunit.location_preprocessor import LocationPreprocessor
 
 
 class TestLocationPreprocessor(unittest.TestCase):
+    """
+    Test the location preprocessor
+    """
+
     def setUp(self):
         self._location_preprocessor = LocationPreprocessor()
         self._location_preprocessor.add_subprogram('sub_prog')

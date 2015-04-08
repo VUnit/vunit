@@ -4,6 +4,11 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Test the test runner
+"""
+
+
 from __future__ import print_function
 
 import unittest
@@ -18,6 +23,10 @@ from vunit.test.mock_2or3 import mock
 
 
 class TestTestRunner(unittest.TestCase):
+    """
+    Test the test runner
+    """
+
     def setUp(self):
         self._tests = []
         self.output_path = join(dirname(__file__), "test_runner_out")
@@ -66,6 +75,10 @@ class TestTestRunner(unittest.TestCase):
         self.assertEqual(self.report.result_of("test").output, output)
 
     def create_test(self, name, passed):
+        """
+        Utility function to create a mocked test with name
+        that is either passed or failed
+        """
         test_case = mock.Mock(spec_set=TestCaseMockSpec)
         test_case.configure_mock(name=name)
 

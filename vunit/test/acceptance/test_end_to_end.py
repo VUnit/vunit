@@ -4,6 +4,11 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Acceptance test of VUnit end to end functionality
+"""
+
+
 import unittest
 from os.path import join, dirname
 from vunit.ui import VUnit
@@ -13,6 +18,10 @@ from fnmatch import fnmatch
 
 @unittest.skipUnless(has_modelsim(), "Requires modelsim")
 class TestVunitEndToEnd(unittest.TestCase):
+    """
+    Acceptance test of VUnit end to end functionality using
+    artificial test benches.
+    """
     def setUp(self):
         # Spaces in path intentional to verify that it is supported
         self.output_path = join(dirname(__file__), "end to end out")
@@ -25,6 +34,10 @@ class TestVunitEndToEnd(unittest.TestCase):
         self._test_artificial(persistent_sim=False)
 
     def _test_artificial(self, persistent_sim):
+        """
+        Utility function to run and check the result of all test benches
+        using either persistent or non-persistent simulator interface mode
+        """
         self.run_ui_main(persistent_sim=persistent_sim)
 
         check_report(self.report_file, [
@@ -90,6 +103,9 @@ class TestVunitEndToEnd(unittest.TestCase):
             self.assertEqual(ex.code, 0)
 
     def create_ui(self, test_patterns=None, persistent_sim=True):
+        """
+        Create VUnit public interface instance
+        """
         vhdl_path = join(dirname(__file__), "vhdl")
         ui = VUnit(verbose=True,
                    clean=True,
@@ -102,6 +118,10 @@ class TestVunitEndToEnd(unittest.TestCase):
         return ui
 
     def run_ui_main(self, test_patterns=None, persistent_sim=True):
+        """
+        Run vunit main function on tests with test_pattern using
+        either persistent simulator mode or not
+        """
         ui = self.create_ui(test_patterns, persistent_sim)
         try:
             ui.main()
@@ -110,6 +130,9 @@ class TestVunitEndToEnd(unittest.TestCase):
 
 
 def make_test_filter(patterns):
+    """
+    Return a test_filter function based on a list of wildcard pattern strings
+    """
     def test_filter(name):
         if patterns is None:
             return True

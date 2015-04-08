@@ -4,10 +4,20 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Preprocessing of VHDL files to add file_name and line_num arguments to function calls
+to enable better messages
+"""
+
+
 import re
 
 
 class LocationPreprocessor:
+    """
+    Preprocessing of VHDL files to add file_name and line_num
+    arguments to calls of known function and procedures
+    """
     def __init__(self):
         self._subprograms_with_arguments = [
             'log', 'verbose_high2', 'verbose_high1', 'verbose',
@@ -24,11 +34,19 @@ class LocationPreprocessor:
         self._subprograms_without_arguments = []
 
     def add_subprogram(self, subprogram):
+        """
+        Add a subprogram name to the list of known names to preprocess
+        """
         self._subprograms_without_arguments.append(subprogram)
         self._subprograms_with_arguments.append(subprogram)
 
     @staticmethod
     def _find_closing_parenthesis(args):
+        """
+        Find the balanced closing parentesis
+
+        @TODO duplicate with vhdl_parser.py
+        """
         pattern = re.compile(r'\(|\)')
         balance = 0
         for match in pattern.finditer(args):
@@ -41,6 +59,9 @@ class LocationPreprocessor:
     _subprogram_declaration_start_backwards_pattern = re.compile(r'\s+(erudecorp|noitcnuf)')
 
     def run(self, code, file_name):
+        """
+        Return preprocessed code given file_name of original file
+        """
         potential_subprogram_call_with_arguments_pattern = re.compile(
             r'[^a-zA-Z0-9_](?P<subprogram>' + '|'.join(self._subprograms_with_arguments) + r')\s*(?P<args>\()',
             re.MULTILINE)

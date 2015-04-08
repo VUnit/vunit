@@ -4,6 +4,10 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Run the check VHDL tests
+"""
+
 import unittest
 from os.path import abspath, join, dirname, basename
 from glob import glob
@@ -15,7 +19,13 @@ from vunit import ROOT
 
 @unittest.skipUnless(has_modelsim(), 'Requires modelsim')
 class TestCheck(unittest.TestCase):
+    """
+    Run the check VHDL tests
+    """
     def run_sim(self, vhdl_standard):
+        """
+        Utility to run the check tests using vhdl_standard
+        """
         output_path = join(dirname(abspath(__file__)), 'check_out')
         vhdl_path = join(ROOT, 'vhdl', 'check', 'test')
 

@@ -4,6 +4,11 @@
 #
 # Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+License header sanity check
+"""
+
+
 import unittest
 from os.path import join, splitext, abspath, commonprefix
 from os import walk
@@ -14,14 +19,11 @@ from vunit import ROOT
 
 
 class TestLicense(unittest.TestCase):
-    _re_license_notice = re.compile(
-        r"(?P<comment_start>#|--|//) This Source Code Form is subject to the terms of the Mozilla Public" + "\n"
-        r"(?P=comment_start) License, v\. 2\.0\. If a copy of the MPL was not distributed with this file," + "\n"
-        r"(?P=comment_start) You can obtain one at http://mozilla\.org/MPL/2\.0/\." + "\n"
-        r"(?P=comment_start)" + "\n"
-        r"(?P=comment_start) Copyright \(c\) (?P<first_year>20\d\d)(-(?P<last_year>20\d\d))?, " +
-        r"Lars Asplund lars\.anders\.asplund@gmail\.com")
-    _re_log_date = re.compile(r'Date:\s*(?P<year>20\d\d)-\d\d-\d\d')
+    """
+    Test that each file in the repository contains a valid license
+    header with a correct year range.
+    The correct year range is computed based on the commit history.
+    """
 
     def test_that_a_valid_license_exists_in_source_files_and_that_global_licensing_information_is_correct(self):
         licensed_files = []
@@ -41,7 +43,19 @@ class TestLicense(unittest.TestCase):
         for file_name in licensed_files:
             self._check_license(file_name)
 
+    _re_license_notice = re.compile(
+        r"(?P<comment_start>#|--|//) This Source Code Form is subject to the terms of the Mozilla Public" + "\n"
+        r"(?P=comment_start) License, v\. 2\.0\. If a copy of the MPL was not distributed with this file," + "\n"
+        r"(?P=comment_start) You can obtain one at http://mozilla\.org/MPL/2\.0/\." + "\n"
+        r"(?P=comment_start)" + "\n"
+        r"(?P=comment_start) Copyright \(c\) (?P<first_year>20\d\d)(-(?P<last_year>20\d\d))?, " +
+        r"Lars Asplund lars\.anders\.asplund@gmail\.com")
+    _re_log_date = re.compile(r'Date:\s*(?P<year>20\d\d)-\d\d-\d\d')
+
     def _check_license(self, file_name):
+        """
+        Check that the license header of file_name is valid
+        """
         proc = Popen(['git', 'log', '--follow', '--date=short', file_name],
                      bufsize=0, stdout=PIPE, stdin=PIPE, stderr=STDOUT, universal_newlines=True)
         out, _ = proc.communicate()

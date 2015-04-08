@@ -4,6 +4,10 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Test the test report functionality
+"""
+
 from unittest import TestCase
 from vunit.test_report import TestReport, PASSED, SKIPPED, FAILED
 from xml.etree import ElementTree
@@ -12,7 +16,7 @@ from os.path import join, dirname
 
 class TestTestReport(TestCase):
     """
-    Collect reports from running testcases
+    Test the TestReport class
     """
 
     def setUp(self):
@@ -169,6 +173,9 @@ Total time 4.0 seconds
 
 
 class StubPrinter:
+    """
+    A stub of a ColorPrinter
+    """
     def __init__(self):
         self.report_str = ""
 
@@ -176,6 +183,9 @@ class StubPrinter:
         self.report_str = ""
 
     def write(self, text, fg=None, bg=None):
+        """
+        ColorPrinter write stub
+        """
         if fg is not None or bg is not None:
             self.report_str += "{"
 

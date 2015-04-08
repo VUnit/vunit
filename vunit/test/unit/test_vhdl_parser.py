@@ -4,6 +4,11 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Test of the VHDL parser
+"""
+
+
 from unittest import TestCase
 from vunit.vhdl_parser import (VHDLDesignFile,
                                VHDLInterfaceElement,
@@ -12,6 +17,9 @@ from vunit.vhdl_parser import (VHDLDesignFile,
 
 
 class TestVHDLParser(TestCase):
+    """
+    Test of the VHDL parser
+    """
 
     def test_parsing_empty(self):
         design_file = VHDLDesignFile.parse("")

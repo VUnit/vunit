@@ -4,12 +4,19 @@
 #
 # Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+PEP8 check
+"""
+
 import unittest
 from subprocess import check_call
 from vunit import ROOT
 
 
 class TestPep8(unittest.TestCase):
+    """
+    Test that all python code follows PEP8 Python coding standard
+    """
     @staticmethod
     def test_pep8():
         check_call(["pep8",

@@ -4,6 +4,11 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Run the path VHDL package tests
+"""
+
+
 import unittest
 from os.path import abspath, join, dirname
 from vunit.ui import VUnit
@@ -13,7 +18,13 @@ from vunit import ROOT
 
 @unittest.skipUnless(has_modelsim(), 'Requires modelsim')
 class TestPath(unittest.TestCase):
+    """
+    Run the path VHDL package tests
+    """
     def run_sim(self, vhdl_standard):
+        """
+        Utility function to run the path test compiled with vhdl_standard
+        """
         output_path = join(dirname(abspath(__file__)), 'path_out')
         vhdl_path = join(ROOT, 'vhdl')
 

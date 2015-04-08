@@ -4,6 +4,11 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Test the dictionary VHDL package
+"""
+
+
 import unittest
 from os.path import abspath, join, dirname
 from vunit.ui import VUnit
@@ -13,8 +18,15 @@ from vunit import ROOT
 
 @unittest.skipUnless(has_modelsim(), 'Requires modelsim')
 class TestDictionary(unittest.TestCase):
+    """
+    Test the dictionary VHDL package
+    """
+
     @staticmethod
     def run_sim(vhdl_standard):
+        """
+        Utility function to run the dictionary test compiled with vhdl_standard
+        """
         output_path = join(dirname(abspath(__file__)), 'dictionary_out')
         src_path = join(ROOT, "vhdl", "dictionary")
 

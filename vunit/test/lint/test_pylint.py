@@ -4,6 +4,11 @@
 #
 # Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Pylint check
+"""
+
+
 import unittest
 from subprocess import check_call
 from vunit import ROOT
@@ -11,10 +16,12 @@ from os.path import join, dirname
 
 
 class TestPylint(unittest.TestCase):
+    """
+    Check that there are no pylint errors or warnings
+    """
     @staticmethod
     def test_pylint():
         check_call(["pylint",
-                    "--disable=missing-docstring",
                     "--disable=too-few-public-methods",
                     "--disable=too-many-public-methods",
                     "--disable=too-many-instance-attributes",

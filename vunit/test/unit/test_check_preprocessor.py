@@ -4,11 +4,20 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Test the check preprocessor
+"""
+
+
 import unittest
 from vunit.check_preprocessor import CheckPreprocessor
 
 
 class TestCheckPreprocessor(unittest.TestCase):
+    """
+    Test the check preprocessor
+    """
+
     def setUp(self):
         self._check_preprocessor = CheckPreprocessor()
 

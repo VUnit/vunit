@@ -4,11 +4,19 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Test the DependencyGraph
+"""
+
 from vunit.dependency_graph import DependencyGraph
 import unittest
 
 
 class TestDependencyGraph(unittest.TestCase):
+    """
+    Test the DependencyGraph
+    """
+
     def test_should_return_empty_compile_order_for_no_nodes(self):
         graph = DependencyGraph()
         self.assertEqual(graph.toposort(), [], 'Should return empty list')
@@ -55,11 +63,18 @@ class TestDependencyGraph(unittest.TestCase):
         self._check_result(result, dependencies)
 
     def _check_result(self, result, dependencies):
+        """
+        Check that the resulting has an order such that
+        dependent files are located after their dependencies
+        """
         for dep1, dep2 in dependencies:
             self.assertTrue(result.index(dep1) < result.index(dep2), "%s is not before %s" % (dep1, dep2))
 
     @staticmethod
     def _add_nodes_and_dependencies(graph, nodes, dependencies):
+        """
+        Add nodes and dependencies to the graph
+        """
         for node in nodes:
             graph.add_node(node)
         for dep in dependencies:

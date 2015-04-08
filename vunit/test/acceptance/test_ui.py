@@ -4,6 +4,11 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Acceptance test of the VUnit public interface class
+"""
+
+
 import unittest
 from string import Template
 from tempfile import NamedTemporaryFile
@@ -15,6 +20,9 @@ from vunit.ui import VUnit
 
 
 class TestPreprocessor:
+    """
+    A preprocessor that appends a check_relation call before the orginal code
+    """
     def __init__(self):
         pass
 
@@ -24,6 +32,9 @@ class TestPreprocessor:
 
 
 class VUnitfier:
+    """
+    A preprocessor that replaces report statments with log calls
+    """
     def __init__(self):
         self._report_pattern = re.compile(r'^(?P<indent>\s*)report\s*(?P<note>"[^"]*")\s*;', MULTILINE)
 
@@ -33,6 +44,9 @@ class VUnitfier:
 
 
 class ParentalControl:
+    """
+    A preprocessor that replaces f..k with [BEEP]
+    """
     def __init__(self):
         self._fword_pattern = re.compile(r'f..k')
 
@@ -41,6 +55,9 @@ class ParentalControl:
 
 
 class TestUi(unittest.TestCase):
+    """
+    Testing the VUnit public interface class
+    """
     def setUp(self):
         self._output_path = join(dirname(__file__), 'ui_out')
         self._preprocessed_path = join(self._output_path, "preprocessed")
@@ -63,12 +80,17 @@ end architecture;
         pass
 
     def _create_ui(self):
+        """ Create an instance of the VUnit public interface class """
         ui = VUnit(output_path=self._output_path)
         ui.add_library('lib')
-
         return ui
 
     def _create_temp_files(self, num_files):
+        """
+        Create and return num_files temporary files containing the
+        same source code but with different entity names depending on
+        the index
+        """
         files = [None] * num_files
         for i in range(num_files):
             with NamedTemporaryFile(mode='w', suffix='.vhd', delete=False) as files[i]:

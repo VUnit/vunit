@@ -4,6 +4,11 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Test the global test bench configuration
+"""
+
+
 import unittest
 from os.path import join, dirname, exists
 from shutil import rmtree
@@ -13,7 +18,9 @@ from vunit.test_configuration import TestConfiguration, Configuration
 
 
 class TestTestConfiguration(unittest.TestCase):
-
+    """
+    Test the global test bench configuration
+    """
     def setUp(self):
         self.cfg = TestConfiguration()
 
