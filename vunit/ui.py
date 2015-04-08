@@ -8,7 +8,7 @@ from __future__ import print_function
 
 import argparse
 import os
-from os.path import dirname, exists, abspath, join, basename, splitext
+from os.path import exists, abspath, join, basename, splitext
 from os import makedirs, getcwd
 from shutil import rmtree
 from glob import glob
@@ -39,8 +39,6 @@ class VUnit:
     """
     The public interface of VUnit
     """
-
-    _builtin_vhdl_path = abspath(join(dirname(__file__), "..", "vhdl"))
 
     @staticmethod
     def _available_simulators():
