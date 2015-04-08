@@ -4,10 +4,17 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+VHDL parsing functionality
+"""
+
 import re
 
 
 class VHDLDesignFile:
+    """
+    Contains VHDL objects found within a file
+    """
     def __init__(self,
                  entities=None,
                  packages=None,
@@ -28,6 +35,9 @@ class VHDLDesignFile:
 
     @classmethod
     def parse(cls, code):
+        """
+        Return a new VHDLDesignFile instance by parsing the code
+        """
         code = remove_comments(code).lower()
         return cls(entities=list(VHDLEntity.find(code)),
                    architectures=list(VHDLArchitecture.find(code)),
@@ -80,21 +90,34 @@ class VHDLDesignFile:
 
     @classmethod
     def _find_libraries(cls, code):
+        """
+        Find all the libraries and use clasues within the code
+        """
 
-        def get_ids(matches):
-            ids = [matches.group('id').strip()]
-            if matches.group('extra'):
-                ids += [name.strip() for name in matches.group('extra').split(',')[1:]]
+        def get_ids(match):
+            """
+            Get all ids found within the match taking the optinal extra ids of
+            library and use clauses into account such as:
+
+            use foo, bar;
+
+            or
+
+            library foo, bar;
+            """
+            ids = [match.group('id').strip()]
+            if match.group('extra'):
+                ids += [name.strip() for name in match.group('extra').split(',')[1:]]
             return ids
 
         libraries = {}
-        for matches in cls._library_re.finditer(code):
-            for library_name in get_ids(matches):
+        for match in cls._library_re.finditer(code):
+            for library_name in get_ids(match):
                 if library_name not in libraries:
                     libraries[library_name] = set()
 
-        for matches in cls._uses_re.finditer(code):
-            for uses in get_ids(matches):
+        for match in cls._uses_re.finditer(code):
+            for uses in get_ids(match):
                 uses = uses.split(".")
                 library_name = uses[0]
                 if library_name not in libraries:
@@ -104,6 +127,9 @@ class VHDLDesignFile:
 
 
 class VHDLPackageBody:
+    """
+    Representation of a VHDL package body
+    """
     def __init__(self, identifier):
         self.identifier = identifier
 
@@ -121,12 +147,18 @@ class VHDLPackageBody:
 
     @classmethod
     def find(cls, code):
+        """
+        Iterate over new instances of VHDLPackageBody for all package bodies within the code
+        """
         matches = cls._package_body_pattern.finditer(code)
         for match in matches:
             yield VHDLPackageBody(match.group('package'))
 
 
 class VHDLArchitecture:
+    """
+    Representation of a VHDL architecture
+    """
     def __init__(self, identifier, entity):
         self.identifier = identifier
         self.entity = entity
@@ -147,6 +179,9 @@ class VHDLArchitecture:
 
     @classmethod
     def find(cls, code):
+        """
+        Iterate over new instances of VHDLArchitecture for all architectures within the code
+        """
         for arch in cls._architecture_re.finditer(code):
             identifier = arch.group('id')
             entity_id = arch.group('entity_id')
@@ -154,6 +189,9 @@ class VHDLArchitecture:
 
 
 class VHDLPackage:
+    """
+    Representation of a VHDL package
+    """
     def __init__(self, identifier, constant_declarations):
         self.identifier = identifier
         self.constant_declarations = constant_declarations
@@ -170,6 +208,9 @@ class VHDLPackage:
 
     @classmethod
     def find(cls, code):
+        """
+        Iterate over new instances of VHDLPackage for all packages within the code
+        """
         for package in cls._package_start_re.finditer(code):
             identifier = package.group('id')
             package_end = re.compile(r"""
@@ -188,16 +229,19 @@ class VHDLPackage:
 
     @classmethod
     def parse(cls, code):
+        """
+        Return a new VHDLPackage instance for a single package found within the code
+        """
         # Extract identifier
         identifier = cls._package_start_re.match(code).group('id')
-
-        constant_declarations = []
-        # Find constant declarations
-        cls._find_constant_declarations(code, constant_declarations)
+        constant_declarations = cls._find_constant_declarations(code)
         return cls(identifier, constant_declarations)
 
     @classmethod
-    def _find_constant_declarations(cls, code, constant_declarations):
+    def _find_constant_declarations(cls, code):
+        """
+        Append all constant declarations found within the code to constant_declarations list
+        """
         re_flags = re.MULTILINE | re.IGNORECASE | re.VERBOSE
         constant_start = re.compile(r"""
             ^                             # Beginning of line
@@ -208,12 +252,18 @@ class VHDLPackage:
             [\s]*                         # Potential whitespaces
             :                             # Colon
             """, re_flags)
+
+        constant_declarations = []
         for constant in constant_start.finditer(code):
             sub_code = code[constant.start():].strip().splitlines()[0].strip()
             constant_declarations.append(VHDLConstantDeclaration.parse(sub_code))
+        return constant_declarations
 
 
 class VHDLEntity:
+    """
+    Represents a VHDL Entity
+    """
     def __init__(self, identifier, generics=None, ports=None):
         self.identifier = identifier
 
@@ -256,6 +306,9 @@ class VHDLEntity:
 
     @classmethod
     def find(cls, code):
+        """
+        Iterates over new instances of VHDLEntity for all entities within the code
+        """
         for entity in cls._entity_start_re.finditer(code):
             identifier = entity.group('id')
             sub_code = code[entity.start():]
@@ -279,7 +332,7 @@ class VHDLEntity:
     @classmethod
     def parse(cls, code):
         """
-        Create a new instance by parsing code
+        Create a new instance by parsing the code
         """
         # Extract identifier
         re_flags = re.MULTILINE | re.IGNORECASE | re.VERBOSE
@@ -301,6 +354,9 @@ class VHDLEntity:
 
     @classmethod
     def _find_generic_clause(cls, code):
+        """
+        Find and return the generic clause code contents
+        """
         re_flags = re.MULTILINE | re.IGNORECASE | re.VERBOSE
         generic_clause_start = re.compile(r"""
             ^                             # Beginning of line
@@ -324,6 +380,9 @@ class VHDLEntity:
 
     @classmethod
     def _find_port_clause(cls, code):
+        """
+        Find and return the port clause code contents
+        """
         re_flags = re.MULTILINE | re.IGNORECASE | re.VERBOSE
         port_clause_start = re.compile(r"""
             ^                             # Beginning of line
@@ -347,6 +406,9 @@ class VHDLEntity:
 
     @classmethod
     def _parse_generic_clause(cls, code):
+        """
+        Parse the generic clause and return a list of interface elements
+        """
         # The generic list is between the outer parenthesis
         generic_list_string = code[code.find('(') + 1: code.rfind(')')]
 
@@ -362,6 +424,9 @@ class VHDLEntity:
 
     @classmethod
     def _parse_port_clause(cls, code):
+        """
+        Parse the port clause and return a list of interface elements
+        """
         # The port list is between the outer parenthesis
         port_list_string = code[code.find('(') + 1: code.rfind(')')]
 
@@ -459,6 +524,9 @@ class VHDLEntity:
         return code
 
     def to_signal_declaration_str(self, sindent="  "):
+        """
+        Convert to code declaring signals for all ports of the entity
+        """
         code = ""
         for port in self.ports:
             code += sindent + "signal " + str(port.without_mode()) + ";\n"
@@ -466,6 +534,9 @@ class VHDLEntity:
 
 
 class VHDLContext:
+    """
+    Represents a VHDL 2008 context
+    """
     def __init__(self, identifier):
         self.identifier = identifier
 
@@ -481,12 +552,18 @@ class VHDLContext:
 
     @classmethod
     def find(cls, code):
+        """
+        Iterate over new instances of VHDLContext for a contexts found in the code
+        """
         for context in cls._context_start_re.finditer(code):
             identifier = context.group('id')
             yield VHDLContext(identifier=identifier)
 
 
 class VHDLSubtypeIndication:
+    """
+    Represents a VHDL subtype indication
+    """
     def __init__(self, code, type_mark, constraint, array_type):
         self.code = code
         self.type_mark = type_mark
@@ -495,6 +572,9 @@ class VHDLSubtypeIndication:
 
     @classmethod
     def parse(cls, code):
+        """
+        Returns a new instance from parsing the code
+        """
         # Extract type mark and find out if it's an array type and if a constraint is given.
         re_flags = re.MULTILINE | re.IGNORECASE | re.VERBOSE
         subtype_indication_start = re.compile(r"""
@@ -519,6 +599,9 @@ class VHDLSubtypeIndication:
 
 
 class VHDLConstantDeclaration:
+    """
+    Represents a constant declaration
+    """
     def __init__(self, identifier, subtype_indication, expression):
         self.identifier = identifier
         self.subtype_indication = subtype_indication
@@ -526,6 +609,9 @@ class VHDLConstantDeclaration:
 
     @classmethod
     def parse(cls, code):
+        """
+        Returns a new instance from parsing the code
+        """
         # Extract identifier
         re_flags = re.MULTILINE | re.IGNORECASE | re.VERBOSE
         constant_start = re.compile(r"""
@@ -553,6 +639,9 @@ class VHDLConstantDeclaration:
 
 
 class VHDLInterfaceElement:
+    """
+    Represents a VHDL interface element
+    """
     def __init__(self, identifier, subtype_indication, mode=None, init_value=None):
         self.identifier = identifier
         self.mode = mode
@@ -569,7 +658,9 @@ class VHDLInterfaceElement:
 
     @classmethod
     def parse(cls, code, is_signal=False):
-
+        """
+        Returns a new instance by parsing the code
+        """
         if is_signal:
             # Remove 'signal' string if a signal is beeing parsed
             code = code.replace("signal", "")
@@ -600,6 +691,9 @@ class VHDLInterfaceElement:
 
     @staticmethod
     def _is_mode(code):
+        """
+        Return True if the code is a mode keyword
+        """
         if code in ('in', 'out', 'inout', 'buffer', 'linkage'):
             return True
         else:
@@ -620,6 +714,12 @@ class VHDLInterfaceElement:
 
 
 def find_closing_delimiter(start, end, code):
+    """
+    Find the balanced closing position within the code.
+
+    The balanced closing position is defined as the first position of an end marker
+    where the number of previous start and end markers are equal
+    """
     delimiter_pattern = start + '|' + end
     start = start.replace('\\', '')
     end = end.replace('\\', '')
@@ -637,6 +737,9 @@ def find_closing_delimiter(start, end, code):
 
 
 def remove_comments(code):
+    """
+    Return the code with comments removed
+    """
     new_code = ''
     lines = code.split('\n')
     for line in lines:

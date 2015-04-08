@@ -4,6 +4,11 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Provide test reporting functionality
+"""
+
+
 from vunit.color_printer import COLOR_PRINTER
 from xml.etree import ElementTree
 from sys import version_info
@@ -33,13 +38,23 @@ class TestReport:
         self._test_names_in_order.append(result.name)
 
     def _last_test_result(self):
+        """
+        Return the latest test result or fail
+        """
         return self._test_results[self._test_names_in_order[-1]]
 
     def _test_results_in_order(self):
+        """
+        Return the test results in the order they were added
+        """
         for name in self._test_names_in_order:
             yield self.result_of(name)
 
     def print_latest_status(self, total_tests):
+        """
+        Print the latest status including the last test run and the
+        total number of passed, failed and skipped tests
+        """
         result = self._last_test_result()
         passed, failed, _ = self._split()
         if result.passed:
@@ -140,6 +155,9 @@ class TestReport:
 
 
 class TestStatus:
+    """
+    The status of a test
+    """
     def __init__(self, name):
         self._name = name
 
@@ -191,6 +209,9 @@ class TestResult:
         return self._status == FAILED
 
     def print_status(self, printer):
+        """
+        Print the status and runtime of this test result
+        """
         if self.passed:
             printer.write("pass", fg='gi')
             printer.write(" ")
@@ -204,6 +225,9 @@ class TestResult:
         printer.write("%s after %.1f seconds\n" % (self.name, self.time))
 
     def to_xml(self):
+        """
+        Convert the test result to ElementTree XML object
+        """
         test = ElementTree.Element("testcase")
         test.attrib["name"] = self.name
         test.attrib["time"] = "%.1f" % self.time
