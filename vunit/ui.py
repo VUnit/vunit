@@ -538,6 +538,9 @@ class EntityFacade:
 
 
 def file_type_of(file_name):
+    """
+    Return the file type of file_name based on the file ending
+    """
     _, ext = splitext(file_name)
     if ext in (".vhd", ".vhdl"):
         return "vhdl"

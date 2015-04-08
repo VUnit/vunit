@@ -176,6 +176,11 @@ if run("Test_2")
                               [("work.tb_entity", ("work.tb_entity.Test_1", "work.tb_entity.Test_2"))])
 
     def assert_has_tests(self, test_list, tests):
+        """
+        Asser that the test_list contains tests.
+        A test can be either a string to represent a single test or a
+        tuple to represent multiple tests within a test suite.
+        """
         self.assertEqual(len(test_list), len(tests))
         for test1, test2 in zip(test_list, tests):
             if isinstance(test2, tuple):
@@ -221,6 +226,9 @@ class LibraryStub:
                    file_name,
                    architecture_names,
                    generic_names=None):
+        """
+        Add a stubbed entity
+        """
         generic_names = generic_names if generic_names is not None else []
         self._entities.append(
             EntityStub(name,

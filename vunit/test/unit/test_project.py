@@ -391,6 +391,9 @@ end architecture;
 """)
 
     def add_source_file(self, library_name, file_name, contents):
+        """
+        Convenient wrapper arround project.add_source_file
+        """
         self.stub.write_file(file_name, contents)
         self.project.add_source_file(file_name, library_name)
 

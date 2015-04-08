@@ -32,6 +32,9 @@ class OstoolsStub:
         return self._files[file_name]
 
     def write_file(self, file_name, contents):
+        """
+        Write contents to file_name and update modification time
+        """
         self._times[file_name] = self._current_time
         self._files[file_name] = contents
 

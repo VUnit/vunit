@@ -23,6 +23,9 @@ class TestLocationPreprocessor(unittest.TestCase):
         self._location_preprocessor.add_subprogram('sub_prog')
 
     def _verify_result(self, code, expected_result):
+        """
+        Assert that the code after preprocessing is equal to the expected_result
+        """
         result = self._location_preprocessor.run(code, 'foo.vhd')
         self.assertEqual(result, expected_result)
 

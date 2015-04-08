@@ -22,6 +22,9 @@ class TestCheckPreprocessor(unittest.TestCase):
         self._check_preprocessor = CheckPreprocessor()
 
     def _verify_result(self, code, expected_result):
+        """
+        Assert that the code after preprocessing is equal to the expected_result
+        """
         result = self._check_preprocessor.run(code, 'foo.vhd')
         self.assertEqual(result, expected_result)
 

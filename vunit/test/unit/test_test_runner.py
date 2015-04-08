@@ -66,6 +66,9 @@ class TestTestRunner(unittest.TestCase):
         output = "Output string, <xml>, </xml>\n"
 
         def side_effect(*args, **kwargs):  # pylint: disable=unused-argument
+            """
+            Side effect that print output to stdout
+            """
             print(output, end="")
             return True
 
@@ -83,6 +86,9 @@ class TestTestRunner(unittest.TestCase):
         test_case.configure_mock(name=name)
 
         def run_side_effect(*args, **kwargs):  # pylint: disable=unused-argument
+            """
+            Side effect that registers that is has been run
+            """
             self._tests.append(name)
             return passed
 
@@ -91,5 +97,8 @@ class TestTestRunner(unittest.TestCase):
 
 
 class TestCaseMockSpec:  # pylint: disable=no-init
+    """
+    A test case mock specification class
+    """
     name = None
     run = None

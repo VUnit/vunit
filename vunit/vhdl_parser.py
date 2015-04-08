@@ -53,6 +53,9 @@ class VHDLDesignFile:
 
     @classmethod
     def _find_instantiations(cls, code):
+        """
+        Return tuple if library_name, unit_name for all entity instantiations found in the code
+        """
         matches = cls._entity_re.findall(code)
         return [(library_name, unit_name) for library_name, unit_name in matches]
 
@@ -63,6 +66,9 @@ class VHDLDesignFile:
 
     @classmethod
     def _find_component_instantiations(cls, code):
+        """
+        Return the component name of all component instantiations found within the code
+        """
         matches = cls._component_re.findall(code)
         return [comp_name for comp_name in matches]
 
