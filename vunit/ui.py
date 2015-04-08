@@ -27,6 +27,9 @@ from vunit.test_configuration import TestConfiguration
 from vunit.exceptions import CompileError
 from vunit.location_preprocessor import LocationPreprocessor
 from vunit.check_preprocessor import CheckPreprocessor
+from vunit.builtins import (add_builtins,
+                            add_array_util,
+                            add_osvvm)
 
 import logging
 LOGGER = logging.getLogger(__name__)
@@ -417,95 +420,28 @@ class VUnit:
             ostools.write_file(self._xunit_xml, xml)
 
     def add_builtins(self, library_name, mock_lang=False, mock_log=False):
-        files = []
-
-        if mock_lang:
-            files += [join("vhdl", "src", "lang", "lang_mock.vhd")]
-        else:
-            files += [join("vhdl", "src", "lang", "lang.vhd")]
-
-        files += [join("vhdl", "src", "lib", "std", "textio.vhd"),
-                  join("string_ops", "src", "string_ops.vhd"),
-                  join("check", "src", "check.vhd"),
-                  join("check", "src", "check_api.vhd"),
-                  join("check", "src", "check_base_api.vhd"),
-                  join("check", "src", "check_types.vhd"),
-                  join("run", "src", "stop_api.vhd"),
-                  join("run", "src", "run.vhd"),
-                  join("run", "src", "run_api.vhd"),
-                  join("run", "src", "run_types.vhd"),
-                  join("run", "src", "run_base_api.vhd")]
-
-        files += [join("logging", "src", "log_api.vhd"),
-                  join("logging", "src", "log_formatting.vhd"),
-                  join("logging", "src", "log.vhd"),
-                  join("logging", "src", "log_types.vhd")]
-
-        files += [join("dictionary", "src", "dictionary.vhd")]
-
-        files += [join("path", "src", "path.vhd")]
-
-        if self._vhdl_standard == '2008':
-            files += [join("run", "src", "stop_body_2008.vhd")]
-        else:
-            files += [join("run", "src", "stop_body_dummy.vhd")]
-
-        if self._vhdl_standard == '93':
-            if mock_log:
-                files += [join("logging", "src", "log_base93_mock.vhd"),
-                          join("logging", "src", "log_special_types93.vhd"),
-                          join("logging", "src", "log_base_api_mock.vhd")]
-            else:
-                files += [join("logging", "src", "log_base93.vhd"),
-                          join("logging", "src", "log_special_types93.vhd"),
-                          join("logging", "src", "log_base_api.vhd")]
-
-            files += [join("check", "src", "check_base93.vhd"),
-                      join("check", "src", "check_special_types93.vhd"),
-                      join("run", "src", "run_base93.vhd"),
-                      join("run", "src", "run_special_types93.vhd")]
-
-        elif self._vhdl_standard in ('2002', '2008'):
-            if mock_log:
-                files += [join("logging", "src", "log_base.vhd"),
-                          join("logging", "src", "log_special_types200x_mock.vhd"),
-                          join("logging", "src", "log_base_api.vhd")]
-            else:
-                files += [join("logging", "src", "log_base.vhd"),
-                          join("logging", "src", "log_special_types200x.vhd"),
-                          join("logging", "src", "log_base_api.vhd")]
-
-            files += [join("check", "src", "check_base.vhd"),
-                      join("check", "src", "check_special_types200x.vhd"),
-                      join("run", "src", "run_base.vhd"),
-                      join("run", "src", "run_special_types200x.vhd")]
-
-            if self._vhdl_standard == '2008':
-                files += ["vunit_context.vhd"]
-
+        """
+        Add vunit builtin libraries
+        """
         library = self.add_library(library_name)
-        for file_name in files:
-            library.add_source_files(join(self._builtin_vhdl_path, file_name))
+        add_builtins(library, self._vhdl_standard, mock_lang, mock_log)
 
     def add_array_util(self, library_name="vunit_lib"):
         """
         Add array utility package
         """
-        if self._vhdl_standard != '2008':
-            raise RuntimeError("Array utility only supports vhdl 2008")
-
         library = self.library(library_name)
-        library.add_source_files(join(self._builtin_vhdl_path, "array", "src", "array_pkg.vhd"))
+        add_array_util(library, self._vhdl_standard)
 
     def add_osvvm(self, library_name="osvvm"):
+        """
+        Add osvvm library
+        """
         if not self._project.has_library(library_name):
             library = self.add_library(library_name)
         else:
             library = self.library(library_name)
-
-        for file_name in glob(join(self._builtin_vhdl_path, "osvvm", "*.vhd")):
-            if basename(file_name) != 'AlertLogPkg_body_BVUL.vhd':
-                library.add_source_files(file_name, preprocessors=[])
+        add_osvvm(library)
 
 
 class LibraryFacade:
