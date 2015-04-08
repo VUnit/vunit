@@ -6,9 +6,9 @@
 
 import unittest
 from os.path import join
-from stub_ostools import OstoolsStub
 import vunit.project
 from vunit.project import Project
+from vunit.test.stub_ostools import OstoolsStub
 
 
 class TestProject(unittest.TestCase):

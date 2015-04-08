@@ -8,7 +8,7 @@ import unittest
 from os.path import abspath, join, dirname, basename
 from glob import glob
 from vunit.ui import VUnit
-from common import has_modelsim
+from vunit.test.common import has_modelsim
 from vunit.check_preprocessor import CheckPreprocessor
 from vunit import ROOT
 

@@ -7,7 +7,7 @@
 import unittest
 from os.path import abspath, join, dirname
 from vunit.ui import VUnit
-from common import has_modelsim, assert_exit
+from vunit.test.common import has_modelsim, assert_exit
 from vunit import ROOT
 
 

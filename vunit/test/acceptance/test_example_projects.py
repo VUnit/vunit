@@ -6,7 +6,7 @@
 
 import unittest
 from os.path import join, dirname
-from common import has_modelsim, check_report
+from vunit.test.common import has_modelsim, check_report
 from subprocess import check_call, call
 import sys
 from vunit import ROOT

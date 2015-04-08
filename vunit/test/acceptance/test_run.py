@@ -7,7 +7,7 @@
 import unittest
 from os.path import join, dirname
 from vunit.ui import VUnit
-from common import has_modelsim
+from vunit.test.common import has_modelsim
 from vunit import ROOT
 
 

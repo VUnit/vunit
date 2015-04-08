@@ -9,7 +9,7 @@ from os.path import abspath, join, dirname
 
 from vunit import ROOT
 from vunit.ui import VUnit
-from common import has_modelsim
+from vunit.test.common import has_modelsim
 
 
 @unittest.skipUnless(has_modelsim(), 'Requires modelsim')

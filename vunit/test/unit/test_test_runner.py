@@ -14,7 +14,7 @@ from vunit.test_runner import TestRunner
 from vunit.test_report import TestReport
 from vunit.test_list import TestList
 
-from mock_2or3 import mock
+from vunit.test.mock_2or3 import mock
 
 
 class TestTestRunner(unittest.TestCase):

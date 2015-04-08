@@ -12,7 +12,7 @@ from os import makedirs
 from vunit.test_scanner import TestScanner, TestScannerError, tb_filter
 from vunit.test_configuration import TestConfiguration
 
-from mock_2or3 import mock
+from vunit.test.mock_2or3 import mock
 
 
 class TestTestScanner(unittest.TestCase):
