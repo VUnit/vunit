@@ -4,6 +4,12 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Provides operating systems dependent functionality that can be easily
+stubbed for testing
+"""
+
+
 from __future__ import print_function
 
 import time
@@ -25,7 +31,8 @@ LOGGER = logging.getLogger(__name__)
 
 class Process:
     """
-    A simple process interface
+    A simple process interface which supports asynchronously consuming the stdout and stderr
+    of the process while it is running.
     """
 
     class NonZeroExitCode(Exception):

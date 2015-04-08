@@ -4,6 +4,11 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Contains different kinds of test suites
+"""
+
+
 from os.path import join
 
 import vunit.ostools as ostools
@@ -11,6 +16,9 @@ from vunit.test_report import (PASSED, SKIPPED, FAILED)
 
 
 class IndependentSimTestCase:
+    """
+    A test case to be run in an independent simulation
+    """
     def __init__(self, name, test_case, test_bench, has_runner_cfg=False, post_check_function=None):
         self._name = name
         self._test_case = test_case
@@ -23,6 +31,9 @@ class IndependentSimTestCase:
         return self._name
 
     def run(self, output_path):
+        """
+        Run the test case using the output_path
+        """
         generics = {}
 
         if self._has_runner_cfg:
@@ -44,6 +55,10 @@ class IndependentSimTestCase:
 
 
 class SameSimTestSuite:
+    """
+    A test suite where multiple test cases are run within the same simulation
+    """
+
     def __init__(self, name, test_cases, test_bench, post_check_function=None):
         self._name = name
         self._test_cases = test_cases
@@ -73,6 +88,9 @@ class SameSimTestSuite:
         return len(self._test_cases) > 0
 
     def run(self, output_path):
+        """
+        Run the test suite using output_path
+        """
         runner_cfg = {
             "enabled_test_cases": ",".join(self._test_cases),
             "output path": output_path.replace("\\", "/") + "/",
@@ -108,7 +126,8 @@ class SameSimTestSuite:
 
     def _determine_partial_pass(self, output_path):
         """
-        @TODO is this a good way?
+        In case of simulation failure determine which of the individual test cases failed.
+        This is done by reading the test_runner_trace.csv file and checking for test case entry points.
         """
         log_file = join(output_path, "test_runner_trace.csv")
 

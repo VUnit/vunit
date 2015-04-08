@@ -4,6 +4,11 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+The main public interface of VUnit.
+"""
+
+
 from __future__ import print_function
 
 import argparse
@@ -88,6 +93,10 @@ class VUnit:
 
     @staticmethod
     def _validate_simulator(preferred_simulator, simulators, description):
+        """
+        Validate the preferred_simulator against available simulators.
+        Use description for error messages.
+        """
         if len(simulators) == 0:
             raise RuntimeError("No simulator detected")
         elif preferred_simulator is not None:
@@ -97,6 +106,9 @@ class VUnit:
 
     @classmethod
     def _create_argument_parser(cls, simulators, preferred_simulator):
+        """
+        Create the argument parser
+        """
         parser = argparse.ArgumentParser(description='VUnit command line tool.')
 
         parser.add_argument('test_patterns', metavar='tests', nargs='*',
@@ -255,7 +267,6 @@ class VUnit:
         """
         Add source files matching wildcard pattern to library
         """
-
         for file_name in glob(pattern):
             file_name = self._preprocess(library_name, abspath(file_name), preprocessors)
             self._project.add_source_file(file_name,
@@ -263,6 +274,10 @@ class VUnit:
                                           file_type=file_type_of(file_name))
 
     def _preprocess(self, library_name, file_name, preprocessors):
+        """
+        Preprocess file_name within library_name using explicit preprocessors
+        if preprocessors is None then use implicit globally defined processors
+        """
         # @TODO dependency checking etc...
 
         if preprocessors is None:
@@ -334,6 +349,9 @@ class VUnit:
         exit(0)
 
     def _main(self):
+        """
+        Base vunit main function without performing exit
+        """
         if self._list_only:
             return self._main_list_only()
 
@@ -350,6 +368,9 @@ class VUnit:
         return report.all_ok()
 
     def _main_list_only(self):
+        """
+        Main function when only listing test cases
+        """
         simulator_if = None
         test_suites = self._create_tests(simulator_if)
         num_tests = 0
@@ -361,11 +382,17 @@ class VUnit:
         return True
 
     def _main_compile_only(self):
+        """
+        Main function when only compiling
+        """
         simulator_if = self._create_simulator_if()
         self._compile(simulator_if)
         return True
 
     def _create_output_path(self):
+        """
+        Create or re-create the output path if necessary
+        """
         if self._clean and exists(self._output_path):
             rmtree(self._output_path)
 
@@ -379,6 +406,9 @@ class VUnit:
             makedirs(self._sim_specific_path)
 
     def _create_simulator_if(self):
+        """
+        Create a simulator interface instance
+        """
         if self._simulator_name == ModelSimInterface.name:
             return ModelSimInterface(
                 join(self._sim_specific_path, "modelsim.ini"),
@@ -392,6 +422,9 @@ class VUnit:
         return join(self._output_path, "preprocessed")
 
     def _create_tests(self, simulator_if):
+        """
+        Create the test suites by scanning the project
+        """
         scanner = TestScanner(simulator_if,
                               self._configuration,
                               elaborate_only=self._elaborate_only)
@@ -403,6 +436,9 @@ class VUnit:
         simulator_if.compile_project(self._project, self._vhdl_standard)
 
     def _run_test(self, test_cases):
+        """
+        Run the test suites and return the report
+        """
         report = TestReport(printer=self._printer)
         runner = TestRunner(report,
                             join(self._output_path, "tests"),
@@ -411,6 +447,9 @@ class VUnit:
         return report
 
     def _post_process(self, report):
+        """
+        Print the report to stdout and optionally write it to an XML file
+        """
         report.print_str()
 
         if self._xunit_xml is not None:
@@ -464,6 +503,9 @@ class LibraryFacade:
         self._parent.add_source_files(pattern, self._library_name, preprocessors)
 
     def entity(self, entity_name):
+        """
+        Return the entity with entity_name or raise KeyError if does not exist
+        """
         library = self._project.get_library(self._library_name)
         if not library.has_entity(entity_name):
             raise KeyError(entity_name)

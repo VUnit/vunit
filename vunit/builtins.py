@@ -4,6 +4,11 @@
 #
 # Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Functions to add builtin VHDL code to a project for compilation
+"""
+
+
 from os.path import join, abspath, dirname, basename
 from glob import glob
 
