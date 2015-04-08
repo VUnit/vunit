@@ -4,10 +4,17 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Functionality to handle lists of test suites and filtering of them
+"""
+
 from vunit.test_report import (PASSED, FAILED)
 
 
 class TestList:
+    """
+    A list of test suites
+    """
     def __init__(self):
         self._test_suites = []
 
@@ -15,6 +22,9 @@ class TestList:
         self._test_suites.append(test_suite)
 
     def add_test(self, test_case):
+        """
+        Add a single test that is automatically wrapped into a test suite
+        """
         test_suite = TestSuiteWrapper(test_case)
         self._test_suites.append(test_suite)
 
@@ -33,6 +43,9 @@ class TestList:
 
 
 class TestSuiteWrapper:
+    """
+    Wrapper which creates a test suite from a single test case
+    """
     def __init__(self, test_case):
         self._test_case = test_case
 
@@ -48,5 +61,8 @@ class TestSuiteWrapper:
         return test_filter(self._test_case.name)
 
     def run(self, output_path):
+        """
+        Run the test suite and return the test results for all test cases
+        """
         test_ok = self._test_case.run(output_path)
         return {self._test_case.name: PASSED if test_ok else FAILED}

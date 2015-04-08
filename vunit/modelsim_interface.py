@@ -4,6 +4,11 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Interface towards Mentor Graphics ModelSim
+"""
+
+
 from __future__ import print_function
 
 from vunit.ostools import Process, write_file, file_exists
@@ -15,6 +20,12 @@ from vunit.exceptions import CompileError
 
 
 class ModelSimInterface:
+    """
+    Mentor Graphics ModelSim interface
+
+    The interface supports both running each simulation in separate vsim processes or
+    re-using the same vsim process to avoid startup-overhead (persistent=True)
+    """
     name = "modelsim"
 
     @staticmethod
@@ -61,11 +72,17 @@ class ModelSimInterface:
         self._vsim_process.consume_output(OutputConsumer(silent=True))
 
     def _create_modelsim_ini(self):
+        """
+        Create the modelsim.ini file if it does not exist
+        """
         if not file_exists(self._modelsim_ini):
             proc = Process(args=['vmap', '-c'], cwd=dirname(self._modelsim_ini))
             proc.consume_output(callback=None)
 
     def compile_project(self, project, vhdl_standard):
+        """
+        Compile the project using vhdl_standard
+        """
         for library in project.get_libraries():
             self.create_library(library.name, library.directory)
 
@@ -84,6 +101,9 @@ class ModelSimInterface:
             project.update(source_file)
 
     def compile_vhdl_file(self, source_file_name, library_name, vhdl_standard):
+        """
+        Compiles a vhdl file into a specific library using a specfic vhdl_standard
+        """
         try:
             proc = Process(['vcom', '-quiet', '-modelsimini', self._modelsim_ini,
                             '-' + vhdl_standard, '-work', library_name, source_file_name])
@@ -93,6 +113,9 @@ class ModelSimInterface:
         return True
 
     def compile_verilog_file(self, source_file_name, library_name):
+        """
+        Compiles a verilog file into a specific library
+        """
         try:
             proc = Process(['vlog', '-sv', '-quiet', '-modelsimini', self._modelsim_ini,
                             '-work', library_name, source_file_name])
@@ -104,7 +127,9 @@ class ModelSimInterface:
     _vmap_pattern = re.compile(r'maps to directory (?P<dir>.*?)\.')
 
     def create_library(self, library_name, path):
-
+        """
+        Create and map a library_name to path
+        """
         if not file_exists(dirname(path)):
             os.makedirs(dirname(path))
 
@@ -132,6 +157,9 @@ class ModelSimInterface:
             proc.consume_output(callback=None)
 
     def _create_load_function(self, library_name, entity_name, architecture_name, generics, pli, output_path):
+        """
+        Create the vunit_load TCL function that runs the vsim command and loads the design
+        """
         set_generic_str = "".join(('    set vunit_generic_%s {%s}\n' % (name, value)
                                    for name, value in generics.items()))
         set_generic_name_str = " ".join(('-g%s="${vunit_generic_%s}"' % (name, name) for name in generics))
@@ -168,6 +196,9 @@ proc vunit_load {{}} {{
 
     @staticmethod
     def _create_run_function(fail_on_warning=False):
+        """
+        Create the vunit_run function to run the test bench
+        """
         return """
 proc vunit_run {} {
     global BreakOnAssertion
@@ -243,12 +274,18 @@ proc vunit_help {} {
 
     @staticmethod
     def _create_user_script(common_file_name):
+        """
+        Create the user facing script which loads common functions and prints a help message
+        """
         tcl = "do %s\n" % fix_path(common_file_name)
         tcl += "vunit_help\n"
         return tcl
 
     @staticmethod
     def _run_batch_file(batch_file_name, gui=False):
+        """
+        Run a test bench in batch by invoking a new vsim process from the command line
+        """
         try:
             args = ['vsim', '-quiet',
                     "-l", join(dirname(batch_file_name), "transcript"),
@@ -266,12 +303,18 @@ proc vunit_help {} {
         return True
 
     def _send_command(self, cmd):
+        """
+        Send a command to the persistent vsim process
+        """
         self._vsim_process.write("%s\n" % cmd)
         self._vsim_process.next_line()
         self._vsim_process.write("#VUNIT_RETURN\n")
         self._vsim_process.consume_output(OutputConsumer())
 
     def _read_var(self, varname):
+        """
+        Read a TCL variable from the persistent vsim process
+        """
         self._vsim_process.write("echo $%s #VUNIT_READVAR\n" % varname)
         self._vsim_process.next_line()
         self._vsim_process.write("#VUNIT_RETURN\n")
@@ -280,6 +323,9 @@ proc vunit_help {} {
         return consumer.var
 
     def _run_persistent(self, common_file_name, load_only=False):
+        """
+        Run a test bench using the persistent vsim process
+        """
         try:
             self._send_command("quit -sim")
             self._send_command("do " + fix_path(common_file_name))
@@ -299,6 +345,10 @@ proc vunit_help {} {
 
     def simulate(self, output_path, library_name, entity_name, architecture_name=None, generics=None, pli=None,
                  load_only=None, fail_on_warning=False):
+        """
+        Run a test bench
+        load_only -- Only load the design performing elaboration without simulating
+        """
         generics = {} if generics is None else generics
         pli = [] if pli is None else pli
         msim_output_path = abspath(join(output_path, "msim"))
@@ -321,9 +371,6 @@ proc vunit_help {} {
             return self._run_batch_file(batch_file_name)
         else:
             return self._run_persistent(common_file_name, load_only)
-
-    def load(self, output_path, library_name, entity_name, architecture_name=None, generics=None, pli=None):
-        return self.simulate(output_path, library_name, entity_name, architecture_name, generics, pli, load_only=True)
 
 
 class OutputConsumer:
