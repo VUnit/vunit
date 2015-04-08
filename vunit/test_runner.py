@@ -4,6 +4,11 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Provided functionality to run a suite of test in a robust way
+"""
+
+
 from __future__ import print_function
 
 from os.path import join, dirname, exists
@@ -18,12 +23,18 @@ import sys
 
 
 class TestRunner:
+    """
+    Administer the execution of a list of test suites
+    """
     def __init__(self, report, output_path, verbose=False):
         self._report = report
         self._output_path = output_path
         self._verbose = verbose
 
     def _run_test_suite(self, test_suite, num_tests):
+        """
+        Run the actual test suite
+        """
         start = ostools.get_time()
 
         for test_name in test_suite.test_cases:
@@ -124,6 +135,9 @@ class TestRunner:
         return path.replace(" ", "_")
 
     def run(self, test_suites):
+        """
+        Run a list of test suites
+        """
         num_tests = 0
         for test_suite in test_suites:
             for test_name in test_suite.test_cases:
@@ -139,6 +153,10 @@ class TestRunner:
 
 
 class TeeToFile:
+    """
+    Provide a write method which writes to multiple files
+    like the unix 'tee' command.
+    """
     def __init__(self, files):
         self._files = files
 

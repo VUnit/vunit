@@ -6,15 +6,29 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Functionality to compute a dependency graph
+"""
+
 
 class DependencyGraph:
+    """
+    A dependency graph
+    """
     def __init__(self):
         self._forward = {}
         self._backward = {}
         self._nodes = []
 
     def toposort(self):
+        """
+        Perform a topological sort returning a list of nodes such that
+        every node is located after its dependency nodes
+        """
         def visit(node):
+            """
+            Recursive function to visit a node and all its dependencies
+            """
             if node in visited:
                 raise RuntimeError('Found circular dependencies')
 
@@ -40,6 +54,10 @@ class DependencyGraph:
         self._nodes.append(node)
 
     def add_dependency(self, start, end):
+        """
+        Add a dependency edge between the start and end node such that
+        end node depends on the start node
+        """
         new_dependency = (start not in self._forward or
                           end not in self._forward[start])
 
@@ -54,14 +72,18 @@ class DependencyGraph:
 
         return new_dependency
 
-    def get_affected(self, nodes):
-        affected = set()
+    def get_dependent(self, nodes):
+        """
+        Get all nodes which are directly or indirectly dependend on
+        the input nodes
+        """
+        dependencies = set()
         leafs = set(nodes)
 
         while len(leafs) > 0:
             next_leafs = set()
             for node in leafs:
-                affected.add(node)
+                dependencies.add(node)
                 if node not in self._forward:
                     continue
 
@@ -69,7 +91,7 @@ class DependencyGraph:
                     next_leafs.add(next_node)
             leafs = next_leafs
 
-        return affected
+        return dependencies
 
     def get_dependencies(self, node):
         return self._backward.get(node, [])

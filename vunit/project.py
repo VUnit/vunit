@@ -6,6 +6,11 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Functionality to represent and operate on a HDL code project
+"""
+
+
 import logging
 LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +23,254 @@ import vunit.ostools as ostools
 import traceback
 
 
+class Project:
+    """
+    The representation of a HDL code project.
+    Compute lists of source files to recompile based on file contents,
+    timestamps and depenencies derived from the design hierarchy.
+    """
+    def __init__(self, depend_on_components=False):
+        self._libraries = {}
+        self._source_files = {}
+        self._source_files_in_order = []
+        self._depend_on_components = depend_on_components
+
+    @staticmethod
+    def _validate_library_name(library_name):
+        """
+        Check that the library_name is valid or raise RuntimeError
+        """
+        if library_name == "work":
+            LOGGER.error("Cannot add library named work. work is a reference to the current library. "
+                         "http://www.sigasi.com/content/work-not-vhdl-library")
+            raise RuntimeError("Illegal library name 'work'")
+
+    def add_library(self, logical_name, directory, allow_replacement=False, is_external=False):
+        """
+        Add library to project with logical_name located or to be located in directory
+        allow_replacement -- Allow replacing an existing library
+        is_external -- Library is assumed to a black-box
+        """
+        self._validate_library_name(logical_name)
+        if logical_name not in self._libraries:
+            library = Library(logical_name, directory, is_external=is_external)
+            self._libraries[logical_name] = library
+            LOGGER.info('Adding library %s with path %s', logical_name, directory)
+        else:
+            assert allow_replacement
+            library = Library(logical_name, directory, is_external=is_external)
+            self._libraries[logical_name] = library
+            LOGGER.info('Replacing library %s with path %s', logical_name, directory)
+
+    def add_source_file(self, file_name, library_name, file_type='vhdl'):
+        """
+        Add a file_name as a source file in library_name with file_type
+        """
+        LOGGER.info('Adding source file %s to library %s', file_name, library_name)
+        self._validate_library_name(library_name)
+        library = self._libraries[library_name]
+        source_file = SourceFile(file_name, library, file_type)
+        library.add_design_units(source_file.design_units)
+        self._source_files[file_name] = source_file
+        self._source_files_in_order.append(file_name)
+
+    @staticmethod
+    def _find_primary_secondary_design_unit_dependencies(source_file):
+        """
+        Iterate over dependencies between the primary design units of the source_file
+        and their secondary design units
+        """
+        library = source_file.library
+
+        for unit in source_file.design_units:
+            if unit.is_primary:
+                continue
+
+            try:
+                primary_unit = library.primary_design_units[unit.primary_design_unit]
+            except KeyError:
+                LOGGER.warning("failed to find a primary design unit '%s' in library '%s'",
+                               unit.primary_design_unit, library.name)
+            else:
+                yield primary_unit.source_file
+
+    def _find_other_design_unit_dependencies(self, source_file):
+        """
+        Iterate over the dependencies on other design unit of the source_file
+        """
+        for library_name, unit_name in source_file.dependencies:
+            try:
+                library = self._libraries[library_name]
+            except KeyError:
+                if library_name not in ("ieee", "std"):
+                    LOGGER.warning("failed to find library '%s'", library_name)
+                continue
+
+            try:
+                primary_unit = library.primary_design_units[unit_name]
+            except KeyError:
+                if not library.is_external:
+                    LOGGER.warning("failed to find a primary design unit '%s' in library '%s'",
+                                   unit_name, library.name)
+            else:
+                yield primary_unit.source_file
+
+    def _find_component_design_unit_dependencies(self, source_file):
+        """
+        Iterate over the dependencies on other design units of the source_file
+        that are the result of component instantiations
+        """
+        for unit_name in source_file.depending_components:
+            found_component_entity = False
+
+            for library in self.get_libraries():
+                try:
+                    primary_unit = library.primary_design_units[unit_name]
+                except KeyError:
+                    continue
+                else:
+                    found_component_entity = True
+                    yield primary_unit.source_file
+
+            if not found_component_entity:
+                LOGGER.debug("failed to find a matching entity for component '%s' ", unit_name)
+
+    def _create_dependency_graph(self):
+        """
+        Create a DependencyGraph object of the HDL code project
+        """
+        def add_dependency(start, end):
+            """
+            Utility to add dependency
+            """
+            if start.name == end.name:
+                return
+
+            is_new = dependency_graph.add_dependency(start, end)
+
+            if is_new:
+                LOGGER.info('Adding dependency: %s depends on %s', end.name, start.name)
+
+        def add_dependencies(dependency_function):
+            """
+            Utility to add all dependencies returned by a dependency_function
+            returning an iterator of dependencies
+            """
+            for source_file in self.get_source_files_in_order():
+                for dependency in dependency_function(source_file):
+                    add_dependency(dependency, source_file)
+
+        dependency_graph = DependencyGraph()
+        for source_file in self.get_source_files_in_order():
+            dependency_graph.add_node(source_file)
+
+        add_dependencies(self._find_other_design_unit_dependencies)
+        add_dependencies(self._find_primary_secondary_design_unit_dependencies)
+
+        if self._depend_on_components:
+            add_dependencies(self._find_component_design_unit_dependencies)
+
+        return dependency_graph
+
+    def get_files_in_compile_order(self, incremental=True):
+        """
+        Get a list of all files in compile order
+        incremental -- Only return files that need recompile if True
+        """
+        dependency_graph = self._create_dependency_graph()
+
+        files = []
+        for source_file in self.get_source_files_in_order():
+            if (not incremental) or self._needs_recompile(dependency_graph, source_file):
+                files.append(source_file)
+
+        # Get files that are affected by recompiling the modified files
+        affected_files = dependency_graph.get_dependent(files)
+        compile_order = dependency_graph.toposort()
+
+        def comparison_key(source_file):
+            return compile_order.index(source_file)
+
+        return sorted(affected_files, key=comparison_key)
+
+    def get_source_files_in_order(self):
+        """
+        Get a list of source files in the order they were added to the project
+        """
+        return [self._source_files[file_name] for file_name in self._source_files_in_order]
+
+    def get_source_file(self, file_name):
+        """
+        Get source file object by file name
+        """
+        return self._source_files[file_name]
+
+    def get_libraries(self):
+        return self._libraries.values()
+
+    def get_library(self, library_name):
+        return self._libraries[library_name]
+
+    def has_library(self, library_name):
+        return library_name in self._libraries
+
+    def _needs_recompile(self, dependency_graph, source_file):
+        """
+        Returns True if the source_file needs to be recompiled
+        given the dependency_graph, the file contents and the last modification time
+        """
+        md5 = source_file.md5()
+        md5_file_name = self._hash_file_name_of(source_file)
+
+        if not ostools.file_exists(md5_file_name):
+            LOGGER.debug("%s has no vunit_hash file at %s and must be recompiled",
+                         source_file.name, md5_file_name)
+            return True
+
+        old_md5 = ostools.read_file(md5_file_name)
+        if old_md5 != md5:
+            LOGGER.debug("%s has different hash than last time and must be recompiled",
+                         source_file.name)
+            return True
+
+        for other_file in dependency_graph.get_dependencies(source_file):
+            other_md5_file_name = self._hash_file_name_of(other_file)
+
+            if not ostools.file_exists(other_md5_file_name):
+                continue
+
+            if ostools.get_modification_time(other_md5_file_name) > ostools.get_modification_time(md5_file_name):
+                LOGGER.debug("%s has dependency compiled earlier and must be recompiled",
+                             source_file.name)
+                return True
+
+        LOGGER.debug("%s has same hash file and must not be recompiled",
+                     source_file.name)
+
+        return False
+
+    def _hash_file_name_of(self, source_file):
+        """
+        Returns the name of the hash file associated with the source_file
+        """
+        library = self.get_library(source_file.library.name)
+        md5_prefix = hashlib.md5(dirname(source_file.name).encode()).hexdigest()
+        return join(library.directory, md5_prefix, basename(source_file.name) + ".vunit_hash")
+
+    def update(self, source_file):
+        """
+        Mark that source_file has been recompiled, triggers a re-write of the hash file
+        to update the timestamp
+        """
+        new_md5 = source_file.md5()
+        ostools.write_file(self._hash_file_name_of(source_file), new_md5)
+        LOGGER.debug('Wrote %s md5=%s', source_file.name, new_md5)
+
+
 class Library:
+    """
+    Represents a VHDL library
+    """
     def __init__(self, name, directory, is_external=False):
         self.name = name
         self.directory = directory
@@ -39,6 +291,9 @@ class Library:
         return self._is_external
 
     def add_design_units(self, design_units):
+        """
+        Add a design unit to the library
+        """
         for design_unit in design_units:
             if design_unit.is_primary:
                 self.primary_design_units[design_unit.name] = design_unit
@@ -82,6 +337,9 @@ class Library:
 
 
 class SourceFile:
+    """
+    Represents a HDL source file
+    """
     def __init__(self, name, library, file_type='vhdl'):
         self.name = name
         self.library = library
@@ -120,6 +378,10 @@ class SourceFile:
             LOGGER.debug("The file '%s' has no components", self.name)
 
     def _find_dependencies(self, design_file):
+        """
+        Return a list of dependencies of this source_file based on the
+        use clause and entity instantiations
+        """
         # Find dependencies introduced by the use clause
         result = []
         for library_name, uses in design_file.libraries.items():
@@ -138,6 +400,9 @@ class SourceFile:
         return result
 
     def _find_design_units(self, design_file):
+        """
+        Return all design units found in the design_file
+        """
         result = []
         for entity in design_file.entities:
             generic_names = [generic.identifier for generic in entity.generics]
@@ -172,6 +437,9 @@ class SourceFile:
 
 
 class Entity:
+    """
+    Represents a VHDL Entity
+    """
     def __init__(self, name, source_file, generic_names=None):
         self.name = name
         self.file_name = source_file.name
@@ -185,6 +453,9 @@ class Entity:
 
 
 class DesignUnit:
+    """
+    Represents a VHDL design unit
+    """
     def __init__(self, name, source_file, unit_type, is_primary=True, primary_design_unit=None):
         self.source_file = source_file
         self.name = name.lower()
@@ -193,193 +464,3 @@ class DesignUnit:
 
         # Related primary design unit if this is a secondary design unit.
         self.primary_design_unit = None if is_primary else primary_design_unit.lower()
-
-
-class Project:
-    def __init__(self, depend_on_components=False):
-        self._libraries = {}
-        self._source_files = {}
-        self._source_files_in_order = []
-        self._depend_on_components = depend_on_components
-
-    @staticmethod
-    def _validate_library_name(library_name):
-        if library_name == "work":
-            LOGGER.error("Cannot add library named work. work is a reference to the current library. "
-                         "http://www.sigasi.com/content/work-not-vhdl-library")
-            raise RuntimeError("Illegal library name 'work'")
-
-    def add_library(self, logical_name, directory, allow_replacement=False, is_external=False):
-        self._validate_library_name(logical_name)
-        if logical_name not in self._libraries:
-            library = Library(logical_name, directory, is_external=is_external)
-            self._libraries[logical_name] = library
-            LOGGER.info('Adding library %s with path %s', logical_name, directory)
-        else:
-            assert allow_replacement
-            library = Library(logical_name, directory, is_external=is_external)
-            self._libraries[logical_name] = library
-            LOGGER.info('Replacing library %s with path %s', logical_name, directory)
-
-    def add_source_file(self, file_name, library_name, file_type='vhdl'):
-        LOGGER.info('Adding source file %s to library %s', file_name, library_name)
-        self._validate_library_name(library_name)
-        library = self._libraries[library_name]
-        source_file = SourceFile(file_name, library, file_type)
-        library.add_design_units(source_file.design_units)
-        self._source_files[file_name] = source_file
-        self._source_files_in_order.append(file_name)
-
-    @staticmethod
-    def _find_primary_secondary_design_unit_dependencies(source_file):
-        library = source_file.library
-
-        for unit in source_file.design_units:
-            if unit.is_primary:
-                continue
-
-            try:
-                primary_unit = library.primary_design_units[unit.primary_design_unit]
-            except KeyError:
-                LOGGER.warning("failed to find a primary design unit '%s' in library '%s'",
-                               unit.primary_design_unit, library.name)
-            else:
-                yield primary_unit.source_file
-
-    def _find_other_design_unit_dependencies(self, source_file):
-        for library_name, unit_name in source_file.dependencies:
-            try:
-                library = self._libraries[library_name]
-            except KeyError:
-                if library_name not in ("ieee", "std"):
-                    LOGGER.warning("failed to find library '%s'", library_name)
-                continue
-
-            try:
-                primary_unit = library.primary_design_units[unit_name]
-            except KeyError:
-                if not library.is_external:
-                    LOGGER.warning("failed to find a primary design unit '%s' in library '%s'",
-                                   unit_name, library.name)
-            else:
-                yield primary_unit.source_file
-
-    def _find_component_design_unit_dependencies(self, source_file):
-
-        for unit_name in source_file.depending_components:
-            found_component_entity = False
-
-            for library in self.get_libraries():
-                try:
-                    primary_unit = library.primary_design_units[unit_name]
-                except KeyError:
-                    continue
-                else:
-                    found_component_entity = True
-                    yield primary_unit.source_file
-
-            if not found_component_entity:
-                LOGGER.debug("failed to find a matching entity for component '%s' ", unit_name)
-
-    def _create_dependency_graph(self):
-        def add_dependency(start, end):
-            if start.name == end.name:
-                return
-
-            is_new = dependency_graph.add_dependency(start, end)
-
-            if is_new:
-                LOGGER.info('Adding dependency: %s depends on %s', end.name, start.name)
-
-        def add_dependencies(dependency_function):
-            for source_file in self.get_source_files_in_order():
-                for dependency in dependency_function(source_file):
-                    add_dependency(dependency, source_file)
-
-        dependency_graph = DependencyGraph()
-        for source_file in self.get_source_files_in_order():
-            dependency_graph.add_node(source_file)
-
-        add_dependencies(self._find_other_design_unit_dependencies)
-        add_dependencies(self._find_primary_secondary_design_unit_dependencies)
-
-        if self._depend_on_components:
-            add_dependencies(self._find_component_design_unit_dependencies)
-
-        return dependency_graph
-
-    def get_files_in_compile_order(self, incremental=True):
-        dependency_graph = self._create_dependency_graph()
-
-        files = []
-        for source_file in self.get_source_files_in_order():
-            if (not incremental) or self._needs_recompile(dependency_graph, source_file):
-                files.append(source_file)
-
-        # Get files that are affected by recompiling the modified files
-        affected_files = dependency_graph.get_affected(files)
-        compile_order = dependency_graph.toposort()
-
-        def comparison_key(source_file):
-            return compile_order.index(source_file)
-
-        return sorted(affected_files, key=comparison_key)
-
-    def get_source_files_in_order(self):
-        return [self._source_files[file_name] for file_name in self._source_files_in_order]
-
-    def get_source_file(self, file_name):
-        """
-        Get source file object by file name
-        """
-        return self._source_files[file_name]
-
-    def get_libraries(self):
-        return self._libraries.values()
-
-    def get_library(self, library_name):
-        return self._libraries[library_name]
-
-    def has_library(self, library_name):
-        return library_name in self._libraries
-
-    def _needs_recompile(self, dependency_graph, source_file):
-        md5 = source_file.md5()
-        md5_file_name = self._hash_file_name_of(source_file)
-
-        if not ostools.file_exists(md5_file_name):
-            LOGGER.debug("%s has no vunit_hash file at %s and must be recompiled",
-                         source_file.name, md5_file_name)
-            return True
-
-        old_md5 = ostools.read_file(md5_file_name)
-        if old_md5 != md5:
-            LOGGER.debug("%s has different hash than last time and must be recompiled",
-                         source_file.name)
-            return True
-
-        for other_file in dependency_graph.get_dependencies(source_file):
-            other_md5_file_name = self._hash_file_name_of(other_file)
-
-            if not ostools.file_exists(other_md5_file_name):
-                continue
-
-            if ostools.get_modification_time(other_md5_file_name) > ostools.get_modification_time(md5_file_name):
-                LOGGER.debug("%s has dependency compiled earlier and must be recompiled",
-                             source_file.name)
-                return True
-
-        LOGGER.debug("%s has same hash file and must not be recompiled",
-                     source_file.name)
-
-        return False
-
-    def _hash_file_name_of(self, source_file):
-        library = self.get_library(source_file.library.name)
-        md5_prefix = hashlib.md5(dirname(source_file.name).encode()).hexdigest()
-        return join(library.directory, md5_prefix, basename(source_file.name) + ".vunit_hash")
-
-    def update(self, source_file):
-        new_md5 = source_file.md5()
-        ostools.write_file(self._hash_file_name_of(source_file), new_md5)
-        LOGGER.debug('Wrote %s md5=%s', source_file.name, new_md5)
