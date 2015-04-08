@@ -4,8 +4,15 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Class to run a single test bench
+"""
+
 
 class TestBench:
+    """
+    Class to contain the context needed to run a specific test bench
+    """
     def __init__(self,
                  simulator_if,
                  library_name,
@@ -27,6 +34,9 @@ class TestBench:
         self._elaborate_only = elaborate_only
 
     def run(self, output_path, extra_generics=None):
+        """
+        Run test bench with output_path and extra_generics
+        """
         generics = self._generics.copy()
 
         if self._has_output_path:

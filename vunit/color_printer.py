@@ -4,6 +4,10 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Provides capability to print in color to the terminal in both Windows and Linux.
+"""
+
 import sys
 import ctypes
 from ctypes import Structure, c_short, c_ushort, byref
@@ -25,7 +29,8 @@ class LinuxColorPrinter:
 
     def write(self, text, output_file=None, fg=None, bg=None):
         """
-        Print the text in color
+        Print the text in color to the output_file
+        uses stdout if output_file is None
         """
         if output_file is None:
             output_file = sys.stdout
@@ -35,6 +40,9 @@ class LinuxColorPrinter:
 
     @staticmethod
     def _to_code(rgb):
+        """
+        Translate strings containing 'rgb' characters to numerical color codes
+        """
         code = 0
         if 'r' in rgb:
             code += 1
@@ -47,6 +55,11 @@ class LinuxColorPrinter:
         return code
 
     def _ansi_wrap(self, text, fg, bg):
+        """
+        Wrap the text into ANSI color escape codes
+        fg -- the foreground color
+        bg -- the background color
+        """
         codes = []
 
         if fg is not None:
@@ -106,7 +119,8 @@ class Win32ColorPrinter(LinuxColorPrinter):
 
     def write(self, text, output_file=None, fg=None, bg=None):
         """
-        Print the text in color
+        Print the text in color to the output_file
+        uses stdout if output_file is None
         """
         if output_file is None:
             output_file = sys.stdout
@@ -138,17 +152,23 @@ class Win32ColorPrinter(LinuxColorPrinter):
 
     @staticmethod
     def _get_text_attr(handle):
+        """
+        Get current text attribute using win-api
+        """
         csbi = ConsoleScreenBufferInfo()
         ctypes.windll.kernel32.GetConsoleScreenBufferInfo(handle, byref(csbi))
         return csbi.wAttributes
 
     @staticmethod
     def _set_text_attr(handle, attr):
+        """
+        Set current text attribute using win-api
+        """
         ctypes.windll.kernel32.SetConsoleTextAttribute(handle, attr)
 
     def _decode_color(self, color_str):
         """
-        Decode color string into bit vector
+        Decode color string into numerical color code
         """
         code = 0
         for char in color_str:
@@ -157,11 +177,18 @@ class Win32ColorPrinter(LinuxColorPrinter):
 
 
 class NoColorPrinter:
+    """
+    Dummy printer that does not print in color
+    """
     def __init__(self):
         pass
 
     @staticmethod
-    def write(text, output_file=None):
+    def write(text, output_file=None, fg=None, bg=None):  # pylint: disable=unused-argument
+        """
+        Print the text in color to the output_file
+        uses stdout if output_file is None
+        """
         if output_file is None:
             output_file = sys.stdout
         output_file.write(text)

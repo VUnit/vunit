@@ -4,6 +4,10 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Public VUnit interface
+"""
+
 from vunit.ui import VUnit
 from os.path import dirname, join, abspath
 

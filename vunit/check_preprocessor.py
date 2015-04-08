@@ -4,10 +4,17 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Preprocessing of check functions
+"""
+
 import re
 
 
 class CheckPreprocessor:
+    """
+    Preprocessing of check functions adding helpful message to check_relation calls
+    """
     def __init__(self):
         self._find_operators = re.compile(r'\?/=|\?<=|\?>=|\?<|\?>|\?=|/=|<=|>=|<|>|=', re.MULTILINE)
         self._find_quotes = re.compile(r'"|' + r"'", re.MULTILINE)
@@ -17,6 +24,9 @@ class CheckPreprocessor:
         self._trailing_paranthesis = re.compile(r'[\s)]*')
 
     def run(self, code, file_name):  # pylint: disable=unused-argument
+        """
+        Preprocess code and return result also given the file_name of the original file
+        """
         check_relation_pattern = re.compile(r'[^a-zA-Z0-9_](?P<call>check_relation)\s*(?P<parameters>\()',
                                             re.MULTILINE)
 
@@ -34,6 +44,7 @@ class CheckPreprocessor:
         return code
 
     def _extract_relation(self, code, check):
+        # pylint: disable=missing-docstring
         def end_of_parameter(token):
             return ((token.value == ',') and (token.level == 1)) or (token.level == 0)
         parameter_tokens = []
@@ -70,6 +81,7 @@ class CheckPreprocessor:
 
     @staticmethod
     def _classify_tokens(code):
+        # pylint: disable=missing-docstring
         # pylint: disable=too-many-branches
         def even_quotes(code):
             n_quotes = 0
@@ -126,6 +138,7 @@ class CheckPreprocessor:
             code_section = next_code_section
 
     def _get_relation_from_parameter(self, tokens):
+        # pylint: disable=missing-docstring
         def find_top_level_match(matches, tokens, top_level=1):
             if matches:
                 for match in matches:
@@ -165,6 +178,7 @@ class CheckPreprocessor:
 
 
 class Token:
+    # pylint: disable=missing-docstring
     NORMAL = 0
     STRING = 1
     CHARACTER_LITERAL = 2
@@ -186,6 +200,7 @@ class Token:
 
 
 class Relation:
+    # pylint: disable=missing-docstring
     def __init__(self, left, operand, right):
         self._left = left
         self._operand = operand

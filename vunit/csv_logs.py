@@ -4,12 +4,18 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Provides csv log functionality
+"""
+
 from csv import Sniffer, DictReader, DictWriter
 from glob import glob
 from os.path import abspath
 
 
 class CsvLogs:
+    # pylint: disable=missing-docstring
+
     def __init__(self, pattern='', field_names=None):
         default_field_names = ['#', 'Time', 'Level', 'File', 'Line', 'Source', 'Message']
         self._field_names = default_field_names if field_names is None else field_names
@@ -20,6 +26,7 @@ class CsvLogs:
         return iter(self._entries)
 
     def add(self, pattern):
+        # pylint: disable=missing-docstring
         for csv_file in [abspath(p) for p in glob(pattern)]:
             with open(csv_file, "r") as fread:
                 sample = fread.readline()
@@ -31,6 +38,7 @@ class CsvLogs:
         self._entries.sort(key=lambda dictionary: int(dictionary['#']))
 
     def write(self, output_file):
+        # pylint: disable=missing-docstring
         with open(output_file, "w") as fwrite:
             csv_writer = DictWriter(fwrite, delimiter=',', fieldnames=self._field_names, lineterminator="\n")
             csv_writer.writerow({name: name for name in self._field_names})
