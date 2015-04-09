@@ -17,6 +17,7 @@ from os.path import join, dirname, abspath
 import os
 
 from vunit.exceptions import CompileError
+from distutils.spawn import find_executable
 
 
 class ModelSimInterface(object):
@@ -33,12 +34,7 @@ class ModelSimInterface(object):
         """
         Return True if ModelSim is installed
         """
-        try:
-            proc = Process(['vsim', '-c', '-help'])
-            proc.consume_output(callback=None)
-            return True
-        except:  # pylint: disable=bare-except
-            return False
+        return find_executable('vsim') is not None
 
     def __init__(self, modelsim_ini="modelsim.ini", persistent=False, gui=False):
         self._modelsim_ini = modelsim_ini
