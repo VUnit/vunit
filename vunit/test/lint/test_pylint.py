@@ -22,9 +22,5 @@ class TestPylint(unittest.TestCase):
     @staticmethod
     def test_pylint():
         check_call(["pylint",
-                    "--disable=too-few-public-methods",
-                    "--disable=locally-disabled",
-                    "--disable=interface-not-implemented",
-                    "--ignore-imports=y",  # Ignore imports from code duplication check
                     "--rcfile=" + join(dirname(__file__), "pylintrc"),
                     join(ROOT, "vunit")])
