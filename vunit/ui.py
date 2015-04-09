@@ -157,7 +157,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
 
         return parser
 
-    def __init__(self,  # pylint: disable=too-many-locals
+    def __init__(self,  # pylint: disable=too-many-locals, too-many-arguments
                  output_path,
                  clean=False,
                  no_color=False,

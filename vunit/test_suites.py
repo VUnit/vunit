@@ -19,7 +19,8 @@ class IndependentSimTestCase(object):
     """
     A test case to be run in an independent simulation
     """
-    def __init__(self, name, test_case, test_bench, has_runner_cfg=False, post_check_function=None):
+    def __init__(self,  # pylint: disable=too-many-arguments
+                 name, test_case, test_bench, has_runner_cfg=False, post_check_function=None):
         self._name = name
         self._test_case = test_case
         self._test_bench = test_bench

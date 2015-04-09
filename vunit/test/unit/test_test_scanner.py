@@ -242,7 +242,8 @@ class EntityStub(object):
     """
     A stub of the Entity class
     """
-    def __init__(self, name, library_name, file_name,
+    def __init__(self,  # pylint: disable=too-many-arguments
+                 name, library_name, file_name,
                  architecture_names, generic_names):
         self.name = name
         self.library_name = library_name

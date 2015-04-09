@@ -457,11 +457,13 @@ class Entity(object):
     def library_name(self):
         return self.source_file.library_name
 
+
 class DesignUnit(object):
     """
     Represents a VHDL design unit
     """
-    def __init__(self, name, source_file, unit_type, is_primary=True, primary_design_unit=None):
+    def __init__(self,  # pylint: disable=too-many-arguments
+                 name, source_file, unit_type, is_primary=True, primary_design_unit=None):
         self.source_file = source_file
         self.name = name.lower()
         self.unit_type = unit_type

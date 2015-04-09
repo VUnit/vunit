@@ -156,7 +156,9 @@ class ModelSimInterface(object):
             proc = Process(['vmap', '-modelsimini', self._modelsim_ini, library_name, path])
             proc.consume_output(callback=None)
 
-    def _create_load_function(self, library_name, entity_name, architecture_name, generics, pli, output_path):
+    def _create_load_function(self,  # pylint: disable=too-many-arguments
+                              library_name, entity_name, architecture_name,
+                              generics, pli, output_path):
         """
         Create the vunit_load TCL function that runs the vsim command and loads the design
         """
@@ -242,7 +244,8 @@ proc vunit_run {} {
 }
 """ % (1 if fail_on_warning else 2)
 
-    def _create_common_script(self, library_name, entity_name, architecture_name,
+    def _create_common_script(self,   # pylint: disable=too-many-arguments
+                              library_name, entity_name, architecture_name,
                               generics, pli, fail_on_warning, output_path):
         """
         Create tcl script with functions common to interactive and batch modes
@@ -343,8 +346,9 @@ proc vunit_help {} {
             self._create_vsim_process()
             return False
 
-    def simulate(self, output_path, library_name, entity_name, architecture_name=None, generics=None, pli=None,
-                 load_only=None, fail_on_warning=False):
+    def simulate(self, output_path,  # pylint: disable=too-many-arguments
+                 library_name, entity_name, architecture_name=None,
+                 generics=None, pli=None, load_only=None, fail_on_warning=False):
         """
         Run a test bench
         load_only -- Only load the design performing elaboration without simulating

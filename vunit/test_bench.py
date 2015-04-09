@@ -13,7 +13,7 @@ class TestBench(object):  # pylint: disable=too-many-instance-attributes
     """
     Class to contain the context needed to run a specific test bench
     """
-    def __init__(self,
+    def __init__(self,  # pylint: disable=too-many-arguments
                  simulator_if,
                  library_name,
                  entity_name,

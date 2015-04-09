@@ -488,7 +488,7 @@ end architecture;
 
         self.assertTrue(found_comp, "Did not find component " + component_name + " in " + source_file_name)
 
-    def _find_design_unit(self,
+    def _find_design_unit(self,  # pylint: disable=too-many-arguments
                           source_file_name,
                           design_unit_type,
                           design_unit_name,

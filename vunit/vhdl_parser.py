@@ -15,7 +15,7 @@ class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes
     """
     Contains VHDL objects found within a file
     """
-    def __init__(self,
+    def __init__(self,  # pylint: disable=too-many-arguments
                  entities=None,
                  packages=None,
                  package_bodies=None,

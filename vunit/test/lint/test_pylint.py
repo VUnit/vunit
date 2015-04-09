@@ -23,7 +23,6 @@ class TestPylint(unittest.TestCase):
     def test_pylint():
         check_call(["pylint",
                     "--disable=too-few-public-methods",
-                    "--disable=too-many-arguments",
                     "--disable=locally-disabled",
                     "--disable=interface-not-implemented",
                     "--ignore-imports=y",  # Ignore imports from code duplication check
