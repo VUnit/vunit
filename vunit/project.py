@@ -442,15 +442,20 @@ class Entity(object):
     """
     def __init__(self, name, source_file, generic_names=None):
         self.name = name
-        self.file_name = source_file.name
-        self.library_name = source_file.library.name
+        self.source_file = source_file
         self.generic_names = [] if generic_names is None else generic_names
         self.architecture_names = {}
 
-        self.source_file = source_file
         self.unit_type = 'entity'
         self.is_primary = True
 
+    @property
+    def file_name(self):
+        return self.source_file.file_name
+
+    @property
+    def library_name(self):
+        return self.source_file.library_name
 
 class DesignUnit(object):
     """

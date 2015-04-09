@@ -9,7 +9,7 @@ Class to run a single test bench
 """
 
 
-class TestBench(object):
+class TestBench(object):  # pylint: disable=too-many-instance-attributes
     """
     Class to contain the context needed to run a specific test bench
     """

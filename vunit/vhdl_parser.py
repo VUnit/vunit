@@ -11,7 +11,7 @@ VHDL parsing functionality
 import re
 
 
-class VHDLDesignFile(object):
+class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes
     """
     Contains VHDL objects found within a file
     """

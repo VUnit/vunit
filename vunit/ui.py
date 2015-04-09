@@ -40,7 +40,7 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 
-class VUnit(object):
+class VUnit(object):  # pylint: disable=too-many-instance-attributes
     """
     The public interface of VUnit
     """
