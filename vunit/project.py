@@ -451,11 +451,11 @@ class Entity(object):
 
     @property
     def file_name(self):
-        return self.source_file.file_name
+        return self.source_file.name
 
     @property
     def library_name(self):
-        return self.source_file.library_name
+        return self.source_file.library.name
 
 
 class DesignUnit(object):
