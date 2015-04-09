@@ -9,7 +9,7 @@ Utility to stub ostools.py functionality
 """
 
 
-class OstoolsStub:
+class OstoolsStub(object):
     """
     Stub of a file system
     """

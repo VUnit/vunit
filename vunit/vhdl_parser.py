@@ -11,7 +11,7 @@ VHDL parsing functionality
 import re
 
 
-class VHDLDesignFile:
+class VHDLDesignFile(object):
     """
     Contains VHDL objects found within a file
     """
@@ -132,7 +132,7 @@ class VHDLDesignFile:
         return libraries
 
 
-class VHDLPackageBody:
+class VHDLPackageBody(object):
     """
     Representation of a VHDL package body
     """
@@ -161,7 +161,7 @@ class VHDLPackageBody:
             yield VHDLPackageBody(match.group('package'))
 
 
-class VHDLArchitecture:
+class VHDLArchitecture(object):
     """
     Representation of a VHDL architecture
     """
@@ -194,7 +194,7 @@ class VHDLArchitecture:
             yield VHDLArchitecture(identifier, entity_id)
 
 
-class VHDLPackage:
+class VHDLPackage(object):
     """
     Representation of a VHDL package
     """
@@ -266,7 +266,7 @@ class VHDLPackage:
         return constant_declarations
 
 
-class VHDLEntity:
+class VHDLEntity(object):
     """
     Represents a VHDL Entity
     """
@@ -539,7 +539,7 @@ class VHDLEntity:
         return code
 
 
-class VHDLContext:
+class VHDLContext(object):
     """
     Represents a VHDL 2008 context
     """
@@ -566,7 +566,7 @@ class VHDLContext:
             yield VHDLContext(identifier=identifier)
 
 
-class VHDLSubtypeIndication:
+class VHDLSubtypeIndication(object):
     """
     Represents a VHDL subtype indication
     """
@@ -604,7 +604,7 @@ class VHDLSubtypeIndication:
         return self.code
 
 
-class VHDLConstantDeclaration:
+class VHDLConstantDeclaration(object):
     """
     Represents a constant declaration
     """
@@ -644,7 +644,7 @@ class VHDLConstantDeclaration:
         return cls(identifier, subtype_indication, expression)
 
 
-class VHDLInterfaceElement:
+class VHDLInterfaceElement(object):
     """
     Represents a VHDL interface element
     """

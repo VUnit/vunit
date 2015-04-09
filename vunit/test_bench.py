@@ -9,7 +9,7 @@ Class to run a single test bench
 """
 
 
-class TestBench:
+class TestBench(object):
     """
     Class to contain the context needed to run a specific test bench
     """

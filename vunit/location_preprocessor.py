@@ -13,7 +13,7 @@ to enable better messages
 import re
 
 
-class LocationPreprocessor:
+class LocationPreprocessor(object):
     """
     Preprocessing of VHDL files to add file_name and line_num
     arguments to calls of known function and procedures

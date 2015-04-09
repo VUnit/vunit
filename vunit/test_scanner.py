@@ -23,7 +23,7 @@ from vunit.test_suites import IndependentSimTestCase, SameSimTestSuite
 from vunit.test_configuration import dotjoin
 
 
-class TestScanner:
+class TestScanner(object):
     """
     Scans a project for test benches
     """

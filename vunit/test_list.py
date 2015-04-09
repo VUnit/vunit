@@ -11,7 +11,7 @@ Functionality to handle lists of test suites and filtering of them
 from vunit.test_report import (PASSED, FAILED)
 
 
-class TestList:
+class TestList(object):
     """
     A list of test suites
     """
@@ -42,7 +42,7 @@ class TestList:
         return len(self._test_suites)
 
 
-class TestSuiteWrapper:
+class TestSuiteWrapper(object):
     """
     Wrapper which creates a test suite from a single test case
     """

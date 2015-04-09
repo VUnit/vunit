@@ -13,7 +13,7 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 
-class TestConfiguration:
+class TestConfiguration(object):
     """
     Maintain a global view of test configurations within different
     scopes.
@@ -131,7 +131,7 @@ class TestConfiguration:
         return plis
 
 
-class Configuration:
+class Configuration(object):
     """
     Represents a configuration of a test bench
     """

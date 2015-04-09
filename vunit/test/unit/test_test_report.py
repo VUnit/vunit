@@ -172,7 +172,7 @@ Total time 4.0 seconds
         return TestReport(self.printer)
 
 
-class StubPrinter:
+class StubPrinter(object):
     """
     A stub of a ColorPrinter
     """

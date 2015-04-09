@@ -96,7 +96,7 @@ class TestTestRunner(unittest.TestCase):
         return test_case
 
 
-class TestCaseMockSpec:  # pylint: disable=no-init
+class TestCaseMockSpec(object):  # pylint: disable=no-init
     """
     A test case mock specification class
     """

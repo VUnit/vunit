@@ -13,7 +13,7 @@ import ctypes
 from ctypes import Structure, c_short, c_ushort, byref
 
 
-class LinuxColorPrinter:
+class LinuxColorPrinter(object):
     """
     Print in color on linux
     """
@@ -176,7 +176,7 @@ class Win32ColorPrinter(LinuxColorPrinter):
         return code
 
 
-class NoColorPrinter:
+class NoColorPrinter(object):
     """
     Dummy printer that does not print in color
     """

@@ -191,7 +191,7 @@ if run("Test_2")
                 self.assertEqual(test1.name, test2)
 
 
-class ProjectStub:
+class ProjectStub(object):
     """
     A stub of the Project class
     """
@@ -210,7 +210,7 @@ class ProjectStub:
         return self._libraries
 
 
-class LibraryStub:
+class LibraryStub(object):
     """
     A stub of the Library class
     """
@@ -238,7 +238,7 @@ class LibraryStub:
                        generic_names))
 
 
-class EntityStub:
+class EntityStub(object):
     """
     A stub of the Entity class
     """

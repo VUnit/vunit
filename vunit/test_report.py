@@ -14,7 +14,7 @@ from xml.etree import ElementTree
 from sys import version_info
 
 
-class TestReport:
+class TestReport(object):
     """
     Collect reports from running testcases
     """
@@ -154,7 +154,7 @@ class TestReport:
         return xml
 
 
-class TestStatus:
+class TestStatus(object):
     """
     The status of a test
     """
@@ -177,7 +177,7 @@ SKIPPED = TestStatus("skipped")
 FAILED = TestStatus("failed")
 
 
-class TestResult:
+class TestResult(object):
     """
     Represents the result of a single test case
     """

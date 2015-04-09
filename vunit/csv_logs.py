@@ -13,7 +13,7 @@ from glob import glob
 from os.path import abspath
 
 
-class CsvLogs:
+class CsvLogs(object):
     # pylint: disable=missing-docstring
 
     def __init__(self, pattern='', field_names=None):

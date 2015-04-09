@@ -11,7 +11,7 @@ Functionality to compute a dependency graph
 """
 
 
-class DependencyGraph:
+class DependencyGraph(object):
     """
     A dependency graph
     """

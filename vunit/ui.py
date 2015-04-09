@@ -40,7 +40,7 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 
-class VUnit:
+class VUnit(object):
     """
     The public interface of VUnit
     """
@@ -481,7 +481,7 @@ class VUnit:
         add_osvvm(library)
 
 
-class LibraryFacade:
+class LibraryFacade(object):
     """
     User interface of a library
     """
@@ -514,7 +514,7 @@ class LibraryFacade:
                             self._configuration)
 
 
-class EntityFacade:
+class EntityFacade(object):
     """
     User interface of an entity
     """

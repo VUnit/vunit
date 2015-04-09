@@ -114,7 +114,7 @@ def out(*args):
     return join(dirname(__file__), "test_configuration_out", *args)
 
 
-class EntityStub:
+class EntityStub(object):
     def __init__(self, name, library_name, architecture_names, generic_names):
         self.name = name
         self.library_name = library_name

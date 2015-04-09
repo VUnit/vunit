@@ -19,7 +19,7 @@ from re import MULTILINE
 from vunit.ui import VUnit
 
 
-class TestPreprocessor:
+class TestPreprocessor(object):
     """
     A preprocessor that appends a check_relation call before the orginal code
     """
@@ -31,7 +31,7 @@ class TestPreprocessor:
         return '-- check_relation(a = b);\n' + code
 
 
-class VUnitfier:
+class VUnitfier(object):
     """
     A preprocessor that replaces report statments with log calls
     """
@@ -43,7 +43,7 @@ class VUnitfier:
             r'\g<indent>log(\g<note>); -- VUnitfier preprocessor: Report turned off, keeping original code.', code)
 
 
-class ParentalControl:
+class ParentalControl(object):
     """
     A preprocessor that replaces f..k with [BEEP]
     """

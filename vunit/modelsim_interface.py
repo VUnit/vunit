@@ -19,7 +19,7 @@ import os
 from vunit.exceptions import CompileError
 
 
-class ModelSimInterface:
+class ModelSimInterface(object):
     """
     Mentor Graphics ModelSim interface
 
@@ -373,7 +373,7 @@ proc vunit_help {} {
             return self._run_persistent(common_file_name, load_only)
 
 
-class OutputConsumer:
+class OutputConsumer(object):
     """
     Consume output from modelsim and print with indentation
     """

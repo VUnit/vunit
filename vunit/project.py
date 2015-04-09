@@ -23,7 +23,7 @@ import vunit.ostools as ostools
 import traceback
 
 
-class Project:
+class Project(object):
     """
     The representation of a HDL code project.
     Compute lists of source files to recompile based on file contents,
@@ -267,7 +267,7 @@ class Project:
         LOGGER.debug('Wrote %s md5=%s', source_file.name, new_md5)
 
 
-class Library:
+class Library(object):
     """
     Represents a VHDL library
     """
@@ -336,7 +336,7 @@ class Library:
         return hash(self.name)
 
 
-class SourceFile:
+class SourceFile(object):
     """
     Represents a HDL source file
     """
@@ -436,7 +436,7 @@ class SourceFile:
         return self._md5
 
 
-class Entity:
+class Entity(object):
     """
     Represents a VHDL Entity
     """
@@ -452,7 +452,7 @@ class Entity:
         self.is_primary = True
 
 
-class DesignUnit:
+class DesignUnit(object):
     """
     Represents a VHDL design unit
     """

@@ -22,7 +22,7 @@ from vunit.test_report import PASSED, FAILED
 import sys
 
 
-class TestRunner:
+class TestRunner(object):
     """
     Administer the execution of a list of test suites
     """
@@ -152,7 +152,7 @@ class TestRunner:
             self._run_test_suite(test_suite, num_tests)
 
 
-class TeeToFile:
+class TeeToFile(object):
     """
     Provide a write method which writes to multiple files
     like the unix 'tee' command.

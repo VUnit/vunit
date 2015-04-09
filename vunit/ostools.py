@@ -29,7 +29,7 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 
-class Process:
+class Process(object):
     """
     A simple process interface which supports asynchronously consuming the stdout and stderr
     of the process while it is running.

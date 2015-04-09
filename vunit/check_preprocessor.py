@@ -11,7 +11,7 @@ Preprocessing of check functions
 import re
 
 
-class CheckPreprocessor:
+class CheckPreprocessor(object):
     """
     Preprocessing of check functions adding helpful message to check_relation calls
     """
@@ -177,7 +177,7 @@ class CheckPreprocessor:
         return relation
 
 
-class Token:
+class Token(object):
     # pylint: disable=missing-docstring
     NORMAL = 0
     STRING = 1
@@ -199,7 +199,7 @@ class Token:
         return self.type in [self.CHARACTER_LITERAL, self.STRING]
 
 
-class Relation:
+class Relation(object):
     # pylint: disable=missing-docstring
     def __init__(self, left, operand, right):
         self._left = left

@@ -15,7 +15,7 @@ import vunit.ostools as ostools
 from vunit.test_report import (PASSED, SKIPPED, FAILED)
 
 
-class IndependentSimTestCase:
+class IndependentSimTestCase(object):
     """
     A test case to be run in an independent simulation
     """
@@ -54,7 +54,7 @@ class IndependentSimTestCase:
             return self._post_check_function(output_path)
 
 
-class SameSimTestSuite:
+class SameSimTestSuite(object):
     """
     A test suite where multiple test cases are run within the same simulation
     """
