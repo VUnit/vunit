@@ -223,7 +223,7 @@ package com_pkg is
   -----------------------------------------------------------------------------
   -- Message related subprograms
   -----------------------------------------------------------------------------
-  function compose (
+  impure function compose (
     constant payload : string := "";
     constant sender  : actor_t := null_actor_c;
     constant request_id : in message_id_t := no_message_id_c)

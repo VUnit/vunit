@@ -13,26 +13,23 @@ package msg_types_pkg is
     rank : rank_t;
     suit : suit_t;
   end record card_t;
-  type card_msg_type_t is (load, received);
+  type msg_type_t is (load, received, reset_shuffler, get_status, get_status_reply);
   type card_msg_t is record
-    msg_type : card_msg_type_t;
+    msg_type : msg_type_t;
     card     : card_t;
   end record card_msg_t;
   
-  type reset_msg_type_t is (reset_shuffler);
   type reset_msg_t is record
-    msg_type : reset_msg_type_t;
+    msg_type : msg_type_t;
   end record reset_msg_t;
   
-  type request_msg_type_t is (get_status);
   type request_msg_t is record
-    msg_type : request_msg_type_t;
+    msg_type : msg_type_t;
     n_received  : natural;
   end record request_msg_t;
   
-  type reply_msg_type_t is (get_status_reply);
   type reply_msg_t is record
-    msg_type : reply_msg_type_t;
+    msg_type : msg_type_t;
     checksum_match : boolean;
   end record reply_msg_t;
 

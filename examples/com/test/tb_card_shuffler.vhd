@@ -33,6 +33,7 @@ architecture test_fixture of tb_card_shuffler is
   signal input_valid  : std_logic := '0';
   signal output_card  : std_logic_vector(5 downto 0);
   signal output_valid : std_logic;
+  constant n_decks : natural := 1;
 begin
   test_runner : process
     variable self : actor_t;
@@ -49,14 +50,18 @@ begin
       if run("Test that the cards in the deck are shuffled") then
         publish(net, self, reset_shuffler, status);
 
-        for r in 0 to 12 loop        
-          for s in 0 to 3 loop
-            publish(net, self, load((rank_t'val(r), suit_t'val(s))), status);
+        for i in 1 to n_decks loop
+          wait for 1 ps;
+          for r in 0 to 12 loop        
+            for s in 0 to 3 loop
+              publish(net, self, load((rank_t'val(r), suit_t'val(s))), status);
+            end loop;
           end loop;
-        end loop;
+        end loop;  -- i
 
-        send(net, self, find("scoreboard"), get_status(52), receipt);
+        send(net, self, find("scoreboard"), get_status(52*n_decks), receipt);
         receive_reply(net, self, receipt.id, reply);
+        reset_messenger;
         check_false(decode(reply.payload.all).checksum_match, "Identical deck after shuffling");
       end if;
     end loop;
@@ -64,7 +69,7 @@ begin
     wait;
   end process;
 
-  test_runner_watchdog(runner, 5 ms);
+  test_runner_watchdog(runner, 500 ms);
 
   clk <= not clk after 5 ns;
 
@@ -88,14 +93,14 @@ begin
       loop 
         receive(net, self, message);
         wait until rising_edge(clk);        
-        if get_first_element(message.payload.all) = "load" then
+        if get_first_element(message.payload.all) = encode_msg_type_t(load) then
           msg := decode(message.payload.all);
           input_valid <= '1';
           input_card(5 downto 2) <= std_logic_vector(to_unsigned(rank_t'pos(msg.card.rank), 4));
           input_card(1 downto 0) <= std_logic_vector(to_unsigned(suit_t'pos(msg.card.suit), 2));
           wait until rising_edge(clk);
           input_valid <= '0';
-        elsif get_first_element(message.payload.all) = "reset_shuffler" then
+        elsif get_first_element(message.payload.all) = encode_msg_type_t(reset_shuffler) then
           rst <= '1';
           wait until rising_edge(clk);
           rst <= '0';
@@ -135,22 +140,22 @@ begin
     subscribe(self, find("test runner"), status);
     loop 
         receive(net, self, message);
-        if get_first_element(message.payload.all) = "reset_shuffler" then
+        if get_first_element(message.payload.all) = encode_msg_type_t(reset_shuffler) then
           n_received := 0;
           n_loaded := 0;
           received_checksum := 0;
           loaded_checksum := 0;
-        elsif get_first_element(message.payload.all) = "load" then
+        elsif get_first_element(message.payload.all) = encode_msg_type_t(load) then
           load_msg := decode(message.payload.all);
           index := rank_t'pos(load_msg.card.rank) * 4 +suit_t'pos(load_msg.card.suit);
           loaded_checksum := loaded_checksum + (index * n_loaded);
           n_loaded := n_loaded + 1;
-        elsif get_first_element(message.payload.all) = "received" then
+        elsif get_first_element(message.payload.all) = encode_msg_type_t(received) then
           received_msg := decode(message.payload.all);
           index := rank_t'pos(received_msg.card.rank) * 4 +suit_t'pos(received_msg.card.suit);
           received_checksum := received_checksum + (index * n_received);
           n_received := n_received + 1;
-        elsif get_first_element(message.payload.all) = "get_status" then
+        elsif get_first_element(message.payload.all) = encode_msg_type_t(get_status) then
           status_point := decode(message.payload.all).n_received;
           client := message.sender;
           client_request_id := message.id;

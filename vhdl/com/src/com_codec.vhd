@@ -537,7 +537,7 @@ package body com_codec_pkg is
     constant data : complex)
     return string is
   begin
-    return create_group(encode(data.re), encode(data.im));
+    return create_group(2, encode(data.re), encode(data.im));
   end;
 
   function decode (
@@ -559,7 +559,7 @@ package body com_codec_pkg is
     constant data : complex_polar)
     return string is
   begin
-    return create_group(encode(data.mag), encode(data.arg));
+    return create_group(2, encode(data.mag), encode(data.arg));
   end;
 
   function decode (
@@ -759,7 +759,7 @@ package body com_codec_pkg is
     return string is
     variable unsigned_data : ieee.numeric_std.unsigned(data'length - 1 downto 0) := ieee.numeric_std.unsigned(data);
   begin
-    return create_group(to_string(unsigned_data), encode(data'left), encode(data'right));
+    return create_array_group(to_string(unsigned_data), encode(data'left), encode(data'right), false);
   end;
   
   function decode (
@@ -786,7 +786,7 @@ package body com_codec_pkg is
     return string is
     variable unsigned_data : ieee.numeric_std.unsigned(data'length - 1 downto 0) := ieee.numeric_std.unsigned(data);
   begin
-    return create_group(to_string(unsigned_data), encode(data'left), encode(data'right));
+    return create_array_group(to_string(unsigned_data), encode(data'left), encode(data'right), false);
   end;
   
   function decode (
@@ -813,7 +813,7 @@ package body com_codec_pkg is
     return string is
     variable unsigned_data : ieee.numeric_std.unsigned(data'length - 1 downto 0) := ieee.numeric_std.unsigned(data);
   begin
-    return create_group(to_string(unsigned_data), encode(data'left), encode(data'right));
+    return create_array_group(to_string(unsigned_data), encode(data'left), encode(data'right), false);
   end;
 
   function decode (
@@ -871,6 +871,7 @@ package body com_codec_pkg is
   end procedure close_group;
 
   function create_group (
+    constant num_of_elements : natural range 0 to 10;
     constant element1 : string := "";
     constant element2 : string := "";
     constant element3 : string := "";
@@ -882,40 +883,31 @@ package body com_codec_pkg is
     constant element9 : string := "";
     constant element10 : string := "")
     return string is
-    variable ret_val : string(1 to 11 + element1'length + element2'length +
-                              element3'length + element4'length + element5'length + element6'length +
-                              element7'length + element8'length + element9'length + element10'length);
-    variable l : line;
-    variable length : natural;
   begin
-    open_group(l);
-    loop
-      exit when element1 = "";
-      append_group(l, element1);
-      exit when element2 = "";
-      append_group(l, element2);
-      exit when element3 = "";
-      append_group(l, element3);
-      exit when element4 = "";
-      append_group(l, element4);
-      exit when element5 = "";
-      append_group(l, element5);
-      exit when element6 = "";
-      append_group(l, element6);
-      exit when element7 = "";
-      append_group(l, element7);
-      exit when element8 = "";
-      append_group(l, element8);
-      exit when element9 = "";
-      append_group(l, element9);
-      exit when element10 = "";
-      append_group(l, element10);
-      exit;
-    end loop;
-    close_group(l, ret_val, length);
-    
-    return ret_val(1 to length);
-  end;
+    if num_of_elements = 4 then
+      return "(" & element1 & "," & element2 & "," & element3 & "," & element4 & ")";
+    elsif num_of_elements = 3 then
+      return "(" & element1 & "," & element2 & "," & element3 & ")";
+    elsif num_of_elements = 5 then
+      return "(" & element1 & "," & element2 & "," & element3 & "," & element4 & "," & element5 & ")";
+    elsif num_of_elements = 2 then
+      return "(" & element1 & "," & element2 & ")";
+    elsif num_of_elements = 7 then
+      return "(" & element1 & "," & element2 & "," & element3 & "," & element4 & "," & element5 & "," & element6 & "," & element7 & ")";
+    elsif num_of_elements = 1 then
+      return "(" & element1 & ")";
+    elsif num_of_elements = 6 then
+      return "(" & element1 & "," & element2 & "," & element3 & "," & element4 & "," & element5 & "," & element6 & ")";
+    elsif num_of_elements = 8 then
+      return "(" & element1 & "," & element2 & "," & element3 & "," & element4 & "," & element5 & "," & element6 & "," & element7 & "," & element8 & ")";
+    elsif num_of_elements = 9 then
+      return "(" & element1 & "," & element2 & "," & element3 & "," & element4 & "," & element5 & "," & element6 & "," & element7 & "," & element8 & "," & element9 & ")";
+    elsif num_of_elements = 10 then      
+      return "(" & element1 & "," & element2 & "," & element3 & "," & element4 & "," & element5 & "," & element6 & "," & element7 & "," & element8 & "," & element9 & "," & element10 & ")";
+    else
+      return "()";
+    end if;
+  end function create_group;
 
   function create_array_group (
     constant arr : string;

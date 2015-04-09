@@ -198,6 +198,7 @@ package com_codec_pkg is
     variable code : out string;
     variable length : out natural);
   function create_group (
+    constant num_of_elements : natural range 0 to 10;
     constant element1 : string := "";
     constant element2 : string := "";
     constant element3 : string := "";

@@ -19,6 +19,7 @@ package body com_pkg is
     message : message_t;
     next_envelope : envelope_ptr_t;
   end record envelope_t;
+  type envelope_ptr_array is array (positive range <>) of envelope_ptr_t;
 
   type inbox_t is record
     num_of_messages      : natural;
@@ -53,7 +54,35 @@ package body com_pkg is
     -----------------------------------------------------------------------------
     variable empty_inbox_c : inbox_t := (0, null, null);
     variable null_actor_item_c : actor_item_t := (null_actor_c, null, false, 0, empty_inbox_c, null, null);
+    variable envelope_recycle_bin : envelope_ptr_array(1 to 1000);
+    variable n_recycled_envelopes : natural := 0;
+    variable null_message : message_t := (0, ok, null_actor_c, no_message_id_c, null);
 
+    impure function new_envelope
+      return envelope_ptr_t is
+    begin
+      if n_recycled_envelopes > 0 then
+        n_recycled_envelopes := n_recycled_envelopes - 1;
+        envelope_recycle_bin(n_recycled_envelopes + 1).message := null_message;
+        envelope_recycle_bin(n_recycled_envelopes + 1).next_envelope := null;
+        return envelope_recycle_bin(n_recycled_envelopes + 1);
+      else
+        return new envelope_t;
+      end if;
+    end new_envelope;
+
+    procedure deallocate_envelope (
+      variable ptr : inout envelope_ptr_t) is
+    begin
+      if (n_recycled_envelopes < envelope_recycle_bin'length) and (ptr /= null) then
+        n_recycled_envelopes := n_recycled_envelopes + 1;
+        envelope_recycle_bin(n_recycled_envelopes) := ptr;
+        ptr := null;
+      else
+        deallocate(ptr);
+      end if;
+    end deallocate_envelope;
+  
     impure function init_actors
       return actor_item_array_ptr_t is
       variable ret_val : actor_item_array_ptr_t;
@@ -148,7 +177,8 @@ package body com_pkg is
         envelope := actors(actor.id).inbox.first_envelope;
         actors(actor.id).inbox.first_envelope := envelope.next_envelope;        
         deallocate(envelope.message.payload);
-        deallocate(envelope);
+--        deallocate(envelope);
+        deallocate_envelope(envelope);
       end loop;
 
       while actors(actor.id).subscribers /= null loop
@@ -253,7 +283,8 @@ package body com_pkg is
       receipt.id := no_message_id_c;
       if not inbox_is_full(receiver) then
         receipt.id := next_message_id;
-        envelope := new envelope_t;
+--        envelope := new envelope_t;
+        envelope := new_envelope;
         envelope.message.sender := sender;
         envelope.message.id := next_message_id;
         envelope.message.request_id := request_id;
@@ -346,7 +377,8 @@ package body com_pkg is
       if first_envelope /= null then
         deallocate(first_envelope.message.payload);
         actors(actor.id).inbox.first_envelope := first_envelope.next_envelope;
-        deallocate(first_envelope);
+--        deallocate(first_envelope);
+        deallocate_envelope(first_envelope);
         if actors(actor.id).inbox.first_envelope = null then
           actors(actor.id).inbox.last_envelope := null;
         end if;
@@ -498,7 +530,7 @@ package body com_pkg is
     end procedure unsubscribe;
   
   end protected body;
-
+  
   -----------------------------------------------------------------------------
   -- Handling of actors
   -----------------------------------------------------------------------------
@@ -558,9 +590,11 @@ package body com_pkg is
   procedure notify (
     signal net : out network_t) is
   begin
-    net <= network_event;
-    wait for 0 ns;
-    net <= idle_network;
+    if net /= network_event then
+      net <= network_event;
+      wait until net = network_event;
+      net <= idle_network;
+    end if;
   end procedure notify;
 
   -----------------------------------------------------------------------------
@@ -867,7 +901,7 @@ package body com_pkg is
   -----------------------------------------------------------------------------
   -- Message related subprograms
   -----------------------------------------------------------------------------
-  function compose (
+  impure function compose (
     constant payload : string := "";
     constant sender  : actor_t := null_actor_c;
     constant request_id : in message_id_t := no_message_id_c)
@@ -886,7 +920,7 @@ package body com_pkg is
   begin
     if message /= null then
       deallocate(message.payload);
-      deallocate(message);
+      deallocate(message);      
     end if;
   end procedure delete;
 

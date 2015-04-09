@@ -245,7 +245,7 @@ class CodecGenerator:
     constant data : $type)
     return string is
   begin
-    return create_group($element_encodings);
+    return create_group($num_of_elements, $element_encodings);
   end function encode;
 
   function decode (
@@ -273,7 +273,7 @@ class CodecGenerator:
   function $name$parameter_part
     return string is
   begin
-    return create_group($encodings);
+    return create_group($num_of_encodings, $encodings);
   end function $name;
 
 """)
@@ -387,6 +387,7 @@ end package body $codec_package_name;
                                                                             parameter_part=parameter_part)
                     codec_definitions += cls._msg_type_record_codec_definition.substitute(name=value,
                                                                             parameter_part=parameter_part,
+                                                                            num_of_encodings=len(encoding_list),
                                                                             encodings=encodings)
                 codec_declarations += '\n'
 
