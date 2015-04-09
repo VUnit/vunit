@@ -16,7 +16,7 @@ from vunit.vhdl_parser import (VHDLDesignFile,
                                VHDLSubtypeIndication)
 
 
-class TestVHDLParser(TestCase):
+class TestVHDLParser(TestCase):  # pylint: disable=too-many-public-methods
     """
     Test of the VHDL parser
     """

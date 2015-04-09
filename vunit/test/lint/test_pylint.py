@@ -23,7 +23,6 @@ class TestPylint(unittest.TestCase):
     def test_pylint():
         check_call(["pylint",
                     "--disable=too-few-public-methods",
-                    "--disable=too-many-public-methods",
                     "--disable=too-many-instance-attributes",
                     "--disable=too-many-arguments",
                     "--disable=locally-disabled",

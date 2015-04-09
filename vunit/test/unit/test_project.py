@@ -16,7 +16,7 @@ from vunit.project import Project
 from vunit.test.stub_ostools import OstoolsStub
 
 
-class TestProject(unittest.TestCase):
+class TestProject(unittest.TestCase):  # pylint: disable=too-many-public-methods
     """
     Test the Project class
     """
