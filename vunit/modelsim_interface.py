@@ -47,11 +47,9 @@ class ModelSimInterface(object):
 
         self._create_modelsim_ini()
         self._vsim_process = None
+        self._persistent = persistent
         self._gui = gui
         assert not (persistent and gui)
-
-        if persistent:
-            self._create_vsim_process()
 
     def __del__(self):
         if self._vsim_process is not None:
@@ -305,6 +303,9 @@ proc vunit_help {} {
         """
         Send a command to the persistent vsim process
         """
+        if self._vsim_process is None:
+            self._create_vsim_process()
+
         self._vsim_process.write("%s\n" % cmd)
         self._vsim_process.next_line()
         self._vsim_process.write("#VUNIT_RETURN\n")
@@ -314,6 +315,9 @@ proc vunit_help {} {
         """
         Read a TCL variable from the persistent vsim process
         """
+        if self._vsim_process is None:
+            self._create_vsim_process()
+
         self._vsim_process.write("echo $%s #VUNIT_READVAR\n" % varname)
         self._vsim_process.next_line()
         self._vsim_process.write("#VUNIT_RETURN\n")
@@ -367,7 +371,7 @@ proc vunit_help {} {
 
         if self._gui:
             return self._run_batch_file(user_file_name, gui=True)
-        elif self._vsim_process is None:
+        elif self._persistent:
             return self._run_batch_file(batch_file_name)
         else:
             return self._run_persistent(common_file_name, load_only)
