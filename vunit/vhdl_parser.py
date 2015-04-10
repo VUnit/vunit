@@ -9,6 +9,53 @@ VHDL parsing functionality
 """
 
 import re
+from vunit.hashing import hash_bytes
+
+import logging
+LOGGER = logging.getLogger(__name__)
+
+
+class VHDLParser(object):
+    """
+    Parses a single VHDL file
+    """
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def parse(code, file_name, content_hash=None):  # pylint: disable=unused-argument
+        """
+        Parse the VHDL code and return a VHDLDesignFile parse result
+        """
+        return VHDLDesignFile.parse(code)
+
+
+class CachedVHDLParser(object):
+    """
+    Parse a single VHDL file, caching the result to a database
+    """
+
+    def __init__(self, database):
+        self._database = database
+
+    def parse(self, code, file_name, content_hash=None):
+        """
+        Parse the VHDL code and return a VHDLDesignFile parse result
+        parse result is re-used if content hash found in database
+        """
+        if content_hash is None:
+            content_hash = "sha1:" + hash_bytes(code.encode())
+        key = "CachedVHDLParser.parse(%s)" % content_hash
+
+        if not key in self._database:
+            design_file = VHDLDesignFile.parse(code)
+            self._database[key] = design_file
+        else:
+            LOGGER.debug("Re-using cached VHDL parse results for %s with content_hash=%s",
+                         file_name, content_hash)
+            design_file = self._database[key]
+        return design_file
 
 
 class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes

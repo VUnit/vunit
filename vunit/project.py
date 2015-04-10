@@ -14,11 +14,11 @@ Functionality to represent and operate on a HDL code project
 import logging
 LOGGER = logging.getLogger(__name__)
 
-import hashlib
+from vunit.hashing import hash_bytes
 from os.path import join, basename, dirname
 
 from vunit.dependency_graph import DependencyGraph
-from vunit.vhdl_parser import VHDLDesignFile
+from vunit.vhdl_parser import VHDLParser
 import vunit.ostools as ostools
 import traceback
 
@@ -29,7 +29,8 @@ class Project(object):
     Compute lists of source files to recompile based on file contents,
     timestamps and depenencies derived from the design hierarchy.
     """
-    def __init__(self, depend_on_components=False):
+    def __init__(self, depend_on_components=False, vhdl_parser=VHDLParser()):
+        self._vhdl_parser = vhdl_parser
         self._libraries = {}
         self._source_files = {}
         self._source_files_in_order = []
@@ -69,7 +70,7 @@ class Project(object):
         LOGGER.info('Adding source file %s to library %s', file_name, library_name)
         self._validate_library_name(library_name)
         library = self._libraries[library_name]
-        source_file = SourceFile(file_name, library, file_type)
+        source_file = SourceFile(file_name, library, file_type, vhdl_parser=self._vhdl_parser)
         library.add_design_units(source_file.design_units)
         self._source_files[file_name] = source_file
         self._source_files_in_order.append(file_name)
@@ -219,27 +220,27 @@ class Project(object):
         Returns True if the source_file needs to be recompiled
         given the dependency_graph, the file contents and the last modification time
         """
-        md5 = source_file.md5()
-        md5_file_name = self._hash_file_name_of(source_file)
+        content_hash = source_file.content_hash
+        content_hash_file_name = self._hash_file_name_of(source_file)
 
-        if not ostools.file_exists(md5_file_name):
+        if not ostools.file_exists(content_hash_file_name):
             LOGGER.debug("%s has no vunit_hash file at %s and must be recompiled",
-                         source_file.name, md5_file_name)
+                         source_file.name, content_hash_file_name)
             return True
 
-        old_md5 = ostools.read_file(md5_file_name)
-        if old_md5 != md5:
+        old_content_hash = ostools.read_file(content_hash_file_name)
+        if old_content_hash != content_hash:
             LOGGER.debug("%s has different hash than last time and must be recompiled",
                          source_file.name)
             return True
 
         for other_file in dependency_graph.get_dependencies(source_file):
-            other_md5_file_name = self._hash_file_name_of(other_file)
+            other_content_hash_file_name = self._hash_file_name_of(other_file)
 
-            if not ostools.file_exists(other_md5_file_name):
+            if not ostools.file_exists(other_content_hash_file_name):
                 continue
 
-            if ostools.get_modification_time(other_md5_file_name) > ostools.get_modification_time(md5_file_name):
+            if more_recent(other_content_hash_file_name, content_hash_file_name):
                 LOGGER.debug("%s has dependency compiled earlier and must be recompiled",
                              source_file.name)
                 return True
@@ -254,17 +255,17 @@ class Project(object):
         Returns the name of the hash file associated with the source_file
         """
         library = self.get_library(source_file.library.name)
-        md5_prefix = hashlib.md5(dirname(source_file.name).encode()).hexdigest()
-        return join(library.directory, md5_prefix, basename(source_file.name) + ".vunit_hash")
+        prefix = hash_bytes(dirname(source_file.name).encode())
+        return join(library.directory, prefix, basename(source_file.name) + ".vunit_hash")
 
     def update(self, source_file):
         """
         Mark that source_file has been recompiled, triggers a re-write of the hash file
         to update the timestamp
         """
-        new_md5 = source_file.md5()
-        ostools.write_file(self._hash_file_name_of(source_file), new_md5)
-        LOGGER.debug('Wrote %s md5=%s', source_file.name, new_md5)
+        new_content_hash = source_file.content_hash
+        ostools.write_file(self._hash_file_name_of(source_file), new_content_hash)
+        LOGGER.debug('Wrote %s content_hash=%s', source_file.name, new_content_hash)
 
 
 class Library(object):
@@ -340,12 +341,12 @@ class SourceFile(object):
     """
     Represents a HDL source file
     """
-    def __init__(self, name, library, file_type='vhdl'):
+    def __init__(self, name, library, file_type, vhdl_parser):
         self.name = name
         self.library = library
         self.file_type = file_type
         code = ostools.read_file(self.name)
-        self._md5 = hashlib.md5(code.encode()).hexdigest()
+        self._content_hash = hash_bytes(code.encode())
 
         self.design_units = []
         self.dependencies = []
@@ -353,7 +354,7 @@ class SourceFile(object):
 
         if self.file_type == 'vhdl':
             try:
-                design_file = VHDLDesignFile.parse(code)
+                design_file = vhdl_parser.parse(code, name)
                 self.design_units = self._find_design_units(design_file)
                 self.dependencies = self._find_dependencies(design_file)
                 self.depending_components = design_file.component_instantiations
@@ -432,8 +433,9 @@ class SourceFile(object):
     def __hash__(self):
         return hash(self.name)
 
-    def md5(self):
-        return self._md5
+    @property
+    def content_hash(self):
+        return self._content_hash
 
 
 class Entity(object):
@@ -471,3 +473,13 @@ class DesignUnit(object):
 
         # Related primary design unit if this is a secondary design unit.
         self.primary_design_unit = None if is_primary else primary_design_unit.lower()
+
+
+def more_recent(file_name, than_file_name):
+    """
+    Returns True if the modification time of file_name is more recent
+    than_file_name
+    """
+    mtime = ostools.get_modification_time(file_name)
+    than_mtime = ostools.get_modification_time(than_file_name)
+    return mtime > than_mtime

@@ -19,6 +19,8 @@ from shutil import rmtree
 from glob import glob
 import traceback
 from fnmatch import fnmatch
+import shelve
+import sys
 
 import vunit.ostools as ostools
 from vunit.color_printer import (COLOR_PRINTER,
@@ -32,6 +34,7 @@ from vunit.test_configuration import TestConfiguration
 from vunit.exceptions import CompileError
 from vunit.location_preprocessor import LocationPreprocessor
 from vunit.check_preprocessor import CheckPreprocessor
+from vunit.vhdl_parser import CachedVHDLParser
 from vunit.builtins import (add_builtins,
                             add_array_util,
                             add_osvvm)
@@ -174,10 +177,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
                  gui=False,
                  simulator_name=None):
 
-        self._project = Project()
+        self._configure_logging(log_level)
 
         self._output_path = output_path
-        self._clean = clean
 
         if no_color:
             self._printer = NO_COLOR_PRINTER
@@ -186,8 +188,6 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
 
         self._verbose = verbose
         self._xunit_xml = xunit_xml
-
-        self._configure_logging(log_level)
 
         self._test_filter = test_filter if test_filter is not None else lambda name: True
         self._list_only = list_only
@@ -209,10 +209,42 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
             self._simulator_name = self._available_simulators()[0]
 
         self._sim_specific_path = join(self._output_path, self._simulator_name)
-        self._create_output_path()
+        self._create_output_path(clean)
+
+        self._project = None
+        self._create_project()
 
         if compile_builtins:
             self.add_builtins(library_name="vunit_lib")
+
+    def _create_project(self):
+        """
+        Create Project instance
+        """
+        database = self._create_database()
+        self._project = Project(vhdl_parser=CachedVHDLParser(database=database))
+
+    def _create_database(self):
+        """
+        Create a persistent database to store expensive parse results
+
+        Check for Python version used to create the database is the
+        same as the running python instance or re-create
+        """
+        project_database_file_name = join(self._output_path, "project_database")
+        create_new = False
+        key = "version"
+        version = 1, sys.version
+        try:
+            database = shelve.open(project_database_file_name, flag='c')
+            create_new = not key in database or database[key] != version
+        except:  # pylint: disable=bare-except
+            create_new = True
+
+        if create_new:
+            database = shelve.open(project_database_file_name, flag='n')
+        database[key] = version
+        return database
 
     @staticmethod
     def _configure_logging(log_level):
@@ -389,11 +421,11 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         self._compile(simulator_if)
         return True
 
-    def _create_output_path(self):
+    def _create_output_path(self, clean):
         """
         Create or re-create the output path if necessary
         """
-        if self._clean and exists(self._output_path):
+        if clean and exists(self._output_path):
             rmtree(self._output_path)
 
         if exists(self._preprocessed_path):
