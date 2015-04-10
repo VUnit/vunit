@@ -37,7 +37,7 @@ class ModelSimInterface(object):
         return find_executable('vsim') is not None
 
     def __init__(self, modelsim_ini="modelsim.ini", persistent=False, gui=False):
-        self._modelsim_ini = modelsim_ini
+        self._modelsim_ini = abspath(modelsim_ini)
 
         # Workarround for Microsemi 10.3a which does not
         # respect MODELSIM environment variable when set within .do script
@@ -156,8 +156,8 @@ class ModelSimInterface(object):
         """
         Create the vunit_load TCL function that runs the vsim command and loads the design
         """
-        set_generic_str = "".join(('    set vunit_generic_%s {%s}\n' % (name, value)
-                                   for name, value in generics.items()))
+        set_generic_str = "\n    ".join(('set vunit_generic_%s {%s}' % (name, value)
+                                         for name, value in generics.items()))
         set_generic_name_str = " ".join(('-g%s="${vunit_generic_%s}"' % (name, name) for name in generics))
         pli_str = " ".join("-pli {%s}" % fix_path(name) for name in pli)
         if architecture_name is None:
@@ -165,10 +165,24 @@ class ModelSimInterface(object):
         else:
             architecture_suffix = "(%s)" % architecture_name
 
+        vsim_flags = ["-wlf {%s}" % fix_path(join(output_path, "vsim.wlf")),
+                      "-quiet",
+                      "-t ps",
+                      pli_str,
+                      set_generic_name_str,
+                      library_name + "." + entity_name + architecture_suffix]
+
+        # There is a known bug in modelsim that prevents the -modelsimini flag from accepting
+        # a space in the path even with escaping, see issue #36
+        if not " " in self._modelsim_ini:
+            vsim_flags = ["-modelsimini {%s}" % self._modelsim_ini] + vsim_flags
+
+        vsim_command = ["vsim"] + vsim_flags
+
         tcl = """
 proc vunit_load {{}} {{
     {set_generic_str}
-    vsim -wlf "{wlf_file_name}" -quiet -t ps {pli_str} {set_generic_name_str} {library_name}.{entity_name}{arch_suffix}
+    {vsim_command}
     set no_finished_signal [catch {{examine -internal {{/vunit_finished}}}}]
     set no_test_runner_exit [catch {{examine -internal {{/run_base_pkg/runner.exit_without_errors}}}}]
 
@@ -180,13 +194,8 @@ proc vunit_load {{}} {{
     }}
     return 0
 }}
-""".format(pli_str=pli_str,
-           set_generic_str=set_generic_str,
-           set_generic_name_str=set_generic_name_str,
-           library_name=library_name,
-           entity_name=entity_name,
-           arch_suffix=architecture_suffix,
-           wlf_file_name=fix_path(join(output_path, "vsim.wlf")))
+""".format(set_generic_str=set_generic_str,
+           vsim_command=" ".join(vsim_command))
 
         return tcl
 
