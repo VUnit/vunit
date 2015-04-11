@@ -245,6 +245,7 @@ class VHDLArchitecture(object):
             entity_id = arch.group('entity_id')
             yield VHDLArchitecture(identifier, entity_id)
 
+
 class VHDLPackage(object):
     """
     Representation of a VHDL package
@@ -913,7 +914,7 @@ class VHDLArrayType(object):
             if ',' in ranges:
                 for c in ranges:
                     if c == ',' and level == 0:
-                        return ranges[:index], ranges[index+1:]
+                        return ranges[:index], ranges[index + 1:]
                         break
                     elif c == '(':
                         level += 1

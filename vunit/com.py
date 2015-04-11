@@ -9,8 +9,9 @@ from glob import glob
 from string import Template
 from vunit.ostools import read_file, write_file
 
-class CodecGenerator:
-    _codec_declarations  = Template("""\
+
+class CodecGenerator(object):
+    _codec_declarations = Template("""\
   function encode (
     constant data : $type)
     return string;
@@ -148,7 +149,7 @@ class CodecGenerator:
     begin
       if is_ascending then
         return ret_val_ascending;
-      else        
+      else
         return ret_val_descending;
       end if;
     end function ret_val_range;
@@ -163,7 +164,7 @@ class CodecGenerator:
       index := index + 1;
     end loop;
     deallocate_elements(elements);
-    
+
     return ret_val;
   end;
 
@@ -204,7 +205,8 @@ class CodecGenerator:
       variable ret_val_ascending_ascending : $array_type(range_left1 to range_right1, range_left2 to range_right2);
       variable ret_val_ascending_decending : $array_type(range_left1 to range_right1, range_left2 downto range_right2);
       variable ret_val_decending_ascending : $array_type(range_left1 downto range_right1, range_left2 to range_right2);
-      variable ret_val_decending_decending : $array_type(range_left1 downto range_right1, range_left2 downto range_right2);
+      \
+variable ret_val_decending_decending : $array_type(range_left1 downto range_right1, range_left2 downto range_right2);
     begin
       if is_ascending1 then
         if is_ascending2 then
@@ -212,14 +214,14 @@ class CodecGenerator:
         else
           return ret_val_ascending_decending;
         end if;
-      else        
+      else
         if is_ascending2 then
           return ret_val_decending_ascending;
         else
           return ret_val_decending_decending;
         end if;
       end if;
-    end function ret_val_range;    
+    end function ret_val_range;
     variable ret_val : $array_type(ret_val_range(code)'range(1), ret_val_range(code)'range(2));
     variable elements : lines_t;
     variable length : natural;
@@ -233,12 +235,11 @@ class CodecGenerator:
       end loop;
     end loop;
     deallocate_elements(elements);
-    
+
     return ret_val;
   end;
 
 """)
-
 
     _record_codec_definition = Template("""\
   function encode (
@@ -258,8 +259,8 @@ class CodecGenerator:
     split_group(code, elements, $num_of_elements, length);
     $element_decodings
     deallocate_elements(elements);
-    
-    return ret_val;    
+
+    return ret_val;
   end function decode;
 
 """)
@@ -330,18 +331,21 @@ end package body $codec_package_name;
                     element_encoding_list.append('encode(data.%s)' % i)
                     element_decoding_list.append('ret_val.%s := decode(elements.all(%d).all);' % (i, num_of_elements))
                     num_of_elements += 1
-            element_encodings  = ', '.join(element_encoding_list)
+            element_encodings = ', '.join(element_encoding_list)
             element_decodings = '\n    '.join(element_decoding_list)
             codec_definitions += cls._record_codec_definition.substitute(type=r.identifier,
-                                                            element_encodings=element_encodings,
-                                                            num_of_elements=str(num_of_elements),
-                                                            element_decodings=element_decodings)
+                                                                         element_encodings=element_encodings,
+                                                                         num_of_elements=str(num_of_elements),
+                                                                         element_decodings=element_decodings)
             if r.elements[0].identifier_list[0] == 'msg_type':
                 msg_type_record_types.append(r)
 
         # Create declarations and definitions for array type codecs
         for a in p.array_types:
-            has_one_dimension = a.range_left2 is None and a.range_right2 is None and a.range_attribute2 is None and a.range_type2 is None
+            has_one_dimension = (a.range_left2 is None and
+                                 a.range_right2 is None and
+                                 a.range_attribute2 is None and
+                                 a.range_type2 is None)
             is_constrained = a.range_type1 is None and a.range_type2 is None
 
             if is_constrained:
@@ -383,12 +387,14 @@ end package body $codec_package_name;
                         parameter_part = ' (\n' + ';\n'.join(parameter_list) + ')'
                     encodings = ', '.join(encoding_list)
 
-                    codec_declarations += cls._msg_type_record_codec_declaration.substitute(name=value,
-                                                                            parameter_part=parameter_part)
-                    codec_definitions += cls._msg_type_record_codec_definition.substitute(name=value,
-                                                                            parameter_part=parameter_part,
-                                                                            num_of_encodings=len(encoding_list),
-                                                                            encodings=encodings)
+                    codec_declarations += cls._msg_type_record_codec_declaration.substitute(
+                        name=value,
+                        parameter_part=parameter_part)
+                    codec_definitions += cls._msg_type_record_codec_definition.substitute(
+                        name=value,
+                        parameter_part=parameter_part,
+                        num_of_encodings=len(encoding_list),
+                        encodings=encodings)
                 codec_declarations += '\n'
 
         # Create extra use clauses

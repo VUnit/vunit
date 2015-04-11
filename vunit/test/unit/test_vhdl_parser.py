@@ -366,8 +366,8 @@ type incomplete_type_declaration_t;
  type   color_t  is( blue ,red  , green ) ;  -- Color type
 type animal_t is (cow);"""
 
-        enums = {e.identifier:e.literals for e in VHDLEnumerationType.find(code)}
-        expect = {'color_t' : ['blue', 'red', 'green'], 'animal_t' : ['cow']}
+        enums = {e.identifier: e.literals for e in VHDLEnumerationType.find(code)}
+        expect = {'color_t': ['blue', 'red', 'green'], 'animal_t': ['cow']}
         self.assertEqual(enums, expect)
 
     def test_that_record_type_declarations_are_found(self):
@@ -386,20 +386,20 @@ record
   bar:std_logic_vector(7 downto 0)  ;
  end  record  ;"""
 
-        records = {e.identifier:e.elements for e in VHDLRecordType.find(code)}
-        self.assertEqual(len(records), 3);
+        records = {e.identifier: e.elements for e in VHDLRecordType.find(code)}
+        self.assertEqual(len(records), 3)
 
-        self.assertIn('space_time_t', records);
-        self.assertEqual(records['space_time_t'][0].identifier_list, ['x','y','z'])
+        self.assertIn('space_time_t', records)
+        self.assertEqual(records['space_time_t'][0].identifier_list, ['x', 'y', 'z'])
         self.assertEqual(records['space_time_t'][0].subtype_indication.type_mark, 'real')
         self.assertEqual(records['space_time_t'][1].identifier_list, ['t'])
         self.assertEqual(records['space_time_t'][1].subtype_indication.type_mark, 'time')
 
-        self.assertIn('complex_t', records);
+        self.assertIn('complex_t', records)
         self.assertEqual(records['complex_t'][0].identifier_list, ['im', 're'])
         self.assertEqual(records['complex_t'][0].subtype_indication.type_mark, 'real')
 
-        self.assertIn('foo', records);
+        self.assertIn('foo', records)
         self.assertEqual(records['foo'][0].identifier_list, ['bar'])
         self.assertEqual(records['foo'][0].subtype_indication.type_mark, 'std_logic_vector')
         self.assertEqual(records['foo'][0].subtype_indication.constraint, '(7 downto 0)')

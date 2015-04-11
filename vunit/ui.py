@@ -557,7 +557,7 @@ class LibraryFacade(object):
     def add_source_files(self, pattern, preprocessors=None):
         self._parent.add_source_files(pattern, self._library_name, preprocessors)
 
-    def generate_codecs(self, package_name, codec_package_name = None, used_packages=[], output_file_name=None):
+    def generate_codecs(self, package_name, codec_package_name=None, used_packages=[], output_file_name=None):
         library = self._parent._project._libraries[self._library_name]
         design_unit = library.primary_design_units.get(package_name)
         if design_unit is None:
@@ -570,7 +570,7 @@ class LibraryFacade(object):
 
         if output_file_name is None:
             codecs_path = join(self._parent._codecs_path, self._library_name)
-            output_file_name =  join(codecs_path, codec_package_name + splitext(design_unit.source_file.name)[1])
+            output_file_name = join(codecs_path, codec_package_name + splitext(design_unit.source_file.name)[1])
 
         CodecGenerator.generate_codecs(design_unit, codec_package_name, used_packages, output_file_name)
 
