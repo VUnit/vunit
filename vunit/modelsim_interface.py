@@ -381,9 +381,9 @@ proc vunit_help {} {
         if self._gui:
             return self._run_batch_file(user_file_name, gui=True)
         elif self._persistent:
-            return self._run_batch_file(batch_file_name)
-        else:
             return self._run_persistent(common_file_name, load_only)
+        else:
+            return self._run_batch_file(batch_file_name)
 
 
 class OutputConsumer(object):
