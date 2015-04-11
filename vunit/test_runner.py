@@ -59,6 +59,8 @@ class TestRunner(object):
                 sys.stderr = TeeToFile([output_file])
 
             results = test_suite.run(self._output_path_of(test_suite))
+        except KeyboardInterrupt:
+            raise
         except:  # pylint: disable=bare-except
             traceback.print_exc()
             results = self._fail_suite(test_suite)
@@ -83,6 +85,8 @@ class TestRunner(object):
                 rmtree(output_path)
             makedirs(output_path)
             return open(output_file_name, "w")
+        except KeyboardInterrupt:
+            raise
         except:  # pylint: disable=bare-except
             traceback.print_exc()
         return None

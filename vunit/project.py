@@ -358,6 +358,8 @@ class SourceFile(object):
                 self.design_units = self._find_design_units(design_file)
                 self.dependencies = self._find_dependencies(design_file)
                 self.depending_components = design_file.component_instantiations
+            except KeyboardInterrupt:
+                raise
             except:  # pylint: disable=bare-except
                 traceback.print_exc()
                 LOGGER.error("Failed to parse %s", name)
