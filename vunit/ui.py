@@ -91,6 +91,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
                    test_filter=test_filter,
                    list_only=args.list,
                    compile_only=args.compile,
+                   elaborate_only=args.elaborate,
                    gui=args.gui,
                    simulator_name=args.sim)
 
@@ -124,7 +125,11 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
 
         parser.add_argument('--compile', action='store_true',
                             default=False,
-                            help='Only compile project')
+                            help='Only compile project without running tests')
+
+        parser.add_argument('--elaborate', action='store_true',
+                            default=False,
+                            help='Only elaborate test benches without running')
 
         parser.add_argument('--clean', action='store_true',
                             default=False,

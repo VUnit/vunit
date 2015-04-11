@@ -11,10 +11,10 @@ import vunit
 # Create VUnit instance by parsing command line arguments
 vu = VUnit.from_argv()
 
-# Create library 'lib' 
+# Create library 'lib'
 lib = vu.add_library("lib")
 
-# Add all files ending in .vhd in current working directory 
+# Add all files ending in .vhd in current working directory
 lib.add_source_files("*.vhd")
 
 # Run vunit function
@@ -32,9 +32,9 @@ cases.
 
 ```shell
 > python run.py -h
-usage: run.py [-h] [-l] [--compile] [--clean] [-o OUTPUT_PATH] [-x XUNIT_XML]
-              [-v] [--no-color] [--gui]
-              [--log-level {info,error,warning,debug}]
+usage: run.py [-h] [-l] [--compile] [--elaborate] [--clean] [-o OUTPUT_PATH]
+              [-x XUNIT_XML] [-v] [--no-color] [--gui]
+              [--log-level {info,error,warning,debug}] [--sim {modelsim}]
               [tests [tests ...]]
 
 VUnit command line tool.
@@ -45,7 +45,8 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -l, --list            Only list all test cases
-  --compile             Only compile project
+  --compile             Only compile project without running tests
+  --elaborate           Only elaborate test benches without running
   --clean               Remove output path first
   -o OUTPUT_PATH, --output-path OUTPUT_PATH
                         Output path for compilation and simulation artifacts
@@ -56,6 +57,7 @@ optional arguments:
   --no-color            Do not color output
   --gui                 Open test case(s) in simulator gui
   --log-level {info,error,warning,debug}
+  --sim {modelsim}
 ```
 
 ## VHDL Test Benches
@@ -81,8 +83,8 @@ end architecture;
 ```
 
 From `tb_example.vhd` a single test case named `lib.tb_example` is
-created.  It is also possible to put multiple tests in a single test  
-benches that are each run in individual simulations. Putting multiple
+created.  It is also possible to put multiple tests in a single test
+benche that are each run in individual simulations. Putting multiple
 tests in the same test bench is a good way to share a common test
 environment.
 
@@ -100,18 +102,18 @@ begin
   main : process
   begin
     test_runner_setup(runner, runner_cfg);
-    
+
     while test_suite loop
-      
+
       if run("test_pass") then
         report "This will pass";
-        
+
       elsif run("test_fail") then
         assert false report "It fails";
-        
+
       end if;
     end loop;
-    
+
     test_runner_cleanup(runner);
   end process;
 end architecture;
@@ -152,7 +154,7 @@ Some failed!
 The above example code can be found in `examples/user_guide/`.
 
 # More examples
-There are many examples demonstrating more specific usage of VUnit listed below: 
+There are many examples demonstrating more specific usage of VUnit listed below:
 * [examples/user_guide/](examples/user_guide/)
   * The most minimal VUnit project covering the basics of this user guide.
 
@@ -163,13 +165,13 @@ There are many examples demonstrating more specific usage of VUnit listed below:
 * [examples/array/](examples/array/)
   * Demonstrates the `array_t` data type of [array_pkg](vhdl/array/src/array_pkg.vhd) which can be used to handle dynamically sized 1D, 2D and 3D data as well as storing and loading it from csv and raw files.
 
-* [generate_tests](examples/generate_tests) 
+* [generate_tests](examples/generate_tests)
   * Demonstrates generating multiple test runs of the same test bench with different generic values.
-   
+
 * [vivado](examples/vivado)
   * Demonstrates compiling and performing behavioral simulation of Vivado IPs with VUnit.
-  
+
 
 ## Interfacing with pre-compiled libraries
 The `add_library` method of the VUnit class is intended for libraries managed by VUnit.
-When interfacing with pre-compiled libraries such as `unisim` from Xilinx the `add_external_library` method can be used. Unlike the `add_library` method which only takes a logical library name for which VUnit will manage the compile location the `add_external_library` method also takes a search path to the pre-compiled library. External libraries are treated as black-boxes by VUnit and no dependency scanning will be performed.  
+When interfacing with pre-compiled libraries such as `unisim` from Xilinx the `add_external_library` method can be used. Unlike the `add_library` method which only takes a logical library name for which VUnit will manage the compile location the `add_external_library` method also takes a search path to the pre-compiled library. External libraries are treated as black-boxes by VUnit and no dependency scanning will be performed.
