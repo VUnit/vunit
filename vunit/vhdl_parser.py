@@ -10,6 +10,7 @@ VHDL parsing functionality
 
 import re
 from vunit.hashing import hash_bytes
+from os.path import abspath
 
 import logging
 LOGGER = logging.getLogger(__name__)
@@ -44,17 +45,21 @@ class CachedVHDLParser(object):
         Parse the VHDL code and return a VHDLDesignFile parse result
         parse result is re-used if content hash found in database
         """
+        file_name = abspath(file_name)
+
         if content_hash is None:
             content_hash = "sha1:" + hash_bytes(code.encode())
-        key = "CachedVHDLParser.parse(%s)" % content_hash
+        key = "CachedVHDLParser.parse(%s)" % file_name
 
-        if not key in self._database:
-            design_file = VHDLDesignFile.parse(code)
-            self._database[key] = design_file
-        else:
-            LOGGER.debug("Re-using cached VHDL parse results for %s with content_hash=%s",
-                         file_name, content_hash)
-            design_file = self._database[key]
+        if key in self._database:
+            design_file, old_content_hash = self._database[key]
+            if content_hash == old_content_hash:
+                LOGGER.debug("Re-using cached VHDL parse results for %s with content_hash=%s",
+                             file_name, content_hash)
+                return design_file
+
+        design_file = VHDLDesignFile.parse(code)
+        self._database[key] = design_file, content_hash
         return design_file
 
 
