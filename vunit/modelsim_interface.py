@@ -175,7 +175,7 @@ class ModelSimInterface(object):
         # There is a known bug in modelsim that prevents the -modelsimini flag from accepting
         # a space in the path even with escaping, see issue #36
         if not " " in self._modelsim_ini:
-            vsim_flags = ["-modelsimini {%s}" % self._modelsim_ini] + vsim_flags
+            vsim_flags = ["-modelsimini %s" % fix_path(self._modelsim_ini)] + vsim_flags
 
         vsim_command = ["vsim"] + vsim_flags
 
