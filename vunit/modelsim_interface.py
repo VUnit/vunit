@@ -12,12 +12,17 @@ Interface towards Mentor Graphics ModelSim
 from __future__ import print_function
 
 from vunit.ostools import Process, write_file, file_exists
-import re
 from os.path import join, dirname, abspath
 import os
 
 from vunit.exceptions import CompileError
 from distutils.spawn import find_executable
+try:
+    # Python 3
+    from configparser import RawConfigParser
+except ImportError:
+    # Python 2
+    from ConfigParser import RawConfigParser
 
 
 class ModelSimInterface(object):
@@ -77,8 +82,10 @@ class ModelSimInterface(object):
         """
         Compile the project using vhdl_standard
         """
+        mapped_libraries = self._get_mapped_libraries()
+
         for library in project.get_libraries():
-            self.create_library(library.name, library.directory)
+            self.create_library(library.name, library.directory, mapped_libraries)
 
         for source_file in project.get_files_in_compile_order():
             print('Compiling ' + source_file.name + ' ...')
@@ -118,12 +125,12 @@ class ModelSimInterface(object):
             return False
         return True
 
-    _vmap_pattern = re.compile(r'maps to directory (?P<dir>.*?)\.')
-
-    def create_library(self, library_name, path):
+    def create_library(self, library_name, path, mapped_libraries=None):
         """
         Create and map a library_name to path
         """
+        mapped_libraries = mapped_libraries if mapped_libraries is not None else {}
+
         if not file_exists(dirname(path)):
             os.makedirs(dirname(path))
 
@@ -131,24 +138,22 @@ class ModelSimInterface(object):
             proc = Process(['vlib', '-unix', path])
             proc.consume_output(callback=None)
 
-        try:
-            proc = Process(['vmap', '-modelsimini', self._modelsim_ini, library_name])
-            proc.consume_output(callback=None)
-        except Process.NonZeroExitCode:
-            pass
+        if library_name in mapped_libraries and mapped_libraries[library_name] == path:
+            return
 
-        match = self._vmap_pattern.search(proc.output)
-        if match:
-            do_vmap = not file_exists(match.group('dir'))
-        else:
-            do_vmap = False
+        proc = Process(['vmap', '-modelsimini', self._modelsim_ini, library_name, path])
+        proc.consume_output(callback=None)
 
-        if 'No mapping for library' in proc.output:
-            do_vmap = True
-
-        if do_vmap:
-            proc = Process(['vmap', '-modelsimini', self._modelsim_ini, library_name, path])
-            proc.consume_output(callback=None)
+    def _get_mapped_libraries(self):
+        """
+        Get mapped libraries from modelsim.ini file
+        """
+        cfg = RawConfigParser()
+        cfg.read(self._modelsim_ini)
+        libraries = dict(cfg.items("Library"))
+        if "others" in libraries:
+            del libraries["others"]
+        return libraries
 
     def _create_load_function(self,  # pylint: disable=too-many-arguments
                               library_name, entity_name, architecture_name,
