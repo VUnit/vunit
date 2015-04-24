@@ -12,6 +12,7 @@ Provide test reporting functionality
 from vunit.color_printer import COLOR_PRINTER
 from xml.etree import ElementTree
 from sys import version_info
+import os
 
 
 class TestReport(object):
@@ -193,8 +194,16 @@ class TestResult(object):
 
     @property
     def output(self):
-        with open(self._output_file_name, "r") as fread:
-            return fread.read()
+        """
+        Return test output
+        """
+        file_exists = os.path.isfile(self._output_file_name)
+        is_readable = os.access(self._output_file_name, os.R_OK)
+        if file_exists and is_readable:
+            with open(self._output_file_name, "r") as fread:
+                return fread.read()
+        else:
+            return "Failed to read output file: %s" % self._output_file_name
 
     @property
     def passed(self):

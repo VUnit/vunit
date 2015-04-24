@@ -12,6 +12,7 @@ from unittest import TestCase
 from vunit.test_report import TestReport, PASSED, SKIPPED, FAILED
 from xml.etree import ElementTree
 from os.path import join, dirname
+import os
 
 
 class TestTestReport(TestCase):
@@ -87,7 +88,11 @@ Total time 4.0 seconds
         self.assertTrue(report.result_of("skipped_test").skipped)
         self.assertTrue(report.result_of("failed_test").failed)
 
-    def assert_has_test(self, root, name, time, status):
+    def assert_has_test(self, root, name, time, status, output=None):  # pylint: disable=too-many-arguments
+        """
+        Assert that junit report xml tree contains a test
+        """
+        output = self.output_file_contents if output is None else output
         for test in root.findall("testcase"):
             if test.attrib["name"] == name:
                 self.assertEqual(test.attrib["time"], time)
@@ -105,8 +110,7 @@ Total time 4.0 seconds
                 else:
                     assert False
 
-                self.assertEqual(test.find("system-out").text,
-                                 self.output_file_contents)
+                self.assertEqual(test.find("system-out").text, output)
                 break
         else:
             assert False
@@ -118,6 +122,18 @@ Total time 4.0 seconds
         self.assertEqual(len(root.findall("*")), 2)
         self.assert_has_test(root, "passed_test0", time="1.0", status="passed")
         self.assert_has_test(root, "passed_test1", time="2.0", status="passed")
+
+    def test_junit_report_with__with_missing_output_file(self):
+        report = self._report_with_all_passed_tests()
+        os.remove(self.output_file_name)
+        fail_output = "Failed to read output file: %s" % self.output_file_name
+        root = ElementTree.fromstring(report.to_junit_xml_str())
+        self.assertEqual(root.tag, "testsuite")
+        self.assertEqual(len(root.findall("*")), 2)
+        self.assert_has_test(root, "passed_test0", time="1.0", status="passed",
+                             output=fail_output)
+        self.assert_has_test(root, "passed_test1", time="2.0", status="passed",
+                             output=fail_output)
 
     def test_junit_report_with_some_failed_tests(self):
         report = self._report_with_some_failed_tests()
