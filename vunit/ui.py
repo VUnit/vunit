@@ -240,15 +240,19 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         create_new = False
         key = "version"
         version = 2, sys.version
+        database = None
         try:
             database = shelve.open(project_database_file_name, flag='c')
             create_new = not key in database or database[key] != version
         except KeyboardInterrupt:
             raise
         except:  # pylint: disable=bare-except
+            traceback.print_exc()
             create_new = True
 
         if create_new:
+            if database is not None:
+                database.close()
             database = shelve.open(project_database_file_name, flag='n')
         database[key] = version
         return database
