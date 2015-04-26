@@ -175,3 +175,22 @@ There are many examples demonstrating more specific usage of VUnit listed below:
 ## Interfacing with pre-compiled libraries
 The `add_library` method of the VUnit class is intended for libraries managed by VUnit.
 When interfacing with pre-compiled libraries such as `unisim` from Xilinx the `add_external_library` method can be used. Unlike the `add_library` method which only takes a logical library name for which VUnit will manage the compile location the `add_external_library` method also takes a search path to the pre-compiled library. External libraries are treated as black-boxes by VUnit and no dependency scanning will be performed.
+
+## Running a test case in the ModelSim GUI
+Sometimes the textual error messages and logs are not enough to pinpoint the error and a test case needs to be opened in the GUI for visual debugging using single stepping, breakpoints and wave form viewing. VUnit makes it easy to open a test case in the GUI by having a `--gui` command line flag:
+```shell
+> python run.py --gui my_test_case
+```
+This a GUI window to launch with test case specific functions pre-loaded priting the following help:
+```shell
+# vunit_help - Prints this help
+# vunit_load - Load design with correct generics for the test
+# vunit_run  - Run test, must do vunit_load first
+```
+
+The test bench can be loaded using the `vunit_load` command. This only has to be done once to select the test bench as the top level entity for simulation. After this breakpoints can be set and signals added to the log or to the waveform viewer. The test case is then run using the `vunit_run` command. Recompilation can be performed without closing the GUI by running `run.py` with the `--compile` flag in a separate terminal. To re-run the test after compilation:
+```tcl
+restart -f
+vunit_run
+```
+ 
