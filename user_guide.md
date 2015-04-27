@@ -33,7 +33,7 @@ cases.
 ```shell
 > python run.py -h
 usage: run.py [-h] [-l] [--compile] [--elaborate] [--clean] [-o OUTPUT_PATH]
-              [-x XUNIT_XML] [-v] [--no-color] [--gui]
+              [-x XUNIT_XML] [-v] [--no-color] [--gui {load,run}]
               [--log-level {info,error,warning,debug}] [--sim {modelsim}]
               [tests [tests ...]]
 
@@ -55,7 +55,10 @@ optional arguments:
   -v, --verbose         Print test output immediately and not only when
                         failure
   --no-color            Do not color output
-  --gui                 Open test case(s) in simulator gui
+  --gui {load,run}      Open test case(s) in simulator gui. 'load' only loads
+                        the test case and gives the user control. 'run' loads
+                        and runs the test case while recursively logging all
+                        variables and signals
   --log-level {info,error,warning,debug}
   --sim {modelsim}
 ```
@@ -177,20 +180,28 @@ The `add_library` method of the VUnit class is intended for libraries managed by
 When interfacing with pre-compiled libraries such as `unisim` from Xilinx the `add_external_library` method can be used. Unlike the `add_library` method which only takes a logical library name for which VUnit will manage the compile location the `add_external_library` method also takes a search path to the pre-compiled library. External libraries are treated as black-boxes by VUnit and no dependency scanning will be performed.
 
 ## Running a test case in the ModelSim GUI
-Sometimes the textual error messages and logs are not enough to pinpoint the error and a test case needs to be opened in the GUI for visual debugging using single stepping, breakpoints and wave form viewing. VUnit makes it easy to open a test case in the GUI by having a `--gui` command line flag:
+Sometimes the textual error messages and logs are not enough to pinpoint the error and a test case needs to be opened in the GUI for visual debugging using single stepping, breakpoints and wave form viewing. VUnit makes it easy to open a test case in the GUI by having a `--gui={load,run}` command line flag:
 ```shell
-> python run.py --gui my_test_case
+> python run.py --gui=load my_test_case
 ```
 This a GUI window to launch with test case specific functions pre-loaded priting the following help:
 ```shell
-# vunit_help - Prints this help
-# vunit_load - Load design with correct generics for the test
-# vunit_run  - Run test, must do vunit_load first
+# List of VUnit modelsim commands:
+# vunit_help
+#   - Prints this help
+# vunit_load [vsim_extra_args]
+#   - Load design with correct generics for the test
+#   - Optional first argument are passed as extra flags to vsim
+# vunit_run
+#   - Run test, must do vunit_load first
 ```
 
-The test bench can be loaded using the `vunit_load` command. This only has to be done once to select the test bench as the top level entity for simulation. After this breakpoints can be set and signals added to the log or to the waveform viewer. The test case is then run using the `vunit_run` command. Recompilation can be performed without closing the GUI by running `run.py` with the `--compile` flag in a separate terminal. To re-run the test after compilation:
+The test bench will then already have been loaded using the `vunit_load` command. This only has to be done once to select the test bench as the top level entity for simulation. After this breakpoints can be set and signals added to the log or to the waveform viewer manually by the user. The test case is then run using the `vunit_run` command. Recompilation can be performed without closing the GUI by running `run.py` with the `--compile` flag in a separate terminal. To re-run the test after compilation:
 ```tcl
 restart -f
 vunit_run
 ```
- 
+
+It is also possible to automatically run the test case in the gui while logging all signals and variables recursively using the `--gui=run` flag.
+After simulation the user can manually add objects of interest to the waveform viewer without re-running since everything has been logged.
+When running large designs this mode can be quite slow and it might be better to just do `--gui=load` and manually add a few signals of interest.

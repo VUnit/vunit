@@ -92,7 +92,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
                    list_only=args.list,
                    compile_only=args.compile,
                    elaborate_only=args.elaborate,
-                   gui=args.gui,
+                   gui_mode=args.gui,
                    simulator_name=args.sim)
 
     @staticmethod
@@ -151,9 +151,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
                             default=False,
                             help='Do not color output')
 
-        parser.add_argument('--gui', action='store_true',
-                            default=False,
-                            help='Open test case(s) in simulator gui')
+        parser.add_argument('--gui', choices=["load", "run"],
+                            default=None,
+                            help=("Open test case(s) in simulator gui. "
+                                  "'load' only loads the test case and gives the user control. "
+                                  "'run' loads and runs the test case while recursively "
+                                  "logging all variables and signals"))
 
         parser.add_argument('--log-level',
                             default="warning",
@@ -179,7 +182,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
                  vhdl_standard='2008',
                  compile_builtins=True,
                  persistent_sim=True,
-                 gui=False,
+                 gui_mode=None,
                  simulator_name=None):
 
         self._configure_logging(log_level)
@@ -202,7 +205,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
 
         self._tb_filter = tb_filter
         self._persistent_sim = persistent_sim
-        self._gui = gui
+        self._gui_mode = gui_mode
         self._configuration = TestConfiguration()
         self._external_preprocessors = []
         self._location_preprocessor = None
@@ -455,8 +458,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         if self._simulator_name == ModelSimInterface.name:
             return ModelSimInterface(
                 join(self._sim_specific_path, "modelsim.ini"),
-                persistent=self._persistent_sim and not self._gui,
-                gui=self._gui)
+                persistent=self._persistent_sim and self._gui_mode is None,
+                gui_mode=self._gui_mode)
         else:
             raise RuntimeError("Unknown simulator %s" % self._simulator_name)
 

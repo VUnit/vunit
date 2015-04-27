@@ -41,7 +41,7 @@ class ModelSimInterface(object):
         """
         return find_executable('vsim') is not None
 
-    def __init__(self, modelsim_ini="modelsim.ini", persistent=False, gui=False):
+    def __init__(self, modelsim_ini="modelsim.ini", persistent=False, gui_mode=None):
         self._modelsim_ini = abspath(modelsim_ini)
 
         # Workarround for Microsemi 10.3a which does not
@@ -53,8 +53,9 @@ class ModelSimInterface(object):
         self._create_modelsim_ini()
         self._vsim_process = None
         self._persistent = persistent
-        self._gui = gui
-        assert not (persistent and gui)
+        self._gui_mode = gui_mode
+        assert gui_mode in (None, "run", "load")
+        assert not (persistent and (gui_mode is not None))
 
     def __del__(self):
         if self._vsim_process is not None:
@@ -180,14 +181,12 @@ class ModelSimInterface(object):
         # There is a known bug in modelsim that prevents the -modelsimini flag from accepting
         # a space in the path even with escaping, see issue #36
         if not " " in self._modelsim_ini:
-            vsim_flags = ["-modelsimini %s" % fix_path(self._modelsim_ini)] + vsim_flags
-
-        vsim_command = ["vsim"] + vsim_flags
+            vsim_flags.insert(0, "-modelsimini %s" % fix_path(self._modelsim_ini))
 
         tcl = """
-proc vunit_load {{}} {{
+proc vunit_load {{{{vsim_extra_args ""}}}} {{
     {set_generic_str}
-    {vsim_command}
+    vsim ${{vsim_extra_args}} {vsim_flags}
     set no_finished_signal [catch {{examine -internal {{/vunit_finished}}}}]
     set no_test_runner_exit [catch {{examine -internal {{/run_base_pkg/runner.exit_without_errors}}}}]
 
@@ -200,7 +199,7 @@ proc vunit_load {{}} {{
     return 0
 }}
 """.format(set_generic_str=set_generic_str,
-           vsim_command=" ".join(vsim_command))
+           vsim_flags=" ".join(vsim_flags))
 
         return tcl
 
@@ -260,9 +259,14 @@ proc vunit_run {} {
         """
         tcl = """
 proc vunit_help {} {
-    echo {vunit_help - Prints this help}
-    echo {vunit_load - Load design with correct generics for the test}
-    echo {vunit_run  - Run test, must do vunit_load first}
+    echo {List of VUnit modelsim commands:}
+    echo {vunit_help}
+    echo {  - Prints this help}
+    echo {vunit_load [vsim_extra_args]}
+    echo {  - Load design with correct generics for the test}
+    echo {  - Optional first argument are passed as extra flags to vsim}
+    echo {vunit_run}
+    echo {  - Run test, must do vunit_load first}
 }
 """
         tcl += self._create_load_function(library_name, entity_name, architecture_name, generics, pli, output_path)
@@ -284,12 +288,30 @@ proc vunit_help {} {
         return batch_do
 
     @staticmethod
-    def _create_user_script(common_file_name):
+    def _create_gui_load_script(common_file_name):
         """
         Create the user facing script which loads common functions and prints a help message
         """
         tcl = "do %s\n" % fix_path(common_file_name)
+        tcl += "vunit_load\n"
         tcl += "vunit_help\n"
+        return tcl
+
+    @staticmethod
+    def _create_gui_run_script(common_file_name):
+        """
+        Create the user facing script which loads common functions and prints a help message
+        """
+        tcl = "do %s\n" % fix_path(common_file_name)
+        # Do not exclude variables from log
+        tcl += "vunit_load -vhdlvariablelogging\n"
+        tcl += "quietly set WildcardFilter [lsearch -not -all -inline $WildcardFilter Process]\n"
+        tcl += "quietly set WildcardFilter [lsearch -not -all -inline $WildcardFilter Variable]\n"
+        tcl += "quietly set WildcardFilter [lsearch -not -all -inline $WildcardFilter Constant]\n"
+        tcl += "quietly set WildcardFilter [lsearch -not -all -inline $WildcardFilter Generic]\n"
+        tcl += "log -recursive /*\n"
+        tcl += "quietly set WildcardFilter default\n"
+        tcl += "vunit_run\n"
         return tcl
 
     @staticmethod
@@ -371,20 +393,25 @@ proc vunit_help {} {
         pli = [] if pli is None else pli
         msim_output_path = abspath(join(output_path, "msim"))
         common_file_name = join(msim_output_path, "common.do")
-        user_file_name = join(msim_output_path, "user.do")
+        gui_load_file_name = join(msim_output_path, "gui_load.do")
+        gui_run_file_name = join(msim_output_path, "gui_run.do")
         batch_file_name = join(msim_output_path, "batch.do")
 
         write_file(common_file_name,
                    self._create_common_script(library_name, entity_name, architecture_name, generics, pli,
                                               fail_on_warning=fail_on_warning,
                                               output_path=msim_output_path))
-        write_file(user_file_name,
-                   self._create_user_script(common_file_name))
+        write_file(gui_load_file_name,
+                   self._create_gui_load_script(common_file_name))
+        write_file(gui_run_file_name,
+                   self._create_gui_run_script(common_file_name))
         write_file(batch_file_name,
                    self._create_batch_script(common_file_name, load_only))
 
-        if self._gui:
-            return self._run_batch_file(user_file_name, gui=True)
+        if self._gui_mode == "load":
+            return self._run_batch_file(gui_load_file_name, gui=True)
+        elif self._gui_mode == "run":
+            return self._run_batch_file(gui_run_file_name, gui=True)
         elif self._persistent:
             return self._run_persistent(common_file_name, load_only)
         else:
