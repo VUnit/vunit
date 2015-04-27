@@ -40,7 +40,6 @@ architecture tb of tb_uart_tx is
 begin
 
   main : process
-    variable index : integer := 0;
 
     procedure send is
     begin
