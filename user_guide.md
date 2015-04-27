@@ -30,7 +30,7 @@ execute the function specified by the command line arguments and exit
 the script. The added source files are automatically scanned for test
 cases.
 
-```s
+```
 > python run.py -h
 usage: run.py [-h] [-l] [--compile] [--elaborate] [--clean] [-o OUTPUT_PATH]
               [-x XUNIT_XML] [-v] [--no-color] [--gui {load,run}]
