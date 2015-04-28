@@ -52,7 +52,6 @@ stdout.write("bar\n")
         process = Process(["python", python_script])
         process.consume_output(output.append)
         self.assertEqual(output, ["foo", "bar"])
-        self.assertEqual(process.output, "foo\nbar\n")
 
     def test_run_error_subprocess(self):
         python_script = self.make_file("run_err.py", r"""
@@ -65,7 +64,6 @@ exit(1)
         self.assertRaises(Process.NonZeroExitCode,
                           process.consume_output, output.append)
         self.assertEqual(output, ["error"])
-        self.assertEqual(process.output, "error\n")
 
     def test_parses_stderr(self):
         python_script = self.make_file("run_err.py", r"""
@@ -76,7 +74,6 @@ stderr.write("error\n")
         output = []
         process.consume_output(output.append)
         self.assertEqual(output, ["error"])
-        self.assertEqual(process.output, "error\n")
 
     def test_output_is_parallel(self):
         python_script = self.make_file("run_timeout.py", r"""

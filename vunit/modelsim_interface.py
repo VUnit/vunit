@@ -69,7 +69,7 @@ class ModelSimInterface(object):
         self._vsim_process = Process(["vsim", "-c",
                                       "-l", join(dirname(self._modelsim_ini), "transcript")])
         self._vsim_process.write("#VUNIT_RETURN\n")
-        self._vsim_process.consume_output(OutputConsumer(silent=True))
+        self._vsim_process.consume_output(silent_output_consumer)
 
     def _create_modelsim_ini(self):
         """
@@ -345,7 +345,7 @@ proc vunit_help {} {
         self._vsim_process.write("%s\n" % cmd)
         self._vsim_process.next_line()
         self._vsim_process.write("#VUNIT_RETURN\n")
-        self._vsim_process.consume_output(OutputConsumer())
+        self._vsim_process.consume_output(output_consumer)
 
     def _read_var(self, varname):
         """
@@ -357,7 +357,7 @@ proc vunit_help {} {
         self._vsim_process.write("echo $%s #VUNIT_READVAR\n" % varname)
         self._vsim_process.next_line()
         self._vsim_process.write("#VUNIT_RETURN\n")
-        consumer = OutputConsumer(silent=True)
+        consumer = ReadVarOutputConsumer()
         self._vsim_process.consume_output(consumer)
         return consumer.var
 
@@ -418,26 +418,38 @@ proc vunit_help {} {
             return self._run_batch_file(batch_file_name)
 
 
-class OutputConsumer(object):
+def output_consumer(line):
+    """
+    Consume output until reaching #VUNIT_RETURN
+    """
+    if line.endswith("#VUNIT_RETURN"):
+        return True
+
+    print(line)
+
+
+def silent_output_consumer(line):
+    """
+    Consume output until reaching #VUNIT_RETURN, silent
+    """
+    if line.endswith("#VUNIT_RETURN"):
+        return True
+
+
+class ReadVarOutputConsumer(object):
     """
     Consume output from modelsim and print with indentation
     """
-    def __init__(self, silent=False):
+    def __init__(self):
         self.var = None
-        self.silent = silent
 
     def __call__(self, line):
-        stripline = line.strip()
-
-        if stripline.endswith("#VUNIT_RETURN"):
+        if line.endswith("#VUNIT_RETURN"):
             return True
 
-        if stripline.endswith("#VUNIT_READVAR"):
+        if line.endswith("#VUNIT_READVAR"):
             self.var = line.split("#VUNIT_READVAR")[0][1:].strip()
             return
-
-        if not self.silent:
-            print(line)
 
 
 def fix_path(path):

@@ -52,7 +52,6 @@ class Process(object):
         self._queue = Queue()
         self._reader = AsynchronousFileReader(self._process.stdout, self._queue)
         self._reader.start()
-        self.output = ""
 
     def write(self, *args, **kwargs):
         """ Write to stdin """
@@ -82,18 +81,22 @@ class Process(object):
         """
 
         try:
-            while True:
-                line = self.next_line()
-                if isinstance(line, int):
-                    if line != 0:
-                        raise Process.NonZeroExitCode
-                    else:
+            if callback is not None:
+                while not self._reader.eof():
+                    line = self._queue.get()
+                    if line is None:
                         break
-                else:
-                    self.output += line + "\n"
-                    if callback:
-                        if callback(line) is not None:
-                            return
+
+                    if callback(line) is not None:
+                        return
+            else:
+                while (not self._reader.eof()) and (self._queue.get() is not None):
+                    pass
+
+            retcode = self._process.wait()
+            if retcode != 0:
+                raise Process.NonZeroExitCode
+
         except:
             self.terminate()
             raise
