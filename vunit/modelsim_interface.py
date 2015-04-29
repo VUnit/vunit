@@ -444,6 +444,7 @@ class ReadVarOutputConsumer(object):
         self.var = None
 
     def __call__(self, line):
+        line = line.strip()
         if line.endswith("#VUNIT_RETURN"):
             return True
 
