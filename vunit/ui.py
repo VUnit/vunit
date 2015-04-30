@@ -242,7 +242,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         project_database_file_name = join(self._output_path, "project_database")
         create_new = False
         key = "version"
-        version = 2, sys.version
+        version = 3, sys.version
         database = None
         try:
             database = shelve.open(project_database_file_name, flag='c')

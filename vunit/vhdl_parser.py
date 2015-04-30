@@ -9,7 +9,7 @@ VHDL parsing functionality
 """
 
 import re
-from vunit.hashing import hash_bytes
+from vunit.hashing import hash_string
 from os.path import abspath
 
 import logging
@@ -48,7 +48,7 @@ class CachedVHDLParser(object):
         file_name = abspath(file_name)
 
         if content_hash is None:
-            content_hash = "sha1:" + hash_bytes(code.encode())
+            content_hash = "sha1:" + hash_string(code)
         key = "CachedVHDLParser.parse(%s)" % file_name
 
         if key in self._database:
