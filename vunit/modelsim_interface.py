@@ -22,7 +22,7 @@ try:
     from configparser import RawConfigParser
 except ImportError:
     # Python 2
-    from ConfigParser import RawConfigParser
+    from ConfigParser import RawConfigParser  # pylint: disable=import-error
 
 
 class ModelSimInterface(object):

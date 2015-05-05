@@ -20,7 +20,7 @@ try:
     from queue import Queue
 except ImportError:
     # Python 2.7
-    from Queue import Queue
+    from Queue import Queue  # pylint: disable=import-error
 
 from os.path import exists, getmtime, dirname
 import os
