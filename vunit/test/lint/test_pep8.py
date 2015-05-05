@@ -11,6 +11,7 @@ PEP8 check
 import unittest
 from subprocess import check_call
 from vunit import ROOT
+import sys
 
 
 class TestPep8(unittest.TestCase):
@@ -19,7 +20,7 @@ class TestPep8(unittest.TestCase):
     """
     @staticmethod
     def test_pep8():
-        check_call(["pep8",
+        check_call([sys.executable, "-m", "pep8",
                     "--show-source",
                     "--show-pep8",
                     "--max-line-length=120",
