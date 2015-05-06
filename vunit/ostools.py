@@ -24,6 +24,7 @@ except ImportError:
 
 from os.path import exists, getmtime, dirname
 import os
+import io
 
 import logging
 LOGGER = logging.getLogger(__name__)
@@ -142,7 +143,7 @@ class AsynchronousFileReader(threading.Thread):
 
 def read_file(file_name):
     """ To stub during testing """
-    with open(file_name, "r") as file_to_read:
+    with io.open(file_name, "r", encoding="latin_1") as file_to_read:
         data = file_to_read.read()
     return data
 
