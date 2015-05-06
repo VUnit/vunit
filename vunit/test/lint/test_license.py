@@ -16,6 +16,7 @@ import re
 from datetime import datetime
 from subprocess import Popen, PIPE, STDOUT
 from vunit import ROOT
+import vunit.ostools as ostools
 
 
 class TestLicense(unittest.TestCase):
@@ -70,21 +71,20 @@ class TestLicense(unittest.TestCase):
             first_year = datetime.now().year
             last_year = first_year
 
-        with open(file_name) as fread:
-            code = fread.read()
-            match = self._re_license_notice.search(code)
-            self.assertIsNotNone(match, "Failed to find license notice in %s" % file_name)
-            if first_year == last_year:
-                self.assertEqual(int(match.group('first_year')), first_year,
-                                 'Expected copyright year to be %d in %s' % (first_year, file_name))
-                self.assertIsNone(match.group('last_year'), 'Expected no copyright years range in %s' % file_name)
-            else:
-                self.assertIsNotNone(match.group('last_year'),
-                                     'Expected copyright year range %d-%d in %s' % (first_year, last_year, file_name))
-                self.assertEqual(int(match.group('first_year')), first_year,
-                                 'Expected copyright year range to start with %d in %s' % (first_year, file_name))
-                self.assertEqual(int(match.group('last_year')), last_year,
-                                 'Expected copyright year range to end with %d in %s' % (last_year, file_name))
+        code = ostools.read_file(file_name)
+        match = self._re_license_notice.search(code)
+        self.assertIsNotNone(match, "Failed to find license notice in %s" % file_name)
+        if first_year == last_year:
+            self.assertEqual(int(match.group('first_year')), first_year,
+                             'Expected copyright year to be %d in %s' % (first_year, file_name))
+            self.assertIsNone(match.group('last_year'), 'Expected no copyright years range in %s' % file_name)
+        else:
+            self.assertIsNotNone(match.group('last_year'),
+                                 'Expected copyright year range %d-%d in %s' % (first_year, last_year, file_name))
+            self.assertEqual(int(match.group('first_year')), first_year,
+                             'Expected copyright year range to start with %d in %s' % (first_year, file_name))
+            self.assertEqual(int(match.group('last_year')), last_year,
+                             'Expected copyright year range to end with %d in %s' % (last_year, file_name))
 
 
 def is_prefix_of(prefix, of_path):
