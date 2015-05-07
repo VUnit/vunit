@@ -169,7 +169,7 @@ def encode_dict(dictionary):
 
 
 def encode_dict_value(value):
-    if isinstance(value, str):
-        return value
-    else:
+    if isinstance(value, bool):
         return str(value).lower()
+    else:
+        return str(value)
