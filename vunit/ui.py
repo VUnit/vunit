@@ -19,7 +19,7 @@ from shutil import rmtree
 from glob import glob
 import traceback
 from fnmatch import fnmatch
-import shelve
+from vunit.database import PickledDataBase, DataBase
 import sys
 
 import vunit.ostools as ostools
@@ -241,12 +241,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         """
         project_database_file_name = join(self._output_path, "project_database")
         create_new = False
-        key = "version"
-        version = 3, sys.version
+        key = b"version"
+        version = str((3, sys.version)).encode()
         database = None
         try:
-            database = shelve.open(project_database_file_name, flag='c')
-            create_new = key not in database or database[key] != version
+            database = DataBase(project_database_file_name)
+            create_new = (key not in database) or (database[key] != version)
         except KeyboardInterrupt:
             raise
         except:  # pylint: disable=bare-except
@@ -254,11 +254,10 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
             create_new = True
 
         if create_new:
-            if database is not None:
-                database.close()
-            database = shelve.open(project_database_file_name, flag='n')
+            database = DataBase(project_database_file_name, new=True)
         database[key] = version
-        return database
+
+        return PickledDataBase(database)
 
     @staticmethod
     def _configure_logging(log_level):

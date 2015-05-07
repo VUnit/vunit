@@ -49,7 +49,7 @@ class CachedVHDLParser(object):
 
         if content_hash is None:
             content_hash = "sha1:" + hash_string(code)
-        key = "CachedVHDLParser.parse(%s)" % file_name
+        key = ("CachedVHDLParser.parse(%s)" % file_name).encode()
 
         if key in self._database:
             design_file, old_content_hash = self._database[key]
