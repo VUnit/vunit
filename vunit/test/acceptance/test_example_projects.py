@@ -76,3 +76,10 @@ class TestExampleProjects(unittest.TestCase):
                      [("passed", "lib.tb_example"),
                       ("passed", "lib.tb_example_many.test_pass"),
                       ("failed", "lib.tb_example_many.test_fail")])
+
+    def test_com_example_project(self):
+        path = join(ROOT, "examples", "com")
+        check_call([sys.executable, join(path, "run.py"),
+                    "--clean",
+                    "--output-path=%s" % self.output_path,
+                    "--xunit-xml=%s" % self.report_file])

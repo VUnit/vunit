@@ -37,7 +37,9 @@ from vunit.check_preprocessor import CheckPreprocessor
 from vunit.vhdl_parser import CachedVHDLParser
 from vunit.builtins import (add_builtins,
                             add_array_util,
-                            add_osvvm)
+                            add_osvvm,
+                            add_com)
+from vunit.com import codec_generator
 
 import logging
 LOGGER = logging.getLogger(__name__)
@@ -84,6 +86,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
 
         return cls(output_path=args.output_path,
                    clean=args.clean,
+                   use_debug_codecs=args.use_debug_codecs,
                    no_color=args.no_color,
                    verbose=args.verbose,
                    xunit_xml=args.xunit_xml,
@@ -135,6 +138,10 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
                             default=False,
                             help='Remove output path first')
 
+        parser.add_argument('--use-debug-codecs', action='store_true',
+                            default=False,
+                            help='Run with debug features enabled')
+
         parser.add_argument('-o', '--output-path',
                             default=join(abspath(getcwd()), "vunit_out"),
                             help='Output path for compilation and simulation artifacts')
@@ -171,6 +178,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
     def __init__(self,  # pylint: disable=too-many-locals, too-many-arguments
                  output_path,
                  clean=False,
+                 use_debug_codecs=False,
                  no_color=False,
                  verbose=False,
                  xunit_xml=None,
@@ -210,6 +218,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         self._external_preprocessors = []
         self._location_preprocessor = None
         self._check_preprocessor = None
+        self._use_debug_codecs = use_debug_codecs
 
         if simulator_name is not None:
             self._simulator_name = simulator_name
@@ -466,6 +475,14 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
     def _preprocessed_path(self):
         return join(self._output_path, "preprocessed")
 
+    @property
+    def codecs_path(self):
+        return join(self._output_path, "codecs")
+
+    @property
+    def use_debug_codecs(self):
+        return self._use_debug_codecs
+
     def _create_tests(self, simulator_if):
         """
         Create the test suites by scanning the project
@@ -508,6 +525,19 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         library = self.add_library(library_name)
         add_builtins(library, self._vhdl_standard, mock_lang, mock_log)
 
+    def add_com(self, library_name="vunit_lib", use_debug_codecs=None):
+        """
+        Add communication package
+        """
+        if not self._project.has_library(library_name):
+            library = self.add_library(library_name)
+        else:
+            library = self.library(library_name)
+        if use_debug_codecs is not None:
+            self._use_debug_codecs = use_debug_codecs
+        add_com(library, self._vhdl_standard,
+                use_debug_codecs=self._use_debug_codecs)
+
     def add_array_util(self, library_name="vunit_lib"):
         """
         Add array utility package
@@ -547,6 +577,20 @@ class LibraryFacade(object):
     def add_source_files(self, pattern, preprocessors=None):
         self._parent.add_source_files(pattern, self._library_name, preprocessors)
 
+    def package(self, package_name):
+        """
+        Return the package with package_name or raise KeyError if does not exist
+        """
+        library = self._project.get_library(self._library_name)
+        design_unit = library.primary_design_units.get(package_name)
+
+        if design_unit is None:
+            raise KeyError(package_name)
+        if design_unit.unit_type is not 'package':
+            raise KeyError(package_name)
+
+        return PackageFacade(self._parent, self._library_name, package_name, design_unit)
+
     def entity(self, entity_name):
         """
         Return the entity with entity_name or raise KeyError if does not exist
@@ -580,6 +624,37 @@ class EntityFacade(object):
                                 name=name,
                                 generics=generics,
                                 post_check=post_check)
+
+
+class PackageFacade(object):
+    """
+    User interface of a Package
+    """
+    def __init__(self, parent, library_name, package_name, design_unit):
+        self._parent = parent
+        self._library_name = library_name
+        self._package_name = package_name
+        self._design_unit = design_unit
+
+    def generate_codecs(self, codec_package_name=None, used_packages=None, output_file_name=None):
+        """
+        Generates codecs for the datatypes in this Package
+        """
+        if codec_package_name is None:
+            codec_package_name = self._package_name + '_codecs'
+
+        if output_file_name is None:
+            codecs_path = join(self._parent.codecs_path, self._library_name)
+            file_extension = splitext(self._design_unit.source_file.name)[1]
+            output_file_name = join(codecs_path, codec_package_name + file_extension)
+
+        codec_generator.generate_codecs(self._design_unit,
+                                        codec_package_name,
+                                        used_packages,
+                                        output_file_name,
+                                        self._parent.use_debug_codecs)
+
+        self._parent.add_source_files(output_file_name, self._library_name)
 
 
 def file_type_of(file_name):

@@ -106,3 +106,25 @@ def add_osvvm(library):
     for file_name in glob(join(VHDL_PATH, "osvvm", "*.vhd")):
         if basename(file_name) != 'AlertLogPkg_body_BVUL.vhd':
             library.add_source_files(file_name, preprocessors=[])
+
+
+def add_com(library, vhdl_standard, use_debug_codecs=False):
+    """
+    Add com library
+    """
+    if vhdl_standard != '2008':
+        raise RuntimeError("Communication package only supports vhdl 2008")
+
+    library.add_source_files(join(VHDL_PATH, "com", "src", "com.vhd"))
+    library.add_source_files(join(VHDL_PATH, "com", "src", "com_api.vhd"))
+    library.add_source_files(join(VHDL_PATH, "com", "src", "com_types.vhd"))
+    library.add_source_files(join(VHDL_PATH, "com", "src", "com_codec_api.vhd"))
+    library.add_source_files(join(VHDL_PATH, "com", "src", "com_context.vhd"))
+    library.add_source_files(join(VHDL_PATH, "com", "src", "com_string.vhd"))
+    library.add_source_files(join(VHDL_PATH, "com", "src", "com_debug_codec_builder.vhd"))
+    library.add_source_files(join(VHDL_PATH, "com", "src", "com_std_codec_builder.vhd"))
+
+    if use_debug_codecs:
+        library.add_source_files(join(VHDL_PATH, "com", "src", "com_codec_debug.vhd"))
+    else:
+        library.add_source_files(join(VHDL_PATH, "com", "src", "com_codec.vhd"))

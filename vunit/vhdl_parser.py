@@ -250,9 +250,13 @@ class VHDLPackage(object):
     """
     Representation of a VHDL package
     """
-    def __init__(self, identifier, constant_declarations):
+    def __init__(self, identifier, constant_declarations,  # pylint: disable=too-many-arguments
+                 enumeration_types, record_types, array_types):
         self.identifier = identifier
         self.constant_declarations = constant_declarations
+        self.enumeration_types = enumeration_types
+        self.record_types = record_types
+        self.array_types = array_types
 
     _package_start_re = re.compile(r"""
         (^|\A)                # Beginning of line or start of string
@@ -283,7 +287,7 @@ class VHDLPackage(object):
             sub_code = code[package.start():]
             match = package_end.search(sub_code)
             if match:
-                yield VHDLPackage.parse(sub_code[:match.end()])
+                yield cls.parse(sub_code[:match.end()])
 
     @classmethod
     def parse(cls, code):
@@ -293,7 +297,11 @@ class VHDLPackage(object):
         # Extract identifier
         identifier = cls._package_start_re.match(code).group('id')
         constant_declarations = cls._find_constant_declarations(code)
-        return cls(identifier, constant_declarations)
+        enumeration_types = [e for e in VHDLEnumerationType.find(code)]
+        record_types = [r for r in VHDLRecordType.find(code)]
+        array_types = [a for a in VHDLArrayType.find(code)]
+
+        return cls(identifier, constant_declarations, enumeration_types, record_types, array_types)
 
     @classmethod
     def _find_constant_declarations(cls, code):
@@ -769,6 +777,191 @@ class VHDLInterfaceElement(object):
             code += " := " + self.init_value
 
         return code
+
+
+class VHDLEnumerationType(object):
+    """Represents a VHDL enumeration type"""
+    def __init__(self, identifier, literals):
+        self.identifier = identifier
+        self.literals = literals
+
+    _enum_declaration_re = re.compile(r"""
+        (^|\A)                      # Beginning of line or start of string
+        \s*
+        type
+        \s+
+        (?P<id>[a-zA-Z][\w]*)       # An identifier
+        \s+
+        is
+        \s*\(\s*
+        (?P<literals>[a-zA-Z][\w]* # First enumeration literal
+        (\s*,\s*[a-zA-Z][\w]*)*)   # More enumeration literals
+        \s*\)\s*;""", re.MULTILINE | re.IGNORECASE | re.VERBOSE)
+
+    @classmethod
+    def find(cls, code):
+        for enum_type in cls._enum_declaration_re.finditer(code):
+            identifier = enum_type.group('id')
+            literals = [e.strip() for e in enum_type.group('literals').split(',')]
+            yield cls(identifier, literals)
+
+
+class VHDLElementDeclaration(object):
+    """Represents a VHDL element declaration"""
+    def __init__(self, identifier_list, subtype_indication):
+        self.identifier_list = identifier_list
+        self.subtype_indication = subtype_indication
+
+
+class VHDLRecordType(object):
+    """Represents a VHDL record type"""
+    def __init__(self, identifier, elements):
+        self.identifier = identifier
+        self.elements = elements
+
+    _record_declaration_re = re.compile(r"""
+        (^|\A)                      # Beginning of line or start of string
+        \s*
+        type
+        \s+
+        (?P<id>[a-zA-Z][\w]*)       # An identifier
+        \s+
+        is
+        \s+
+        record
+        (?P<elements>.*?)end\s+record""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
+
+    @classmethod
+    def find(cls, code):
+        for record_type in cls._record_declaration_re.finditer(code):
+            identifier = record_type.group('id')
+            elements = record_type.group('elements').split(';')
+            parsed_elements = []
+            for element in elements:
+                if ':' in element:
+                    identifier_list_and_subtype_indication = element.split(':')
+                    identifier_list = [i.strip() for i in identifier_list_and_subtype_indication[0].split(',')]
+                    subtype_indication = VHDLSubtypeIndication.parse(identifier_list_and_subtype_indication[1].strip())
+                    parsed_elements.append(VHDLElementDeclaration(identifier_list, subtype_indication))
+            yield cls(identifier, parsed_elements)
+
+
+class VHDLRange(object):
+    """Represents a VHDL Range"""
+    def __init__(self, range_type=None, left=None, right=None, attribute=None):
+        self.range_type = range_type
+        self.left = left
+        self.right = right
+        self.attribute = attribute
+
+
+class VHDLArrayType(object):
+    """Represents a VHDL array type"""
+    def __init__(self, identifier, subtype_indication, range1, range2):
+        self.identifier = identifier
+        self.subtype_indication = subtype_indication
+        self.range1 = range1
+        self.range2 = range2
+
+    _constrained_ranges_re = re.compile(r"""
+        \s*(?P<range_left1>.+?)
+        \s+(to|downto)\s+
+        (?P<range_right1>.+?)\s*
+        (,
+        \s*(?P<range_left2>.+?)
+        \s+(to|downto)\s+
+        (?P<range_right2>.+?)\s*)?""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
+
+    _range_attribute_ranges_re = re.compile(r"""
+        \s*(?P<range_attribute>[a-zA-Z][\w]*'range)\s*""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
+
+    _unconstrained_ranges_re = re.compile(r"""
+        \s*(?P<range_type1>[a-zA-Z][\w]*)
+        \s+range\s+<>\s*
+        (,
+        \s*(?P<range_type2>[a-zA-Z][\w]*)
+        \s+range\s+<>\s*)?""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
+
+    _constrained_range_re = re.compile(r"""
+        \s*(?P<range_left>.+?)
+        \s+(to|downto)\s+
+        (?P<range_right>.+?)\s*""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
+
+    _range_attribute_range_re = re.compile(r"""
+        \s*(?P<range_attribute>[a-zA-Z][\w]*'range)\s*""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
+
+    _unconstrained_range_re = re.compile(r"""
+        \s*(?P<range_type>[a-zA-Z][\w]*)
+        \s+range\s+<>\s*""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
+
+    _array_declaration_re = re.compile(r"""
+        (^|\A)
+        \s*
+        type
+        \s+
+        (?P<id>[a-zA-Z][\w]*)
+        \s+
+        is
+        \s+
+        array
+        \s+\(
+        (?P<ranges>.*?)
+        \)\s+of\s+
+        (?P<subtype_indication>.*?)\s*;""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
+
+    @classmethod
+    def find(cls, code):
+        """Iterate over new instances of VHDLArrayType for all array types within the code"""
+        for array_type in cls._array_declaration_re.finditer(code):
+            identifier = array_type.group('id')
+            subtype_indication = VHDLSubtypeIndication.parse(array_type.group('subtype_indication'))
+            ranges = array_type.group('ranges')
+            range1_str, range2_str = cls._split_ranges(ranges)
+            range1 = cls._parse_range(range1_str)
+            range2 = cls._parse_range(range2_str)
+
+            yield cls(identifier, subtype_indication, range1, range2)
+
+    @staticmethod
+    def _split_ranges(ranges):
+        """Splits 2D ranges in two. 1D ranges will return None as the second range"""
+        level = 0
+        index = 0
+        if ',' in ranges:
+            for char in ranges:
+                if char == ',' and level == 0:
+                    return ranges[:index], ranges[index + 1:]
+                elif char == '(':
+                    level += 1
+                elif char == ')':
+                    level -= 1
+                index += 1
+
+        return ranges, None
+
+    @classmethod
+    def _parse_range(cls, the_range):
+        """Extracts range type, left and right boundary as well as the range when the 'range attribute
+        is used"""
+        if the_range is None:
+            return VHDLRange()
+
+        unconstrained_range = cls._unconstrained_range_re.match(the_range)
+        if unconstrained_range is not None:
+            range_type = unconstrained_range.group('range_type')
+            return VHDLRange(range_type)
+        else:
+            constrained_range = cls._constrained_range_re.match(the_range)
+            range_attribute = cls._range_attribute_range_re.match(the_range)
+            if constrained_range is not None:
+                range_left = constrained_range.group('range_left')
+                range_right = constrained_range.group('range_right')
+                return VHDLRange(None, range_left, range_right)
+            elif range_attribute is not None:
+                range_attribute = range_attribute.group('range_attribute')
+                return VHDLRange(attribute=range_attribute)
+
+        return VHDLRange()
 
 
 def find_closing_delimiter(start, end, code):
