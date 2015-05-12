@@ -50,5 +50,5 @@ package com_types_pkg is
   constant network_event : std_logic := '1';
   constant idle_network  : std_logic := 'Z';
 
-  constant max_timeout_c : time := 1000 hr;  -- ModelSim can't handle time'high
+  constant max_timeout_c : time := 1 hr;  -- ModelSim can't handle time'high
 end package;
