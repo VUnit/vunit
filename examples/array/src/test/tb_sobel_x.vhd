@@ -119,7 +119,11 @@ begin
       for x in 0 to image.width-1 loop
         wait until rising_edge(clk);
         input_tvalid <= '1';
-        input_tlast <= '1' when x = image.width-1 else '0';
+        if x = image.width-1 then
+          input_tlast <= '1';
+        else
+          input_tlast <= '0';
+        end if;
         input_tdata <= to_unsigned(image.get(x,y), input_tdata'length);
       end loop;
     end loop;
