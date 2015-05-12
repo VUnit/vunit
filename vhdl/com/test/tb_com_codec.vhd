@@ -293,8 +293,8 @@ begin
         check_relation(decode_enum1_t(encode_enum1_t(blue)) = blue);
       elsif run("Test that custom record type can be encoded and decoded") then
         check_relation(decode_record1_t(encode_record1_t((character'pos(lp), -1, -2, -3))) = record1_t'((character'pos(lp), -1, -2, -3)));
-        check_relation(decode_record2_t(encode_record2_t((command, 1, -1, -2, -3))) = record2_t'((command, 1, -1, -2, -3)));
-        check_relation(decode_record2_t(command(1, -1, -2, -3)) = record2_t'((command, 1, -1, -2, -3)));
+        check_relation(decode_record2_t(encode_record2_t((command, 1, -1, -2, -3, '1'))) = record2_t'((command, 1, -1, -2, -3, '1')));
+        check_relation(decode_record2_t(command(1, -1, -2, -3, '1')) = record2_t'((command, 1, -1, -2, -3, '1')));
         check_relation(decode_record3_t(encode_record3_t((char => comma))) = record3_t'((char => comma)));
         check_relation(decode_record3_t(encode_record3_t((char => lp))) = record3_t'((char => lp)));
         check_relation(decode_record3_t(encode_record3_t((char => rp))) = record3_t'((char => rp)));

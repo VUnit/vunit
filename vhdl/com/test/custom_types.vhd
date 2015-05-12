@@ -48,6 +48,7 @@ package custom_types_pkg is
     msg_type : record2_msg_type_t;
     a        : natural;
     b, c, d  : integer;
+    e        : std_logic;
   end record record2_t;
   type record3_t is record
     char : character;

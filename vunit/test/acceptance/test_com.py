@@ -38,7 +38,7 @@ class TestCom(unittest.TestCase):
         tb_com_lib = vu.add_library("tb_com_lib")
         tb_com_lib.add_source_files(join(src_path, 'test', '*.vhd'))
         pkg = tb_com_lib.package('custom_types_pkg')
-        pkg.generate_codecs(codec_package_name='custom_codec_pkg')
+        pkg.generate_codecs(codec_package_name='custom_codec_pkg', used_packages=['ieee.std_logic_1164'])
 
         try:
             vu.main()
