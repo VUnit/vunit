@@ -462,7 +462,7 @@ package body com_pkg is
   end function find_and_stash_reply_message;
 
   procedure clear_reply_stash (
-    constant actor : in actor_t) is
+    constant actor : actor_t) is
   begin
     deallocate(actors(actor.id).reply_stash.message.payload);
     deallocate(actors(actor.id).reply_stash);
@@ -585,7 +585,7 @@ end;
 -- Network related
 -----------------------------------------------------------------------------
 procedure notify (
-  signal net : out network_t) is
+  signal net : inout network_t) is
 begin
   if net /= network_event then
     net <= network_event;
@@ -629,6 +629,7 @@ procedure send (
   variable receipt      : out   receipt_t;
   constant timeout      : in    time    := max_timeout_c;
   constant keep_message : in    boolean := false) is
+  variable send_message : boolean := true;
 begin
   if message = null then
     receipt.status := null_message_error;
@@ -646,14 +647,12 @@ begin
     wait on net until not messenger.inbox_is_full(receiver) for timeout;
     if messenger.inbox_is_full(receiver) then
       receipt.status := full_inbox_error;
+      send_message := false;
     end if;
   end if;
 
-  if receipt.status = ok then
+  if send_message then
     messenger.send(message.sender, receiver, message.request_id, message.payload.all, receipt);
-  end if;
-
-  if receipt.status = ok then
     notify(net);
   end if;
 
