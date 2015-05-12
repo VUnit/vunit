@@ -174,6 +174,8 @@ There are many examples demonstrating more specific usage of VUnit listed below:
 * [vivado](examples/vivado)
   * Demonstrates compiling and performing behavioral simulation of Vivado IPs with VUnit.
 
+* [com](examples/com)
+  * Demonstrates the `com` message passing package which can be used to communicate arbitrary objects between processes. Further reading can be found in the [com user guide](vhdl/com/user_guide.md)
 
 ## Interfacing with pre-compiled libraries
 The `add_library` method of the VUnit class is intended for libraries managed by VUnit.
