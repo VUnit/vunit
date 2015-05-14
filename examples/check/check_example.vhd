@@ -2,12 +2,14 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
 library vunit_lib;
 context vunit_lib.vunit_context;
+use work.test_types.all;
+use work.test_type_methods.all;
 
 entity check_example is
 end entity check_example;
@@ -18,7 +20,7 @@ architecture test of check_example is
   signal status_ok : std_logic;
   signal clk : std_logic := '0';
   signal check_en : std_logic := '0';
-  shared variable counter : integer := 0;
+  shared variable counter : shared_natural;
 begin
   example_process: process is
     alias note is info_low2[string, string, natural, string];
@@ -34,7 +36,7 @@ begin
       return cash_t is
       variable diff : cash_t;
     begin
-      
+
       if r.cents > l.cents then
         diff.cents := 100 + l.cents - r.cents;
         diff.dollars := l.dollars - r.dollars - 1;
@@ -86,17 +88,19 @@ begin
 
     impure function inc
       return integer is
+      variable ret_val : integer;
     begin
-      counter := counter + 1;
-      return counter;
+      add(counter, 1);
+      get(counter, ret_val);
+      return ret_val;
     end function inc;
 
     procedure set (
       constant value : integer) is
     begin
-      counter := value;
+      set(counter, value);
     end procedure set;
-    
+
     variable savings, price : cash_t;
     variable all_reports : logger_t;
     variable my_checker : checker_t;
@@ -119,7 +123,7 @@ begin
     check(some_false_condition, "Expected to fail");
 
     ---------------------------------------------------------------------------
-    
+
     info("The checker_init takes all the inputs logger_init does to configure the logger that errors are reported to. It also takes a default_level input that controls the level reported to the logger. This is error unless specified.");
     info("The default level can be overridden in a specific check call.");
     check(some_false_condition, "This is not very good", level => warning);
@@ -180,7 +184,7 @@ begin
     else
       info("This was not expected.");
     end if;
-    
+
     ---------------------------------------------------------------------------
 
     info("Uptil now we've only used the basic sequential check call. There is a more generic check_true call that can be called concurrently as well. The concurrent call takes a std_logic condition ('1' = true) and checks that on every enabled clock_edge (either rising, falling, or both)");
@@ -222,22 +226,22 @@ begin
     info("One work-around is to extract the impure function call from the relation");
     set(7);
     cnt := inc;
-    check_relation(cnt = 9, "Now the error message makes sense.");    
+    check_relation(cnt = 9, "Now the error message makes sense.");
 
     info("in case your relation is an equality between two ""standard"" types you can use check_equal.");
     set(7);
     check_equal(inc, 9, "Also a correct error message.");
-    
+
     info("""="" has been defined on string to be the same as ""&"". This will confuse the parser. Not a very likely use case!");
     check_relation(msg => string'("Something ") = string'("failed!"), expr => 3 > 5);
-    info("Relations not at the top level are safe but still unlikely."); 
+    info("Relations not at the top level are safe but still unlikely.");
     check_relation(msg => messages(use_upper_case = true), expr => 3 > 5);
-    
+
     info("Follow these rules and it tries to handle other tricky things such as embedded comments and strings containing relational operators");
     check_relation(len("""Heart"" => <3") = -- The string contains <, so does
                                             -- this comment
                    12, "Incorrect length of ""<3 message"".");
-    
+
     ---------------------------------------------------------------------------
 
     info("There are also a number of other check types which differ in how the error condition is calculated but apart from that can be used in the same way as check/check_true.");
@@ -251,7 +255,7 @@ begin
     info("check_one_hot - Checks that there is exactly one '1' in the input vector.");
     info("check_next - Checks that the input condition is true a specified number of clock cycles after a start event.");
     info("check_sequence - Checks that there sequence of events happens in the order specified.");
-    
+
     assert false report "End of example" severity failure;
   end process example_process;
 

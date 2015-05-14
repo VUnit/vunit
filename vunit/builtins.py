@@ -19,40 +19,49 @@ def add_builtins(library, vhdl_standard, mock_lang=False, mock_log=False):
     """
     Add vunit builtin libraries
     """
-    files = []
+    def get_builtins_vhdl_all(mock_lang):
+        """Return built-in VHDL files present under all VHDL versions"""
+        files = []
 
-    if mock_lang:
-        files += [join("vhdl", "src", "lang", "lang_mock.vhd")]
-    else:
-        files += [join("vhdl", "src", "lang", "lang.vhd")]
+        if mock_lang:
+            files += [join("vhdl", "src", "lang", "lang_mock.vhd")]
+            files += [join("vhdl", "src", "lang", "lang_mock_types.vhd")]
+            files += [join("common", "test", "test_type_methods_api.vhd")]
+        else:
+            files += [join("vhdl", "src", "lang", "lang.vhd")]
 
-    files += [join("vhdl", "src", "lib", "std", "textio.vhd"),
-              join("string_ops", "src", "string_ops.vhd"),
-              join("check", "src", "check.vhd"),
-              join("check", "src", "check_api.vhd"),
-              join("check", "src", "check_base_api.vhd"),
-              join("check", "src", "check_types.vhd"),
-              join("run", "src", "stop_api.vhd"),
-              join("run", "src", "run.vhd"),
-              join("run", "src", "run_api.vhd"),
-              join("run", "src", "run_types.vhd"),
-              join("run", "src", "run_base_api.vhd")]
+        files += [join("vhdl", "src", "lib", "std", "textio.vhd"),
+                  join("string_ops", "src", "string_ops.vhd"),
+                  join("check", "src", "check.vhd"),
+                  join("check", "src", "check_api.vhd"),
+                  join("check", "src", "check_base_api.vhd"),
+                  join("check", "src", "check_types.vhd"),
+                  join("run", "src", "stop_api.vhd"),
+                  join("run", "src", "run.vhd"),
+                  join("run", "src", "run_api.vhd"),
+                  join("run", "src", "run_types.vhd"),
+                  join("run", "src", "run_base_api.vhd")]
 
-    files += [join("logging", "src", "log_api.vhd"),
-              join("logging", "src", "log_formatting.vhd"),
-              join("logging", "src", "log.vhd"),
-              join("logging", "src", "log_types.vhd")]
+        files += [join("logging", "src", "log_api.vhd"),
+                  join("logging", "src", "log_formatting.vhd"),
+                  join("logging", "src", "log.vhd"),
+                  join("logging", "src", "log_types.vhd")]
 
-    files += [join("dictionary", "src", "dictionary.vhd")]
+        files += [join("dictionary", "src", "dictionary.vhd")]
 
-    files += [join("path", "src", "path.vhd")]
+        files += [join("path", "src", "path.vhd")]
 
-    if vhdl_standard == '2008':
-        files += [join("run", "src", "stop_body_2008.vhd")]
-    else:
-        files += [join("run", "src", "stop_body_dummy.vhd")]
+        return files
 
-    if vhdl_standard == '93':
+    def get_builtins_vhdl_93(mock_lang, mock_log):
+        """Return built-in VHDL files unique fro VHDL 93"""
+        files = []
+
+        if mock_lang:
+            files += [join("common", "test", "test_type_methods93.vhd")]
+            files += [join("common", "test", "test_types93.vhd")]
+            files += [join("vhdl", "src", "lang", "lang_mock_special_types93.vhd")]
+
         if mock_log:
             files += [join("logging", "src", "log_base93_mock.vhd"),
                       join("logging", "src", "log_special_types93.vhd"),
@@ -67,8 +76,21 @@ def add_builtins(library, vhdl_standard, mock_lang=False, mock_log=False):
                   join("run", "src", "run_base93.vhd"),
                   join("run", "src", "run_special_types93.vhd")]
 
-    elif vhdl_standard in ('2002', '2008'):
+        return files
+
+    def get_builtins_vhdl_not_93(mock_lang, mock_log):
+        """Return built-in VHDL files present both in VHDL 2002 and 2008"""
+        files = []
+
+        if mock_lang:
+            files += [join("common", "test", "test_type_methods200x.vhd")]
+            files += [join("common", "test", "test_types200x.vhd")]
+            files += [join("vhdl", "src", "lang", "lang_mock_special_types200x.vhd")]
+
         if mock_log:
+            files += [join("common", "test", "test_type_methods_api.vhd")]
+            files += [join("common", "test", "test_type_methods200x.vhd")]
+            files += [join("common", "test", "test_types200x.vhd")]
             files += [join("logging", "src", "log_base.vhd"),
                       join("logging", "src", "log_special_types200x_mock.vhd"),
                       join("logging", "src", "log_base_api.vhd")]
@@ -82,8 +104,36 @@ def add_builtins(library, vhdl_standard, mock_lang=False, mock_log=False):
                   join("run", "src", "run_base.vhd"),
                   join("run", "src", "run_special_types200x.vhd")]
 
-        if vhdl_standard == '2008':
-            files += ["vunit_context.vhd"]
+        return files
+
+    def get_builtins_vhdl_2008():
+        """Return built-in VHDL files present only in 2008"""
+        files = []
+
+        files += ["vunit_context.vhd"]
+        files += [join("run", "src", "stop_body_2008.vhd")]
+
+        return files
+
+    def get_builtins_vhdl_not_2008():
+        """Return built-in VHDL files present both in VHDL 93 and 2002"""
+        files = []
+
+        files += [join("run", "src", "stop_body_dummy.vhd")]
+
+        return files
+
+    files = get_builtins_vhdl_all(mock_lang)
+
+    if vhdl_standard == '93':
+        files += get_builtins_vhdl_93(mock_lang, mock_log)
+        files += get_builtins_vhdl_not_2008()
+    elif vhdl_standard == '2002':
+        files += get_builtins_vhdl_not_93(mock_lang, mock_log)
+        files += get_builtins_vhdl_not_2008()
+    elif vhdl_standard == '2008':
+        files += get_builtins_vhdl_not_93(mock_lang, mock_log)
+        files += get_builtins_vhdl_2008()
 
     for file_name in files:
         library.add_source_files(join(VHDL_PATH, file_name))

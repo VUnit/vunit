@@ -6,35 +6,39 @@
 
 library vunit_lib;
 use vunit_lib.lang.all;
+use vunit_lib.lang_mock_types_pkg.all;
 use vunit_lib.textio.all;
 use vunit_lib.string_ops.all;
 use std.textio.all;
 use vunit_lib.log_types_pkg.all;
 use vunit_lib.log_special_types_pkg.all;
 use vunit_lib.log_pkg.all;
+use work.test_types.all;
+use work.test_type_methods.all;
 
 entity tb_logging is
 end entity tb_logging;
 
-architecture test_fixture of tb_logging is 
+architecture test_fixture of tb_logging is
   signal vunit_finished : boolean := false;
   alias status is vunit_lib.log_pkg.info_high1[string, string, natural, string];
-  shared variable n_errors : natural := 0;
-  shared variable n_asserts : natural := 0;
   signal test_component1_done, test_component2_done : boolean := false;
+
+  shared variable n_asserts : shared_natural;
+  shared variable n_errors : shared_natural;
 
   procedure counting_assert (
     constant expr : in boolean;
     constant msg  : in string := "";
     constant level : in severity_level := error) is
   begin
-    n_asserts := n_asserts + 1;
+    add(n_asserts, 1);
     if not expr then
       assert false report msg severity level;
-      n_errors := n_errors + 1;      
+      add(n_errors, 1);
     end if;
   end procedure counting_assert;
-  
+
   procedure verify_write_call (
     constant expected_count  : in natural;
     constant expected_string : in string) is
@@ -45,8 +49,7 @@ architecture test_fixture of tb_logging is
     counting_assert(call_count = expected_count, "Invalid write call count. Got " & natural'image(call_count) & " but was expecting " & natural'image(expected_count) & ".", error);
     get_write_call_args(write_call_args);
     counting_assert(write_call_args.valid, "Write not called", error);
-    counting_assert(write_call_args.msg.all = expected_string & LF, "Wrong string. Got " &  write_call_args.msg.all & " but expected " & expected_string & ".", error);
-    deallocate(write_call_args.msg);
+    counting_assert(write_call_args.msg(1 to write_call_args.msg_length) = expected_string & LF, "Wrong string. Got " &  write_call_args.msg(1 to write_call_args.msg_length) & " but expected " & expected_string & ".", error);
   end verify_write_call;
 
   procedure verify_num_of_write_calls (
@@ -56,7 +59,7 @@ architecture test_fixture of tb_logging is
     call_count := get_write_call_count;
     counting_assert(call_count = expected_count, "Invalid write call count. Got " & natural'image(call_count) & " but was expecting " & natural'image(expected_count) & ".", error);
   end verify_num_of_write_calls;
-  
+
   procedure verify_num_of_report_calls (
     constant expected_count  : in natural) is
     variable call_count : natural;
@@ -114,7 +117,7 @@ begin
     test_component1_done <= true;
     wait;
   end process test_component1;
-  
+
   test_component2: process
   begin
     wait for 1 ns;
@@ -127,7 +130,7 @@ begin
     test_component2_done <= true;
     wait;
   end process test_component2;
-  
+
   test_runner : process
     variable l, l2, l3, uninitialized_logger, initialized_logger  : logger_t;
     variable entries : line_vector(1 to 30);
@@ -137,6 +140,7 @@ begin
     variable uninitialized_logger_cfg_export, initialized_logger_cfg_export : logger_cfg_export_t;
     variable cnt : natural;
     variable report_call_args : report_call_args_t;
+    variable n_asserts_value, n_errors_value : integer;
     procedure print_line_vector (
       variable l : lines_t) is
     begin
@@ -155,7 +159,7 @@ begin
     banner("Verify report equivalent");
     log("Hello World");
     verify_write_call(1, "Hello World");
-    
+
     -- Log with level
     banner("Verify log with level");
     log("This is a warning", warning);
@@ -169,7 +173,7 @@ begin
     verify_write_call(4, "An error but design may continue to work");
     failure("Very severe condition, likely to crash");
     verify_write_call(5, "Very severe condition, likely to crash");
-    
+
     info("High-level internal info, typically progress at a high level (startup, shutdown,...)");
     verify_write_call(6, "High-level internal info, typically progress at a high level (startup, shutdown,...)");
     debug("Medium-level internal information, typically for debugging");
@@ -201,25 +205,25 @@ begin
     -- Two handlers and two formatters
     banner("Verify file handler and verbose formatter");
     temp_sensor: logger_init(test_fixture'path_name & "temp_sensor", "temperature_sensor.csv", verbose, verbose_csv);
-      
+
     info("High temp");
-    verify_write_call(15, "0 ps: INFO in .tb_logging.temp_sensor (tb_logging.vhd:205): High temp");
-    write(entries(1), string'("0,0 ps,info,tb_logging.vhd,205,.tb_logging.temp_sensor,High temp"));
-    
+    verify_write_call(15, "0 ps: INFO in .tb_logging.temp_sensor (tb_logging.vhd:209): High temp");
+    write(entries(1), string'("0,0 ps,info,tb_logging.vhd,209,.tb_logging.temp_sensor,High temp"));
+
     -- Different loggers with different configurations
     banner("Verify custom loggers");
     humidity_sensor: logger_init(l, test_fixture'path_name & "humidity_sensor", "humidity_sensor.csv", level, raw);
-    
+
     warning(l, "High humidity");
-    verify_write_call(16, "WARNING: High humidity");    
-    write(entries(3), string'("High humidity"));    
+    verify_write_call(16, "WARNING: High humidity");
+    write(entries(3), string'("High humidity"));
     verify_log_file("humidity_sensor.csv", entries(3 to 3));
 
     -- Level filters
     banner("Verify level filters");
     stop_level(l, warning, display_handler, f1);
     stop_level(l, (debug, verbose), display_handler, f2);
-    
+
     debug(l,"Debug should not pass");
     verify_num_of_write_calls(16);
     verbose(l,"Verbose should not pass");
@@ -227,31 +231,31 @@ begin
     warning(l,"Warning should not pass");
     verify_num_of_write_calls(16);
     error(l,"Error should pass");
-    verify_write_call(17, "ERROR: Error should pass");        
+    verify_write_call(17, "ERROR: Error should pass");
     remove_filter(l,f2);
     debug(l,"Debug should pass");
-    verify_write_call(18, "DEBUG: Debug should pass");        
+    verify_write_call(18, "DEBUG: Debug should pass");
     verbose(l,"Verbose should pass");
-    verify_write_call(19, "VERBOSE: Verbose should pass");        
+    verify_write_call(19, "VERBOSE: Verbose should pass");
     warning(l,"Warning should not pass");
     verify_num_of_write_calls(19);
     error(l,"Error should pass");
-    verify_write_call(20, "ERROR: Error should pass");        
+    verify_write_call(20, "ERROR: Error should pass");
     remove_filter(l,f1);
     warning(l,"Warning should pass");
-    verify_write_call(21, "WARNING: Warning should pass");        
+    verify_write_call(21, "WARNING: Warning should pass");
     pass_level(l, (debug, verbose), display_handler, f1);
     debug(l,"Debug should pass");
-    verify_write_call(22, "DEBUG: Debug should pass");            
+    verify_write_call(22, "DEBUG: Debug should pass");
     verbose(l,"Verbose should pass");
-    verify_write_call(23, "VERBOSE: Verbose should pass");            
+    verify_write_call(23, "VERBOSE: Verbose should pass");
     warning(l,"Warning should not pass");
     verify_num_of_write_calls(23);
     error(l,"Error should not pass");
     verify_num_of_write_calls(23);
     error("Error on default logger should pass");
-    verify_write_call(24, "0 ps: ERROR in .tb_logging.temp_sensor (tb_logging.vhd:252): Error on default logger should pass");
-    write(entries(2), string'("1,0 ps,error,tb_logging.vhd,252,.tb_logging.temp_sensor,Error on default logger should pass"));
+    verify_write_call(24, "0 ps: ERROR in .tb_logging.temp_sensor (tb_logging.vhd:256): Error on default logger should pass");
+    write(entries(2), string'("1,0 ps,error,tb_logging.vhd,256,.tb_logging.temp_sensor,Error on default logger should pass"));
     verify_log_file("temperature_sensor.csv", entries(1 to 2));
 
     stop_level(l, warning, file_handler, f2);
@@ -279,7 +283,7 @@ begin
     verify_log_file("humidity_sensor.csv", entries(3 to 17));
 
     -- Simple source filters
-    banner("Verify simple source filters");    
+    banner("Verify simple source filters");
     logger_init(l2, "pressure_sensor", "pressure_sensor.csv", raw, verbose_csv);
 
     stop_source(l2, "temperature_sensor", display_handler, f1);
@@ -304,10 +308,10 @@ begin
     rename_level(l2, error, "error");
     remove_filter(l2, f3);
 
-    write(entries(18), string'("2,0 ps,error,tb_logging.vhd,286,pressure_sensor,Error should pass"));
-    write(entries(19), string'("3,0 ps,error,tb_logging.vhd,290,pressure_sensor,Error should pass"));
-    write(entries(20), string'("4,0 ps,error,tb_logging.vhd,294,pressure_sensor,Error should not pass"));
-    write(entries(21), string'("5,0 ps,test_level,tb_logging.vhd,302,pressure_sensor,Error should pass"));
+    write(entries(18), string'("2,0 ps,error,tb_logging.vhd,290,pressure_sensor,Error should pass"));
+    write(entries(19), string'("3,0 ps,error,tb_logging.vhd,294,pressure_sensor,Error should pass"));
+    write(entries(20), string'("4,0 ps,error,tb_logging.vhd,298,pressure_sensor,Error should not pass"));
+    write(entries(21), string'("5,0 ps,test_level,tb_logging.vhd,306,pressure_sensor,Error should pass"));
     verify_log_file("pressure_sensor.csv", entries(18 to 21));
 
     -- Source level filters
@@ -334,12 +338,12 @@ begin
     error(l2,"Error should pass");
     remove_filter(l2, f3);
 
-    write(entries(22), string'("6,0 ps,error,tb_logging.vhd,318,pressure_sensor,Error should pass"));
-    write(entries(23), string'("7,0 ps,error,tb_logging.vhd,322,pressure_sensor,Error should pass"));
-    write(entries(24), string'("8,0 ps,error,tb_logging.vhd,326,pressure_sensor,Error should not pass"));
-    write(entries(25), string'("9,0 ps,error,tb_logging.vhd,334,pressure_sensor,Error should pass"));
+    write(entries(22), string'("6,0 ps,error,tb_logging.vhd,322,pressure_sensor,Error should pass"));
+    write(entries(23), string'("7,0 ps,error,tb_logging.vhd,326,pressure_sensor,Error should pass"));
+    write(entries(24), string'("8,0 ps,error,tb_logging.vhd,330,pressure_sensor,Error should not pass"));
+    write(entries(25), string'("9,0 ps,error,tb_logging.vhd,338,pressure_sensor,Error should pass"));
     verify_log_file("pressure_sensor.csv", entries(22 to 25));
-    
+
     -- Hierarchical source filters
     banner("Verify hierarchical source filters");
     logger_init("test_components", display_format => verbose_csv, file_format => verbose_csv);
@@ -347,13 +351,13 @@ begin
 
     wait on test_component1_done, test_component2_done until test_component1_done and test_component2_done;
 
-    write(entries(26), string'("10,1000 ps,info,tb_logging.vhd,121,.tb_logging.test_component2.init,I'm test component 2"));
-    write(entries(27), string'("11,1000 ps,info,tb_logging.vhd,122,.tb_logging.test_component2.purpose,I'm logging time"));
-    write(entries(28), string'("12,1000 ps,info,tb_logging.vhd,124,.tb_logging.test_component2.clock.time,Time is 1000 ps"));
-    write(entries(29), string'("13,11000 ps,info,tb_logging.vhd,124,.tb_logging.test_component2.clock.time,Time is 11000 ps"));
-    write(entries(30), string'("14,21000 ps,info,tb_logging.vhd,124,.tb_logging.test_component2.clock.time,Time is 21000 ps"));
+    write(entries(26), string'("10,1000 ps,info,tb_logging.vhd,124,.tb_logging.test_component2.init,I'm test component 2"));
+    write(entries(27), string'("11,1000 ps,info,tb_logging.vhd,125,.tb_logging.test_component2.purpose,I'm logging time"));
+    write(entries(28), string'("12,1000 ps,info,tb_logging.vhd,127,.tb_logging.test_component2.clock.time,Time is 1000 ps"));
+    write(entries(29), string'("13,11000 ps,info,tb_logging.vhd,127,.tb_logging.test_component2.clock.time,Time is 11000 ps"));
+    write(entries(30), string'("14,21000 ps,info,tb_logging.vhd,127,.tb_logging.test_component2.clock.time,Time is 21000 ps"));
     verify_log_file("log.csv", entries(26 to 30));
-    
+
     -- get_logger_cfg
     banner("Verify that get_logger_cfg can be called on an uninitialized logger");
     get_logger_cfg(uninitialized_logger, uninitialized_logger_cfg);
@@ -371,7 +375,7 @@ begin
     get_report_call_args(report_call_args);
     verify_num_of_report_calls(cnt + 1);
     counting_assert(report_call_args.valid);
-    counting_assert(report_call_args.msg.all = "");
+    counting_assert(report_call_args.msg_length = 0);
     counting_assert(report_call_args.level = failure);
     logger_init(stop_level => highest_level);
     cnt := get_report_call_count;
@@ -386,16 +390,16 @@ begin
       get_report_call_args(report_call_args);
       verify_num_of_report_calls(cnt + 1);
       counting_assert(report_call_args.valid);
-      counting_assert(report_call_args.msg.all = "");
+      counting_assert(report_call_args.msg_length = 0);
       counting_assert(report_call_args.level = failure);
-    end loop; 
+    end loop;
     logger_init(stop_level => verbose_low2);
     cnt := get_report_call_count;
     log("Should break", verbose_low2);
     get_report_call_args(report_call_args);
     verify_num_of_report_calls(cnt + 1);
     counting_assert(report_call_args.valid);
-    counting_assert(report_call_args.msg.all = "");
+    counting_assert(report_call_args.msg_length = 0);
     counting_assert(report_call_args.level = failure);
 
     -- Verify configuration export
@@ -443,8 +447,10 @@ begin
     counting_assert(initialized_logger_cfg_export.log_separator = ':');
 
     banner("Test result");
-    write(output, "Number of assertions: " & natural'image(n_asserts) & LF);
-    write(output, "Number of errors: " & natural'image(n_errors) & LF);
+    get(n_asserts, n_asserts_value);
+    get(n_errors, n_errors_value);
+    write(output, "Number of assertions: " & integer'image(n_asserts_value) & LF);
+    write(output, "Number of errors: " & integer'image(n_errors_value) & LF);
 
     vunit_finished <= true;
     wait;

@@ -29,14 +29,21 @@ class TestStringOps(unittest.TestCase):
         """
         output_path = join(dirname(abspath(__file__)), 'string_ops_out')
         src_path = join(ROOT, "vhdl", "string_ops")
+        common_path = join(ROOT, 'vhdl', 'common', 'test')
 
         ui = VUnit(clean=True,
                    output_path=output_path,
                    vhdl_standard=vhdl_standard,
-                   compile_builtins=False)
+                   compile_builtins=True)
         lib = ui.add_library("lib")
-        ui.add_builtins("vunit_lib", mock_lang=True)
         lib.add_source_files(join(src_path, "test", "*.vhd"))
+        lib.add_source_files(join(common_path, "test_type_methods_api.vhd"))
+        if vhdl_standard in ('2002', '2008'):
+            lib.add_source_files(join(common_path, "test_types200x.vhd"))
+            lib.add_source_files(join(common_path, "test_type_methods200x.vhd"))
+        elif vhdl_standard == '93':
+            lib.add_source_files(join(common_path, "test_types93.vhd"))
+            lib.add_source_files(join(common_path, "test_type_methods93.vhd"))
         assert_exit(ui.main, code=0)
 
     def test_string_ops_vhdl_93(self):

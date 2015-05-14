@@ -14,10 +14,12 @@ use work.textio.all;
 use work.string_ops.all;
 use work.log_formatting_pkg.all;
 use work.log_types_pkg.all;
+use work.test_types.all;
+use work.test_type_methods.all;
 
 package log_special_types_pkg is
   type log_call_args_t is record
-    valid : boolean;    
+    valid : boolean;
     logger : logger_cfg_export_t;
     msg : string(1 to 512);
     level : log_level_t;
@@ -27,7 +29,7 @@ package log_special_types_pkg is
   end record log_call_args_t;
 
   type logger_init_call_args_t is record
-    valid : boolean;    
+    valid : boolean;
     logger : logger_cfg_export_t;
     default_src : string(1 to 512);
     file_name : string(1 to 512);
@@ -40,16 +42,16 @@ package log_special_types_pkg is
 
   impure function get_log_call_count
     return natural;
-  
+
   impure function get_logger_init_call_count
     return natural;
-  
+
   procedure get_log_call_args (
     variable args : out log_call_args_t);
-  
+
   procedure get_logger_init_call_args (
     variable args : out logger_init_call_args_t);
-  
+
   type logger_t is protected
 
     procedure init (
@@ -89,7 +91,7 @@ package log_special_types_pkg is
       constant src     : in string;
       constant handler : in log_handler_t)
       return boolean;
-  
+
   end protected logger_t;
 end package;
 
@@ -123,7 +125,7 @@ package body log_special_types_pkg is
 
     variable list : list_t(1 to 10);
     variable tail : natural := 0;
-      
+
     procedure append (
       constant filter : in log_filter_t) is
     begin
@@ -161,7 +163,7 @@ package body log_special_types_pkg is
 
   type global_sequence_number_t is protected body
     variable seq_num : natural := 0;
-                                             
+
     impure function next_num
       return natural is
     begin
@@ -172,51 +174,101 @@ package body log_special_types_pkg is
 
   shared variable global_sequence_number : global_sequence_number_t;
 
-  shared variable log_call_args : log_call_args_t :=
-    (false,
-     ((others => NUL), 0, (others => NUL), 0, off, off, false, failure, ','),
-     (others => NUL),
-     error,
-     (others => NUL),
-     0,
-     (others => NUL));  
-  shared variable logger_init_call_args : logger_init_call_args_t :=
-    (false,
-     ((others => NUL), 0, (others => NUL), 0, off, off, false, failure, ','),
-     (others => NUL),
-     (others => NUL),
-     off,
-     off,
-     failure,
-     ',',
-     false);  
+  type log_call_args_pt is protected
+    procedure set (
+      constant args : in log_call_args_t);
+    impure function get
+      return log_call_args_t;
+  end protected log_call_args_pt;
 
-  shared variable log_call_count : natural := 0;
-  shared variable logger_init_call_count : natural := 0;
+  type log_call_args_pt is protected body
+    variable log_call_args : log_call_args_t :=
+                                       (false,
+                                        ((others => NUL), 0, (others => NUL), 0, off, off, false, failure, ','),
+                                        (others => NUL),
+                                        error,
+                                        (others => NUL),
+                                        0,
+                                        (others => NUL));
+    procedure set (
+      constant args : in log_call_args_t) is
+    begin
+      log_call_args := args;
+    end procedure set;
+
+    impure function get
+      return log_call_args_t is
+    begin
+      return log_call_args;
+    end function get;
+  end protected body log_call_args_pt;
+
+  shared variable log_call_args : log_call_args_pt;
+
+  type logger_init_call_args_pt is protected
+    procedure set (
+      constant args : in logger_init_call_args_t);
+    impure function get
+      return logger_init_call_args_t;
+  end protected logger_init_call_args_pt;
+
+  type logger_init_call_args_pt is protected body
+    variable logger_init_call_args : logger_init_call_args_t :=
+                                               (false,
+                                                ((others => NUL), 0, (others => NUL), 0, off, off, false, failure, ','),
+                                                (others => NUL),
+                                                (others => NUL),
+                                                off,
+                                                off,
+                                                failure,
+                                                ',',
+                                                false);
+
+    procedure set (
+      constant args : in logger_init_call_args_t) is
+    begin
+      logger_init_call_args := args;
+    end procedure set;
+
+    impure function get
+      return logger_init_call_args_t is
+    begin
+      return logger_init_call_args;
+    end function get;
+  end protected body logger_init_call_args_pt;
+
+  shared variable logger_init_call_args : logger_init_call_args_pt;
+
+  shared variable log_call_count : shared_natural;
+  shared variable logger_init_call_count : shared_natural;
 
   impure function get_log_call_count
     return natural is
+    variable ret_val : natural;
   begin
-    return log_call_count;
+    get(log_call_count, ret_val);
+    return ret_val;
   end;
-  
+
   impure function get_logger_init_call_count
     return natural is
+    variable ret_val : natural;
   begin
-    return logger_init_call_count;
+    get(logger_init_call_count, ret_val);
+    return ret_val;
   end;
 
   procedure get_log_call_args (
     variable args : out log_call_args_t) is
   begin
-    args := log_call_args;
+    args := log_call_args.get;
   end;
 
   procedure get_logger_init_call_args (
     variable args : out logger_init_call_args_t) is
   begin
-    args := logger_init_call_args;
-  end;  
+    args := logger_init_call_args.get;
+  end;
 
   type logger_t is protected body
     type report_args_internal_t is record
@@ -225,7 +277,7 @@ package body log_special_types_pkg is
       level : severity_level;
     end record;
     type level_names_t is array (log_level_t range <>) of line;
-                                    
+
     variable cfg : logger_cfg_t := (null, null, raw, off, false, failure, ',');
     variable filter_list : filter_list_t;
     variable id : natural := 0;
@@ -254,17 +306,19 @@ package body log_special_types_pkg is
       constant append               : in boolean    := false) is
 
       procedure use_mock is
+        variable args : logger_init_call_args_t;
       begin
-        logger_init_call_count := logger_init_call_count + 1;
-        logger_init_call_args.logger := get_logger_cfg;
-        logger_init_call_args.default_src(default_src'range) := default_src;
-        logger_init_call_args.file_name(file_name'range) := file_name;
-        logger_init_call_args.display_format := display_format;
-        logger_init_call_args.file_format := file_format;
-        logger_init_call_args.stop_level := stop_level;
-        logger_init_call_args.separator := separator;
-        logger_init_call_args.append := append;
-        logger_init_call_args.valid := true;
+        add(logger_init_call_count, 1);
+        args.logger := get_logger_cfg;
+        args.default_src(default_src'range) := default_src;
+        args.file_name(file_name'range) := file_name;
+        args.display_format := display_format;
+        args.file_format := file_format;
+        args.stop_level := stop_level;
+        args.separator := separator;
+        args.append := append;
+        args.valid := true;
+        logger_init_call_args.set(args);
       end procedure use_mock;
     begin
       if (default_src'length < 2) then
@@ -272,7 +326,7 @@ package body log_special_types_pkg is
         return;
       elsif (default_src(1 to 2) /= "__") and (default_src /= "Test Runner") then
         use_mock;
-        return;      
+        return;
       end if;
 
       if cfg.log_default_src /= null then
@@ -300,26 +354,28 @@ package body log_special_types_pkg is
       end if;
       cfg.log_separator            := separator;
       open_log(append);
-      cfg.log_file_is_initialized  := true;      
-      
+      cfg.log_file_is_initialized  := true;
+
     end init;
-  
+
     procedure log(msg          : string;
                   log_level        : log_level_t := info;
                   src          : string      := "";
                   line_num : in natural := 0;
                   file_name : in string := "") is
-    
+
       procedure use_mock is
+        variable args : log_call_args_t;
       begin  -- procedure use_mock
-        log_call_count := log_call_count + 1;
-        log_call_args.logger := get_logger_cfg;
-        log_call_args.msg(msg'range) := msg;
-        log_call_args.level := log_level;
-        log_call_args.src(src'range) := src;
-        log_call_args.line_num := line_num;
-        log_call_args.file_name(file_name'range) := file_name;
-        log_call_args.valid := true;
+        add(log_call_count, 1);
+        args.logger := get_logger_cfg;
+        args.msg(msg'range) := msg;
+        args.level := log_level;
+        args.src(src'range) := src;
+        args.line_num := line_num;
+        args.file_name(file_name'range) := file_name;
+        args.valid := true;
+        log_call_args.set(args);
       end procedure use_mock;
 
       variable status  : file_open_status;
@@ -341,16 +397,16 @@ package body log_special_types_pkg is
         use_mock;
         return;
       end if;
- 
+
       if selected_src /= null then
-        deallocate(selected_src);    
+        deallocate(selected_src);
       end if;
       if src /= "" then
         write(selected_src, src);
       elsif cfg.log_default_src = null then
         write(selected_src, string'(""));
       else
-        selected_src := cfg.log_default_src;      
+        selected_src := cfg.log_default_src;
       end if;
 
       if log_level = dflt then
@@ -366,7 +422,7 @@ package body log_special_types_pkg is
         pass_to_display := pass_filters(selected_level, "", display_handler);
         pass_to_file := pass_filters(selected_level, "", file_handler);
       end if;
-      
+
       if pass_to_display or pass_to_file then
         if (cfg.log_display_format = verbose_csv) or (cfg.log_file_format = verbose_csv) or
            (cfg.log_display_format = verbose) or (cfg.log_file_format = verbose) then
@@ -414,17 +470,17 @@ package body log_special_types_pkg is
       if selected_level <= cfg.log_stop_level then
         lang_report("", failure);
       end if;
-    end log;  
+    end log;
 
   impure function get_logger_cfg
     return logger_cfg_export_t is
     variable cfg_export : logger_cfg_export_t;
-  begin 
+  begin
     if not cfg.log_file_is_initialized then
       cfg_export.log_file_is_initialized := false;
       return cfg_export;
     end if;
-    
+
     assert cfg.log_default_src'length <= cfg_export.log_default_src'length
       report "Default source name is more than " &
       natural'image(cfg_export.log_default_src'length) &
@@ -467,11 +523,11 @@ package body log_special_types_pkg is
     temp_filter.src(src'range) := src;
     temp_filter.src_length := src'length;
     temp_filter.handlers(1 to handlers'length) := handlers;
-    temp_filter.n_handlers := handlers'length;    
+    temp_filter.n_handlers := handlers'length;
     filter := temp_filter;
     filter_list.append(temp_filter);
   end;
-  
+
   procedure remove_filter (
     constant filter : in log_filter_t) is
   begin
@@ -512,7 +568,7 @@ package body log_special_types_pkg is
         exit when level_match;
       end loop;
 
-      source_match := (filter.src_length = 0);        
+      source_match := (filter.src_length = 0);
       if filter.src_length > 0 then
         if replace(filter.src, ':', '.')(1) /= '.' then
           if (filter.src(src'range) = src) and (filter.src_length = src'length) then
@@ -531,7 +587,7 @@ package body log_special_types_pkg is
       if (match and not filter.pass_filter) or (not match and filter.pass_filter) then
         pass := false;
       end if;
-      
+
       exit list_loop when pass = false;
 
     end loop;
@@ -540,4 +596,3 @@ package body log_special_types_pkg is
 
   end protected body logger_t;
 end package body log_special_types_pkg;
-

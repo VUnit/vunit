@@ -28,6 +28,7 @@ class TestLogging(unittest.TestCase):
         """
         output_path = join(dirname(abspath(__file__)), 'logging_out')
         vhdl_path = join(ROOT, 'vhdl', 'logging')
+        common_path = join(ROOT, 'vhdl', 'common', 'test')
         ui = VUnit(clean=True,
                    output_path=output_path,
                    vhdl_standard=vhdl_standard,
@@ -37,6 +38,13 @@ class TestLogging(unittest.TestCase):
         ui.enable_location_preprocessing()
         lib = ui.add_library('lib')
         lib.add_source_files(join(vhdl_path, "test", "tb_logging.vhd"))
+        lib.add_source_files(join(common_path, "test_type_methods_api.vhd"))
+        if vhdl_standard in ('2002', '2008'):
+            lib.add_source_files(join(common_path, "test_types200x.vhd"))
+            lib.add_source_files(join(common_path, "test_type_methods200x.vhd"))
+        elif vhdl_standard == '93':
+            lib.add_source_files(join(common_path, "test_types93.vhd"))
+            lib.add_source_files(join(common_path, "test_type_methods93.vhd"))
 
         try:
             ui.main()
