@@ -11,12 +11,11 @@ Acceptance test of VUnit end to end functionality
 
 import unittest
 from os.path import join, dirname
-from vunit.ui import VUnit
-from vunit.test.common import has_modelsim, check_report
+from vunit.test.common import has_simulator, check_report, create_vunit
 from fnmatch import fnmatch
 
 
-@unittest.skipUnless(has_modelsim(), "Requires modelsim")
+@unittest.skipUnless(has_simulator(), "Requires simulator")
 class TestVunitEndToEnd(unittest.TestCase):
     """
     Acceptance test of VUnit end to end functionality using
@@ -89,11 +88,10 @@ class TestVunitEndToEnd(unittest.TestCase):
 
     def test_compile_verilog(self):
         verilog_path = join(dirname(__file__), "verilog")
-        ui = VUnit(verbose=True,
-                   clean=True,
-                   output_path=self.output_path,
-                   xunit_xml=self.report_file,
-                   compile_only=True)
+        ui = create_vunit(clean=True,
+                          output_path=self.output_path,
+                          xunit_xml=self.report_file,
+                          compile_only=True)
         ui.add_library("lib")
         ui.add_source_files(join(verilog_path, "*.v"), "lib")
         ui.add_source_files(join(verilog_path, "*.sv"), "lib")
@@ -107,12 +105,11 @@ class TestVunitEndToEnd(unittest.TestCase):
         Create VUnit public interface instance
         """
         vhdl_path = join(dirname(__file__), "vhdl")
-        ui = VUnit(verbose=True,
-                   clean=True,
-                   test_filter=make_test_filter(test_patterns),
-                   output_path=self.output_path,
-                   xunit_xml=self.report_file,
-                   persistent_sim=persistent_sim)
+        ui = create_vunit(clean=True,
+                          test_filter=make_test_filter(test_patterns),
+                          output_path=self.output_path,
+                          xunit_xml=self.report_file,
+                          persistent_sim=persistent_sim)
         ui.add_library("lib")
         ui.add_source_files(join(vhdl_path, "*.vhd"), "lib")
         return ui

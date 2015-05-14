@@ -11,12 +11,11 @@ Run the path VHDL package tests
 
 import unittest
 from os.path import abspath, join, dirname
-from vunit.ui import VUnit
-from vunit.test.common import has_modelsim
+from vunit.test.common import has_simulator, create_vunit
 from vunit import ROOT
 
 
-@unittest.skipUnless(has_modelsim(), 'Requires modelsim')
+@unittest.skipUnless(has_simulator(), 'Requires simulator')
 class TestPath(unittest.TestCase):
     """
     Run the path VHDL package tests
@@ -28,9 +27,9 @@ class TestPath(unittest.TestCase):
         output_path = join(dirname(abspath(__file__)), 'path_out')
         vhdl_path = join(ROOT, 'vhdl')
 
-        ui = VUnit(clean=True,
-                   output_path=output_path,
-                   vhdl_standard=vhdl_standard)
+        ui = create_vunit(clean=True,
+                          output_path=output_path,
+                          vhdl_standard=vhdl_standard)
         ui.add_library("lib")
         ui.add_source_files(join(vhdl_path, "path", "test", "*.vhd"), "lib")
 

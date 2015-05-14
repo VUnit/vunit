@@ -11,13 +11,13 @@ Verify that example projects run correctly
 
 import unittest
 from os.path import join, dirname
-from vunit.test.common import has_modelsim, check_report
+from vunit.test.common import has_simulator, check_report
 from subprocess import check_call, call
 import sys
 from vunit import ROOT
 
 
-@unittest.skipUnless(has_modelsim(), "Requires modelsim")
+@unittest.skipUnless(has_simulator(), "Requires simulator")
 class TestExampleProjects(unittest.TestCase):
     """
     Verify that example projects run correctly

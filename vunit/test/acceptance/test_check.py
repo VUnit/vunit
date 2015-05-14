@@ -11,13 +11,12 @@ Run the check VHDL tests
 import unittest
 from os.path import abspath, join, dirname, basename
 from glob import glob
-from vunit.ui import VUnit
-from vunit.test.common import has_modelsim
+from vunit.test.common import has_simulator, create_vunit
 from vunit.check_preprocessor import CheckPreprocessor
 from vunit import ROOT
 
 
-@unittest.skipUnless(has_modelsim(), 'Requires modelsim')
+@unittest.skipUnless(has_simulator(), 'Requires simulator')
 class TestCheck(unittest.TestCase):
     """
     Run the check VHDL tests
@@ -29,10 +28,10 @@ class TestCheck(unittest.TestCase):
         output_path = join(dirname(abspath(__file__)), 'check_out')
         vhdl_path = join(ROOT, 'vhdl', 'check', 'test')
 
-        ui = VUnit(clean=True,
-                   output_path=output_path,
-                   vhdl_standard=vhdl_standard,
-                   compile_builtins=False)
+        ui = create_vunit(clean=True,
+                          output_path=output_path,
+                          vhdl_standard=vhdl_standard,
+                          compile_builtins=False)
 
         ui.add_builtins('vunit_lib', mock_log=True)
         ui.add_library(r'lib')

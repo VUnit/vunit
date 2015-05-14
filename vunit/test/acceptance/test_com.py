@@ -11,12 +11,11 @@ Run the com VHDL package tests
 
 import unittest
 from os.path import abspath, join, dirname
-from vunit.ui import VUnit
-from vunit.test.common import has_modelsim
+from vunit.test.common import has_simulator, create_vunit
 from vunit import ROOT
 
 
-@unittest.skipUnless(has_modelsim(), 'Requires modelsim')
+@unittest.skipUnless(has_simulator(), 'Requires simulator')
 class TestCom(unittest.TestCase):
     """
     Run the com VHDL package tests
@@ -29,11 +28,10 @@ class TestCom(unittest.TestCase):
         output_path = join(dirname(abspath(__file__)), 'com_out')
         src_path = join(ROOT, 'vhdl', 'com')
 
-        vu = VUnit(clean=True,
-                   use_debug_codecs=use_debug_codecs,
-                   output_path=output_path,
-                   vhdl_standard=vhdl_standard)
-        vu.add_com()
+        vu = create_vunit(clean=True,
+                          output_path=output_path,
+                          vhdl_standard=vhdl_standard)
+        vu.add_com(use_debug_codecs=use_debug_codecs)
 
         tb_com_lib = vu.add_library("tb_com_lib")
         tb_com_lib.add_source_files(join(src_path, 'test', '*.vhd'))

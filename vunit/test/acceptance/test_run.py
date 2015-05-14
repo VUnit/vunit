@@ -10,12 +10,11 @@ Run the 'run' VHDL package tests
 
 import unittest
 from os.path import join, dirname
-from vunit.ui import VUnit
-from vunit.test.common import has_modelsim
+from vunit.test.common import has_simulator, create_vunit
 from vunit import ROOT
 
 
-@unittest.skipUnless(has_modelsim(), 'Requires modelsim')
+@unittest.skipUnless(has_simulator(), 'Requires simulator')
 class TestRun(unittest.TestCase):
     """
     Run the 'run' VHDL package tests
@@ -26,8 +25,9 @@ class TestRun(unittest.TestCase):
         Utility function to run the 'run' test compiled with vhdl_standard
         """
         output_path = join(dirname(__file__), "run_out")
-        ui = VUnit(clean=True, output_path=output_path,
-                   vhdl_standard=vhdl_standard)
+        ui = create_vunit(clean=True,
+                          output_path=output_path,
+                          vhdl_standard=vhdl_standard)
         ui.add_library("tb_run_lib")
 
         vhdl_path = join(ROOT, 'vhdl', 'run')

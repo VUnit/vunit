@@ -11,12 +11,11 @@ Run the array VHDL package tests
 
 import unittest
 from os.path import abspath, join, dirname
-from vunit.ui import VUnit
-from vunit.test.common import has_modelsim
+from vunit.test.common import has_simulator, create_vunit
 from vunit import ROOT
 
 
-@unittest.skipUnless(has_modelsim(), 'Requires modelsim')
+@unittest.skipUnless(has_simulator(), 'Requires simulator')
 class TestArray(unittest.TestCase):
     """
     Run the array VHDL package tests
@@ -29,9 +28,9 @@ class TestArray(unittest.TestCase):
         output_path = join(dirname(abspath(__file__)), 'array_out')
         src_path = join(ROOT, 'vhdl', 'array')
 
-        vu = VUnit(clean=True,
-                   output_path=output_path,
-                   vhdl_standard=vhdl_standard)
+        vu = create_vunit(clean=True,
+                          output_path=output_path,
+                          vhdl_standard=vhdl_standard)
 
         vu.add_library("lib")
         vu.add_array_util("lib")

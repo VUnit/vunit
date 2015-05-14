@@ -13,11 +13,10 @@ import unittest
 from os.path import abspath, join, dirname
 
 from vunit import ROOT
-from vunit.ui import VUnit
-from vunit.test.common import has_modelsim
+from vunit.test.common import has_simulator, create_vunit
 
 
-@unittest.skipUnless(has_modelsim(), 'Requires modelsim')
+@unittest.skipUnless(has_simulator(), 'Requires simulator')
 class TestLogging(unittest.TestCase):
     """
     Run the logging VHDL tests
@@ -29,10 +28,10 @@ class TestLogging(unittest.TestCase):
         output_path = join(dirname(abspath(__file__)), 'logging_out')
         vhdl_path = join(ROOT, 'vhdl', 'logging')
         common_path = join(ROOT, 'vhdl', 'common', 'test')
-        ui = VUnit(clean=True,
-                   output_path=output_path,
-                   vhdl_standard=vhdl_standard,
-                   compile_builtins=False)
+        ui = create_vunit(clean=True,
+                          output_path=output_path,
+                          vhdl_standard=vhdl_standard,
+                          compile_builtins=False)
 
         ui.add_builtins('vunit_lib', mock_lang=True)
         ui.enable_location_preprocessing()

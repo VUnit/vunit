@@ -11,12 +11,11 @@ Run the string_ops test cases
 
 import unittest
 from os.path import abspath, join, dirname
-from vunit.ui import VUnit
-from vunit.test.common import has_modelsim, assert_exit
+from vunit.test.common import has_simulator, assert_exit, create_vunit
 from vunit import ROOT
 
 
-@unittest.skipUnless(has_modelsim(), 'Requires modelsim')
+@unittest.skipUnless(has_simulator(), 'Requires simulator')
 class TestStringOps(unittest.TestCase):
     """
     Run the string_ops test cases
@@ -31,10 +30,11 @@ class TestStringOps(unittest.TestCase):
         src_path = join(ROOT, "vhdl", "string_ops")
         common_path = join(ROOT, 'vhdl', 'common', 'test')
 
-        ui = VUnit(clean=True,
-                   output_path=output_path,
-                   vhdl_standard=vhdl_standard,
-                   compile_builtins=True)
+        ui = create_vunit(clean=True,
+                          output_path=output_path,
+                          vhdl_standard=vhdl_standard,
+                          compile_builtins=True)
+
         lib = ui.add_library("lib")
         lib.add_source_files(join(src_path, "test", "*.vhd"))
         lib.add_source_files(join(common_path, "test_type_methods_api.vhd"))
