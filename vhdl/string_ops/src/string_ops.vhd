@@ -14,7 +14,7 @@ use ieee.numeric_std.all;
 package string_ops is
   type line_vector is array (natural range <>) of line;
   type lines_t is access line_vector;
-  
+
   function count (
     constant s : string;
     constant substring : string;
@@ -125,7 +125,7 @@ package body string_ops is
       return index - s'left;
     else
       return s'left - index;
-    end if;    
+    end if;
   end function offset;
 
   function in_range (
@@ -139,7 +139,7 @@ package body string_ops is
       return (index <= s'left) and (index >= s'right);
     end if;
   end function in_range;
-  
+
   function slice (
     constant s      : string;
     constant offset : natural;
@@ -153,7 +153,7 @@ package body string_ops is
       return s(s'left - offset downto s'left -offset - length + 1);
     end if;
   end function slice;
-  
+
   function image (
     constant data : std_logic_vector)
     return string is
@@ -182,7 +182,7 @@ package body string_ops is
     data_extended(data'length-1 downto 0) := data;
     j := 0;
     for i in ret_val'right - 1 downto 3 loop
-      meta_value_detected := false;      
+      meta_value_detected := false;
       for k in j+3 downto j loop
         if (data_extended(k) /= '1') and (data_extended(k) /= '0') then
           meta_value_detected := true;
@@ -216,7 +216,7 @@ package body string_ops is
     if lstrip then
       for i in str'range loop
         start := i;
-        exit when count(chars, str(i)) = 0;      
+        exit when count(chars, str(i)) = 0;
       end loop;
 
       if count(chars, str(start)) > 0 then
@@ -228,7 +228,7 @@ package body string_ops is
       for i in str'reverse_range loop
         stop := i;
         exit when count(chars, str(i)) = 0;
-      end loop;      
+      end loop;
 
       if count(chars, str(stop)) > 0 then
         return "";
@@ -238,11 +238,11 @@ package body string_ops is
     if str'ascending then
       return str(start to stop);
     else
-      return str(start downto stop); 
+      return str(start downto stop);
     end if;
-    
+
   end strip;
-  
+
   function strip (
     str : string;
     chars : string := " ")
@@ -266,7 +266,7 @@ package body string_ops is
   begin
     return strip(str, chars, true, false);
   end lstrip;
-  
+
   function replace (
     constant s      : string;
     constant old_segment : string;
@@ -298,7 +298,7 @@ package body string_ops is
         else
           ret_val(j) := s_int(i);
           j := j + 1;
-          i := i + 1;          
+          i := i + 1;
         end if;
       end loop;
       ret_val(j to j + s_int'right - i) := s_int(i to s_int'right);
@@ -308,7 +308,7 @@ package body string_ops is
 
     return ret_val;
   end replace;
-  
+
   function replace (
     constant s      : string;
     constant old_segment : string;
@@ -362,10 +362,10 @@ package body string_ops is
       else
         result(i) := s(i);
       end if;
-      last_char := s(i);      
+      last_char := s(i);
     end loop;
     return result;
-  end title;              
+  end title;
 
   function upper (
     constant s : string)
@@ -381,7 +381,7 @@ package body string_ops is
       end if;
     end loop;
     return result;
-  end upper;              
+  end upper;
 
   function lower (
     constant s : string)
@@ -397,7 +397,7 @@ package body string_ops is
       end if;
     end loop;
     return result;
-  end lower;              
+  end lower;
 
   function count (
     constant s : string;
@@ -410,7 +410,7 @@ package body string_ops is
     substring(1) := char;
     return count(s, substring, start, stop);
   end;
-  
+
   function count (
     constant s : string;
     constant substring : string;
@@ -444,7 +444,7 @@ package body string_ops is
       if offset(s, start_pos) > offset(s, stop_pos) then
         return 0;
       end if;
-      
+
       o := offset(s, start_pos);
       while o <= offset(s, stop_pos) - substring'length + 1 loop
         if slice(s, o, substring'length) = substring then
@@ -459,7 +459,7 @@ package body string_ops is
 
     return n;
   end count;
-  
+
   impure function split (
     constant s         : string;
     constant sep       : string;
@@ -476,7 +476,7 @@ package body string_ops is
     else
       ret_val := new line_vector(0 to max_split);
     end if;
-    
+
     i := 1;
     while i <= s_int'length - sep'length + 1 loop
       exit when n_splits = max_split;
@@ -508,11 +508,11 @@ package body string_ops is
     if is_x(std_logic_vector(value)) then
       return "NaN";
     end if;
-    
+
     if value = (value'range => '0') then
       return "0";
     end if;
-    
+
     if value'length < 32 then
       return integer'image(to_integer(value));
     end if;
@@ -534,7 +534,7 @@ package body string_ops is
   begin
     return to_integer_string(unsigned(value));
   end;
-  
+
   function to_integer_string (
     constant value : signed)
     return string is
