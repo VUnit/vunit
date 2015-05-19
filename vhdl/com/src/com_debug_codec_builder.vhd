@@ -205,17 +205,13 @@ package body com_debug_codec_builder_pkg is
     variable length              : inout natural) is
     variable element_start       : positive;
     variable level               : natural   := 0;
-    constant opening_parenthesis : character := '(';
-    constant closing_parenthesis : character := ')';
   begin
     deallocate_elements(elements);
-
-    check(grp(grp'left) = opening_parenthesis, "Group must be opened with a parenthesis");
-    check(grp(grp'right) = closing_parenthesis, "Group must be closed with a parenthesis");
-
     length := 0;
 
-    if grp = "()" then
+    if (grp = "()") or                  -- Empty group
+       (grp(grp'left) /= '(') or        -- Not a valid group
+       (grp(grp'right) /= ')') then     -- Not a valid group
       return;
     end if;
 
@@ -240,7 +236,10 @@ package body com_debug_codec_builder_pkg is
       end if;
     end loop;
 
-    check(level = 0, "Parenthesis are not balanced");
+    if level /= 0 then  -- Not a valid group
+      deallocate_elements(elements);
+      length := 0;
+    end if;
 
   end procedure split_group;
 
