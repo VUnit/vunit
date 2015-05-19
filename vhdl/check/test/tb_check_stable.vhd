@@ -133,6 +133,7 @@ begin
       elsif running_test_case = "Test concurrent checker should pass window with varying drive strength" then
         get_checker_stat(checker, stat);
         apply_sequence("00.101;10.101;00.1LH;01.101;00.101", clk, check_input, active_rising_clock_edge);
+        wait for 1 ns;
         verify_passed_checks(checker, stat, 6);
       elsif running_test_case = "Test concurrent checker should handle weak start and end events" then
         apply_sequence("00.101;HL.101;LL.111;LH.111;00.111", clk, check_input, active_rising_clock_edge);
@@ -140,9 +141,11 @@ begin
         verify_log_call(set_count(get_count + 2), expected_level => level);
       elsif running_test_case = "Test concurrent checker should fail unstable window" then
         apply_sequence("00.101;10.101;00.111;01.111;00.111", clk, check_input, active_rising_clock_edge);
+        wait for 1 ns;
         verify_log_call(set_count(get_count + 2), expected_level => level);
       elsif running_test_case = "Test concurrent checker should fail window with weak changes to opposite level" then
         apply_sequence("00.101;10.101;00.L01;01.1H1;00.111", clk, check_input, active_rising_clock_edge);
+        wait for 1 ns;
         verify_log_call(set_count(get_count + 2), expected_level => level);
       elsif running_test_case = "Test concurrent checker should fail on unknown start event" then
         apply_sequence("00.101;X0.101;00.111;01.101;00.101", clk, check_input, active_rising_clock_edge);
@@ -152,6 +155,7 @@ begin
         verify_log_call(inc_count, "Unknown end event.", level);
       elsif running_test_case = "Test concurrent checker should fail on stable unknown window" then
         apply_sequence("00.101;10.10X;00.10X;01.10X;00.101", clk, check_input, active_rising_clock_edge);
+        wait for 1 ns;
         verify_log_call(set_count(get_count + 3), "Unknown data in window.", level);
       elsif running_test_case = "Test concurrent checker should handle back to back windows" then
         apply_sequence("00.101;10.101;01.111;10.010", clk, check_input, active_rising_clock_edge);
@@ -185,6 +189,7 @@ begin
       elsif running_test_case = "Test concurrent checker should pass window with varying drive strength" then
         get_checker_stat(checker, stat);
         apply_sequence("00.1;10.1;00.H;01.1;00.1", clk, check_input, active_rising_clock_edge);
+        wait for 1 ns;
         verify_passed_checks(checker, stat, 6);
       elsif running_test_case = "Test concurrent checker should handle weak start and end events" then
         apply_sequence("00.0;HL.0;LL.1;LH.1;00.1", clk, check_input, active_rising_clock_edge);
@@ -192,9 +197,11 @@ begin
         verify_log_call(set_count(get_count + 2), expected_level => level);
       elsif running_test_case = "Test concurrent checker should fail unstable window" then
         apply_sequence("00.0;10.0;00.1;01.1;00.1", clk, check_input, active_rising_clock_edge);
+        wait for 1 ns;
         verify_log_call(set_count(get_count + 2), expected_level => level);
       elsif running_test_case = "Test concurrent checker should fail window with weak changes to opposite level" then
         apply_sequence("00.1;10.1;00.L;01.1;00.1", clk, check_input, active_rising_clock_edge);
+        wait for 1 ns;
         verify_log_call(inc_count, expected_level => level);
       elsif running_test_case = "Test concurrent checker should fail on unknown start event" then
         apply_sequence("00.0;X0.0;00.1;01.0;00.0", clk, check_input, active_rising_clock_edge);
@@ -204,6 +211,7 @@ begin
         verify_log_call(inc_count, "Unknown end event.", level);
       elsif running_test_case = "Test concurrent checker should fail on stable unknown window" then
         apply_sequence("00.1;10.X;00.X;01.X;00.1", clk, check_input, active_rising_clock_edge);
+        wait for 1 ns;
         verify_log_call(set_count(get_count + 3), "Unknown data in window.", level);
       elsif running_test_case = "Test concurrent checker should handle back to back windows" then
         apply_sequence("00.0;10.0;01.1;10.1", clk, check_input, active_rising_clock_edge);
