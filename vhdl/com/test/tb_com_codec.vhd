@@ -116,6 +116,18 @@ begin
     variable my_record6          : record6_t;
     variable my_record7          : record7_t;
     variable e1, e2, e3          : line;
+
+    variable string_15_downto_4 : string(15 downto 4);
+    variable boolean_vector_5_downto_3 : boolean_vector(5 downto 3);
+    variable bit_vector_5_downto_3 : bit_vector(5 downto 3);
+    variable integer_vector_5_downto_3 : integer_vector(5 downto 3);
+    variable real_vector_5_downto_3 : real_vector(5 downto 3);
+    variable time_vector_5_downto_3 : time_vector(5 downto 3);
+    variable std_ulogic_vector_5_downto_3 : std_ulogic_vector(5 downto 3);
+    variable numeric_bit_unsigned_5_downto_3 : ieee.numeric_bit.unsigned(5 downto 3);
+    variable numeric_bit_signed_5_downto_3 : ieee.numeric_bit.signed(5 downto 3);
+    variable numeric_std_unsigned_5_downto_3 : ieee.numeric_std.unsigned(5 downto 3);
+    variable numeric_std_signed_5_downto_3 : ieee.numeric_std.signed(5 downto 3);
   begin
     checker_init(display_format => verbose,
                  file_name      => join(output_path(runner_cfg), "error.csv"),
@@ -183,88 +195,99 @@ begin
           check_relation(decode_character(encode_character(character'val(i))) = character'val(i));
         end loop;
       elsif run("Test that string can be encoded and decoded") then
+        string_15_downto_4 := "Hello world!";
         check_relation(decode_string(encode_string("The quick brown fox jumps over the lazy dog")) = string'("The quick brown fox jumps over the lazy dog"));
         check_relation(decode_string(encode_string(special_chars)) = string'(special_chars));
         check_relation(decode_string(encode_string("")) = string'(""));
         check_relation(decode_string(encode_string(null_string))'left = 10);
         check_relation(decode_string(encode_string(null_string))'right = 9);
-        check_relation(decode_string(encode_string((15 downto 4 => "Hello world!"))) = string'("Hello world!"));
-        check_relation(decode_string(encode_string((15 downto 4 => "Hello world!")))'left = 15);
-        check_relation(decode_string(encode_string((15 downto 4 => "Hello world!")))'right = 4);
+        check_relation(decode_string(encode_string(string_15_downto_4)) = string'("Hello world!"));
+        check_relation(decode_string(encode_string(string_15_downto_4))'left = 15);
+        check_relation(decode_string(encode_string(string_15_downto_4))'right = 4);
       elsif run("Test that boolean_vector can be encoded and decoded") then
+        boolean_vector_5_downto_3 := (true, false, true);
         check_relation(decode_boolean_vector(encode_boolean_vector((true, false, true))) = boolean_vector'(true, false, true));
         check_relation(decode_boolean_vector(encode_boolean_vector((0          => true))) = boolean_vector'(0 => true));
         check_relation(decode_boolean_vector(encode_boolean_vector(null_boolean_vector)) = null_boolean_vector);
-        check_relation(decode_boolean_vector(encode_boolean_vector((5 downto 3 => (true, false, true)))) = boolean_vector'(true, false, true));
-        check_relation(decode_boolean_vector(encode_boolean_vector((5 downto 3 => (true, false, true))))'left = 5);
-        check_relation(decode_boolean_vector(encode_boolean_vector((5 downto 3 => (true, false, true))))'right = 3);
+        check_relation(decode_boolean_vector(encode_boolean_vector(boolean_vector_5_downto_3)) = boolean_vector'(true, false, true));
+        check_relation(decode_boolean_vector(encode_boolean_vector(boolean_vector_5_downto_3))'left = 5);
+        check_relation(decode_boolean_vector(encode_boolean_vector(boolean_vector_5_downto_3))'right = 3);
       elsif run("Test that bit_vector can be encoded and decoded") then
+        bit_vector_5_downto_3 := "101";
         check_relation(decode_bit_vector(encode_bit_vector("101")) = bit_vector'("101"));
         check_relation(decode_bit_vector(encode_bit_vector("1")) = bit_vector'("1"));
         check_relation(decode_bit_vector(encode_bit_vector("")) = bit_vector'(""));
-        check_relation(decode_bit_vector(encode_bit_vector((5 downto 3 => "101"))) = bit_vector'("101"));
-        check_relation(decode_bit_vector(encode_bit_vector((5 downto 3 => "101")))'left = 5);
-        check_relation(decode_bit_vector(encode_bit_vector((5 downto 3 => "101")))'right = 3);
+        check_relation(decode_bit_vector(encode_bit_vector(bit_vector_5_downto_3)) = bit_vector'("101"));
+        check_relation(decode_bit_vector(encode_bit_vector(bit_vector_5_downto_3))'left = 5);
+        check_relation(decode_bit_vector(encode_bit_vector(bit_vector_5_downto_3))'right = 3);
       elsif run("Test that integer_vector can be encoded and decoded") then
+        integer_vector_5_downto_3 := (-42, 0, 17);
         check_relation(decode_integer_vector(encode_integer_vector((-42, 0, 17))) = integer_vector'(-42, 0, 17));
         check_relation(decode_integer_vector(encode_integer_vector((0          => -42))) = integer_vector'(0 => -42));
         check_relation(decode_integer_vector(encode_integer_vector(null_integer_vector)) = null_integer_vector);
-        check_relation(decode_integer_vector(encode_integer_vector((5 downto 3 => (-42, 0, 17)))) = integer_vector'(-42, 0, 17));
-        check_relation(decode_integer_vector(encode_integer_vector((5 downto 3 => (-42, 0, 17))))'left = 5);
-        check_relation(decode_integer_vector(encode_integer_vector((5 downto 3 => (-42, 0, 17))))'right = 3);
+        check_relation(decode_integer_vector(encode_integer_vector(integer_vector_5_downto_3)) = integer_vector'(-42, 0, 17));
+        check_relation(decode_integer_vector(encode_integer_vector(integer_vector_5_downto_3))'left = 5);
+        check_relation(decode_integer_vector(encode_integer_vector(integer_vector_5_downto_3))'right = 3);
       elsif run("Test that real_vector can be encoded and decoded") then
+        real_vector_5_downto_3 := (-42.42, 0.001, 17.17);
         check_relation(decode_real_vector(encode_real_vector((-42.42, 0.001, 17.17))) = real_vector'(-42.42, 0.001, 17.17));
         check_relation(decode_real_vector(encode_real_vector((0          => -42.42))) = real_vector'(0 => -42.42));
         check_relation(decode_real_vector(encode_real_vector(null_real_vector)) = null_real_vector);
-        check_relation(decode_real_vector(encode_real_vector((5 downto 3 => (-42.42, 0.001, 17.17)))) = real_vector'(-42.42, 0.001, 17.17));
-        check_relation(decode_real_vector(encode_real_vector((5 downto 3 => (-42.42, 0.001, 17.17))))'left = 5);
-        check_relation(decode_real_vector(encode_real_vector((5 downto 3 => (-42.42, 0.001, 17.17))))'right = 3);
+        check_relation(decode_real_vector(encode_real_vector(real_vector_5_downto_3)) = real_vector'(-42.42, 0.001, 17.17));
+        check_relation(decode_real_vector(encode_real_vector(real_vector_5_downto_3))'left = 5);
+        check_relation(decode_real_vector(encode_real_vector(real_vector_5_downto_3))'right = 3);
       elsif run("Test that time_vector can be encoded and decoded") then
+        time_vector_5_downto_3 := (-42 ms, 0 sec, 17 min);
         check_relation(decode_time_vector(encode_time_vector((-42 ms, 0 sec, 17 min))) = time_vector'(-42 ms, 0 sec, 17 min));
         check_relation(decode_time_vector(encode_time_vector((0          => -42 ms))) = time_vector'(0 => -42 ms));
         check_relation(decode_time_vector(encode_time_vector(null_time_vector)) = null_time_vector);
-        check_relation(decode_time_vector(encode_time_vector((5 downto 3 => (-42 ms, 0 sec, 17 min)))) = time_vector'(-42 ms, 0 sec, 17 min));
-        check_relation(decode_time_vector(encode_time_vector((5 downto 3 => (-42 ms, 0 sec, 17 min))))'left = 5);
-        check_relation(decode_time_vector(encode_time_vector((5 downto 3 => (-42 ms, 0 sec, 17 min))))'right = 3);
+        check_relation(decode_time_vector(encode_time_vector(time_vector_5_downto_3)) = time_vector'(-42 ms, 0 sec, 17 min));
+        check_relation(decode_time_vector(encode_time_vector(time_vector_5_downto_3))'left = 5);
+        check_relation(decode_time_vector(encode_time_vector(time_vector_5_downto_3))'right = 3);
       elsif run("Test that std_ulogic_vector can be encoded and decoded") then
+        std_ulogic_vector_5_downto_3 := "XU1";
         check_relation(decode_std_ulogic_vector(encode_std_ulogic_vector("XU1")) = std_ulogic_vector'("XU1"));
         check_relation(decode_std_ulogic_vector(encode_std_ulogic_vector("X")) = std_ulogic_vector'("X"));
         check_relation(decode_std_ulogic_vector(encode_std_ulogic_vector("")) = std_ulogic_vector'(""));
-        check_relation(decode_std_ulogic_vector(encode_std_ulogic_vector((5 downto 3 => "XU1"))) = std_ulogic_vector'("XU1"));
-        check_relation(decode_std_ulogic_vector(encode_std_ulogic_vector((5 downto 3 => "XU1")))'left = 5);
-        check_relation(decode_std_ulogic_vector(encode_std_ulogic_vector((5 downto 3 => "XU1")))'right = 3);
+        check_relation(decode_std_ulogic_vector(encode_std_ulogic_vector(std_ulogic_vector_5_downto_3)) = std_ulogic_vector'("XU1"));
+        check_relation(decode_std_ulogic_vector(encode_std_ulogic_vector(std_ulogic_vector_5_downto_3))'left = 5);
+        check_relation(decode_std_ulogic_vector(encode_std_ulogic_vector(std_ulogic_vector_5_downto_3))'right = 3);
       elsif run("Test that complex can be encoded and decoded") then
         check_relation(decode_complex(encode_complex((-17.17, 42.42))) = complex'(-17.17, 42.42));
       elsif run("Test that complex_polar can be encoded and decoded") then
         check_relation(decode_complex_polar(encode_complex_polar((17.17, 0.42))) = complex_polar'(17.17, 0.42));
       elsif run("Test that unsigned from numeric_bit can be encoded and decoded") then
+        numeric_bit_unsigned_5_downto_3 := "101";
         check_relation(decode_numeric_bit_unsigned(encode_numeric_bit_unsigned("101")) = ieee.numeric_bit.unsigned'("101"));
         check_relation(decode_numeric_bit_unsigned(encode_numeric_bit_unsigned("1")) = ieee.numeric_bit.unsigned'("1"));
         check_relation(decode_numeric_bit_unsigned(encode_numeric_bit_unsigned("")) = ieee.numeric_bit.unsigned'(""));
-        check_relation(decode_numeric_bit_unsigned(encode_numeric_bit_unsigned((5 downto 3 => "101"))) = ieee.numeric_bit.unsigned'("101"));
-        check_relation(decode_numeric_bit_unsigned(encode_numeric_bit_unsigned((5 downto 3 => "101")))'left = 5);
-        check_relation(decode_numeric_bit_unsigned(encode_numeric_bit_unsigned((5 downto 3 => "101")))'right = 3);
+        check_relation(decode_numeric_bit_unsigned(encode_numeric_bit_unsigned(numeric_bit_unsigned_5_downto_3)) = ieee.numeric_bit.unsigned'("101"));
+        check_relation(decode_numeric_bit_unsigned(encode_numeric_bit_unsigned(numeric_bit_unsigned_5_downto_3))'left = 5);
+        check_relation(decode_numeric_bit_unsigned(encode_numeric_bit_unsigned(numeric_bit_unsigned_5_downto_3))'right = 3);
       elsif run("Test that signed from numeric_bit can be encoded and decoded") then
+        numeric_bit_signed_5_downto_3 := "101";
         check_relation(decode_numeric_bit_signed(encode_numeric_bit_signed("101")) = ieee.numeric_bit.signed'("101"));
         check_relation(decode_numeric_bit_signed(encode_numeric_bit_signed("1")) = ieee.numeric_bit.signed'("1"));
         check_relation(decode_numeric_bit_signed(encode_numeric_bit_signed("")) = ieee.numeric_bit.signed'(""));
-        check_relation(decode_numeric_bit_signed(encode_numeric_bit_signed((5 downto 3 => "101"))) = ieee.numeric_bit.signed'("101"));
-        check_relation(decode_numeric_bit_signed(encode_numeric_bit_signed((5 downto 3 => "101")))'left = 5);
-        check_relation(decode_numeric_bit_signed(encode_numeric_bit_signed((5 downto 3 => "101")))'right = 3);
+        check_relation(decode_numeric_bit_signed(encode_numeric_bit_signed(numeric_bit_signed_5_downto_3)) = ieee.numeric_bit.signed'("101"));
+        check_relation(decode_numeric_bit_signed(encode_numeric_bit_signed(numeric_bit_signed_5_downto_3))'left = 5);
+        check_relation(decode_numeric_bit_signed(encode_numeric_bit_signed(numeric_bit_signed_5_downto_3))'right = 3);
       elsif run("Test that unsigned from numeric_std can be encoded and decoded") then
+        numeric_std_unsigned_5_downto_3 := "101";
         check_relation(decode_numeric_std_unsigned(encode_numeric_std_unsigned("101")) = ieee.numeric_std.unsigned'("101"));
         check_relation(decode_numeric_std_unsigned(encode_numeric_std_unsigned("1")) = ieee.numeric_std.unsigned'("1"));
         check_relation(decode_numeric_std_unsigned(encode_numeric_std_unsigned("")) = ieee.numeric_std.unsigned'(""));
-        check_relation(decode_numeric_std_unsigned(encode_numeric_std_unsigned((5 downto 3 => "101"))) = ieee.numeric_std.unsigned'("101"));
-        check_relation(decode_numeric_std_unsigned(encode_numeric_std_unsigned((5 downto 3 => "101")))'left = 5);
-        check_relation(decode_numeric_std_unsigned(encode_numeric_std_unsigned((5 downto 3 => "101")))'right = 3);
+        check_relation(decode_numeric_std_unsigned(encode_numeric_std_unsigned(numeric_std_unsigned_5_downto_3)) = ieee.numeric_std.unsigned'("101"));
+        check_relation(decode_numeric_std_unsigned(encode_numeric_std_unsigned(numeric_std_unsigned_5_downto_3))'left = 5);
+        check_relation(decode_numeric_std_unsigned(encode_numeric_std_unsigned(numeric_std_unsigned_5_downto_3))'right = 3);
       elsif run("Test that signed from numeric_std can be encoded and decoded") then
+        numeric_std_signed_5_downto_3 := "101";
         check_relation(decode_numeric_std_signed(encode_numeric_std_signed("101")) = ieee.numeric_std.signed'("101"));
         check_relation(decode_numeric_std_signed(encode_numeric_std_signed("1")) = ieee.numeric_std.signed'("1"));
         check_relation(decode_numeric_std_signed(encode_numeric_std_signed("")) = ieee.numeric_std.signed'(""));
-        check_relation(decode_numeric_std_signed(encode_numeric_std_signed((5 downto 3 => "101"))) = ieee.numeric_std.signed'("101"));
-        check_relation(decode_numeric_std_signed(encode_numeric_std_signed((5 downto 3 => "101")))'left = 5);
-        check_relation(decode_numeric_std_signed(encode_numeric_std_signed((5 downto 3 => "101")))'right = 3);
+        check_relation(decode_numeric_std_signed(encode_numeric_std_signed(numeric_std_signed_5_downto_3)) = ieee.numeric_std.signed'("101"));
+        check_relation(decode_numeric_std_signed(encode_numeric_std_signed(numeric_std_signed_5_downto_3))'left = 5);
+        check_relation(decode_numeric_std_signed(encode_numeric_std_signed(numeric_std_signed_5_downto_3))'right = 3);
       elsif run("Test that ufixed can be encoded and decoded") then
         check_relation(decode_ufixed(encode_ufixed(to_ufixed(6.5, 3, -3))) = to_ufixed(6.5, 3, -3));
         check_relation(decode_ufixed(encode_ufixed(to_ufixed(8.0, 3, 1))) = to_ufixed(8.0, 3, 1));
