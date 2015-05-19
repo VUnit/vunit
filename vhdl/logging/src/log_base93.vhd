@@ -18,7 +18,7 @@ package body log_base_pkg is
   procedure append (
     variable logger : inout logger_t;
     constant filter : in log_filter_t) is
-  begin  
+  begin
     logger.log_filter_list_tail := logger.log_filter_list_tail + 1;
     logger.log_filter_list(logger.log_filter_list_tail) := (true, filter);
   end append;
@@ -26,28 +26,28 @@ package body log_base_pkg is
   procedure remove (
     variable logger : inout logger_t;
     constant filter : in log_filter_t) is
-  begin  
+  begin
     for i in logger.log_filter_list_tail downto 1 loop
       if logger.log_filter_list(i).filter.id = filter.id then
         logger.log_filter_list(i).active := false;
         logger.log_filter_list(i to 9) := logger.log_filter_list(i + 1 to 10);
         logger.log_filter_list_tail := logger.log_filter_list_tail - 1;
       end if;
-    end loop;  
+    end loop;
   end remove;
 
   procedure get (
     variable logger : inout logger_t;
     constant index  : in    natural;
     variable filter : out log_filter_t) is
-  begin  
+  begin
     assert index <= logger.log_filter_list_tail report "Index " & natural'image(index) & " is out of range 1 to " & natural'image(logger.log_filter_list_tail) & "." severity failure;
     assert index > 0 report "Index " & natural'image(index) & " is out of range 1 to " & natural'image(logger.log_filter_list_tail) & "." severity failure;
-    filter := logger.log_filter_list(index).filter;    
+    filter := logger.log_filter_list(index).filter;
   end procedure get;
 
   procedure open_log(
-    variable logger : inout logger_t;   
+    variable logger : inout logger_t;
     constant append : in    boolean := false) is
     variable status : file_open_status;
     file log_file   : text;
@@ -57,7 +57,7 @@ package body log_base_pkg is
     else
       file_open(status, log_file, logger.log_file_name.all, write_mode);
     end if;
-      assert status = open_ok report "Failed opening " & logger.log_file_name.all & " (" & file_open_status'image(status) & ")." severity failure;    
+      assert status = open_ok report "Failed opening " & logger.log_file_name.all & " (" & file_open_status'image(status) & ")." severity failure;
     file_close(log_file);
   end;
 
@@ -98,8 +98,8 @@ package body log_base_pkg is
     logger.log_separator := separator;
     if logger.log_file_format /= off then
       open_log(logger, append);
-    end if;    
-    logger.log_file_is_initialized := true;    
+    end if;
+    logger.log_file_is_initialized := true;
     -- pragma translate_on
   end base_init;
 
@@ -129,14 +129,14 @@ package body log_base_pkg is
         end loop;
 
         next list_loop when not match;
-        
+
         level_match := (filter.n_levels = 0);
         for l in 1 to filter.n_levels loop
           level_match := filter.levels(l) = level;
           exit when level_match;
         end loop;
 
-        source_match := (filter.src_length = 0);        
+        source_match := (filter.src_length = 0);
         if filter.src_length > 0 then
           if replace(filter.src, ':', '.')(1) /= '.' then
             if (filter.src(src'range) = src) and (filter.src_length = src'length) then
@@ -159,7 +159,7 @@ package body log_base_pkg is
         exit list_loop when ret_val = false;
       end loop;
       pass := ret_val;
-    end procedure pass_filters;    
+    end procedure pass_filters;
 
     variable status                : file_open_status;
     variable l                     : line;
@@ -171,16 +171,16 @@ package body log_base_pkg is
     variable sev_level : severity_level := note;
     variable selected_level_name : line;
   begin
-    -- pragma translate_off    
+    -- pragma translate_off
     if selected_src /= null then
-      deallocate(selected_src);    
+      deallocate(selected_src);
     end if;
     if src /= "" then
       write(selected_src, src);
     elsif logger.log_default_src = null then
       write(selected_src, string'(""));
     else
-      selected_src := logger.log_default_src;      
+      selected_src := logger.log_default_src;
     end if;
 
     if log_level = dflt then
@@ -197,7 +197,7 @@ package body log_base_pkg is
       pass_filters(logger, pass_to_file, selected_level, "", file_handler);
     end if;
 
-    if pass_to_display or pass_to_file then    
+    if pass_to_display or pass_to_file then
       if (logger.log_display_format = verbose_csv) or (logger.log_file_format = verbose_csv) or
          (logger.log_display_format = verbose) or (logger.log_file_format = verbose) then
         seq_num := get_seq_num;
@@ -244,7 +244,7 @@ package body log_base_pkg is
     if selected_level <= logger.log_stop_level then
       lang_report("", failure);
     end if;
-    -- pragma translate_on    
+    -- pragma translate_on
   end base_log;
 
   procedure base_get_logger_cfg (
@@ -281,14 +281,14 @@ package body log_base_pkg is
     cfg.log_separator := logger.log_separator;
     -- pragma translate_on
   end;
-  
+
   procedure base_add_filter (
     variable logger : inout logger_t;
     variable filter       : out log_filter_t;
     constant levels : in log_level_vector_t := null_log_level_vector;
     constant src : in string := "";
     constant pass               : in boolean := false;
-    constant handlers       : in log_handler_vector_t) is    
+    constant handlers       : in log_handler_vector_t) is
     variable temp_filter : log_filter_t;
   begin
     temp_filter.id := logger.log_filter_id;
@@ -302,8 +302,8 @@ package body log_base_pkg is
     temp_filter.handlers(1 to handlers'length) := handlers;
     temp_filter.n_handlers := handlers'length;
     filter := temp_filter;
-    append(logger, temp_filter);    
-  end;  
+    append(logger, temp_filter);
+  end;
 
   procedure base_remove_filter (
     variable logger : inout logger_t;
@@ -323,8 +323,7 @@ package body log_base_pkg is
     if logger.log_level_names(level) /= null then
       deallocate(logger.log_level_names(level));
     end if;
-    write(logger.log_level_names(level), name);    
+    write(logger.log_level_names(level), name);
     -- pragma translate_on
   end;
 end package body log_base_pkg;
-
