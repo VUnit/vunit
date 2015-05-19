@@ -74,6 +74,9 @@ package com_pkg is
     impure function get_first_message_id (
       constant actor : actor_t)
       return message_id_t;
+    impure function get_first_message_request_id (
+      constant actor : actor_t)
+      return message_id_t;
     procedure delete_first_envelope (
       constant actor : in actor_t);
     impure function has_reply_stash_message (
@@ -87,6 +90,9 @@ package com_pkg is
       constant actor : actor_t)
       return actor_t;
     impure function get_reply_stash_message_id (
+      constant actor : actor_t)
+      return message_id_t;
+    impure function get_reply_stash_message_request_id (
       constant actor : actor_t)
       return message_id_t;
     impure function find_and_stash_reply_message (

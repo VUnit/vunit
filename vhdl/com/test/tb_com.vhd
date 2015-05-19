@@ -239,10 +239,14 @@ begin
         server        := find("server2");
         send(net, self, server, "request1", receipt);
         send(net, self, server, "request2", receipt2);
-        receive_reply(net, self, receipt.id, reply_message);
-        check(reply_message.payload.all = "reply1", "Expected ""reply1""");
         receive_reply(net, self, receipt2.id, reply_message);
         check(reply_message.payload.all = "reply2", "Expected ""reply2""");
+        check(reply_message.request_id = receipt2.id, "Expected request_id = " & integer'image(receipt2.id) &
+              " but got " & integer'image(reply_message.request_id));
+        receive_reply(net, self, receipt.id, reply_message);
+        check(reply_message.payload.all = "reply1", "Expected ""reply1""");
+        check(reply_message.request_id = receipt.id, "Expected request_id = " & integer'image(receipt.id) &
+              " but got " & integer'image(reply_message.request_id));
         delete(reply_message);
       elsif run("Test that a receiver is protected from flooding by creating a bounded inbox") then
         start_limited_inbox <= true;

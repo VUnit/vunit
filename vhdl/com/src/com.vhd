@@ -49,27 +49,27 @@ package body com_pkg is
   type actor_item_array_ptr_t is access actor_item_array_t;
 
   type messenger_t is protected body
-                                  -----------------------------------------------------------------------------
-                                  -- Handling of actors
-                                  -----------------------------------------------------------------------------
-                                  variable empty_inbox_c : inbox_t := (0, null, null);
-                                variable null_actor_item_c    : actor_item_t := (null_actor_c, null, false, 0, empty_inbox_c, null, null);
-                                variable envelope_recycle_bin : envelope_ptr_array(1 to 1000);
-                                variable n_recycled_envelopes : natural      := 0;
-                                variable null_message         : message_t    := (0, ok, null_actor_c, no_message_id_c, null);
+  -----------------------------------------------------------------------------
+  -- Handling of actors
+  -----------------------------------------------------------------------------
+  variable empty_inbox_c : inbox_t := (0, null, null);
+  variable null_actor_item_c    : actor_item_t := (null_actor_c, null, false, 0, empty_inbox_c, null, null);
+  variable envelope_recycle_bin : envelope_ptr_array(1 to 1000);
+  variable n_recycled_envelopes : natural      := 0;
+  variable null_message         : message_t    := (0, ok, null_actor_c, no_message_id_c, null);
 
-                                impure function new_envelope
-                                  return envelope_ptr_t is
-                                begin
-                                  if n_recycled_envelopes > 0 then
-                                    n_recycled_envelopes                                         := n_recycled_envelopes - 1;
-                                    envelope_recycle_bin(n_recycled_envelopes + 1).message       := null_message;
-                                    envelope_recycle_bin(n_recycled_envelopes + 1).next_envelope := null;
-                                    return envelope_recycle_bin(n_recycled_envelopes + 1);
-                                  else
-                                    return new envelope_t;
-                                  end if;
-                                end new_envelope;
+  impure function new_envelope
+    return envelope_ptr_t is
+  begin
+    if n_recycled_envelopes > 0 then
+      n_recycled_envelopes                                         := n_recycled_envelopes - 1;
+      envelope_recycle_bin(n_recycled_envelopes + 1).message       := null_message;
+      envelope_recycle_bin(n_recycled_envelopes + 1).next_envelope := null;
+      return envelope_recycle_bin(n_recycled_envelopes + 1);
+    else
+      return new envelope_t;
+    end if;
+  end new_envelope;
 
   procedure deallocate_envelope (
     variable ptr : inout envelope_ptr_t) is
@@ -125,7 +125,8 @@ package body com_pkg is
       actors(i) := old_actors(i);
     end loop;
     deallocate(old_actors);
-    actors(actors'length - 1) := ((id => actors'length - 1), new string'(name), deferred_creation, inbox_size, empty_inbox_c, null, null);
+    actors(actors'length - 1) := ((id => actors'length - 1), new string'(name),
+                                  deferred_creation, inbox_size, empty_inbox_c, null, null);
 
     return actors(actors'length - 1).actor;
   end function;
@@ -368,6 +369,17 @@ package body com_pkg is
     end if;
   end;
 
+  impure function get_first_message_request_id (
+    constant actor : actor_t)
+    return message_id_t is
+  begin
+    if actors(actor.id).inbox.first_envelope /= null then
+      return actors(actor.id).inbox.first_envelope.message.request_id;
+    else
+      return no_message_id_c;
+    end if;
+  end;
+
   procedure delete_first_envelope (
     constant actor : in actor_t) is
     variable first_envelope : envelope_ptr_t := actors(actor.id).inbox.first_envelope;
@@ -428,6 +440,18 @@ package body com_pkg is
   begin
     if envelope /= null then
       return envelope.message.id;
+    else
+      return no_message_id_c;
+    end if;
+  end;
+
+  impure function get_reply_stash_message_request_id (
+    constant actor : actor_t)
+    return message_id_t is
+    variable envelope : envelope_ptr_t := actors(actor.id).reply_stash;
+  begin
+    if envelope /= null then
+      return envelope.message.request_id;
     else
       return no_message_id_c;
     end if;
@@ -770,9 +794,10 @@ begin
   message        := new message_t;
   message.status := null_message_error;
   if messenger.has_messages(receiver) then
-    message.status := ok;
-    message.id     := messenger.get_first_message_id(receiver);
-    message.sender := messenger.get_first_message_sender(receiver);
+    message.status     := ok;
+    message.id         := messenger.get_first_message_id(receiver);
+    message.request_id := messenger.get_first_message_request_id(receiver);
+    message.sender     := messenger.get_first_message_sender(receiver);
     write(message.payload, messenger.get_first_message_payload(receiver));
     if delete_from_inbox then
       messenger.delete_first_envelope(receiver);
@@ -848,6 +873,7 @@ begin
   if messenger.has_reply_stash_message(receiver) then
     message.status := ok;
     message.id     := messenger.get_reply_stash_message_id(receiver);
+    message.request_id     := messenger.get_reply_stash_message_request_id(receiver);
     message.sender := messenger.get_reply_stash_message_sender(receiver);
     write(message.payload, messenger.get_reply_stash_message_payload(receiver));
     if clear_reply_stash then
