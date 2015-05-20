@@ -53,34 +53,25 @@ package body com_codec_pkg is
   function encode (
     constant data : time)
     return string is
+
     constant resolution  : time := std.env.resolution_limit;
+
+    function modulo(t : time; m : natural) return integer is
+    begin
+      return (integer((t - (t/m)*m)/resolution) mod m);
+    end function;
+
     variable ret_val     : string(1 to 8);
     variable t           : time;
-    variable is_negative : boolean;
     variable ascii       : natural;
   begin
-    -- Modelsim has a 64-bit integer representation of time
-    -- with the unit = resolution time. According to standard.
-    -- Range is +/- 2^63-1 (symmetric)
-    if data < resolution * 0 then
-      t           := -1 * data;
-      is_negative := true;
-    else
-      t           := data;
-      is_negative := false;
-    end if;
-
+    -- @TODO assumes time is 8 bytes
+    t           := data;
     for i in 8 downto 1 loop
-      ascii      := (t-(t/256)*256)/resolution;
+      ascii := modulo(t, 256);
       ret_val(i) := character'val(ascii);
-      t          := t/256;
+      t          := (t - (ascii * resolution))/256;
     end loop;
-
-    if is_negative then
-      ascii      := ascii + 128;
-      ret_val(1) := character'val(ascii);
-    end if;
-
     return ret_val;
   end;
 

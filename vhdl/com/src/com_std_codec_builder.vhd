@@ -199,24 +199,20 @@ package body com_std_codec_builder_pkg is
     variable result : out   time) is
     constant resolution  : time           := std.env.resolution_limit;
     variable code_int    : string(1 to 8) := code(index to index + 7);
-    variable is_negative : boolean        := false;
     variable r : time;
+    variable b : integer;
   begin
+    -- @TODO assumes time is 8 bytes
     r := resolution * 0;
 
-    if character'pos(code_int(1)) > 127 then
-      code_int(1) := character'val(character'pos(code_int(1)) - 128);
-      is_negative := true;
-    end if;
-
     for i in code_int'range loop
+      b := character'pos(code_int(i));
       r := r * 256;
-      r := r + character'pos(code_int(i)) * resolution;
+      if i = 1 and b >= 128 then
+        b := b - 256;
+      end if;
+      r := r + b * resolution;
     end loop;
-
-    if is_negative then
-      r := -1 * r;
-    end if;
 
     index := index + 8;
     result := r;
