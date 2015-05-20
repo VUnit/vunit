@@ -21,10 +21,11 @@ entity tb_com is
 end entity tb_com;
 
 architecture test_fixture of tb_com is
-  signal hello_world_received, start_receiver, start_server, start_server2, start_subscribers : boolean                  := false;
-  signal hello_subscriber_received                                                            : std_logic_vector(1 to 2) := "ZZ";
-  signal start_limited_inbox, limited_inbox_actor_done                                        : boolean                  := false;
-  signal start_limited_inbox_subscriber                                                       : boolean                  := false;
+  signal hello_world_received, start_receiver, start_server,
+    start_server2, start_server3, start_subscribers : boolean := false;
+  signal hello_subscriber_received : std_logic_vector(1 to 2) := "ZZ";
+  signal start_limited_inbox, limited_inbox_actor_done : boolean := false;
+  signal start_limited_inbox_subscriber : boolean := false;
 begin
   test_runner : process
     variable actor_to_be_found, actor_with_deferred_creation, actor_to_destroy,
@@ -248,6 +249,29 @@ begin
         check(reply_message.request_id = receipt.id, "Expected request_id = " & integer'image(receipt.id) &
               " but got " & integer'image(reply_message.request_id));
         delete(reply_message);
+      elsif run("Test that a synchronous request can be made") then
+        start_server3 <= true;
+        server := find("server3");
+
+        request(net, self, server, "request1", reply_message);
+        check(reply_message.payload.all = "reply1", "Expected ""reply1""");
+        delete(reply_message);
+
+        t_start := now;
+        request(net, self, server, "request2", reply_message, 3 ns);
+        check(reply_message.status = timeout, "Expected timeout");
+        check(now - t_start = 3 ns, "Expected timeout after 3 ns");
+        delete(reply_message);
+
+        send(net, self, server, "A message", receipt);
+        send(net, self, server, "This will sit in the inbox for 3 ns", receipt);
+        t_start := now;
+        request(net, self, server,
+                "The send part will block for 3 ns, the receive part should timout after 2 to get a total of 5 ns",
+                reply_message, 5 ns);
+        check(reply_message.status = timeout, "Expected timeout");
+        check(now - t_start = 5 ns, "Expected timeout after 5 ns");
+        delete(reply_message);
       elsif run("Test that a receiver is protected from flooding by creating a bounded inbox") then
         start_limited_inbox <= true;
         limited_inbox       := find("limited inbox");
@@ -379,6 +403,30 @@ begin
     delete(request_message2);
     wait;
   end process server2;
+
+  server3 : process is
+    variable self : actor_t;
+    variable request_message : message_ptr_t;
+    variable receipt : receipt_t;
+  begin
+    wait until start_server3;
+    self := create("server3", 1);
+
+    receive(net, self, request_message);
+    check(request_message.payload.all = "request1", "Expected ""request1""");
+    reply(net, request_message.sender, request_message.id, "reply1", receipt);
+    check(receipt.status = ok, "Expected reply to succeed");
+    delete(request_message);
+
+    receive(net, self, request_message);
+    delete(request_message);
+
+    receive(net, self, request_message);
+    wait for 3 ns;
+    receive(net, self, request_message);
+    delete(request_message);
+    wait;
+  end process server3;
 
   limited_inbox_actor : process is
     variable self, test_runner  : actor_t;

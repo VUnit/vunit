@@ -158,6 +158,20 @@ package com_pkg is
     variable receipt      : out   receipt_t;
     constant timeout      : in    time    := max_timeout_c;
     constant keep_message : in    boolean := false);
+  procedure request (
+    signal net               : inout network_t;
+    constant sender          : in    actor_t;
+    constant receiver        : in    actor_t;
+    constant request_payload : in    string := "";
+    variable reply_message   : inout message_ptr_t;
+    constant timeout         : in    time   := max_timeout_c);
+  procedure request (
+    signal net               : inout network_t;
+    constant receiver        : in    actor_t;
+    variable request_message : inout message_ptr_t;
+    variable reply_message   : inout message_ptr_t;
+    constant timeout         : in    time    := max_timeout_c;
+    constant keep_message    : in    boolean := false);
   procedure reply (
     signal net          : inout network_t;
     constant sender     : in    actor_t;

@@ -685,6 +685,39 @@ begin
   end if;
 end;
 
+procedure request (
+  signal net               : inout network_t;
+  constant sender          : in    actor_t;
+  constant receiver        : in    actor_t;
+  constant request_payload : in    string := "";
+  variable reply_message   : inout message_ptr_t;
+  constant timeout         : in    time   := max_timeout_c) is
+  variable request_message : message_ptr_t;
+begin
+  request_message := compose(request_payload, sender);
+  request(net, receiver, request_message, reply_message, timeout);
+end;
+
+procedure request (
+  signal net               : inout network_t;
+  constant receiver        : in    actor_t;
+  variable request_message : inout message_ptr_t;
+  variable reply_message   : inout message_ptr_t;
+  constant timeout         : in    time    := max_timeout_c;
+  constant keep_message    : in    boolean := false) is
+  variable receipt : receipt_t;
+  variable start : time;
+  variable sender : actor_t := request_message.sender;
+begin
+  start := now;
+  send(net, receiver, request_message, receipt, timeout, keep_message);
+  if receipt.status = ok then
+    receive_reply(net, sender, receipt.id, reply_message, timeout - (now - start));
+  else
+    reply_message.status := receipt.status;
+  end if;
+end;
+
 procedure reply (
   signal net          : inout network_t;
   constant sender     : in    actor_t;

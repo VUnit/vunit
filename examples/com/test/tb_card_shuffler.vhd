@@ -66,8 +66,7 @@ begin
               publish(net, self, load((r, s)), status);
             end loop;
           end loop;
-          send(net, self, find("scoreboard"), get_status(52), receipt);
-          receive_reply(net, self, receipt.id, reply);
+          request(net, self, find("scoreboard"), get_status(52), reply);
           check_true(decode(reply.payload.all).matching_cards, "Cards loaded and received differ");
           check_false(decode(reply.payload.all).checksum_match, "Identical deck after shuffling");
         end loop;

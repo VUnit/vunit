@@ -20,7 +20,7 @@ from os import environ
 
 # pylint: disable=too-many-public-methods
 @unittest.skipUnless(has_simulator(), "Requires simulator")
-class TestExternalRunScrips(unittest.TestCase):
+class TestExternalRunScripts(unittest.TestCase):
     """
     Verify that example projects run correctly
     """
