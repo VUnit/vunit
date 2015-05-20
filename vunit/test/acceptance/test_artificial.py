@@ -47,7 +47,6 @@ class TestVunitArtificial(unittest.TestCase):
         check_report(self.report_file, [
             ("passed", "lib.tb_pass"),
             ("failed", "lib.tb_fail"),
-            ("failed", "lib.tb_no_finished_signal"),
             ("passed", "lib.tb_infinite_events"),
             ("failed", "lib.tb_fail_on_warning"),
             ("passed", "lib.tb_no_fail_on_warning"),
