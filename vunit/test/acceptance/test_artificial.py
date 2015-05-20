@@ -36,6 +36,53 @@ class TestVunitArtificial(unittest.TestCase):
     def test_artificial(self):
         self._test_artificial(persistent_sim=False)
 
+    def test_artificial_elaborate_only(self):
+        self.check(self.artificial_run,
+                   exit_code=1,
+                   args=["--elaborate"])
+        check_report(self.report_file, [
+            ("passed", "lib.tb_pass"),
+            ("passed", "lib.tb_fail"),
+            ("passed", "lib.tb_infinite_events"),
+            ("passed", "lib.tb_fail_on_warning"),
+            ("passed", "lib.tb_no_fail_on_warning"),
+            ("passed", "lib.tb_two_architectures.pass"),
+            ("passed", "lib.tb_two_architectures.fail"),
+            ("passed", "lib.tb_with_vhdl_runner.pass"),
+            ("passed", "lib.tb_with_vhdl_runner.Test with spaces"),
+            ("passed", "lib.tb_with_vhdl_runner.fail"),
+            ("passed", "lib.tb_with_vhdl_runner.Test that timeouts"),
+            ("passed", "lib.tb_magic_paths"),
+            ("passed", "lib.tb_no_fail_after_cleanup"),
+            ("failed", "lib.tb_elab_fail"),
+
+            ("passed", "lib.tb_same_sim_all_pass.Test 1"),
+            ("passed", "lib.tb_same_sim_all_pass.Test 2"),
+            ("passed", "lib.tb_same_sim_all_pass.Test 3"),
+
+            ("passed", "lib.tb_same_sim_some_fail.Test 1"),
+            ("passed", "lib.tb_same_sim_some_fail.Test 2"),
+            ("passed", "lib.tb_same_sim_some_fail.Test 3"),
+
+            ("passed", "lib.tb_with_checks.Test passing check"),
+            ("passed", "lib.tb_with_checks.Test failing check"),
+            ("passed", "lib.tb_with_checks.Test non-stopping failing check")])
+
+        self.check(self.artificial_run,
+                   exit_code=0,
+                   clean=False,
+                   args=["--elaborate", "lib.tb_pass"])
+        check_report(self.report_file, [
+            ("passed", "lib.tb_pass"),])
+
+        self.check(self.artificial_run,
+                   exit_code=1,
+                   clean=False,
+                   args=["--elaborate", "lib.tb_elab_fail"])
+        check_report(self.report_file, [
+            ("failed", "lib.tb_elab_fail"),])
+
+
     def _test_artificial(self, persistent_sim):
         """
         Utility function to run and check the result of all test benches
@@ -58,6 +105,7 @@ class TestVunitArtificial(unittest.TestCase):
             ("failed", "lib.tb_with_vhdl_runner.Test that timeouts"),
             ("passed", "lib.tb_magic_paths"),
             ("passed", "lib.tb_no_fail_after_cleanup"),
+            ("failed", "lib.tb_elab_fail"),
 
             # @TODO verify that these are actually run in separate simulations
             ("passed", "lib.tb_same_sim_all_pass.Test 1"),
