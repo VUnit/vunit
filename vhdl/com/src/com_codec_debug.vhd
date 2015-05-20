@@ -131,7 +131,7 @@ package body com_codec_pkg is
     constant code : string)
     return bit is
   begin
-    return bit'value(code);
+    return bit'value("'" & code & "'");
   end;
 
   function encode (
@@ -145,7 +145,7 @@ package body com_codec_pkg is
     constant code : string)
     return std_ulogic is
   begin
-    return std_ulogic'value(code);
+    return std_ulogic'value("'" & code & "'");
   end;
 
   function encode (
