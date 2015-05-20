@@ -22,5 +22,5 @@ begin
     vunit_finished <= true;
     wait;
   end process;
-  
+
 end architecture;

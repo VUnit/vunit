@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -30,7 +30,7 @@ architecture test_fixture of tb_check_relation is
   signal bit_0 : bit := '0';
   signal bit_1 : bit := '1';
 begin
-  
+
   test_runner : process
     type cash_t is record
       dollars : natural;
@@ -66,7 +66,7 @@ begin
     begin
       return integer'image(value);
     end function to_string;
-    
+
     variable pass : boolean;
     variable stat : checker_stat_t;
     variable check_relation_checker : checker_t;
@@ -74,7 +74,7 @@ begin
   begin
     test_runner_setup(runner, runner_cfg);
 
-    while test_suite loop    
+    while test_suite loop
       if run("Test that a true relation does not generate an error") then
         get_checker_stat(stat);
         check_relation(5 > 3);
@@ -84,7 +84,7 @@ begin
         counting_assert(pass, "Should return pass = true on passing check");
         verify_passed_checks(stat, 3);
 
-        get_checker_stat(check_relation_checker, stat);      
+        get_checker_stat(check_relation_checker, stat);
         check_relation(check_relation_checker, 5 > 3);
         check_relation(check_relation_checker, pass, 5 > 3);
         counting_assert(pass, "Should return pass = true on passing check");
@@ -150,7 +150,7 @@ begin
         verify_log_call(inc_count, "Relation cash > cash_t'((100,0)) failed! Left is $99.95. Right is $100.0.");
       end if;
     end loop;
-    
+
     get_and_print_test_result(stat);
     test_runner_cleanup(runner, stat);
     wait;

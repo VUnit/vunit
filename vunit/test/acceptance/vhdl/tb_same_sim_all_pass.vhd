@@ -12,7 +12,7 @@ use vunit_lib.run_pkg.all;
 entity tb_same_sim_all_pass is
   generic (
     runner_cfg : runner_cfg_t := runner_cfg_default);
-end entity; 
+end entity;
 
 architecture vunit_test_bench of tb_same_sim_all_pass is
 begin
@@ -23,7 +23,7 @@ begin
     while test_suite loop
       if run("Test 1") then
         wait for 10 ns;
-        report "Test 1";        
+        report "Test 1";
       elsif run("Test 2") then
         wait for 10 ns;
         report "Test 2";
@@ -32,7 +32,7 @@ begin
         report "Test 3";
       end if;
     end loop;
-    
+
     test_runner_cleanup(runner);
     wait;
   end process;

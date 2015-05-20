@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -24,7 +24,7 @@ entity tb_check_next is
     runner_cfg : runner_cfg_t := runner_cfg_default);
 end entity tb_check_next;
 
-architecture test_fixture of tb_check_next is 
+architecture test_fixture of tb_check_next is
   signal clk : std_logic := '0';
   signal one : std_logic := '1';
   signal zero : std_logic := '0';
@@ -56,7 +56,7 @@ begin
     end loop;
     wait;
   end process clock;
-  
+
   check_next_1 : check_next(clk,
                             check_next_en_1,
                             check_next_start_event_1,
@@ -89,7 +89,7 @@ begin
                             check_next_expr_5,
                             num_cks => 4,
                             allow_missing_start => false);
-  
+
   check_next_runner : process
     variable pass : boolean;
     variable stat : checker_stat_t;
@@ -170,19 +170,19 @@ begin
         wait for 1 ns;
         verify_passed_checks(check_next_checker5, stat, 1);
         verify_failed_checks(check_next_checker5, stat, 0);
-        
+
         get_checker_stat(check_next_checker5, stat);
         apply_sequence("0LH;1LH;0LH;0LH;0LL;0LH;0HH;0LH;0LH", clk, check_next_in_5);
         wait for 1 ns;
         verify_passed_checks(check_next_checker5, stat, 1);
         verify_failed_checks(check_next_checker5, stat, 0);
-        
+
         get_checker_stat(check_next_checker5, stat);
         apply_sequence("LLH;HLH;LLH;LLH;LLL;LLH;LHH;LLH;LLH", clk, check_next_in_5);
         wait for 1 ns;
         verify_passed_checks(check_next_checker5, stat, 1);
         verify_failed_checks(check_next_checker5, stat, 0);
-        
+
         get_checker_stat(check_next_checker5, stat);
         apply_sequence("XLH;HLH;LLH;LLH;LXX;LLH;LHH;LLH;LLH", clk, check_next_in_5);
         wait for 1 ns;
@@ -190,7 +190,7 @@ begin
         verify_failed_checks(check_next_checker5, stat, 1);
       end if;
     end loop;
-    
+
     get_and_print_test_result(stat);
     test_runner_cleanup(runner, stat);
     wait;

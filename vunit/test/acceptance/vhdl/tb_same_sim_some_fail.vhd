@@ -12,7 +12,7 @@ use vunit_lib.run_pkg.all;
 entity tb_same_sim_some_fail is
   generic (
     runner_cfg : runner_cfg_t := "");
-end entity; 
+end entity;
 
 architecture vunit_test_bench of tb_same_sim_some_fail is
 begin
@@ -23,7 +23,7 @@ begin
     while test_suite loop
       if run("Test 1") then
         wait for 10 ns;
-        report "Test 1";        
+        report "Test 1";
       elsif run("Test 2") then
         wait for 10 ns;
         report "Test 2";
@@ -33,7 +33,7 @@ begin
         report "Test 3";
       end if;
     end loop;
-    
+
     test_runner_cleanup(runner);
     wait;
   end process;

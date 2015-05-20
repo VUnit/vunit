@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.string_ops.all;
 use work.lang.all;
@@ -27,7 +27,7 @@ package dictionary is
     constant d   : frozen_dictionary_t;
     constant key : string)
     return boolean;
-  
+
 end package dictionary;
 
 package body dictionary is
@@ -40,18 +40,18 @@ package body dictionary is
   end;
 
   type dictionary_status_t is (valid_value, key_error, corrupt_dictionary);
-  
+
   procedure get (
     constant d     : in  frozen_dictionary_t;
     constant key   : in  string;
     variable value : inout line;
     variable status : out dictionary_status_t) is
-    variable key_value_pairs, key_value_pair : lines_t;    
+    variable key_value_pairs, key_value_pair : lines_t;
   begin
     if value /= null then
       deallocate(value);
     end if;
-    
+
     if len(d) = 0 then
       status := key_error;
       return;
@@ -73,7 +73,7 @@ package body dictionary is
       end if;
 
     end loop;
-                       
+
     status := key_error;
     return;
   end procedure get;
@@ -92,9 +92,9 @@ package body dictionary is
       check(false, "Key error! """ & key & """ wasn't found in """ & d & """.", level => failure);
       return "will return when log is mocked out during unit test.";
     end if;
-    
-  end;    
-  
+
+  end;
+
   impure function has_key (
     constant d   : frozen_dictionary_t;
     constant key : string)
@@ -105,5 +105,5 @@ package body dictionary is
     get(d, key, value, status);
     return status = valid_value;
   end;
-  
+
 end package body dictionary;

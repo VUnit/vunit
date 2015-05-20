@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 use std.textio.all;
 use work.run_types_pkg.all;
@@ -39,7 +39,7 @@ package run_special_types_pkg is
        return integer;
 
      procedure inc_active_test_case_index;
-     
+
      procedure set_test_suite_completed;
 
      impure function get_test_suite_completed
@@ -53,22 +53,22 @@ package run_special_types_pkg is
      procedure set_run_test_case (
        constant index : in positive;
        constant new_name  : in string);
-  
+
      impure function get_run_test_case (
        constant index : positive)
        return string;
 
      procedure set_running_test_case (
        constant new_name  : in string);
-  
+
      impure function get_running_test_case
        return string;
-     
+
      impure function get_num_of_run_test_cases
        return natural;
 
      procedure inc_num_of_run_test_cases;
-  
+
      procedure set_has_run_since_last_loop_check;
 
      procedure clear_has_run_since_last_loop_check;
@@ -110,9 +110,9 @@ package run_special_types_pkg is
 
      impure function get_cfg
        return runner_cfg_t;
-     
+
   end protected runner_t;
-      
+
 end package;
 
 package body run_special_types_pkg is
@@ -146,7 +146,7 @@ package body run_special_types_pkg is
        state.active_test_case_index := 1;
        state.test_suite_completed := false;
        state.test_suite_iteration := 0;
-       
+
        for i in state.run_test_cases'range loop
          if state.run_test_cases(i) /= null then
            deallocate(state.run_test_cases(i));
@@ -165,7 +165,7 @@ package body run_special_types_pkg is
        state.test_suite_exit_after_error := false;
        state.runner_cfg := (others => ' ');
        state.runner_cfg(runner_cfg_default'range) := runner_cfg_default;
-       
+
      end procedure init;
 
      procedure set_phase (
@@ -233,13 +233,13 @@ package body run_special_types_pkg is
      begin
        state.test_suite_completed := true;
      end;
-  
+
      impure function get_test_suite_completed
        return boolean is
      begin
        return state.test_suite_completed;
      end;
-  
+
      impure function get_test_suite_iteration
        return natural is
      begin
@@ -260,7 +260,7 @@ package body run_special_types_pkg is
        end if;
        write(state.run_test_cases(index), new_name);
      end;
-  
+
      impure function get_run_test_case (
        constant index : positive)
        return string is
@@ -270,7 +270,7 @@ package body run_special_types_pkg is
        else
          return "";
        end if;
-     end;  
+     end;
 
     procedure set_running_test_case (
       constant new_name  : in string) is
@@ -280,7 +280,7 @@ package body run_special_types_pkg is
       end if;
       write(state.running_test_case_v, new_name);
     end;
-  
+
     impure function get_running_test_case
       return string is
     begin
@@ -290,7 +290,7 @@ package body run_special_types_pkg is
         return "";
       end if;
     end;
-  
+
     impure function get_num_of_run_test_cases
       return natural is
     begin
@@ -328,7 +328,7 @@ package body run_special_types_pkg is
    begin
      state.run_all := new_value;
    end;
-  
+
     impure function get_run_all
       return boolean is
     begin
@@ -395,8 +395,7 @@ package body run_special_types_pkg is
     begin
       return state.runner_cfg;
     end;
-  
-  end protected body runner_t;
-  
-end package body run_special_types_pkg;
 
+  end protected body runner_t;
+
+end package body run_special_types_pkg;

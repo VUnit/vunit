@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -21,10 +21,10 @@ use work.test_count.all;
 
 entity tb_check_not_unknown is
   generic (
-    runner_cfg : runner_cfg_t := runner_cfg_default);    
+    runner_cfg : runner_cfg_t := runner_cfg_default);
 end entity tb_check_not_unknown;
 
-architecture test_fixture of tb_check_not_unknown is 
+architecture test_fixture of tb_check_not_unknown is
   signal clk : std_logic := '0';
   signal check_not_unknown_in_1, check_not_unknown_in_2, check_not_unknown_in_3 : std_logic_vector(8 downto 0) := (others => '0');
   signal check_not_unknown_in_4, check_not_unknown_in_5, check_not_unknown_in_6 : std_logic_vector(1 downto 0) := (others => '0');
@@ -43,7 +43,7 @@ architecture test_fixture of tb_check_not_unknown is
 
   shared variable check_not_unknown_checker, check_not_unknown_checker2, check_not_unknown_checker3 : checker_t;
   shared variable check_not_unknown_checker5, check_not_unknown_checker6 : checker_t;
-  
+
 begin
   clock: process is
   begin
@@ -60,19 +60,19 @@ begin
   check_not_unknown_4 : check_not_unknown(clk, en_4, expr_4);
   check_not_unknown_5 : check_not_unknown(check_not_unknown_checker5, clk, en_5, expr_5, active_clock_edge => falling_edge);
   check_not_unknown_6 : check_not_unknown(check_not_unknown_checker6, clk, en_6, expr_6);
-  
+
   check_not_unknown_runner : process
     variable pass : boolean;
-    variable stat : checker_stat_t;    
+    variable stat : checker_stat_t;
     variable test_expr : std_logic_vector(7 downto 0);
     constant metadata : std_logic_vector(1 to 5) := "UXZW-";
     constant not_unknowns : string(1 to 4) := "01LH";
     variable reversed_and_offset_expr : std_logic_vector(23 downto 16) := "10100101";
-    
+
     procedure test_concurrent_check (
       signal clk                        : in  std_logic;
       signal check_input                : out std_logic_vector;
-      variable checker : inout checker_t ;      
+      variable checker : inout checker_t ;
       constant level                    : in  log_level_t := error;
       constant active_rising_clock_edge : in  boolean := true) is
       variable test_expr : string(1 to check_input'length - 1);
@@ -83,7 +83,7 @@ begin
       get_checker_stat(checker, stat);
       for i in 1 to 4 loop
         test_expr := (others => not_unknowns(i));
-        apply_sequence(test_expr & "0" & test_expr & "1", clk, check_input, active_rising_clock_edge); 
+        apply_sequence(test_expr & "0" & test_expr & "1", clk, check_input, active_rising_clock_edge);
         wait until clock_edge(clk, active_rising_clock_edge);
       end loop;
       wait for 1 ns;
@@ -92,14 +92,14 @@ begin
       -- Values other than strong/weak zeros/ones should fail when en is high,
       -- pass otherwise
       for i in metadata'range loop
-        get_checker_stat(checker, stat);                  
+        get_checker_stat(checker, stat);
         test_expr := (others => std_logic'image(metadata(i))(2));
         apply_sequence(test_expr & "0" & test_expr & "L", clk, check_input, active_rising_clock_edge);
         wait until clock_edge(clk, active_rising_clock_edge);
         wait for 1 ns;
         verify_passed_checks(checker, stat, 0);
         verify_failed_checks(checker, stat, 0);
-        apply_sequence(test_expr & "1" & test_expr & "H", clk, check_input, active_rising_clock_edge); 
+        apply_sequence(test_expr & "1" & test_expr & "H", clk, check_input, active_rising_clock_edge);
         wait until clock_edge(clk, active_rising_clock_edge);
         wait for 1 ns;
         verify_log_call(set_count(get_count + 2), expected_level => level);
@@ -129,7 +129,7 @@ begin
         counting_assert(pass, "Should return pass = true on passing check");
         verify_passed_checks(stat, 7);
 
-        get_checker_stat(check_not_unknown_checker3, stat);      
+        get_checker_stat(check_not_unknown_checker3, stat);
         check_not_unknown(check_not_unknown_checker3, '0');
         check_not_unknown(check_not_unknown_checker3, '1');
         check_not_unknown(check_not_unknown_checker3, "10100101");
@@ -139,11 +139,11 @@ begin
       elsif run("Test should fail on all std logic values except zero and one") then
         for i in metadata'range loop
           test_expr := (others => metadata(i));
-          check_not_unknown(metadata(i));          
+          check_not_unknown(metadata(i));
           verify_log_call(inc_count);
           check_not_unknown(test_expr);
           verify_log_call(inc_count);
-          check_not_unknown(pass, metadata(i));          
+          check_not_unknown(pass, metadata(i));
           counting_assert(not pass, "Should return pass = false on failing check");
           verify_log_call(inc_count);
           check_not_unknown(pass, test_expr);
@@ -179,10 +179,10 @@ begin
       elsif run("Test should handle reversed and or offset expressions") then
         get_checker_stat(stat);
         check_not_unknown(reversed_and_offset_expr);
-        verify_passed_checks(stat, 1);      
+        verify_passed_checks(stat, 1);
       end if;
     end loop;
-    
+
     get_and_print_test_result(stat);
     test_runner_cleanup(runner, stat);
     wait;

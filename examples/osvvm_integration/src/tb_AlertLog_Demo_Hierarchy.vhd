@@ -76,7 +76,7 @@ entity tb_AlertLog_Demo_Hierarchy is
 end tb_AlertLog_Demo_Hierarchy;
 architecture hierarchy of tb_AlertLog_Demo_Hierarchy is
   signal Clk : std_logic := '0';
-  
+
 begin
 
   Clk <= not Clk after 10 ns;
@@ -87,7 +87,7 @@ begin
   Testbench_1 : block
     constant TB_AlertLogID : AlertLogIDType := GetAlertLogID("Testbench_1");
   begin
-    
+
     TbP0 : process
       variable ClkNum : integer := 0;
     begin
@@ -104,7 +104,7 @@ begin
       test_runner_setup(runner, runner_cfg);
 
       -- Uncomment this line to use a log file rather than OUTPUT
-      -- TranscriptOpen("./Demo_Hierarchy.txt") ;   
+      -- TranscriptOpen("./Demo_Hierarchy.txt") ;
 
       -- SetAlertStopCount(error, 0);
 
@@ -115,11 +115,11 @@ begin
       SetLogEnable(TempID, DEBUG, false);  -- turn off DEBUG messages in CPU
       SetLogEnable(TempID, INFO, true);    -- turn on INFO messages in CPU
 
-      -- Uncomment this line to justify alert and log reports  
-      -- SetAlertLogJustify ; 
+      -- Uncomment this line to justify alert and log reports
+      -- SetAlertLogJustify ;
 
       while test_suite loop
-        if run("Test failing alerts") then      
+        if run("Test failing alerts") then
           for i in 1 to 5 loop
             wait until Clk = '1';
             if i = 4 then SetLogEnable(DEBUG, false); end if;  -- DEBUG Mode OFF
@@ -136,7 +136,7 @@ begin
           AlertIf(false, "This should not fail");
         end if;
       end loop;
-      
+
       -- Report Alerts without expected errors
       ReportAlerts;
       TranscriptClose;
@@ -159,7 +159,7 @@ begin
       wait until Clk = '1';
       wait for 2 ns;
       -- Uncomment this line to and the simulation will stop here
-      -- Alert(TB_P2_ID, "Tb.P2.F Message 1 of 1", FAILURE) ; 
+      -- Alert(TB_P2_ID, "Tb.P2.F Message 1 of 1", FAILURE) ;
       wait;
     end process TbP2;
 
@@ -192,7 +192,7 @@ begin
         wait for 5 ns;
         Alert(CPU_P1_ID, "Cpu.P1.E Message " & to_string(i) & " of 5", error);
         Log (CPU_P1_ID, "Cpu.P1.D log   " & to_string(i) & " of 5", DEBUG);
-        Log (CPU_P1_ID, "Cpu.P1.F log   " & to_string(i) & " of 5", FINAL);  -- disabled      
+        Log (CPU_P1_ID, "Cpu.P1.F log   " & to_string(i) & " of 5", FINAL);  -- disabled
       end loop;
       wait;
     end process CpuP1;

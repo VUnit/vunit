@@ -22,11 +22,11 @@ package body common_pkg is
     variable stat : checker_stat_t := (0,0,0);
   begin
     -- OSVVM doesn't keep track of passing alerts other than failing alerts
-    -- that has been disabled. 
+    -- that has been disabled.
     stat.n_passed := GetDisabledAlertCount;
     stat.n_failed := GetEnabledAlertCount;
-    stat.n_checks := stat.n_passed + stat.n_failed; 
-    
+    stat.n_checks := stat.n_passed + stat.n_failed;
+
     return stat;
   end function get_alert_statistics;
 end package body common_pkg;

@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 use std.textio.all;
 
@@ -57,14 +57,14 @@ package body textio is
     external_name : line;
     open_kind : file_open_kind;
   end record;
-  
+
   shared variable file_open_call_args : file_open_call_args_internal_t := (false, null, read_mode);
   shared variable file_open_call_count : natural := 0;
   shared variable file_close_call_valid : boolean := false;
   shared variable file_close_call_count : natural := 0;
   shared variable writeline_call_args : writeline_call_args_t := (false, null);
   shared variable writeline_call_count : natural := 0;
-  
+
   impure function get_file_open_call_count
     return natural is
   begin
@@ -78,7 +78,7 @@ package body textio is
     args.open_kind := file_open_call_args.open_kind;
     args.valid := file_open_call_args.valid;
   end;
-  
+
   procedure std_file_open (
     variable status        : out file_open_status;
     file f                 : text;
@@ -120,7 +120,7 @@ package body textio is
   begin
     return writeline_call_count;
   end;
-  
+
   procedure get_writeline_call_args (
     variable args : out writeline_call_args_t) is
   begin
@@ -135,5 +135,5 @@ package body textio is
     writeline_call_args.l := l;
     writeline_call_args.valid := true;
   end std_writeline;
-  
+
 end textio;

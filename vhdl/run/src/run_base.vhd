@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 package body run_base_pkg is
   shared variable default_runner : runner_t;
@@ -13,7 +13,7 @@ package body run_base_pkg is
   begin
     default_runner.init;
   end;
-    
+
   procedure set_phase (
     constant new_phase  : in runner_phase_t) is
   begin
@@ -25,14 +25,14 @@ package body run_base_pkg is
   begin
     return default_runner.get_phase;
   end;
-  
+
   procedure set_test_case_name (
     constant index : in positive;
     constant new_name  : in string) is
   begin
     default_runner.set_test_case_name(index, new_name);
   end;
-  
+
   impure function get_test_case_name (
     constant index : positive)
     return string  is
@@ -89,14 +89,14 @@ package body run_base_pkg is
   begin
     default_runner.inc_test_suite_iteration;
   end;
- 
+
   procedure set_run_test_case (
     constant index : in positive;
     constant new_name  : in string) is
   begin
     default_runner.set_run_test_case(index, new_name);
   end;
-  
+
   impure function get_run_test_case (
     constant index : positive)
     return string is
@@ -109,7 +109,7 @@ package body run_base_pkg is
   begin
     default_runner.set_running_test_case(new_name);
   end;
-  
+
   impure function get_running_test_case
     return string is
   begin
@@ -153,13 +153,13 @@ package body run_base_pkg is
   begin
     default_runner.set_run_all(new_value);
   end;
-  
+
   impure function get_run_all
     return boolean is
   begin
     return default_runner.get_run_all;
   end;
-  
+
   impure function get_test_case_iteration
     return natural is
   begin
@@ -221,4 +221,3 @@ package body run_base_pkg is
   end;
 
 end package body run_base_pkg;
-

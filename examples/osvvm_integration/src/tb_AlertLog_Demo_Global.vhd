@@ -73,7 +73,7 @@ entity tb_AlertLog_Demo_Global is
 end tb_AlertLog_Demo_Global;
 architecture hierarchy of tb_AlertLog_Demo_Global is
   signal Clk : std_logic := '0';
-  
+
 begin
 
   Clk <= not Clk after 10 ns;
@@ -83,7 +83,7 @@ begin
   -- \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   Testbench_1 : block
   begin
-    
+
     TbP0 : process
       variable ClkNum : integer := 0;
     begin
@@ -98,7 +98,7 @@ begin
       test_runner_setup(runner, runner_cfg);
 
       -- Uncomment this line to use a log file rather than OUTPUT
-      -- TranscriptOpen("./Demo_Global.txt") ;   
+      -- TranscriptOpen("./Demo_Global.txt") ;
 
       -- SetAlertStopCount(error, 0);
 
@@ -106,7 +106,7 @@ begin
       wait for 0 ns;              -- make sure all processes have elaborated
       SetLogEnable(DEBUG, true);  -- Enable DEBUG Messages for all levels of the hierarchy
 
-      -- Uncomment this line to justify alert and log reports  
+      -- Uncomment this line to justify alert and log reports
       -- SetAlertLogJustify ;
 
       while test_suite loop
@@ -127,7 +127,7 @@ begin
           AlertIf(false, "This should not fail");
         end if;
       end loop;
-      
+
       ReportAlerts;
       TranscriptClose;
 
@@ -148,7 +148,7 @@ begin
       wait until Clk = '1';
       wait for 2 ns;
       -- Uncomment this line to and the simulation will stop here
-      -- Alert("Tb.P2.F Message 1 of 1", FAILURE) ; 
+      -- Alert("Tb.P2.F Message 1 of 1", FAILURE) ;
       wait;
     end process TbP2;
 
@@ -178,7 +178,7 @@ begin
         wait for 5 ns;
         Alert("Cpu.P1.E Message " & to_string(i) & " of 5", error);
         Log ("Cpu.P1.D log   " & to_string(i) & " of 5", DEBUG);
-        Log ("Cpu.P1.F log   " & to_string(i) & " of 5", FINAL);  -- enabled by Uart_1      
+        Log ("Cpu.P1.F log   " & to_string(i) & " of 5", FINAL);  -- enabled by Uart_1
       end loop;
       wait;
     end process CpuP1;

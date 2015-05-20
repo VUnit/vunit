@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
 use vunit_lib.log_types_pkg.all;
@@ -17,7 +17,7 @@ architecture test of logging_example is
   signal enable_sensor_clusters : boolean := false;
   procedure core_dump(
     line_num : natural := 0;
-    file_name : string := "") is 
+    file_name : string := "") is
   begin
     debug(temperature_logger, "Sensor core dump", line_num => line_num, file_name => file_name);
     debug(temperature_logger, "Internal state = sensor_error", line_num => line_num, file_name => file_name);
@@ -31,7 +31,7 @@ begin
     info("Sensor 2 = y", sensor_cluster1'path_name & "sensor2");
     wait;
   end process sensor_cluster1;
-  
+
   sensor_cluster2: process is
   begin
     wait until enable_sensor_clusters;
@@ -111,7 +111,7 @@ begin
     wait for 1 ns;
     logger_init(display_format => level);
     info("Only logs from sensor_cluster2 should be displayed");
-    
+
     wait;
   end process example_process;
 

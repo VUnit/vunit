@@ -7,8 +7,8 @@
 entity tb_no_fail_on_warning is
 end entity;
 
-architecture vunit_test_bench of tb_no_fail_on_warning is  
-  signal vunit_finished : boolean := false;  
+architecture vunit_test_bench of tb_no_fail_on_warning is
+  signal vunit_finished : boolean := false;
 begin
   test_runner : process
   begin

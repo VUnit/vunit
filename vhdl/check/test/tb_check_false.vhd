@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -21,10 +21,10 @@ use work.test_count.all;
 
 entity tb_check_false is
   generic (
-    runner_cfg : runner_cfg_t := runner_cfg_default);    
+    runner_cfg : runner_cfg_t := runner_cfg_default);
 end entity tb_check_false;
 
-architecture test_fixture of tb_check_false is 
+architecture test_fixture of tb_check_false is
   signal clk : std_logic := '0';
   signal check_false_in_1, check_false_in_2, check_false_in_3, check_false_in_4 : std_logic := '0';
   signal check_false_en_1, check_false_en_2, check_false_en_3, check_false_en_4 : std_logic := '1';
@@ -32,7 +32,7 @@ architecture test_fixture of tb_check_false is
   signal zero : std_logic := '0';
 
   shared variable check_false_checker, check_false_checker2, check_false_checker3, check_false_checker4  : checker_t;
-  
+
 begin
   clock: process is
   begin
@@ -42,20 +42,20 @@ begin
     end loop;
     wait;
   end process clock;
-  
+
   check_false_1 : check_false(clk, check_false_en_1, check_false_in_1);
   check_false_2 : check_false(check_false_checker2, clk, check_false_en_2, check_false_in_2, active_clock_edge => falling_edge);
   check_false_3 : check_false(check_false_checker3, clk, check_false_en_3, check_false_in_3);
   check_false_4 : check_false(check_false_checker4, clk, check_false_en_4, check_false_in_4);
-  
+
   check_false_runner : process
     variable pass : boolean;
     variable stat : checker_stat_t;
-    
+
     procedure test_concurrent_check (
       signal clk                        : in  std_logic;
       signal check_input                : out std_logic;
-      variable checker : inout checker_t ;      
+      variable checker : inout checker_t ;
       constant level                    : in  log_level_t := error;
       constant active_rising_clock_edge : in  boolean := true) is
     begin
@@ -63,16 +63,16 @@ begin
       -- generated on the correct clock edge. No log on low.
       wait until clock_edge(clk, active_rising_clock_edge);
       wait for 1 ns;
-      get_checker_stat(checker, stat);                  
-      apply_sequence("1", clk, check_input, active_rising_clock_edge); 
+      get_checker_stat(checker, stat);
+      apply_sequence("1", clk, check_input, active_rising_clock_edge);
       wait until clock_edge(clk, not active_rising_clock_edge);
       wait for 1 ns;
       verify_passed_checks(checker, stat, 0);
       wait until clock_edge(clk, active_rising_clock_edge);
       wait for 1 ns;
-      verify_log_call(inc_count, expected_level => level);    
-      get_checker_stat(checker, stat);            
-      apply_sequence("0", clk, check_input, active_rising_clock_edge); 
+      verify_log_call(inc_count, expected_level => level);
+      get_checker_stat(checker, stat);
+      apply_sequence("0", clk, check_input, active_rising_clock_edge);
       wait until clock_edge(clk, active_rising_clock_edge);
       wait for 1 ns;
       verify_passed_checks(checker, stat, 1);
@@ -82,22 +82,22 @@ begin
     custom_checker_init_from_scratch(check_false_checker3, default_level => info);
     test_runner_setup(runner, runner_cfg);
 
-    while test_suite loop    
+    while test_suite loop
       if run("Test should fail on true and logic 1 inputs to sequential checks") then
         check_false(true);
-        verify_log_call(inc_count);           
+        verify_log_call(inc_count);
         check_false(pass, true);
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count);     
+        verify_log_call(inc_count);
         pass := check_false(true);
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count);     
+        verify_log_call(inc_count);
 
         check_false(check_false_checker,true);
-        verify_log_call(inc_count);     
+        verify_log_call(inc_count);
         check_false(check_false_checker,pass, true);
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count);     
+        verify_log_call(inc_count);
       elsif run("Test should pass on false and logic 0 inputs to sequential checks") then
         get_checker_stat(stat);
         check_false(false);
@@ -107,7 +107,7 @@ begin
         counting_assert(pass, "Should return pass = true on passing check");
         verify_passed_checks(stat, 3);
 
-        get_checker_stat(check_false_checker, stat);      
+        get_checker_stat(check_false_checker, stat);
         check_false(check_false_checker,false);
         check_false(check_false_checker,pass, false);
         counting_assert(pass, "Should return pass = true on passing check");
@@ -134,23 +134,23 @@ begin
         wait for 1 ns;
         get_checker_stat(stat);
         check_false_en_1 <= '0';
-        apply_sequence("10", clk, check_false_in_1); 
+        apply_sequence("10", clk, check_false_in_1);
         check_false_en_1 <= '1';
         wait until rising_edge(clk);
         check_false_en_1 <= 'L';
-        apply_sequence("10", clk, check_false_in_1); 
+        apply_sequence("10", clk, check_false_in_1);
         check_false_en_1 <= 'H';
         wait until rising_edge(clk);
         check_false_en_1 <= 'X';
-        apply_sequence("10", clk, check_false_in_1); 
+        apply_sequence("10", clk, check_false_in_1);
         check_false_en_1 <= '1';
         wait until rising_edge(clk);
         wait for 1 ns;
         verify_passed_checks(stat, 3);
-        verify_failed_checks(stat, 0);           
+        verify_failed_checks(stat, 0);
       end if;
     end loop;
-    
+
     get_and_print_test_result(stat);
     test_runner_cleanup(runner, stat);
     wait;

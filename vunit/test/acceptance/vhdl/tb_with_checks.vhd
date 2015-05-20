@@ -16,7 +16,7 @@ use vunit_lib.log_types_pkg.all;
 entity tb_with_checks is
   generic (
     runner_cfg : runner_cfg_t);
-end entity; 
+end entity;
 
 architecture vunit_test_bench of tb_with_checks is
 begin
@@ -25,7 +25,7 @@ begin
     variable pass : boolean;
   begin
     test_runner_setup(runner, runner_cfg);
-    
+
     while test_suite loop
       if run("Test passing check") then
         wait for 10 ns;
@@ -41,7 +41,7 @@ begin
 
     get_checker_stat(stat);
     info("Result:" & LF & to_string(stat));
-    
+
     test_runner_cleanup(runner);
     wait;
   end process;

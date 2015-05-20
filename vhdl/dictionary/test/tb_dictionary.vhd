@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
 use vunit_lib.log_special_types_pkg.all;
@@ -60,9 +60,9 @@ begin
         get_log_call_args(args);
         check(c, args.level = failure, "Expected the error call to be on failure level.");
       elsif run("Test getting an existing key from a frozen dictionary") then
-        check(c, get(test_dict, "input path") = "c:\ying\yang", "Expected ""c:\ying\yang"" when getting input path key from test dictionary (got """ & get(test_dict, "input path") & """)."); 
-        check(c, get(test_dict, "output path") = "c:\foo\bar", "Expected ""c:\foo\bar"" when getting ""output path"" key from test dictionary (got """ & get(test_dict, "input path") & """)."); 
-        check(c, get(test_dict, " output path ") = "c:\foo\bar", "Expected ""c:\foo\bar"" when getting "" output path "" key from test dictionary (got """ & get(test_dict, "input path") & """)."); 
+        check(c, get(test_dict, "input path") = "c:\ying\yang", "Expected ""c:\ying\yang"" when getting input path key from test dictionary (got """ & get(test_dict, "input path") & """).");
+        check(c, get(test_dict, "output path") = "c:\foo\bar", "Expected ""c:\foo\bar"" when getting ""output path"" key from test dictionary (got """ & get(test_dict, "input path") & """).");
+        check(c, get(test_dict, " output path ") = "c:\foo\bar", "Expected ""c:\foo\bar"" when getting "" output path "" key from test dictionary (got """ & get(test_dict, "input path") & """).");
       elsif run("Test that a corrupted directory results in an assertion") then
         log_call_count := get_log_call_count;
         write(value, get(corrupt_dict, "input path"));

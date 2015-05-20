@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -39,7 +39,7 @@ package body test_types is
     begin
       return count(index);
     end;
-  
+
     impure function set(
       constant index : in natural;
       constant value : in natural)
@@ -48,7 +48,7 @@ package body test_types is
       count(index) := value;
       return count(index);
     end;
-  
+
     impure function inc(
       constant index : in natural)
       return natural is
@@ -56,13 +56,13 @@ package body test_types is
       count(index) := count(index) + 1;
       return count(index);
     end;
-  
+
     procedure inc(
       constant index : in natural) is
     begin
       count(index) := count(index) + 1;
     end;
-  
+
     procedure reset(
       constant index : in natural) is
     begin

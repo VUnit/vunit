@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -29,7 +29,7 @@ begin
   begin
     if rising_edge(clk) then
       q <= d;
-      
+
       logger_init("foo");
       get_logger_cfg(logger_cfg);
       get_logger_cfg(logger_cfg_export);
@@ -47,7 +47,7 @@ begin
       pass_source("foo", (display_handler, file_handler), filter);
       remove_filter(filter);
       rename_level(info_high1, "important info");
-      
+
       info("Hello World");
       log("Hello World");
       verbose_high2("Hello World");

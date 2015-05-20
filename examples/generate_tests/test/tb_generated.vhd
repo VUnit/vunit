@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 use std.textio.all;
 
@@ -23,7 +23,7 @@ begin
   main : process
    file fwrite : text;
    variable l : line;
-  begin    
+  begin
     test_runner_setup(runner, runner_cfg);
     file_open(fwrite, output_path & "/" & "generics.txt", write_mode);
     write(l, message & ", " & to_string(data_width) & ", " & to_string(sign));

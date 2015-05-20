@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 use std.textio.all;
 use work.log_types_pkg.all;
@@ -19,7 +19,7 @@ use ieee.std_logic_1164.all;
 package run_types_pkg is
   constant max_locked_time_c : time := 1 ms;
   constant max_n_test_cases_c : natural := 1024;
-  constant unknown_num_of_test_cases_c : integer := integer'left;  
+  constant unknown_num_of_test_cases_c : integer := integer'left;
 
   subtype runner_cfg_t is frozen_dictionary_t;
   constant max_dictionary_length_c : positive := 10000;
@@ -49,14 +49,14 @@ package run_types_pkg is
     constant values : boolean_array_t)
     return boolean;
   subtype runner_flag_t is resolve_runner_flag boolean;
-  
+
   type runner_sync_t is record
     phase : runner_phase_t;
     locks : phase_locks_array_t(test_runner_setup to test_runner_cleanup);
     exit_without_errors : runner_flag_t;
   end record runner_sync_t;
 
-  type test_case_names_t is array (positive range <>) of line;  
+  type test_case_names_t is array (positive range <>) of line;
 
   type runner_state_t is record
     runner_phase : runner_phase_t;
@@ -134,4 +134,3 @@ package body run_types_pkg is
   end;
 
 end package body run_types_pkg;
-

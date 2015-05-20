@@ -33,7 +33,7 @@ package body check_pkg is
       return what_failed & " failed! Got " & got & ". Expected " & expected & ". " & msg;
     end if;
   end function failed_expectation_msg;
-  
+
   procedure checker_init (
     constant default_level  : in log_level_t  := error;
     constant default_src    : in string       := "";
@@ -56,7 +56,7 @@ package body check_pkg is
          append);
     -- pragma translate_on
   end checker_init;
-  
+
   procedure checker_init (
     variable checker       : inout checker_t;
     constant default_level : in    log_level_t := error;
@@ -76,12 +76,12 @@ package body check_pkg is
          true);
     -- pragma translate_on
   end;
-  
+
   procedure checker_init (
     constant default_level : in    log_level_t := error;
     variable logger        : inout logger_t) is
   begin
-    -- pragma translate_off    
+    -- pragma translate_off
     checker_init(default_checker,
          default_level,
          logger);
@@ -93,7 +93,7 @@ package body check_pkg is
     constant msg       : in string      := "Check failed!";
     constant level     : in log_level_t := dflt;
     constant line_num  : in natural     := 0;
-    constant file_name : in string      := "") is        
+    constant file_name : in string      := "") is
   begin
     base_check(default_checker, expr, msg, level, line_num, file_name);
   end;
@@ -105,7 +105,7 @@ package body check_pkg is
     constant msg       : in    string      := "Check failed!";
     constant level     : in    log_level_t := dflt;
     constant line_num  : in    natural     := 0;
-    constant file_name : in    string      := "") is            
+    constant file_name : in    string      := "") is
   begin
     base_check(checker, expr, msg, level, line_num, file_name);
     if (expr = false) then
@@ -113,7 +113,7 @@ package body check_pkg is
     else
       pass := true;
     end if;
-  end;  
+  end;
 
   procedure check(
     variable pass      : out boolean;
@@ -121,7 +121,7 @@ package body check_pkg is
     constant msg       : in  string      := "Check failed!";
     constant level     : in  log_level_t := dflt;
     constant line_num  : in  natural     := 0;
-    constant file_name : in  string      := "") is        
+    constant file_name : in  string      := "") is
   begin
     check(default_checker, pass, expr, msg, level, line_num, file_name);
   end;
@@ -191,9 +191,9 @@ package body check_pkg is
     variable result : line;
   begin
     write(result, "Checks: " & natural'image(stat.n_checks) & LF & "Passed: ");
-    write(result, stat.n_passed, right, natural'image(stat.n_checks)'length); 
+    write(result, stat.n_passed, right, natural'image(stat.n_checks)'length);
     write(result, LF & "Failed: ");
-    write(result, stat.n_failed, right, natural'image(stat.n_checks)'length); 
+    write(result, stat.n_failed, right, natural'image(stat.n_checks)'length);
 
     return result.all;
   end function to_string;
@@ -216,7 +216,7 @@ package body check_pkg is
   begin
     get_logger_cfg(default_checker, cfg);
   end;
-  
+
   procedure get_logger_cfg (
     variable cfg : inout logger_cfg_export_t) is
   begin
@@ -286,14 +286,14 @@ package body check_pkg is
     check(checker, true);
     -- pragma translate_on
   end;
-  
+
   procedure check_passed is
   begin
     -- pragma translate_off
     check(true);
     -- pragma translate_on
   end;
-  
+
   -----------------------------------------------------------------------------
   -- check_failed
   -----------------------------------------------------------------------------
@@ -308,7 +308,7 @@ package body check_pkg is
     check(checker, false, msg, level, line_num, file_name);
     -- pragma translate_on
   end;
-  
+
   procedure check_failed(
     constant msg       : in string      := "Check failed!";
     constant level     : in log_level_t := dflt;
@@ -400,12 +400,12 @@ package body check_pkg is
     constant level     : in  log_level_t := dflt;
     constant line_num  : in  natural     := 0;
     constant file_name : in  string      := "")
-    return boolean is  
+    return boolean is
     variable pass : boolean;
   begin
     -- pragma translate_off
     check_true(default_checker, pass, expr, msg, level, line_num, file_name);
-    -- pragma translate_on    
+    -- pragma translate_on
     return pass;
   end;
 
@@ -638,7 +638,7 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
-  
+
   -----------------------------------------------------------------------------
   -- check_stable
   -----------------------------------------------------------------------------
@@ -771,7 +771,7 @@ package body check_pkg is
     check(checker, pass, not is_x(expr), msg, level, line_num, file_name);
     -- pragma translate_on
   end;
-  
+
   procedure check_not_unknown(
     signal clock        : in std_logic;
     signal en           : in std_logic;
@@ -841,7 +841,7 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
-  
+
   procedure check_not_unknown(
     variable checker    : inout checker_t;
     signal clock        : in    std_logic;
@@ -872,7 +872,7 @@ package body check_pkg is
     check(checker, pass, not is_x(expr), msg, level, line_num, file_name);
     -- pragma translate_on
   end;
-  
+
   procedure check_not_unknown(
     signal clock        : in std_logic;
     signal en           : in std_logic;
@@ -942,7 +942,7 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
-  
+
   -----------------------------------------------------------------------------
   -- check_zero_one_hot
   -----------------------------------------------------------------------------
@@ -996,7 +996,7 @@ package body check_pkg is
     check(checker, pass, n_hot_in_valid_range(expr, 0, 1), msg, level, line_num, file_name);
     -- pragma translate_on
   end;
-  
+
   procedure check_zero_one_hot(
     signal clock        : in std_logic;
     signal en           : in std_logic;
@@ -1011,7 +1011,7 @@ package body check_pkg is
     check_zero_one_hot(default_checker, clock, en, expr, msg, level, active_clock_edge, line_num, file_name);
     -- pragma translate_on
   end;
-  
+
   procedure check_zero_one_hot(
     variable pass      : out boolean;
     constant expr      : in  std_logic_vector;
@@ -1039,7 +1039,7 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
-  
+
   procedure check_zero_one_hot(
     variable checker   : inout checker_t;
     constant expr      : in    std_logic_vector;
@@ -1053,7 +1053,7 @@ package body check_pkg is
     check_zero_one_hot(checker, pass, expr, msg, level, line_num, file_name);
     -- pragma translate_on
   end;
-  
+
   procedure check_zero_one_hot(
     constant expr      : in std_logic_vector;
     constant msg       : in string      := "Check failed!";
@@ -1101,7 +1101,7 @@ package body check_pkg is
     check(checker, pass, n_hot_in_valid_range(expr, 1, 1), msg, level, line_num, file_name);
     -- pragma translate_on
   end;
-  
+
   procedure check_one_hot(
     signal clock        : in std_logic;
     signal en           : in std_logic;
@@ -1116,7 +1116,7 @@ package body check_pkg is
     check_one_hot(default_checker, clock, en, expr, msg, level, active_clock_edge, line_num, file_name);
     -- pragma translate_on
   end;
-  
+
   procedure check_one_hot(
     variable pass      : out boolean;
     constant expr      : in  std_logic_vector;
@@ -1129,7 +1129,7 @@ package body check_pkg is
     check_one_hot(default_checker, pass, expr, msg, level, line_num, file_name);
     -- pragma translate_on
   end;
-  
+
   impure function check_one_hot(
     constant expr      : in  std_logic_vector;
     constant msg       : in  string      := "Check failed!";
@@ -1158,7 +1158,7 @@ package body check_pkg is
     check_one_hot(checker, pass, expr, msg, level, line_num, file_name);
     -- pragma translate_on
   end;
-  
+
   procedure check_one_hot(
     constant expr      : in std_logic_vector;
     constant msg       : in string      := "Check failed!";
@@ -1174,7 +1174,7 @@ package body check_pkg is
 
   -----------------------------------------------------------------------------
   -- check_next
-  -----------------------------------------------------------------------------  
+  -----------------------------------------------------------------------------
   procedure check_next(
     variable checker             : inout checker_t;
     signal clock                 : in    std_logic;
@@ -1225,7 +1225,7 @@ package body check_pkg is
         return true;
       end if;
     end function pending_check;
-    
+
   begin
     -- pragma translate_off
     loop
@@ -1292,11 +1292,11 @@ package body check_pkg is
     procedure find_new_and_update_existing_tracks (
       variable tracks : inout boolean_vector;
       constant event_sequence : in std_logic_vector) is
-      
+
       variable seq : std_logic_vector(0 to event_sequence'length - 1) := event_sequence;
 
       function active_tracks (
-        constant tracks : in boolean_vector)        
+        constant tracks : in boolean_vector)
         return boolean is
       begin
         for i in tracks'range loop
@@ -1309,7 +1309,7 @@ package body check_pkg is
     begin
       for i in tracks'reverse_range loop
         if to_x01(seq(i)) = 'X' then
-          check(checker, false, "Unknown event in sequence.", level, line_num, file_name);          
+          check(checker, false, "Unknown event in sequence.", level, line_num, file_name);
         elsif i = 0 then
           if (trigger_event = first_no_pipe) and active_tracks(tracks) then
             tracks(0) := false;
@@ -1336,7 +1336,7 @@ package body check_pkg is
     end procedure update_expectations_on_events_in_next_cycle;
 
     procedure verify_expected_events (
-      constant expected_events : in boolean_vector;      
+      constant expected_events : in boolean_vector;
       constant event_sequence : in std_logic_vector) is
       variable seq : std_logic_vector(0 to event_sequence'length - 1) := event_sequence;
     begin
@@ -1361,7 +1361,7 @@ package body check_pkg is
     end loop;
 
     wait;
-    -- pragma translate_on    
+    -- pragma translate_on
   end;
 
   procedure check_sequence(
@@ -1416,7 +1416,7 @@ package body check_pkg is
     elsif msg = "" then
       check(checker, pass, expr, auto_msg, level, line_num, file_name);
     else
-      check(checker, pass, expr, auto_msg & " " & msg, level, line_num, file_name);      
+      check(checker, pass, expr, auto_msg & " " & msg, level, line_num, file_name);
     end if;
     -- pragma translate_on
   end;
@@ -1623,7 +1623,7 @@ package body check_pkg is
   begin
     return left = unsigned(right);
   end function "=";
-  
+
   function "=" (
     constant left : std_logic_vector;
     constant right : unsigned)
@@ -1639,7 +1639,7 @@ package body check_pkg is
   begin
     return left = (right = '1');
   end function "=";
-  
+
   function "=" (
     constant left  : std_logic;
     constant right : boolean)
@@ -1670,7 +1670,7 @@ package body check_pkg is
     end loop;
     return ret_val;
   end function to_string;
-  
+
   function to_string (
     constant data : signed)
     return string is
@@ -1685,7 +1685,7 @@ package body check_pkg is
     end loop;
     return ret_val;
   end function to_string;
-  
+
   function to_string (
     constant data : std_logic_vector)
     return string is
@@ -1700,7 +1700,7 @@ package body check_pkg is
     end loop;
     return ret_val;
   end function to_string;
-  
+
   function to_string (
     constant data : std_logic)
     return string is
@@ -1709,7 +1709,7 @@ package body check_pkg is
     ret_val(1) := to_char(data);
     return ret_val;
   end function to_string;
-  
+
   function to_string (
     constant data : boolean)
     return string is
@@ -1720,7 +1720,7 @@ package body check_pkg is
       return "false";
     end if;
   end function to_string;
-  
+
   function to_string (
     constant data : integer)
     return string is
@@ -1762,7 +1762,7 @@ package body check_pkg is
   begin
     return to_unsigned(value, max(min_length, required_num_of_unsigned_bits(value)));
   end to_sufficient_unsigned;
-    
+
   function to_sufficient_signed (
     constant value      : integer;
     constant min_length : natural)
@@ -1775,7 +1775,7 @@ package body check_pkg is
     if value < 0 then
       for i in 0 to max_supported_num_of_bits_in_integer_implementation - 1 loop
         exit when min_value <= value;
-        min_value := min_value * 2;      
+        min_value := min_value * 2;
         required_length := required_length + 1;
       end loop;
 
@@ -1784,11 +1784,11 @@ package body check_pkg is
       return signed(to_unsigned(natural(value), max(min_length, required_num_of_unsigned_bits(natural(value)) + 1)));
     end if;
   end to_sufficient_signed;
-    
+
   procedure check_equal(
     constant got             : in unsigned;
     constant expected        : in unsigned;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -1803,7 +1803,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in unsigned;
     constant expected        : in unsigned;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -1818,7 +1818,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in unsigned;
     constant expected        : in unsigned;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -1834,7 +1834,7 @@ package body check_pkg is
     variable checker         : inout checker_t;
     constant got             : in unsigned;
     constant expected        : in unsigned;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -1848,7 +1848,7 @@ package body check_pkg is
   impure function check_equal(
     constant got             : in unsigned;
     constant expected        : in unsigned;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
@@ -1860,11 +1860,11 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
-  
+
   procedure check_equal(
     constant got             : in unsigned;
     constant expected        : in natural;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -1879,7 +1879,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in unsigned;
     constant expected        : in natural;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -1894,7 +1894,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in unsigned;
     constant expected        : in natural;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -1910,7 +1910,7 @@ package body check_pkg is
     variable checker         : inout checker_t;
     constant got             : in unsigned;
     constant expected        : in natural;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -1924,7 +1924,7 @@ package body check_pkg is
   impure function check_equal(
     constant got             : in unsigned;
     constant expected        : in natural;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
@@ -1936,11 +1936,11 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
-  
+
   procedure check_equal(
     constant got             : in natural;
     constant expected        : in unsigned;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -1955,7 +1955,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in natural;
     constant expected        : in unsigned;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -1970,7 +1970,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in natural;
     constant expected        : in unsigned;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -1986,7 +1986,7 @@ package body check_pkg is
     variable checker         : inout checker_t;
     constant got             : in natural;
     constant expected        : in unsigned;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2000,7 +2000,7 @@ package body check_pkg is
   impure function check_equal(
     constant got             : in natural;
     constant expected        : in unsigned;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
@@ -2012,11 +2012,11 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
-  
+
   procedure check_equal(
     constant got             : in unsigned;
     constant expected        : in std_logic_vector;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2031,7 +2031,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in unsigned;
     constant expected        : in std_logic_vector;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2046,7 +2046,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in unsigned;
     constant expected        : in std_logic_vector;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2062,7 +2062,7 @@ package body check_pkg is
     variable checker         : inout checker_t;
     constant got             : in unsigned;
     constant expected        : in std_logic_vector;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2076,7 +2076,7 @@ package body check_pkg is
   impure function check_equal(
     constant got             : in unsigned;
     constant expected        : in std_logic_vector;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
@@ -2088,11 +2088,11 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
-  
+
   procedure check_equal(
     constant got             : in std_logic_vector;
     constant expected        : in unsigned;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2107,7 +2107,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in std_logic_vector;
     constant expected        : in unsigned;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2122,7 +2122,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in std_logic_vector;
     constant expected        : in unsigned;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2138,7 +2138,7 @@ package body check_pkg is
     variable checker         : inout checker_t;
     constant got             : in std_logic_vector;
     constant expected        : in unsigned;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2152,7 +2152,7 @@ package body check_pkg is
   impure function check_equal(
     constant got             : in std_logic_vector;
     constant expected        : in unsigned;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
@@ -2164,11 +2164,11 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
-  
+
   procedure check_equal(
     constant got             : in std_logic_vector;
     constant expected        : in std_logic_vector;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2183,7 +2183,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in std_logic_vector;
     constant expected        : in std_logic_vector;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2198,7 +2198,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in std_logic_vector;
     constant expected        : in std_logic_vector;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2214,7 +2214,7 @@ package body check_pkg is
     variable checker         : inout checker_t;
     constant got             : in std_logic_vector;
     constant expected        : in std_logic_vector;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2228,7 +2228,7 @@ package body check_pkg is
   impure function check_equal(
     constant got             : in std_logic_vector;
     constant expected        : in std_logic_vector;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
@@ -2240,11 +2240,11 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
-  
+
   procedure check_equal(
     constant got             : in signed;
     constant expected        : in signed;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2259,7 +2259,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in signed;
     constant expected        : in signed;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2274,7 +2274,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in signed;
     constant expected        : in signed;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2290,7 +2290,7 @@ package body check_pkg is
     variable checker         : inout checker_t;
     constant got             : in signed;
     constant expected        : in signed;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2304,7 +2304,7 @@ package body check_pkg is
   impure function check_equal(
     constant got             : in signed;
     constant expected        : in signed;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
@@ -2316,11 +2316,11 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
-  
+
   procedure check_equal(
     constant got             : in signed;
     constant expected        : in integer;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2335,7 +2335,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in signed;
     constant expected        : in integer;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2350,7 +2350,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in signed;
     constant expected        : in integer;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2366,7 +2366,7 @@ package body check_pkg is
     variable checker         : inout checker_t;
     constant got             : in signed;
     constant expected        : in integer;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2380,7 +2380,7 @@ package body check_pkg is
   impure function check_equal(
     constant got             : in signed;
     constant expected        : in integer;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
@@ -2392,11 +2392,11 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
-  
+
   procedure check_equal(
     constant got             : in integer;
     constant expected        : in signed;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2411,7 +2411,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in integer;
     constant expected        : in signed;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2426,7 +2426,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in integer;
     constant expected        : in signed;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2442,7 +2442,7 @@ package body check_pkg is
     variable checker         : inout checker_t;
     constant got             : in integer;
     constant expected        : in signed;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2456,7 +2456,7 @@ package body check_pkg is
   impure function check_equal(
     constant got             : in integer;
     constant expected        : in signed;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
@@ -2468,11 +2468,11 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
-  
+
   procedure check_equal(
     constant got             : in integer;
     constant expected        : in integer;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2487,7 +2487,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in integer;
     constant expected        : in integer;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2502,7 +2502,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in integer;
     constant expected        : in integer;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2518,7 +2518,7 @@ package body check_pkg is
     variable checker         : inout checker_t;
     constant got             : in integer;
     constant expected        : in integer;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2532,7 +2532,7 @@ package body check_pkg is
   impure function check_equal(
     constant got             : in integer;
     constant expected        : in integer;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
@@ -2544,11 +2544,11 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
-  
+
   procedure check_equal(
     constant got             : in std_logic;
     constant expected        : in std_logic;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2563,7 +2563,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in std_logic;
     constant expected        : in std_logic;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2578,7 +2578,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in std_logic;
     constant expected        : in std_logic;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2594,7 +2594,7 @@ package body check_pkg is
     variable checker         : inout checker_t;
     constant got             : in std_logic;
     constant expected        : in std_logic;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2608,7 +2608,7 @@ package body check_pkg is
   impure function check_equal(
     constant got             : in std_logic;
     constant expected        : in std_logic;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
@@ -2620,11 +2620,11 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
-  
+
   procedure check_equal(
     constant got             : in std_logic;
     constant expected        : in boolean;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2639,7 +2639,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in std_logic;
     constant expected        : in boolean;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2654,7 +2654,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in std_logic;
     constant expected        : in boolean;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2670,7 +2670,7 @@ package body check_pkg is
     variable checker         : inout checker_t;
     constant got             : in std_logic;
     constant expected        : in boolean;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2684,7 +2684,7 @@ package body check_pkg is
   impure function check_equal(
     constant got             : in std_logic;
     constant expected        : in boolean;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
@@ -2696,11 +2696,11 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
-  
+
   procedure check_equal(
     constant got             : in boolean;
     constant expected        : in std_logic;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2715,7 +2715,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in boolean;
     constant expected        : in std_logic;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2730,7 +2730,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in boolean;
     constant expected        : in std_logic;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2746,7 +2746,7 @@ package body check_pkg is
     variable checker         : inout checker_t;
     constant got             : in boolean;
     constant expected        : in std_logic;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2760,7 +2760,7 @@ package body check_pkg is
   impure function check_equal(
     constant got             : in boolean;
     constant expected        : in std_logic;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
@@ -2772,11 +2772,11 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
-  
+
   procedure check_equal(
     constant got             : in boolean;
     constant expected        : in boolean;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2791,7 +2791,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in boolean;
     constant expected        : in boolean;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2806,7 +2806,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in boolean;
     constant expected        : in boolean;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2822,7 +2822,7 @@ package body check_pkg is
     variable checker         : inout checker_t;
     constant got             : in boolean;
     constant expected        : in boolean;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2836,7 +2836,7 @@ package body check_pkg is
   impure function check_equal(
     constant got             : in boolean;
     constant expected        : in boolean;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
@@ -2856,7 +2856,7 @@ package body check_pkg is
   procedure check_match(
     constant got             : in unsigned;
     constant expected        : in unsigned;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2871,7 +2871,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in unsigned;
     constant expected        : in unsigned;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2886,7 +2886,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in unsigned;
     constant expected        : in unsigned;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2902,7 +2902,7 @@ package body check_pkg is
     variable checker         : inout checker_t;
     constant got             : in unsigned;
     constant expected        : in unsigned;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2916,7 +2916,7 @@ package body check_pkg is
   impure function check_match(
     constant got             : in unsigned;
     constant expected        : in unsigned;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
@@ -2928,11 +2928,11 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
-  
+
   procedure check_match(
     constant got             : in std_logic_vector;
     constant expected        : in std_logic_vector;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2947,7 +2947,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in std_logic_vector;
     constant expected        : in std_logic_vector;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2962,7 +2962,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in std_logic_vector;
     constant expected        : in std_logic_vector;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2978,7 +2978,7 @@ package body check_pkg is
     variable checker         : inout checker_t;
     constant got             : in std_logic_vector;
     constant expected        : in std_logic_vector;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -2992,7 +2992,7 @@ package body check_pkg is
   impure function check_match(
     constant got             : in std_logic_vector;
     constant expected        : in std_logic_vector;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
@@ -3004,11 +3004,11 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
-  
+
   procedure check_match(
     constant got             : in signed;
     constant expected        : in signed;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -3023,7 +3023,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in signed;
     constant expected        : in signed;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -3038,7 +3038,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in signed;
     constant expected        : in signed;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -3054,7 +3054,7 @@ package body check_pkg is
     variable checker         : inout checker_t;
     constant got             : in signed;
     constant expected        : in signed;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -3068,7 +3068,7 @@ package body check_pkg is
   impure function check_match(
     constant got             : in signed;
     constant expected        : in signed;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
@@ -3080,11 +3080,11 @@ package body check_pkg is
     -- pragma translate_on
     return pass;
   end;
-  
+
   procedure check_match(
     constant got             : in std_logic;
     constant expected        : in std_logic;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -3099,7 +3099,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in std_logic;
     constant expected        : in std_logic;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -3114,7 +3114,7 @@ package body check_pkg is
     variable pass            : out boolean;
     constant got             : in std_logic;
     constant expected        : in std_logic;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -3130,7 +3130,7 @@ package body check_pkg is
     variable checker         : inout checker_t;
     constant got             : in std_logic;
     constant expected        : in std_logic;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -3144,7 +3144,7 @@ package body check_pkg is
   impure function check_match(
     constant got             : in std_logic;
     constant expected        : in std_logic;
-    constant msg             : in string := "";    
+    constant msg             : in string := "";
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
@@ -3155,7 +3155,7 @@ package body check_pkg is
     check_match(default_checker, pass, got, expected, msg, level, line_num, file_name);
     -- pragma translate_on
     return pass;
-  end;  
+  end;
 end package body check_pkg;
 
 

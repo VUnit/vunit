@@ -102,7 +102,7 @@ begin
   -- \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   Testbench_1 : block
   begin
-    
+
     TbP0 : process
       variable ClkNum : integer := 0;
     begin
@@ -135,7 +135,7 @@ begin
       -- configured like this. The verbose format means that some extra information
       -- like simulation time is logged with every entry
       logger_init(display_format => verbose, file_format => verbose, file_name => "./Vunit_Demo_Global.txt");
-      
+
       -- Uncomment this line to use a log file rather than OUTPUT
       -- TranscriptOpen("./Demo_Global.txt") ;
 
@@ -149,14 +149,14 @@ begin
       -- number of errors has not been identified as an important feature since it's
       -- hard to set a good number. Whether or not it is useful to continue
       -- after 3 errors depends entirely on type of errors you have.
-      
+
       -- SetAlertStopCount(error, 0);
 
       -- VUnit:
       -- Every logger has a default name, called the source, which is visible when a verbose format
       -- is used. The default name can be overridden when a log call is made
       logger_init(default_src => "AlertLog_Demo_Global", display_format => verbose, file_format => verbose, file_name => "./Vunit_Demo_Global.txt");
-      
+
       SetAlertLogName("AlertLog_Demo_Global");
       wait for 0 ns;              -- make sure all processes have elaborated
 
@@ -165,7 +165,7 @@ begin
       -- has been set to off. Disabling info level that is still disabled in
       -- the OSVVM code at this point.
       stop_level(info, display_handler, filter1);
-      
+
       SetLogEnable(DEBUG, true);  -- Enable DEBUG Messages for all levels of the hierarchy
 
       -- VUnit:
@@ -174,8 +174,8 @@ begin
       -- be justified when opened in a spreadsheet tool. Custom formats are
       -- also fairly easy to add since all formatting functions are located in a
       -- separate file (log_formatting.vhd)
-      
-      -- Uncomment this line to justify alert and log reports  
+
+      -- Uncomment this line to justify alert and log reports
       -- SetAlertLogJustify ;
 
       while test_suite loop
@@ -199,7 +199,7 @@ begin
             -- are also convenience procedures for all levels
             check_failed("Tb.P1.E alert " & to_string(i) & " of 5");
             debug("Tb.P1.D log   " & to_string(i) & " of 5");
-            
+
             Alert("Tb.P1.E alert " & to_string(i) & " of 5");  -- ERROR by default
             Log ("Tb.P1.D log   " & to_string(i) & " of 5", DEBUG);
           end loop;
@@ -217,7 +217,7 @@ begin
           -- hiding errors is dangerous and should be avoided. If you want to
           -- remove all errors from a test case it's also easier to insert a
           -- next statement in that if branch to skip to the next test case.
-          
+
           -- Report Alerts with expected errors expressed as a negative ExternalErrors value
           ReportAlerts(Name => "AlertLog_Demo_Hierarchy with expected errors", ExternalErrors => -(failure => 0, error => 20, warning => 15));
         elsif run("Test passing alerts") then
@@ -253,7 +253,7 @@ begin
         -- VUnit equivalents
         check_failed("Tb.P2.E alert " & to_string(i) & " of 5");
         info("Tb.P2.I log   " & to_string(i) & " of 5");
-        
+
         Alert("Tb.P2.E alert " & to_string(i) & " of 5", error);
         -- example of a log that is not enabled, so it does not print
         Log ("Tb.P2.I log   " & to_string(i) & " of 5", INFO);
@@ -261,7 +261,7 @@ begin
       wait until Clk = '1';
       wait for 2 ns;
       -- Uncomment this line to and the simulation will stop here
-      -- Alert("Tb.P2.F Message 1 of 1", FAILURE) ; 
+      -- Alert("Tb.P2.F Message 1 of 1", FAILURE) ;
       wait;
     end process TbP2;
 
@@ -297,10 +297,10 @@ begin
         check_failed("Cpu.P1.E Message " & to_string(i) & " of 5");
         debug("Cpu.P1.D log   " & to_string(i) & " of 5");
         final("Cpu.P1.F log   " & to_string(i) & " of 5");
-        
+
         Alert("Cpu.P1.E Message " & to_string(i) & " of 5", error);
         Log ("Cpu.P1.D log   " & to_string(i) & " of 5", DEBUG);
-        Log ("Cpu.P1.F log   " & to_string(i) & " of 5", FINAL);  -- enabled by Uart_1      
+        Log ("Cpu.P1.F log   " & to_string(i) & " of 5", FINAL);  -- enabled by Uart_1
       end loop;
       wait;
     end process CpuP1;
@@ -330,7 +330,7 @@ begin
     -- VUnit:
     -- All VUnit logs are enabled by default unless the display/file_format
     -- has been set to off.
-    
+
     -- Enable FINAL logs for every level
     -- Note it is expected that most control of alerts will occur only in the testbench block
     -- Note that this also turns on FINAL messages for CPU - see hierarchy for better control

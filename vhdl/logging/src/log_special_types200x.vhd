@@ -42,7 +42,7 @@ package log_special_types_pkg is
       constant src      : in  string             := "";
       constant pass     : in  boolean            := false;
       constant handlers : in  log_handler_vector_t);
-    
+
     procedure remove_filter (
       constant filter : in log_filter_t);
 
@@ -55,7 +55,7 @@ package log_special_types_pkg is
       constant src     : in string;
       constant handler : in log_handler_t)
       return boolean;
-    
+
   end protected logger_t;
 end package;
 
@@ -89,7 +89,7 @@ package body log_special_types_pkg is
 
     variable list : list_t(1 to 10);
     variable tail : natural := 0;
-      
+
     procedure append (
       constant filter : in log_filter_t) is
     begin
@@ -127,7 +127,7 @@ package body log_special_types_pkg is
 
   type global_sequence_number_t is protected body
     variable seq_num : natural := 0;
-                                             
+
     impure function next_num
       return natural is
     begin
@@ -140,7 +140,7 @@ package body log_special_types_pkg is
 
   type logger_t is protected body
     type level_names_t is array (log_level_t range <>) of line;
-                                    
+
     variable cfg : logger_cfg_t := (null, null, raw, off, false, failure, ',');
     variable filter_list : filter_list_t;
     variable id : natural := 0;
@@ -158,7 +158,7 @@ package body log_special_types_pkg is
       assert status = open_ok report "Failed opening " & cfg.log_file_name.all & " (" & file_open_status'image(status) & ")." severity failure;
       file_close(log_file);
     end;
-  
+
     procedure init (
       constant default_src          : in string     := "";
       constant file_name            : in string     := "log.csv";
@@ -193,15 +193,15 @@ package body log_special_types_pkg is
       end if;
       cfg.log_separator            := separator;
       open_log(append);
-      cfg.log_file_is_initialized  := true;      
+      cfg.log_file_is_initialized  := true;
     end init;
-  
+
   procedure log(msg          : string;
                 log_level        : log_level_t := info;
                 src          : string      := "";
                 line_num : in natural := 0;
                 file_name : in string := "") is
-    
+
     variable status  : file_open_status;
     variable l       : line;
     file log_file    : text;
@@ -213,14 +213,14 @@ package body log_special_types_pkg is
     variable selected_level_name : line;
   begin
     if selected_src /= null then
-      deallocate(selected_src);    
+      deallocate(selected_src);
     end if;
     if src /= "" then
       write(selected_src, src);
     elsif cfg.log_default_src = null then
       write(selected_src, string'(""));
     else
-      selected_src := cfg.log_default_src;      
+      selected_src := cfg.log_default_src;
     end if;
 
     if log_level = dflt then
@@ -236,7 +236,7 @@ package body log_special_types_pkg is
       pass_to_display := pass_filters(selected_level, "", display_handler);
       pass_to_file := pass_filters(selected_level, "", file_handler);
     end if;
- 
+
     if pass_to_display or pass_to_file then
       if (cfg.log_display_format = verbose_csv) or (cfg.log_file_format = verbose_csv) or
          (cfg.log_display_format = verbose) or (cfg.log_file_format = verbose) then
@@ -289,12 +289,12 @@ package body log_special_types_pkg is
   impure function get_logger_cfg
     return logger_cfg_export_t is
     variable cfg_export : logger_cfg_export_t;
-  begin 
+  begin
     if not cfg.log_file_is_initialized then
       cfg_export.log_file_is_initialized := false;
       return cfg_export;
     end if;
-    
+
     assert cfg.log_default_src'length <= cfg_export.log_default_src'length
       report "Default source name is more than " &
       natural'image(cfg_export.log_default_src'length) &
@@ -337,11 +337,11 @@ package body log_special_types_pkg is
     temp_filter.src(src'range) := src;
     temp_filter.src_length := src'length;
     temp_filter.handlers(1 to handlers'length) := handlers;
-    temp_filter.n_handlers := handlers'length;    
+    temp_filter.n_handlers := handlers'length;
     filter := temp_filter;
     filter_list.append(temp_filter);
   end;
-  
+
   procedure remove_filter (
     constant filter : in log_filter_t) is
   begin
@@ -382,7 +382,7 @@ package body log_special_types_pkg is
         exit when level_match;
       end loop;
 
-      source_match := (filter.src_length = 0);        
+      source_match := (filter.src_length = 0);
       if filter.src_length > 0 then
         if replace(filter.src, ':', '.')(1) /= '.' then
           if (filter.src(src'range) = src) and (filter.src_length = src'length) then
@@ -401,7 +401,7 @@ package body log_special_types_pkg is
       if (match and not filter.pass_filter) or (not match and filter.pass_filter) then
         pass := false;
       end if;
-      
+
       exit list_loop when pass = false;
 
     end loop;

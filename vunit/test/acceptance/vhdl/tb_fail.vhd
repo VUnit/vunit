@@ -7,8 +7,8 @@
 entity tb_fail is
 end entity;
 
-architecture vunit_test_bench of tb_fail is  
-  signal vunit_finished : boolean := false;  
+architecture vunit_test_bench of tb_fail is
+  signal vunit_finished : boolean := false;
 begin
   test_runner : process
   begin

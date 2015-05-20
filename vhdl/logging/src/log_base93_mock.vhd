@@ -22,7 +22,7 @@ package body log_base_pkg is
      error,
      (others => NUL),
      0,
-     (others => NUL));  
+     (others => NUL));
   shared variable logger_init_call_args : logger_init_call_args_t :=
     (false,
      ((others => NUL), 0, (others => NUL), 0, off, off, false, failure, ','),
@@ -32,8 +32,8 @@ package body log_base_pkg is
      off,
      failure,
      ',',
-     false);  
-  
+     false);
+
   shared variable log_call_count : natural := 0;
   shared variable logger_init_call_count : natural := 0;
 
@@ -42,7 +42,7 @@ package body log_base_pkg is
   begin
     return log_call_count;
   end;
-  
+
   impure function get_logger_init_call_count
     return natural is
   begin
@@ -110,7 +110,7 @@ package body log_base_pkg is
   begin
     assert index <= logger.log_filter_list_tail report "Index " & natural'image(index) & " is out of range 1 to " & natural'image(logger.log_filter_list_tail) & "." severity failure;
     assert index > 0 report "Index " & natural'image(index) & " is out of range 1 to " & natural'image(logger.log_filter_list_tail) & "." severity failure;
-    filter := logger.log_filter_list(index).filter;    
+    filter := logger.log_filter_list(index).filter;
   end procedure get;
 
   procedure open_log(
@@ -124,7 +124,7 @@ package body log_base_pkg is
     else
       file_open(status, log_file, logger.log_file_name.all, write_mode);
     end if;
-      assert status = open_ok report "Failed opening " & logger.log_file_name.all & " (" & file_open_status'image(status) & ")." severity failure;    
+      assert status = open_ok report "Failed opening " & logger.log_file_name.all & " (" & file_open_status'image(status) & ")." severity failure;
     file_close(log_file);
   end;
 
@@ -158,7 +158,7 @@ package body log_base_pkg is
       return;
     elsif (default_src(1 to 2) /= "__") and (default_src /= "Test Runner") then
       use_mock;
-      return;      
+      return;
     end if;
 
     if logger.log_default_src /= null then
@@ -187,11 +187,11 @@ package body log_base_pkg is
     logger.log_separator := separator;
     if logger.log_file_format /= off then
       open_log(logger, append);
-    end if;    
-    logger.log_file_is_initialized := true;    
+    end if;
+    logger.log_file_is_initialized := true;
     -- pragma translate_on
   end base_init;
-  
+
   procedure base_log(
     variable logger    : inout logger_t;
     constant msg       : in    string;
@@ -218,14 +218,14 @@ package body log_base_pkg is
         end loop;
 
         next list_loop when not match;
-        
+
         level_match := (filter.n_levels = 0);
         for l in 1 to filter.n_levels loop
           level_match := filter.levels(l) = level;
           exit when level_match;
         end loop;
 
-        source_match := (filter.src_length = 0);        
+        source_match := (filter.src_length = 0);
         if filter.src_length > 0 then
           if replace(filter.src, ':', '.')(1) /= '.' then
             if (filter.src(src'range) = src) and (filter.src_length = src'length) then
@@ -248,8 +248,8 @@ package body log_base_pkg is
         exit list_loop when ret_val = false;
       end loop;
       pass := ret_val;
-    end procedure pass_filters;    
-    
+    end procedure pass_filters;
+
     procedure use_mock is
     begin
       log_call_count := log_call_count + 1;
@@ -276,24 +276,24 @@ package body log_base_pkg is
     -- pragma translate_off
     base_get_logger_cfg(logger, cfg);
 
-    if cfg.log_default_src = null then    
+    if cfg.log_default_src = null then
       use_mock;
       return;
     elsif (cfg.log_default_src.all(1 to 2) /= "__") and
           (cfg.log_default_src.all /= "Test Runner") then
       use_mock;
-      return;      
+      return;
     end if;
-    
+
     if selected_src /= null then
-      deallocate(selected_src);    
+      deallocate(selected_src);
     end if;
     if src /= "" then
       write(selected_src, src);
     elsif logger.log_default_src = null then
       write(selected_src, string'(""));
     else
-      selected_src := logger.log_default_src;      
+      selected_src := logger.log_default_src;
     end if;
 
     if log_level = dflt then
@@ -310,7 +310,7 @@ package body log_base_pkg is
       pass_filters(logger, pass_to_file, selected_level, "", file_handler);
     end if;
 
-    if pass_to_display or pass_to_file then    
+    if pass_to_display or pass_to_file then
       if (logger.log_display_format = verbose_csv) or (logger.log_file_format = verbose_csv) or
          (logger.log_display_format = verbose) or (logger.log_file_format = verbose) then
         seq_num := get_seq_num;
@@ -356,8 +356,8 @@ package body log_base_pkg is
 
     if selected_level <= logger.log_stop_level then
       lang_report("", failure);
-    end if;    
-    -- pragma translate_on    
+    end if;
+    -- pragma translate_on
   end base_log;
 
   procedure base_get_logger_cfg (
@@ -394,14 +394,14 @@ package body log_base_pkg is
     cfg.log_separator := logger.log_separator;
     -- pragma translate_on
   end;
-  
+
   procedure base_add_filter (
     variable logger : inout logger_t;
     variable filter       : out log_filter_t;
     constant levels : in log_level_vector_t := null_log_level_vector;
     constant src : in string := "";
     constant pass               : in boolean := false;
-    constant handlers       : in log_handler_vector_t) is    
+    constant handlers       : in log_handler_vector_t) is
     variable temp_filter : log_filter_t;
   begin
     temp_filter.id := logger.log_filter_id;
@@ -415,7 +415,7 @@ package body log_base_pkg is
     temp_filter.handlers(1 to handlers'length) := handlers;
     temp_filter.n_handlers := handlers'length;
     filter := temp_filter;
-    append(logger, temp_filter);    
+    append(logger, temp_filter);
   end;
 
   procedure base_remove_filter (
@@ -436,7 +436,7 @@ package body log_base_pkg is
     if logger.log_level_names(level) /= null then
       deallocate(logger.log_level_names(level));
     end if;
-    write(logger.log_level_names(level), name);    
+    write(logger.log_level_names(level), name);
     -- pragma translate_on
   end;
 end package body log_base_pkg;

@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -22,10 +22,10 @@ entity uart_tx is
 
    -- AXI stream for input bytes
    tready : out std_logic := '0';
-   tvalid : in std_Logic; 
+   tvalid : in std_Logic;
    tdata : in std_logic_vector(7 downto 0));
 begin
-  -- pragma translate_off  
+  -- pragma translate_off
   check_stable(clk, check_enabled, tvalid, tready, tdata, "tdata must be stable until tready is active");
   check_stable(clk, check_enabled, tvalid, tready, tvalid, "tvalid must be active until tready is active");
   check_not_unknown(clk, check_enabled, tvalid, "tvalid must never be unknown");
@@ -37,7 +37,7 @@ begin
       debug("Sending " & to_string(to_integer(unsigned(tdata))));
     end if;
   end process traffic_logger;
-  -- pragma translate_on  
+  -- pragma translate_on
 end entity;
 
 architecture a of uart_tx is
@@ -73,14 +73,14 @@ begin
             cycles := 0;
           else
             cycles := cycles + 1;
-          end if;          
+          end if;
       end case;
 
       if state = idle then
         tready_int <= '1';
       else
-        tready_int <= '0';        
-      end if;      
+        tready_int <= '0';
+      end if;
     end if;
   end process;
 

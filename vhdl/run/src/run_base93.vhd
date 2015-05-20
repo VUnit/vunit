@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 package body run_base_pkg is
   shared variable default_runner : runner_t;
@@ -21,7 +21,7 @@ package body run_base_pkg is
     default_runner.active_test_case_index := 1;
     default_runner.test_suite_completed := false;
     default_runner.test_suite_iteration := 0;
-    
+
     for i in default_runner.run_test_cases'range loop
       if default_runner.run_test_cases(i) /= null then
         deallocate(default_runner.run_test_cases(i));
@@ -41,7 +41,7 @@ package body run_base_pkg is
     default_runner.runner_cfg := (others => ' ');
     default_runner.runner_cfg(runner_cfg_default'range) := runner_cfg_default;
   end;
-    
+
   procedure set_phase (
     constant new_phase  : in runner_phase_t) is
   begin
@@ -53,7 +53,7 @@ package body run_base_pkg is
   begin
     return default_runner.runner_phase;
   end;
-  
+
   procedure set_test_case_name (
     constant index : in positive;
     constant new_name  : in string) is
@@ -63,7 +63,7 @@ package body run_base_pkg is
     end if;
     write(default_runner.test_case_names(index), new_name);
   end;
-  
+
   impure function get_test_case_name (
     constant index : positive)
     return string  is
@@ -124,7 +124,7 @@ package body run_base_pkg is
   begin
     default_runner.test_suite_iteration := default_runner.test_suite_iteration + 1;
   end;
- 
+
   procedure set_run_test_case (
     constant index : in positive;
     constant new_name  : in string) is
@@ -134,7 +134,7 @@ package body run_base_pkg is
     end if;
     write(default_runner.run_test_cases(index), new_name);
   end;
-  
+
   impure function get_run_test_case (
     constant index : positive)
     return string is
@@ -154,7 +154,7 @@ package body run_base_pkg is
     end if;
     write(default_runner.running_test_case_v, new_name);
   end;
-  
+
   impure function get_running_test_case
     return string is
   begin
@@ -202,13 +202,13 @@ package body run_base_pkg is
   begin
     default_runner.run_all := new_value;
   end;
-  
+
   impure function get_run_all
     return boolean is
   begin
     return default_runner.run_all;
   end;
-  
+
   impure function get_test_case_iteration
     return natural is
   begin
@@ -269,6 +269,6 @@ package body run_base_pkg is
   begin
     return default_runner.runner_cfg;
   end;
-  
+
 end package body run_base_pkg;
 

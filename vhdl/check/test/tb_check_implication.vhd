@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -21,10 +21,10 @@ use work.test_count.all;
 
 entity tb_check_implication is
   generic (
-    runner_cfg : runner_cfg_t := runner_cfg_default);    
+    runner_cfg : runner_cfg_t := runner_cfg_default);
 end entity tb_check_implication;
 
-architecture test_fixture of tb_check_implication is 
+architecture test_fixture of tb_check_implication is
   signal clk : std_logic := '0';
   signal one : std_logic := '1';
   signal zero : std_logic := '0';
@@ -42,9 +42,9 @@ architecture test_fixture of tb_check_implication is
   alias antecedent_4 : std_logic is check_implication_in_4(1);
   alias consequent_4 : std_logic is check_implication_in_4(2);
   signal check_implication_en_1, check_implication_en_2, check_implication_en_3, check_implication_en_4 : std_logic := '1';
-  
+
   shared variable check_implication_checker, check_implication_checker2, check_implication_checker3, check_implication_checker4 : checker_t;
-  
+
 begin
   clock: process is
   begin
@@ -54,38 +54,38 @@ begin
     end loop;
     wait;
   end process clock;
-  
+
   check_implication_1 : check_implication(clk, check_implication_en_1, antecedent_1, consequent_1);
   check_implication_2 : check_implication(check_implication_checker2, clk, check_implication_en_2, antecedent_2, consequent_2, active_clock_edge => falling_edge);
   check_implication_3 : check_implication(check_implication_checker3, clk, check_implication_en_3, antecedent_3, consequent_3);
   check_implication_4 : check_implication(check_implication_checker4, clk, check_implication_en_4, antecedent_4, consequent_4);
-  
+
   check_implication_runner : process
     variable pass : boolean;
     type boolean_vector is array (natural range <>) of boolean;
     constant test_antecedents : boolean_vector(1 to 4) := (false, false, true, true);
     constant test_consequents : boolean_vector(1 to 4) := (false, true, false, true);
     constant test_implication_expected_result : boolean_vector(1 to 4) := (true, true, false, true);
-    variable stat : checker_stat_t;        
+    variable stat : checker_stat_t;
     constant metadata : std_logic_vector(1 to 7) := "UXZHLW-";
 
     procedure test_concurrent_check (
       signal clk                        : in  std_logic;
       signal check_input                : out std_logic_vector;
-      variable checker : inout checker_t ;      
+      variable checker : inout checker_t ;
       constant level                    : in  log_level_t := error;
       constant active_rising_clock_edge : in  boolean := true) is
     begin
       -- Verify all combinations of antecedent/consequent inputs
       wait until clock_edge(clk, active_rising_clock_edge);
       wait for 1 ns;
-      get_checker_stat(checker, stat);                  
+      get_checker_stat(checker, stat);
       apply_sequence("000110", clk, check_input, active_rising_clock_edge);
       wait for 1 ns;
       verify_passed_checks(checker, stat, 2);
       wait until clock_edge(clk, active_rising_clock_edge);
       wait for 1 ns;
-      verify_log_call(inc_count, expected_level => level);    
+      verify_log_call(inc_count, expected_level => level);
       apply_sequence("11", clk, check_input, active_rising_clock_edge);
       wait until clock_edge(clk, active_rising_clock_edge);
       wait for 1 ns;
@@ -102,7 +102,7 @@ begin
       else
         verify_log_call(inc_count);
       end if;
-      
+
     end verify_result;
 
   begin
@@ -123,7 +123,7 @@ begin
           get_checker_stat(stat);
           check_implication(pass, test_antecedents(i), test_consequents(i));
           verify_result(i, default_checker, stat);
-          
+
           get_checker_stat(stat);
           pass := check_implication(test_antecedents(i), test_consequents(i));
           verify_result(i, default_checker, stat);
@@ -142,7 +142,7 @@ begin
       elsif run("Test should handle weak known meta values as known values and others as unknowns") then
         wait until rising_edge(clk);
         wait for 1 ns;
-        get_checker_stat(check_implication_checker4, stat);                  
+        get_checker_stat(check_implication_checker4, stat);
         apply_sequence("000XLXH1HH00", clk, check_implication_in_4);
         wait for 1 ns;
         verify_passed_checks(check_implication_checker4, stat, 5);
@@ -172,11 +172,11 @@ begin
         check_implication_en_1 <= '1';
         wait until rising_edge(clk);
         wait for 1 ns;
-        verify_passed_checks(stat, 3);     
-        verify_failed_checks(stat, 0);     
+        verify_passed_checks(stat, 3);
+        verify_failed_checks(stat, 0);
       end if;
     end loop;
-    
+
     get_and_print_test_result(stat);
     test_runner_cleanup(runner, stat);
     wait;

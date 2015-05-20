@@ -38,7 +38,7 @@ package check_pkg is
     variable checker       : inout checker_t;
     constant default_level : in    log_level_t := error;
     variable logger        : inout logger_t);
-  
+
   procedure checker_init (
     constant default_level : in    log_level_t := error;
     variable logger        : inout logger_t);
@@ -53,13 +53,13 @@ package check_pkg is
     constant level     : in    log_level_t := dflt;
     constant line_num  : in    natural     := 0;
     constant file_name : in    string      := "");
-  
+
   procedure check(
     constant expr      : in boolean;
     constant msg       : in string      := "Check failed!";
     constant level     : in log_level_t := dflt;
     constant line_num  : in natural     := 0;
-    constant file_name : in string      := "");        
+    constant file_name : in string      := "");
 
   procedure check(
     variable pass      : out boolean;
@@ -68,7 +68,7 @@ package check_pkg is
     constant level     : in  log_level_t := dflt;
     constant line_num  : in  natural     := 0;
     constant file_name : in  string      := "");
-  
+
   impure function check(
     constant expr      : in  boolean;
     constant msg       : in  string      := "Check failed!";
@@ -76,13 +76,13 @@ package check_pkg is
     constant line_num  : in  natural     := 0;
     constant file_name : in  string      := "")
     return boolean;
-  
+
   procedure get_checker_stat (
     variable stat : out checker_stat_t);
   alias get_checker_stat is base_get_checker_stat[checker_t, checker_stat_t];
   impure function get_checker_stat
     return checker_stat_t;
-  
+
   procedure reset_checker_stat;
   alias reset_checker_stat is base_reset_checker_stat[checker_t];
 
@@ -91,7 +91,7 @@ package check_pkg is
   alias get_checker_cfg is base_get_checker_cfg[checker_t, checker_cfg_t];
 
   procedure get_checker_cfg (
-    variable cfg : inout checker_cfg_export_t);  
+    variable cfg : inout checker_cfg_export_t);
   alias get_checker_cfg is base_get_checker_cfg[checker_t, checker_cfg_export_t];
 
   procedure get_logger_cfg (
@@ -107,7 +107,7 @@ package check_pkg is
   alias checker_found_errors is base_checker_found_errors[checker_t, boolean];
   impure function checker_found_errors
     return boolean;
-  
+
   function "+" (
     constant stat1 : checker_stat_t;
     constant stat2 : checker_stat_t)
@@ -118,7 +118,7 @@ package check_pkg is
     constant stat2 : checker_stat_t)
     return checker_stat_t;
 
-  -- pragma translate_off  
+  -- pragma translate_off
   function to_string (
     constant stat : checker_stat_t)
     return string;
@@ -129,9 +129,9 @@ package check_pkg is
   -----------------------------------------------------------------------------
   procedure check_passed(
     variable checker   : inout checker_t);
-  
+
   procedure check_passed;
-  
+
   -----------------------------------------------------------------------------
   -- check_failed
   -----------------------------------------------------------------------------
@@ -141,13 +141,13 @@ package check_pkg is
     constant level     : in    log_level_t := dflt;
     constant line_num  : in    natural     := 0;
     constant file_name : in    string      := "");
-  
+
   procedure check_failed(
     constant msg       : in string      := "Check failed!";
     constant level     : in log_level_t := dflt;
     constant line_num  : in natural     := 0;
-    constant file_name : in string      := "");        
-  
+    constant file_name : in string      := "");
+
   -----------------------------------------------------------------------------
   -- check_true
   -----------------------------------------------------------------------------
@@ -201,7 +201,7 @@ package check_pkg is
     constant line_num  : in  natural     := 0;
     constant file_name : in  string      := "")
     return boolean;
-  
+
   procedure check_true(
     signal clock        : in std_logic;
     signal en           : in std_logic;
@@ -265,7 +265,7 @@ package check_pkg is
     constant line_num  : in  natural     := 0;
     constant file_name : in  string      := "")
     return boolean;
-  
+
   procedure check_false(
     signal clock        : in std_logic;
     signal en           : in std_logic;
@@ -346,7 +346,7 @@ package check_pkg is
     constant line_num        : in  natural     := 0;
     constant file_name       : in  string      := "")
     return boolean;
-  
+
   -----------------------------------------------------------------------------
   -- check_stable
   -----------------------------------------------------------------------------
@@ -524,7 +524,7 @@ package check_pkg is
     constant line_num  : in  natural     := 0;
     constant file_name : in  string      := "")
     return boolean;
-  
+
   -----------------------------------------------------------------------------
   -- check_zero_one_hot
   -----------------------------------------------------------------------------
@@ -573,7 +573,7 @@ package check_pkg is
     constant line_num  : in  natural     := 0;
     constant file_name : in  string      := "")
     return boolean;
-  
+
   procedure check_zero_one_hot(
     variable checker   : inout checker_t;
     constant expr      : in    std_logic_vector;
@@ -637,7 +637,7 @@ package check_pkg is
     constant line_num  : in  natural     := 0;
     constant file_name : in  string      := "")
     return boolean;
-  
+
   procedure check_one_hot(
     variable checker   : inout checker_t;
     constant expr      : in    std_logic_vector;
@@ -758,7 +758,7 @@ package check_pkg is
     constant line_num  : in  natural     := 0;
     constant file_name : in  string      := "")
     return boolean;
-  
+
   procedure check_relation(
     constant expr      : in std_ulogic;
     constant msg       : in string      := "";
@@ -824,7 +824,7 @@ package check_pkg is
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
     return boolean;
-  
+
   procedure check_equal(
     constant got             : in unsigned;
     constant expected        : in natural;
@@ -869,7 +869,7 @@ package check_pkg is
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
     return boolean;
-  
+
   procedure check_equal(
     constant got             : in natural;
     constant expected        : in unsigned;
@@ -914,7 +914,7 @@ package check_pkg is
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
     return boolean;
-  
+
   procedure check_equal(
     constant got             : in unsigned;
     constant expected        : in std_logic_vector;
@@ -959,7 +959,7 @@ package check_pkg is
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
     return boolean;
-  
+
   procedure check_equal(
     constant got             : in std_logic_vector;
     constant expected        : in unsigned;
@@ -1004,7 +1004,7 @@ package check_pkg is
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
     return boolean;
-  
+
   procedure check_equal(
     constant got             : in std_logic_vector;
     constant expected        : in std_logic_vector;
@@ -1049,7 +1049,7 @@ package check_pkg is
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
     return boolean;
-  
+
   procedure check_equal(
     constant got             : in signed;
     constant expected        : in signed;
@@ -1094,7 +1094,7 @@ package check_pkg is
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
     return boolean;
-  
+
   procedure check_equal(
     constant got             : in signed;
     constant expected        : in integer;
@@ -1139,7 +1139,7 @@ package check_pkg is
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
     return boolean;
-  
+
   procedure check_equal(
     constant got             : in integer;
     constant expected        : in signed;
@@ -1184,7 +1184,7 @@ package check_pkg is
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
     return boolean;
-  
+
   procedure check_equal(
     constant got             : in integer;
     constant expected        : in integer;
@@ -1229,7 +1229,7 @@ package check_pkg is
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
     return boolean;
-  
+
   procedure check_equal(
     constant got             : in std_logic;
     constant expected        : in std_logic;
@@ -1274,7 +1274,7 @@ package check_pkg is
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
     return boolean;
-  
+
   procedure check_equal(
     constant got             : in std_logic;
     constant expected        : in boolean;
@@ -1319,7 +1319,7 @@ package check_pkg is
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
     return boolean;
-  
+
   procedure check_equal(
     constant got             : in boolean;
     constant expected        : in std_logic;
@@ -1364,7 +1364,7 @@ package check_pkg is
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
     return boolean;
-  
+
   procedure check_equal(
     constant got             : in boolean;
     constant expected        : in boolean;
@@ -1458,7 +1458,7 @@ package check_pkg is
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
     return boolean;
-  
+
   procedure check_match(
     constant got             : in std_logic_vector;
     constant expected        : in std_logic_vector;
@@ -1503,7 +1503,7 @@ package check_pkg is
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
     return boolean;
-  
+
   procedure check_match(
     constant got             : in signed;
     constant expected        : in signed;
@@ -1548,7 +1548,7 @@ package check_pkg is
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
     return boolean;
-  
+
   procedure check_match(
     constant got             : in std_logic;
     constant expected        : in std_logic;
@@ -1596,4 +1596,4 @@ package check_pkg is
 end package;
 
 
- 
+

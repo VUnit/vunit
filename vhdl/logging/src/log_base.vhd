@@ -36,7 +36,7 @@ package body log_base_pkg is
     constant log_level : in    log_level_t := info;
     constant src       : in    string      := "";
     constant line_num  : in    natural     := 0;
-    constant file_name : in    string      := "") is    
+    constant file_name : in    string      := "") is
   begin
     logger.log(msg, log_level, src, line_num, file_name);
   end base_log;
@@ -71,14 +71,14 @@ package body log_base_pkg is
   begin
     cfg := logger.get_logger_cfg;
   end;
-  
+
   procedure base_add_filter (
     variable logger : inout logger_t;
     variable filter       : out log_filter_t;
     constant levels : in log_level_vector_t := null_log_level_vector;
     constant src : in string := "";
     constant pass               : in boolean := false;
-    constant handlers       : in log_handler_vector_t) is    
+    constant handlers       : in log_handler_vector_t) is
   begin
     logger.add_filter(filter, levels, src, pass, handlers);
   end;
@@ -96,7 +96,7 @@ package body log_base_pkg is
     constant name   : in    string) is
   begin
     logger.rename_level(level, name);
-  end;    
-  
+  end;
+
 end package body log_base_pkg;
 

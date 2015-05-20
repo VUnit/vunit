@@ -16,7 +16,7 @@ use work.log_formatting_pkg.all;
 
 package log_base_pkg is
   type log_call_args_t is record
-    valid : boolean;    
+    valid : boolean;
     logger : logger_cfg_export_t;
     msg : string(1 to 512);
     level : log_level_t;
@@ -26,7 +26,7 @@ package log_base_pkg is
   end record log_call_args_t;
 
   type logger_init_call_args_t is record
-    valid : boolean;    
+    valid : boolean;
     logger : logger_cfg_export_t;
     default_src : string(1 to 512);
     file_name : string(1 to 512);
@@ -39,23 +39,23 @@ package log_base_pkg is
 
   impure function get_log_call_count
     return natural;
-  
+
   impure function get_logger_init_call_count
     return natural;
-  
+
   procedure get_log_call_args (
     variable args : out log_call_args_t);
-  
+
   procedure get_logger_init_call_args (
     variable args : out logger_init_call_args_t);
-  
+
   procedure base_init (
     variable logger         : inout logger_t;
     constant default_src    : in    string       := "";
     constant file_name      : in    string       := "log.csv";
     constant display_format : in    log_format_t := raw;
     constant file_format    : in    log_format_t := off;
-    constant stop_level : in log_level_t := failure; 
+    constant stop_level : in log_level_t := failure;
     constant separator      : in    character    := ',';
     constant append         : in    boolean      := false);
 
@@ -65,7 +65,7 @@ package log_base_pkg is
     constant log_level : in    log_level_t := info;
     constant src       : in    string      := "";
     constant line_num  : in    natural     := 0;
-    constant file_name : in    string      := "");    
+    constant file_name : in    string      := "");
 
   procedure base_get_logger_cfg (
     variable logger : inout logger_t;

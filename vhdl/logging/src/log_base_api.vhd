@@ -31,7 +31,7 @@ package log_base_pkg is
     constant log_level : in    log_level_t := info;
     constant src       : in    string      := "";
     constant line_num  : in    natural     := 0;
-    constant file_name : in    string      := "");    
+    constant file_name : in    string      := "");
 
   procedure base_get_logger_cfg (
     variable logger : inout logger_t;

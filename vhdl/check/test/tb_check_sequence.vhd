@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -22,10 +22,10 @@ use work.test_count.all;
 
 entity tb_check_sequence is
   generic (
-    runner_cfg : runner_cfg_t := runner_cfg_default);   
+    runner_cfg : runner_cfg_t := runner_cfg_default);
 end entity tb_check_sequence;
 
-architecture test_fixture of tb_check_sequence is 
+architecture test_fixture of tb_check_sequence is
   signal clk : std_logic := '0';
   signal one : std_logic := '1';
   signal zero : std_logic := '0';
@@ -52,13 +52,13 @@ begin
                                                 inp(1)(5),
                                                 inp(1)(1 to 4),
                                                 trigger_event => first_pipe);
-  
+
   check_sequence_2 : check_sequence(checker_2,
                                                 clk,
                                                 inp(2)(5),
                                                 inp(2)(1 to 4),
                                                 trigger_event => penultimate);
-  
+
   check_sequence_3 : check_sequence(checker_3,
                                                 clk,
                                                 inp(3)(5),
@@ -88,19 +88,19 @@ begin
       if run("Test should fail on sequences shorter than two events") then
         start_check_sequence_4 <= true;
         wait for 1 ns;
-        verify_log_call(inc_count, "Event sequence must be at least two events long.");      
+        verify_log_call(inc_count, "Event sequence must be at least two events long.");
       elsif run("Test should pass a most triggered pipelined and sequentially asserted event sequence") then
         wait until rising_edge(clk);
         wait for 1 ns;
-        get_checker_stat(checker_2, stat);                  
+        get_checker_stat(checker_2, stat);
         apply_sequence("0000.1;1000.1;0100.1;1010.1;0101.1;0010.1", clk, inp(2));
         wait for 1 ns;
         verify_passed_checks(checker_2,stat, 1);
         verify_failed_checks(checker_2,stat, 0);
-        apply_sequence("0010.1;0001.1;0000.1", clk, inp(2));      
+        apply_sequence("0010.1;0001.1;0000.1", clk, inp(2));
         wait for 1 ns;
         verify_passed_checks(checker_2,stat, 2);
-        verify_failed_checks(checker_2,stat, 0);      
+        verify_failed_checks(checker_2,stat, 0);
         apply_sequence("0000.1;1000.1;0100.1;0000.1;0001.1;0000.1", clk, inp(2));
         wait for 1 ns;
         verify_passed_checks(checker_2,stat, 2);
@@ -108,70 +108,70 @@ begin
       elsif run("Test should fail a most triggered but interrupted event sequence") then
         wait until rising_edge(clk);
         wait for 1 ns;
-        get_checker_stat(checker_2, stat);                  
+        get_checker_stat(checker_2, stat);
         apply_sequence("0000.1;1000.1;0100.1;1010.1;0101.1;0010.1", clk, inp(2));
         wait for 1 ns;
         verify_passed_checks(checker_2, stat, 1);
         verify_failed_checks(checker_2, stat, 0);
-        apply_sequence("0010.1;0000.1;0000.1", clk, inp(2));      
+        apply_sequence("0010.1;0000.1;0000.1", clk, inp(2));
         wait for 1 ns;
         verify_passed_checks(checker_2, stat, 1);
         verify_log_call(inc_count, "Missing required event in position 3 from left.");
       elsif run("Test should pass a first triggered pipelined and sequentially asserted event sequence when pipelining is supported") then
         wait until rising_edge(clk);
         wait for 1 ns;
-        get_checker_stat(stat);                  
+        get_checker_stat(stat);
         apply_sequence("0000.1;1000.1;0100.1;1010.1;0101.1;0010.1", clk, inp(1));
         wait for 1 ns;
         verify_passed_checks(stat, 4);
         verify_failed_checks(stat, 0);
-        apply_sequence("0010.1;0001.1;0000.1", clk, inp(1));      
+        apply_sequence("0010.1;0001.1;0000.1", clk, inp(1));
         wait for 1 ns;
         verify_passed_checks(stat, 6);
         verify_failed_checks(stat, 0);
       elsif run("Test should fail a first triggered but interrupted event sequence") then
         wait until rising_edge(clk);
         wait for 1 ns;
-        get_checker_stat(stat);                  
+        get_checker_stat(stat);
         apply_sequence("0000.1;1000.1;0100.1;1010.1;0101.1;0000.1", clk, inp(1));
         wait for 1 ns;
         verify_passed_checks(stat, 4);
         verify_failed_checks(stat, 0);
-        apply_sequence("0000.1;0001.1;0000.1", clk, inp(1));      
+        apply_sequence("0000.1;0001.1;0000.1", clk, inp(1));
         wait for 1 ns;
         verify_passed_checks(stat, 5);
         verify_log_call(inc_count, "Missing required event in position 2 from left.");
       elsif run("Test should ignore a first triggered and simulataneously initiated event sequence when pipelining is not supported") then
         wait until rising_edge(clk);
         wait for 1 ns;
-        get_checker_stat(checker_3, stat);                  
+        get_checker_stat(checker_3, stat);
         apply_sequence("0000.1;1000.1;0100.1;1010.1;0101.1;0010.1", clk, inp(3));
         wait for 1 ns;
         verify_passed_checks(checker_3, stat, 3);
         verify_failed_checks(checker_3, stat, 0);
-        apply_sequence("0010.1;0001.1;0000.1", clk, inp(3));      
+        apply_sequence("0010.1;0001.1;0000.1", clk, inp(3));
         wait for 1 ns;
         verify_passed_checks(checker_3, stat, 3);
-        verify_failed_checks(checker_3, stat, 0);      
+        verify_failed_checks(checker_3, stat, 0);
       elsif run("Test should fail on unknowns in event sequence") then
         wait until rising_edge(clk);
         wait for 1 ns;
-        get_checker_stat(checker_2, stat);                  
+        get_checker_stat(checker_2, stat);
         apply_sequence("0000.1;1000.1;0100.1;10X0.1;0101.1;0010.1", clk, inp(2));
         wait for 1 ns;
         verify_passed_checks(checker_2,stat, 0);
         verify_log_call(inc_count, "Unknown event in sequence.");
-        apply_sequence("0010.1;0001.1;0000.1", clk, inp(2));      
+        apply_sequence("0010.1;0001.1;0000.1", clk, inp(2));
         wait for 1 ns;
         verify_passed_checks(checker_2, stat, 1);
       elsif run("Test should support weak high and low meta values") then
         wait until rising_edge(clk);
         wait for 1 ns;
-        get_checker_stat(checker_2, stat);                  
+        get_checker_stat(checker_2, stat);
         apply_sequence("0000.1;HL00.H;LH00.1;0010.1;000H.1;0000.1", clk, inp(2));
         wait for 1 ns;
         verify_passed_checks(checker_2, stat, 1);
-        verify_failed_checks(checker_2, stat, 0);      
+        verify_failed_checks(checker_2, stat, 0);
       elsif run("Test should handle reversed and or offset expressions") then
         wait until rising_edge(clk);
         wait for 1 ns;
@@ -188,9 +188,9 @@ begin
         wait for 1 ns;
         verify_passed_checks(stat, 3);
         verify_failed_checks(stat, 0);
-      end if;      
+      end if;
     end loop;
-    
+
     get_and_print_test_result(stat);
     test_runner_cleanup(runner, stat);
     wait;

@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -21,7 +21,7 @@ entity tb_uart_rx is
     runner_cfg : runner_cfg_t := runner_cfg_default);
 end entity;
 
-architecture tb of tb_uart_rx is  
+architecture tb of tb_uart_rx is
   constant baud_rate : integer := 115200; -- bits / s
   constant clk_period : integer := 20; -- ns
   constant cycles_per_bit : integer := 50 * 10**6 / baud_rate;
@@ -84,11 +84,11 @@ begin
         warning("Overflow");
         num_overflows <= num_overflows + 1;
       end if;
-    end if;      
-  end process;  
-    
+    end if;
+  end process;
+
   clk <= not clk after (clk_period/2) * 1 ns;
-  
+
   dut : entity uart_lib.uart_rx
     generic map (
       cycles_per_bit => cycles_per_bit)
@@ -99,5 +99,5 @@ begin
       tready => tready,
       tvalid => tvalid,
       tdata => tdata);
-  
+
 end architecture;

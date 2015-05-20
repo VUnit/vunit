@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 use std.textio.all;
 use work.log_types_pkg.all;
@@ -28,10 +28,10 @@ package run_base_pkg is
                                      (false, false)),
                                     false);
 
-  shared variable runner_trace_logger : logger_t;  
+  shared variable runner_trace_logger : logger_t;
 
   procedure runner_init;
-    
+
   procedure set_phase (
       constant new_phase  : in runner_phase_t);
 
@@ -41,11 +41,11 @@ package run_base_pkg is
   procedure set_test_case_name (
     constant index : in positive;
     constant new_name  : in string);
-  
+
   impure function get_test_case_name (
     constant index : positive)
     return string;
-  
+
   procedure set_num_of_test_cases (
     constant new_value : in integer);
 
@@ -53,7 +53,7 @@ package run_base_pkg is
     return integer;
 
   procedure inc_num_of_test_cases;
-  
+
   impure function get_active_test_case_index
     return integer;
 
@@ -63,23 +63,23 @@ package run_base_pkg is
 
   impure function get_test_suite_completed
     return boolean;
-  
+
   impure function get_test_suite_iteration
     return natural;
 
   procedure inc_test_suite_iteration;
-  
+
   procedure set_run_test_case (
     constant index : in positive;
     constant new_name  : in string);
-  
+
   impure function get_run_test_case (
     constant index : positive)
     return string;
 
   procedure set_running_test_case (
     constant new_name  : in string);
-  
+
   impure function get_running_test_case
     return string;
 

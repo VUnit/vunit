@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -24,10 +24,10 @@ entity uart_rx is
 
    -- AXI stream for output bytes
    tready : in std_logic;
-   tvalid : out std_Logic := '0'; 
+   tvalid : out std_Logic := '0';
    tdata : out std_logic_vector(7 downto 0));
 begin
-  -- pragma translate_off  
+  -- pragma translate_off
   check_stable(clk, check_enabled, tvalid, tready, tdata, "tdata must be stable until tready is active");
   check_stable(clk, check_enabled, tvalid, tready, tvalid, "tvalid must be active until tready is active");
   check_not_unknown(clk, check_enabled, tvalid, "tvalid must never be unknown");
@@ -39,7 +39,7 @@ begin
       debug("Received " & to_string(to_integer(unsigned(tdata))));
     end if;
   end process traffic_logger;
-  -- pragma translate_on  
+  -- pragma translate_on
 end entity;
 
 architecture a of uart_rx is
@@ -54,10 +54,10 @@ begin
   begin
     if rising_edge(clk) then
       overflow <= '0';
-      
+
       case state is
         when idle =>
-          if rx = '0' then          
+          if rx = '0' then
             if cycles = cycles_per_bit/2 - 1 then
               state := receiving;
               cycles := 0;
@@ -85,7 +85,7 @@ begin
 
         when done =>
           -- New output overwrites old output
-          overflow <= tvalid_int and not tready;          
+          overflow <= tvalid_int and not tready;
           tvalid_int <= '1';
           tdata <= data;
           state := idle;
@@ -95,9 +95,9 @@ begin
       if tvalid_int = '1' and tready = '1' then
         tvalid_int <= '0';
       end if;
-      
-    end if;   
+
+    end if;
   end process;
-  
+
   tvalid <= tvalid_int;
 end architecture;

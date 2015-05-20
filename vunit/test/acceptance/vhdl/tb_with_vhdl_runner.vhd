@@ -12,7 +12,7 @@ use vunit_lib.run_pkg.all;
 entity tb_with_vhdl_runner is
   generic (
     runner_cfg : runner_cfg_t := "");
-end entity; 
+end entity;
 
 architecture vunit_test_bench of tb_with_vhdl_runner is
 begin
@@ -35,7 +35,7 @@ begin
         wait for 100 ns;
       end if;
     end loop;
-    
+
     test_runner_cleanup(runner);
     wait;
   end process;

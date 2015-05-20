@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -23,13 +23,13 @@ use std.textio.all;
 
 package test_support is
   alias default_checker_init_from_scratch is checker_init[log_level_t, string, string, log_format_t, log_format_t, log_level_t, character, boolean];
-  alias custom_checker_init_from_scratch is checker_init[checker_t, log_level_t, string, string, log_format_t, log_format_t, log_level_t, character, boolean];    
+  alias custom_checker_init_from_scratch is checker_init[checker_t, log_level_t, string, string, log_format_t, log_format_t, log_level_t, character, boolean];
 
   procedure counting_assert (
     constant expr : in boolean;
     constant msg  : in string := "";
     constant level : in severity_level := error);
-  
+
   procedure verify_log_call (
     constant expected_count  : in natural;
     constant expected_msg : in string := "Check failed!";
@@ -51,36 +51,36 @@ package test_support is
   procedure verify_passed_checks (
     variable stat : inout checker_stat_t;
     constant expected_n_passed : in integer := -1);
-  
+
   procedure verify_passed_checks (
     variable checker : inout checker_t;
     variable stat : inout checker_stat_t;
     constant expected_n_passed : in integer := -1);
-  
+
   procedure verify_failed_checks (
     variable stat : inout checker_stat_t;
     constant expected_n_failed : in integer := -1);
-  
+
   procedure verify_failed_checks (
     variable checker : inout checker_t;
     variable stat : inout checker_stat_t;
     constant expected_n_failed : in integer := -1);
-  
+
   procedure verify_num_of_log_calls (
     constant expected_count  : in natural);
 
   procedure apply_sequence (
-    constant seq : in string;    
+    constant seq : in string;
     signal clk        : in  std_logic;
     signal data       : out std_logic;
     constant active_rising_clk_edge : in boolean := true);
-  
+
   procedure apply_sequence (
-    constant seq : in string;    
+    constant seq : in string;
     signal clk        : in  std_logic;
     signal data       : out std_logic_vector;
     constant active_rising_clk_edge : in boolean := true);
-  
+
   procedure banner (
     constant s : in string);
 
@@ -88,7 +88,7 @@ package test_support is
 
   procedure get_and_print_test_result (
     variable stat : out checker_stat_t);
-  
+
   function clock_edge (
     signal clk                : in std_logic;
     constant wait_rising_edge : in boolean := true)
@@ -128,9 +128,9 @@ package body test_support is
     get_log_call_args(log_call_args);
     counting_assert(log_call_args.valid, "Log not called");
     counting_assert(log_call_args.msg(expected_msg'range) = expected_msg, "Wrong message. Got " &  log_call_args.msg(expected_msg'range) & " but expected " & expected_msg & ".");
-    counting_assert(log_call_args.level = expected_level, "Wrong level.", error);    
+    counting_assert(log_call_args.level = expected_level, "Wrong level.", error);
     counting_assert(log_call_args.src(expected_src'range) = expected_src, "Wrong source. Got " &  log_call_args.src(expected_src'range) & " but expected " & expected_src & ".");
-    counting_assert(log_call_args.line_num = expected_line_num, "Wrong line number.", error);    
+    counting_assert(log_call_args.line_num = expected_line_num, "Wrong line number.", error);
     counting_assert(log_call_args.file_name(expected_file_name'range) = expected_file_name, "Wrong file_name. Got " &  log_call_args.file_name(expected_file_name'range) & " but expected " & expected_file_name & ".");
   end verify_log_call;
 
@@ -152,11 +152,11 @@ package body test_support is
     counting_assert(logger_init_call_args.valid, "Init not called");
     counting_assert(logger_init_call_args.default_src(expected_default_src'range) = expected_default_src, "Wrong default source. Got " &  logger_init_call_args.default_src(expected_default_src'range) & " but expected " & expected_default_src & ".");
     counting_assert(logger_init_call_args.file_name(expected_file_name'range) = expected_file_name, "Wrong file name. Got " &  logger_init_call_args.file_name(expected_file_name'range) & " but expected " & expected_file_name & ".");
-    counting_assert(logger_init_call_args.display_format = expected_display_format, "Wrong display format.", error);    
-    counting_assert(logger_init_call_args.file_format = expected_file_format, "Wrong file format.", error);    
-    counting_assert(logger_init_call_args.stop_level = expected_stop_level, "Wrong stop level.", error);    
-    counting_assert(logger_init_call_args.separator = expected_separator, "Wrong separator.", error);    
-    counting_assert(logger_init_call_args.append = expected_append, "Wrong append value.", error);    
+    counting_assert(logger_init_call_args.display_format = expected_display_format, "Wrong display format.", error);
+    counting_assert(logger_init_call_args.file_format = expected_file_format, "Wrong file format.", error);
+    counting_assert(logger_init_call_args.stop_level = expected_stop_level, "Wrong stop level.", error);
+    counting_assert(logger_init_call_args.separator = expected_separator, "Wrong separator.", error);
+    counting_assert(logger_init_call_args.append = expected_append, "Wrong append value.", error);
   end verify_logger_init_call;
 
   procedure verify_passed_checks (
@@ -167,7 +167,7 @@ package body test_support is
   begin
     verify_passed_checks(default_checker, stat, expected_n_passed);
   end;
-  
+
   procedure verify_passed_checks (
     variable checker : inout checker_t;
     variable stat : inout checker_stat_t;
@@ -182,7 +182,7 @@ package body test_support is
       counting_assert(new_stat.n_passed = stat.n_passed + expected_n_passed, "Not expected number of passed checks registered. Got " & integer'image(new_stat.n_passed) & " but expected " & integer'image(stat.n_passed + expected_n_passed) & ".");
     end if;
   end;
-  
+
   procedure verify_failed_checks (
     variable stat : inout checker_stat_t;
     constant expected_n_failed : in integer := -1) is
@@ -191,7 +191,7 @@ package body test_support is
   begin
     verify_failed_checks(default_checker, stat, expected_n_failed);
   end;
-  
+
   procedure verify_failed_checks (
     variable checker : inout checker_t;
     variable stat : inout checker_stat_t;
@@ -206,7 +206,7 @@ package body test_support is
       counting_assert(new_stat.n_failed = stat.n_failed + expected_n_failed, "Not expected number of failed checks registered. Got " & integer'image(new_stat.n_failed) & " but expected " & integer'image(stat.n_failed + expected_n_failed) & ".");
     end if;
   end;
-  
+
   procedure verify_num_of_log_calls (
     constant expected_count  : in natural) is
     variable call_count : natural;
@@ -229,7 +229,7 @@ package body test_support is
   end;
 
   procedure apply_sequence (
-    constant seq : in string;    
+    constant seq : in string;
     signal clk        : in  std_logic;
     signal data       : out std_logic;
     constant active_rising_clk_edge : in boolean := true) is
@@ -247,9 +247,9 @@ package body test_support is
       end if;
     end loop;
   end procedure apply_sequence;
-  
+
   procedure apply_sequence (
-    constant seq : in string;    
+    constant seq : in string;
     signal clk        : in  std_logic;
     signal data       : out std_logic_vector;
     constant active_rising_clk_edge : in boolean := true) is
@@ -268,17 +268,17 @@ package body test_support is
             j := j + 1;
           else
             delimiters := delimiters + 1;
-          end if;       
+          end if;
         else
           if is_std_logic(seq(i + delimiters - j + data'left)) then
             data(j) <= std_logic'value("'" & seq(i + delimiters - j + data'left) & "'");
             j := j - 1;
           else
             delimiters := delimiters + 1;
-          end if;       
+          end if;
         end if;
       end loop;
-      i := i + data'length + delimiters;      
+      i := i + data'length + delimiters;
       if i <= seq'right then
         if active_rising_clk_edge then
           wait until rising_edge(clk);
@@ -288,7 +288,7 @@ package body test_support is
       end if;
     end loop;
   end procedure apply_sequence;
-  
+
   procedure banner (
     constant s : in string) is
     variable dashes : string(1 to 256) := (others => '-');
@@ -306,13 +306,13 @@ package body test_support is
   procedure get_and_print_test_result (
     variable stat : out checker_stat_t) is
   begin
-    reset_checker_stat; -- Normal checker stat doesn't contain real errors    
+    reset_checker_stat; -- Normal checker stat doesn't contain real errors
     print_test_result;
     stat.n_checks := get_count(asserts);
     stat.n_failed := get_count(unexpected_errors);
     stat.n_passed := get_count(asserts) - get_count(unexpected_errors);
   end;
-  
+
   function clock_edge (
     signal clk                : in std_logic;
     constant wait_rising_edge : in boolean := true)

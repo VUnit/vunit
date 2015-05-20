@@ -25,7 +25,7 @@ entity tb_check_match is
     runner_cfg : runner_cfg_t := runner_cfg_default);
 end entity tb_check_match;
 
-architecture test_fixture of tb_check_match is 
+architecture test_fixture of tb_check_match is
 begin
   check_match_runner : process
     variable stat : checker_stat_t;
@@ -45,15 +45,15 @@ begin
         check_match(pass, unsigned'(X"A5"), unsigned'(X"A5"));
         counting_assert(pass, "Should return pass = true on passing check");
         pass := check_match(unsigned'(X"A5"), unsigned'(X"A5"));
-        counting_assert(pass, "Should return pass = true on passing check");        
+        counting_assert(pass, "Should return pass = true on passing check");
         verify_passed_checks(stat, 6);
 
-        get_checker_stat(check_match_checker, stat);      
+        get_checker_stat(check_match_checker, stat);
         check_match(check_match_checker, unsigned'(X"A5"), unsigned'(X"A5"));
         check_match(check_match_checker, pass, unsigned'(X"A5"), unsigned'(X"A5"));
         counting_assert(pass, "Should return pass = true on passing check");
         verify_passed_checks(check_match_checker,stat, 2);
-        
+
       elsif run("Test should fail on unsigned not matching unsigned") then
         check_match(unsigned'(X"A5"), unsigned'("0101----"));
         verify_log_call(inc_count, "Matching failed! Got 1010_0101 (165). Expected 0101_---- (NaN).");
@@ -70,7 +70,7 @@ begin
         verify_log_call(inc_count, "Matching failed! Got 1010_0101 (165). Expected 0101_1010 (90).");
         check_match(check_match_checker, pass, unsigned'(X"A5"), unsigned'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Matching failed! Got 1010_0101 (165). Expected 0101_1010 (90).");        
+        verify_log_call(inc_count, "Matching failed! Got 1010_0101 (165). Expected 0101_1010 (90).");
       elsif run("Test should pass on std_logic_vector matching std_logic_vector") then
         get_checker_stat(stat);
         check_match(std_logic_vector'(X"A5"), std_logic_vector'(X"A5"));
@@ -80,15 +80,15 @@ begin
         check_match(pass, std_logic_vector'(X"A5"), std_logic_vector'(X"A5"));
         counting_assert(pass, "Should return pass = true on passing check");
         pass := check_match(std_logic_vector'(X"A5"), std_logic_vector'(X"A5"));
-        counting_assert(pass, "Should return pass = true on passing check");        
+        counting_assert(pass, "Should return pass = true on passing check");
         verify_passed_checks(stat, 6);
 
-        get_checker_stat(check_match_checker, stat);      
+        get_checker_stat(check_match_checker, stat);
         check_match(check_match_checker, std_logic_vector'(X"A5"), std_logic_vector'(X"A5"));
         check_match(check_match_checker, pass, std_logic_vector'(X"A5"), std_logic_vector'(X"A5"));
         counting_assert(pass, "Should return pass = true on passing check");
         verify_passed_checks(check_match_checker,stat, 2);
-        
+
       elsif run("Test should fail on std_logic_vector not matching std_logic_vector") then
         check_match(std_logic_vector'(X"A5"), std_logic_vector'("0101----"));
         verify_log_call(inc_count, "Matching failed! Got 1010_0101 (165). Expected 0101_---- (NaN).");
@@ -105,7 +105,7 @@ begin
         verify_log_call(inc_count, "Matching failed! Got 1010_0101 (165). Expected 0101_1010 (90).");
         check_match(check_match_checker, pass, std_logic_vector'(X"A5"), std_logic_vector'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Matching failed! Got 1010_0101 (165). Expected 0101_1010 (90).");        
+        verify_log_call(inc_count, "Matching failed! Got 1010_0101 (165). Expected 0101_1010 (90).");
       elsif run("Test should pass on signed matching signed") then
         get_checker_stat(stat);
         check_match(signed'(X"A5"), signed'(X"A5"));
@@ -115,15 +115,15 @@ begin
         check_match(pass, signed'(X"A5"), signed'(X"A5"));
         counting_assert(pass, "Should return pass = true on passing check");
         pass := check_match(signed'(X"A5"), signed'(X"A5"));
-        counting_assert(pass, "Should return pass = true on passing check");        
+        counting_assert(pass, "Should return pass = true on passing check");
         verify_passed_checks(stat, 6);
 
-        get_checker_stat(check_match_checker, stat);      
+        get_checker_stat(check_match_checker, stat);
         check_match(check_match_checker, signed'(X"A5"), signed'(X"A5"));
         check_match(check_match_checker, pass, signed'(X"A5"), signed'(X"A5"));
         counting_assert(pass, "Should return pass = true on passing check");
         verify_passed_checks(check_match_checker,stat, 2);
-        
+
       elsif run("Test should fail on signed not matching signed") then
         check_match(signed'(X"A5"), signed'("0101----"));
         verify_log_call(inc_count, "Matching failed! Got 1010_0101 (-91). Expected 0101_---- (NaN).");
@@ -140,7 +140,7 @@ begin
         verify_log_call(inc_count, "Matching failed! Got 1010_0101 (-91). Expected 0101_1010 (90).");
         check_match(check_match_checker, pass, signed'(X"A5"), signed'(X"5A"));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Matching failed! Got 1010_0101 (-91). Expected 0101_1010 (90).");        
+        verify_log_call(inc_count, "Matching failed! Got 1010_0101 (-91). Expected 0101_1010 (90).");
       elsif run("Test should pass on std_logic matching std_logic") then
         get_checker_stat(stat);
         check_match('1', '1');
@@ -150,15 +150,15 @@ begin
         check_match(pass, '1', '1');
         counting_assert(pass, "Should return pass = true on passing check");
         pass := check_match('1', '1');
-        counting_assert(pass, "Should return pass = true on passing check");        
+        counting_assert(pass, "Should return pass = true on passing check");
         verify_passed_checks(stat, 6);
 
-        get_checker_stat(check_match_checker, stat);      
+        get_checker_stat(check_match_checker, stat);
         check_match(check_match_checker, '1', '1');
         check_match(check_match_checker, pass, '1', '1');
         counting_assert(pass, "Should return pass = true on passing check");
         verify_passed_checks(check_match_checker,stat, 2);
-        
+
       elsif run("Test should fail on std_logic not matching std_logic") then
         check_match('1', '0');
         verify_log_call(inc_count, "Matching failed! Got 1. Expected 0.");

@@ -17,216 +17,216 @@ use work.log_formatting_pkg.all;
 package log_pkg is
   alias logger_init is base_init[logger_t, string, string, log_format_t, log_format_t, log_level_t, character, boolean];
   alias log is base_log[logger_t, string, log_level_t, string, natural, string];
-  
+
   procedure verbose_high2(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure verbose_high1(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure verbose(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure verbose_low1(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure verbose_low2(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure debug_high2(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure debug_high1(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure debug(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure debug_low1(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure debug_low2(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure info_high2(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure info_high1(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure info(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure info_low1(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure info_low2(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure warning_high2(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure warning_high1(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure warning(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure warning_low1(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure warning_low2(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure error_high2(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure error_high1(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure error(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure error_low1(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure error_low2(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure failure_high2(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure failure_high1(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure failure(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure failure_low1(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure failure_low2(
     variable logger    : inout logger_t;
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   alias get_logger_cfg is base_get_logger_cfg[logger_t, logger_cfg_t];
   alias get_logger_cfg is base_get_logger_cfg[logger_t, logger_cfg_export_t];
@@ -382,188 +382,188 @@ package log_pkg is
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure verbose_high1(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure verbose(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure verbose_low1(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure verbose_low2(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure debug_high2(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure debug_high1(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure debug(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure debug_low1(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure debug_low2(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure info_high2(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure info_high1(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure info(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure info_low1(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure info_low2(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure warning_high2(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure warning_high1(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure warning(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure warning_low1(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure warning_low2(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure error_high2(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure error_high1(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure error(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure error_low1(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure error_low2(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure failure_high2(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure failure_high1(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure failure(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure failure_low1(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure failure_low2(
     constant msg       : in    string;
     constant src       : in    string  := "";
     constant line_num  : in    natural := 0;
-    constant file_name : in    string  := "");    
+    constant file_name : in    string  := "");
 
   procedure get_logger_cfg (
     variable cfg : inout logger_cfg_t);
 
   procedure get_logger_cfg (
     variable cfg : inout logger_cfg_export_t);
-  
+
   procedure stop_source_level (
     constant source : in string;
     constant level : in log_level_t;
@@ -671,10 +671,10 @@ package log_pkg is
     constant source : in string;
     constant handler       : in log_handler_vector_t;
     variable filter       : out log_filter_t);
-  
+
   procedure remove_filter (
     constant filter : in log_filter_t);
-  
+
   procedure rename_level (
     constant level  : in    log_level_t;
     constant name   : in    string);

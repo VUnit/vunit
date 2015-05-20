@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.string_ops.all;
 use work.log_types_pkg.all;
@@ -53,7 +53,7 @@ package body log_formatting_pkg is
   begin
     return upper(level) & ": " & msg;
   end function level_format;
-  
+
   function verbose_csv_format (
     constant msg           : string;
     constant seq_num       : natural     := 0;
@@ -124,5 +124,5 @@ package body log_formatting_pkg is
       return "";
     end if;
   end;
-  
+
 end package body log_formatting_pkg;

@@ -36,7 +36,7 @@ package log_types_pkg is
     src      : string(1 to 256);
     src_length : natural;
   end record;
-  
+
   type logger_cfg_t is record
     log_default_src          : line;
     log_file_name            : line;

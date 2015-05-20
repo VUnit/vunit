@@ -5,7 +5,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.log_types_pkg.all;
 use work.log_special_types_pkg.all;
@@ -53,20 +53,20 @@ package run_pkg is
   impure function test_suite_error (
     constant err : boolean)
     return boolean;
-  
+
   impure function test_case_error (
     constant err : boolean)
     return boolean;
 
   impure function test_suite_exit
     return boolean;
-  
+
   impure function test_case_exit
     return boolean;
-  
+
   impure function test_exit
     return boolean;
-  
+
   impure function test_case
     return boolean;
 
@@ -74,14 +74,14 @@ package run_pkg is
     signal runner                    : inout runner_sync_t;
     constant timeout                 : in    time;
     constant disable_simulation_exit : in    boolean := false);
-  
+
   procedure lock_entry (
     signal runner : out runner_sync_t;
     constant phase : in runner_phase_t;
     constant me : in string := "";
     constant line_num  : in natural := 0;
-    constant file_name : in string := "");    
-  
+    constant file_name : in string := "");
+
   procedure unlock_entry (
     signal runner : out runner_sync_t;
     constant phase : in runner_phase_t;
@@ -95,7 +95,7 @@ package run_pkg is
     constant me : in string := "";
     constant line_num  : in natural := 0;
     constant file_name : in string := "");
-  
+
   procedure unlock_exit (
     signal runner : out runner_sync_t;
     constant phase : in runner_phase_t;
@@ -112,7 +112,7 @@ package run_pkg is
 
   procedure entry_gate (
     signal runner : inout runner_sync_t);
-  
+
   procedure exit_gate (
     signal runner : in runner_sync_t);
 
@@ -142,5 +142,5 @@ package run_pkg is
   alias test_suite_cleanup_exit_gate is exit_gate[runner_sync_t];
   alias test_runner_cleanup_entry_gate is entry_gate[runner_sync_t];
   alias test_runner_cleanup_exit_gate is exit_gate[runner_sync_t];
-  
+
 end package;

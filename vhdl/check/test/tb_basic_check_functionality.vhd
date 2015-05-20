@@ -28,11 +28,11 @@ entity tb_basic_check_functionality is
     runner_cfg : runner_cfg_t := "");
 end entity tb_basic_check_functionality;
 
-architecture test_fixture of tb_basic_check_functionality is 
+architecture test_fixture of tb_basic_check_functionality is
 begin
   test_runner : process
     alias default_checker_init_from_scratch is checker_init[log_level_t, string, string, log_format_t, log_format_t, log_level_t, character, boolean];
-    alias custom_checker_init_from_scratch is checker_init[checker_t, log_level_t, string, string, log_format_t, log_format_t, log_level_t, character, boolean];    
+    alias custom_checker_init_from_scratch is checker_init[checker_t, log_level_t, string, string, log_format_t, log_format_t, log_level_t, character, boolean];
     procedure banner (
       constant s : in string) is
       variable dashes : string(1 to 256) := (others => '-');
@@ -51,7 +51,7 @@ begin
     test_runner_setup(runner, runner_cfg);
     cnt := get_logger_init_call_count;
 
-    while test_suite loop    
+    while test_suite loop
       if run("Verify default checker basic functionality") then
         stat_before := get_checker_stat;
         check(true);
@@ -113,7 +113,7 @@ begin
         verify_logger_init_call(inc_count(3), "", "error.csv", level, off, failure, '@');
         default_checker_init_from_scratch(append => true);
         verify_logger_init_call(inc_count(3), "", "error.csv", level, off, failure, ',', true);
-      
+
       elsif run("Verify custom checker basic functionality") then
         custom_checker_init_from_scratch(my_checker);
         verify_logger_init_call(inc_count(3), "", "error.csv", level, off, failure, ',', false);
@@ -198,7 +198,7 @@ begin
         counting_assert(cfg.logger_cfg.log_file_format = raw);
         counting_assert(cfg.logger_cfg.log_file_is_initialized);
         counting_assert(cfg.logger_cfg.log_stop_level = error);
-        counting_assert(cfg.logger_cfg.log_separator = ';');          
+        counting_assert(cfg.logger_cfg.log_separator = ';');
 
         get_checker_cfg(cfg_export);
         counting_assert(cfg_export.default_level = warning);
@@ -221,7 +221,7 @@ begin
         counting_assert(cfg.logger_cfg.log_file_format = verbose_csv);
         counting_assert(cfg.logger_cfg.log_file_is_initialized);
         counting_assert(cfg.logger_cfg.log_stop_level = warning);
-        counting_assert(cfg.logger_cfg.log_separator = ':');          
+        counting_assert(cfg.logger_cfg.log_separator = ':');
 
         get_checker_cfg(my_checker, cfg_export);
         counting_assert(cfg_export.default_level = info);
@@ -236,7 +236,7 @@ begin
         counting_assert(cfg_export.logger_cfg.log_separator = ':');
 
       end if;
-    end loop;    
+    end loop;
 
     get_and_print_test_result(stat);
     test_runner_cleanup(runner, stat);
