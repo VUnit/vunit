@@ -251,24 +251,33 @@ package body com_string_pkg is
   function to_detailed_string (
     constant data : ufixed)
     return string is
-    variable unsigned_data : ieee.numeric_std.unsigned(data'length - 1 downto 0) := ieee.numeric_std.unsigned(data);
+    variable unsigned_data : ieee.numeric_std.unsigned(data'length - 1 downto 0);
   begin
+    for i in unsigned_data'range loop
+      unsigned_data(i) := data(i + data'low);
+    end loop;
     return create_array_group(to_string(unsigned_data), to_string(data'left), to_string(data'right), false);
   end;
 
   function to_detailed_string (
     constant data : sfixed)
     return string is
-    variable unsigned_data : ieee.numeric_std.unsigned(data'length - 1 downto 0) := ieee.numeric_std.unsigned(data);
+    variable unsigned_data : ieee.numeric_std.unsigned(data'length - 1 downto 0);
   begin
+    for i in unsigned_data'range loop
+      unsigned_data(i) := data(i + data'low);
+    end loop;
     return create_array_group(to_string(unsigned_data), to_string(data'left), to_string(data'right), false);
   end;
 
   function to_detailed_string (
     constant data : float)
     return string is
-    variable unsigned_data : ieee.numeric_std.unsigned(data'length - 1 downto 0) := ieee.numeric_std.unsigned(data);
+    variable unsigned_data : ieee.numeric_std.unsigned(data'length - 1 downto 0);
   begin
+    for i in unsigned_data'range loop
+      unsigned_data(i) := data(i + data'low);
+    end loop;
     return create_array_group(to_string(unsigned_data), to_string(data'left), to_string(data'right), false);
   end;
 
