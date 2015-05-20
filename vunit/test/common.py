@@ -11,7 +11,6 @@ Common functions re-used between test cases
 
 from xml.etree import ElementTree
 from vunit.modelsim_interface import ModelSimInterface
-from vunit.ui import VUnit
 from os import environ
 
 SIMULATORS = [ModelSimInterface]
@@ -45,29 +44,6 @@ def simulator_is(*names):
     return _get_simulator_to_use().name in names
 
 
-def create_vunit(output_path,  # pylint: disable=too-many-arguments
-                 vhdl_standard='2008',
-                 test_filter=None,
-                 clean=False,
-                 compile_builtins=True,
-                 xunit_xml=None,
-                 persistent_sim=False,
-                 compile_only=False):
-    """
-    Create instance of VUnit public interface
-    """
-    return VUnit(clean=clean,
-                 verbose=True,
-                 test_filter=test_filter,
-                 output_path=output_path,
-                 vhdl_standard=vhdl_standard,
-                 compile_builtins=compile_builtins,
-                 xunit_xml=xunit_xml,
-                 persistent_sim=persistent_sim,
-                 simulator_name=_get_simulator_to_use().name,
-                 compile_only=compile_only)
-
-
 def check_report(report_file, tests):
     """
     Check an XML report_file for the exact occurrence of specific test results
@@ -86,7 +62,9 @@ def check_report(report_file, tests):
         report[test.attrib["name"]] = status
 
     for status, name in tests:
-        assert report[name] == status
+        if report[name] != status:
+            raise AssertionError("Wrong status of %s got %s expected %s" %
+                                 (name, report[name], status))
 
     num_tests = int(root.attrib["tests"])
     assert num_tests == len(tests)

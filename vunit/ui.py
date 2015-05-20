@@ -98,6 +98,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
                    elaborate_only=args.elaborate,
                    gui_mode=args.gui,
                    compile_builtins=compile_builtins,
+                   persistent_sim=os.environ.get("VUNIT_PERSISTENT_SIM", "True") == "True",
                    simulator_name=args.sim)
 
     @staticmethod
