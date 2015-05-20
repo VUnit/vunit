@@ -73,15 +73,14 @@ class TestVunitArtificial(unittest.TestCase):
                    clean=False,
                    args=["--elaborate", "lib.tb_pass"])
         check_report(self.report_file, [
-            ("passed", "lib.tb_pass"),])
+            ("passed", "lib.tb_pass")])
 
         self.check(self.artificial_run,
                    exit_code=1,
                    clean=False,
                    args=["--elaborate", "lib.tb_elab_fail"])
         check_report(self.report_file, [
-            ("failed", "lib.tb_elab_fail"),])
-
+            ("failed", "lib.tb_elab_fail")])
 
     def _test_artificial(self, persistent_sim):
         """
