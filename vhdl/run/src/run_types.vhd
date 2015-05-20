@@ -54,6 +54,7 @@ package run_types_pkg is
     phase : runner_phase_t;
     locks : phase_locks_array_t(test_runner_setup to test_runner_cleanup);
     exit_without_errors : runner_flag_t;
+    exit_simulation : runner_flag_t;
   end record runner_sync_t;
 
   type test_case_names_t is array (positive range <>) of line;

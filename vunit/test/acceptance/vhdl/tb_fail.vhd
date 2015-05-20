@@ -4,16 +4,20 @@
 --
 -- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+library vunit_lib;
+context vunit_lib.vunit_context;
+
 entity tb_fail is
+  generic (runner_cfg : runner_cfg_t);
 end entity;
 
 architecture vunit_test_bench of tb_fail is
-  signal vunit_finished : boolean := false;
 begin
   test_runner : process
   begin
+    test_runner_setup(runner, runner_cfg);
     assert false;
-    vunit_finished <= true;
+    test_runner_cleanup(runner);
     wait;
   end process;
 end architecture;

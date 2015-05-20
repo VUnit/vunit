@@ -4,14 +4,17 @@
 --
 -- Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
 
+library vunit_lib;
+context vunit_lib.vunit_context;
+
 entity tb_magic_paths is
   generic (
+    runner_cfg : runner_cfg_t;
     tb_path : string;
     output_path : string);
 end entity;
 
 architecture vunit_test_bench of tb_magic_paths is
-  signal vunit_finished : boolean := false;
 begin
   test_runner : process
 
@@ -25,9 +28,10 @@ begin
       check_equal(value(value'length+1-suffix'length to value'length), suffix);
     end procedure;
   begin
+    test_runner_setup(runner, runner_cfg);
     check_has_suffix(tb_path, "acceptance/vhdl/");
     check_has_suffix(output_path, "acceptance/end to end out/tests/lib.tb_magic_paths/");
-    vunit_finished <= true;
+    test_runner_cleanup(runner);
     wait;
   end process;
 end architecture;

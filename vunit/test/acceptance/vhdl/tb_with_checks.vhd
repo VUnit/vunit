@@ -5,13 +5,7 @@
 -- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
-use vunit_lib.run_types_pkg.all;
-use vunit_lib.run_base_pkg.all;
-use vunit_lib.run_pkg.all;
-use vunit_lib.check_types_pkg.all;
-use vunit_lib.check_pkg.all;
-use vunit_lib.log_pkg.all;
-use vunit_lib.log_types_pkg.all;
+context vunit_lib.vunit_context;
 
 entity tb_with_checks is
   generic (

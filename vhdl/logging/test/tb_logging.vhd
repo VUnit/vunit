@@ -13,6 +13,7 @@ use std.textio.all;
 use vunit_lib.log_types_pkg.all;
 use vunit_lib.log_special_types_pkg.all;
 use vunit_lib.log_pkg.all;
+use vunit_lib.run_base_pkg.all;
 use work.test_types.all;
 use work.test_type_methods.all;
 
@@ -20,7 +21,6 @@ entity tb_logging is
 end entity tb_logging;
 
 architecture test_fixture of tb_logging is
-  signal vunit_finished : boolean := false;
   alias status is vunit_lib.log_pkg.info_high1[string, string, natural, string];
   signal test_component1_done, test_component2_done : boolean := false;
 
@@ -452,7 +452,8 @@ begin
     write(output, "Number of assertions: " & integer'image(n_asserts_value) & LF);
     write(output, "Number of errors: " & integer'image(n_errors_value) & LF);
 
-    vunit_finished <= true;
+    runner.exit_without_errors <= true;
+    runner.exit_simulation <= true;
     wait;
   end process;
 end test_fixture;

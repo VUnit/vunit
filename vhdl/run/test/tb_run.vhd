@@ -30,7 +30,6 @@ architecture test_fixture of tb_run is
   signal test_process_completed : boolean := false;
   signal start_locking_process : boolean := false;
   signal start_test_runner_watchdog, test_runner_watchdog_completed : boolean := false;
-  signal vunit_finished : boolean := false;
 begin
   test_process : process is
     variable t_start : time;
@@ -820,7 +819,8 @@ begin
     info("Number of passing checks: " & natural'image(checker_stat.n_passed));
     info("Number of failing checks: " & natural'image(checker_stat.n_failed));
 
-    vunit_finished <= true;
+    runner.exit_without_errors <= true;
+    runner.exit_simulation <= true;
     wait;
   end process;
 end test_fixture;

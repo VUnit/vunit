@@ -120,6 +120,7 @@ package body run_pkg is
     wait for 0 ns;
 
     if not disable_simulation_exit then
+      runner.exit_simulation <= true;
       if runner.exit_without_errors then
         vunit_stop(0);
       else

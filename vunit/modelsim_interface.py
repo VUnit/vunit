@@ -188,7 +188,7 @@ proc vunit_load {{{{vsim_extra_args ""}}}} {{
     {set_generic_str}
     vsim ${{vsim_extra_args}} {vsim_flags}
     set no_finished_signal [catch {{examine -internal {{/vunit_finished}}}}]
-    set no_test_runner_exit [catch {{examine -internal {{/run_base_pkg/runner.exit_without_errors}}}}]
+    set no_test_runner_exit [catch {{examine -internal {{/run_base_pkg/runner.exit_simulation}}}}]
 
     if {{${{no_finished_signal}} && ${{no_test_runner_exit}}}}  {{
         echo {{Error: Found none of either simulation shutdown mechanisms}}
@@ -223,9 +223,11 @@ proc vunit_run {} {
     set no_finished_signal [catch {examine -internal {/vunit_finished}}]
 
     if {${no_finished_signal}} {
-        set exit_boolean {/run_base_pkg/runner.exit_without_errors}
+        set exit_boolean {/run_base_pkg/runner.exit_simulation}
+        set status_boolean {/run_base_pkg/runner.exit_without_errors}
     } {
         set exit_boolean {/vunit_finished}
+        set status_boolean {/vunit_finished}
     }
 
     when -fast "${exit_boolean} = TRUE" {
@@ -235,7 +237,7 @@ proc vunit_run {} {
     }
 
     run -all
-    set failed [expr [examine -internal ${exit_boolean}]!=TRUE]
+    set failed [expr [examine -internal ${status_boolean}]!=TRUE]
     if {$failed} {
         catch {
             # tb command can fail when error comes from pli

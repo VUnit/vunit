@@ -5,13 +5,11 @@
 -- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
-use vunit_lib.run_types_pkg.all;
-use vunit_lib.run_base_pkg.all;
-use vunit_lib.run_pkg.all;
+context vunit_lib.vunit_context;
 
 entity tb_with_vhdl_runner is
   generic (
-    runner_cfg : runner_cfg_t := "");
+    runner_cfg : runner_cfg_t);
 end entity;
 
 architecture vunit_test_bench of tb_with_vhdl_runner is
