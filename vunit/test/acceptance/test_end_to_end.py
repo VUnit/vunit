@@ -53,6 +53,7 @@ class TestVunitEndToEnd(unittest.TestCase):
             ("failed", "lib.tb_with_vhdl_runner.fail"),
             ("failed", "lib.tb_with_vhdl_runner.Test that timeouts"),
             ("passed", "lib.tb_magic_paths"),
+            ("passed", "lib.tb_no_fail_after_cleanup"),
 
             # @TODO verify that these are actually run in separate simulations
             ("passed", "lib.tb_same_sim_all_pass.Test 1"),
