@@ -61,7 +61,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         return sims
 
     @classmethod
-    def from_argv(cls, argv=None, preferred_simulator=None):
+    def from_argv(cls, argv=None, preferred_simulator=None, compile_builtins=True):
         """
         Create VUnit instance from command line arguments
         Can take arguments from 'argv' if not None  instead of sys.argv
@@ -86,6 +86,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
 
         return cls(output_path=args.output_path,
                    clean=args.clean,
+                   vhdl_standard=select_vhdl_standard(),
                    use_debug_codecs=args.use_debug_codecs,
                    no_color=args.no_color,
                    verbose=args.verbose,
@@ -96,6 +97,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
                    compile_only=args.compile,
                    elaborate_only=args.elaborate,
                    gui_mode=args.gui,
+                   compile_builtins=compile_builtins,
                    simulator_name=args.sim)
 
     @staticmethod
@@ -472,6 +474,10 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
             raise RuntimeError("Unknown simulator %s" % self._simulator_name)
 
     @property
+    def vhdl_standard(self):
+        return self._vhdl_standard
+
+    @property
     def _preprocessed_path(self):
         return join(self._output_path, "preprocessed")
 
@@ -668,3 +674,12 @@ def file_type_of(file_name):
         return "verilog"
     else:
         raise RuntimeError("Unknown file ending '%s' of %s" % (ext, file_name))
+
+
+def select_vhdl_standard():
+    """
+    Select VHDL standard according to environment variable VUNIT_VHDL_STANDARD
+    """
+    vhdl_standard = os.environ.get('VUNIT_VHDL_STANDARD', '2008')
+    assert vhdl_standard in ('93', '2002', '2008')
+    return vhdl_standard
