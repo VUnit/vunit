@@ -206,5 +206,5 @@ class TestUiEncoding(unittest.TestCase):
     def test_can_add_non_ascii_encoded_files(self):
         ui = VUnit(output_path=self._output_path, clean=True)
         lib = ui.add_library('lib')
-        lib.add_source_files(join(dirname(__file__), 'vhdl', 'encoding', 'encoding.vhd'))
+        lib.add_source_files(join(dirname(__file__), 'encoding', 'encoding.vhd'))
         lib.entity("encoding")  # Fill raise exception of not found
