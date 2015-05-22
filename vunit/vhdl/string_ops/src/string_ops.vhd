@@ -606,7 +606,7 @@ package body string_ops is
   function to_integer_string (
     constant value : unsigned)
     return string is
-    variable ret_val : string(1 to integer(0.302*value'length + 1.0));
+    variable ret_val : string(1 to integer(0.302*real(value'length) + 1.0));
     variable index : integer := ret_val'right;
     variable last_digit, quotient : unsigned(value'length - 1 downto 0);
   begin
