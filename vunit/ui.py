@@ -45,7 +45,7 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 
-class VUnit(object):  # pylint: disable=too-many-instance-attributes
+class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-public-methods
     """
     The public interface of VUnit
     """
@@ -141,17 +141,20 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         return parser
 
     @staticmethod
-    def available_simulators():
+    def supported_simulators():
+        """
+        Return a list of supported simulator classes
+        """
+        return [ModelSimInterface]
+
+    @classmethod
+    def available_simulators(cls):
         """
         Return a list of available simulators
         """
-        sims = {}
-        if ModelSimInterface.is_available():
-            sims[ModelSimInterface.name] = ModelSimInterface
-        if len(sims) == 0:
-            raise RuntimeError("No simulator detected. "
-                               "Simulator executables must be available in PATH environment variable.")
-        return sims
+        return [simulator_class
+                for simulator_class in cls.supported_simulators()
+                if simulator_class.is_available()]
 
     @classmethod
     def select_simulator(cls):
@@ -159,19 +162,26 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         Select simulator class, either from VUNIT_SIMULATOR environment variable
         or the first available
         """
-        simulators = cls.available_simulators()
         environ_name = "VUNIT_SIMULATOR"
+
+        available_simulators = cls.available_simulators()
+        name_mapping = {simulator_class.name: simulator_class for simulator_class in cls.supported_simulators()}
+        if len(available_simulators) == 0:
+            raise RuntimeError("No available simulator detected. "
+                               "Simulator executables must be available in PATH environment variable.")
 
         if environ_name in os.environ:
             simulator_name = os.environ[environ_name]
-            if simulator_name not in simulators:
+            if simulator_name not in name_mapping:
                 raise RuntimeError(
-                    ("Simulator from " + environ_name + " environment variable %r is not available. "
-                     "Available simulators are %r")
-                    % (simulator_name, simulators.keys()))
+                    ("Simulator from " + environ_name + " environment variable %r is not supported. "
+                     "Supported simulators are %r")
+                    % (simulator_name, name_mapping.keys()))
+            simulator_class = name_mapping[simulator_name]
         else:
-            simulator_name = simulators.keys()[0]
-        return simulators[simulator_name]
+            simulator_class = available_simulators[0]
+
+        return simulator_class
 
     def __init__(self,  # pylint: disable=too-many-locals, too-many-arguments
                  output_path,
@@ -221,7 +231,10 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         if simulator_class is not None:
             self._simulator_class = simulator_class
         else:
-            self._simulator_class = self.available_simulators().values()[0]
+            self._simulator_class = self.select_simulator()
+
+        if not self._simulator_class.is_available():
+            raise AssertionError("Simulator %s is not available" % self._simulator_class.name)
 
         self._sim_specific_path = join(self._output_path, self._simulator_class.name)
         self._create_output_path(clean)
