@@ -50,6 +50,18 @@ class TestExternalRunScripts(unittest.TestCase):
                       ("passed", "lib.tb_example_many.test_pass"),
                       ("failed", "lib.tb_example_many.test_fail")])
 
+    def test_osvvm_integration_example_project(self):
+        self.check(join(ROOT, "examples", "osvvm_integration", "run.py"), exit_code=1)
+        check_report(self.report_file,
+                     [("passed", "lib.tb_alertlog_demo_global_with_comments.Test passing alerts"),
+                      ("passed", "lib.tb_alertlog_demo_hierarchy_with_comments.Test passing alerts"),
+                      ("passed", "lib.tb_alertlog_demo_global.Test passing alerts"),
+                      ("passed", "lib.tb_alertlog_demo_hierarchy.Test passing alerts"),
+                      ("failed", "lib.tb_alertlog_demo_global_with_comments.Test failing alerts"),
+                      ("failed", "lib.tb_alertlog_demo_hierarchy_with_comments.Test failing alerts"),
+                      ("failed", "lib.tb_alertlog_demo_global.Test failing alerts"),
+                      ("failed", "lib.tb_alertlog_demo_hierarchy.Test failing alerts")])
+
     def test_com_example_project(self):
         self.check(join(ROOT, "examples", "com", "run.py"))
 
