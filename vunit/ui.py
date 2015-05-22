@@ -23,9 +23,9 @@ from vunit.database import PickledDataBase, DataBase
 import sys
 
 import vunit.ostools as ostools
+from vunit.simulator_factory import SimulatorFactory
 from vunit.color_printer import (COLOR_PRINTER,
                                  NO_COLOR_PRINTER)
-from vunit.modelsim_interface import ModelSimInterface
 from vunit.project import Project
 from vunit.test_runner import TestRunner
 from vunit.test_report import TestReport
@@ -45,7 +45,7 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 
-class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-public-methods
+class VUnit(object):  # pylint: disable=too-many-instance-attributes
     """
     The public interface of VUnit
     """
@@ -58,6 +58,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
 
         parser = cls._create_argument_parser()
+        SimulatorFactory.add_arguments(parser)
         args = parser.parse_args(args=argv)
 
         def test_filter(name):
@@ -75,10 +76,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                    list_only=args.list,
                    compile_only=args.compile,
                    elaborate_only=args.elaborate,
-                   gui_mode=args.gui,
                    compile_builtins=compile_builtins,
-                   persistent_sim=os.environ.get("VUNIT_PERSISTENT_SIM", "True") == "True",
-                   simulator_class=cls.select_simulator())
+                   simulator_factory=SimulatorFactory(args))
 
     @classmethod
     def _create_argument_parser(cls):
@@ -127,64 +126,15 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                             default=False,
                             help='Do not color output')
 
-        parser.add_argument('--gui', choices=["load", "run"],
-                            default=None,
-                            help=("Open test case(s) in simulator gui. "
-                                  "'load' only loads the test case and gives the user control. "
-                                  "'run' loads and runs the test case while recursively "
-                                  "logging all variables and signals"))
-
         parser.add_argument('--log-level',
                             default="warning",
                             choices=["info", "error", "warning", "debug"])
 
         return parser
 
-    @staticmethod
-    def supported_simulators():
-        """
-        Return a list of supported simulator classes
-        """
-        return [ModelSimInterface]
-
-    @classmethod
-    def available_simulators(cls):
-        """
-        Return a list of available simulators
-        """
-        return [simulator_class
-                for simulator_class in cls.supported_simulators()
-                if simulator_class.is_available()]
-
-    @classmethod
-    def select_simulator(cls):
-        """
-        Select simulator class, either from VUNIT_SIMULATOR environment variable
-        or the first available
-        """
-        environ_name = "VUNIT_SIMULATOR"
-
-        available_simulators = cls.available_simulators()
-        name_mapping = {simulator_class.name: simulator_class for simulator_class in cls.supported_simulators()}
-        if len(available_simulators) == 0:
-            raise RuntimeError("No available simulator detected. "
-                               "Simulator executables must be available in PATH environment variable.")
-
-        if environ_name in os.environ:
-            simulator_name = os.environ[environ_name]
-            if simulator_name not in name_mapping:
-                raise RuntimeError(
-                    ("Simulator from " + environ_name + " environment variable %r is not supported. "
-                     "Supported simulators are %r")
-                    % (simulator_name, name_mapping.keys()))
-            simulator_class = name_mapping[simulator_name]
-        else:
-            simulator_class = available_simulators[0]
-
-        return simulator_class
-
     def __init__(self,  # pylint: disable=too-many-locals, too-many-arguments
                  output_path,
+                 simulator_factory,
                  clean=False,
                  use_debug_codecs=False,
                  no_color=False,
@@ -196,10 +146,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                  compile_only=False,
                  elaborate_only=False,
                  vhdl_standard='2008',
-                 compile_builtins=True,
-                 persistent_sim=True,
-                 gui_mode=None,
-                 simulator_class=None):
+                 compile_builtins=True):
 
         self._configure_logging(log_level)
 
@@ -220,23 +167,13 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._vhdl_standard = vhdl_standard
 
         self._tb_filter = tb_filter
-        self._persistent_sim = persistent_sim
-        self._gui_mode = gui_mode
         self._configuration = TestConfiguration()
         self._external_preprocessors = []
         self._location_preprocessor = None
         self._check_preprocessor = None
         self._use_debug_codecs = use_debug_codecs
 
-        if simulator_class is not None:
-            self._simulator_class = simulator_class
-        else:
-            self._simulator_class = self.select_simulator()
-
-        if not self._simulator_class.is_available():
-            raise AssertionError("Simulator %s is not available" % self._simulator_class.name)
-
-        self._sim_specific_path = join(self._output_path, self._simulator_class.name)
+        self._simulator_factory = simulator_factory
         self._create_output_path(clean)
 
         self._project = None
@@ -298,7 +235,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         Add vunit managed white box library
         """
-        path = join(self._sim_specific_path, "libraries", library_name)
+        path = join(self._simulator_factory.simulator_output_path, "libraries", library_name)
         self._project.add_library(library_name, abspath(path))
         return self._create_library_facade(library_name)
 
@@ -467,20 +404,11 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         if not exists(self._output_path):
             makedirs(self._output_path)
 
-        if not exists(self._sim_specific_path):
-            makedirs(self._sim_specific_path)
-
     def _create_simulator_if(self):
         """
         Create a simulator interface instance
         """
-        if self._simulator_class == ModelSimInterface:
-            return ModelSimInterface(
-                join(self._sim_specific_path, "modelsim.ini"),
-                persistent=self._persistent_sim and self._gui_mode is None,
-                gui_mode=self._gui_mode)
-        else:
-            raise RuntimeError("Unknown simulator %s" % self._simulator_class.name)
+        return self._simulator_factory.create()
 
     @property
     def vhdl_standard(self):

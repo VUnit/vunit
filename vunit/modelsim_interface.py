@@ -35,6 +35,34 @@ class ModelSimInterface(object):
     name = "modelsim"
 
     @staticmethod
+    def add_arguments(parser):
+        """
+        Add command line arguments
+        """
+        group = parser.add_argument_group("modelsim",
+                                          description="ModelSim specific flags")
+        group.add_argument('--gui', choices=["load", "run"],
+                           default=None,
+                           help=("Open test case(s) in simulator gui. "
+                                 "'load' only loads the test case and gives the user control. "
+                                 "'run' loads and runs the test case while recursively "
+                                 "logging all variables and signals"))
+        group.add_argument("--new-vsim",
+                           action="store_true",
+                           default=False,
+                           help="Do not re-use the same vsim process for running different test cases (slower)")
+
+    @classmethod
+    def from_args(cls, output_path, args):
+        """
+        Create new instance from command line arguments object
+        """
+        persistent = (not args.new_vsim) and args.gui is None
+        return cls(join(output_path, "modelsim.ini"),
+                   persistent=persistent,
+                   gui_mode=args.gui)
+
+    @staticmethod
     def is_available():
         """
         Return True if ModelSim is installed

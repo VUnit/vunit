@@ -10,21 +10,21 @@ Common functions re-used between test cases
 
 
 from xml.etree import ElementTree
-from vunit import VUnit
+from vunit.simulator_factory import SimulatorFactory
 
 
 def has_simulator():
-    return VUnit.select_simulator().is_available()
+    return SimulatorFactory.select_simulator().is_available()
 
 
 def simulator_is(*names):
     """
     Check that current simulator is any of names
     """
-    supported_names = [sim.name for sim in VUnit.supported_simulators()]
+    supported_names = [sim.name for sim in SimulatorFactory.supported_simulators()]
     for name in names:
         assert name in supported_names
-    return VUnit.select_simulator().name in names
+    return SimulatorFactory.select_simulator().name in names
 
 
 def check_report(report_file, tests):

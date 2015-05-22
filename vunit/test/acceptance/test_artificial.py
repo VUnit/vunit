@@ -11,7 +11,7 @@ Acceptance test of VUnit end to end functionality
 
 import unittest
 from os.path import join, dirname
-from vunit.test.common import has_simulator, check_report
+from vunit.test.common import has_simulator, check_report, simulator_is
 from os import environ
 from vunit import VUnit
 from subprocess import call
@@ -30,11 +30,12 @@ class TestVunitArtificial(unittest.TestCase):
         self.report_file = join(self.output_path, "xunit.xml")
         self.artificial_run = join(dirname(__file__), "artificial", "run.py")
 
-    def test_artificial_with_persistent(self):
-        self._test_artificial(persistent_sim=True)
+    @unittest.skipUnless(simulator_is("modelsim"), "Only modelsim has --new-vsim flag")
+    def test_artificial_modelsim_new_vsim(self):
+        self._test_artificial(args=["--new-vsim"])
 
     def test_artificial(self):
-        self._test_artificial(persistent_sim=False)
+        self._test_artificial()
 
     def test_artificial_elaborate_only(self):
         self.check(self.artificial_run,
@@ -82,14 +83,14 @@ class TestVunitArtificial(unittest.TestCase):
         check_report(self.report_file, [
             ("failed", "lib.tb_elab_fail")])
 
-    def _test_artificial(self, persistent_sim):
+    def _test_artificial(self, args=None):
         """
         Utility function to run and check the result of all test benches
         using either persistent or non-persistent simulator interface mode
         """
         self.check(self.artificial_run,
                    exit_code=1,
-                   persistent_sim=persistent_sim)
+                   args=args)
         check_report(self.report_file, [
             ("passed", "lib.tb_pass"),
             ("failed", "lib.tb_fail"),
@@ -171,7 +172,8 @@ class TestVunitArtificial(unittest.TestCase):
         args = args if args is not None else []
         new_env = environ.copy()
         new_env["VUNIT_VHDL_STANDARD"] = '2008'
-        new_env["VUNIT_PERSISTENT_SIM"] = str(persistent_sim)
+        if not persistent_sim:
+            args += ["--new-vsim"]
         if clean:
             args += ["--clean"]
         retcode = call([sys.executable, run_file,

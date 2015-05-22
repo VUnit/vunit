@@ -35,6 +35,7 @@ cases.
 usage: run.py [-h] [-l] [--compile] [--elaborate] [--clean] [-o OUTPUT_PATH]
               [-x XUNIT_XML] [-v] [--no-color] [--gui {load,run}]
               [--log-level {info,error,warning,debug}]
+              [--gui {load,run}] [--new-vsim]
               [tests [tests ...]]
 
 VUnit command line tool.
@@ -60,6 +61,16 @@ optional arguments:
                         and runs the test case while recursively logging all
                         variables and signals
   --log-level {info,error,warning,debug}
+
+modelsim:
+  ModelSim specific flags
+
+  --gui {load,run}      Open test case(s) in simulator gui. 'load' only loads
+                        the test case and gives the user control. 'run' loads
+                        and runs the test case while recursively logging all
+                        variables and signals
+  --new-vsim            Do not re-use the same vsim process for running
+                        different test cases (slower)
 ```
 
 ## VHDL Test Benches

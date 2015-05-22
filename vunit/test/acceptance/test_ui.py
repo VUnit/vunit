@@ -81,7 +81,8 @@ end architecture;
 
     def _create_ui(self):
         """ Create an instance of the VUnit public interface class """
-        ui = VUnit(output_path=self._output_path, clean=True)
+        ui = VUnit.from_argv(argv=["--output-path=%s" % self._output_path,
+                                   "--clean"])
         ui.add_library('lib')
         return ui
 
@@ -204,7 +205,8 @@ class TestUiEncoding(unittest.TestCase):
         self._output_path = join(dirname(__file__), 'ui_out')
 
     def test_can_add_non_ascii_encoded_files(self):
-        ui = VUnit(output_path=self._output_path, clean=True)
+        ui = VUnit.from_argv(argv=["--output-path=%s" % self._output_path,
+                                   "--clean"])
         lib = ui.add_library('lib')
         lib.add_source_files(join(dirname(__file__), 'encoding', 'encoding.vhd'))
         lib.entity("encoding")  # Fill raise exception of not found
