@@ -69,6 +69,6 @@ License, v. 2.0](http://mozilla.org/MPL/2.0/).
 &copy; 2014-2015 Lars Asplund, lars.anders.asplund@gmail.com.
 
 ##OSVVM
-OSVVM is redistributed with VUnit for your convenience and is located under [vhdl/osvvm](vhdl/osvvm). Derivative work is also located under [examples/osvvm\_integration/src](examples/osvvm_integration/src). These files are licensed under the terms of [ARTISTIC License](http://www.perlfoundation.org/artistic_license_2_0).
+OSVVM 2015.03 is redistributed with VUnit for your convenience and is located under [vhdl/osvvm](vhdl/osvvm). Minor [modifications](https://github.com/LarsAsplund/vunit/commit/25fce1b3700e746c3fa23bd7157777dd4f20f0d6) have been made to enable GHDL support. Derivative work is also located under [examples/osvvm\_integration/src](examples/osvvm_integration/src). These files are licensed under the terms of [ARTISTIC License](http://www.perlfoundation.org/artistic_license_2_0).
 
 &copy; 2010 - 2015 by SynthWorks Design Inc.  All rights reserved.

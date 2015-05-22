@@ -490,7 +490,7 @@ package body AlertLogPkg is
           end if ; 
           write(buf, " at " & to_string(NOW, 1 ns) & " ") ; 
           writeline(buf) ; 
-          ReportAlerts ;
+          ReportAlerts(ReportAll => TRUE);
           std.env.stop(0) ; 
         end if ; 
       end if ; 

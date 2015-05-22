@@ -84,9 +84,9 @@ package RandomBasePkg is
   -- Translate from integer_vector, integer, or string to RandomSeedType
   -- Required by RandomPkg.InitSeed
   -- GenRandSeed makes sure all values are in a valid range
-  function  GenRandSeed(IV : integer_vector) return RandomSeedType ;
-  function  GenRandSeed(I : integer) return RandomSeedType ;
-  function  GenRandSeed(S : string) return RandomSeedType ;
+  impure function  GenRandSeed(IV : integer_vector) return RandomSeedType ;
+  impure function  GenRandSeed(I : integer) return RandomSeedType ;
+  impure function  GenRandSeed(S : string) return RandomSeedType ;
   
   -- IO for RandomSeedType.  If use subtype, then create aliases here
   -- in a similar fashion VHDL-2008 std_logic_textio.
@@ -133,7 +133,7 @@ package body RandomBasePkg is
   --    if 2 seed values are passed to GenRandSeed and they are 
   --    in the above range, then they must remain unmodified.
   --
-  function GenRandSeed(IV : integer_vector) return RandomSeedType is
+  impure function GenRandSeed(IV : integer_vector) return RandomSeedType is
     alias iIV : integer_vector(1 to IV'length) is IV ;
     variable Seed1 : integer ;
     variable Seed2 : integer ;
@@ -163,7 +163,7 @@ package body RandomBasePkg is
   --  GenRandSeed
   --    transform a single integer into the internal seed
   --
-  function GenRandSeed(I : integer) return RandomSeedType is
+  impure function GenRandSeed(I : integer) return RandomSeedType is
     variable result : integer_vector(1 to 2) ;
   begin
     result(1) := I ;
@@ -177,7 +177,7 @@ package body RandomBasePkg is
   --    transform a string value into the internal seed
   --    usage:  RV.GenRandSeed(RV'instance_path));
   --
-  function GenRandSeed(S : string) return RandomSeedType is
+  impure function GenRandSeed(S : string) return RandomSeedType is
     constant LEN : integer := S'length ;
     constant HALF_LEN : integer := LEN/2 ;
     alias revS : string(LEN downto 1) is S ;

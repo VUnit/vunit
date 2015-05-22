@@ -25,11 +25,9 @@ class TestExternalRunScripts(unittest.TestCase):
     Verify that example projects run correctly
     """
 
-    @unittest.skipIf(simulator_is("ghdl"), "OSVVM 2015.03 does not work with GHDL")
     def test_uart_example_project(self):
         self.check(join(ROOT, "examples", "uart", "run.py"))
 
-    @unittest.skipIf(simulator_is("ghdl"), "OSVVM 2015.03 does not work with GHDL")
     def test_preprocessed_uart_example_project(self):
         self.check(join(ROOT, "examples", "uart", "run_with_preprocessing.py"))
 
@@ -52,7 +50,6 @@ class TestExternalRunScripts(unittest.TestCase):
                       ("passed", "lib.tb_generated.data_width=4,sign=True.Test 1"),
                       ("passed", "lib.tb_generated.data_width=16,sign=True.Test 2")])
 
-    @unittest.skipIf(simulator_is("ghdl"), "OSVVM 2015.03 does not work with GHDL")
     def test_array_example_project(self):
         self.check(join(ROOT, "examples", "array", "run.py"))
 
@@ -63,7 +60,6 @@ class TestExternalRunScripts(unittest.TestCase):
                       ("passed", "lib.tb_example_many.test_pass"),
                       ("failed", "lib.tb_example_many.test_fail")])
 
-    @unittest.skipIf(simulator_is("ghdl"), "OSVVM 2015.03 does not work with GHDL")
     def test_osvvm_integration_example_project(self):
         self.check(join(ROOT, "examples", "osvvm_integration", "run.py"), exit_code=1)
         check_report(self.report_file,
@@ -76,11 +72,9 @@ class TestExternalRunScripts(unittest.TestCase):
                       ("failed", "lib.tb_alertlog_demo_global.Test failing alerts"),
                       ("failed", "lib.tb_alertlog_demo_hierarchy.Test failing alerts")])
 
-    @unittest.skipIf(simulator_is("ghdl"), "OSVVM 2015.03 does not work with GHDL")
     def test_com_example_project(self):
         self.check(join(ROOT, "examples", "com", "run.py"))
 
-    @unittest.skipIf(simulator_is("ghdl"), "OSVVM 2015.03 does not work with GHDL")
     def test_array_vhdl_2008(self):
         self.check(join(ROOT, "vhdl", "array", "run.py"))
 
