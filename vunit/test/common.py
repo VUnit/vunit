@@ -10,38 +10,20 @@ Common functions re-used between test cases
 
 
 from xml.etree import ElementTree
-from vunit.modelsim_interface import ModelSimInterface
-from os import environ
-
-SIMULATORS = [ModelSimInterface]
-
-
-def _get_simulator_to_use():
-    """
-    Return the class of the simulator to use
-    """
-    key = "VUNIT_SIMULATOR"
-    if key in environ:
-        for sim in SIMULATORS:
-            if sim.name == environ[key]:
-                return sim
-    else:
-        return SIMULATORS[0]
-    assert False
+from vunit import VUnit
 
 
 def has_simulator():
-    return _get_simulator_to_use().is_available()
+    return VUnit.select_simulator().is_available()
 
 
 def simulator_is(*names):
     """
     Check that current simulator is any of names
     """
-    simulator_names = [sim.name for sim in SIMULATORS]
     for name in names:
-        assert name in simulator_names
-    return _get_simulator_to_use().name in names
+        assert name in VUnit.available_simulators()
+    return VUnit.select_simulator().name in names
 
 
 def check_report(report_file, tests):

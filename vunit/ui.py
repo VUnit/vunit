@@ -78,7 +78,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
                    gui_mode=args.gui,
                    compile_builtins=compile_builtins,
                    persistent_sim=os.environ.get("VUNIT_PERSISTENT_SIM", "True") == "True",
-                   simulator_class=cls._select_simulator())
+                   simulator_class=cls.select_simulator())
 
     @classmethod
     def _create_argument_parser(cls):
@@ -141,7 +141,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         return parser
 
     @staticmethod
-    def _available_simulators():
+    def available_simulators():
         """
         Return a list of available simulators
         """
@@ -154,12 +154,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         return sims
 
     @classmethod
-    def _select_simulator(cls):
+    def select_simulator(cls):
         """
         Select simulator class, either from VUNIT_SIMULATOR environment variable
         or the first available
         """
-        simulators = cls._available_simulators()
+        simulators = cls.available_simulators()
         environ_name = "VUNIT_SIMULATOR"
 
         if environ_name in os.environ:
@@ -221,7 +221,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         if simulator_class is not None:
             self._simulator_class = simulator_class
         else:
-            self._simulator_class = self._available_simulators().values()[0]
+            self._simulator_class = self.available_simulators().values()[0]
 
         self._sim_specific_path = join(self._output_path, self._simulator_class.name)
         self._create_output_path(clean)
