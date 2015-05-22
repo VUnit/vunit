@@ -71,12 +71,13 @@ package body com_codec_pkg is
     variable resolution        : time;
     variable t, t_part         : time                     := 0 ns;
     variable l, r, sign_offset : integer;
+    variable is_negative : boolean;
   begin
     -- Modelsim can't parse a string representation of time
     -- with a numerical value outside of the integer range (32 bits).
     -- According to standard?
     resolution := time'value("1 " & code_i(space_pos + 1 to code_i'length));
-
+    is_negative := code_i(1) = '-';
     l := space_pos - 9;
     r := space_pos - 1;
     if code_i(1) = '-' then
@@ -94,14 +95,14 @@ package body com_codec_pkg is
         t_part := t_part * 1e9;
       end loop;
 
-      t := t + t_part;
+      if is_negative then
+        t := t - t_part;
+      else
+        t := t + t_part;
+      end if;
       l := l - 9;
       r := r - 9;
     end loop;
-
-    if code_i(1) = '-' then
-      t := -t;
-    end if;
 
     return t;
   end;
