@@ -34,7 +34,7 @@ cases.
 > python run.py -h
 usage: run.py [-h] [-l] [--compile] [--elaborate] [--clean] [-o OUTPUT_PATH]
               [-x XUNIT_XML] [-v] [--no-color] [--gui {load,run}]
-              [--log-level {info,error,warning,debug}] [--sim {modelsim}]
+              [--log-level {info,error,warning,debug}]
               [tests [tests ...]]
 
 VUnit command line tool.
@@ -60,7 +60,6 @@ optional arguments:
                         and runs the test case while recursively logging all
                         variables and signals
   --log-level {info,error,warning,debug}
-  --sim {modelsim}
 ```
 
 ## VHDL Test Benches

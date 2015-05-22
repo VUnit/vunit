@@ -50,37 +50,14 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
     The public interface of VUnit
     """
 
-    @staticmethod
-    def _available_simulators():
-        """
-        Return a list of available simulators
-        """
-        sims = []
-        if ModelSimInterface.is_available():
-            sims.append(ModelSimInterface.name)
-        if len(sims) == 0:
-            raise RuntimeError("No simulator detected. "
-                               "Simulator executables must be available in PATH environment variable.")
-        return sims
-
     @classmethod
-    def from_argv(cls, argv=None, preferred_simulator=None, compile_builtins=True):
+    def from_argv(cls, argv=None, compile_builtins=True):
         """
         Create VUnit instance from command line arguments
         Can take arguments from 'argv' if not None  instead of sys.argv
         """
-        simulators = cls._available_simulators()
-        environ_name = "VUNIT_SIMULATOR"
 
-        if preferred_simulator is not None:
-            cls._validate_simulator(preferred_simulator, simulators,
-                                    description="preferred_simulator")
-        elif environ_name in os.environ:
-            preferred_simulator = os.environ[environ_name]
-            cls._validate_simulator(preferred_simulator, simulators,
-                                    description="Simulator from " + environ_name + " environment variable")
-
-        parser = cls._create_argument_parser(simulators, preferred_simulator=preferred_simulator)
+        parser = cls._create_argument_parser()
         args = parser.parse_args(args=argv)
 
         def test_filter(name):
@@ -101,20 +78,10 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
                    gui_mode=args.gui,
                    compile_builtins=compile_builtins,
                    persistent_sim=os.environ.get("VUNIT_PERSISTENT_SIM", "True") == "True",
-                   simulator_name=args.sim)
-
-    @staticmethod
-    def _validate_simulator(simulator_name, simulators, description):
-        """
-        Validate the simulator_name against available simulators.
-        Use description for error messages.
-        """
-        if simulator_name not in simulators:
-            raise RuntimeError("%s: %r is not available. Available simulators are %r"
-                               % (description, simulator_name, simulators))
+                   simulator_class=cls._select_simulator())
 
     @classmethod
-    def _create_argument_parser(cls, simulators, preferred_simulator):
+    def _create_argument_parser(cls):
         """
         Create the argument parser
         """
@@ -171,11 +138,40 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
                             default="warning",
                             choices=["info", "error", "warning", "debug"])
 
-        parser.add_argument('--sim',
-                            default=preferred_simulator,
-                            choices=simulators)
-
         return parser
+
+    @staticmethod
+    def _available_simulators():
+        """
+        Return a list of available simulators
+        """
+        sims = {}
+        if ModelSimInterface.is_available():
+            sims[ModelSimInterface.name] = ModelSimInterface
+        if len(sims) == 0:
+            raise RuntimeError("No simulator detected. "
+                               "Simulator executables must be available in PATH environment variable.")
+        return sims
+
+    @classmethod
+    def _select_simulator(cls):
+        """
+        Select simulator class, either from VUNIT_SIMULATOR environment variable
+        or the first available
+        """
+        simulators = cls._available_simulators()
+        environ_name = "VUNIT_SIMULATOR"
+
+        if environ_name in os.environ:
+            simulator_name = os.environ[environ_name]
+            if simulator_name not in simulators:
+                raise RuntimeError(
+                    ("Simulator from " + environ_name + " environment variable %r is not available. "
+                     "Available simulators are %r")
+                    % (simulator_name, simulators.keys()))
+        else:
+            simulator_name = simulators.keys()[0]
+        return simulators[simulator_name]
 
     def __init__(self,  # pylint: disable=too-many-locals, too-many-arguments
                  output_path,
@@ -193,7 +189,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
                  compile_builtins=True,
                  persistent_sim=True,
                  gui_mode=None,
-                 simulator_name=None):
+                 simulator_class=None):
 
         self._configure_logging(log_level)
 
@@ -222,12 +218,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         self._check_preprocessor = None
         self._use_debug_codecs = use_debug_codecs
 
-        if simulator_name is not None:
-            self._simulator_name = simulator_name
+        if simulator_class is not None:
+            self._simulator_class = simulator_class
         else:
-            self._simulator_name = self._available_simulators()[0]
+            self._simulator_class = self._available_simulators().values()[0]
 
-        self._sim_specific_path = join(self._output_path, self._simulator_name)
+        self._sim_specific_path = join(self._output_path, self._simulator_class.name)
         self._create_output_path(clean)
 
         self._project = None
@@ -465,13 +461,13 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         """
         Create a simulator interface instance
         """
-        if self._simulator_name == ModelSimInterface.name:
+        if self._simulator_class == ModelSimInterface:
             return ModelSimInterface(
                 join(self._sim_specific_path, "modelsim.ini"),
                 persistent=self._persistent_sim and self._gui_mode is None,
                 gui_mode=self._gui_mode)
         else:
-            raise RuntimeError("Unknown simulator %s" % self._simulator_name)
+            raise RuntimeError("Unknown simulator %s" % self._simulator_class.name)
 
     @property
     def vhdl_standard(self):
