@@ -58,6 +58,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         sims = []
         if ModelSimInterface.is_available():
             sims.append(ModelSimInterface.name)
+        if len(sims) == 0:
+            raise RuntimeError("No simulator detected. "
+                               "Simulator executables must be available in PATH environment variable.")
         return sims
 
     @classmethod
@@ -67,7 +70,6 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         Can take arguments from 'argv' if not None  instead of sys.argv
         """
         simulators = cls._available_simulators()
-
         environ_name = "VUNIT_SIMULATOR"
 
         if preferred_simulator is not None:
@@ -102,17 +104,14 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
                    simulator_name=args.sim)
 
     @staticmethod
-    def _validate_simulator(preferred_simulator, simulators, description):
+    def _validate_simulator(simulator_name, simulators, description):
         """
-        Validate the preferred_simulator against available simulators.
+        Validate the simulator_name against available simulators.
         Use description for error messages.
         """
-        if len(simulators) == 0:
-            raise RuntimeError("No simulator detected")
-        elif preferred_simulator is not None:
-            if preferred_simulator not in simulators:
-                raise RuntimeError("%s: %r is not available. Available simulators are %r"
-                                   % (description, preferred_simulator, simulators))
+        if simulator_name not in simulators:
+            raise RuntimeError("%s: %r is not available. Available simulators are %r"
+                               % (description, simulator_name, simulators))
 
     @classmethod
     def _create_argument_parser(cls, simulators, preferred_simulator):
