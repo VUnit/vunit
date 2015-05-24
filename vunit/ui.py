@@ -5,24 +5,24 @@
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 """
-The main public interface of VUnit.
+The main public Python interface of VUnit.
 """
 
 
 from __future__ import print_function
 
-import argparse
+import sys
 import os
+import traceback
+
 from os.path import exists, abspath, join, basename, splitext
-from os import makedirs, getcwd
 from shutil import rmtree
 from glob import glob
-import traceback
 from fnmatch import fnmatch
 from vunit.database import PickledDataBase, DataBase
-import sys
 
 import vunit.ostools as ostools
+from vunit.vunit_cli import VUnitCLI
 from vunit.simulator_factory import SimulatorFactory
 from vunit.color_printer import (COLOR_PRINTER,
                                  NO_COLOR_PRINTER)
@@ -56,11 +56,14 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         Create VUnit instance from command line arguments
         Can take arguments from 'argv' if not None  instead of sys.argv
         """
+        args = VUnitCLI().parse_args(argv=argv)
+        return cls.from_args(args, compile_builtins=compile_builtins)
 
-        parser = cls._create_argument_parser()
-        SimulatorFactory.add_arguments(parser)
-        args = parser.parse_args(args=argv)
-
+    @classmethod
+    def from_args(cls, args, compile_builtins=True):
+        """
+        Create VUnit instance from args namespace
+        """
         def test_filter(name):
             return any(fnmatch(name, pattern) for pattern in args.test_patterns)
 
@@ -78,59 +81,6 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
                    elaborate_only=args.elaborate,
                    compile_builtins=compile_builtins,
                    simulator_factory=SimulatorFactory(args))
-
-    @classmethod
-    def _create_argument_parser(cls):
-        """
-        Create the argument parser
-        """
-        parser = argparse.ArgumentParser(description='VUnit command line tool.')
-
-        parser.add_argument('test_patterns', metavar='tests', nargs='*',
-                            default='*',
-                            help='Tests to run')
-
-        parser.add_argument('-l', '--list', action='store_true',
-                            default=False,
-                            help='Only list all test cases')
-
-        parser.add_argument('--compile', action='store_true',
-                            default=False,
-                            help='Only compile project without running tests')
-
-        parser.add_argument('--elaborate', action='store_true',
-                            default=False,
-                            help='Only elaborate test benches without running')
-
-        parser.add_argument('--clean', action='store_true',
-                            default=False,
-                            help='Remove output path first')
-
-        parser.add_argument('--use-debug-codecs', action='store_true',
-                            default=False,
-                            help='Run with debug features enabled')
-
-        parser.add_argument('-o', '--output-path',
-                            default=join(abspath(getcwd()), "vunit_out"),
-                            help='Output path for compilation and simulation artifacts')
-
-        parser.add_argument('-x', '--xunit-xml',
-                            default=None,
-                            help='Xunit test report .xml file')
-
-        parser.add_argument('-v', '--verbose', action="store_true",
-                            default=False,
-                            help='Print test output immediately and not only when failure')
-
-        parser.add_argument('--no-color', action='store_true',
-                            default=False,
-                            help='Do not color output')
-
-        parser.add_argument('--log-level',
-                            default="warning",
-                            choices=["info", "error", "warning", "debug"])
-
-        return parser
 
     def __init__(self,  # pylint: disable=too-many-locals, too-many-arguments
                  output_path,
@@ -402,7 +352,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
             rmtree(self._preprocessed_path)
 
         if not exists(self._output_path):
-            makedirs(self._output_path)
+            os.makedirs(self._output_path)
 
     def _create_simulator_if(self):
         """
