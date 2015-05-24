@@ -55,10 +55,6 @@ class VUnitCLI(object):
                             default=False,
                             help='Remove output path first')
 
-        parser.add_argument('--use-debug-codecs', action='store_true',
-                            default=False,
-                            help='Run with debug features enabled')
-
         parser.add_argument('-o', '--output-path',
                             default=join(abspath(os.getcwd()), "vunit_out"),
                             help='Output path for compilation and simulation artifacts')
@@ -79,6 +75,10 @@ class VUnitCLI(object):
                             default="warning",
                             choices=["info", "error", "warning", "debug"])
 
+        com = parser.add_argument_group("com", description="Flags specific to the com message passing package")
+        com.add_argument('--use-debug-codecs', action='store_true',
+                         default=False,
+                         help='Run with debug features enabled')
         SimulatorFactory.add_arguments(parser)
 
         return parser
