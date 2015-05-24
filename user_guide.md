@@ -6,7 +6,7 @@ that can be imported directly from the vunit module.
 
 ```python
 # file: run.py
-import vunit
+from vunit import VUnit
 
 # Create VUnit instance by parsing command line arguments
 vu = VUnit.from_argv()
