@@ -35,13 +35,13 @@ To send a message we must first create an actor for the sender and then find the
     variable proc_2 : actor_t := find("proc_2");  -- Find the receiver
     variable receipt : receipt_t;       -- Send receipt
   begin
-    send(net, self, proc_2, "Hello proc_2!", receipt);
+    send(net, proc_2, "Hello proc_2!", receipt);
     check_relation(receipt.status = ok);
     wait;
   end process proc_1;
 ```
 
-The returned receipt contains, among other things, status for the send and the expected value is `ok`. `net` is the abstract network over which messages are sent. Ideally this shouldn't be part of the procedure call but since `net` is a signal and the procedure is defined within a package it has to be among the parameters if the procedure is to drive the signal.
+The returned receipt contains, among other things, status for the send and the expected value is `ok`. `net` is the abstract network over which messages are sent. Ideally this shouldn't be part of the procedure call but since `net` is a signal and the procedure is defined within a package it has to be among the parameters if the procedure is to drive the signal. Note that the self variable isn't used and could have been excluded. It will be used in later examples where the sender can't be anonymous. 
 
 Below is a basic receiver for the message above.
 
@@ -89,7 +89,7 @@ The default behaviour with deferred creation can be overridden by calling `find(
 In the examples so far the message has been a string and string is the only message type that `com` can handle. Rather than having the user define overloaded versions for every subprogram and message type needed `com` provides functionality for encoding other types to string before the message is sent and then, on the receiving side, decode back to the original type again. For example, sending an integer can be done like this.
 
 ```vhdl
-    send(net, self, receiver, encode(my_integer), receipt);
+    send(net, receiver, encode(my_integer), receipt);
 ```
 
 which can be received like this.
@@ -150,13 +150,13 @@ The last two lines will take the types in `msg_types_pkg`, generate codecs and p
 
 ``` vhdl
 my_card_msg := (load, (ace, spades));
-send(net, self, receiver, encode(my_card_msg), receipt);
+send(net, receiver, encode(my_card_msg), receipt);
 ```
 
 you can write
 
 ``` vhdl
-send(net, self, receiver, load((ace, spades)), receipt);
+send(net, receiver, load((ace, spades)), receipt);
 ```
 
 which makes the intention of the message more clear. You also get a `get_msg_type` function which will return the type of a message considering all message types defined in the package. This provides a convenient way to select the correct decoder on the receiving side. Here's an example.
@@ -185,7 +185,7 @@ Sometimes a message needs to be sent to many receivers and this can of course be
 
 An example of this pattern can be found in the [card shuffler example](../examples/com/test/tb_card_shuffler.vhd). There the test runner publishes commands to load cards into the card shuffler. These commands are received by a driver which translates the commands to the pin wiggling understood by the card shuffler. The commands are also received by the scoreboard such that it can compare what is being sent into the card shuffler with what is sent out and from that determine if a correct shuffling has taken place.
 
-A `publish` is the same as a `send` with the difference that no receiver is specified and that a status is returned instead of a receipt. The difference between a receipt and a status is that the receipt contains status as we've seen before but also a message ID which is used for the client/server pattern described later on. The ID is unique to a message but a publish may result in zero or many messages. Moreover, it does not make sense to combine publishing with the client/server pattern so the message ID has been excluded from the `publish` procedure.
+A `publish` is the same as a `send` with the difference that no receiver is specified, it can't be anonymous, and that a status is returned instead of a receipt. The difference between a receipt and a status is that the receipt contains status as we've seen before but also a message ID which is used for the client/server pattern described later on. The ID is unique to a message but a publish may result in zero or many messages. Moreover, it does not make sense to combine publishing with the client/server pattern so the message ID has been excluded from the `publish` procedure. A publish must be made with the publisher actor as a parameter so that `com` can find the subscribers.
 
 ```vhdl
 publish(net, self, load((rank, suit)), status); 
@@ -206,7 +206,7 @@ unsubscribe(self, find("test runner"), status);
 ## Client/Server Pattern
 Messages sent are often requests for some information owned by the receiver. This is called the client/server pattern and is supported in a number of ways.
 
-* The server needs a way to reply to a request from a client which it has no prior knowledge of. This is achieved by using `message.sender` on an incoming message.
+* The server needs a way to reply to a request from a client which it has no prior knowledge of. This is achieved by using `message.sender` on an incoming message. This also means that the `send` call making the request can't be anonymous.
 * The server also needs a way to specify which request it's replying to since replies may be done out of order. To do this the server extracts a unique message ID from the client request message and use that as a reference when sending the reply.
   ```vhdl
 requesting_actor := message.sender;
