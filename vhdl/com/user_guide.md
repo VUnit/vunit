@@ -221,7 +221,11 @@ reply(net, self, requesting_actor, request_id, reply_message, receipt);
 send(net, self, find("scoreboard"), request_message, receipt);
 receive_reply(net, self, receipt.id, reply_message);
 ```
-  The difference between `receive_reply` and a normal `receive` is the ID for the request message which reply we are waiting for. Any message ignored by `receive_reply` will still be available by calling the normal `receive` procedure later on.
+  The difference between `receive_reply` and a normal `receive` is the ID for the request message which reply we are waiting for. Any message ignored by `receive_reply` will still be available by calling the normal `receive` procedure later on. When the `send` and the `receive_reply` calls are made back-to-back they can be replaced by a single `request` call.
+   ```vhdl
+request(net, self, find("scoreboard"), request_message, reply_message);
+```
+
 
 ## Synchronous Communication
 The actor model as well as `com` are based on asynchronous communication but can still be used for synchronous communication. There are basically two ways:
