@@ -14,6 +14,7 @@ from __future__ import print_function
 from vunit.ostools import Process, write_file, file_exists
 from os.path import join, dirname, abspath
 import os
+import subprocess
 
 from vunit.exceptions import CompileError
 from distutils.spawn import find_executable
@@ -23,6 +24,9 @@ try:
 except ImportError:
     # Python 2
     from ConfigParser import RawConfigParser  # pylint: disable=import-error
+
+import logging
+LOGGER = logging.getLogger(__name__)
 
 
 class ModelSimInterface(object):
@@ -103,9 +107,19 @@ class ModelSimInterface(object):
         """
         Create the modelsim.ini file if it does not exist
         """
-        if not file_exists(self._modelsim_ini):
-            proc = Process(args=['vmap', '-c'], cwd=dirname(self._modelsim_ini))
-            proc.consume_output(callback=None)
+        if file_exists(self._modelsim_ini):
+            return
+        cwd = join(dirname(self._modelsim_ini))
+        try:
+            env = os.environ.copy()
+            del env["MODELSIM"]
+            output = subprocess.check_output(['vmap', '-c'], cwd=cwd, stderr=subprocess.PIPE, env=env)
+        except subprocess.CalledProcessError as exc:
+            LOGGER.error("Failed to create %s by running 'vmap -c' in %s exit code was %i",
+                         self._modelsim_ini, cwd, exc.returncode)
+            print("== Output of 'vmap -c' " + ("=" * 60))
+            print(exc.output)
+            print("=======================" + ("=" * 60))
 
     def compile_project(self, project, vhdl_standard):
         """
