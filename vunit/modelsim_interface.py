@@ -82,12 +82,12 @@ class ModelSimInterface(object):
         # Also a problem with ALTERA STARTER EDITION 10.3c
         os.environ["MODELSIM"] = self._modelsim_ini
 
-        self._create_modelsim_ini()
         self._vsim_process = None
         self._persistent = persistent
         self._gui_mode = gui_mode
         assert gui_mode in (None, "run", "load")
         assert not (persistent and (gui_mode is not None))
+        self._create_modelsim_ini()
 
     def __del__(self):
         if self._vsim_process is not None:
@@ -120,6 +120,7 @@ class ModelSimInterface(object):
             print("== Output of 'vmap -c' " + ("=" * 60))
             print(exc.output)
             print("=======================" + ("=" * 60))
+            raise
 
     def compile_project(self, project, vhdl_standard):
         """
