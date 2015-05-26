@@ -1,4 +1,8 @@
 # VUnit User Guide
+
+## Introduction
+The idea in VUnit is to have a single point of entry for compiling and running all tests within a VHDL project. Tests do not need to be manually added to some list as they are automatically detected. There is no need for maintaining a list of files in compile order or manually re-compile selected files after they have been edited as VUnit automatically determines the compile order as well as which files to incrementally re-compile. This is achieved by having a `run.py` file for each project where libraries are defined into which files are added using the VUnit Python interface. The `run.py` file then acts as a command line utility for compiling and running tests within the VHDL project. 
+
 ## Python Interface
 
 The public interface of VUnit is exposed through the `VUnit` class
