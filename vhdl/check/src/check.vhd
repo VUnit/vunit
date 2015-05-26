@@ -1657,51 +1657,6 @@ package body check_pkg is
   end function to_char;
 
   function to_string (
-    constant data : unsigned)
-    return string is
-    variable ret_val : string(1 to data'length);
-  begin
-    for i in ret_val'range loop
-      if data'ascending then
-        ret_val(i) := to_char(data(data'left + i - 1));
-      else
-        ret_val(i) := to_char(data(data'left - i + 1));
-      end if;
-    end loop;
-    return ret_val;
-  end function to_string;
-
-  function to_string (
-    constant data : signed)
-    return string is
-    variable ret_val : string(1 to data'length);
-  begin
-    for i in ret_val'range loop
-      if data'ascending then
-        ret_val(i) := to_char(data(data'left + i - 1));
-      else
-        ret_val(i) := to_char(data(data'left - i + 1));
-      end if;
-    end loop;
-    return ret_val;
-  end function to_string;
-
-  function to_string (
-    constant data : std_logic_vector)
-    return string is
-    variable ret_val : string(1 to data'length);
-  begin
-    for i in ret_val'range loop
-      if data'ascending then
-        ret_val(i) := to_char(data(data'left + i - 1));
-      else
-        ret_val(i) := to_char(data(data'left - i + 1));
-      end if;
-    end loop;
-    return ret_val;
-  end function to_string;
-
-  function to_string (
     constant data : std_logic)
     return string is
     variable ret_val : string(1 to 1);
@@ -3157,5 +3112,3 @@ package body check_pkg is
     return pass;
   end;
 end package body check_pkg;
-
-

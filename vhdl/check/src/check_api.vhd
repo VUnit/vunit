@@ -760,21 +760,94 @@ package check_pkg is
     return boolean;
 
   procedure check_relation(
+    variable checker   : inout checker_t;
+    constant expr      : in    std_ulogic;
+    constant msg       : in    string      := "";
+    constant level     : in    log_level_t := dflt;
+    constant auto_msg  : in    string      := "";
+    constant line_num  : in    natural     := 0;
+    constant file_name : in    string      := "");
+
+  procedure check_relation(
+    variable checker   : inout checker_t;
+    variable pass      : out   boolean;
+    constant expr      : in    std_ulogic;
+    constant msg       : in    string      := "";
+    constant level     : in    log_level_t := dflt;
+    constant auto_msg  : in    string      := "";
+    constant line_num  : in    natural     := 0;
+    constant file_name : in    string      := "");
+
+  procedure check_relation(
     constant expr      : in std_ulogic;
     constant msg       : in string      := "";
     constant level     : in log_level_t := dflt;
-    constant auto_msg  : in string      := "";
+    constant auto_msg  : in    string      := "";
     constant line_num  : in natural     := 0;
     constant file_name : in string      := "");
+
+  procedure check_relation(
+    variable pass      : out boolean;
+    constant expr      : in  std_ulogic;
+    constant msg       : in  string      := "";
+    constant level     : in  log_level_t := dflt;
+    constant auto_msg  : in    string      := "";
+    constant line_num  : in  natural     := 0;
+    constant file_name : in  string      := "");
+
+  impure function check_relation(
+    constant expr      : in  std_ulogic;
+    constant msg       : in  string      := "";
+    constant level     : in  log_level_t := dflt;
+    constant auto_msg  : in    string      := "";
+    constant line_num  : in  natural     := 0;
+    constant file_name : in  string      := "")
+    return boolean;
+
+  procedure check_relation(
+    variable checker   : inout checker_t;
+    constant expr      : in    bit;
+    constant msg       : in    string      := "";
+    constant level     : in    log_level_t := dflt;
+    constant auto_msg  : in    string      := "";
+    constant line_num  : in    natural     := 0;
+    constant file_name : in    string      := "");
+
+  procedure check_relation(
+    variable checker   : inout checker_t;
+    variable pass      : out   boolean;
+    constant expr      : in    bit;
+    constant msg       : in    string      := "";
+    constant level     : in    log_level_t := dflt;
+    constant auto_msg  : in    string      := "";
+    constant line_num  : in    natural     := 0;
+    constant file_name : in    string      := "");
 
   procedure check_relation(
     constant expr      : in bit;
     constant msg       : in string      := "";
     constant level     : in log_level_t := dflt;
-    constant auto_msg  : in string      := "";
+    constant auto_msg  : in    string      := "";
     constant line_num  : in natural     := 0;
     constant file_name : in string      := "");
 
+  procedure check_relation(
+    variable pass      : out boolean;
+    constant expr      : in  bit;
+    constant msg       : in  string      := "";
+    constant level     : in  log_level_t := dflt;
+    constant auto_msg  : in    string      := "";
+    constant line_num  : in  natural     := 0;
+    constant file_name : in  string      := "");
+
+  impure function check_relation(
+    constant expr      : in  bit;
+    constant msg       : in  string      := "";
+    constant level     : in  log_level_t := dflt;
+    constant auto_msg  : in    string      := "";
+    constant line_num  : in  natural     := 0;
+    constant file_name : in  string      := "")
+    return boolean;
 
   -----------------------------------------------------------------------------
   -- check_equal
@@ -1594,6 +1667,3 @@ package check_pkg is
     constant file_name       : in string      := "")
     return boolean;
 end package;
-
-
-
