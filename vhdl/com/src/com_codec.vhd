@@ -276,17 +276,6 @@ package body com_codec_pkg is
     return ret_val;
   end;
 
-  function decode (
-    constant code : string)
-    return std_ulogic_array is
-    variable ret_val : std_ulogic_array(get_range(code)'range);
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
-    return ret_val;
-  end;
-
   function encode (
     constant data : string)
     return string is

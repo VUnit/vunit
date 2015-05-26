@@ -183,18 +183,6 @@ package body com_debug_codec_builder_pkg is
     return replace(replace(replace(data, ')', "\rp"), '(', "\lp"), ',', "\comma");
   end function escape_special_characters;
 
-  function encode_array_header (
-    constant range_left1   : string;
-    constant range_right1  : string;
-    constant is_ascending1 : boolean;
-    constant range_left2   : string  := "";
-    constant range_right2  : string  := "";
-    constant is_ascending2 : boolean := true)
-    return string is
-  begin
-    return "";
-  end;
-
   -----------------------------------------------------------------------------
   -- Decoding support
   -----------------------------------------------------------------------------
