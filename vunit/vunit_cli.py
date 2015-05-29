@@ -19,8 +19,8 @@ class VUnitCLI(object):
     VUnit command line interface
     """
 
-    def __init__(self):
-        self.parser = self.create_argument_parser()
+    def __init__(self, description=None):
+        self.parser = self.create_argument_parser(description)
 
     def parse_args(self, argv=None):
         """
@@ -29,11 +29,13 @@ class VUnitCLI(object):
         return self.parser.parse_args(args=argv)
 
     @staticmethod
-    def create_argument_parser():
+    def create_argument_parser(description_from_user):
         """
         Create the argument parser
         """
-        parser = argparse.ArgumentParser(description='VUnit command line tool.')
+        description = 'VUnit command line tool.' if description_from_user is None else description_from_user
+
+        parser = argparse.ArgumentParser(description=description)
 
         parser.add_argument('test_patterns', metavar='tests', nargs='*',
                             default='*',
