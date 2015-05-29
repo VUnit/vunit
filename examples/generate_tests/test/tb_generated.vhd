@@ -21,14 +21,26 @@ end entity;
 architecture a of tb_generated is
 begin
   main : process
-   file fwrite : text;
-   variable l : line;
+    procedure dump_generics is
+      file fwrite : text;
+      variable l : line;
+    begin
+      file_open(fwrite, output_path & "/" & "generics.txt", write_mode);
+      write(l, to_string(data_width) & ", " & to_string(sign));
+      writeline(fwrite, l);
+      file_close(fwrite);
+    end procedure;
   begin
     test_runner_setup(runner, runner_cfg);
-    file_open(fwrite, output_path & "/" & "generics.txt", write_mode);
-    write(l, message & ", " & to_string(data_width) & ", " & to_string(sign));
-    writeline(fwrite, l);
-    file_close(fwrite);
+    while test_suite loop
+      if run("Test 1") then
+        assert message = "set-for-entity";
+        dump_generics;
+      elsif run("Test 2") then
+        assert message = "set-for-test";
+        dump_generics;
+      end if;
+    end loop;
     test_runner_cleanup(runner);
     wait;
   end process;

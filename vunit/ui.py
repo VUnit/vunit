@@ -30,7 +30,7 @@ from vunit.project import Project
 from vunit.test_runner import TestRunner
 from vunit.test_report import TestReport
 from vunit.test_scanner import TestScanner, TestScannerError, tb_filter
-from vunit.test_configuration import TestConfiguration
+from vunit.test_configuration import TestConfiguration, create_scope
 from vunit.exceptions import CompileError
 from vunit.location_preprocessor import LocationPreprocessor
 from vunit.check_preprocessor import CheckPreprocessor
@@ -207,13 +207,13 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         """
         Globally set generic
         """
-        self._configuration.set_generic(name, value, scope="")
+        self._configuration.set_generic(name, value, scope=create_scope())
 
     def set_pli(self, value):
         """
         Globally set pli
         """
-        self._configuration.set_pli(value, scope="")
+        self._configuration.set_pli(value, scope=create_scope())
 
     def add_source_files(self, pattern, library_name, preprocessors=None):
         """
@@ -461,11 +461,11 @@ class LibraryFacade(object):
 
     def set_generic(self, name, value):
         """ Set generic within library """
-        self._configuration.set_generic(name, value, scope=self._library_name)
+        self._configuration.set_generic(name, value, scope=create_scope(self._library_name))
 
     def set_pli(self, value):
         """ Set pli within library """
-        self._configuration.set_pli(value, scope=self._library_name)
+        self._configuration.set_pli(value, scope=create_scope(self._library_name))
 
     def add_source_files(self, pattern, preprocessors=None):
         self._parent.add_source_files(pattern, self._library_name, preprocessors)
@@ -492,7 +492,7 @@ class LibraryFacade(object):
         if not library.has_entity(entity_name):
             raise KeyError(entity_name)
 
-        return EntityFacade("%s.%s" % (self._library_name, entity_name),
+        return EntityFacade(self._library_name, entity_name,
                             self._configuration)
 
 
@@ -500,23 +500,36 @@ class EntityFacade(object):
     """
     User interface of an entity
     """
-    def __init__(self, name, config):
-        self._name = name
+    def __init__(self, library_name, entity_name, config):
+        self._library_name = library_name
+        self._entity_name = entity_name
         self._config = config
+        self._scope = create_scope(library_name, entity_name)
 
     def set_generic(self, name, value):
         """ Set generic within entity """
-        self._config.set_generic(name, value, scope=self._name)
+        self._config.set_generic(name, value, scope=self._scope)
 
     def set_pli(self, value):
         """ Set pli within entity """
-        self._config.set_pli(value, scope=self._name)
+        self._config.set_pli(value, scope=self._scope)
 
     def add_config(self, name, generics, post_check=None):
-        self._config.add_config(tb_name=self._name,
+        self._config.add_config(scope=self._scope,
                                 name=name,
                                 generics=generics,
                                 post_check=post_check)
+
+    def test(self, test_name):
+        """
+        Return the test case with test_name
+
+        @TODO we cannot check that test exists at this point since tests are scanned in main
+        @TODO assumes there is only one architecture for test benchs
+        @TODO makes sense to have multiple architectures of a test bench?
+        """
+
+        return TestFacade(self._library_name, self._entity_name, test_name, self._config)
 
 
 class PackageFacade(object):
@@ -548,6 +561,31 @@ class PackageFacade(object):
                                         self._parent.use_debug_codecs)
 
         self._parent.add_source_files(output_file_name, self._library_name)
+
+
+class TestFacade(object):
+    """
+    User interface of a single test case
+
+    """
+    def __init__(self, library_name, entity_name, test_name, config):
+        self._library_name = library_name
+        self._entity_name = entity_name
+        self._test_name = test_name
+        self._config = config
+        self._scope = create_scope(library_name, entity_name, test_name)
+
+    def add_config(self, name, generics, post_check=None):
+        self._config.add_config(scope=self._scope,
+                                name=name,
+                                generics=generics,
+                                post_check=post_check)
+
+    def set_generic(self, name, value):
+        """
+        Set generic for test case
+        """
+        self._config.set_generic(name, value, scope=self._scope)
 
 
 def file_type_of(file_name):

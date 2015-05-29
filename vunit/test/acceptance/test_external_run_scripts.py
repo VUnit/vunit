@@ -39,6 +39,16 @@ class TestExternalRunScripts(unittest.TestCase):
 
     def test_generate_tests_example_project(self):
         self.check(join(ROOT, "examples", "generate_tests", "run.py"))
+        check_report(self.report_file,
+                     [("passed", "lib.tb_generated.data_width=1,sign=False.Test 1"),
+                      ("passed", "lib.tb_generated.data_width=1,sign=True.Test 1"),
+                      ("passed", "lib.tb_generated.data_width=2,sign=False.Test 1"),
+                      ("passed", "lib.tb_generated.data_width=2,sign=True.Test 1"),
+                      ("passed", "lib.tb_generated.data_width=3,sign=False.Test 1"),
+                      ("passed", "lib.tb_generated.data_width=3,sign=True.Test 1"),
+                      ("passed", "lib.tb_generated.data_width=4,sign=False.Test 1"),
+                      ("passed", "lib.tb_generated.data_width=4,sign=True.Test 1"),
+                      ("passed", "lib.tb_generated.data_width=16,sign=True.Test 2")])
 
     def test_array_example_project(self):
         self.check(join(ROOT, "examples", "array", "run.py"))

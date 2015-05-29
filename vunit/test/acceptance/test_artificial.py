@@ -41,33 +41,16 @@ class TestVunitArtificial(unittest.TestCase):
         self.check(self.artificial_run,
                    exit_code=1,
                    args=["--elaborate"])
-        check_report(self.report_file, [
-            ("passed", "lib.tb_pass"),
-            ("passed", "lib.tb_fail"),
-            ("passed", "lib.tb_infinite_events"),
-            ("passed", "lib.tb_fail_on_warning"),
-            ("passed", "lib.tb_no_fail_on_warning"),
-            ("passed", "lib.tb_two_architectures.pass"),
-            ("passed", "lib.tb_two_architectures.fail"),
-            ("passed", "lib.tb_with_vhdl_runner.pass"),
-            ("passed", "lib.tb_with_vhdl_runner.Test with spaces"),
-            ("passed", "lib.tb_with_vhdl_runner.fail"),
-            ("passed", "lib.tb_with_vhdl_runner.Test that timeouts"),
-            ("passed", "lib.tb_magic_paths"),
-            ("passed", "lib.tb_no_fail_after_cleanup"),
-            ("failed", "lib.tb_elab_fail"),
 
-            ("passed", "lib.tb_same_sim_all_pass.Test 1"),
-            ("passed", "lib.tb_same_sim_all_pass.Test 2"),
-            ("passed", "lib.tb_same_sim_all_pass.Test 3"),
+        elab_expected_report = []
+        for status, name in EXPECTED_REPORT:
+            if name in ("lib.tb_elab_fail",):
+                status = "failed"
+            else:
+                status = "passed"
+            elab_expected_report.append((status, name))
 
-            ("passed", "lib.tb_same_sim_some_fail.Test 1"),
-            ("passed", "lib.tb_same_sim_some_fail.Test 2"),
-            ("passed", "lib.tb_same_sim_some_fail.Test 3"),
-
-            ("passed", "lib.tb_with_checks.Test passing check"),
-            ("passed", "lib.tb_with_checks.Test failing check"),
-            ("passed", "lib.tb_with_checks.Test non-stopping failing check")])
+        check_report(self.report_file, elab_expected_report)
 
         self.check(self.artificial_run,
                    exit_code=0,
@@ -91,34 +74,7 @@ class TestVunitArtificial(unittest.TestCase):
         self.check(self.artificial_run,
                    exit_code=1,
                    args=args)
-        check_report(self.report_file, [
-            ("passed", "lib.tb_pass"),
-            ("failed", "lib.tb_fail"),
-            ("passed", "lib.tb_infinite_events"),
-            ("failed", "lib.tb_fail_on_warning"),
-            ("passed", "lib.tb_no_fail_on_warning"),
-            ("passed", "lib.tb_two_architectures.pass"),
-            ("failed", "lib.tb_two_architectures.fail"),
-            ("passed", "lib.tb_with_vhdl_runner.pass"),
-            ("passed", "lib.tb_with_vhdl_runner.Test with spaces"),
-            ("failed", "lib.tb_with_vhdl_runner.fail"),
-            ("failed", "lib.tb_with_vhdl_runner.Test that timeouts"),
-            ("passed", "lib.tb_magic_paths"),
-            ("passed", "lib.tb_no_fail_after_cleanup"),
-            ("failed", "lib.tb_elab_fail"),
-
-            # @TODO verify that these are actually run in separate simulations
-            ("passed", "lib.tb_same_sim_all_pass.Test 1"),
-            ("passed", "lib.tb_same_sim_all_pass.Test 2"),
-            ("passed", "lib.tb_same_sim_all_pass.Test 3"),
-
-            ("passed", "lib.tb_same_sim_some_fail.Test 1"),
-            ("failed", "lib.tb_same_sim_some_fail.Test 2"),
-            ("skipped", "lib.tb_same_sim_some_fail.Test 3"),
-
-            ("passed", "lib.tb_with_checks.Test passing check"),
-            ("failed", "lib.tb_with_checks.Test failing check"),
-            ("failed", "lib.tb_with_checks.Test non-stopping failing check")])
+        check_report(self.report_file, EXPECTED_REPORT)
 
     def test_run_selected_tests_in_same_sim_test_bench(self):
         self.check(self.artificial_run,
@@ -181,3 +137,39 @@ class TestVunitArtificial(unittest.TestCase):
                         "--xunit-xml=%s" % self.report_file] + args,
                        env=new_env)
         self.assertEqual(retcode, exit_code)
+
+
+EXPECTED_REPORT = (
+    ("passed", "lib.tb_pass"),
+    ("failed", "lib.tb_fail"),
+    ("passed", "lib.tb_infinite_events"),
+    ("failed", "lib.tb_fail_on_warning"),
+    ("passed", "lib.tb_no_fail_on_warning"),
+    ("passed", "lib.tb_two_architectures.pass"),
+    ("failed", "lib.tb_two_architectures.fail"),
+    ("passed", "lib.tb_with_vhdl_runner.pass"),
+    ("passed", "lib.tb_with_vhdl_runner.Test with spaces"),
+    ("failed", "lib.tb_with_vhdl_runner.fail"),
+    ("failed", "lib.tb_with_vhdl_runner.Test that timeouts"),
+    ("passed", "lib.tb_magic_paths"),
+    ("passed", "lib.tb_no_fail_after_cleanup"),
+    ("failed", "lib.tb_elab_fail"),
+
+    # @TODO verify that these are actually run in separate simulations
+    ("passed", "lib.tb_same_sim_all_pass.Test 1"),
+    ("passed", "lib.tb_same_sim_all_pass.Test 2"),
+    ("passed", "lib.tb_same_sim_all_pass.Test 3"),
+
+    ("passed", "lib.tb_same_sim_some_fail.Test 1"),
+    ("failed", "lib.tb_same_sim_some_fail.Test 2"),
+    ("skipped", "lib.tb_same_sim_some_fail.Test 3"),
+
+    ("passed", "lib.tb_with_checks.Test passing check"),
+    ("failed", "lib.tb_with_checks.Test failing check"),
+    ("failed", "lib.tb_with_checks.Test non-stopping failing check"),
+
+    ("passed", "lib.tb_with_generic_config.Test 0"),
+    ("passed", "lib.tb_with_generic_config.Test 1"),
+    ("passed", "lib.tb_with_generic_config.Test 2"),
+    ("passed", "lib.tb_with_generic_config.Test 3"),
+    ("passed", "lib.tb_with_generic_config.Test 4"))

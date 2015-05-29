@@ -25,8 +25,7 @@ def make_post_check(data_width, sign):
         This function recives the output_path of the test
         """
 
-        expected = ", ".join(["hello world",
-                              str(data_width),
+        expected = ", ".join([str(data_width),
                               str(sign).lower()]) + "\n"
 
         output_file = join(output_path, "generics.txt")
@@ -42,21 +41,21 @@ def make_post_check(data_width, sign):
     return post_check
 
 
-def generate_data_width_and_sign_tests(entity):
+def generate_tests(obj, signs, data_widths):
     """
-    Generate test for entity by varying the data_width and sign generics
+    Generate test by varying the data_width and sign generics
     """
 
-    for sign, data_width in product([False, True], range(1, 5)):
+    for sign, data_width in product(signs, data_widths):
         # This configuration name is added as a suffix to the test bench name
         config_name = "data_width=%i,sign=%s" % (data_width, sign)
 
         # Add the configuration with a post check function to verify the output
-        entity.add_config(name=config_name,
-                          generics=dict(
-                              data_width=data_width,
-                              sign=sign),
-                          post_check=make_post_check(data_width, sign))
+        obj.add_config(name=config_name,
+                       generics=dict(
+                           data_width=data_width,
+                           sign=sign),
+                       post_check=make_post_check(data_width, sign))
 
 
 test_path = join(dirname(__file__), "test")
@@ -68,7 +67,17 @@ lib.add_source_files(join(test_path, "*.vhd"))
 tb_generated = lib.entity("tb_generated")
 
 # Just set a generic for a given test bench
-tb_generated.set_generic("message", "hello world")
-generate_data_width_and_sign_tests(tb_generated)
+tb_generated.set_generic("message", "set-for-entity")
+
+# Run all tests with signed/unsigned and data width in range [1,5[
+generate_tests(tb_generated, [False, True], range(1, 5))
+
+# Test 2 should only be run with signed width of 16
+test_2 = tb_generated.test("Test 2")
+generate_tests(test_2, [True], [16])
+
+# Just set a generic for a given test
+test_2.set_generic("message", "set-for-test")
+
 
 ui.main()

@@ -14,7 +14,7 @@ from os.path import join, dirname, exists
 from shutil import rmtree
 from os import makedirs
 
-from vunit.test_configuration import TestConfiguration, Configuration
+from vunit.test_configuration import TestConfiguration, Configuration, create_scope
 
 
 class TestTestConfiguration(unittest.TestCase):
@@ -30,79 +30,84 @@ class TestTestConfiguration(unittest.TestCase):
         makedirs(self.output_path)
 
     def test_has_default_configuration(self):
-        entity = EntityStub(name="tb_entity",
-                            library_name="lib",
-                            architecture_names={"arch": out("arch.vhd")},
-                            generic_names=[])
-
-        self.assertEqual(self.cfg.get_configurations(entity, "arch"),
-                         [Configuration("lib.tb_entity")])
+        scope = create_scope("lib", "tb_entity")
+        self.assertEqual(self.cfg.get_configurations(scope),
+                         [Configuration()])
 
     def test_set_generic(self):
-        entity = EntityStub(name="tb_entity",
-                            library_name="lib",
-                            architecture_names={"arch": out("arch.vhd")},
-                            generic_names=["global_generic"])
+        scope = create_scope("lib", "tb_entity")
+        self.assertEqual(self.cfg.get_configurations(scope),
+                         [Configuration()])
 
-        self.assertEqual(self.cfg.get_configurations(entity, "arch"),
-                         [Configuration("lib.tb_entity")])
+        self.cfg.set_generic("global_generic", "global", scope=create_scope())
+        self.assertEqual(self.cfg.get_configurations(scope),
+                         [Configuration(generics={"global_generic": "global"})])
 
-        self.cfg.set_generic("global_generic", False, scope="")
-        self.assertEqual(self.cfg.get_configurations(entity, "arch"),
-                         [Configuration("lib.tb_entity", generics={"global_generic": False})])
+        self.cfg.set_generic("global_generic", "library", scope=create_scope("lib"))
+        self.assertEqual(self.cfg.get_configurations(scope),
+                         [Configuration(generics={"global_generic": "library"})])
 
-        self.cfg.set_generic("global_generic", True, scope="lib")
-        self.cfg.set_generic("generic_not_present", True, scope="lib")
-        self.assertEqual(self.cfg.get_configurations(entity, "arch"),
-                         [Configuration("lib.tb_entity", generics={"global_generic": True})])
-
-        self.cfg.set_generic("global_generic", None, scope="lib.tb_entity")
-        self.assertEqual(self.cfg.get_configurations(entity, "arch"),
-                         [Configuration("lib.tb_entity", generics={"global_generic": None})])
+        self.cfg.set_generic("global_generic", "entity", scope=create_scope("lib", "tb_entity"))
+        self.assertEqual(self.cfg.get_configurations(scope),
+                         [Configuration(generics={"global_generic": "entity"})])
 
     def test_set_pli(self):
-        entity = EntityStub(name="tb_entity",
-                            library_name="lib",
-                            architecture_names={"arch": out("arch.vhd")},
-                            generic_names=[])
+        scope = create_scope("lib", "tb_entity")
+        self.assertEqual(self.cfg.get_configurations(scope),
+                         [Configuration("")])
 
-        self.assertEqual(self.cfg.get_configurations(entity, "arch"),
-                         [Configuration("lib.tb_entity")])
+        self.cfg.set_pli(["libglobal.so"], scope=create_scope())
+        self.cfg.set_pli(["libfoo.so"], scope=create_scope("lib2"))
+        self.assertEqual(self.cfg.get_configurations(scope),
+                         [Configuration(pli=["libglobal.so"])])
 
-        self.cfg.set_pli(["libglobal.so"], scope="")
-        self.cfg.set_pli(["libfoo.so"], scope="lib2")
-        self.assertEqual(self.cfg.get_configurations(entity, "arch"),
-                         [Configuration("lib.tb_entity", pli=["libglobal.so"])])
+        self.cfg.set_pli(["libfoo.so"], scope=create_scope("lib"))
+        self.assertEqual(self.cfg.get_configurations(scope),
+                         [Configuration(pli=["libfoo.so"])])
 
-        self.cfg.set_pli(["libfoo.so"], scope="lib")
-        self.assertEqual(self.cfg.get_configurations(entity, "arch"),
-                         [Configuration("lib.tb_entity", pli=["libfoo.so"])])
-
-        self.cfg.set_pli(["libfoo2.so"], scope="lib.tb_entity")
-        self.assertEqual(self.cfg.get_configurations(entity, "arch"),
-                         [Configuration("lib.tb_entity", pli=["libfoo2.so"])])
+        self.cfg.set_pli(["libfoo2.so"], scope=create_scope("lib", "tb_entity"))
+        self.assertEqual(self.cfg.get_configurations(scope),
+                         [Configuration(pli=["libfoo2.so"])])
 
     def test_add_config(self):
-        entity = EntityStub(name="tb_entity",
-                            library_name="lib",
-                            architecture_names={"arch": out("arch.vhd")},
-                            generic_names=["value",
-                                           "global_value"])
-
         for value in range(1, 3):
-            self.cfg.add_config("lib.tb_entity",
+            self.cfg.add_config(scope=create_scope("lib", "tb_entity"),
                                 name="value=%i" % value,
                                 generics=dict(value=value,
                                               global_value="local value"))
 
+        self.cfg.add_config(scope=create_scope("lib", "tb_entity", "configured test"),
+                            name="specific_test_config",
+                            generics=dict())
+
         # Local value should take precedence
         self.cfg.set_generic("global_value", "global value")
 
-        self.assertEqual(self.cfg.get_configurations(entity, "arch"),
-                         [Configuration("lib.tb_entity.value=1",
+        self.assertEqual(self.cfg.get_configurations(create_scope("lib", "tb_entity")),
+                         [Configuration("value=1",
                                         generics={"value": 1, "global_value": "local value"}),
-                          Configuration("lib.tb_entity.value=2",
+                          Configuration("value=2",
                                         generics={"value": 2, "global_value": "local value"})])
+
+        self.assertEqual(self.cfg.get_configurations(create_scope("lib", "tb_entity", "test")),
+                         [Configuration("value=1",
+                                        generics={"value": 1, "global_value": "local value"}),
+                          Configuration("value=2",
+                                        generics={"value": 2, "global_value": "local value"})])
+
+        self.assertEqual(self.cfg.get_configurations(create_scope("lib", "tb_entity", "configured test")),
+                         [Configuration("specific_test_config", dict(global_value="global value"))])
+
+    def test_more_specific_configurations(self):
+        self.cfg.set_generic("name", "value", scope=create_scope("lib", "entity3"))
+        self.cfg.set_generic("name", "value", scope=create_scope("lib", "entity", "test"))
+        self.cfg.add_config(name="name", generics=dict(), scope=create_scope("lib", "entity2", "test"))
+        self.assertEqual(self.cfg.more_specific_configurations(create_scope("lib", "entity")),
+                         [create_scope("lib", "entity", "test")])
+        self.assertEqual(self.cfg.more_specific_configurations(create_scope("lib", "entity2")),
+                         [create_scope("lib", "entity2", "test")])
+        self.assertEqual(self.cfg.more_specific_configurations(create_scope("lib", "entity3")),
+                         [])
 
     @staticmethod
     def write_file(name, contents):
@@ -112,11 +117,3 @@ class TestTestConfiguration(unittest.TestCase):
 
 def out(*args):
     return join(dirname(__file__), "test_configuration_out", *args)
-
-
-class EntityStub(object):
-    def __init__(self, name, library_name, architecture_names, generic_names):
-        self.name = name
-        self.library_name = library_name
-        self.architecture_names = architecture_names
-        self.generic_names = generic_names

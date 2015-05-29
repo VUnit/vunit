@@ -14,8 +14,8 @@ from os.path import join, dirname, exists
 from shutil import rmtree
 from os import makedirs
 
-from vunit.test_scanner import TestScanner, TestScannerError, tb_filter
-from vunit.test_configuration import TestConfiguration
+from vunit.test_scanner import TestScanner, TestScannerError, tb_filter, dotjoin
+from vunit.test_configuration import TestConfiguration, create_scope
 
 from vunit.test.mock_2or3 import mock
 
@@ -27,7 +27,8 @@ class TestTestScanner(unittest.TestCase):
 
     def setUp(self):
         self.simulator_if = 'simulator_if'
-        self.test_scanner = TestScanner(self.simulator_if, TestConfiguration())
+        self.configuration = TestConfiguration()
+        self.test_scanner = TestScanner(self.simulator_if, self.configuration)
 
         self.output_path = join(dirname(__file__), "test_scanner_out")
 
@@ -39,11 +40,6 @@ class TestTestScanner(unittest.TestCase):
         if exists(self.output_path):
             rmtree(self.output_path)
 
-    @staticmethod
-    def write_file(name, contents):
-        with open(name, "w") as fwrite:
-            fwrite.write(contents)
-
     def test_that_no_tests_are_created(self):
         project = ProjectStub()
         tests = self.test_scanner.from_project(project)
@@ -51,61 +47,55 @@ class TestTestScanner(unittest.TestCase):
 
     def test_that_single_test_is_created(self):
         project = ProjectStub()
-        work = project.add_library("work")
-        work.add_entity("tb_entity", out("tb_entity.vhd"),
-                        {"arch": out("arch.vhd")})
-        self.write_file(out("arch.vhd"), "")
+        lib = project.add_library("lib")
+        ent = lib.add_entity("tb_entity")
+        ent.set_contents("")
         tests = self.test_scanner.from_project(project)
-        self.assert_has_tests(tests,
-                              ["work.tb_entity"])
+        self.assert_has_tests(tests, ["lib.tb_entity"])
 
     def test_that_tests_are_filtered(self):
         project = ProjectStub()
-        work = project.add_library("work")
+        lib = project.add_library("lib")
 
-        work.add_entity("tb_entity", out("tb_entity.vhd"),
-                        {"arch": out("arch1.vhd")})
-        self.write_file(out("arch1.vhd"), "")
+        tb1 = lib.add_entity("tb_entity")
+        tb1.set_contents("")
 
-        work.add_entity("tb_entity2", out("path", "tb_entity2.vhd"),
-                        {"arch": out("arch2.vhd")})
-        self.write_file(out("arch2.vhd"), "")
+        tb2 = lib.add_entity("tb_entity2")
+        tb2.set_contents("")
 
-        work.add_entity("entity2", out("entity2.vhd"),
-                        {"arch": ""})
+        ent = lib.add_entity("entity_tb")
+        ent.set_contents("")
 
-        work.add_entity("entity_tb", out("entity_tb.vhd"),
-                        {"arch": out("entity_tb.vhd")})
-        self.write_file(out("entity_tb.vhd"), "")
+        ent2 = lib.add_entity("entity2")
+        ent2.set_contents("")
 
         tests = self.test_scanner.from_project(project, entity_filter=tb_filter)
         self.assert_has_tests(tests,
-                              ["work.tb_entity",
-                               "work.tb_entity2",
-                               "work.entity_tb"])
+                              ["lib.tb_entity",
+                               "lib.tb_entity2",
+                               "lib.entity_tb"])
 
-    def test_that_two_tests_are_created(self):
+    def test_that_two_tests_are_created_from_two_architectures(self):
         project = ProjectStub()
-        work = project.add_library("work")
-        work.add_entity("tb_entity", out("tb_entity.vhd"),
-                        {"arch1": out("arch1.vhd"),
-                         "arch2": out("arch2.vhd")})
-        self.write_file(out("arch1.vhd"), "")
-        self.write_file(out("arch2.vhd"), "")
+        lib = project.add_library("lib")
+        ent = lib.add_entity("tb_entity")
+        ent.set_contents("")
+
+        arch2 = ent.add_architecture("arch2")
+        arch2.set_contents("")
 
         tests = self.test_scanner.from_project(project)
         self.assert_has_tests(tests,
-                              ["work.tb_entity.arch1",
-                               "work.tb_entity.arch2"])
+                              ["lib.tb_entity.arch",
+                               "lib.tb_entity.arch2"])
 
     def test_create_tests_with_runner_cfg_generic(self):
         project = ProjectStub()
-        work = project.add_library("work")
-        work.add_entity("tb_entity", out("tb_entity.vhd"),
-                        {"arch": out("entity_arch.vhd")},
-                        ["runner_cfg"])
+        lib = project.add_library("lib")
+        ent = lib.add_entity("tb_entity",
+                             generic_names=["runner_cfg"])
 
-        self.write_file(out("entity_arch.vhd"), '''\
+        ent.set_contents('''\
 if run("Test_1")
 --if run("Test_2")
 if run("Test_3")
@@ -113,18 +103,17 @@ if run("Test_3")
 
         tests = self.test_scanner.from_project(project)
         self.assert_has_tests(tests,
-                              ["work.tb_entity.Test_1",
-                               "work.tb_entity.Test_3"])
+                              ["lib.tb_entity.Test_1",
+                               "lib.tb_entity.Test_3"])
 
     @mock.patch("vunit.test_scanner.LOGGER")
     def test_duplicate_tests_cause_error(self, mock_logger):
         project = ProjectStub()
-        work = project.add_library("work")
-        work.add_entity("tb_entity", out("tb_entity.vhd"),
-                        {"arch": out("entity_arch.vhd")},
-                        ["runner_cfg"])
+        lib = project.add_library("lib")
+        ent = lib.add_entity("tb_entity",
+                             generic_names=["runner_cfg"])
 
-        self.write_file(out("entity_arch.vhd"), '''\
+        ent.set_contents('''\
 if run("Test_1")
 --if run("Test_1")
 if run("Test_3")
@@ -138,33 +127,91 @@ if run("Test_2")
 
         error_calls = mock_logger.error.call_args_list
         self.assertEqual(len(error_calls), 2)
-        self.assertTrue("Test_3" in error_calls[0][0][1])
-        self.assertTrue(out("entity_arch.vhd") in error_calls[0][0][2])
+        call0_args = error_calls[0][0]
+        self.assertIn("Test_3", call0_args)
+        self.assertIn(ent.file_name, call0_args)
 
-        self.assertTrue("Test_2" in str(error_calls[1][0][1]))
-        self.assertTrue(out("entity_arch.vhd") in error_calls[1][0][2])
+        call1_args = error_calls[1][0]
+        self.assertIn("Test_2", call1_args)
+        self.assertIn(ent.file_name, call1_args)
+
+    @mock.patch("vunit.test_scanner.LOGGER")
+    def test_warning_on_configuration_of_non_existent_test(self, mock_logger):
+        project = ProjectStub()
+        lib = project.add_library("lib")
+        ent = lib.add_entity("tb_entity",
+                             generic_names=["runner_cfg"])
+
+        ent.set_contents('if run("Test")')
+
+        test_scope = create_scope("lib", "tb_entity", "Test")
+        self.configuration.set_generic("name", "value",
+                                       scope=test_scope)
+
+        test_1_scope = create_scope("lib", "tb_entity", "No test 1")
+        self.configuration.add_config(scope=test_1_scope,
+                                      name="",
+                                      generics=dict())
+
+        test_2_scope = create_scope("lib", "tb_entity", "No test 2")
+        self.configuration.set_generic("name", "value",
+                                       scope=test_2_scope)
+
+        tests = self.test_scanner.from_project(project)
+
+        warning_calls = mock_logger.warning.call_args_list
+        self.assertEqual(len(warning_calls), 2)
+        call_args0 = warning_calls[0][0]
+        call_args1 = warning_calls[1][0]
+        self.assertIn(dotjoin(*test_1_scope), call_args0)
+        self.assertIn(dotjoin(*test_2_scope), call_args1)
+        self.assert_has_tests(tests,
+                              ["lib.tb_entity.Test"])
+
+    @mock.patch("vunit.test_scanner.LOGGER")
+    def test_warning_on_configuration_of_individual_test_with_same_sim(self, mock_logger):
+        project = ProjectStub()
+        lib = project.add_library("lib")
+        ent = lib.add_entity("tb_entity",
+                             generic_names=["runner_cfg"])
+
+        ent.set_contents('''\
+if run("Test 1")
+if run("Test 2")
+-- vunit_pragma run_all_in_same_sim
+''')
+
+        test_scope = create_scope("lib", "tb_entity", "Test 1")
+        self.configuration.set_generic("name", "value", scope=test_scope)
+        tests = self.test_scanner.from_project(project)
+
+        warning_calls = mock_logger.warning.call_args_list
+        self.assertEqual(len(warning_calls), 1)
+        call_args = warning_calls[0][0]
+        self.assertIn(1, call_args)
+        self.assertIn("lib.tb_entity", call_args)
+        self.assert_has_tests(tests,
+                              [("lib.tb_entity", ("lib.tb_entity.Test 1", "lib.tb_entity.Test 2"))])
 
     def test_create_default_test_with_runner_cfg_generic(self):
         project = ProjectStub()
-        work = project.add_library("work")
-        work.add_entity("tb_entity", out("tb_entity.vhd"),
-                        {"arch": out("entity_arch.vhd")},
-                        ["runner_cfg"])
+        lib = project.add_library("lib")
+        ent = lib.add_entity("tb_entity",
+                             generic_names=["runner_cfg"])
 
-        self.write_file(out("entity_arch.vhd"), '')
+        ent.set_contents('')
 
         tests = self.test_scanner.from_project(project)
         self.assert_has_tests(tests,
-                              ["work.tb_entity"])
+                              ["lib.tb_entity"])
 
     def test_that_pragma_run_in_same_simulation_works(self):
         project = ProjectStub()
-        work = project.add_library("work")
-        work.add_entity("tb_entity", out("tb_entity.vhd"),
-                        {"arch": out("entity_arch.vhd")},
-                        ["runner_cfg"])
+        lib = project.add_library("lib")
+        ent = lib.add_entity("tb_entity",
+                             generic_names=["runner_cfg"])
 
-        self.write_file(out("entity_arch.vhd"), '''\
+        ent.set_contents('''\
 -- vunit_pragma run_all_in_same_sim
 if run("Test_1")
 if run("Test_2")
@@ -173,7 +220,51 @@ if run("Test_2")
 
         tests = self.test_scanner.from_project(project)
         self.assert_has_tests(tests,
-                              [("work.tb_entity", ("work.tb_entity.Test_1", "work.tb_entity.Test_2"))])
+                              [("lib.tb_entity", ("lib.tb_entity.Test_1", "lib.tb_entity.Test_2"))])
+
+    def test_adds_tb_path_generic(self):
+        project = ProjectStub()
+        lib = project.add_library("lib")
+        with_path = lib.add_entity("tb_entity_with_tb_path",
+                                   generic_names=["tb_path"])
+        with_path.set_contents("")
+
+        without_path = lib.add_entity("tb_entity_without_tb_path")
+        without_path.set_contents("")
+
+        tests = self.test_scanner.from_project(project)
+
+        with_path_generics = find_generics(tests, "lib.tb_entity_with_tb_path")
+        without_path_generics = find_generics(tests, "lib.tb_entity_without_tb_path")
+        self.assertEqual(with_path_generics["tb_path"], (out() + "/").replace("\\", "/"))
+        self.assertNotIn("tb_path", without_path_generics)
+
+    @mock.patch("vunit.test_scanner.LOGGER")
+    def test_warning_on_non_overrriden_tb_path(self, mock_logger):
+        project = ProjectStub()
+        lib = project.add_library("lib")
+
+        ent = lib.add_entity("tb_entity",
+                             generic_names=["tb_path"])
+        ent.set_contents("")
+
+        # Should not yield warning since it does not have tb_path generic
+        ent_without = lib.add_entity("tb_entity_without")
+        ent_without.set_contents("")
+
+        tb_path_non_overriden_value = "foo"
+        self.configuration.set_generic("tb_path", tb_path_non_overriden_value)
+        tests = self.test_scanner.from_project(project)
+
+        warning_calls = mock_logger.warning.call_args_list
+        tb_path_value = (out() + "/").replace("\\", "/")
+        self.assertEqual(len(warning_calls), 1)
+        call_args = warning_calls[0][0]
+        self.assertIn("lib.tb_entity", call_args)
+        self.assertIn(tb_path_non_overriden_value, call_args)
+        self.assertIn(tb_path_value, call_args)
+        generics = find_generics(tests, "lib.tb_entity")
+        self.assertEqual(generics["tb_path"], tb_path_value)
 
     def assert_has_tests(self, test_list, tests):
         """
@@ -223,19 +314,28 @@ class LibraryStub(object):
 
     def add_entity(self,
                    name,
-                   file_name,
-                   architecture_names,
+                   file_name=None,
+                   architecture_names=None,
                    generic_names=None):
         """
         Add a stubbed entity
         """
-        generic_names = generic_names if generic_names is not None else []
-        self._entities.append(
-            EntityStub(name,
-                       self.name,
-                       file_name,
-                       architecture_names,
-                       generic_names))
+        if file_name is None:
+            file_name = out(name + ".vhd")
+
+        if architecture_names is None:
+            architecture_names = {"arch": file_name}
+
+        if generic_names is None:
+            generic_names = []
+
+        entity = EntityStub(name,
+                            self.name,
+                            file_name,
+                            architecture_names,
+                            generic_names)
+        self._entities.append(entity)
+        return entity
 
 
 class EntityStub(object):
@@ -251,6 +351,50 @@ class EntityStub(object):
         self.architecture_names = architecture_names
         self.generic_names = generic_names
 
+    def set_contents(self, contents, architecture_name=None):
+        """
+        Set contents of architecture file
+        """
+        if architecture_name is None:
+            assert len(self.architecture_names) == 1
+            architecture_name = list(self.architecture_names.keys())[0]
+
+        file_name = self.architecture_names[architecture_name]
+
+        with open(file_name, "w") as fwrite:
+            fwrite.write(contents)
+
+    def add_architecture(self, name, file_name=None):
+        """
+        Add architecture
+        """
+        if file_name is None:
+            file_name = out(name + "_arch.vhd")
+        self.architecture_names[name] = file_name
+        return ArchitectureStub(self, name)
+
+
+class ArchitectureStub(object):
+    """
+    Stub of architecture
+    """
+    def __init__(self, entity, name):
+        self._entity = entity
+        self._name = name
+
+    def set_contents(self, contents):
+        self._entity.set_contents(contents, self._name)
+
 
 def out(*args):
     return join(dirname(__file__), "test_scanner_out", *args)
+
+
+def find_generics(tests, name):
+    """
+    Find generic values of test
+    """
+    for test in tests:
+        if test.name == name:
+            return test._test_case._test_bench._generics  # pylint: disable=protected-access
+    raise KeyError(name)

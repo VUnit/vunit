@@ -13,14 +13,30 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 
+def create_scope(*args):
+    """
+    Create a scope
+    """
+    return args
+
+
+def iter_scopes(scope):
+    """
+    Iterate between all scopes from global scope down to to specific scope
+    """
+    for i in range(len(scope) + 1):
+        yield scope[:i]
+
+
 class TestConfiguration(object):
     """
     Maintain a global view of test configurations within different
     scopes.
 
-    Global scope: ""
-    Library scope: "lib"
-    Entity scope: "lib.entity"
+    Global scope: create_scope()
+    Library scope: create_scope("lib")
+    Entity scope: create_scope("lib", "entity")
+    Test case scope: create_scope("lib", "entity", "test case")
 
     Specific scopes have priority over general scopes in case of conflict
     """
@@ -29,7 +45,7 @@ class TestConfiguration(object):
         self._configs = {}
         self._plis = {}
 
-    def set_generic(self, name, value, scope=""):
+    def set_generic(self, name, value, scope=create_scope()):
         """
         Set generic within scope
         """
@@ -37,98 +53,90 @@ class TestConfiguration(object):
             self._generics[scope] = {}
         self._generics[scope][name] = value
 
-    def set_pli(self, value, scope=""):
+    def set_pli(self, value, scope=create_scope()):
         """
         Set pli within scope
         """
         self._plis[scope] = value
 
-    def add_config(self, tb_name, name, generics, post_check=None):
+    def add_config(self, scope, name, generics, post_check=None):
         """
-        Add a configuration for test bench entity with tb_name
-        specifyin the name of the configuration, its generic values as
-        well as a post_check function to be run after the simulation
+        Add a configuration for scope specifying the name of the
+        configuration, its generic values as well as a post_check
+        function to be run after the simulation
         """
-        if tb_name not in self._configs:
-            self._configs[tb_name] = {}
-        self._configs[tb_name][name] = (generics, post_check)
+        if scope not in self._configs:
+            self._configs[scope] = {}
+        self._configs[scope][name] = (generics, post_check)
 
-    def get_configurations(self, entity, architecture_name):
+    def get_configurations(self, scope):
         """
-        Get all configurations for architecture_name of entity
+        Get all configurations for scope
         """
-        tb_name = "%s.%s" % (entity.library_name, entity.name)
+        global_generics = self._get_generics_for_scope(scope)
+        pli = self._get_pli_for_scope(scope)
+        configs_for_scope = self._get_configs_for_scope(scope)
 
-        configs = self._get_configurations_for_tb(entity)
-
-        result = []
-        for suffix, generics, pli, post_check in configs:
-            if len(entity.architecture_names) > 1:
-                config_name = dotjoin(tb_name, architecture_name, suffix)
-            else:
-                config_name = dotjoin(tb_name, suffix)
-
-            result.append(Configuration(config_name, generics, post_check, pli))
-
-        return result
-
-    def _get_configurations_for_tb(self, entity):
-        """
-        Helper function to get all configurations for entity
-        """
-        global_generics = self._get_generics_for_tb(entity.library_name, entity.name)
-        global_generics = self._prune_generics(global_generics, entity.generic_names)
-        pli = self._get_pli_for_tb(entity.library_name, entity.name)
         configs = []
-
-        tb_name = "%s.%s" % (entity.library_name, entity.name)
-        configs_for_tb_name = self._configs.get(tb_name, {})
-        for config_name in sorted(configs_for_tb_name.keys()):
-            cfg_generics, post_check = configs_for_tb_name[config_name]
+        for config_name in sorted(configs_for_scope.keys()):
+            cfg_generics, post_check = configs_for_scope[config_name]
             generics = global_generics.copy()
             generics.update(cfg_generics)
-            generics = self._prune_generics(generics, entity.generic_names)
-            configs.append((config_name, generics, pli, post_check))
+            configs.append(Configuration(config_name, generics, post_check, pli))
 
         if len(configs) == 0:
-            configs = [("", global_generics.copy(), pli, None)]
+            configs = [Configuration("", global_generics.copy(), None, pli)]
+
         return configs
 
-    @staticmethod
-    def _prune_generics(generics, generic_names):
+    def _get_configurations_for_scope(self, scope):
         """
-        Prune generics not found in the list of generic_names
+        Helper function to get all configurations for a scope
         """
-        generics = generics.copy()
-        for gname in list(generics.keys()):
-            if gname not in generic_names:
-                del generics[gname]
-        return generics
 
-    def _get_generics_for_tb(self, library_name, entity_name):
+    def _get_configs_for_scope(self, scope):
         """
-        Get scope inferred generics for entity_name within library_namex
+        Return configs for scope, specific scope has precedence
+        """
+        configs = {}
+        for iter_scope in iter_scopes(scope):
+            configs = self._configs.get(iter_scope, configs)
+        return configs
+
+    def _get_generics_for_scope(self, scope):
+        """
+        Get scope inferred generics, specific scope has precedence
         """
         generics = {}
-        # Global
-        generics.update(self._generics.get("", {}))
-        # Library
-        generics.update(self._generics.get(library_name, {}))
-        # Entity
-        generics.update(self._generics.get(library_name + "." + entity_name, {}))
+        for iter_scope in iter_scopes(scope):
+            generics.update(self._generics.get(iter_scope, {}))
         return generics
 
-    def _get_pli_for_tb(self, library_name, entity_name):
+    def _get_pli_for_scope(self, scope):
         """
-        Get scope inferred pli for entity_name within library_namex
+        Get scope inferred pli, specific scope has precedence
         """
-        # Global
-        plis = self._plis.get("", [])
-        # Library
-        plis = self._plis.get(library_name, plis)
-        # Entity
-        plis = self._plis.get(library_name + "." + entity_name, plis)
+        plis = []
+        for iter_scope in iter_scopes(scope):
+            plis = self._plis.get(iter_scope, plis)
         return plis
+
+    def more_specific_configurations(self, scope):
+        """
+        Return scopes containing more specific configurations
+        """
+        # @TODO speedup
+        result = []
+
+        def add(scopes):
+            for other_scope in scopes:
+                if is_within_scope(scope, other_scope):
+                    result.append(other_scope)
+
+        add(self._generics)
+        add(self._configs)
+        add(self._plis)
+        return result
 
 
 class Configuration(object):
@@ -156,6 +164,10 @@ class Configuration(object):
                % (self.name, self.generics, self.post_check, self.pli))
 
 
-def dotjoin(*args):
-    """ string arguments joined by '.' unless empty string """
-    return ".".join(arg for arg in args if not arg == "")
+def is_within_scope(scope, other_scope):
+    """
+    Returns True if other_scope is strictly within scope
+    """
+    if len(other_scope) <= len(scope):
+        return False
+    return other_scope[:len(scope)] == scope
