@@ -45,6 +45,7 @@ class TestRunner(object):
         output_file = self._create_output_file(output_file_name)
         if output_file is None:
             results = self._fail_suite(test_suite)
+            results = self._sort_results(test_suite.test_cases, results)
             self._add_results(results, output_file_name, num_tests)
             return
 
@@ -70,8 +71,23 @@ class TestRunner(object):
             output_file.close()
 
         self._maybe_print_output_if_not_verbose(results, output_file_name)
+        results = self._sort_results(test_suite.test_cases, results)
         self._add_results(results, output_file_name, num_tests,
                           runtime=ostools.get_time() - start)
+
+    @staticmethod
+    def _sort_results(test_names, results):
+        """
+        Return test results sorted according to the order they were run
+        """
+        def sort_key(item):
+            """
+            Sort based on index in test_names list
+            """
+            test_name, _ = item
+            return test_names.index(test_name)
+
+        return sorted(results.items(), key=sort_key)
 
     @staticmethod
     def _create_output_file(output_file_name):
@@ -106,9 +122,9 @@ class TestRunner(object):
         Add results to test suite
         """
         time = runtime / len(results)
-        for test_name in results:
+        for test_name, result in results:
             self._report.add_result(test_name,
-                                    results[test_name],
+                                    result,
                                     time,
                                     output_file_name)
             self._report.print_latest_status(total_tests=num_tests)
