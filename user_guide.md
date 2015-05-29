@@ -200,7 +200,7 @@ Sometimes the textual error messages and logs are not enough to pinpoint the err
 ```
 > python run.py --gui=load my_test_case
 ```
-This a GUI window to launch with test case specific functions pre-loaded priting the following help:
+This launches a GUI window for each test case with specific functions pre-loaded printing the following help:
 ```
 # List of VUnit modelsim commands:
 # vunit_help
