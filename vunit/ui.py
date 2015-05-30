@@ -215,6 +215,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         """
         self._configuration.set_pli(value, scope=create_scope())
 
+    def disable_ieee_warnings(self):
+        """
+        Globally disable ieee warnings
+        """
+        self._configuration.disable_ieee_warnings(scope=create_scope())
+
     def add_source_files(self, pattern, library_name, preprocessors=None):
         """
         Add source files matching wildcard pattern to library
@@ -458,14 +464,21 @@ class LibraryFacade(object):
         self._parent = parent
         self._project = project
         self._configuration = configuration
+        self._scope = create_scope(self._library_name)
 
     def set_generic(self, name, value):
         """ Set generic within library """
-        self._configuration.set_generic(name, value, scope=create_scope(self._library_name))
+        self._configuration.set_generic(name, value, scope=self._scope)
 
     def set_pli(self, value):
         """ Set pli within library """
-        self._configuration.set_pli(value, scope=create_scope(self._library_name))
+        self._configuration.set_pli(value, scope=self._scope)
+
+    def disable_ieee_warnings(self):
+        """
+        Disable ieee warnings within library
+        """
+        self._configuration.disable_ieee_warnings(scope=self._scope)
 
     def add_source_files(self, pattern, preprocessors=None):
         self._parent.add_source_files(pattern, self._library_name, preprocessors)
@@ -519,6 +532,12 @@ class EntityFacade(object):
                                 name=name,
                                 generics=generics,
                                 post_check=post_check)
+
+    def disable_ieee_warnings(self):
+        """
+        Disable ieee warnings within entity
+        """
+        self._config.disable_ieee_warnings(scope=self._scope)
 
     def test(self, test_name):
         """
@@ -586,6 +605,12 @@ class TestFacade(object):
         Set generic for test case
         """
         self._config.set_generic(name, value, scope=self._scope)
+
+    def disable_ieee_warnings(self):
+        """
+        Disable ieee warnings for test case
+        """
+        self._config.disable_ieee_warnings(scope=self._scope)
 
 
 def file_type_of(file_name):

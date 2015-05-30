@@ -83,6 +83,7 @@ class TestScanner(object):
                          architecture_name=architecture_name,
                          entity_name=entity.name,
                          fail_on_warning=fail_on_warning,
+                         disable_ieee_warnings=config.disable_ieee_warnings,
                          has_output_path="output_path" in entity.generic_names,
                          generics=generics,
                          pli=config.pli,

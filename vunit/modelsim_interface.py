@@ -247,16 +247,24 @@ proc vunit_load {{{{vsim_extra_args ""}}}} {{
         return tcl
 
     @staticmethod
-    def _create_run_function(fail_on_warning=False):
+    def _create_run_function(fail_on_warning=False, disable_ieee_warnings=False):
         """
         Create the vunit_run function to run the test bench
         """
+        if disable_ieee_warnings:
+            no_warnings = 1
+        else:
+            no_warnings = 0
         return """
 proc vunit_run {} {
     global BreakOnAssertion
-
-    # Break on error
     set BreakOnAssertion %i
+
+    global NumericStdNoWarnings
+    set NumericStdNoWarnings %i
+
+    global StdArithNoWarnings
+    set StdArithNoWarnings %i
 
     proc on_break {} {
         resume
@@ -294,11 +302,12 @@ proc vunit_run {} {
     }
     return $failed
 }
-""" % (1 if fail_on_warning else 2)
+""" % (1 if fail_on_warning else 2, no_warnings, no_warnings)
 
     def _create_common_script(self,   # pylint: disable=too-many-arguments
                               library_name, entity_name, architecture_name,
-                              generics, pli, fail_on_warning, output_path):
+                              generics, pli, fail_on_warning, disable_ieee_warnings,
+                              output_path):
         """
         Create tcl script with functions common to interactive and batch modes
         """
@@ -315,7 +324,7 @@ proc vunit_help {} {
 }
 """
         tcl += self._create_load_function(library_name, entity_name, architecture_name, generics, pli, output_path)
-        tcl += self._create_run_function(fail_on_warning)
+        tcl += self._create_run_function(fail_on_warning, disable_ieee_warnings)
         return tcl
 
     @staticmethod
@@ -429,7 +438,8 @@ proc vunit_help {} {
 
     def simulate(self, output_path,  # pylint: disable=too-many-arguments
                  library_name, entity_name, architecture_name=None,
-                 generics=None, pli=None, load_only=None, fail_on_warning=False):
+                 generics=None, pli=None, load_only=None, fail_on_warning=False,
+                 disable_ieee_warnings=False):
         """
         Run a test bench
         load_only -- Only load the design performing elaboration without simulating
@@ -445,6 +455,7 @@ proc vunit_help {} {
         write_file(common_file_name,
                    self._create_common_script(library_name, entity_name, architecture_name, generics, pli,
                                               fail_on_warning=fail_on_warning,
+                                              disable_ieee_warnings=disable_ieee_warnings,
                                               output_path=msim_output_path))
         write_file(gui_load_file_name,
                    self._create_gui_load_script(common_file_name))

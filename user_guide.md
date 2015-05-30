@@ -1,7 +1,7 @@
 # VUnit User Guide
 
 ## Introduction
-The idea in VUnit is to have a single point of entry for compiling and running all tests within a VHDL project. Tests do not need to be manually added to some list as they are automatically detected. There is no need for maintaining a list of files in compile order or manually re-compile selected files after they have been edited as VUnit automatically determines the compile order as well as which files to incrementally re-compile. This is achieved by having a `run.py` file for each project where libraries are defined into which files are added using the VUnit Python interface. The `run.py` file then acts as a command line utility for compiling and running tests within the VHDL project. 
+The idea in VUnit is to have a single point of entry for compiling and running all tests within a VHDL project. Tests do not need to be manually added to some list as they are automatically detected. There is no need for maintaining a list of files in compile order or manually re-compile selected files after they have been edited as VUnit automatically determines the compile order as well as which files to incrementally re-compile. This is achieved by having a `run.py` file for each project where libraries are defined into which files are added using the VUnit Python interface. The `run.py` file then acts as a command line utility for compiling and running tests within the VHDL project.
 
 ## Python Interface
 
@@ -221,3 +221,22 @@ vunit_run
 It is also possible to automatically run the test case in the gui while logging all signals and variables recursively using the `--gui=run` flag.
 After simulation the user can manually add objects of interest to the waveform viewer without re-running since everything has been logged.
 When running large designs this mode can be quite slow and it might be better to just do `--gui=load` and manually add a few signals of interest.
+
+## Disabling warnings from IEEE packages
+Warnings from IEEE packages can be disabled in `run.py`:
+```python
+# They can be lobally disabled...
+vu.disable_ieee_warnings()
+
+# ... or just disabled for a library
+lib = vu.lib("lib")
+lib.disable_ieee_warnings()
+
+# ... or just disabled for a test bench
+ent = lib.entity("ent")
+ent.disable_ieee_warnings()
+
+# ... or just disabled for a test case
+test = ent.test("test")
+test.disable_ieee_warnings()
+```

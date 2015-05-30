@@ -172,4 +172,6 @@ EXPECTED_REPORT = (
     ("passed", "lib.tb_with_generic_config.Test 1"),
     ("passed", "lib.tb_with_generic_config.Test 2"),
     ("passed", "lib.tb_with_generic_config.Test 3"),
-    ("passed", "lib.tb_with_generic_config.Test 4"))
+    ("passed", "lib.tb_with_generic_config.Test 4"),
+
+    ("passed", "lib.tb_ieee_warning"))

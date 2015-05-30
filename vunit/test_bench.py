@@ -21,6 +21,7 @@ class TestBench(object):  # pylint: disable=too-many-instance-attributes
                  generics=None,
                  has_output_path=False,
                  fail_on_warning=False,
+                 disable_ieee_warnings=False,
                  pli=None,
                  elaborate_only=False):
         self._simulator_if = simulator_if
@@ -30,6 +31,7 @@ class TestBench(object):  # pylint: disable=too-many-instance-attributes
         self._architecture_name = architecture_name
         self._has_output_path = has_output_path
         self._fail_on_warning = fail_on_warning
+        self._disable_ieee_warnings = disable_ieee_warnings
         self._pli = pli
         self._elaborate_only = elaborate_only
 
@@ -51,5 +53,6 @@ class TestBench(object):  # pylint: disable=too-many-instance-attributes
                                            self._architecture_name,
                                            generics,
                                            fail_on_warning=self._fail_on_warning,
+                                           disable_ieee_warnings=self._disable_ieee_warnings,
                                            pli=self._pli,
                                            load_only=self._elaborate_only)

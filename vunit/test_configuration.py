@@ -44,6 +44,7 @@ class TestConfiguration(object):
         self._generics = {}
         self._configs = {}
         self._plis = {}
+        self._disable_ieee_warnings = set()
 
     def set_generic(self, name, value, scope=create_scope()):
         """
@@ -58,6 +59,12 @@ class TestConfiguration(object):
         Set pli within scope
         """
         self._plis[scope] = value
+
+    def disable_ieee_warnings(self, scope=create_scope()):
+        """
+        Disable ieee warnings within scope
+        """
+        self._disable_ieee_warnings.add(scope)
 
     def add_config(self, scope, name, generics, post_check=None):
         """
@@ -76,16 +83,25 @@ class TestConfiguration(object):
         global_generics = self._get_generics_for_scope(scope)
         pli = self._get_pli_for_scope(scope)
         configs_for_scope = self._get_configs_for_scope(scope)
+        disable_ieee_warnings = self._ieee_warnings_disabled_in_scope(scope)
 
         configs = []
         for config_name in sorted(configs_for_scope.keys()):
             cfg_generics, post_check = configs_for_scope[config_name]
             generics = global_generics.copy()
             generics.update(cfg_generics)
-            configs.append(Configuration(config_name, generics, post_check, pli))
+            configs.append(Configuration(config_name,
+                                         generics,
+                                         post_check,
+                                         pli,
+                                         disable_ieee_warnings))
 
         if len(configs) == 0:
-            configs = [Configuration("", global_generics.copy(), None, pli)]
+            configs = [Configuration("",
+                                     global_generics.copy(),
+                                     None,
+                                     pli,
+                                     disable_ieee_warnings)]
 
         return configs
 
@@ -121,6 +137,15 @@ class TestConfiguration(object):
             plis = self._plis.get(iter_scope, plis)
         return plis
 
+    def _ieee_warnings_disabled_in_scope(self, scope):
+        """
+        Return true if ieee warnings are disabled within scope
+        """
+        for iter_scope in iter_scopes(scope):
+            if iter_scope in self._disable_ieee_warnings:
+                return True
+        return False
+
     def more_specific_configurations(self, scope):
         """
         Return scopes containing more specific configurations
@@ -136,6 +161,7 @@ class TestConfiguration(object):
         add(self._generics)
         add(self._configs)
         add(self._plis)
+        add(self._disable_ieee_warnings)
         return result
 
 
@@ -143,25 +169,28 @@ class Configuration(object):
     """
     Represents a configuration of a test bench
     """
-    def __init__(self,
+    def __init__(self,  # pylint: disable=too-many-arguments
                  name="",
                  generics=None,
                  post_check=None,
-                 pli=None):
+                 pli=None,
+                 disable_ieee_warnings=False):
         self.name = name
         self.generics = generics if generics is not None else {}
         self.post_check = post_check
         self.pli = [] if pli is None else pli
+        self.disable_ieee_warnings = disable_ieee_warnings
 
     def __eq__(self, other):
         return (self.name == other.name and
                 self.generics == other.generics and
                 self.post_check == other.post_check and
-                self.pli == other.pli)
+                self.pli == other.pli,
+                self.disable_ieee_warnings == other.disable_ieee_warnings)
 
     def __repr__(self):
-        return("Configuration(%r, %r, %r, %r)"
-               % (self.name, self.generics, self.post_check, self.pli))
+        return("Configuration(%r, %r, %r, %r, %r)"
+               % (self.name, self.generics, self.post_check, self.pli, self.disable_ieee_warnings))
 
 
 def is_within_scope(scope, other_scope):
