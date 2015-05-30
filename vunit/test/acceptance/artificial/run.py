@@ -46,5 +46,5 @@ def configure_tb_with_generic_config(ui):
                         post_check=post_check)
 
 configure_tb_with_generic_config(ui)
-lib.entity("tb_ieee_warning").disable_ieee_warnings()
+lib.entity("tb_ieee_warning").test("pass").disable_ieee_warnings()
 ui.main()

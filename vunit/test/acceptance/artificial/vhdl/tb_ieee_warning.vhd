@@ -21,7 +21,16 @@ begin
     variable undefined : unsigned(15 downto 0);
   begin
     test_runner_setup(runner, runner_cfg);
-    report integer'image(to_integer(undefined));
+
+    while test_suite loop
+      if run("pass") then
+        report integer'image(to_integer(undefined));
+
+      elsif run("fail") then
+        report integer'image(to_integer(undefined));
+      end if;
+    end loop;
+
     test_runner_cleanup(runner);
     wait;
   end process;
