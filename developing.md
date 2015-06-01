@@ -11,7 +11,7 @@ The test suite is divided into three parts:
 3. **vunit/test/lint/**
    - Style checks such as PEP8 and license header verification.
 
-```shell
+```console
 # Run all tests
 vunit/ > python -m unittest discover vunit/test
 
@@ -20,6 +20,12 @@ vunit/ > python -m unittest discover vunit/test/unit
 ```
 
 The test suites must work using both Python 2.7 and Python 3.x.
+
+### Running with different simulator back-ends
+VUnit supports both ModelSim and GHDL and the acceptance tests must work for both simulators. The acceptance tests can be run for a specific simulator by setting the `VUNIT_SIMULATOR` environment variable:
+```console
+vunit/ > VUNIT_SIMULATOR=ghdl python -m unittest discover vunit/test/acceptance/
+```
 
 ## Dependencies
 Other that the dependencies required to use VUnit as a user the following are also required for developers to run the test suite:
@@ -31,7 +37,7 @@ Other that the dependencies required to use VUnit as a user the following are al
 ## Code coverage
 Code coverage can be measured using the [coverage](https://pypi.python.org/pypi/coverage) tool.
 The following commands measure the code coverage while running the entire test suite:
-```shell
+```console
 vunit/ > coverage run --branch --source vunit/ -m unittest discover vunit/test/
 vunit/ > coverage html --directory=htmlcov
 vunit/ > open htmlcov/index.html
