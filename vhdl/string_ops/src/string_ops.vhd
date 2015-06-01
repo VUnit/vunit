@@ -104,18 +104,6 @@ package string_ops is
 end package;
 
 package body string_ops is
-  function index (
-    constant s      : string;
-    constant offset : natural)
-    return natural is
-  begin
-    if s'ascending then
-      return s'left + offset;
-    else
-      return s'left - offset;
-    end if;
-  end function index;
-
   function offset (
     constant s     : string;
     constant index : natural)
