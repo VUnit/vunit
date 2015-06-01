@@ -34,7 +34,7 @@ execute the function specified by the command line arguments and exit
 the script. The added source files are automatically scanned for test
 cases.
 
-```
+```console
 > python run.py -h
 usage: run.py [-h] [-l] [--compile] [--elaborate] [--clean] [-o OUTPUT_PATH]
               [-x XUNIT_XML] [-v] [--no-color] [--gui {load,run}]
@@ -148,7 +148,7 @@ From `tb_example_many.vhd` two test cases named
 created.
 
 We can run these test using `run.py` command line interface:
-```
+```console
 > python run.py -v lib.tb_example*
 Running test: lib.tb_example
 Running test: lib.tb_example_many.test_pass
@@ -207,11 +207,11 @@ When interfacing with pre-compiled libraries such as `unisim` from Xilinx the `a
 
 ## Running a test case in the ModelSim GUI
 Sometimes the textual error messages and logs are not enough to pinpoint the error and a test case needs to be opened in the GUI for visual debugging using single stepping, breakpoints and wave form viewing. VUnit makes it easy to open a test case in the GUI by having a `--gui={load,run}` command line flag:
-```
+```console
 > python run.py --gui=load my_test_case
 ```
 This launches a GUI window for each test case with specific functions pre-loaded printing the following help:
-```
+```tcl
 # List of VUnit modelsim commands:
 # vunit_help
 #   - Prints this help
