@@ -198,6 +198,9 @@ There are many examples demonstrating more specific usage of VUnit listed below:
 * [com](examples/com)
   * Demonstrates the `com` message passing package which can be used to communicate arbitrary objects between processes. Further reading can be found in the [com user guide](vhdl/com/user_guide.md)
 
+## Selecting simulator backend
+VUnit automatically detects which simulators are available on the `PATH` environment variable and by default selects the first one found. For people who have multiple simulators installed the `VUNIT_SIMULATOR` environment variable can be set to either `modelsim` or `ghdl` to explicitly choose the simulator backend. 
+
 ## Interfacing with pre-compiled libraries
 The `add_library` method of the VUnit class is intended for libraries managed by VUnit.
 When interfacing with pre-compiled libraries such as `unisim` from Xilinx the `add_external_library` method can be used. Unlike the `add_library` method which only takes a logical library name for which VUnit will manage the compile location the `add_external_library` method also takes a search path to the pre-compiled library. External libraries are treated as black-boxes by VUnit and no dependency scanning will be performed.
