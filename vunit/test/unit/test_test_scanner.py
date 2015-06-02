@@ -396,5 +396,5 @@ def find_generics(tests, name):
     """
     for test in tests:
         if test.name == name:
-            return test._test_case._test_bench._generics  # pylint: disable=protected-access
+            return test._test_case._test_bench._sim_config.generics  # pylint: disable=protected-access
     raise KeyError(name)

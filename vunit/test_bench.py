@@ -17,29 +17,21 @@ class TestBench(object):  # pylint: disable=too-many-instance-attributes
                  simulator_if,
                  library_name,
                  entity_name,
-                 architecture_name=None,
-                 generics=None,
-                 has_output_path=False,
-                 fail_on_warning=False,
-                 disable_ieee_warnings=False,
-                 pli=None,
-                 elaborate_only=False):
+                 architecture_name,
+                 sim_config,
+                 has_output_path=False):
         self._simulator_if = simulator_if
         self._library_name = library_name
         self._entity_name = entity_name
-        self._generics = {} if generics is None else generics
         self._architecture_name = architecture_name
+        self._sim_config = sim_config
         self._has_output_path = has_output_path
-        self._fail_on_warning = fail_on_warning
-        self._disable_ieee_warnings = disable_ieee_warnings
-        self._pli = pli
-        self._elaborate_only = elaborate_only
 
     def run(self, output_path, extra_generics=None):
         """
         Run test bench with output_path and extra_generics
         """
-        generics = self._generics.copy()
+        generics = self._sim_config.generics.copy()
 
         if self._has_output_path:
             generics["output_path"] = '%s/' % output_path.replace("\\", "/")
@@ -47,12 +39,10 @@ class TestBench(object):  # pylint: disable=too-many-instance-attributes
         if extra_generics is not None:
             generics.update(extra_generics)
 
+        self._sim_config.generics = generics
+
         return self._simulator_if.simulate(output_path,
                                            self._library_name,
                                            self._entity_name,
                                            self._architecture_name,
-                                           generics,
-                                           fail_on_warning=self._fail_on_warning,
-                                           disable_ieee_warnings=self._disable_ieee_warnings,
-                                           pli=self._pli,
-                                           load_only=self._elaborate_only)
+                                           self._sim_config)

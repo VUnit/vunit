@@ -150,19 +150,18 @@ class GHDLInterface:
         return True
 
     def simulate(self,  # pylint: disable=too-many-arguments, too-many-locals
-                 output_path, library_name, entity_name, architecture_name=None, generics=None, pli=None,
-                 load_only=False, fail_on_warning=False, disable_ieee_warnings=False):
+                 output_path, library_name, entity_name, architecture_name, config):
         """
         Simulate with entity as top level using generics
         """
-        assert pli in (None, [])
+        assert config.pli == []
 
         ghdl_output_path = join(output_path, self.name)
         data_file_name = join(ghdl_output_path, "wave.%s" % self._gtkwave)
         if not exists(ghdl_output_path):
             os.makedirs(ghdl_output_path)
 
-        launch_gtkwave = self._gtkwave is not None and not load_only
+        launch_gtkwave = self._gtkwave is not None and not config.elaborate_only
 
         status = True
         try:
@@ -178,15 +177,15 @@ class GHDLInterface:
 
             cmd += [entity_name, architecture_name]
 
-            for name, value in generics.items():
+            for name, value in config.generics.items():
                 cmd += ['-g%s=%s' % (name, value)]
 
-            cmd += ['--assert-level=%s' % ("warning" if fail_on_warning else "error")]
+            cmd += ['--assert-level=%s' % ("warning" if config.fail_on_warning else "error")]
 
-            if disable_ieee_warnings:
+            if config.disable_ieee_warnings:
                 cmd += ["--ieee-asserts=disable"]
 
-            if load_only:
+            if config.elaborate_only:
                 cmd += ["--no-run"]
 
             if launch_gtkwave:

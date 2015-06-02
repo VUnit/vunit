@@ -28,10 +28,9 @@ class TestScanner(object):
     Scans a project for test benches
     """
 
-    def __init__(self, simulator_if, configuration, elaborate_only=False):
+    def __init__(self, simulator_if, configuration):
         self._simulator_if = simulator_if
         self._cfg = configuration
-        self._elaborate_only = elaborate_only
 
     def from_project(self, project, entity_filter=None):
         """
@@ -74,20 +73,17 @@ class TestScanner(object):
 
             generics["tb_path"] = new_value
 
-        generics = config.generics.copy()
+        generics = config.sim_config.generics.copy()
         add_tb_path_generic(generics)
-        generics = prune_generics(generics, entity.generic_names)
+        config.sim_config.fail_on_warning = fail_on_warning
+        config.sim_config.generics = prune_generics(generics, entity.generic_names)
 
         return TestBench(simulator_if=self._simulator_if,
                          library_name=entity.library_name,
-                         architecture_name=architecture_name,
                          entity_name=entity.name,
-                         fail_on_warning=fail_on_warning,
-                         disable_ieee_warnings=config.disable_ieee_warnings,
-                         has_output_path="output_path" in entity.generic_names,
-                         generics=generics,
-                         pli=config.pli,
-                         elaborate_only=self._elaborate_only)
+                         architecture_name=architecture_name,
+                         sim_config=config.sim_config,
+                         has_output_path="output_path" in entity.generic_names)
 
     def _parse(self, entity, architecture_name):
         """
@@ -123,14 +119,6 @@ class TestScanner(object):
             fail_on_warning = "fail_on_warning" in pragmas
             return self._create_test_bench(entity, architecture_name, config, fail_on_warning)
 
-        def create_post_check(config):
-            """
-            Helper function to create a post_check unless elaborate only
-            """
-            if self._elaborate_only:
-                return None
-            return config.post_check
-
         def create_name(config, run_string=None):
             """
             Helper function to create a test name
@@ -151,7 +139,7 @@ class TestScanner(object):
                         test_case=None,
                         test_bench=create_test_bench(config),
                         has_runner_cfg=has_runner_cfg,
-                        post_check_function=create_post_check(config)))
+                        post_check_function=config.post_check))
         elif should_run_in_same_sim:
             scope = create_scope(entity.library_name, entity.name)
             configurations = self._cfg.get_configurations(scope)
@@ -160,7 +148,7 @@ class TestScanner(object):
                     SameSimTestSuite(name=create_name(config),
                                      test_cases=run_strings,
                                      test_bench=create_test_bench(config),
-                                     post_check_function=create_post_check(config)))
+                                     post_check_function=config.post_check))
         else:
             for run_string in run_strings:
                 scope = create_scope(entity.library_name, entity.name, run_string)
@@ -172,7 +160,7 @@ class TestScanner(object):
                             test_case=run_string,
                             test_bench=create_test_bench(config),
                             has_runner_cfg=has_runner_cfg,
-                            post_check_function=create_post_check(config)))
+                            post_check_function=config.post_check))
 
     def _warn_on_individual_configuration(self, scope, run_strings, should_run_in_same_sim):
         """

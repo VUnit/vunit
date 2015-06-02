@@ -201,25 +201,23 @@ class ModelSimInterface(object):
 
     def _create_load_function(self,  # pylint: disable=too-many-arguments
                               library_name, entity_name, architecture_name,
-                              generics, pli, output_path):
+                              config, output_path):
         """
         Create the vunit_load TCL function that runs the vsim command and loads the design
         """
         set_generic_str = "\n    ".join(('set vunit_generic_%s {%s}' % (name, value)
-                                         for name, value in generics.items()))
-        set_generic_name_str = " ".join(('-g%s="${vunit_generic_%s}"' % (name, name) for name in generics))
-        pli_str = " ".join("-pli {%s}" % fix_path(name) for name in pli)
-        if architecture_name is None:
-            architecture_suffix = ""
-        else:
-            architecture_suffix = "(%s)" % architecture_name
+                                         for name, value in config.generics.items()))
+        set_generic_name_str = " ".join(('-g%s="${vunit_generic_%s}"' % (name, name) for name in config.generics))
+        pli_str = " ".join("-pli {%s}" % fix_path(name) for name in config.pli)
+        architecture_suffix = "(%s)" % architecture_name
 
         vsim_flags = ["-wlf {%s}" % fix_path(join(output_path, "vsim.wlf")),
                       "-quiet",
                       "-t ps",
                       pli_str,
                       set_generic_name_str,
-                      library_name + "." + entity_name + architecture_suffix]
+                      library_name + "." + entity_name + architecture_suffix,
+                      self._vsim_extra_args(config)]
 
         # There is a known bug in modelsim that prevents the -modelsimini flag from accepting
         # a space in the path even with escaping, see issue #36
@@ -229,7 +227,14 @@ class ModelSimInterface(object):
         tcl = """
 proc vunit_load {{{{vsim_extra_args ""}}}} {{
     {set_generic_str}
-    vsim ${{vsim_extra_args}} {vsim_flags}
+    set vsim_failed [catch {{
+        vsim ${{vsim_extra_args}} {vsim_flags}
+    }}]
+    if {{${{vsim_failed}}}} {{
+       echo Command 'vsim ${{vsim_extra_args}} {vsim_flags}' failed
+       echo Bad flag from vsim_extra_args?
+       return 1
+    }}
     set no_finished_signal [catch {{examine -internal {{/vunit_finished}}}}]
     set no_test_runner_exit [catch {{examine -internal {{/run_base_pkg/runner.exit_simulation}}}}]
 
@@ -304,9 +309,23 @@ proc vunit_run {} {
 }
 """ % (1 if fail_on_warning else 2, no_warnings, no_warnings)
 
+    def _vsim_extra_args(self, config):
+        """
+        Determine vsim_extra_args
+        """
+        vsim_extra_args = ""
+        vsim_extra_args = config.options.get("vsim_extra_args",
+                                             vsim_extra_args)
+
+        if self._gui_mode is not None:
+            vsim_extra_args = config.options.get("vsim_extra_args.gui",
+                                                 vsim_extra_args)
+
+        return vsim_extra_args
+
     def _create_common_script(self,   # pylint: disable=too-many-arguments
                               library_name, entity_name, architecture_name,
-                              generics, pli, fail_on_warning, disable_ieee_warnings,
+                              config,
                               output_path):
         """
         Create tcl script with functions common to interactive and batch modes
@@ -323,8 +342,10 @@ proc vunit_help {} {
     echo {  - Run test, must do vunit_load first}
 }
 """
-        tcl += self._create_load_function(library_name, entity_name, architecture_name, generics, pli, output_path)
-        tcl += self._create_run_function(fail_on_warning, disable_ieee_warnings)
+        tcl += self._create_load_function(library_name, entity_name, architecture_name,
+                                          config, output_path)
+        tcl += self._create_run_function(config.fail_on_warning,
+                                         config.disable_ieee_warnings)
         return tcl
 
     @staticmethod
@@ -346,9 +367,12 @@ proc vunit_help {} {
         """
         Create the user facing script which loads common functions and prints a help message
         """
-        tcl = "do %s\n" % fix_path(common_file_name)
-        tcl += "vunit_load\n"
-        tcl += "vunit_help\n"
+        tcl = """
+do %s
+if {![vunit_load]} {
+  vunit_help
+}
+""" % fix_path(common_file_name)
         return tcl
 
     @staticmethod
@@ -356,16 +380,19 @@ proc vunit_help {} {
         """
         Create the user facing script which loads common functions and prints a help message
         """
-        tcl = "do %s\n" % fix_path(common_file_name)
-        # Do not exclude variables from log
-        tcl += "vunit_load -vhdlvariablelogging\n"
-        tcl += "quietly set WildcardFilter [lsearch -not -all -inline $WildcardFilter Process]\n"
-        tcl += "quietly set WildcardFilter [lsearch -not -all -inline $WildcardFilter Variable]\n"
-        tcl += "quietly set WildcardFilter [lsearch -not -all -inline $WildcardFilter Constant]\n"
-        tcl += "quietly set WildcardFilter [lsearch -not -all -inline $WildcardFilter Generic]\n"
-        tcl += "log -recursive /*\n"
-        tcl += "quietly set WildcardFilter default\n"
-        tcl += "vunit_run\n"
+        tcl = """\
+do %s
+# Do not exclude variables from log
+if {![vunit_load -vhdlvariablelogging]} {
+  quietly set WildcardFilter [lsearch -not -all -inline $WildcardFilter Process]
+  quietly set WildcardFilter [lsearch -not -all -inline $WildcardFilter Variable]
+  quietly set WildcardFilter [lsearch -not -all -inline $WildcardFilter Constant]
+  quietly set WildcardFilter [lsearch -not -all -inline $WildcardFilter Generic]
+  log -recursive /*"
+  quietly set WildcardFilter default
+  vunit_run
+}
+""" % fix_path(common_file_name)
         return tcl
 
     @staticmethod
@@ -437,15 +464,10 @@ proc vunit_help {} {
             return False
 
     def simulate(self, output_path,  # pylint: disable=too-many-arguments
-                 library_name, entity_name, architecture_name=None,
-                 generics=None, pli=None, load_only=None, fail_on_warning=False,
-                 disable_ieee_warnings=False):
+                 library_name, entity_name, architecture_name, config):
         """
         Run a test bench
-        load_only -- Only load the design performing elaboration without simulating
         """
-        generics = {} if generics is None else generics
-        pli = [] if pli is None else pli
         msim_output_path = abspath(join(output_path, "msim"))
         common_file_name = join(msim_output_path, "common.do")
         gui_load_file_name = join(msim_output_path, "gui_load.do")
@@ -453,23 +475,24 @@ proc vunit_help {} {
         batch_file_name = join(msim_output_path, "batch.do")
 
         write_file(common_file_name,
-                   self._create_common_script(library_name, entity_name, architecture_name, generics, pli,
-                                              fail_on_warning=fail_on_warning,
-                                              disable_ieee_warnings=disable_ieee_warnings,
+                   self._create_common_script(library_name,
+                                              entity_name,
+                                              architecture_name,
+                                              config,
                                               output_path=msim_output_path))
         write_file(gui_load_file_name,
                    self._create_gui_load_script(common_file_name))
         write_file(gui_run_file_name,
                    self._create_gui_run_script(common_file_name))
         write_file(batch_file_name,
-                   self._create_batch_script(common_file_name, load_only))
+                   self._create_batch_script(common_file_name, config.elaborate_only))
 
         if self._gui_mode == "load":
             return self._run_batch_file(gui_load_file_name, gui=True)
         elif self._gui_mode == "run":
             return self._run_batch_file(gui_run_file_name, gui=True)
         elif self._persistent:
-            return self._run_persistent(common_file_name, load_only)
+            return self._run_persistent(common_file_name, config.elaborate_only)
         else:
             return self._run_batch_file(batch_file_name)
 

@@ -45,7 +45,7 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 
-class VUnit(object):  # pylint: disable=too-many-instance-attributes
+class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-public-methods
     """
     The public interface of VUnit
     """
@@ -113,11 +113,10 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         self._test_filter = test_filter if test_filter is not None else lambda name: True
         self._list_only = list_only
         self._compile_only = compile_only
-        self._elaborate_only = elaborate_only
         self._vhdl_standard = vhdl_standard
 
         self._tb_filter = tb_filter
-        self._configuration = TestConfiguration()
+        self._configuration = TestConfiguration(elaborate_only=elaborate_only)
         self._external_preprocessors = []
         self._location_preprocessor = None
         self._check_preprocessor = None
@@ -208,6 +207,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         Globally set generic
         """
         self._configuration.set_generic(name, value, scope=create_scope())
+
+    def set_sim_option(self, name, value):
+        """
+        Globally set simulation option
+        """
+        self._configuration.set_sim_option(name, value, scope=create_scope())
 
     def set_pli(self, value):
         """
@@ -387,8 +392,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes
         Create the test suites by scanning the project
         """
         scanner = TestScanner(simulator_if,
-                              self._configuration,
-                              elaborate_only=self._elaborate_only)
+                              self._configuration)
         test_list = scanner.from_project(self._project, entity_filter=self._tb_filter)
         test_list.keep_matches(self._test_filter)
         return test_list
@@ -470,6 +474,12 @@ class LibraryFacade(object):
         """ Set generic within library """
         self._configuration.set_generic(name, value, scope=self._scope)
 
+    def set_sim_option(self, name, value):
+        """
+        Set simulation option within library
+        """
+        self._configuration.set_sim_option(name, value, scope=self._scope)
+
     def set_pli(self, value):
         """ Set pli within library """
         self._configuration.set_pli(value, scope=self._scope)
@@ -522,6 +532,12 @@ class EntityFacade(object):
     def set_generic(self, name, value):
         """ Set generic within entity """
         self._config.set_generic(name, value, scope=self._scope)
+
+    def set_sim_option(self, name, value):
+        """
+        Set simulation option within entity
+        """
+        self._config.set_sim_option(name, value, scope=self._scope)
 
     def set_pli(self, value):
         """ Set pli within entity """
@@ -605,6 +621,12 @@ class TestFacade(object):
         Set generic for test case
         """
         self._config.set_generic(name, value, scope=self._scope)
+
+    def set_sim_option(self, name, value):
+        """
+        Set simulation option within entity
+        """
+        self._config.set_sim_option(name, value, scope=self._scope)
 
     def disable_ieee_warnings(self):
         """

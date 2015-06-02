@@ -40,11 +40,13 @@ class TestConfiguration(object):
 
     Specific scopes have priority over general scopes in case of conflict
     """
-    def __init__(self):
+    def __init__(self, elaborate_only=False):
         self._generics = {}
+        self._sim_options = {}
         self._configs = {}
         self._plis = {}
         self._disable_ieee_warnings = set()
+        self._elaborate_only = elaborate_only
 
     def set_generic(self, name, value, scope=create_scope()):
         """
@@ -53,6 +55,22 @@ class TestConfiguration(object):
         if scope not in self._generics:
             self._generics[scope] = {}
         self._generics[scope][name] = value
+
+    _known_options = ["vsim_extra_args",
+                      "vsim_extra_args.gui"]
+
+    def set_sim_option(self, name, value, scope=create_scope()):
+        """
+        Set sim option within scope
+        """
+        if name not in self._known_options:
+            LOGGER.error("Unknown sim_option %r, expected one of %r",
+                         name, self._known_options)
+            raise ValueError(name)
+
+        if scope not in self._generics:
+            self._sim_options[scope] = {}
+        self._sim_options[scope][name] = value
 
     def set_pli(self, value, scope=create_scope()):
         """
@@ -83,25 +101,34 @@ class TestConfiguration(object):
         global_generics = self._get_generics_for_scope(scope)
         pli = self._get_pli_for_scope(scope)
         configs_for_scope = self._get_configs_for_scope(scope)
+        sim_options_for_scope = self._get_sim_options_for_scope(scope)
         disable_ieee_warnings = self._ieee_warnings_disabled_in_scope(scope)
 
         configs = []
         for config_name in sorted(configs_for_scope.keys()):
             cfg_generics, post_check = configs_for_scope[config_name]
+            if self._elaborate_only:
+                post_check = None
             generics = global_generics.copy()
             generics.update(cfg_generics)
-            configs.append(Configuration(config_name,
-                                         generics,
-                                         post_check,
-                                         pli,
-                                         disable_ieee_warnings))
+            configs.append(Configuration(name=config_name,
+                                         sim_config=SimConfig(
+                                             generics=generics,
+                                             pli=pli,
+                                             disable_ieee_warnings=disable_ieee_warnings,
+                                             elaborate_only=self._elaborate_only,
+                                             options=sim_options_for_scope.copy()),
+                                         post_check=post_check))
 
         if len(configs) == 0:
-            configs = [Configuration("",
-                                     global_generics.copy(),
-                                     None,
-                                     pli,
-                                     disable_ieee_warnings)]
+            configs = [Configuration(name="",
+                                     sim_config=SimConfig(
+                                         generics=global_generics.copy(),
+                                         pli=pli,
+                                         disable_ieee_warnings=disable_ieee_warnings,
+                                         elaborate_only=self._elaborate_only,
+                                         options=sim_options_for_scope.copy()),
+                                     post_check=None)]
 
         return configs
 
@@ -127,6 +154,15 @@ class TestConfiguration(object):
         for iter_scope in iter_scopes(scope):
             generics.update(self._generics.get(iter_scope, {}))
         return generics
+
+    def _get_sim_options_for_scope(self, scope):
+        """
+        Get scope inferred sim_options, specific scope has precedence
+        """
+        sim_options = {}
+        for iter_scope in iter_scopes(scope):
+            sim_options.update(self._sim_options.get(iter_scope, {}))
+        return sim_options
 
     def _get_pli_for_scope(self, scope):
         """
@@ -160,6 +196,7 @@ class TestConfiguration(object):
 
         add(self._generics)
         add(self._configs)
+        add(self._sim_options)
         add(self._plis)
         add(self._disable_ieee_warnings)
         return result
@@ -169,28 +206,59 @@ class Configuration(object):
     """
     Represents a configuration of a test bench
     """
-    def __init__(self,  # pylint: disable=too-many-arguments
+    def __init__(self,
                  name="",
-                 generics=None,
-                 post_check=None,
-                 pli=None,
-                 disable_ieee_warnings=False):
+                 sim_config=None,
+                 post_check=None,):
         self.name = name
-        self.generics = generics if generics is not None else {}
+        self.sim_config = sim_config if sim_config is not None else SimConfig()
         self.post_check = post_check
-        self.pli = [] if pli is None else pli
-        self.disable_ieee_warnings = disable_ieee_warnings
 
     def __eq__(self, other):
         return (self.name == other.name and
-                self.generics == other.generics and
-                self.post_check == other.post_check and
-                self.pli == other.pli,
-                self.disable_ieee_warnings == other.disable_ieee_warnings)
+                self.sim_config == other.sim_config and
+                self.post_check == other.post_check)
 
     def __repr__(self):
-        return("Configuration(%r, %r, %r, %r, %r)"
-               % (self.name, self.generics, self.post_check, self.pli, self.disable_ieee_warnings))
+        return("Configuration(%r, %r, %r)"
+               % (self.name, self.sim_config, self.post_check))
+
+
+class SimConfig(object):
+    """
+    Simulation related configuration
+    """
+
+    def __init__(self,  # pylint: disable=too-many-arguments
+                 generics=None,
+                 pli=None,
+                 disable_ieee_warnings=False,
+                 fail_on_warning=False,
+                 elaborate_only=False,
+                 options=None):
+        self.generics = generics if generics is not None else {}
+        self.pli = [] if pli is None else pli
+        self.disable_ieee_warnings = disable_ieee_warnings
+        self.fail_on_warning = fail_on_warning
+        self.elaborate_only = elaborate_only
+        self.options = {} if options is None else options
+
+    def __eq__(self, other):
+        return (self.generics == other.generics and
+                self.pli == other.pli and
+                self.disable_ieee_warnings == other.disable_ieee_warnings and
+                self.fail_on_warning == other.fail_on_warning and
+                self.elaborate_only == other.elaborate_only and
+                self.options == other.options)
+
+    def __repr__(self):
+        return("SimConfig(%r, %r, %r, %r, %r, %r)"
+               % (self.generics,
+                  self.pli,
+                  self.disable_ieee_warnings,
+                  self.fail_on_warning,
+                  self.elaborate_only,
+                  self.options))
 
 
 def is_within_scope(scope, other_scope):
