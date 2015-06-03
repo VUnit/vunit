@@ -255,3 +255,14 @@ ent.disable_ieee_warnings()
 test = ent.test("test")
 test.disable_ieee_warnings()
 ```
+## Setting custom simulation options
+Custom simulation options can be set using the`sim_options(name, value)` method. Options can either be set globally, for a library, for an entity or for a specific test. 
+```python
+vu.set_sim_option("vsim_extra_args.gui", "-voptargs=+acc")
+```
+
+### Known simulation options
+* `vsim_extra_args`
+  - Extra arguments passed to `vsim` when loading the design.
+* `vsim_extra_args.gui`
+  - Extra arguments passed to `vsim` when loading the design in GUI mode where it takes precedence over `vsim_extra_args`.
