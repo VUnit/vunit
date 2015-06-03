@@ -230,7 +230,7 @@ request(net, self, find("scoreboard"), request_message, reply_message);
 ## Synchronous Communication
 The actor model as well as `com` are based on asynchronous communication but can still be used for synchronous communication. There are basically two ways:
 
-1. You can use the client/server pattern and have the receiver send an acknowledge message back to the sender which blocks waiting for that acknowledge using `receive_reply`.
+1. You can use the client/server pattern and have the receiver send an acknowledge message back to the sender which blocks waiting for that acknowledge using `receive_reply` or `request`. For the case when the acknowledge message contains no more information than if the request was handled with positive or negative result there is a special `reply` procedure called `acknowledge` that takes a `positive_ack` boolean input instead of a string message. There are also matching `request` and `receive_reply` procedures working with this boolean information.
 2. It is also possible to limit the number of unread messages that an receiver can have. This mechanism can be used to limit the amount of memory used in the simulation but can also be used for synchronization. If the limit is reached a new send to that receiver will block with an optional timeout. Setting the limit to one means that the receiver must read the first message before the sender can get another one through. To set a limit on the receiver you add a second parameter to the create call.
 
   ```vhdl

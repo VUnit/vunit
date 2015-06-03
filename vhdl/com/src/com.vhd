@@ -9,6 +9,8 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
+use work.com_codec_pkg.all;
+
 use std.textio.all;
 
 package body com_pkg is
@@ -671,7 +673,7 @@ begin
     wait on net until not messenger.inbox_is_full(receiver) for timeout;
     if messenger.inbox_is_full(receiver) then
       receipt.status := full_inbox_error;
-      send_message := false;
+      send_message   := false;
     end if;
   end if;
 
@@ -706,8 +708,8 @@ procedure request (
   constant timeout         : in    time    := max_timeout_c;
   constant keep_message    : in    boolean := false) is
   variable receipt : receipt_t;
-  variable start : time;
-  variable sender : actor_t := request_message.sender;
+  variable start   : time;
+  variable sender  : actor_t := request_message.sender;
 begin
   start := now;
   send(net, receiver, request_message, receipt, timeout, keep_message);
@@ -715,6 +717,42 @@ begin
     receive_reply(net, sender, receipt.id, reply_message, timeout - (now - start));
   else
     reply_message.status := receipt.status;
+  end if;
+end;
+
+procedure request (
+  signal net               : inout network_t;
+  constant sender          : in    actor_t;
+  constant receiver        : in    actor_t;
+  constant request_payload : in    string := "";
+  variable positive_ack    : out   boolean;
+  variable status          : out   com_status_t;
+  constant timeout         : in    time   := max_timeout_c) is
+  variable request_message : message_ptr_t;
+begin
+  request_message := compose(request_payload, sender);
+  request(net, receiver, request_message, positive_ack, status, timeout);
+end;
+
+procedure request (
+  signal net               : inout network_t;
+  constant receiver        : in    actor_t;
+  variable request_message : inout message_ptr_t;
+  variable positive_ack    : out   boolean;
+  variable status          : out   com_status_t;
+  constant timeout         : in    time    := max_timeout_c;
+  constant keep_message    : in    boolean := false) is
+  variable receipt : receipt_t;
+  variable start   : time;
+  variable sender  : actor_t := request_message.sender;
+begin
+  start := now;
+  send(net, receiver, request_message, receipt, timeout, keep_message);
+  if receipt.status = ok then
+    receive_reply(net, sender, receipt.id, positive_ack, status, timeout - (now - start));
+  else
+    status       := receipt.status;
+    positive_ack := false;
   end if;
 end;
 
@@ -760,6 +798,32 @@ begin
 
   send(net, receiver, message, receipt, timeout, keep_message);
 end;
+
+procedure acknowledge (
+  signal net            : inout network_t;
+  constant sender       : in    actor_t;
+  constant receiver     : in    actor_t;
+  constant request_id   : in    message_id_t;
+  constant positive_ack : in    boolean := true;
+  variable receipt      : out   receipt_t;
+  constant timeout      : in    time    := max_timeout_c) is
+  variable message : message_ptr_t;
+begin
+  message := compose(encode(positive_ack), sender, request_id);
+  send(net, receiver, message, receipt, timeout);
+end;
+
+procedure acknowledge (
+  signal net            : inout network_t;
+  constant receiver     : in    actor_t;
+  constant request_id   : in    message_id_t;
+  constant positive_ack : in    boolean := true;
+  variable receipt      : out   receipt_t;
+  constant timeout      : in    time    := max_timeout_c) is
+begin
+  acknowledge(net, null_actor_c, receiver, request_id, positive_ack, receipt, timeout);
+end;
+
 
 procedure publish (
   signal net       : inout network_t;
@@ -904,10 +968,10 @@ begin
   message        := new message_t;
   message.status := null_message_error;
   if messenger.has_reply_stash_message(receiver) then
-    message.status := ok;
-    message.id     := messenger.get_reply_stash_message_id(receiver);
-    message.request_id     := messenger.get_reply_stash_message_request_id(receiver);
-    message.sender := messenger.get_reply_stash_message_sender(receiver);
+    message.status     := ok;
+    message.id         := messenger.get_reply_stash_message_id(receiver);
+    message.request_id := messenger.get_reply_stash_message_request_id(receiver);
+    message.sender     := messenger.get_reply_stash_message_sender(receiver);
     write(message.payload, messenger.get_reply_stash_message_payload(receiver));
     if clear_reply_stash then
       messenger.clear_reply_stash(receiver);
@@ -935,6 +999,24 @@ begin
     message        := new message_t;
     message.status := status;
   end if;
+end;
+
+procedure receive_reply (
+  signal net            : inout network_t;
+  constant receiver     :       actor_t;
+  constant request_id   : in    message_id_t;
+  variable positive_ack : out   boolean;
+  variable status       : out   com_status_t;
+  constant timeout      : in    time := max_timeout_c) is
+  variable message : message_ptr_t;
+begin
+  receive_reply(net, receiver, request_id, message, timeout);
+  if message.status = ok then
+    positive_ack := decode(message.payload.all);
+  else
+    positive_ack := false;
+  end if;
+  status := message.status;
 end;
 
 procedure subscribe (

@@ -23,9 +23,9 @@ end entity tb_com;
 architecture test_fixture of tb_com is
   signal hello_world_received, start_receiver, start_server,
     start_server2, start_server3, start_subscribers : boolean := false;
-  signal hello_subscriber_received : std_logic_vector(1 to 2) := "ZZ";
-  signal start_limited_inbox, limited_inbox_actor_done : boolean := false;
-  signal start_limited_inbox_subscriber : boolean := false;
+  signal hello_subscriber_received                     : std_logic_vector(1 to 2) := "ZZ";
+  signal start_limited_inbox, limited_inbox_actor_done : boolean                  := false;
+  signal start_limited_inbox_subscriber                : boolean                  := false;
 begin
   test_runner : process
     variable actor_to_be_found, actor_with_deferred_creation, actor_to_destroy,
@@ -39,6 +39,7 @@ begin
     variable message           : message_ptr_t;
     variable reply_message     : message_ptr_t;
     variable t_start, t_stop   : time;
+    variable ack               : boolean;
   begin
     checker_init(display_format => verbose,
                  file_name      => join(output_path(runner_cfg), "error.csv"),
@@ -78,8 +79,10 @@ begin
         actor_with_bounded_inbox := create("actor with bounded inbox", 23);
         check(inbox_size(actor_with_bounded_inbox) = 23, "Expected inbox size = 23");
         check(inbox_size(null_actor_c) = 0, "Expected no inbox on null actor");
-        check(inbox_size(find("actor to be created")) = 1, "Expected inbox size on actor with deferred creation to be one");
-        check(inbox_size(create("actor to be created", 42)) = 42, "Expected inbox size on actor with deferred creation to change to given value when created");
+        check(inbox_size(find("actor to be created")) = 1,
+              "Expected inbox size on actor with deferred creation to be one");
+        check(inbox_size(create("actor to be created", 42)) = 42,
+              "Expected inbox size on actor with deferred creation to change to given value when created");
       elsif run("Test that a created actor can be destroyed") then
         actor_to_destroy := create("actor to destroy");
         actor_to_keep    := create("actor to keep");
@@ -89,7 +92,8 @@ begin
         check(status = ok, "Expected destroy status to be ok");
         check(actor_to_destroy = null_actor_c, "Destroyed actor should be nullified");
         check(find("actor to destroy", false) = null_actor_c, "A destroyed actor should not be found");
-        check(find("actor to keep", false) /= null_actor_c, "Actors other than the one destroyed must not be affected");
+        check(find("actor to keep", false) /= null_actor_c,
+              "Actors other than the one destroyed must not be affected");
       elsif run("Test that a non-existing actor cannot be destroyed") then
         actor_to_destroy      := create("actor to destroy");
         actor_to_destroy_copy := actor_to_destroy;
@@ -240,6 +244,7 @@ begin
         server        := find("server2");
         send(net, self, server, "request1", receipt);
         send(net, self, server, "request2", receipt2);
+
         receive_reply(net, self, receipt2.id, reply_message);
         check(reply_message.payload.all = "reply2", "Expected ""reply2""");
         check(reply_message.request_id = receipt2.id, "Expected request_id = " & integer'image(receipt2.id) &
@@ -251,14 +256,22 @@ begin
         delete(reply_message);
       elsif run("Test that a synchronous request can be made") then
         start_server3 <= true;
-        server := find("server3");
+        server        := find("server3");
 
         request(net, self, server, "request1", reply_message);
         check(reply_message.payload.all = "reply1", "Expected ""reply1""");
         delete(reply_message);
 
+        request(net, self, server, "request2", ack, status);
+        check(status = ok, "Expected request to succeed");
+        check(ack, "Expected positive acknowledgement");
+
+        request(net, self, server, "request3", ack, status);
+        check(status = ok, "Expected request to succeed");
+        check(not ack, "Expected negative acknowledgement");
+
         t_start := now;
-        request(net, self, server, "request2", reply_message, 3 ns);
+        request(net, self, server, "request4", reply_message, 3 ns);
         check(reply_message.status = timeout, "Expected timeout");
         check(now - t_start = 3 ns, "Expected timeout after 3 ns");
         delete(reply_message);
@@ -405,9 +418,9 @@ begin
   end process server2;
 
   server3 : process is
-    variable self : actor_t;
+    variable self            : actor_t;
     variable request_message : message_ptr_t;
-    variable receipt : receipt_t;
+    variable receipt         : receipt_t;
   begin
     wait until start_server3;
     self := create("server3", 1);
@@ -416,6 +429,16 @@ begin
     check(request_message.payload.all = "request1", "Expected ""request1""");
     reply(net, request_message.sender, request_message.id, "reply1", receipt);
     check(receipt.status = ok, "Expected reply to succeed");
+    delete(request_message);
+
+    receive(net, self, request_message);
+    check(request_message.payload.all = "request2", "Expected ""request2""");
+    acknowledge(net, request_message.sender, request_message.id, true, receipt);
+    check(receipt.status = ok, "Expected acknowledge to succeed");
+    delete(request_message);
+
+    receive(net, self, request_message);
+    acknowledge(net, request_message.sender, request_message.id, false, receipt);
     delete(request_message);
 
     receive(net, self, request_message);
