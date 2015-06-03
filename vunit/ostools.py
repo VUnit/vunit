@@ -15,12 +15,13 @@ from __future__ import print_function
 import time
 import subprocess
 import threading
+import shutil
 try:
     # Python 3.x
-    from queue import Queue
+    from queue import Queue, Empty
 except ImportError:
     # Python 2.7
-    from Queue import Queue  # pylint: disable=import-error
+    from Queue import Queue, Empty  # pylint: disable=import-error
 
 from os.path import exists, getmtime, dirname
 import os
@@ -28,6 +29,55 @@ import io
 
 import logging
 LOGGER = logging.getLogger(__name__)
+
+IS_WINDOWS_SYSTEM = os.name == 'nt'
+
+
+class ProgramStatus(object):
+    """
+    Maintain global program status to support graceful shutdown
+    """
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._shutting_down = False
+
+    @property
+    def is_shutting_down(self):
+        with self._lock:
+            return self._shutting_down
+
+    def check_for_shutdown(self):
+        if self.is_shutting_down:
+            raise KeyboardInterrupt
+
+    def shutdown(self):
+        with self._lock:
+            self._shutting_down = True
+
+PROGRAM_STATUS = ProgramStatus()
+
+
+class InterruptableQueue(object):
+    """
+    A Queue which can be interrupted
+    """
+
+    def __init__(self):
+        self._queue = Queue()
+
+    def get(self):
+        while True:
+            PROGRAM_STATUS.check_for_shutdown()
+            try:
+                return self._queue.get(timeout=0.1)
+            except Empty:
+                pass
+
+    def put(self, value):
+        self._queue.put(value)
+
+    def empty(self):
+        return self._queue.empty()
 
 
 class Process(object):
@@ -40,17 +90,37 @@ class Process(object):
         pass
 
     def __init__(self, args, cwd=None):
-        LOGGER.debug("Starting process: '%s'", (" ".join(args)))
-        self._process = subprocess.Popen(
-            args,
-            bufsize=0,
-            cwd=cwd,
-            stdout=subprocess.PIPE,
-            stdin=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            universal_newlines=True)
+        self._args = args
 
-        self._queue = Queue()
+        # Create process with new process group
+        # Sending a signal to a process group will send it to all children
+        # Hopefully this way no orphaned processes will be left behind
+        if IS_WINDOWS_SYSTEM:  # Windows
+            self._process = subprocess.Popen(
+                args,
+                bufsize=0,
+                cwd=cwd,
+                stdout=subprocess.PIPE,
+                stdin=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True,
+                # Create new process group on Windows
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+        else:
+            self._process = subprocess.Popen(
+                args,
+                bufsize=0,
+                cwd=cwd,
+                stdout=subprocess.PIPE,
+                stdin=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True,
+                # Create new process group on POSIX, setpgrp does not exist on Windows
+                preexec_fn=os.setpgrp)  # pylint: disable=no-member
+
+        LOGGER.debug("Started process with pid=%i: '%s'", self._process.pid, (" ".join(args)))
+
+        self._queue = InterruptableQueue()
         self._reader = AsynchronousFileReader(self._process.stdout, self._queue)
         self._reader.start()
 
@@ -71,8 +141,25 @@ class Process(object):
             if msg is not None:
                 return msg
 
-        retcode = self._process.wait()
+        retcode = self.wait()
         return retcode
+
+    def wait(self):
+        """
+        Wait while without completely blocking to avoid
+        deadlock when shutting down
+        """
+        while self._process.poll() is None:
+            PROGRAM_STATUS.check_for_shutdown()
+            time.sleep(0.05)
+            LOGGER.debug("Waiting for process with pid=%i to stop", self._process.pid)
+        return self._process.returncode
+
+    def is_alive(self):
+        """
+        Returns true if alive
+        """
+        return self._process.poll() is None
 
     def consume_output(self, callback=print):
         """
@@ -94,9 +181,11 @@ class Process(object):
                 while (not self._reader.eof()) and (self._queue.get() is not None):
                     pass
 
-            retcode = self._process.wait()
-            if retcode != 0:
-                raise Process.NonZeroExitCode
+            retcode = None
+            while retcode is None:
+                retcode = self.wait()
+                if retcode != 0:
+                    raise Process.NonZeroExitCode
 
         except:
             self.terminate()
@@ -108,8 +197,25 @@ class Process(object):
         Terminate the process
         """
         # Let's be tidy and join the threads we've started.
-        if self._process.returncode is None:
+        if self._process.poll() is None:
+            LOGGER.debug("Terminating process with pid=%i", self._process.pid)
             self._process.terminate()
+
+        if self._process.poll() is None:
+            time.sleep(0.05)
+
+        if self._process.poll() is None:
+            LOGGER.debug("Killing process with pid=%i", self._process.pid)
+            self._process.kill()
+
+        if self._process.poll() is None:
+            LOGGER.debug("Waiting for process with pid=%i", self._process.pid)
+            self.wait()
+
+        LOGGER.debug("Process with pid=%i terminated with code=%i",
+                     self._process.pid,
+                     self._process.returncode)
+
         self._reader.join()
         self._process.stdout.close()
         self._process.stdin.close()
@@ -133,6 +239,8 @@ class AsynchronousFileReader(threading.Thread):
     def run(self):
         """The body of the tread: read lines and put them on the queue."""
         for line in iter(self._fd.readline, ''):
+            if PROGRAM_STATUS.is_shutting_down:
+                break
             self._queue.put(line[:-1])
         self._queue.put(None)
 
@@ -175,3 +283,25 @@ def get_modification_time(file_name):
 def get_time():
     """ To stub during testing """
     return time.time()
+
+
+def renew_path(path):
+    """
+    Ensure path directory exists and is empty
+
+    On Windows deleting a file will not actually delete it right away but only
+    mark it for deletion. Therefore there is a race-condition between rmtree and makedirs.
+    Virus scanners and file system indexers might temporarily block a file from being deleted right away
+
+    http://stackoverflow.com/questions/27625683/can-anyone-explain-this-weird-behaviour-of-shutil-rmtree-and-shutil-copytree
+    """
+    if IS_WINDOWS_SYSTEM:
+        retries = 10
+        while retries > 0 and exists(path):
+            shutil.rmtree(path, ignore_errors=retries > 1)
+            time.sleep(0.01)
+            retries -= 1
+    else:
+        if exists(path):
+            shutil.rmtree(path)
+    os.makedirs(path)

@@ -12,13 +12,12 @@ Test the test runner
 from __future__ import print_function
 
 import unittest
-from os.path import join, dirname, exists
-from shutil import rmtree
+from os.path import join, dirname
 
 from vunit.test_runner import TestRunner
 from vunit.test_report import TestReport
 from vunit.test_list import TestList
-
+from vunit.ostools import renew_path
 from vunit.test.mock_2or3 import mock
 
 
@@ -30,10 +29,7 @@ class TestTestRunner(unittest.TestCase):
     def setUp(self):
         self._tests = []
         self.output_path = join(dirname(__file__), "test_runner_out")
-
-        if exists(self.output_path):
-            rmtree(self.output_path)
-
+        renew_path(self.output_path)
         self.report = TestReport()
         self.runner = TestRunner(self.report, self.output_path)
 

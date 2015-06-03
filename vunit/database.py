@@ -10,10 +10,10 @@ A simple file based database
 
 from os.path import join, exists
 import os
-from shutil import rmtree
 import pickle
 import io
 import struct
+from vunit.ostools import renew_path
 
 
 class DataBase(object):
@@ -37,10 +37,9 @@ class DataBase(object):
         """
         self._path = path
 
-        if new and exists(path):
-            rmtree(path)
-
-        if not exists(path):
+        if new:
+            renew_path(path)
+        elif not exists(path):
             os.makedirs(path)
 
         # Map keys to nodes indexes

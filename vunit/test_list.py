@@ -41,6 +41,9 @@ class TestList(object):
     def __len__(self):
         return len(self._test_suites)
 
+    def __getitem__(self, idx):
+        return self._test_suites[idx]
+
 
 class TestSuiteWrapper(object):
     """

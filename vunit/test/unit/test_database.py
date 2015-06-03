@@ -10,9 +10,8 @@ Test the database related classes
 
 import unittest
 from vunit.database import DataBase, PickledDataBase
-from os import makedirs
-from os.path import join, dirname, exists
-from shutil import rmtree
+from os.path import join, dirname
+from vunit.ostools import renew_path
 
 
 class TestDataBase(unittest.TestCase):
@@ -27,9 +26,7 @@ class TestDataBase(unittest.TestCase):
 
     def setUp(self):
         self.output_path = join(dirname(__file__), "test_database_out")
-        if exists(self.output_path):
-            rmtree(self.output_path)
-        makedirs(self.output_path)
+        renew_path(self.output_path)
 
     def create_database(self, new=False):
         return DataBase(join(self.output_path, "database"), new=new)

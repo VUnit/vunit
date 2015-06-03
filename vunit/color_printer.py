@@ -11,6 +11,7 @@ Provides capability to print in color to the terminal in both Windows and Linux.
 import sys
 import ctypes
 from ctypes import Structure, c_short, c_ushort, byref
+from vunit.ostools import IS_WINDOWS_SYSTEM
 
 
 class LinuxColorPrinter(object):
@@ -111,6 +112,7 @@ class Win32ColorPrinter(LinuxColorPrinter):
         LinuxColorPrinter.__init__(self)
         self._stdout_handle = ctypes.windll.kernel32.GetStdHandle(-11)
         self._stderr_handle = ctypes.windll.kernel32.GetStdHandle(-12)
+        self._default_attr = self._get_text_attr(self._stdout_handle)
 
         self._color_to_code = {self.RED: 4,
                                self.GREEN: 2,
@@ -127,15 +129,14 @@ class Win32ColorPrinter(LinuxColorPrinter):
 
         if output_file is sys.stdout:
             handle = self._stdout_handle
-        elif output_file is sys.stdout:
+        elif output_file is sys.stderr:
             handle = self._stderr_handle
         else:
             handle = None
 
         if handle is not None:
             output_file.flush()
-            old_attr = self._get_text_attr(handle)
-            attr = old_attr
+            attr = self._default_attr
             if fg is not None:
                 attr &= 0xf0
                 attr |= self._decode_color(fg)
@@ -148,7 +149,7 @@ class Win32ColorPrinter(LinuxColorPrinter):
 
         if handle is not None:
             output_file.flush()
-            ctypes.windll.kernel32.SetConsoleTextAttribute(handle, old_attr)
+            ctypes.windll.kernel32.SetConsoleTextAttribute(handle, self._default_attr)
 
     @staticmethod
     def _get_text_attr(handle):
@@ -193,8 +194,9 @@ class NoColorPrinter(object):
             output_file = sys.stdout
         output_file.write(text)
 
+
 NO_COLOR_PRINTER = NoColorPrinter()
-if "win" in sys.platform:
+if IS_WINDOWS_SYSTEM:
     COLOR_PRINTER = Win32ColorPrinter()
 else:
     COLOR_PRINTER = LinuxColorPrinter()

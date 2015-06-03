@@ -10,9 +10,8 @@ Test the os-dependent functionality wrappers
 
 
 from unittest import TestCase
-from vunit.ostools import Process
+from vunit.ostools import Process, renew_path
 from shutil import rmtree
-from os import makedirs
 from os.path import exists, dirname, join, abspath
 
 
@@ -23,9 +22,7 @@ class TestOSTools(TestCase):
 
     def setUp(self):
         self.tmp_dir = join(dirname(__file__), "test_ostools_tmp")
-        if exists(self.tmp_dir):
-            rmtree(self.tmp_dir)
-        makedirs(self.tmp_dir)
+        renew_path(self.tmp_dir)
 
     def tearDown(self):
         if exists(self.tmp_dir):

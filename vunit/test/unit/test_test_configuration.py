@@ -10,9 +10,8 @@ Test the global test bench configuration
 
 
 import unittest
-from os.path import join, dirname, exists
-from shutil import rmtree
-from os import makedirs
+from os.path import join, dirname
+from vunit.ostools import renew_path
 
 from vunit.test_configuration import TestConfiguration, Configuration, SimConfig, create_scope
 
@@ -25,9 +24,7 @@ class TestTestConfiguration(unittest.TestCase):
         self.cfg = TestConfiguration()
 
         self.output_path = out()
-        if exists(self.output_path):
-            rmtree(self.output_path)
-        makedirs(self.output_path)
+        renew_path(self.output_path)
 
     def test_has_default_configuration(self):
         scope = create_scope("lib", "tb_entity")

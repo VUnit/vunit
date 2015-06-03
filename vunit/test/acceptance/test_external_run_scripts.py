@@ -175,6 +175,7 @@ class TestExternalRunScripts(unittest.TestCase):
         new_env = environ.copy()
         new_env["VUNIT_VHDL_STANDARD"] = vhdl_standard
         retcode = call([sys.executable, run_file,
+                        "-p4",
                         "--clean",
                         "--output-path=%s" % self.output_path,
                         "--xunit-xml=%s" % self.report_file] + args,

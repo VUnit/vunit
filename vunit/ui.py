@@ -16,7 +16,6 @@ import os
 import traceback
 
 from os.path import exists, abspath, join, basename, splitext
-from shutil import rmtree
 from glob import glob
 from fnmatch import fnmatch
 from vunit.database import PickledDataBase, DataBase
@@ -80,7 +79,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                    compile_only=args.compile,
                    elaborate_only=args.elaborate,
                    compile_builtins=compile_builtins,
-                   simulator_factory=SimulatorFactory(args))
+                   simulator_factory=SimulatorFactory(args),
+                   num_threads=args.num_threads)
 
     def __init__(self,  # pylint: disable=too-many-locals, too-many-arguments
                  output_path,
@@ -96,7 +96,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                  compile_only=False,
                  elaborate_only=False,
                  vhdl_standard='2008',
-                 compile_builtins=True):
+                 compile_builtins=True,
+                 num_threads=1):
 
         self._configure_logging(log_level)
 
@@ -127,6 +128,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         self._project = None
         self._create_project()
+        self._num_threads = num_threads
 
         if compile_builtins:
             self.add_builtins(library_name="vunit_lib")
@@ -296,7 +298,6 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         try:
             all_ok = self._main()
         except KeyboardInterrupt:
-            # Ctrl-C
             exit(1)
         except CompileError:
             exit(1)
@@ -323,10 +324,21 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         simulator_if = self._create_simulator_if()
         test_cases = self._create_tests(simulator_if)
+
         self._compile(simulator_if)
 
-        report = self._run_test(test_cases)
-        del simulator_if
+        start_time = ostools.get_time()
+        report = TestReport(printer=self._printer)
+        try:
+            self._run_test(test_cases, report)
+        except KeyboardInterrupt:
+            print()
+            LOGGER.debug("_main: Caught Ctrl-C shutting down")
+        finally:
+            del test_cases
+            del simulator_if
+
+        report.set_real_total_time(ostools.get_time() - start_time)
         self._post_process(report)
         return report.all_ok()
 
@@ -356,14 +368,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         Create or re-create the output path if necessary
         """
-        if clean and exists(self._output_path):
-            rmtree(self._output_path)
-
-        if exists(self._preprocessed_path):
-            rmtree(self._preprocessed_path)
-
-        if not exists(self._output_path):
+        if clean:
+            ostools.renew_path(self._output_path)
+        elif not exists(self._output_path):
             os.makedirs(self._output_path)
+
+        ostools.renew_path(self._preprocessed_path)
 
     def _create_simulator_if(self):
         """
@@ -398,18 +408,20 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         return test_list
 
     def _compile(self, simulator_if):
+        """
+        Compile entire project
+        """
         simulator_if.compile_project(self._project, self._vhdl_standard)
 
-    def _run_test(self, test_cases):
+    def _run_test(self, test_cases, report):
         """
         Run the test suites and return the report
         """
-        report = TestReport(printer=self._printer)
         runner = TestRunner(report,
                             join(self._output_path, "tests"),
-                            verbose=self._verbose)
+                            verbose=self._verbose,
+                            num_threads=self._num_threads)
         runner.run(test_cases)
-        return report
 
     def _post_process(self, report):
         """

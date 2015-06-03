@@ -134,6 +134,7 @@ class TestVunitArtificial(unittest.TestCase):
         if clean:
             args += ["--clean"]
         retcode = call([sys.executable, run_file,
+                        "-p4",
                         "--output-path=%s" % self.output_path,
                         "--xunit-xml=%s" % self.report_file] + args,
                        env=new_env)

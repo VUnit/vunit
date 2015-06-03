@@ -77,6 +77,11 @@ class VUnitCLI(object):
                             default="warning",
                             choices=["info", "error", "warning", "debug"])
 
+        parser.add_argument('-p', '--num-threads', type=positive_int,
+                            default=1,
+                            help=('Number of tests to run in parallel. '
+                                  'Test output is not continuously written in verbose mode with p > 1'))
+
         com = parser.add_argument_group("com", description="Flags specific to the com message passing package")
         com.add_argument('--use-debug-codecs', action='store_true',
                          default=False,
@@ -84,3 +89,15 @@ class VUnitCLI(object):
         SimulatorFactory.add_arguments(parser)
 
         return parser
+
+
+def positive_int(val):
+    """
+    ArgumentParse positive int check
+    """
+    try:
+        ival = int(val)
+        assert ival > 0
+        return ival
+    except (ValueError, AssertionError):
+        raise argparse.ArgumentTypeError("'%s' is not a valid positive int" % val)

@@ -39,14 +39,19 @@ class TestTestReport(TestCase):
 
     def test_report_with_all_passed_tests(self):
         report = self._report_with_all_passed_tests()
+        report.set_real_total_time(1.0)
         self.assertEqual(self.report_to_str(report), """\
-{gi}pass{x} passed_test0 after 1.0 seconds
-{gi}pass{x} passed_test1 after 2.0 seconds
-
-Total time 3.0 seconds
-2 of 2 passed
-{gi}All passed!
-{x}""")
+==== Summary ========================
+{gi}pass{x} passed_test0 (1.0 seconds)
+{gi}pass{x} passed_test1 (2.0 seconds)
+=====================================
+{gi}pass{x} 2 of 2
+=====================================
+Total time was 3.0 seconds
+Elapsed time was 1.0 seconds
+=====================================
+{gi}All passed!{x}
+""")
         self.assertTrue(report.all_ok())
         self.assertTrue(report.result_of("passed_test0").passed)
         self.assertTrue(report.result_of("passed_test1").passed)
@@ -55,16 +60,21 @@ Total time 3.0 seconds
 
     def test_report_with_failed_tests(self):
         report = self._report_with_some_failed_tests()
+        report.set_real_total_time(12.0)
         self.assertEqual(self.report_to_str(report), """\
-{gi}pass{x} passed_test after 2.0 seconds
-{ri}fail{x} failed_test0 after 11.1 seconds
-{ri}fail{x} failed_test1 after 3.0 seconds
-
-Total time 16.1 seconds
-1 of 3 passed
-2 of 3 failed
-{ri}Some failed!
-{x}""")
+==== Summary ========================
+{gi}pass{x} passed_test  (2.0 seconds)
+{ri}fail{x} failed_test0 (11.1 seconds)
+{ri}fail{x} failed_test1 (3.0 seconds)
+=====================================
+{gi}pass{x} 1 of 3
+{ri}fail{x} 2 of 3
+=====================================
+Total time was 16.1 seconds
+Elapsed time was 12.0 seconds
+=====================================
+{ri}Some failed!{x}
+""")
         self.assertFalse(report.all_ok())
         self.assertTrue(report.result_of("passed_test").passed)
         self.assertTrue(report.result_of("failed_test0").failed)
@@ -72,21 +82,33 @@ Total time 16.1 seconds
 
     def test_report_with_skipped_tests(self):
         report = self._report_with_some_skipped_tests()
+        report.set_real_total_time(3.0)
         self.assertEqual(self.report_to_str(report), """\
-{gi}pass{x} passed_test after 1.0 seconds
-{rgi}skip{x} skipped_test after 0.0 seconds
-{ri}fail{x} failed_test after 3.0 seconds
-
-Total time 4.0 seconds
-1 of 3 passed
-1 of 3 skipped
-1 of 3 failed
-{ri}Some failed!
-{x}""")
+==== Summary ========================
+{gi}pass{x} passed_test  (1.0 seconds)
+{rgi}skip{x} skipped_test (0.0 seconds)
+{ri}fail{x} failed_test  (3.0 seconds)
+=====================================
+{gi}pass{x} 1 of 3
+{rgi}skip{x} 1 of 3
+{ri}fail{x} 1 of 3
+=====================================
+Total time was 4.0 seconds
+Elapsed time was 3.0 seconds
+=====================================
+{ri}Some failed!{x}
+""")
         self.assertFalse(report.all_ok())
         self.assertTrue(report.result_of("passed_test").passed)
         self.assertTrue(report.result_of("skipped_test").skipped)
         self.assertTrue(report.result_of("failed_test").failed)
+
+    def test_report_with_no_tests(self):
+        report = self._new_report()
+        self.assertEqual(self.report_to_str(report), """\
+{rgi}No tests were run!{x}
+""")
+        self.assertTrue(report.all_ok())
 
     def assert_has_test(self, root, name, time, status, output=None):  # pylint: disable=too-many-arguments
         """

@@ -12,11 +12,10 @@ Tests the test scanner
 import unittest
 from os.path import join, dirname, exists
 from shutil import rmtree
-from os import makedirs
 
 from vunit.test_scanner import TestScanner, TestScannerError, tb_filter, dotjoin
 from vunit.test_configuration import TestConfiguration, create_scope
-
+from vunit.ostools import renew_path
 from vunit.test.mock_2or3 import mock
 
 
@@ -29,12 +28,8 @@ class TestTestScanner(unittest.TestCase):
         self.simulator_if = 'simulator_if'
         self.configuration = TestConfiguration()
         self.test_scanner = TestScanner(self.simulator_if, self.configuration)
-
         self.output_path = join(dirname(__file__), "test_scanner_out")
-
-        if exists(self.output_path):
-            rmtree(self.output_path, ignore_errors=True)
-        makedirs(self.output_path)
+        renew_path(self.output_path)
 
     def tearDown(self):
         if exists(self.output_path):

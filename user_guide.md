@@ -65,6 +65,9 @@ optional arguments:
                         and runs the test case while recursively logging all
                         variables and signals
   --log-level {info,error,warning,debug}
+  -p NUM_THREADS, --num-threads NUM_THREADS
+                        Number of tests to run in parallel. Test output is not
+                        continuously written in verbose mode with p > 1
 
 modelsim:
   ModelSim specific flags
@@ -108,7 +111,7 @@ end architecture;
 
 From `tb_example.vhd` a single test case named `lib.tb_example` is
 created.  It is also possible to put multiple tests in a single test
-benche that are each run in individual simulations. Putting multiple
+bench that are each run in individual simulations. Putting multiple
 tests in the same test bench is a good way to share a common test
 environment.
 
@@ -154,24 +157,30 @@ Running test: lib.tb_example
 Running test: lib.tb_example_many.test_pass
 Running test: lib.tb_example_many.test_fail
 Running 3 tests
+
 running lib.tb_example
 Hello World!
-pass (P=1 F=0 T=3) lib.tb_example
+pass (P=1 S=0 F=0 T=3) lib.tb_example (0.1 seconds)
 
 running lib.tb_example.test_pass
 This will pass
-pass (P=2 F=0 T=3) lib.tb_example_many.test_pass
+pass (P=2 S=0 F=0 T=3) lib.tb_example_many.test_pass (0.1 seconds)
 
 running lib.tb_example.test_fail
 Error: It fails
-fail (P=2 F=1 T=3) lib.tb_example_many.test_fail
+fail (P=2 S=0 F=1 T=3) lib.tb_example_many.test_fail (0.1 seconds)
 
-pass lib.tb_example after 0.1 seconds
-pass lib.tb_example_many.test_pass after 0.1 seconds
-fail lib.tb_example_many.test_fail after 0.1 seconds
-
-Total time 0.3 seconds
-2 of 3 passed
+==== Summary =========================================
+pass lib.tb_example                (0.1 seconds)
+pass lib.tb_example_many.test_pass (0.1 seconds)
+fail lib.tb_example_many.test_fail (0.1 seconds)
+======================================================
+pass 2 of 3
+fail 1 of 3
+======================================================
+Total time was 0.3 seconds
+Elapsed time was 0.3 seconds
+======================================================
 Some failed!
 ```
 
@@ -199,7 +208,7 @@ There are many examples demonstrating more specific usage of VUnit listed below:
   * Demonstrates the `com` message passing package which can be used to communicate arbitrary objects between processes. Further reading can be found in the [com user guide](vhdl/com/user_guide.md)
 
 ## Selecting simulator backend
-VUnit automatically detects which simulators are available on the `PATH` environment variable and by default selects the first one found. For people who have multiple simulators installed the `VUNIT_SIMULATOR` environment variable can be set to either `modelsim` or `ghdl` to explicitly choose the simulator backend. 
+VUnit automatically detects which simulators are available on the `PATH` environment variable and by default selects the first one found. For people who have multiple simulators installed the `VUNIT_SIMULATOR` environment variable can be set to either `modelsim` or `ghdl` to explicitly choose the simulator backend.
 
 ## Interfacing with pre-compiled libraries
 The `add_library` method of the VUnit class is intended for libraries managed by VUnit.
@@ -256,7 +265,7 @@ test = ent.test("test")
 test.disable_ieee_warnings()
 ```
 ## Setting custom simulation options
-Custom simulation options can be set using the`sim_options(name, value)` method. Options can either be set globally, for a library, for an entity or for a specific test. 
+Custom simulation options can be set using the`sim_options(name, value)` method. Options can either be set globally, for a library, for an entity or for a specific test.
 ```python
 vu.set_sim_option("vsim_extra_args.gui", "-voptargs=+acc")
 ```

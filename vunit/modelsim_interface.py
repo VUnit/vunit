@@ -27,6 +27,7 @@ except ImportError:
 
 import logging
 LOGGER = logging.getLogger(__name__)
+import threading
 
 
 class ModelSimInterface(object):
@@ -62,6 +63,7 @@ class ModelSimInterface(object):
         Create new instance from command line arguments object
         """
         persistent = (not args.new_vsim) and args.gui is None
+
         return cls(join(output_path, "modelsim.ini"),
                    persistent=persistent,
                    gui_mode=args.gui)
@@ -82,26 +84,39 @@ class ModelSimInterface(object):
         # Also a problem with ALTERA STARTER EDITION 10.3c
         os.environ["MODELSIM"] = self._modelsim_ini
 
-        self._vsim_process = None
+        self._vsim_processes = {}
+        self._lock = threading.Lock()
+        self._transcript_id = 0
+
         self._persistent = persistent
         self._gui_mode = gui_mode
         assert gui_mode in (None, "run", "load")
         assert not (persistent and (gui_mode is not None))
         self._create_modelsim_ini()
 
-    def __del__(self):
-        if self._vsim_process is not None:
-            del self._vsim_process
-
     def _create_vsim_process(self):
         """
         Create the vsim process
         """
+        ident = threading.current_thread().ident
 
-        self._vsim_process = Process(["vsim", "-c",
-                                      "-l", join(dirname(self._modelsim_ini), "transcript")])
-        self._vsim_process.write("#VUNIT_RETURN\n")
-        self._vsim_process.consume_output(silent_output_consumer)
+        with self._lock:
+            try:
+                vsim_process = self._vsim_processes[ident]
+                if vsim_process.is_alive():
+                    return vsim_process
+            except KeyError:
+                pass
+
+            transcript_id = self._transcript_id
+            self._transcript_id += 1
+            vsim_process = Process(["vsim", "-c",
+                                    "-l", join(dirname(self._modelsim_ini), "transcript%i" % transcript_id)])
+            self._vsim_processes[ident] = vsim_process
+
+        vsim_process.write("#VUNIT_RETURN\n")
+        vsim_process.consume_output(silent_output_consumer)
+        return vsim_process
 
     def _create_modelsim_ini(self):
         """
@@ -400,6 +415,7 @@ if {![vunit_load -vhdlvariablelogging]} {
         """
         Run a test bench in batch by invoking a new vsim process from the command line
         """
+
         try:
             args = ['vsim', '-quiet',
                     "-l", join(dirname(batch_file_name), "transcript"),
@@ -420,26 +436,24 @@ if {![vunit_load -vhdlvariablelogging]} {
         """
         Send a command to the persistent vsim process
         """
-        if self._vsim_process is None:
-            self._create_vsim_process()
+        vsim_process = self._create_vsim_process()
 
-        self._vsim_process.write("%s\n" % cmd)
-        self._vsim_process.next_line()
-        self._vsim_process.write("#VUNIT_RETURN\n")
-        self._vsim_process.consume_output(output_consumer)
+        vsim_process.write("%s\n" % cmd)
+        vsim_process.next_line()
+        vsim_process.write("#VUNIT_RETURN\n")
+        vsim_process.consume_output(output_consumer)
 
     def _read_var(self, varname):
         """
         Read a TCL variable from the persistent vsim process
         """
-        if self._vsim_process is None:
-            self._create_vsim_process()
+        vsim_process = self._create_vsim_process()
 
-        self._vsim_process.write("echo $%s #VUNIT_READVAR\n" % varname)
-        self._vsim_process.next_line()
-        self._vsim_process.write("#VUNIT_RETURN\n")
+        vsim_process.write("echo $%s #VUNIT_READVAR\n" % varname)
+        vsim_process.next_line()
+        vsim_process.write("#VUNIT_RETURN\n")
         consumer = ReadVarOutputConsumer()
-        self._vsim_process.consume_output(consumer)
+        vsim_process.consume_output(consumer)
         return consumer.var
 
     def _run_persistent(self, common_file_name, load_only=False):
@@ -460,7 +474,6 @@ if {![vunit_load -vhdlvariablelogging]} {
 
             return True
         except Process.NonZeroExitCode:
-            self._create_vsim_process()
             return False
 
     def simulate(self, output_path,  # pylint: disable=too-many-arguments
