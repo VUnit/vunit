@@ -71,9 +71,9 @@ class TestTestScanner(unittest.TestCase):
 
         tests = self.test_scanner.from_project(project, entity_filter=tb_filter)
         self.assert_has_tests(tests,
-                              ["lib.tb_entity",
-                               "lib.tb_entity2",
-                               "lib.entity_tb"])
+                              ["lib.entity_tb",
+                               "lib.tb_entity",
+                               "lib.tb_entity2"])
 
     def test_that_two_tests_are_created_from_two_architectures(self):
         project = ProjectStub()

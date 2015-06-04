@@ -38,8 +38,8 @@ class TestScanner(object):
         entity_filter -- An optional filter function of entity objects
         """
         test_list = TestList()
-        for library in project.get_libraries():
-            for entity in library.get_entities():
+        for library in sorted(project.get_libraries(), key=lambda lib: lib.name):
+            for entity in sorted(library.get_entities(), key=lambda ent: ent.name):
                 if entity_filter is None or entity_filter(entity):
                     self._create_tests_from_entity(test_list, entity)
         return test_list
