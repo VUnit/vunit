@@ -91,8 +91,8 @@ end package body;
     def test_finds_entity_instantiation_dependencies(self):
         self.create_dummy_three_file_project()
 
-        self.assert_compiles_before("file1.vhd", before="file2.vhd")
-        self.assert_compiles_before("file2.vhd", before="file3.vhd")
+        self.assert_compiles("file1.vhd", before="file2.vhd")
+        self.assert_compiles("file2.vhd", before="file3.vhd")
 
     def test_primary_with_same_name_in_multiple_libraries_secondary_dependency(self):
         self.project.add_library("lib1", "lib1_path")
@@ -158,8 +158,8 @@ architecture arch2 of foo is
 begin
 end architecture;
 """)
-        self.assert_compiles_before("entity.vhd", before="arch1.vhd")
-        self.assert_compiles_before("entity.vhd", before="arch2.vhd")
+        self.assert_compiles("entity.vhd", before="arch1.vhd")
+        self.assert_compiles("entity.vhd", before="arch2.vhd")
 
     def test_finds_package_dependencies(self):
         self.project.add_library("lib", "lib_path")
@@ -174,7 +174,7 @@ begin
 end package body;
 """)
 
-        self.assert_compiles_before("package.vhd", before="body.vhd")
+        self.assert_compiles("package.vhd", before="body.vhd")
 
     def test_finds_use_package_dependencies(self):
         self.project.add_library("lib", "lib_path")
@@ -202,8 +202,8 @@ begin
 end architecture;
 """)
 
-        self.assert_compiles_before("package.vhd", before="body.vhd")
-        self.assert_compiles_before("package.vhd", before="module.vhd")
+        self.assert_compiles("package.vhd", before="body.vhd")
+        self.assert_compiles("package.vhd", before="module.vhd")
 
     def test_finds_context_dependencies(self):
         self.project.add_library("lib", "lib_path")
@@ -225,7 +225,113 @@ begin
 end architecture;
 """)
 
-        self.assert_compiles_before("context.vhd", before="module.vhd")
+        self.assert_compiles("context.vhd", before="module.vhd")
+
+    def test_finds_configuration_dependencies(self):
+        self.project.add_library("lib", "lib_path")
+        self.add_source_file("lib", "cfg.vhd", """
+configuration cfg of ent is
+end configuration;
+""")
+
+        self.add_source_file("lib", "ent.vhd", """
+entity ent is
+end entity;
+""")
+
+        self.add_source_file("lib", "ent_a1.vhd", """
+architecture a1 of ent is
+begin
+end architecture;
+""")
+
+        self.add_source_file("lib", "ent_a2.vhd", """
+architecture a2 of ent is
+begin
+end architecture;
+""")
+
+        self.assert_compiles("ent.vhd", before="cfg.vhd")
+        self.assert_compiles("ent_a1.vhd", before="cfg.vhd")
+        self.assert_compiles("ent_a2.vhd", before="cfg.vhd")
+
+    def test_finds_configuration_reference_dependencies(self):
+        self.project.add_library("lib", "lib_path")
+        self.add_source_file("lib", "cfg.vhd", """
+configuration cfg of ent is
+end configuration;
+""")
+
+        self.add_source_file("lib", "ent.vhd", """
+entity ent is
+end entity;
+""")
+
+        self.add_source_file("lib", "ent_a.vhd", """
+architecture a of ent is
+begin
+end architecture;
+""")
+
+        self.add_source_file("lib", "top.vhd", """
+entity top is
+end entity;
+
+architecture a of top is
+   for inst : comp use configuration work.cfg;
+begin
+   inst : comp;
+end architecture;
+""")
+
+        self.assert_compiles("cfg.vhd", before="top.vhd")
+
+    def test_specific_architecture_reference_dependencies(self):
+        """
+        GHDL dependes also on architecture when specificially mentioned
+        """
+        self.project.add_library("lib", "lib_path")
+
+        self.add_source_file("lib", "ent.vhd", """
+entity ent is
+end entity;
+""")
+
+        self.add_source_file("lib", "ent_a1.vhd", """
+architecture a1 of ent is
+begin
+end architecture;
+""")
+
+        self.add_source_file("lib", "ent_a2.vhd", """
+architecture a2 of ent is
+begin
+end architecture;
+""")
+
+        self.add_source_file("lib", "top1.vhd", """
+entity top1 is
+end entity;
+
+architecture a of top1 is
+begin
+  inst : entity work.ent(a1);
+end architecture;
+""")
+
+        self.add_source_file("lib", "top2.vhd", """
+entity top2 is
+end entity;
+
+architecture a of top2 is
+  for inst : comp use entity work.ent(a2);
+begin
+  inst : comp;
+end architecture;
+""")
+
+        self.assert_compiles("ent_a1.vhd", before="top1.vhd")
+        self.assert_compiles("ent_a2.vhd", before="top2.vhd")
 
     def test_should_recompile_all_files_initially(self):
         self.create_dummy_three_file_project()
@@ -340,8 +446,8 @@ end architecture;
         self.assert_has_component_instantiation("top.vhd", "foo")
         self.assert_has_component_instantiation("top.vhd", "foo2")
 
-        self.assert_compiles_before("comp1.vhd", before="top.vhd")
-        self.assert_compiles_before("comp2.vhd", before="top.vhd")
+        self.assert_compiles("comp1.vhd", before="top.vhd")
+        self.assert_compiles("comp2.vhd", before="top.vhd")
 
     def create_dummy_three_file_project(self, update_file1=False):
         """
@@ -418,7 +524,7 @@ end architecture;
     def assert_should_recompile(self, file_names):
         self.assert_count_equal(file_names, [dep.name for dep in self.project.get_files_in_compile_order()])
 
-    def assert_compiles_before(self, file_name, before):
+    def assert_compiles(self, file_name, before):
         """
         Assert that the compile order of file_name is before the file named 'before'.
         """

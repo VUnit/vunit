@@ -18,7 +18,7 @@ from vunit.hashing import hash_string
 from os.path import join, basename, dirname
 
 from vunit.dependency_graph import DependencyGraph
-from vunit.vhdl_parser import VHDLParser
+from vunit.vhdl_parser import VHDLParser, VHDLReference
 import vunit.ostools as ostools
 import traceback
 
@@ -99,22 +99,40 @@ class Project(object):
         """
         Iterate over the dependencies on other design unit of the source_file
         """
-        for library_name, unit_name in source_file.dependencies:
+        for ref in source_file.dependencies:
             try:
-                library = self._libraries[library_name]
+                library = self._libraries[ref.library]
             except KeyError:
-                if library_name not in ("ieee", "std"):
-                    LOGGER.warning("failed to find library '%s'", library_name)
+                if ref.library not in ("ieee", "std"):
+                    LOGGER.warning("failed to find library '%s'", ref.library)
                 continue
 
             try:
-                primary_unit = library.primary_design_units[unit_name]
+                primary_unit = library.primary_design_units[ref.design_unit]
             except KeyError:
                 if not library.is_external:
                     LOGGER.warning("failed to find a primary design unit '%s' in library '%s'",
-                                   unit_name, library.name)
+                                   ref.design_unit, library.name)
             else:
                 yield primary_unit.source_file
+
+            if ref.is_entity_reference():
+                architectures = library.get_architectures_of(primary_unit.name)
+
+                if ref.reference_all_names_within():
+                    # Reference all architectures,
+                    # We make configuration declarations implicitly reference all architectures
+                    names = architectures.keys()
+                else:
+                    names = [ref.name_within]
+
+                for name in names:
+                    if name is None:
+                        # Was not a reference to a specific architecture
+                        continue
+
+                    file_name = architectures[name]
+                    yield self._source_files[file_name]
 
     def _find_component_design_unit_dependencies(self, source_file):
         """
@@ -321,6 +339,9 @@ class Library(object):
             entities.append(entity)
         return entities
 
+    def get_architectures_of(self, entity_name):
+        return self._architecture_names[entity_name]
+
     def has_entity(self, name):
         """
         Return true if entity with 'name' is in library
@@ -387,18 +408,17 @@ class SourceFile(object):
         """
         # Find dependencies introduced by the use clause
         result = []
-        for library_name, uses in design_file.libraries.items():
-            if library_name == "work":
-                # Work means same library as current file
-                library_name = self.library.name
-            for use in uses:
-                result.append((library_name, use[0]))
+        for ref in design_file.references:
+            ref = ref.copy()
 
-        for library_name, entity in design_file.instantiations:
-            if library_name == "work":
+            if ref.library == "work":
                 # Work means same library as current file
-                library_name = self.library.name
-            result.append((library_name, entity))
+                ref.library = self.library.name
+
+            result.append(ref)
+
+        for configuration in design_file.configurations:
+            result.append(VHDLReference('entity', self.library.name, configuration.entity, 'all'))
 
         return result
 
@@ -419,6 +439,9 @@ class SourceFile(object):
 
         for architecture in design_file.architectures:
             result.append(DesignUnit(architecture.identifier, self, 'architecture', False, architecture.entity))
+
+        for configuration in design_file.configurations:
+            result.append(DesignUnit(configuration.identifier, self, 'configuration'))
 
         for body in design_file.package_bodies:
             result.append(DesignUnit('package body for ' + body.identifier,
@@ -473,8 +496,7 @@ class DesignUnit(object):
         self.unit_type = unit_type
         self.is_primary = is_primary
 
-        # Related primary design unit if this is a secondary design unit.
-        self.primary_design_unit = None if is_primary else primary_design_unit.lower()
+        self.primary_design_unit = primary_design_unit
 
 
 def more_recent(file_name, than_file_name):

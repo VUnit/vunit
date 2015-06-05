@@ -11,7 +11,6 @@ VHDL parsing functionality
 import re
 from vunit.hashing import hash_string
 from os.path import abspath
-
 import logging
 LOGGER = logging.getLogger(__name__)
 
@@ -72,18 +71,18 @@ class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes
                  packages=None,
                  package_bodies=None,
                  architectures=None,
-                 instantiations=None,
-                 libraries=None,
                  contexts=None,
-                 component_instantiations=None):
+                 component_instantiations=None,
+                 configurations=None,
+                 references=None):
         self.entities = [] if entities is None else entities
         self.packages = [] if packages is None else packages
         self.package_bodies = [] if package_bodies is None else package_bodies
         self.architectures = [] if architectures is None else architectures
-        self.instantiations = [] if instantiations is None else instantiations
-        self.libraries = {} if libraries is None else libraries
         self.contexts = [] if contexts is None else contexts
         self.component_instantiations = [] if component_instantiations is None else component_instantiations
+        self.configurations = [] if configurations is None else configurations
+        self.references = [] if references is None else references
 
     @classmethod
     def parse(cls, code):
@@ -95,21 +94,10 @@ class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes
                    architectures=list(VHDLArchitecture.find(code)),
                    packages=list(VHDLPackage.find(code)),
                    package_bodies=list(VHDLPackageBody.find(code)),
-                   instantiations=list(cls._find_instantiations(code)),
-                   libraries=cls._find_libraries(code),
                    contexts=list(VHDLContext.find(code)),
-                   component_instantiations=list(cls._find_component_instantiations(code)))
-
-    _entity_re = re.compile(r'[a-zA-Z]\w*\s*\:\s*entity\s+(?P<libName>[a-zA-Z]\w*)\.(?P<entityName>[a-zA-Z]\w*)',
-                            re.IGNORECASE)
-
-    @classmethod
-    def _find_instantiations(cls, code):
-        """
-        Return tuple if library_name, unit_name for all entity instantiations found in the code
-        """
-        matches = cls._entity_re.findall(code)
-        return [(library_name, unit_name) for library_name, unit_name in matches]
+                   component_instantiations=list(cls._find_component_instantiations(code)),
+                   configurations=list(VHDLConfiguration.find(code)),
+                   references=list(VHDLReference.find(code)))
 
     _component_re = re.compile(
         r"[a-zA-Z]\w*\s*\:\s*(?:component)?\s*(?:(?:[a-zA-Z]\w*)\.)?([a-zA-Z]\w*)\s*"
@@ -123,65 +111,6 @@ class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes
         """
         matches = cls._component_re.findall(code)
         return [comp_name for comp_name in matches]
-
-    _library_re = re.compile(r"""
-        (^|\A)                         # Beginning of line or start of string
-        \s*                            # Potential whitespaces
-        library                        # library keyword
-        \s+                            # At least one whitespace
-        (?P<id>[a-zA-Z][\w]*)          # An identifier
-        (?P<extra>(\s*,\s*[a-zA-Z]+[\w])*)
-        \s*                            # Potential whitespaces
-        ;                              # Semi-colon
-    """, re.MULTILINE | re.IGNORECASE | re.VERBOSE)
-
-    _uses_re = re.compile(r"""
-            (^|\A)                         # Beginning of line or start of string
-            \s*                            # Potential whitespaces
-            (use|context)                  # use or context keyword
-            \s+                            # At least one whitespace
-            (?P<id>[a-zA-Z][\w]*(\.[a-zA-Z][\w]*){1,2})
-            (?P<extra>(\s*,\s*[a-zA-Z][\w]*(\.[a-zA-Z][\w]*){1,2})*)
-            \s*                            # Potential whitespaces
-            ;                              # Semi-colon
-    """, re.MULTILINE | re.IGNORECASE | re.VERBOSE)
-
-    @classmethod
-    def _find_libraries(cls, code):
-        """
-        Find all the libraries and use clasues within the code
-        """
-
-        def get_ids(match):
-            """
-            Get all ids found within the match taking the optinal extra ids of
-            library and use clauses into account such as:
-
-            use foo, bar;
-
-            or
-
-            library foo, bar;
-            """
-            ids = [match.group('id').strip()]
-            if match.group('extra'):
-                ids += [name.strip() for name in match.group('extra').split(',')[1:]]
-            return ids
-
-        libraries = {}
-        for match in cls._library_re.finditer(code):
-            for library_name in get_ids(match):
-                if library_name not in libraries:
-                    libraries[library_name] = set()
-
-        for match in cls._uses_re.finditer(code):
-            for uses in get_ids(match):
-                uses = uses.split(".")
-                library_name = uses[0]
-                if library_name not in libraries:
-                    libraries[library_name] = set()
-                libraries[library_name].add(tuple(uses[1:]))
-        return libraries
 
 
 class VHDLPackageBody(object):
@@ -211,6 +140,37 @@ class VHDLPackageBody(object):
         matches = cls._package_body_pattern.finditer(code)
         for match in matches:
             yield VHDLPackageBody(match.group('package'))
+
+
+class VHDLConfiguration(object):
+    """
+    A configuratio declaration
+    """
+    def __init__(self, identifier, entity):
+        self.identifier = identifier
+        self.entity = entity
+
+    _configuration_re = re.compile(r"""
+        (^|\A)                # Beginning of line or start of string
+        \s*                   # Potential whitespaces
+        configuration         # configuration keyword
+        \s+                   # At least one whitespace
+        (?P<id>[a-zA-Z][\w]*) # An identifier
+        \s+                   # At least one whitespace
+        of                    # of keyword
+        \s+                   # At least one whitespace
+        (?P<entity_id>[a-zA-Z][\w]*) # An identifier
+        \s+                   # At least one whitespace
+        is                    # is keyword
+        """, re.MULTILINE | re.IGNORECASE | re.VERBOSE)
+
+    @classmethod
+    def find(cls, code):
+        """
+        Return tuple if library_name, unit_name for all entity instantiations found in the code
+        """
+        matches = cls._configuration_re.finditer(code)
+        return [cls(match.group('id'), match.group('entity_id')) for match in matches]
 
 
 class VHDLArchitecture(object):
@@ -505,98 +465,6 @@ class VHDLEntity(object):
             port_list.append(VHDLInterfaceElement.parse(interface_element, is_signal=True))
 
         return port_list
-
-    def to_str(self, sindent="", indent="  ", as_component=False):
-        """
-        Convert entity to string, we dont use __str__ so we can have
-        indentation start and indentation step parameters
-
-        @param sindent The start indentation
-        @param indent The incremental indentation
-        """
-
-        if as_component:
-            keyword = "component"
-        else:
-            keyword = "entity"
-
-        code = sindent + keyword + " " + self.identifier + " is\n"
-
-        generic_codes = []
-        for generic in self.generics:
-            generic_code = sindent + (2 * indent) + str(generic)
-            generic_codes.append(generic_code)
-
-        if len(generic_codes) > 0:
-            code += sindent + indent + "generic (\n"
-            code += ";\n".join(generic_codes)
-            code += ");\n"
-
-        port_codes = []
-        for port in self.ports:
-            port_code = sindent + (2 * indent) + str(port)
-            port_codes.append(port_code)
-
-        if len(port_codes) > 0:
-            code += sindent + indent + "port (\n"
-            code += ";\n".join(port_codes)
-            code += ");\n"
-
-        code += sindent + "end " + keyword + ";\n"
-        return code
-
-    def to_instantiation_str(self, name, mapping=None, sindent="  ", indent="  "):
-        """
-        Convert entity to an instantiation string
-
-        @param name The name of the instance
-        @param sindent The start indentation
-        @param indent The incremental indentation
-        """
-        if mapping is None:
-            mapping = {}
-
-        code = sindent + name + " : " + self.identifier
-
-        generic_codes = []
-        for generic in self.generics:
-            generic_code = sindent + 2 * indent + generic.identifier
-            to_value = mapping.get(generic.identifier,
-                                   generic.identifier)
-            generic_code += " => " + to_value
-            generic_codes.append(generic_code)
-
-        if len(generic_codes) > 0:
-            code += "\n"
-            code += sindent + indent + "generic map (\n"
-            code += ",\n".join(generic_codes)
-            code += ")"
-
-        port_codes = []
-        for port in self.ports:
-            port_code = sindent + 2 * indent + port.identifier
-            to_value = mapping.get(port.identifier,
-                                   port.identifier)
-            port_code += " => " + to_value
-            port_codes.append(port_code)
-
-        if len(port_codes) > 0:
-            code += "\n"
-            code += sindent + indent + "port map (\n"
-            code += ",\n".join(port_codes)
-            code += ")"
-
-        code += ";\n"
-        return code
-
-    def to_signal_declaration_str(self, sindent="  "):
-        """
-        Convert to code declaring signals for all ports of the entity
-        """
-        code = ""
-        for port in self.ports:
-            code += sindent + "signal " + str(port.without_mode()) + ";\n"
-        return code
 
 
 class VHDLContext(object):
@@ -985,6 +853,138 @@ def find_closing_delimiter(start, end, code):
         if count == 0:
             return delimiter.end()
     raise ValueError('Failed to find closing delimiter to ' + start + ' in ' + code + '.')
+
+
+class VHDLReference(object):
+    """
+    Reference to design unit
+    """
+    _reference_types = ("use",
+                        "context",
+                        "entity",
+                        "configuration")
+
+    _uses_re = re.compile(r"""
+            (^|\A)                         # Beginning of line or start of string
+            \s*                            # Potential whitespaces
+            (?P<use_type>use|context)      # use or context keyword
+            \s+                            # At least one whitespace
+            (?P<id>[a-zA-Z][\w]*(\.[a-zA-Z][\w]*){1,2})
+            (?P<extra>(\s*,\s*[a-zA-Z][\w]*(\.[a-zA-Z][\w]*){1,2})*)
+            \s*                            # Potential whitespaces
+            ;                              # Semi-colon
+    """, re.MULTILINE | re.IGNORECASE | re.VERBOSE)
+
+    @classmethod
+    def _find_uses(cls, code):
+        """
+        Find all the libraries and use clasues within the code
+        """
+
+        def get_ids(match):
+            """
+            Get all ids found within the match taking the optinal extra ids of
+            library and use clauses into account such as:
+
+            use foo, bar;
+
+            or
+
+            library foo, bar;
+            """
+            ids = [match.group('id').strip()]
+            if match.group('extra'):
+                ids += [name.strip() for name in match.group('extra').split(',')[1:]]
+            return ids
+
+        references = []
+        for match in cls._uses_re.finditer(code):
+            for uses in get_ids(match):
+                uses = uses.split(".")
+
+                names_within = uses[2:] if len(uses) > 2 else (None,)
+                for name_within in names_within:
+                    ref = cls(reference_type=match.group("use_type"),
+                              library=uses[0],
+                              design_unit=uses[1],
+                              name_within=name_within)
+
+                    references.append(ref)
+        return references
+
+    _entity_reference_re = re.compile(
+        r'(^|\A|\s)\s*entity\s+(?P<lib>[a-zA-Z]\w*)\.(?P<ent>[a-zA-Z]\w*)(\((?P<arch>[a-zA-Z]\w*)\))?',
+        re.MULTILINE | re.IGNORECASE)
+
+    @classmethod
+    def _find_entity_references(cls, code):
+        """
+        Find all entity references from instantiations or block configurations
+        """
+        references = []
+        for match in cls._entity_reference_re.finditer(code):
+            if match.group("arch") is None:
+                references.append(cls('entity', match.group("lib"), match.group("ent")))
+            else:
+                references.append(cls('entity', match.group("lib"), match.group("ent"), match.group("arch")))
+        return references
+
+    _configuration_reference_re = re.compile(
+        r'(^|\A|\s)\s*configuration\s+(?P<lib>[a-zA-Z]\w*)\.(?P<cfg>[a-zA-Z]\w*)',
+        re.MULTILINE | re.IGNORECASE)
+
+    @classmethod
+    def _find_configuration_references(cls, code):
+        """
+        Find all configuration references within block configurations
+        """
+        references = []
+        for match in cls._configuration_reference_re.finditer(code):
+            references.append(cls('configuration', match.group("lib"), match.group("cfg")))
+        return references
+
+    @classmethod
+    def find(cls, code):
+        """
+        Find entity, use, context and configuration references within the code
+        """
+        return (cls._find_uses(code) +
+                cls._find_entity_references(code) +
+                cls._find_configuration_references(code))
+
+    def __init__(self, reference_type, library, design_unit, name_within=None):
+        assert reference_type in self._reference_types
+        self.reference_type = reference_type
+        self.library = library
+        self.design_unit = design_unit
+
+        # String "all" may be used to denote all names within
+        self.name_within = name_within
+
+    def __repr__(self):
+        return "VHDLReference(%r, %r, %r, %r)" % (
+            self.reference_type,
+            self.library,
+            self.design_unit,
+            self.name_within)
+
+    def __eq__(self, other):
+        return (self.reference_type == other.reference_type and
+                self.library == other.library and
+                self.design_unit == other.design_unit and
+                self.name_within == other.name_within)
+
+    def copy(self):
+        return VHDLReference(self.reference_type,
+                             self.library,
+                             self.design_unit,
+                             self.name_within)
+
+    def is_entity_reference(self):
+        return self.reference_type == 'entity'
+
+    def reference_all_names_within(self):
+        return self.name_within == "all"
 
 
 def remove_comments(code):
