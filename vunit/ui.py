@@ -148,7 +148,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         project_database_file_name = join(self._output_path, "project_database")
         create_new = False
         key = b"version"
-        version = str((3, sys.version)).encode()
+        version = str((4, sys.version)).encode()
         database = None
         try:
             database = DataBase(project_database_file_name)
