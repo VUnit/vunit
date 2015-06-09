@@ -35,9 +35,6 @@ class GHDLInterface:
         """
         Add command line arguments
         """
-        has_gtkwave = find_executable('gtkwave')
-        if not has_gtkwave:
-            return
         group = parser.add_argument_group("ghdl",
                                           description="GHDL specific flags")
         group.add_argument("--gtkwave", choices=["vcd", "ghw"],
