@@ -26,7 +26,7 @@ begin
       variable l : line;
     begin
       file_open(fwrite, output_path & "/" & "generics.txt", write_mode);
-      write(l, to_string(data_width) & ", " & to_string(sign));
+      write(l, integer'image(data_width) & ", " & boolean'image(sign));
       writeline(fwrite, l);
       file_close(fwrite);
     end procedure;
@@ -45,5 +45,5 @@ begin
     wait;
   end process;
 
-  test_runner_watchdog(runner, 10 ms);
+--  test_runner_watchdog(runner, 10 ms);
 end architecture;

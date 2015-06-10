@@ -26,7 +26,7 @@ def make_post_check(data_width, sign):
 
         print("Post check: %s" % output_file)
         with open(output_file, "r") as fread:
-            got = fread.read()
+            got = fread.read().lower()
             if not got == expected:
                 print("Content mismatch, got %r expected %r" % (got, expected))
                 return False
