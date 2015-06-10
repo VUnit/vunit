@@ -18,19 +18,20 @@ def find_all_files(directory):
             result.append(os.path.join(root, filename))
     return result
 
-vhdl_files = find_all_files('vhdl')
+data_files = (find_all_files('vhdl') +
+              find_all_files('verilog'))
 
 # Makes data folder appear one directory level up from the vunit package in the installed system folder.
 # This is required since references are made with the source directory layout in mind
 # @TODO This is not very nice and could potentially cause problems,
 #       we should move the data folders into the vunit package folder to keep locality
-vhdl_files = [os.path.join("..", i) for i in vhdl_files]
+data_files = [os.path.join("..", i) for i in data_files]
 
 setup(
     name='vunit_hdl',
-    version='v0.27.0',
+    version='v0.31.0',
     packages=['vunit', 'vunit.com', 'vunit.test', 'vunit.test.lint', 'vunit.test.unit', 'vunit.test.acceptance'],
-    package_data={'vunit': vhdl_files},
+    package_data={'vunit': data_files},
     url='https://github.com/LarsAsplund/vunit',
     classifiers=['Development Status :: 5 - Production/Stable',
                  'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
@@ -46,5 +47,5 @@ setup(
                  'Topic :: Software Development :: Testing'],
     author='Lars Asplund',
     author_email='lars.anders.asplund@gmail.com',
-    description="VUnit is an open source unit testing framework for VHDL.",
-    long_description="""VUnit is an open source unit testing framework for VHDL released under the terms of Mozilla Public License, v. 2.0. It features the functionality needed to realize continuous and automated testing of your VHDL code. VUnit doesn't replace but rather complements traditional testing methodologies by supporting a "test early and often" approach through automation.""")  # nopep8
+    description="VUnit is an open source unit testing framework for VHDL/SystemVerilog.",
+    long_description="""VUnit is an open source unit testing framework for VHDL/SystemVerilog released under the terms of Mozilla Public License, v. 2.0. It features the functionality needed to realize continuous and automated testing of your VHDL code. VUnit doesn't replace but rather complements traditional testing methodologies by supporting a "test early and often" approach through automation.""")  # nopep8

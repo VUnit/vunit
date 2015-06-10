@@ -25,7 +25,7 @@ from vunit.vunit_cli import VUnitCLI
 from vunit.simulator_factory import SimulatorFactory
 from vunit.color_printer import (COLOR_PRINTER,
                                  NO_COLOR_PRINTER)
-from vunit.project import Project
+from vunit.project import Project, file_type_of
 from vunit.test_runner import TestRunner
 from vunit.test_report import TestReport
 from vunit.test_scanner import TestScanner, TestScannerError, tb_filter
@@ -34,7 +34,8 @@ from vunit.exceptions import CompileError
 from vunit.location_preprocessor import LocationPreprocessor
 from vunit.check_preprocessor import CheckPreprocessor
 from vunit.vhdl_parser import CachedVHDLParser
-from vunit.builtins import (add_builtins,
+from vunit.builtins import (add_vhdl_builtins,
+                            add_verilog_include_dir,
                             add_array_util,
                             add_osvvm,
                             add_com)
@@ -42,10 +43,6 @@ from vunit.com import codec_generator
 
 import logging
 LOGGER = logging.getLogger(__name__)
-
-# lower case representation of supported extensions
-VHDL_EXTENSIONS = (".vhd", ".vhdl")
-VERILOG_EXTENSIONS = (".v", ".vp", ".sv")
 
 
 class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-public-methods
@@ -219,6 +216,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         self._configuration.set_generic(name, value, scope=create_scope())
 
+    def set_parameter(self, name, value):
+        """
+        Globally set parameter
+        """
+        self.set_generic(name, value)
+
     def set_sim_option(self, name, value):
         """
         Globally set simulation option
@@ -237,15 +240,28 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         self._configuration.disable_ieee_warnings(scope=create_scope())
 
-    def add_source_files(self, pattern, library_name, preprocessors=None):
+    def add_source_files(self, pattern, library_name, preprocessors=None, include_dirs=None):
         """
         Add source files matching wildcard pattern to library
         """
         for file_name in glob(pattern):
-            file_name = self._preprocess(library_name, abspath(file_name), preprocessors)
-            self._project.add_source_file(file_name,
-                                          library_name,
-                                          file_type=file_type_of(file_name))
+            self.add_source_file(file_name, library_name, preprocessors, include_dirs)
+
+    def add_source_file(self, file_name, library_name, preprocessors=None, include_dirs=None):
+        """
+        Add source file to library
+        """
+        file_type = file_type_of(file_name)
+
+        if file_type == "verilog":
+            include_dirs = include_dirs if include_dirs is not None else []
+            add_verilog_include_dir(include_dirs)
+
+        file_name = self._preprocess(library_name, abspath(file_name), preprocessors)
+        self._project.add_source_file(file_name,
+                                      library_name,
+                                      file_type=file_type,
+                                      include_dirs=include_dirs)
 
     def _preprocess(self, library_name, file_name, preprocessors):
         """
@@ -442,12 +458,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             xml = report.to_junit_xml_str()
             ostools.write_file(self._xunit_xml, xml)
 
-    def add_builtins(self, library_name, mock_lang=False, mock_log=False):
+    def add_builtins(self, library_name="vunit_lib", mock_lang=False, mock_log=False):
         """
-        Add vunit builtin libraries
+        Add vunit VHDL builtin libraries
         """
         library = self.add_library(library_name)
-        add_builtins(library, self._vhdl_standard, mock_lang, mock_log)
+        add_vhdl_builtins(library, self._vhdl_standard, mock_lang, mock_log)
 
     def add_com(self, library_name="vunit_lib", use_debug_codecs=None):
         """
@@ -505,6 +521,10 @@ class LibraryFacade(object):
         """ Set generic within library """
         self._configuration.set_generic(name, value, scope=self._scope)
 
+    def set_parameter(self, name, value):
+        """ Set generic within library  """
+        self.set_generic(name, value)
+
     def set_sim_option(self, name, value):
         """
         Set simulation option within library
@@ -549,6 +569,17 @@ class LibraryFacade(object):
         return EntityFacade(self._library_name, entity_name,
                             self._configuration)
 
+    def module(self, name):
+        """
+        Return the module with name or raise KeyError if does not exist
+        """
+        library = self._project.get_library(self._library_name)
+        if name not in library.modules:
+            raise KeyError(name)
+
+        return EntityFacade(self._library_name, name,
+                            self._configuration)
+
 
 class EntityFacade(object):
     """
@@ -564,6 +595,10 @@ class EntityFacade(object):
         """ Set generic within entity """
         self._config.set_generic(name, value, scope=self._scope)
 
+    def set_parameter(self, name, value):
+        """ Set generic within module """
+        self.set_generic(name, value)
+
     def set_sim_option(self, name, value):
         """
         Set simulation option within entity
@@ -574,7 +609,13 @@ class EntityFacade(object):
         """ Set pli within entity """
         self._config.set_pli(value, scope=self._scope)
 
-    def add_config(self, name, generics, post_check=None):
+    def add_config(self, name="", generics=None, parameters=None, post_check=None):
+        """
+        Add a run-configuration of all tests within entity
+        """
+        generics = {} if generics is None else generics
+        parameters = {} if parameters is None else parameters
+        generics.update(parameters)
         self._config.add_config(scope=self._scope,
                                 name=name,
                                 generics=generics,
@@ -641,7 +682,13 @@ class TestFacade(object):
         self._config = config
         self._scope = create_scope(library_name, entity_name, test_name)
 
-    def add_config(self, name, generics, post_check=None):
+    def add_config(self, name="", generics=None, parameters=None, post_check=None):
+        """
+        Add a run-configuration this test case
+        """
+        generics = {} if generics is None else generics
+        parameters = {} if parameters is None else parameters
+        generics.update(parameters)
         self._config.add_config(scope=self._scope,
                                 name=name,
                                 generics=generics,
@@ -652,6 +699,12 @@ class TestFacade(object):
         Set generic for test case
         """
         self._config.set_generic(name, value, scope=self._scope)
+
+    def set_parameter(self, name, value):
+        """
+        Set generic within test case
+        """
+        self.set_generic(name, value)
 
     def set_sim_option(self, name, value):
         """
@@ -664,19 +717,6 @@ class TestFacade(object):
         Disable ieee warnings for test case
         """
         self._config.disable_ieee_warnings(scope=self._scope)
-
-
-def file_type_of(file_name):
-    """
-    Return the file type of file_name based on the file ending
-    """
-    _, ext = splitext(file_name)
-    if ext.lower() in VHDL_EXTENSIONS:
-        return "vhdl"
-    elif ext.lower() in VERILOG_EXTENSIONS:
-        return "verilog"
-    else:
-        raise RuntimeError("Unknown file ending '%s' of %s" % (ext, file_name))
 
 
 def select_vhdl_standard():

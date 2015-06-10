@@ -31,7 +31,7 @@ LOGGER = logging.getLogger(__name__)
 import threading
 
 
-class ModelSimInterface(SimulatorInterface):
+class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instance-attributes
     """
     Mentor Graphics ModelSim interface
 
@@ -89,6 +89,7 @@ class ModelSimInterface(SimulatorInterface):
         self._lock = threading.Lock()
         self._transcript_id = 0
         self._prefix = dirname(find_executable('vsim'))
+        self._libraries = {}
 
         self._persistent = persistent
         self._gui_mode = gui_mode
@@ -147,6 +148,7 @@ class ModelSimInterface(SimulatorInterface):
         mapped_libraries = self._get_mapped_libraries()
 
         for library in project.get_libraries():
+            self._libraries[library.name] = library
             self.create_library(library.name, library.directory, mapped_libraries)
 
         for source_file in project.get_files_in_compile_order():
@@ -155,7 +157,9 @@ class ModelSimInterface(SimulatorInterface):
             if source_file.file_type == 'vhdl':
                 success = self.compile_vhdl_file(source_file.name, source_file.library.name, vhdl_standard)
             elif source_file.file_type == 'verilog':
-                success = self.compile_verilog_file(source_file.name, source_file.library.name)
+                success = self.compile_verilog_file(source_file.name,
+                                                    source_file.library.name,
+                                                    source_file.include_dirs)
             else:
                 raise RuntimeError("Unkown file type: " + source_file.file_type)
 
@@ -175,13 +179,19 @@ class ModelSimInterface(SimulatorInterface):
             return False
         return True
 
-    def compile_verilog_file(self, source_file_name, library_name):
+    def compile_verilog_file(self, source_file_name, library_name, include_dirs):
         """
         Compiles a verilog file into a specific library
         """
         try:
-            proc = Process([join(self._prefix, 'vlog'), '-sv', '-quiet', '-modelsimini', self._modelsim_ini,
-                            '-work', library_name, source_file_name])
+
+            args = [join(self._prefix, 'vlog'), '-sv', '-quiet', '-modelsimini', self._modelsim_ini,
+                    '-work', library_name, source_file_name]
+            for library in self._libraries.values():
+                args += ["-L", library.name]
+            for include_dir in include_dirs:
+                args += ["+incdir+%s" % include_dir]
+            proc = Process(args)
             proc.consume_output()
         except Process.NonZeroExitCode:
             return False
@@ -228,11 +238,17 @@ class ModelSimInterface(SimulatorInterface):
         set_generic_name_str = " ".join(('-g/%s/%s="${vunit_generic_%s}"' % (entity_name, name, name)
                                          for name in config.generics))
         pli_str = " ".join("-pli {%s}" % fix_path(name) for name in config.pli)
-        architecture_suffix = "(%s)" % architecture_name
+
+        if architecture_name is None:
+            architecture_suffix = ""
+        else:
+            architecture_suffix = "(%s)" % architecture_name
 
         vsim_flags = ["-wlf {%s}" % fix_path(join(output_path, "vsim.wlf")),
                       "-quiet",
                       "-t ps",
+                      # for correct handling of verilog fatal/finish
+                      "-onfinish stop",
                       pli_str,
                       set_generic_name_str,
                       library_name + "." + entity_name + architecture_suffix,
@@ -242,6 +258,9 @@ class ModelSimInterface(SimulatorInterface):
         # a space in the path even with escaping, see issue #36
         if " " not in self._modelsim_ini:
             vsim_flags.insert(0, "-modelsimini %s" % fix_path(self._modelsim_ini))
+
+        for library in self._libraries.values():
+            vsim_flags += ["-L", library.name]
 
         tcl = """
 proc vunit_load {{{{vsim_extra_args ""}}}} {{
@@ -255,9 +274,10 @@ proc vunit_load {{{{vsim_extra_args ""}}}} {{
        return 1
     }}
     set no_finished_signal [catch {{examine -internal {{/vunit_finished}}}}]
-    set no_test_runner_exit [catch {{examine -internal {{/run_base_pkg/runner.exit_simulation}}}}]
+    set no_vhdl_test_runner_exit [catch {{examine -internal {{/run_base_pkg/runner.exit_simulation}}}}]
+    set no_verilog_test_runner_exit [catch {{examine -internal {{/__runner__}}}}]
 
-    if {{${{no_finished_signal}} && ${{no_test_runner_exit}}}}  {{
+    if {{${{no_finished_signal}} && ${{no_vhdl_test_runner_exit}} && ${{no_verilog_test_runner_exit}}}}  {{
         echo {{Error: Found none of either simulation shutdown mechanisms}}
         echo {{Error: 1) No vunit_finished signal on test bench top level}}
         echo {{Error: 2) No vunit test runner package used}}
@@ -280,7 +300,7 @@ proc vunit_load {{{{vsim_extra_args ""}}}} {{
         else:
             no_warnings = 0
         return """
-proc vunit_run {} {
+proc _vunit_run {} {
     global BreakOnAssertion
     set BreakOnAssertion %i
 
@@ -295,24 +315,35 @@ proc vunit_run {} {
     }
     onbreak {on_break}
 
-    set no_finished_signal [catch {examine -internal {/vunit_finished}}]
+    set has_vunit_finished_signal [expr ![catch {examine -internal {/vunit_finished}}]]
+    set has_vhdl_runner [expr ![catch {examine -internal {/run_base_pkg/runner.exit_simulation}}]]
+    set has_verilog_runner [expr ![catch {examine -internal {/__runner__}}]]
 
-    if {${no_finished_signal}} {
-        set exit_boolean {/run_base_pkg/runner.exit_simulation}
-        set status_boolean {/run_base_pkg/runner.exit_without_errors}
-    } {
+    if {${has_vunit_finished_signal}} {
         set exit_boolean {/vunit_finished}
         set status_boolean {/vunit_finished}
+        set true_value TRUE
+    } elseif {${has_vhdl_runner}} {
+        set exit_boolean {/run_base_pkg/runner.exit_simulation}
+        set status_boolean {/run_base_pkg/runner.exit_without_errors}
+        set true_value TRUE
+    } elseif {${has_verilog_runner}} {
+        set exit_boolean {/__runner__.exit_simulation}
+        set status_boolean {/__runner__.exit_without_errors}
+        set true_value 1
+    } else {
+        echo "No finish mechanism detected"
+        return 1;
     }
 
-    when -fast "${exit_boolean} = TRUE" {
+    when -fast "${exit_boolean} = ${true_value}" {
         echo "Finished"
         stop
         resume
     }
 
     run -all
-    set failed [expr [examine -internal ${status_boolean}]!=TRUE]
+    set failed [expr [examine -internal ${status_boolean}]!=${true_value}]
     if {$failed} {
         catch {
             # tb command can fail when error comes from pli
@@ -325,6 +356,14 @@ proc vunit_run {} {
         }
     }
     return $failed
+}
+
+proc vunit_run {} {
+    if {[catch {_vunit_run} failed_or_err]} {
+        echo $failed_or_err
+        return 1;
+    }
+    return $failed_or_err;
 }
 """ % (1 if fail_on_warning else 2, no_warnings, no_warnings)
 

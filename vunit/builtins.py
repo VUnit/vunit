@@ -13,11 +13,26 @@ from os.path import join, abspath, dirname, basename
 from glob import glob
 
 VHDL_PATH = abspath(join(dirname(__file__), "..", "vhdl"))
+VERILOG_PATH = abspath(join(dirname(__file__), "..", "verilog"))
 
 
-def add_builtins(library, vhdl_standard, mock_lang=False, mock_log=False):
+def add_verilog_builtins(library):
     """
-    Add vunit builtin libraries
+    Add Verilog builtins
+    """
+    library.add_source_files(join(VERILOG_PATH, "vunit_pkg.sv"))
+
+
+def add_verilog_include_dir(include_dirs):
+    """
+    Add VUnit Verilog include directory
+    """
+    include_dirs.insert(0, join(VERILOG_PATH, "include"))
+
+
+def add_vhdl_builtins(library, vhdl_standard, mock_lang=False, mock_log=False):
+    """
+    Add vunit VHDL builtin libraries
     """
     def get_builtins_vhdl_all(mock_lang):
         """Return built-in VHDL files present under all VHDL versions"""

@@ -42,6 +42,10 @@ class TestScanner(object):
             for entity in sorted(library.get_entities(), key=lambda ent: ent.name):
                 if entity_filter is None or entity_filter(entity):
                     self._create_tests_from_entity(test_list, entity)
+
+            for module in sorted(library.get_modules(), key=lambda module: module.name):
+                if entity_filter is None or entity_filter(module):
+                    self._create_tests_from_module(test_list, module)
         return test_list
 
     def _create_tests_from_entity(self, test_list, entity):
@@ -50,66 +54,21 @@ class TestScanner(object):
         runner_cfg
         """
         for architecture_name in sorted(entity.architecture_names):
-            self._create_tests_from_architecture(test_list, entity, architecture_name)
+            self._create_tests_from_unit(test_list, entity, architecture_name)
 
-    def _create_test_bench(self, entity, architecture_name, config, fail_on_warning):
+    def _create_tests_from_module(self, test_list, entity):
         """
-        Helper function to create a test bench given a config
-        """
-        def add_tb_path_generic(generics):
-            """
-            Add tb_path generic pointing to directory name of test bench
-            """
-            name = "tb_path"
-            file_name = entity.architecture_names[architecture_name]
-            new_value = '%s/' % dirname(file_name).replace("\\", "/")
-            if name in generics and name in entity.generic_names:
-                LOGGER.warning(("The '%s' generic from a configuration of %s of was overwritten, "
-                                "old value was '%s', new value is '%s'"),
-                               name,
-                               create_test_name(entity, architecture_name, config.name),
-                               generics["tb_path"],
-                               new_value)
-
-            generics["tb_path"] = new_value
-
-        generics = config.sim_config.generics.copy()
-        add_tb_path_generic(generics)
-        config.sim_config.fail_on_warning = fail_on_warning
-        config.sim_config.generics = prune_generics(generics, entity.generic_names)
-
-        return TestBench(simulator_if=self._simulator_if,
-                         library_name=entity.library_name,
-                         entity_name=entity.name,
-                         architecture_name=architecture_name,
-                         sim_config=config.sim_config,
-                         has_output_path="output_path" in entity.generic_names)
-
-    def _parse(self, entity, architecture_name):
-        """
-        Parse file for run strings and pragmas
-        """
-        file_name = entity.architecture_names[architecture_name]
-        code = ostools.read_file(file_name)
-        pragmas = self.find_pragmas(code, file_name)
-
-        # @TODO use presence of runner_cfg as tb_filter instead of tb_*
-        has_runner_cfg = "runner_cfg" in entity.generic_names
-
-        if has_runner_cfg:
-            run_strings = self.find_run_strings(code, file_name)
-        else:
-            run_strings = []
-
-        return pragmas, run_strings
-
-    def _create_tests_from_architecture(self, test_list, entity, architecture_name):
-        """
-        Derive test cases from an architecture if there is one generic called
+        Derive test cases from an module if there is one generic called
         runner_cfg
         """
-        has_runner_cfg = "runner_cfg" in entity.generic_names
-        pragmas, run_strings = self._parse(entity, architecture_name)
+        self._create_tests_from_unit(test_list, entity, None, verilog=True)
+
+    def _create_tests_from_unit(self, test_list, entity, architecture_name, verilog=False):
+        """
+        Derive test cases from an unit
+        """
+        has_runner_cfg = verilog or ("runner_cfg" in entity.generic_names)
+        pragmas, run_strings = self._parse(entity, architecture_name, verilog)
         should_run_in_same_sim = "run_all_in_same_sim" in pragmas
 
         def create_test_bench(config):
@@ -117,7 +76,7 @@ class TestScanner(object):
             Helper function to create a test bench
             """
             fail_on_warning = "fail_on_warning" in pragmas
-            return self._create_test_bench(entity, architecture_name, config, fail_on_warning)
+            return self._create_test_bench(entity, architecture_name, config, fail_on_warning, verilog)
 
         def create_name(config, run_string=None):
             """
@@ -162,6 +121,65 @@ class TestScanner(object):
                             has_runner_cfg=has_runner_cfg,
                             post_check_function=config.post_check))
 
+    def _create_test_bench(self,  # pylint: disable=too-many-arguments
+                           entity, architecture_name, config, fail_on_warning, verilog):
+        """
+        Helper function to create a test bench given a config
+        """
+        def add_tb_path_generic(generics):
+            """
+            Add tb_path generic pointing to directory name of test bench
+            """
+            name = "tb_path"
+            if verilog:
+                file_name = entity.file_name
+            else:
+                file_name = entity.architecture_names[architecture_name]
+            new_value = '%s/' % dirname(file_name).replace("\\", "/")
+            if (name in generics) and (name in entity.generic_names):
+                LOGGER.warning(("The '%s' generic from a configuration of %s of was overwritten, "
+                                "old value was '%s', new value is '%s'"),
+                               name,
+                               create_test_name(entity, architecture_name, config.name),
+                               generics["tb_path"],
+                               new_value)
+
+            generics["tb_path"] = new_value
+
+        generics = config.sim_config.generics.copy()
+        add_tb_path_generic(generics)
+        config.sim_config.fail_on_warning = fail_on_warning
+        config.sim_config.generics = prune_generics(generics, entity.generic_names)
+
+        return TestBench(simulator_if=self._simulator_if,
+                         library_name=entity.library_name,
+                         entity_name=entity.name,
+                         architecture_name=architecture_name,
+                         sim_config=config.sim_config,
+                         has_output_path="output_path" in entity.generic_names)
+
+    def _parse(self, entity, architecture_name, verilog):
+        """
+        Parse file for run strings and pragmas
+        """
+        if verilog:
+            file_name = entity.file_name
+        else:
+            file_name = entity.architecture_names[architecture_name]
+        code = ostools.read_file(file_name)
+
+        pragmas = self.find_pragmas(code, file_name)
+
+        # @TODO use presence of runner_cfg as tb_filter instead of tb_*
+        has_runner_cfg = verilog or ("runner_cfg" in entity.generic_names)
+
+        if has_runner_cfg:
+            run_strings = self.find_run_strings(code, file_name, verilog)
+        else:
+            run_strings = []
+
+        return pragmas, run_strings
+
     def _warn_on_individual_configuration(self, scope, run_strings, should_run_in_same_sim):
         """
         Warn on individual test configurations
@@ -187,16 +205,22 @@ class TestScanner(object):
 
     _valid_run_string_fmt = r'[A-Za-z0-9_\-\. ]+'
     _re_valid_run_string = re.compile(_valid_run_string_fmt + "$")
-    _re_run_string = re.compile(r'\s+run\("(.*?)"\)', re.IGNORECASE)
+    _re_vhdl_run_string = re.compile(r'\s+run\("(.*?)"\)', re.IGNORECASE)
+    _re_verilog_run_string = re.compile(r'`TEST_CASE\("(.*?)"\)')
 
-    def find_run_strings(self, code, file_name):
+    def find_run_strings(self, code, file_name, verilog):
         """
         Finds all if run("something") strings in file
         """
-        code = remove_comments(code)
+        if verilog:
+            # @TODO verilog
+            regexp = self._re_verilog_run_string
+        else:
+            code = remove_comments(code)
+            regexp = self._re_vhdl_run_string
 
         run_strings = [match.group(1)
-                       for match in self._re_run_string.finditer(code)]
+                       for match in regexp.finditer(code)]
 
         unique = set()
         not_unique = set()
@@ -224,6 +248,8 @@ class TestScanner(object):
     def find_pragmas(self, code, file_name):
         """
         Return a list of all vunit pragmas parsed from the code
+
+        @TODO only look inside comments
         """
         pragmas = []
         for match in self._re_pragma.finditer(code):
@@ -267,7 +293,7 @@ def prune_generics(generics, generic_names):
 
 
 def create_test_name(entity, architecture_name, config_name, test_name=None):
-    if len(entity.architecture_names) > 1:
+    if (architecture_name is None) or (len(entity.architecture_names) > 1):
         return dotjoin(entity.library_name, entity.name, architecture_name, config_name, test_name)
     else:
         return dotjoin(entity.library_name, entity.name, config_name, test_name)

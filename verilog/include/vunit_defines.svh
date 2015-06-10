@@ -1,0 +1,53 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this file,
+// You can obtain one at http://mozilla.org/MPL/2.0/.
+//
+// Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
+
+`define WATCHDOG(runtime) \
+   initial begin \
+      __runner__.watchdog(runtime); \
+   end
+
+`define TEST_SUITE \
+   parameter string runner_cfg; \
+   import vunit_pkg::*; \
+   test_runner __runner__ = new; \
+   initial \
+     if (__runner__.setup(runner_cfg)) \
+      while (__runner__.loop)
+
+`define TEST_CASE(test_name) if (__runner__.run(test_name))
+
+`define TEST_SUITE_SETUP if (__runner__.is_test_suite_setup())
+`define TEST_SUITE_TEARDOWN if (__runner__.is_test_suite_teardown())
+
+`define TEST_CASE_SETUP if (__runner__.is_test_case_setup())
+`define TEST_CASE_TEARDOWN if (__runner__.is_test_case_teardown())
+`define CHECK_EQUAL(got,expected,msg=__none__) \
+        assert ((got) === (expected)) else \
+          begin \
+             string __none__; \
+             string got_str; \
+             string expected_str; \
+             string full_msg; \
+             int index; \
+             got_str = "";\
+             expected_str ="";\
+             $swrite(got_str, got); \
+             $swrite(expected_str, expected); \
+               for (int i=0; i<got_str.len(); i++) begin \
+                  if (got_str[i] != " ") begin \
+                     got_str = got_str.substr(i, got_str.len()-1); \
+                     break; \
+                  end \
+               end \
+               for (int i=0; i<expected_str.len(); i++) begin \
+                  if (expected_str[i] != " ") begin \
+                     expected_str = expected_str.substr(i, expected_str.len()-1); \
+                     break; \
+                  end \
+               end \
+             full_msg = {"CHECK_EQUAL failed! Got ",`"got`", "=",  got_str, " expected ", expected_str, ". ", msg}; \
+             $error(full_msg); \
+          end

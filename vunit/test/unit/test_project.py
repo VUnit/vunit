@@ -10,10 +10,12 @@ Test the project functionality
 
 
 import unittest
-from os.path import join
-import vunit.project
-from vunit.project import Project
-from vunit.test.stub_ostools import OstoolsStub
+from shutil import rmtree
+from os.path import join, exists, dirname
+import os
+from vunit.ostools import renew_path, write_file
+from vunit.project import Project, file_type_of
+from time import sleep
 
 
 class TestProject(unittest.TestCase):  # pylint: disable=too-many-public-methods
@@ -22,12 +24,16 @@ class TestProject(unittest.TestCase):  # pylint: disable=too-many-public-methods
     """
 
     def setUp(self):
-        self.stub = OstoolsStub()
-        vunit.project.ostools = self.stub
+        self.output_path = join(dirname(__file__), "test_project_out")
+        renew_path(self.output_path)
         self.project = Project()
+        self.cwd = os.getcwd()
+        os.chdir(self.output_path)
 
     def tearDown(self):
-        vunit.project.ostools = vunit.ostools
+        os.chdir(self.cwd)
+        if exists(self.output_path):
+            rmtree(self.output_path)
 
     def test_parses_entity_architecture(self):
         self.project.add_library("lib", "work_path")
@@ -120,7 +126,7 @@ end entity;
         self.update("foo2_ent.vhd")
         self.assert_should_recompile([])
 
-        self.stub.tick()
+        tick()
         self.update("foo1_ent.vhd")
         self.assert_should_recompile(["foo_arch.vhd"])
 
@@ -358,7 +364,7 @@ end architecture;
 
         for file_name in ["file1.vhd", "file2.vhd", "file3.vhd"]:
             self.update(file_name)
-            self.assertIn(self.hash_file_name_of(file_name), self.stub.file_names)
+            self.assertTrue(exists(self.hash_file_name_of(file_name)))
 
     def test_should_not_recompile_updated_files(self):
         self.create_dummy_three_file_project()
@@ -400,7 +406,7 @@ end architecture;
         self.create_dummy_three_file_project(update_file1=True)
         self.assert_should_recompile(["file1.vhd", "file2.vhd", "file3.vhd"])
 
-        self.stub.tick()
+        tick()
         self.update("file1.vhd")
         self.assert_should_recompile(["file2.vhd", "file3.vhd"])
 
@@ -412,7 +418,7 @@ end architecture;
         self.update("file3.vhd")
         self.assert_should_recompile([])
 
-        self.stub.remove_file(self.hash_file_name_of("file2.vhd"))
+        os.remove(self.hash_file_name_of("file2.vhd"))
         self.assert_should_recompile(["file2.vhd", "file3.vhd"])
 
     def test_finds_component_instantiation_dependencies(self):
@@ -486,6 +492,79 @@ end architecture;
         self.assertTrue(deps[1] == self.project.get_source_files_in_order()[1])
         self.assertTrue(deps[2] == self.project.get_source_files_in_order()[2])
 
+    def test_has_verilog_module(self):
+        self.project.add_library("lib", "lib_path")
+        self.add_source_file("lib", "module.v", """\
+module name;
+endmodule
+""")
+        library = self.project.get_library("lib")
+        modules = library.get_modules()
+        self.assertEqual(len(modules), 1)
+
+    def test_finds_verilog_package_dependencies(self):
+        self.project.add_library("lib", "lib_path")
+        self.add_source_file("lib", "pkg.sv", """\
+package pkg;
+endpackage
+""")
+        self.add_source_file("lib", "module.sv", """\
+module name;
+  import pkg::*;
+endmodule
+""")
+        self.assert_compiles("pkg.sv", before="module.sv")
+
+    def test_finds_verilog_module_instantiation_dependencies(self):
+        self.project.add_library("lib", "lib_path")
+        self.add_source_file("lib", "module1.sv", """\
+module module1;
+endmodule
+""")
+        self.add_source_file("lib", "module2.sv", """\
+module module2;
+  module1 inst();
+endmodule
+""")
+        self.assert_compiles("module1.sv", before="module2.sv")
+
+    def test_finds_verilog_include_dependencies(self):
+        def create_project():
+            """
+            Create the test project
+            """
+            self.project = Project()
+            self.project.add_library("lib", "lib_path")
+            self.add_source_file("lib", "module.sv", """\
+`include "include.svh"
+""")
+
+        write_file("include.svh", """\
+module name;
+endmodule
+""")
+        create_project()
+        self.assert_should_recompile(["module.sv"])
+
+        for src_file in self.project.get_files_in_compile_order():
+            self.update(src_file.name)
+        create_project()
+        self.assert_should_recompile([])
+
+        write_file("include.svh", """\
+module other_name;
+endmodule
+""")
+        create_project()
+        self.assert_should_recompile(["module.sv"])
+
+    def test_file_type_of(self):
+        self.assertEqual(file_type_of("file.vhd"), "vhdl")
+        self.assertEqual(file_type_of("file.vhdl"), "vhdl")
+        self.assertEqual(file_type_of("file.sv"), "verilog")
+        self.assertEqual(file_type_of("file.v"), "verilog")
+        self.assertRaises(RuntimeError, file_type_of, "file.foo")
+
     def create_dummy_three_file_project(self, update_file1=False):
         """
         Create a projected containing three dummy files
@@ -537,8 +616,8 @@ end architecture;
         """
         Convenient wrapper arround project.add_source_file
         """
-        self.stub.write_file(file_name, contents)
-        self.project.add_source_file(file_name, library_name)
+        write_file(file_name, contents)
+        self.project.add_source_file(file_name, library_name, file_type=file_type_of(file_name))
 
     def hash_file_name_of(self, file_name):
         """
@@ -568,7 +647,7 @@ end architecture;
         for src_file in self.project.get_files_in_compile_order():
             self.update(src_file.name)
         self.assert_should_recompile([])
-        self.stub.tick()
+        tick()
         self.update(file_name)
         self.assertIn(before, [dep.name for dep in self.project.get_files_in_compile_order()])
 
@@ -579,7 +658,7 @@ end architecture;
         for src_file in self.project.get_files_in_compile_order():
             self.update(src_file.name)
         self.assert_should_recompile([])
-        self.stub.tick()
+        tick()
         self.update(file_name)
         self.assertNotIn(before, [dep.name for dep in self.project.get_files_in_compile_order()])
 
@@ -670,3 +749,7 @@ end architecture;
     def assert_count_equal(self, values1, values2):
         # Python 2.7 compatability
         self.assertEqual(sorted(values1), sorted(values2))
+
+
+def tick():
+    sleep(0.01)

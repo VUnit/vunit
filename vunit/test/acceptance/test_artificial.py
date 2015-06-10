@@ -13,7 +13,6 @@ import unittest
 from os.path import join, dirname
 from vunit.test.common import has_simulator, check_report, simulator_is
 from os import environ
-from vunit import VUnit
 from subprocess import call
 import sys
 
@@ -29,6 +28,7 @@ class TestVunitArtificial(unittest.TestCase):
         self.output_path = join(dirname(__file__), "artificial out")
         self.report_file = join(self.output_path, "xunit.xml")
         self.artificial_run_vhdl = join(dirname(__file__), "artificial", "vhdl", "run.py")
+        self.artificial_run_verilog = join(dirname(__file__), "artificial", "verilog", "run.py")
 
     @unittest.skipUnless(simulator_is("modelsim"), "Only modelsim has --new-vsim flag")
     def test_artificial_modelsim_new_vsim(self):
@@ -76,29 +76,39 @@ class TestVunitArtificial(unittest.TestCase):
                    args=args)
         check_report(self.report_file, EXPECTED_REPORT)
 
-    def test_run_selected_tests_in_same_sim_test_bench(self):
-        self.check(self.artificial_run_vhdl,
+    def test_run_selected_tests_in_same_sim_test_bench_vhdl(self):
+        self._test_run_selected_tests_in_same_sim_test_bench(self.artificial_run_vhdl)
+
+    @unittest.skipIf(simulator_is("ghdl"), "GHDL does not support verilog")
+    def test_run_selected_tests_in_same_sim_test_bench_verilog(self):
+        self._test_run_selected_tests_in_same_sim_test_bench(self.artificial_run_verilog)
+
+    def _test_run_selected_tests_in_same_sim_test_bench(self, run_file):
+        """
+        Run selected "same_sim" test in isolation
+        """
+        self.check(run_file,
                    exit_code=0,
-                   clean=False,
+                   clean=True,
                    args=["*same_sim_some_fail*Test 1*"])
         check_report(self.report_file, [
             ("passed", "lib.tb_same_sim_some_fail.Test 1")])
 
-        self.check(self.artificial_run_vhdl,
+        self.check(run_file,
                    exit_code=1,
                    clean=False,
                    args=["*same_sim_some_fail*Test 2*"])
         check_report(self.report_file, [
             ("failed", "lib.tb_same_sim_some_fail.Test 2")])
 
-        self.check(self.artificial_run_vhdl,
+        self.check(run_file,
                    exit_code=0,
                    clean=False,
                    args=["*same_sim_some_fail*Test 3*"])
         check_report(self.report_file, [
             ("passed", "lib.tb_same_sim_some_fail.Test 3")])
 
-        self.check(self.artificial_run_vhdl,
+        self.check(run_file,
                    exit_code=1,
                    clean=False,
                    args=["*same_sim_some_fail*Test 2*", "*same_sim_some_fail*Test 3*"])
@@ -107,19 +117,35 @@ class TestVunitArtificial(unittest.TestCase):
             ("skipped", "lib.tb_same_sim_some_fail.Test 3")])
 
     @unittest.skipIf(simulator_is("ghdl"), "GHDL does not support verilog")
-    def test_compile_verilog(self):
-        verilog_path = join(dirname(__file__), "verilog")
-        ui = VUnit.from_argv(argv=["--clean",
-                                   "--output-path=%s" % self.output_path,
-                                   "--xunit-xml=%s" % self.report_file,
-                                   "--compile"])
-        ui.add_library("lib")
-        ui.add_source_files(join(verilog_path, "*.v"), "lib")
-        ui.add_source_files(join(verilog_path, "*.sv"), "lib")
-        try:
-            ui.main()
-        except SystemExit as ex:
-            self.assertEqual(ex.code, 0)
+    def test_artificial_verilog(self):
+        self.check(self.artificial_run_verilog,
+                   exit_code=1)
+        check_report(self.report_file, [
+            ("passed", "lib.tb_magic_paths.Test magic paths are correct"),
+
+            ("failed", "lib.tb_fail_on_warning.fail"),
+
+            ("failed", "lib.tb_fail_on_fatal_and_early_finish.fatal0"),
+            ("failed", "lib.tb_fail_on_fatal_and_early_finish.fatal1"),
+            ("failed", "lib.tb_fail_on_fatal_and_early_finish.finish0"),
+            ("failed", "lib.tb_fail_on_fatal_and_early_finish.finish1"),
+
+            ("passed", "lib.tb_with_parameter_config.Test 0"),
+            ("passed", "lib.tb_with_parameter_config.Test 1"),
+            ("passed", "lib.tb_with_parameter_config.Test 2"),
+            ("passed", "lib.tb_with_parameter_config.Test 3"),
+            ("passed", "lib.tb_with_parameter_config.Test 4"),
+
+            ("passed", "lib.tb_same_sim_all_pass.Test 1"),
+            ("passed", "lib.tb_same_sim_all_pass.Test 2"),
+            ("passed", "lib.tb_same_sim_all_pass.Test 3"),
+
+            ("passed", "lib.tb_same_sim_some_fail.Test 1"),
+            ("failed", "lib.tb_same_sim_some_fail.Test 2"),
+            ("skipped", "lib.tb_same_sim_some_fail.Test 3"),
+
+            ("passed", "lib.tb_with_runner.pass"),
+            ("failed", "lib.tb_with_runner.fail")])
 
     # pylint: disable=too-many-arguments
     def check(self, run_file, args=None, persistent_sim=True, clean=True, exit_code=0):

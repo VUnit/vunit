@@ -40,13 +40,21 @@ class TestTestScanner(unittest.TestCase):
         tests = self.test_scanner.from_project(project)
         self.assertEqual(len(tests), 0)
 
-    def test_that_single_test_is_created(self):
+    def test_that_single_vhdl_test_is_created(self):
         project = ProjectStub()
         lib = project.add_library("lib")
         ent = lib.add_entity("tb_entity")
         ent.set_contents("")
         tests = self.test_scanner.from_project(project)
         self.assert_has_tests(tests, ["lib.tb_entity"])
+
+    def test_that_single_verilog_test_is_created(self):
+        project = ProjectStub()
+        lib = project.add_library("lib")
+        module = lib.add_module("tb_module")
+        module.set_contents("")
+        tests = self.test_scanner.from_project(project)
+        self.assert_has_tests(tests, ["lib.tb_module"])
 
     def test_that_tests_are_filtered(self):
         project = ProjectStub()
@@ -303,9 +311,13 @@ class LibraryStub(object):
     def __init__(self, name):
         self.name = name
         self._entities = []
+        self._modules = []
 
     def get_entities(self):
         return self._entities
+
+    def get_modules(self):
+        return self._modules
 
     def add_entity(self,
                    name,
@@ -331,6 +343,39 @@ class LibraryStub(object):
                             generic_names)
         self._entities.append(entity)
         return entity
+
+    def add_module(self,
+                   name,
+                   file_name=None):
+        """
+        Add a stubbed entity
+        """
+        if file_name is None:
+            file_name = out(name + ".sv")
+
+        module = ModuleStub(name,
+                            self.name,
+                            file_name)
+        self._modules.append(module)
+        return module
+
+
+class ModuleStub(object):
+    """
+    A stub of a Module
+    """
+    def __init__(self, name, library_name, file_name):
+        self.name = name
+        self.library_name = library_name
+        self.file_name = file_name
+        self.generic_names = []
+
+    def set_contents(self, contents):
+        """
+        Set contents of module file
+        """
+        with open(self.file_name, "w") as fwrite:
+            fwrite.write(contents)
 
 
 class EntityStub(object):

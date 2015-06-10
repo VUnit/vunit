@@ -84,12 +84,13 @@ class TestConfiguration(object):
         """
         self._disable_ieee_warnings.add(scope)
 
-    def add_config(self, scope, name, generics, post_check=None):
+    def add_config(self, scope, name="", generics=None, post_check=None):
         """
         Add a configuration for scope specifying the name of the
         configuration, its generic values as well as a post_check
         function to be run after the simulation
         """
+        generics = {} if generics is None else generics
         if scope not in self._configs:
             self._configs[scope] = {}
         self._configs[scope][name] = (generics, post_check)

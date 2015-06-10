@@ -16,7 +16,8 @@ from os.path import join, dirname, basename, exists
 from os import remove
 import re
 from re import MULTILINE
-from vunit.ui import VUnit, VHDL_EXTENSIONS, VERILOG_EXTENSIONS
+from vunit.ui import VUnit
+from vunit.project import VHDL_EXTENSIONS, VERILOG_EXTENSIONS
 
 
 class TestPreprocessor(object):

@@ -31,6 +31,10 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_vhdl_preprocessed_uart_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "uart", "run_with_preprocessing.py"))
 
+    @unittest.skipIf(simulator_is("ghdl"), "GHDL does not support verilog")
+    def test_verilog_uart_example_project(self):
+        self.check(join(ROOT, "examples", "verilog", "uart", "run.py"))
+
     def test_vhdl_logging_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "logging", "compile.py"))
 
@@ -59,6 +63,14 @@ class TestExternalRunScripts(unittest.TestCase):
                      [("passed", "lib.tb_example"),
                       ("passed", "lib.tb_example_many.test_pass"),
                       ("failed", "lib.tb_example_many.test_fail")])
+
+    @unittest.skipIf(simulator_is("ghdl"), "GHDL does not support verilog")
+    def test_verilog_user_guide_example_project(self):
+        self.check(join(ROOT, "examples", "verilog", "user_guide", "run.py"), exit_code=1)
+        check_report(self.report_file,
+                     [("passed", "lib.tb_example.Test that pass"),
+                      ("failed", "lib.tb_example.Test that fail"),
+                      ("failed", "lib.tb_example.Test that timeouts")])
 
     def test_vhdl_osvvm_integration_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "osvvm_integration", "run.py"), exit_code=1)
