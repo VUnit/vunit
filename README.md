@@ -10,6 +10,7 @@ The VUnit project mission is to apply best SW testing practises to the world of 
 * Builds on the commonly used [xUnit](http://en.wikipedia.org/wiki/XUnit) architecture.
 * Python test runner that enables powerful test administration, can handle VHDL fatal run-time errors (e.g. division by zero), and ensures test case independence.
 * Scanners for identifying files, tests, file dependencies, and file changes enable for automatic (re)compilation and execution of test suites.
+* Can run test cases in parallel to take advantage of multi-core machines.
 * Scripting as well as command line support.
 * Support for running same test suite with different generics.
 * VHDL test runner which enables test execution for not fully supported simulators.
