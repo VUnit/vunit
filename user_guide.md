@@ -57,6 +57,9 @@ optional arguments:
                         Output path for compilation and simulation artifacts
   -x XUNIT_XML, --xunit-xml XUNIT_XML
                         Xunit test report .xml file
+  --exit-0              Exit with code 0 even if a test failed. Still exits
+                        with code 1 on fatal errors such as compilation
+                        failure
   -v, --verbose         Print test output immediately and not only when
                         failure
   --no-color            Do not color output

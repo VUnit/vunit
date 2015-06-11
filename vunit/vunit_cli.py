@@ -65,6 +65,12 @@ class VUnitCLI(object):
                             default=None,
                             help='Xunit test report .xml file')
 
+        parser.add_argument('--exit-0',
+                            default=False,
+                            action="store_true",
+                            help=('Exit with code 0 even if a test failed. '
+                                  'Still exits with code 1 on fatal errors such as compilation failure'))
+
         parser.add_argument('-v', '--verbose', action="store_true",
                             default=False,
                             help='Print test output immediately and not only when failure')

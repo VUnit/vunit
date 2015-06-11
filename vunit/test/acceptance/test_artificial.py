@@ -140,6 +140,14 @@ class TestVunitArtificial(unittest.TestCase):
                        env=new_env)
         self.assertEqual(retcode, exit_code)
 
+    def test_exit_0_flag(self):
+        self.check(self.artificial_run,
+                   exit_code=1,
+                   args=["lib.tb_fail"])
+        self.check(self.artificial_run,
+                   exit_code=0,
+                   args=["--exit-0", "lib.tb_fail"])
+
 
 EXPECTED_REPORT = (
     ("passed", "lib.tb_pass"),

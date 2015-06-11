@@ -80,7 +80,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                    elaborate_only=args.elaborate,
                    compile_builtins=compile_builtins,
                    simulator_factory=SimulatorFactory(args),
-                   num_threads=args.num_threads)
+                   num_threads=args.num_threads,
+                   exit_0=args.exit_0)
 
     def __init__(self,  # pylint: disable=too-many-locals, too-many-arguments
                  output_path,
@@ -97,7 +98,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                  elaborate_only=False,
                  vhdl_standard='2008',
                  compile_builtins=True,
-                 num_threads=1):
+                 num_threads=1,
+                 exit_0=False):
 
         self._configure_logging(log_level)
 
@@ -129,6 +131,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._project = None
         self._create_project()
         self._num_threads = num_threads
+        self._exit_0 = exit_0
 
         if compile_builtins:
             self.add_builtins(library_name="vunit_lib")
@@ -307,7 +310,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             traceback.print_exc()
             exit(1)
 
-        if not all_ok:
+        if (not all_ok) and (not self._exit_0):
             exit(1)
 
         exit(0)
