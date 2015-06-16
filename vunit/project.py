@@ -113,6 +113,7 @@ class Project(object):
                 if not library.is_external:
                     LOGGER.warning("failed to find a primary design unit '%s' in library '%s'",
                                    ref.design_unit, library.name)
+                continue
             else:
                 yield primary_unit.source_file
 
