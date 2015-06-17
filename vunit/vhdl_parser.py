@@ -913,7 +913,7 @@ class VHDLReference(object):
         return references
 
     _entity_reference_re = re.compile(
-        r'(^|\A|\s)\s*entity\s+(?P<lib>[a-zA-Z]\w*)\.(?P<ent>[a-zA-Z]\w*)(\((?P<arch>[a-zA-Z]\w*)\))?',
+        r'(^|\A|\s)\s*entity\s+(?P<lib>[a-zA-Z]\w*)\.(?P<ent>[a-zA-Z]\w*)\s*(\((?P<arch>[a-zA-Z]\w*)\))?',
         re.MULTILINE | re.IGNORECASE)
 
     @classmethod

@@ -89,7 +89,7 @@ context name1.is_identifier;
 entity work1.foo1
 entity work1.foo1(a1)
 for all : bar use entity work2.foo2
-for all : bar use entity work2.foo2(a2)
+for all : bar use entity work2.foo2 (a2)
 for foo : bar use configuration work.cfg
 
 entity foo is -- False
