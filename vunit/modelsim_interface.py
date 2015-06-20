@@ -509,6 +509,15 @@ if {![vunit_load -vhdlvariablelogging]} {
         else:
             return self._run_batch_file(batch_file_name)
 
+    def __del__(self):
+        for proc in self._vsim_processes.values():
+            if proc.is_alive():
+                proc.write("quit -f -code 0\n")
+
+        for proc in self._vsim_processes.values():
+            if proc.is_alive():
+                proc.wait()
+
 
 def output_consumer(line):
     """
