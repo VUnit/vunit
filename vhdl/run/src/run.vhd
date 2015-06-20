@@ -49,7 +49,8 @@ package body run_pkg is
                      checker_cfg.logger_cfg.log_separator,
                      true);
       else
-        checker_init(stop_level => error);
+        checker_init(stop_level => error,
+                     file_name => get(runner_cfg, "output path") & "error.csv");
       end if;
     end if;
 
