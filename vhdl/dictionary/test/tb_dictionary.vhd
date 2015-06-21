@@ -21,7 +21,8 @@ use std.textio.all;
 
 entity tb_dictionary is
   generic (
-    runner_cfg : runner_cfg_t := runner_cfg_default);
+    runner_cfg : runner_cfg_t := runner_cfg_default;
+    output_path : string);
 end entity tb_dictionary;
 
 architecture test_fixture of tb_dictionary is
@@ -37,10 +38,10 @@ begin
     constant test_dict : frozen_dictionary_t := "output path : c::\foo\bar, input path : c::\ying\yang, active python runner : true";
     constant corrupt_dict : frozen_dictionary_t := "output path : c::\foo\bar, input path, active python runner : true";
   begin
-    checker_init(c, default_src => "Test Runner", display_format => verbose);
+    checker_init(c, default_src => "Test Runner", display_format => verbose, file_name => output_path & "error.csv");
     if has_key(runner_cfg, "active python runner") then
       if get(runner_cfg, "active python runner") = "true" then
-        checker_init(c, default_src => "Test Runner", display_format => verbose, stop_level => error);
+        checker_init(c, default_src => "Test Runner", display_format => verbose, stop_level => error, file_name => output_path & "error.csv");
       end if;
     end if;
     test_runner_setup(runner, runner_cfg);

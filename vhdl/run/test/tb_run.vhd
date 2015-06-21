@@ -23,6 +23,7 @@ use vunit_lib.run_base_pkg.all;
 use vunit_lib.run_pkg.all;
 
 entity tb_run is
+  generic (output_path : string);
 end entity tb_run;
 
 architecture test_fixture of tb_run is
@@ -203,7 +204,8 @@ begin
     variable checker_cfg : checker_cfg_t;
     variable runner_cfg : line;
   begin
-    checker_init(c, display_format => verbose, default_src => "Test Runner", stop_level => error);
+    logger_init(runner_trace_logger, file_name => output_path & "test_runner_trace.csv");
+    checker_init(c, display_format => verbose, default_src => "Test Runner", stop_level => error, file_name => output_path & "error.csv");
 
     banner("Should extract single enabled test case from input string");
     test_case_setup;
@@ -538,7 +540,7 @@ begin
     ---------------------------------------------------------------------------
     banner("Should have a trace log where source of locking/unlocking commands can be logged. All but test case name entries should have the debug level.");
     test_case_setup;
-    logger_init(runner_trace_logger, "", "trace.txt", verbose, verbose_csv);
+    logger_init(runner_trace_logger, "", output_path & "trace.txt", verbose, verbose_csv);
 
     start_locking_process <= true;
 
@@ -650,16 +652,16 @@ begin
     write(log_entries(67), string'("Passed test runner cleanup phase exit gate."));
     write(log_entries(68), string'("Entering test runner exit phase."));
 
-    verify_log_file("trace.txt", log_entries, 1, 17, "locking_proc1");
-    verify_log_file("trace.txt", log_entries, 18, 18, "locking_proc2");
-    verify_log_file("trace.txt", log_entries, 19, 65, "locking_proc1");
-    verify_log_file("trace.txt", log_entries, 66, 66, "locking_proc2");
-    verify_log_file("trace.txt", log_entries, 67, 68, "locking_proc1");
+    verify_log_file(output_path & "trace.txt", log_entries, 1, 17, "locking_proc1");
+    verify_log_file(output_path & "trace.txt", log_entries, 18, 18, "locking_proc2");
+    verify_log_file(output_path & "trace.txt", log_entries, 19, 65, "locking_proc1");
+    verify_log_file(output_path & "trace.txt", log_entries, 66, 66, "locking_proc2");
+    verify_log_file(output_path & "trace.txt", log_entries, 67, 68, "locking_proc1");
 
     ---------------------------------------------------------------------------
     banner("Should be possible to track (un)lock commands to file and line number");
     test_case_setup;
-    logger_init(runner_trace_logger, "", "trace2.txt", verbose, verbose_csv);
+    logger_init(runner_trace_logger, "", output_path & "trace2.txt", verbose, verbose_csv);
 
     test_runner_setup(runner, "enabled_test_cases : test a");
     lock_entry(runner, test_case_setup, "me", 17, "foo1.vhd");
@@ -678,10 +680,10 @@ begin
 
     test_runner_cleanup(runner, disable_simulation_exit => true);
 
-    verify_log_file("trace2.txt", log_entries, 6, 6, "me", 17, "foo1.vhd");
-    verify_log_file("trace2.txt", log_entries, 7, 7, "me", 18, "foo2.vhd");
-    verify_log_file("trace2.txt", log_entries, 8, 8, "me", 19, "foo3.vhd");
-    verify_log_file("trace2.txt", log_entries, 9, 9, "me", 20, "foo4.vhd");
+    verify_log_file(output_path & "trace2.txt", log_entries, 6, 6, "me", 17, "foo1.vhd");
+    verify_log_file(output_path & "trace2.txt", log_entries, 7, 7, "me", 18, "foo2.vhd");
+    verify_log_file(output_path & "trace2.txt", log_entries, 8, 8, "me", 19, "foo3.vhd");
+    verify_log_file(output_path & "trace2.txt", log_entries, 9, 9, "me", 20, "foo4.vhd");
 
     ---------------------------------------------------------------------------
     banner("Should be possible to identify fatal exits in cleanup code");
@@ -721,7 +723,7 @@ begin
     banner("Should be possible to time-out a test runner that is stuck");
     test_case_setup;
     test_runner_setup(runner, "enabled_test_cases : test a,, test b,, test c,, test d");
-    checker_init;
+    checker_init(file_name => output_path & "error.csv");
     start_test_runner_watchdog <= true;
     wait for 0 ns;
     start_test_runner_watchdog <= false;
@@ -743,7 +745,7 @@ begin
     ---------------------------------------------------------------------------
     banner("Should be possible to externally figure out if the test runner terminated with or errors.");
     test_case_setup;
-    checker_init(test_checker, default_src => "Test Checker");
+    checker_init(test_checker, default_src => "Test Checker", file_name => output_path & "error.csv");
     test_runner_setup(runner, "enabled_test_cases : test a,, test b,, test c,, test d");
     check(test_checker, false, "Should fail");
     get_checker_stat(test_checker, test_checker_stat);
@@ -772,12 +774,12 @@ begin
     ---------------------------------------------------------------------------
     banner("Should set stop level to the default level but maintain all other setting when Python runner is active");
     test_case_setup;
-    checker_init(warning, "my_default_checker", "problems.csv", verbose, level, failure, ';');
+    checker_init(warning, "my_default_checker", output_path & "problems.csv", verbose, level, failure, ';');
     test_runner_setup(runner, "active python runner : true");
     get_checker_cfg(checker_cfg);
     check(c, checker_cfg.default_level = warning, "Expected default level to be warning");
     check(c, checker_cfg.logger_cfg.log_default_src.all = "my_default_checker", "Expected default src to be ""my_default_checker""");
-    check(c, checker_cfg.logger_cfg.log_file_name.all = "problems.csv", "Expected file name to be ""problems.csv""");
+    check(c, checker_cfg.logger_cfg.log_file_name.all = output_path & "problems.csv", "Expected file name to be """ & output_path & "problems.csv""");
     check(c, checker_cfg.logger_cfg.log_display_format = verbose, "Expected display format to be verbose");
     check(c, checker_cfg.logger_cfg.log_file_format = level, "Expected file format to be level");
     check(c, checker_cfg.logger_cfg.log_stop_level = warning, "Expected stop level to be warning");
@@ -786,12 +788,12 @@ begin
     ---------------------------------------------------------------------------
     banner("Should leave stop level as is when Python runner is inactive");
     test_case_setup;
-    checker_init(warning, "my_default_checker", "problems.csv", verbose, level, failure, ';');
+    checker_init(warning, "my_default_checker", output_path & "problems.csv", verbose, level, failure, ';');
     test_runner_setup(runner, "active python runner : false");
     get_checker_cfg(checker_cfg);
     check(c, checker_cfg.default_level = warning, "Expected default level to be warning");
     check(c, checker_cfg.logger_cfg.log_default_src.all = "my_default_checker", "Expected default src to be ""my_default_checker""");
-    check(c, checker_cfg.logger_cfg.log_file_name.all = "problems.csv", "Expected file name to be ""problems.csv""");
+    check(c, checker_cfg.logger_cfg.log_file_name.all = output_path & "problems.csv", "Expected file name to be """ & output_path & "problems.csv""");
     check(c, checker_cfg.logger_cfg.log_display_format = verbose, "Expected display format to be verbose");
     check(c, checker_cfg.logger_cfg.log_file_format = level, "Expected file format to be level");
     check(c, checker_cfg.logger_cfg.log_stop_level = failure, "Expected stop level to be failure");
@@ -805,11 +807,11 @@ begin
     end if;
     write(runner_cfg, string'("active python runner : true, enabled_test_cases : foo,, bar, output path : some_dir/out"));
     check(c, active_python_runner(runner_cfg.all), "Expected active python runner to be true");
-    check(c, output_path(runner_cfg.all) = "some_dir/out", "Expected output path to be ""some_dir/out"" but got " & output_path(runner_cfg.all));
+    check(c, vunit_lib.run_pkg.output_path(runner_cfg.all) = "some_dir/out", "Expected output path to be ""some_dir/out"" but got " & vunit_lib.run_pkg.output_path(runner_cfg.all));
     check(c, enabled_test_cases(runner_cfg.all) = "foo, bar", "Expected enabled_test_cases to be ""foo, bar"" but got " & enabled_test_cases(runner_cfg.all));
 
     check_false(c, active_python_runner(""), "Expected active python runner to be false");
-    check(c, output_path("") = "", "Expected output path to be """" but got " & output_path(runner_cfg.all));
+    check(c, vunit_lib.run_pkg.output_path("") = "", "Expected output path to be """" but got " & vunit_lib.run_pkg.output_path(runner_cfg.all));
     check(c, enabled_test_cases("") = "__all__", "Expected enabled_test_cases to be ""__all__"" but got " & enabled_test_cases(runner_cfg.all));
 
     ---------------------------------------------------------------------------

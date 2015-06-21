@@ -18,6 +18,7 @@ use work.test_types.all;
 use work.test_type_methods.all;
 
 entity tb_logging is
+  generic (output_path : string);
 end entity tb_logging;
 
 architecture test_fixture of tb_logging is
@@ -155,11 +156,11 @@ begin
       write(output, dashes(s'range) & LF & s & LF & dashes(s'range) & LF);
     end banner;
   begin
+    logger_init(file_name => output_path & "log.csv");
     -- Report equivalent
     banner("Verify report equivalent");
     log("Hello World");
     verify_write_call(1, "Hello World");
-
     -- Log with level
     banner("Verify log with level");
     log("This is a warning", warning);
@@ -183,7 +184,7 @@ begin
 
     -- Custom levels
     banner("Verify custom levels");
-    logger_init(display_format => level);
+    logger_init(display_format => level, file_name => output_path & "log.csv");
     log("This is a status message", info_high1);
     verify_write_call(9, "INFO_HIGH1: This is a status message");
     info_high1("This is a status message");
@@ -191,7 +192,7 @@ begin
     rename_level(info_high1, "status");
     status("This is a status message");
     verify_write_call(11, "STATUS: This is a status message");
-    logger_init(display_format => raw);
+    logger_init(display_format => raw, file_name => output_path & "log.csv");
 
     -- Identify source of log
     banner("Verify log with specified source");
@@ -204,20 +205,20 @@ begin
 
     -- Two handlers and two formatters
     banner("Verify file handler and verbose formatter");
-    temp_sensor: logger_init(test_fixture'path_name & "temp_sensor", "temperature_sensor.csv", verbose, verbose_csv);
+    temp_sensor: logger_init(test_fixture'path_name & "temp_sensor", output_path & "temperature_sensor.csv", verbose, verbose_csv);
 
     info("High temp");
-    verify_write_call(15, time'image(0 ps) & ": INFO in .tb_logging.temp_sensor (tb_logging.vhd:209): High temp");
-    write(entries(1), string'("0," & time'image(0 ps) & ",info,tb_logging.vhd,209,.tb_logging.temp_sensor,High temp"));
+    verify_write_call(15, time'image(0 ps) & ": INFO in .tb_logging.temp_sensor (tb_logging.vhd:210): High temp");
+    write(entries(1), string'("0," & time'image(0 ps) & ",info,tb_logging.vhd,210,.tb_logging.temp_sensor,High temp"));
 
     -- Different loggers with different configurations
     banner("Verify custom loggers");
-    humidity_sensor: logger_init(l, test_fixture'path_name & "humidity_sensor", "humidity_sensor.csv", level, raw);
+    humidity_sensor: logger_init(l, test_fixture'path_name & "humidity_sensor", output_path & "humidity_sensor.csv", level, raw);
 
     warning(l, "High humidity");
     verify_write_call(16, "WARNING: High humidity");
     write(entries(3), string'("High humidity"));
-    verify_log_file("humidity_sensor.csv", entries(3 to 3));
+    verify_log_file(output_path & "humidity_sensor.csv", entries(3 to 3));
 
     -- Level filters
     banner("Verify level filters");
@@ -254,9 +255,9 @@ begin
     error(l,"Error should not pass");
     verify_num_of_write_calls(23);
     error("Error on default logger should pass");
-    verify_write_call(24, time'image(0 ps) & ": ERROR in .tb_logging.temp_sensor (tb_logging.vhd:256): Error on default logger should pass");
-    write(entries(2), string'("1," & time'image(0 ps) & ",error,tb_logging.vhd,256,.tb_logging.temp_sensor,Error on default logger should pass"));
-    verify_log_file("temperature_sensor.csv", entries(1 to 2));
+    verify_write_call(24, time'image(0 ps) & ": ERROR in .tb_logging.temp_sensor (tb_logging.vhd:257): Error on default logger should pass");
+    write(entries(2), string'("1," & time'image(0 ps) & ",error,tb_logging.vhd,257,.tb_logging.temp_sensor,Error on default logger should pass"));
+    verify_log_file(output_path & "temperature_sensor.csv", entries(1 to 2));
 
     stop_level(l, warning, file_handler, f2);
     warning(l,"Warning should not pass to file");
@@ -280,11 +281,11 @@ begin
     write(entries(15), string'("Warning should not pass"));
     write(entries(16), string'("Error should not pass"));
     write(entries(17), string'("Error should pass to file"));
-    verify_log_file("humidity_sensor.csv", entries(3 to 17));
+    verify_log_file(output_path & "humidity_sensor.csv", entries(3 to 17));
 
     -- Simple source filters
     banner("Verify simple source filters");
-    logger_init(l2, "pressure_sensor", "pressure_sensor.csv", raw, verbose_csv);
+    logger_init(l2, "pressure_sensor", output_path & "pressure_sensor.csv", raw, verbose_csv);
 
     stop_source(l2, "temperature_sensor", display_handler, f1);
     error(l2,"Error should pass");
@@ -308,15 +309,15 @@ begin
     rename_level(l2, error, "error");
     remove_filter(l2, f3);
 
-    write(entries(18), string'("2," & time'image(0 ps) & ",error,tb_logging.vhd,290,pressure_sensor,Error should pass"));
-    write(entries(19), string'("3," & time'image(0 ps) & ",error,tb_logging.vhd,294,pressure_sensor,Error should pass"));
-    write(entries(20), string'("4," & time'image(0 ps) & ",error,tb_logging.vhd,298,pressure_sensor,Error should not pass"));
-    write(entries(21), string'("5," & time'image(0 ps) & ",test_level,tb_logging.vhd,306,pressure_sensor,Error should pass"));
-    verify_log_file("pressure_sensor.csv", entries(18 to 21));
+    write(entries(18), string'("2," & time'image(0 ps) & ",error,tb_logging.vhd,291,pressure_sensor,Error should pass"));
+    write(entries(19), string'("3," & time'image(0 ps) & ",error,tb_logging.vhd,295,pressure_sensor,Error should pass"));
+    write(entries(20), string'("4," & time'image(0 ps) & ",error,tb_logging.vhd,299,pressure_sensor,Error should not pass"));
+    write(entries(21), string'("5," & time'image(0 ps) & ",test_level,tb_logging.vhd,307,pressure_sensor,Error should pass"));
+    verify_log_file(output_path & "pressure_sensor.csv", entries(18 to 21));
 
     -- Source level filters
     banner("Verify source level filters");
-    logger_init(l2, "pressure_sensor", "pressure_sensor.csv", raw, verbose_csv);
+    logger_init(l2, "pressure_sensor", output_path & "pressure_sensor.csv", raw, verbose_csv);
 
     stop_source_level(l2, "temperature_sensor", error, display_handler, f1);
     error(l2,"Error should pass");
@@ -338,25 +339,25 @@ begin
     error(l2,"Error should pass");
     remove_filter(l2, f3);
 
-    write(entries(22), string'("6," & time'image(0 ps) & ",error,tb_logging.vhd,322,pressure_sensor,Error should pass"));
-    write(entries(23), string'("7," & time'image(0 ps) & ",error,tb_logging.vhd,326,pressure_sensor,Error should pass"));
-    write(entries(24), string'("8," & time'image(0 ps) & ",error,tb_logging.vhd,330,pressure_sensor,Error should not pass"));
-    write(entries(25), string'("9," & time'image(0 ps) & ",error,tb_logging.vhd,338,pressure_sensor,Error should pass"));
-    verify_log_file("pressure_sensor.csv", entries(22 to 25));
+    write(entries(22), string'("6," & time'image(0 ps) & ",error,tb_logging.vhd,323,pressure_sensor,Error should pass"));
+    write(entries(23), string'("7," & time'image(0 ps) & ",error,tb_logging.vhd,327,pressure_sensor,Error should pass"));
+    write(entries(24), string'("8," & time'image(0 ps) & ",error,tb_logging.vhd,331,pressure_sensor,Error should not pass"));
+    write(entries(25), string'("9," & time'image(0 ps) & ",error,tb_logging.vhd,339,pressure_sensor,Error should pass"));
+    verify_log_file(output_path & "pressure_sensor.csv", entries(22 to 25));
 
     -- Hierarchical source filters
     banner("Verify hierarchical source filters");
-    logger_init("test_components", display_format => verbose_csv, file_format => verbose_csv);
+    logger_init("test_components", display_format => verbose_csv, file_format => verbose_csv, file_name => output_path & "log.csv");
     stop_source(test_fixture'path_name & "test_component1", (display_handler, file_handler), f1);
 
     wait on test_component1_done, test_component2_done until test_component1_done and test_component2_done;
 
-    write(entries(26), string'("10," & time'image(1000 ps) & ",info,tb_logging.vhd,124,.tb_logging.test_component2.init,I'm test component 2"));
-    write(entries(27), string'("11," & time'image(1000 ps) & ",info,tb_logging.vhd,125,.tb_logging.test_component2.purpose,I'm logging time"));
-    write(entries(28), string'("12," & time'image(1000 ps) & ",info,tb_logging.vhd,127,.tb_logging.test_component2.clock.time,Time is " & time'image(1000 ps)));
-    write(entries(29), string'("13," & time'image(11000 ps) & ",info,tb_logging.vhd,127,.tb_logging.test_component2.clock.time,Time is " & time'image(11000 ps)));
-    write(entries(30), string'("14," & time'image(21000 ps) & ",info,tb_logging.vhd,127,.tb_logging.test_component2.clock.time,Time is " & time'image(21000 ps)));
-    verify_log_file("log.csv", entries(26 to 30));
+    write(entries(26), string'("10," & time'image(1000 ps) & ",info,tb_logging.vhd,125,.tb_logging.test_component2.init,I'm test component 2"));
+    write(entries(27), string'("11," & time'image(1000 ps) & ",info,tb_logging.vhd,126,.tb_logging.test_component2.purpose,I'm logging time"));
+    write(entries(28), string'("12," & time'image(1000 ps) & ",info,tb_logging.vhd,128,.tb_logging.test_component2.clock.time,Time is " & time'image(1000 ps)));
+    write(entries(29), string'("13," & time'image(11000 ps) & ",info,tb_logging.vhd,128,.tb_logging.test_component2.clock.time,Time is " & time'image(11000 ps)));
+    write(entries(30), string'("14," & time'image(21000 ps) & ",info,tb_logging.vhd,128,.tb_logging.test_component2.clock.time,Time is " & time'image(21000 ps)));
+    verify_log_file(output_path & "log.csv", entries(26 to 30));
 
     -- get_logger_cfg
     banner("Verify that get_logger_cfg can be called on an uninitialized logger");
@@ -367,7 +368,7 @@ begin
 
     -- Verify break level
     banner("Verify that log entries with levels greater than or equal to the break level stops the simulation but lower levels don't.");
-    logger_init;
+    logger_init(file_name => output_path & "log.csv");
     cnt := get_report_call_count;
     log("Should not break", failure_low1);
     verify_num_of_report_calls(cnt);
@@ -377,12 +378,12 @@ begin
     counting_assert(report_call_args.valid);
     counting_assert(report_call_args.msg_length = 0);
     counting_assert(report_call_args.level = failure);
-    logger_init(stop_level => highest_level);
+    logger_init(stop_level => highest_level, file_name => output_path & "log.csv");
     cnt := get_report_call_count;
     log("Should not break", failure_high2);
     verify_num_of_report_calls(cnt);
     for l in log_level_t'pos(failure_high2) to log_level_t'pos(verbose_low1) loop
-      logger_init(stop_level => log_level_t'val(l));
+      logger_init(stop_level => log_level_t'val(l), file_name => output_path & "log.csv");
       cnt := get_report_call_count;
       log("Should not break", log_level_t'rightof(log_level_t'val(l)));
       verify_num_of_report_calls(cnt);
@@ -393,7 +394,7 @@ begin
       counting_assert(report_call_args.msg_length = 0);
       counting_assert(report_call_args.level = failure);
     end loop;
-    logger_init(stop_level => verbose_low2);
+    logger_init(stop_level => verbose_low2, file_name => output_path & "log.csv");
     cnt := get_report_call_count;
     log("Should break", verbose_low2);
     get_report_call_args(report_call_args);
@@ -404,10 +405,10 @@ begin
 
     -- Verify configuration export
     banner("Verify that all entries of the logger configuration are exported correctly.");
-    logger_init("my_src", "file.csv", verbose_csv, raw, error, ';', true);
+    logger_init("my_src", output_path & "file.csv", verbose_csv, raw, error, ';', true);
     get_logger_cfg(initialized_logger_cfg);
     counting_assert(initialized_logger_cfg.log_default_src.all = "my_src");
-    counting_assert(initialized_logger_cfg.log_file_name.all = "file.csv");
+    counting_assert(initialized_logger_cfg.log_file_name.all = output_path & "file.csv");
     counting_assert(initialized_logger_cfg.log_display_format = verbose_csv);
     counting_assert(initialized_logger_cfg.log_file_format = raw);
     counting_assert(initialized_logger_cfg.log_file_is_initialized);
@@ -417,18 +418,18 @@ begin
     get_logger_cfg(initialized_logger_cfg_export);
     counting_assert(initialized_logger_cfg_export.log_default_src(1 to 6) = "my_src");
     counting_assert(initialized_logger_cfg_export.log_default_src_length = 6);
-    counting_assert(initialized_logger_cfg_export.log_file_name(1 to 8) = "file.csv");
-    counting_assert(initialized_logger_cfg_export.log_file_name_length = 8);
+    counting_assert(initialized_logger_cfg_export.log_file_name(1 to 8+output_path'length) = output_path & "file.csv");
+    counting_assert(initialized_logger_cfg_export.log_file_name_length = 8+output_path'length);
     counting_assert(initialized_logger_cfg_export.log_display_format = verbose_csv);
     counting_assert(initialized_logger_cfg_export.log_file_format = raw);
     counting_assert(initialized_logger_cfg_export.log_file_is_initialized);
     counting_assert(initialized_logger_cfg_export.log_stop_level = error);
     counting_assert(initialized_logger_cfg_export.log_separator = ';');
 
-    logger_init(initialized_logger, "my_src2", "file2.csv", off, verbose_csv, warning, ':', true);
+    logger_init(initialized_logger, "my_src2", output_path & "file2.csv", off, verbose_csv, warning, ':', true);
     get_logger_cfg(initialized_logger, initialized_logger_cfg);
     counting_assert(initialized_logger_cfg.log_default_src.all = "my_src2");
-    counting_assert(initialized_logger_cfg.log_file_name.all = "file2.csv");
+    counting_assert(initialized_logger_cfg.log_file_name.all = output_path & "file2.csv");
     counting_assert(initialized_logger_cfg.log_display_format = off);
     counting_assert(initialized_logger_cfg.log_file_format = verbose_csv);
     counting_assert(initialized_logger_cfg.log_file_is_initialized);
@@ -438,8 +439,8 @@ begin
     get_logger_cfg(initialized_logger, initialized_logger_cfg_export);
     counting_assert(initialized_logger_cfg_export.log_default_src(1 to 7) = "my_src2");
     counting_assert(initialized_logger_cfg_export.log_default_src_length = 7);
-    counting_assert(initialized_logger_cfg_export.log_file_name(1 to 9) = "file2.csv");
-    counting_assert(initialized_logger_cfg_export.log_file_name_length = 9);
+    counting_assert(initialized_logger_cfg_export.log_file_name(1 to 9+output_path'length) = output_path & "file2.csv");
+    counting_assert(initialized_logger_cfg_export.log_file_name_length = 9+output_path'length);
     counting_assert(initialized_logger_cfg_export.log_display_format = off);
     counting_assert(initialized_logger_cfg_export.log_file_format = verbose_csv);
     counting_assert(initialized_logger_cfg_export.log_file_is_initialized);

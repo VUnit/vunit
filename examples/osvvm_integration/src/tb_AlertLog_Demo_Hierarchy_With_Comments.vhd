@@ -86,8 +86,10 @@ use work.common_pkg.all;
 
 entity tb_AlertLog_Demo_Hierarchy_With_Comments is
   generic (
-    runner_cfg : runner_cfg_t := runner_cfg_default);
+    runner_cfg : runner_cfg_t := runner_cfg_default;
+    output_path : string);
 end tb_AlertLog_Demo_Hierarchy_With_Comments;
+
 architecture hierarchy of tb_AlertLog_Demo_Hierarchy_With_Comments is
   signal Clk : std_logic := '0';
   alias final is info_high1[string, string, natural, string];
@@ -128,7 +130,7 @@ begin
       -- You have have custom checkers with individual names. Names starting
       -- with "." indicates a hierarchical name where every level of the
       -- hierarchy is separated with a "."
-      checker_init(tb_checker, display_format => verbose, default_src => ".tb");
+      checker_init(tb_checker, display_format => verbose, default_src => ".tb", file_name => output_path & "error.csv");
 
       -- Uncomment this line to use a log file rather than OUTPUT
       -- TranscriptOpen("./Demo_Hierarchy.txt") ;
@@ -142,7 +144,7 @@ begin
       -- All log levels are
       -- on by default so here I'm disabling the levels needed to get the same
       -- behaviour as the OSVVM example
-      logger_init(display_format => verbose);
+      logger_init(display_format => verbose, file_name => output_path & "log.csv");
       stop_source_level(".cpu", debug, display_handler, cpu_debug_filter);
       stop_source_level(".tb", info, display_handler, tb_info_filter);
       stop_source_level(".uart", info, display_handler, uart_info_filter);
@@ -243,7 +245,7 @@ begin
     CpuP1 : process
       constant CPU_P1_ID : AlertLogIDType := GetAlertLogID("CPU P1", CPU_AlertLogID);
     begin
-      checker_init(cpu_checker, display_format => verbose, default_src => ".cpu");
+      checker_init(cpu_checker, display_format => verbose, default_src => ".cpu", file_name => output_path & "error.csv");
       for i in 1 to 5 loop
         wait until Clk = '1';
         wait for 5 ns;
@@ -289,7 +291,7 @@ begin
     ------------------------------------------------------------
     UartP1 : process
     begin
-      checker_init(uart_checker, display_format => verbose, default_src => ".uart");
+      checker_init(uart_checker, display_format => verbose, default_src => ".uart", file_name => output_path & "error.csv");
       for i in 1 to 5 loop
         wait until Clk = '1';
         wait for 10 ns;

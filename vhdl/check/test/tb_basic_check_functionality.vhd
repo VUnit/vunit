@@ -25,7 +25,8 @@ use std.textio.all;
 
 entity tb_basic_check_functionality is
   generic (
-    runner_cfg : runner_cfg_t := "");
+    runner_cfg : runner_cfg_t := "";
+    output_path : string);
 end entity tb_basic_check_functionality;
 
 architecture test_fixture of tb_basic_check_functionality is
@@ -189,11 +190,11 @@ begin
                         "Failed: 13",
                         "Format error of checker_stat_t. Got:" & to_string(stat1));
       elsif run("Verify export of configuration") then
-        default_checker_init_from_scratch(warning, "__my_src", "file.csv", verbose_csv, raw, error, ';', true);
+        default_checker_init_from_scratch(warning, "__my_src", output_path & "file.csv", verbose_csv, raw, error, ';', true);
         get_checker_cfg(cfg);
         counting_assert(cfg.default_level = warning);
         counting_assert(cfg.logger_cfg.log_default_src.all = "__my_src");
-        counting_assert(cfg.logger_cfg.log_file_name.all = "file.csv");
+        counting_assert(cfg.logger_cfg.log_file_name.all = output_path & "file.csv");
         counting_assert(cfg.logger_cfg.log_display_format = verbose_csv);
         counting_assert(cfg.logger_cfg.log_file_format = raw);
         counting_assert(cfg.logger_cfg.log_file_is_initialized);
@@ -204,19 +205,19 @@ begin
         counting_assert(cfg_export.default_level = warning);
         counting_assert(cfg_export.logger_cfg.log_default_src(1 to 8) = "__my_src");
         counting_assert(cfg_export.logger_cfg.log_default_src_length = 8);
-        counting_assert(cfg_export.logger_cfg.log_file_name(1 to 8) = "file.csv");
-        counting_assert(cfg_export.logger_cfg.log_file_name_length = 8);
+        counting_assert(cfg_export.logger_cfg.log_file_name(1 to 8+output_path'length) = output_path & "file.csv");
+        counting_assert(cfg_export.logger_cfg.log_file_name_length = 8+output_path'length);
         counting_assert(cfg_export.logger_cfg.log_display_format = verbose_csv);
         counting_assert(cfg_export.logger_cfg.log_file_format = raw);
         counting_assert(cfg_export.logger_cfg.log_file_is_initialized);
         counting_assert(cfg_export.logger_cfg.log_stop_level = error);
         counting_assert(cfg_export.logger_cfg.log_separator = ';');
 
-        custom_checker_init_from_scratch(my_checker, info, "__my_src2", "file2.csv", off, verbose_csv, warning, ':', true);
+        custom_checker_init_from_scratch(my_checker, info, "__my_src2", output_path & "file2.csv", off, verbose_csv, warning, ':', true);
         get_checker_cfg(my_checker, cfg);
         counting_assert(cfg.default_level = info);
         counting_assert(cfg.logger_cfg.log_default_src.all = "__my_src2");
-        counting_assert(cfg.logger_cfg.log_file_name.all = "file2.csv");
+        counting_assert(cfg.logger_cfg.log_file_name.all = output_path & "file2.csv");
         counting_assert(cfg.logger_cfg.log_display_format = off);
         counting_assert(cfg.logger_cfg.log_file_format = verbose_csv);
         counting_assert(cfg.logger_cfg.log_file_is_initialized);
@@ -227,8 +228,8 @@ begin
         counting_assert(cfg_export.default_level = info);
         counting_assert(cfg_export.logger_cfg.log_default_src(1 to 9) = "__my_src2");
         counting_assert(cfg_export.logger_cfg.log_default_src_length = 9);
-        counting_assert(cfg_export.logger_cfg.log_file_name(1 to 9) = "file2.csv");
-        counting_assert(cfg_export.logger_cfg.log_file_name_length = 9);
+        counting_assert(cfg_export.logger_cfg.log_file_name(1 to 9+output_path'length) = output_path & "file2.csv");
+        counting_assert(cfg_export.logger_cfg.log_file_name_length = 9+output_path'length);
         counting_assert(cfg_export.logger_cfg.log_display_format = off);
         counting_assert(cfg_export.logger_cfg.log_file_format = verbose_csv);
         counting_assert(cfg_export.logger_cfg.log_file_is_initialized);

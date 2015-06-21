@@ -82,7 +82,8 @@ use work.common_pkg.all;
 
 entity tb_AlertLog_Demo_Global_With_Comments is
   generic (
-    runner_cfg : runner_cfg_t := runner_cfg_default);
+    runner_cfg : runner_cfg_t := runner_cfg_default;
+    output_path : string);
 end tb_AlertLog_Demo_Global_With_Comments;
 architecture hierarchy of tb_AlertLog_Demo_Global_With_Comments is
   signal Clk : std_logic := '0';
@@ -124,7 +125,7 @@ begin
       variable filter1, filter2 : log_filter_t;
     begin
       test_runner_setup(runner, runner_cfg);
-      checker_init(stop_level => failure, display_format => verbose);
+      checker_init(stop_level => failure, display_format => verbose, file_name => output_path & "error.csv");
 
       -- VUnit:
       -- Logging in VUnit use separate handlers for display (OUTPUT) and file.
@@ -134,7 +135,7 @@ begin
       -- (you can have any number of loggers with different settings) can be
       -- configured like this. The verbose format means that some extra information
       -- like simulation time is logged with every entry
-      logger_init(display_format => verbose, file_format => verbose, file_name => "./Vunit_Demo_Global.txt");
+      logger_init(display_format => verbose, file_format => verbose, file_name => output_path & "Vunit_Demo_Global.txt");
 
       -- Uncomment this line to use a log file rather than OUTPUT
       -- TranscriptOpen("./Demo_Global.txt") ;
@@ -155,7 +156,7 @@ begin
       -- VUnit:
       -- Every logger has a default name, called the source, which is visible when a verbose format
       -- is used. The default name can be overridden when a log call is made
-      logger_init(default_src => "AlertLog_Demo_Global", display_format => verbose, file_format => verbose, file_name => "./Vunit_Demo_Global.txt");
+      logger_init(default_src => "AlertLog_Demo_Global", display_format => verbose, file_format => verbose, file_name => output_path & "Vunit_Demo_Global.txt");
 
       SetAlertLogName("AlertLog_Demo_Global");
       wait for 0 ns;              -- make sure all processes have elaborated
@@ -373,4 +374,3 @@ begin
   end block Uart_1;
 
 end hierarchy;
-
