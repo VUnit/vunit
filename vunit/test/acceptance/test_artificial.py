@@ -165,7 +165,6 @@ EXPECTED_REPORT = (
     ("passed", "lib.tb_no_fail_after_cleanup"),
     ("failed", "lib.tb_elab_fail"),
 
-    # @TODO verify that these are actually run in separate simulations
     ("passed", "lib.tb_same_sim_all_pass.Test 1"),
     ("passed", "lib.tb_same_sim_all_pass.Test 2"),
     ("passed", "lib.tb_same_sim_all_pass.Test 3"),
