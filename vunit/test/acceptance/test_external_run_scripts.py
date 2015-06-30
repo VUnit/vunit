@@ -25,20 +25,20 @@ class TestExternalRunScripts(unittest.TestCase):
     Verify that example projects run correctly
     """
 
-    def test_uart_example_project(self):
-        self.check(join(ROOT, "examples", "uart", "run.py"))
+    def test_vhdl_uart_example_project(self):
+        self.check(join(ROOT, "examples", "vhdl", "uart", "run.py"))
 
-    def test_preprocessed_uart_example_project(self):
-        self.check(join(ROOT, "examples", "uart", "run_with_preprocessing.py"))
+    def test_vhdl_preprocessed_uart_example_project(self):
+        self.check(join(ROOT, "examples", "vhdl", "uart", "run_with_preprocessing.py"))
 
-    def test_logging_example_project(self):
-        self.check(join(ROOT, "examples", "logging", "compile.py"))
+    def test_vhdl_logging_example_project(self):
+        self.check(join(ROOT, "examples", "vhdl", "logging", "compile.py"))
 
-    def test_check_example_project(self):
-        self.check(join(ROOT, "examples", "check", "compile.py"))
+    def test_vhdl_check_example_project(self):
+        self.check(join(ROOT, "examples", "vhdl", "check", "compile.py"))
 
-    def test_generate_tests_example_project(self):
-        self.check(join(ROOT, "examples", "generate_tests", "run.py"))
+    def test_vhdl_generate_tests_example_project(self):
+        self.check(join(ROOT, "examples", "vhdl", "generate_tests", "run.py"))
         check_report(self.report_file,
                      [("passed", "lib.tb_generated.data_width=1,sign=False.Test 1"),
                       ("passed", "lib.tb_generated.data_width=1,sign=True.Test 1"),
@@ -50,18 +50,18 @@ class TestExternalRunScripts(unittest.TestCase):
                       ("passed", "lib.tb_generated.data_width=4,sign=True.Test 1"),
                       ("passed", "lib.tb_generated.data_width=16,sign=True.Test 2")])
 
-    def test_array_example_project(self):
-        self.check(join(ROOT, "examples", "array", "run.py"))
+    def test_vhdl_array_example_project(self):
+        self.check(join(ROOT, "examples", "vhdl", "array", "run.py"))
 
-    def test_user_guide_example_project(self):
-        self.check(join(ROOT, "examples", "user_guide", "run.py"), exit_code=1)
+    def test_vhdl_user_guide_example_project(self):
+        self.check(join(ROOT, "examples", "vhdl", "user_guide", "run.py"), exit_code=1)
         check_report(self.report_file,
                      [("passed", "lib.tb_example"),
                       ("passed", "lib.tb_example_many.test_pass"),
                       ("failed", "lib.tb_example_many.test_fail")])
 
-    def test_osvvm_integration_example_project(self):
-        self.check(join(ROOT, "examples", "osvvm_integration", "run.py"), exit_code=1)
+    def test_vhdl_osvvm_integration_example_project(self):
+        self.check(join(ROOT, "examples", "vhdl", "osvvm_integration", "run.py"), exit_code=1)
         check_report(self.report_file,
                      [("passed", "lib.tb_alertlog_demo_global_with_comments.Test passing alerts"),
                       ("passed", "lib.tb_alertlog_demo_hierarchy_with_comments.Test passing alerts"),
@@ -72,8 +72,8 @@ class TestExternalRunScripts(unittest.TestCase):
                       ("failed", "lib.tb_alertlog_demo_global.Test failing alerts"),
                       ("failed", "lib.tb_alertlog_demo_hierarchy.Test failing alerts")])
 
-    def test_com_example_project(self):
-        self.check(join(ROOT, "examples", "com", "run.py"))
+    def test_vhdl_com_example_project(self):
+        self.check(join(ROOT, "examples", "vhdl", "com", "run.py"))
 
     def test_array_vhdl_2008(self):
         self.check(join(ROOT, "vhdl", "array", "run.py"))

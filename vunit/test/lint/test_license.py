@@ -37,7 +37,8 @@ class TestLicense(unittest.TestCase):
                 osvvm_directory = abspath(join(ROOT, 'vhdl', 'osvvm'))
                 if is_prefix_of(osvvm_directory, abspath(join(root, file_name))):
                     continue
-                osvvm_integration_example_directory = abspath(join(ROOT, 'examples', 'osvvm_integration', 'src'))
+                osvvm_integration_example_directory = abspath(
+                    join(ROOT, 'examples', 'vhdl', 'osvvm_integration', 'src'))
                 if is_prefix_of(osvvm_integration_example_directory, abspath(join(root, file_name))):
                     continue
                 if splitext(file_name)[1] in ('.vhd', '.vhdl', '.py', '.v', '.sv'):

@@ -4,20 +4,14 @@
 #
 # Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
-# Make vunit python module importable
 from os.path import join, dirname
-import sys
-path_to_vunit = join(dirname(__file__), '..', '..', '..', '..')
-sys.path.append(path_to_vunit)
-#  -------
-
 from vunit import VUnit
 
 root = dirname(__file__)
 
 ui = VUnit.from_argv()
 lib = ui.add_library("lib")
-lib.add_source_files(join(root, "vhdl", "*.vhd"))
+lib.add_source_files(join(root, "*.vhd"))
 
 
 def configure_tb_with_generic_config(ui):
@@ -44,6 +38,7 @@ def configure_tb_with_generic_config(ui):
                         generics=dict(set_generic="set-from-config",
                                       config_generic="set-from-config"),
                         post_check=post_check)
+
 
 def configure_tb_same_sim_all_pass(self):
     def post_check(output_path):

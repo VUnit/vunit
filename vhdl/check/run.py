@@ -4,13 +4,7 @@
 #
 # Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
 
-# Make vunit python module importable
 from os.path import join, dirname, basename
-import sys
-path_to_vunit = join(dirname(__file__), '..', '..')
-sys.path.append(path_to_vunit)
-#  -------
-
 from vunit import VUnit
 from vunit.check_preprocessor import CheckPreprocessor
 from glob import glob

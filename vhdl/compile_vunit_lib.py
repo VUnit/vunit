@@ -2,14 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
-
-# Make vunit python module importable
-from os.path import join, dirname, basename
-import sys
-path_to_vunit = join(dirname(__file__), '..', '..')
-sys.path.append(path_to_vunit)
-#  -------
+# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 from vunit import VUnit
 

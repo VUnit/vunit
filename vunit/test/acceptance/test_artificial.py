@@ -28,7 +28,7 @@ class TestVunitArtificial(unittest.TestCase):
         # Spaces in path intentional to verify that it is supported
         self.output_path = join(dirname(__file__), "artificial out")
         self.report_file = join(self.output_path, "xunit.xml")
-        self.artificial_run = join(dirname(__file__), "artificial", "run.py")
+        self.artificial_run_vhdl = join(dirname(__file__), "artificial", "vhdl", "run.py")
 
     @unittest.skipUnless(simulator_is("modelsim"), "Only modelsim has --new-vsim flag")
     def test_artificial_modelsim_new_vsim(self):
@@ -38,7 +38,7 @@ class TestVunitArtificial(unittest.TestCase):
         self._test_artificial()
 
     def test_artificial_elaborate_only(self):
-        self.check(self.artificial_run,
+        self.check(self.artificial_run_vhdl,
                    exit_code=1,
                    args=["--elaborate"])
 
@@ -52,14 +52,14 @@ class TestVunitArtificial(unittest.TestCase):
 
         check_report(self.report_file, elab_expected_report)
 
-        self.check(self.artificial_run,
+        self.check(self.artificial_run_vhdl,
                    exit_code=0,
                    clean=False,
                    args=["--elaborate", "lib.tb_pass"])
         check_report(self.report_file, [
             ("passed", "lib.tb_pass")])
 
-        self.check(self.artificial_run,
+        self.check(self.artificial_run_vhdl,
                    exit_code=1,
                    clean=False,
                    args=["--elaborate", "lib.tb_elab_fail"])
@@ -71,34 +71,34 @@ class TestVunitArtificial(unittest.TestCase):
         Utility function to run and check the result of all test benches
         using either persistent or non-persistent simulator interface mode
         """
-        self.check(self.artificial_run,
+        self.check(self.artificial_run_vhdl,
                    exit_code=1,
                    args=args)
         check_report(self.report_file, EXPECTED_REPORT)
 
     def test_run_selected_tests_in_same_sim_test_bench(self):
-        self.check(self.artificial_run,
+        self.check(self.artificial_run_vhdl,
                    exit_code=0,
                    clean=False,
                    args=["*same_sim_some_fail*Test 1*"])
         check_report(self.report_file, [
             ("passed", "lib.tb_same_sim_some_fail.Test 1")])
 
-        self.check(self.artificial_run,
+        self.check(self.artificial_run_vhdl,
                    exit_code=1,
                    clean=False,
                    args=["*same_sim_some_fail*Test 2*"])
         check_report(self.report_file, [
             ("failed", "lib.tb_same_sim_some_fail.Test 2")])
 
-        self.check(self.artificial_run,
+        self.check(self.artificial_run_vhdl,
                    exit_code=0,
                    clean=False,
                    args=["*same_sim_some_fail*Test 3*"])
         check_report(self.report_file, [
             ("passed", "lib.tb_same_sim_some_fail.Test 3")])
 
-        self.check(self.artificial_run,
+        self.check(self.artificial_run_vhdl,
                    exit_code=1,
                    clean=False,
                    args=["*same_sim_some_fail*Test 2*", "*same_sim_some_fail*Test 3*"])
@@ -141,10 +141,10 @@ class TestVunitArtificial(unittest.TestCase):
         self.assertEqual(retcode, exit_code)
 
     def test_exit_0_flag(self):
-        self.check(self.artificial_run,
+        self.check(self.artificial_run_vhdl,
                    exit_code=1,
                    args=["lib.tb_fail"])
-        self.check(self.artificial_run,
+        self.check(self.artificial_run_vhdl,
                    exit_code=0,
                    args=["--exit-0", "lib.tb_fail"])
 

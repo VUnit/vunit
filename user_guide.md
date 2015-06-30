@@ -187,27 +187,27 @@ Elapsed time was 0.3 seconds
 Some failed!
 ```
 
-The above example code can be found in `examples/user_guide/`.
+The above example code can be found in [examples/vhdl/user_guide/](examples/vhdl/user_guide/).
 
 # More examples
 There are many examples demonstrating more specific usage of VUnit listed below:
-* [examples/user_guide/](examples/user_guide/)
+* [examples/vhdl/user_guide/](examples/vhdl/user_guide/)
   * The most minimal VUnit project covering the basics of this user guide.
 
-* [examples/uart/](examples/uart/)
+* [examples/vhdl/uart/](examples/vhdl/uart/)
   * A more realistic test bench of an UART to show VUnit usage on a typical module.
-  In addition to the normal [run.py](examples/uart/run.py) it also contains a [run_with_preprocessing.py](examples/uart/run_with_preprocessing.py) to demonstrate the benefit of    location and check preprocessing.
+  In addition to the normal [run.py](examples/vhdl/uart/run.py) it also contains a [run_with_preprocessing.py](examples/vhdl/uart/run_with_preprocessing.py) to demonstrate the benefit of    location and check preprocessing.
 
-* [examples/array/](examples/array/)
+* [examples/vhdl/array/](examples/vhdl/array/)
   * Demonstrates the `array_t` data type of [array_pkg](vhdl/array/src/array_pkg.vhd) which can be used to handle dynamically sized 1D, 2D and 3D data as well as storing and loading it from csv and raw files.
 
-* [generate_tests](examples/generate_tests)
+* [generate_tests](examples/vhdl/generate_tests)
   * Demonstrates generating multiple test runs of the same test bench with different generic values.
 
-* [vivado](examples/vivado)
+* [vivado](examples/vhdl/vivado)
   * Demonstrates compiling and performing behavioral simulation of Vivado IPs with VUnit.
 
-* [com](examples/com)
+* [com](examples/vhdl/com)
   * Demonstrates the `com` message passing package which can be used to communicate arbitrary objects between processes. Further reading can be found in the [com user guide](vhdl/com/user_guide.md)
 
 ## Selecting simulator backend
