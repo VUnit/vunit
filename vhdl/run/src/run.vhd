@@ -6,8 +6,15 @@
 --
 -- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
+use work.log_types_pkg.all;
+use work.log_special_types_pkg.all;
+use work.log_pkg.all;
+use work.check_types_pkg.all;
+use work.check_pkg.all;
+use work.string_ops.all;
 use work.dictionary.all;
 use work.vunit_stop_pkg.vunit_stop;
+use std.textio.all;
 
 package body run_pkg is
   procedure test_runner_setup (
@@ -97,7 +104,7 @@ package body run_pkg is
 
   procedure test_runner_cleanup (
     signal runner: inout runner_sync_t;
-    constant checker_stat : in checker_stat_t := (0, 0, 0);
+    constant external_failure : in boolean;
     constant disable_simulation_exit : in boolean := false) is
     variable stat : checker_stat_t;
   begin
@@ -112,8 +119,7 @@ package body run_pkg is
     wait for 0 ns;
     debug(runner_trace_logger, "Entering test runner exit phase.");
     get_checker_stat(stat);
-    stat := stat + checker_stat;
-    runner.exit_without_errors <= (stat.n_failed = 0);
+    runner.exit_without_errors <= (stat.n_failed = 0) and not external_failure;
 
     runner_init;
     runner.locks(test_runner_setup to test_runner_cleanup) <= (others => (false, false));
@@ -129,6 +135,14 @@ package body run_pkg is
       end if;
       report "Test runner exit." severity failure;
     end if;
+  end procedure test_runner_cleanup;
+
+  procedure test_runner_cleanup (
+    signal runner: inout runner_sync_t;
+    constant checker_stat : in checker_stat_t := (0, 0, 0);
+    constant disable_simulation_exit : in boolean := false) is
+  begin
+    test_runner_cleanup(runner, checker_stat.n_failed > 0, disable_simulation_exit);
   end procedure test_runner_cleanup;
 
   impure function num_of_enabled_test_cases

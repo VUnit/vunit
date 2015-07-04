@@ -7,15 +7,9 @@
 --
 -- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
-use work.log_types_pkg.all;
-use work.log_special_types_pkg.all;
-use work.log_pkg.all;
-use work.check_pkg.all;
-use work.check_types_pkg.all;
-use work.string_ops.all;
+use work.check_types_pkg.checker_stat_t;
 use work.run_base_pkg.all;
 use work.run_types_pkg.all;
-use std.textio.all;
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -49,6 +43,11 @@ package run_pkg is
     signal runner: inout runner_sync_t;
     constant checker_stat : in checker_stat_t := (0, 0, 0);
     constant disable_simulation_exit : in    boolean := false);
+
+  procedure test_runner_cleanup (
+    signal runner: inout runner_sync_t;
+    constant external_failure : in boolean;
+    constant disable_simulation_exit : in boolean := false);
 
   impure function test_suite_error (
     constant err : boolean)

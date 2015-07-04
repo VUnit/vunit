@@ -111,6 +111,7 @@ def add_builtins(library, vhdl_standard, mock_lang=False, mock_log=False):
         files = []
 
         files += ["vunit_context.vhd"]
+        files += ["vunit_run_context.vhd"]
         files += [join("run", "src", "stop_body_2008.vhd")]
 
         return files

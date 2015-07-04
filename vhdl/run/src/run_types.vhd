@@ -7,10 +7,6 @@
 -- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 use std.textio.all;
-use work.log_types_pkg.all;
-use work.log_special_types_pkg.all;
-use work.log_pkg.all;
-use work.check_types_pkg.all;
 use work.dictionary.all;
 
 library ieee;
