@@ -6,7 +6,7 @@ The idea in VUnit is to have a single point of entry for compiling and running a
 ## Python Interface
 
 The public interface of VUnit is exposed through the `VUnit` class
-that can be imported directly from the vunit module.
+that can be imported directly from the vunit module. To make VUnit visible to Python you need a PYTHONPATH environment variable which includes the path to the VUnit root directory containing this user guide. Note that you shouldn't point to the vunit directory within the root directory.
 
 ```python
 # file: run.py
