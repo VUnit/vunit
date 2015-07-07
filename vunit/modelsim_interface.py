@@ -243,7 +243,7 @@ class ModelSimInterface(object):
 proc vunit_load {{{{vsim_extra_args ""}}}} {{
     {set_generic_str}
     set vsim_failed [catch {{
-        vsim {{*}}${{vsim_extra_args}} {vsim_flags}
+        eval vsim ${{vsim_extra_args}} {{{vsim_flags}}}
     }}]
     if {{${{vsim_failed}}}} {{
        echo Command 'vsim ${{vsim_extra_args}} {vsim_flags}' failed
