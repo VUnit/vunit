@@ -139,6 +139,46 @@ end entity;
         self.assertEqual(generics[1].subtype_indication.code, "boolean")
         self.assertEqual(generics[1].subtype_indication.type_mark, "boolean")
 
+    def test_parsing_entity_with_generics_corner_cases(self):
+        self.parse_single_entity("""\
+entity name is end entity;
+""")
+
+        entity = self.parse_single_entity("""\
+entity name is generic(g : t); end entity;
+""")
+        self.assertEqual(len(entity.generics), 1)
+        self.assertEqual(entity.generics[0].identifier, "g")
+
+        entity = self.parse_single_entity("""\
+entity name is generic
+(
+g : t
+);
+end entity;
+""")
+        self.assertEqual(len(entity.generics), 1)
+        self.assertEqual(entity.generics[0].identifier, "g")
+
+        entity = self.parse_single_entity("""\
+end architecture; entity name is generic
+(
+g : t
+);
+end entity;
+""")
+        self.assertEqual(len(entity.generics), 1)
+        self.assertEqual(entity.generics[0].identifier, "g")
+
+        entity = self.parse_single_entity("""\
+entity name is foo_generic
+(
+g : t
+);
+end entity;
+""")
+        self.assertEqual(len(entity.generics), 0)
+
     def test_parsing_entity_with_ports(self):
         entity = self.parse_single_entity("""\
 entity name is

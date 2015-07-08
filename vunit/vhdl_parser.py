@@ -121,8 +121,7 @@ class VHDLPackageBody(object):
         self.identifier = identifier
 
     _package_body_pattern = re.compile(r"""
-        (^|\A)                         # Beginning of line or start of string
-        \s*                            # Potential whitespaces
+        \b                             # Word boundary
         package                        # package keyword
         \s+                            # At least one whitespace
         body                           # body keyword
@@ -151,8 +150,7 @@ class VHDLConfiguration(object):
         self.entity = entity
 
     _configuration_re = re.compile(r"""
-        (^|\A)                # Beginning of line or start of string
-        \s*                   # Potential whitespaces
+        \b                    # Word boundary
         configuration         # configuration keyword
         \s+                   # At least one whitespace
         (?P<id>[a-zA-Z][\w]*) # An identifier
@@ -182,8 +180,7 @@ class VHDLArchitecture(object):
         self.entity = entity
 
     _architecture_re = re.compile(r"""
-        (^|\A)                # Beginning of line or start of string
-        \s*                   # Potential whitespaces
+        \b                    # Word boundary
         architecture          # architecture keyword
         \s+                   # At least one whitespace
         (?P<id>[a-zA-Z][\w]*) # An identifier
@@ -219,8 +216,7 @@ class VHDLPackage(object):
         self.array_types = array_types
 
     _package_start_re = re.compile(r"""
-        (^|\A)                # Beginning of line or start of string
-        \s*                   # Potential whitespaces
+        \b                    # Word boundary
         package               # package keyword
         \s+                   # At least one whitespace
         (?P<id>[a-zA-Z][\w]*) # An identifier
@@ -236,8 +232,7 @@ class VHDLPackage(object):
         for package in cls._package_start_re.finditer(code):
             identifier = package.group('id')
             package_end = re.compile(r"""
-                (^|\A)                        # Beginning of line or start of string
-                [\s]*                         # Potential whitespaces
+                \b                            # Word boundary
                 end                           # end keyword
                 (\s+package)?                 # Optional package keyword
                 (\s+""" + identifier + r""")? # Optional identifier
@@ -321,8 +316,7 @@ class VHDLEntity(object):
                                                mode=mode))
 
     _entity_start_re = re.compile(r"""
-        (^|\A)                # Beginning of line or start of string
-        \s*                   # Potential whitespaces
+        \b                    # Word boundary
         entity                # entity keyword
         \s+                   # At least one whitespace
         (?P<id>[a-zA-Z][\w]*) # An identifier
@@ -338,10 +332,8 @@ class VHDLEntity(object):
         for entity in cls._entity_start_re.finditer(code):
             identifier = entity.group('id')
             sub_code = code[entity.start():]
-
             entity_end_re = re.compile(r"""
-                (^|\A)                        # Beginning of line or start of string
-                [\s]*                         # Potential whitespaces
+                \b                            # Word boundary
                 end                           # end keyword
                 [\s]*                         # Potential whitespaces
                 (entity)?                     # Optional entity keyword
@@ -363,8 +355,7 @@ class VHDLEntity(object):
         # Extract identifier
         re_flags = re.MULTILINE | re.IGNORECASE | re.VERBOSE
         entity_start = re.compile(r"""
-            \A                    # Start of string
-            \s*                   # Potential whitespaces
+            \b                    # Word boundary
             entity                # entity keyword
             \s+                   # At least one whitespace
             (?P<id>[a-zA-Z][\w]*) # An identifier
@@ -385,11 +376,10 @@ class VHDLEntity(object):
         """
         re_flags = re.MULTILINE | re.IGNORECASE | re.VERBOSE
         generic_clause_start = re.compile(r"""
-            ^                             # Beginning of line
-            [\s]*                         # Potential whitespaces
-            generic                       # generic keyword
-            [\s]*                         # Potential whitespaces
-            \(                             # Opening parenthesis
+            \b                          # Word boundary
+            generic                     # generic keyword
+            [\s]*                       # Potential whitespaces
+            \(                          # Opening parenthesis
             """, re_flags)
         match = generic_clause_start.search(code)
         if match:
@@ -475,9 +465,8 @@ class VHDLContext(object):
         self.identifier = identifier
 
     _context_start_re = re.compile(r"""
-        (^|\A)                # Beginning of line or start of string
-        \s*                   # Potential whitespaces
-        context                # context keyword
+        \b                    # Word boundary
+        context               # context keyword
         \s+                   # At least one whitespace
         (?P<id>[a-zA-Z][\w]*) # An identifier
         \s+                   # At least one whitespace
@@ -654,8 +643,7 @@ class VHDLEnumerationType(object):
         self.literals = literals
 
     _enum_declaration_re = re.compile(r"""
-        (^|\A)                      # Beginning of line or start of string
-        \s*
+        \b                    # Word boundary
         type
         \s+
         (?P<id>[a-zA-Z][\w]*)       # An identifier
@@ -688,8 +676,7 @@ class VHDLRecordType(object):
         self.elements = elements
 
     _record_declaration_re = re.compile(r"""
-        (^|\A)                      # Beginning of line or start of string
-        \s*
+        \b                    # Word boundary
         type
         \s+
         (?P<id>[a-zA-Z][\w]*)       # An identifier
@@ -763,8 +750,7 @@ class VHDLArrayType(object):
         \s+range\s+<>\s*""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
 
     _array_declaration_re = re.compile(r"""
-        (^|\A)
-        \s*
+        \b                    # Word boundary
         type
         \s+
         (?P<id>[a-zA-Z][\w]*)
@@ -865,8 +851,7 @@ class VHDLReference(object):
                         "configuration")
 
     _uses_re = re.compile(r"""
-            (^|\A)                         # Beginning of line or start of string
-            \s*                            # Potential whitespaces
+            \b                             # Word boundary
             (?P<use_type>use|context)      # use or context keyword
             \s+                            # At least one whitespace
             (?P<id>[a-zA-Z][\w]*(\.[a-zA-Z][\w]*){1,2})
@@ -913,7 +898,7 @@ class VHDLReference(object):
         return references
 
     _entity_reference_re = re.compile(
-        r'(^|\A|\s)\s*entity\s+(?P<lib>[a-zA-Z]\w*)\.(?P<ent>[a-zA-Z]\w*)\s*(\((?P<arch>[a-zA-Z]\w*)\))?',
+        r'\bentity\s+(?P<lib>[a-zA-Z]\w*)\.(?P<ent>[a-zA-Z]\w*)\s*(\((?P<arch>[a-zA-Z]\w*)\))?',
         re.MULTILINE | re.IGNORECASE)
 
     @classmethod
@@ -930,7 +915,7 @@ class VHDLReference(object):
         return references
 
     _configuration_reference_re = re.compile(
-        r'(^|\A|\s)\s*configuration\s+(?P<lib>[a-zA-Z]\w*)\.(?P<cfg>[a-zA-Z]\w*)',
+        r'\bconfiguration\s+(?P<lib>[a-zA-Z]\w*)\.(?P<cfg>[a-zA-Z]\w*)',
         re.MULTILINE | re.IGNORECASE)
 
     @classmethod
