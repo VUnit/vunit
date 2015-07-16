@@ -222,23 +222,6 @@ end package;
 """)
         self.assertEqual(package.identifier, "simple")
 
-    def test_parsing_package_with_constants(self):
-        package = self.parse_single_package("""\
-package name is
-  constant foo : integer := 15 - 1 * 2;
-  constant bar : boolean := false or true;
-end package;
-""")
-        self.assertEqual(package.identifier, "name")
-        constants = package.constant_declarations
-        self.assertEqual(len(constants), 2)
-        self.assertEqual(constants[0].identifier, "foo")
-        self.assertEqual(constants[0].expression, "15 - 1 * 2")
-        self.assertEqual(constants[0].subtype_indication.type_mark, "integer")
-        self.assertEqual(constants[1].identifier, "bar")
-        self.assertEqual(constants[1].expression, "false or true")
-        self.assertEqual(constants[1].subtype_indication.type_mark, "boolean")
-
     def test_parsing_context(self):
         context = self.parse_single_context("""\
 context foo is

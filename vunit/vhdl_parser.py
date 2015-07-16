@@ -207,10 +207,9 @@ class VHDLPackage(object):
     """
     Representation of a VHDL package
     """
-    def __init__(self, identifier, constant_declarations,  # pylint: disable=too-many-arguments
+    def __init__(self, identifier,
                  enumeration_types, record_types, array_types):
         self.identifier = identifier
-        self.constant_declarations = constant_declarations
         self.enumeration_types = enumeration_types
         self.record_types = record_types
         self.array_types = array_types
@@ -251,34 +250,11 @@ class VHDLPackage(object):
         """
         # Extract identifier
         identifier = cls._package_start_re.match(code).group('id')
-        constant_declarations = cls._find_constant_declarations(code)
         enumeration_types = [e for e in VHDLEnumerationType.find(code)]
         record_types = [r for r in VHDLRecordType.find(code)]
         array_types = [a for a in VHDLArrayType.find(code)]
 
-        return cls(identifier, constant_declarations, enumeration_types, record_types, array_types)
-
-    @classmethod
-    def _find_constant_declarations(cls, code):
-        """
-        Append all constant declarations found within the code to constant_declarations list
-        """
-        re_flags = re.MULTILINE | re.IGNORECASE | re.VERBOSE
-        constant_start = re.compile(r"""
-            ^                             # Beginning of line
-            [\s]*                         # Potential whitespaces
-            constant                      # constant keyword
-            \s+                           # At least one whitespace
-            (?P<id>[a-zA-Z][\w]*)         # An identifier
-            [\s]*                         # Potential whitespaces
-            :                             # Colon
-            """, re_flags)
-
-        constant_declarations = []
-        for constant in constant_start.finditer(code):
-            sub_code = code[constant.start():].strip().splitlines()[0].strip()
-            constant_declarations.append(VHDLConstantDeclaration.parse(sub_code))
-        return constant_declarations
+        return cls(identifier, enumeration_types, record_types, array_types)
 
 
 class VHDLEntity(object):

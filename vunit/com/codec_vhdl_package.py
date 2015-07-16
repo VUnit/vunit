@@ -18,10 +18,9 @@ class CodecVHDLPackage(VHDLPackage):
     """Class derived from VHDLPackage to provide codec generator functionality for the data types definied
     in the package."""
 
-    def __init__(self, identifier, constant_declarations,  # pylint: disable=too-many-arguments
+    def __init__(self, identifier,
                  enumeration_types, record_types, array_types):
         super(CodecVHDLPackage, self).__init__(identifier,
-                                               constant_declarations,
                                                enumeration_types,
                                                record_types,
                                                array_types)
@@ -35,12 +34,11 @@ class CodecVHDLPackage(VHDLPackage):
         """
         # Extract identifier
         identifier = cls._package_start_re.match(code).group('id')
-        constant_declarations = cls._find_constant_declarations(code)
         enumeration_types = [e for e in CodecVHDLEnumerationType.find(code)]
         record_types = [r for r in CodecVHDLRecordType.find(code)]
         array_types = [a for a in CodecVHDLArrayType.find(code)]
 
-        return cls(identifier, constant_declarations, enumeration_types, record_types, array_types)
+        return cls(identifier, enumeration_types, record_types, array_types)
 
     @classmethod
     def find_named_package(cls, code, name):
