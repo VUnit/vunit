@@ -497,46 +497,6 @@ class VHDLSubtypeIndication(object):
         return self.code
 
 
-class VHDLConstantDeclaration(object):
-    """
-    Represents a constant declaration
-    """
-    def __init__(self, identifier, subtype_indication, expression):
-        self.identifier = identifier
-        self.subtype_indication = subtype_indication
-        self.expression = expression
-
-    @classmethod
-    def parse(cls, code):
-        """
-        Returns a new instance from parsing the code
-        """
-        # Extract identifier
-        re_flags = re.MULTILINE | re.IGNORECASE | re.VERBOSE
-        constant_start = re.compile(r"""
-            ^                             # Beginning of line
-            [\s]*                         # Potential whitespaces
-            constant                      # constant keyword
-            \s+                           # At least one whitespace
-            (?P<id>[a-zA-Z][\w]*)         # An identifier
-            [\s]*                         # Potential whitespaces
-            :                             # Colon
-            """, re_flags)
-        constant_declaration = constant_start.match(code)
-        identifier = constant_declaration.group('id')
-
-        # Extract subtype indication
-        sub_code = code[constant_declaration.end():]
-        expression_start = sub_code.find(':=')
-        subtype_indication = VHDLSubtypeIndication.parse(sub_code[:expression_start].strip())
-
-        # Extract expression
-        sub_code = sub_code[expression_start + 2:]
-        expression_end = sub_code.find(';')
-        expression = sub_code[: expression_end].strip()
-        return cls(identifier, subtype_indication, expression)
-
-
 class VHDLInterfaceElement(object):
     """
     Represents a VHDL interface element
