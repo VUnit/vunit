@@ -6,7 +6,7 @@ The idea in VUnit is to have a single point of entry for compiling and running a
 ## Python Interface
 
 The public interface of VUnit is exposed through the `VUnit` class
-that can be imported directly from the vunit module. Read [this](#making-vunit-importable) to make VUnit visible to Python.
+that can be imported directly from the vunit module. Read [this](#installing-vunit) to make VUnit visible to Python.
 
 ```python
 # file: run.py
@@ -282,7 +282,7 @@ vu.set_sim_option("vsim_extra_args.gui", "-voptargs=+acc")
 ## Ctrl-C when using Git/MSYS Bash on Windows
 VUnit will catch Ctrl-C and perform a clean shutdown closing all started simulation processes and printing the test report so far. On Git/MSYS Bash on Windows however there is a mechanism that hard kills a process a very short time after pressing Ctrl-C often prohibiting VUnit from completing its shutdown. This can leave simulation process open which have to be manually killed. See this [stack overflow post](http://stackoverflow.com/questions/23678045/control-c-kills-ipython-in-git-bash-on-windows-7) for tips on how to remove this mechanism.
 
-## Making VUnit importable
+## Installing VUnit
 To be able to import VUnit in your `run.py` script you need to make it visible to Python or else the following error occurs:
 ```console
 Traceback (most recent call last): 
@@ -291,8 +291,9 @@ Traceback (most recent call last):
 ImportError: No module named vunit 
 ```
 
-There are two methods to make VUnit importable in your `run.py` script:
+There are three methods to make VUnit importable in your `run.py` script:
 
-1. Set the `PYTHONPATH` environment variable to include the path to the VUnit root directory containing this user guide. Note that you shouldn't point to the vunit directory within the root directory.
+1. Install it in your Python environment using `python setup.py install`
+2. Set the `PYTHONPATH` environment variable to include the path to the VUnit root directory containing this user guide. Note that you shouldn't point to the vunit directory within the root directory.
 
-2. Add a `import sys; sys.path.append("/path/to/vunit_root/")` statement in your `run.py` file **before** the `import vunit` statement.  
+3. Add a `import sys; sys.path.append("/path/to/vunit_root/")` statement in your `run.py` file **before** the `import vunit` statement.  
