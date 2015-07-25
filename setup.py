@@ -15,7 +15,6 @@ directories += glob.glob(os.path.join('vhdl', 'vhdl', 'src', 'lib', 'std'))
 directories += glob.glob(os.path.join('vhdl', 'array', 'src'))
 directories += glob.glob(os.path.join('vhdl', 'check', 'src'))
 directories += glob.glob(os.path.join('vhdl', 'com', 'src'))
-directories += glob.glob(os.path.join('vhdl', 'com', 'src'))
 directories += glob.glob(os.path.join('vhdl', 'dictionary', 'src'))
 directories += glob.glob(os.path.join('vhdl', 'logging', 'src'))
 directories += glob.glob(os.path.join('vhdl', 'osvvm'))
@@ -25,7 +24,6 @@ directories += glob.glob(os.path.join('vhdl', 'string_ops', 'src'))
 for directory in directories:
     vhdl_files += glob.glob(os.path.join(directory, '*.vhd'))
 vhdl_files = [os.path.join("..", i) for i in vhdl_files]
-print(vhdl_files)
 
 setup(
     name='vunit',
@@ -33,9 +31,18 @@ setup(
     packages=['vunit', 'vunit.com', 'vunit.test', 'vunit.test.lint', 'vunit.test.unit', 'vunit.test.acceptance'],
     package_data={'vunit': vhdl_files},
     url='https://github.com/LarsAsplund/vunit',
-    classifiers=['License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
+    classifiers=['Development Status :: 5 - Production/Stable',
+                 'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
+                 'Natural Language :: English',
                  'Intended Audience :: Developers',
-                 'Programming Language :: Python :: 3 :: Only'],
+                 'Programming Language :: Python :: 2.7',
+                 'Programming Language :: Python :: 3.3',
+                 'Programming Language :: Python :: 3.4',
+                 'Programming Language :: Python :: 3.5',
+                 'Operating System :: Microsoft :: Windows',
+                 'Operating System :: MacOS :: MacOS X',
+                 'Operating System :: POSIX :: Linux',
+                 'Topic :: Software Development :: Testing'],
     author='Lars Asplund',
     author_email='lars.anders.asplund@gmail.com',
     description="VUnit is an open source unit testing framework for VHDL.",
