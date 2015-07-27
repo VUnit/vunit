@@ -5,24 +5,25 @@
 # Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
 
 from distutils.core import setup
-import glob
 import os
 
-vhdl_files = []
-directories = glob.glob('vhdl')
-directories += glob.glob(os.path.join('vhdl', 'vhdl', 'src', 'lang'))
-directories += glob.glob(os.path.join('vhdl', 'vhdl', 'src', 'lib', 'std'))
-directories += glob.glob(os.path.join('vhdl', 'array', 'src'))
-directories += glob.glob(os.path.join('vhdl', 'check', 'src'))
-directories += glob.glob(os.path.join('vhdl', 'com', 'src'))
-directories += glob.glob(os.path.join('vhdl', 'dictionary', 'src'))
-directories += glob.glob(os.path.join('vhdl', 'logging', 'src'))
-directories += glob.glob(os.path.join('vhdl', 'osvvm'))
-directories += glob.glob(os.path.join('vhdl', 'run', 'src'))
-directories += glob.glob(os.path.join('vhdl', 'path', 'src'))
-directories += glob.glob(os.path.join('vhdl', 'string_ops', 'src'))
-for directory in directories:
-    vhdl_files += glob.glob(os.path.join(directory, '*.vhd'))
+
+def find_all_files(directory):
+    """
+    Recursively find all files within directory
+    """
+    result = []
+    for root, dirnames, filenames in os.walk(directory):
+        for filename in filenames:
+            result.append(os.path.join(root, filename))
+    return result
+
+vhdl_files = find_all_files('vhdl')
+
+# Makes data folder appear one directory level up from the vunit package in the installed system folder.
+# This is required since references are made with the source directory layout in mind
+# @TODO This is not very nice and could potentially cause problems,
+#       we should move the data folders into the vunit package folder to keep locality
 vhdl_files = [os.path.join("..", i) for i in vhdl_files]
 
 setup(
