@@ -27,7 +27,7 @@ vhdl_files = find_all_files('vhdl')
 vhdl_files = [os.path.join("..", i) for i in vhdl_files]
 
 setup(
-    name='vunit',
+    name='vunit_hdl',
     version='v0.26.0',
     packages=['vunit', 'vunit.com', 'vunit.test', 'vunit.test.lint', 'vunit.test.unit', 'vunit.test.acceptance'],
     package_data={'vunit': vhdl_files},
