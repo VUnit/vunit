@@ -104,7 +104,7 @@ class GHDLInterface:
             self._libraries[library.name] = library.directory
 
         for source_file in project.get_files_in_compile_order():
-            print('Compiling ' + source_file.name + ' ...')
+            print('Compiling ' + source_file.name + ' into ' + source_file.library.name + ' ...')
 
             if source_file.file_type == 'vhdl':
                 success = self.compile_vhdl_file(source_file.name, source_file.library.name,
