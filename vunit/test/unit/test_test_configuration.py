@@ -171,6 +171,10 @@ class TestTestConfiguration(unittest.TestCase):
     def test_fail_on_unknown_sim_option(self):
         self.assertRaises(ValueError, self.cfg.set_sim_option, "unknown", "value")
 
+    def test_issue_65(self):
+        self.cfg.set_generic(name="name", value=1, scope=create_scope())
+        self.cfg.set_sim_option(name="vsim_extra_args", value="-quiet", scope=create_scope())
+
     @staticmethod
     def write_file(name, contents):
         with open(name, "w") as fwrite:

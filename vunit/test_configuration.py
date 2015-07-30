@@ -68,7 +68,7 @@ class TestConfiguration(object):
                          name, self._known_options)
             raise ValueError(name)
 
-        if scope not in self._generics:
+        if scope not in self._sim_options:
             self._sim_options[scope] = {}
         self._sim_options[scope][name] = value
 
