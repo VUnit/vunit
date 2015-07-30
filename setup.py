@@ -28,7 +28,7 @@ vhdl_files = [os.path.join("..", i) for i in vhdl_files]
 
 setup(
     name='vunit_hdl',
-    version='v0.26.0',
+    version='v0.27.0',
     packages=['vunit', 'vunit.com', 'vunit.test', 'vunit.test.lint', 'vunit.test.unit', 'vunit.test.acceptance'],
     package_data={'vunit': vhdl_files},
     url='https://github.com/LarsAsplund/vunit',
