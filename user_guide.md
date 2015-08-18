@@ -189,6 +189,9 @@ Some failed!
 
 The above example code can be found in [examples/vhdl/user_guide/](examples/vhdl/user_guide/).
 
+# VUnit Checks
+The above examples used the VHDL `assert` statement for self-checking. Vunit also provides a more complete assertion library described in the [Check User Guide](vhdl/check/user_guide.md).
+
 # More examples
 There are many examples demonstrating more specific usage of VUnit listed below:
 * [examples/vhdl/user_guide/](examples/vhdl/user_guide/)
@@ -197,6 +200,9 @@ There are many examples demonstrating more specific usage of VUnit listed below:
 * [examples/vhdl/uart/](examples/vhdl/uart/)
   * A more realistic test bench of an UART to show VUnit usage on a typical module.
   In addition to the normal [run.py](examples/vhdl/uart/run.py) it also contains a [run_with_preprocessing.py](examples/vhdl/uart/run_with_preprocessing.py) to demonstrate the benefit of    location and check preprocessing.
+
+* [examples/vhdl/check/](examples/vhdl/check/)
+  * Demonstrates VUnit check subprograms. 
 
 * [examples/vhdl/array/](examples/vhdl/array/)
   * Demonstrates the `array_t` data type of [array_pkg](vhdl/array/src/array_pkg.vhd) which can be used to handle dynamically sized 1D, 2D and 3D data as well as storing and loading it from csv and raw files.
@@ -209,6 +215,10 @@ There are many examples demonstrating more specific usage of VUnit listed below:
 
 * [com](examples/vhdl/com)
   * Demonstrates the `com` message passing package which can be used to communicate arbitrary objects between processes. Further reading can be found in the [com user guide](vhdl/com/user_guide.md)
+
+* [examples/vhdl/logging/](examples/vhdl/logging/)
+  * Demonstrates VUnit's support for logging.  
+  
 
 ## Selecting simulator backend
 VUnit automatically detects which simulators are available on the `PATH` environment variable and by default selects the first one found. For people who have multiple simulators installed the `VUNIT_SIMULATOR` environment variable can be set to either `modelsim` or `ghdl` to explicitly choose the simulator backend.
