@@ -1,0 +1,12 @@
+{
+ signal: [
+   {name: 'clock', wave: 'p..........'},
+   {name: 'en', wave: '1..........'},
+   {name: 'start_event', wave: '010...10...'},
+   {name: 'end_event', wave: '0..10...10.'},
+   {name: 'expr', wave: '===.=.=....', data: ['101','111','101','111','1U1']},
+   {name: 'active_clock_edge', wave: '=..........', data: ['rising_edge']}
+ ],
+ head:{
+   tick:0,
+ }}
