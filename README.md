@@ -47,7 +47,9 @@ VUnit depends on a number of components as listed below. Full VUnit functionalit
 # Getting Started
 There are a number of ways to get started.
 
-*  The [User Guide](user_guide.md) will guide users on how to use start using the basic features of VUnit but also provides information about more speficic and adanced usage.
+*  The [VUnit User Guide](user_guide.md) will guide users on how to use start using the basic features of VUnit but also provides information about more specific and advanced usage.
+*  The [Check User Guide](vhdl/check/user_guide.md) presents the check package.
+*  The [Log User Guide](vhdl/logging/user_guide.md) presents the log package.
 *  Have a look at the examples under [examples](examples). The examples in [logging](examples/vhdl/logging) and [check](examples/vhdl/check) are tutorials that should be single-stepped in your simulator.
 *  There are also various presentations of VUnit on [YouTube](https://www.youtube.com/channel/UCCPVCaeWkz6C95aRUTbIwdg). For example [an introduction to unit testing (6 min)](https://www.youtube.com/watch?v=PZuBqcxS8t4) and a [short introduction to VUnit (12 min)](https://www.youtube.com/watch?v=D8s_VLD91tw).
 
