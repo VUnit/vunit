@@ -13,6 +13,7 @@ use work.check_types_pkg.all;
 use work.check_pkg.all;
 use work.string_ops.all;
 use work.dictionary.all;
+use work.path.all;
 use work.vunit_stop_pkg.vunit_stop;
 use std.textio.all;
 
@@ -28,23 +29,15 @@ package body run_pkg is
     runner_init;
     get_logger_cfg(runner_trace_logger, logger_cfg);
     if not logger_cfg.log_file_is_initialized then
-      if has_key(runner_cfg, "output path") then
         logger_init(runner_trace_logger,
                     "Test Runner",
-                    get(runner_cfg, "output path") & "test_runner_trace.csv",
+                  join(output_path(runner_cfg), "test_runner_trace.csv"),
                     off,
                     verbose_csv);
-      else
-        logger_init(runner_trace_logger,
-                    "Test Runner",
-                    "test_runner_trace.csv",
-                    off,
-                    verbose_csv);
-      end if;
     end if;
 
+    get_checker_cfg(checker_cfg);
     if active_python_runner(runner_cfg) then
-      get_checker_cfg(checker_cfg);
       if checker_cfg.logger_cfg.log_file_is_initialized then
         checker_cfg.logger_cfg.log_stop_level := checker_cfg.default_level;
         checker_init(checker_cfg.default_level,
@@ -57,8 +50,12 @@ package body run_pkg is
                      true);
       else
         checker_init(stop_level => error,
-                     file_name => get(runner_cfg, "output path") & "error.csv");
+                     file_name => join(output_path(runner_cfg), "error.csv"),
+                     file_format => verbose_csv);
       end if;
+    elsif not checker_cfg.logger_cfg.log_file_is_initialized then
+      checker_init(file_name => join(output_path(runner_cfg), "error.csv"),
+                   file_format => verbose_csv);
     end if;
 
     set_phase(test_runner_setup);

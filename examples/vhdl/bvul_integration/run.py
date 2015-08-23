@@ -18,12 +18,12 @@ from vunit import VUnit, VUnitCLI
 root = dirname(__file__)
 
 # These lines add the option to specify the Bitvis Utility Library root directory
-# from the command line (python run_1.py -b <path to my BVUL root>). They
+# from the command line (python run.py -b <path to my BVUL root>). They
 # can be replaced by a single line, ui = VUnit.from_argv(), if you assign the root
 # directory to the bvul_root variable directly
 cli = VUnitCLI()
 cli.parser.add_argument('-b', '--bvul-root',
-                        default=root,
+                        required=True,
                         help='Bitvis Utility Library root directory')
 args = cli.parse_args()
 ui = VUnit.from_args(args)
