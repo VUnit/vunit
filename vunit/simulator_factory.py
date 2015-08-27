@@ -46,8 +46,7 @@ class SimulatorFactory(object):
         available_simulators = cls.available_simulators()
         name_mapping = {simulator_class.name: simulator_class for simulator_class in cls.supported_simulators()}
         if len(available_simulators) == 0:
-            raise RuntimeError("No available simulator detected. "
-                               "Simulator executables must be available in PATH environment variable.")
+            return None
 
         if environ_name in os.environ:
             simulator_name = os.environ[environ_name]
@@ -67,7 +66,9 @@ class SimulatorFactory(object):
         """
         Add command line arguments to parser
         """
-        cls.select_simulator().add_arguments(parser)
+        simulator = cls.select_simulator()
+        if simulator is not None:
+            simulator.add_arguments(parser)
 
     def __init__(self, args):
         self._args = args
@@ -76,7 +77,10 @@ class SimulatorFactory(object):
 
     @property
     def simulator_name(self):
-        return self._simulator_class.name
+        if self._simulator_class is None:
+            return "none"
+        else:
+            return self._simulator_class.name
 
     @property
     def simulator_output_path(self):
@@ -86,6 +90,11 @@ class SimulatorFactory(object):
         """
         Create new simulator instance
         """
+
+        if self._simulator_class is None:
+            raise RuntimeError("No available simulator detected. "
+                               "Simulator executables must be available in PATH environment variable.")
+
         if not exists(self.simulator_output_path):
             os.makedirs(self.simulator_output_path)
 
