@@ -61,22 +61,22 @@ class TestDependencyGraph(unittest.TestCase):
         graph.add_dependency('b', 'g')
         result = graph.toposort()
         self._check_result(result, dependencies)
-    
-    def test_get_dependencies_should_return_empty_set_when_no_dependendencies(self):
+
+    def test_get_direct_dependencies_should_return_empty_set_when_no_dependendencies(self):
         nodes = ['a', 'b', 'c']
         dependencies = []
         graph = DependencyGraph()
         self._add_nodes_and_dependencies(graph, nodes, dependencies)
-        result = graph.get_dependencies('b')
+        result = graph.get_direct_dependencies('b')
         self.assertTrue(isinstance(result, (set)))
         self.assertFalse(result)
-        
-    def test_get_dependencies_should_return_dependendencies_set(self):
+
+    def test_get_direct_dependencies_should_return_dependendencies_set(self):
         nodes = ['a', 'b', 'c', 'd']
         dependencies = [('a', 'b'), ('a', 'c')]
         graph = DependencyGraph()
         self._add_nodes_and_dependencies(graph, nodes, dependencies)
-        result = graph.get_dependencies('c')
+        result = graph.get_direct_dependencies('c')
         print result
         self.assertFalse('b' in result)
         self.assertTrue('a' in result)

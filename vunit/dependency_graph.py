@@ -72,10 +72,11 @@ class DependencyGraph(object):
 
         return new_dependency
 
-    def get_dependent(self, nodes):
+    @staticmethod
+    def _visit(nodes, graph):
         """
-        Get all nodes which are directly or indirectly dependend on
-        the input nodes
+        Follow graph edges starting from the nodes iteratively
+        returning all the nodes visited
         """
         dependencies = set()
         leafs = set(nodes)
@@ -84,14 +85,31 @@ class DependencyGraph(object):
             next_leafs = set()
             for node in leafs:
                 dependencies.add(node)
-                if node not in self._forward:
+                if node not in graph:
                     continue
 
-                for next_node in self._forward[node]:
+                for next_node in graph[node]:
                     next_leafs.add(next_node)
             leafs = next_leafs
 
         return dependencies
 
-    def get_dependencies(self, node):
+    def get_dependent(self, nodes):
+        """
+        Get all nodes which are directly or indirectly dependent on
+        the input nodes
+        """
+        return self._visit(nodes, self._forward)
+
+    def get_dependencies(self, nodes):
+        """
+        Get all nodes which are directly or indirectly dependencies of
+        the input nodes
+        """
+        return self._visit(nodes, self._backward)
+
+    def get_direct_dependencies(self, node):
+        """
+        Get the direct dependencies of node
+        """
         return self._backward.get(node, set())

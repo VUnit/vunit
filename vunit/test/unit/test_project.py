@@ -449,6 +449,28 @@ end architecture;
         self.assert_compiles("comp1.vhd", before="top.vhd")
         self.assert_compiles("comp2.vhd", before="top.vhd")
 
+    def test_get_dependencies_in_compile_order_without_target(self):
+        self.create_dummy_three_file_project(False)
+        deps = self.project.get_dependencies_in_compile_order(target=None)
+        self.assertEqual(len(deps), 3)
+        self.assertTrue(deps[0] == self.project.get_source_files_in_order()[0])
+        self.assertTrue(deps[1] == self.project.get_source_files_in_order()[1])
+        self.assertTrue(deps[2] == self.project.get_source_files_in_order()[2])
+
+    def test_get_dependencies_in_compile_order_with_target(self):
+        self.create_dummy_three_file_project(False)
+        deps = self.project.get_dependencies_in_compile_order(target=self.project.get_source_files_in_order()[1].name)
+        self.assertEqual(len(deps), 2)
+        self.assertTrue(deps[0] == self.project.get_source_files_in_order()[0])
+        self.assertTrue(deps[1] == self.project.get_source_files_in_order()[1])
+
+        # To test that indirect dependencies are included
+        deps = self.project.get_dependencies_in_compile_order(target=self.project.get_source_files_in_order()[2].name)
+        self.assertEqual(len(deps), 3)
+        self.assertTrue(deps[0] == self.project.get_source_files_in_order()[0])
+        self.assertTrue(deps[1] == self.project.get_source_files_in_order()[1])
+        self.assertTrue(deps[2] == self.project.get_source_files_in_order()[2])
+
     def create_dummy_three_file_project(self, update_file1=False):
         """
         Create a projected containing three dummy files

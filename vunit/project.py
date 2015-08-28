@@ -213,6 +213,27 @@ class Project(object):
 
         return sorted(affected_files, key=comparison_key)
 
+    def get_dependencies_in_compile_order(self, target):
+        """
+        Get a list of dependencies of target, if target is specified.
+        Otherwise, get a list of all files in the project.
+        The files will be listed in compile order.
+        target -- absolute or relative path to a file
+        """
+        if target is None:
+            return self.get_files_in_compile_order(incremental=False)
+
+        target_file = self._source_files[target]
+        dependency_graph = self._create_dependency_graph()
+        affected_files = dependency_graph.get_dependencies(set([target_file]))
+        compile_order = dependency_graph.toposort()
+
+        def comparison_key(source_file):
+            return compile_order.index(source_file)
+
+        sorted_files = sorted(affected_files, key=comparison_key)
+        return sorted_files
+
     def get_source_files_in_order(self):
         """
         Get a list of source files in the order they were added to the project
@@ -253,7 +274,7 @@ class Project(object):
                          source_file.name)
             return True
 
-        for other_file in dependency_graph.get_dependencies(source_file):
+        for other_file in dependency_graph.get_direct_dependencies(source_file):
             other_content_hash_file_name = self._hash_file_name_of(other_file)
 
             if not ostools.file_exists(other_content_hash_file_name):

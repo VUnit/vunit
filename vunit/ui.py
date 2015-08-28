@@ -473,6 +473,16 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             library = self.library(library_name)
         add_osvvm(library)
 
+    def get_project_compile_order(self, target=None):
+        """
+        Get all project files in compile order.  An optional target
+        file may be specified causing only its direct and indirect
+        dependencies to be included.
+        """
+        if target is not None:
+            target = abspath(target)
+        return self._project.get_dependencies_in_compile_order(target=target)
+
 
 class LibraryFacade(object):
     """
