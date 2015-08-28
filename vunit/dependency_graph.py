@@ -94,4 +94,4 @@ class DependencyGraph(object):
         return dependencies
 
     def get_dependencies(self, node):
-        return self._backward.get(node, [])
+        return self._backward.get(node, set())
