@@ -212,6 +212,29 @@ class Project(object):
             return compile_order.index(source_file)
 
         return sorted(affected_files, key=comparison_key)
+    
+    def get_dependencies_in_compile_order(self, target):
+        """
+        Get a list of dependencies of target, if target is specified.
+        Otherwise, get a list of all files in the project.
+        The files will be listed in compile order.
+        target -- absolute or relative path to a file
+        """
+        dependency_graph = self._create_dependency_graph()
+        if target is None:
+            sorted_files = self.get_files_in_compile_order(incremental=False)
+        else:
+            target_file = self._source_files[target]
+    
+            affected_files = dependency_graph.get_dependencies(target_file)
+            affected_files.add(target_file)
+            compile_order = dependency_graph.toposort()
+
+            def comparison_key(source_file):
+                return compile_order.index(source_file)
+            
+            sorted_files = sorted(affected_files, key=comparison_key)
+        return sorted_files
 
     def get_source_files_in_order(self):
         """
