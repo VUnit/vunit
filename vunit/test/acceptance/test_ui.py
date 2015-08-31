@@ -10,13 +10,13 @@ Acceptance test of the VUnit public interface class
 
 
 import unittest
-from string import Template
+from string import Template, upper, lower
 from tempfile import NamedTemporaryFile
 from os.path import join, dirname, basename, exists
 from os import remove
 import re
 from re import MULTILINE
-from vunit.ui import VUnit
+from vunit.ui import VUnit, VHDL_EXTENSIONS, VERILOG_EXTENSIONS
 
 
 class TestPreprocessor(object):
@@ -86,7 +86,7 @@ end architecture;
         ui.add_library('lib')
         return ui
 
-    def _create_temp_files(self, num_files):
+    def _create_temp_files(self, num_files, file_suffix='.vhd'):
         """
         Create and return num_files temporary files containing the
         same source code but with different entity names depending on
@@ -94,7 +94,7 @@ end architecture;
         """
         files = [None] * num_files
         for i in range(num_files):
-            with NamedTemporaryFile(mode='w', suffix='.vhd', delete=False) as files[i]:
+            with NamedTemporaryFile(mode='w', suffix=file_suffix, delete=False) as files[i]:
                 files[i].write(self._source.substitute(entity='foo%d' % i))
         return files
 
@@ -194,6 +194,27 @@ end architecture;
                 report='log("Here I am!"); -- VUnitfier preprocessor: Report turned off, keeping original code.')
             self.assertEqual(fread.read(), expectd)
 
+        self._delete_temp_files(files)
+
+    def test_supported_source_file_suffixes(self):
+        """Test adding a supported filetype, of any case, is accepted."""
+        ui = self._create_ui()
+        accepted_extensions = VHDL_EXTENSIONS + VERILOG_EXTENSIONS
+        allowable_extensions = [ext for ext in accepted_extensions]
+        allowable_extensions.extend([upper(ext) for ext in accepted_extensions])
+        allowable_extensions.append(VHDL_EXTENSIONS[0][0] + upper(VHDL_EXTENSIONS[0][1]) +
+                                    VHDL_EXTENSIONS[0][2:])  # mixed case
+        for ext in allowable_extensions:
+            files = self._create_temp_files(1, ext)
+            ui.add_source_files(files[0].name, 'lib')
+            self._delete_temp_files(files)
+
+    def test_unsupported_source_file_suffixes(self):
+        """Test adding an unsupported filetype is rejected"""
+        ui = self._create_ui()
+        bogus_ext = '.docx'  # obviously not an HDL file
+        files = self._create_temp_files(1, bogus_ext)
+        self.assertRaises(RuntimeError, ui.add_source_files, files[0].name, 'lib')
         self._delete_temp_files(files)
 
 
