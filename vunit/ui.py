@@ -14,6 +14,7 @@ from __future__ import print_function
 import sys
 import os
 import traceback
+import string
 
 from os.path import exists, abspath, join, basename, splitext
 from glob import glob
@@ -42,6 +43,10 @@ from vunit.com import codec_generator
 
 import logging
 LOGGER = logging.getLogger(__name__)
+
+# lower case representation of supported extensions
+VHDL_EXTENSIONS = (".vhd", ".vhdl")
+VERILOG_EXTENSIONS = (".v", ".vp", ".sv")
 
 
 class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-public-methods
@@ -665,9 +670,9 @@ def file_type_of(file_name):
     Return the file type of file_name based on the file ending
     """
     _, ext = splitext(file_name)
-    if ext in (".vhd", ".vhdl"):
+    if string.lower(ext) in VHDL_EXTENSIONS:
         return "vhdl"
-    elif ext in (".v", ".vp", ".sv"):
+    elif string.lower(ext) in VERILOG_EXTENSIONS:
         return "verilog"
     else:
         raise RuntimeError("Unknown file ending '%s' of %s" % (ext, file_name))
