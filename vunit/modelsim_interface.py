@@ -222,7 +222,8 @@ class ModelSimInterface(object):
         """
         set_generic_str = "\n    ".join(('set vunit_generic_%s {%s}' % (name, value)
                                          for name, value in config.generics.items()))
-        set_generic_name_str = " ".join(('-g%s="${vunit_generic_%s}"' % (name, name) for name in config.generics))
+        set_generic_name_str = " ".join(('-g/%s/%s="${vunit_generic_%s}"' % (entity_name, name, name)
+                                         for name in config.generics))
         pli_str = " ".join("-pli {%s}" % fix_path(name) for name in config.pli)
         architecture_suffix = "(%s)" % architecture_name
 

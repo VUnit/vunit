@@ -50,5 +50,6 @@ def configure_tb_same_sim_all_pass(self):
 
 configure_tb_with_generic_config(ui)
 configure_tb_same_sim_all_pass(ui)
+lib.entity("tb_no_generic_override").set_generic("g_val", False)
 lib.entity("tb_ieee_warning").test("pass").disable_ieee_warnings()
 ui.main()

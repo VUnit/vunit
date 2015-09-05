@@ -183,5 +183,7 @@ EXPECTED_REPORT = (
     ("passed", "lib.tb_with_generic_config.Test 3"),
     ("passed", "lib.tb_with_generic_config.Test 4"),
 
+    ("passed", "lib.tb_no_generic_override"),
+
     ("passed", "lib.tb_ieee_warning.pass"),
     ("failed", "lib.tb_ieee_warning.fail"))
