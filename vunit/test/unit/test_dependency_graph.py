@@ -77,7 +77,6 @@ class TestDependencyGraph(unittest.TestCase):
         graph = DependencyGraph()
         self._add_nodes_and_dependencies(graph, nodes, dependencies)
         result = graph.get_direct_dependencies('c')
-        print result
         self.assertFalse('b' in result)
         self.assertTrue('a' in result)
 
