@@ -912,10 +912,4 @@ def remove_comments(code):
     """
     Return the code with comments removed
     """
-    new_code = ''
-    lines = code.split('\n')
-    for line in lines:
-        line_wo_comments = line.split('--')[0] + '\n'
-        new_code = new_code + line_wo_comments
-
-    return new_code
+    return re.sub(r'--[^\n]*', '', code)
