@@ -31,7 +31,7 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_vhdl_preprocessed_uart_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "uart", "run_with_preprocessing.py"))
 
-    @unittest.skipIf(simulator_is("ghdl"), "GHDL does not support verilog")
+    @unittest.skipUnless(simulator_is("modelsim"), "Only modelsim supports verilog")
     def test_verilog_uart_example_project(self):
         self.check(join(ROOT, "examples", "verilog", "uart", "run.py"))
 
@@ -64,7 +64,7 @@ class TestExternalRunScripts(unittest.TestCase):
                       ("passed", "lib.tb_example_many.test_pass"),
                       ("failed", "lib.tb_example_many.test_fail")])
 
-    @unittest.skipIf(simulator_is("ghdl"), "GHDL does not support verilog")
+    @unittest.skipUnless(simulator_is("modelsim"), "Only modelsim supports verilog")
     def test_verilog_user_guide_example_project(self):
         self.check(join(ROOT, "examples", "verilog", "user_guide", "run.py"), exit_code=1)
         check_report(self.report_file,
@@ -93,12 +93,12 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_check_vhdl_2008(self):
         self.check(join(ROOT, "vhdl", "check", "run.py"))
 
-    @unittest.skipIf(simulator_is("ghdl"), "GHDL only supports 2008")
+    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_check_vhdl_2002(self):
         self.check(join(ROOT, "vhdl", "check", "run.py"),
                    vhdl_standard='2002')
 
-    @unittest.skipIf(simulator_is("ghdl"), "GHDL only supports 2008")
+    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_check_vhdl_93(self):
         self.check(join(ROOT, "vhdl", "check", "run.py"),
                    vhdl_standard='93')
@@ -106,12 +106,12 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_logging_vhdl_2008(self):
         self.check(join(ROOT, "vhdl", "logging", "run.py"))
 
-    @unittest.skipIf(simulator_is("ghdl"), "GHDL only supports 2008")
+    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_logging_vhdl_2002(self):
         self.check(join(ROOT, "vhdl", "logging", "run.py"),
                    vhdl_standard='2002')
 
-    @unittest.skipIf(simulator_is("ghdl"), "GHDL only supports 2008")
+    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_logging_vhdl_93(self):
         self.check(join(ROOT, "vhdl", "logging", "run.py"),
                    vhdl_standard='93')
@@ -119,12 +119,12 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_run_vhdl_2008(self):
         self.check(join(ROOT, "vhdl", "run", "run.py"))
 
-    @unittest.skipIf(simulator_is("ghdl"), "GHDL only supports 2008")
+    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_run_vhdl_2002(self):
         self.check(join(ROOT, "vhdl", "run", "run.py"),
                    vhdl_standard='2002')
 
-    @unittest.skipIf(simulator_is("ghdl"), "GHDL only supports 2008")
+    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_run_vhdl_93(self):
         self.check(join(ROOT, "vhdl", "run", "run.py"),
                    vhdl_standard='93')
@@ -132,12 +132,12 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_string_ops_vhdl_2008(self):
         self.check(join(ROOT, "vhdl", "string_ops", "run.py"))
 
-    @unittest.skipIf(simulator_is("ghdl"), "GHDL only supports 2008")
+    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_string_ops_vhdl_2002(self):
         self.check(join(ROOT, "vhdl", "string_ops", "run.py"),
                    vhdl_standard='2002')
 
-    @unittest.skipIf(simulator_is("ghdl"), "GHDL only supports 2008")
+    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_string_ops_vhdl_93(self):
         self.check(join(ROOT, "vhdl", "string_ops", "run.py"),
                    vhdl_standard='93')
@@ -145,12 +145,12 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_dictionary_vhdl_2008(self):
         self.check(join(ROOT, "vhdl", "dictionary", "run.py"))
 
-    @unittest.skipIf(simulator_is("ghdl"), "GHDL only supports 2008")
+    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_dictionary_vhdl_2002(self):
         self.check(join(ROOT, "vhdl", "dictionary", "run.py"),
                    vhdl_standard='2002')
 
-    @unittest.skipIf(simulator_is("ghdl"), "GHDL only supports 2008")
+    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_dictionary_vhdl_93(self):
         self.check(join(ROOT, "vhdl", "dictionary", "run.py"),
                    vhdl_standard='93')
@@ -158,12 +158,12 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_path_vhdl_2008(self):
         self.check(join(ROOT, "vhdl", "path", "run.py"))
 
-    @unittest.skipIf(simulator_is("ghdl"), "GHDL only supports 2008")
+    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_path_vhdl_2002(self):
         self.check(join(ROOT, "vhdl", "path", "run.py"),
                    vhdl_standard='2002')
 
-    @unittest.skipIf(simulator_is("ghdl"), "GHDL only supports 2008")
+    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_path_vhdl_93(self):
         self.check(join(ROOT, "vhdl", "path", "run.py"),
                    vhdl_standard='93')
@@ -191,7 +191,6 @@ class TestExternalRunScripts(unittest.TestCase):
         new_env = environ.copy()
         new_env["VUNIT_VHDL_STANDARD"] = vhdl_standard
         retcode = call([sys.executable, run_file,
-                        "-p4",
                         "--clean",
                         "--output-path=%s" % self.output_path,
                         "--xunit-xml=%s" % self.report_file] + args,

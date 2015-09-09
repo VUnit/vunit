@@ -79,7 +79,7 @@ class TestVunitArtificial(unittest.TestCase):
     def test_run_selected_tests_in_same_sim_test_bench_vhdl(self):
         self._test_run_selected_tests_in_same_sim_test_bench(self.artificial_run_vhdl)
 
-    @unittest.skipIf(simulator_is("ghdl"), "GHDL does not support verilog")
+    @unittest.skipUnless(simulator_is("modelsim"), "Only modelsim supports verilog")
     def test_run_selected_tests_in_same_sim_test_bench_verilog(self):
         self._test_run_selected_tests_in_same_sim_test_bench(self.artificial_run_verilog)
 
@@ -116,7 +116,7 @@ class TestVunitArtificial(unittest.TestCase):
             ("failed", "lib.tb_same_sim_some_fail.Test 2"),
             ("skipped", "lib.tb_same_sim_some_fail.Test 3")])
 
-    @unittest.skipIf(simulator_is("ghdl"), "GHDL does not support verilog")
+    @unittest.skipUnless(simulator_is("modelsim"), "Only modelsim supports verilog")
     def test_artificial_verilog(self):
         self.check(self.artificial_run_verilog,
                    exit_code=1)
@@ -160,7 +160,6 @@ class TestVunitArtificial(unittest.TestCase):
         if clean:
             args += ["--clean"]
         retcode = call([sys.executable, run_file,
-                        "-p4",
                         "--output-path=%s" % self.output_path,
                         "--xunit-xml=%s" % self.report_file] + args,
                        env=new_env)
