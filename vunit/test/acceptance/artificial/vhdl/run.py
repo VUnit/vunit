@@ -32,7 +32,7 @@ def configure_tb_with_generic_config(ui):
 
     def post_check(output_path):
         with open(join(output_path, "post_check.txt"), "r") as fptr:
-            return fptr.read() == "Test 4 was here"
+            return "Test 4 was here" in fptr.read()
 
     tests[4].add_config("",
                         generics=dict(set_generic="set-from-config",
@@ -43,7 +43,7 @@ def configure_tb_with_generic_config(ui):
 def configure_tb_same_sim_all_pass(self):
     def post_check(output_path):
         with open(join(output_path, "post_check.txt"), "r") as fptr:
-            return fptr.read() == "Test 3 was here"
+            return "Test 3 was here" in fptr.read()
     ent = ui.library("lib").entity("tb_same_sim_all_pass")
     ent.add_config("", generics=dict(), post_check=post_check)
 
