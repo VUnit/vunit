@@ -87,6 +87,7 @@ class ModelSimInterface(object):
         self._vsim_processes = {}
         self._lock = threading.Lock()
         self._transcript_id = 0
+        self._prefix = dirname(find_executable('vsim'))
 
         self._persistent = persistent
         self._gui_mode = gui_mode
@@ -110,7 +111,7 @@ class ModelSimInterface(object):
 
             transcript_id = self._transcript_id
             self._transcript_id += 1
-            vsim_process = Process(["vsim", "-c",
+            vsim_process = Process([join(self._prefix, "vsim"), "-c",
                                     "-l", join(dirname(self._modelsim_ini), "transcript%i" % transcript_id)])
             self._vsim_processes[ident] = vsim_process
 
@@ -128,7 +129,8 @@ class ModelSimInterface(object):
         try:
             env = os.environ.copy()
             del env["MODELSIM"]
-            output = subprocess.check_output(['vmap', '-c'], cwd=cwd, stderr=subprocess.PIPE, env=env)
+            output = subprocess.check_output([join(self._prefix, 'vmap'), '-c'],
+                                             cwd=cwd, stderr=subprocess.PIPE, env=env)
         except subprocess.CalledProcessError as exc:
             LOGGER.error("Failed to create %s by running 'vmap -c' in %s exit code was %i",
                          self._modelsim_ini, cwd, exc.returncode)
@@ -165,7 +167,7 @@ class ModelSimInterface(object):
         Compiles a vhdl file into a specific library using a specfic vhdl_standard
         """
         try:
-            proc = Process(['vcom', '-quiet', '-modelsimini', self._modelsim_ini,
+            proc = Process([join(self._prefix, 'vcom'), '-quiet', '-modelsimini', self._modelsim_ini,
                             '-' + vhdl_standard, '-work', library_name, source_file_name])
             proc.consume_output()
         except Process.NonZeroExitCode:
@@ -177,7 +179,7 @@ class ModelSimInterface(object):
         Compiles a verilog file into a specific library
         """
         try:
-            proc = Process(['vlog', '-sv', '-quiet', '-modelsimini', self._modelsim_ini,
+            proc = Process([join(self._prefix, 'vlog'), '-sv', '-quiet', '-modelsimini', self._modelsim_ini,
                             '-work', library_name, source_file_name])
             proc.consume_output()
         except Process.NonZeroExitCode:
@@ -194,13 +196,13 @@ class ModelSimInterface(object):
             os.makedirs(dirname(path))
 
         if not file_exists(path):
-            proc = Process(['vlib', '-unix', path])
+            proc = Process([join(self._prefix, 'vlib'), '-unix', path])
             proc.consume_output(callback=None)
 
         if library_name in mapped_libraries and mapped_libraries[library_name] == path:
             return
 
-        proc = Process(['vmap', '-modelsimini', self._modelsim_ini, library_name, path])
+        proc = Process([join(self._prefix, 'vmap'), '-modelsimini', self._modelsim_ini, library_name, path])
         proc.consume_output(callback=None)
 
     def _get_mapped_libraries(self):
@@ -411,14 +413,13 @@ if {![vunit_load -vhdlvariablelogging]} {
 """ % fix_path(common_file_name)
         return tcl
 
-    @staticmethod
-    def _run_batch_file(batch_file_name, gui=False):
+    def _run_batch_file(self, batch_file_name, gui=False):
         """
         Run a test bench in batch by invoking a new vsim process from the command line
         """
 
         try:
-            args = ['vsim', '-quiet',
+            args = [join(self._prefix, 'vsim'), '-quiet',
                     "-l", join(dirname(batch_file_name), "transcript"),
                     '-do', "do %s" % fix_path(batch_file_name)]
 
