@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 -- @TODO add explicit check of csv string data
 use std.textio.all;
@@ -112,8 +112,8 @@ begin
 
       elsif run("Has set 2d") then
         arr.init_2d(width => 1, height => 2);
-        arr.set(0, 0, value => 7);
-        arr.set(0, 1, value => 11);
+        arr.set(x => 0, y => 0, value => 7);
+        arr.set(x => 0, y => 1, value => 11);
 
       elsif run("Test reshape") then
         arr.init(length => 1);

@@ -48,7 +48,7 @@ begin
 
       for y in 0 to image.height-1 loop
         for x in 0 to image.width-1 loop
-          result.set(x, y,
+          result.set(x => x, y => y,
                      value => (image.get(minimum(x+1, image.width-1),y) -
                                image.get(maximum(x-1, 0), y)));
         end loop;
