@@ -29,12 +29,19 @@ class Project(object):
     Compute lists of source files to recompile based on file contents,
     timestamps and depenencies derived from the design hierarchy.
     """
-    def __init__(self, depend_on_components=False, vhdl_parser=VHDLParser()):
+    def __init__(self,
+                 depend_on_components=False,
+                 depend_on_package_body=False,
+                 vhdl_parser=VHDLParser()):
+        """
+        depend_on_package_body - Package users depend also on package body
+        """
         self._vhdl_parser = vhdl_parser
         self._libraries = {}
         self._source_files = {}
         self._source_files_in_order = []
         self._depend_on_components = depend_on_components
+        self._depend_on_package_body = depend_on_package_body
 
     @staticmethod
     def _validate_library_name(library_name):
@@ -134,6 +141,9 @@ class Project(object):
 
                     file_name = architectures[name]
                     yield self._source_files[file_name]
+
+            elif ref.is_package_reference() and self._depend_on_package_body:
+                yield library.get_package_body(primary_unit.name).source_file
 
     def _find_component_design_unit_dependencies(self, source_file):
         """
@@ -319,6 +329,7 @@ class Library(object):
 
         # Entity objects
         self._entities = {}
+        self._package_bodies = {}
 
         # Entity name to architecture names mapping
         self._architecture_names = {}
@@ -351,6 +362,9 @@ class Library(object):
                 file_name = design_unit.source_file.name
                 self._architecture_names[design_unit.primary_design_unit][design_unit.name] = file_name
 
+            if design_unit.unit_type == 'package body':
+                self._package_bodies[design_unit.primary_design_unit] = design_unit
+
     def get_entities(self):
         """
         Return a list of all entites in the design with their generic names and architecture names
@@ -363,6 +377,9 @@ class Library(object):
 
     def get_architectures_of(self, entity_name):
         return self._architecture_names[entity_name]
+
+    def get_package_body(self, name):
+        return self._package_bodies[name]
 
     def has_entity(self, name):
         """
@@ -466,7 +483,7 @@ class SourceFile(object):
             result.append(DesignUnit(configuration.identifier, self, 'configuration'))
 
         for body in design_file.package_bodies:
-            result.append(DesignUnit('package body for ' + body.identifier,
+            result.append(DesignUnit(body.identifier,
                                      self, 'package body', False, body.identifier))
 
         return result

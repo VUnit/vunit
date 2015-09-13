@@ -145,7 +145,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         Create Project instance
         """
         database = self._create_database()
-        self._project = Project(vhdl_parser=CachedVHDLParser(database=database))
+        self._project = Project(
+            vhdl_parser=CachedVHDLParser(database=database),
+            depend_on_package_body=self._simulator_factory.package_users_depend_on_bodies())
 
     def _create_database(self):
         """

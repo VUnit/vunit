@@ -176,15 +176,20 @@ end package body;
 
         self.assert_compiles("package.vhd", before="body.vhd")
 
-    def test_finds_use_package_dependencies(self):
+    def create_module_package_and_body(self):
+        """
+        Help function to create a three file project
+        with a package, a package body and a module using the package
+        """
         self.project.add_library("lib", "lib_path")
+
         self.add_source_file("lib", "package.vhd", """
-package foo_pkg is
+package pkg is
 end package;
 """)
 
         self.add_source_file("lib", "body.vhd", """
-package body foo_pkg is
+package body pkg is
 begin
 end package body;
 """)
@@ -192,7 +197,7 @@ end package body;
         self.project.add_library("lib2", "work_path")
         self.add_source_file("lib2", "module.vhd", """
 library lib;
-use lib.foo_pkg.all;
+use lib.pkg.all;
 
 entity module is
 end entity;
@@ -202,7 +207,17 @@ begin
 end architecture;
 """)
 
+    def test_finds_use_package_dependencies(self):
+        self.create_module_package_and_body()
         self.assert_compiles("package.vhd", before="body.vhd")
+        self.assert_compiles("package.vhd", before="module.vhd")
+        self.assert_not_compiles("body.vhd", before="module.vhd")
+
+    def test_finds_extra_package_body_dependencies(self):
+        self.project = Project(depend_on_package_body=True)
+        self.create_module_package_and_body()
+        self.assert_compiles("package.vhd", before="body.vhd")
+        self.assert_compiles("body.vhd", before="module.vhd")
         self.assert_compiles("package.vhd", before="module.vhd")
 
     def test_finds_context_dependencies(self):
@@ -557,13 +572,24 @@ end architecture;
         self.update(file_name)
         self.assertIn(before, [dep.name for dep in self.project.get_files_in_compile_order()])
 
+    def assert_not_compiles(self, file_name, before):
+        """
+        Assert that the compile order of file_name is not before the file named 'before'.
+        """
+        for src_file in self.project.get_files_in_compile_order():
+            self.update(src_file.name)
+        self.assert_should_recompile([])
+        self.stub.tick()
+        self.update(file_name)
+        self.assertNotIn(before, [dep.name for dep in self.project.get_files_in_compile_order()])
+
     def assert_has_package_body(self, source_file_name, package_name):
         """
         Assert that there is a package body with package_name withing source_file_name
         """
         unit = self._find_design_unit(source_file_name,
                                       "package body",
-                                      "package body for " + package_name,
+                                      package_name,
                                       False, package_name)
         self.assertIsNotNone(unit)
 
@@ -628,11 +654,12 @@ end architecture;
 
         for source_file in self.project.get_source_files_in_order():
             for design_unit in source_file.design_units:
+                if design_unit.unit_type != design_unit_type:
+                    continue
                 if design_unit.name != design_unit_name:
                     continue
 
                 self.assertEqual(design_unit.is_primary, is_primary)
-                self.assertEqual(design_unit.unit_type, design_unit_type)
                 self.assertEqual(source_file.name, source_file_name)
                 if not is_primary:
                     self.assertEqual(design_unit.primary_design_unit, primary_design_unit_name)

@@ -904,6 +904,9 @@ class VHDLReference(object):
     def is_entity_reference(self):
         return self.reference_type == 'entity'
 
+    def is_package_reference(self):
+        return self.reference_type == 'use'
+
     def reference_all_names_within(self):
         return self.name_within == "all"
 

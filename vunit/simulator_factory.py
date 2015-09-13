@@ -75,6 +75,15 @@ class SimulatorFactory(object):
         self._output_path = args.output_path
         self._simulator_class = self.select_simulator()
 
+    def package_users_depend_on_bodies(self):
+        """
+        Returns True when package users also depend on package bodies
+        """
+        if self._simulator_class is not None:
+            return self._simulator_class.package_users_depend_on_bodies()
+        else:
+            return False
+
     @property
     def simulator_name(self):
         if self._simulator_class is None:

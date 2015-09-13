@@ -13,6 +13,7 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 from vunit.ostools import Process
+from vunit.simulator_interface import SimulatorInterface
 from vunit.exceptions import CompileError
 
 from os.path import exists, join
@@ -23,7 +24,7 @@ import shlex
 from sys import stdout  # To avoid output catched in non-verbose mode
 
 
-class GHDLInterface:
+class GHDLInterface(SimulatorInterface):
     """
     Interface for GHDL simulator
     """

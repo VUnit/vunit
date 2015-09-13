@@ -12,6 +12,7 @@ Interface towards Mentor Graphics ModelSim
 from __future__ import print_function
 
 from vunit.ostools import Process, write_file, file_exists
+from vunit.simulator_interface import SimulatorInterface
 from os.path import join, dirname, abspath
 import os
 import subprocess
@@ -30,7 +31,7 @@ LOGGER = logging.getLogger(__name__)
 import threading
 
 
-class ModelSimInterface(object):
+class ModelSimInterface(SimulatorInterface):
     """
     Mentor Graphics ModelSim interface
 
