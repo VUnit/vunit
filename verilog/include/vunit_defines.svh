@@ -10,9 +10,8 @@
    end
 
 `define TEST_SUITE \
-   parameter string runner_cfg; \
+   parameter string runner_cfg = ""; \
    import vunit_pkg::*; \
-   test_runner __runner__ = new; \
    initial \
      if (__runner__.setup(runner_cfg)) \
       while (__runner__.loop)

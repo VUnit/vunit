@@ -275,7 +275,7 @@ proc vunit_load {{{{vsim_extra_args ""}}}} {{
     }}
     set no_finished_signal [catch {{examine -internal {{/vunit_finished}}}}]
     set no_vhdl_test_runner_exit [catch {{examine -internal {{/run_base_pkg/runner.exit_simulation}}}}]
-    set no_verilog_test_runner_exit [catch {{examine -internal {{/__runner__}}}}]
+    set no_verilog_test_runner_exit [catch {{examine -internal {{/vunit_pkg/__runner__}}}}]
 
     if {{${{no_finished_signal}} && ${{no_vhdl_test_runner_exit}} && ${{no_verilog_test_runner_exit}}}}  {{
         echo {{Error: Found none of either simulation shutdown mechanisms}}
@@ -317,7 +317,7 @@ proc _vunit_run {} {
 
     set has_vunit_finished_signal [expr ![catch {examine -internal {/vunit_finished}}]]
     set has_vhdl_runner [expr ![catch {examine -internal {/run_base_pkg/runner.exit_simulation}}]]
-    set has_verilog_runner [expr ![catch {examine -internal {/__runner__}}]]
+    set has_verilog_runner [expr ![catch {examine -internal {/vunit_pkg/__runner__}}]]
 
     if {${has_vunit_finished_signal}} {
         set exit_boolean {/vunit_finished}
@@ -328,8 +328,8 @@ proc _vunit_run {} {
         set status_boolean {/run_base_pkg/runner.exit_without_errors}
         set true_value TRUE
     } elseif {${has_verilog_runner}} {
-        set exit_boolean {/__runner__.exit_simulation}
-        set status_boolean {/__runner__.exit_without_errors}
+        set exit_boolean {/vunit_pkg/__runner__.exit_simulation}
+        set status_boolean {/vunit_pkg/__runner__.exit_without_errors}
         set true_value 1
     } else {
         echo "No finish mechanism detected"

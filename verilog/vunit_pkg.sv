@@ -84,7 +84,10 @@ class test_runner;
       end
 
       for (int i=index; i<runner_cfg.len(); i++) begin
-         if (runner_cfg[i] == ",") begin
+	 if (i == runner_cfg.len()-1) begin
+            test_cases_to_run.push_back(runner_cfg.substr(index, i));
+	 end 
+         else if (runner_cfg[i] == ",") begin
             test_cases_to_run.push_back(runner_cfg.substr(index, i-1));
             index = i+2;
             i++;
@@ -108,7 +111,11 @@ class test_runner;
       end
 
       for (int i=index; i<runner_cfg.len(); i++) begin
-         if (runner_cfg[i] == ",") begin
+	 if (i == runner_cfg.len()-1) begin
+            output_path = runner_cfg.substr(index, i);
+            break;
+	 end 
+         else if (runner_cfg[i] == ",") begin
             i++;
             if (runner_cfg[i] != ",") begin
                output_path = runner_cfg.substr(index, i-2);
@@ -219,4 +226,5 @@ class test_runner;
 
 endclass
 
+   test_runner __runner__ = new;
 endpackage
