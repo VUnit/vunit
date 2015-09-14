@@ -17,13 +17,14 @@ use vunit_lib.log_special_types_pkg.all;
 use vunit_lib.log_base_pkg.all;
 use vunit_lib.check_types_pkg.all;
 use vunit_lib.check_special_types_pkg.all;
+use vunit_lib.check_base_pkg.all;
 use vunit_lib.check_pkg.all;
 use work.test_count.all;
 use std.textio.all;
 
 package test_support is
-  alias default_checker_init_from_scratch is checker_init[log_level_t, string, string, log_format_t, log_format_t, log_level_t, character, boolean];
-  alias custom_checker_init_from_scratch is checker_init[checker_t, log_level_t, string, string, log_format_t, log_format_t, log_level_t, character, boolean];
+  alias default_checker_init_from_scratch is vunit_lib.check_pkg.checker_init[log_level_t, string, string, log_format_t, log_format_t, log_level_t, character, boolean];
+  alias custom_checker_init_from_scratch is vunit_lib.check_base_pkg.base_init[checker_t, log_level_t, string, string, log_format_t, log_format_t, log_level_t, character, boolean];
 
   procedure counting_assert (
     constant expr : in boolean;
