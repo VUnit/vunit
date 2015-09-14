@@ -361,7 +361,7 @@ begin
     i := 0;
     while test_suite loop
       check(c, get_phase = test_case_setup, "Phase should be test case setup." & " Got " & runner_phase_t'image(get_phase) & ".");
-      while test_case loop
+      while in_test_case loop
         check(c, get_phase = test_case, "Phase should be test case main."  & " Got " & runner_phase_t'image(get_phase) & ".");
         if i = 0 then
           check_false(c, run("test b"), "Test b should not be enabled at this time.");
@@ -388,7 +388,7 @@ begin
     i := 0;
     while test_suite loop
       check(c, get_phase = test_case_setup, "Phase should be test case setup." & " Got " & runner_phase_t'image(get_phase) & ".");
-      while test_case loop
+      while in_test_case loop
         check(c, get_phase = test_case, "Phase should be test case main."  & " Got " & runner_phase_t'image(get_phase) & ".");
         if i = 0 then
           check_false(c, run("test b"), "Test b should not be enabled at this time.");
@@ -418,7 +418,7 @@ begin
     i := 0;
     while test_suite loop
       check(c, get_phase = test_case_setup, "Phase should be test case setup." & " Got " & runner_phase_t'image(get_phase) & ".");
-      while test_case loop
+      while in_test_case loop
         check(c, get_phase = test_case, "Phase should be test case main."  & " Got " & runner_phase_t'image(get_phase) & ".");
         check(c, i = 0, "The second test case should never be activated");
         check_false(c, run("test b"), "Test b should not be enabled at this time.");
@@ -467,7 +467,7 @@ begin
     exit_gate(runner);
     while test_suite loop
       check(c, now - t_start = 4 ns, "Expected a 4 ns delay due to phase lock");
-      while test_case loop
+      while in_test_case loop
       end loop;
     end loop;
     test_runner_cleanup(runner, disable_simulation_exit => true);
@@ -483,7 +483,7 @@ begin
     wait for 9 ns;
     while test_suite loop
       entry_gate(runner);
-      while test_case loop
+      while in_test_case loop
       end loop;
     end loop;
     test_runner_cleanup(runner, disable_simulation_exit => true);
@@ -499,7 +499,7 @@ begin
     test_runner_setup(runner, "enabled_test_cases : test a,, test b");
     i := 0;
     while test_suite loop
-      while test_case loop
+      while in_test_case loop
         if i = 0 then
           check(c, active_test_case = "test a", "Expected active test case to be ""test a"" but got " & active_test_case);
         else
@@ -515,7 +515,7 @@ begin
     test_case_setup;
     test_runner_setup(runner, "enabled_test_cases : __all__");
     while test_suite loop
-      while test_case loop
+      while in_test_case loop
           check(c, active_test_case = "", "Expected active test case to be """" but got " & active_test_case);
       end loop;
     end loop;
@@ -600,7 +600,7 @@ begin
       write(log_entries(36), string'("Unlocked test case setup phase exit gate."));
       write(log_entries(37), string'("Passed test case setup phase exit gate."));
 
-      while test_case loop
+      while in_test_case loop
         write(log_entries(38), string'("Entering test case phase."));
 
         test_case_entry_gate(runner);
@@ -690,7 +690,7 @@ begin
     test_case_setup;
     test_runner_setup(runner, "enabled_test_cases : test a,, test b,, test c,, test d");
     while test_suite loop
-      while test_case loop
+      while in_test_case loop
         if run("test a") then
           null;
         elsif run("test b") then

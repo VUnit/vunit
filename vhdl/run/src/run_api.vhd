@@ -69,6 +69,8 @@ package run_pkg is
   impure function test_case
     return boolean;
 
+  alias in_test_case is test_case[return boolean];
+
   procedure test_runner_watchdog (
     signal runner                    : inout runner_sync_t;
     constant timeout                 : in    time;
