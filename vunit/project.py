@@ -109,8 +109,8 @@ class Project(object):
             try:
                 primary_unit = library.primary_design_units[unit.primary_design_unit]
             except KeyError:
-                LOGGER.warning("failed to find a primary design unit '%s' in library '%s'",
-                               unit.primary_design_unit, library.name)
+                LOGGER.warning("%s: failed to find a primary design unit '%s' in library '%s'",
+                               source_file.name, unit.primary_design_unit, library.name)
             else:
                 yield primary_unit.source_file
 
@@ -123,15 +123,15 @@ class Project(object):
                 library = self._libraries[ref.library]
             except KeyError:
                 if ref.library not in ("ieee", "std"):
-                    LOGGER.warning("failed to find library '%s'", ref.library)
+                    LOGGER.warning("%s: failed to find library '%s'", source_file.name, ref.library)
                 continue
 
             try:
                 primary_unit = library.primary_design_units[ref.design_unit]
             except KeyError:
                 if not library.is_external:
-                    LOGGER.warning("failed to find a primary design unit '%s' in library '%s'",
-                                   ref.design_unit, library.name)
+                    LOGGER.warning("%s: failed to find a primary design unit '%s' in library '%s'",
+                                   source_file.name, ref.design_unit, library.name)
                 continue
             else:
                 yield primary_unit.source_file
@@ -151,8 +151,12 @@ class Project(object):
                         # Was not a reference to a specific architecture
                         continue
 
-                    file_name = architectures[name]
-                    yield self._source_files[file_name]
+                    if name in architectures:
+                        file_name = architectures[name]
+                        yield self._source_files[file_name]
+                    else:
+                        LOGGER.warning("%s: failed to find architecture '%s' of entity '%s.%s'",
+                                       source_file.name, name, library.name, primary_unit.name)
 
             elif ref.is_package_reference() and self._depend_on_package_body:
                 try:

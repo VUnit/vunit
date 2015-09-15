@@ -16,6 +16,7 @@ import os
 from vunit.ostools import renew_path, write_file
 from vunit.project import Project, file_type_of
 from time import sleep
+from vunit.test.mock_2or3 import mock
 
 
 class TestProject(unittest.TestCase):  # pylint: disable=too-many-public-methods
@@ -359,6 +360,40 @@ end architecture;
 
         self.assert_compiles("ent_a1.vhd", before="top1.vhd")
         self.assert_compiles("ent_a2.vhd", before="top2.vhd")
+
+    @mock.patch("vunit.project.LOGGER")
+    def test_warning_on_missing_specific_architecture_reference(self, mock_logger):
+        self.project.add_library("lib", "lib_path")
+
+        self.add_source_file("lib", "ent.vhd", """
+entity ent is
+end entity;
+""")
+
+        self.add_source_file("lib", "arch.vhd", """
+architecture a1 of ent is
+begin
+end architecture;
+""")
+
+        self.add_source_file("lib", "top.vhd", """
+entity top1 is
+end entity;
+
+architecture a of top1 is
+begin
+  inst1 : entity work.ent(a1);
+  inst2 : entity work.ent(a2); # Missing
+end architecture;
+""")
+
+        self.project.get_files_in_compile_order()
+        warning_calls = mock_logger.warning.call_args_list
+        log_msg = warning_calls[0][0][0] % warning_calls[0][0][1:]
+        self.assertEqual(len(warning_calls), 1)
+        self.assertIn("top.vhd", log_msg)
+        self.assertIn("a2", log_msg)
+        self.assertIn("lib.ent", log_msg)
 
     def test_should_recompile_all_files_initially(self):
         self.create_dummy_three_file_project()
