@@ -86,7 +86,7 @@ class test_runner;
       for (int i=index; i<runner_cfg.len(); i++) begin
 	 if (i == runner_cfg.len()-1) begin
             test_cases_to_run.push_back(runner_cfg.substr(index, i));
-	 end 
+	 end
          else if (runner_cfg[i] == ",") begin
             test_cases_to_run.push_back(runner_cfg.substr(index, i-1));
             index = i+2;
@@ -114,7 +114,7 @@ class test_runner;
 	 if (i == runner_cfg.len()-1) begin
             output_path = runner_cfg.substr(index, i);
             break;
-	 end 
+	 end
          else if (runner_cfg[i] == ",") begin
             i++;
             if (runner_cfg[i] != ",") begin
