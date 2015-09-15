@@ -203,6 +203,7 @@ begin
     variable c : checker_t;
     variable checker_cfg : checker_cfg_t;
     variable runner_cfg : line;
+    variable passed : boolean;
   begin
     logger_init(runner_trace_logger, file_name => output_path & "test_runner_trace.csv");
     checker_init(c, display_format => verbose, default_src => "Test Runner", stop_level => error, file_name => output_path & "error.csv");
@@ -501,9 +502,11 @@ begin
     while test_suite loop
       while in_test_case loop
         if i = 0 then
-          check(c, active_test_case = "test a", "Expected active test case to be ""test a"" but got " & active_test_case);
+          passed := active_test_case = "test a";
+          check(c, passed, "Expected active test case to be ""test a"" but got " & active_test_case);
         else
-          check(c, active_test_case = "test b", "Expected active test case to be ""test b"" but got " & active_test_case);
+          passed := active_test_case = "test b";
+          check(c, passed, "Expected active test case to be ""test b"" but got " & active_test_case);
         end if;
         i := i + 1;
       end loop;
@@ -516,7 +519,8 @@ begin
     test_runner_setup(runner, "enabled_test_cases : __all__");
     while test_suite loop
       while in_test_case loop
-          check(c, active_test_case = "", "Expected active test case to be """" but got " & active_test_case);
+          passed := active_test_case = "";
+          check(c, passed, "Expected active test case to be """" but got " & active_test_case);
       end loop;
     end loop;
     test_runner_cleanup(runner, disable_simulation_exit => true);
@@ -779,7 +783,8 @@ begin
     get_checker_cfg(checker_cfg);
     check(c, checker_cfg.default_level = warning, "Expected default level to be warning");
     check(c, checker_cfg.logger_cfg.log_default_src.all = "my_default_checker", "Expected default src to be ""my_default_checker""");
-    check(c, checker_cfg.logger_cfg.log_file_name.all = output_path & "problems.csv", "Expected file name to be """ & output_path & "problems.csv""");
+    passed := checker_cfg.logger_cfg.log_file_name.all = output_path & "problems.csv";
+    check(c, passed, "Expected file name to be """ & output_path & "problems.csv""");
     check(c, checker_cfg.logger_cfg.log_display_format = verbose, "Expected display format to be verbose");
     check(c, checker_cfg.logger_cfg.log_file_format = level, "Expected file format to be level");
     check(c, checker_cfg.logger_cfg.log_stop_level = warning, "Expected stop level to be warning");
@@ -793,7 +798,8 @@ begin
     get_checker_cfg(checker_cfg);
     check(c, checker_cfg.default_level = warning, "Expected default level to be warning");
     check(c, checker_cfg.logger_cfg.log_default_src.all = "my_default_checker", "Expected default src to be ""my_default_checker""");
-    check(c, checker_cfg.logger_cfg.log_file_name.all = output_path & "problems.csv", "Expected file name to be """ & output_path & "problems.csv""");
+    passed := checker_cfg.logger_cfg.log_file_name.all = output_path & "problems.csv";
+    check(c, passed, "Expected file name to be """ & output_path & "problems.csv""");
     check(c, checker_cfg.logger_cfg.log_display_format = verbose, "Expected display format to be verbose");
     check(c, checker_cfg.logger_cfg.log_file_format = level, "Expected file format to be level");
     check(c, checker_cfg.logger_cfg.log_stop_level = failure, "Expected stop level to be failure");
@@ -807,8 +813,10 @@ begin
     end if;
     write(runner_cfg, string'("active python runner : true, enabled_test_cases : foo,, bar, output path : some_dir/out"));
     check(c, active_python_runner(runner_cfg.all), "Expected active python runner to be true");
-    check(c, vunit_lib.run_pkg.output_path(runner_cfg.all) = "some_dir/out", "Expected output path to be ""some_dir/out"" but got " & vunit_lib.run_pkg.output_path(runner_cfg.all));
-    check(c, enabled_test_cases(runner_cfg.all) = "foo, bar", "Expected enabled_test_cases to be ""foo, bar"" but got " & enabled_test_cases(runner_cfg.all));
+    passed := vunit_lib.run_pkg.output_path(runner_cfg.all) = "some_dir/out";
+    check(c, passed, "Expected output path to be ""some_dir/out"" but got " & vunit_lib.run_pkg.output_path(runner_cfg.all));
+    passed := enabled_test_cases(runner_cfg.all) = "foo, bar";
+    check(c, passed, "Expected enabled_test_cases to be ""foo, bar"" but got " & enabled_test_cases(runner_cfg.all));
 
     check_false(c, active_python_runner(""), "Expected active python runner to be false");
     check(c, vunit_lib.run_pkg.output_path("") = "", "Expected output path to be """" but got " & vunit_lib.run_pkg.output_path(runner_cfg.all));

@@ -24,7 +24,6 @@ end entity tb_logging;
 architecture test_fixture of tb_logging is
   alias status is vunit_lib.log_pkg.info_high1[string, string, natural, string];
   signal test_component1_done, test_component2_done : boolean := false;
-
   shared variable n_asserts : shared_natural;
   shared variable n_errors : shared_natural;
 
@@ -45,12 +44,14 @@ architecture test_fixture of tb_logging is
     constant expected_string : in string) is
     variable call_count : natural;
     variable write_call_args : write_call_args_t;
+    variable passed : boolean;
   begin
     call_count := get_write_call_count;
     counting_assert(call_count = expected_count, "Invalid write call count. Got " & natural'image(call_count) & " but was expecting " & natural'image(expected_count) & ".", error);
     get_write_call_args(write_call_args);
     counting_assert(write_call_args.valid, "Write not called", error);
-    counting_assert(write_call_args.msg(1 to write_call_args.msg_length) = expected_string & LF, "Wrong string. Got " &  write_call_args.msg(1 to write_call_args.msg_length) & " but expected " & expected_string & ".", error);
+    passed := write_call_args.msg(1 to write_call_args.msg_length) = expected_string & LF;
+    counting_assert(passed, "Wrong string. Got " &  write_call_args.msg(1 to write_call_args.msg_length) & " but expected " & expected_string & ".", error);
   end verify_write_call;
 
   procedure verify_num_of_write_calls (
@@ -81,8 +82,7 @@ architecture test_fixture of tb_logging is
                       (actual_split(1).all = expected_split(1).all) and
                       (actual_split(2).all = expected_split(2).all) and
                       (actual_split(3).all = expected_split(5).all) and
-                      (actual_split(4).all = expected_split(6).all),
-                      "Error in entry. Got " & actual_split(0).all & "," &
+                      (actual_split(4).all = expected_split(6).all), "Error in entry. Got " & actual_split(0).all & "," &
                       actual_split(0).all & "," & actual_split(1).all & "," &
                       actual_split(2).all & "," & actual_split(3).all & "," &
                       actual_split(4).all & " but expected " & expected_split(0).all &

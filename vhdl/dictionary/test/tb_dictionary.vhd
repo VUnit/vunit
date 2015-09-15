@@ -34,6 +34,7 @@ begin
     variable args : log_call_args_t;
     variable c : checker_t;
     variable stat : checker_stat_t;
+    variable passed : boolean;
     constant empty_dict : frozen_dictionary_t := empty_c;
     constant test_dict : frozen_dictionary_t := "output path : c::\foo\bar, input path : c::\ying\yang, active python runner : true";
     constant corrupt_dict : frozen_dictionary_t := "output path : c::\foo\bar, input path, active python runner : true";
@@ -61,9 +62,12 @@ begin
         get_log_call_args(args);
         check(c, args.level = failure, "Expected the error call to be on failure level.");
       elsif run("Test getting an existing key from a frozen dictionary") then
-        check(c, get(test_dict, "input path") = "c:\ying\yang", "Expected ""c:\ying\yang"" when getting input path key from test dictionary (got """ & get(test_dict, "input path") & """).");
-        check(c, get(test_dict, "output path") = "c:\foo\bar", "Expected ""c:\foo\bar"" when getting ""output path"" key from test dictionary (got """ & get(test_dict, "input path") & """).");
-        check(c, get(test_dict, " output path ") = "c:\foo\bar", "Expected ""c:\foo\bar"" when getting "" output path "" key from test dictionary (got """ & get(test_dict, "input path") & """).");
+        passed := get(test_dict, "input path") = "c:\ying\yang";
+        check(c, passed, "Expected ""c:\ying\yang"" when getting input path key from test dictionary (got """ & get(test_dict, "input path") & """).");
+        passed := get(test_dict, "output path") = "c:\foo\bar";
+        check(c, passed, "Expected ""c:\foo\bar"" when getting ""output path"" key from test dictionary (got """ & get(test_dict, "input path") & """).");
+        passed := get(test_dict, " output path ") = "c:\foo\bar";
+        check(c, passed, "Expected ""c:\foo\bar"" when getting "" output path "" key from test dictionary (got """ & get(test_dict, "input path") & """).");
       elsif run("Test that a corrupted directory results in an assertion") then
         log_call_count := get_log_call_count;
         write(value, get(corrupt_dict, "input path"));

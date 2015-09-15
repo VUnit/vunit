@@ -20,22 +20,24 @@ end entity tb_path;
 architecture test_fixture of tb_path is
 begin
   test_runner: process is
+    procedure check_equal (
+      constant got      : in string;
+      constant expected : in string) is
+    begin
+        check(got = expected, "Expected """ & expected & """ but got """ & got & """.");
+    end procedure check_equal;
   begin
     test_runner_setup(runner, runner_cfg);
 
     while test_suite loop
       if run("Verify that joining a single path returns that path") then
-        check(join("some_path") = "some_path", "Expected ""some_path"" but got """ &
-              join("some_path") & """.");
+        check_equal(join("some_path"), "some_path");
       elsif run("Verify that joining an empty path with a second path returns the second path") then
-        check(join("", "some_path") = "some_path", "Expected ""some_path"" but got """ &
-              join("some_path") & """.");
+        check_equal(join("", "some_path"), "some_path");
       elsif run("Verify the joining of two paths") then
-        check(join("foo", "bar") = "foo/bar", "Expected ""foo/bar"" but got """ &
-              join("foo", "bar") & """.");
+        check_equal(join("foo", "bar"), "foo/bar");
       elsif run("Verify that a separator ending the first path is ignored") then
-        check(join("foo/", "bar") = "foo/bar", "Expected ""foo/bar"" but got """ &
-              join("foo/", "bar") & """.");
+        check_equal(join("foo/", "bar"), "foo/bar");
       end if;
     end loop;
 
