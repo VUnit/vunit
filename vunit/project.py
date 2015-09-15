@@ -114,7 +114,7 @@ class Project(object):
             else:
                 yield primary_unit.source_file
 
-    def _find_other_design_unit_dependencies(self, source_file):
+    def _find_other_design_unit_dependencies(self, source_file):  # pylint: disable=too-many-branches
         """
         Iterate over the dependencies on other design unit of the source_file
         """
@@ -155,7 +155,11 @@ class Project(object):
                     yield self._source_files[file_name]
 
             elif ref.is_package_reference() and self._depend_on_package_body:
-                yield library.get_package_body(primary_unit.name).source_file
+                try:
+                    yield library.get_package_body(primary_unit.name).source_file
+                except KeyError:
+                    # There was no package body, which is legal in VHDL
+                    pass
 
     def _find_verilog_package_dependencies(self, source_file):
         """

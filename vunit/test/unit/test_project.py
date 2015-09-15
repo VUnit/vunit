@@ -182,7 +182,7 @@ end package body;
 
         self.assert_compiles("package.vhd", before="body.vhd")
 
-    def create_module_package_and_body(self):
+    def create_module_package_and_body(self, add_body=True):
         """
         Help function to create a three file project
         with a package, a package body and a module using the package
@@ -194,7 +194,8 @@ package pkg is
 end package;
 """)
 
-        self.add_source_file("lib", "body.vhd", """
+        if add_body:
+            self.add_source_file("lib", "body.vhd", """
 package body pkg is
 begin
 end package body;
@@ -224,6 +225,11 @@ end architecture;
         self.create_module_package_and_body()
         self.assert_compiles("package.vhd", before="body.vhd")
         self.assert_compiles("body.vhd", before="module.vhd")
+        self.assert_compiles("package.vhd", before="module.vhd")
+
+    def test_that_package_can_have_no_body(self):
+        self.project = Project(depend_on_package_body=True)
+        self.create_module_package_and_body(add_body=False)
         self.assert_compiles("package.vhd", before="module.vhd")
 
     def test_finds_context_dependencies(self):
