@@ -177,7 +177,8 @@ begin
           end if;
           if file_name /= "" then
             check(fields(3).all = file_name, "Expected file name = " & file_name & " but got " & fields(3).all);
-            check(fields(4).all = natural'image(line_num), "Expected line num = " & natural'image(line_num) & " but got " & fields(4).all);
+            pass := fields(4).all = natural'image(line_num);
+            check(pass, "Expected line num = " & natural'image(line_num) & " but got " & fields(4).all);
           end if;
         end loop;
       end if;
@@ -727,7 +728,7 @@ begin
     banner("Should be possible to time-out a test runner that is stuck");
     test_case_setup;
     test_runner_setup(runner, "enabled_test_cases : test a,, test b,, test c,, test d");
-    checker_init(file_name => output_path & "error.csv");
+    checker_init(file_name =>output_path & "error.csv");
     start_test_runner_watchdog <= true;
     wait for 0 ns;
     start_test_runner_watchdog <= false;
@@ -819,8 +820,10 @@ begin
     check(c, passed, "Expected enabled_test_cases to be ""foo, bar"" but got " & enabled_test_cases(runner_cfg.all));
 
     check_false(c, active_python_runner(""), "Expected active python runner to be false");
-    check(c, vunit_lib.run_pkg.output_path("") = "", "Expected output path to be """" but got " & vunit_lib.run_pkg.output_path(runner_cfg.all));
-    check(c, enabled_test_cases("") = "__all__", "Expected enabled_test_cases to be ""__all__"" but got " & enabled_test_cases(runner_cfg.all));
+    passed := vunit_lib.run_pkg.output_path("") = "";
+    check(c, passed, "Expected output path to be """" but got " & vunit_lib.run_pkg.output_path(""));
+    passed := enabled_test_cases("") = "__all__";
+    check(c, passed, "Expected enabled_test_cases to be ""__all__"" but got " & enabled_test_cases(""));
 
     ---------------------------------------------------------------------------
     banner("Result");
