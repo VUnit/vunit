@@ -307,3 +307,31 @@ There are three methods to make VUnit importable in your `run.py` script:
 2. Set the `PYTHONPATH` environment variable to include the path to the VUnit root directory containing this user guide. Note that you shouldn't point to the vunit directory within the root directory.
 
 3. Add a `import sys; sys.path.append("/path/to/vunit_root/")` statement in your `run.py` file **before** the `import vunit` statement.  
+
+## Creating Sigasi Projects
+The official Sigasi [SigasiProjectCreator](https://github.com/sigasi/SigasiProjectCreator) utility can be used to generate a Sigasi project from a VUnit project using the following script. The script will create virtual folders for each VHDL library containing the files of the library.
+```python
+from SigasiProjectCreator import SigasiProjectCreator
+from os.path import relpath, exists, basename
+import os
+from shutil import rmtree
+
+def create_sigasi_project(prj, name, project_path):
+    """
+    Create Sigasi project from VUnit object prj with name into project_path
+    """
+    creator = SigasiProjectCreator(name, 2008)
+    
+    for source_file in prj.get_project_compile_order():
+        file_name = source_file.name
+        library_name = source_file.library.name
+        virtual_name = library_name + "/" + basename(file_name)
+        creator.add_link(virtual_name, file_name)
+        creator.add_mapping(virtual_name, library_name)
+
+    if not exists(project_path):
+      os.makedirs(project_path)
+
+    creator.write(project_path)
+
+```
