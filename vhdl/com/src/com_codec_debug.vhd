@@ -203,6 +203,7 @@ package body com_codec_pkg is
     return character is
     variable chars : string(1 to 2);
   begin
+    -- @TODO Use just character'value when Aldec issue SPT72992 has been solved
     chars := unescape_special_characters(code)(1 to 2);
     if chars(1) = ''' then
       return chars(2);

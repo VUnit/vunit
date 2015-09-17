@@ -486,6 +486,25 @@ package body string_ops is
     return ret_val;
   end split;
 
+  -- @TODO: Remove this division function when Aldec issue SPT72991 has been solved
+  function divide_by_10 (
+    constant n : unsigned)
+    return unsigned is
+    variable r, q : unsigned(n'length - 1 downto 0);
+  begin
+    q := (others => '0');
+    r := (others => '0');
+    for i in n'length - 1 downto 0 loop
+      r := r sll 1;
+      r(0) := n(i);
+      if r >= 10 then
+        r := r - 10;
+        q(i) := '1';
+      end if;
+    end loop;
+    return q;
+  end function divide_by_10;
+
   function to_integer_string (
     constant value : unsigned)
     return string is
@@ -508,7 +527,7 @@ package body string_ops is
     quotient := value;
     while quotient /= (quotient'range => '0') loop
       last_digit := quotient mod 10;
-      quotient := quotient / 10;
+      quotient := divide_by_10(quotient);
       ret_val(index to index) := integer'image(to_integer(last_digit(3 downto 0)));
       index := index - 1;
     end loop;
