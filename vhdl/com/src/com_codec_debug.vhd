@@ -201,8 +201,14 @@ package body com_codec_pkg is
   function decode (
     constant code : string)
     return character is
+    variable chars : string(1 to 2);
   begin
-    return character'value(unescape_special_characters(code));
+    chars := unescape_special_characters(code)(1 to 2);
+    if chars(1) = ''' then
+      return chars(2);
+    else
+      return character'value(unescape_special_characters(code));
+    end if;
   end;
 
   -----------------------------------------------------------------------------
@@ -234,11 +240,11 @@ package body com_codec_pkg is
   function decode (
     constant code : string)
     return string is
-    variable ret_val : string(get_range(code)'range);
+    variable ret_val : string(get_range(code)'range) := (others => NUL);
   begin
     if get_first_element(code) /= "" then
-      ret_val := unescape_special_characters(get_first_element(code));
-    end if;
+        ret_val := unescape_special_characters(get_first_element(code));
+      end if;
 
     return ret_val;
   end;
@@ -253,7 +259,7 @@ package body com_codec_pkg is
   function decode (
     constant code : string)
     return boolean_vector is
-    variable ret_val  : boolean_vector(get_range(code)'range);
+    variable ret_val  : boolean_vector(get_range(code)'range) := (others => false);
     variable elements : lines_t;
     variable length   : natural;
     variable index    : natural := 0;
@@ -278,7 +284,7 @@ package body com_codec_pkg is
   function decode (
     constant code : string)
     return bit_vector is
-    variable ret_val : bit_vector(get_range(code)'range);
+    variable ret_val : bit_vector(get_range(code)'range) := (others => '0');
     variable l       : line;
     variable index   : natural := 1;
   begin
@@ -303,7 +309,7 @@ package body com_codec_pkg is
   function decode (
     constant code : string)
     return integer_vector is
-    variable ret_val  : integer_vector(get_range(code)'range);
+    variable ret_val  : integer_vector(get_range(code)'range) := (others => integer'left);
     variable elements : lines_t;
     variable length   : natural;
     variable index    : natural := 0;
@@ -328,7 +334,7 @@ package body com_codec_pkg is
   function decode (
     constant code : string)
     return real_vector is
-    variable ret_val  : real_vector(get_range(code)'range);
+    variable ret_val  : real_vector(get_range(code)'range) := (others => real'left);
     variable elements : lines_t;
     variable length   : natural;
     variable index    : natural := 0;
@@ -353,7 +359,7 @@ package body com_codec_pkg is
   function decode (
     constant code : string)
     return time_vector is
-    variable ret_val  : time_vector(get_range(code)'range);
+    variable ret_val  : time_vector(get_range(code)'range) := (others => time'left);
     variable elements : lines_t;
     variable length   : natural;
     variable index    : natural := 0;
@@ -378,7 +384,7 @@ package body com_codec_pkg is
   function decode (
     constant code : string)
     return std_ulogic_vector is
-    variable ret_val : std_ulogic_vector(get_range(code)'range);
+    variable ret_val : std_ulogic_vector(get_range(code)'range) := (others => 'U');
     variable l       : line;
     variable index   : natural := 1;
   begin
@@ -447,7 +453,7 @@ package body com_codec_pkg is
   function decode (
     constant code : string)
     return ieee.numeric_bit.unsigned is
-    variable ret_val : ieee.numeric_bit.unsigned(get_range(code)'range);
+    variable ret_val : ieee.numeric_bit.unsigned(get_range(code)'range) := (others => '0');
     variable l       : line;
     variable index   : natural := 1;
   begin
@@ -472,7 +478,7 @@ package body com_codec_pkg is
   function decode (
     constant code : string)
     return ieee.numeric_bit.signed is
-    variable ret_val : ieee.numeric_bit.signed(get_range(code)'range);
+    variable ret_val : ieee.numeric_bit.signed(get_range(code)'range) := (others => '0');
     variable l       : line;
     variable length  : natural;
     variable index   : natural := 1;
@@ -498,7 +504,7 @@ package body com_codec_pkg is
   function decode (
     constant code : string)
     return ieee.numeric_std.unsigned is
-    variable ret_val : ieee.numeric_std.unsigned(get_range(code)'range);
+    variable ret_val : ieee.numeric_std.unsigned(get_range(code)'range) := (others => 'U');
     variable l       : line;
     variable index   : natural := 1;
   begin
@@ -523,7 +529,7 @@ package body com_codec_pkg is
   function decode (
     constant code : string)
     return ieee.numeric_std.signed is
-    variable ret_val : ieee.numeric_std.signed(get_range(code)'range);
+    variable ret_val : ieee.numeric_std.signed(get_range(code)'range) := (others => 'U');
     variable l       : line;
     variable index   : natural := 1;
   begin

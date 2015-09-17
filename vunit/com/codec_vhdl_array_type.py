@@ -40,6 +40,7 @@ class CodecVHDLArrayType(VHDLArrayType):
         else:
             if has_one_dimension:
                 definitions += template.unconstrained_1d_array_definition.substitute(array_type=self.identifier,
+                                                                                     subtype=self.subtype_indication,
                                                                                      range_type=self.range1.range_type)
                 definitions += template.unconstrained_1d_array_to_string_definition.substitute(
                     array_type=self.identifier,
@@ -287,7 +288,7 @@ class ArrayStdCodecTemplate(DatatypeStdCodecTemplate, ArrayCodecTemplate):
         return ret_val_descending;
       end if;
     end function ret_val_range;
-    variable ret_val : $array_type(ret_val_range(code)'range);
+    variable ret_val : $array_type(ret_val_range(code)'range) := (others => $subtype'left);
     variable index : positive := code'left + 1 + 2 * range_length;
   begin
     for i in ret_val'range loop
@@ -493,7 +494,7 @@ class ArrayDebugCodecTemplate(DatatypeDebugCodecTemplate, ArrayCodecTemplate):
         return ret_val_descending;
       end if;
     end function ret_val_range;
-    variable ret_val : $array_type(ret_val_range(code)'range);
+    variable ret_val : $array_type(ret_val_range(code)'range) := (others => $subtype'left);
     variable elements : lines_t;
     variable length : natural;
     variable index : natural := 0;
