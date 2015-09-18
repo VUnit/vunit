@@ -395,6 +395,102 @@ end architecture;
         self.assertIn("a2", log_msg)
         self.assertIn("lib.ent", log_msg)
 
+    def _test_warning_on_duplicate(self, mock_logger, code, message):
+        """
+        Utility function to test adding the same duplicate code under
+        file.vhd and file_copy.vhd where the duplication should cause a warning message.
+        """
+        self.add_source_file("lib", "file.vhd", code)
+
+        warning_calls = mock_logger.warning.call_args_list
+
+        self.assertEqual(len(warning_calls), 0)
+
+        self.add_source_file("lib", "file_copy.vhd", code)
+
+        warning_calls = mock_logger.warning.call_args_list
+        self.assertEqual(len(warning_calls), 1)
+
+        log_msg = warning_calls[0][0][0] % warning_calls[0][0][1:]
+        self.assertEqual(log_msg, message)
+
+    @mock.patch("vunit.project.LOGGER")
+    def test_warning_on_duplicate_entity(self, mock_logger):
+        self.project.add_library("lib", "lib_path")
+        self._test_warning_on_duplicate(
+            mock_logger, """
+entity ent is
+end entity;
+""",
+            "file_copy.vhd: entity 'ent' previously defined in file.vhd")
+
+    @mock.patch("vunit.project.LOGGER")
+    def test_warning_on_duplicate_package(self, mock_logger):
+        self.project.add_library("lib", "lib_path")
+        self._test_warning_on_duplicate(
+            mock_logger, """
+package pkg is
+end package;
+""",
+            "file_copy.vhd: package 'pkg' previously defined in file.vhd")
+
+    @mock.patch("vunit.project.LOGGER")
+    def test_warning_on_duplicate_configuration(self, mock_logger):
+        self.project.add_library("lib", "lib_path")
+        self._test_warning_on_duplicate(
+            mock_logger, """
+configuration cfg of ent is
+end configuration;
+""",
+            "file_copy.vhd: configuration 'cfg' previously defined in file.vhd")
+
+    @mock.patch("vunit.project.LOGGER")
+    def test_warning_on_duplicate_package_body(self, mock_logger):
+        self.project.add_library("lib", "lib_path")
+        self.add_source_file("lib", "pkg.vhd", """
+package pkg is
+end package;
+""")
+
+        self._test_warning_on_duplicate(
+            mock_logger, """
+package body pkg is
+end package bodY;
+""",
+            "file_copy.vhd: package body 'pkg' previously defined in file.vhd")
+
+    @mock.patch("vunit.project.LOGGER")
+    def test_warning_on_duplicate_architecture(self, mock_logger):
+        self.project.add_library("lib", "lib_path")
+        self.add_source_file("lib", "ent.vhd", """
+entity ent is
+end entity;
+""")
+
+        self.add_source_file("lib", "arch.vhd", """
+architecture a_no_duplicate of ent is
+begin
+end architecture;
+""")
+
+        self._test_warning_on_duplicate(
+            mock_logger, """
+architecture a of ent is
+begin
+end architecture;
+""",
+            "file_copy.vhd: architecture 'a' previously defined in file.vhd")
+
+    @mock.patch("vunit.project.LOGGER")
+    def test_warning_on_duplicate_context(self, mock_logger):
+        self.project.add_library("lib", "lib_path")
+        self._test_warning_on_duplicate(
+            mock_logger, """
+context ctx is
+end context;
+""",
+            "file_copy.vhd: context 'ctx' previously defined in file.vhd")
+
     def test_should_recompile_all_files_initially(self):
         self.create_dummy_three_file_project()
         self.assert_should_recompile(["file1.vhd", "file2.vhd", "file3.vhd"])

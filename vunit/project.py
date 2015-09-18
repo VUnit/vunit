@@ -402,28 +402,59 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
         """
         return self._is_external
 
+    @staticmethod
+    def _warn_duplication(design_unit, old_file_name):
+        """
+        Utility function to give warning for design unit duplication
+        """
+        LOGGER.warning("%s: %s '%s' previously defined in %s",
+                       design_unit.source_file.name,
+                       design_unit.unit_type,
+                       design_unit.name,
+                       old_file_name)
+
+    def _check_duplication(self, dictionary, design_unit):
+        """
+        Utility function to check if design_unit already in dictionary
+        and give warning
+        """
+        if design_unit.name in dictionary:
+            self._warn_duplication(design_unit, dictionary[design_unit.name].source_file.name)
+
     def add_vhdl_design_units(self, design_units):
         """
         Add VHDL design units to the library
         """
         for design_unit in design_units:
             if design_unit.is_primary:
+                self._check_duplication(self.primary_design_units,
+                                        design_unit)
                 self.primary_design_units[design_unit.name] = design_unit
 
-            if design_unit.unit_type == 'entity':
-                if design_unit.name not in self._architecture_names:
-                    self._architecture_names[design_unit.name] = {}
-                self._entities[design_unit.name] = design_unit
+                if design_unit.unit_type == 'entity':
+                    if design_unit.name not in self._architecture_names:
+                        self._architecture_names[design_unit.name] = {}
+                    self._entities[design_unit.name] = design_unit
 
-            if design_unit.unit_type == 'architecture':
-                if design_unit.primary_design_unit not in self._architecture_names:
-                    self._architecture_names[design_unit.primary_design_unit] = {}
+            else:
+                if design_unit.unit_type == 'architecture':
+                    if design_unit.primary_design_unit not in self._architecture_names:
+                        self._architecture_names[design_unit.primary_design_unit] = {}
 
-                file_name = design_unit.source_file.name
-                self._architecture_names[design_unit.primary_design_unit][design_unit.name] = file_name
+                    if design_unit.name in self._architecture_names[design_unit.primary_design_unit]:
+                        self._warn_duplication(
+                            design_unit,
+                            self._architecture_names[design_unit.primary_design_unit][design_unit.name])
 
-            if design_unit.unit_type == 'package body':
-                self._package_bodies[design_unit.primary_design_unit] = design_unit
+                    file_name = design_unit.source_file.name
+                    self._architecture_names[design_unit.primary_design_unit][design_unit.name] = file_name
+
+                if design_unit.unit_type == 'package body':
+                    if design_unit.primary_design_unit in self._package_bodies:
+                        self._warn_duplication(
+                            design_unit,
+                            self._package_bodies[design_unit.primary_design_unit].source_file.name)
+                    self._package_bodies[design_unit.primary_design_unit] = design_unit
 
     def add_verilog_design_units(self, design_units):
         """
