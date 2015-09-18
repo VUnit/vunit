@@ -59,7 +59,11 @@ begin
     while test_suite loop
       if run("Test that the cards in the deck are shuffled") then
         for i in 1 to n_decks loop
-          publish(net, self, reset_shuffler, status);
+          -- reset_shuffler_msg is an alias for reset_shuffler which must be
+          -- used with Aldec's simulators to avoid that this function call
+          -- without parameters is confused with the enumeration literal in
+          -- reset_msg_type_t with the same name.
+          publish(net, self, reset_shuffler_msg, status);
           wait for 1 ps;
           for r in ace to king loop
             for s in spades to clubs loop

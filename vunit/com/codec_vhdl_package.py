@@ -172,7 +172,7 @@ class CodecVHDLPackage(VHDLPackage):
 
         return declarations, definitions
 
-    def _generate_msg_type_encoders(self):
+    def _generate_msg_type_encoders(self):  # pylint: disable=too-many-locals
         """Generate message type encoders for records with the initial element = msg_type. An encoder is
         generated for each value of the enumeration data type for msg_type. For example, if the record
         has two message types, read and write, and two other fields, addr and data, then two encoders,
@@ -193,19 +193,23 @@ class CodecVHDLPackage(VHDLPackage):
             if msg_type_values is not None:
                 for value in msg_type_values:
                     parameter_list = []
+                    parameter_type_list = []
                     encoding_list = []
                     for element in record.elements:
                         for identifier in element.identifier_list:
                             if identifier != 'msg_type':
                                 parameter_list.append('    constant %s : %s' % (identifier,
                                                                                 element.subtype_indication.code))
+                                parameter_type_list.append(element.subtype_indication.code)
                                 encoding_list.append('encode(%s)' % identifier)
                             else:
                                 encoding_list.append("encode(%s'(%s))" % (element.subtype_indication.code, value))
                     if parameter_list == []:
                         parameter_part = ''
+                        alias_signature = value + '[return string];'
                     else:
                         parameter_part = ' (\n' + ';\n'.join(parameter_list) + ')'
+                        alias_signature = value + '[' + ', '.join(parameter_type_list) + ' return string];'
                     if self._debug:
                         encodings = ', '.join(encoding_list)
                     else:
@@ -213,7 +217,9 @@ class CodecVHDLPackage(VHDLPackage):
 
                     declarations += \
                         self._template.msg_type_record_codec_declaration.substitute(name=value,
-                                                                                    parameter_part=parameter_part)
+                                                                                    parameter_part=parameter_part,
+                                                                                    alias_signature=alias_signature,
+                                                                                    alias_name=value + '_msg')
                     definitions += \
                         self._template.msg_type_record_codec_definition.substitute(name=value,
                                                                                    parameter_part=parameter_part,
@@ -256,6 +262,7 @@ class PackageCodecTemplate(object):
     msg_type_record_codec_declaration = Template("""\
   function $name$parameter_part
     return string;
+  alias $alias_name is $alias_signature
 
 """)
 
