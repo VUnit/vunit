@@ -159,7 +159,13 @@ you can write
 send(net, receiver, load((ace, spades)), receipt);
 ```
 
-which makes the intention of the message more clear. You also get a `get_msg_type` function which will return the type of a message considering all message types defined in the package. This provides a convenient way to select the correct decoder on the receiving side. Here's an example.
+which makes the intention of the message more clear. 
+
+**Note1:** The encoder function also has an alias with a `_msg` suffix (`load_msg` in the previous example). This must currently be used with Aldec's simulators if the function has no input parameters. The reason is that the normal name (`load`) is confused with the enumeration literal with the same name.
+
+**Note2:** Codec generation for unconstrained arrays with composite element types is not supported for Aldec's simulators. This limitation will be removed as soon as some issues with these tools have been fixed.
+
+You also get a `get_msg_type` function which will return the type of a message considering all message types defined in the package. This provides a convenient way to select the correct decoder on the receiving side. Here's an example.
 
 ```vhdl
       receive(net, self, message);
