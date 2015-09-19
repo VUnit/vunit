@@ -173,8 +173,10 @@ begin
         check_relation(decode_real(encode_real(r2)) = r2);
         check_relation(r1 /= r2, "Should be different values in a double precision implementation");
       elsif run("Test that time can be encoded and decoded") then
-        check_relation(decode_time(encode_time(time'low)) = time'low);
-        check_relation(decode_time(encode_time(time'high)) = time'high);
+        t1 := time'low;
+        check_relation(decode_time(encode_time(t1)) = t1);
+        t1 := time'high;
+        check_relation(decode_time(encode_time(t1)) = t1);
         check_relation(decode_time(encode_time(17 ns)) = 17 ns);
         check_relation(decode_time(encode_time(-17 ns)) = -17 ns);
       elsif run("Test that boolean can be encoded and decoded") then
