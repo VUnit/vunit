@@ -92,9 +92,15 @@ impl_template = """  procedure check_equal(
     constant file_name       : in string      := "") is
   begin
     -- pragma translate_off
-    check(checker, pass, got = expected,
-          failed_expectation_msg("Equality check", $got_str, $expected_str, msg),
-          level, line_num, file_name);
+    if got = expected then
+      pass := true;
+      check_passed(checker);
+    else
+      pass := false;
+      check_failed(checker,
+                   failed_expectation_msg("Equality check", $got_str, $expected_str, msg),
+                   level, line_num, file_name);
+    end if;
     -- pragma translate_on
   end;
 

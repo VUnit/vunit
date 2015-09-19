@@ -1789,9 +1789,15 @@ package body check_pkg is
     constant file_name       : in string      := "") is
   begin
     -- pragma translate_off
-    check(checker, pass, got = expected,
-          failed_expectation_msg("Equality check", to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
-          level, line_num, file_name);
+    if got = expected then
+      pass := true;
+      check_passed(checker);
+    else
+      pass := false;
+      check_failed(checker,
+                   failed_expectation_msg("Equality check", to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
+                   level, line_num, file_name);
+    end if;
     -- pragma translate_on
   end;
 
@@ -1865,9 +1871,15 @@ package body check_pkg is
     constant file_name       : in string      := "") is
   begin
     -- pragma translate_off
-    check(checker, pass, got = expected,
-          failed_expectation_msg("Equality check", to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_string(expected) & " (" & to_nibble_string(to_sufficient_unsigned(expected, got'length)) & ")", msg),
-          level, line_num, file_name);
+    if got = expected then
+      pass := true;
+      check_passed(checker);
+    else
+      pass := false;
+      check_failed(checker,
+                   failed_expectation_msg("Equality check", to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_string(expected) & " (" & to_nibble_string(to_sufficient_unsigned(expected, got'length)) & ")", msg),
+                   level, line_num, file_name);
+    end if;
     -- pragma translate_on
   end;
 
@@ -1941,9 +1953,15 @@ package body check_pkg is
     constant file_name       : in string      := "") is
   begin
     -- pragma translate_off
-    check(checker, pass, got = expected,
-          failed_expectation_msg("Equality check", to_string(got) & " (" & to_nibble_string(to_sufficient_unsigned(got, expected'length)) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
-          level, line_num, file_name);
+    if got = expected then
+      pass := true;
+      check_passed(checker);
+    else
+      pass := false;
+      check_failed(checker,
+                   failed_expectation_msg("Equality check", to_string(got) & " (" & to_nibble_string(to_sufficient_unsigned(got, expected'length)) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
+                   level, line_num, file_name);
+    end if;
     -- pragma translate_on
   end;
 
@@ -2017,9 +2035,15 @@ package body check_pkg is
     constant file_name       : in string      := "") is
   begin
     -- pragma translate_off
-    check(checker, pass, got = expected,
-          failed_expectation_msg("Equality check", to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
-          level, line_num, file_name);
+    if got = expected then
+      pass := true;
+      check_passed(checker);
+    else
+      pass := false;
+      check_failed(checker,
+                   failed_expectation_msg("Equality check", to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
+                   level, line_num, file_name);
+    end if;
     -- pragma translate_on
   end;
 
@@ -2093,9 +2117,15 @@ package body check_pkg is
     constant file_name       : in string      := "") is
   begin
     -- pragma translate_off
-    check(checker, pass, got = expected,
-          failed_expectation_msg("Equality check", to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
-          level, line_num, file_name);
+    if got = expected then
+      pass := true;
+      check_passed(checker);
+    else
+      pass := false;
+      check_failed(checker,
+                   failed_expectation_msg("Equality check", to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
+                   level, line_num, file_name);
+    end if;
     -- pragma translate_on
   end;
 
@@ -2169,9 +2199,15 @@ package body check_pkg is
     constant file_name       : in string      := "") is
   begin
     -- pragma translate_off
-    check(checker, pass, got = expected,
-          failed_expectation_msg("Equality check", to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
-          level, line_num, file_name);
+    if got = expected then
+      pass := true;
+      check_passed(checker);
+    else
+      pass := false;
+      check_failed(checker,
+                   failed_expectation_msg("Equality check", to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
+                   level, line_num, file_name);
+    end if;
     -- pragma translate_on
   end;
 
@@ -2245,9 +2281,15 @@ package body check_pkg is
     constant file_name       : in string      := "") is
   begin
     -- pragma translate_off
-    check(checker, pass, got = expected,
-          failed_expectation_msg("Equality check", to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
-          level, line_num, file_name);
+    if got = expected then
+      pass := true;
+      check_passed(checker);
+    else
+      pass := false;
+      check_failed(checker,
+                   failed_expectation_msg("Equality check", to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
+                   level, line_num, file_name);
+    end if;
     -- pragma translate_on
   end;
 
@@ -2321,9 +2363,15 @@ package body check_pkg is
     constant file_name       : in string      := "") is
   begin
     -- pragma translate_off
-    check(checker, pass, got = expected,
-          failed_expectation_msg("Equality check", to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_string(expected) & " (" & to_nibble_string(to_sufficient_signed(expected, got'length)) & ")", msg),
-          level, line_num, file_name);
+    if got = expected then
+      pass := true;
+      check_passed(checker);
+    else
+      pass := false;
+      check_failed(checker,
+                   failed_expectation_msg("Equality check", to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_string(expected) & " (" & to_nibble_string(to_sufficient_signed(expected, got'length)) & ")", msg),
+                   level, line_num, file_name);
+    end if;
     -- pragma translate_on
   end;
 
@@ -2397,9 +2445,15 @@ package body check_pkg is
     constant file_name       : in string      := "") is
   begin
     -- pragma translate_off
-    check(checker, pass, got = expected,
-          failed_expectation_msg("Equality check", to_string(got) & " (" & to_nibble_string(to_sufficient_signed(got, expected'length)) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
-          level, line_num, file_name);
+    if got = expected then
+      pass := true;
+      check_passed(checker);
+    else
+      pass := false;
+      check_failed(checker,
+                   failed_expectation_msg("Equality check", to_string(got) & " (" & to_nibble_string(to_sufficient_signed(got, expected'length)) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
+                   level, line_num, file_name);
+    end if;
     -- pragma translate_on
   end;
 
@@ -2473,9 +2527,15 @@ package body check_pkg is
     constant file_name       : in string      := "") is
   begin
     -- pragma translate_off
-    check(checker, pass, got = expected,
-          failed_expectation_msg("Equality check", to_string(got), to_string(expected), msg),
-          level, line_num, file_name);
+    if got = expected then
+      pass := true;
+      check_passed(checker);
+    else
+      pass := false;
+      check_failed(checker,
+                   failed_expectation_msg("Equality check", to_string(got), to_string(expected), msg),
+                   level, line_num, file_name);
+    end if;
     -- pragma translate_on
   end;
 
@@ -2549,9 +2609,15 @@ package body check_pkg is
     constant file_name       : in string      := "") is
   begin
     -- pragma translate_off
-    check(checker, pass, got = expected,
-          failed_expectation_msg("Equality check", to_string(got), to_string(expected), msg),
-          level, line_num, file_name);
+    if got = expected then
+      pass := true;
+      check_passed(checker);
+    else
+      pass := false;
+      check_failed(checker,
+                   failed_expectation_msg("Equality check", to_string(got), to_string(expected), msg),
+                   level, line_num, file_name);
+    end if;
     -- pragma translate_on
   end;
 
@@ -2625,9 +2691,15 @@ package body check_pkg is
     constant file_name       : in string      := "") is
   begin
     -- pragma translate_off
-    check(checker, pass, got = expected,
-          failed_expectation_msg("Equality check", to_string(got), to_string(expected), msg),
-          level, line_num, file_name);
+    if got = expected then
+      pass := true;
+      check_passed(checker);
+    else
+      pass := false;
+      check_failed(checker,
+                   failed_expectation_msg("Equality check", to_string(got), to_string(expected), msg),
+                   level, line_num, file_name);
+    end if;
     -- pragma translate_on
   end;
 
@@ -2701,9 +2773,15 @@ package body check_pkg is
     constant file_name       : in string      := "") is
   begin
     -- pragma translate_off
-    check(checker, pass, got = expected,
-          failed_expectation_msg("Equality check", to_string(got), to_string(expected), msg),
-          level, line_num, file_name);
+    if got = expected then
+      pass := true;
+      check_passed(checker);
+    else
+      pass := false;
+      check_failed(checker,
+                   failed_expectation_msg("Equality check", to_string(got), to_string(expected), msg),
+                   level, line_num, file_name);
+    end if;
     -- pragma translate_on
   end;
 
@@ -2777,9 +2855,15 @@ package body check_pkg is
     constant file_name       : in string      := "") is
   begin
     -- pragma translate_off
-    check(checker, pass, got = expected,
-          failed_expectation_msg("Equality check", to_string(got), to_string(expected), msg),
-          level, line_num, file_name);
+    if got = expected then
+      pass := true;
+      check_passed(checker);
+    else
+      pass := false;
+      check_failed(checker,
+                   failed_expectation_msg("Equality check", to_string(got), to_string(expected), msg),
+                   level, line_num, file_name);
+    end if;
     -- pragma translate_on
   end;
 
@@ -2857,9 +2941,15 @@ package body check_pkg is
     constant file_name       : in string      := "") is
   begin
     -- pragma translate_off
-    check(checker, pass, std_match(got, expected),
-          failed_expectation_msg("Matching", to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
-          level, line_num, file_name);
+    if std_match(got, expected) then
+      pass := true;
+      check_passed(checker);
+    else
+      pass := false;
+      check_failed(checker,
+                   failed_expectation_msg("Matching", to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
+                   level, line_num, file_name);
+    end if;
     -- pragma translate_on
   end;
 
@@ -2933,9 +3023,15 @@ package body check_pkg is
     constant file_name       : in string      := "") is
   begin
     -- pragma translate_off
-    check(checker, pass, std_match(got, expected),
-          failed_expectation_msg("Matching", to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
-          level, line_num, file_name);
+    if std_match(got, expected) then
+      pass := true;
+      check_passed(checker);
+    else
+      pass := false;
+      check_failed(checker,
+                   failed_expectation_msg("Matching", to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
+                   level, line_num, file_name);
+    end if;
     -- pragma translate_on
   end;
 
@@ -3009,9 +3105,15 @@ package body check_pkg is
     constant file_name       : in string      := "") is
   begin
     -- pragma translate_off
-    check(checker, pass, std_match(got, expected),
-          failed_expectation_msg("Matching", to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
-          level, line_num, file_name);
+    if std_match(got, expected) then
+      pass := true;
+      check_passed(checker);
+    else
+      pass := false;
+      check_failed(checker,
+                   failed_expectation_msg("Matching", to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
+                   level, line_num, file_name);
+    end if;
     -- pragma translate_on
   end;
 
@@ -3085,9 +3187,15 @@ package body check_pkg is
     constant file_name       : in string      := "") is
   begin
     -- pragma translate_off
-    check(checker, pass, std_match(got, expected),
-          failed_expectation_msg("Matching", to_string(got), to_string(expected), msg),
-          level, line_num, file_name);
+    if std_match(got, expected) then
+      pass := true;
+      check_passed(checker);
+    else
+      pass := false;
+      check_failed(checker,
+                   failed_expectation_msg("Matching", to_string(got), to_string(expected), msg),
+                   level, line_num, file_name);
+    end if;
     -- pragma translate_on
   end;
 
