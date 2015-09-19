@@ -9,6 +9,7 @@ Create simulator instances
 """
 
 from vunit.modelsim_interface import ModelSimInterface
+from vunit.activehdl_interface import ActiveHDLInterface
 from vunit.rivierapro_interface import RivieraProInterface
 from vunit.ghdl_interface import GHDLInterface
 from os.path import join, exists
@@ -27,6 +28,7 @@ class SimulatorFactory(object):
         """
         return [ModelSimInterface,
                 RivieraProInterface,
+                ActiveHDLInterface,
                 GHDLInterface]
 
     @classmethod

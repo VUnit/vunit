@@ -41,7 +41,7 @@ class CodecVHDLArrayType(VHDLArrayType):
         else:
             if has_one_dimension:
                 # @TODO: Remove workaround when Aldec issue SPT73021 is solved
-                if simulator_is('rivierapro'):
+                if simulator_is('rivierapro', 'activehdl'):
                     init_value = " := (others => %s'left)" % self.subtype_indication
                 else:
                     init_value = ''
