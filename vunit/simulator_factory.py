@@ -100,7 +100,7 @@ class SimulatorFactory(object):
         Create new simulator instance
         """
 
-        if self._simulator_class is None:
+        if self._simulator_class is None or not self._simulator_class.is_available():
             raise RuntimeError("No available simulator detected. "
                                "Simulator executables must be available in PATH environment variable.")
 

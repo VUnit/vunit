@@ -18,7 +18,6 @@ import os
 import subprocess
 
 from vunit.exceptions import CompileError
-from distutils.spawn import find_executable
 try:
     # Python 3
     from configparser import RawConfigParser
@@ -69,12 +68,24 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
                    persistent=persistent,
                    gui_mode=args.gui)
 
-    @staticmethod
-    def is_available():
+    @classmethod
+    def _find_prefix(cls):
+        """
+        Find first valid modelsim toolchain prefix
+        """
+
+        def has_modelsim_ini(path):
+            return os.path.isfile(join(path, "..", "modelsim.ini"))
+
+        return cls.find_toolchain(["vsim"],
+                                  constraints=[has_modelsim_ini])
+
+    @classmethod
+    def is_available(cls):
         """
         Return True if ModelSim is installed
         """
-        return find_executable('vsim') is not None
+        return cls._find_prefix() is not None
 
     def __init__(self, modelsim_ini="modelsim.ini", persistent=False, gui_mode=None):
         self._modelsim_ini = abspath(modelsim_ini)
@@ -88,7 +99,11 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         self._vsim_processes = {}
         self._lock = threading.Lock()
         self._transcript_id = 0
-        self._prefix = dirname(find_executable('vsim'))
+        self._prefix = self._find_prefix()
+
+        if self._prefix is None:
+            raise RuntimeError("Cannot find ModelSim any toolchain.")
+
         self._libraries = {}
 
         self._persistent = persistent
