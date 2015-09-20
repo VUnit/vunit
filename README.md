@@ -36,6 +36,9 @@ VUnit depends on a number of components as listed below. Full VUnit functionalit
 * Python 3.3 or higher
 
 ## Simulators
+* [Aldec Riviera-PRO](https://www.aldec.com/en/products/functional_verification/riviera-pro])
+  * Tested with Riviera-PRO-2015.06 (x64/x86).
+  * Only VHDL 2008
 * [Mentor Graphics ModelSim/Questa](http://www.mentor.com/products/fv/modelsim/)
   * Tested with 10.1 - 10.3
 * [GHDL](https://sourceforge.net/projects/ghdl-updates/)
