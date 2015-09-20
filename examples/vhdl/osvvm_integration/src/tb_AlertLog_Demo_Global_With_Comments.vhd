@@ -301,7 +301,7 @@ begin
 
         Alert("Cpu.P1.E Message " & to_string(i) & " of 5", error);
         Log ("Cpu.P1.D log   " & to_string(i) & " of 5", DEBUG);
-        Log ("Cpu.P1.F log   " & to_string(i) & " of 5", FINAL);  -- enabled by Uart_1
+        Log ("Cpu.P1.F log   " & to_string(i) & " of 5", osvvm.AlertLogPkg.FINAL);  -- enabled by Uart_1
       end loop;
       wait;
     end process CpuP1;
@@ -335,7 +335,7 @@ begin
     -- Enable FINAL logs for every level
     -- Note it is expected that most control of alerts will occur only in the testbench block
     -- Note that this also turns on FINAL messages for CPU - see hierarchy for better control
-    SetLogEnable(FINAL, true);          -- Runs once at initialization time
+    SetLogEnable(osvvm.AlertLogPkg.FINAL, true);          -- Runs once at initialization time
 
     ------------------------------------------------------------
     UartP1 : process
@@ -367,7 +367,7 @@ begin
         Alert("Uart.P2.W alert " & to_string(i) & " of 5", warning);
         -- Info not enabled
         Log ("UART.P2.I log   " & to_string(i) & " of 5", INFO);
-        Log ("UART.P2.F log   " & to_string(i) & " of 5", FINAL);
+        Log ("UART.P2.F log   " & to_string(i) & " of 5", osvvm.AlertLogPkg.FINAL);
       end loop;
       wait;
     end process UartP2;
