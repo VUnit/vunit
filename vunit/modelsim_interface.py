@@ -538,18 +538,18 @@ if {![vunit_load -vhdlvariablelogging]} {
         """
         Run a test bench
         """
-        msim_output_path = abspath(join(output_path, "msim"))
-        common_file_name = join(msim_output_path, "common.do")
-        gui_load_file_name = join(msim_output_path, "gui_load.do")
-        gui_run_file_name = join(msim_output_path, "gui_run.do")
-        batch_file_name = join(msim_output_path, "batch.do")
+        sim_output_path = abspath(join(output_path, self.name))
+        common_file_name = join(sim_output_path, "common.do")
+        gui_load_file_name = join(sim_output_path, "gui_load.do")
+        gui_run_file_name = join(sim_output_path, "gui_run.do")
+        batch_file_name = join(sim_output_path, "batch.do")
 
         write_file(common_file_name,
                    self._create_common_script(library_name,
                                               entity_name,
                                               architecture_name,
                                               config,
-                                              output_path=msim_output_path))
+                                              output_path=sim_output_path))
         write_file(gui_load_file_name,
                    self._create_gui_load_script(common_file_name))
         write_file(gui_run_file_name,
