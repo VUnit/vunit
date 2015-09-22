@@ -133,10 +133,27 @@ begin
     variable a1 : array1_t;
     variable a2 : array2_t;
     variable a3 : array3_t;
-    variable a4 : array4_t(10 to 8);
+    variable a4 : array4_t(1 to 5);
+    variable a4_null : array4_t(1 to 0);
+    variable a5_null : array5_t(1 to 0, 1 to 0);
+    variable a5_null2 : array5_t(0 to 1, 1 to 0);
+    variable a5_null3 : array5_t(1 to 0, 0 to 1);
+    variable a5 : array5_t(1 to 5, 1 to 3);
+    variable a6_null : array6_t(apple downto orange);
+    variable a6 : array6_t(apple to orange);
+    variable a7_null : array7_t(1 to 2, apple downto banana);
+    variable a7 : array7_t(1 to 5, apple to melon);
     variable a8 : array8_t;
     variable a9 : array9_t;
     variable a10 : array10_t;
+
+    variable enum1 : enum1_t;
+
+    variable rec1 : record1_t;
+    variable rec2 : record2_t;
+    variable rec3 : record3_t;
+    variable p : positive := 1;
+
   begin
     checker_init(display_format => verbose,
                  file_name      => join(output_path(runner_cfg), "error.csv"),
@@ -322,77 +339,105 @@ begin
         check_relation(to_string(decode_float(encode_float(nan))) /= to_string(positive_zero));
         check_relation(to_string(decode_float(encode_float(negative_zero))) /= to_string(positive_zero));
       elsif run("Test that custom enumeration type can be encoded and decoded") then
-        check_relation(enum1_t'(decode_enum1_t(encode_enum1_t(red))) = red);
-        check_relation(enum1_t'(decode_enum1_t(encode_enum1_t(green))) = green);
-        check_relation(enum1_t'(decode_enum1_t(encode_enum1_t(blue))) = blue);
+        enum1 := decode(encode(red));
+        check_relation(enum1 = red);
+        enum1 := decode(encode(green));
+        check_relation(enum1 = green);
+        enum1 := decode(encode(blue));
+        check_relation(enum1 = blue);
       elsif run("Test that custom record type can be encoded and decoded") then
-        check_relation(record1_t'(decode_record1_t(encode_record1_t((character'pos(lp), -1, -2, -3)))) = record1_t'(character'pos(lp), -1, -2, -3));
-        check_relation(record2_t'(decode_record2_t(encode_record2_t((command, 1, -1, -2, -3, '1')))) = record2_t'(command, 1, -1, -2, -3, '1'));
-        check_relation(record2_t'(decode_record2_t(command(1, -1, -2, -3, '1'))) = record2_t'(command, 1, -1, -2, -3, '1'));
-        check_relation(record3_t'(decode_record3_t(encode_record3_t((char => comma)))) = record3_t'(char => comma));
-        check_relation(record3_t'(decode_record3_t(encode_record3_t((char => lp)))) = record3_t'(char => lp));
-        check_relation(record3_t'(decode_record3_t(encode_record3_t((char => rp)))) = record3_t'(char => rp));
+        rec1 := decode(encode_record1_t((character'pos(lp), -1, -2, -3)));
+        check_relation(rec1 = (character'pos(lp), -1, -2, -3));
+
+        rec2 := decode(encode_record2_t((command, 1, -1, -2, -3, '1')));
+        check_relation(rec2 = (command, 1, -1, -2, -3, '1'));
+        rec2 := decode(command(1, -1, -2, -3, '1'));
+        check_relation(rec2 = (command, 1, -1, -2, -3, '1'));
+
+        rec3 := decode(encode_record3_t((char => comma)));
+        check_relation(rec3 = (char => comma));
+        rec3 := decode(encode_record3_t((char => lp)));
+        check_relation(rec3 = (char => lp));
+        rec3 := decode(encode_record3_t((char => rp)));
+        check_relation(rec3 = (char => rp));
       elsif run("Test that custom array can be encoded and decoded") then
-        a1 := decode_array1_t(encode_array1_t((0, 1, 2, 3, 4)));
-        check_relation(a1 = array1_t'(0, 1, 2, 3, 4));
+        a1 := decode(encode_array1_t((0, 1, 2, 3, 4)));
+        check_relation(a1 = (0, 1, 2, 3, 4));
         check_relation(a1'left = -2);
         check_relation(a1'right = 2);
-        a2 := decode_array2_t(encode_array2_t((0, 1, 2, 3, 4)));
-        check_relation(a2 = array2_t'(0, 1, 2, 3, 4));
+
+        a2 := decode(encode_array2_t((0, 1, 2, 3, 4)));
+        check_relation(a2 = (0, 1, 2, 3, 4));
         check_relation(a2'left = 2);
         check_relation(a2'right = -2);
-        a3 := decode_array3_t(encode_array3_t(((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14))));
-        check_relation(a3 = array3_t'((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14)));
+
+        a3 := decode(encode_array3_t(((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14))));
+        check_relation(a3 = ((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14)));
         check_relation(a3'left(1) = -2);
         check_relation(a3'right(1) = 2);
         check_relation(a3'left(2) = -1);
         check_relation(a3'right(2) = 1);
-        check_relation(array4_t'(decode_array4_t(encode_array4_t(null_array4_t))) = null_array4_t);
-        check_relation(array4_t'(decode_array4_t(encode_array4_t((0, 1, 2, 3, 4)))) = array4_t'(0, 1, 2, 3, 4));
-        check_relation(array4_t'(decode_array4_t(encode_array4_t((0, 1, 2, 3, 4, 5)))) = array4_t'(0, 1, 2, 3, 4, 5));
-        check_relation(array5_t'(decode_array5_t(encode_array5_t(null_array5_t))) = null_array5_t);
-        check_relation(array5_t'(decode_array5_t(encode_array5_t(null_array5_2_t))) = null_array5_2_t);
-        check_relation(array5_t'(decode_array5_t(encode_array5_t(null_array5_3_t))) = null_array5_3_t);
-        check_relation(array5_t'(decode_array5_t(encode_array5_t(((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14))))) = array5_t'((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14)));
-        check_relation(array5_t'(decode_array5_t(encode_array5_t(((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14), (15, 16, 17))))) = array5_t'((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14), (15, 16, 17)));
-        check_relation(array6_t'(decode_array6_t(encode_array6_t(null_array6_t))) = null_array6_t);
-        check_relation(array6_t'(decode_array6_t(encode_array6_t((0, 1, 2, 3, 4)))) = array6_t'(0, 1, 2, 3, 4));
-        check_relation(array6_t'(decode_array6_t(encode_array6_t((0, 1, 2, 3, 4, 5)))) = array6_t'(0, 1, 2, 3, 4, 5));
+
+        a4_null := decode(encode(null_array4_t));
+        check_relation(a4_null = null_array4_t);
+        a4 := decode(encode_array4_t((0, 1, 2, 3, 4)));
+        check_relation(a4 = (0, 1, 2, 3, 4));
+
+        a5_null := decode(encode(null_array5_t));
+        check_relation(a5_null = null_array5_t);
+        a5_null2 := decode(encode(null_array5_2_t));
+        check_relation(a5_null2 = null_array5_2_t);
+        a5_null3 := decode(encode(null_array5_3_t));
+        check_relation(a5_null3 = null_array5_3_t);
+        a5 := decode(encode_array5_t(((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14))));
+        check_relation(a5 = ((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14)));
+
+        a6_null := decode(encode(null_array6_t));
+        check_relation(a6_null = null_array6_t);
+        a6 := decode(encode_array6_t((0, 1, 2, 3, 4)));
+        check_relation(a6 = (0, 1, 2, 3, 4));
+
         -- This test has been removed since it fails under Active-HDL. @TODO
         -- Investigate futher if this can be reintroduced or separated into its
         -- own test that is selectively executed in the acceptance tests
         -- depending on simulator.
-        --check_relation(array7_t'(decode_array7_t(encode_array7_t(null_array7_t))) = null_array7_t);
-        --check_relation(array7_t'(decode_array7_t(encode_array7_t(((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14))))) = array7_t'((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14)));
-        --check_relation(array7_t'(decode_array7_t(encode_array7_t(((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14), (15, 16, 17))))) = array7_t'((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14), (15, 16, 17)));
-        a8 := decode_array8_t(encode_array8_t(((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14))));
-        check_relation(a8 = array8_t'((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14)));
+        --a7_null := decode(encode(null_array7_t));
+        --check_relation(a7_null = null_array7_t);
+        --a7 := decode(encode_array7_t(((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14))));
+        --check_relation(a7 = ((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14)));
+
+        a8 := decode(encode_array8_t(((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14))));
+        check_relation(a8 = ((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14)));
         check_relation(a8'left(1) = -2);
         check_relation(a8'right(1) = 2);
         check_relation(a8'left(2) = -1);
         check_relation(a8'right(2) = 1);
-        a9 := decode_array9_t(encode_array9_t((0, 1, 2, 3, 4)));
-        check_relation(a9 = array9_t'(0, 1, 2, 3, 4));
+
+        a9 := decode(encode_array9_t((0, 1, 2, 3, 4)));
+        check_relation(a9 = (0, 1, 2, 3, 4));
         check_relation(a9'left = -2);
         check_relation(a9'right = 2);
-        a10 := decode_array10_t(encode_array10_t(((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14))));
-        check_relation(a10 = array10_t'((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14)));
+
+        a10 := decode(encode_array10_t(((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14))));
+        check_relation(a10 = ((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14)));
         check_relation(a10'left(1) = -2);
         check_relation(a10'right(1) = 2);
         check_relation(a10'left(2) = -1);
         check_relation(a10'right(2) = 1);
       elsif run("Test that all provided codecs can be used within a composite") then
         my_record4 := (17, 42.21, -365 ns, true, '0', 'U', error, open_ok, read_mode, 21);
-        check_relation(record4_t'(decode_record4_t(encode_record4_t(my_record4))) = record4_t'(my_record4));
+        check_relation(my_record4 = decode(encode(my_record4)));
 
-        my_record5 := ('f', "abc", (true, false, false), ('1', '0', '0'), (17, 21, 42), (-3.14, 2.71, 1000.1000), (-13 ns, 14 ps, 3 ms), "1UX", (1.12, -0.25), 'g');
-	  	check_relation(record5_t'(decode_record5_t(encode_record5_t(my_record5))) = record5_t'(my_record5));
+        my_record5 := ('f', "abc", (true, false, false), ('1', '0', '0'), (17, 21, 42), (-3.14, 2.71, 1000.1000),
+                       (-13 ns, 14 ps, 3 ms), "1UX", (1.12, -0.25), 'g');
+        check_relation(my_record5 = decode(encode(my_record5)));
 
-        my_record6 := ((112.3, 0.48), "100", "011", "1XU", "LHW", "1U0X1", "01LZ1", to_float(234.56, f64), (12.3, -0.48));
-        check_relation(record6_t'(decode_record6_t(encode_record6_t(my_record6))) = record6_t'(my_record6));
+        my_record6 := ((112.3, 0.48), "100", "011", "1XU", "LHW", "1U0X1", "01LZ1", to_float(234.56, f64),
+                       (12.3, -0.48));
+        check_relation(my_record6 = record6_t'(decode(encode(my_record6))));
 
         my_record7 := (my_record4, my_record5, my_record6);
-        check_relation(record7_t'(decode_record7_t(encode_record7_t(my_record7))) = record7_t'(my_record7));
+        check_relation(my_record7 = record7_t'(decode(encode(my_record7))));
       elsif run("Test that the values of different enumeration types used for msg_type record elements get different encodings") then
         write(e1, encode(record2_msg_type_t'(command)));
         write(e2, encode(record8_msg_type_t'(read)));
