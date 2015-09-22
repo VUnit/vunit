@@ -29,8 +29,15 @@ data_files = [os.path.join("..", i) for i in data_files]
 
 setup(
     name='vunit_hdl',
-    version='v0.34.0',
-    packages=['vunit', 'vunit.com', 'vunit.test', 'vunit.test.lint', 'vunit.test.unit', 'vunit.test.acceptance'],
+    version='v0.35.0',
+    packages=['vunit',
+              'vunit.com',
+              'vunit.test',
+              'vunit.parsing',
+              'vunit.parsing.verilog',
+              'vunit.test.lint',
+              'vunit.test.unit',
+              'vunit.test.acceptance'],
     package_data={'vunit': data_files},
     url='https://github.com/LarsAsplund/vunit',
     classifiers=['Development Status :: 5 - Production/Stable',
