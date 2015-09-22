@@ -39,6 +39,9 @@ VUnit depends on a number of components as listed below. Full VUnit functionalit
 * [Aldec Riviera-PRO](https://www.aldec.com/en/products/functional_verification/riviera-pro])
   * Tested with Riviera-PRO-2015.06 (x64/x86).
   * Only VHDL 2008
+* [Aldec Active-HDL](https://www.aldec.com/en/products/fpga_simulation/active-hdl)
+  * Tested with Active-HDL-10.2 (x64/x86)
+  * Only VHDL 2008
 * [Mentor Graphics ModelSim/Questa](http://www.mentor.com/products/fv/modelsim/)
   * Tested with 10.1 - 10.3
 * [GHDL](https://sourceforge.net/projects/ghdl-updates/)

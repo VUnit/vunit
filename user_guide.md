@@ -72,6 +72,25 @@ optional arguments:
                         Number of tests to run in parallel. Test output is not
                         continuously written in verbose mode with p > 1
 
+activehdl:
+  Aldec Active HDL specific flags
+
+  --gui                 Open test case(s) in simulator gui with top level pre
+                        loaded
+
+rivierapro:
+  Aldec Riviera Pro specific flags
+
+  --gui                 Open test case(s) in simulator gui with top level pre
+                        loaded
+
+ghdl:
+  GHDL specific flags
+
+  --gtkwave {vcd,ghw}   Save .vcd or .ghw and open in gtkwave
+  --gtkwave-args GTKWAVE_ARGS
+                        Arguments to pass to gtkwave
+
 modelsim:
   ModelSim specific flags
 
@@ -81,13 +100,6 @@ modelsim:
                         variables and signals
   --new-vsim            Do not re-use the same vsim process for running
                         different test cases (slower)
-
-ghdl:
-  GHDL specific flags
-
-  --gtkwave {vcd,ghw}   Save .vcd or .ghw and open in gtkwave
-  --gtkwave-args GTKWAVE_ARGS
-                        Arguments to pass to gtkwave
 ```
 
 ## VHDL Test Benches
@@ -202,7 +214,7 @@ There are many examples demonstrating more specific usage of VUnit listed below:
   In addition to the normal [run.py](examples/vhdl/uart/run.py) it also contains a [run_with_preprocessing.py](examples/vhdl/uart/run_with_preprocessing.py) to demonstrate the benefit of    location and check preprocessing.
 
 * [examples/vhdl/check/](examples/vhdl/check/)
-  * Demonstrates VUnit check subprograms. 
+  * Demonstrates VUnit check subprograms.
 
 * [examples/vhdl/array/](examples/vhdl/array/)
   * Demonstrates the `array_t` data type of [array_pkg](vhdl/array/src/array_pkg.vhd) which can be used to handle dynamically sized 1D, 2D and 3D data as well as storing and loading it from csv and raw files.
@@ -217,11 +229,11 @@ There are many examples demonstrating more specific usage of VUnit listed below:
   * Demonstrates the `com` message passing package which can be used to communicate arbitrary objects between processes. Further reading can be found in the [com user guide](vhdl/com/user_guide.md)
 
 * [examples/vhdl/logging/](examples/vhdl/logging/)
-  * Demonstrates VUnit's support for logging.  
-  
+  * Demonstrates VUnit's support for logging.
+
 
 ## Selecting simulator backend
-VUnit automatically detects which simulators are available on the `PATH` environment variable and by default selects the first one found. For people who have multiple simulators installed the `VUNIT_SIMULATOR` environment variable can be set to either `modelsim` or `ghdl` to explicitly choose the simulator backend.
+VUnit automatically detects which simulators are available on the `PATH` environment variable and by default selects the first one found. For people who have multiple simulators installed the `VUNIT_SIMULATOR` environment variable can be set to either `activehdl`,  `rivierapro`, `ghdl` or `modelsim` to explicitly choose the simulator backend.
 
 ## Interfacing with pre-compiled libraries
 The `add_library` method of the VUnit class is intended for libraries managed by VUnit.
@@ -295,10 +307,10 @@ VUnit will catch Ctrl-C and perform a clean shutdown closing all started simulat
 ## Installing VUnit
 To be able to import VUnit in your `run.py` script you need to make it visible to Python or else the following error occurs:
 ```console
-Traceback (most recent call last): 
-   File "run.py", line 2, in <module> 
-     from vunit import VUnit 
-ImportError: No module named vunit 
+Traceback (most recent call last):
+   File "run.py", line 2, in <module>
+     from vunit import VUnit
+ImportError: No module named vunit
 ```
 
 There are three methods to make VUnit importable in your `run.py` script:
@@ -306,7 +318,7 @@ There are three methods to make VUnit importable in your `run.py` script:
 1. Install it in your Python environment using `python setup.py install`
 2. Set the `PYTHONPATH` environment variable to include the path to the VUnit root directory containing this user guide. Note that you shouldn't point to the vunit directory within the root directory.
 
-3. Add a `import sys; sys.path.append("/path/to/vunit_root/")` statement in your `run.py` file **before** the `import vunit` statement.  
+3. Add a `import sys; sys.path.append("/path/to/vunit_root/")` statement in your `run.py` file **before** the `import vunit` statement.
 
 ## Creating Sigasi Projects
 The official Sigasi [SigasiProjectCreator](https://github.com/sigasi/SigasiProjectCreator) utility can be used to generate a Sigasi project from a VUnit project using the following script. The script will create virtual folders for each VHDL library containing the files of the library.
@@ -321,7 +333,7 @@ def create_sigasi_project(prj, name, project_path):
     Create Sigasi project from VUnit object prj with name into project_path
     """
     creator = SigasiProjectCreator(name, 2008)
-    
+
     for source_file in prj.get_project_compile_order():
         file_name = source_file.name
         library_name = source_file.library.name
