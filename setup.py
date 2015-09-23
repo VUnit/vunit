@@ -29,7 +29,7 @@ data_files = [os.path.join("..", i) for i in data_files]
 
 setup(
     name='vunit_hdl',
-    version='v0.36.0',
+    version='v0.37.0',
     packages=['vunit',
               'vunit.com',
               'vunit.test',
