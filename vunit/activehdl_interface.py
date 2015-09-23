@@ -199,6 +199,12 @@ proc vunit_load {{}} {{
         return 1
     }}
 
+    global breakassertlevel
+    set breakassertlevel {breaklevel}
+
+    global builtinbreakassertlevel
+    set builtinbreakassertlevel $breakassertlevel
+
     set no_vhdl_test_runner_exit [catch {{examine /run_base_pkg/runner.exit_simulation}}]
     if {{${{no_vhdl_test_runner_exit}}}}  {{
         echo {{Error: No vunit test runner package used}}
@@ -207,23 +213,18 @@ proc vunit_load {{}} {{
     return 0
 }}
 """.format(set_generic_str=set_generic_str,
-           vsim_flags=" ".join(vsim_flags))
+           vsim_flags=" ".join(vsim_flags),
+           breaklevel=1 if config.fail_on_warning else 2)
 
         return tcl
 
     @staticmethod
-    def _create_run_function(fail_on_warning=False):
+    def _create_run_function():
         """
         Create the vunit_run function to run the test bench
         """
         return """
 proc vunit_run {} {
-    global breakassertlevel
-    set breakassertlevel %i
-
-    global builtinbreakassertlevel
-    set builtinbreakassertlevel $breakassertlevel
-
     set has_vhdl_runner [expr ![catch {examine /run_base_pkg/runner}]]
 
     if {${has_vhdl_runner}} {
@@ -246,7 +247,7 @@ proc vunit_run {} {
     }
     return $failed
 }
-""" % (1 if fail_on_warning else 2)
+"""
 
     def _create_common_script(self,   # pylint: disable=too-many-arguments
                               library_name, entity_name, architecture_name,
@@ -259,7 +260,7 @@ proc vunit_run {} {
         tcl += self._create_load_function(library_name, entity_name, architecture_name,
                                           config, output_path,
                                           config.disable_ieee_warnings)
-        tcl += self._create_run_function(config.fail_on_warning)
+        tcl += self._create_run_function()
         return tcl
 
     @staticmethod
