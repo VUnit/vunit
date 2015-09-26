@@ -27,7 +27,7 @@ else:
     lib.add_source_files(join(vhdl_path, "tb_check_relation93_2002.vhd"), [CheckPreprocessor()])
 
 for file_name in glob(join(vhdl_path, "tb_*.vhd")):
-    if basename(file_name) == "tb_check_relation.vhd":
+    if basename(file_name).startswith("tb_check_relation"):
         continue
     lib.add_source_files(file_name)
 
