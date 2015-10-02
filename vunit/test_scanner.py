@@ -147,9 +147,12 @@ class TestScanner(object):
             generics["tb_path"] = new_value
 
         generics = config.sim_config.generics.copy()
-        add_tb_path_generic(generics)
+
+        if "tb_path" in entity.generic_names:
+            add_tb_path_generic(generics)
+
         config.sim_config.fail_on_warning = fail_on_warning
-        config.sim_config.generics = prune_generics(generics, entity.generic_names)
+        config.sim_config.generics = prune_generics(generics, entity)
 
         return TestBench(simulator_if=self._simulator_if,
                          library_name=entity.library_name,
@@ -281,13 +284,18 @@ def dotjoin(*args):
     return ".".join(arg for arg in args if arg not in ("", None))
 
 
-def prune_generics(generics, generic_names):
+def prune_generics(generics, entity):
     """
-    Keep only generics with name in generic_names
+    Keep only generics with name in entity.generic_names
     """
     generics = generics.copy()
     for gname in list(generics.keys()):
-        if gname not in generic_names:
+        if gname not in entity.generic_names:
+            LOGGER.warning(
+                "Generic '%s' set to value '%s' not found in entity '%s.%s'. Possible values are [%s]",
+                gname, generics[gname],
+                entity.library_name, entity.name,
+                ", ".join('%s' % name for name in entity.generic_names))
             del generics[gname]
     return generics
 

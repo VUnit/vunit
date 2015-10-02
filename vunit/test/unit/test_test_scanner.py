@@ -143,7 +143,7 @@ if run("Test_2")
         project = ProjectStub()
         lib = project.add_library("lib")
         ent = lib.add_entity("tb_entity",
-                             generic_names=["runner_cfg"])
+                             generic_names=["runner_cfg", "name"])
 
         ent.set_contents('if run("Test")')
 
@@ -251,10 +251,6 @@ if run("Test_2")
                              generic_names=["tb_path"])
         ent.set_contents("")
 
-        # Should not yield warning since it does not have tb_path generic
-        ent_without = lib.add_entity("tb_entity_without")
-        ent_without.set_contents("")
-
         tb_path_non_overriden_value = "foo"
         self.configuration.set_generic("tb_path", tb_path_non_overriden_value)
         tests = self.test_scanner.from_project(project)
@@ -268,6 +264,24 @@ if run("Test_2")
         self.assertIn(tb_path_value, call_args)
         generics = find_generics(tests, "lib.tb_entity")
         self.assertEqual(generics["tb_path"], tb_path_value)
+
+    @mock.patch("vunit.test_scanner.LOGGER")
+    def test_warning_on_setting_missing_generic(self, mock_logger):
+        project = ProjectStub()
+        lib = project.add_library("lib")
+
+        ent = lib.add_entity("tb_entity",
+                             generic_names=[""])
+        ent.set_contents("")
+        self.configuration.set_generic("name123", "value123")
+        self.test_scanner.from_project(project)
+        warning_calls = mock_logger.warning.call_args_list
+        self.assertEqual(len(warning_calls), 1)
+        call_args = warning_calls[0][0]
+        self.assertIn("lib", call_args)
+        self.assertIn("tb_entity", call_args)
+        self.assertIn("name123", call_args)
+        self.assertIn("value123", call_args)
 
     def assert_has_tests(self, test_list, tests):
         """
