@@ -214,7 +214,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         Globally set generic
         """
-        self._configuration.set_generic(name, value, scope=create_scope())
+        self._configuration.set_generic(name.lower(), value, scope=create_scope())
 
     def set_parameter(self, name, value):
         """
@@ -519,7 +519,7 @@ class LibraryFacade(object):
 
     def set_generic(self, name, value):
         """ Set generic within library """
-        self._configuration.set_generic(name, value, scope=self._scope)
+        self._configuration.set_generic(name.lower(), value, scope=self._scope)
 
     def set_parameter(self, name, value):
         """ Set generic within library  """
@@ -593,7 +593,7 @@ class EntityFacade(object):
 
     def set_generic(self, name, value):
         """ Set generic within entity """
-        self._config.set_generic(name, value, scope=self._scope)
+        self._config.set_generic(name.lower(), value, scope=self._scope)
 
     def set_parameter(self, name, value):
         """ Set generic within module """
@@ -614,6 +614,7 @@ class EntityFacade(object):
         Add a run-configuration of all tests within entity
         """
         generics = {} if generics is None else generics
+        generics = lower_generics(generics)
         parameters = {} if parameters is None else parameters
         generics.update(parameters)
         self._config.add_config(scope=self._scope,
@@ -687,6 +688,7 @@ class TestFacade(object):
         Add a run-configuration this test case
         """
         generics = {} if generics is None else generics
+        generics = lower_generics(generics)
         parameters = {} if parameters is None else parameters
         generics.update(parameters)
         self._config.add_config(scope=self._scope,
@@ -698,7 +700,7 @@ class TestFacade(object):
         """
         Set generic for test case
         """
-        self._config.set_generic(name, value, scope=self._scope)
+        self._config.set_generic(name.lower(), value, scope=self._scope)
 
     def set_parameter(self, name, value):
         """
@@ -726,3 +728,11 @@ def select_vhdl_standard():
     vhdl_standard = os.environ.get('VUNIT_VHDL_STANDARD', '2008')
     assert vhdl_standard in ('93', '2002', '2008')
     return vhdl_standard
+
+
+def lower_generics(generics):
+    """
+    Convert all generics names to lower case to match internal representation.
+    @TODO Maybe warn in case of conflict. VHDL forbids this though so the user will notice anyway.
+    """
+    return dict((name.lower(), value) for name, value in generics.items())
