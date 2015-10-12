@@ -82,7 +82,14 @@ package custom_types_pkg is
     msg_type : record8_msg_type_t;
     addr     : natural;
     data     : natural;
-  end record record8_t;
+  end record record8_t;    type int_2d_t is array (integer range <>, integer range <>) of integer;
+  type record9_msg_type_t is (foo, bar);
+  type record9_t is record
+    msg_type : record9_msg_type_t;
+    slv   : std_logic_vector(7 downto 0);
+    str   : string(1 to 3);
+    int_2d : int_2d_t(1 to 2, 4 downto -1);
+  end record record9_t;
 
   type array1_t is array (-2 to 2) of natural;
   type array2_t is array (2 downto -2) of natural;

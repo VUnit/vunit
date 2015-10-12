@@ -200,7 +200,7 @@ class CodecVHDLPackage(VHDLPackage):
                             if identifier != 'msg_type':
                                 parameter_list.append('    constant %s : %s' % (identifier,
                                                                                 element.subtype_indication.code))
-                                parameter_type_list.append(element.subtype_indication.code)
+                                parameter_type_list.append(element.subtype_indication.type_mark)
                                 encoding_list.append('encode(%s)' % identifier)
                             else:
                                 encoding_list.append("encode(%s'(%s))" % (element.subtype_indication.code, value))

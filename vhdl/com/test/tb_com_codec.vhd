@@ -152,6 +152,7 @@ begin
     variable rec1 : record1_t;
     variable rec2 : record2_t;
     variable rec3 : record3_t;
+    variable rec9 : record9_t;
     variable p : positive := 1;
 
   begin
@@ -461,6 +462,9 @@ begin
         deallocate(e1);
         deallocate(e2);
         deallocate(e3);
+      elsif run("Test that records containing arrays can be encoded and decoded") then
+        rec9 := decode(encode(record9_t'(foo, x"a5", "foo", ((1, 2, 3, 4, 5, 6), (4, 3, 2, 1, 0, -1)))));
+        check_relation(rec9 = (foo, x"a5", "foo", ((1, 2, 3, 4, 5, 6), (4, 3, 2, 1, 0, -1))));
       end if;
     end loop;
 
