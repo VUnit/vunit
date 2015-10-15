@@ -41,7 +41,6 @@ class Project(object):
         self._vhdl_parser = vhdl_parser
         self._verilog_parser = verilog_parser
         self._libraries = {}
-        self._source_files = {}
         self._source_files_in_order = []
         self._depend_on_components = depend_on_components
         self._depend_on_package_body = depend_on_package_body
@@ -91,8 +90,9 @@ class Project(object):
         else:
             raise ValueError(file_type)
 
-        self._source_files[file_name] = source_file
-        self._source_files_in_order.append(file_name)
+        library.add_source_file(source_file)
+        self._source_files_in_order.append(source_file)
+        return source_file
 
     @staticmethod
     def _find_primary_secondary_design_unit_dependencies(source_file):
@@ -153,7 +153,7 @@ class Project(object):
 
                     if name in architectures:
                         file_name = architectures[name]
-                        yield self._source_files[file_name]
+                        yield library.get_source_file(file_name)
                     else:
                         LOGGER.warning("%s: failed to find architecture '%s' of entity '%s.%s'",
                                        source_file.name, name, library.name, primary_unit.name)
@@ -277,7 +277,7 @@ class Project(object):
 
         return sorted(affected_files, key=comparison_key)
 
-    def get_dependencies_in_compile_order(self, target):
+    def get_dependencies_in_compile_order(self, target, library=None):
         """
         Get a list of dependencies of target, if target is specified.
         Otherwise, get a list of all files in the project.
@@ -287,9 +287,18 @@ class Project(object):
         if target is None:
             return self.get_files_in_compile_order(incremental=False)
 
-        target_file = self._source_files[target]
+        target_files = []
+        for library in self._libraries.values():
+            try:
+                target_files.append(library.get_source_file(target))
+            except KeyError:
+                pass
+
+        if len(target_files) == 0:
+            raise KeyError(target)
+
         dependency_graph = self._create_dependency_graph()
-        affected_files = dependency_graph.get_dependencies(set([target_file]))
+        affected_files = dependency_graph.get_dependencies(set(target_files))
         compile_order = dependency_graph.toposort()
 
         def comparison_key(source_file):
@@ -302,13 +311,7 @@ class Project(object):
         """
         Get a list of source files in the order they were added to the project
         """
-        return [self._source_files[file_name] for file_name in self._source_files_in_order]
-
-    def get_source_file(self, file_name):
-        """
-        Get source file object by file name
-        """
-        return self._source_files[file_name]
+        return [source_file for source_file in self._source_files_in_order]
 
     def get_libraries(self):
         return self._libraries.values()
@@ -379,6 +382,8 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
         self.name = name
         self.directory = directory
 
+        self._source_files = {}
+
         # VHDL specific
         # Entity objects
         self._entities = {}
@@ -394,6 +399,21 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
         self.verilog_packages = {}
 
         self._is_external = is_external
+
+    def add_source_file(self, source_file):
+        """
+        Add source file to library unless it exists
+        """
+        if source_file.name not in self._source_files:
+            self._source_files[source_file.name] = source_file
+        else:
+            LOGGER.warning("%s already added to library %s", source_file.name, self.name)
+
+    def get_source_file(self, file_name):
+        """
+        Get source file with file name or raise KeyError
+        """
+        return self._source_files[file_name]
 
     @property
     def is_external(self):
@@ -518,12 +538,15 @@ class SourceFile(object):
 
     def __eq__(self, other):
         if isinstance(other, type(self)):
-            return self.name == other.name
+            return (self.name, self.library.name) == (other.name, other.library.name)
         else:
             return False
 
     def __hash__(self):
-        return hash(self.name)
+        return hash((self.name, self.library.name))
+
+    def __repr__(self):
+        return "SourceFile(%s, %s)" % (self.name, self.library.name)
 
     @property
     def content_hash(self):
