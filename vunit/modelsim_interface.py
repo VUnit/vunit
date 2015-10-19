@@ -11,11 +11,10 @@ Interface towards Mentor Graphics ModelSim
 
 from __future__ import print_function
 
-from vunit.ostools import Process, write_file, file_exists
+from vunit.ostools import Process, write_file, read_file, file_exists
 from vunit.simulator_interface import SimulatorInterface
 from os.path import join, dirname, abspath
 import os
-import subprocess
 
 from vunit.exceptions import CompileError
 try:
@@ -142,19 +141,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         """
         if file_exists(self._modelsim_ini):
             return
-        cwd = join(dirname(self._modelsim_ini))
-        try:
-            env = os.environ.copy()
-            del env["MODELSIM"]
-            output = subprocess.check_output([join(self._prefix, 'vmap'), '-c'],
-                                             cwd=cwd, stderr=subprocess.PIPE, env=env)
-        except subprocess.CalledProcessError as exc:
-            LOGGER.error("Failed to create %s by running 'vmap -c' in %s exit code was %i",
-                         self._modelsim_ini, cwd, exc.returncode)
-            print("== Output of 'vmap -c' " + ("=" * 60))
-            print(exc.output)
-            print("=======================" + ("=" * 60))
-            raise
+        write_file(self._modelsim_ini, read_file(join(self._prefix, "..", "modelsim.ini")))
 
     def compile_project(self, project, vhdl_standard):
         """
@@ -228,8 +215,11 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         if library_name in mapped_libraries and mapped_libraries[library_name] == path:
             return
 
-        proc = Process([join(self._prefix, 'vmap'), '-modelsimini', self._modelsim_ini, library_name, path])
-        proc.consume_output(callback=None)
+        cfg = RawConfigParser()
+        cfg.read(self._modelsim_ini)
+        cfg.set("Library", library_name, path)
+        with open(self._modelsim_ini, "w") as optr:
+            cfg.write(optr)
 
     def _get_mapped_libraries(self):
         """
