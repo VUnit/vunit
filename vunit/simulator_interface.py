@@ -66,6 +66,12 @@ class SimulatorInterface(object):
                    [constraint(path0) for constraint in constraints]):
                 return path0
 
+    def post_process(self, output_path):
+        """
+        Hook for simulator interface to perform post processing such as creating coverage reports
+        """
+        pass
+
 
 def isfile(file_name):
     """

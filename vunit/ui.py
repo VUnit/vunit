@@ -356,6 +356,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         report = TestReport(printer=self._printer)
         try:
             self._run_test(test_cases, report)
+            simulator_if.post_process(self._simulator_factory.simulator_output_path)
         except KeyboardInterrupt:
             print()
             LOGGER.debug("_main: Caught Ctrl-C shutting down")
@@ -365,6 +366,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         report.set_real_total_time(ostools.get_time() - start_time)
         self._post_process(report)
+
         return report.all_ok()
 
     def _main_list_only(self):
