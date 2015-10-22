@@ -6,13 +6,13 @@
 
 from os.path import join, dirname
 from vunit import VUnit
-from vunit import ROOT
+from vunit.builtins import VHDL_PATH
 
 ui = VUnit.from_argv()
 ui.enable_check_preprocessing()
 lib = ui.add_library("lib")
 lib.add_source_files(join(dirname(__file__), "check_example.vhd"))
-common_path = join(ROOT, 'vhdl', 'common', 'test')
+common_path = join(VHDL_PATH, 'common', 'test')
 lib.add_source_files(join(common_path, "test_type_methods_api.vhd"))
 lib.add_source_files(join(common_path, "test_types200x.vhd"))
 lib.add_source_files(join(common_path, "test_type_methods200x.vhd"))

@@ -15,6 +15,7 @@ from vunit.test.common import has_simulator, check_report, simulator_is
 from subprocess import call
 import sys
 from vunit import ROOT
+from vunit.builtins import VHDL_PATH
 from os import environ
 
 
@@ -88,91 +89,91 @@ class TestExternalRunScripts(unittest.TestCase):
         self.check(join(ROOT, "examples", "vhdl", "com", "run.py"))
 
     def test_array_vhdl_2008(self):
-        self.check(join(ROOT, "vhdl", "array", "run.py"))
+        self.check(join(VHDL_PATH, "array", "run.py"))
 
     def test_check_vhdl_2008(self):
-        self.check(join(ROOT, "vhdl", "check", "run.py"))
+        self.check(join(VHDL_PATH, "check", "run.py"))
 
     @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_check_vhdl_2002(self):
-        self.check(join(ROOT, "vhdl", "check", "run.py"),
+        self.check(join(VHDL_PATH, "check", "run.py"),
                    vhdl_standard='2002')
 
     @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_check_vhdl_93(self):
-        self.check(join(ROOT, "vhdl", "check", "run.py"),
+        self.check(join(VHDL_PATH, "check", "run.py"),
                    vhdl_standard='93')
 
     def test_logging_vhdl_2008(self):
-        self.check(join(ROOT, "vhdl", "logging", "run.py"))
+        self.check(join(VHDL_PATH, "logging", "run.py"))
 
     @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_logging_vhdl_2002(self):
-        self.check(join(ROOT, "vhdl", "logging", "run.py"),
+        self.check(join(VHDL_PATH, "logging", "run.py"),
                    vhdl_standard='2002')
 
     @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_logging_vhdl_93(self):
-        self.check(join(ROOT, "vhdl", "logging", "run.py"),
+        self.check(join(VHDL_PATH, "logging", "run.py"),
                    vhdl_standard='93')
 
     def test_run_vhdl_2008(self):
-        self.check(join(ROOT, "vhdl", "run", "run.py"))
+        self.check(join(VHDL_PATH, "run", "run.py"))
 
     @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_run_vhdl_2002(self):
-        self.check(join(ROOT, "vhdl", "run", "run.py"),
+        self.check(join(VHDL_PATH, "run", "run.py"),
                    vhdl_standard='2002')
 
     @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_run_vhdl_93(self):
-        self.check(join(ROOT, "vhdl", "run", "run.py"),
+        self.check(join(VHDL_PATH, "run", "run.py"),
                    vhdl_standard='93')
 
     def test_string_ops_vhdl_2008(self):
-        self.check(join(ROOT, "vhdl", "string_ops", "run.py"))
+        self.check(join(VHDL_PATH, "string_ops", "run.py"))
 
     @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_string_ops_vhdl_2002(self):
-        self.check(join(ROOT, "vhdl", "string_ops", "run.py"),
+        self.check(join(VHDL_PATH, "string_ops", "run.py"),
                    vhdl_standard='2002')
 
     @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_string_ops_vhdl_93(self):
-        self.check(join(ROOT, "vhdl", "string_ops", "run.py"),
+        self.check(join(VHDL_PATH, "string_ops", "run.py"),
                    vhdl_standard='93')
 
     def test_dictionary_vhdl_2008(self):
-        self.check(join(ROOT, "vhdl", "dictionary", "run.py"))
+        self.check(join(VHDL_PATH, "dictionary", "run.py"))
 
     @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_dictionary_vhdl_2002(self):
-        self.check(join(ROOT, "vhdl", "dictionary", "run.py"),
+        self.check(join(VHDL_PATH, "dictionary", "run.py"),
                    vhdl_standard='2002')
 
     @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_dictionary_vhdl_93(self):
-        self.check(join(ROOT, "vhdl", "dictionary", "run.py"),
+        self.check(join(VHDL_PATH, "dictionary", "run.py"),
                    vhdl_standard='93')
 
     def test_path_vhdl_2008(self):
-        self.check(join(ROOT, "vhdl", "path", "run.py"))
+        self.check(join(VHDL_PATH, "path", "run.py"))
 
     @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_path_vhdl_2002(self):
-        self.check(join(ROOT, "vhdl", "path", "run.py"),
+        self.check(join(VHDL_PATH, "path", "run.py"),
                    vhdl_standard='2002')
 
     @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_path_vhdl_93(self):
-        self.check(join(ROOT, "vhdl", "path", "run.py"),
+        self.check(join(VHDL_PATH, "path", "run.py"),
                    vhdl_standard='93')
 
     def test_com_vhdl_2008(self):
-        self.check(join(ROOT, "vhdl", "com", "run.py"))
+        self.check(join(VHDL_PATH, "com", "run.py"))
 
     def test_com_debug_vhdl_2008(self):
-        self.check(join(ROOT, "vhdl", "com", "run.py"),
+        self.check(join(VHDL_PATH, "com", "run.py"),
                    args=["--use-debug-codecs"])
 
     def test_vhdl_compile_order_project(self):

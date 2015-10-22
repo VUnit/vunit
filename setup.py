@@ -4,28 +4,30 @@
 #
 # Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
 
-from distutils.core import setup
+from setuptools import setup
 import os
 
 
-def find_all_files(directory):
+def find_all_files(directory, endings=None):
     """
     Recursively find all files within directory
     """
     result = []
     for root, dirnames, filenames in os.walk(directory):
         for filename in filenames:
-            result.append(os.path.join(root, filename))
+            ending = os.path.splitext(filename)[-1]
+            if endings is None or ending in endings:
+                result.append(os.path.join(root, filename))
+            else:
+                print("Ignoring %s" % filename)
     return result
 
-data_files = (find_all_files('vhdl') +
-              find_all_files('verilog'))
-
-# Makes data folder appear one directory level up from the vunit package in the installed system folder.
-# This is required since references are made with the source directory layout in mind
-# @TODO This is not very nice and could potentially cause problems,
-#       we should move the data folders into the vunit package folder to keep locality
-data_files = [os.path.join("..", i) for i in data_files]
+data_files = []
+data_files += find_all_files(os.path.join('vunit', 'vhdl'),
+                             endings=[".vhd"])
+data_files += find_all_files(os.path.join('vunit', 'verilog'),
+                             endings=[".v", ".sv", ".svh"])
+data_files = [os.path.relpath(file_name, 'vunit') for file_name in data_files]
 
 setup(
     name='vunit_hdl',
@@ -39,6 +41,7 @@ setup(
               'vunit.test.unit',
               'vunit.test.acceptance'],
     package_data={'vunit': data_files},
+    zip_safe=False,
     url='https://github.com/LarsAsplund/vunit',
     classifiers=['Development Status :: 5 - Production/Stable',
                  'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',

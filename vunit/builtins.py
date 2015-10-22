@@ -12,8 +12,8 @@ Functions to add builtin VHDL code to a project for compilation
 from os.path import join, abspath, dirname, basename
 from glob import glob
 
-VHDL_PATH = abspath(join(dirname(__file__), "..", "vhdl"))
-VERILOG_PATH = abspath(join(dirname(__file__), "..", "verilog"))
+VHDL_PATH = abspath(join(dirname(__file__), "vhdl"))
+VERILOG_PATH = abspath(join(dirname(__file__), "verilog"))
 
 
 def add_verilog_builtins(library):

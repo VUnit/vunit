@@ -16,6 +16,7 @@ import re
 from datetime import datetime
 from subprocess import Popen, PIPE, STDOUT
 from vunit import ROOT
+from vunit.builtins import VHDL_PATH
 import vunit.ostools as ostools
 
 
@@ -34,7 +35,7 @@ class TestLicense(unittest.TestCase):
                     continue
                 if 'codecs' in root:
                     continue
-                osvvm_directory = abspath(join(ROOT, 'vhdl', 'osvvm'))
+                osvvm_directory = abspath(join(VHDL_PATH, 'osvvm'))
                 if is_prefix_of(osvvm_directory, abspath(join(root, file_name))):
                     continue
                 osvvm_integration_example_directory = abspath(

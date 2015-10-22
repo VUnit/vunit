@@ -41,7 +41,7 @@ To send a message we must first create an actor for the sender and then find the
   end process proc_1;
 ```
 
-The returned receipt contains, among other things, status for the send and the expected value is `ok`. `net` is the abstract network over which messages are sent. Ideally this shouldn't be part of the procedure call but since `net` is a signal and the procedure is defined within a package it has to be among the parameters if the procedure is to drive the signal. Note that the self variable isn't used and could have been excluded. It will be used in later examples where the sender can't be anonymous. 
+The returned receipt contains, among other things, status for the send and the expected value is `ok`. `net` is the abstract network over which messages are sent. Ideally this shouldn't be part of the procedure call but since `net` is a signal and the procedure is defined within a package it has to be among the parameters if the procedure is to drive the signal. Note that the self variable isn't used and could have been excluded. It will be used in later examples where the sender can't be anonymous.
 
 Below is a basic receiver for the message above.
 
@@ -82,7 +82,7 @@ The default behaviour of the `receive` procedure above is to block until a messa
   end process proc_2;
 ```
 
-Creating and finding actors is often done at the beginning of a process at time zero. This means that there is a potential race condition, i.e. the `find` of one process is called before the the actor searched for has been created. The default behaviour is that `com` does a *deferred* creation of an actor in these situations. The deferred state is then removed when the actor is created. It is possible to perform actions on a deferred actor when it is the "other" actor, for example sending **to** an actor. However, it is not possible to perform actions from a deferred actor, for example sending **from** it. The risk with this approach is if you do a `find` with a misspelled actor. Messages sent to the resulting deferred actor will never be read by anyone. 
+Creating and finding actors is often done at the beginning of a process at time zero. This means that there is a potential race condition, i.e. the `find` of one process is called before the the actor searched for has been created. The default behaviour is that `com` does a *deferred* creation of an actor in these situations. The deferred state is then removed when the actor is created. It is possible to perform actions on a deferred actor when it is the "other" actor, for example sending **to** an actor. However, it is not possible to perform actions from a deferred actor, for example sending **from** it. The risk with this approach is if you do a `find` with a misspelled actor. Messages sent to the resulting deferred actor will never be read by anyone.
 
 The default behaviour with deferred creation can be overridden by calling `find("actor_name", enable_deferred_creation => false);`. Such a call will return `null_actor_c` if the searched actor hasn't been created. It's also possible to call `num_of_deferred_creations` and verify that it returns zero when you expect all involved actors to be created.
 
@@ -99,7 +99,7 @@ which can be received like this.
     report "Received " & to_string(my_integer);
 ```
 
-`com` has support for around 25 native VHDL and IEEE types. These can be used as primitives when building codecs for custom composite types. For example, an encoder for a custom record type can be built as a simple concatenation of the encoded record elements. However, `com` can also generate codecs for your custom enumeration, array, and record types. For example, the [card shuffler example](../examples/com/test/tb_card_shuffler.vhd) uses the following package.
+`com` has support for around 25 native VHDL and IEEE types. These can be used as primitives when building codecs for custom composite types. For example, an encoder for a custom record type can be built as a simple concatenation of the encoded record elements. However, `com` can also generate codecs for your custom enumeration, array, and record types. For example, the [card shuffler example](../../../examples/com/test/tb_card_shuffler.vhd) uses the following package.
 
 ```vhdl
 package msg_types_pkg is
@@ -159,7 +159,7 @@ you can write
 send(net, receiver, load((ace, spades)), receipt);
 ```
 
-which makes the intention of the message more clear. 
+which makes the intention of the message more clear.
 
 **Note1:** The encoder function also has an alias with a `_msg` suffix (`load_msg` in the previous example). This must currently be used with Aldec's simulators if the function has no input parameters. The reason is that the normal name (`load`) is confused with the enumeration literal with the same name.
 
@@ -176,7 +176,7 @@ You also get a `get_msg_type` function which will return the type of a message c
         when received =>
 		  -- Decode this message type and take action
         when get_status =>
-		  -- Decode this message type and take action	
+		  -- Decode this message type and take action
         when reset_shuffler =>
 		  -- Decode this message type and take action
         when others =>
@@ -184,17 +184,17 @@ You also get a `get_msg_type` function which will return the type of a message c
         end case;
 ```
 
-Sometimes the encode/decode functions used in the code are ambiguous to the compiler. To handle this all built-in and generated encode/decode functions have an alias on the format encode/decode_<type>, for example `encode_card_t`. 
+Sometimes the encode/decode functions used in the code are ambiguous to the compiler. To handle this all built-in and generated encode/decode functions have an alias on the format encode/decode_<type>, for example `encode_card_t`.
 
 ## Publisher/Subscriber Pattern
 Sometimes a message needs to be sent to many receivers and this can of course be achieved with multiple calls to the `send` procedure. However, in many of these cases the sender isn't interested in who the receivers are, it just want to broadcast information to anyone interested. If this is the case it's inconvenient to add a new `send` call to the sender for every new receiver. This is called the publisher/subscriber pattern and `com` has dedicated functionality to support it.
 
-An example of this pattern can be found in the [card shuffler example](../examples/com/test/tb_card_shuffler.vhd). There the test runner publishes commands to load cards into the card shuffler. These commands are received by a driver which translates the commands to the pin wiggling understood by the card shuffler. The commands are also received by the scoreboard such that it can compare what is being sent into the card shuffler with what is sent out and from that determine if a correct shuffling has taken place.
+An example of this pattern can be found in the [card shuffler example](../../../examples/com/test/tb_card_shuffler.vhd). There the test runner publishes commands to load cards into the card shuffler. These commands are received by a driver which translates the commands to the pin wiggling understood by the card shuffler. The commands are also received by the scoreboard such that it can compare what is being sent into the card shuffler with what is sent out and from that determine if a correct shuffling has taken place.
 
 A `publish` is the same as a `send` with the difference that no receiver is specified, it can't be anonymous, and that a status is returned instead of a receipt. The difference between a receipt and a status is that the receipt contains status as we've seen before but also a message ID which is used for the client/server pattern described later on. The ID is unique to a message but a publish may result in zero or many messages. Moreover, it does not make sense to combine publishing with the client/server pattern so the message ID has been excluded from the `publish` procedure. A publish must be made with the publisher actor as a parameter so that `com` can find the subscribers.
 
 ```vhdl
-publish(net, self, load((rank, suit)), status); 
+publish(net, self, load((rank, suit)), status);
 ```
 
 An actor interested in what's published call the `subscribe` procedure. Both the driver and the scoreboard have this piece of code.

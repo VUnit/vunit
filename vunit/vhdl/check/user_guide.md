@@ -87,7 +87,7 @@ Note that when using the VUnit Python test runner the default checker `stop_leve
 
 ### Check Location
 
-The `check` procedure described in the previous section has two additional parameters, `line_num` and `file_name`. These are normally not set by the user but by the location preprocessor such that the location of a failing check is included in the error message. The location preprocessor is further described in the [log user guide](../logging/user_guide.md). Preprocessor parameters are always placed at the end of the parameter list and they have "good" default values such that the function behaves nicely even if the preprocessor isn't used. 
+The `check` procedure described in the previous section has two additional parameters, `line_num` and `file_name`. These are normally not set by the user but by the location preprocessor such that the location of a failing check is included in the error message. The location preprocessor is further described in the [log user guide](../logging/user_guide.md). Preprocessor parameters are always placed at the end of the parameter list and they have "good" default values such that the function behaves nicely even if the preprocessor isn't used.
 
 ``` vhdl
 procedure check(
@@ -198,7 +198,7 @@ The unclocked procedures have the following format. The four variants comes from
 
 ``` vhdl
 procedure check_<name>(
-  [variable checker   : inout checker_t;] 
+  [variable checker   : inout checker_t;]
   [variable pass      : out   boolean;]
   <specific parameters>
   constant msg       : in    string      := "Check failed!";
@@ -240,7 +240,7 @@ procedure check_<name>(
 type edge_t is (rising_edge, falling_edge, both_edges);
 ```
 
-The condition for failure is continuously evaluated on the clock edge(s) specified by `active_clock_edge` as long as `en = '1'`. 
+The condition for failure is continuously evaluated on the clock edge(s) specified by `active_clock_edge` as long as `en = '1'`.
 
 The figure below shows an example using the concurrent version of `check_true` which evaluates a boolean `expr` just like the basic check. The only difference is that `check_true` provides the two concurrent procedure formats which the basic check does not.
 
@@ -251,7 +251,7 @@ The figure below shows an example using the concurrent version of `check_true` w
 #### check\_true
 Special Parameter | Type
 ----------------- | ----
-expr  | boolean or std_logic 
+expr  | boolean or std_logic
 
 
 `check_true` passes when `expr` is `true`/`1`/`H`.
@@ -259,7 +259,7 @@ expr  | boolean or std_logic
 #### check\_false
 Special Parameter | Type
 ----------------- | ----
-expr  | boolean or std_logic 
+expr  | boolean or std_logic
 
 
 `check_false` passes when `expr` is `false`/`0`/`L`.
@@ -267,8 +267,8 @@ expr  | boolean or std_logic
 #### check\_implication
 Special Parameter | Type
 ----------------- | ----
-antecedent_expr  | boolean or std_logic 
-consequent_expr  | boolean or std_logic 
+antecedent_expr  | boolean or std_logic
+consequent_expr  | boolean or std_logic
 
 The unclocked subprograms use `boolean` parameters while the clocked procedures use `std_logic`.
 
@@ -277,21 +277,21 @@ The unclocked subprograms use `boolean` parameters while the clocked procedures 
 #### check\_not\_unknown
 Special Parameter | Type
 ----------------- | ----
-expr  | std_logic_vector or std_logic 
+expr  | std_logic_vector or std_logic
 
-`check_not_unknown` passes when `expr` contains none of the metavalues `U`, `X`, `Z`, `W`, or `-`. 
+`check_not_unknown` passes when `expr` contains none of the metavalues `U`, `X`, `Z`, `W`, or `-`.
 
 #### check\_zero\_one\_hot
 Special Parameter | Type
 ----------------- | ----
-expr  | std_logic_vector 
+expr  | std_logic_vector
 
 `check_zero_one_hot` passes when `expr` contains none of the metavalues `U`, `X`, `Z`, `W`, or `-` and there are zero or one bit equal to `1` or `H` .
 
 #### check\_one\_hot
 Special Parameter | Type
 ----------------- | ----
-expr  | std_logic_vector 
+expr  | std_logic_vector
 
 `check_one_hot` passes when `expr` contains none of the metavalues `U`, `X`, `Z`, `W`, or `-` and there is exactly one bit equal to `1` or `H` .
 
@@ -319,7 +319,7 @@ impure function check_<name>(
 Note the difference in default value for `msg` when compared to the point checks. Point checks have `Check failed!` as default while relation checks use an empty string. The reason is that relation checks generate error messages of their own that describes how the relation failed. Any `msg` input provided by the user is added to that error message as additional information.
 
 There's also a difference in the preprocessor parameters. `check_equal` and `check_match` have the `line_num` and `file_name` parameters just as the point checks but `check_relation` also has a parameter called `auto_msg` described later.
-  
+
 #### check\_equal
 
 Special Parameter |
@@ -329,7 +329,7 @@ expected |
 
 The `got` and `expected` parameters can have the following combination of types
 
-got | expected 
+got | expected
 ------|-----------
 unsigned | unsigned
 natural | unsigned
@@ -408,9 +408,9 @@ The left and right hand sides of the relation are evaluated twice, once when the
 check_relation(counter_to_verify = get_and_increment_reference_counter(increment_with => 3));
 ```
 
-The reference counter will be incremented with 6 which is not what you expect by just looking at the code before the preprocessor has generated the `auto_msg` which will be a string containing `to_string(get_and_increment_reference_counter(increment_with => 3))`. 
+The reference counter will be incremented with 6 which is not what you expect by just looking at the code before the preprocessor has generated the `auto_msg` which will be a string containing `to_string(get_and_increment_reference_counter(increment_with => 3))`.
 
-Conclusion: Do not use impure functions in your expression. If you have a case like this you can do something like 
+Conclusion: Do not use impure functions in your expression. If you have a case like this you can do something like
 
 ``` vhdl
 ref_cnt := get_and_increment_reference_counter(increment_with => 3);
@@ -448,7 +448,7 @@ If this logical expression returns false the check will generate an error messag
 
 Conclusion: Use `check_relation` for relations as intended!
 
-The [check example testbench](../../examples/vhdl/check/check_example.vhd) also contain another highly unlikely way to fool the parser.
+The [check example testbench](../../../examples/vhdl/check/check_example.vhd) also contain another highly unlikely way to fool the parser.
 
 It should also be noted that the parser can handle that there are relational operators within the check call but outside of the `expr` parameter. For example, it won't be fooled by the relational operators appearing within strings and comments of this call.
 
@@ -467,7 +467,7 @@ expected |
 
 The `got` and `expected` parameters can have the following combination of types
 
-got | expected 
+got | expected
 ------|-----------
 unsigned | unsigned
 std_logic_vector | std_logic_vector
@@ -588,7 +588,7 @@ procedure check_sequence(
   The figure below shows two overlapping sequences which pass and then an early interrupted sequence that doesn't cause a failure in this mode (which it did in the example for the `first_pipe` mode.
 
   ![](images/check_sequence_penultimate_passing.png)
-  
+
   In this example the sequence is interrupted after the second to last bit is activated and the check fails.
 
   ![](images/check_sequence_penultimate_failing.png)

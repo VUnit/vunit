@@ -54,8 +54,8 @@ VUnit depends on a number of components as listed below. Full VUnit functionalit
 There are a number of ways to get started.
 
 *  The [VUnit User Guide](user_guide.md) will guide users on how to use start using the basic features of VUnit but also provides information about more specific and advanced usage.
-*  The [Check User Guide](vhdl/check/user_guide.md) presents the check package.
-*  The [Log User Guide](vhdl/logging/user_guide.md) presents the log package.
+*  The [Check User Guide](vunit/vhdl/check/user_guide.md) presents the check package.
+*  The [Log User Guide](vunit/vhdl/logging/user_guide.md) presents the log package.
 *  Have a look at the examples under [examples](examples). The examples in [logging](examples/vhdl/logging) and [check](examples/vhdl/check) are tutorials that should be single-stepped in your simulator.
 *  There are also various presentations of VUnit on [YouTube](https://www.youtube.com/channel/UCCPVCaeWkz6C95aRUTbIwdg). For example [an introduction to unit testing (6 min)](https://www.youtube.com/watch?v=PZuBqcxS8t4) and a [short introduction to VUnit (12 min)](https://www.youtube.com/watch?v=D8s_VLD91tw).
 
@@ -78,6 +78,6 @@ License, v. 2.0](http://mozilla.org/MPL/2.0/).
 &copy; 2014-2015 Lars Asplund, lars.anders.asplund@gmail.com.
 
 ##OSVVM
-OSVVM 2015.03 is redistributed with VUnit for your convenience and is located under [vhdl/osvvm](vhdl/osvvm). Minor [modifications](https://github.com/LarsAsplund/vunit/commit/25fce1b3700e746c3fa23bd7157777dd4f20f0d6) have been made to enable GHDL support. Derivative work is also located under [examples/vhdl/osvvm\_integration/src](examples/vhdl/osvvm_integration/src). These files are licensed under the terms of [ARTISTIC License](http://www.perlfoundation.org/artistic_license_2_0).
+OSVVM 2015.03 is [redistributed](vunit/vhdl/osvvm) with VUnit for your convenience. Minor [modifications](https://github.com/LarsAsplund/vunit/commit/25fce1b3700e746c3fa23bd7157777dd4f20f0d6) have been made to enable GHDL support. Derivative work is also located under [examples/vhdl/osvvm\_integration/src](examples/vhdl/osvvm_integration/src). These files are licensed under the terms of [ARTISTIC License](http://www.perlfoundation.org/artistic_license_2_0).
 
 &copy; 2010 - 2015 by SynthWorks Design Inc.  All rights reserved.
