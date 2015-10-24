@@ -40,7 +40,7 @@ bitvis_vip_spi_lib.add_source_files(join(bvul_root, 'bitvis_vip_sbi', 'src', '*.
 
 # Add all testbenches to lib
 lib = ui.add_library('lib')
-lib.add_source_files(join(root, 'test', '*.vhd'))
+lib.add_source_files(join(root, 'test', 'tb_bvul_integration.vhd'))
 
 # Compile and run all test cases
 ui.main()

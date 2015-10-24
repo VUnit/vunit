@@ -22,7 +22,7 @@
 --
 -- The testbench can be run directly with your simulator like a "traditional"
 -- BVUL testbench but the preferred way is to run with the VUnit run script,
--- run.py, in the parent directory of this file (<root>). There are some
+-- run_bvul.py, in the parent directory of this file (<root>). There are some
 -- differences in behavior when running in the different modes. This is
 -- described at the end of this file (see Running w/wo Script).
 --
@@ -31,8 +31,8 @@
 -- log("\nChecking Register defaults"); -- progress report
 -- report_alert_counters(FINAL); -- final summary report
 --
--- have been excluded. The reason is that run.py will handle reporting for you.
--- More information about what's reported by run.py and what you can add to the
+-- have been excluded. The reason is that run_bvul.py will handle reporting for you.
+-- More information about what's reported by run_bvul.py and what you can add to the
 -- VHDL code if you want to is described at the end of this file (see VHDL and
 -- Python Reporting).
 --
@@ -58,7 +58,7 @@ use bitvis_util.vhdl_version_layer_pkg.get_alert_counter;
 
 entity tb_bvul_integration is
   generic (
-    -- This generic is used to configure the testbench from run.py, e.g. what
+    -- This generic is used to configure the testbench from run_bvul.py, e.g. what
     -- test case to run. The default value is used when not running from script
     -- and in that case all test cases are run.
     runner_cfg : runner_cfg_t := runner_cfg_default);
@@ -75,9 +75,9 @@ begin
     test_runner_setup(runner, runner_cfg);
 
     -- To avoid that log files from different test cases (run in separate
-    -- simulations) overwrite each other run.py provides separate test case
+    -- simulations) overwrite each other run_bvul.py provides separate test case
     -- directories through the runner_cfg generic (<root>/vunit_out/tests/<test case
-    -- name>). When not using run.py the default path is the current directory
+    -- name>). When not using run_bvul.py the default path is the current directory
     -- (<root>/vunit_out/<simulator>). These directories are used by VUnit
     -- itself and these lines make sure that BVUL do to.
     set_log_file_name(join(output_path(runner_cfg), "_Log.txt"));
@@ -94,7 +94,7 @@ begin
     end if;
 
     -- The VUnit runner loops over the enabled test cases in the test suite.
-    -- When using run.py only one test case is enabled in each simulation.
+    -- When using run_bvul.py only one test case is enabled in each simulation.
     while test_suite loop
       -- Each test case is defined by a branch in the if statement. This test
       -- suite has four test cases, two using VUnit checking and two using BVUL
@@ -132,12 +132,12 @@ end;
 -- Running w/wo Script
 -- ===================
 --
--- The default behaviour when running your testbench with the run.py script
+-- The default behaviour when running your testbench with the run_bvul.py script
 -- is to run each test case in a separate simulation which means that the test
 -- case is free from interference from other test cases. So when a test case
 -- fails you know that the root cause is within that test case and not a side
 -- effect of previous test cases. Also, with independent test cases you can run
--- selected test cases in a test suite (see python run.py -h), test cases can
+-- selected test cases in a test suite (see python run_bvul.py -h), test cases can
 -- be run in parallel on many cores to reduce test time (see -p option), and
 -- the risk of having to change many test cases just because you wanted to make
 -- changes to one is reduced.
@@ -184,7 +184,7 @@ end;
 -- * Make a shorter alias like bvul_error of the selected name
 -- * Instead of using vunit_context you can use vunit_run_context
 --   which allows you to create a VUnit style testbench that can be automated
---   by run.py but it doesn't give access to VUnit check and log functionality
+--   by run_bvul.py but it doesn't give access to VUnit check and log functionality
 --   so there are no name collisions.
 
 
@@ -236,10 +236,10 @@ end;
 -- =========================
 --
 -- Preferred VUnit usage is to do the "simulate everything" runs using the
--- run.py script. The script will report what test case is running, if it passed
+-- run_bvul.py script. The script will report what test case is running, if it passed
 -- or failed, error message and call stack if it fails, and a summary at the end.
 -- If you have a failing test case you can start that in the GUI for debugging
--- (see run.py -h). When running the single test case in the GUI there is no
+-- (see run_bvul.py -h). When running the single test case in the GUI there is no
 -- need for progress and summary reporting.
 -- If you still want the VHDL to generate this kind of information you can enable the
 -- embedded runner_trace_logger and filter out everything but info messages to get
