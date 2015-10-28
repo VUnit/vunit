@@ -5,6 +5,7 @@
 # Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
 
 from setuptools import setup
+from os.path import exists
 import os
 
 
@@ -23,8 +24,7 @@ def find_all_files(directory, endings=None):
     return result
 
 data_files = []
-data_files += find_all_files(os.path.join('vunit', 'vhdl'),
-                             endings=[".vhd"])
+data_files += find_all_files(os.path.join('vunit', 'vhdl'))
 data_files += find_all_files(os.path.join('vunit', 'verilog'),
                              endings=[".v", ".sv", ".svh"])
 data_files = [os.path.relpath(file_name, 'vunit') for file_name in data_files]
@@ -57,5 +57,5 @@ setup(
                  'Topic :: Software Development :: Testing'],
     author='Lars Asplund',
     author_email='lars.anders.asplund@gmail.com',
-    description="VUnit is an open source unit testing framework for VHDL/SystemVerilog.",
-    long_description="""VUnit is an open source unit testing framework for VHDL/SystemVerilog released under the terms of Mozilla Public License, v. 2.0. It features the functionality needed to realize continuous and automated testing of your VHDL code. VUnit doesn't replace but rather complements traditional testing methodologies by supporting a "test early and often" approach through automation.""")  # nopep8
+    description="VUnit is an open source unit testing framework for VHDL.",
+    long_description=(open('README.rst').read() if exists('README.rst') else ''))  # nopep8
