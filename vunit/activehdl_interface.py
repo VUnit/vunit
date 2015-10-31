@@ -44,7 +44,7 @@ class ActiveHDLInterface(SimulatorInterface):
         group = parser.add_argument_group("activehdl",
                                           description="Aldec Active HDL specific flags")
 
-        group.add_argument('--gui',
+        group.add_argument('-g', '--gui',
                            action="store_true",
                            default=False,
                            help=("Open test case(s) in simulator gui with top level pre loaded"))

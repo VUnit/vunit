@@ -36,10 +36,12 @@ cases.
 
 ```console
 > python run.py -h
+/repo/vunit (master)$ PYTHONPATH=. python examples/vhdl/user_guide/run.py -h
 usage: run.py [-h] [-l] [--compile] [--elaborate] [--clean] [-o OUTPUT_PATH]
-              [-x XUNIT_XML] [-v] [--no-color] [--gui {load,run}]
-              [--log-level {info,error,warning,debug}]
-              [--gui {load,run}] [--new-vsim]
+              [-x XUNIT_XML] [--exit-0] [-v] [--no-color]
+              [--log-level {info,error,warning,debug}] [-p NUM_THREADS]
+              [--use-debug-codecs] [-g [{load,run}]] [--new-vsim]
+              [--coverage [COVERAGE]]
               [tests [tests ...]]
 
 VUnit command line tool.
@@ -63,25 +65,44 @@ optional arguments:
   -v, --verbose         Print test output immediately and not only when
                         failure
   --no-color            Do not color output
-  --gui {load,run}      Open test case(s) in simulator gui. 'load' only loads
-                        the test case and gives the user control. 'run' loads
-                        and runs the test case while recursively logging all
-                        variables and signals
   --log-level {info,error,warning,debug}
   -p NUM_THREADS, --num-threads NUM_THREADS
                         Number of tests to run in parallel. Test output is not
                         continuously written in verbose mode with p > 1
 
+com:
+  Flags specific to the com message passing package
+
+  --use-debug-codecs    Run with debug features enabled
+
+modelsim:
+  ModelSim specific flags
+
+-g [{load,run}], --gui [{load,run}]
+                        Open test case(s) in simulator gui. 'load' only loads
+                        the test case and gives the user control (default).
+                        'run' loads and runs the test case while recursively
+                        logging all variables and signals.
+  --new-vsim            Do not re-use the same vsim process for running
+                        different test cases (slower)
+  --coverage [COVERAGE]
+                        Enable code coverage. Choose any combination of
+                        "bcestf". When the flag is given with no argument
+                        everthing is enabled. Remember to run --clean when
+                        chaning this as re-compilation is not triggered.
+                        Experimental feature not supported by VUnit main
+                        developers.
+
 activehdl:
   Aldec Active HDL specific flags
 
-  --gui                 Open test case(s) in simulator gui with top level pre
+  -g, --gui             Open test case(s) in simulator gui with top level pre
                         loaded
 
 rivierapro:
   Aldec Riviera Pro specific flags
 
-  --gui                 Open test case(s) in simulator gui with top level pre
+  -g, --gui             Open test case(s) in simulator gui with top level pre
                         loaded
 
 ghdl:
@@ -91,15 +112,6 @@ ghdl:
   --gtkwave-args GTKWAVE_ARGS
                         Arguments to pass to gtkwave
 
-modelsim:
-  ModelSim specific flags
-
-  --gui {load,run}      Open test case(s) in simulator gui. 'load' only loads
-                        the test case and gives the user control. 'run' loads
-                        and runs the test case while recursively logging all
-                        variables and signals
-  --new-vsim            Do not re-use the same vsim process for running
-                        different test cases (slower)
 ```
 
 ## VHDL Test Benches
@@ -242,7 +254,7 @@ When interfacing with pre-compiled libraries such as `unisim` from Xilinx the `a
 ## Running a test case in the ModelSim GUI
 Sometimes the textual error messages and logs are not enough to pinpoint the error and a test case needs to be opened in the GUI for visual debugging using single stepping, breakpoints and wave form viewing. VUnit makes it easy to open a test case in the GUI by having a `--gui={load,run}` command line flag:
 ```console
-> python run.py --gui=load my_test_case
+> python run.py --gui my_test_case
 ```
 This launches a GUI window for each test case with specific functions pre-loaded printing the following help:
 ```tcl
@@ -264,7 +276,7 @@ vunit_run
 
 It is also possible to automatically run the test case in the gui while logging all signals and variables recursively using the `--gui=run` flag.
 After simulation the user can manually add objects of interest to the waveform viewer without re-running since everything has been logged.
-When running large designs this mode can be quite slow and it might be better to just do `--gui=load` and manually add a few signals of interest.
+When running large designs this mode can be quite slow and it might be better to just do `--gui` and manually add a few signals of interest.
 
 ## GHDL - Viewing signals in GTKWave
 Signals can be viewed in GTKWave when using the GHDL simulator and GTKWave executable is found in the `PATH` environment variable.

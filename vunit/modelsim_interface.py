@@ -46,12 +46,14 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         """
         group = parser.add_argument_group("modelsim",
                                           description="ModelSim specific flags")
-        group.add_argument('--gui', choices=["load", "run"],
+        group.add_argument('-g', '--gui', choices=["load", "run"],
                            default=None,
+                           nargs="?",
+                           const="load",
                            help=("Open test case(s) in simulator gui. "
-                                 "'load' only loads the test case and gives the user control. "
+                                 "'load' only loads the test case and gives the user control (default). "
                                  "'run' loads and runs the test case while recursively "
-                                 "logging all variables and signals"))
+                                 "logging all variables and signals."))
         group.add_argument("--new-vsim",
                            action="store_true",
                            default=False,
