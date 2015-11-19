@@ -267,10 +267,9 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         """
         Create the vunit_load TCL function that runs the vsim command and loads the design
         """
-        set_generic_str = "\n    ".join(('set vunit_generic_%s {%s}' % (name, value)
-                                         for name, value in config.generics.items()))
-        set_generic_name_str = " ".join(('-g/%s/%s="${vunit_generic_%s}"' % (entity_name, name, name)
-                                         for name in config.generics))
+
+        set_generic_str = " ".join(('-g/%s/%s=%s' % (entity_name, name, encode_generic_value(value))
+                                    for name, value in config.generics.items()))
         pli_str = " ".join("-pli {%s}" % fix_path(name) for name in config.pli)
 
         if architecture_name is None:
@@ -293,7 +292,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
                       # for correct handling of verilog fatal/finish
                       "-onfinish stop",
                       pli_str,
-                      set_generic_name_str,
+                      set_generic_str,
                       library_name + "." + entity_name + architecture_suffix,
                       coverage_args,
                       self._vsim_extra_args(config)]
@@ -308,7 +307,6 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
 
         tcl = """
 proc vunit_load {{{{vsim_extra_args ""}}}} {{
-    {set_generic_str}
     set vsim_failed [catch {{
         eval vsim ${{vsim_extra_args}} {{{vsim_flags}}}
     }}]
@@ -331,8 +329,7 @@ proc vunit_load {{{{vsim_extra_args ""}}}} {{
     {coverage_save_cmd}
     return 0
 }}
-""".format(set_generic_str=set_generic_str,
-           coverage_save_cmd=coverage_save_cmd,
+""".format(coverage_save_cmd=coverage_save_cmd,
            vsim_flags=" ".join(vsim_flags))
 
         return tcl
@@ -699,3 +696,14 @@ def argparse_coverage_type(value):
         raise ArgumentTypeError("'%s' is not 'all' or any combination of 'bcestf'" % value)
 
     return value
+
+
+def encode_generic_value(value):
+    """
+    Ensure values with space in them are quoted
+    """
+    s_value = str(value)
+    if " " in s_value:
+        return '{"%s"}' % s_value
+    else:
+        return s_value

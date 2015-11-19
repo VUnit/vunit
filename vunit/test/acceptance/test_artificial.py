@@ -202,6 +202,8 @@ EXPECTED_REPORT = (
     ("failed", "lib.tb_with_checks.Test failing check"),
     ("failed", "lib.tb_with_checks.Test non-stopping failing check"),
 
+    ("passed", "lib.tb_set_generic"),
+
     ("passed", "lib.tb_with_generic_config.Test 0"),
     ("passed", "lib.tb_with_generic_config.Test 1"),
     ("passed", "lib.tb_with_generic_config.Test 2"),

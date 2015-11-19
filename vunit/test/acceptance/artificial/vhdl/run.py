@@ -40,7 +40,7 @@ def configure_tb_with_generic_config(ui):
                         post_check=post_check)
 
 
-def configure_tb_same_sim_all_pass(self):
+def configure_tb_same_sim_all_pass(ui):
     def post_check(output_path):
         with open(join(output_path, "post_check.txt"), "r") as fptr:
             return "Test 3 was here" in fptr.read()
@@ -48,8 +48,25 @@ def configure_tb_same_sim_all_pass(self):
     ent.add_config("", generics=dict(), post_check=post_check)
 
 
+def configure_tb_set_generic(ui):
+    tb = ui.library("lib").entity("tb_set_generic")
+    is_ghdl = ui._simulator_factory.select_simulator().name == "ghdl"
+    tb.set_generic("is_ghdl", is_ghdl)
+    tb.set_generic("true_boolean", True)
+    tb.set_generic("false_boolean", False)
+    tb.set_generic("negative_integer", -10000)
+    tb.set_generic("positive_integer", 99999)
+    if not is_ghdl:
+        tb.set_generic("negative_real", -9999.9)
+        tb.set_generic("positive_real", 2222.2)
+        tb.set_generic("time_val", "4ns")
+    tb.set_generic("str_val", "4ns")
+    tb.set_generic("str_space_val", "1 2 3")
+    tb.set_generic("str_quote_val", 'a"b')
+
 configure_tb_with_generic_config(ui)
 configure_tb_same_sim_all_pass(ui)
+configure_tb_set_generic(ui)
 lib.entity("tb_no_generic_override").set_generic("g_val", False)
 lib.entity("tb_ieee_warning").test("pass").disable_ieee_warnings()
 ui.main()
