@@ -396,6 +396,8 @@ class VHDLEntity(object):
                     code[match.start(): match.end() + closing_pos + match_semicolon.end()])
         return []
 
+    _package_generic_re = re.compile(r"\s*package\s+", re.MULTILINE | re.IGNORECASE)
+
     @classmethod
     def _parse_generic_clause(cls, code):
         """
@@ -410,6 +412,11 @@ class VHDLEntity(object):
         generic_list = []
         # Add interface elements to the generic list
         for interface_element in interface_elements:
+
+            if cls._package_generic_re.match(interface_element.strip()) is not None:
+                # Ignore package generics
+                continue
+
             generic_list.append(VHDLInterfaceElement.parse(interface_element))
 
         return generic_list

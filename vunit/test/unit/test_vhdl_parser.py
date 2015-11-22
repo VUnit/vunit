@@ -32,11 +32,26 @@ class TestVHDLParser(TestCase):  # pylint: disable=too-many-public-methods
     def test_parsing_simple_entity(self):
         entity = self.parse_single_entity("""\
 entity simple is
-end entity;
+end entity;ace
 """)
         self.assertEqual(entity.identifier, "simple")
         self.assertEqual(entity.ports, [])
         self.assertEqual(entity.generics, [])
+
+    def test_parsing_entity_with_package_generic(self):
+        entity = self.parse_single_entity("""\
+entity ent is
+  generic (
+    package p is new work.pkg generic map (c => 1, b => 2);
+    package_g : integer
+    );
+end entity;
+""")
+        self.assertEqual(entity.identifier, "ent")
+        self.assertEqual(entity.ports, [])
+        self.assertEqual(len(entity.generics), 1)
+        self.assertEqual(entity.generics[0].identifier, 'package_g')
+        self.assertEqual(entity.generics[0].subtype_indication.type_mark, 'integer')
 
     def test_getting_entities_from_design_file(self):
         design_file = VHDLDesignFile.parse("""
@@ -221,6 +236,15 @@ package simple is
 end package;
 """)
         self.assertEqual(package.identifier, "simple")
+
+    def test_parsing_generic_package(self):
+        package = self.parse_single_package("""\
+package pkg is
+  generic (c : integer;
+           b : bit_vector(4-1 downto 0));
+end package;
+""")
+        self.assertEqual(package.identifier, "pkg")
 
     def test_parsing_context(self):
         context = self.parse_single_context("""\
