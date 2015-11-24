@@ -30,7 +30,7 @@ data_files = [os.path.relpath(file_name, 'vunit') for file_name in data_files]
 
 setup(
     name='vunit_hdl',
-    version='0.44.0',
+    version='0.45.0',
     packages=['vunit',
               'vunit.com',
               'vunit.test',
