@@ -53,6 +53,21 @@ end entity;
         self.assertEqual(entity.generics[0].identifier, 'package_g')
         self.assertEqual(entity.generics[0].subtype_indication.type_mark, 'integer')
 
+    def test_parsing_entity_with_type_generic(self):
+        entity = self.parse_single_entity("""\
+entity ent is
+  generic (
+    type t;
+    type_g : integer
+    );
+end entity;
+""")
+        self.assertEqual(entity.identifier, "ent")
+        self.assertEqual(entity.ports, [])
+        self.assertEqual(len(entity.generics), 1)
+        self.assertEqual(entity.generics[0].identifier, 'type_g')
+        self.assertEqual(entity.generics[0].subtype_indication.type_mark, 'integer')
+
     def test_getting_entities_from_design_file(self):
         design_file = VHDLDesignFile.parse("""
 entity entity1 is

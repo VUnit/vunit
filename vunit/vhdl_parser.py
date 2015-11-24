@@ -397,6 +397,7 @@ class VHDLEntity(object):
         return []
 
     _package_generic_re = re.compile(r"\s*package\s+", re.MULTILINE | re.IGNORECASE)
+    _type_generic_re = re.compile(r"\s*type\s+", re.MULTILINE | re.IGNORECASE)
 
     @classmethod
     def _parse_generic_clause(cls, code):
@@ -413,8 +414,12 @@ class VHDLEntity(object):
         # Add interface elements to the generic list
         for interface_element in interface_elements:
 
-            if cls._package_generic_re.match(interface_element.strip()) is not None:
+            if cls._package_generic_re.match(interface_element) is not None:
                 # Ignore package generics
+                continue
+
+            if cls._type_generic_re.match(interface_element) is not None:
+                # Ignore type generics
                 continue
 
             generic_list.append(VHDLInterfaceElement.parse(interface_element))
