@@ -396,8 +396,34 @@ class VHDLEntity(object):
                     code[match.start(): match.end() + closing_pos + match_semicolon.end()])
         return []
 
+    @staticmethod
+    def _split_not_in_par(string, sep):
+        """
+        Split string at all occurences of sep but not inside of a parenthesis
+        """
+        result = []
+        count = 0
+        split = []
+        for char in string:
+            if char == '(':
+                count += 1
+            elif char == ')':
+                count -= 1
+
+            if char == sep and count == 0:
+                result.append("".join(split))
+                split = []
+            else:
+                split.append(char)
+
+        if len(split) > 0:
+            result.append("".join(split))
+
+        return result
+
     _package_generic_re = re.compile(r"\s*package\s+", re.MULTILINE | re.IGNORECASE)
     _type_generic_re = re.compile(r"\s*type\s+", re.MULTILINE | re.IGNORECASE)
+    _function_generic_re = re.compile(r"\s*(impure\s+)?(function|procedure)\s+", re.MULTILINE | re.IGNORECASE)
 
     @classmethod
     def _parse_generic_clause(cls, code):
@@ -408,7 +434,7 @@ class VHDLEntity(object):
         generic_list_string = code[code.find('(') + 1: code.rfind(')')]
 
         # Split the interface elements
-        interface_elements = generic_list_string.split(';')
+        interface_elements = cls._split_not_in_par(generic_list_string, ';')
 
         generic_list = []
         # Add interface elements to the generic list
@@ -420,6 +446,10 @@ class VHDLEntity(object):
 
             if cls._type_generic_re.match(interface_element) is not None:
                 # Ignore type generics
+                continue
+
+            if cls._function_generic_re.match(interface_element) is not None:
+                # Ignore function generics
                 continue
 
             generic_list.append(VHDLInterfaceElement.parse(interface_element))

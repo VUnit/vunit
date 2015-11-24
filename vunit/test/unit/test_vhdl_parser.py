@@ -68,6 +68,26 @@ end entity;
         self.assertEqual(entity.generics[0].identifier, 'type_g')
         self.assertEqual(entity.generics[0].subtype_indication.type_mark, 'integer')
 
+    def test_parsing_entity_with_function_generic(self):
+        entity = self.parse_single_entity("""\
+entity ent is
+  generic (
+    function f(a : integer; b : integer) return integer;
+    function_g : boolean;
+    impure function if(a : integer; b : integer) return integer;
+    procedure_g : boolean;
+    procedure p(a : integer; b : integer)
+    );
+end entity;
+""")
+        self.assertEqual(entity.identifier, "ent")
+        self.assertEqual(entity.ports, [])
+        self.assertEqual(len(entity.generics), 2)
+        self.assertEqual(entity.generics[0].identifier, 'function_g')
+        self.assertEqual(entity.generics[0].subtype_indication.type_mark, 'boolean')
+        self.assertEqual(entity.generics[1].identifier, 'procedure_g')
+        self.assertEqual(entity.generics[1].subtype_indication.type_mark, 'boolean')
+
     def test_getting_entities_from_design_file(self):
         design_file = VHDLDesignFile.parse("""
 entity entity1 is
