@@ -520,6 +520,9 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
         else:
             return False
 
+    def __lt__(self, other):
+        return self.name < other.name
+
     def __hash__(self):
         return hash(self.name)
 
@@ -538,9 +541,15 @@ class SourceFile(object):
 
     def __eq__(self, other):
         if isinstance(other, type(self)):
-            return (self.name, self.library.name) == (other.name, other.library.name)
+            return self.to_tuple() == other.to_tuple()
         else:
             return False
+
+    def to_tuple(self):
+        return (self.name, self.library, self.file_type)
+
+    def __lt__(self, other):
+        return self.to_tuple() < other.to_tuple()
 
     def __hash__(self):
         return hash((self.name, self.library.name))
