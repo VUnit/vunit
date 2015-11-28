@@ -98,7 +98,8 @@ class TestScanner(object):
                         test_case=None,
                         test_bench=create_test_bench(config),
                         has_runner_cfg=has_runner_cfg,
-                        post_check_function=config.post_check))
+                        pre_config=config.pre_config,
+                        post_check=config.post_check))
         elif should_run_in_same_sim:
             scope = create_scope(entity.library_name, entity.name)
             configurations = self._cfg.get_configurations(scope)
@@ -107,7 +108,8 @@ class TestScanner(object):
                     SameSimTestSuite(name=create_name(config),
                                      test_cases=run_strings,
                                      test_bench=create_test_bench(config),
-                                     post_check_function=config.post_check))
+                                     pre_config=config.pre_config,
+                                     post_check=config.post_check))
         else:
             for run_string in run_strings:
                 scope = create_scope(entity.library_name, entity.name, run_string)
@@ -119,7 +121,8 @@ class TestScanner(object):
                             test_case=run_string,
                             test_bench=create_test_bench(config),
                             has_runner_cfg=has_runner_cfg,
-                            post_check_function=config.post_check))
+                            pre_config=config.pre_config,
+                            post_check=config.post_check))
 
     def _create_test_bench(self,  # pylint: disable=too-many-arguments
                            entity, architecture_name, config, fail_on_warning, verilog):

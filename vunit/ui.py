@@ -611,7 +611,8 @@ class EntityFacade(object):
         """ Set pli within entity """
         self._config.set_pli(value, scope=self._scope)
 
-    def add_config(self, name="", generics=None, parameters=None, post_check=None):
+    def add_config(self,  # pylint: disable=too-many-arguments
+                   name="", generics=None, parameters=None, pre_config=None, post_check=None):
         """
         Add a run-configuration of all tests within entity
         """
@@ -622,6 +623,7 @@ class EntityFacade(object):
         self._config.add_config(scope=self._scope,
                                 name=name,
                                 generics=generics,
+                                pre_config=pre_config,
                                 post_check=post_check)
 
     def disable_ieee_warnings(self):
@@ -685,7 +687,8 @@ class TestFacade(object):
         self._config = config
         self._scope = create_scope(library_name, entity_name, test_name)
 
-    def add_config(self, name="", generics=None, parameters=None, post_check=None):
+    def add_config(self,  # pylint: disable=too-many-arguments
+                   name="", generics=None, parameters=None, pre_config=None, post_check=None):
         """
         Add a run-configuration this test case
         """
@@ -696,6 +699,7 @@ class TestFacade(object):
         self._config.add_config(scope=self._scope,
                                 name=name,
                                 generics=generics,
+                                pre_config=pre_config,
                                 post_check=post_check)
 
     def set_generic(self, name, value):

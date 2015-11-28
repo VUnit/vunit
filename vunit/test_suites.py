@@ -20,12 +20,14 @@ class IndependentSimTestCase(object):
     A test case to be run in an independent simulation
     """
     def __init__(self,  # pylint: disable=too-many-arguments
-                 name, test_case, test_bench, has_runner_cfg=False, post_check_function=None):
+                 name, test_case, test_bench, has_runner_cfg=False,
+                 pre_config=None, post_check=None):
         self._name = name
         self._test_case = test_case
         self._test_bench = test_bench
         self._has_runner_cfg = has_runner_cfg
-        self._post_check_function = post_check_function
+        self._pre_config = pre_config
+        self._post_check = post_check
 
     @property
     def name(self):
@@ -36,6 +38,10 @@ class IndependentSimTestCase(object):
         Run the test case using the output_path
         """
         generics = {}
+
+        if self._pre_config is not None:
+            if not self._pre_config():
+                return False
 
         if self._has_runner_cfg:
             runner_cfg = {
@@ -49,10 +55,10 @@ class IndependentSimTestCase(object):
         if not self._test_bench.run(output_path, generics):
             return False
 
-        if self._post_check_function is None:
+        if self._post_check is None:
             return True
         else:
-            return self._post_check_function(output_path)
+            return self._post_check(output_path)
 
 
 class SameSimTestSuite(object):
@@ -60,11 +66,13 @@ class SameSimTestSuite(object):
     A test suite where multiple test cases are run within the same simulation
     """
 
-    def __init__(self, name, test_cases, test_bench, post_check_function=None):
+    def __init__(self,  # pylint: disable=too-many-arguments
+                 name, test_cases, test_bench, pre_config=None, post_check=None):
         self._name = name
         self._test_cases = test_cases
         self._test_bench = test_bench
-        self._post_check_function = post_check_function
+        self._pre_config = pre_config
+        self._post_check = post_check
 
     @property
     def test_cases(self):
@@ -92,6 +100,11 @@ class SameSimTestSuite(object):
         """
         Run the test suite using output_path
         """
+
+        if self._pre_config is not None:
+            if not self._pre_config():
+                return False
+
         runner_cfg = {
             "enabled_test_cases": ",".join(self._test_cases),
             "output path": output_path.replace("\\", "/") + "/",
@@ -111,7 +124,7 @@ class SameSimTestSuite(object):
         else:
             retval = self._determine_partial_pass(output_path)
 
-        if self._post_check_function is None:
+        if self._post_check is None:
             return retval
 
         # Do not run post check unless all passed
@@ -119,7 +132,7 @@ class SameSimTestSuite(object):
             if status != PASSED:
                 return retval
 
-        if not self._post_check_function(output_path):
+        if not self._post_check(output_path):
             for name in self.test_cases:
                 retval[name] = FAILED
 

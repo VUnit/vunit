@@ -139,6 +139,24 @@ class TestTestConfiguration(unittest.TestCase):
         self.cfg = TestConfiguration(elaborate_only=True)
         scope = create_scope("lib", "entity")
 
+        def pre_config():
+            return True
+
+        def post_check():
+            return True
+
+        self.cfg.add_config(name="name",
+                            generics=dict(),
+                            pre_config=pre_config,
+                            post_check=post_check,
+                            scope=scope)
+
+        self.assertEqual(self.cfg.get_configurations(scope),
+                         [cfg("name", pre_config=pre_config, elaborate_only=True)])
+
+    def test_config_with_post_check(self):
+        scope = create_scope("lib", "entity")
+
         def post_check():
             return True
 
@@ -148,7 +166,21 @@ class TestTestConfiguration(unittest.TestCase):
                             scope=scope)
 
         self.assertEqual(self.cfg.get_configurations(scope),
-                         [cfg("name", elaborate_only=True)])
+                         [cfg("name", post_check=post_check)])
+
+    def test_config_with_pre_config(self):
+        scope = create_scope("lib", "entity")
+
+        def pre_config():
+            return True
+
+        self.cfg.add_config(name="name",
+                            generics=dict(),
+                            pre_config=pre_config,
+                            scope=scope)
+
+        self.assertEqual(self.cfg.get_configurations(scope),
+                         [cfg("name", pre_config=pre_config)])
 
     def test_sim_options(self):
         scope = create_scope("lib", "entity")
@@ -187,6 +219,7 @@ def out(*args):
 
 def cfg(name="",  # pylint: disable=too-many-arguments
         generics=None,
+        pre_config=None,
         post_check=None,
         pli=None,
         disable_ieee_warnings=False,
@@ -201,4 +234,5 @@ def cfg(name="",  # pylint: disable=too-many-arguments
                                               disable_ieee_warnings=disable_ieee_warnings,
                                               elaborate_only=elaborate_only,
                                               options=sim_options),
+                         pre_config=pre_config,
                          post_check=post_check)

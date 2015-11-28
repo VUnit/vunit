@@ -84,16 +84,19 @@ class TestConfiguration(object):
         """
         self._disable_ieee_warnings.add(scope)
 
-    def add_config(self, scope, name="", generics=None, post_check=None):
+    def add_config(self,  # pylint: disable=too-many-arguments
+                   scope, name="", generics=None, pre_config=None, post_check=None):
         """
-        Add a configuration for scope specifying the name of the
-        configuration, its generic values as well as a post_check
-        function to be run after the simulation
+        Add a configuration for scope specifying:
+        - The name of the configuration
+        - The generic values
+        - A post_config function to be run before the simulation
+        - A post_check function to be run after the simulation
         """
         generics = {} if generics is None else generics
         if scope not in self._configs:
             self._configs[scope] = {}
-        self._configs[scope][name] = (generics, post_check)
+        self._configs[scope][name] = (generics, pre_config, post_check)
 
     def get_configurations(self, scope):
         """
@@ -107,7 +110,7 @@ class TestConfiguration(object):
 
         configs = []
         for config_name in sorted(configs_for_scope.keys()):
-            cfg_generics, post_check = configs_for_scope[config_name]
+            cfg_generics, pre_config, post_check = configs_for_scope[config_name]
             if self._elaborate_only:
                 post_check = None
             generics = global_generics.copy()
@@ -119,6 +122,7 @@ class TestConfiguration(object):
                                              disable_ieee_warnings=disable_ieee_warnings,
                                              elaborate_only=self._elaborate_only,
                                              options=sim_options_for_scope.copy()),
+                                         pre_config=pre_config,
                                          post_check=post_check))
 
         if len(configs) == 0:
@@ -129,6 +133,7 @@ class TestConfiguration(object):
                                          disable_ieee_warnings=disable_ieee_warnings,
                                          elaborate_only=self._elaborate_only,
                                          options=sim_options_for_scope.copy()),
+                                     pre_config=None,
                                      post_check=None)]
 
         return configs
@@ -210,19 +215,22 @@ class Configuration(object):
     def __init__(self,
                  name="",
                  sim_config=None,
-                 post_check=None,):
+                 pre_config=None,
+                 post_check=None):
         self.name = name
         self.sim_config = sim_config if sim_config is not None else SimConfig()
+        self.pre_config = pre_config
         self.post_check = post_check
 
     def __eq__(self, other):
         return (self.name == other.name and
                 self.sim_config == other.sim_config and
+                self.pre_config == other.pre_config and
                 self.post_check == other.post_check)
 
     def __repr__(self):
-        return("Configuration(%r, %r, %r)"
-               % (self.name, self.sim_config, self.post_check))
+        return("Configuration(%r, %r, %r, %r)"
+               % (self.name, self.sim_config, self.pre_config, self.post_check))
 
 
 class SimConfig(object):
