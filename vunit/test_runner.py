@@ -24,7 +24,7 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 
-class TestRunner(object):
+class TestRunner(object):  # pylint: disable=too-many-instance-attributes
     """
     Administer the execution of a list of test suites
     """
@@ -35,6 +35,8 @@ class TestRunner(object):
         self._output_path = output_path
         self._verbose = verbose
         self._num_threads = num_threads
+        self._stdout = sys.stdout
+        self._stderr = sys.stderr
 
     def run(self, test_suites):
         """
@@ -59,8 +61,8 @@ class TestRunner(object):
         write_stdout = self._verbose and self._num_threads == 1
 
         try:
-            sys.stdout = ThreadLocalOutput(self._local)
-            sys.stderr = ThreadLocalOutput(self._local)
+            sys.stdout = ThreadLocalOutput(self._local, self._stdout)
+            sys.stderr = ThreadLocalOutput(self._local, self._stdout)
 
             # Start P-1 worker threads
             for _ in range(self._num_threads - 1):
@@ -83,15 +85,15 @@ class TestRunner(object):
             for thread in threads:
                 thread.join()
 
-            sys.stdout = sys.__stdout__
-            sys.stderr = sys.__stderr__
+            sys.stdout = self._stdout
+            sys.stderr = self._stderr
             LOGGER.debug("TestRunner: Leaving")
 
     def _run_thread(self, write_stdout, scheduler, num_tests, is_main):
         """
         Run worker thread
         """
-        self._local.output = sys.__stdout__
+        self._local.output = self._stdout
 
         while True:
             test_suite = None
@@ -142,7 +144,7 @@ class TestRunner(object):
 
         try:
             if write_stdout:
-                self._local.output = TeeToFile([sys.__stdout__, output_file])
+                self._local.output = TeeToFile([self._stdout, output_file])
             else:
                 self._local.output = TeeToFile([output_file])
 
@@ -153,7 +155,7 @@ class TestRunner(object):
             traceback.print_exc()
             results = self._fail_suite(test_suite)
         finally:
-            self._local.output = sys.__stdout__
+            self._local.output = self._stdout
             output_file.flush()
             output_file.close()
 
@@ -221,20 +223,21 @@ class ThreadLocalOutput(object):
     Replacement for stdout/err that separates re-directs
     output to a thread local file interface
     """
-    def __init__(self, local):
+    def __init__(self, local, stdout):
         self._local = local
+        self._stdout = stdout
 
     def write(self, txt):
         if hasattr(self._local, "output"):
             self._local.output.write(txt)
         else:
-            sys.__stdout__.write(txt)
+            self._stdout.write(txt)
 
     def flush(self):
         if hasattr(self._local, "output"):
             self._local.output.flush()
         else:
-            sys.__stdout__.flush()
+            self._stdout.flush()
 
 
 class TestScheduler(object):
