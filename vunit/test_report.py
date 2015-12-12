@@ -13,6 +13,7 @@ from vunit.color_printer import COLOR_PRINTER
 from xml.etree import ElementTree
 from sys import version_info
 import os
+import socket
 
 
 class TestReport(object):
@@ -177,6 +178,7 @@ class TestReport(object):
         root.attrib["failures"] = str(len(failures))
         root.attrib["skipped"] = str(len(skipped))
         root.attrib["tests"] = str(len(self._test_results))
+        root.attrib["hostname"] = socket.gethostname()
 
         for result in self._test_results_in_order():
             root.append(result.to_xml())
