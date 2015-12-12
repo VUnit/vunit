@@ -70,6 +70,7 @@ use vunit_lib.log_pkg.stop_level;
 use vunit_lib.log_pkg.remove_filter;
 use vunit_lib.log_pkg.rename_level;
 use vunit_lib.check_pkg.all;
+use vunit_lib.path.all;
 
 library osvvm;
 use osvvm.OsvvmGlobalPkg.all;
@@ -82,8 +83,7 @@ use work.common_pkg.all;
 
 entity tb_AlertLog_Demo_Global_With_Comments is
   generic (
-    runner_cfg : runner_cfg_t := runner_cfg_default;
-    output_path : string);
+    runner_cfg : runner_cfg_t := runner_cfg_default);
 end tb_AlertLog_Demo_Global_With_Comments;
 architecture hierarchy of tb_AlertLog_Demo_Global_With_Comments is
   signal Clk : std_logic := '0';
@@ -125,7 +125,7 @@ begin
       variable filter1, filter2 : log_filter_t;
     begin
       test_runner_setup(runner, runner_cfg);
-      checker_init(stop_level => failure, display_format => verbose, file_name => output_path & "error.csv");
+      checker_init(stop_level => failure, display_format => verbose, file_name => join(output_path(runner_cfg), "error.csv"));
 
       -- VUnit:
       -- Logging in VUnit use separate handlers for display (OUTPUT) and file.
@@ -135,7 +135,7 @@ begin
       -- (you can have any number of loggers with different settings) can be
       -- configured like this. The verbose format means that some extra information
       -- like simulation time is logged with every entry
-      logger_init(display_format => verbose, file_format => verbose, file_name => output_path & "Vunit_Demo_Global.txt");
+      logger_init(display_format => verbose, file_format => verbose, file_name => join(output_path(runner_cfg), "Vunit_Demo_Global.txt"));
 
       -- Uncomment this line to use a log file rather than OUTPUT
       -- TranscriptOpen("./Demo_Global.txt") ;
@@ -156,7 +156,7 @@ begin
       -- VUnit:
       -- Every logger has a default name, called the source, which is visible when a verbose format
       -- is used. The default name can be overridden when a log call is made
-      logger_init(default_src => "AlertLog_Demo_Global", display_format => verbose, file_format => verbose, file_name => output_path & "Vunit_Demo_Global.txt");
+      logger_init(default_src => "AlertLog_Demo_Global", display_format => verbose, file_format => verbose, file_name => join(output_path(runner_cfg), "Vunit_Demo_Global.txt"));
 
       SetAlertLogName("AlertLog_Demo_Global");
       wait for 0 ns;              -- make sure all processes have elaborated

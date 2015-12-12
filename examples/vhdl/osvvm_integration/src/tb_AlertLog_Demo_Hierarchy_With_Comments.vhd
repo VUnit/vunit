@@ -57,23 +57,7 @@ use std.textio.all;
 use ieee.std_logic_textio.all;
 
 library vunit_lib;
-use vunit_lib.run_types_pkg.all;
-use vunit_lib.run_base_pkg.all;
-use vunit_lib.run_pkg.all;
-use vunit_lib.check_types_pkg.all;
-use vunit_lib.check_special_types_pkg.all;
-use vunit_lib.check_pkg.all;
-use vunit_lib.log_types_pkg.all;
-use vunit_lib.log_special_types_pkg.all;
-use vunit_lib.log_pkg.stop_level;
-use vunit_lib.log_pkg.stop_source_level;
-use vunit_lib.log_pkg.debug;
-use vunit_lib.log_pkg.info;
-use vunit_lib.log_pkg.info_high1;
-use vunit_lib.log_pkg.info_high2;
-use vunit_lib.log_pkg.logger_init;
-use vunit_lib.log_pkg.rename_level;
-
+context vunit_lib.vunit_context;
 
 library osvvm;
 use osvvm.OsvvmGlobalPkg.all;
@@ -86,8 +70,7 @@ use work.common_pkg.all;
 
 entity tb_AlertLog_Demo_Hierarchy_With_Comments is
   generic (
-    runner_cfg : runner_cfg_t := runner_cfg_default;
-    output_path : string);
+    runner_cfg : runner_cfg_t := runner_cfg_default);
 end tb_AlertLog_Demo_Hierarchy_With_Comments;
 
 architecture hierarchy of tb_AlertLog_Demo_Hierarchy_With_Comments is
@@ -130,7 +113,7 @@ begin
       -- You have have custom checkers with individual names. Names starting
       -- with "." indicates a hierarchical name where every level of the
       -- hierarchy is separated with a "."
-      checker_init(tb_checker, display_format => verbose, default_src => ".tb", file_name => output_path & "error.csv");
+      checker_init(tb_checker, display_format => verbose, default_src => ".tb", file_name => join(output_path(runner_cfg), "error.csv"));
 
       -- Uncomment this line to use a log file rather than OUTPUT
       -- TranscriptOpen("./Demo_Hierarchy.txt") ;
@@ -144,7 +127,7 @@ begin
       -- All log levels are
       -- on by default so here I'm disabling the levels needed to get the same
       -- behaviour as the OSVVM example
-      logger_init(display_format => verbose, file_name => output_path & "log.csv");
+      logger_init(display_format => verbose, file_name => join(output_path(runner_cfg), "log.csv"));
       stop_source_level(".cpu", debug, display_handler, cpu_debug_filter);
       stop_source_level(".tb", info, display_handler, tb_info_filter);
       stop_source_level(".uart", info, display_handler, uart_info_filter);
@@ -245,7 +228,7 @@ begin
     CpuP1 : process
       constant CPU_P1_ID : AlertLogIDType := GetAlertLogID("CPU P1", CPU_AlertLogID);
     begin
-      checker_init(cpu_checker, display_format => verbose, default_src => ".cpu", file_name => output_path & "error.csv");
+      checker_init(cpu_checker, display_format => verbose, default_src => ".cpu", file_name => join(output_path(runner_cfg), "error.csv"));
       for i in 1 to 5 loop
         wait until Clk = '1';
         wait for 5 ns;
@@ -291,7 +274,7 @@ begin
     ------------------------------------------------------------
     UartP1 : process
     begin
-      checker_init(uart_checker, display_format => verbose, default_src => ".uart", file_name => output_path & "error.csv");
+      checker_init(uart_checker, display_format => verbose, default_src => ".uart", file_name => join(output_path(runner_cfg), "error.csv"));
       for i in 1 to 5 loop
         wait until Clk = '1';
         wait for 10 ns;
