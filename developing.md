@@ -22,7 +22,7 @@ vunit/ > python -m unittest discover vunit/test/unit
 The test suites must work using both Python 2.7 and Python 3.x.
 
 ### Running with different simulator back-ends
-VUnit supports both ModelSim and GHDL and the acceptance tests must work for both simulators. The acceptance tests can be run for a specific simulator by setting the `VUNIT_SIMULATOR` environment variable:
+VUnit supports ModelSim, GHDL, ActiveHDL, and RivieraPRO and the acceptance tests must work for all simulators. The acceptance tests can be run for a specific simulator by setting the `VUNIT_SIMULATOR` environment variable:
 ```console
 vunit/ > VUNIT_SIMULATOR=ghdl python -m unittest discover vunit/test/acceptance/
 ```
