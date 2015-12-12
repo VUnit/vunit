@@ -130,6 +130,46 @@ begin
         counting_assert(count(reverse_string, "a", 12 ,4) = 0, "Should not find anything outside of the string");
         counting_assert(count("aba", "a", 3 ,1) = 0, "Should not find anything within a negative range");
         counting_assert(count("aba", "abab") = 0, "Should not find anything when substring is longer than the string");
+      elsif run("Test find") then
+        counting_assert(find("", "") = 1, "Empty string should be found at the start");
+        counting_assert(find("foo bar", "") = 1, "Empty string should be found at the start");
+        counting_assert(find("foo bar", "foo") = 1, "Should find string at the start");
+        counting_assert(find("foo bar", "bar") = 5, "Should find string at the end");
+        counting_assert(find("foo bar", "o b") = 3, "Should find string in the middle");
+        counting_assert(find("foo bar", "foo bar") = 1, "Should find full string");
+        counting_assert(find("foo bar", 'f') = 1, "Should find character at the start");
+        counting_assert(find("foo bar", 'r') = 7, "Should find character at the end");
+        counting_assert(find("foo bar", ' ') = 4, "Should find character in the middle");
+        counting_assert(find("foo bar", "bars") = 0, "Should return 0 when string not found");
+        counting_assert(find("foo bar", "foo bars") = 0, "Should return 0 when string not found");
+        counting_assert(find("foo bar", 'q') = 0, "Should return 0 when character not found");
+        counting_assert(find(offset_string, "") = 10, "Empty string should be found at the start on offset string");
+        counting_assert(find(offset_string, "foo") = 10, "Should find string at the start on offset string");
+        counting_assert(find(offset_string, "bar") = 14, "Should find string at the end on offset string");
+        counting_assert(find(offset_string, "o b") = 12, "Should find string in the middle on offset string");
+        counting_assert(find(reverse_string, "") = 16, "Empty string should be found at the start on reversed string");
+        counting_assert(find(reverse_string, "foo") = 16, "Should find string at the start on reversed string");
+        counting_assert(find(reverse_string, "bar") = 12, "Should find string at the end on reversed string");
+        counting_assert(find(reverse_string, "o b") = 14, "Should find string in the middle on reversed string");
+        counting_assert(find("foo bar", "oo", 2, 6) = 2, "Should find string at the start of slice");
+        counting_assert(find("foo bar", "ba", 2, 6) = 5, "Should find string at the end of slice");
+        counting_assert(find("foo bar", "o b", 2, 6) = 3, "Should find string in the middle of slice");
+        counting_assert(find("foo bar", "", 2, 6) = 2, "Empty string should be found at the start of slice");
+        counting_assert(find("foo bar", 'f', 2, 6) = 0, "Should not find anything before slice");
+        counting_assert(find("foo bar", "ar", 2, 6) = 0, "Should not find anything after slice");
+        counting_assert(find(offset_string, 'f', 11, 15) = 0, "Should not find anything before slice in offset string");
+        counting_assert(find(offset_string, "ar", 11, 15) = 0, "Should not find anything after slice in offset string");
+        counting_assert(find(reverse_string, 'f', 15, 11) = 0, "Should not find anything before slice in reversed string");
+        counting_assert(find(reverse_string, "ar", 15, 11) = 0, "Should not find anything after slice in reversed string");
+        counting_assert(find("foo bar", "o b", 1, 100) = 3, "Should find in ranges wider than input'range");
+        counting_assert(find("foo bar", "zen", 1, 100) = 0, "Should not find in ranges wider than input'range");
+        counting_assert(find(offset_string, "o b", 1, 100) = 12, "Should find in ranges wider than input'range");
+        counting_assert(find(offset_string, "zen", 1, 100) = 0, "Should not find in ranges wider than input'range");
+        counting_assert(find(reverse_string, "o b", 100, 1) = 14, "Should find in ranges wider than input'range");
+        counting_assert(find(reverse_string, "zen", 100, 1) = 0, "Should not find in ranges wider than input'range");
+        counting_assert(find("foo bar", "o b", 3, 2) = 0, "Should not find string in negative range");
+        counting_assert(find("foo bar", "o b", 30, 0) = 0, "Should not find string in negative range");
+        counting_assert(find(reverse_string, "o b", 1, 100) = 0, "Should not find string in negative range");
 
       elsif run("Test image") then
         counting_assert(image("") = "", "Should return empty string on empty input vector.");

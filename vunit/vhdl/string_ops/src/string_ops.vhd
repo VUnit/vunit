@@ -27,6 +27,18 @@ package string_ops is
     constant start : natural := 0;
     constant stop : natural := 0)
     return natural;
+  function find (
+    constant s : string;
+    constant substring : string;
+    constant start : natural := 0;
+    constant stop : natural := 0)
+    return natural;
+  function find (
+    constant s : string;
+    constant char : character;
+    constant start : natural := 0;
+    constant stop : natural := 0)
+    return natural;
   function strip (
     str : string;
     chars : string := " ")
@@ -116,16 +128,48 @@ package body string_ops is
     end if;
   end function offset;
 
-  function in_range (
+  function index (
+    constant s     : string;
+    constant offset : natural)
+    return positive is
+  begin
+    if s'ascending then
+      return s'left + offset;
+    else
+      return s'left - offset;
+    end if;
+  end function index;
+
+  function left_of_range (
     constant s     : string;
     constant index : natural)
     return boolean is
   begin
     if s'ascending then
-      return (index >= s'left) and (index <= s'right);
+      return (index < s'left);
     else
-      return (index <= s'left) and (index >= s'right);
+      return (index > s'left);
     end if;
+  end function left_of_range;
+
+  function right_of_range (
+    constant s     : string;
+    constant index : natural)
+    return boolean is
+  begin
+    if s'ascending then
+      return (index > s'right);
+    else
+      return (index < s'right);
+    end if;
+  end function right_of_range;
+
+  function in_range (
+    constant s     : string;
+    constant index : natural)
+    return boolean is
+  begin
+    return not left_of_range(s, index) and not right_of_range(s, index);
   end function in_range;
 
   function slice (
@@ -447,6 +491,60 @@ package body string_ops is
 
     return n;
   end count;
+
+  function find (
+    constant s : string;
+    constant char : character;
+    constant start : natural := 0;
+    constant stop : natural := 0)
+    return natural is
+    variable substring : string(1 to 1);
+  begin
+    substring(1) := char;
+    return find(s, substring, start, stop);
+  end;
+
+  function find (
+    constant s : string;
+    constant substring : string;
+    constant start : natural := 0;
+    constant stop : natural := 0)
+    return natural is
+    variable start_pos, stop_pos : natural;
+    variable o : natural;
+  begin
+    if start = 0 or left_of_range(s, start) then
+      start_pos := s'left;
+    elsif right_of_range(s, start) then
+      return 0;
+    else
+      start_pos := start;
+    end if;
+
+    if stop = 0 or right_of_range(s, stop) then
+      stop_pos := s'right;
+    elsif left_of_range(s, stop) then
+      return 0;
+    else
+      stop_pos := stop;
+    end if;
+
+    if substring = "" then
+      return start_pos;
+    end if;
+
+    o := offset(s, start_pos);
+    while o <= offset(s, stop_pos) - substring'length + 1 loop
+      if slice(s, o, substring'length) = substring then
+        return index(s, o);
+      end if;
+
+      o := o + 1;
+    end loop;
+
+    return 0;
+
+  end find;
 
   impure function split (
     constant s         : string;
