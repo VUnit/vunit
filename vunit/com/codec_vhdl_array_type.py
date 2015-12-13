@@ -294,7 +294,8 @@ class ArrayStdCodecTemplate(DatatypeStdCodecTemplate, ArrayCodecTemplate):
         return ret_val_descending;
       end if;
     end function ret_val_range;
-    variable ret_val : $array_type(ret_val_range(code)'range)$init_value;
+    constant array_of_correct_range : $array_type := ret_val_range(code);
+    variable ret_val : $array_type(array_of_correct_range'range)$init_value;
     variable index : positive := code'left + 1 + 2 * range_length;
   begin
     for i in ret_val'range loop
@@ -398,7 +399,8 @@ class ArrayStdCodecTemplate(DatatypeStdCodecTemplate, ArrayCodecTemplate):
       end if;
     end function ret_val_range;
 
-    variable ret_val : $array_type(ret_val_range(code)'range(1), ret_val_range(code)'range(2));
+    constant array_of_correct_range : $array_type := ret_val_range(code);
+    variable ret_val : $array_type(array_of_correct_range'range(1), array_of_correct_range'range(2));
     variable index : positive := code'left + 2 + 2 * range1_length + 2 * range2_length;
   begin
     for i in ret_val'range(1) loop
