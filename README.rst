@@ -89,8 +89,7 @@ Simulators
 -  `GHDL`_
 
    -  Only VHDL 2008
-   -  Only versions >= 0.33 dev (There is no official release yet, must be
-      built from source)
+   -  Works with versions >= 0.33
    -  Tested with LLVM and mcode backends, gcc backend might work aswell.
    -  Integrated support for using `GTKWave`_ to view waveforms.
 
