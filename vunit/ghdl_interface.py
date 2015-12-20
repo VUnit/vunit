@@ -170,7 +170,7 @@ class GHDLInterface(SimulatorInterface):
             cmd += ['--workdir=%s' % self._libraries[library_name]]
             cmd += ['-P%s' % path for path in self._libraries.values()]
 
-            if self._backend == "llvm":
+            if self._has_output_flag():
                 cmd += ['-o', join(ghdl_output_path, "%s-%s" % (entity_name, architecture_name))]
 
             cmd += [entity_name, architecture_name]
