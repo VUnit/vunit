@@ -359,3 +359,20 @@ def create_sigasi_project(prj, name, project_path):
     creator.write(project_path)
 
 ```
+
+## Adding custom command line arguments
+It is possible to add custom command line arguments to your `run.py` scripts using the `VUnitCLI` class.
+A `VUnitCLI` object has a `parser` field which is an [argparse.ArgumentParser](https://docs.python.org/2/library/argparse.html) object.
+```python
+from vunit import VUnitCLI, VUnit
+cli = VUnitCLI()
+
+# Add custom command line argument
+cli.parser.add_argument('--custom-arg', ...)
+
+args = cli.parse_args()
+vu = VUnit.from_args(args=args)
+
+# Use args.custom_arg here ...
+
+```
