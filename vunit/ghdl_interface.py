@@ -108,8 +108,11 @@ class GHDLInterface(SimulatorInterface):
             print('Compiling ' + source_file.name + ' into ' + source_file.library.name + ' ...')
 
             if source_file.file_type == 'vhdl':
-                success = self.compile_vhdl_file(source_file.name, source_file.library.name,
-                                                 source_file.library.directory, vhdl_standard)
+                success = self.compile_vhdl_file(source_file.name,
+                                                 source_file.library.name,
+                                                 source_file.library.directory,
+                                                 vhdl_standard,
+                                                 source_file.compile_options)
             elif source_file.file_type == 'verilog':
                 raise RuntimeError("Unkown file type: " + source_file.file_type)
 
@@ -130,7 +133,12 @@ class GHDLInterface(SimulatorInterface):
         else:
             assert False
 
-    def compile_vhdl_file(self, source_file_name, library_name, library_path, vhdl_standard):
+    def compile_vhdl_file(self,  # pylint: disable=too-many-arguments
+                          source_file_name,
+                          library_name,
+                          library_path,
+                          vhdl_standard,
+                          compile_options):
         """
         Compile a vhdl file
         """
@@ -140,6 +148,7 @@ class GHDLInterface(SimulatorInterface):
                    '--std=%s' % self._std_str()]
             for library_name, library_path in self._libraries.items():
                 cmd += ["-P%s" % library_path]
+            cmd += compile_options.get("ghdl_flags", [])
             cmd += [source_file_name]
             proc = Process(cmd)
             proc.consume_output()
@@ -172,6 +181,7 @@ class GHDLInterface(SimulatorInterface):
 
             if self._has_output_flag():
                 cmd += ['-o', join(ghdl_output_path, "%s-%s" % (entity_name, architecture_name))]
+            cmd += config.options.get("ghdl_flags", [])
 
             cmd += [entity_name, architecture_name]
 

@@ -547,6 +547,17 @@ end context;
         file1, file2, file3 = self.create_dummy_three_file_project(update_file1=True)
         self.assert_should_recompile([file1, file2, file3])
 
+    def test_should_recompile_files_after_changing_compile_options(self):
+        file1, file2, file3 = self.create_dummy_three_file_project()
+
+        self.update(file1)
+        self.update(file2)
+        self.update(file3)
+        self.assert_should_recompile([])
+
+        file2.set_compile_option("ghdl_flags", ["--no-vital-checks"])
+        self.assert_should_recompile([file2, file3])
+
     def test_should_recompile_files_affected_by_change_with_later_timestamp(self):
         file1, file2, file3 = self.create_dummy_three_file_project()
 

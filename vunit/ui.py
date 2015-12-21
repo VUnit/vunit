@@ -228,6 +228,13 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         self._configuration.set_sim_option(name, value, scope=create_scope())
 
+    def set_compile_option(self, name, value):
+        """
+        Globally set compile option
+        """
+        for source_file in self._project.get_source_files_in_order():
+            source_file.set_compile_option(name, value)
+
     def set_pli(self, value):
         """
         Globally set pli
@@ -244,8 +251,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         Add source files matching wildcard pattern to library
         """
-        for file_name in glob(pattern):
+        return FileSetFacade(source_files=[
             self.add_source_file(file_name, library_name, preprocessors, include_dirs)
+            for file_name in glob(pattern)])
 
     def add_source_file(self, file_name, library_name, preprocessors=None, include_dirs=None):
         """
@@ -258,10 +266,10 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             add_verilog_include_dir(include_dirs)
 
         file_name = self._preprocess(library_name, abspath(file_name), preprocessors)
-        self._project.add_source_file(file_name,
-                                      library_name,
-                                      file_type=file_type,
-                                      include_dirs=include_dirs)
+        return self._project.add_source_file(file_name,
+                                             library_name,
+                                             file_type=file_type,
+                                             include_dirs=include_dirs)
 
     def _preprocess(self, library_name, file_name, preprocessors):
         """
@@ -533,6 +541,14 @@ class LibraryFacade(object):
         """
         self._configuration.set_sim_option(name, value, scope=self._scope)
 
+    def set_compile_option(self, name, value):
+        """
+        Set compile option within library
+        """
+        for source_file in self._project.get_source_files_in_order():
+            if source_file.library.name == self._library_name:
+                source_file.set_compile_option(name, value)
+
     def set_pli(self, value):
         """ Set pli within library """
         self._configuration.set_pli(value, scope=self._scope)
@@ -544,7 +560,7 @@ class LibraryFacade(object):
         self._configuration.disable_ieee_warnings(scope=self._scope)
 
     def add_source_files(self, pattern, preprocessors=None):
-        self._parent.add_source_files(pattern, self._library_name, preprocessors)
+        return self._parent.add_source_files(pattern, self._library_name, preprocessors)
 
     def package(self, package_name):
         """
@@ -672,7 +688,7 @@ class PackageFacade(object):
                                         output_file_name,
                                         self._parent.use_debug_codecs)
 
-        self._parent.add_source_files(output_file_name, self._library_name)
+        return self._parent.add_source_files(output_file_name, self._library_name)
 
 
 class TestFacade(object):
@@ -725,6 +741,22 @@ class TestFacade(object):
         Disable ieee warnings for test case
         """
         self._config.disable_ieee_warnings(scope=self._scope)
+
+
+class FileSetFacade(object):
+    """
+    A set of one or more files
+    """
+
+    def __init__(self, source_files):
+        self._source_files = source_files
+
+    def set_compile_option(self, name, value):
+        """
+        Set compile option
+        """
+        for source_file in self._source_files:
+            source_file.set_compile_option(name, value)
 
 
 def select_vhdl_standard():

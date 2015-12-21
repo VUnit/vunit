@@ -302,7 +302,7 @@ test = ent.test("test")
 test.disable_ieee_warnings()
 ```
 ## Setting custom simulation options
-Custom simulation options can be set using the`sim_options(name, value)` method. Options can either be set globally, for a library, for an entity or for a specific test.
+Custom simulation options can be set using the`set_sim_option(name, value)` method. Options can either be set globally, for a library, for an entity or for a specific test.
 ```python
 vu.set_sim_option("vsim_extra_args.gui", "-voptargs=+acc")
 ```
@@ -312,6 +312,22 @@ vu.set_sim_option("vsim_extra_args.gui", "-voptargs=+acc")
   - Extra arguments passed to `vsim` when loading the design.
 * `vsim_extra_args.gui`
   - Extra arguments passed to `vsim` when loading the design in GUI mode where it takes precedence over `vsim_extra_args`.
+* `ghdl_flags`
+  - Extra arguments passed to `ghdl --elab-run` command *before* executable specific flags. Must be a list of strings.
+  - Example `vu.set_sim_option("ghdl_flags", ["--no-vital-checks"])`.
+
+## Setting custom compilation options
+Custom compilation options can be set using the `set_compile_option(name, value)` method. Options can be either set globally, for a library or for a specific file returned by the `add_source_files` method.
+```python
+vu.set_compile_option("ghdl_flags", ["--no-vital-checks"])
+```
+
+**NOTE:** Only affects source files added *before* the option is set.
+
+### Known compilation options
+* `ghdl_flags`
+  - Extra arguments passed to `ghdl -a` command. Must be a list of strings.
+  - Example `vu.set_compile_option("ghdl_flags", ["--no-vital-checks"])`.
 
 ## Ctrl-C when using Git/MSYS Bash on Windows
 VUnit will catch Ctrl-C and perform a clean shutdown closing all started simulation processes and printing the test report so far. On Git/MSYS Bash on Windows however there is a mechanism that hard kills a process a very short time after pressing Ctrl-C often prohibiting VUnit from completing its shutdown. This can leave simulation process open which have to be manually killed. See this [stack overflow post](http://stackoverflow.com/questions/23678045/control-c-kills-ipython-in-git-bash-on-windows-7) for tips on how to remove this mechanism.

@@ -538,6 +538,7 @@ class SourceFile(object):
         self.file_type = file_type
         self.design_units = []
         self._content_hash = None
+        self._compile_options = {}
 
     def __eq__(self, other):
         if isinstance(other, type(self)):
@@ -557,9 +558,34 @@ class SourceFile(object):
     def __repr__(self):
         return "SourceFile(%s, %s)" % (self.name, self.library.name)
 
+    _allowed_compile_options = ["ghdl_flags"]
+
+    def set_compile_option(self, name, value):
+        """
+        Set compile option
+        """
+        if name not in self._allowed_compile_options:
+            raise ValueError("Unknown compile option %r" % name)
+        self._compile_options[name] = value
+
+    @property
+    def compile_options(self):
+        return self._compile_options
+
+    def _compile_options_hash(self):
+        """
+        Compute hash of compile options
+
+        Needs to be updated if there are nested dictionaries
+        """
+        return hash_string(repr(sorted(self._compile_options.items())))
+
     @property
     def content_hash(self):
-        return self._content_hash
+        """
+        Compute hash of contents and compile options
+        """
+        return hash_string(self._content_hash + self._compile_options_hash())
 
 
 class VerilogSourceFile(SourceFile):
