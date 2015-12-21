@@ -229,6 +229,28 @@ end architecture;
         package, _, module = self.create_module_package_and_body(add_body=False)
         self.assert_compiles(package, before=module)
 
+    def test_package_instantiation_dependencies(self):
+        self.project.add_library("pkg_lib", "pkg_lib_path")
+        pkg = self.add_source_file("pkg_lib", "pkg.vhd", """
+package pkg is
+end package;
+        """)
+
+        self.project.add_library("lib", "lib_path")
+        ent = self.add_source_file("lib", "ent.vhd", """
+library pkg_lib;
+
+entity ent is
+end entity;
+
+architecture a of ent is
+   package pkg_inst is new pkg_lib.pkg;
+begin
+end architecture;
+""")
+
+        self.assert_compiles(pkg, before=ent)
+
     def test_finds_context_dependencies(self):
         self.project.add_library("lib", "lib_path")
         context = self.add_source_file("lib", "context.vhd", """

@@ -823,7 +823,7 @@ class VHDLReference(object):
     """
     Reference to design unit
     """
-    _reference_types = ("use",
+    _reference_types = ("package",
                         "context",
                         "entity",
                         "configuration")
@@ -867,7 +867,7 @@ class VHDLReference(object):
 
                 names_within = uses[2:] if len(uses) > 2 else (None,)
                 for name_within in names_within:
-                    ref = cls(reference_type=match.group("use_type"),
+                    ref = cls(reference_type="package" if match.group("use_type") == "use" else "context",
                               library=uses[0],
                               design_unit=uses[1],
                               name_within=name_within)
@@ -906,6 +906,20 @@ class VHDLReference(object):
             references.append(cls('configuration', match.group("lib"), match.group("cfg")))
         return references
 
+    _package_instance_re = re.compile(
+        r'\bpackage\s+(?P<new_name>[a-zA-Z]\w*)\s+is\s+new\s+(?P<lib>[a-zA-Z]\w*)\.(?P<name>[a-zA-Z]\w*)',
+        re.MULTILINE | re.IGNORECASE)
+
+    @classmethod
+    def _find_package_instance_references(cls, code):
+        """
+        Finds all reference causes by package instantiation
+        """
+        references = []
+        for match in cls._package_instance_re.finditer(code):
+            references.append(cls('package', match.group("lib"), match.group("name")))
+        return references
+
     @classmethod
     def find(cls, code):
         """
@@ -913,7 +927,8 @@ class VHDLReference(object):
         """
         return (cls._find_uses(code) +
                 cls._find_entity_references(code) +
-                cls._find_configuration_references(code))
+                cls._find_configuration_references(code) +
+                cls._find_package_instance_references(code))
 
     def __init__(self, reference_type, library, design_unit, name_within=None):
         assert reference_type in self._reference_types
@@ -947,7 +962,7 @@ class VHDLReference(object):
         return self.reference_type == 'entity'
 
     def is_package_reference(self):
-        return self.reference_type == 'use'
+        return self.reference_type == 'package'
 
     def reference_all_names_within(self):
         return self.name_within == "all"

@@ -144,23 +144,26 @@ for foo : bar use configuration work.cfg
 
 entity foo is -- False
 configuration bar of ent -- False
+
+package new_pkg is new lib.pkg;
 """)
-        self.assertEqual(len(design_file.references), 13)
-        self.assertEqual(sorted(design_file.references, key=repr), [
+        self.assertEqual(len(design_file.references), 14)
+        self.assertEqual(sorted(design_file.references, key=repr), sorted([
             VHDLReference('configuration', 'work', 'cfg', None),
             VHDLReference('context', 'name1', 'is_identifier', None),
             VHDLReference('entity', 'work1', 'foo1', 'a1'),
             VHDLReference('entity', 'work1', 'foo1', None),
             VHDLReference('entity', 'work2', 'foo2', 'a2'),
             VHDLReference('entity', 'work2', 'foo2', None),
-            VHDLReference('use', 'ieee', 'numeric_std', 'all'),
-            VHDLReference('use', 'ieee', 'std_logic_1164', 'all'),
-            VHDLReference('use', 'lib1', 'foo', None),
-            VHDLReference('use', 'lib2', 'bar', None),
-            VHDLReference('use', 'lib3', 'xyz', None),
-            VHDLReference('use', 'name1', 'bla', 'all'),
-            VHDLReference('use', 'name1', 'foo', 'all'),
-        ])
+            VHDLReference('package', 'ieee', 'numeric_std', 'all'),
+            VHDLReference('package', 'ieee', 'std_logic_1164', 'all'),
+            VHDLReference('package', 'lib1', 'foo', None),
+            VHDLReference('package', 'lib2', 'bar', None),
+            VHDLReference('package', 'lib3', 'xyz', None),
+            VHDLReference('package', 'name1', 'bla', 'all'),
+            VHDLReference('package', 'name1', 'foo', 'all'),
+            VHDLReference('package', 'lib', 'pkg', None),
+        ], key=repr))
 
     def test_parsing_entity_with_generics(self):
         entity = self.parse_single_entity("""\
