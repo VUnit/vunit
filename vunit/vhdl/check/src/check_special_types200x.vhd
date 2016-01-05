@@ -7,6 +7,9 @@
 -- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
+
+library vunit_lib;
+
 use ieee.std_logic_1164.all;
 use std.textio.all;
 use work.log_types_pkg.all;

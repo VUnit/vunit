@@ -9,6 +9,9 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use std.textio.all;
+
+library vunit_lib;
+
 use work.lang.all;
 use work.string_ops.all;
 use work.log_formatting_pkg.all;

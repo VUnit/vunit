@@ -9,6 +9,8 @@
 use std.textio.all;
 use work.run_types_pkg.all;
 
+library vunit_lib;
+
 package run_special_types_pkg is
   type runner_t is protected
      procedure init(active_python_runner : boolean);
