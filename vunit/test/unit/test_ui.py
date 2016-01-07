@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Acceptance test of the VUnit public interface class
@@ -202,6 +202,19 @@ end architecture;
         lib = ui.library("lib")
         lib.add_source_files(join(dirname(__file__), 'test_ui_encoding.vhd'))
         lib.entity("encoding")  # Fill raise exception of not found
+
+    def test_exception_on_adding_zero_files(self):
+        ui = self._create_ui()
+        lib = ui.library("lib")
+        self.assertRaisesRegexp(ValueError, "Pattern.*missing1.vhd.*",
+                                lib.add_source_files, join(dirname(__file__), 'missing1.vhd'))
+        self.assertRaisesRegexp(ValueError, "File.*missing2.vhd.*",
+                                lib.add_source_file, join(dirname(__file__), 'missing2.vhd'))
+
+    def test_no_exception_on_adding_zero_files_when_allowed(self):
+        ui = self._create_ui()
+        lib = ui.library("lib")
+        lib.add_source_files(join(dirname(__file__), 'missing.vhd'), allow_empty=True)
 
     def _test_pre_config_helper(self, retval, test_not_entity=False):
         """

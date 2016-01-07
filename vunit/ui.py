@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 The main public Python interface of VUnit.
@@ -247,13 +247,20 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         self._configuration.disable_ieee_warnings(scope=create_scope())
 
-    def add_source_files(self, pattern, library_name, preprocessors=None, include_dirs=None):
+    def add_source_files(self,   # pylint: disable=too-many-arguments
+                         pattern, library_name, preprocessors=None, include_dirs=None, allow_empty=False):
         """
         Add source files matching wildcard pattern to library
         """
+        file_names = glob(pattern)
+
+        if (not allow_empty) and len(file_names) == 0:
+            raise ValueError(("Pattern %r did not match any file. "
+                              "Use allow_empty=True to avoid exception,") % pattern)
+
         return FileSetFacade(source_files=[
             self.add_source_file(file_name, library_name, preprocessors, include_dirs)
-            for file_name in glob(pattern)])
+            for file_name in file_names])
 
     def add_source_file(self, file_name, library_name, preprocessors=None, include_dirs=None):
         """
@@ -559,8 +566,12 @@ class LibraryFacade(object):
         """
         self._configuration.disable_ieee_warnings(scope=self._scope)
 
-    def add_source_files(self, pattern, preprocessors=None):
-        return self._parent.add_source_files(pattern, self._library_name, preprocessors)
+    def add_source_files(self, pattern, preprocessors=None, allow_empty=False):
+        return self._parent.add_source_files(pattern, self._library_name, preprocessors,
+                                             allow_empty=allow_empty)
+
+    def add_source_file(self, pattern, preprocessors=None):
+        return self._parent.add_source_file(pattern, self._library_name, preprocessors)
 
     def package(self, package_name):
         """

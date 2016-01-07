@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Functionality to represent and operate on a HDL code project
@@ -76,6 +76,9 @@ class Project(object):
         """
         Add a file_name as a source file in library_name with file_type
         """
+        if not ostools.file_exists(file_name):
+            raise ValueError("File %r does not exist" % file_name)
+
         LOGGER.info('Adding source file %s to library %s', file_name, library_name)
         self._validate_library_name(library_name)
         library = self._libraries[library_name]
