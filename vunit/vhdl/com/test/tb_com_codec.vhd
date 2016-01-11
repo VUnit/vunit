@@ -251,6 +251,7 @@ begin
         check_relation(decode_bit_vector(encode_bit_vector(bit_vector_5_downto_3))'right = 3);
       elsif run("Test that integer_vector can be encoded and decoded") then
         integer_vector_5_downto_3 := (-42, 0, 17);
+        check_relation(decode_integer_vector(encode_integer_vector((-2147483648, -2147483648, -2147483648))) = integer_vector'(-2147483648, -2147483648, -2147483648));
         check_relation(decode_integer_vector(encode_integer_vector((-42, 0, 17))) = integer_vector'(-42, 0, 17));
         check_relation(decode_integer_vector(encode_integer_vector((0          => -42))) = integer_vector'(0 => -42));
         check_relation(decode_integer_vector(encode_integer_vector(null_integer_vector)) = null_integer_vector);

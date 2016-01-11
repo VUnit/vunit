@@ -134,7 +134,7 @@ package body com_string_pkg is
   function to_detailed_string (
     constant data : integer_vector)
     return string is
-    variable element : string(1 to 2 + data'length * 11);
+    variable element : string(1 to 2 + data'length * 12);
     variable l       : line;
     variable length  : natural;
   begin
