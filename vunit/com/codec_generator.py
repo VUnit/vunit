@@ -38,9 +38,9 @@ def generate_codecs(input_package_design_unit, codec_package_name,  # pylint: di
         if '.' in used_package:
             if used_package.split('.')[0] not in libraries:
                 libraries.append(used_package.split('.')[0])
-                use_clauses += 'use %s.all;\n' % used_package
-            else:
-                use_clauses += 'use work.%s.all;\n' % used_package
+            use_clauses += 'use %s.all;\n' % used_package
+        else:
+            use_clauses += 'use work.%s.all;\n' % used_package
     if len(libraries) != 0:
         use_clauses = 'library ' + ';\nlibrary '.join(libraries) + ';\n' + use_clauses
 

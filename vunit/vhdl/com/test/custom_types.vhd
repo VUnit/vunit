@@ -20,6 +20,9 @@ use ieee.float_pkg.all;
 
 use std.textio.all;
 
+use work.constants_pkg.all;
+use work.more_constants_pkg.all;
+
 package custom_types_pkg is
   type enum1_t is (red, green, blue);
 
@@ -86,7 +89,7 @@ package custom_types_pkg is
   type record9_msg_type_t is (foo, bar);
   type record9_t is record
     msg_type : record9_msg_type_t;
-    slv   : std_logic_vector(7 downto 0);
+    slv   : std_logic_vector(byte_msb_c downto byte_lsb_c);
     str   : string(1 to 3);
     int_2d : int_2d_t(1 to 2, 4 downto -1);
   end record record9_t;
