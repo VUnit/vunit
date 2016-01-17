@@ -355,7 +355,7 @@ proc _vunit_run {} {
     } elseif {${has_vhdl_runner}} {
         set exit_boolean {/run_base_pkg/runner.exit_simulation}
         set status_boolean {/run_base_pkg/runner.exit_without_errors}
-        set true_value TRUE
+        set true_value 1
     } elseif {${has_verilog_runner}} {
         set exit_boolean {/vunit_pkg/__runner__.exit_simulation}
         set status_boolean {/vunit_pkg/__runner__.exit_without_errors}

@@ -242,7 +242,7 @@ proc vunit_run {} {
 
     if {${has_vhdl_runner}} {
         set status_boolean "/vunit_lib.run_base_pkg/runner.exit_without_errors"
-        set true_value true
+        set true_value 1
     } elseif {${has_verilog_runner}} {
         set status_boolean "/\\\\package vunit_lib.vunit_pkg\\\\/__runner__.exit_without_errors"
         set true_value 1

@@ -45,14 +45,7 @@ architecture test_fixture of tb_check_not_unknown is
   shared variable check_not_unknown_checker5, check_not_unknown_checker6 : checker_t;
 
 begin
-  clock: process is
-  begin
-    while runner.phase < test_runner_exit loop
-      clk <= '1', '0' after 5 ns;
-      wait for 10 ns;
-    end loop;
-    wait;
-  end process clock;
+  clk <= not clk after 5 ns;
 
   check_not_unknown_1 : check_not_unknown(clk, en_1, expr_1);
   check_not_unknown_2 : check_not_unknown(check_not_unknown_checker2, clk, en_2, expr_2, active_clock_edge => falling_edge);

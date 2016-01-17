@@ -23,6 +23,9 @@ use vunit_lib.run_pkg.all;
 use vunit_lib.vunit_core_pkg;
 use vunit_lib.vunit_stop_pkg;
 
+library ieee;
+use ieee.std_logic_1164.all;
+
 entity tb_run is
   generic (output_path : string);
 end entity tb_run;
@@ -38,15 +41,15 @@ begin
   begin
     wait until start_test_process;
     t_start := now;
-    if runner.phase /= test_suite_setup then
-      wait until runner.phase = test_suite_setup for 20 ns;
+    if runner.phase /= test_suite_setup_phase then
+      wait until runner.phase = test_suite_setup_phase for 20 ns;
     end if;
-    check(now - t_start = 17 ns, "Expected wait on test_suite_setup phase to be 17 ns.");
+    check(now - t_start = 17 ns, "Expected wait on test_suite_setup_phase to be 17 ns.");
     t_start := now;
-    if runner.phase /= test_case_setup then
-      wait until runner.phase = test_case_setup for 20 ns;
+    if runner.phase /= test_case_setup_phase then
+      wait until runner.phase = test_case_setup_phase for 20 ns;
     end if;
-    check(now - t_start = 9 ns, "Expected wait on test_case_setup phase to be 9 ns.");
+    check(now - t_start = 9 ns, "Expected wait on test_case_setup_phase to be 9 ns.");
     test_process_completed <= true;
     wait;
   end process;
@@ -54,63 +57,63 @@ begin
   test_process2 : process is
   begin
     wait until start_test_process2;
-    lock_entry(runner, test_suite_setup);
-    lock_exit(runner, test_suite_setup);
+    lock_entry(runner, test_suite_setup_phase);
+    lock_exit(runner, test_suite_setup_phase);
     wait for 7 ns;
-    unlock_entry(runner, test_suite_setup);
+    unlock_entry(runner, test_suite_setup_phase);
     wait for 4 ns;
-    unlock_exit(runner, test_suite_setup);
+    unlock_exit(runner, test_suite_setup_phase);
     wait;
   end process;
 
   locking_proc1: process is
   begin
     wait until start_locking_process = true;
-    lock_entry(runner, test_runner_setup, "locking_proc1");
-    lock_exit(runner, test_runner_setup, "locking_proc1");
-    lock_entry(runner, test_suite_setup, "locking_proc1");
-    lock_exit(runner, test_suite_setup, "locking_proc1");
+    lock_entry(runner, test_runner_setup_phase, "locking_proc1");
+    lock_exit(runner, test_runner_setup_phase, "locking_proc1");
+    lock_entry(runner, test_suite_setup_phase, "locking_proc1");
+    lock_exit(runner, test_suite_setup_phase, "locking_proc1");
     wait for 2 ns;
-    unlock_entry(runner, test_runner_setup, "locking_proc1");
+    unlock_entry(runner, test_runner_setup_phase, "locking_proc1");
     wait for 1 ns;
-    unlock_exit(runner, test_runner_setup, "locking_proc1");
+    unlock_exit(runner, test_runner_setup_phase, "locking_proc1");
     wait for 1 ns;
-    unlock_entry(runner, test_suite_setup, "locking_proc1");
+    unlock_entry(runner, test_suite_setup_phase, "locking_proc1");
     wait for 2 ns;
 
-    lock_entry(runner, test_case_setup, "locking_proc1");
-    lock_exit(runner, test_case_setup, "locking_proc1");
-    lock_entry(runner, test_case, "locking_proc1");
-    lock_exit(runner, test_case, "locking_proc1");
-    lock_entry(runner, test_case_cleanup, "locking_proc1");
-    lock_exit(runner, test_case_cleanup, "locking_proc1");
-    lock_entry(runner, test_suite_cleanup, "locking_proc1");
-    lock_exit(runner, test_suite_cleanup, "locking_proc1");
-    lock_entry(runner, test_runner_cleanup, "locking_proc1");
-    lock_exit(runner, test_runner_cleanup, "locking_proc1");
+    lock_entry(runner, test_case_setup_phase, "locking_proc1");
+    lock_exit(runner, test_case_setup_phase, "locking_proc1");
+    lock_entry(runner, test_case_phase, "locking_proc1");
+    lock_exit(runner, test_case_phase, "locking_proc1");
+    lock_entry(runner, test_case_cleanup_phase, "locking_proc1");
+    lock_exit(runner, test_case_cleanup_phase, "locking_proc1");
+    lock_entry(runner, test_suite_cleanup_phase, "locking_proc1");
+    lock_exit(runner, test_suite_cleanup_phase, "locking_proc1");
+    lock_entry(runner, test_runner_cleanup_phase, "locking_proc1");
+    lock_exit(runner, test_runner_cleanup_phase, "locking_proc1");
 
     wait for 1 ns;
-    unlock_exit(runner, test_suite_setup, "locking_proc1");
+    unlock_exit(runner, test_suite_setup_phase, "locking_proc1");
     wait for 1 ns;
-    unlock_entry(runner, test_case_setup, "locking_proc1");
+    unlock_entry(runner, test_case_setup_phase, "locking_proc1");
     wait for 2 ns;
-    unlock_exit(runner, test_case_setup, "locking_proc1");
+    unlock_exit(runner, test_case_setup_phase, "locking_proc1");
     wait for 1 ns;
-    unlock_entry(runner, test_case, "locking_proc1");
+    unlock_entry(runner, test_case_phase, "locking_proc1");
     wait for 2 ns;
-    unlock_exit(runner, test_case, "locking_proc1");
+    unlock_exit(runner, test_case_phase, "locking_proc1");
     wait for 1 ns;
-    unlock_entry(runner, test_case_cleanup, "locking_proc1");
+    unlock_entry(runner, test_case_cleanup_phase, "locking_proc1");
     wait for 2 ns;
-    unlock_exit(runner, test_case_cleanup, "locking_proc1");
+    unlock_exit(runner, test_case_cleanup_phase, "locking_proc1");
     wait for 4 ns;
-    unlock_entry(runner, test_suite_cleanup, "locking_proc1");
+    unlock_entry(runner, test_suite_cleanup_phase, "locking_proc1");
     wait for 2 ns;
-    unlock_exit(runner, test_suite_cleanup, "locking_proc1");
+    unlock_exit(runner, test_suite_cleanup_phase, "locking_proc1");
     wait for 1 ns;
-    unlock_entry(runner, test_runner_cleanup, "locking_proc1");
+    unlock_entry(runner, test_runner_cleanup_phase, "locking_proc1");
     wait for 1 ns;
-    unlock_exit(runner, test_runner_cleanup, "locking_proc1");
+    unlock_exit(runner, test_runner_cleanup_phase, "locking_proc1");
     wait;
   end process locking_proc1;
 
@@ -118,9 +121,9 @@ begin
   begin
     wait until start_locking_process = true;
     wait for 5 ns;
-    lock_exit(runner, test_runner_cleanup, "locking_proc2");
+    lock_exit(runner, test_runner_cleanup_phase, "locking_proc2");
     wait for 21 ns;
-    unlock_exit(runner, test_runner_cleanup, "locking_proc2");
+    unlock_exit(runner, test_runner_cleanup_phase, "locking_proc2");
     wait;
   end process locking_proc2;
 
@@ -129,7 +132,7 @@ begin
     wait until start_test_runner_watchdog;
     test_runner_watchdog(runner, 10 ns, true);
     test_runner_watchdog_completed <= true;
-    runner.exit_without_errors <= false;
+    runner.exit_without_errors <= resolved_false_c;
   end process watchdog;
 
   test_runner : process
@@ -189,9 +192,9 @@ begin
 
     procedure test_case_setup is
     begin
-      set_phase(test_runner_entry);
-      runner.phase <= test_runner_entry;
-      runner.exit_without_errors <= false;
+      set_phase(test_runner_entry_phase);
+      runner.phase <= test_runner_entry_phase;
+      runner.exit_without_errors <= resolved_false_c;
     end procedure test_case_setup;
 
     variable checker_stat, test_checker_stat : checker_stat_t;
@@ -358,14 +361,14 @@ begin
     ---------------------------------------------------------------------------
     banner("Should maintain correct phase when using the full run mode of operation without any early exits");
     test_case_setup;
-    check(c, get_phase = test_runner_entry, "Phase should be test runner entry");
+    check(c, get_phase = test_runner_entry_phase, "Phase should be test runner entry");
     test_runner_setup(runner, "enabled_test_cases : test a,, test b");
-    check(c, get_phase = test_suite_setup, "Phase should be test suite setup");
+    check(c, get_phase = test_suite_setup_phase, "Phase should be test suite setup");
     i := 0;
     while test_suite loop
-      check(c, get_phase = test_case_setup, "Phase should be test case setup." & " Got " & runner_phase_t'image(get_phase) & ".");
+      check(c, get_phase = test_case_setup_phase, "Phase should be test case setup." & " Got " & to_string(get_phase) & ".");
       while in_test_case loop
-        check(c, get_phase = test_case, "Phase should be test case main."  & " Got " & runner_phase_t'image(get_phase) & ".");
+        check(c, get_phase = test_case_phase, "Phase should be test case main."  & " Got " & to_string(get_phase) & ".");
         if i = 0 then
           check_false(c, run("test b"), "Test b should not be enabled at this time.");
           check(c, run("test a"), "Test a should be enabled at this time");
@@ -376,23 +379,23 @@ begin
         i := i + 1;
       end loop;
     end loop;
-    check(c, get_phase = test_suite_cleanup, "Phase should be test suite cleanup" & " Got " & runner_phase_t'image(get_phase) & ".");
+    check(c, get_phase = test_suite_cleanup_phase, "Phase should be test suite cleanup" & " Got " & to_string(get_phase) & ".");
     test_runner_cleanup(runner, disable_simulation_exit => true);
-    check(c, get_phase = test_runner_exit, "Phase should be test runner exit" & " Got " & runner_phase_t'image(get_phase) & ".");
+    check(c, get_phase = test_runner_exit_phase, "Phase should be test runner exit" & " Got " & to_string(get_phase) & ".");
 
 
 
     ---------------------------------------------------------------------------
     banner("Should maintain correct phase when using the full run mode of operation and there is a premature exit of a test case.");
     test_case_setup;
-    check(c, get_phase = test_runner_entry, "Phase should be test runner entry");
+    check(c, get_phase = test_runner_entry_phase, "Phase should be test runner entry");
     test_runner_setup(runner, "enabled_test_cases : test a,, test b");
-    check(c, get_phase = test_suite_setup, "Phase should be test suite setup");
+    check(c, get_phase = test_suite_setup_phase, "Phase should be test suite setup");
     i := 0;
     while test_suite loop
-      check(c, get_phase = test_case_setup, "Phase should be test case setup." & " Got " & runner_phase_t'image(get_phase) & ".");
+      check(c, get_phase = test_case_setup_phase, "Phase should be test case setup." & " Got " & to_string(get_phase) & ".");
       while in_test_case loop
-        check(c, get_phase = test_case, "Phase should be test case main."  & " Got " & runner_phase_t'image(get_phase) & ".");
+        check(c, get_phase = test_case_phase, "Phase should be test case main."  & " Got " & to_string(get_phase) & ".");
         if i = 0 then
           check_false(c, run("test b"), "Test b should not be enabled at this time.");
           check(c, run("test a"), "Test a should be enabled at this time");
@@ -404,36 +407,36 @@ begin
           i := i + 1;
         end if;
       end loop;
-      check(c, get_phase = test_case_cleanup, "Phase should be test case cleanup."  & " Got " & runner_phase_t'image(get_phase) & ".");
+      check(c, get_phase = test_case_cleanup_phase, "Phase should be test case cleanup."  & " Got " & to_string(get_phase) & ".");
     end loop;
-    check(c, get_phase = test_suite_cleanup, "Phase should be test suite cleanup" & " Got " & runner_phase_t'image(get_phase) & ".");
+    check(c, get_phase = test_suite_cleanup_phase, "Phase should be test suite cleanup" & " Got " & to_string(get_phase) & ".");
     test_runner_cleanup(runner, disable_simulation_exit => true);
-    check(c, get_phase = test_runner_exit, "Phase should be test runner exit" & " Got " & runner_phase_t'image(get_phase) & ".");
+    check(c, get_phase = test_runner_exit_phase, "Phase should be test runner exit" & " Got " & to_string(get_phase) & ".");
 
 
 
     ---------------------------------------------------------------------------
     banner("Should maintain correct phase when using the full run mode of operation and there is a premature exit of a test suite.");
     test_case_setup;
-    check(c, get_phase = test_runner_entry, "Phase should be test runner entry");
+    check(c, get_phase = test_runner_entry_phase, "Phase should be test runner entry");
     test_runner_setup(runner, "enabled_test_cases : test a,, test b");
-    check(c, get_phase = test_suite_setup, "Phase should be test suite setup");
+    check(c, get_phase = test_suite_setup_phase, "Phase should be test suite setup");
     i := 0;
     while test_suite loop
-      check(c, get_phase = test_case_setup, "Phase should be test case setup." & " Got " & runner_phase_t'image(get_phase) & ".");
+      check(c, get_phase = test_case_setup_phase, "Phase should be test case setup." & " Got " & to_string(get_phase) & ".");
       while in_test_case loop
-        check(c, get_phase = test_case, "Phase should be test case main."  & " Got " & runner_phase_t'image(get_phase) & ".");
+        check(c, get_phase = test_case_phase, "Phase should be test case main."  & " Got " & to_string(get_phase) & ".");
         check(c, i = 0, "The second test case should never be activated");
         check_false(c, run("test b"), "Test b should not be enabled at this time.");
         check(c, run("test a"), "Test a should be enabled at this time");
         i := i + 1;
         exit when test_suite_error(true);
       end loop;
-      check(c, get_phase = test_case_cleanup, "Phase should be test case cleanup."  & " Got " & runner_phase_t'image(get_phase) & ".");
+      check(c, get_phase = test_case_cleanup_phase, "Phase should be test case cleanup."  & " Got " & to_string(get_phase) & ".");
     end loop;
-    check(c, get_phase = test_suite_cleanup, "Phase should be test suite cleanup." & " Got " & runner_phase_t'image(get_phase) & ".");
+    check(c, get_phase = test_suite_cleanup_phase, "Phase should be test suite cleanup." & " Got " & to_string(get_phase) & ".");
     test_runner_cleanup(runner, disable_simulation_exit => true);
-    check(c, get_phase = test_runner_exit, "Phase should be test runner exit" & " Got " & runner_phase_t'image(get_phase) & ".");
+    check(c, get_phase = test_runner_exit_phase, "Phase should be test runner exit" & " Got " & to_string(get_phase) & ".");
 
     ---------------------------------------------------------------------------
     --banner("Should be possible to exit a test case or test suite with an error message that can be caught afterwards.");
@@ -670,10 +673,10 @@ begin
     logger_init(runner_trace_logger, "", output_path & "trace2.txt", verbose, verbose_csv);
 
     test_runner_setup(runner, "enabled_test_cases : test a");
-    lock_entry(runner, test_case_setup, "me", 17, "foo1.vhd");
-    lock_exit(runner, test_case_setup, "me", 18, "foo2.vhd");
-    unlock_entry(runner, test_case_setup, "me", 19, "foo3.vhd");
-    unlock_exit(runner, test_case_setup, "me", 20, "foo4.vhd");
+    lock_entry(runner, test_case_setup_phase, "me", 17, "foo1.vhd");
+    lock_exit(runner, test_case_setup_phase, "me", 18, "foo2.vhd");
+    unlock_entry(runner, test_case_setup_phase, "me", 19, "foo3.vhd");
+    unlock_exit(runner, test_case_setup_phase, "me", 20, "foo4.vhd");
 
     for i in log_entries'range loop
       deallocate(log_entries(i));
@@ -744,9 +747,9 @@ begin
     banner("Should be possible to externally figure out if the test runner terminated without errors.");
     test_case_setup;
     test_runner_setup(runner, "enabled_test_cases : test a,, test b,, test c,, test d");
-    check_false(c, runner.exit_without_errors, "Expected exit flag to be false after runner setup");
+    check(c, runner.exit_without_errors = resolved_false_c, "Expected exit flag to be false after runner setup");
     test_runner_cleanup(runner, disable_simulation_exit => true);
-    check(c, runner.exit_without_errors, "Expected exit flag to be true after runner cleanup");
+    check(c, runner.exit_without_errors = resolved_true_c, "Expected exit flag to be true after runner cleanup");
 
     ---------------------------------------------------------------------------
     banner("Should be possible to externally figure out if the test runner terminated with or errors.");
@@ -756,7 +759,7 @@ begin
     check(test_checker, false, "Should fail");
     get_checker_stat(test_checker, test_checker_stat);
     test_runner_cleanup(runner, test_checker_stat, disable_simulation_exit => true);
-    check_false(c, runner.exit_without_errors, "Expected exit flag to be false after runner cleanup");
+    check(c, runner.exit_without_errors = resolved_false_c, "Expected exit flag to be false after runner cleanup");
 
     ---------------------------------------------------------------------------
     banner("Should be possible to read running test case when running all");

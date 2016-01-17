@@ -121,7 +121,7 @@ package body run_special_types_pkg is
   type runner_t is protected body
     variable state : runner_state_t := (
       active_python_runner => false,
-      runner_phase => runner_phase_t'left,
+      runner_phase => test_runner_entry_phase,
       test_case_names => (others => null),
       n_test_cases => unknown_num_of_test_cases_c,
       active_test_case_index => 1,

@@ -46,14 +46,7 @@ architecture test_fixture of tb_check_implication is
   shared variable check_implication_checker, check_implication_checker2, check_implication_checker3, check_implication_checker4 : checker_t;
 
 begin
-  clock: process is
-  begin
-    while runner.phase < test_runner_exit loop
-      clk <= '1', '0' after 5 ns;
-      wait for 10 ns;
-    end loop;
-    wait;
-  end process clock;
+  clk <= not clk after 5 ns;
 
   check_implication_1 : check_implication(clk, check_implication_en_1, antecedent_1, consequent_1);
   check_implication_2 : check_implication(check_implication_checker2, clk, check_implication_en_2, antecedent_2, consequent_2, active_clock_edge => falling_edge);

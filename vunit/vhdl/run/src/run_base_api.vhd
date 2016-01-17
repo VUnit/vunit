@@ -15,16 +15,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 package run_base_pkg is
-  signal runner : runner_sync_t := (phase => test_runner_entry,
-                                    locks => ((false, false),
-                                              (false, false),
-                                              (false, false),
-                                              (false, false),
-                                              (false, false),
-                                              (false, false),
-                                              (false, false)),
-                                    exit_without_errors => false,
-                                    exit_simulation => false);
+  signal runner : runner_sync_t := (phase => test_runner_entry_phase,
+                                    locks => (others => (resolved_false_c, resolved_false_c)),
+                                    exit_without_errors => resolved_false_c,
+                                    exit_simulation => resolved_false_c);
 
   shared variable runner_trace_logger : logger_t;
 

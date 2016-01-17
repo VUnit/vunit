@@ -39,14 +39,7 @@ architecture test_fixture of tb_check_sequence is
   signal start_check_sequence_4 : boolean := false;
   shared variable checker_2, checker_3, checker_4, checker_5 : checker_t;
 begin
-  clock: process is
-  begin
-    while runner.phase < test_runner_exit loop
-      clk <= '1', '0' after 5 ns;
-      wait for 10 ns;
-    end loop;
-    wait;
-  end process clock;
+  clk <= not clk after 5 ns;
 
   check_sequence_1 : check_sequence(clk,
                                                 inp(1)(5),

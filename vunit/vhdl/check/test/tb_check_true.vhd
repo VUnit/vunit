@@ -34,14 +34,7 @@ architecture test_fixture of tb_check_true is
   shared variable check_true_checker, check_true_checker2, check_true_checker3, check_true_checker4 : checker_t;
 
 begin
-  clock: process is
-  begin
-    while runner.phase < test_runner_exit loop
-      clk <= '1', '0' after 5 ns;
-      wait for 10 ns;
-    end loop;
-    wait;
-  end process clock;
+  clk <= not clk after 5 ns;
 
   check_true_1 : check_true(clk, check_true_en_1, check_true_in_1);
   check_true_2 : check_true(check_true_checker2, clk, check_true_en_2, check_true_in_2, active_clock_edge => falling_edge);

@@ -61,14 +61,7 @@ architecture test_fixture of tb_check_stable is
   shared variable check_stable_checker2, check_stable_checker3 : checker_t;
   shared variable check_stable_checker6, check_stable_checker7 : checker_t;
 begin
-  clock: process is
-  begin
-    while runner.phase < test_runner_exit loop
-      clk <= '1', '0' after 5 ns;
-      wait for 10 ns;
-    end loop;
-    wait;
-  end process clock;
+  clk <= not clk after 5 ns;
 
   check_stable_1 : check_stable(clk,
                                             check_stable_en_1,

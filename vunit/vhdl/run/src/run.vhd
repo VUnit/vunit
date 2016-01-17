@@ -68,9 +68,9 @@ package body run_pkg is
                    file_format => verbose_csv);
     end if;
 
-    set_phase(test_runner_setup);
-    runner.phase <= test_runner_setup;
-    runner.exit_without_errors <= false;
+    set_phase(test_runner_setup_phase);
+    runner.phase <= test_runner_setup_phase;
+    runner.exit_without_errors <= resolved_false_c;
     wait for 0 ns;
     debug(runner_trace_logger, "Entering test runner setup phase.");
     entry_gate(runner);
@@ -102,8 +102,8 @@ package body run_pkg is
       end loop;
     end if;
     exit_gate(runner);
-    set_phase(test_suite_setup);
-    runner.phase <= test_suite_setup;
+    set_phase(test_suite_setup_phase);
+    runner.phase <= test_suite_setup_phase;
     wait for 0 ns;
     debug(runner_trace_logger, "Entering test suite setup phase.");
     entry_gate(runner);
@@ -115,33 +115,36 @@ package body run_pkg is
     constant disable_simulation_exit : in boolean := false) is
     variable stat : checker_stat_t;
   begin
-    set_phase(test_runner_cleanup);
-    runner.phase <= test_runner_cleanup;
+    set_phase(test_runner_cleanup_phase);
+    runner.phase <= test_runner_cleanup_phase;
     wait for 0 ns;
     debug(runner_trace_logger, "Entering test runner cleanup phase.");
     entry_gate(runner);
     exit_gate(runner);
-    set_phase(test_runner_exit);
-    runner.phase <= test_runner_exit;
+    set_phase(test_runner_exit_phase);
+    runner.phase <= test_runner_exit_phase;
     wait for 0 ns;
     debug(runner_trace_logger, "Entering test runner exit phase.");
     get_checker_stat(stat);
-    runner.exit_without_errors <= (stat.n_failed = 0) and not external_failure;
-
+    if (stat.n_failed = 0) and not external_failure then
+      runner.exit_without_errors <= resolved_true_c;
+    else
+      runner.exit_without_errors <= resolved_false_c;
+    end if;
     runner_init(has_active_python_runner); -- @TODO Why?
-    runner.locks(test_runner_setup to test_runner_cleanup) <= (others => (false, false));
+    runner.locks(index_of(test_runner_setup_phase) to index_of(test_runner_cleanup_phase)) <= (others => (resolved_false_c, resolved_false_c));
 
     wait for 0 ns;
 
-    if runner.exit_without_errors then
+    if runner.exit_without_errors = resolved_true_c then
       if has_active_python_runner then
         vunit_core_pkg.test_suite_done;
       end if;
     end if;
 
     if not disable_simulation_exit then
-      runner.exit_simulation <= true;
-      if runner.exit_without_errors then
+      runner.exit_simulation <= resolved_true_c;
+      if runner.exit_without_errors = resolved_true_c then
         vunit_stop(0);
       else
         vunit_stop(1);
@@ -204,11 +207,11 @@ package body run_pkg is
 
     if ret_val then
       inc_test_suite_iteration;
-      set_phase(test_case_setup);
+      set_phase(test_case_setup_phase);
       debug(runner_trace_logger, "Entering test case setup phase.");
     else
       set_test_suite_completed;
-      set_phase(test_suite_cleanup);
+      set_phase(test_suite_cleanup_phase);
       debug(runner_trace_logger, "Entering test suite cleanup phase.");
     end if;
 
@@ -219,7 +222,7 @@ package body run_pkg is
     return boolean is
   begin
     if get_test_case_iteration = 0 then
-      set_phase(test_case);
+      set_phase(test_case_phase);
       debug(runner_trace_logger, "Entering test case phase.");
       inc_test_case_iteration;
       clear_test_case_exit_after_error;
@@ -227,7 +230,7 @@ package body run_pkg is
       set_running_test_case("");
       return true;
     else
-      set_phase(test_case_cleanup);
+      set_phase(test_case_cleanup_phase);
       debug(runner_trace_logger, "Entering test case cleanup phase.");
       return false;
     end if;
@@ -304,9 +307,9 @@ package body run_pkg is
     constant timeout                 : in    time;
     constant disable_simulation_exit : in    boolean := false) is
   begin
-    wait until runner.exit_without_errors for timeout;
-    check(runner.exit_without_errors, "Test runner timeout after " & time'image(timeout) & ".");
-    if not runner.exit_without_errors then
+    wait until runner.exit_without_errors = resolved_true_c for timeout;
+    check(runner.exit_without_errors = resolved_true_c, "Test runner timeout after " & time'image(timeout) & ".");
+    if runner.exit_without_errors = resolved_false_c then
       test_runner_cleanup(runner, disable_simulation_exit => disable_simulation_exit);
     end if;
   end;
@@ -317,7 +320,7 @@ package body run_pkg is
   begin
     if err then
       set_test_suite_completed;
-      set_phase(test_case_cleanup);
+      set_phase(test_case_cleanup_phase);
       debug(runner_trace_logger, "Entering test case cleanup phase.");
       set_test_suite_exit_after_error;
     end if;
@@ -330,7 +333,7 @@ package body run_pkg is
     return boolean is
   begin
     if err then
-      set_phase(test_case_cleanup);
+      set_phase(test_case_cleanup_phase);
       debug(runner_trace_logger, "Entering test case cleanup phase.");
       set_test_case_exit_after_error;
     end if;
@@ -363,9 +366,9 @@ package body run_pkg is
     constant line_num  : in natural := 0;
     constant file_name : in string := "") is
   begin
-    runner.locks(phase).entry_is_locked <= true;
+    runner.locks(index_of(phase)).entry_is_locked <= resolved_true_c;
     wait for 0 ns;
-    debug(runner_trace_logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase entry gate.", me, line_num, file_name);
+    debug(runner_trace_logger, "Locked " & to_string(phase) & " entry gate.", me, line_num, file_name);
   end;
 
   procedure unlock_entry (
@@ -375,8 +378,8 @@ package body run_pkg is
     constant line_num  : in natural := 0;
     constant file_name : in string := "") is
   begin
-    runner.locks(phase).entry_is_locked <= false;
-    debug(runner_trace_logger, "Unlocked " & replace(runner_phase_t'image(phase), "_", " ") & " phase entry gate.", me, line_num, file_name);
+    runner.locks(index_of(phase)).entry_is_locked <= resolved_false_c;
+    debug(runner_trace_logger, "Unlocked " & to_string(phase) & " entry gate.", me, line_num, file_name);
     wait for 0 ns;
   end;
 
@@ -387,9 +390,9 @@ package body run_pkg is
     constant line_num  : in natural := 0;
     constant file_name : in string := "") is
   begin
-    runner.locks(phase).exit_is_locked <= true;
+    runner.locks(index_of(phase)).exit_is_locked <= resolved_true_c;
     wait for 0 ns;
-    debug(runner_trace_logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase exit gate.", me, line_num, file_name);
+    debug(runner_trace_logger, "Locked " & to_string(phase) & " exit gate.", me, line_num, file_name);
   end;
 
   procedure unlock_exit (
@@ -399,8 +402,8 @@ package body run_pkg is
     constant line_num  : in natural := 0;
     constant file_name : in string := "") is
   begin
-    runner.locks(phase).exit_is_locked <= false;
-    debug(runner_trace_logger, "Unlocked " & replace(runner_phase_t'image(phase), "_", " ") & " phase exit gate.", me, line_num, file_name);
+    runner.locks(index_of(phase)).exit_is_locked <= resolved_false_c;
+    debug(runner_trace_logger, "Unlocked " & to_string(phase) & " exit gate.", me, line_num, file_name);
     wait for 0 ns;
   end;
 
@@ -412,32 +415,32 @@ package body run_pkg is
     constant file_name : in string := "") is
   begin
     if runner.phase /= phase then
-      debug(runner_trace_logger, "Waiting for phase = " & replace(runner_phase_t'image(phase), "_", " ") & ".", me, line_num, file_name);
+      debug(runner_trace_logger, "Waiting for phase = " & to_string(phase) & ".", me, line_num, file_name);
       wait until runner.phase = phase;
-      debug(runner_trace_logger, "Waking up. Phase is " & replace(runner_phase_t'image(phase), "_", " ") & ".", me, line_num, file_name);
+      debug(runner_trace_logger, "Waking up. Phase is " & to_string(phase) & ".", me, line_num, file_name);
     end if;
   end;
 
   procedure entry_gate (
     signal runner : inout runner_sync_t) is
   begin
-    if runner.locks(get_phase).entry_is_locked then
-      debug(runner_trace_logger, "Halting on " & replace(runner_phase_t'image(get_phase), "_", " ") & " phase entry gate.");
-      wait on runner.locks until not runner.locks(get_phase).entry_is_locked for max_locked_time_c;
+    if runner.locks(index_of(get_phase)).entry_is_locked = resolved_true_c then
+      debug(runner_trace_logger, "Halting on " & to_string(get_phase) & " entry gate.");
+      wait on runner.locks until runner.locks(index_of(get_phase)).entry_is_locked = resolved_false_c for max_locked_time_c;
     end if;
     runner.phase <= get_phase;
     wait for 0 ns;
-    debug(runner_trace_logger, "Passed " & replace(runner_phase_t'image(get_phase), "_", " ") & " phase entry gate.");
+    debug(runner_trace_logger, "Passed " & to_string(get_phase) & " entry gate.");
   end procedure entry_gate;
 
   procedure exit_gate (
     signal runner : in runner_sync_t) is
   begin
-    if runner.locks(get_phase).exit_is_locked then
-      debug(runner_trace_logger, "Halting on " & replace(runner_phase_t'image(get_phase), "_", " ") & " phase exit gate.");
-      wait on runner.locks until not runner.locks(get_phase).exit_is_locked for max_locked_time_c;
+    if runner.locks(index_of(get_phase)).exit_is_locked = resolved_true_c then
+      debug(runner_trace_logger, "Halting on " & to_string(get_phase) & " exit gate.");
+      wait on runner.locks until runner.locks(index_of(get_phase)).exit_is_locked = resolved_false_c for max_locked_time_c;
     end if;
-    debug(runner_trace_logger, "Passed " & replace(runner_phase_t'image(get_phase), "_", " ") & " phase exit gate.");
+    debug(runner_trace_logger, "Passed " & to_string(get_phase) & " exit gate.");
   end procedure exit_gate;
 
   impure function active_python_runner (
