@@ -328,6 +328,10 @@ vu.set_compile_option("ghdl_flags", ["--no-vital-checks"])
 * `ghdl_flags`
   - Extra arguments passed to `ghdl -a` command. Must be a list of strings.
   - Example `vu.set_compile_option("ghdl_flags", ["--no-vital-checks"])`.
+* `modelsim_vcom_flags`
+  - Extra arguments passed to ModelSim `vcom` command. Must be a list of strings.
+* `modelsim_vlog_flags`
+  - Extra arguments passed to ModelSim `vlog` command. Must be a list of strings.
 
 ## Ctrl-C when using Git/MSYS Bash on Windows
 VUnit will catch Ctrl-C and perform a clean shutdown closing all started simulation processes and printing the test report so far. On Git/MSYS Bash on Windows however there is a mechanism that hard kills a process a very short time after pressing Ctrl-C often prohibiting VUnit from completing its shutdown. This can leave simulation process open which have to be manually killed. See this [stack overflow post](http://stackoverflow.com/questions/23678045/control-c-kills-ipython-in-git-bash-on-windows-7) for tips on how to remove this mechanism.

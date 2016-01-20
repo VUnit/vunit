@@ -561,7 +561,9 @@ class SourceFile(object):
     def __repr__(self):
         return "SourceFile(%s, %s)" % (self.name, self.library.name)
 
-    _allowed_compile_options = ["ghdl_flags"]
+    _allowed_compile_options = ["ghdl_flags",
+                                "modelsim_vcom_flags",
+                                "modelsim_vlog_flags"]
 
     def set_compile_option(self, name, value):
         """

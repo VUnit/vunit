@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Interface towards Mentor Graphics ModelSim
@@ -173,11 +173,15 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
             print('Compiling ' + source_file.name + ' into ' + source_file.library.name + ' ...')
 
             if source_file.file_type == 'vhdl':
-                success = self.compile_vhdl_file(source_file.name, source_file.library.name, vhdl_standard)
+                success = self.compile_vhdl_file(source_file.name,
+                                                 source_file.library.name,
+                                                 vhdl_standard,
+                                                 source_file.compile_options)
             elif source_file.file_type == 'verilog':
                 success = self.compile_verilog_file(source_file.name,
                                                     source_file.library.name,
-                                                    source_file.include_dirs)
+                                                    source_file.include_dirs,
+                                                    source_file.compile_options)
             else:
                 raise RuntimeError("Unkown file type: " + source_file.file_type)
 
@@ -185,7 +189,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
                 raise CompileError("Failed to compile '%s'" % source_file.name)
             project.update(source_file)
 
-    def compile_vhdl_file(self, source_file_name, library_name, vhdl_standard):
+    def compile_vhdl_file(self, source_file_name, library_name, vhdl_standard, compile_options):
         """
         Compiles a vhdl file into a specific library using a specfic vhdl_standard
         """
@@ -196,7 +200,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
                 coverage_args = ["+cover=" + to_coverage_args(self._coverage)]
 
             proc = Process([join(self._prefix, 'vcom'), '-quiet', '-modelsimini', self._modelsim_ini] +
-                           coverage_args +
+                           coverage_args + compile_options.get("modelsim_vcom_flags", []) +
                            ['-' + vhdl_standard, '-work', library_name, source_file_name])
 
             proc.consume_output()
@@ -204,7 +208,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
             return False
         return True
 
-    def compile_verilog_file(self, source_file_name, library_name, include_dirs):
+    def compile_verilog_file(self, source_file_name, library_name, include_dirs, compile_options):
         """
         Compiles a verilog file into a specific library
         """
@@ -216,6 +220,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
 
             args = [join(self._prefix, 'vlog'), '-sv', '-quiet', '-modelsimini', self._modelsim_ini]
             args += coverage_args
+            args += compile_options.get("modelsim_vlog_flags", [])
             args += ['-work', library_name, source_file_name]
 
             for library in self._libraries.values():
