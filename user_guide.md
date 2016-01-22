@@ -241,12 +241,12 @@ module tb_example;
          #2ns;
       end
 
-      `TEST_CASE_TEARDOWN begin
-         $info("test case teardown");
+      `TEST_CASE_CLEANUP begin
+         $info("test case cleanup");
       end
 
-      `TEST_SUITE_TEARDOWN begin
-         $info("test suite teardown");
+      `TEST_SUITE_CLEANUP begin
+         $info("test suite cleanup");
       end
    end;
 

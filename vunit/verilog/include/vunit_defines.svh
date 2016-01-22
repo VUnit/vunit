@@ -19,10 +19,10 @@
 `define TEST_CASE(test_name) if (__runner__.run(test_name))
 
 `define TEST_SUITE_SETUP if (__runner__.is_test_suite_setup())
-`define TEST_SUITE_TEARDOWN if (__runner__.is_test_suite_teardown())
+`define TEST_SUITE_CLEANUP if (__runner__.is_test_suite_cleanup())
 
 `define TEST_CASE_SETUP if (__runner__.is_test_case_setup())
-`define TEST_CASE_TEARDOWN if (__runner__.is_test_case_teardown())
+`define TEST_CASE_CLEANUP if (__runner__.is_test_case_cleanup())
 `define CHECK_EQUAL(got,expected,msg=__none__) \
         assert ((got) === (expected)) else \
           begin \

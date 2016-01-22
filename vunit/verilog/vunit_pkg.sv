@@ -12,8 +12,8 @@ class test_runner;
                  test_suite_setup,
                  test_case_setup,
                  test_case,
-                 test_case_teardown,
-                 test_suite_teardown}
+                 test_case_cleanup,
+                 test_suite_cleanup}
                 phase_t;
 
    phase_t phase = idle;
@@ -165,14 +165,14 @@ class test_runner;
          end
       end;
 
-      if (phase == test_case_teardown) begin
+      if (phase == test_case_cleanup) begin
          test_idx++;
          if (test_idx < test_cases_to_run.size()) begin
             phase = test_case_setup;
          end else begin
-            phase = test_suite_teardown;
+            phase = test_suite_cleanup;
          end
-      end else if (phase == test_suite_teardown) begin
+      end else if (phase == test_suite_cleanup) begin
          cleanup();
          return 0;
       end else begin
@@ -198,16 +198,16 @@ class test_runner;
       return phase == test_case_setup;
    endfunction;
 
-   function int is_test_case_teardown();
-      return phase == test_case_teardown;
+   function int is_test_case_cleanup();
+      return phase == test_case_cleanup;
    endfunction;
 
    function int is_test_suite_setup();
       return phase == test_suite_setup;
    endfunction;
 
-   function int is_test_suite_teardown();
-      return phase == test_suite_teardown;
+   function int is_test_suite_cleanup();
+      return phase == test_suite_cleanup;
    endfunction;
 
    task automatic watchdog(realtime timeout);
