@@ -392,7 +392,7 @@ proc _vunit_run {} {
     }
 
     run -all
-    set failed [expr [examine -internal ${status_boolean}]!=${true_value}]
+    set failed [expr [examine -radix unsigned -internal ${status_boolean}]!=${true_value}]
     if {$failed} {
         catch {
             # tb command can fail when error comes from pli
