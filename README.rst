@@ -146,7 +146,7 @@ VUnit
 VUnit except for OSVVM (see below) is released under the terms of
 `Mozilla Public License, v. 2.0`_.
 
-|copy| 2014-2015 Lars Asplund, lars.anders.asplund@gmail.com.
+|copy| 2014-2016 Lars Asplund, lars.anders.asplund@gmail.com.
 
 OSVVM
 -----
