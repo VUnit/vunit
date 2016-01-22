@@ -1,7 +1,7 @@
 # VUnit User Guide
 
 ## Introduction
-The idea in VUnit is to have a single point of entry for compiling and running all tests within a VHDL project. Tests do not need to be manually added to some list as they are automatically detected. There is no need for maintaining a list of files in compile order or manually re-compile selected files after they have been edited as VUnit automatically determines the compile order as well as which files to incrementally re-compile. This is achieved by having a `run.py` file for each project where libraries are defined into which files are added using the VUnit Python interface. The `run.py` file then acts as a command line utility for compiling and running tests within the VHDL project.
+The idea in VUnit is to have a single point of entry for compiling and running all tests within a HDL project. Tests do not need to be manually added to some list as they are automatically detected. There is no need for maintaining a list of files in compile order or manually re-compile selected files after they have been edited as VUnit automatically determines the compile order as well as which files to incrementally re-compile. This is achieved by having a `run.py` file for each project where libraries are defined into which files are added using the VUnit Python interface. The `run.py` file then acts as a command line utility for compiling and running tests within the VHDL project.
 
 ## Python Interface
 
@@ -213,17 +213,76 @@ Some failed!
 
 The above example code can be found in [examples/vhdl/user_guide/](examples/vhdl/user_guide/).
 
+## SystemVerilog Test Benches
+In its simplest form a VUnit SystemVerilog test bench looks like this:
+```systemverilog
+`include "vunit_defines.svh"
+
+module tb_example;
+   `TEST_SUITE begin
+
+      `TEST_SUITE_SETUP begin
+         $info("test suite setup");
+      end
+
+      `TEST_CASE_SETUP begin
+         $info("test case setup");
+      end
+
+      `TEST_CASE("Test that pass") begin
+         $info("pass");
+      end
+
+      `TEST_CASE("Test that fail") begin
+         `CHECK_EQUAL(0, 1);
+      end
+
+      `TEST_CASE("Test that timeouts") begin
+         #2ns;
+      end
+
+      `TEST_CASE_TEARDOWN begin
+         $info("test case teardown");
+      end
+
+      `TEST_SUITE_TEARDOWN begin
+         $info("test suite teardown");
+      end
+   end;
+
+   `WATCHDOG(1ns);
+endmodule
+```
+
+From `tb_example.vhd` a tree test cases are created:
+
+* `lib.tb_example.Test that pass`
+* `lib.tb_example.Test that fail`
+* `lib.tb_example.Test that timeouts`
+
+Each test is run in an individual simulation. Putting multiple
+tests in the same test bench is a good way to share a common test
+environment.
+
+The above example code can be found in [examples/verilog/user_guide/](examples/verilog/user_guide/).
+
 # VUnit Checks
 The above examples used the VHDL `assert` statement for self-checking. Vunit also provides a more complete assertion library described in the [Check User Guide](vunit/vhdl/check/user_guide.md).
 
 # More examples
 There are many examples demonstrating more specific usage of VUnit listed below:
 * [examples/vhdl/user_guide/](examples/vhdl/user_guide/)
-  * The most minimal VUnit project covering the basics of this user guide.
+  * The most minimal VUnit VHDL project covering the basics of this user guide.
+
+* [examples/verilog/user_guide/](examples/verilog/user_guide/)
+  * The most minimal VUnit SystemVerilog project covering the basics of this user guide.
 
 * [examples/vhdl/uart/](examples/vhdl/uart/)
-  * A more realistic test bench of an UART to show VUnit usage on a typical module.
+  * A more realistic test bench of an UART to show VUnit VHDL usage on a typical module.
   In addition to the normal [run.py](examples/vhdl/uart/run.py) it also contains a [run_with_preprocessing.py](examples/vhdl/uart/run_with_preprocessing.py) to demonstrate the benefit of    location and check preprocessing.
+
+* [examples/verilog/uart/](examples/verilog/uart/)
+  * A more realistic test bench of an UART to show VUnit SystemVerilog usage on a typical module.
 
 * [examples/vhdl/check/](examples/vhdl/check/)
   * Demonstrates VUnit check subprograms.

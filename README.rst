@@ -1,28 +1,31 @@
 What is VUnit?
 ==============
 
-VUnit is an open source unit testing framework for VHDL released under
-the terms of Mozilla Public License, v. 2.0. It features the
-functionality needed to realize continuous and automated testing of your
-VHDL code. VUnit doesn't replace but rather complements traditional
-testing methodologies by supporting a "test early and often" approach
-through automation.
+VUnit is an open source unit testing framework for VHDL/SystemVerilog
+released under the terms of Mozilla Public License, v. 2.0. It
+features the functionality needed to realize continuous and automated
+testing of your HDL code. VUnit doesn't replace but rather complements
+traditional testing methodologies by supporting a "test early and
+often" approach through automation.
+
+**NOTE:** SystemVerilog support is experimental.
 
 Project Mission
 ===============
 
 The VUnit project mission is to apply best SW testing practises to the
-world of VHDL by providing the tools missing to adapt to such practises.
-The major missing piece is the unit testing framework, hence the name
-V(HDL)Unit. However, VUnit also provides supporting functionality not
-normally considered as a part of an unit testing framework.
+world of HDLs by providing the tools missing to adapt to such
+practises. The major missing piece is the unit testing framework,
+hence the name V(HDL)Unit. However, VUnit also provides supporting
+functionality not normally considered as a part of an unit testing
+framework.
 
 Main Features
 =============
 
 -  Builds on the commonly used `xUnit`_ architecture.
 -  Python test runner that enables powerful test administration, can
-   handle VHDL fatal run-time errors (e.g. division by zero), and
+   handle fatal run-time errors (e.g. division by zero), and
    ensures test case independence.
 -  Scanners for identifying files, tests, file dependencies, and file
    changes enable for automatic (re)compilation and execution of test
@@ -52,12 +55,14 @@ entirely within VHDL which means that unsupported simulators can be used
 as well. Prototype work has been done to fully support other simulators
 but this work is yet to be completed and released.
 
-VHDL
-----
+Languages
+---------
 
 -  VHDL-93
 -  VHDL-2002
 -  VHDL-2008
+-  Verilog
+-  SystemVerilog
 
 Operating systems
 -----------------
