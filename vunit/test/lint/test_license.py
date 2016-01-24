@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 License header sanity check
@@ -34,6 +34,8 @@ class TestLicense(unittest.TestCase):
                 if 'preprocessed' in root:
                     continue
                 if 'codecs' in root:
+                    continue
+                if root == join(ROOT, "docs"):
                     continue
                 osvvm_directory = abspath(join(VHDL_PATH, 'osvvm'))
                 if is_prefix_of(osvvm_directory, abspath(join(root, file_name))):

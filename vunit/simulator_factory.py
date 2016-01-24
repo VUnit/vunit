@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Create simulator instances
@@ -67,13 +67,22 @@ class SimulatorFactory(object):
         return simulator_class
 
     @classmethod
-    def add_arguments(cls, parser):
+    def add_arguments(cls, parser, for_all_simulators=False):
         """
         Add command line arguments to parser
         """
-        simulator = cls.select_simulator()
-        if simulator is not None:
-            simulator.add_arguments(parser)
+
+        if for_all_simulators or cls.select_simulator().supports_gui_flag:
+            parser.add_argument('-g', '--gui',
+                                action="store_true",
+                                default=False,
+                                help=("Open test case(s) in simulator gui with top level pre loaded"))
+
+        if for_all_simulators:
+            for simulator in cls.supported_simulators():
+                simulator.add_arguments(parser)
+        else:
+            cls.select_simulator().add_arguments(parser)
 
     def __init__(self, args):
         self._args = args
@@ -85,7 +94,7 @@ class SimulatorFactory(object):
         Returns True when package users also depend on package bodies
         """
         if self._simulator_class is not None:
-            return self._simulator_class.package_users_depend_on_bodies()
+            return self._simulator_class.package_users_depend_on_bodies
         else:
             return False
 

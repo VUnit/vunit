@@ -10,15 +10,15 @@ module tb_example;
    `TEST_SUITE begin
 
       `TEST_SUITE_SETUP begin
-         $info("test suite setup");
+         $display("test suite setup");
       end
 
       `TEST_CASE_SETUP begin
-         $info("test case setup");
+         $display("test case setup");
       end
 
       `TEST_CASE("Test that pass") begin
-         $info("pass");
+         $display("pass");
       end
 
       `TEST_CASE("Test that fail") begin
@@ -30,11 +30,11 @@ module tb_example;
       end
 
       `TEST_CASE_CLEANUP begin
-         $info("test case cleanup");
+         $display("test case cleanup");
       end
 
       `TEST_SUITE_CLEANUP begin
-         $info("test suite cleanup");
+         $display("test suite cleanup");
       end
    end;
 

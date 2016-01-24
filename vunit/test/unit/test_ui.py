@@ -429,10 +429,6 @@ class MockSimulatorFactory(object):
     def simulator_output_path(self):
         return join(self._output_path, self.simulator_name)
 
-    @staticmethod
-    def package_users_depend_on_bodies():
-        return True
-
     def create(self):
         return self.mocksim
 

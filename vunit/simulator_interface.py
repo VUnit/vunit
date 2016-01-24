@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Generic simulator interface
@@ -17,12 +17,16 @@ class SimulatorInterface(object):
     Generic simulator interface
     """
 
+    name = None
+    supports_gui_flag = False
+    package_users_depend_on_bodies = False
+
     @staticmethod
-    def package_users_depend_on_bodies():
+    def add_arguments(parser):
         """
-        Returns True when package users also depend on package bodies with this simulator
+        Add command line arguments
         """
-        return False
+        pass
 
     @staticmethod
     def find_executable(executable):

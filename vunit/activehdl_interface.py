@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Interface towards Aldec Active HDL
@@ -27,27 +27,10 @@ class ActiveHDLInterface(SimulatorInterface):
     """
     Active HDL interface
     """
+
     name = "activehdl"
-
-    @staticmethod
-    def package_users_depend_on_bodies():
-        """
-        With this simulator package users depend on package bodies
-        """
-        return True
-
-    @staticmethod
-    def add_arguments(parser):
-        """
-        Add command line arguments
-        """
-        group = parser.add_argument_group("activehdl",
-                                          description="Aldec Active HDL specific flags")
-
-        group.add_argument('-g', '--gui',
-                           action="store_true",
-                           default=False,
-                           help=("Open test case(s) in simulator gui with top level pre loaded"))
+    supports_gui_flag = True
+    package_users_depend_on_bodies = True
 
     @classmethod
     def from_args(cls, output_path, args):
