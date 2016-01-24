@@ -15,7 +15,7 @@ import sys
 import os
 import traceback
 
-from os.path import exists, abspath, join, basename, splitext
+from os.path import exists, relpath, abspath, join, basename, splitext
 from glob import glob
 from fnmatch import fnmatch
 from vunit.database import PickledDataBase, DataBase
@@ -247,6 +247,47 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         self._configuration.disable_ieee_warnings(scope=create_scope())
 
+    def get_source_file(self, file_name, library_name=None):
+        """
+        Get specific source file in specfic or any library.
+        Error if multiple matches.
+        """
+
+        files = self.get_source_files(file_name, library_name, allow_empty=True)
+        if len(files) > 1:
+            raise ValueError("Found file named '%s' in multiple-libraries, "
+                             "add explicit library_name." % file_name)
+        elif len(files) == 0:
+            if library_name is None:
+                raise ValueError("Found no file named '%s'" % file_name)
+            else:
+                raise ValueError("Found no file named '%s' in library '%s'"
+                                 % (file_name, library_name))
+        return files[0]
+
+    def get_source_files(self, pattern="*", library_name=None, allow_empty=False):
+        """
+        Get source files matching wildcard pattern in either a specific
+        library or all libraries
+        """
+        results = []
+        for source_file in self._project.get_source_files_in_order():
+            if library_name is not None:
+                if source_file.library.name != library_name:
+                    continue
+
+            if not (fnmatch(abspath(source_file.name), pattern) or
+                    fnmatch(relpath(source_file.name), pattern)):
+                continue
+
+            results.append(FileFacade(source_file))
+
+        if (not allow_empty) and len(results) == 0:
+            raise ValueError(("Pattern %r did not match any file. "
+                              "Use allow_empty=True to avoid exception,") % pattern)
+
+        return FileSetFacade(results)
+
     def add_source_files(self,   # pylint: disable=too-many-arguments
                          pattern, library_name, preprocessors=None, include_dirs=None, allow_empty=False):
         """
@@ -273,10 +314,10 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             add_verilog_include_dir(include_dirs)
 
         file_name = self._preprocess(library_name, abspath(file_name), preprocessors)
-        return self._project.add_source_file(file_name,
-                                             library_name,
-                                             file_type=file_type,
-                                             include_dirs=include_dirs)
+        return FileFacade(self._project.add_source_file(file_name,
+                                                        library_name,
+                                                        file_type=file_type,
+                                                        include_dirs=include_dirs))
 
     def _preprocess(self, library_name, file_name, preprocessors):
         """
@@ -566,6 +607,12 @@ class LibraryFacade(object):
         """
         self._configuration.disable_ieee_warnings(scope=self._scope)
 
+    def get_source_file(self, file_name):
+        return self._parent.get_source_files(file_name, self._library_name)
+
+    def get_source_files(self, pattern="*", allow_empty=False):
+        return self._parent.get_source_files(pattern, self._library_name, allow_empty)
+
     def add_source_files(self, pattern, preprocessors=None, allow_empty=False):
         return self._parent.add_source_files(pattern, self._library_name, preprocessors,
                                              allow_empty=allow_empty)
@@ -754,20 +801,34 @@ class TestFacade(object):
         self._config.disable_ieee_warnings(scope=self._scope)
 
 
-class FileSetFacade(object):
+class FileSetFacade(list):
     """
-    A set of one or more files
+    A set of several files
     """
 
     def __init__(self, source_files):
-        self._source_files = source_files
+        list.__init__(self, source_files)
 
     def set_compile_option(self, name, value):
         """
         Set compile option
         """
-        for source_file in self._source_files:
+        for source_file in self:
             source_file.set_compile_option(name, value)
+
+
+class FileFacade(object):
+    """
+    A single file
+    """
+    def __init__(self, source_file):
+        self._source_file = source_file
+
+    def set_compile_option(self, name, value):
+        """
+        Set compile option
+        """
+        self._source_file.set_compile_option(name, value)
 
 
 def select_vhdl_standard():

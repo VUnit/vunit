@@ -167,6 +167,45 @@ end architecture;
         lib = ui.library("lib")
         lib.add_source_files(join(dirname(__file__), 'missing.vhd'), allow_empty=True)
 
+    def test_get_source_files(self):
+        ui = self._create_ui()
+        lib1 = ui.add_library("lib1")
+        lib2 = ui.add_library("lib2")
+        file_name = self.create_entity_file()
+        lib1.add_source_file(file_name)
+        lib2.add_source_file(file_name)
+
+        self.assertEqual(len(ui.get_source_files(file_name)), 2)
+        self.assertEqual(len(lib1.get_source_files(file_name)), 1)
+        self.assertEqual(len(lib2.get_source_files(file_name)), 1)
+
+        ui.get_source_file(file_name, library_name="lib1")
+        ui.get_source_file(file_name, library_name="lib2")
+        lib1.get_source_file(file_name)
+        lib2.get_source_file(file_name)
+
+    def test_get_source_files_errors(self):
+        ui = self._create_ui()
+        lib1 = ui.add_library("lib1")
+        lib2 = ui.add_library("lib2")
+        file_name = self.create_entity_file()
+        lib1.add_source_file(file_name)
+        lib2.add_source_file(file_name)
+        non_existant_name = "non_existant"
+
+        self.assertRaisesRegexp(ValueError, ".*%s.*allow_empty.*" % non_existant_name,
+                                ui.get_source_files, non_existant_name)
+        self.assertEqual(len(ui.get_source_files(non_existant_name, allow_empty=True)), 0)
+
+        self.assertRaisesRegexp(ValueError, ".*named.*%s.*multiple.*library_name.*" % file_name,
+                                ui.get_source_file, file_name)
+
+        self.assertRaisesRegexp(ValueError, ".*Found no file named.*%s'" % non_existant_name,
+                                ui.get_source_file, non_existant_name)
+
+        self.assertRaisesRegexp(ValueError, ".*Found no file named.*%s.* in library 'lib1'" % non_existant_name,
+                                ui.get_source_file, non_existant_name, "lib1")
+
     def _test_pre_config_helper(self, retval, test_not_entity=False):
         """
         Helper method to test pre_config where the pre config can return different values
