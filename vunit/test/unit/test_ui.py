@@ -11,14 +11,15 @@ Acceptance test of the VUnit public interface class
 
 import unittest
 from string import Template
-from tempfile import NamedTemporaryFile
 from os.path import join, dirname, basename, exists
-from os import remove
+import os
 import re
+from shutil import rmtree
 from re import MULTILINE
 from vunit.ui import VUnit
 from vunit.project import VHDL_EXTENSIONS, VERILOG_EXTENSIONS
 from vunit.test.mock_2or3 import mock
+from vunit.ostools import renew_path
 
 
 class TestUi(unittest.TestCase):
@@ -26,70 +27,27 @@ class TestUi(unittest.TestCase):
     Testing the VUnit public interface class
     """
     def setUp(self):
-        self._output_path = join(dirname(__file__), 'ui_out')
+        self.tmp_path = join(dirname(__file__), "test_ui_tmp")
+        renew_path(self.tmp_path)
+        self.cwd = os.getcwd()
+        os.chdir(self.tmp_path)
+
+        self._output_path = join(self.tmp_path, 'output')
         self._preprocessed_path = join(self._output_path, "preprocessed")
         self.mocksim = None
 
     def tearDown(self):
-        pass
-
-    def _create_ui(self, *args):
-        """ Create an instance of the VUnit public interface class """
-        ui = VUnit.from_argv(argv=["--output-path=%s" % self._output_path,
-                                   "--clean"] + list(args))
-        ui.add_library('lib')
-
-        factory = MockSimulatorFactory(self._output_path)
-        self.mocksim = factory.mocksim
-        ui._simulator_factory = factory  # pylint: disable=protected-access
-        return ui
-
-    def _create_temp_files(self, num_files, file_suffix='.vhd'):
-        """
-        Create and return num_files temporary files containing the
-        same source code but with different entity names depending on
-        the index
-        """
-        return [self._create_temp_file(i, file_suffix) for i in range(num_files)]
-
-    @staticmethod
-    def _create_temp_file(idx, file_suffix='.vhd'):
-        """
-        Create and a temporary file containing the same source code
-        but with different entity names depending on the index
-        """
-        source = Template("""
-library vunit_lib;
-context vunit_lib.vunit_context;
-
-entity $entity is
-end entity;
-
-architecture arch of $entity is
-begin
-    log("Hello World");
-    check_relation(1 /= 2);
-    report "Here I am!";
-end architecture;
-""")
-
-        fptr = NamedTemporaryFile(mode='w', suffix=file_suffix, delete=False)
-        fptr.write(source.substitute(entity='foo%d' % idx))
-        fptr.close()
-        return fptr
-
-    @staticmethod
-    def _delete_temp_files(files):
-        for file_obj in files:
-            remove(file_obj.name)
+        os.chdir(self.cwd)
+        if exists(self.tmp_path):
+            rmtree(self.tmp_path)
 
     def test_global_custom_preprocessors_should_be_applied_in_the_order_they_are_added(self):
         ui = self._create_ui()
         ui.add_preprocessor(VUnitfier())
         ui.add_preprocessor(ParentalControl())
 
-        files = self._create_temp_files(1)
-        ui.add_source_files(files[0].name, 'lib')
+        file_name = self.create_entity_file()
+        ui.add_source_files(file_name, 'lib')
 
         pp_source = Template("""
 library vunit_lib;
@@ -105,10 +63,8 @@ begin
     log("Here I am!"); -- VUnitfier preprocessor: Report turned of[BEEP]eeping original code.
 end architecture;
 """)
-        with open(join(self._preprocessed_path, 'lib', basename(files[0].name))) as fread:
-            self.assertEqual(fread.read(), pp_source.substitute(entity='foo0', file=basename(files[0].name)))
-
-        self._delete_temp_files(files)
+        with open(join(self._preprocessed_path, 'lib', basename(file_name))) as fread:
+            self.assertEqual(fread.read(), pp_source.substitute(entity='ent0', file=basename(file_name)))
 
     def test_global_check_and_location_preprocessors_should_be_applied_after_global_custom_preprocessors(self):
         ui = self._create_ui()
@@ -116,8 +72,8 @@ end architecture;
         ui.enable_check_preprocessing()
         ui.add_preprocessor(TestPreprocessor())
 
-        files = self._create_temp_files(1)
-        ui.add_source_files(files[0].name, 'lib')
+        file_name = self.create_entity_file()
+        ui.add_source_files(file_name, 'lib')
 
         pp_source = Template("""\
 -- check_relation(a = b, line_num => 1, file_name => "$file", \
@@ -137,10 +93,8 @@ auto_msg => "Relation 1 /= 2 failed! Left is " & to_string(1) & ". Right is " & 
     report "Here I am!";
 end architecture;
 """)
-        with open(join(self._preprocessed_path, 'lib', basename(files[0].name))) as fread:
-            self.assertEqual(fread.read(), pp_source.substitute(entity='foo0', file=basename(files[0].name)))
-
-        self._delete_temp_files(files)
+        with open(join(self._preprocessed_path, 'lib', basename(file_name))) as fread:
+            self.assertEqual(fread.read(), pp_source.substitute(entity='ent0', file=basename(file_name)))
 
     def test_locally_specified_preprocessors_should_be_used_instead_of_any_globally_defined_preprocessors(self):
         ui = self._create_ui()
@@ -148,10 +102,11 @@ end architecture;
         ui.enable_check_preprocessing()
         ui.add_preprocessor(TestPreprocessor())
 
-        files = self._create_temp_files(2)
+        file_name1 = self.create_entity_file(1)
+        file_name2 = self.create_entity_file(2)
 
-        ui.add_source_files(files[0].name, 'lib', [])
-        ui.add_source_files(files[1].name, 'lib', [VUnitfier()])
+        ui.add_source_files(file_name1, 'lib', [])
+        ui.add_source_files(file_name2, 'lib', [VUnitfier()])
 
         pp_source = Template("""
 library vunit_lib;
@@ -167,14 +122,12 @@ begin
     $report
 end architecture;
 """)
-        self.assertFalse(exists(join(self._preprocessed_path, 'lib', basename(files[0].name))))
-        with open(join(self._preprocessed_path, 'lib', basename(files[1].name))) as fread:
+        self.assertFalse(exists(join(self._preprocessed_path, 'lib', basename(file_name1))))
+        with open(join(self._preprocessed_path, 'lib', basename(file_name2))) as fread:
             expectd = pp_source.substitute(
-                entity='foo1',
+                entity='ent2',
                 report='log("Here I am!"); -- VUnitfier preprocessor: Report turned off, keeping original code.')
             self.assertEqual(fread.read(), expectd)
-
-        self._delete_temp_files(files)
 
     def test_supported_source_file_suffixes(self):
         """Test adding a supported filetype, of any case, is accepted."""
@@ -185,17 +138,15 @@ end architecture;
         allowable_extensions.append(VHDL_EXTENSIONS[0][0] + VHDL_EXTENSIONS[0][1].upper() +
                                     VHDL_EXTENSIONS[0][2:])  # mixed case
         for idx, ext in enumerate(allowable_extensions):
-            fptr = self._create_temp_file(idx, ext)
-            ui.add_source_files(fptr.name, 'lib')
-            self._delete_temp_files([fptr])
+            file_name = self.create_entity_file(idx, ext)
+            ui.add_source_files(file_name, 'lib')
 
     def test_unsupported_source_file_suffixes(self):
         """Test adding an unsupported filetype is rejected"""
         ui = self._create_ui()
-        bogus_ext = '.docx'  # obviously not an HDL file
-        files = self._create_temp_files(1, bogus_ext)
-        self.assertRaises(RuntimeError, ui.add_source_files, files[0].name, 'lib')
-        self._delete_temp_files(files)
+        unsupported_name = "unsupported.docx"
+        self.create_file(unsupported_name)
+        self.assertRaises(RuntimeError, ui.add_source_files, unsupported_name, 'lib')
 
     def test_can_add_non_ascii_encoded_files(self):
         ui = self._create_ui()
@@ -256,6 +207,51 @@ end architecture;
 
     def test_test_has_pre_config(self):
         self._test_pre_config_helper(True, test_not_entity=False)
+
+    def _create_ui(self, *args):
+        """ Create an instance of the VUnit public interface class """
+        ui = VUnit.from_argv(argv=["--output-path=%s" % self._output_path,
+                                   "--clean"] + list(args))
+        ui.add_library('lib')
+
+        factory = MockSimulatorFactory(self._output_path)
+        self.mocksim = factory.mocksim
+        ui._simulator_factory = factory  # pylint: disable=protected-access
+        return ui
+
+    def create_entity_file(self, idx=0, file_suffix='.vhd'):
+        """
+        Create and a temporary file containing the same source code
+        but with different entity names depending on the index
+        """
+        source = Template("""
+library vunit_lib;
+context vunit_lib.vunit_context;
+
+entity $entity is
+end entity;
+
+architecture arch of $entity is
+begin
+    log("Hello World");
+    check_relation(1 /= 2);
+    report "Here I am!";
+end architecture;
+""")
+
+        entity_name = "ent%i" % idx
+        file_name = entity_name + file_suffix
+        self.create_file(file_name,
+                         source.substitute(entity=entity_name))
+        return file_name
+
+    @staticmethod
+    def create_file(file_name, contents=""):
+        """
+        Creata file in the temporary path with given contents
+        """
+        with open(file_name, "w") as fptr:
+            fptr.write(contents)
 
 
 def call(*args, **kwargs):
