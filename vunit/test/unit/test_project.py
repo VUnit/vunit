@@ -759,6 +759,29 @@ endmodule
         module = create_project()
         self.assert_should_recompile([module])
 
+    def test_manual_dependencies(self):
+        self.project.add_library("lib", "lib_path")
+        ent1 = self.add_source_file("lib", "ent1.vhd", """\
+entity ent1 is
+end ent1;
+
+architecture arch of ent1 is
+begin
+end architecture;
+""")
+
+        ent2 = self.add_source_file("lib", "ent2.vhd", """\
+entity ent2 is
+end ent2;
+
+architecture arch of ent2 is
+begin
+end architecture;
+""")
+
+        self.project.add_manual_dependency(ent2, depends_on=ent1)
+        self.assert_compiles(ent1, before=ent2)
+
     def test_file_type_of(self):
         self.assertEqual(file_type_of("file.vhd"), "vhdl")
         self.assertEqual(file_type_of("file.vhdl"), "vhdl")

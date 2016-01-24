@@ -280,7 +280,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                     fnmatch(relpath(source_file.name), pattern)):
                 continue
 
-            results.append(FileFacade(source_file))
+            results.append(FileFacade(source_file, self._project))
 
         if (not allow_empty) and len(results) == 0:
             raise ValueError(("Pattern %r did not match any file. "
@@ -317,7 +317,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         return FileFacade(self._project.add_source_file(file_name,
                                                         library_name,
                                                         file_type=file_type,
-                                                        include_dirs=include_dirs))
+                                                        include_dirs=include_dirs),
+                          self._project)
 
     def _preprocess(self, library_name, file_name, preprocessors):
         """
@@ -816,19 +817,41 @@ class FileSetFacade(list):
         for source_file in self:
             source_file.set_compile_option(name, value)
 
+    def depends_on(self, source_file):
+        """
+        Add manual dependency of these files on another
+        """
+        for my_source_file in self:
+            my_source_file.depends_on(source_file)
+
 
 class FileFacade(object):
     """
     A single file
     """
-    def __init__(self, source_file):
+    def __init__(self, source_file, project):
         self._source_file = source_file
+        self._project = project
 
     def set_compile_option(self, name, value):
         """
         Set compile option
         """
         self._source_file.set_compile_option(name, value)
+
+    def depends_on(self, source_file):
+        """
+        Add manual dependency of this file on another
+        """
+        if isinstance(source_file, FileFacade):
+            private_source_file = source_file._source_file  # pylint: disable=protected-access
+            self._project.add_manual_dependency(self._source_file,
+                                                depends_on=private_source_file)
+        elif hasattr(source_file, "__iter__"):
+            for element in source_file:
+                self.depends_on(element)
+        else:
+            raise ValueError(source_file)
 
 
 def select_vhdl_standard():

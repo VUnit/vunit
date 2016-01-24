@@ -42,6 +42,7 @@ class Project(object):
         self._verilog_parser = verilog_parser
         self._libraries = {}
         self._source_files_in_order = []
+        self._manual_dependencies = []
         self._depend_on_components = depend_on_components
         self._depend_on_package_body = depend_on_package_body
 
@@ -96,6 +97,12 @@ class Project(object):
         library.add_source_file(source_file)
         self._source_files_in_order.append(source_file)
         return source_file
+
+    def add_manual_dependency(self, source_file, depends_on):
+        """
+        Add manual dependency where 'source_file' depends_on 'depends_on'
+        """
+        self._manual_dependencies.append((source_file, depends_on))
 
     @staticmethod
     def _find_primary_secondary_design_unit_dependencies(source_file):
@@ -256,6 +263,9 @@ class Project(object):
 
         if self._depend_on_components:
             add_dependencies(self._find_component_design_unit_dependencies, vhdl_files)
+
+        for source_file, depends_on in self._manual_dependencies:
+            add_dependency(depends_on, source_file)
 
         return dependency_graph
 

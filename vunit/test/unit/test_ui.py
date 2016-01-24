@@ -206,6 +206,63 @@ end architecture;
         self.assertRaisesRegexp(ValueError, ".*Found no file named.*%s.* in library 'lib1'" % non_existant_name,
                                 ui.get_source_file, non_existant_name, "lib1")
 
+    @mock.patch("vunit.project.Project.add_manual_dependency", autospec=True)
+    def test_add_single_file_manual_dependencies(self, add_manual_dependency):
+        # pylint: disable=protected-access
+        ui = self._create_ui()
+        lib = ui.library("lib")
+        file_name1 = self.create_entity_file(1)
+        file_name2 = self.create_entity_file(2)
+        file1 = lib.add_source_file(file_name1)
+        file2 = lib.add_source_file(file_name2)
+
+        add_manual_dependency.assert_has_calls([])
+        file1.depends_on(file2)
+        add_manual_dependency.assert_has_calls([
+            mock.call(ui._project,
+                      file1._source_file,
+                      depends_on=file2._source_file)])
+
+    @mock.patch("vunit.project.Project.add_manual_dependency", autospec=True)
+    def test_add_multiple_file_manual_dependencies(self, add_manual_dependency):
+        # pylint: disable=protected-access
+        ui = self._create_ui()
+        lib = ui.library("lib")
+        self.create_file("foo1.vhd")
+        self.create_file("foo2.vhd")
+        self.create_file("foo3.vhd")
+        self.create_file("bar.vhd")
+        foo_files = lib.add_source_files("foo*.vhd")
+        bar_file = lib.add_source_file("bar.vhd")
+
+        add_manual_dependency.assert_has_calls([])
+        bar_file.depends_on(foo_files)
+        add_manual_dependency.assert_has_calls([
+            mock.call(ui._project,
+                      bar_file._source_file,
+                      depends_on=foo_file._source_file)
+            for foo_file in foo_files])
+
+    @mock.patch("vunit.project.Project.add_manual_dependency", autospec=True)
+    def test_add_fileset_manual_dependencies(self, add_manual_dependency):
+        # pylint: disable=protected-access
+        ui = self._create_ui()
+        lib = ui.library("lib")
+        self.create_file("foo1.vhd")
+        self.create_file("foo2.vhd")
+        self.create_file("foo3.vhd")
+        self.create_file("bar.vhd")
+        foo_files = lib.add_source_files("foo*.vhd")
+        bar_file = lib.add_source_file("bar.vhd")
+
+        add_manual_dependency.assert_has_calls([])
+        foo_files.depends_on(bar_file)
+        add_manual_dependency.assert_has_calls([
+            mock.call(ui._project,
+                      foo_file._source_file,
+                      depends_on=bar_file._source_file)
+            for foo_file in foo_files])
+
     def _test_pre_config_helper(self, retval, test_not_entity=False):
         """
         Helper method to test pre_config where the pre config can return different values
