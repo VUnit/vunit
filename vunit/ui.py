@@ -5,7 +5,66 @@
 # Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
-The main public Python interface of VUnit.
+The public Python interface of VUnit.
+
+.. autoclass:: vunit.ui.VUnit()
+   :members:
+   :exclude-members: get_project_compile_order,
+      add_preprocessor,
+      enable_location_preprocessing,
+      enable_check_preprocessing
+      add_builtins
+
+.. autoclass:: vunit.ui.Library()
+   :members:
+   :exclude-members: package
+
+.. autoclass:: vunit.ui.SourceFileList()
+   :members:
+
+.. autoclass:: vunit.ui.SourceFile()
+   :members:
+
+.. autoclass:: vunit.ui.TestBench()
+   :members:
+
+.. _compile_options:
+
+Compilation options
+-------------------
+The following compilation are known.
+
+``ghdl_flags``
+   Extra arguments passed to ``ghdl -a`` command during compilation.
+   Must be a list of strings.
+
+``modelsim_vcom_flags``
+   Extra arguments passed to ModelSim ``vcom`` command.
+   Must be a list of strings.
+
+``modelsim_vlog_flags``
+   Extra arguments passed to ModelSim ``vlog`` command.
+   Must be a list of strings.
+
+.. _sim_options:
+
+Simulation options
+-------------------
+The following simulation are known.
+
+``vsim_extra_args``
+   Extra arguments passed to ``vsim`` when loading the design.
+``vsim_extra_args.gui``
+   Extra arguments passed to ``vsim`` when loading the design in GUI mode where it takes precedence over ``vsim_extra_args``.
+``ghdl_flags``
+   Extra arguments passed to ``ghdl --elab-run`` command *before* executable specific flags. Must be a list of strings.
+
+.. |compile_option| replace::
+   The name of the compile option (See :ref:`Compilation options <compile_options>`)
+
+.. |simulation_options| replace::
+   The name of the simulation option (See :ref:`Simulation options <sim_options>`)
+
 """
 
 
@@ -48,13 +107,30 @@ LOGGER = logging.getLogger(__name__)
 class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-public-methods
     """
     The public interface of VUnit
+
+    :example:
+
+    .. code-block:: python
+
+       from vunit import VUnit
     """
 
     @classmethod
     def from_argv(cls, argv=None, compile_builtins=True):
         """
-        Create VUnit instance from command line arguments
-        Can take arguments from 'argv' if not None  instead of sys.argv
+        Create VUnit instance from command line arguments.
+
+        :param argv: Use explicit argv instead of actual command line argument
+        :param compile_builtins: Do not compile builtins. Used for VUnit internal testing.
+        :returns: A :class:`.VUnit` object instance
+
+        :example:
+
+        .. code-block:: python
+
+           from vunit import VUnit
+           prj = VUnit.from_argv()
+
         """
         args = VUnitCLI().parse_args(argv=argv)
         return cls.from_args(args, compile_builtins=compile_builtins)
@@ -62,7 +138,14 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
     @classmethod
     def from_args(cls, args, compile_builtins=True):
         """
-        Create VUnit instance from args namespace
+        Create VUnit instance from args namespace.
+        Intended for users who adds custom command line options.
+        See :class:`vunit.vunit_cli.VUnitCLI` class to learn about
+        adding custom command line options.
+
+        :param args: The parsed argument namespace object
+        :param compile_builtins: Do not compile builtins. Used for VUnit internal testing.
+        :returns: A :class:`.VUnit` object instance
         """
         def test_filter(name):
             return any(fnmatch(name, pattern) for pattern in args.test_patterns)
@@ -183,14 +266,35 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
     def add_external_library(self, library_name, path):
         """
-        Add external black box library
+        Add an externally compiled library as a black-box
+
+        :param library_name: The name of the external library
+        :param path: The path to the external library
+        :returns: The created :class:`.Library` object
+
+        :example:
+
+        .. code-block:: python
+
+           prj.add_external_library("unisim", "path/to/unisim/")
+
         """
         self._project.add_library(library_name, abspath(path), is_external=True)
         return self._create_library_facade(library_name)
 
     def add_library(self, library_name):
         """
-        Add vunit managed white box library
+        Add a library managed by VUnit.
+
+        :param library_name: The name of the library
+        :returns: The created :class:`.Library` object
+
+        :example:
+
+        .. code-block:: python
+
+           library = prj.add_library("lib")
+
         """
         path = join(self._simulator_factory.simulator_output_path, "libraries", library_name)
         self._project.add_library(library_name, abspath(path))
@@ -198,7 +302,10 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
     def library(self, library_name):
         """
-        Get reference to library
+        Get a library
+
+        :param library_name: The name of the library
+        :returns: A :class:`.Library` object
         """
         if not self._project.has_library(library_name):
             raise KeyError(library_name)
@@ -208,36 +315,78 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         Create a Library object to be exposed to users
         """
-        return LibraryFacade(library_name, self, self._project, self._configuration)
+        return Library(library_name, self, self._project, self._configuration)
 
     def set_generic(self, name, value):
         """
-        Globally set generic
+        Globally set a value of generic
+
+        :param name: The name of the generic
+        :param value: The value of the generic
+
+        :example:
+
+        .. code-block:: python
+
+           prj.set_generic("data_width", 16)
+
         """
         self._configuration.set_generic(name.lower(), value, scope=create_scope())
 
     def set_parameter(self, name, value):
         """
-        Globally set parameter
+        Globally set value of parameter
+
+        :param name: The name of the parameter
+        :param value: The value of the parameter
+
+        :example:
+
+        .. code-block:: python
+
+           prj.set_parameter("data_width", 16)
+
         """
         self.set_generic(name, value)
 
     def set_sim_option(self, name, value):
         """
         Globally set simulation option
+
+        :param name: |simulation_options|
+        :param value: The value of the simulation option
+
+        :example:
+
+        .. code-block:: python
+
+           prj.set_sim_option("ghdl_flags", ["--no-vital-checks"])
+
         """
         self._configuration.set_sim_option(name, value, scope=create_scope())
 
     def set_compile_option(self, name, value):
         """
         Globally set compile option
+
+        :param name: |compile_option|
+        :param value: The value of the compile option
+
+        :example:
+
+        .. code-block:: python
+
+           prj.set_compile_option("ghdl_flags", ["--no-vital-checks"])
+
         """
         for source_file in self._project.get_source_files_in_order():
             source_file.set_compile_option(name, value)
 
     def set_pli(self, value):
         """
-        Globally set pli
+        Globally Set pli
+
+        :param value: A list of PLI object file names
         """
         self._configuration.set_pli(value, scope=create_scope())
 
@@ -249,8 +398,11 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
     def get_source_file(self, file_name, library_name=None):
         """
-        Get specific source file in specfic or any library.
-        Error if multiple matches.
+        Get a source file
+
+        :param file_name: The name of the file as a relative or absolute path
+        :param library_name: The name of a specific library to search if not all libraries
+        :returns: A :class:`.SourceFile` object
         """
 
         files = self.get_source_files(file_name, library_name, allow_empty=True)
@@ -267,8 +419,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
     def get_source_files(self, pattern="*", library_name=None, allow_empty=False):
         """
-        Get source files matching wildcard pattern in either a specific
-        library or all libraries
+        Get a list of source files
+
+        :param pattern: A wildcard pattern matching either an absolute or relative path
+        :param library_name: The name of a specific library to search if not all libraries
+        :param allow_empty: To disable an error if no files matched the pattern
+        :returns: A :class:`.SourceFileList` object
         """
         results = []
         for source_file in self._project.get_source_files_in_order():
@@ -280,18 +436,31 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                     fnmatch(relpath(source_file.name), pattern)):
                 continue
 
-            results.append(FileFacade(source_file, self._project))
+            results.append(SourceFile(source_file, self._project))
 
         if (not allow_empty) and len(results) == 0:
             raise ValueError(("Pattern %r did not match any file. "
                               "Use allow_empty=True to avoid exception,") % pattern)
 
-        return FileSetFacade(results)
+        return SourceFileList(results)
 
     def add_source_files(self,   # pylint: disable=too-many-arguments
                          pattern, library_name, preprocessors=None, include_dirs=None, allow_empty=False):
         """
         Add source files matching wildcard pattern to library
+
+        :param pattern: A wildcard pattern match the files to add
+        :param library_name: The name of the library to add files into
+        :param include_dirs: A list of include directories
+        :param allow_empty: To disable an error if no files matched the pattern
+        :returns: A list of files (:class:`.SourceFileList`) which were added
+
+        :example:
+
+        .. code-block:: python
+
+           prj.add_source_files("*.vhd", "lib")
+
         """
         file_names = glob(pattern)
 
@@ -299,13 +468,25 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             raise ValueError(("Pattern %r did not match any file. "
                               "Use allow_empty=True to avoid exception,") % pattern)
 
-        return FileSetFacade(source_files=[
+        return SourceFileList(source_files=[
             self.add_source_file(file_name, library_name, preprocessors, include_dirs)
             for file_name in file_names])
 
     def add_source_file(self, file_name, library_name, preprocessors=None, include_dirs=None):
         """
         Add source file to library
+
+        :param file_name: The name of the file
+        :param library_name: The name of the library to add the file into
+        :param include_dirs: A list of include directories
+        :returns: The :class:`.SourceFile` which was added
+
+        :example:
+
+        .. code-block:: python
+
+           prj.add_source_file("file.vhd", "lib")
+
         """
         file_type = file_type_of(file_name)
 
@@ -314,7 +495,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             add_verilog_include_dir(include_dirs)
 
         file_name = self._preprocess(library_name, abspath(file_name), preprocessors)
-        return FileFacade(self._project.add_source_file(file_name,
+        return SourceFile(self._project.add_source_file(file_name,
                                                         library_name,
                                                         file_type=file_type,
                                                         include_dirs=include_dirs),
@@ -375,7 +556,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
     def main(self):
         """
-        Run vunit main function and exit with code
+        Run vunit main function and exit
         """
         try:
             all_ok = self._main()
@@ -531,6 +712,14 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
     def add_com(self, library_name="vunit_lib", use_debug_codecs=None):
         """
         Add communication package
+
+        :param use_debug_codecs: Use human readable debug codecs
+
+           :class:`None`: Use command line argument setting
+
+           :class:`False`: Never use debug codecs
+
+           :class:`True`: Always use debug codecs
         """
         if not self._project.has_library(library_name):
             library = self.add_library(library_name)
@@ -569,7 +758,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         return self._project.get_dependencies_in_compile_order(target=target)
 
 
-class LibraryFacade(object):
+class Library(object):
     """
     User interface of a library
     """
@@ -581,29 +770,77 @@ class LibraryFacade(object):
         self._scope = create_scope(self._library_name)
 
     def set_generic(self, name, value):
-        """ Set generic within library """
+        """
+        Set a value of generic within all test benches of this library
+
+        :param name: The name of the generic
+        :param value: The value of the generic
+
+        :example:
+
+        .. code-block:: python
+
+           lib.set_generic("data_width", 16)
+
+        """
         self._configuration.set_generic(name.lower(), value, scope=self._scope)
 
     def set_parameter(self, name, value):
-        """ Set generic within library  """
+        """
+        Set a value of parameter within all test benches of this library
+
+        :param name: The name of the parameter
+        :param value: The value of the parameter
+
+        :example:
+
+        .. code-block:: python
+
+           lib.set_parameter("data_width", 16)
+
+        """
         self.set_generic(name, value)
 
     def set_sim_option(self, name, value):
         """
-        Set simulation option within library
+        Set simulation option of all test benches within this library
+
+        :param name: |simulation_options|
+        :param value: The value of the simulation option
+
+        :example:
+
+        .. code-block:: python
+
+           lib.set_sim_option("ghdl_flags", ["--no-vital-checks"])
+
         """
         self._configuration.set_sim_option(name, value, scope=self._scope)
 
     def set_compile_option(self, name, value):
         """
-        Set compile option within library
+        Set compile option for all files within the library
+
+        :param name: |compile_option|
+        :param value: The value of the compile option
+
+        :example:
+
+        .. code-block:: python
+
+           lib.set_compile_option("ghdl_flags", ["--no-vital-checks"])
+
         """
         for source_file in self._project.get_source_files_in_order():
             if source_file.library.name == self._library_name:
                 source_file.set_compile_option(name, value)
 
     def set_pli(self, value):
-        """ Set pli within library """
+        """
+        Set pli within library
+
+        :param value: A list of PLI object file names
+        """
         self._configuration.set_pli(value, scope=self._scope)
 
     def disable_ieee_warnings(self):
@@ -619,52 +856,89 @@ class LibraryFacade(object):
         return self._parent.get_source_files(pattern, self._library_name, allow_empty)
 
     def add_source_files(self, pattern, preprocessors=None, allow_empty=False):
+        """
+        Add source files matching wildcard pattern to library
+
+        :param pattern: A wildcard pattern match the files to add
+        :param include_dirs: A list of include directories
+        :param allow_empty: To disable an error if no files matched the pattern
+        :returns: A list of files (:class:`.SourceFileList`) which were added
+
+        :example:
+
+        .. code-block:: python
+
+           library.add_source_files("*.vhd")
+
+        """
         return self._parent.add_source_files(pattern, self._library_name, preprocessors,
                                              allow_empty=allow_empty)
 
     def add_source_file(self, pattern, preprocessors=None):
+        """
+        Add source file to library
+
+        :param file_name: The name of the file
+        :param include_dirs: A list of include directories
+        :returns: The :class:`.SourceFile` which was added
+
+        :example:
+
+        .. code-block:: python
+
+           library.add_source_file("file.vhd")
+
+        """
         return self._parent.add_source_file(pattern, self._library_name, preprocessors)
 
-    def package(self, package_name):
+    def package(self, name):
         """
-        Return the package with package_name or raise KeyError if does not exist
+        Get a package within the library
         """
         library = self._project.get_library(self._library_name)
-        design_unit = library.primary_design_units.get(package_name)
+        design_unit = library.primary_design_units.get(name)
 
         if design_unit is None:
-            raise KeyError(package_name)
+            raise KeyError(name)
         if design_unit.unit_type is not 'package':
-            raise KeyError(package_name)
+            raise KeyError(name)
 
-        return PackageFacade(self._parent, self._library_name, package_name, design_unit)
+        return PackageFacade(self._parent, self._library_name, name, design_unit)
 
-    def entity(self, entity_name):
+    def entity(self, name):
         """
-        Return the entity with entity_name or raise KeyError if does not exist
+        Get an entity within the library
+
+        :param name: The name of the entity
+        :returns: A :class:`.TestBench` object
+        :raises: KeyError
         """
         library = self._project.get_library(self._library_name)
-        if not library.has_entity(entity_name):
-            raise KeyError(entity_name)
+        if not library.has_entity(name):
+            raise KeyError(name)
 
-        return EntityFacade(self._library_name, entity_name,
-                            self._configuration)
+        return TestBench(self._library_name, name,
+                         self._configuration)
 
     def module(self, name):
         """
-        Return the module with name or raise KeyError if does not exist
+        Get a module within the library
+
+        :param name: The name of the module
+        :returns: A :class:`.TestBench` object
+        :raises: KeyError
         """
         library = self._project.get_library(self._library_name)
         if name not in library.modules:
             raise KeyError(name)
 
-        return EntityFacade(self._library_name, name,
-                            self._configuration)
+        return TestBench(self._library_name, name,
+                         self._configuration)
 
 
-class EntityFacade(object):
+class TestBench(object):
     """
-    User interface of an entity
+    A test bench
     """
     def __init__(self, library_name, entity_name, config):
         self._library_name = library_name
@@ -673,27 +947,99 @@ class EntityFacade(object):
         self._scope = create_scope(library_name, entity_name)
 
     def set_generic(self, name, value):
-        """ Set generic within entity """
+        """
+        Set a value of generic within this test bench
+
+        :param name: The name of the generic
+        :param value: The value of the generic
+
+        :example:
+
+        .. code-block:: python
+
+           test_bench.set_generic("data_width", 16)
+
+        """
         self._config.set_generic(name.lower(), value, scope=self._scope)
 
     def set_parameter(self, name, value):
-        """ Set generic within module """
+        """
+        Set a value of parameter within this test bench
+
+        :param name: The name of the parameter
+        :param value: The value of the parameter
+
+        :example:
+
+        .. code-block:: python
+
+           test_bench.set_parameter("data_width", 16)
+
+        """
         self.set_generic(name, value)
 
     def set_sim_option(self, name, value):
         """
-        Set simulation option within entity
+        Set simulation option this test bench
+
+        :param name: |simulation_options|
+        :param value: The value of the simulation option
+
+        :example:
+
+        .. code-block:: python
+
+           test_bench.set_sim_option("ghdl_flags", ["--no-vital-checks"])
+
         """
         self._config.set_sim_option(name, value, scope=self._scope)
 
     def set_pli(self, value):
-        """ Set pli within entity """
+        """
+        Set pli for test bench
+
+        :param value: A list of PLI object file names
+        """
         self._config.set_pli(value, scope=self._scope)
 
     def add_config(self,  # pylint: disable=too-many-arguments
                    name="", generics=None, parameters=None, pre_config=None, post_check=None):
         """
-        Add a run-configuration of all tests within entity
+        Add a configuration of this test bench.
+        Multiple configuration may be added one after another.
+        If no configurations are added the default configuration is used.
+
+        :param name: The name of the configuration. Will be added as a suffix on the test name
+        :param generics: A :class:`dict` containing the generics to be set
+        :param parameters: A :class:`dict` containing the parameters to be set
+        :param pre_config: A function to be called before test execution.
+           The function must return :class:`True` or the test will fail
+        :param post_check: A function to be called after test execution.
+           The function must return :class:`True` or the test will fail
+
+        :example:
+
+        Given a test bench that by default gives rise to the test
+        ``lib.test_bench`` and the following ``add_config`` calls:
+
+        .. code-block:: python
+
+           for data_width in range(14, 15+1):
+               for sign in [False, True]:
+                   test_bench.add_config(
+                       name="data_width=%s,sign=%s" % (data_width, sign),
+                       generics=dict(data_width=data_width, sign=sign))
+
+        The following tests will be created:
+
+        * ``lib.test_bench.data_width=14,sign=False``
+
+        * ``lib.test_bench.data_width=14,sign=True``
+
+        * ``lib.test_bench.data_width=15,sign=False``
+
+        * ``lib.test_bench.data_width=15,sign=True``
+
         """
         generics = {} if generics is None else generics
         generics = lower_generics(generics)
@@ -707,20 +1053,22 @@ class EntityFacade(object):
 
     def disable_ieee_warnings(self):
         """
-        Disable ieee warnings within entity
+        Disable ieee warnings within test bench
         """
         self._config.disable_ieee_warnings(scope=self._scope)
 
-    def test(self, test_name):
+    def test(self, name):
         """
-        Return the test case with test_name
+        Get a test within this test bench
 
-        @TODO we cannot check that test exists at this point since tests are scanned in main
-        @TODO assumes there is only one architecture for test benchs
-        @TODO makes sense to have multiple architectures of a test bench?
+        :param name: The name of the test
+        :returns: A :class:`.Test` object
         """
+        # @TODO we cannot check that test exists at this point since tests are scanned in main
+        # @TODO assumes there is only one architecture for test benchs
+        # @TODO makes sense to have multiple architectures of a test bench?
 
-        return TestFacade(self._library_name, self._entity_name, test_name, self._config)
+        return Test(self._library_name, self._entity_name, name, self._config)
 
 
 class PackageFacade(object):
@@ -754,7 +1102,7 @@ class PackageFacade(object):
         return self._parent.add_source_files(output_file_name, self._library_name)
 
 
-class TestFacade(object):
+class Test(object):
     """
     User interface of a single test case
 
@@ -806,9 +1154,9 @@ class TestFacade(object):
         self._config.disable_ieee_warnings(scope=self._scope)
 
 
-class FileSetFacade(list):
+class SourceFileList(list):
     """
-    A set of several files
+    A list of :class:`.SourceFile`
     """
 
     def __init__(self, source_files):
@@ -816,20 +1164,38 @@ class FileSetFacade(list):
 
     def set_compile_option(self, name, value):
         """
-        Set compile option
+        Set compile option for all files in the list
+
+        :param name: |compile_option|
+        :param value: The value of the compile option
+
+        :example:
+
+        .. code-block:: python
+
+           files.set_compile_option("ghdl_flags", ["--no-vital-checks"])
         """
         for source_file in self:
             source_file.set_compile_option(name, value)
 
     def depends_on(self, source_file):
         """
-        Add manual dependency of these files on another
+        Add manual dependency of these files on other file(s)
+
+        :param source_file: The file(s) which this file depends on
+
+        :example:
+
+        .. code-block:: python
+
+           other_file = lib.get_source_file("other_file.vhd")
+           files.depends_on(other_file)
         """
         for my_source_file in self:
             my_source_file.depends_on(source_file)
 
 
-class FileFacade(object):
+class SourceFile(object):
     """
     A single file
     """
@@ -839,15 +1205,33 @@ class FileFacade(object):
 
     def set_compile_option(self, name, value):
         """
-        Set compile option
+        Set compile option for this file
+
+        :param name: |compile_option|
+        :param value: The value of the compile option
+
+        :example:
+
+        .. code-block:: python
+
+           my_file.set_compile_option("ghdl_flags", ["--no-vital-checks"])
         """
         self._source_file.set_compile_option(name, value)
 
     def depends_on(self, source_file):
         """
-        Add manual dependency of this file on another
+        Add manual dependency of this file other file(s)
+
+        :param source_file: The file(s) which this file depends on
+
+        :example:
+
+        .. code-block:: python
+
+           other_files = lib.get_source_files("*.vhd")
+           my_file.depends_on(other_files)
         """
-        if isinstance(source_file, FileFacade):
+        if isinstance(source_file, SourceFile):
             private_source_file = source_file._source_file  # pylint: disable=protected-access
             self._project.add_manual_dependency(self._source_file,
                                                 depends_on=private_source_file)

@@ -6,6 +6,36 @@
 
 """
 The command line interface of VUnit.
+
+.. autoclass:: vunit.vunit_cli.VUnitCLI
+   :members:
+
+Adding custom command line arguments
+------------------------------------
+It is possible to add custom command line arguments to your ``run.py``
+scripts using the :class:`.VUnitCLI` class.
+
+A :class:`.VUnitCLI` object has a ``parser`` field which is an
+:class:`ArgumentParser` object of the `argparse`_ library.
+
+.. _argparse: https://docs.python.org/3/library/argparse.html
+
+.. code-block:: python
+
+   from vunit import VUnitCLI, VUnit
+
+   # Add custom command line argument to standard CLI
+   # Beware of conflicts with existing arguments
+   cli = VUnitCLI()
+   cli.parser.add_argument('--custom-arg', ...)
+   args = cli.parse_args()
+
+   # Create VUNit instance from custom arguments
+   vu = VUnit.from_args(args=args)
+
+   # Use args.custom_arg here ...
+   print(args.custom_arg)
+
 """
 
 import argparse
@@ -20,11 +50,17 @@ class VUnitCLI(object):
     """
 
     def __init__(self, description=None):
+        """
+        :param description: A custom short description of the command line tool
+        """
         self.parser = self.create_argument_parser(description)
 
     def parse_args(self, argv=None):
         """
-        Parse arguments from 'argv' if not None instead of sys.argv
+        Parse command line arguments
+
+        :param argv: Use explicit argv instead of actual command line argument
+        :returns: The parsed argument namespace object
         """
         return self.parser.parse_args(args=argv)
 
@@ -32,6 +68,9 @@ class VUnitCLI(object):
     def create_argument_parser(description=None):
         """
         Create the argument parser
+
+        :param description: A custom short description of the command line tool
+        :returns: The created :mod:`argparse` parser object
         """
         description = 'VUnit command line tool.' if description is None else description
 
