@@ -14,6 +14,9 @@ Indices and tables
 
    user_guide
    python_interface
+   logging/user_guide
+   check/user_guide
+   com/user_guide
 
 * :ref:`genindex`
 * :ref:`modindex`
