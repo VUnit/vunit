@@ -30,6 +30,7 @@ import os
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.extlinks',
     'sphinxarg.ext' # Automatic argparse command line argument documentation
 ]
 
@@ -286,3 +287,6 @@ texinfo_documents = [
 #texinfo_no_detailmenu = False
 
 autodoc_member_order = 'bysource'
+
+extlinks = {'vunit_example': ('https://github.com/VUnit/vunit/tree/master/examples/%s/',
+                              '')}

@@ -45,6 +45,9 @@ listing all tests found as well as running individual tests matching a
 wildcard pattern. The Python API also supports running the same test
 bench or test with multiple combinations of generic values.
 
+There are many :ref:`example projects <examples>` demonstrating the
+usage and capabilities of VUnit.
+
 .. _vhdl_test_benches:
 
 VHDL Test Benches
@@ -75,6 +78,8 @@ From ``tb_example_many.vhd`` two test cases are created:
 * ``lib.tb_example_many.test_fail``
 
 
+The above example code can be found in :vunit_example:`vhdl/user_guide`.
+
 .. _sv_test_benches:
 
 SystemVerilog Test Benches
@@ -95,6 +100,8 @@ From ``tb_example.vhd`` three test cases are created:
 Each test is run in an individual simulation. Putting multiple tests
 in the same test bench is a good way to share a common test
 environment.
+
+The above example code can be found in :vunit_example:`verilog/user_guide`.
 
 .. _cli:
 
@@ -152,3 +159,53 @@ There are three methods to make VUnit importable in your ``run.py`` script.:
       import sys
       sys.path.append("/path/to/vunit_root/")
       import vunit
+
+.. _examples:
+
+Examples
+--------
+There are many examples demonstrating more specific usage of VUnit listed below:
+
+:vunit_example:`VHDL User Guide Example <vhdl/user_guide/>`
+  The most minimal VUnit VHDL project covering the basics of this user
+  guide.
+
+:vunit_example:`SystemVerilog User Guide Example <verilog/user_guide/>`
+  The most minimal VUnit SystemVerilog project covering the basics of
+  this user guide.
+
+:vunit_example:`VHDL UART Example <vhdl/uart/>`
+  A more realistic test bench of an UART to show VUnit VHDL usage on a
+  typical module.  In addition to the normal ``run.py`` it also
+  contains a ``run_with_preprocessing.py`` to demonstrate the benefit
+  of location and check preprocessing.
+
+:vunit_example:`SystemVerilog UART Example <verilog/uart/>`
+  A more realistic test bench of an UART to show VUnit SystemVerilog
+  usage on a typical module.
+
+:vunit_example:`Check Example <vhdl/check/>`
+  Demonstrates the VUnit check library..
+
+:vunit_example:`Logging Example <vhdl/logging/>`
+  Demonstrates VUnit's support for logging.
+
+:vunit_example:`Array Example <vhdl/array/>`
+  Demonstrates the ``array_t`` data type of ``array_pkg.vhd`` which
+  can be used to handle dynamically sized 1D, 2D and 3D data as well
+  as storing and loading it from csv and raw files.
+
+:vunit_example:`Generateing tests <vhdl/generate_tests/>`
+  Demonstrates generating multiple test runs of the same test bench
+  with different generic values.
+
+:vunit_example:`Vivado IP example <vhdl/vivado/>`
+  Demonstrates compiling and performing behavioral simulation of
+  Vivado IPs with VUnit.
+
+:vunit_example:`Communication library example <vhdl/com/>`
+  Demonstrates the ``com`` message passing package which can be used
+  to communicate arbitrary objects between processes.
+
+..
+  @TODO Further reading can be found in the [com user guide](vunit/vhdl/com/user_guide.md)
