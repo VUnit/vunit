@@ -126,6 +126,43 @@ Usage
 
 .. _installing:
 
+Example session
+---------------
+The :vunit_example:`VHDL User Guide Example <vhdl/user_guide/>` can be run to produce the following output:
+
+.. code-block:: console
+
+   > python run.py -v lib.tb_example*
+   Running test: lib.tb_example
+   Running test: lib.tb_example_many.test_pass
+   Running test: lib.tb_example_many.test_fail
+   Running 3 tests
+
+   running lib.tb_example
+   Hello World!
+   pass (P=1 S=0 F=0 T=3) lib.tb_example (0.1 seconds)
+
+   running lib.tb_example.test_pass
+   This will pass
+   pass (P=2 S=0 F=0 T=3) lib.tb_example_many.test_pass (0.1 seconds)
+
+   running lib.tb_example.test_fail
+   Error: It fails
+   fail (P=2 S=0 F=1 T=3) lib.tb_example_many.test_fail (0.1 seconds)
+
+   ==== Summary =========================================
+   pass lib.tb_example                (0.1 seconds)
+   pass lib.tb_example_many.test_pass (0.1 seconds)
+   fail lib.tb_example_many.test_fail (0.1 seconds)
+   ======================================================
+   pass 2 of 3
+   fail 1 of 3
+   ======================================================
+   Total time was 0.3 seconds
+   Elapsed time was 0.3 seconds
+   ======================================================
+   Some failed!
+
 Installing
 ----------
 To be able to import :class:`vunit.ui.VUnit` in your ``run.py`` script
