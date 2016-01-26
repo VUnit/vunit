@@ -12,14 +12,13 @@ VUnit automatically determines the compile order as well as which
 files to incrementally re-compile. This is achieved by having a
 ``run.py`` file for each project where libraries are defined into
 which files are added using the VUnit Python interface. The ``run.py``
-file then acts as a command line utility for compiling and running
-tests within the VHDL project.
+file then acts as a :ref:`command line utility <cli>` for compiling
+and running tests within the VHDL project.
 
-Python Interface
-----------------
-The public interface of VUnit is exposed through the :class:`vunit.ui.VUnit` class
-that can be imported directly from the :mod:`vunit <vunit.ui>` module. Read
-:ref:`this <installing>` to make VUnit visible to Python.
+The Python interface of VUnit is exposed through the :class:`VUnit
+<vunit.ui.VUnit>` class that can be imported directly from the
+:mod:`vunit <vunit.ui>` module. Read :ref:`this <installing>` to make
+VUnit module visible to Python.
 
 .. code-block:: python
    :caption: Example ``run.py`` file.
@@ -38,6 +37,41 @@ that can be imported directly from the :mod:`vunit <vunit.ui>` module. Read
    # Run vunit function
    vu.main()
 
+Test benches are written using supporing libraries in :ref:`VHDL
+<vhdl_test_benches>` and SystemVerilog respectively. A test bench can in
+iself be a single unamed test or contain multiple named test
+cases. The command line interface supports listing all tests found as
+well as running individual tests matching a wildcard pattern. The
+Python API also supports running the same test bench or test with
+multiple combinations of generic values.
+
+.. _vhdl_test_benches:
+
+VHDL Test Benches
+-----------------
+In its simplest form a VUnit VHDL test bench looks like this:
+
+.. code-block: vhdl
+   :caption: Simplest VHDL test bench: `tb_example.vhd`
+
+   library vunit_lib;
+   context vunit_lib.vunit_context;
+
+   entity tb_example is
+   generic (runner_cfg : runner_cfg_t);
+   end entity;
+
+   architecture tb of tb_example is
+   begin
+   main : process
+   begin
+   test_runner_setup(runner, runner_cfg);
+   report "Hello world!";
+   test_runner_cleanup(runner); -- Simulation ends here
+   end process;
+   end architecture;
+
+.. _cli:
 
 Command Line Interface
 ----------------------
