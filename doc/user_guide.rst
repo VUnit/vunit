@@ -51,25 +51,25 @@ VHDL Test Benches
 -----------------
 In its simplest form a VUnit VHDL test bench looks like this:
 
-.. code-block: vhdl
+.. literalinclude:: ../examples/vhdl/user_guide/tb_example.vhd
    :caption: Simplest VHDL test bench: `tb_example.vhd`
+   :language: vhdl
+   :lines: 7-
 
-   library vunit_lib;
-   context vunit_lib.vunit_context;
+From ``tb_example.vhd`` a single test case named ``lib.tb_example`` is
+created.  It is also possible to put multiple tests in a single test
+bench that are each run in individual simulations. Putting multiple
+tests in the same test bench is a good way to share a common test
+environment.
 
-   entity tb_example is
-   generic (runner_cfg : runner_cfg_t);
-   end entity;
+.. literalinclude:: ../examples/vhdl/user_guide/tb_example_many.vhd
+   :caption: VHDL test bench with multiple tests: `tb_example_many.vhd`
+   :language: vhdl
+   :lines: 7-
 
-   architecture tb of tb_example is
-   begin
-   main : process
-   begin
-   test_runner_setup(runner, runner_cfg);
-   report "Hello world!";
-   test_runner_cleanup(runner); -- Simulation ends here
-   end process;
-   end architecture;
+From ``tb_example_many.vhd`` two test cases named
+``lib.tb_example_many.test_pass`` and ``lib.tb_example_many.test_fail``
+are created.
 
 .. _cli:
 
