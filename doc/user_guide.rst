@@ -38,12 +38,12 @@ VUnit module visible to Python.
    vu.main()
 
 Test benches are written using supporing libraries in :ref:`VHDL
-<vhdl_test_benches>` and SystemVerilog respectively. A test bench can in
-iself be a single unamed test or contain multiple named test
-cases. The command line interface supports listing all tests found as
-well as running individual tests matching a wildcard pattern. The
-Python API also supports running the same test bench or test with
-multiple combinations of generic values.
+<vhdl_test_benches>` and :ref:`SystemVerilog <sv_test_benches>`
+respectively. A test bench can in iself be a single unamed test or
+contain multiple named test cases. The command line interface supports
+listing all tests found as well as running individual tests matching a
+wildcard pattern. The Python API also supports running the same test
+bench or test with multiple combinations of generic values.
 
 .. _vhdl_test_benches:
 
@@ -57,7 +57,9 @@ In its simplest form a VUnit VHDL test bench looks like this:
    :lines: 7-
 
 From ``tb_example.vhd`` a single test case named ``lib.tb_example`` is
-created.  It is also possible to put multiple tests in a single test
+created.
+
+It is also possible to put multiple tests in a single test
 bench that are each run in individual simulations. Putting multiple
 tests in the same test bench is a good way to share a common test
 environment.
@@ -67,10 +69,13 @@ environment.
    :language: vhdl
    :lines: 7-
 
-From ``tb_example_many.vhd`` two test cases named
-``lib.tb_example_many.test_pass`` and
-``lib.tb_example_many.test_fail`` are created.
+From ``tb_example_many.vhd`` two test cases are created:
 
+* ``lib.tb_example_many.test_pass``
+* ``lib.tb_example_many.test_fail``
+
+
+.. _sv_test_benches:
 
 SystemVerilog Test Benches
 --------------------------
