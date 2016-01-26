@@ -28,6 +28,9 @@ The public Python interface of VUnit.
 .. autoclass:: vunit.ui.TestBench()
    :members:
 
+.. autoclass:: vunit.ui.Test()
+   :members:
+
 .. _compile_options:
 
 Compilation options
@@ -715,11 +718,11 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         :param use_debug_codecs: Use human readable debug codecs
 
-           :class:`None`: Use command line argument setting
+           `None`: Use command line argument setting
 
-           :class:`False`: Never use debug codecs
+           `False`: Never use debug codecs
 
-           :class:`True`: Always use debug codecs
+           `True`: Always use debug codecs
         """
         if not self._project.has_library(library_name):
             library = self.add_library(library_name)
@@ -1010,12 +1013,12 @@ class TestBench(object):
         If no configurations are added the default configuration is used.
 
         :param name: The name of the configuration. Will be added as a suffix on the test name
-        :param generics: A :class:`dict` containing the generics to be set
-        :param parameters: A :class:`dict` containing the parameters to be set
+        :param generics: A `dict` containing the generics to be set
+        :param parameters: A `dict` containing the parameters to be set
         :param pre_config: A function to be called before test execution.
-           The function must return :class:`True` or the test will fail
+           The function must return `True` or the test will fail
         :param post_check: A function to be called after test execution.
-           The function must return :class:`True` or the test will fail
+           The function must return `True` or the test will fail
 
         :example:
 
