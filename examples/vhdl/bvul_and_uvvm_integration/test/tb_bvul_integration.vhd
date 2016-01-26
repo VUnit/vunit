@@ -15,7 +15,7 @@
 -- * <VUnit root>/vhdl/logging/user_guide.md
 --
 -- The user guides are Markdown documents. If you don't have a Markdown viewer
--- you can read the rendered versions on https://github.com/LarsAsplund/vunit
+-- you can read the rendered versions on https://github.com/VUnit/vunit
 --
 -- For simplicity there is no DUT in this testbench, focus is on describing BVUL
 -- and VUnit integration.

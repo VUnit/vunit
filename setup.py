@@ -30,7 +30,7 @@ data_files = [os.path.relpath(file_name, 'vunit') for file_name in data_files]
 
 setup(
     name='vunit_hdl',
-    version='0.51.0',
+    version='0.51.1',
     packages=['vunit',
               'vunit.com',
               'vunit.test',
@@ -41,7 +41,7 @@ setup(
               'vunit.test.acceptance'],
     package_data={'vunit': data_files},
     zip_safe=False,
-    url='https://github.com/LarsAsplund/vunit',
+    url='https://github.com/VUnit/vunit',
     classifiers=['Development Status :: 5 - Production/Stable',
                  'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
                  'Natural Language :: English',

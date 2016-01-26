@@ -165,19 +165,19 @@ files are licensed under the terms of `ARTISTIC License`_.
 .. _Mentor Graphics ModelSim/Questa: http://www.mentor.com/products/fv/modelsim/
 .. _GHDL: https://sourceforge.net/projects/ghdl-updates/
 .. _GTKWave: http://gtkwave.sourceforge.net/
-.. _VUnit User Guide: https://github.com/LarsAsplund/vunit/blob/master/user_guide.md
-.. _Check User Guide: https://github.com/LarsAsplund/vunit/blob/master/vunit/vhdl/check/user_guide.md
-.. _Log User Guide: https://github.com/LarsAsplund/vunit/blob/master/vunit/vhdl/logging/user_guide.md
-.. _examples: https://github.com/LarsAsplund/vunit/blob/master/examples
-.. _logging: https://github.com/LarsAsplund/vunit/blob/master/examples/vhdl/logging
-.. _check: https://github.com/LarsAsplund/vunit/blob/master/examples/vhdl/check
+.. _VUnit User Guide: https://github.com/VUnit/vunit/blob/master/user_guide.md
+.. _Check User Guide: https://github.com/VUnit/vunit/blob/master/vunit/vhdl/check/user_guide.md
+.. _Log User Guide: https://github.com/VUnit/vunit/blob/master/vunit/vhdl/logging/user_guide.md
+.. _examples: https://github.com/VUnit/vunit/blob/master/examples
+.. _logging: https://github.com/VUnit/vunit/blob/master/examples/vhdl/logging
+.. _check: https://github.com/VUnit/vunit/blob/master/examples/vhdl/check
 .. _YouTube: https://www.youtube.com/channel/UCCPVCaeWkz6C95aRUTbIwdg
 .. _an introduction to unit testing (6 min): https://www.youtube.com/watch?v=PZuBqcxS8t4
 .. _short introduction to VUnit (12 min): https://www.youtube.com/watch?v=D8s_VLD91tw
-.. _Development document: https://github.com/LarsAsplund/vunit/blob/master/developing.md
-.. _new issue: https://github.com/LarsAsplund/vunit/issues/new
+.. _Development document: https://github.com/VUnit/vunit/blob/master/developing.md
+.. _new issue: https://github.com/VUnit/vunit/issues/new
 .. _Mozilla Public License, v. 2.0: http://mozilla.org/MPL/2.0/
-.. _redistributed: https://github.com/LarsAsplund/vunit/blob/master/vunit/vhdl/osvvm
-.. _modifications: https://github.com/LarsAsplund/vunit/commit/25fce1b3700e746c3fa23bd7157777dd4f20f0d6
-.. _examples/vhdl/osvvm\_integration/src: https://github.com/LarsAsplund/vunit/blob/master/examples/vhdl/osvvm_integration/src
+.. _redistributed: https://github.com/VUnit/vunit/blob/master/vunit/vhdl/osvvm
+.. _modifications: https://github.com/VUnit/vunit/commit/25fce1b3700e746c3fa23bd7157777dd4f20f0d6
+.. _examples/vhdl/osvvm\_integration/src: https://github.com/VUnit/vunit/blob/master/examples/vhdl/osvvm_integration/src
 .. _ARTISTIC License: http://www.perlfoundation.org/artistic_license_2_0
