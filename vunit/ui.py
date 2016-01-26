@@ -37,6 +37,8 @@ Compilation options
 -------------------
 The following compilation are known.
 
+**NOTE**: Only affects source files added *before* the option is set.
+
 ``ghdl_flags``
    Extra arguments passed to ``ghdl -a`` command during compilation.
    Must be a list of strings.
