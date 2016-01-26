@@ -983,7 +983,7 @@ class TestBench(object):
 
     def set_sim_option(self, name, value):
         """
-        Set simulation option this test bench
+        Set simulation option of this test bench
 
         :param name: |simulation_options|
         :param value: The value of the simulation option
@@ -1120,7 +1120,40 @@ class Test(object):
     def add_config(self,  # pylint: disable=too-many-arguments
                    name="", generics=None, parameters=None, pre_config=None, post_check=None):
         """
-        Add a run-configuration this test case
+        Add a configuration of this test.
+        Multiple configuration may be added one after another.
+        If no configurations are added the default configuration is used.
+
+        :param name: The name of the configuration. Will be added as a suffix on the test name
+        :param generics: A `dict` containing the generics to be set
+        :param parameters: A `dict` containing the parameters to be set
+        :param pre_config: A function to be called before test execution.
+           The function must return `True` or the test will fail
+        :param post_check: A function to be called after test execution.
+           The function must return `True` or the test will fail
+
+        :example:
+
+        Given the ``lib.test_bench.test`` test and the following ``add_config`` calls:
+
+        .. code-block:: python
+
+           for data_width in range(14, 15+1):
+               for sign in [False, True]:
+                   test.add_config(
+                       name="data_width=%s,sign=%s" % (data_width, sign),
+                       generics=dict(data_width=data_width, sign=sign))
+
+        The following tests will be created:
+
+        * ``lib.test_bench.test.data_width=14,sign=False``
+
+        * ``lib.test_bench.test.data_width=14,sign=True``
+
+        * ``lib.test_bench.test.data_width=15,sign=False``
+
+        * ``lib.test_bench.test.data_width=15,sign=True``
+
         """
         generics = {} if generics is None else generics
         generics = lower_generics(generics)
@@ -1134,19 +1167,49 @@ class Test(object):
 
     def set_generic(self, name, value):
         """
-        Set generic for test case
+        Set a value of generic within this test
+
+        :param name: The name of the generic
+        :param value: The value of the generic
+
+        :example:
+
+        .. code-block:: python
+
+           test.set_generic("data_width", 16)
+
         """
         self._config.set_generic(name.lower(), value, scope=self._scope)
 
     def set_parameter(self, name, value):
         """
-        Set generic within test case
+        Set a value of parameter within this test
+
+        :param name: The name of the parameter
+        :param value: The value of the parameter
+
+        :example:
+
+        .. code-block:: python
+
+           test.set_parameter("data_width", 16)
+
         """
         self.set_generic(name, value)
 
     def set_sim_option(self, name, value):
         """
-        Set simulation option within entity
+        Set simulation option of this test
+
+        :param name: |simulation_options|
+        :param value: The value of the simulation option
+
+        :example:
+
+        .. code-block:: python
+
+           test.set_sim_option("ghdl_flags", ["--no-vital-checks"])
+
         """
         self._config.set_sim_option(name, value, scope=self._scope)
 
