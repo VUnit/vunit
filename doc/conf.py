@@ -30,6 +30,7 @@ import os
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinxarg.ext' # Automatic argparse command line argument documentation
 ]
 
 # Add any paths that contain templates here, relative to this directory.

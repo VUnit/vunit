@@ -53,7 +53,7 @@ class VUnitCLI(object):
         """
         :param description: A custom short description of the command line tool
         """
-        self.parser = self.create_argument_parser(description)
+        self.parser = _create_argument_parser(description)
 
     def parse_args(self, argv=None):
         """
@@ -64,76 +64,85 @@ class VUnitCLI(object):
         """
         return self.parser.parse_args(args=argv)
 
-    @staticmethod
-    def create_argument_parser(description=None):
-        """
-        Create the argument parser
+def _create_argument_parser(description=None, for_documentation=False):
+    """
+    Create the argument parser
 
-        :param description: A custom short description of the command line tool
-        :returns: The created :mod:`argparse` parser object
-        """
-        description = 'VUnit command line tool.' if description is None else description
+    :param description: A custom short description of the command line tool
+    :param for_documentation: When used for user guide documentation
+    :returns: The created :mod:`argparse` parser object
+    """
+    description = 'VUnit command line tool.' if description is None else description
 
-        parser = argparse.ArgumentParser(description=description)
+    if for_documentation:
+        default_output_path = "./vunit_out"
+    else:
+        default_output_path = join(abspath(os.getcwd()), "vunit_out")
 
-        parser.add_argument('test_patterns', metavar='tests', nargs='*',
-                            default='*',
-                            help='Tests to run')
+    parser = argparse.ArgumentParser(description=description)
 
-        parser.add_argument('-l', '--list', action='store_true',
-                            default=False,
-                            help='Only list all test cases')
+    parser.add_argument('test_patterns', metavar='tests', nargs='*',
+                        default='*',
+                        help='Tests to run')
 
-        parser.add_argument('--compile', action='store_true',
-                            default=False,
-                            help='Only compile project without running tests')
+    parser.add_argument('-l', '--list', action='store_true',
+                        default=False,
+                        help='Only list all test cases')
 
-        parser.add_argument('--elaborate', action='store_true',
-                            default=False,
-                            help='Only elaborate test benches without running')
+    parser.add_argument('--compile', action='store_true',
+                        default=False,
+                        help='Only compile project without running tests')
 
-        parser.add_argument('--clean', action='store_true',
-                            default=False,
-                            help='Remove output path first')
+    parser.add_argument('--elaborate', action='store_true',
+                        default=False,
+                        help='Only elaborate test benches without running')
 
-        parser.add_argument('-o', '--output-path',
-                            default=join(abspath(os.getcwd()), "vunit_out"),
-                            help='Output path for compilation and simulation artifacts')
+    parser.add_argument('--clean', action='store_true',
+                        default=False,
+                        help='Remove output path first')
 
-        parser.add_argument('-x', '--xunit-xml',
-                            default=None,
-                            help='Xunit test report .xml file')
+    parser.add_argument('-o', '--output-path',
+                        default=default_output_path,
+                        help='Output path for compilation and simulation artifacts')
 
-        parser.add_argument('--exit-0',
-                            default=False,
-                            action="store_true",
-                            help=('Exit with code 0 even if a test failed. '
-                                  'Still exits with code 1 on fatal errors such as compilation failure'))
+    parser.add_argument('-x', '--xunit-xml',
+                        default=None,
+                        help='Xunit test report .xml file')
 
-        parser.add_argument('-v', '--verbose', action="store_true",
-                            default=False,
-                            help='Print test output immediately and not only when failure')
+    parser.add_argument('--exit-0',
+                        default=False,
+                        action="store_true",
+                        help=('Exit with code 0 even if a test failed. '
+                              'Still exits with code 1 on fatal errors such as compilation failure'))
 
-        parser.add_argument('--no-color', action='store_true',
-                            default=False,
-                            help='Do not color output')
+    parser.add_argument('-v', '--verbose', action="store_true",
+                        default=False,
+                        help='Print test output immediately and not only when failure')
 
-        parser.add_argument('--log-level',
-                            default="warning",
-                            choices=["info", "error", "warning", "debug"])
+    parser.add_argument('--no-color', action='store_true',
+                        default=False,
+                        help='Do not color output')
 
-        parser.add_argument('-p', '--num-threads', type=positive_int,
-                            default=1,
-                            help=('Number of tests to run in parallel. '
-                                  'Test output is not continuously written in verbose mode with p > 1'))
+    parser.add_argument('--log-level',
+                        default="warning",
+                        choices=["info", "error", "warning", "debug"],
+                        help=("Log level of VUnit internal python logging. "
+                              "Used for debugging"))
 
-        com = parser.add_argument_group("com", description="Flags specific to the com message passing package")
-        com.add_argument('--use-debug-codecs', action='store_true',
-                         default=False,
-                         help='Run with debug features enabled')
+    parser.add_argument('-p', '--num-threads', type=positive_int,
+                        default=1,
+                        help=('Number of tests to run in parallel. '
+                              'Test output is not continuously written in verbose mode with p > 1'))
+
+    com = parser.add_argument_group("com", description="Flags specific to the com message passing package")
+    com.add_argument('--use-debug-codecs', action='store_true',
+                     default=False,
+                     help='Run with debug features enabled')
+
+    if not for_documentation:
         SimulatorFactory.add_arguments(parser)
 
-        return parser
+    return parser
 
 
 def positive_int(val):
@@ -146,3 +155,10 @@ def positive_int(val):
         return ival
     except (ValueError, AssertionError):
         raise argparse.ArgumentTypeError("'%s' is not a valid positive int" % val)
+
+
+def _parser_for_documentation():
+    """
+    Returns an argparse object used by sphinx for documentation in user_guide.rst
+    """
+    return _create_argument_parser(for_documentation=True)

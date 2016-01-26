@@ -39,6 +39,8 @@ that can be imported directly from the :mod:`vunit <vunit.ui>` module. Read
    vu.main()
 
 
+Command Line Interface
+----------------------
 A :class:`VUnit <vunit.ui.VUnit>` object can be created from command
 line arguments by using the :meth:`from_argv
 <vunit.ui.VUnit.from_argv>` method effectively creating a custom
@@ -48,6 +50,13 @@ object. The configuration is followed by a call to the :meth:`main
 <vunit.ui.VUnit.main>` method which will execute the function
 specified by the command line arguments and exit the script. The added
 source files are automatically scanned for test cases.
+
+Usage
+^^^^^
+
+.. argparse::
+   :ref: vunit.vunit_cli._parser_for_documentation
+   :prog: run.py
 
 .. _installing:
 
