@@ -68,8 +68,28 @@ environment.
    :lines: 7-
 
 From ``tb_example_many.vhd`` two test cases named
-``lib.tb_example_many.test_pass`` and ``lib.tb_example_many.test_fail``
-are created.
+``lib.tb_example_many.test_pass`` and
+``lib.tb_example_many.test_fail`` are created.
+
+
+SystemVerilog Test Benches
+--------------------------
+In its simplest form a VUnit SystemVerilog test bench looks like this:
+
+.. literalinclude:: ../examples/verilog/user_guide/tb_example.sv
+   :caption: SystemVerilog test bench: `tb_example.sv`
+   :language: verilog
+   :lines: 7-
+
+From ``tb_example.vhd`` three test cases are created:
+
+* ``lib.tb_example.Test that pass``
+* ``lib.tb_example.Test that fail``
+* ``lib.tb_example.Test that timeouts``
+
+Each test is run in an individual simulation. Putting multiple tests
+in the same test bench is a good way to share a common test
+environment.
 
 .. _cli:
 
