@@ -131,6 +131,16 @@ Example session
 The :vunit_example:`VHDL User Guide Example <vhdl/user_guide/>` can be run to produce the following output:
 
 .. code-block:: console
+   :caption: List all tests
+
+   > python run.py -l
+   lib.tb_example
+   lib.tb_example_many.test_pass
+   lib.tb_example_many.test_fail
+   Listed 3 tests
+
+.. code-block:: console
+   :caption: Run all tests
 
    > python run.py -v lib.tb_example*
    Running test: lib.tb_example
@@ -140,7 +150,7 @@ The :vunit_example:`VHDL User Guide Example <vhdl/user_guide/>` can be run to pr
 
    running lib.tb_example
    Hello World!
-   pass (P=1 S=0 F=0 T=3) lib.tb_example (0.1 seconds)
+   pass( P=1 S=0 F=0 T=3) lib.tb_example (0.1 seconds)
 
    running lib.tb_example.test_pass
    This will pass
@@ -163,9 +173,30 @@ The :vunit_example:`VHDL User Guide Example <vhdl/user_guide/>` can be run to pr
    ======================================================
    Some failed!
 
+.. code-block:: console
+   :caption: Run a specific test
+
+   > python run.py -v lib.tb_example
+   Running test: lib.tb_example
+   Running 1 tests
+
+   Starting lib.tb_example
+   Hello world!
+   pass (P=1 S=0 F=0 T=1) lib.tb_example (0.1 seconds)
+
+   ==== Summary ==========================
+   pass lib.tb_example (0.9 seconds)
+   =======================================
+   pass 1 of 1
+   =======================================
+   Total time was 0.9 seconds
+   Elapsed time was 1.2 seconds
+   =======================================
+   All passed!
+
 Installing
 ----------
-To be able to import :class:`vunit.ui.VUnit` in your ``run.py`` script
+To be able to import :class:`VUnit <vunit.ui.VUnit>` in your ``run.py`` script
 you need to make it visible to Python or else the following error
 occurs.
 
