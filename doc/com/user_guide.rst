@@ -36,7 +36,7 @@ Message passing is not a core functionality of unit testing so ``com``
 is provided as an optional add-on to VUnit. It is compiled to the
 ``vunit_lib`` library with the ``add_com`` method in your Python script
 
-.. code:: python
+.. code-block:: python
 
     ui = VUnit.from_argv()
     ui.add_com()
@@ -44,7 +44,7 @@ is provided as an optional add-on to VUnit. It is compiled to the
 The VHDL functionality is provided to your testbench with the
 ``com_context``.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     library vunit_lib;
     context vunit_lib.vunit_context;
@@ -57,7 +57,7 @@ To send a message we must first create an actor for the sender and then
 find the actor of the receiver. These actors are then used when sending
 a message as shown in the example below.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
       proc_1: process is
         variable self : actor_t := create("proc_1");  -- Create an actor for myself
@@ -80,7 +80,7 @@ anonymous.
 
 Below is a basic receiver for the message above.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
       proc_2: process is
         variable self : actor_t := create("proc_2");
@@ -108,7 +108,7 @@ The default behaviour of the ``receive`` procedure above is to block
 until a message arrives but it can also be setup with a timeout. If you
 want the receiver to poll for messages you set the timeout to zero.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
       proc_2: process is
         variable self : actor_t := create("proc_2");
@@ -153,13 +153,13 @@ the message is sent and then, on the receiving side, decode back to the
 original type again. For example, sending an integer can be done like
 this.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
         send(net, receiver, encode(my_integer), receipt);
 
 which can be received like this.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
         my_integer := decode(message.payload.all);
         report "Received " & to_string(my_integer);
@@ -173,7 +173,7 @@ types. For example, the `card shuffler
 example <../../../examples/vhdl/com/test/tb_card_shuffler.vhd>`__ uses the
 following package.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     package msg_types_pkg is
       type rank_t is (ace, two, three, four, five, six, seven, eight, nine, ten, jack, queen, king);
@@ -212,7 +212,7 @@ following package.
 Encoders for these types are generated if you add the following to the
 Python script
 
-.. code:: python
+.. code-block:: python
 
     tb_shuffler_lib = ui.add_library('tb_shuffler_lib')
     tb_shuffler_lib.add_source_files(join(dirname(__file__), 'test', '*.vhd'))
@@ -226,14 +226,14 @@ special treatment. For each value of the enumerated type there will be
 an encoder function named after that value with the rest of the elements
 as parameters. So instead of writing
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     my_card_msg := (load, (ace, spades));
     send(net, receiver, encode(my_card_msg), receipt);
 
 you can write
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     send(net, receiver, load((ace, spades)), receipt);
 
@@ -254,7 +254,7 @@ message considering all message types defined in the package. This
 provides a convenient way to select the correct decoder on the receiving
 side. Here's an example.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
           receive(net, self, message);
           case get_msg_type(message.payload.all) is
@@ -308,14 +308,14 @@ with the client/server pattern so the message ID has been excluded from
 the ``publish`` procedure. A publish must be made with the publisher
 actor as a parameter so that ``com`` can find the subscribers.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     publish(net, self, load((rank, suit)), status);
 
 An actor interested in what's published call the ``subscribe``
 procedure. Both the driver and the scoreboard have this piece of code.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     subscribe(self, find("test runner"), status);
 
@@ -323,7 +323,7 @@ Published messages are then received with the normal ``receive``
 procedure. It's also possible for an actor to unsubscribe from what's
 being published.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     unsubscribe(self, find("test runner"), status);
 
@@ -343,7 +343,7 @@ number of ways.
    extracts a unique message ID from the client request message and use
    that as a reference when sending the reply.
 
-   .. code:: vhdl
+   .. code-block:: vhdl
 
        requesting_actor := message.sender;
        request_id       := message.id;
@@ -356,7 +356,7 @@ number of ways.
 -  The client making the request can also wait for the reply to that
    request ignoring any other message that may arrive before the reply.
 
-   .. code:: vhdl
+   .. code-block:: vhdl
 
        send(net, self, find("scoreboard"), request_message, receipt);
        receive_reply(net, self, receipt.id, reply_message);
@@ -368,7 +368,7 @@ number of ways.
    and the ``receive_reply`` calls are made back-to-back they can be
    replaced by a single ``request`` call.
 
-   .. code:: vhdl
+   .. code-block:: vhdl
 
        request(net, self, find("scoreboard"), request_message, reply_message);
 
@@ -397,7 +397,7 @@ are basically two ways:
    get another one through. To set a limit on the receiver you add a
    second parameter to the create call.
 
-   .. code:: vhdl
+   .. code-block:: vhdl
 
        variable self : actor_t := create("proc_1", 1);
 
@@ -445,13 +445,13 @@ function. Message payloads now becomes readable in the simulation but at
 the expense of longer strings which lowers the performance. You can
 permanently enable the debug codecs in your Python script like this.
 
-.. code:: python
+.. code-block:: python
 
     ui = VUnit.from_argv()
     ui.add_com(use_debug_codecs=True)
 
 You can also enable the debug codecs when calling your script.
 
-.. code:: console
+.. code-block:: console
 
     python run.py --use-debug-codecs

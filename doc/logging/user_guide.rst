@@ -28,13 +28,13 @@ Whenever you do a log entry that entry is handled by a logger. There is
 a default logger that is used when none is specified but you can also
 create multiple custom loggers. For example
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     log("Hello world");
 
 will use the default logger while
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     log(my_logger, "Hello world");
 
@@ -53,7 +53,7 @@ Basic Log
 The most basic log you can do is a simple text message using the default
 logger.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     log("Hello world");
 
@@ -68,7 +68,7 @@ call procedure unless you specify anything using the ``log_level``
 parameter. There are also dedicated procedure calls for each log level.
 The standard log levels and their associated procedure calls are
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     failure("Highest level of *error* message (most severe).");
     error("Normal severity error message.");
@@ -92,7 +92,7 @@ example, if a status level is needed in between info and debug you can
 rename the info\_low2 level to *status* and then create a status alias
 for the info\_low2 procedure call.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     alias status is info_low2[string, string, natural, string];
     ...
@@ -106,7 +106,7 @@ By default the simulation will stop if the log level is ``failure`` or
 more severe. This can be changed to any of the other levels by changing
 the stop level configuration.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     logger_init(stop_level => error);
 
@@ -118,21 +118,21 @@ message produced. To do that you have to change the formatter to
 something else. Here I'm changing the formatter for the default logger
 display handler
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     logger_init(display_format => level);
     info("Hello world");
 
 which will result in the following output.
 
-.. code:: console
+.. code-block:: console
 
     INFO: Hello world
 
 There is also a ``verbose`` formatter which adds more details to the
 output.
 
-.. code:: console
+.. code-block:: console
 
     1000 ps: INFO: Hello World
 
@@ -155,7 +155,7 @@ File Name
 The path to the file targeted with the file handler is also controlled
 with ``logger_init``. Typically you would have something like this.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     logger_init(display_format => verbose, file_format => verbose_csv, file_name = "path/to/my/logs/my_log.csv");
 
@@ -171,20 +171,20 @@ Log calls can be given a source ID such that it can be associated to a
 group of logs like logs coming from the same module or logs of a
 specific type.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     warning("Over-temperature (73 degrees C)!", "Temperature sensor");
 
 results in something like this with the ``verbose`` formatter.
 
-.. code:: console
+.. code-block:: console
 
     1000 ps: WARNING in Temperature sensor: Over-temperature (73 degrees C)!
 
 It's also possible to give a logger a default source ID with the
 ``logger_init`` call.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     logger_init(default_src => "Test runner");
 
@@ -195,14 +195,14 @@ You can have the file name and the line number of a log entry if the
 testbench is compiled with the location preprocessor provided with
 VUnit. It's enabled like this in your VUnit run script
 
-.. code:: python
+.. code-block:: python
 
     ui = VUnit.from_argv()
     ui.enable_location_preprocessing()
 
 and will change the output to something like this.
 
-.. code:: console
+.. code-block:: console
 
     1000 ps: WARNING in Temperature sensor (logging_example.vhd:79): Over-temperature (73 degrees C)!
 
@@ -213,7 +213,7 @@ convenience procedure. You can do that by adding the ``line_num`` and
 ``file_name`` parameters to the **end** of the parameter list for that
 convenience procedure
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     procedure my_convenience_procedure(
       <my parameters>
@@ -227,7 +227,7 @@ convenience procedure
 
 and then let the location preprocessor know about the added procedure
 
-.. code:: python
+.. code-block:: python
 
     ui = VUnit.from_argv()
     ui.enable_location_preprocessing(additional_subprograms=['my_convenience_procedure'])
@@ -247,7 +247,7 @@ Log Level Filters
 The two procedures below show how you can create pass and stop filters
 on one or more log levels.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     stop_level((debug, verbose), display_handler, my_display_filter);
     pass_level(error, file_handler, my_file_filter);
@@ -256,13 +256,13 @@ The last procedure parameter is of type ``log_filter_t`` and returns the
 created filter which is used as reference if you want to remove the
 filter.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     remove_filter(my_display_filter);
 
 You can also apply the same filter to both handlers.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     stop_level((debug, verbose), (display_handler, file_handler), my_filter);
 
@@ -272,7 +272,7 @@ Log Source Filters
 Pass and stop filters that act on the log source can also be created.
 For example
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     stop_source("UART receiver", display_handler, uart_rx_stop_filter);
     pass_source("status message", file_handler, status_msg_pass_filter);
@@ -282,14 +282,14 @@ number of logs have the same prefix and the prefix starts with a point
 or a colon then you can create a filter that apply to all of them. The
 typical use case is something like this.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     info("Some message", my_module'path_name & "monitor1");
     info("Another message", my_module'path_name & "monitor2");
 
 The following filter will stop both of them.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     stop_source(my_module'path_name, display_handler, my_module_stop_filter);
 
@@ -299,7 +299,7 @@ Combined Log Level and Log Source Filters
 Log level(s) and log source can be combined in a single filter. For
 example, this filter will stop debug logs from the UART source.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     stop_source_level("UART", debug, display_handler, stop_uart_debug_msg_filter);
 
@@ -320,13 +320,13 @@ Previous chapters have used the built-in default logger for the examples
 but you can also create your own loggers. You do that by declaring a
 (shared) variable of type ``logger_t``.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     shared variable my_logger : logger_t;
 
 and then you use that variable as the first parameter in the procedure
 calls presented in the previous chapters, for example.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     log(my_logger, "Hello world");

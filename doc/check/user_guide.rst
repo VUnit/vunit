@@ -19,20 +19,20 @@ Every check you do is handled by a checker. There is a default checker
 that is used when none is specified but you can also create multiple
 custom checkers. For example
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     check(re = '1', "Expected active read enable at this point");
 
 will use the default checker while
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     check(my_checker, re = '1', "Expected active read enable at this point");
 
 will use the custom ``my_checker``. A checker is just a (shared)
 variable
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     variable my_checker : checker_t;
 
@@ -42,7 +42,7 @@ default checker and the custom checkers. The difference is the first
 To make the user guide more compact we present this as an optional
 parameter using brackets. For example
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     procedure checker_init (
      [variable checker       : inout checker_t;]
@@ -73,7 +73,7 @@ and there is also a ``default_level`` parameter unique to
 the error message unless specified in the check subprogram as explained
 in the following chapters.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     procedure checker_init (
      [variable checker        : inout checker_t;]
@@ -89,7 +89,7 @@ in the following chapters.
 It is also possible to initialize a checker to use an already defined
 logger using the following procedure
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     procedure checker_init (
      [variable checker       : inout checker_t;]
@@ -102,7 +102,7 @@ Basic Check
 The check package provides a basic ``check`` procedure which is similar
 to the VHDL ``assert`` statement
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     check(re = '1', "Expected active read enable at this point");
 
@@ -111,14 +111,14 @@ is the error message issued if the expression is false. Assuming this
 check fails and you've initialized the default checker with the default
 values the error message will be
 
-.. code:: console
+.. code-block:: console
 
     ERROR: Expected active read enable at this point
 
 If you wish to have another log level than the default one set by
 ``checker_init`` you can override this for each check call. For example
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     check(re = '1', "Expected active read enable at this point", failure);
 
@@ -148,7 +148,7 @@ placed at the end of the parameter list and they have "good" default
 values such that the function behaves nicely even if the preprocessor
 isn't used.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     procedure check(
      [variable checker   : inout checker_t;]
@@ -167,7 +167,7 @@ your test and your testbench is setup to continue on a failing check you
 have a number of options. You can use this procedure where the ``pass``
 output is ``false`` on a failing check
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     procedure check(
      [variable checker   : inout checker_t;]
@@ -180,7 +180,7 @@ output is ``false`` on a failing check
 
 or you can use this function which returns the same information
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     impure function check(
       constant expr      : in  boolean;
@@ -192,33 +192,33 @@ or you can use this function which returns the same information
 
 or you can see if there has been any errors so far
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     procedure checker_found_errors (
      [variable checker : inout checker_t;]
       variable result  : out   boolean);
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     impure function checker_found_errors
       return boolean;
 
 or you can use any of the following subprograms to get more details.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     procedure get_checker_stat (
      [variable checker : inout checker_t;]
       variable stat    : out   checker_stat_t);
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     impure function get_checker_stat
       return checker_stat_t;
 
 ``checker_stat_t`` is a record containing pass/fail information.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     type checker_stat_t is record
       n_checks : natural;
@@ -235,7 +235,7 @@ of your test you can make intermediate readouts using the
 ``get_checker_stat`` subprograms and then reset the counters to zero
 using
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     procedure reset_checker_stat [(
       variable checker : inout checker_t)];
@@ -248,7 +248,7 @@ each other using the normal ``-`` and ``+`` operators. There is also a
 ``to_string`` function defined to allow for logging/reporting of
 statistics, for example
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     info(to_string(get_checker_stat));
 
@@ -283,7 +283,7 @@ The unclocked procedures have the following format. The four variants
 comes from the different combinations of using the two first optional
 parameters.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     procedure check_<name>(
       [variable checker   : inout checker_t;]
@@ -296,7 +296,7 @@ parameters.
 
 The function has the following format.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     impure function check_<name>(
       <specific parameters>
@@ -309,7 +309,7 @@ The function has the following format.
 The clocked procedures come from the following format with and without
 the optional parameter.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     procedure check_<name>(
      [variable checker           : inout checker_t;]
@@ -324,7 +324,7 @@ the optional parameter.
 
 ``edge_t`` is an enumerated type:
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     type edge_t is (rising_edge, falling_edge, both_edges);
 
@@ -428,7 +428,7 @@ Relation checks are used to check whether or not a relation holds
 between two expressions, for example if ``(a + b) = c``. They support
 the following five unclocked formats.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     procedure check_<name>(
      [variable checker         : inout checker_t;]
@@ -438,7 +438,7 @@ the following five unclocked formats.
       constant level           : in log_level_t := dflt;
       <preprocessor parameters>);
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     impure function check_<name>(
       <specific parameters>
@@ -521,7 +521,7 @@ operator (``?=``) or ``check_match`` instead.
 
 If an check fails you will get an error message on the following format.
 
-.. code:: console
+.. code-block:: console
 
     ERROR: Equality check failed! Got <got value>. Expected <expected value>. <msg input string if any>.
 
@@ -530,7 +530,7 @@ the error message will output the values on both formats. For example,
 here is an error message when a ``check_equal`` between a ``signed`` and
 an ``integer`` value fails.
 
-.. code:: console
+.. code-block:: console
 
     ERROR: Equality check failed! Got -256 (1_0000_0000). Expected 1010_0101 (-91).
 
@@ -564,7 +564,7 @@ means that the ``boolean`` case behaves just like ``check_true``. The
 additional value of this check comes when you enable the check
 preprocessor in your VUnit run script.
 
-.. code:: python
+.. code-block:: python
 
     ui = VUnit.from_argv()
     ui.enable_check_preprocessing()
@@ -574,13 +574,13 @@ and then parses ``expr`` as a VHDL relation. From that it will generate
 an error message describing how the relation failed. For example, the
 check
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     check_relation(real_time_clock <= timeout, "Response too late.");
 
 will generate the following error message if it fails.
 
-.. code:: console
+.. code-block:: console
 
     ERROR: Relation real_time_clock <= timeout failed! Left is 23:15:02. Right is 23:15:04. Response too late.
 
@@ -604,7 +604,7 @@ The left and right hand sides of the relation are evaluated twice, once
 when the relation is evaluated and once to create the error message so
 if you have a call like this
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     check_relation(counter_to_verify = get_and_increment_reference_counter(increment_with => 3));
 
@@ -616,7 +616,7 @@ the ``auto_msg`` which will be a string containing
 Conclusion: Do not use impure functions in your expression. If you have
 a case like this you can do something like
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     ref_cnt := get_and_increment_reference_counter(increment_with => 3);
     check_relation(counter_to_verify = ref_cnt);
@@ -635,27 +635,27 @@ relation operator in the expression is and what the left and right hand
 operands are. For example, it knows that this is an inequality since
 that is the only relational operator on the "top-level".
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     check_relation((a = b) /= (c = d));
 
 It also knows that this isn't a relation since there's no relational
 operator on the top-level.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     check_relation((a = b) and c);
 
 This will result in a syntax error from the check preprocessor
 
-.. code:: console
+.. code-block:: console
 
     SyntaxError: Failed to find relation in check_relation((a = b) and c)
 
 However, its knowledge about precedence is limited to parenthesis so it
 will not understand that this identical expression isn't a relation.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     check_relation(a = b and c);
 
@@ -674,7 +674,7 @@ relational operators within the check call but outside of the ``expr``
 parameter. For example, it won't be fooled by the relational operators
 appearing within strings and comments of this call.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     check_relation(len("""Heart"" => <3") = -- The string contains <, so does
                                             -- this comment
@@ -730,7 +730,7 @@ check\_stable
 parameter can be ``std_logic`` or ``std_logic_vector`` and the call can
 be made with or without the initial custom checker parameter.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     procedure check_stable(
      [variable checker           : inout checker_t;]
@@ -780,7 +780,7 @@ check\_next
 ``check_next`` supports two different formats. One with and one without
 the initial custom checker parameter.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     procedure check_next(
      [variable checker             : inout checker_t;]
@@ -833,7 +833,7 @@ check\_sequence
 ``check_sequence`` supports two different formats. One with and one
 without the initial custom checker parameter.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     procedure check_sequence(
      [variable checker             : inout checker_t;]
@@ -910,7 +910,7 @@ The check package has two unconditional checks, ``check_passed`` and
 They are used when the pass/fail status is already given by the program
 flow. For example,
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     if <some condition> then
       <do something>
@@ -923,12 +923,12 @@ flow. For example,
 With no ``expr`` parameter there are also fewer usable formats for these
 checkers.
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     procedure check_passed [(
       variable checker   : inout checker_t)];
 
-.. code:: vhdl
+.. code-block:: vhdl
 
     procedure check_failed(
      [variable checker   : inout checker_t;]
