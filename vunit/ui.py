@@ -33,7 +33,7 @@ The public Python interface of VUnit.
 
 .. _compile_options:
 
-Compilation options
+Compilation Options
 -------------------
 The following compilation are known.
 
@@ -53,7 +53,7 @@ The following compilation are known.
 
 .. _sim_options:
 
-Simulation options
+Simulation Options
 -------------------
 The following simulation are known.
 

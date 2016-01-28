@@ -124,9 +124,7 @@ Usage
    :ref: vunit.vunit_cli._parser_for_documentation
    :prog: run.py
 
-.. _installing:
-
-Example session
+Example Session
 ---------------
 The :vunit_example:`VHDL User Guide Example <vhdl/user_guide/>` can be run to produce the following output:
 
@@ -193,6 +191,8 @@ The :vunit_example:`VHDL User Guide Example <vhdl/user_guide/>` can be run to pr
    Elapsed time was 1.2 seconds
    =======================================
    All passed!
+
+.. _installing:
 
 Installing
 ----------
@@ -273,7 +273,5 @@ There are many examples demonstrating more specific usage of VUnit listed below:
 
 :vunit_example:`Communication library example <vhdl/com/>`
   Demonstrates the ``com`` message passing package which can be used
-  to communicate arbitrary objects between processes.
-
-..
-  @TODO Further reading can be found in the [com user guide](vunit/vhdl/com/user_guide.md)
+  to communicate arbitrary objects between processes.  Further reading
+  can be found in the :ref:`com user guide <com_user_guide>`

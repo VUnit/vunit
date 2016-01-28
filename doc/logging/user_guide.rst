@@ -1,5 +1,5 @@
-Logging
-=======
+Logging Library
+===============
 
 Introduction
 ------------

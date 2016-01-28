@@ -10,7 +10,7 @@ The command line interface of VUnit.
 .. autoclass:: vunit.vunit_cli.VUnitCLI
    :members:
 
-Adding custom command line arguments
+Adding Custom Command Line Arguments
 ------------------------------------
 It is possible to add custom command line arguments to your ``run.py``
 scripts using the :class:`.VUnitCLI` class.

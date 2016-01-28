@@ -1,5 +1,7 @@
-Communication
-=============
+.. _com_user_guide:
+
+Communication Library
+=====================
 
 Introduction
 ------------

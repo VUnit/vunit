@@ -1,5 +1,5 @@
-Check
-=====
+Check Library
+=============
 
 Introduction
 ------------
