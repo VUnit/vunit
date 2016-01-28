@@ -46,14 +46,6 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         """
         group = parser.add_argument_group("modelsim",
                                           description="ModelSim specific flags")
-        group.add_argument('-g', '--gui', choices=["load", "run"],
-                           default=None,
-                           nargs="?",
-                           const="load",
-                           help=("Open test case(s) in simulator gui. "
-                                 "'load' only loads the test case and gives the user control (default). "
-                                 "'run' loads and runs the test case while recursively "
-                                 "logging all variables and signals."))
         group.add_argument("--new-vsim",
                            action="store_true",
                            default=False,
@@ -79,7 +71,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         return cls(join(output_path, "modelsim.ini"),
                    persistent=persistent,
                    coverage=args.coverage,
-                   gui_mode=args.gui)
+                   gui_mode="load" if args.gui else None)
 
     @classmethod
     def _find_prefix(cls):

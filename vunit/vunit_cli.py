@@ -134,13 +134,17 @@ def _create_argument_parser(description=None, for_documentation=False):
                         help=('Number of tests to run in parallel. '
                               'Test output is not continuously written in verbose mode with p > 1'))
 
+    parser.add_argument('-g', '--gui',
+                        action="store_true",
+                        default=False,
+                        help=("Open test case(s) in simulator gui with top level pre loaded"))
+
     com = parser.add_argument_group("com", description="Flags specific to the com message passing package")
     com.add_argument('--use-debug-codecs', action='store_true',
                      default=False,
                      help='Run with debug features enabled')
 
-    if not for_documentation:
-        SimulatorFactory.add_arguments(parser)
+    SimulatorFactory.add_arguments(parser)
 
     return parser
 

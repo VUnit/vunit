@@ -71,8 +71,7 @@ class SimulatorFactory(object):
         """
         Add command line arguments to parser
         """
-        simulator = cls.select_simulator()
-        if simulator is not None:
+        for simulator in cls.supported_simulators():
             simulator.add_arguments(parser)
 
     def __init__(self, args):

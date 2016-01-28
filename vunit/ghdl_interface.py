@@ -47,6 +47,10 @@ class GHDLInterface(SimulatorInterface):
 
     @classmethod
     def from_args(cls, output_path, args):
+        if args.gui:
+            LOGGER.error("GHDL does not support -g/--gui flag. Use --gtkwave instead")
+            exit(1)
+
         return cls(gtkwave=args.gtkwave,
                    gtkwave_args=args.gtkwave_args)
 

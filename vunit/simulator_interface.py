@@ -18,6 +18,13 @@ class SimulatorInterface(object):
     """
 
     @staticmethod
+    def add_arguments(parser):
+        """
+        Add command line arguments
+        """
+        pass
+
+    @staticmethod
     def package_users_depend_on_bodies():
         """
         Returns True when package users also depend on package bodies with this simulator

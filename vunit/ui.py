@@ -571,6 +571,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             exit(1)
         except TestScannerError:
             exit(1)
+        except SystemExit:
+            exit(1)
         except:  # pylint: disable=bare-except
             traceback.print_exc()
             exit(1)

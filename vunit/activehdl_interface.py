@@ -36,19 +36,6 @@ class ActiveHDLInterface(SimulatorInterface):
         """
         return True
 
-    @staticmethod
-    def add_arguments(parser):
-        """
-        Add command line arguments
-        """
-        group = parser.add_argument_group("activehdl",
-                                          description="Aldec Active HDL specific flags")
-
-        group.add_argument('-g', '--gui',
-                           action="store_true",
-                           default=False,
-                           help=("Open test case(s) in simulator gui with top level pre loaded"))
-
     @classmethod
     def from_args(cls, output_path, args):
         """
