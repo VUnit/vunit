@@ -48,6 +48,9 @@ bench or test with multiple combinations of generic values.
 There are many :ref:`example projects <examples>` demonstrating the
 usage and capabilities of VUnit.
 
+VUnit supports many simulators. Read about how they are detected and
+how to choose which one to use :ref:`here <simulator_selection>`.
+
 .. _vhdl_test_benches:
 
 VHDL Test Benches
@@ -227,6 +230,17 @@ There are three methods to make VUnit importable in your ``run.py`` script.:
       import sys
       sys.path.append("/path/to/vunit_root/")
       import vunit
+
+.. _simulator_selection:
+
+Simulator Selection
+-------------------
+VUnit automatically detects which simulators are available on the
+``PATH`` environment variable and by default selects the first one
+found. For people who have multiple simulators installed the
+``VUNIT_SIMULATOR`` environment variable can be set to one of
+``activehdl``, ``rivierapro``, ``ghdl`` or ``modelsim`` to explicitly
+choose the simulator explicitly.
 
 .. _examples:
 
