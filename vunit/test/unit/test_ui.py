@@ -287,13 +287,7 @@ end architecture;
         pre_config.side_effect = side_effect
 
         obj.add_config(name="", pre_config=pre_config)
-        try:
-            ui.main()
-        except SystemExit as exc:
-            if retval is True:
-                self.assertEqual(exc.code, 0)
-            else:
-                self.assertEqual(exc.code, 1)
+        self._run_main(ui, 0 if retval else 1)
 
         pre_config.assert_has_calls([call()])
 
@@ -304,16 +298,45 @@ end architecture;
     def test_test_has_pre_config(self):
         self._test_pre_config_helper(True, test_not_entity=False)
 
+    @mock.patch("vunit.ui.LOGGER", autospec=True)
+    def test_warning_on_no_tests(self, logger):
+        ui = self._create_ui("--compile")
+        self._run_main(ui)
+        self.assertEqual(logger.warning.mock_calls, [])
+        logger.reset_mock()
+
+        ui = self._create_ui("--list")
+        self._run_main(ui)
+        self.assertEqual(len(logger.warning.mock_calls), 1)
+        self.assertTrue("found no test benches" in str(logger.warning.mock_calls))
+        logger.reset_mock()
+
+        ui = self._create_ui()
+        self._run_main(ui)
+        self.assertEqual(len(logger.warning.mock_calls), 1)
+        self.assertTrue("found no test benches" in str(logger.warning.mock_calls))
+        logger.reset_mock()
+
     def _create_ui(self, *args):
         """ Create an instance of the VUnit public interface class """
         ui = VUnit.from_argv(argv=["--output-path=%s" % self._output_path,
-                                   "--clean"] + list(args))
+                                   "--clean"] + list(args),
+                             compile_builtins=False)
         ui.add_library('lib')
 
         factory = MockSimulatorFactory(self._output_path)
         self.mocksim = factory.mocksim
         ui._simulator_factory = factory  # pylint: disable=protected-access
         return ui
+
+    def _run_main(self, ui, code=0):
+        """
+        Run ui.main and expect exit code
+        """
+        try:
+            ui.main()
+        except SystemExit as exc:
+            self.assertEqual(exc.code, code)
 
     def create_entity_file(self, idx=0, file_suffix='.vhd'):
         """

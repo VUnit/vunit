@@ -432,12 +432,11 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         simulator_if = None
         test_suites = self._create_tests(simulator_if)
-        num_tests = 0
+
         for test_suite in test_suites:
             for name in test_suite.test_cases:
                 print(name)
-                num_tests += 1
-        print("Listed %i tests" % num_tests)
+        print("Listed %i tests" % test_suites.num_tests())
         return True
 
     def _main_compile_only(self):
@@ -488,6 +487,11 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         scanner = TestScanner(simulator_if,
                               self._configuration)
         test_list = scanner.from_project(self._project, entity_filter=self._tb_filter)
+
+        if test_list.num_tests() == 0:
+            LOGGER.warning("Test scanner found no test benches using current filter rule:\n%s",
+                           self._tb_filter.__doc__)
+
         test_list.keep_matches(self._test_filter)
         return test_list
 

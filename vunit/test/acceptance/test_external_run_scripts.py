@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Verify that all external run scripts work correctly
@@ -37,10 +37,10 @@ class TestExternalRunScripts(unittest.TestCase):
         self.check(join(ROOT, "examples", "verilog", "uart", "run.py"))
 
     def test_vhdl_logging_example_project(self):
-        self.check(join(ROOT, "examples", "vhdl", "logging", "compile.py"))
+        self.check(join(ROOT, "examples", "vhdl", "logging", "compile.py"), args=["--compile"])
 
     def test_vhdl_check_example_project(self):
-        self.check(join(ROOT, "examples", "vhdl", "check", "compile.py"))
+        self.check(join(ROOT, "examples", "vhdl", "check", "compile.py"), args=["--compile"])
 
     def test_vhdl_generate_tests_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "generate_tests", "run.py"))

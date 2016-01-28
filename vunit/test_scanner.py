@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Functionality to automatically create test suites from a project
@@ -269,7 +269,10 @@ class TestScanner(object):
 
 
 def tb_filter(entity):
-    """ Filter entities with file name tb_* and entity_name tb_* """
+    """
+    Filters entities with both file name and entity name matching tb_* or *_tb.
+    """
+    # Above docstring can show up in ui.py warnings
     file_ok = basename(entity.file_name).startswith("tb_") or splitext(basename(entity.file_name))[0].endswith("_tb")
     entity_ok = entity.name.startswith("tb_") or entity.name.endswith("_tb")
 
