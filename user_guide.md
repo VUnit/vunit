@@ -1,7 +1,3 @@
-
-## Selecting simulator backend
-VUnit automatically detects which simulators are available on the `PATH` environment variable and by default selects the first one found. For people who have multiple simulators installed the `VUNIT_SIMULATOR` environment variable can be set to either `activehdl`,  `rivierapro`, `ghdl` or `modelsim` to explicitly choose the simulator backend.
-
 ## Running a test case in the ModelSim GUI
 Sometimes the textual error messages and logs are not enough to pinpoint the error and a test case needs to be opened in the GUI for visual debugging using single stepping, breakpoints and wave form viewing. VUnit makes it easy to open a test case in the GUI by having a `--gui={load,run}` command line flag:
 ```console
