@@ -18,7 +18,7 @@ use work.string_ops.all;
 
 package body check_pkg is
   type boolean_vector is array (natural range <>) of boolean;
-  function "srl" (
+  function logical_right_shift (
     constant arg   : boolean_vector;
     constant count : natural)
     return boolean_vector is
@@ -28,7 +28,7 @@ package body check_pkg is
     ret_val(count to ret_val'right) := temp(0 to ret_val'right - count);
 
     return ret_val;
-  end function "srl";
+  end function logical_right_shift;
   constant max_supported_num_of_bits_in_integer_implementation : natural := 256;
 
   function failed_expectation_msg (
@@ -1350,7 +1350,7 @@ package body check_pkg is
       else
         expected_events(0) := tracks(0);
       end if;
-      expected_events := expected_events srl 1;
+      expected_events := logical_right_shift(expected_events, 1);
     end procedure update_expectations_on_events_in_next_cycle;
 
     procedure verify_expected_events (
