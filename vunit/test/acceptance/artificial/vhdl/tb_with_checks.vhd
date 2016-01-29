@@ -5,7 +5,21 @@
 -- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
-context vunit_lib.vunit_context;
+use vunit_lib.lang.all;
+use vunit_lib.textio.all;
+use vunit_lib.string_ops.all;
+use vunit_lib.dictionary.all;
+use vunit_lib.path.all;
+use vunit_lib.log_types_pkg.all;
+use vunit_lib.log_special_types_pkg.all;
+use vunit_lib.log_pkg.all;
+use vunit_lib.check_types_pkg.all;
+use vunit_lib.check_special_types_pkg.all;
+use vunit_lib.check_pkg.all;
+use vunit_lib.run_types_pkg.all;
+use vunit_lib.run_special_types_pkg.all;
+use vunit_lib.run_base_pkg.all;
+use vunit_lib.run_pkg.all;
 
 entity tb_with_checks is
   generic (
