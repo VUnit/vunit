@@ -128,7 +128,6 @@ class IncisiveInterface(SimulatorInterface):
             cmd += ['-makelib %s' % library_name]
             cmd += ['-endlib']
             cmd += [source_file_name]
-            print('compile_vhdl_file: Running "{0}"'.format(' '.join(cmd)))
             proc = Process(cmd)
             proc.consume_output()
         except Process.NonZeroExitCode:
@@ -157,7 +156,6 @@ class IncisiveInterface(SimulatorInterface):
             cmd += ['-makelib %s' % library_name]
             cmd += ['-endlib']
             cmd += [source_file_name]
-            print('compile_verilog_file: Running "{0}"'.format(' '.join(cmd)))
             proc = Process(cmd)
             proc.consume_output()
         except Process.NonZeroExitCode:
@@ -196,7 +194,6 @@ class IncisiveInterface(SimulatorInterface):
                 cmd += ['-input "@exit"']
 #            cmd += ['-top %s' % join('%s.%s' % (entity_name, architecture_name))]
             cmd += ['-top %s' % join('%s' % (entity_name))] # FIXME: correct?
-            print('simulate: Running "{0}"'.format(' '.join(cmd)))
             proc = Process(cmd)
             proc.consume_output()
         except Process.NonZeroExitCode:
