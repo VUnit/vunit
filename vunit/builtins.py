@@ -30,7 +30,11 @@ def add_verilog_include_dir(include_dirs):
     return [join(VERILOG_PATH, "include")] + include_dirs
 
 
-def add_vhdl_builtins(library, vhdl_standard, mock_lang=False, mock_log=False):
+def add_vhdl_builtins(library,
+                      vhdl_standard,
+                      mock_lang=False,
+                      mock_log=False,
+                      supports_context=True):
     """
     Add vunit VHDL builtin libraries
     """
@@ -125,8 +129,9 @@ def add_vhdl_builtins(library, vhdl_standard, mock_lang=False, mock_log=False):
         """Return built-in VHDL files present only in 2008"""
         files = []
 
-        files += ["vunit_context.vhd"]
-        files += ["vunit_run_context.vhd"]
+        if supports_context:
+            files += ["vunit_context.vhd"]
+            files += ["vunit_run_context.vhd"]
         files += [join("run", "src", "stop_body_2008.vhd")]
 
         return files
@@ -174,7 +179,7 @@ def add_osvvm(library):
             library.add_source_files(file_name, preprocessors=[])
 
 
-def add_com(library, vhdl_standard, use_debug_codecs=False):
+def add_com(library, vhdl_standard, use_debug_codecs=False, supports_context=True):
     """
     Add com library
     """
@@ -185,7 +190,8 @@ def add_com(library, vhdl_standard, use_debug_codecs=False):
     library.add_source_files(join(VHDL_PATH, "com", "src", "com_api.vhd"))
     library.add_source_files(join(VHDL_PATH, "com", "src", "com_types.vhd"))
     library.add_source_files(join(VHDL_PATH, "com", "src", "com_codec_api.vhd"))
-    library.add_source_files(join(VHDL_PATH, "com", "src", "com_context.vhd"))
+    if supports_context:
+        library.add_source_files(join(VHDL_PATH, "com", "src", "com_context.vhd"))
     library.add_source_files(join(VHDL_PATH, "com", "src", "com_string.vhd"))
     library.add_source_files(join(VHDL_PATH, "com", "src", "com_debug_codec_builder.vhd"))
     library.add_source_files(join(VHDL_PATH, "com", "src", "com_std_codec_builder.vhd"))
