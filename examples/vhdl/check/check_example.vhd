@@ -7,7 +7,21 @@
 library ieee;
 use ieee.std_logic_1164.all;
 library vunit_lib;
-context vunit_lib.vunit_context;
+use vunit_lib.lang.all;
+use vunit_lib.textio.all;
+use vunit_lib.string_ops.all;
+use vunit_lib.dictionary.all;
+use vunit_lib.path.all;
+use vunit_lib.log_types_pkg.all;
+use vunit_lib.log_special_types_pkg.all;
+use vunit_lib.log_pkg.all;
+use vunit_lib.check_types_pkg.all;
+use vunit_lib.check_special_types_pkg.all;
+use vunit_lib.check_pkg.all;
+use vunit_lib.run_types_pkg.all;
+use vunit_lib.run_special_types_pkg.all;
+use vunit_lib.run_base_pkg.all;
+use vunit_lib.run_pkg.all;
 use work.test_types.all;
 use work.test_type_methods.all;
 
