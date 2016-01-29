@@ -162,7 +162,9 @@ package body TranscriptPkg is
     if not TranscriptEnable.Get then
       WriteLine(OUTPUT, buf) ; 
     elsif TranscriptMirror.Get then
-      TEE(TranscriptFile, buf) ; 
+--      TEE(TranscriptFile, buf) ; -- not supported in Cadence Incisive
+      WriteLine(OUTPUT, buf) ; 
+      WriteLine(TranscriptFile, buf) ; 
     else
       WriteLine(TranscriptFile, buf) ; 
     end if ; 
