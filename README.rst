@@ -1,6 +1,10 @@
 What is VUnit?
 ==============
 
+.. image:: https://badges.gitter.im/VUnit/vunit.svg
+   :alt: Join the chat at https://gitter.im/VUnit/vunit
+   :target: https://gitter.im/VUnit/vunit?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
 VUnit is an open source unit testing framework for VHDL/SystemVerilog
 released under the terms of Mozilla Public License, v. 2.0. It
 features the functionality needed to realize continuous and automated
