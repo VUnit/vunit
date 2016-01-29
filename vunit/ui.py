@@ -39,15 +39,23 @@ The following compilation are known.
 **NOTE**: Only affects source files added *before* the option is set.
 
 ``ghdl_flags``
-   Extra arguments passed to ``ghdl -a`` command during compilation.
+   Extra arguments passed to the ``ghdl -a`` command during compilation.
    Must be a list of strings.
 
 ``modelsim_vcom_flags``
-   Extra arguments passed to ModelSim ``vcom`` command.
+   Extra arguments passed to the ModelSim ``vcom`` command.
    Must be a list of strings.
 
 ``modelsim_vlog_flags``
-   Extra arguments passed to ModelSim ``vlog`` command.
+   Extra arguments passed to the ModelSim ``vlog`` command.
+   Must be a list of strings.
+
+``incisive_irun_vhdl_flags``
+   Extra arguments passed to the Incisive ``irun`` command when compiling VHDL files.
+   Must be a list of strings.
+
+``incisive_irun_verilog_flags``
+   Extra arguments passed to the Incisive ``irun`` command when compiling Verilog files.
    Must be a list of strings.
 
 .. _sim_options:
@@ -65,6 +73,10 @@ The following simulation are known.
 
 ``ghdl_flags``
    Extra arguments passed to ``ghdl --elab-run`` command *before* executable specific flags. Must be a list of strings.
+
+``incisive_irun_sim_flags``
+   Extra arguments passed to the Incisive ``irun`` command when loading the design.
+   Must be a list of strings.
 
 .. |compile_option| replace::
    The name of the compile option (See :ref:`Compilation options <compile_options>`)

@@ -72,7 +72,8 @@ class TestConfiguration(object):
 
     _known_options = ["vsim_extra_args",
                       "vsim_extra_args.gui",
-                      "ghdl_flags"]
+                      "ghdl_flags",
+                      "incisive_irun_sim_flags"]
 
     def set_sim_option(self, name, value, scope=create_scope()):
         """

@@ -582,7 +582,9 @@ class SourceFile(object):
 
     _allowed_compile_options = ["ghdl_flags",
                                 "modelsim_vcom_flags",
-                                "modelsim_vlog_flags"]
+                                "modelsim_vlog_flags",
+                                "incisive_irun_vhdl_flags",
+                                "incisive_irun_verilog_flags"]
 
     def set_compile_option(self, name, value):
         """
