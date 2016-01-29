@@ -744,7 +744,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         Add vunit VHDL builtin libraries
         """
         library = self.add_library(library_name)
-        add_vhdl_builtins(library, self._vhdl_standard, mock_lang, mock_log)
+        supports_context = self._simulator_factory.supports_vhdl_2008_contexts()
+        add_vhdl_builtins(library, self._vhdl_standard, mock_lang, mock_log,
+                          supports_context=supports_context)
 
     def add_com(self, library_name="vunit_lib", use_debug_codecs=None):
         """
@@ -762,10 +764,15 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             library = self.add_library(library_name)
         else:
             library = self.library(library_name)
+
         if use_debug_codecs is not None:
             self._use_debug_codecs = use_debug_codecs
+
+        supports_context = self._simulator_factory.supports_vhdl_2008_contexts()
+
         add_com(library, self._vhdl_standard,
-                use_debug_codecs=self._use_debug_codecs)
+                use_debug_codecs=self._use_debug_codecs,
+                supports_context=supports_context)
 
     def add_array_util(self, library_name="vunit_lib"):
         """

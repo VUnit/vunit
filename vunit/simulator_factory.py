@@ -98,6 +98,15 @@ class SimulatorFactory(object):
         else:
             return False
 
+    def supports_vhdl_2008_contexts(self):
+        """
+        Returns True when this simulator supports VHDL 2008 contexts
+        """
+        if self._simulator_class is not None:
+            return self._simulator_class.supports_vhdl_2008_contexts()
+        else:
+            return True
+
     @property
     def simulator_name(self):
         if self._simulator_class is None:
