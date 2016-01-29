@@ -25,6 +25,13 @@ class SimulatorInterface(object):
         return False
 
     @staticmethod
+    def supports_vhdl_2008_contexts():
+        """
+        Returns True when this simulator supports VHDL 2008 contexts
+        """
+        return True
+
+    @staticmethod
     def find_executable(executable):
         """
         Return a list of all executables found in PATH
