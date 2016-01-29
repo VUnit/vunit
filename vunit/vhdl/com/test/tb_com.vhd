@@ -327,13 +327,24 @@ begin
         t_stop              := now;
         check(t_stop - t_start = 13 ns, "Expected a 20 ns blocking period");
         wait until limited_inbox_actor_done;
-      elsif run("Test that publish skip sending messages to subscribers with full inboxes") then
+      elsif run("Test that publish skip sending messages to subscribers with full inboxes and that this can be detected") then
         start_limited_inbox_subscriber <= true;
         wait for 1 ns;
+        check_equal(num_of_missed_messages(find("limited inbox subscriber")), 0,
+                    "No messages should have been missed at this point");
         publish(net, self, "hello subscribers", status);
         check(status = ok, "Expected publish to pass");
+        check_equal(num_of_missed_messages(find("limited inbox subscriber")), 0,
+                    "No messages should have been missed at this point");
         publish(net, self, "hello subscribers", status);
         check(status = full_inbox_error, "Expected publish to skip subscriber with full inbox");
+        check_equal(num_of_missed_messages(find("limited inbox subscriber")), 1,
+                    "Expected one missed message");
+        publish(net, self, "hello subscribers", status);
+        check(status = full_inbox_error, "Expected publish to skip subscriber with full inbox");
+        check_equal(num_of_missed_messages(find("limited inbox subscriber")), 2,
+                    "Expected two missed messages");
+        check_equal(num_of_missed_messages(self), 0, "The test runner actor should not indicate missed messages");
       end if;
     end loop;
 

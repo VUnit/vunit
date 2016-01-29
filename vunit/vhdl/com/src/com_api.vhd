@@ -109,6 +109,9 @@ package com_pkg is
       constant subscriber : in  actor_t;
       constant publisher  : in  actor_t;
       variable status     : out com_status_t);
+    impure function num_of_missed_messages (
+      constant actor : actor_t)
+      return natural;
 
   end protected;
 
@@ -277,6 +280,9 @@ package com_pkg is
     constant subscriber : in  actor_t;
     constant publisher  : in  actor_t;
     variable status     : out com_status_t);
+  impure function num_of_missed_messages (
+    constant actor : actor_t)
+    return natural;
 
   -----------------------------------------------------------------------------
   -- Message related subprograms

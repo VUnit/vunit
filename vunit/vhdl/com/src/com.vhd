@@ -38,13 +38,14 @@ package body com_pkg is
   end record subscriber_item_t;
 
   type actor_item_t is record
-    actor               : actor_t;
-    name                : line;
-    deferred_creation   : boolean;
-    max_num_of_messages : natural;
-    inbox               : inbox_t;
-    reply_stash         : envelope_ptr_t;
-    subscribers         : subscriber_item_ptr_t;
+    actor                  : actor_t;
+    name                   : line;
+    deferred_creation      : boolean;
+    max_num_of_messages    : natural;
+    num_of_missed_messages : natural;
+    inbox                  : inbox_t;
+    reply_stash            : envelope_ptr_t;
+    subscribers            : subscriber_item_ptr_t;
   end record actor_item_t;
 
   type actor_item_array_t is array (natural range <>) of actor_item_t;
@@ -55,7 +56,7 @@ package body com_pkg is
   -- Handling of actors
   -----------------------------------------------------------------------------
   variable empty_inbox_c : inbox_t := (0, null, null);
-  variable null_actor_item_c    : actor_item_t := (null_actor_c, null, false, 0, empty_inbox_c, null, null);
+  variable null_actor_item_c    : actor_item_t := (null_actor_c, null, false, 0, 0, empty_inbox_c, null, null);
   variable envelope_recycle_bin : envelope_ptr_array(1 to 1000);
   variable n_recycled_envelopes : natural      := 0;
   variable null_message         : message_t    := (0, ok, null_actor_c, no_message_id_c, null);
@@ -128,7 +129,7 @@ package body com_pkg is
     end loop;
     deallocate(old_actors);
     actors(actors'length - 1) := ((id => actors'length - 1), new string'(name),
-                                  deferred_creation, inbox_size, empty_inbox_c, null, null);
+                                  deferred_creation, inbox_size, 0, empty_inbox_c, null, null);
 
     return actors(actors'length - 1).actor;
   end function;
@@ -301,6 +302,7 @@ package body com_pkg is
       end if;
       actors(receiver.id).inbox.last_envelope := envelope;
     else
+      actors(receiver.id).num_of_missed_messages := actors(receiver.id).num_of_missed_messages + 1;
       receipt.status := full_inbox_error;
     end if;
   end;
@@ -551,6 +553,13 @@ package body com_pkg is
       item          := item.next_item;
     end loop;
   end procedure unsubscribe;
+
+  impure function num_of_missed_messages (
+    constant actor : actor_t)
+    return natural is
+  begin
+    return actors(actor.id).num_of_missed_messages;
+  end function num_of_missed_messages;
 
 end protected body;
 
@@ -1034,6 +1043,14 @@ procedure unsubscribe (
 begin
   messenger.unsubscribe(subscriber, publisher, status);
 end procedure unsubscribe;
+
+impure function num_of_missed_messages (
+  constant actor : actor_t)
+  return natural is
+begin
+  return messenger.num_of_missed_messages(actor);
+end num_of_missed_messages;
+
 
 -----------------------------------------------------------------------------
 -- Message related subprograms
