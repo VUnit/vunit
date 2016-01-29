@@ -274,8 +274,8 @@ side. Here's an example.
             end case;
 
 Sometimes the encode/decode functions used in the code are ambiguous to
-the compiler. To handle this all built-in and generated encode/decode
-functions have an alias on the format encode/decode\_, for example
+the compiler. To handle this, all built-in and generated encode/decode
+functions have an alias with a prefix of ``encode_/decode_``, for example
 ``encode_card_t``.
 
 Publisher/Subscriber Pattern
