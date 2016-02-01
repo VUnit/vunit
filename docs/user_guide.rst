@@ -141,7 +141,7 @@ There are many examples demonstrating more specific usage of VUnit listed below:
   can be used to handle dynamically sized 1D, 2D and 3D data as well
   as storing and loading it from csv and raw files.
 
-:vunit_example:`Generateing tests <vhdl/generate_tests/>`
+:vunit_example:`Generating tests <vhdl/generate_tests/>`
   Demonstrates generating multiple test runs of the same test bench
   with different generic values.
 
