@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Create simulator instances
@@ -12,6 +12,7 @@ from vunit.modelsim_interface import ModelSimInterface
 from vunit.activehdl_interface import ActiveHDLInterface
 from vunit.rivierapro_interface import RivieraProInterface
 from vunit.ghdl_interface import GHDLInterface
+from vunit.incisive_interface import IncisiveInterface
 from os.path import join, exists
 import os
 
@@ -29,7 +30,8 @@ class SimulatorFactory(object):
         return [ModelSimInterface,
                 RivieraProInterface,
                 ActiveHDLInterface,
-                GHDLInterface]
+                GHDLInterface,
+                IncisiveInterface]
 
     @classmethod
     def available_simulators(cls):
