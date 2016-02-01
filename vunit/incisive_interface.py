@@ -21,7 +21,6 @@ import os
 from distutils.spawn import find_executable
 from sys import stdout  # To avoid output catched in non-verbose mode
 
-
 class IncisiveInterface(SimulatorInterface):
     """
     Interface for the Cadence Incisive simulator
@@ -52,6 +51,13 @@ class IncisiveInterface(SimulatorInterface):
         """
         return find_executable('irun') is not None
 
+    @staticmethod
+    def supports_vhdl_2008_contexts():
+        """
+        Returns True when this simulator supports VHDL 2008 contexts
+        """
+        return False
+
     def __init__(self, gui=None):
         self._libraries = {}
         self._vhdl_standard = None
@@ -74,13 +80,13 @@ class IncisiveInterface(SimulatorInterface):
             if source_file.file_type == 'vhdl':
                 success = self.compile_vhdl_file(source_file.name,
                                                  source_file.library.name,
-                                                 os.path.dirname(source_file.library.directory),
+                                                 source_file.library.directory,
                                                  vhdl_standard,
                                                  source_file.compile_options)
             elif source_file.file_type == 'verilog':
                 success = self.compile_verilog_file(source_file.name,
                                                     source_file.library.name,
-                                                    os.path.dirname(source_file.library.directory),
+                                                    source_file.library.directory,
                                                     source_file.include_dirs,
                                                     source_file.compile_options)
 
@@ -104,7 +110,7 @@ class IncisiveInterface(SimulatorInterface):
     def compile_vhdl_file(self,  # pylint: disable=too-many-arguments
                           source_file_name,
                           library_name,
-                          library_path_root,
+                          library_path,
                           vhdl_standard,
                           compile_options):
         """
@@ -124,17 +130,16 @@ class IncisiveInterface(SimulatorInterface):
                    '%s' % self._vhdl_std_opt(),
             ]
             cmd += compile_options.get('irun_flags', [])
-            cmd += ['-nclibdirname %s' % library_path_root]
-            cmd += ['-makelib %s' % library_name]
-            cmd += ['-endlib']
+            cmd += ['-makelib %s' % library_path]
             cmd += [source_file_name]
+            cmd += ['-endlib']
             proc = Process(cmd)
             proc.consume_output()
         except Process.NonZeroExitCode:
             return False
         return True
 
-    def compile_verilog_file(self, source_file_name, library_name, library_path_root, include_dirs, compile_options):
+    def compile_verilog_file(self, source_file_name, library_name, library_path, include_dirs, compile_options):
         """
         Compiles a Verilog file
         """
@@ -152,10 +157,10 @@ class IncisiveInterface(SimulatorInterface):
             cmd += compile_options.get('irun_flags', [])
             for include_dir in include_dirs:
                 cmd += ['-incdir %s' % include_dir]
-            cmd += ['-nclibdirname %s' % library_path_root]
-            cmd += ['-makelib %s' % library_name]
-            cmd += ['-endlib']
+#            cmd += ['-nclibdirname %s' % os.path.dirname(library_path)]
+            cmd += ['-makelib %s' % library_path]
             cmd += [source_file_name]
+            cmd += ['-endlib']
             proc = Process(cmd)
             proc.consume_output()
         except Process.NonZeroExitCode:
@@ -172,15 +177,19 @@ class IncisiveInterface(SimulatorInterface):
 
         status = True
         try:
-            cmd = ['irun',
-                   '-nocopyright',
-                   '-licqueue',
-                   '-cdslib cds.lib',
-#                   '-timescale 1ns/1ns',
-                   '-nowarn WRMNZD',
-                   '-wreal_resolution fourstate',
-                   '-shm_dyn_probe',
-                   '-mcdump',
+            cmd = ['irun']
+            cmd += ['-generic']
+            cmd += ['''%s.%s => "%s"''' % (entity_name, name, value)
+                    for name, value in config.generics.items()]
+            cmd += ['-nocopyright',
+                    '-licqueue',
+                    '-cdslib cds.lib',
+                    #                   '-timescale 1ns/1ns',
+                    '-nowarn WRMNZD',
+                    '-nowarn DLCPTH', # "cds.lib Invalid path"
+#                    '-wreal_resolution fourstate',
+#                    '-shm_dyn_probe',
+#                    '-mcdump',
             ]
             if config.elaborate_only:
                 cmd += ['-elaborate']
