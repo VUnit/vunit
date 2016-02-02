@@ -9,7 +9,7 @@
 
 module tb_with_parameter_config;
 
-   parameter string output_path;
+   parameter string output_path = "";
    parameter string set_parameter = "default";
    parameter string config_parameter = "default";
 
