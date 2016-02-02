@@ -24,7 +24,7 @@
 `define TEST_CASE_SETUP if (__runner__.is_test_case_setup())
 `define TEST_CASE_CLEANUP if (__runner__.is_test_case_cleanup())
 `define CHECK_EQUAL(got,expected,msg=__none__) \
-        assert ((got) === (expected)) else \
+        assert ((got) == (expected)) else \
           begin \
              string __none__; \
              string got_str; \
