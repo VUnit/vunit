@@ -8,8 +8,8 @@
 `include "vunit_defines.svh"
 
 module tb_magic_paths;
-   parameter string tb_path;
-   parameter string output_path;
+   parameter string tb_path = "";
+   parameter string output_path = "";
 
    function void check_equal(string got, string expected);
       assert (got == expected) else $error("Mismatch got %s expected %s", got, expected);
