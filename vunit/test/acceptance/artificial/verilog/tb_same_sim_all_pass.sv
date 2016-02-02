@@ -9,7 +9,7 @@
 
 module tb_same_sim_all_pass;
 
-   parameter string output_path;
+   parameter string output_path = "";
 
    integer counter = 1;
 
