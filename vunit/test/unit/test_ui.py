@@ -9,18 +9,20 @@
 Acceptance test of the VUnit public interface class
 """
 
+from __future__ import print_function
 import unittest
 from string import Template
 import os
 from os.path import join, dirname, basename, exists, abspath
 import re
 from re import MULTILINE
+import sys
 from shutil import rmtree
 from vunit.ui import VUnit
 from vunit.project import VHDL_EXTENSIONS, VERILOG_EXTENSIONS
 from vunit.test.mock_2or3 import mock
 from vunit.test.common import set_env
-from vunit.ostools import renew_path
+from vunit.ostools import renew_path, Process
 from vunit.builtins import add_verilog_include_dir
 from vunit.simulator_interface import SimulatorInterface
 
@@ -562,6 +564,20 @@ endmodule;
         with set_env(PATH=""):
             ui = self._create_ui("--list")
             self._run_main(ui, 0)
+
+    def test_simulator_emitting_non_utf8(self):
+        xml_file = join(self.tmp_path, "junit.xml")
+        ui = self._create_ui("lib.test_ui_tb.test_one",
+                             "--xunit-xml=%s" % xml_file)
+        lib = ui.library("lib")
+        lib.add_source_files(join(dirname(__file__), 'test_ui_tb.vhd'))
+
+        def simulate(*args, **kwargs):
+            Process([sys.executable, join(dirname(__file__), "non_utf8_printer.py")]).consume_output(print)
+            return True
+
+        self.mocksim.simulate = simulate
+        self._run_main(ui)
 
     def _create_ui(self, *args):
         """ Create an instance of the VUnit public interface class """
