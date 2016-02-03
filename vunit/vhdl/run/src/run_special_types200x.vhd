@@ -106,10 +106,10 @@ package run_special_types_pkg is
        return boolean;
 
      procedure set_cfg (
-       constant new_value : in runner_cfg_t);
+       constant new_value : in string);
 
      impure function get_cfg
-       return runner_cfg_t;
+       return string;
 
   end protected runner_t;
 
@@ -384,14 +384,14 @@ package body run_special_types_pkg is
     end;
 
     procedure set_cfg (
-      constant new_value : in runner_cfg_t) is
+      constant new_value : in string) is
     begin
       state.runner_cfg := (others => ' ');
       state.runner_cfg(new_value'range) := new_value;
     end;
 
     impure function get_cfg
-      return runner_cfg_t is
+      return string is
     begin
       return state.runner_cfg;
     end;

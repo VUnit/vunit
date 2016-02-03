@@ -21,7 +21,7 @@ use vunit_lib.run_base_pkg.all;
 use vunit_lib.run_pkg.all;
 
 entity tb_elab_fail is
-  generic (runner_cfg : runner_cfg_t;
+  generic (runner_cfg : string;
            generic_without_default : string);
 end entity;
 

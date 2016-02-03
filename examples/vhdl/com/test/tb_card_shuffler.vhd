@@ -44,7 +44,7 @@ use work.tb_common_pkg.all;
 
 entity tb_card_shuffler is
   generic (
-    runner_cfg : runner_cfg_t := runner_cfg_default);
+    runner_cfg : string := runner_cfg_default);
 end entity tb_card_shuffler;
 
 architecture test_fixture of tb_card_shuffler is

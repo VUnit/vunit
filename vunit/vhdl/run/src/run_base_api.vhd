@@ -123,8 +123,8 @@ package run_base_pkg is
     return boolean;
 
   procedure set_cfg (
-    constant new_value : in runner_cfg_t);
+    constant new_value : in string);
 
   impure function get_cfg
-    return runner_cfg_t;
+    return string;
 end package;

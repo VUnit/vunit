@@ -70,7 +70,7 @@ entity tb_uvvm_integration is
     -- This generic is used to configure the testbench from run_uvvm.py, e.g. what
     -- test case to run. The default value is used when not running from script
     -- and in that case all test cases are run.
-    runner_cfg : runner_cfg_t := runner_cfg_default);
+    runner_cfg : string := runner_cfg_default);
 end entity tb_uvvm_integration;
 
 architecture test_fixture of tb_uvvm_integration is
