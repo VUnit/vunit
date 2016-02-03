@@ -21,7 +21,7 @@ use vunit_lib.run_base_pkg.all;
 use vunit_lib.run_pkg.all;
 
 entity tb_no_fail_on_warning is
-  generic (runner_cfg : runner_cfg_t);
+  generic (runner_cfg : string);
 end entity;
 
 architecture vunit_test_bench of tb_no_fail_on_warning is

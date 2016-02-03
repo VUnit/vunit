@@ -27,7 +27,7 @@ use work.array_pkg.all;
 entity tb_array is
   generic (
     output_path : string;
-    runner_cfg : runner_cfg_t);
+    runner_cfg : string);
 end entity;
 
 architecture a of tb_array is

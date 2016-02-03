@@ -20,7 +20,7 @@ use std.textio.all;
 package body run_pkg is
   procedure test_runner_setup (
     signal runner : inout runner_sync_t;
-    constant runner_cfg : in runner_cfg_t := runner_cfg_default) is
+    constant runner_cfg : in string := runner_cfg_default) is
     variable test_case_candidates : lines_t;
     variable logger_cfg : logger_cfg_export_t;
     variable checker_cfg : checker_cfg_export_t;
@@ -419,7 +419,7 @@ package body run_pkg is
   end procedure exit_gate;
 
   impure function active_python_runner (
-    constant runner_cfg : runner_cfg_t)
+    constant runner_cfg : string)
     return boolean is
   begin
     if has_key(runner_cfg, "active python runner") then
@@ -430,7 +430,7 @@ package body run_pkg is
   end;
 
   impure function output_path (
-    constant runner_cfg : runner_cfg_t)
+    constant runner_cfg : string)
     return string is
   begin
     if has_key(runner_cfg, "output path") then
@@ -441,7 +441,7 @@ package body run_pkg is
   end;
 
   impure function enabled_test_cases (
-    constant runner_cfg : runner_cfg_t)
+    constant runner_cfg : string)
     return test_cases_t is
   begin
     if has_key(runner_cfg, "enabled_test_cases") then

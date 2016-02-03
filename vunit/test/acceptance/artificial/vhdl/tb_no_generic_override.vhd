@@ -24,7 +24,7 @@ use vunit_lib.run_pkg.all;
 
 entity tb_no_generic_override is
   generic (
-    runner_cfg : runner_cfg_t;
+    runner_cfg : string;
     g_val : boolean);
 end entity;
 

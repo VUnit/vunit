@@ -825,6 +825,10 @@ begin
     check(c, passed, "Expected enabled_test_cases to be ""__all__"" but got " & enabled_test_cases(""));
 
     ---------------------------------------------------------------------------
+    banner("Should recognize runner_cfg_t for backward compatibility");
+    check(runner_cfg_t'("foo") = string'("foo"));
+
+    ---------------------------------------------------------------------------
     banner("Result");
     get_checker_stat(c, checker_stat);
     info("Number of checks: " & natural'image(checker_stat.n_checks));

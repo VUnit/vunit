@@ -23,7 +23,7 @@ use vunit_lib.run_base_pkg.all;
 use vunit_lib.run_pkg.all;
 
 entity test_ui_tb is
-  generic (runner_cfg : runner_cfg_t);
+  generic (runner_cfg : string);
 end entity;
 
 architecture tb of test_ui_tb is

@@ -83,7 +83,7 @@ use work.common_pkg.all;
 
 entity tb_AlertLog_Demo_Global_With_Comments is
   generic (
-    runner_cfg : runner_cfg_t := runner_cfg_default);
+    runner_cfg : string := runner_cfg_default);
 end tb_AlertLog_Demo_Global_With_Comments;
 architecture hierarchy of tb_AlertLog_Demo_Global_With_Comments is
   signal Clk : std_logic := '0';

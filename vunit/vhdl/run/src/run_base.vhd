@@ -209,13 +209,13 @@ package body run_base_pkg is
   end;
 
   procedure set_cfg (
-    constant new_value : in runner_cfg_t) is
+    constant new_value : in string) is
   begin
     default_runner.set_cfg(new_value);
   end;
 
   impure function get_cfg
-    return runner_cfg_t is
+    return string is
   begin
     return default_runner.get_cfg;
   end;

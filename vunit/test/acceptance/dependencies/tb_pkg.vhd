@@ -24,7 +24,7 @@ use work.pkg.all;
 
 entity tb_pkg is
   generic (
-    runner_cfg : runner_cfg_t;
+    runner_cfg : string;
     value : integer);
 end entity;
 

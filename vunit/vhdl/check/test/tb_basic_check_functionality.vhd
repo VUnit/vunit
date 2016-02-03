@@ -25,7 +25,7 @@ use std.textio.all;
 
 entity tb_basic_check_functionality is
   generic (
-    runner_cfg : runner_cfg_t := "";
+    runner_cfg : string := "";
     output_path : string);
 end entity tb_basic_check_functionality;
 

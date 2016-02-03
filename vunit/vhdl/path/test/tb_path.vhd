@@ -14,7 +14,7 @@ use vunit_lib.path.all;
 
 entity tb_path is
   generic (
-    runner_cfg : runner_cfg_t := runner_cfg_default);
+    runner_cfg : string := runner_cfg_default);
 end entity tb_path;
 
 architecture test_fixture of tb_path is

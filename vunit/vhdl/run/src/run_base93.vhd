@@ -258,17 +258,16 @@ package body run_base_pkg is
   end;
 
   procedure set_cfg (
-    constant new_value : in runner_cfg_t) is
+    constant new_value : in string) is
   begin
     default_runner.runner_cfg := (others => ' ');
     default_runner.runner_cfg(new_value'range) := new_value;
   end;
 
   impure function get_cfg
-    return runner_cfg_t is
+    return string is
   begin
     return default_runner.runner_cfg;
   end;
 
 end package body run_base_pkg;
-

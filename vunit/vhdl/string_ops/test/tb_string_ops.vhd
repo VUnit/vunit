@@ -18,7 +18,7 @@ use work.test_types.all;
 use work.test_type_methods.all;
 
 entity tb_string_ops is
-  generic (runner_cfg : runner_cfg_t := runner_cfg_default);
+  generic (runner_cfg : string := runner_cfg_default);
 end entity tb_string_ops;
 
 architecture test_fixture of tb_string_ops is

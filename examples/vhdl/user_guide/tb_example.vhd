@@ -21,7 +21,7 @@ use vunit_lib.run_base_pkg.all;
 use vunit_lib.run_pkg.all;
 
 entity tb_example is
-  generic (runner_cfg : runner_cfg_t);
+  generic (runner_cfg : string);
 end entity;
 
 architecture tb of tb_example is
