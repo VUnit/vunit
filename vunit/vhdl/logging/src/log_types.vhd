@@ -10,7 +10,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 use std.textio.all;
 use work.lang.all;
-use work.textio.all;
 use work.string_ops.all;
 
 package log_types_pkg is
@@ -63,4 +62,3 @@ end package;
 
 package body log_types_pkg is
 end package body log_types_pkg;
-

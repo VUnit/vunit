@@ -8,7 +8,6 @@ for file_name in sys.argv[1:]:
     text = text.replace("context vunit_lib.vunit_context;",
 """\
 use vunit_lib.lang.all;
-use vunit_lib.textio.all;
 use vunit_lib.string_ops.all;
 use vunit_lib.dictionary.all;
 use vunit_lib.path.all;

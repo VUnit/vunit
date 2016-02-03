@@ -10,7 +10,6 @@ use ieee.numeric_std.all;
 
 library vunit_lib;
 use vunit_lib.lang.all;
-use vunit_lib.textio.all;
 use vunit_lib.string_ops.all;
 use vunit_lib.dictionary.all;
 use vunit_lib.path.all;
