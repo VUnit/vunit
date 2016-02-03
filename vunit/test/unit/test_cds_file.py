@@ -54,8 +54,26 @@ softinclude $CDS_INST_DIR/tools/inca/files/cds.lib
 #
 softinclude $CDS_INST_DIR/tools/inca/files/cds.lib
 
-define foo bar
+define foo "bar"
 """)
+
+    def test_ignores_case(self):
+        cds = self._create_cds_file('DeFiNe foo bar')
+        self.assertEqual(cds.keys(), ["foo"])
+        self.assertEqual(cds["foo"], 'bar')
+
+    def test_unquotes_define(self):
+        cds = self._create_cds_file('define foo "bar xyz"')
+        self.assertEqual(cds["foo"], 'bar xyz')
+
+    def test_does_not_unquotes_define(self):
+        cds = self._create_cds_file('define foo bar')
+        self.assertEqual(cds["foo"], 'bar')
+
+    def test_quotes_define(self):
+        cds = CDSFile()
+        cds["foo"] = 'bar xyz'
+        self._check_written_as(cds, 'define foo "bar xyz"\n')
 
     @staticmethod
     def _create_cds_file(contents):
@@ -78,9 +96,9 @@ CDS_FILE_CONTENTS = """
 #
 softinclude $CDS_INST_DIR/tools/inca/files/cds.lib
 
-define lib ./vunit_out/incisive/libraries/lib
-define tb_uart_lib ./vunit_out/incisive/libraries/tb_uart_lib
-define uart_lib ./vunit_out/incisive/libraries/uart_lib
-define vunit_lib ./vunit_out/incisive/libraries/vunit_lib
-define worklib ./vunit_out/incisive/libraries/worklib
+define lib "./vunit_out/incisive/libraries/lib"
+define tb_uart_lib "./vunit_out/incisive/libraries/tb_uart_lib"
+define uart_lib "./vunit_out/incisive/libraries/uart_lib"
+define vunit_lib "./vunit_out/incisive/libraries/vunit_lib"
+define worklib "./vunit_out/incisive/libraries/worklib"
 """
