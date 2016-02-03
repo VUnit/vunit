@@ -15,6 +15,7 @@ import os
 import socket
 import re
 from vunit.color_printer import COLOR_PRINTER
+from vunit.ostools import read_file
 
 
 class TestReport(object):
@@ -238,8 +239,7 @@ class TestResult(object):
         file_exists = os.path.isfile(self._output_file_name)
         is_readable = os.access(self._output_file_name, os.R_OK)
         if file_exists and is_readable:
-            with open(self._output_file_name, "r") as fread:
-                return fread.read()
+            return read_file(self._output_file_name)
         else:
             return "Failed to read output file: %s" % self._output_file_name
 

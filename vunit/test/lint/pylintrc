@@ -36,7 +36,7 @@ load-plugins=
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
 #disable=
-disable=too-few-public-methods, locally-disabled, redefined-variable-type, duplicate-code
+disable=too-few-public-methods, locally-disabled, redefined-variable-type, duplicate-code, file-ignored
 
 [REPORTS]
 
