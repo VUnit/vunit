@@ -121,7 +121,7 @@ class Process(object):
         LOGGER.debug("Started process with pid=%i: '%s'", self._process.pid, (" ".join(args)))
 
         self._queue = InterruptableQueue()
-        self._reader = AsynchronousFileReader(self._process.stdout, self._queue)
+        self._reader = AsynchronousFileReader(change_encoding(self._process.stdout), self._queue)
         self._reader.start()
 
     def write(self, *args, **kwargs):
@@ -305,3 +305,14 @@ def renew_path(path):
         if exists(path):
             shutil.rmtree(path)
     os.makedirs(path)
+
+
+def change_encoding(textio):
+    """
+    If Python 3 change encoding of TextIOWrapper to latin-1 ignoring decode errors
+    """
+    if isinstance(textio, io.TextIOWrapper):
+        # Python 3
+        return io.TextIOWrapper(textio.buffer, encoding='latin-1', errors="ignore")
+    else:
+        return textio
