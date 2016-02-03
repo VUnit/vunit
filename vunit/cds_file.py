@@ -19,7 +19,8 @@ class CDSFile(dict):
     Only cares about 'define' but other lines are kept intact
     """
 
-    _re_define = re.compile(r"\s*define\s+([a-zA-Z0-9_]+)\s+(.*)(#|$)")
+    _re_define = re.compile(r'\s*define\s+([a-zA-Z0-9_]+)\s+"?(.*?)"?(#|$)',
+                            re.IGNORECASE)
 
     @classmethod
     def parse(cls, file_name):
@@ -39,7 +40,9 @@ class CDSFile(dict):
                 defines[match.group(1)] = match.group(2)
         return cls(defines, other_lines)
 
-    def __init__(self, defines, other_lines):
+    def __init__(self, defines=None, other_lines=None):
+        defines = {} if defines is None else defines
+        other_lines = [] if other_lines is None else other_lines
         dict.__init__(self, defines)
         self._other_lines = other_lines
 
@@ -48,6 +51,6 @@ class CDSFile(dict):
         Write cds file to file named 'file_name'
         """
         contents = "\n".join(self._other_lines +
-                             ["define %s %s" % item
+                             ['define %s "%s"' % item
                               for item in sorted(self.items())]) + "\n"
         write_file(file_name, contents)
