@@ -113,8 +113,8 @@ begin
   test_component1: process
   begin
     wait for 1 ns;
-    info("I'm test component 1", test_fixture'path_name & "test_component1.init");
-    info("I'm not doing anything", test_fixture'path_name & "test_component1.purpose");
+    info("I'm test component 1", ".tb_logging.test_component1.init");
+    info("I'm not doing anything", ".tb_logging.test_component1.purpose");
     test_component1_done <= true;
     wait;
   end process test_component1;
@@ -122,10 +122,10 @@ begin
   test_component2: process
   begin
     wait for 1 ns;
-    info("I'm test component 2", test_fixture'path_name & "test_component2.init");
-    info("I'm logging time", test_fixture'path_name & "test_component2.purpose");
+    info("I'm test component 2", ".tb_logging.test_component2.init");
+    info("I'm logging time", ".tb_logging.test_component2.purpose");
     clock: for i in 1 to 3 loop
-      info("Time is " & time'image(now), test_fixture'path_name & "test_component2.clock.time");
+      info("Time is " & time'image(now), ".tb_logging.test_component2.clock.time");
       wait for 10 ns;
     end loop;
     test_component2_done <= true;
@@ -200,12 +200,12 @@ begin
     verify_write_call(12, "This is a warning from the temperature sensor");
     warning("This is a warning from the temperature sensor", "temperature_sensor");
     verify_write_call(13, "This is a warning from the temperature sensor");
-    temperature_sensor: warning("This is a warning from the temperature sensor", test_fixture'path_name & "temperature_sensor");
+    temperature_sensor: warning("This is a warning from the temperature sensor", ".tb_logging.temperature_sensor");
     verify_write_call(14, "This is a warning from the temperature sensor");
 
     -- Two handlers and two formatters
     banner("Verify file handler and verbose formatter");
-    temp_sensor: logger_init(test_fixture'path_name & "temp_sensor", output_path & "temperature_sensor.csv", verbose, verbose_csv);
+    temp_sensor: logger_init(".tb_logging.temp_sensor", output_path & "temperature_sensor.csv", verbose, verbose_csv);
 
     info("High temp");
     verify_write_call(15, time'image(0 ps) & ": INFO in .tb_logging.temp_sensor (tb_logging.vhd:210): High temp");
@@ -213,7 +213,7 @@ begin
 
     -- Different loggers with different configurations
     banner("Verify custom loggers");
-    humidity_sensor: logger_init(l, test_fixture'path_name & "humidity_sensor", output_path & "humidity_sensor.csv", level, raw);
+    humidity_sensor: logger_init(l, ".tb_logging.humidity_sensor", output_path & "humidity_sensor.csv", level, raw);
 
     warning(l, "High humidity");
     verify_write_call(16, "WARNING: High humidity");
@@ -348,7 +348,7 @@ begin
     -- Hierarchical source filters
     banner("Verify hierarchical source filters");
     logger_init("test_components", display_format => verbose_csv, file_format => verbose_csv, file_name => output_path & "log.csv");
-    stop_source(test_fixture'path_name & "test_component1", (display_handler, file_handler), f1);
+    stop_source(".tb_logging.test_component1", (display_handler, file_handler), f1);
 
     wait on test_component1_done, test_component2_done until test_component1_done and test_component2_done;
 
