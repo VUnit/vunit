@@ -10,7 +10,7 @@ library vunit_lib;
 context vunit_lib.vunit_context;
 
 entity test_ui_tb is
-  generic (runner_cfg : runner_cfg_t);
+  generic (runner_cfg : string);
 end entity;
 
 architecture tb of test_ui_tb is

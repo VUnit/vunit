@@ -9,7 +9,7 @@ context vunit_lib.vunit_context;
 
 entity tb_with_vhdl_runner is
   generic (
-    runner_cfg : runner_cfg_t);
+    runner_cfg : string);
 end entity;
 
 architecture vunit_test_bench of tb_with_vhdl_runner is

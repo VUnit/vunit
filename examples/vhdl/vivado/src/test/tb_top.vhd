@@ -14,7 +14,7 @@ context vunit_lib.vunit_context;
 library lib;
 
 entity tb_top is
-  generic (runner_cfg : runner_cfg_t);
+  generic (runner_cfg : string);
 end entity;
 
 architecture tb of tb_top is

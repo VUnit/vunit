@@ -12,7 +12,7 @@ context vunit_lib.vunit_context;
 entity tb_same_sim_all_pass is
   generic (
     output_path : string;
-    runner_cfg : runner_cfg_t);
+    runner_cfg : string);
 end entity;
 
 architecture vunit_test_bench of tb_same_sim_all_pass is

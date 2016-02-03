@@ -8,7 +8,7 @@ library vunit_lib;
 context vunit_lib.vunit_context;
 
 entity tb_fail_on_warning is
-  generic (runner_cfg : runner_cfg_t);
+  generic (runner_cfg : string);
 end entity;
 
 architecture vunit_test_bench of tb_fail_on_warning is

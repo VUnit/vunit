@@ -11,7 +11,7 @@ context vunit_lib.vunit_context;
 
 entity tb_with_generic_config is
   generic (
-    runner_cfg : runner_cfg_t;
+    runner_cfg : string;
     output_path : string;
     set_generic : string := "default";
     config_generic : string := "default");

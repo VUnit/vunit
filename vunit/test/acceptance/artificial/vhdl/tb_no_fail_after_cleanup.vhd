@@ -8,7 +8,7 @@ library vunit_lib;
 context vunit_lib.vunit_context;
 
 entity tb_no_fail_after_cleanup is
-  generic (runner_cfg : runner_cfg_t);
+  generic (runner_cfg : string);
 end entity;
 
 architecture vunit_test_bench of tb_no_fail_after_cleanup is

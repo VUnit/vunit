@@ -8,7 +8,7 @@ library vunit_lib;
 context vunit_lib.vunit_context;
 
 entity tb_example_many is
-  generic (runner_cfg : runner_cfg_t);
+  generic (runner_cfg : string);
 end entity;
 
 architecture tb of tb_example_many is

@@ -9,7 +9,7 @@ context vunit_lib.vunit_context;
 
 entity tb_set_generic is
   generic (
-    runner_cfg : runner_cfg_t;
+    runner_cfg : string;
     is_ghdl : boolean;
     true_boolean : boolean;
     false_boolean : boolean;

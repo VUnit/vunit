@@ -17,7 +17,7 @@ use ieee.std_logic_1164.all;
 package run_pkg is
   procedure test_runner_setup (
     signal runner : inout runner_sync_t;
-    constant runner_cfg : in runner_cfg_t := runner_cfg_default);
+    constant runner_cfg : in string := runner_cfg_default);
 
   impure function num_of_enabled_test_cases
     return integer;
@@ -118,15 +118,15 @@ package run_pkg is
     signal runner : in runner_sync_t);
 
   impure function active_python_runner (
-    constant runner_cfg : runner_cfg_t)
+    constant runner_cfg : string)
     return boolean;
 
   impure function output_path (
-    constant runner_cfg : runner_cfg_t)
+    constant runner_cfg : string)
     return string;
 
   impure function enabled_test_cases (
-    constant runner_cfg : runner_cfg_t)
+    constant runner_cfg : string)
     return test_cases_t;
 
   alias test_runner_setup_entry_gate is entry_gate[runner_sync_t];

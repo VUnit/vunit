@@ -9,7 +9,7 @@ context vunit_lib.vunit_context;
 
 entity tb_magic_paths is
   generic (
-    runner_cfg : runner_cfg_t;
+    runner_cfg : string;
     tb_path : string;
     output_path : string);
 end entity;

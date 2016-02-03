@@ -8,7 +8,7 @@ library vunit_lib;
 context vunit_lib.vunit_context;
 
 entity tb_elab_fail is
-  generic (runner_cfg : runner_cfg_t;
+  generic (runner_cfg : string;
            generic_without_default : string);
 end entity;
 
