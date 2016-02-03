@@ -9,7 +9,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use std.textio.all;
-use work.textio.all;
 use work.log_types_pkg.all;
 use work.log_special_types_pkg.all;
 use work.log_formatting_pkg.all;
@@ -93,4 +92,3 @@ package log_base_pkg is
     constant name   : in    string);
 
 end package;
-

@@ -7,7 +7,6 @@
 library vunit_lib;
 use vunit_lib.lang.all;
 use vunit_lib.lang_mock_types_pkg.all;
-use vunit_lib.textio.all;
 use vunit_lib.string_ops.all;
 use std.textio.all;
 use vunit_lib.log_types_pkg.all;
@@ -24,6 +23,7 @@ end entity tb_logging;
 architecture test_fixture of tb_logging is
   alias status is vunit_lib.log_pkg.info_high1[string, string, natural, string];
   signal test_component1_done, test_component2_done : boolean := false;
+
   shared variable n_asserts : shared_natural;
   shared variable n_errors : shared_natural;
 

@@ -49,8 +49,7 @@ def add_vhdl_builtins(library,
         else:
             files += [join("vhdl", "src", "lang", "lang.vhd")]
 
-        files += [join("vhdl", "src", "lib", "std", "textio.vhd"),
-                  join("string_ops", "src", "string_ops.vhd"),
+        files += [join("string_ops", "src", "string_ops.vhd"),
                   join("check", "src", "check.vhd"),
                   join("check", "src", "check_api.vhd"),
                   join("check", "src", "check_base_api.vhd"),

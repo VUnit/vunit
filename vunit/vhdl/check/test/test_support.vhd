@@ -10,7 +10,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 library vunit_lib;
 use vunit_lib.lang.all;
-use vunit_lib.textio.all;
 use vunit_lib.string_ops.all;
 use vunit_lib.log_types_pkg.all;
 use vunit_lib.log_special_types_pkg.all;
