@@ -59,8 +59,8 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
                            type=argparse_coverage_type,
                            help=('Enable code coverage. '
                                  'Choose any combination of "bcestf". '
-                                 'When the flag is given with no argument everthing is enabled. '
-                                 'Remember to run --clean when chaning this as re-compilation is not triggered. '
+                                 'When the flag is given with no argument, everything is enabled. '
+                                 'Remember to run --clean when changing this as re-compilation is not triggered. '
                                  'Experimental feature not supported by VUnit main developers.'))
 
     @classmethod
@@ -97,8 +97,8 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
     def __init__(self, modelsim_ini="modelsim.ini", persistent=False, gui_mode=None, coverage=None):
         self._modelsim_ini = abspath(modelsim_ini)
 
-        # Workarround for Microsemi 10.3a which does not
-        # respect MODELSIM environment variable when set within .do script
+        # Workaround for Microsemi 10.3a which does not
+        # respect the MODELSIM environment variable when set within .do script
         # Microsemi bug reference id: dvt64978
         # Also a problem with ALTERA STARTER EDITION 10.3c
         os.environ["MODELSIM"] = self._modelsim_ini
@@ -109,7 +109,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         self._prefix = self._find_prefix()
 
         if self._prefix is None:
-            raise RuntimeError("Cannot find ModelSim any toolchain.")
+            raise RuntimeError("Cannot find any ModelSim toolchain.")
 
         self._libraries = {}
 
