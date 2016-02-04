@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Verilog parsing functionality
@@ -77,8 +77,9 @@ class VerilogDesignFile(object):
             token = stream.pop()
             if token.kind == tokenizer.IMPORT:
                 stream.skip_until(tokenizer.IDENTIFIER)
-                name = stream.pop().value
-                results.append(name)
+                token = stream.pop()
+                if token is not None:
+                    results.append(token.value)
         return results
 
     @staticmethod
@@ -96,7 +97,9 @@ class VerilogDesignFile(object):
             modulename = token.value
 
             token = stream.pop()
-            if token.kind == tokenizer.HASH:
+            if token is None:
+                continue
+            elif token.kind == tokenizer.HASH:
                 results.append(modulename)
                 continue
             elif token.kind == tokenizer.IDENTIFIER:

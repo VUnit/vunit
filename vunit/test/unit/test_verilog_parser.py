@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test of the Verilog parser
@@ -107,6 +107,12 @@ endpackage
         self.assertEqual(imports[0], "true1")
         self.assertEqual(imports[1], "true2")
 
+    def test_parse_imports_without_crashing(self):
+        imports = parse("""\
+import;
+""").imports
+        self.assertEqual(len(imports), 0)
+
     def test_parse_instances(self):
         instances = parse("""\
 module name;
@@ -119,6 +125,13 @@ endmodule
         self.assertEqual(instances[0], "true1")
         self.assertEqual(instances[1], "true2")
         self.assertEqual(instances[2], "true3")
+
+    def test_parse_instances_without_crashing(self):
+        instances = parse("""\
+module name;
+endmodule identifier
+""").instances
+        self.assertEqual(len(instances), 0)
 
 
 def parse(code):
