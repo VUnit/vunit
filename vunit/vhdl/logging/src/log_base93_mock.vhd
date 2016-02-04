@@ -389,9 +389,9 @@ package body log_base_pkg is
     if not logger.log_file_is_initialized then
       return;
     end if;
-    cfg.log_default_src := logger.log_default_src.all;
+    cfg.log_default_src(logger.log_default_src'range) := logger.log_default_src.all;
     cfg.log_default_src_length := logger.log_default_src'length;
-    cfg.log_file_name := logger.log_file_name.all;
+    cfg.log_file_name(logger.log_file_name'range) := logger.log_file_name.all;
     cfg.log_file_name_length := logger.log_file_name'length;
     cfg.log_display_format := logger.log_display_format;
     cfg.log_file_format := logger.log_file_format;
