@@ -893,6 +893,7 @@ end architecture;
         self.assertEqual(file_type_of("file.vhdl"), "vhdl")
         self.assertEqual(file_type_of("file.sv"), "verilog")
         self.assertEqual(file_type_of("file.v"), "verilog")
+        self.assertEqual(file_type_of("file.vams"), "verilog")
         self.assertRaises(RuntimeError, file_type_of, "file.foo")
 
     def create_dummy_three_file_project(self, update_file1=False):
