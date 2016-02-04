@@ -59,7 +59,7 @@ define foo "bar"
 
     def test_ignores_case(self):
         cds = self._create_cds_file('DeFiNe foo bar')
-        self.assertEqual(cds.keys(), ["foo"])
+        self.assertEqual(list(cds.keys()), ["foo"])
         self.assertEqual(cds["foo"], 'bar')
 
     def test_unquotes_define(self):
