@@ -32,9 +32,6 @@ end entity tb_basic_check_functionality;
 architecture test_fixture of tb_basic_check_functionality is
 begin
   test_runner : process
-    alias default_checker_init_from_scratch is vunit_lib.check_pkg.checker_init[log_level_t, string, string, log_format_t, log_format_t, log_level_t, character, boolean];
-    alias custom_checker_init_from_scratch is vunit_lib.check_base_pkg.base_init[checker_t, log_level_t, string, string, log_format_t, log_format_t, log_level_t, character, boolean];
-
     procedure banner (
       constant s : in string) is
       variable dashes : string(1 to 256) := (others => '-');
