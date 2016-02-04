@@ -254,6 +254,11 @@ package body log_base_pkg is
     begin
       log_call_count := log_call_count + 1;
       base_get_logger_cfg(logger, log_call_args.logger);
+      report "Message: " & msg & ".";
+      report "Source left: " & integer'image(msg'left) & ".";
+      report "Source right: " & integer'image(msg'right) & ".";
+      report "Destination left: " & integer'image(log_call_args.msg'left) & ".";
+      report "Destination right: " & integer'image(log_call_args.msg'right) & ".";
       log_call_args.msg(msg'range) := msg;
       log_call_args.level := log_level;
       log_call_args.src(src'range) := src;
@@ -440,4 +445,3 @@ package body log_base_pkg is
     -- pragma translate_on
   end;
 end package body log_base_pkg;
-
