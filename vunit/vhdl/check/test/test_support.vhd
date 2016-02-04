@@ -22,8 +22,26 @@ use work.test_count.all;
 use std.textio.all;
 
 package test_support is
-  alias default_checker_init_from_scratch is vunit_lib.check_pkg.checker_init[log_level_t, string, string, log_format_t, log_format_t, log_level_t, character, boolean];
-  alias custom_checker_init_from_scratch is vunit_lib.check_base_pkg.base_init[checker_t, log_level_t, string, string, log_format_t, log_format_t, log_level_t, character, boolean];
+  procedure default_checker_init_from_scratch (
+    constant default_level  : in log_level_t  := error;
+    constant default_src    : in string       := "";
+    constant file_name      : in string       := "error.csv";
+    constant display_format : in log_format_t := level;
+    constant file_format    : in log_format_t := off;
+    constant stop_level : in log_level_t := failure;
+    constant separator      : in character    := ',';
+    constant append         : in boolean      := false);
+
+  procedure custom_checker_init_from_scratch (
+    variable checker               : inout checker_t;
+    constant default_level        : in    log_level_t := error;
+    constant default_src          : in    string      := "";
+    constant file_name            : in    string      := "error.csv";
+    constant display_format : in    log_format_t  := level;
+    constant file_format    : in    log_format_t  := off;
+    constant stop_level : in log_level_t := failure;
+    constant separator            : in    character   := ',';
+    constant append               : in    boolean     := false);
 
   procedure counting_assert (
     constant expr : in boolean;
@@ -100,6 +118,35 @@ package body test_support is
   constant asserts : natural := 0;
   constant errors : natural := 1;
   constant unexpected_errors : natural := 2;
+
+  procedure default_checker_init_from_scratch (
+    constant default_level  : in log_level_t  := error;
+    constant default_src    : in string       := "";
+    constant file_name      : in string       := "error.csv";
+    constant display_format : in log_format_t := level;
+    constant file_format    : in log_format_t := off;
+    constant stop_level : in log_level_t := failure;
+    constant separator      : in character    := ',';
+    constant append               : in    boolean     := false) is
+  begin
+    vunit_lib.check_pkg.checker_init(default_level, default_src, file_name, display_format, file_format,
+                                     stop_level, separator, append);
+  end;
+
+  procedure custom_checker_init_from_scratch (
+    variable checker               : inout checker_t;
+    constant default_level        : in    log_level_t := error;
+    constant default_src          : in    string      := "";
+    constant file_name            : in    string      := "error.csv";
+    constant display_format : in    log_format_t  := level;
+    constant file_format    : in    log_format_t  := off;
+    constant stop_level : in log_level_t := failure;
+    constant separator            : in    character   := ',';
+    constant append               : in    boolean     := false) is
+  begin
+    vunit_lib.check_base_pkg.base_init(checker, default_level, default_src, file_name, display_format,
+                                       file_format, stop_level, separator, append);
+  end;
 
   procedure counting_assert (
     constant expr : in boolean;
