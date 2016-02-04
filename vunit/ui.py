@@ -453,11 +453,11 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         return SourceFileList(results)
 
     def add_source_files(self,   # pylint: disable=too-many-arguments
-                         pattern, library_name, preprocessors=None, include_dirs=None, allow_empty=False):
+                         files, library_name, preprocessors=None, include_dirs=None, allow_empty=False):
         """
         Add source files matching wildcard pattern to library
 
-        :param pattern: A wildcard pattern match the files to add
+        :param files: A wildcard pattern matching the files to add or a list of files
         :param library_name: The name of the library to add files into
         :param include_dirs: A list of include directories
         :param allow_empty: To disable an error if no files matched the pattern
@@ -470,11 +470,17 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
            prj.add_source_files("*.vhd", "lib")
 
         """
-        file_names = glob(pattern)
+        if _is_iterable_not_string(files):
+            files = [files]
 
-        if (not allow_empty) and len(file_names) == 0:
-            raise ValueError(("Pattern %r did not match any file. "
-                              "Use allow_empty=True to avoid exception,") % pattern)
+        file_names = []
+        for pattern in files:
+            new_file_names = glob(pattern)
+
+            if (not allow_empty) and len(new_file_names) == 0:
+                raise ValueError(("Pattern %r did not match any file. "
+                                  "Use allow_empty=True to avoid exception,") % pattern)
+            file_names += new_file_names
 
         return SourceFileList(source_files=[
             self.add_source_file(file_name, library_name, preprocessors, include_dirs)
@@ -1330,3 +1336,13 @@ def lower_generics(generics):
     @TODO Maybe warn in case of conflict. VHDL forbids this though so the user will notice anyway.
     """
     return dict((name.lower(), value) for name, value in generics.items())
+
+
+def _is_iterable_not_string(value):
+    """
+    Returns True if value is an iterable that is not a string
+    """
+    if sys.version_info.major == 3:
+        return isinstance(value, str)
+    else:
+        return isinstance(value, (str, unicode))

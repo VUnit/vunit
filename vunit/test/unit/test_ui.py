@@ -3,6 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 # Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
+# pylint: disable=too-many-public-methods
 
 """
 Acceptance test of the VUnit public interface class
@@ -166,6 +167,47 @@ end architecture;
         ui = self._create_ui()
         lib = ui.library("lib")
         lib.add_source_files(join(dirname(__file__), 'missing.vhd'), allow_empty=True)
+
+    def test_add_source_files(self):
+        files = ["file1.vhd",
+                 "file2.vhd",
+                 "file3.vhd",
+                 "file_foo.vhd"]
+
+        for file_name in files:
+            self.create_file(file_name)
+
+        ui = self._create_ui()
+        lib = ui.library("lib")
+        lib.add_source_files("file*.vhd")
+        lib.add_source_files("file_foo.vhd")
+        for file_name in files:
+            lib.get_source_file(file_name)
+
+        ui = self._create_ui()
+        lib = ui.library("lib")
+        lib.add_source_files(["file*.vhd", "file_foo.vhd"])
+        for file_name in files:
+            lib.get_source_file(file_name)
+
+        ui = self._create_ui()
+        lib = ui.library("lib")
+        lib.add_source_files(("file*.vhd", "file_foo.vhd"))
+        for file_name in files:
+            lib.get_source_file(file_name)
+
+        ui = self._create_ui()
+        lib = ui.library("lib")
+        lib.add_source_files(iter(["file*.vhd", "file_foo.vhd"]))
+        for file_name in files:
+            lib.get_source_file(file_name)
+
+    def test_add_source_files_errors(self):
+        ui = self._create_ui()
+        lib = ui.library("lib")
+        self.create_file("file.vhd")
+        self.assertRaisesRegexp(ValueError, r"missing\.vhd", lib.add_source_files, ["missing.vhd", "file.vhd"])
+        self.assertRaisesRegexp(ValueError, r"missing\.vhd", lib.add_source_files, "missing.vhd")
 
     def test_get_source_files(self):
         ui = self._create_ui()
