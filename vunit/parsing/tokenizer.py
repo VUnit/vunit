@@ -10,8 +10,14 @@ A general tokenizer
 
 import collections
 import re
+from os.path import relpath
+from vunit.ostools import read_file, file_exists
 
-Token = collections.namedtuple("Token", ["kind", "value"])
+TokenType = collections.namedtuple("Token", ["kind", "value", "location"])
+
+
+def Token(kind, value, location=None):  # pylint: disable=invalid-name
+    return TokenType(kind, value, location)
 
 
 def new_token_kind(name):
@@ -45,7 +51,7 @@ class Tokenizer(object):
     def finalize(self):
         self._regex = re.compile("|".join("(?P<%s>%s)" % spec for spec in self._regexs), re.VERBOSE | re.MULTILINE)
 
-    def tokenize(self, code):
+    def tokenize(self, code, file_name=None, previous_location=None, create_locations=False):
         """
         Tokenize the code
         """
@@ -55,11 +61,18 @@ class Tokenizer(object):
             match = self._regex.search(code, pos=start)
             if match is None:
                 break
+            lexpos = (start, match.end() - 1)
             start = match.end()
             key = match.lastgroup
             kind, func = self._assoc[key]
             value = match.group(match.lastgroup)
-            token = Token(kind, value)
+
+            if create_locations:
+                location = ((file_name, lexpos), previous_location)
+            else:
+                location = None
+
+            token = Token(kind, value, location)
             if func is not None:
                 token = func(token)
 
@@ -98,19 +111,23 @@ class TokenStream(object):
     def peek(self, offset=0):
         return self._tokens[self._idx + offset]
 
-    def skip_while(self, kind):
+    def skip_while(self, *kinds):
         """
         Skip forward while token kind is present
         """
-        while (not self.eof) and self._tokens[self._idx].kind == kind:
+        while not self.eof:
+            if not any(self._tokens[self._idx].kind == kind for kind in kinds):
+                break
             self._idx += 1
         return self._idx
 
-    def skip_until(self, kind):
+    def skip_until(self, *kinds):
         """
         Skip forward until token kind is present
         """
-        while (not self.eof) and self._tokens[self._idx].kind != kind:
+        while not self.eof:
+            if any(self._tokens[self._idx].kind == kind for kind in kinds):
+                break
             self._idx += 1
         return self._idx
 
@@ -119,10 +136,103 @@ class TokenStream(object):
         Return current token and advance stream
         """
         if self.eof:
-            return None
+            raise EOFException()
 
         self._idx += 1
         return self._tokens[self._idx - 1]
 
     def slice(self, start, end):
         return self._tokens[start:end]
+
+
+def describe_location(location, first=True):
+    """
+    Describe the location as a string
+    """
+    if location is None:
+        return "Unknown location"
+
+    ((file_name, (start, end)), previous) = location
+
+    retval = ""
+    if previous is not None:
+        retval += describe_location(previous, first=False) + "\n"
+
+    if not file_exists(file_name):
+        retval += "Unknown location in %s" % file_name
+        return retval
+
+    contents = read_file(file_name)
+
+    if first:
+        prefix = "at"
+    else:
+        prefix = "from"
+
+    count = 0
+    for lineno, line in enumerate(contents.splitlines()):
+        lstart = count
+        lend = lstart + len(line)
+        if lstart <= start and start <= lend:
+            retval += "%s %s line %i:\n" % (prefix, relpath(file_name), lineno + 1)
+            retval += line + "\n"
+            retval += (" " * (start - lstart)) + ("~" * (min(lend - 1, end) - start + 1))
+            return retval
+
+        count = lend + 1
+
+
+class EOFException(Exception):
+    """
+    End of file
+    """
+    pass
+
+
+class LocationException(Exception):
+    """
+    A an exception to be raised when there is a problem in a location
+    """
+    @classmethod
+    def warning(cls, message, location):
+        return cls(message, location, "warning")
+
+    @classmethod
+    def debug(cls, message, location):
+        return cls(message, location, "debug")
+
+    def __init__(self, message, location, severity="warning"):
+        Exception.__init__(self)
+        assert severity in ("debug", "warning")
+        self._severtity = severity
+        self._message = message
+        self._location = location
+
+    def add_previous(self, location):
+        """
+        Append a previous location
+        """
+        self._locations.append(location)
+
+    def log(self, logger):
+        """
+        Log the exception
+        """
+        if self._severtity == "warning":
+            method = logger.warning
+        else:
+            method = logger.debug
+
+        method(self._message + "\n%s",
+               describe_location(self._location))
+
+
+def add_previous(location, previous):
+    """
+    Add previous location
+    """
+    if location is None:
+        return previous
+    else:
+        current, old_previous = location
+        return (current, add_previous(old_previous, previous))

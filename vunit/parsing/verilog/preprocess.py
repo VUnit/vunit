@@ -2,97 +2,188 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Verilog parsing functionality
 """
 from os.path import join, exists
 
-from vunit.parsing.tokenizer import TokenStream
+from vunit.parsing.tokenizer import (TokenStream,
+                                     Token,
+                                     add_previous,
+                                     EOFException,
+                                     LocationException)
 import vunit.parsing.verilog.tokenizer as tokenizer
 from vunit.parsing.verilog.tokenizer import tokenize
+from vunit.ostools import read_file
+import logging
+LOGGER = logging.getLogger(__name__)
 
 
-def preprocess(tokens, defines=None, include_paths=None, included_files=None):
+class VerilogPreprocessor(object):
     """
-    Pre-process tokens while filling in defines
+    A Verilog preprocessor
     """
-    stream = TokenStream(tokens)
-    include_paths = [] if include_paths is None else include_paths
-    included_files = [] if included_files is None else included_files
-    defines = {} if defines is None else defines
-    result = []
 
-    while not stream.eof:
-        token = stream.pop()
-        if not token.kind == tokenizer.PREPROCESSOR:
-            result.append(token)
-            continue
+    def __init__(self, create_locations=True):
+        self._create_locations = create_locations
 
-        if token.value == "define":
-            macro = define(stream)
-            defines[macro.name] = macro
+    def preprocess(self, tokens, defines=None, include_paths=None, included_files=None):
+        """
+        Pre-process tokens while filling in defines
+        """
+        stream = TokenStream(tokens)
+        include_paths = [] if include_paths is None else include_paths
+        included_files = [] if included_files is None else included_files
+        defines = {} if defines is None else defines
+        result = []
 
-        if token.value == "include":
-            stream.skip_until(tokenizer.STRING)
-            file_name = stream.pop().value
+        while not stream.eof:
+            token = stream.pop()
+            if not token.kind == tokenizer.PREPROCESSOR:
+                result.append(token)
+                continue
 
-            full_name = None
-            for include_path in include_paths:
-                full_name = join(include_path, file_name)
-                if exists(full_name):
-                    break
+            try:
+                if token.value == "define":
+                    macro = define(token, stream)
+                    if macro is not None:
+                        defines[macro.name] = macro
+
+                elif token.value == "include":
+                    result += self.include(token, stream, include_paths, included_files, defines)
+
+                elif token.value in defines:
+                    macro = defines[token.value]
+                    result += self.preprocess(macro.expand_from_stream(token,
+                                                                       stream,
+                                                                       previous=token.location),
+                                              defines=defines,
+                                              include_paths=include_paths,
+                                              included_files=included_files)
+                else:
+                    raise LocationException.debug(
+                        "Verilog undefined name",
+                        token.location)
+            except LocationException as exc:
+                exc.log(LOGGER)
+
+        return result
+
+    def include(self,  # pylint: disable=too-many-arguments
+                token, stream, include_paths, included_files, defines):
+        """
+        Handle `include directive
+        """
+        stream.skip_while(tokenizer.WHITESPACE)
+        try:
+            tok = stream.pop()
+        except EOFException:
+            raise LocationException.warning(
+                "EOF reached when parsing `include argument",
+                token.location)
+
+        if tok.kind == tokenizer.PREPROCESSOR:
+            if tok.value in defines:
+                macro = defines[tok.value]
             else:
-                assert False
-            included_files.append(full_name)
-            with open(full_name, "r") as fptr:
-                included_tokens = tokenize(fptr.read())
-            result += preprocess(included_tokens, defines, include_paths, included_files)
+                raise LocationException.warning(
+                    "Verilog `include argument not defined",
+                    tok.location)
 
-        elif token.value in defines:
-            macro = defines[token.value]
-            if macro.num_args == 0:
-                values = []
-            else:
-                values = parse_macro_actuals(stream)
-            result += macro.expand(values)
+            expanded_tokens = macro.expand_from_stream(tok,
+                                                       stream,
+                                                       previous=tok.location)
+            if len(expanded_tokens) == 0:
+                raise LocationException.warning("Verilog `include has bad argument, empty define `%s" % macro.name,
+                                                tok.location)
 
-    return result
+            if expanded_tokens[0].kind != tokenizer.STRING:
+                raise LocationException.warning("Verilog `include has bad argument",
+                                                expanded_tokens[0].location)
+
+            file_name_tok = expanded_tokens[0]
+
+        elif tok.kind == tokenizer.STRING:
+            file_name_tok = tok
+        else:
+            raise LocationException.warning("Verilog `include bad argument",
+                                            tok.location)
+
+        full_name = None
+        for include_path in include_paths:
+            full_name = join(include_path, file_name_tok.value)
+            if exists(full_name):
+                break
+        else:
+            # Is debug message since there are so many builtin includes in tools
+            raise LocationException.debug(
+                "Could not file verilog `include file %s" % file_name_tok.value,
+                file_name_tok.location)
+
+        included_files.append(full_name)
+        included_tokens = tokenize(read_file(full_name),
+                                   file_name=full_name,
+                                   previous_location=token.location,
+                                   create_locations=self._create_locations)
+        return self.preprocess(included_tokens, defines, include_paths, included_files)
 
 
-def define(stream):
+def define(define_token, stream):
     """
     Handle a `define directive
     """
-    stream.skip_while(tokenizer.WHITESPACE)
-    name_token = stream.pop()
-    assert name_token.kind == tokenizer.IDENTIFIER
+    stream.skip_while(tokenizer.WHITESPACE, tokenizer.NEWLINE)
+    try:
+        name_token = stream.pop()
+    except EOFException:
+        raise LocationException.warning("Verilog `define without argument",
+                                        define_token.location)
+
+    if name_token.kind != tokenizer.IDENTIFIER:
+        raise LocationException.warning("Verilog `define invalid name",
+                                        name_token.location)
+
     name = name_token.value
 
-    if stream.eof:
+    try:
+        token = stream.pop()
+    except EOFException:
+        # Empty define
         return Macro(name)
 
-    token = stream.pop()
-    if token.kind in (tokenizer.WHITESPACE, tokenizer.NEWLINE):
+    if token.kind in (tokenizer.NEWLINE,):
+        # Empty define
+        return Macro(name)
+
+    if token.kind in (tokenizer.WHITESPACE,):
         # Define without arguments
         args = tuple()
         defaults = {}
     elif token.kind == tokenizer.LPAR:
+        lpar_token = token
         args = tuple()
         defaults = {}
-        while token.kind != tokenizer.RPAR:
-            if token.kind == tokenizer.IDENTIFIER:
-                argname = token.value
-                args = args + (argname,)
-                token = stream.pop()
-                if token.kind == tokenizer.EQUAL:
-                    token = stream.pop()
-                    defaults[argname] = [token]
-                    token = stream.pop()
-            else:
-                token = stream.pop()
 
+        try:
+            while token.kind != tokenizer.RPAR:
+                if token.kind == tokenizer.IDENTIFIER:
+                    argname = token.value
+                    args = args + (argname,)
+                    token = stream.pop()
+                    if token.kind == tokenizer.EQUAL:
+                        token = stream.pop()
+                        defaults[argname] = [token]
+                        token = stream.pop()
+                else:
+                    token = stream.pop()
+        except EOFException:
+            raise LocationException.warning(
+                "EOF reached when parsing `define argument list",
+                lpar_token.location)
+
+    stream.skip_while(tokenizer.WHITESPACE)
     start = stream.idx
     end = stream.skip_until(tokenizer.NEWLINE)
     if not stream.eof:
@@ -101,28 +192,6 @@ def define(stream):
                  tokens=stream.slice(start, end),
                  args=args,
                  defaults=defaults)
-
-
-def parse_macro_actuals(stream):
-    """
-    Parse the actual values of macro call such as
-    1 2 in `macro(1, 2)
-    """
-    token = stream.pop()
-    assert token.kind == tokenizer.LPAR
-    token = stream.pop()
-
-    value = []
-    values = []
-    while token.kind != tokenizer.RPAR:
-        if token.kind == tokenizer.COMMA:
-            values.append(value)
-            value = []
-        else:
-            value.append(token)
-        token = stream.pop()
-    values.append(value)
-    return values
 
 
 class Macro(object):
@@ -143,7 +212,7 @@ class Macro(object):
     def __repr__(self):
         return "Macro(%r, %r %r, %r)" % (self.name, self.tokens, self.args, self.defaults)
 
-    def expand(self, values):
+    def expand(self, values, previous):
         """
         Expand macro with actual values, returns a list of expanded tokens
         """
@@ -151,17 +220,71 @@ class Macro(object):
         for token in self.tokens:
             if token.kind == tokenizer.IDENTIFIER and token.value in self.args:
                 idx = self.args.index(token.value)
-                if idx >= len(values):
-                    value = self.defaults[token.value]
-                else:
-                    value = values[idx]
+                value = values[idx]
                 tokens += value
             else:
                 tokens.append(token)
-        return tokens
+        return [Token(tok.kind, tok.value, add_previous(tok.location, previous))
+                for tok in tokens]
 
     def __eq__(self, other):
         return ((self.name == other.name) and
                 (self.tokens == other.tokens) and
                 (self.args == other.args) and
                 (self.defaults == other.defaults))
+
+    def expand_from_stream(self, token, stream, previous=None):
+        """
+        Expand macro consuming arguments from the stream
+        returns the expanded tokens
+        """
+        if self.num_args == 0:
+            values = []
+        else:
+            try:
+                values = self._parse_macro_actuals(token, stream)
+            except EOFException:
+                raise LocationException.warning("EOF reached when parsing `define actuals",
+                                                location=token.location)
+
+            # Bind defaults
+            if len(values) < len(self.args):
+                for i in range(len(values), len(self.args)):
+                    name = self.args[i]
+                    if name in self.defaults:
+                        values.append(self.defaults[name])
+                    else:
+                        raise LocationException.warning(
+                            "Missing value for argument %s" % name,
+                            token.location)
+
+            elif len(values) > len(self.args):
+                raise LocationException("Too many arguments got %i expected %i" %
+                                        (len(values), len(self.args)),
+                                        token.location)
+
+        return self.expand(values, previous)
+
+    @staticmethod
+    def _parse_macro_actuals(define_token, stream):
+        """
+        Parse the actual values of macro call such as
+        1 2 in `macro(1, 2)
+        """
+        token = stream.pop()
+        if token.kind != tokenizer.LPAR:
+            raise LocationException.warning("Bad `define argument list",
+                                            define_token.location)
+        token = stream.pop()
+        value = []
+        values = []
+        while token.kind != tokenizer.RPAR:
+            if token.kind == tokenizer.COMMA:
+                values.append(value)
+                value = []
+            else:
+                value.append(token)
+            token = stream.pop()
+
+        values.append(value)
+        return values

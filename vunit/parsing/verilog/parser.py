@@ -9,10 +9,12 @@ Verilog parsing functionality
 """
 
 from os.path import dirname
-from vunit.parsing.tokenizer import TokenStream
+from vunit.parsing.tokenizer import TokenStream, EOFException, LocationException
 from vunit.parsing.verilog.tokenizer import tokenize
-from vunit.parsing.verilog.preprocess import preprocess
+from vunit.parsing.verilog.preprocess import VerilogPreprocessor
 import vunit.parsing.verilog.tokenizer as tokenizer
+import logging
+LOGGER = logging.getLogger(__name__)
 
 
 class VerilogParser(object):
@@ -50,10 +52,12 @@ class VerilogDesignFile(object):
         Parse verilog file
         """
         include_paths = [] if include_paths is None else include_paths
-        tokens = tokenize(code)
+        tokens = tokenize(code, file_name=file_name, create_locations=True)
         included_files = []
-        pp_tokens = preprocess(tokens, include_paths=[dirname(file_name)] + include_paths,
-                               included_files=included_files)
+        preprocessor = VerilogPreprocessor()
+        pp_tokens = preprocessor.preprocess(tokens,
+                                            include_paths=[dirname(file_name)] + include_paths,
+                                            included_files=included_files)
         tokens = [token
                   for token in pp_tokens
                   if token.kind not in (tokenizer.WHITESPACE,
@@ -75,11 +79,20 @@ class VerilogDesignFile(object):
         stream = TokenStream(tokens)
         while not stream.eof:
             token = stream.pop()
-            if token.kind == tokenizer.IMPORT:
-                stream.skip_until(tokenizer.IDENTIFIER)
+
+            if token.kind != tokenizer.IMPORT:
+                continue
+            import_token = token
+            try:
                 token = stream.pop()
-                if token is not None:
+                if token.kind == tokenizer.IDENTIFIER:
                     results.append(token.value)
+                else:
+                    LocationException.warning("import bad argument",
+                                              token.location).log(LOGGER)
+            except EOFException:
+                LocationException.warning("EOF reached when parsing import",
+                                          location=import_token.location).log(LOGGER)
         return results
 
     @staticmethod
@@ -96,10 +109,12 @@ class VerilogDesignFile(object):
                 continue
             modulename = token.value
 
-            token = stream.pop()
-            if token is None:
+            try:
+                token = stream.pop()
+            except EOFException:
                 continue
-            elif token.kind == tokenizer.HASH:
+
+            if token.kind == tokenizer.HASH:
                 results.append(modulename)
                 continue
             elif token.kind == tokenizer.IDENTIFIER:

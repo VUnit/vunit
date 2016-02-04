@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test of the Verilog tokenizer
@@ -118,3 +118,14 @@ class TestVerilogTokenizer(TestCase):
                          [Token(tokenizer.PARAMETER, value='')])
         self.assertEqual(list(tokenize("import")),
                          [Token(tokenizer.IMPORT, value='')])
+
+    def test_has_location_information(self):
+        tokens = list(tokenize("""\
+`define foo""",
+                               file_name="fn",
+                               create_locations=True))
+        self.assertEqual(tokens, [
+            Token(tokenizer.PREPROCESSOR, value="define", location=(("fn", (0, 6)), None)),
+            Token(tokenizer.WHITESPACE, value="", location=(("fn", (7, 7)), None)),
+            Token(tokenizer.IDENTIFIER, value="foo", location=(("fn", (8, 10)), None)),
+        ])

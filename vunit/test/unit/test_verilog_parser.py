@@ -10,6 +10,7 @@ Test of the Verilog parser
 
 from unittest import TestCase
 from vunit.parsing.verilog.parser import VerilogDesignFile
+from vunit.test.mock_2or3 import mock
 
 
 class TestVerilogParser(TestCase):  # pylint: disable=too-many-public-methods
@@ -107,11 +108,29 @@ endpackage
         self.assertEqual(imports[0], "true1")
         self.assertEqual(imports[1], "true2")
 
-    def test_parse_imports_without_crashing(self):
+    @mock.patch("vunit.parsing.verilog.parser.LOGGER", autospec=True)
+    def test_parse_import_with_bad_argument(self, logger):
         imports = parse("""\
 import;
 """).imports
         self.assertEqual(len(imports), 0)
+        logger.warning.assert_called_once_with(
+            "import bad argument\n%s",
+            "at file_name.sv line 1:\n"
+            "import;\n"
+            "      ~")
+
+    @mock.patch("vunit.parsing.verilog.parser.LOGGER", autospec=True)
+    def test_parse_import_eof(self, logger):
+        imports = parse("""\
+import
+""").imports
+        self.assertEqual(len(imports), 0)
+        logger.warning.assert_called_once_with(
+            "EOF reached when parsing import\n%s",
+            "at file_name.sv line 1:\n"
+            "import\n"
+            "~~~~~~")
 
     def test_parse_instances(self):
         instances = parse("""\
@@ -138,5 +157,20 @@ def parse(code):
     """
     Helper function to parse
     """
-    design_file = VerilogDesignFile.parse(code, "file_name.sv", [])
+    with mock.patch("vunit.parsing.tokenizer.read_file", autospec=True) as mock_read_file:
+        with mock.patch("vunit.parsing.tokenizer.file_exists", autospec=True) as mock_file_exists:
+            def file_exists_side_effect(filename):
+                return filename == "file_name.sv"
+
+            def read_file_side_effect(filename):
+                """
+                Side effect of read file
+                """
+                assert filename == "file_name.sv"
+                return code
+
+            mock_file_exists.side_effect = file_exists_side_effect
+            mock_read_file.side_effect = read_file_side_effect
+
+            design_file = VerilogDesignFile.parse(code, "file_name.sv", [])
     return design_file
