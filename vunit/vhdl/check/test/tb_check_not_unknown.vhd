@@ -21,7 +21,7 @@ use work.test_count.all;
 
 entity tb_check_not_unknown is
   generic (
-    runner_cfg : string := runner_cfg_default);
+    runner_cfg : string);
 end entity tb_check_not_unknown;
 
 architecture test_fixture of tb_check_not_unknown is

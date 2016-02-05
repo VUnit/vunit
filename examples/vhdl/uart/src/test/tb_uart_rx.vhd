@@ -31,7 +31,7 @@ use tb_uart_lib.uart_model_pkg.all;
 
 entity tb_uart_rx is
   generic (
-    runner_cfg : string := runner_cfg_default);
+    runner_cfg : string);
 end entity;
 
 architecture tb of tb_uart_rx is
