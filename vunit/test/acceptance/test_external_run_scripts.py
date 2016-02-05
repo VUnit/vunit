@@ -42,8 +42,7 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_vhdl_check_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "check", "compile.py"), args=["--compile"])
 
-    def test_vhdl_generate_tests_example_project(self):
-        self.check(join(ROOT, "examples", "vhdl", "generate_tests", "run.py"))
+    def _check_generate_tests_example_project_report(self):
         check_report(self.report_file,
                      [("passed", "lib.tb_generated.data_width=1,sign=False.Test 1"),
                       ("passed", "lib.tb_generated.data_width=1,sign=True.Test 1"),
@@ -54,6 +53,23 @@ class TestExternalRunScripts(unittest.TestCase):
                       ("passed", "lib.tb_generated.data_width=4,sign=False.Test 1"),
                       ("passed", "lib.tb_generated.data_width=4,sign=True.Test 1"),
                       ("passed", "lib.tb_generated.data_width=16,sign=True.Test 2")])
+
+    def test_generate_tests_example_project_vhdl_2008(self):
+        self.check(join(ROOT, "examples", "vhdl", "generate_tests", "run.py"),
+                   vhdl_standard='2008')
+        self._check_generate_tests_example_project_report()
+
+    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
+    def test_generate_tests_example_project_vhdl_2002(self):
+        self.check(join(ROOT, "examples", "vhdl", "generate_tests", "run.py"),
+                   vhdl_standard='2002')
+        self._check_generate_tests_example_project_report()
+
+    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
+    def test_generate_tests_example_project_vhdl_93(self):
+        self.check(join(ROOT, "examples", "vhdl", "generate_tests", "run.py"),
+                   vhdl_standard='93')
+        self._check_generate_tests_example_project_report()
 
     def test_vhdl_array_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "array", "run.py"))
