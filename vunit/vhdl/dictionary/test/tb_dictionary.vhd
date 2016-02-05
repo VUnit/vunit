@@ -21,7 +21,7 @@ use std.textio.all;
 
 entity tb_dictionary is
   generic (
-    runner_cfg : string := runner_cfg_default;
+    runner_cfg : string;
     output_path : string);
 end entity tb_dictionary;
 

@@ -45,7 +45,7 @@ use std.textio.all;
 
 entity tb_com_codec is
   generic (
-    runner_cfg : string := runner_cfg_default);
+    runner_cfg : string);
 end entity tb_com_codec;
 
 architecture test_fixture of tb_com_codec is

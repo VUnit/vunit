@@ -36,7 +36,7 @@ use std.textio.all;
 
 entity tb_com is
   generic (
-    runner_cfg : string := runner_cfg_default);
+    runner_cfg : string);
 end entity tb_com;
 
 architecture test_fixture of tb_com is

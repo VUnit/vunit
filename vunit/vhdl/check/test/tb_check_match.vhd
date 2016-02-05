@@ -22,7 +22,7 @@ use work.test_count.all;
 
 entity tb_check_match is
   generic (
-    runner_cfg : string := runner_cfg_default);
+    runner_cfg : string);
 end entity tb_check_match;
 
 architecture test_fixture of tb_check_match is
