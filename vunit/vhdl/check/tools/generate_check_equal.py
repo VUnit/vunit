@@ -299,7 +299,7 @@ for c in combinations:
 print("Implementation:\n\n" + impl)
 
 test = """\
-      if run("Test should handle comparsion of vectors longer than 32 bits") then
+      if run("Test should handle comparison of vectors longer than 32 bits") then
         get_checker_stat(stat);
         check_equal(unsigned'(X"A5A5A5A5A"), unsigned'(X"A5A5A5A5A"));
         check_equal(std_logic_vector'(X"A5A5A5A5A"), unsigned'(X"A5A5A5A5A"));
