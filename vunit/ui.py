@@ -167,6 +167,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                    log_level=args.log_level,
                    test_filter=test_filter,
                    list_only=args.list,
+                   list_files_only=args.files,
                    compile_only=args.compile,
                    elaborate_only=args.elaborate,
                    compile_builtins=compile_builtins,
@@ -185,6 +186,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                  log_level="warning",
                  test_filter=None,
                  list_only=False,
+                 list_files_only=False,
                  compile_only=False,
                  elaborate_only=False,
                  vhdl_standard='2008',
@@ -206,6 +208,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         self._test_filter = test_filter if test_filter is not None else lambda name: True
         self._list_only = list_only
+        self._list_files_only = list_files_only
         self._compile_only = compile_only
         self._vhdl_standard = vhdl_standard
 
@@ -598,6 +601,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         if self._list_only:
             return self._main_list_only()
 
+        if self._list_files_only:
+            return self._main_list_files_only()
+
         if self._compile_only:
             return self._main_compile_only()
 
@@ -634,6 +640,16 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             for name in test_suite.test_cases:
                 print(name)
         print("Listed %i tests" % test_suites.num_tests())
+        return True
+
+    def _main_list_files_only(self):
+        """
+        Main function when only listing files
+        """
+        files = self.get_compile_order()
+        for source_file in files:
+            print("%s, %s" % (source_file.library.name, source_file.name))
+        print("Listed %i files" % len(files))
         return True
 
     def _main_compile_only(self):

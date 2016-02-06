@@ -245,6 +245,24 @@ end architecture;
         self.assertEqual(len(compile_order), 1)
         self.assertEqual(compile_order[0].name, file_name)
 
+    def test_list_files_flag(self):
+        ui = self._create_ui("--files")
+        lib1 = ui.add_library("lib1")
+        lib2 = ui.add_library("lib2")
+        file_name = self.create_entity_file()
+        lib1.add_source_file(file_name)
+        lib2.add_source_file(file_name)
+
+        with mock.patch("sys.stdout", autospec=True) as stdout:
+            self._run_main(ui)
+        text = "".join([call[1][0] for call in stdout.write.mock_calls])
+        # @TODO not always in the same order in Python3 due to dependency graph
+        self.assertEqual(set(text.splitlines()),
+                         set("""\
+lib2, ent0.vhd
+lib1, ent0.vhd
+Listed 2 files""".splitlines()))
+
     def test_library_attributes(self):
         ui = self._create_ui()
         lib1 = ui.add_library("lib1")
@@ -363,7 +381,7 @@ end architecture;
         obj.add_config(name="", pre_config=pre_config)
         self._run_main(ui, 0 if retval else 1)
 
-        pre_config.assert_has_calls([call()])
+        pre_config.assert_has_calls([mock.call()])
 
     def test_entity_has_pre_config(self):
         for retval in (True, False, None):
@@ -445,13 +463,6 @@ end architecture;
         """
         with open(file_name, "w") as fptr:
             fptr.write(contents)
-
-
-def call(*args, **kwargs):
-    """
-    To create call objects for checking calls on mock objects
-    """
-    return (args, kwargs)
 
 
 class TestPreprocessor(object):

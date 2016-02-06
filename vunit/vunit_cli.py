@@ -88,6 +88,10 @@ def _create_argument_parser(description=None, for_documentation=False):
                         default=False,
                         help='Only list all test cases')
 
+    parser.add_argument('-f', '--files', action='store_true',
+                        default=False,
+                        help='Only list all files in compile order')
+
     parser.add_argument('--compile', action='store_true',
                         default=False,
                         help='Only compile project without running tests')
