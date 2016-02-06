@@ -475,6 +475,152 @@ keep''',
             '`define foo `include wrong\n'
             "                     ~~~~~")
 
+    def test_ifndef_taken(self):
+        tokens = preprocess_loc('''\
+`ifndef foo
+taken
+`endif
+keep''')
+        self.assert_equal_noloc(tokens, tokenize("taken\nkeep"))
+
+    def test_ifdef_taken(self):
+        tokens = preprocess_loc('''\
+`define foo
+`ifdef foo
+taken
+`endif
+keep''')
+        self.assert_equal_noloc(tokens, tokenize("taken\nkeep"))
+
+    def test_ifdef_else_taken(self):
+        tokens = preprocess_loc('''\
+`define foo
+`ifdef foo
+taken
+`else
+else
+`endif
+keep''')
+        self.assert_equal_noloc(tokens, tokenize("taken\nkeep"))
+
+    def test_ifdef_not_taken(self):
+        tokens = preprocess_loc('''\
+`ifdef foo
+taken
+`endif
+keep''')
+        self.assert_equal_noloc(tokens, tokenize("keep"))
+
+    def test_ifdef_else_not_taken(self):
+        tokens = preprocess_loc('''\
+`ifdef foo
+taken
+`else
+else
+`endif
+keep''')
+        self.assert_equal_noloc(tokens, tokenize("else\nkeep"))
+
+    def test_ifdef_elsif_taken(self):
+        tokens = preprocess_loc('''\
+`define foo
+`ifdef foo
+taken
+`elsif bar
+elsif_taken
+`else
+else_taken
+`endif
+keep''')
+        self.assert_equal_noloc(tokens, tokenize("taken\nkeep"))
+
+    def test_ifdef_elsif_elseif_taken(self):
+        tokens = preprocess_loc('''\
+`define bar
+`ifdef foo
+taken
+`elsif bar
+elsif_taken
+`else
+else_taken
+`endif
+keep''')
+        self.assert_equal_noloc(tokens, tokenize("elsif_taken\nkeep"))
+
+    def test_ifdef_elsif_else_taken(self):
+        tokens = preprocess_loc('''\
+`ifdef foo
+taken
+`elsif bar
+elsif_taken
+`else
+else_taken
+`endif
+keep''')
+        self.assert_equal_noloc(tokens, tokenize("else_taken\nkeep"))
+
+    def test_nested_ifdef(self):
+        tokens = preprocess_loc('''\
+`define foo
+`ifdef foo
+outer_before
+`ifdef bar
+inner_ifndef
+`else
+inner_else
+`endif
+`ifdef bar
+inner_ifndef
+`elsif foo
+inner_elsif
+`endif
+outer_after
+`endif
+keep''')
+        self.assert_equal_noloc(tokens,
+                                tokenize("outer_before\n"
+                                         "inner_else\n"
+                                         "inner_elsif\n"
+                                         "outer_after\n"
+                                         "keep"))
+
+    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
+    def test_ifdef_eof(self, logger):
+        tokens = preprocess_loc('''\
+`ifdef foo
+taken''')
+        self.assert_equal_noloc(tokens, tokenize(""))
+        logger.warning.assert_called_once_with(
+            "EOF reached when parsing `ifdef\n%s",
+            "at fn.v line 1:\n"
+            '`ifdef foo\n'
+            '~~~~~~')
+
+    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
+    def test_ifdef_bad_argument(self, logger):
+        tokens = preprocess_loc('''\
+`ifdef "hello"
+keep''')
+        self.assert_equal_noloc(tokens, tokenize("\nkeep"))
+        logger.warning.assert_called_once_with(
+            "Bad argument to `ifdef\n%s",
+            "at fn.v line 1:\n"
+            '`ifdef "hello"\n'
+            '       ~~~~~~~')
+
+    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
+    def test_elsif_bad_argument(self, logger):
+        tokens = preprocess_loc('''\
+`ifdef bar
+`elsif "hello"
+keep''')
+        self.assert_equal_noloc(tokens, tokenize("\nkeep"))
+        logger.warning.assert_called_once_with(
+            "Bad argument to `elsif\n%s",
+            "at fn.v line 2:\n"
+            '`elsif "hello"\n'
+            '       ~~~~~~~')
+
     def write_file(self, file_name, contents):
         """
         Write file with contents into output path

@@ -54,6 +54,18 @@ class VerilogPreprocessor(object):
                 elif token.value == "include":
                     result += self.include(token, stream, include_paths, included_files, defines)
 
+                elif token.value in ("ifdef", "ifndef"):
+                    try:
+                        tokens = self.if_statement(token, stream, defines)
+                        result += self.preprocess(tokens,
+                                                  defines=defines,
+                                                  include_paths=include_paths,
+                                                  included_files=included_files)
+                    except EOFException:
+                        raise LocationException.warning(
+                            "EOF reached when parsing `%s" % token.value,
+                            token.location)
+
                 elif token.value in defines:
                     macro = defines[token.value]
                     result += self.preprocess(macro.expand_from_stream(token,
@@ -69,6 +81,72 @@ class VerilogPreprocessor(object):
             except LocationException as exc:
                 exc.log(LOGGER)
 
+        return result
+
+    @staticmethod
+    def if_statement(if_token, stream, defines):
+        """
+        Handle if statement
+        """
+        def check_arg(if_token, arg):
+            """
+            Check the define argument of an if statement
+            """
+            if arg.kind != tokenizer.IDENTIFIER:
+                raise LocationException.warning(
+                    "Bad argument to `%s" % if_token.value,
+                    arg.location)
+            stream.skip_while(tokenizer.NEWLINE)
+
+        def determine_if_taken(if_token, arg):
+            """
+            Determine if the branch was taken
+            """
+            if if_token.value in ("ifdef", "elsif"):
+                return arg.value in defines
+            elif if_token.value == "ifndef":
+                return arg.value not in defines
+            else:
+                assert False
+
+        result = []
+        stream.skip_while(tokenizer.WHITESPACE)
+        arg = stream.pop()
+        check_arg(if_token, arg)
+
+        taken = determine_if_taken(if_token, arg)
+        any_taken = taken
+        count = 1
+        while True:
+            token = stream.pop()
+            if token.kind == tokenizer.PREPROCESSOR:
+                if token.value in ("ifdef", "ifndef"):
+                    count += 1
+                elif token.value == "endif":
+                    count -= 1
+                    if count == 0:
+                        break
+
+            if count == 1 and (token.kind, token.value) == (tokenizer.PREPROCESSOR, "else"):
+                stream.skip_while(tokenizer.NEWLINE)
+                if not any_taken:
+                    taken = True
+                    any_taken = True
+                else:
+                    taken = False
+            elif count == 1 and (token.kind, token.value) == (tokenizer.PREPROCESSOR, "elsif"):
+                stream.skip_while(tokenizer.WHITESPACE)
+                arg = stream.pop()
+                check_arg(token, arg)
+                stream.skip_while(tokenizer.NEWLINE)
+                if not any_taken:
+                    taken = determine_if_taken(token, arg)
+                    any_taken = taken
+                else:
+                    taken = False
+            elif taken:
+                result.append(token)
+        stream.skip_while(tokenizer.NEWLINE)
         return result
 
     def include(self,  # pylint: disable=too-many-arguments
