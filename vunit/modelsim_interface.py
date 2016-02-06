@@ -68,7 +68,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         """
         Create new instance from command line arguments object
         """
-        persistent = (not args.new_vsim) and args.gui is None
+        persistent = not (args.new_vsim or args.gui)
 
         return cls(join(output_path, "modelsim.ini"),
                    persistent=persistent,
