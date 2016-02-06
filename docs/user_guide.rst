@@ -5,23 +5,33 @@ User Guide
 
 Introduction
 ------------
-The idea in VUnit is to have a single point of entry for compiling and
-running all tests within a HDL project. Tests do not need to be
-manually added to some list as they are automatically detected. There
-is no need for maintaining a list of files in compile order or
-manually re-compile files after they have been edited as VUnit
-automatically determines the compile order and which files to
-re-compile after a modification.
+VUnit is invoked by a user-defined project specified in a Python script.
+At minimum, a VUnit project consists of a set of HDL source files mapped to
+libraries. The project serves as single point of entry for compiling and
+running all tests within an HDL project. VUnit provides automatic scanning
+for unit tests (test benches), automatic determination of compilation order, 
+and incremental recompilation of modified sources.
 
-A ``run.py`` file is created for the project where the :ref:`VUnit
-Python interface <python_interface>` is used to add libraries and HDL
-files. The ``run.py`` file then acts as a :ref:`command line utility
-<cli>` for compiling and running tests within the project.
+The top level Python script is typically named ``run.py``.
+This script is the entry point for executing VUnit.
+The script defines the location for each HDL source
+file in the project, the library that each source file belongs to, any
+external (pre-compiled) libraries, and special settings that may be required
+in order to compile or simulate the project source files. The :ref:`VUnit
+Python interface <python_interface>` is used to create and manipulate the VUnit
+project within the ``run.py`` file.
 
-The command line interface supports listing all tests found as well as
-running individual tests matching a wildcard pattern. The Python
-interface also supports running a test bench or test for many
-different combinations of generic values.
+Since the VUnit project is defined by a Python script, the full functionality
+of Python is available to create dynamic rules to specify the files
+that should be included in the project. For example, HDL files may be
+recursively included from a directory structure based on a filename pattern.
+Other Python packages or modules may be imported in order to setup the project.
+
+Once the files for a project have been included, the :ref:`command line
+interface <cli>` can then be used to perform a variety of actions on the
+project. For example, listing all tests discovered, or running individual tests 
+matching a wildcard pattern. The Python interface also supports running a test
+bench or test for many different combinations of generic values.
 
 .. code-block:: python
    :caption: Example ``run.py`` file.
@@ -34,15 +44,15 @@ different combinations of generic values.
    # Create library 'lib'
    lib = vu.add_library("lib")
 
-   # Add all files ending in .vhd in current working directory
+   # Add all files ending in .vhd in current working directory to library
    lib.add_source_files("*.vhd")
 
    # Run vunit function
    vu.main()
 
-Test benches are written using supporing libraries in :ref:`VHDL
+Test benches are written using supporting libraries in :ref:`VHDL
 <vhdl_test_benches>` and :ref:`SystemVerilog <sv_test_benches>`
-respectively. A test bench can in iself be a single unnamed test or
+respectively. A test bench can in itself be a single unnamed test or
 contain multiple named test cases.
 
 There are many :ref:`example projects <examples>` demonstrating the
@@ -66,9 +76,9 @@ From ``tb_example.vhd`` a single test case named ``lib.tb_example`` is
 created.
 
 It is also possible to put multiple tests in a single test
-bench that are each run in individual simulations. Putting multiple
-tests in the same test bench is a good way to share a common test
-environment.
+bench that are each run in individual, independent, simulations.
+Putting multiple tests in the same test bench is a good way to share a common
+test environment.
 
 .. literalinclude:: ../examples/vhdl/user_guide/tb_example_many.vhd
    :caption: VHDL test bench with multiple tests: `tb_example_many.vhd`
@@ -105,6 +115,22 @@ in the same test bench is a good way to share a common test
 environment.
 
 The above example code can be found in :vunit_example:`verilog/user_guide`.
+
+.. _continuous_integration:
+
+Continuous Integration Environment
+----------------------------------
+VUnit is easily utilized with continuous integration environments such as
+`Jenkins`_. Once a project ``run.py`` has been setup, tests can be run in a
+headless environment with standardized xUnit style output to a file.
+
+.. code-block:: console
+   :caption: Execute VUnit tests on CI server with XML output
+
+    python run.py --xunit-xml test_output.xml
+
+After tests have finished running, the ``test_output.xml`` file can be parsed
+using standard xUnit test parsers such as `Jenkins xUnit Plugin`_.
 
 .. _examples:
 
@@ -153,3 +179,6 @@ There are many examples demonstrating more specific usage of VUnit listed below:
   Demonstrates the ``com`` message passing package which can be used
   to communicate arbitrary objects between processes.  Further reading
   can be found in the :ref:`com user guide <com_user_guide>`
+
+.. _Jenkins: http://jenkins-ci.org/
+.. _Jenkins xUnit Plugin: http://wiki.jenkins-ci.org/display/JENKINS/xUnit+Plugin

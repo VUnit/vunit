@@ -30,11 +30,12 @@ Main Features
    handle fatal run-time errors (e.g. division by zero), and
    ensures test case independence.
 -  Scanners for identifying files, tests, file dependencies, and file
-   changes enable for automatic (re)compilation and execution of test
+   changes enable automatic (re)compilation and execution of test
    suites.
 -  Can run test cases in parallel to take advantage of multi-core
    machines.
--  Scripting as well as command line support.
+-  :ref:`Scriptable API <python_interface>` as well as :ref:`command line <cli>` 
+   support.
 -  Support for running same test suite with different generics.
 -  VHDL test runner which enables test execution for not fully supported
    simulators.
@@ -45,7 +46,8 @@ Main Features
    and multiple loggers. Spreadsheet tool integration.
 -  Location preprocessor that traces log and check calls back to file
    and line number.
--  JUnit report files for better `Jenkins`_ integration.
+-  JUnit report files for better `Jenkins`_ :ref:`integration
+   <continuous_integration>`.
 
 Requirements
 ------------
@@ -153,7 +155,7 @@ files are licensed under the terms of `ARTISTIC License`_.
 
 .. _xUnit: http://en.wikipedia.org/wiki/XUnit
 .. _Jenkins: http://jenkins-ci.org/
-.. _Aldec Riviera-PRO: https://www.aldec.com/en/products/functional_verification/riviera-pro%5D
+.. _Aldec Riviera-PRO: https://www.aldec.com/en/products/functional_verification/riviera-pro
 .. _Aldec Active-HDL: https://www.aldec.com/en/products/fpga_simulation/active-hdl
 .. _Mentor Graphics ModelSim/Questa: http://www.mentor.com/products/fv/modelsim/
 .. _GHDL: https://sourceforge.net/projects/ghdl-updates/
