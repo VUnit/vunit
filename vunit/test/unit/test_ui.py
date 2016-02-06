@@ -226,6 +226,38 @@ end architecture;
         lib1.get_source_file(file_name)
         lib2.get_source_file(file_name)
 
+    def test_get_compile_order_smoke_test(self):
+        ui = self._create_ui()
+        lib1 = ui.add_library("lib1")
+        lib2 = ui.add_library("lib2")
+        file_name = self.create_entity_file()
+        lib1.add_source_file(file_name)
+        lib2.add_source_file(file_name)
+
+        # Without argument
+        compile_order = ui.get_compile_order()
+        self.assertEqual(len(compile_order), 2)
+        self.assertEqual(compile_order[0].name, file_name)
+        self.assertEqual(compile_order[1].name, file_name)
+
+        # With argument
+        compile_order = ui.get_compile_order(lib1.get_source_file(file_name))
+        self.assertEqual(len(compile_order), 1)
+        self.assertEqual(compile_order[0].name, file_name)
+
+    def test_library_attributes(self):
+        ui = self._create_ui()
+        lib1 = ui.add_library("lib1")
+        self.assertEqual(lib1.name, "lib1")
+
+    def test_source_file_attributes(self):
+        ui = self._create_ui()
+        lib = ui.library("lib")
+        self.create_file("file_name.vhd")
+        source_file = lib.add_source_file("file_name.vhd")
+        self.assertEqual(source_file.name, "file_name.vhd")
+        self.assertEqual(source_file.library.name, "lib")
+
     def test_get_source_files_errors(self):
         ui = self._create_ui()
         lib1 = ui.add_library("lib1")

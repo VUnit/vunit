@@ -9,8 +9,7 @@
 """
 .. autoclass:: vunit.ui.VUnit()
    :members:
-   :exclude-members: get_project_compile_order,
-      add_preprocessor,
+   :exclude-members: add_preprocessor,
       enable_location_preprocessing,
       enable_check_preprocessing
       add_builtins
@@ -444,7 +443,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                     fnmatch(relpath(source_file.name), pattern)):
                 continue
 
-            results.append(SourceFile(source_file, self._project))
+            results.append(SourceFile(source_file, self._project, self))
 
         if (not allow_empty) and len(results) == 0:
             raise ValueError(("Pattern %r did not match any file. "
@@ -513,7 +512,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                                                         library_name,
                                                         file_type=file_type,
                                                         include_dirs=include_dirs),
-                          self._project)
+                          self._project,
+                          self)
 
     def _preprocess(self, library_name, file_name, preprocessors):
         """
@@ -763,15 +763,22 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             library = self.library(library_name)
         add_osvvm(library)
 
-    def get_project_compile_order(self, target=None):
+    def get_compile_order(self, source_files=None):
         """
-        Get all project files in compile order.  An optional target
-        file may be specified causing only its direct and indirect
-        dependencies to be included.
+        Get the compile order of all or specific source files and
+        their dependencies
+
+        :param source_files: A list of :class:`.SourceFile` objects or `None` meaing all
+        :returns: A list of :class:`.SourceFile` objects in compile order.
         """
-        if target is not None:
-            target = abspath(target)
-        return self._project.get_dependencies_in_compile_order(target=target)
+        if source_files is None:
+            source_files = self.get_source_files()
+
+        target_files = [source_file._source_file  # pylint: disable=protected-access
+                        for source_file in source_files]
+        source_files = self._project.get_dependencies_in_compile_order(target_files)
+        return SourceFileList([SourceFile(source_file, self._project, self)
+                               for source_file in source_files])
 
 
 class Library(object):
@@ -784,6 +791,13 @@ class Library(object):
         self._project = project
         self._configuration = configuration
         self._scope = create_scope(self._library_name)
+
+    @property
+    def name(self):
+        """
+        The name of the library
+        """
+        return self._library_name
 
     def set_generic(self, name, value):
         """
@@ -1278,9 +1292,24 @@ class SourceFile(object):
     """
     A single file
     """
-    def __init__(self, source_file, project):
+    def __init__(self, source_file, project, ui):
         self._source_file = source_file
         self._project = project
+        self._ui = ui
+
+    @property
+    def name(self):
+        """
+        The name of the SourceFile
+        """
+        return relpath(self._source_file.name)
+
+    @property
+    def library(self):
+        """
+        The library of the source file
+        """
+        return self._ui.library(self._source_file.library.name)
 
     def set_compile_option(self, name, value):
         """

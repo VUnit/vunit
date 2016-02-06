@@ -290,25 +290,15 @@ class Project(object):
 
         return sorted(affected_files, key=comparison_key)
 
-    def get_dependencies_in_compile_order(self, target, library=None):
+    def get_dependencies_in_compile_order(self, target_files=None):
         """
-        Get a list of dependencies of target, if target is specified.
-        Otherwise, get a list of all files in the project.
-        The files will be listed in compile order.
-        target -- absolute or relative path to a file
+        Get a list of dependencies of target files including the
+        target files.
+        :param target_files: A list of SourceFiles
         """
-        if target is None:
-            return self.get_files_in_compile_order(incremental=False)
 
-        target_files = []
-        for library in self._libraries.values():
-            try:
-                target_files.append(library.get_source_file(target))
-            except KeyError:
-                pass
-
-        if len(target_files) == 0:
-            raise KeyError(target)
+        if target_files is None:
+            target_files = self.get_source_files_in_order()
 
         dependency_graph = self._create_dependency_graph()
         affected_files = dependency_graph.get_dependencies(set(target_files))
