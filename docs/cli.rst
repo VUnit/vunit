@@ -135,4 +135,4 @@ VUnit automatically detects which simulators are available on the
 found. For people who have multiple simulators installed the
 ``VUNIT_SIMULATOR`` environment variable can be set to one of
 ``activehdl``, ``rivierapro``, ``ghdl`` or ``modelsim`` to explicitly
-choose the simulator explicitly.
+specify the simulator.
