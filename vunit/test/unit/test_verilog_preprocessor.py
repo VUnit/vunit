@@ -621,6 +621,72 @@ keep''')
             '`elsif "hello"\n'
             '       ~~~~~~~')
 
+    def test_undefineall(self):
+        defines = {}
+        tokens = preprocess('''\
+`define foo keep
+`define bar keep2
+`foo
+`undefineall''', defines)
+        self.assert_equal_noloc(tokens, tokenize("keep\n"))
+        self.assertEqual(defines, {})
+
+    def test_resetall(self):
+        defines = {}
+        tokens = preprocess('''\
+`define foo keep
+`define bar keep2
+`foo
+`resetall''', defines)
+        self.assert_equal_noloc(tokens, tokenize("keep\n"))
+        self.assertEqual(defines, {})
+
+    def test_undef(self):
+        defines = {}
+        tokens = preprocess('''\
+`define foo keep
+`define bar keep2
+`foo
+`undef foo''', defines)
+        self.assert_equal_noloc(tokens, tokenize("keep\n"))
+        self.assertEqual(defines, {"bar": Macro("bar", tokenize("keep2"))})
+
+    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
+    def test_undef_eof(self, logger):
+        defines = {}
+        tokens = preprocess_loc('`undef')
+        self.assert_equal_noloc(tokens, [])
+        self.assertEqual(defines, {})
+        logger.warning.assert_called_once_with(
+            "EOF reached when parsing `undef\n%s",
+            "at fn.v line 1:\n"
+            '`undef\n'
+            '~~~~~~')
+
+    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
+    def test_undef_bad_argument(self, logger):
+        defines = {}
+        tokens = preprocess_loc('`undef "foo"', defines)
+        self.assert_equal_noloc(tokens, [])
+        self.assertEqual(defines, {})
+        logger.warning.assert_called_once_with(
+            "Bad argument to `undef\n%s",
+            "at fn.v line 1:\n"
+            '`undef "foo"\n'
+            '       ~~~~~')
+
+    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
+    def test_undef_not_defined(self, logger):
+        defines = {}
+        tokens = preprocess_loc('`undef foo', defines)
+        self.assert_equal_noloc(tokens, [])
+        self.assertEqual(defines, {})
+        logger.warning.assert_called_once_with(
+            "`undef argument was not previously defined\n%s",
+            "at fn.v line 1:\n"
+            '`undef foo\n'
+            '       ~~~')
+
     def write_file(self, file_name, contents):
         """
         Write file with contents into output path

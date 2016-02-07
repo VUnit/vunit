@@ -51,6 +51,12 @@ class VerilogPreprocessor(object):
                     if macro is not None:
                         defines[macro.name] = macro
 
+                elif token.value == "undef":
+                    undef(token, stream, defines)
+
+                elif token.value in ("undefineall", "resetall"):
+                    defines.clear()
+
                 elif token.value == "include":
                     result += self.include(token, stream, include_paths, included_files, defines)
 
@@ -206,6 +212,28 @@ class VerilogPreprocessor(object):
                                    previous_location=token.location,
                                    create_locations=self._create_locations)
         return self.preprocess(included_tokens, defines, include_paths, included_files)
+
+
+def undef(undef_token, stream, defines):
+    """
+    Handles undef directive
+    """
+    stream.skip_while(tokenizer.WHITESPACE, tokenizer.NEWLINE)
+    try:
+        name_token = stream.pop()
+    except EOFException:
+        raise LocationException.warning("EOF reached when parsing `undef",
+                                        undef_token.location)
+
+    if name_token.kind != tokenizer.IDENTIFIER:
+        raise LocationException.warning("Bad argument to `undef",
+                                        name_token.location)
+
+    if name_token.value not in defines:
+        raise LocationException.warning("`undef argument was not previously defined",
+                                        name_token.location)
+
+    del defines[name_token.value]
 
 
 def define(define_token, stream):
