@@ -42,7 +42,7 @@ begin
       neg := input_tdata_p2;
     end if;
 
-    if input_tlast_p1 then
+    if input_tlast_p1 = '1' then
       pos := input_tdata_p1;
     else
       pos := input_tdata;
@@ -51,8 +51,8 @@ begin
     output_tdata <= signed(resize(pos, output_tdata'length) -
                            resize(neg, output_tdata'length));
 
-    if input_tvalid_p1 then
-      if input_tlast_p1 then
+    if input_tvalid_p1 = '1' then
+      if input_tlast_p1 ='1' then
         first := true;
       else
         first := false;
