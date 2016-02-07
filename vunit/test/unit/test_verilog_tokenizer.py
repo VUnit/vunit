@@ -22,7 +22,7 @@ class TestVerilogTokenizer(TestCase):
     def test_tokenizes_define(self):
         self.assertEqual(list(tokenize("`define name")),
                          [Token(tokenizer.PREPROCESSOR, value="define"),
-                          Token(tokenizer.WHITESPACE, value=""),
+                          Token(tokenizer.WHITESPACE, value=" "),
                           Token(tokenizer.IDENTIFIER, value="name")])
 
     def test_tokenizes_string_literal(self):
@@ -126,6 +126,6 @@ class TestVerilogTokenizer(TestCase):
                                create_locations=True))
         self.assertEqual(tokens, [
             Token(tokenizer.PREPROCESSOR, value="define", location=(("fn", (0, 6)), None)),
-            Token(tokenizer.WHITESPACE, value="", location=(("fn", (7, 7)), None)),
+            Token(tokenizer.WHITESPACE, value=" ", location=(("fn", (7, 7)), None)),
             Token(tokenizer.IDENTIFIER, value="foo", location=(("fn", (8, 10)), None)),
         ])

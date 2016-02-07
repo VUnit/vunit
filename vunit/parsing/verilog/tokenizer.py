@@ -343,8 +343,7 @@ NEWLINE = TOKENIZER.add(
 
 WHITESPACE = TOKENIZER.add(
     "whitespace",
-    r"\s +",
-    remove_value)
+    r"\s +")
 
 MULTI_COMMENT = TOKENIZER.add(
     "multi_line_comment",
