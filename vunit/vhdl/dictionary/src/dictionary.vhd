@@ -67,7 +67,7 @@ package body dictionary is
           return;
         end if;
       else
-        check(false, "Corrupt frozen directory item """ & key_value_pairs(i).all & """ in """ & d & """.", level => failure);
+        check(false, "Corrupt frozen dictionary item """ & key_value_pairs(i).all & """ in """ & d & """.", level => failure);
         write(value, string'("will return when log is mocked out during unit test."));
         return;
       end if;
