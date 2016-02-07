@@ -9,7 +9,7 @@ VUnit is invoked by a user-defined project specified in a Python script.
 At minimum, a VUnit project consists of a set of HDL source files mapped to
 libraries. The project serves as single point of entry for compiling and
 running all tests within an HDL project. VUnit provides automatic scanning
-for unit tests (test benches), automatic determination of compilation order, 
+for unit tests (test benches), automatic determination of compilation order,
 and incremental recompilation of modified sources.
 
 The top level Python script is typically named ``run.py``.
@@ -29,7 +29,7 @@ Other Python packages or modules may be imported in order to setup the project.
 
 Once the files for a project have been included, the :ref:`command line
 interface <cli>` can then be used to perform a variety of actions on the
-project. For example, listing all tests discovered, or running individual tests 
+project. For example, listing all tests discovered, or running individual tests
 matching a wildcard pattern. The Python interface also supports running a test
 bench or test for many different combinations of generic values.
 
@@ -116,22 +116,6 @@ environment.
 
 The above example code can be found in :vunit_example:`verilog/user_guide`.
 
-.. _continuous_integration:
-
-Continuous Integration Environment
-----------------------------------
-VUnit is easily utilized with continuous integration environments such as
-`Jenkins`_. Once a project ``run.py`` has been setup, tests can be run in a
-headless environment with standardized xUnit style output to a file.
-
-.. code-block:: console
-   :caption: Execute VUnit tests on CI server with XML output
-
-    python run.py --xunit-xml test_output.xml
-
-After tests have finished running, the ``test_output.xml`` file can be parsed
-using standard xUnit test parsers such as `Jenkins xUnit Plugin`_.
-
 .. _examples:
 
 Examples
@@ -179,6 +163,3 @@ There are many examples demonstrating more specific usage of VUnit listed below:
   Demonstrates the ``com`` message passing package which can be used
   to communicate arbitrary objects between processes.  Further reading
   can be found in the :ref:`com user guide <com_user_guide>`
-
-.. _Jenkins: http://jenkins-ci.org/
-.. _Jenkins xUnit Plugin: http://wiki.jenkins-ci.org/display/JENKINS/xUnit+Plugin

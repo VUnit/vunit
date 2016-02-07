@@ -58,17 +58,18 @@ There are three methods to make VUnit importable in your ``run.py`` script.:
       import vunit
 
 For VUnit Developers
---------------------
+~~~~~~~~~~~~~~~~~~~~
 For those interested in development of VUnit, it is best to install
-VUnit so that the sources from git are installed in-place instead of to the
-Python site-packages directory. This can be achieved by using the ``-e`` flag
-with ``pip``, or the ``develop`` option with ``setup.py``.
+VUnit so that the sources from git are installed in-place instead of
+to the Python site-packages directory. This can be achieved by using
+the ``-e`` flag with ``pip``, or the ``develop`` option with
+``setup.py``, or setting the ``PYTHONPATH`` environment variable.
 
    .. code-block:: console
 
       > git clone https://github.com/VUnit/vunit.git
       > cd vunit
-      
+
       > python setup.py develop
       or
       > pip install -e .

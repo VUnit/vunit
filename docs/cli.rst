@@ -126,6 +126,25 @@ ModelSim:
   restart -f
   vunit_run
 
+.. _continuous_integration:
+
+Continuous Integration Environment
+----------------------------------
+VUnit is easily utilized with continuous integration environments such as
+`Jenkins`_. Once a project ``run.py`` has been setup, tests can be run in a
+headless environment with standardized xUnit style output to a file.
+
+.. code-block:: console
+   :caption: Execute VUnit tests on CI server with XML output
+
+    python run.py --xunit-xml test_output.xml
+
+After tests have finished running, the ``test_output.xml`` file can be parsed
+using standard xUnit test parsers such as `Jenkins xUnit Plugin`_.
+
+.. _Jenkins: http://jenkins-ci.org/
+.. _Jenkins xUnit Plugin: http://wiki.jenkins-ci.org/display/JENKINS/xUnit+Plugin
+
 .. _simulator_selection:
 
 Simulator Selection
