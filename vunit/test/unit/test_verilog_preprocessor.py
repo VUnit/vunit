@@ -315,7 +315,7 @@ class TestVerilogPreprocessor(TestCase):
         self.assertEqual(included_files, [])
         # Is debug message since there are so many builtin includes in tools
         logger.debug.assert_called_once_with(
-            "Could not file verilog `include file missing.svh\n%s",
+            "Could not find `include file missing.svh\n%s",
             "at fn.v line 1:\n"
             '`include "missing.svh"\n'
             "         ~~~~~~~~~~~~~")

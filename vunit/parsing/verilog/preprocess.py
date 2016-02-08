@@ -203,7 +203,7 @@ class VerilogPreprocessor(object):
         else:
             # Is debug message since there are so many builtin includes in tools
             raise LocationException.debug(
-                "Could not file verilog `include file %s" % file_name_tok.value,
+                "Could not find `include file %s" % file_name_tok.value,
                 file_name_tok.location)
 
         included_files.append(full_name)
