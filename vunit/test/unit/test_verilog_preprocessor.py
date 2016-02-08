@@ -687,6 +687,41 @@ keep''')
             '`undef foo\n'
             '       ~~~')
 
+    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
+    def test_ignores_celldefine(self, logger):
+        tokens = preprocess_loc('`celldefine`endcelldefine keep')
+        self.assert_equal_noloc(tokens, tokenize(" keep"))
+        assert not logger.debug.called
+        assert not logger.warning.called
+
+    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
+    def test_ignores_timescale(self, logger):
+        tokens = preprocess_loc('`timescale 1 ns / 1 ps\nkeep')
+        self.assert_equal_noloc(tokens, tokenize("\nkeep"))
+        assert not logger.debug.called
+        assert not logger.warning.called
+
+    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
+    def test_ignores_default_nettype(self, logger):
+        tokens = preprocess_loc('`default_nettype none\nkeep')
+        self.assert_equal_noloc(tokens, tokenize("\nkeep"))
+        assert not logger.debug.called
+        assert not logger.warning.called
+
+    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
+    def test_ignores_nounconnected_drive(self, logger):
+        tokens = preprocess_loc('`nounconnected_drive keep')
+        self.assert_equal_noloc(tokens, tokenize(" keep"))
+        assert not logger.debug.called
+        assert not logger.warning.called
+
+    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
+    def test_ignores_unconnected_drive(self, logger):
+        tokens = preprocess_loc('`unconnected_drive pull1\nkeep')
+        self.assert_equal_noloc(tokens, tokenize("\nkeep"))
+        assert not logger.debug.called
+        assert not logger.warning.called
+
     def write_file(self, file_name, contents):
         """
         Write file with contents into output path

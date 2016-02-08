@@ -46,48 +46,65 @@ class VerilogPreprocessor(object):
                 continue
 
             try:
-                if token.value == "define":
-                    macro = define(token, stream)
-                    if macro is not None:
-                        defines[macro.name] = macro
-
-                elif token.value == "undef":
-                    undef(token, stream, defines)
-
-                elif token.value in ("undefineall", "resetall"):
-                    defines.clear()
-
-                elif token.value == "include":
-                    result += self.include(token, stream, include_paths, included_files, defines)
-
-                elif token.value in ("ifdef", "ifndef"):
-                    try:
-                        tokens = self.if_statement(token, stream, defines)
-                        result += self.preprocess(tokens,
-                                                  defines=defines,
-                                                  include_paths=include_paths,
-                                                  included_files=included_files)
-                    except EOFException:
-                        raise LocationException.warning(
-                            "EOF reached when parsing `%s" % token.value,
-                            token.location)
-
-                elif token.value in defines:
-                    macro = defines[token.value]
-                    result += self.preprocess(macro.expand_from_stream(token,
-                                                                       stream,
-                                                                       previous=token.location),
-                                              defines=defines,
-                                              include_paths=include_paths,
-                                              included_files=included_files)
-                else:
-                    raise LocationException.debug(
-                        "Verilog undefined name",
-                        token.location)
+                result += self.preprocessor(token, stream, defines, include_paths, included_files)
             except LocationException as exc:
                 exc.log(LOGGER)
 
         return result
+
+    def preprocessor(self,  # pylint: disable=too-many-arguments
+                     token, stream, defines, include_paths, included_files):
+        """
+        Handle preprocessor token
+        """
+        if token.value == "define":
+            macro = define(token, stream)
+            if macro is not None:
+                defines[macro.name] = macro
+
+        elif token.value == "undef":
+            undef(token, stream, defines)
+
+        elif token.value in ("undefineall", "resetall"):
+            defines.clear()
+
+        elif token.value == "include":
+            return self.include(token, stream, include_paths, included_files, defines)
+
+        elif token.value in ("ifdef", "ifndef"):
+            try:
+                tokens = self.if_statement(token, stream, defines)
+                return self.preprocess(tokens,
+                                       defines=defines,
+                                       include_paths=include_paths,
+                                       included_files=included_files)
+            except EOFException:
+                raise LocationException.warning(
+                    "EOF reached when parsing `%s" % token.value,
+                    token.location)
+
+        elif token.value in ("celldefine", "endcelldefine", "nounconnected_drive"):
+            # Ignored
+            pass
+
+        elif token.value in ("timescale", "default_nettype", "unconnected_drive"):
+            # Ignore directive and arguments
+            stream.skip_until(tokenizer.NEWLINE)
+
+        elif token.value in defines:
+            macro = defines[token.value]
+            return self.preprocess(macro.expand_from_stream(token,
+                                                            stream,
+                                                            previous=token.location),
+                                   defines=defines,
+                                   include_paths=include_paths,
+                                   included_files=included_files)
+        else:
+            raise LocationException.debug(
+                "Verilog undefined name",
+                token.location)
+
+        return []
 
     @staticmethod
     def if_statement(if_token, stream, defines):
