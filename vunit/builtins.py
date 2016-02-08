@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Functions to add builtin VHDL code to a project for compilation
@@ -27,7 +27,7 @@ def add_verilog_include_dir(include_dirs):
     """
     Add VUnit Verilog include directory
     """
-    include_dirs.insert(0, join(VERILOG_PATH, "include"))
+    return [join(VERILOG_PATH, "include")] + include_dirs
 
 
 def add_vhdl_builtins(library, vhdl_standard, mock_lang=False, mock_log=False):

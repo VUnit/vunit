@@ -508,7 +508,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         if file_type == "verilog":
             include_dirs = include_dirs if include_dirs is not None else []
-            add_verilog_include_dir(include_dirs)
+            include_dirs = add_verilog_include_dir(include_dirs)
 
         file_name = self._preprocess(library_name, abspath(file_name), preprocessors)
         return SourceFile(self._project.add_source_file(file_name,
@@ -901,7 +901,7 @@ class Library(object):
     def get_source_files(self, pattern="*", allow_empty=False):
         return self._parent.get_source_files(pattern, self._library_name, allow_empty)
 
-    def add_source_files(self, pattern, preprocessors=None, allow_empty=False):
+    def add_source_files(self, pattern, preprocessors=None, include_dirs=None, allow_empty=False):
         """
         Add source files matching wildcard pattern to library
 
@@ -917,10 +917,10 @@ class Library(object):
            library.add_source_files("*.vhd")
 
         """
-        return self._parent.add_source_files(pattern, self._library_name, preprocessors,
+        return self._parent.add_source_files(pattern, self._library_name, preprocessors, include_dirs,
                                              allow_empty=allow_empty)
 
-    def add_source_file(self, pattern, preprocessors=None):
+    def add_source_file(self, pattern, preprocessors=None, include_dirs=None):
         """
         Add source file to library
 
@@ -935,7 +935,7 @@ class Library(object):
            library.add_source_file("file.vhd")
 
         """
-        return self._parent.add_source_file(pattern, self._library_name, preprocessors)
+        return self._parent.add_source_file(pattern, self._library_name, preprocessors, include_dirs)
 
     def package(self, name):
         """

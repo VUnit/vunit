@@ -12,7 +12,7 @@ Acceptance test of the VUnit public interface class
 
 import unittest
 from string import Template
-from os.path import join, dirname, basename, exists
+from os.path import join, dirname, basename, exists, abspath
 import os
 import re
 from shutil import rmtree
@@ -21,6 +21,7 @@ from vunit.ui import VUnit
 from vunit.project import VHDL_EXTENSIONS, VERILOG_EXTENSIONS
 from vunit.test.mock_2or3 import mock
 from vunit.ostools import renew_path
+from vunit.builtins import add_verilog_include_dir
 
 
 class TestUi(unittest.TestCase):
@@ -354,6 +355,36 @@ Listed 2 files""".splitlines()))
                       foo_file._source_file,
                       depends_on=bar_file._source_file)
             for foo_file in foo_files])
+
+    def test_add_source_files_has_include_dirs(self):
+        file_name = "verilog.v"
+        include_dirs = ["include_dir"]
+        all_include_dirs = add_verilog_include_dir(include_dirs)
+        self.create_file(file_name)
+
+        def check(action):
+            """
+            Helper to check that project method was called
+            """
+            with mock.patch.object(ui, "_project", autospec=True) as project:
+                action()
+                project.add_source_file.assert_called_once_with(abspath("verilog.v"),
+                                                                "lib",
+                                                                file_type="verilog",
+                                                                include_dirs=all_include_dirs)
+        ui = self._create_ui()
+        check(lambda: ui.add_source_files(file_name, "lib", include_dirs=include_dirs))
+
+        ui = self._create_ui()
+        check(lambda: ui.add_source_file(file_name, "lib", include_dirs=include_dirs))
+
+        ui = self._create_ui()
+        lib = ui.library("lib")
+        check(lambda: lib.add_source_files(file_name, include_dirs=include_dirs))
+
+        ui = self._create_ui()
+        lib = ui.library("lib")
+        check(lambda: lib.add_source_file(file_name, include_dirs=include_dirs))
 
     def _test_pre_config_helper(self, retval, test_not_entity=False):
         """
