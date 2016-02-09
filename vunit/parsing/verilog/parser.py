@@ -4,15 +4,19 @@
 #
 # Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
 
+# pylint: disable=unused-wildcard-import
+# pylint: disable=wildcard-import
+
 """
 Verilog parsing functionality
 """
 
 from os.path import dirname
 from vunit.parsing.tokenizer import TokenStream, EOFException, LocationException
-from vunit.parsing.verilog.tokenizer import tokenize
+from vunit.parsing.verilog.tokenizer import VerilogTokenizer
 from vunit.parsing.verilog.preprocess import VerilogPreprocessor
-import vunit.parsing.verilog.tokenizer as tokenizer
+from vunit.parsing.verilog.tokens import *
+
 import logging
 LOGGER = logging.getLogger(__name__)
 
@@ -23,11 +27,21 @@ class VerilogParser(object):
     """
 
     def __init__(self):
-        pass
+        self._tokenizer = VerilogTokenizer()
+        self._preprocessor = VerilogPreprocessor(self._tokenizer)
 
-    @staticmethod
-    def parse(code, file_name, include_paths, content_hash):  # pylint: disable=unused-argument
-        return VerilogDesignFile.parse(code, file_name, include_paths)
+    def parse(self, code, file_name, include_paths, content_hash=None):  # pylint: disable=unused-argument
+        """
+        Parse verilog code
+        """
+        include_paths = [] if include_paths is None else include_paths
+        tokens = self._tokenizer.tokenize(code, file_name=file_name)
+        included_files = []
+        pp_tokens = self._preprocessor.preprocess(tokens,
+                                                  include_paths=[dirname(file_name)] + include_paths,
+                                                  included_files=included_files)
+
+        return VerilogDesignFile.parse(pp_tokens, included_files)
 
 
 class VerilogDesignFile(object):
@@ -47,23 +61,16 @@ class VerilogDesignFile(object):
         self.included_files = [] if included_files is None else included_files
 
     @classmethod
-    def parse(cls, code, file_name, include_paths=None):
+    def parse(cls, tokens, included_files):
         """
         Parse verilog file
         """
-        include_paths = [] if include_paths is None else include_paths
-        tokens = tokenize(code, file_name=file_name, create_locations=True)
-        included_files = []
-        preprocessor = VerilogPreprocessor()
-        pp_tokens = preprocessor.preprocess(tokens,
-                                            include_paths=[dirname(file_name)] + include_paths,
-                                            included_files=included_files)
         tokens = [token
-                  for token in pp_tokens
-                  if token.kind not in (tokenizer.WHITESPACE,
-                                        tokenizer.COMMENT,
-                                        tokenizer.NEWLINE,
-                                        tokenizer.MULTI_COMMENT)]
+                  for token in tokens
+                  if token.kind not in (WHITESPACE,
+                                        COMMENT,
+                                        NEWLINE,
+                                        MULTI_COMMENT)]
         return cls(modules=VerilogModule.find(tokens),
                    packages=VerilogPackage.find(tokens),
                    imports=cls.find_imports(tokens),
@@ -80,12 +87,12 @@ class VerilogDesignFile(object):
         while not stream.eof:
             token = stream.pop()
 
-            if token.kind != tokenizer.IMPORT:
+            if token.kind != IMPORT:
                 continue
             import_token = token
             try:
                 token = stream.pop()
-                if token.kind == tokenizer.IDENTIFIER:
+                if token.kind == IDENTIFIER:
                     results.append(token.value)
                 else:
                     LocationException.warning("import bad argument",
@@ -105,7 +112,7 @@ class VerilogDesignFile(object):
         while not stream.eof:
             token = stream.pop()
 
-            if not token.kind == tokenizer.IDENTIFIER:
+            if not token.kind == IDENTIFIER:
                 continue
             modulename = token.value
 
@@ -114,10 +121,10 @@ class VerilogDesignFile(object):
             except EOFException:
                 continue
 
-            if token.kind == tokenizer.HASH:
+            if token.kind == HASH:
                 results.append(modulename)
                 continue
-            elif token.kind == tokenizer.IDENTIFIER:
+            elif token.kind == IDENTIFIER:
                 results.append(modulename)
                 continue
 
@@ -138,10 +145,10 @@ class VerilogModule(object):
         """
         Parse parameter at point
         """
-        if not tokens[idx].kind == tokenizer.PARAMETER:
+        if not tokens[idx].kind == PARAMETER:
             return None
 
-        if tokens[idx + 2].kind == tokenizer.IDENTIFIER:
+        if tokens[idx + 2].kind == IDENTIFIER:
             return tokens[idx + 2].value
         else:
             return tokens[idx + 1].value
@@ -159,13 +166,13 @@ class VerilogModule(object):
         parameters = []
         while idx < len(tokens):
 
-            if tokens[idx].kind == tokenizer.MODULE:
+            if tokens[idx].kind == MODULE:
                 if balance == 0:
                     name = tokens[idx + 1].value
                     parameters = []
                 balance += 1
 
-            elif tokens[idx].kind == tokenizer.ENDMODULE:
+            elif tokens[idx].kind == ENDMODULE:
                 balance -= 1
                 if balance == 0:
                     results.append(cls(name, parameters))
@@ -195,7 +202,7 @@ class VerilogPackage(object):
         idx = 0
         results = []
         while idx < len(tokens):
-            if tokens[idx].kind == tokenizer.PACKAGE:
+            if tokens[idx].kind == PACKAGE:
                 idx += 1
                 name = tokens[idx].value
                 results.append(cls(name))

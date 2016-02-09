@@ -4,14 +4,16 @@
 #
 # Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
 
+# pylint: disable=unused-wildcard-import
+# pylint: disable=wildcard-import
+
 """
 Test of the Verilog tokenizer
 """
 
 from unittest import TestCase
-from vunit.parsing.tokenizer import Token
-from vunit.parsing.verilog.tokenizer import tokenize
-import vunit.parsing.verilog.tokenizer as tokenizer
+from vunit.parsing.verilog.tokenizer import VerilogTokenizer
+from vunit.parsing.verilog.tokens import *
 
 
 class TestVerilogTokenizer(TestCase):
@@ -20,112 +22,127 @@ class TestVerilogTokenizer(TestCase):
     """
 
     def test_tokenizes_define(self):
-        self.assertEqual(list(tokenize("`define name")),
-                         [Token(tokenizer.PREPROCESSOR, value="define"),
-                          Token(tokenizer.WHITESPACE, value=" "),
-                          Token(tokenizer.IDENTIFIER, value="name")])
+        self.check("`define name",
+                   [PREPROCESSOR(value="define"),
+                    WHITESPACE(value=" "),
+                    IDENTIFIER(value="name")])
 
     def test_tokenizes_string_literal(self):
-        self.assertEqual(list(tokenize('"hello"')),
-                         [Token(tokenizer.STRING, value='hello')])
+        self.check('"hello"',
+                   [STRING(value='hello')])
 
-        self.assertEqual(list(tokenize('"hel""lo"')),
-                         [Token(tokenizer.STRING, value='hel'),
-                          Token(tokenizer.STRING, value='lo')])
+        self.check('"hel""lo"',
+                   [STRING(value='hel'),
+                    STRING(value='lo')])
 
-        self.assertEqual(list(tokenize(r'"h\"ello"')),
-                         [Token(tokenizer.STRING, value=r'h\"ello')])
+        self.check(r'"h\"ello"',
+                   [STRING(value=r'h\"ello')])
 
-        self.assertEqual(list(tokenize(r'"h\"ello"')),
-                         [Token(tokenizer.STRING, value=r'h\"ello')])
+        self.check(r'"h\"ello"',
+                   [STRING(value=r'h\"ello')])
 
-        self.assertEqual(list(tokenize(r'"\"ello"')),
-                         [Token(tokenizer.STRING, value=r'\"ello')])
+        self.check(r'"\"ello"',
+                   [STRING(value=r'\"ello')])
 
-        self.assertEqual(list(tokenize(r'"\"\""')),
-                         [Token(tokenizer.STRING, value=r'\"\"')])
+        self.check(r'"\"\""',
+                   [STRING(value=r'\"\"')])
 
     def test_tokenizes_single_line_comment(self):
-        self.assertEqual(list(tokenize("// asd")),
-                         [Token(tokenizer.COMMENT, value=" asd")])
+        self.check("// asd",
+                   [COMMENT(value=" asd")])
 
-        self.assertEqual(list(tokenize("asd// asd")),
-                         [Token(tokenizer.IDENTIFIER, value="asd"),
-                          Token(tokenizer.COMMENT, value=" asd")])
+        self.check("asd// asd",
+                   [IDENTIFIER(value="asd"),
+                    COMMENT(value=" asd")])
 
-        self.assertEqual(list(tokenize("asd// asd //")),
-                         [Token(tokenizer.IDENTIFIER, value="asd"),
-                          Token(tokenizer.COMMENT, value=" asd //")])
+        self.check("asd// asd //",
+                   [IDENTIFIER(value="asd"),
+                    COMMENT(value=" asd //")])
 
     def test_tokenizes_multi_line_comment(self):
-        self.assertEqual(list(tokenize("/* asd */")),
-                         [Token(tokenizer.MULTI_COMMENT, value=" asd ")])
+        self.check("/* asd */",
+                   [MULTI_COMMENT(value=" asd ")])
 
-        self.assertEqual(list(tokenize("/* /* asd */")),
-                         [Token(tokenizer.MULTI_COMMENT, value=" /* asd ")])
+        self.check("/* /* asd */",
+                   [MULTI_COMMENT(value=" /* asd ")])
 
-        self.assertEqual(list(tokenize("/* /* asd */")),
-                         [Token(tokenizer.MULTI_COMMENT, value=" /* asd ")])
+        self.check("/* /* asd */",
+                   [MULTI_COMMENT(value=" /* asd ")])
 
-        self.assertEqual(list(tokenize("/* 1 \n 2 */")),
-                         [Token(tokenizer.MULTI_COMMENT, value=" 1 \n 2 ")])
+        self.check("/* 1 \n 2 */",
+                   [MULTI_COMMENT(value=" 1 \n 2 ")])
 
-        self.assertEqual(list(tokenize("/* 1 \r\n 2 */")),
-                         [Token(tokenizer.MULTI_COMMENT, value=" 1 \r\n 2 ")])
+        self.check("/* 1 \r\n 2 */",
+                   [MULTI_COMMENT(value=" 1 \r\n 2 ")])
 
     def test_tokenizes_semi_colon(self):
-        self.assertEqual(list(tokenize("asd;")),
-                         [Token(tokenizer.IDENTIFIER, value="asd"),
-                          Token(tokenizer.SEMI_COLON, value='')])
+        self.check("asd;",
+                   [IDENTIFIER(value="asd"),
+                    SEMI_COLON(value='')])
 
     def test_tokenizes_newline(self):
-        self.assertEqual(list(tokenize("asd\n")),
-                         [Token(tokenizer.IDENTIFIER, value="asd"),
-                          Token(tokenizer.NEWLINE, value='')])
+        self.check("asd\n",
+                   [IDENTIFIER(value="asd"),
+                    NEWLINE(value='')])
 
     def test_tokenizes_comma(self):
-        self.assertEqual(list(tokenize(",")),
-                         [Token(tokenizer.COMMA, value='')])
+        self.check(",",
+                   [COMMA(value='')])
 
     def test_tokenizes_parenthesis(self):
-        self.assertEqual(list(tokenize("()")),
-                         [Token(tokenizer.LPAR, value=''),
-                          Token(tokenizer.RPAR, value='')])
+        self.check("()",
+                   [LPAR(value=''),
+                    RPAR(value='')])
 
     def test_tokenizes_hash(self):
-        self.assertEqual(list(tokenize("#")),
-                         [Token(tokenizer.HASH, value='')])
+        self.check("#",
+                   [HASH(value='')])
 
     def test_tokenizes_equal(self):
-        self.assertEqual(list(tokenize("=")),
-                         [Token(tokenizer.EQUAL, value='')])
+        self.check("=",
+                   [EQUAL(value='')])
 
     def test_escaped_newline_ignored(self):
-        self.assertEqual(list(tokenize("a\\\nb")),
-                         [Token(tokenizer.IDENTIFIER, value='a'),
-                          Token(tokenizer.IDENTIFIER, value='b')])
+        self.check("a\\\nb",
+                   [IDENTIFIER(value='a'),
+                    IDENTIFIER(value='b')])
 
     def test_tokenizes_keywords(self):
-        self.assertEqual(list(tokenize("module")),
-                         [Token(tokenizer.MODULE, value='')])
-        self.assertEqual(list(tokenize("endmodule")),
-                         [Token(tokenizer.ENDMODULE, value='')])
-        self.assertEqual(list(tokenize("package")),
-                         [Token(tokenizer.PACKAGE, value='')])
-        self.assertEqual(list(tokenize("endpackage")),
-                         [Token(tokenizer.ENDPACKAGE, value='')])
-        self.assertEqual(list(tokenize("parameter")),
-                         [Token(tokenizer.PARAMETER, value='')])
-        self.assertEqual(list(tokenize("import")),
-                         [Token(tokenizer.IMPORT, value='')])
+        self.check("module",
+                   [MODULE(value='')])
+        self.check("endmodule",
+                   [ENDMODULE(value='')])
+        self.check("package",
+                   [PACKAGE(value='')])
+        self.check("endpackage",
+                   [ENDPACKAGE(value='')])
+        self.check("parameter",
+                   [PARAMETER(value='')])
+        self.check("import",
+                   [IMPORT(value='')])
 
     def test_has_location_information(self):
-        tokens = list(tokenize("""\
-`define foo""",
-                               file_name="fn",
-                               create_locations=True))
-        self.assertEqual(tokens, [
-            Token(tokenizer.PREPROCESSOR, value="define", location=(("fn", (0, 6)), None)),
-            Token(tokenizer.WHITESPACE, value=" ", location=(("fn", (7, 7)), None)),
-            Token(tokenizer.IDENTIFIER, value="foo", location=(("fn", (8, 10)), None)),
-        ])
+        self.check("`define foo", [
+            PREPROCESSOR(value="define", location=(("fn.v", (0, 6)), None)),
+            WHITESPACE(value=" ", location=(("fn.v", (7, 7)), None)),
+            IDENTIFIER(value="foo", location=(("fn.v", (8, 10)), None)),
+        ], strip_loc=False)
+
+    def setUp(self):
+        self.tokenizer = VerilogTokenizer()
+
+    def check(self, code, tokens, strip_loc=True):
+        """
+        Helper method to test tokenizer
+        Tokenize code and check that it matches tokens
+        optionally strip location information in comparison
+        """
+
+        def preprocess(tokens):
+            if strip_loc:
+                return [token.kind(token.value, None) for token in tokens]
+            else:
+                return tokens
+
+        self.assertEqual(preprocess(list(self.tokenizer.tokenize(code, "fn.v"))),
+                         tokens)

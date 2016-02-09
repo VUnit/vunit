@@ -9,7 +9,7 @@ Test of the Verilog parser
 """
 
 from unittest import TestCase
-from vunit.parsing.verilog.parser import VerilogDesignFile
+from vunit.parsing.verilog.parser import VerilogParser
 from vunit.test.mock_2or3 import mock
 
 
@@ -172,5 +172,5 @@ def parse(code):
             mock_file_exists.side_effect = file_exists_side_effect
             mock_read_file.side_effect = read_file_side_effect
 
-            design_file = VerilogDesignFile.parse(code, "file_name.sv", [])
+            design_file = VerilogParser().parse(code, "file_name.sv", [])
     return design_file

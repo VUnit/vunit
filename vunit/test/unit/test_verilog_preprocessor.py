@@ -5,6 +5,8 @@
 # Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 # pylint: disable=too-many-public-methods
+# pylint: disable=unused-wildcard-import
+# pylint: disable=wildcard-import
 
 """
 Test of the Verilog preprocessor
@@ -16,7 +18,8 @@ from vunit.ostools import renew_path, write_file
 
 from unittest import TestCase
 from vunit.parsing.verilog.preprocess import VerilogPreprocessor, Macro
-from vunit.parsing.verilog.tokenizer import tokenize, Token
+from vunit.parsing.verilog.tokenizer import VerilogTokenizer
+from vunit.parsing.tokenizer import Token
 from vunit.test.mock_2or3 import mock
 import shutil
 
@@ -37,463 +40,130 @@ class TestVerilogPreprocessor(TestCase):
         shutil.rmtree(self.output_path)
 
     def test_non_preprocess_tokens_are_kept(self):
-        defines = {}
-        tokens = tokenize('"hello"ident/*comment*///comment')
-        pp_tokens = preprocess('"hello"ident/*comment*///comment', defines)
-        self.assertEqual(pp_tokens, tokens)
-        self.assertEqual(defines, {})
+        result = self.preprocess('"hello"ident/*comment*///comment')
+        result.assert_has_tokens('"hello"ident/*comment*///comment')
+        result.assert_no_defines()
 
     def test_preprocess_define_without_value(self):
-        defines = {}
-        tokens = preprocess("`define foo", defines)
-        self.assertEqual(tokens, [])
-        self.assertEqual(defines, {"foo": Macro("foo")})
+        result = self.preprocess("`define foo")
+        result.assert_has_tokens("")
+        result.assert_has_defines({"foo": Macro("foo")})
 
-        defines = {}
-        tokens = preprocess("`define foo\nkeep", defines)
-        self.assertEqual(tokens, tokenize("keep"))
-        self.assertEqual(defines, {"foo": Macro("foo")})
-
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_preprocess_broken_define(self, logger):
-        defines = {}
-        tokens = preprocess_loc("`define", defines)
-        self.assertEqual(tokens, [])
-        self.assertEqual(defines, {})
-        logger.warning.assert_called_once_with(
-            "Verilog `define without argument\n%s",
-            "at fn.v line 1:\n"
-            "`define\n"
-            "~~~~~~~")
-
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_preprocess_broken_define_first_argument(self, logger):
-        defines = {}
-        tokens = preprocess_loc('`define "foo"', defines)
-        self.assertEqual(tokens, [])
-        self.assertEqual(defines, {})
-        logger.warning.assert_called_once_with(
-            "Verilog `define invalid name\n%s",
-            "at fn.v line 1:\n"
-            '`define "foo"\n'
-            "        ~~~~~")
-
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_preprocess_broken_define_argument_list(self, logger):
-        defines = {}
-        tokens = preprocess_loc('`define foo(', defines)
-        self.assertEqual(tokens, [])
-        self.assertEqual(defines, {})
-        logger.warning.assert_called_once_with(
-            "EOF reached when parsing `define argument list\n%s",
-            "at fn.v line 1:\n"
-            '`define foo(\n'
-            "           ~")
-        logger.warning.reset_mock()
-
-        defines = {}
-        tokens = preprocess_loc('`define foo(a', defines)
-        self.assertEqual(tokens, [])
-        self.assertEqual(defines, {})
-        logger.warning.assert_called_once_with(
-            "EOF reached when parsing `define argument list\n%s",
-            "at fn.v line 1:\n"
-            '`define foo(a\n'
-            "           ~")
-        logger.warning.reset_mock()
-
-        defines = {}
-        tokens = preprocess_loc('`define foo(a=', defines)
-        self.assertEqual(tokens, [])
-        self.assertEqual(defines, {})
-        logger.warning.assert_called_once_with(
-            "EOF reached when parsing `define argument list\n%s",
-            "at fn.v line 1:\n"
-            '`define foo(a=\n'
-            "           ~")
-        logger.warning.reset_mock()
-
-        defines = {}
-        tokens = preprocess_loc('`define foo(a=b', defines)
-        self.assertEqual(tokens, [])
-        self.assertEqual(defines, {})
-        logger.warning.assert_called_once_with(
-            "EOF reached when parsing `define argument list\n%s",
-            "at fn.v line 1:\n"
-            '`define foo(a=b\n'
-            "           ~")
-        logger.warning.reset_mock()
-
-        defines = {}
-        tokens = preprocess_loc('`define foo(a=)', defines)
-        self.assertEqual(tokens, [])
-        self.assertEqual(defines, {})
-        logger.warning.assert_called_once_with(
-            "EOF reached when parsing `define argument list\n%s",
-            "at fn.v line 1:\n"
-            '`define foo(a=)\n'
-            "           ~")
-        logger.warning.reset_mock()
-
-        defines = {}
-        tokens = preprocess_loc('`define foo("a"', defines)
-        self.assertEqual(tokens, [])
-        self.assertEqual(defines, {})
-        logger.warning.assert_called_once_with(
-            "EOF reached when parsing `define argument list\n%s",
-            "at fn.v line 1:\n"
-            '`define foo("a"\n'
-            "           ~")
-        logger.warning.reset_mock()
-
-        defines = {}
-        tokens = preprocess_loc('`define foo("a"=', defines)
-        self.assertEqual(tokens, [])
-        self.assertEqual(defines, {})
-        logger.warning.assert_called_once_with(
-            "EOF reached when parsing `define argument list\n%s",
-            "at fn.v line 1:\n"
-            '`define foo("a"=\n'
-            "           ~")
-        logger.warning.reset_mock()
+        result = self.preprocess("`define foo\nkeep")
+        result.assert_has_tokens("keep")
+        result.assert_has_defines({"foo": Macro("foo")})
 
     def test_preprocess_define_with_value(self):
-        defines = {}
-        tokens = preprocess("`define foo bar \"abc\"", defines)
-        self.assertEqual(tokens, [])
-        self.assertEqual(defines, {"foo": Macro("foo", tokenize("bar \"abc\""))})
+        result = self.preprocess("`define foo bar \"abc\"")
+        result.assert_has_tokens("")
+        result.assert_has_defines({"foo": Macro("foo", tokenize("bar \"abc\""))})
 
     def test_preprocess_define_with_lpar_value(self):
-        defines = {}
-        tokens = preprocess("`define foo (bar)", defines)
-        self.assertEqual(tokens, [])
-        self.assertEqual(defines, {"foo": Macro("foo", tokenize("(bar)"))})
+        result = self.preprocess("`define foo (bar)")
+        result.assert_has_tokens("")
+        result.assert_has_defines({"foo": Macro("foo", tokenize("(bar)"))})
 
     def test_preprocess_define_with_one_arg(self):
-        defines = {}
-        tokens = preprocess("`define foo(arg)arg 123", defines)
-        self.assertEqual(tokens, [])
-        self.assertEqual(defines,
-                         {"foo": Macro("foo", tokenize("arg 123"), args=("arg",))})
+        result = self.preprocess("`define foo(arg)arg 123")
+        result.assert_has_tokens("")
+        result.assert_has_defines({"foo": Macro("foo", tokenize("arg 123"), args=("arg",))})
 
     def test_preprocess_define_with_one_arg_ignores_initial_space(self):
-        defines = {}
-        tokens = preprocess("`define foo(arg) arg 123", defines)
-        self.assertEqual(tokens, [])
-        self.assertEqual(defines,
-                         {"foo": Macro("foo", tokenize("arg 123"), args=("arg",))})
+        result = self.preprocess("`define foo(arg) arg 123")
+        result.assert_has_tokens("")
+        result.assert_has_defines({"foo": Macro("foo", tokenize("arg 123"), args=("arg",))})
 
     def test_preprocess_define_with_multiple_args(self):
-        defines = {}
-        tokens = preprocess("`define foo( arg1, arg2)arg1 arg2", defines)
-        self.assertEqual(tokens, [])
-        self.assertEqual(defines,
-                         {"foo": Macro("foo", tokenize("arg1 arg2"), args=("arg1", "arg2"))})
+        result = self.preprocess("`define foo( arg1, arg2)arg1 arg2")
+        result.assert_has_tokens("")
+        result.assert_has_defines({"foo": Macro("foo", tokenize("arg1 arg2"), args=("arg1", "arg2"))})
 
     def test_preprocess_define_with_default_values(self):
-        defines = {}
-        tokens = preprocess("`define foo(arg1, arg2=default)arg1 arg2", defines)
-        self.assertEqual(tokens, [])
-        self.assertEqual(defines,
-                         {"foo": Macro("foo",
-                                       tokenize("arg1 arg2"),
-                                       args=("arg1", "arg2"),
-                                       defaults={"arg2": tokenize("default")})})
+        result = self.preprocess("`define foo(arg1, arg2=default)arg1 arg2")
+        result.assert_has_tokens("")
+        result.assert_has_defines({"foo": Macro("foo",
+                                                tokenize("arg1 arg2"),
+                                                args=("arg1", "arg2"),
+                                                defaults={"arg2": tokenize("default")})})
 
     def test_preprocess_substitute_define_without_args(self):
-        tokens = preprocess("""\
+        result = self.preprocess("""\
 `define foo bar \"abc\"
 `foo""")
-        self.assertEqual(tokens, tokenize("bar \"abc\""))
+        result.assert_has_tokens("bar \"abc\"")
 
     def test_preprocess_substitute_define_with_one_arg(self):
-        tokens = preprocess("""\
+        result = self.preprocess("""\
 `define foo(arg)arg 123
 `foo(hello hey)""")
-        self.assertEqual(tokens, tokenize("hello hey 123"))
+        result.assert_has_tokens("hello hey 123")
 
     def test_preprocess_substitute_define_with_multile_args(self):
-        tokens = preprocess("""\
+        result = self.preprocess("""\
 `define foo(arg1, arg2)arg1,arg2
 `foo(1 2, hello)""")
-        self.assertEqual(tokens, tokenize("1 2, hello"))
+        result.assert_has_tokens("1 2, hello")
 
     def test_preprocess_substitute_define_with_default_values(self):
-        defines = {}
-        tokens = preprocess("""\
+        result = self.preprocess("""\
 `define foo(arg1, arg2=default)arg1 arg2
-`foo(1)""", defines)
-        self.assertEqual(tokens, tokenize("1 default"))
-
-    def test_preprocess_substitute_define_broken_args(self):
-        tokens = preprocess("""\
-`define foo(arg1, arg2)arg1,arg2
-`foo(1 2)""")
-        self.assertEqual(tokens, tokenize(""))
-
-        tokens = preprocess("""\
-`define foo(arg1, arg2)arg1,arg2
-`foo""")
-        self.assertEqual(tokens, tokenize(""))
-
-        tokens = preprocess("""\
-`define foo(arg1, arg2)arg1,arg2
-`foo(""")
-        self.assertEqual(tokens, tokenize(""))
-
-        tokens = preprocess("""\
-`define foo(arg1, arg2)arg1,arg2
-`foo(1""")
-        self.assertEqual(tokens, tokenize(""))
-
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_preprocess_substitute_define_missing_argument(self, logger):
-        tokens = preprocess_loc("""\
-`define foo(arg1, arg2)arg1,arg2
 `foo(1)""")
-        self.assert_equal_noloc(tokens, tokenize(""))
-        logger.warning.assert_called_once_with(
-            "Missing value for argument arg2\n%s",
-            "at fn.v line 2:\n"
-            '`foo(1)\n'
-            "~~~~")
-
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_preprocess_substitute_define_too_many_argument(self, logger):
-        tokens = preprocess_loc("""\
-`define foo(arg1)arg1
-`foo(1, 2)""")
-        self.assert_equal_noloc(tokens, tokenize(""))
-        logger.warning.assert_called_once_with(
-            "Too many arguments got 2 expected 1\n%s",
-            "at fn.v line 2:\n"
-            '`foo(1, 2)\n'
-            "~~~~")
-
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_preprocess_substitute_define_eof(self, logger):
-        tokens = preprocess_loc("""\
-`define foo(arg1, arg2)arg1,arg2
-`foo(1 2""")
-        self.assert_equal_noloc(tokens, tokenize(""))
-        logger.warning.assert_called_once_with(
-            "EOF reached when parsing `define actuals\n%s",
-            "at fn.v line 2:\n"
-            '`foo(1 2\n'
-            "~~~~")
-
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_substitute_undefined(self, logger):
-        defines = {}
-        tokens = preprocess_loc('`foo', defines)
-        self.assert_equal_noloc(tokens, [])
-        self.assertEqual(defines, {})
-        # Debug since there are many custon `names in tools
-        logger.debug.assert_called_once_with(
-            "Verilog undefined name\n%s",
-            "at fn.v line 1:\n"
-            '`foo\n'
-            "~~~~")
+        result.assert_has_tokens("1 default")
 
     def test_preprocess_include_directive(self):
         self.write_file("include.svh", "hello hey")
-        included_files = []
-        tokens = preprocess('`include "include.svh"',
-                            include_paths=[self.output_path],
-                            included_files=included_files)
-        self.assertEqual(tokens, tokenize("hello hey"))
-        self.assertEqual(included_files, [join(self.output_path, "include.svh")])
-
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_preprocess_include_directive_missing_file(self, logger):
-
-        included_files = []
-        tokens = preprocess_loc('`include "missing.svh"',
-                                include_paths=[self.output_path],
-                                included_files=included_files)
-        self.assert_equal_noloc(tokens, tokenize(""))
-        self.assertEqual(included_files, [])
-        # Is debug message since there are so many builtin includes in tools
-        logger.debug.assert_called_once_with(
-            "Could not find `include file missing.svh\n%s",
-            "at fn.v line 1:\n"
-            '`include "missing.svh"\n'
-            "         ~~~~~~~~~~~~~")
-
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_preprocess_include_directive_missing_argument(self, logger):
-        included_files = []
-        tokens = preprocess_loc('`include',
-                                include_paths=[self.output_path],
-                                included_files=included_files)
-        self.assertEqual(tokens, [])
-        self.assertEqual(included_files, [])
-        logger.warning.assert_called_once_with(
-            "EOF reached when parsing `include argument\n%s",
-            "at fn.v line 1:\n"
-            '`include\n'
-            "~~~~~~~~")
-
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_preprocess_include_directive_bad_argument(self, logger):
-        included_files = []
-        self.write_file("include.svh", "hello hey")
-        tokens = preprocess_loc('`include foo "include.svh"',
-                                include_paths=[self.output_path],
-                                included_files=included_files)
-        self.assert_equal_noloc(tokens, tokenize(' "include.svh"'))
-        self.assertEqual(included_files, [])
-        logger.warning.assert_called_once_with(
-            "Verilog `include bad argument\n%s",
-            "at fn.v line 1:\n"
-            '`include foo "include.svh"\n'
-            "         ~~~")
+        result = self.preprocess('`include "include.svh"',
+                                 include_paths=[self.output_path])
+        result.assert_has_tokens("hello hey")
+        result.assert_included_files([join(self.output_path, "include.svh")])
 
     def test_preprocess_include_directive_from_define(self):
-        included_files = []
         self.write_file("include.svh", "hello hey")
-        tokens = preprocess('''\
+        result = self.preprocess('''\
 `define inc "include.svh"
 `include `inc''',
-                            include_paths=[self.output_path],
-                            included_files=included_files)
-        self.assertEqual(tokens, tokenize('hello hey'))
-        self.assertEqual(included_files, [join(self.output_path, "include.svh")])
+                                 include_paths=[self.output_path])
+        result.assert_has_tokens('hello hey')
+        result.assert_included_files([join(self.output_path, "include.svh")])
 
     def test_preprocess_include_directive_from_define_with_args(self):
-        included_files = []
         self.write_file("include.svh", "hello hey")
-        tokens = preprocess('''\
+        result = self.preprocess('''\
 `define inc(a) a
-`include `inc("include.svh")''',
-                            include_paths=[self.output_path],
-                            included_files=included_files)
-        self.assertEqual(tokens, tokenize('hello hey'))
-        self.assertEqual(included_files, [join(self.output_path, "include.svh")])
-
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_preprocess_include_directive_from_define_bad_argument(self, logger):
-        included_files = []
-        tokens = preprocess_loc('''\
-`define inc foo
-`include `inc
-keep''',
-                                include_paths=[self.output_path],
-                                included_files=included_files)
-        self.assert_equal_noloc(tokens, tokenize('\nkeep'))
-        self.assertEqual(included_files, [])
-        logger.warning.assert_called_once_with(
-            "Verilog `include has bad argument\n%s",
-            "from fn.v line 2:\n"
-            '`include `inc\n'
-            '         ~~~~\n'
-            "at fn.v line 1:\n"
-            '`define inc foo\n'
-            "            ~~~")
-
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_preprocess_include_directive_from_empty_define(self, logger):
-        included_files = []
-        tokens = preprocess_loc('''\
-`define inc
-`include `inc
-keep''',
-                                include_paths=[self.output_path],
-                                included_files=included_files)
-        self.assert_equal_noloc(tokens, tokenize('\nkeep'))
-        self.assertEqual(included_files, [])
-        logger.warning.assert_called_once_with(
-            "Verilog `include has bad argument, empty define `inc\n%s",
-            "at fn.v line 2:\n"
-            '`include `inc\n'
-            "         ~~~~")
-
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_preprocess_include_directive_from_define_not_defined(self, logger):
-        included_files = []
-        tokens = preprocess_loc('''\
-`include `inc''',
-                                include_paths=[self.output_path],
-                                included_files=included_files)
-        self.assert_equal_noloc(tokens, tokenize(''))
-        self.assertEqual(included_files, [])
-        logger.warning.assert_called_once_with(
-            "Verilog `include argument not defined\n%s",
-            "at fn.v line 1:\n"
-            '`include `inc\n'
-            "         ~~~~")
-
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_preprocess_error_in_include_file(self, logger):
-        included_files = []
-        self.write_file("include.svh", '`include foo')
-        tokens = preprocess_loc('\n\n`include "include.svh"',
-                                include_paths=[self.output_path],
-                                included_files=included_files)
-        self.assert_equal_noloc(tokens, tokenize('\n\n'))
-        self.assertEqual(included_files, [join(self.output_path, "include.svh")])
-        logger.warning.assert_called_once_with(
-            "Verilog `include bad argument\n%s",
-            "from fn.v line 3:\n"
-            '`include "include.svh"\n'
-            "~~~~~~~~\n"
-            "at include.svh line 1:\n"
-            '`include foo\n'
-            '         ~~~')
+`include `inc("include.svh")''', include_paths=[self.output_path])
+        result.assert_has_tokens('hello hey')
+        result.assert_included_files([join(self.output_path, "include.svh")])
 
     def test_preprocess_macros_are_recursively_expanded(self):
-        included_files = []
-        tokens = preprocess_loc('''\
+        result = self.preprocess('''\
 `define foo `bar
 `define bar xyz
 `foo
 `define bar abc
 `foo
 ''',
-                                include_paths=[self.output_path],
-                                included_files=included_files)
-        self.assert_equal_noloc(tokens, tokenize('xyz\nabc\n'))
-        self.assertEqual(included_files, [])
-
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_preprocess_error_in_expanded_define(self, logger):
-        included_files = []
-        tokens = preprocess_loc('''\
-`define foo `include wrong
-`foo
-''',
-                                include_paths=[self.output_path],
-                                included_files=included_files)
-        self.assert_equal_noloc(tokens, tokenize('\n'))
-        self.assertEqual(included_files, [])
-        logger.warning.assert_called_once_with(
-            "Verilog `include bad argument\n%s",
-            "from fn.v line 2:\n"
-            '`foo\n'
-            '~~~~\n'
-            "at fn.v line 1:\n"
-            '`define foo `include wrong\n'
-            "                     ~~~~~")
+                                 include_paths=[self.output_path])
+        result.assert_has_tokens('xyz\nabc\n')
 
     def test_ifndef_taken(self):
-        tokens = preprocess_loc('''\
+        result = self.preprocess('''\
 `ifndef foo
 taken
 `endif
 keep''')
-        self.assert_equal_noloc(tokens, tokenize("taken\nkeep"))
+        result.assert_has_tokens("taken\nkeep")
 
     def test_ifdef_taken(self):
-        tokens = preprocess_loc('''\
+        result = self.preprocess('''\
 `define foo
 `ifdef foo
 taken
 `endif
 keep''')
-        self.assert_equal_noloc(tokens, tokenize("taken\nkeep"))
+        result.assert_has_tokens("taken\nkeep")
 
     def test_ifdef_else_taken(self):
-        tokens = preprocess_loc('''\
+        result = self.preprocess('''\
 `define foo
 `ifdef foo
 taken
@@ -501,28 +171,28 @@ taken
 else
 `endif
 keep''')
-        self.assert_equal_noloc(tokens, tokenize("taken\nkeep"))
+        result.assert_has_tokens("taken\nkeep")
 
     def test_ifdef_not_taken(self):
-        tokens = preprocess_loc('''\
+        result = self.preprocess('''\
 `ifdef foo
 taken
 `endif
 keep''')
-        self.assert_equal_noloc(tokens, tokenize("keep"))
+        result.assert_has_tokens("keep")
 
     def test_ifdef_else_not_taken(self):
-        tokens = preprocess_loc('''\
+        result = self.preprocess('''\
 `ifdef foo
 taken
 `else
 else
 `endif
 keep''')
-        self.assert_equal_noloc(tokens, tokenize("else\nkeep"))
+        result.assert_has_tokens("else\nkeep")
 
     def test_ifdef_elsif_taken(self):
-        tokens = preprocess_loc('''\
+        result = self.preprocess('''\
 `define foo
 `ifdef foo
 taken
@@ -532,10 +202,10 @@ elsif_taken
 else_taken
 `endif
 keep''')
-        self.assert_equal_noloc(tokens, tokenize("taken\nkeep"))
+        result.assert_has_tokens("taken\nkeep")
 
     def test_ifdef_elsif_elseif_taken(self):
-        tokens = preprocess_loc('''\
+        result = self.preprocess('''\
 `define bar
 `ifdef foo
 taken
@@ -545,10 +215,10 @@ elsif_taken
 else_taken
 `endif
 keep''')
-        self.assert_equal_noloc(tokens, tokenize("elsif_taken\nkeep"))
+        result.assert_has_tokens("elsif_taken\nkeep")
 
     def test_ifdef_elsif_else_taken(self):
-        tokens = preprocess_loc('''\
+        result = self.preprocess('''\
 `ifdef foo
 taken
 `elsif bar
@@ -557,10 +227,10 @@ elsif_taken
 else_taken
 `endif
 keep''')
-        self.assert_equal_noloc(tokens, tokenize("else_taken\nkeep"))
+        result.assert_has_tokens("else_taken\nkeep")
 
     def test_nested_ifdef(self):
-        tokens = preprocess_loc('''\
+        result = self.preprocess('''\
 `define foo
 `ifdef foo
 outer_before
@@ -577,150 +247,395 @@ inner_elsif
 outer_after
 `endif
 keep''')
-        self.assert_equal_noloc(tokens,
-                                tokenize("outer_before\n"
-                                         "inner_else\n"
-                                         "inner_elsif\n"
-                                         "outer_after\n"
-                                         "keep"))
+        result.assert_has_tokens("outer_before\n"
+                                 "inner_else\n"
+                                 "inner_elsif\n"
+                                 "outer_after\n"
+                                 "keep")
 
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_ifdef_eof(self, logger):
-        tokens = preprocess_loc('''\
+    def test_preprocess_broken_define(self):
+        result = self.preprocess("`define")
+        result.assert_has_tokens("")
+        result.assert_no_defines()
+        result.logger.warning.assert_called_once_with(
+            "Verilog `define without argument\n%s",
+            "at fn.v line 1:\n"
+            "`define\n"
+            "~~~~~~~")
+
+    def test_preprocess_broken_define_first_argument(self):
+        result = self.preprocess('`define "foo"')
+        result.assert_has_tokens("")
+        result.assert_no_defines()
+        result.logger.warning.assert_called_once_with(
+            "Verilog `define invalid name\n%s",
+            "at fn.v line 1:\n"
+            '`define "foo"\n'
+            "        ~~~~~")
+
+    def test_preprocess_broken_define_argument_list(self):
+        result = self.preprocess('`define foo(')
+        result.assert_has_tokens("")
+        result.assert_no_defines()
+        result.logger.warning.assert_called_once_with(
+            "EOF reached when parsing `define argument list\n%s",
+            "at fn.v line 1:\n"
+            '`define foo(\n'
+            "           ~")
+
+        result = self.preprocess('`define foo(a')
+        result.assert_has_tokens("")
+        result.assert_no_defines()
+        result.logger.warning.assert_called_once_with(
+            "EOF reached when parsing `define argument list\n%s",
+            "at fn.v line 1:\n"
+            '`define foo(a\n'
+            "           ~")
+
+        result = self.preprocess('`define foo(a=')
+        result.assert_has_tokens("")
+        result.assert_no_defines()
+        result.logger.warning.assert_called_once_with(
+            "EOF reached when parsing `define argument list\n%s",
+            "at fn.v line 1:\n"
+            '`define foo(a=\n'
+            "           ~")
+
+        result = self.preprocess('`define foo(a=b')
+        result.assert_has_tokens("")
+        result.assert_no_defines()
+        result.logger.warning.assert_called_once_with(
+            "EOF reached when parsing `define argument list\n%s",
+            "at fn.v line 1:\n"
+            '`define foo(a=b\n'
+            "           ~")
+
+        result = self.preprocess('`define foo(a=)')
+        result.assert_has_tokens("")
+        result.assert_no_defines()
+        result.logger.warning.assert_called_once_with(
+            "EOF reached when parsing `define argument list\n%s",
+            "at fn.v line 1:\n"
+            '`define foo(a=)\n'
+            "           ~")
+
+        result = self.preprocess('`define foo("a"')
+        result.assert_has_tokens("")
+        result.assert_no_defines()
+        result.logger.warning.assert_called_once_with(
+            "EOF reached when parsing `define argument list\n%s",
+            "at fn.v line 1:\n"
+            '`define foo("a"\n'
+            "           ~")
+
+        result = self.preprocess('`define foo("a"=')
+        result.assert_has_tokens("")
+        result.assert_no_defines()
+        result.logger.warning.assert_called_once_with(
+            "EOF reached when parsing `define argument list\n%s",
+            "at fn.v line 1:\n"
+            '`define foo("a"=\n'
+            "           ~")
+
+    def test_preprocess_substitute_define_broken_args(self):
+        result = self.preprocess("""\
+`define foo(arg1, arg2)arg1,arg2
+`foo(1 2)""")
+        result.assert_has_tokens("")
+
+        result = self.preprocess("""\
+`define foo(arg1, arg2)arg1,arg2
+`foo""")
+        result.assert_has_tokens("")
+
+        result = self.preprocess("""\
+`define foo(arg1, arg2)arg1,arg2
+`foo(""")
+        result.assert_has_tokens("")
+
+        result = self.preprocess("""\
+`define foo(arg1, arg2)arg1,arg2
+`foo(1""")
+        result.assert_has_tokens("")
+
+    def test_preprocess_substitute_define_missing_argument(self):
+        result = self.preprocess("""\
+`define foo(arg1, arg2)arg1,arg2
+`foo(1)""")
+        result.assert_has_tokens("")
+        result.logger.warning.assert_called_once_with(
+            "Missing value for argument arg2\n%s",
+            "at fn.v line 2:\n"
+            '`foo(1)\n'
+            "~~~~")
+
+    def test_preprocess_substitute_define_too_many_argument(self):
+        result = self.preprocess("""\
+`define foo(arg1)arg1
+`foo(1, 2)""")
+        result.assert_has_tokens("")
+        result.logger.warning.assert_called_once_with(
+            "Too many arguments got 2 expected 1\n%s",
+            "at fn.v line 2:\n"
+            '`foo(1, 2)\n'
+            "~~~~")
+
+    def test_preprocess_substitute_define_eof(self):
+        result = self.preprocess("""\
+`define foo(arg1, arg2)arg1,arg2
+`foo(1 2""")
+        result.assert_has_tokens("")
+        result.logger.warning.assert_called_once_with(
+            "EOF reached when parsing `define actuals\n%s",
+            "at fn.v line 2:\n"
+            '`foo(1 2\n'
+            "~~~~")
+
+    def test_substitute_undefined(self):
+        result = self.preprocess('`foo')
+        result.assert_has_tokens("")
+        # Debug since there are many custon `names in tools
+        result.logger.debug.assert_called_once_with(
+            "Verilog undefined name\n%s",
+            "at fn.v line 1:\n"
+            '`foo\n'
+            "~~~~")
+
+    def test_preprocess_include_directive_missing_file(self):
+        result = self.preprocess('`include "missing.svh"',
+                                 include_paths=[self.output_path])
+        result.assert_has_tokens("")
+        result.assert_included_files([])
+        # Is debug message since there are so many builtin includes in tools
+        result.logger.debug.assert_called_once_with(
+            "Could not find `include file missing.svh\n%s",
+            "at fn.v line 1:\n"
+            '`include "missing.svh"\n'
+            "         ~~~~~~~~~~~~~")
+
+    def test_preprocess_include_directive_missing_argument(self):
+        result = self.preprocess('`include',
+                                 include_paths=[self.output_path])
+        result.assert_has_tokens("")
+        result.assert_included_files([])
+        result.logger.warning.assert_called_once_with(
+            "EOF reached when parsing `include argument\n%s",
+            "at fn.v line 1:\n"
+            '`include\n'
+            "~~~~~~~~")
+
+    def test_preprocess_include_directive_bad_argument(self):
+        self.write_file("include.svh", "hello hey")
+        result = self.preprocess('`include foo "include.svh"',
+                                 include_paths=[self.output_path])
+        result.assert_has_tokens(' "include.svh"')
+        result.assert_included_files([])
+        result.logger.warning.assert_called_once_with(
+            "Verilog `include bad argument\n%s",
+            "at fn.v line 1:\n"
+            '`include foo "include.svh"\n'
+            "         ~~~")
+
+    def test_preprocess_include_directive_from_define_bad_argument(self):
+        result = self.preprocess('''\
+`define inc foo
+`include `inc
+keep''',
+                                 include_paths=[self.output_path])
+        result.assert_has_tokens('\nkeep')
+        result.assert_included_files([])
+        result.logger.warning.assert_called_once_with(
+            "Verilog `include has bad argument\n%s",
+            "from fn.v line 2:\n"
+            '`include `inc\n'
+            '         ~~~~\n'
+            "at fn.v line 1:\n"
+            '`define inc foo\n'
+            "            ~~~")
+
+    def test_preprocess_include_directive_from_empty_define(self):
+        result = self.preprocess('''\
+`define inc
+`include `inc
+keep''', include_paths=[self.output_path])
+        result.assert_has_tokens('\nkeep')
+        result.assert_included_files([])
+        result.logger.warning.assert_called_once_with(
+            "Verilog `include has bad argument, empty define `inc\n%s",
+            "at fn.v line 2:\n"
+            '`include `inc\n'
+            "         ~~~~")
+
+    def test_preprocess_include_directive_from_define_not_defined(self):
+        result = self.preprocess('`include `inc', include_paths=[self.output_path])
+        result.assert_has_tokens('')
+        result.assert_included_files([])
+        result.logger.warning.assert_called_once_with(
+            "Verilog `include argument not defined\n%s",
+            "at fn.v line 1:\n"
+            '`include `inc\n'
+            "         ~~~~")
+
+    def test_preprocess_error_in_include_file(self):
+        self.write_file("include.svh", '`include foo')
+        result = self.preprocess('\n\n`include "include.svh"',
+                                 include_paths=[self.output_path])
+        result.assert_has_tokens('\n\n')
+        result.assert_included_files([join(self.output_path, "include.svh")])
+        result.logger.warning.assert_called_once_with(
+            "Verilog `include bad argument\n%s",
+            "from fn.v line 3:\n"
+            '`include "include.svh"\n'
+            "~~~~~~~~\n"
+            "at include.svh line 1:\n"
+            '`include foo\n'
+            '         ~~~')
+
+    def test_preprocess_error_in_expanded_define(self):
+        result = self.preprocess('''\
+`define foo `include wrong
+`foo
+''', include_paths=[self.output_path])
+        result.assert_has_tokens('\n')
+        result.assert_included_files([])
+        result.logger.warning.assert_called_once_with(
+            "Verilog `include bad argument\n%s",
+            "from fn.v line 2:\n"
+            '`foo\n'
+            '~~~~\n'
+            "at fn.v line 1:\n"
+            '`define foo `include wrong\n'
+            "                     ~~~~~")
+
+    def test_ifdef_eof(self):
+        result = self.preprocess('''\
 `ifdef foo
 taken''')
-        self.assert_equal_noloc(tokens, tokenize(""))
-        logger.warning.assert_called_once_with(
+        result.assert_has_tokens("")
+        result.logger.warning.assert_called_once_with(
             "EOF reached when parsing `ifdef\n%s",
             "at fn.v line 1:\n"
             '`ifdef foo\n'
             '~~~~~~')
 
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_ifdef_bad_argument(self, logger):
-        tokens = preprocess_loc('''\
+    def test_ifdef_bad_argument(self):
+        result = self.preprocess('''\
 `ifdef "hello"
 keep''')
-        self.assert_equal_noloc(tokens, tokenize("\nkeep"))
-        logger.warning.assert_called_once_with(
+        result.assert_has_tokens("\nkeep")
+        result.logger.warning.assert_called_once_with(
             "Bad argument to `ifdef\n%s",
             "at fn.v line 1:\n"
             '`ifdef "hello"\n'
             '       ~~~~~~~')
 
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_elsif_bad_argument(self, logger):
-        tokens = preprocess_loc('''\
+    def test_elsif_bad_argument(self):
+        result = self.preprocess('''\
 `ifdef bar
 `elsif "hello"
 keep''')
-        self.assert_equal_noloc(tokens, tokenize("\nkeep"))
-        logger.warning.assert_called_once_with(
+        result.assert_has_tokens("\nkeep")
+        result.logger.warning.assert_called_once_with(
             "Bad argument to `elsif\n%s",
             "at fn.v line 2:\n"
             '`elsif "hello"\n'
             '       ~~~~~~~')
 
     def test_undefineall(self):
-        defines = {}
-        tokens = preprocess('''\
+        result = self.preprocess('''\
 `define foo keep
 `define bar keep2
 `foo
-`undefineall''', defines)
-        self.assert_equal_noloc(tokens, tokenize("keep\n"))
-        self.assertEqual(defines, {})
+`undefineall''')
+        result.assert_has_tokens("keep\n")
+        result.assert_no_defines()
 
     def test_resetall(self):
-        defines = {}
-        tokens = preprocess('''\
+        result = self.preprocess('''\
 `define foo keep
 `define bar keep2
 `foo
-`resetall''', defines)
-        self.assert_equal_noloc(tokens, tokenize("keep\n"))
-        self.assertEqual(defines, {})
+`resetall''')
+        result.assert_has_tokens("keep\n")
+        result.assert_no_defines()
 
     def test_undef(self):
-        defines = {}
-        tokens = preprocess('''\
+        result = self.preprocess('''\
 `define foo keep
 `define bar keep2
 `foo
-`undef foo''', defines)
-        self.assert_equal_noloc(tokens, tokenize("keep\n"))
-        self.assertEqual(defines, {"bar": Macro("bar", tokenize("keep2"))})
+`undef foo''')
+        result.assert_has_tokens("keep\n")
+        result.assert_has_defines({"bar": Macro("bar", tokenize("keep2"))})
 
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_undef_eof(self, logger):
-        defines = {}
-        tokens = preprocess_loc('`undef')
-        self.assert_equal_noloc(tokens, [])
-        self.assertEqual(defines, {})
-        logger.warning.assert_called_once_with(
+    def test_undef_eof(self):
+        result = self.preprocess('`undef')
+        result.assert_has_tokens("")
+        result.assert_no_defines()
+        result.logger.warning.assert_called_once_with(
             "EOF reached when parsing `undef\n%s",
             "at fn.v line 1:\n"
             '`undef\n'
             '~~~~~~')
 
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_undef_bad_argument(self, logger):
-        defines = {}
-        tokens = preprocess_loc('`undef "foo"', defines)
-        self.assert_equal_noloc(tokens, [])
-        self.assertEqual(defines, {})
-        logger.warning.assert_called_once_with(
+    def test_undef_bad_argument(self):
+        result = self.preprocess('`undef "foo"')
+        result.assert_has_tokens("")
+        result.assert_no_defines()
+        result.logger.warning.assert_called_once_with(
             "Bad argument to `undef\n%s",
             "at fn.v line 1:\n"
             '`undef "foo"\n'
             '       ~~~~~')
 
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_undef_not_defined(self, logger):
-        defines = {}
-        tokens = preprocess_loc('`undef foo', defines)
-        self.assert_equal_noloc(tokens, [])
-        self.assertEqual(defines, {})
-        logger.warning.assert_called_once_with(
+    def test_undef_not_defined(self):
+        result = self.preprocess('`undef foo')
+        result.assert_has_tokens("")
+        result.assert_no_defines()
+        result.logger.warning.assert_called_once_with(
             "`undef argument was not previously defined\n%s",
             "at fn.v line 1:\n"
             '`undef foo\n'
             '       ~~~')
 
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_ignores_celldefine(self, logger):
-        tokens = preprocess_loc('`celldefine`endcelldefine keep')
-        self.assert_equal_noloc(tokens, tokenize(" keep"))
-        assert not logger.debug.called
-        assert not logger.warning.called
+    def test_ignores_celldefine(self):
+        result = self.preprocess('`celldefine`endcelldefine keep')
+        result.assert_has_tokens(" keep")
+        result.assert_no_log()
 
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_ignores_timescale(self, logger):
-        tokens = preprocess_loc('`timescale 1 ns / 1 ps\nkeep')
-        self.assert_equal_noloc(tokens, tokenize("\nkeep"))
-        assert not logger.debug.called
-        assert not logger.warning.called
+    def test_ignores_timescale(self):
+        result = self.preprocess('`timescale 1 ns / 1 ps\nkeep')
+        result.assert_has_tokens("\nkeep")
+        result.assert_no_log()
 
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_ignores_default_nettype(self, logger):
-        tokens = preprocess_loc('`default_nettype none\nkeep')
-        self.assert_equal_noloc(tokens, tokenize("\nkeep"))
-        assert not logger.debug.called
-        assert not logger.warning.called
+    def test_ignores_default_nettype(self):
+        result = self.preprocess('`default_nettype none\nkeep')
+        result.assert_has_tokens("\nkeep")
+        result.assert_no_log()
 
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_ignores_nounconnected_drive(self, logger):
-        tokens = preprocess_loc('`nounconnected_drive keep')
-        self.assert_equal_noloc(tokens, tokenize(" keep"))
-        assert not logger.debug.called
-        assert not logger.warning.called
+    def test_ignores_nounconnected_drive(self):
+        result = self.preprocess('`nounconnected_drive keep')
+        result.assert_has_tokens(" keep")
+        result.assert_no_log()
 
-    @mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True)
-    def test_ignores_unconnected_drive(self, logger):
-        tokens = preprocess_loc('`unconnected_drive pull1\nkeep')
-        self.assert_equal_noloc(tokens, tokenize("\nkeep"))
-        assert not logger.debug.called
-        assert not logger.warning.called
+    def test_ignores_unconnected_drive(self):
+        result = self.preprocess('`unconnected_drive pull1\nkeep')
+        result.assert_has_tokens("\nkeep")
+        result.assert_no_log()
+
+    def preprocess(self, code, file_name="fn.v", include_paths=None):
+        """
+        Tokenize & Preprocess
+        """
+        tokenizer = VerilogTokenizer()
+        preprocessor = VerilogPreprocessor(tokenizer)
+        write_file(file_name, code)
+        tokens = tokenizer.tokenize(code, file_name=file_name)
+        defines = {}
+        included_files = []
+        with mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True) as logger:
+            tokens = preprocessor.preprocess(tokens, defines, include_paths, included_files)
+        return PreprocessResult(self, tokens, defines, included_files, logger)
 
     def write_file(self, file_name, contents):
         """
@@ -733,32 +648,82 @@ keep''')
         with open(full_name, "w") as fptr:
             fptr.write(contents)
 
-    def assert_equal_noloc(self, expected, got):
+
+class PreprocessResult(object):
+    """
+    Helper object to test preprocessing
+    """
+
+    def __init__(self,  # pylint: disable=too-many-arguments
+                 test, tokens, defines, included_files, logger):
+        self.test = test
+        self.tokens = tokens
+        self.defines = defines
+        self.included_files = included_files
+        self.logger = logger
+
+    def assert_has_tokens(self, code, noloc=True):
         """
-        Assert that two token lists are equal disregarding locations
+        Check that tokens are the same as code
         """
-        def transform(tokens):
-            return [Token(tok.kind, tok.value, None) for tok in tokens]
-        self.assertEqual(transform(expected), transform(got))
+        expected = tokenize(code)
+
+        if noloc:
+            self.test.assertEqual(strip_loc(self.tokens), strip_loc(expected))
+        else:
+            self.test.assertEqual(self.tokens, expected)
+        return self
+
+    def assert_no_defines(self):
+        """
+        Assert that there were no defines
+        """
+        self.test.assertEqual(self.defines, {})
+
+    def assert_included_files(self, included_files):
+        """
+        Assert that these files where included
+        """
+        self.test.assertEqual(self.included_files, included_files)
+
+    def assert_has_defines(self, defines):
+        """
+        Assert that these defines were made
+        """
+        self.test.assertEqual(self.defines.keys(), defines.keys())
+
+        def macro_strip_loc(define):
+            """
+            Strip location information from a Macro
+            """
+            define.tokens = strip_loc(define.tokens)
+            for key, value in define.defaults.items():
+                define.defaults[key] = strip_loc(value)
+
+        for key in self.defines:
+            self.test.assertEqual(macro_strip_loc(self.defines[key]),
+                                  macro_strip_loc(defines[key]))
+
+    def assert_no_log(self):
+        """
+        Assert that no log call were made
+        """
+        self.test.assertEqual(self.logger.debug.mock_calls, [])
+        self.test.assertEqual(self.logger.info.mock_calls, [])
+        self.test.assertEqual(self.logger.warning.mock_calls, [])
+        self.test.assertEqual(self.logger.error.mock_calls, [])
 
 
-def preprocess_loc(code, defines=None, file_name="fn.v", include_paths=None, included_files=None):
+def tokenize(code, file_name="fn.v"):
     """
-    Preprocess with location information
+    Tokenize
     """
-
-    write_file(file_name, code)
-    tokens = tokenize(code, file_name=file_name, create_locations=True)
-    tokens = VerilogPreprocessor().preprocess(tokens, defines, include_paths, included_files)
-    return tokens
+    tokenizer = VerilogTokenizer()
+    return tokenizer.tokenize(code, file_name=file_name)
 
 
-def preprocess(code, defines=None, include_paths=None, included_files=None):
+def strip_loc(tokens):
     """
-    Preprocess without location information
+    Strip location information
     """
-    tokens = tokenize(code, file_name=None, create_locations=False)
-    return VerilogPreprocessor(create_locations=False).preprocess(tokens=tokens,
-                                                                  defines=defines,
-                                                                  include_paths=include_paths,
-                                                                  included_files=included_files)
+    return [Token(token.kind, token.value, None) for token in tokens]

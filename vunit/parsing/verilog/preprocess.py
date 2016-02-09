@@ -4,6 +4,9 @@
 #
 # Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
 
+# pylint: disable=unused-wildcard-import
+# pylint: disable=wildcard-import
+
 """
 Verilog parsing functionality
 """
@@ -14,8 +17,7 @@ from vunit.parsing.tokenizer import (TokenStream,
                                      add_previous,
                                      EOFException,
                                      LocationException)
-import vunit.parsing.verilog.tokenizer as tokenizer
-from vunit.parsing.verilog.tokenizer import tokenize
+from vunit.parsing.verilog.tokens import *
 from vunit.ostools import read_file
 import logging
 LOGGER = logging.getLogger(__name__)
@@ -26,8 +28,8 @@ class VerilogPreprocessor(object):
     A Verilog preprocessor
     """
 
-    def __init__(self, create_locations=True):
-        self._create_locations = create_locations
+    def __init__(self, tokenizer):
+        self._tokenizer = tokenizer
 
     def preprocess(self, tokens, defines=None, include_paths=None, included_files=None):
         """
@@ -41,7 +43,7 @@ class VerilogPreprocessor(object):
 
         while not stream.eof:
             token = stream.pop()
-            if not token.kind == tokenizer.PREPROCESSOR:
+            if not token.kind == PREPROCESSOR:
                 result.append(token)
                 continue
 
@@ -89,7 +91,7 @@ class VerilogPreprocessor(object):
 
         elif token.value in ("timescale", "default_nettype", "unconnected_drive"):
             # Ignore directive and arguments
-            stream.skip_until(tokenizer.NEWLINE)
+            stream.skip_until(NEWLINE)
 
         elif token.value in defines:
             macro = defines[token.value]
@@ -115,11 +117,11 @@ class VerilogPreprocessor(object):
             """
             Check the define argument of an if statement
             """
-            if arg.kind != tokenizer.IDENTIFIER:
+            if arg.kind != IDENTIFIER:
                 raise LocationException.warning(
                     "Bad argument to `%s" % if_token.value,
                     arg.location)
-            stream.skip_while(tokenizer.NEWLINE)
+            stream.skip_while(NEWLINE)
 
         def determine_if_taken(if_token, arg):
             """
@@ -133,7 +135,7 @@ class VerilogPreprocessor(object):
                 assert False
 
         result = []
-        stream.skip_while(tokenizer.WHITESPACE)
+        stream.skip_while(WHITESPACE)
         arg = stream.pop()
         check_arg(if_token, arg)
 
@@ -142,7 +144,7 @@ class VerilogPreprocessor(object):
         count = 1
         while True:
             token = stream.pop()
-            if token.kind == tokenizer.PREPROCESSOR:
+            if token.kind == PREPROCESSOR:
                 if token.value in ("ifdef", "ifndef"):
                     count += 1
                 elif token.value == "endif":
@@ -150,18 +152,18 @@ class VerilogPreprocessor(object):
                     if count == 0:
                         break
 
-            if count == 1 and (token.kind, token.value) == (tokenizer.PREPROCESSOR, "else"):
-                stream.skip_while(tokenizer.NEWLINE)
+            if count == 1 and (token.kind, token.value) == (PREPROCESSOR, "else"):
+                stream.skip_while(NEWLINE)
                 if not any_taken:
                     taken = True
                     any_taken = True
                 else:
                     taken = False
-            elif count == 1 and (token.kind, token.value) == (tokenizer.PREPROCESSOR, "elsif"):
-                stream.skip_while(tokenizer.WHITESPACE)
+            elif count == 1 and (token.kind, token.value) == (PREPROCESSOR, "elsif"):
+                stream.skip_while(WHITESPACE)
                 arg = stream.pop()
                 check_arg(token, arg)
-                stream.skip_while(tokenizer.NEWLINE)
+                stream.skip_while(NEWLINE)
                 if not any_taken:
                     taken = determine_if_taken(token, arg)
                     any_taken = taken
@@ -169,7 +171,7 @@ class VerilogPreprocessor(object):
                     taken = False
             elif taken:
                 result.append(token)
-        stream.skip_while(tokenizer.NEWLINE)
+        stream.skip_while(NEWLINE)
         return result
 
     def include(self,  # pylint: disable=too-many-arguments
@@ -177,7 +179,7 @@ class VerilogPreprocessor(object):
         """
         Handle `include directive
         """
-        stream.skip_while(tokenizer.WHITESPACE)
+        stream.skip_while(WHITESPACE)
         try:
             tok = stream.pop()
         except EOFException:
@@ -185,7 +187,7 @@ class VerilogPreprocessor(object):
                 "EOF reached when parsing `include argument",
                 token.location)
 
-        if tok.kind == tokenizer.PREPROCESSOR:
+        if tok.kind == PREPROCESSOR:
             if tok.value in defines:
                 macro = defines[tok.value]
             else:
@@ -200,13 +202,13 @@ class VerilogPreprocessor(object):
                 raise LocationException.warning("Verilog `include has bad argument, empty define `%s" % macro.name,
                                                 tok.location)
 
-            if expanded_tokens[0].kind != tokenizer.STRING:
+            if expanded_tokens[0].kind != STRING:
                 raise LocationException.warning("Verilog `include has bad argument",
                                                 expanded_tokens[0].location)
 
             file_name_tok = expanded_tokens[0]
 
-        elif tok.kind == tokenizer.STRING:
+        elif tok.kind == STRING:
             file_name_tok = tok
         else:
             raise LocationException.warning("Verilog `include bad argument",
@@ -224,10 +226,9 @@ class VerilogPreprocessor(object):
                 file_name_tok.location)
 
         included_files.append(full_name)
-        included_tokens = tokenize(read_file(full_name),
-                                   file_name=full_name,
-                                   previous_location=token.location,
-                                   create_locations=self._create_locations)
+        included_tokens = self._tokenizer.tokenize(read_file(full_name),
+                                                   file_name=full_name,
+                                                   previous_location=token.location)
         return self.preprocess(included_tokens, defines, include_paths, included_files)
 
 
@@ -235,14 +236,14 @@ def undef(undef_token, stream, defines):
     """
     Handles undef directive
     """
-    stream.skip_while(tokenizer.WHITESPACE, tokenizer.NEWLINE)
+    stream.skip_while(WHITESPACE, NEWLINE)
     try:
         name_token = stream.pop()
     except EOFException:
         raise LocationException.warning("EOF reached when parsing `undef",
                                         undef_token.location)
 
-    if name_token.kind != tokenizer.IDENTIFIER:
+    if name_token.kind != IDENTIFIER:
         raise LocationException.warning("Bad argument to `undef",
                                         name_token.location)
 
@@ -257,14 +258,14 @@ def define(define_token, stream):
     """
     Handle a `define directive
     """
-    stream.skip_while(tokenizer.WHITESPACE, tokenizer.NEWLINE)
+    stream.skip_while(WHITESPACE, NEWLINE)
     try:
         name_token = stream.pop()
     except EOFException:
         raise LocationException.warning("Verilog `define without argument",
                                         define_token.location)
 
-    if name_token.kind != tokenizer.IDENTIFIER:
+    if name_token.kind != IDENTIFIER:
         raise LocationException.warning("Verilog `define invalid name",
                                         name_token.location)
 
@@ -276,26 +277,26 @@ def define(define_token, stream):
         # Empty define
         return Macro(name)
 
-    if token.kind in (tokenizer.NEWLINE,):
+    if token.kind in (NEWLINE,):
         # Empty define
         return Macro(name)
 
-    if token.kind in (tokenizer.WHITESPACE,):
+    if token.kind in (WHITESPACE,):
         # Define without arguments
         args = tuple()
         defaults = {}
-    elif token.kind == tokenizer.LPAR:
+    elif token.kind == LPAR:
         lpar_token = token
         args = tuple()
         defaults = {}
 
         try:
-            while token.kind != tokenizer.RPAR:
-                if token.kind == tokenizer.IDENTIFIER:
+            while token.kind != RPAR:
+                if token.kind == IDENTIFIER:
                     argname = token.value
                     args = args + (argname,)
                     token = stream.pop()
-                    if token.kind == tokenizer.EQUAL:
+                    if token.kind == EQUAL:
                         token = stream.pop()
                         defaults[argname] = [token]
                         token = stream.pop()
@@ -306,9 +307,9 @@ def define(define_token, stream):
                 "EOF reached when parsing `define argument list",
                 lpar_token.location)
 
-    stream.skip_while(tokenizer.WHITESPACE)
+    stream.skip_while(WHITESPACE)
     start = stream.idx
-    end = stream.skip_until(tokenizer.NEWLINE)
+    end = stream.skip_until(NEWLINE)
     if not stream.eof:
         stream.pop()
     return Macro(name,
@@ -341,7 +342,7 @@ class Macro(object):
         """
         tokens = []
         for token in self.tokens:
-            if token.kind == tokenizer.IDENTIFIER and token.value in self.args:
+            if token.kind == IDENTIFIER and token.value in self.args:
                 idx = self.args.index(token.value)
                 value = values[idx]
                 tokens += value
@@ -395,14 +396,14 @@ class Macro(object):
         1 2 in `macro(1, 2)
         """
         token = stream.pop()
-        if token.kind != tokenizer.LPAR:
+        if token.kind != LPAR:
             raise LocationException.warning("Bad `define argument list",
                                             define_token.location)
         token = stream.pop()
         value = []
         values = []
-        while token.kind != tokenizer.RPAR:
-            if token.kind == tokenizer.COMMA:
+        while token.kind != RPAR:
+            if token.kind == COMMA:
                 values.append(value)
                 value = []
             else:

@@ -16,7 +16,7 @@ from vunit.ostools import read_file, file_exists
 TokenType = collections.namedtuple("Token", ["kind", "value", "location"])
 
 
-def Token(kind, value, location=None):  # pylint: disable=invalid-name
+def Token(kind, value="", location=None):  # pylint: disable=invalid-name
     return TokenType(kind, value, location)
 
 
@@ -24,7 +24,18 @@ def new_token_kind(name):
     """
     Create a new token kind with nice __repr__
     """
-    cls = type(name, (object,), {"__repr__": lambda self: name})
+
+    def new_token(kind, value='', location=None):
+        """
+        Create new token of kind
+        """
+        return Token(kind, value, location)
+
+    cls = type(name,
+               (object,), {
+                   "__repr__": lambda self: name,
+                   "__call__": new_token
+               })
     return cls()
 
 
@@ -38,13 +49,12 @@ class Tokenizer(object):
         self._assoc = {}
         self._regex = None
 
-    def add(self, name, regex, func=None):
+    def add(self, kind, regex, func=None):
         """
         Add token type
         """
         key = chr(ord('a') + len(self._regexs))
         self._regexs.append((key, regex))
-        kind = new_token_kind(name)
         self._assoc[key] = (kind, func)
         return kind
 
@@ -207,12 +217,6 @@ class LocationException(Exception):
         self._severtity = severity
         self._message = message
         self._location = location
-
-    def add_previous(self, location):
-        """
-        Append a previous location
-        """
-        self._locations.append(location)
 
     def log(self, logger):
         """
