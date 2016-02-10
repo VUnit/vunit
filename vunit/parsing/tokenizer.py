@@ -151,6 +151,20 @@ class TokenStream(object):
         self._idx += 1
         return self._tokens[self._idx - 1]
 
+    def expect(self, *kinds):
+        """
+        Expect to pop token with any of kinds
+        """
+        token = self.pop()
+        if token.kind not in kinds:
+            if len(kinds) == 1:
+                expected = str(kinds[0])
+            else:
+                expected = "any of [%s]" % ", ".join(str(kind) for kind in kinds)
+            raise LocationException.error("Expected %s got %s" % (expected, token.kind),
+                                          token.location)
+        return token
+
     def slice(self, start, end):
         return self._tokens[start:end]
 
@@ -204,6 +218,10 @@ class LocationException(Exception):
     A an exception to be raised when there is a problem in a location
     """
     @classmethod
+    def error(cls, message, location):
+        return cls(message, location, "error")
+
+    @classmethod
     def warning(cls, message, location):
         return cls(message, location, "warning")
 
@@ -211,9 +229,9 @@ class LocationException(Exception):
     def debug(cls, message, location):
         return cls(message, location, "debug")
 
-    def __init__(self, message, location, severity="warning"):
+    def __init__(self, message, location, severity):
         Exception.__init__(self)
-        assert severity in ("debug", "warning")
+        assert severity in ("debug", "warning", "error")
         self._severtity = severity
         self._message = message
         self._location = location
@@ -222,7 +240,9 @@ class LocationException(Exception):
         """
         Log the exception
         """
-        if self._severtity == "warning":
+        if self._severtity == "error":
+            method = logger.error
+        elif self._severtity == "warning":
             method = logger.warning
         else:
             method = logger.debug

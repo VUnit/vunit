@@ -383,9 +383,9 @@ class Macro(object):
                             token.location)
 
             elif len(values) > len(self.args):
-                raise LocationException("Too many arguments got %i expected %i" %
-                                        (len(values), len(self.args)),
-                                        token.location)
+                raise LocationException.warning("Too many arguments got %i expected %i" %
+                                                (len(values), len(self.args)),
+                                                token.location)
 
         return self.expand(values, previous)
 
