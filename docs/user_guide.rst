@@ -85,7 +85,7 @@ test environment.
    :language: vhdl
    :lines: 7-
 
-From ``tb_example_many.vhd`` two test cases are created:
+From ``tb_example_many.vhd``'s ``run()`` calls, two test cases are created:
 
 * ``lib.tb_example_many.test_pass``
 * ``lib.tb_example_many.test_fail``
@@ -104,7 +104,7 @@ In its simplest form a VUnit SystemVerilog test bench looks like this:
    :language: verilog
    :lines: 7-
 
-From ``tb_example.vhd`` three test cases are created:
+From ``tb_example.sv``'s ```TEST_CASE()`` macros, three test cases are created:
 
 * ``lib.tb_example.Test that pass``
 * ``lib.tb_example.Test that fail``
