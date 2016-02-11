@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Acceptance test of VUnit end to end functionality
@@ -121,6 +121,9 @@ class TestVunitArtificial(unittest.TestCase):
         self.check(self.artificial_run_verilog,
                    exit_code=1)
         check_report(self.report_file, [
+            ("passed", "lib.tb_other_file_tests.pass"),
+            ("failed", "lib.tb_other_file_tests.fail"),
+
             ("passed", "lib.tb_magic_paths.Test magic paths are correct"),
 
             ("failed", "lib.tb_fail_on_warning.fail"),
@@ -175,6 +178,8 @@ class TestVunitArtificial(unittest.TestCase):
 
 
 EXPECTED_REPORT = (
+    ("passed", "lib.tb_other_file_tests.pass"),
+    ("failed", "lib.tb_other_file_tests.fail"),
     ("passed", "lib.tb_pass"),
     ("failed", "lib.tb_fail"),
     ("passed", "lib.tb_infinite_events"),

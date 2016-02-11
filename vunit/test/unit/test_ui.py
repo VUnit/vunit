@@ -440,6 +440,92 @@ Listed 2 files""".splitlines()))
         self.assertTrue("found no test benches" in str(logger.warning.mock_calls))
         logger.reset_mock()
 
+    def test_scan_tests_from_other_file(self):
+        for tb_type in ["vhdl", "verilog"]:
+            for tests_type in ["vhdl", "verilog"]:
+                ui = self._create_ui()
+                lib = ui.library("lib")
+
+                print(tb_type, tests_type)
+                if tb_type == "vhdl":
+                    tb_file_name = "tb_top.vhd"
+                    self.create_file(tb_file_name, """
+entity tb_top is
+  generic (runner_cfg : string);
+end entity;
+
+architecture a of tb_top is
+begin
+end architecture;
+                    """)
+                else:
+                    tb_file_name = "tb_top.sv"
+                    self.create_file(tb_file_name, """
+module tb_top
+  parameter string runner_cfg = "";
+  tb_top #(.runner_cfg(runner_cfg)) tb();
+endmodule;
+                    """)
+
+                if tests_type == "vhdl":
+                    tests_file_name = "tests.vhd"
+                    self.create_file(tests_file_name, """
+entity tests is
+  generic (runner_cfg : string);
+end entity;
+
+architecture a of tests is
+begin
+  main : process
+    if run("test1") then
+    elsif run("test2")
+    end if;
+  end process;
+end architecture;
+                    """)
+                else:
+                    tests_file_name = "tests.sv"
+                    self.create_file(tests_file_name, """
+`include "vunit_defines.svh"
+module tests;
+   `TEST_SUITE begin
+      `TEST_CASE("test1") begin
+      end
+      `TEST_CASE("test2") begin
+      end
+   end;
+endmodule
+                    """)
+
+                lib.add_source_file(tb_file_name)
+                lib.add_source_file(tests_file_name)
+
+                tests = ui._create_tests(None)  # pylint: disable=protected-access
+                # tb_top is a single test case in itself
+                self.assertEqual(tests.test_names(), ["lib.tb_top"])
+
+                if tb_type == "vhdl":
+                    test_bench = lib.entity("tb_top")
+                else:
+                    test_bench = lib.module("tb_top")
+                test_bench.scan_tests_from_file(tests_file_name)
+
+                tests = ui._create_tests(None)  # pylint: disable=protected-access
+                # tb_top is a single test case in itself
+                self.assertEqual(tests.test_names(), ["lib.tb_top.test1",
+                                                      "lib.tb_top.test2"])
+
+    def test_scan_tests_from_other_file_mssing(self):
+        ui = self._create_ui()
+        lib = ui.library("lib")
+        tb_file_name = "tb_top.sv"
+        self.create_file(tb_file_name, """
+module tb_top
+endmodule;
+        """)
+        lib.add_source_file(tb_file_name)
+        self.assertRaises(ValueError, lib.module("tb_top").scan_tests_from_file, "missing.sv")
+
     def _create_ui(self, *args):
         """ Create an instance of the VUnit public interface class """
         ui = VUnit.from_argv(argv=["--output-path=%s" % self._output_path,

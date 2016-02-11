@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 from os.path import join, dirname
 from vunit import VUnit
@@ -69,4 +69,5 @@ configure_tb_same_sim_all_pass(ui)
 configure_tb_set_generic(ui)
 lib.entity("tb_no_generic_override").set_generic("g_val", False)
 lib.entity("tb_ieee_warning").test("pass").disable_ieee_warnings()
+lib.entity("tb_other_file_tests").scan_tests_from_file(join(root, "other_file_tests.vhd"))
 ui.main()

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Contains functionality to manage the configuration of tests
@@ -46,7 +46,21 @@ class TestConfiguration(object):
         self._configs = {}
         self._plis = {}
         self._disable_ieee_warnings = set()
+        self._scan_tests_from_file = {}
         self._elaborate_only = elaborate_only
+
+    def scan_tests_from_file(self, scope, file_name):
+        """
+        Scan tests from another file than the default one
+        """
+        self._scan_tests_from_file[scope] = file_name
+
+    def file_to_scan_for_tests(self, scope):
+        """
+        Return the file to scan for tests or None if not set
+        """
+        if scope in self._scan_tests_from_file:
+            return self._scan_tests_from_file[scope]
 
     def set_generic(self, name, value, scope=create_scope()):
         """

@@ -44,6 +44,15 @@ class TestList(object):
             num_tests += len(test_suite.test_cases)
         return num_tests
 
+    def test_names(self):
+        """
+        Return the names of all tests
+        """
+        names = []
+        for test_suite in self:
+            names += test_suite.test_cases
+        return names
+
     def __iter__(self):
         return iter(self._test_suites)
 

@@ -1116,6 +1116,22 @@ class TestBench(object):
 
         return Test(self._library_name, self._entity_name, name, self._config)
 
+    def scan_tests_from_file(self, file_name):
+        """
+        Scan tests from another file than the one containg the test
+        bench.  Useful for when the top level test bench does not
+        contain the tests.
+
+        Such a structure is not the preferred way of doing things in
+        VUnit but this method exists to accommodate legacy needs.
+
+        :param file_name: The name of another file to scan for tests
+
+        """
+        if not ostools.file_exists(file_name):
+            raise ValueError("File %r does not exist" % file_name)
+        self._config.scan_tests_from_file(self._scope, file_name)
+
 
 class PackageFacade(object):
     """

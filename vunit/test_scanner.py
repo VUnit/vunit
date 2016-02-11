@@ -21,6 +21,7 @@ import vunit.ostools as ostools
 from vunit.vhdl_parser import remove_comments
 from vunit.test_suites import IndependentSimTestCase, SameSimTestSuite
 from vunit.test_configuration import create_scope
+from vunit.project import file_type_of
 
 
 class TestScanner(object):
@@ -168,7 +169,12 @@ class TestScanner(object):
         """
         Parse file for run strings and pragmas
         """
-        if verilog:
+        scope = create_scope(entity.library_name, entity.name)
+        other_file = self._cfg.file_to_scan_for_tests(scope)
+        if other_file is not None:
+            file_name = other_file
+            verilog = file_type_of(other_file) == "verilog"
+        elif verilog:
             file_name = entity.file_name
         else:
             file_name = entity.architecture_names[architecture_name]
