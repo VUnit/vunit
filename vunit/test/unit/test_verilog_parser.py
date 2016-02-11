@@ -108,6 +108,20 @@ endpackage
         self.assertEqual(imports[0], "true1")
         self.assertEqual(imports[1], "true2")
 
+    def test_parse_package_references(self):
+        package_references = parse("""\
+import false1;
+import false1::false2::*;
+package pkg;
+  true1::func(true2::bar());
+  true3::foo();
+endpackage
+""").package_references
+        self.assertEqual(len(package_references), 3)
+        self.assertEqual(package_references[0], "true1")
+        self.assertEqual(package_references[1], "true2")
+        self.assertEqual(package_references[2], "true3")
+
     @mock.patch("vunit.parsing.verilog.parser.LOGGER", autospec=True)
     def test_parse_import_with_bad_argument(self, logger):
         imports = parse("""\

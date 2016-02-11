@@ -52,11 +52,13 @@ class VerilogDesignFile(object):
                  modules=None,
                  packages=None,
                  imports=None,
+                 package_references=None,
                  instances=None,
                  included_files=None):
         self.modules = [] if modules is None else modules
         self.packages = [] if packages is None else packages
         self.imports = [] if imports is None else imports
+        self.package_references = [] if package_references is None else package_references
         self.instances = [] if instances is None else instances
         self.included_files = [] if included_files is None else included_files
 
@@ -74,6 +76,7 @@ class VerilogDesignFile(object):
         return cls(modules=VerilogModule.find(tokens),
                    packages=VerilogPackage.find(tokens),
                    imports=cls.find_imports(tokens),
+                   package_references=cls.find_package_references(tokens),
                    instances=cls.find_instances(tokens),
                    included_files=included_files)
 
@@ -100,6 +103,27 @@ class VerilogDesignFile(object):
             except EOFException:
                 LocationException.warning("EOF reached when parsing import",
                                           location=import_token.location).log(LOGGER)
+        return results
+
+    @staticmethod
+    def find_package_references(tokens):
+        """
+        Find package_references pkg::func
+        """
+        results = []
+        stream = TokenStream(tokens)
+        while not stream.eof:
+            token = stream.pop()
+            if token.kind == IMPORT:
+                stream.skip_until(SEMI_COLON)
+                if not stream.eof:
+                    stream.pop()
+
+            elif token.kind == IDENTIFIER and not stream.eof:
+                kind = stream.pop().kind
+                if kind == DOUBLE_COLON:
+                    results.append(token.value)
+                    stream.skip_while(IDENTIFIER, DOUBLE_COLON)
         return results
 
     @staticmethod

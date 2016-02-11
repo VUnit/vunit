@@ -620,8 +620,11 @@ class VerilogSourceFile(SourceFile):
             for package in design_file.packages:
                 self.design_units.append(VerilogDesignUnit(package.name, self, "package"))
 
-            for import_name in design_file.imports:
-                self.package_dependencies.append(import_name)
+            for package_name in design_file.imports:
+                self.package_dependencies.append(package_name)
+
+            for package_name in design_file.package_references:
+                self.package_dependencies.append(package_name)
 
             for instance_name in design_file.instances:
                 self.module_dependencies.append(instance_name)

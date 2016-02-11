@@ -705,7 +705,7 @@ endmodule
         modules = library.get_modules()
         self.assertEqual(len(modules), 1)
 
-    def test_finds_verilog_package_dependencies(self):
+    def test_finds_verilog_package_import_dependencies(self):
         self.project.add_library("lib", "lib_path")
         pkg = self.add_source_file("lib", "pkg.sv", """\
 package pkg;
@@ -714,6 +714,19 @@ endpackage
         module = self.add_source_file("lib", "module.sv", """\
 module name;
   import pkg::*;
+endmodule
+""")
+        self.assert_compiles(pkg, before=module)
+
+    def test_finds_verilog_package_reference_dependencies(self):
+        self.project.add_library("lib", "lib_path")
+        pkg = self.add_source_file("lib", "pkg.sv", """\
+package pkg;
+endpackage
+""")
+        module = self.add_source_file("lib", "module.sv", """\
+module name;
+  pkg::func();
 endmodule
 """)
         self.assert_compiles(pkg, before=module)

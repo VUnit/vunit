@@ -75,6 +75,10 @@ class VerilogTokenizer(object):
             r"/\*(.|\n)*?\*/",
             lambda token: slice_value(token, start=2, end=-2))
 
+        add(DOUBLE_COLON,
+            r"::",
+            remove_value)
+
         add(SEMI_COLON,
             r";",
             remove_value)
