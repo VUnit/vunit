@@ -6,7 +6,7 @@
 
 from os.path import join, dirname
 
-# Make vunit python module importable. Can be removed if vunit is on you pythonpath
+# Make vunit python module importable. Can be removed if vunit is in your PYTHONPATH
 # environment variable
 import sys
 path_to_vunit = join(dirname(__file__), '..', '..', '..')
