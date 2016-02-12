@@ -75,7 +75,7 @@ begin
     -- directories through the runner_cfg generic (<root>/vunit_out/tests/<test case
     -- name>). When not using run_uvvm.py the default path is the current directory
     -- (<root>/vunit_out/<simulator>). These directories are used by VUnit
-    -- itself and these lines make sure that UVVM do to.
+    -- itself and these lines make sure that UVVM do too.
     set_log_file_name(join(output_path(runner_cfg), "_Log.txt"));
     set_alert_file_name(join(output_path(runner_cfg), "_Alert.txt"));
 
@@ -167,7 +167,7 @@ end;
 -- Because of this the VUnit warning, error, and failure procedures aren't
 -- normally found in a testbench.
 --
--- UVVM handles this differently, the error call above is a convinience procedure
+-- UVVM handles this differently, the error call above is a convenience procedure
 -- for UVVM's unconditional check
 --
 -- alert(ERROR, "Something is wrong");
