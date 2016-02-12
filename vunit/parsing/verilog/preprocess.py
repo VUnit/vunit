@@ -214,22 +214,29 @@ class VerilogPreprocessor(object):
             raise LocationException.warning("Verilog `include bad argument",
                                             tok.location)
 
-        full_name = None
-        for include_path in include_paths:
-            full_name = join(include_path, file_name_tok.value)
-            if exists(full_name):
-                break
-        else:
+        included_file = find_included_file(include_paths, file_name_tok.value)
+        included_files.append((file_name_tok.value, included_file))
+        if included_file is None:
             # Is debug message since there are so many builtin includes in tools
             raise LocationException.debug(
                 "Could not find `include file %s" % file_name_tok.value,
                 file_name_tok.location)
 
-        included_files.append(full_name)
-        included_tokens = self._tokenizer.tokenize(read_file(full_name),
-                                                   file_name=full_name,
+        included_tokens = self._tokenizer.tokenize(read_file(included_file),
+                                                   file_name=included_file,
                                                    previous_location=token.location)
         return self.preprocess(included_tokens, defines, include_paths, included_files)
+
+
+def find_included_file(include_paths, file_name):
+    """
+    Find the file to include given include_paths
+    """
+    for include_path in include_paths:
+        full_name = join(include_path, file_name)
+        if exists(full_name):
+            return full_name
+    return None
 
 
 def undef(undef_token, stream, defines):

@@ -14,8 +14,11 @@ Verilog parsing functionality
 from os.path import dirname
 from vunit.parsing.tokenizer import TokenStream, EOFException, LocationException
 from vunit.parsing.verilog.tokenizer import VerilogTokenizer
-from vunit.parsing.verilog.preprocess import VerilogPreprocessor
+from vunit.parsing.verilog.preprocess import VerilogPreprocessor, find_included_file
 from vunit.parsing.verilog.tokens import *
+from vunit.hashing import hash_string
+from os.path import exists
+from vunit.ostools import read_file
 
 import logging
 LOGGER = logging.getLogger(__name__)
@@ -26,14 +29,21 @@ class VerilogParser(object):
     Parse a single Verilog file
     """
 
-    def __init__(self):
+    def __init__(self, database=None):
         self._tokenizer = VerilogTokenizer()
         self._preprocessor = VerilogPreprocessor(self._tokenizer)
+        self._database = database
+        self._content_cache = {}
 
     def parse(self, code, file_name, include_paths, content_hash=None):  # pylint: disable=unused-argument
         """
         Parse verilog code
         """
+
+        cached = self._lookup_parse_cache(file_name, include_paths)
+        if cached is not None:
+            return cached
+
         include_paths = [] if include_paths is None else include_paths
         tokens = self._tokenizer.tokenize(code, file_name=file_name)
         included_files = []
@@ -41,7 +51,67 @@ class VerilogParser(object):
                                                   include_paths=[dirname(file_name)] + include_paths,
                                                   included_files=included_files)
 
-        return VerilogDesignFile.parse(pp_tokens, included_files)
+        included_files_for_design_file = [file_name for _, file_name in included_files if file_name is not None]
+        result = VerilogDesignFile.parse(pp_tokens, included_files_for_design_file)
+
+        if self._database is None:
+            return result
+
+        self._store_result(file_name, result, included_files)
+        return result
+
+    @staticmethod
+    def _key(file_name):
+        """
+        Returns the database key for parse results of file_name
+        """
+        return ("CachedVerilogParser.parse(%s)" % file_name).encode()
+
+    def _store_result(self, file_name, result, included_files):
+        """
+        Store parse result into back into cache
+        """
+        new_included_files = [(short_name, full_name, self._content_hash(full_name))
+                              for short_name, full_name in included_files]
+        key = self._key(file_name)
+        self._database[key] = self._content_hash(file_name), new_included_files, result
+        return result
+
+    def _content_hash(self, file_name):
+        """
+        Hash the contents of the file
+        """
+        if file_name is None or not exists(file_name):
+            return None
+        if file_name not in self._content_cache:
+            self._content_cache[file_name] = "sha1:" + hash_string(read_file(file_name))
+        return self._content_cache[file_name]
+
+    def _lookup_parse_cache(self, file_name, include_paths):
+        """
+        Use verilog code from cache
+        """
+        if self._database is None:
+            return None
+
+        key = self._key(file_name)
+        if key not in self._database:
+            return None
+
+        old_content_hash, old_included_files, old_result = self._database[key]
+        if old_content_hash != self._content_hash(file_name):
+            return None
+
+        for include_str, included_file_name, last_content_hash in old_included_files:
+            if last_content_hash != self._content_hash(included_file_name):
+                return None
+
+            if find_included_file(include_paths, include_str) != included_file_name:
+                return None
+
+        LOGGER.debug("Re-using cached Verilog parse results for %s", file_name)
+
+        return old_result
 
 
 class VerilogDesignFile(object):

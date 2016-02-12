@@ -166,11 +166,37 @@ endmodule identifier
 """).instances
         self.assertEqual(len(instances), 0)
 
+    def test_cached_parsing_smoketest(self):
+        code = """\
+`include "missing.sv"
+module name;
+  true1 instance_name1();
+  true2 instance_name2(.foo(bar));
+  true3 #(.param(1)) instance_name3(.foo(bar));
+endmodule
+"""
+        cache = {}
+        parser = VerilogParser(database=cache)
+        result = parse(code, parser=parser)
+        instances = result.instances
+        self.assertEqual(len(instances), 3)
+        self.assertEqual(instances[0], "true1")
+        self.assertEqual(instances[1], "true2")
+        self.assertEqual(instances[2], "true3")
 
-def parse(code):
+        result = parse(code, parser=parser)
+        self.assertEqual(instances, result.instances)
+        cache.clear()
+
+        result = parse(code, parser=parser)
+        self.assertEqual(instances, result.instances)
+
+
+def parse(code, parser=None):
     """
     Helper function to parse
     """
+    parser = VerilogParser() if parser is None else parser
     with mock.patch("vunit.parsing.tokenizer.read_file", autospec=True) as mock_read_file:
         with mock.patch("vunit.parsing.tokenizer.file_exists", autospec=True) as mock_file_exists:
             def file_exists_side_effect(filename):
@@ -186,5 +212,5 @@ def parse(code):
             mock_file_exists.side_effect = file_exists_side_effect
             mock_read_file.side_effect = read_file_side_effect
 
-            design_file = VerilogParser().parse(code, "file_name.sv", [])
+            design_file = parser.parse(code, "file_name.sv", [])
     return design_file

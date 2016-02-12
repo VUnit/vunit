@@ -635,7 +635,9 @@ keep''')
         included_files = []
         with mock.patch("vunit.parsing.verilog.preprocess.LOGGER", autospec=True) as logger:
             tokens = preprocessor.preprocess(tokens, defines, include_paths, included_files)
-        return PreprocessResult(self, tokens, defines, included_files, logger)
+        return PreprocessResult(self, tokens, defines,
+                                [file_name for _, file_name in included_files if file_name is not None],
+                                logger)
 
     def write_file(self, file_name, contents):
         """

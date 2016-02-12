@@ -100,6 +100,7 @@ from vunit.exceptions import CompileError
 from vunit.location_preprocessor import LocationPreprocessor
 from vunit.check_preprocessor import CheckPreprocessor
 from vunit.vhdl_parser import CachedVHDLParser
+from vunit.parsing.verilog.parser import VerilogParser
 from vunit.builtins import (add_vhdl_builtins,
                             add_verilog_include_dir,
                             add_array_util,
@@ -237,6 +238,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         database = self._create_database()
         self._project = Project(
             vhdl_parser=CachedVHDLParser(database=database),
+            verilog_parser=VerilogParser(database=database),
             depend_on_package_body=self._simulator_factory.package_users_depend_on_bodies())
 
     def _create_database(self):
