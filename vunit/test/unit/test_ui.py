@@ -515,7 +515,7 @@ endmodule
                 self.assertEqual(tests.test_names(), ["lib.tb_top.test1",
                                                       "lib.tb_top.test2"])
 
-    def test_scan_tests_from_other_file_mssing(self):
+    def test_scan_tests_from_other_file_missing(self):
         ui = self._create_ui()
         lib = ui.library("lib")
         tb_file_name = "tb_top.sv"
