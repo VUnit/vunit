@@ -10,11 +10,12 @@
 """
 Verilog parsing functionality
 """
-from os.path import join, exists
+from os.path import join, exists, abspath
 
 from vunit.parsing.tokenizer import (TokenStream,
                                      Token,
                                      add_previous,
+                                     strip_previous,
                                      EOFException,
                                      LocationException)
 from vunit.parsing.verilog.tokens import *
@@ -30,8 +31,18 @@ class VerilogPreprocessor(object):
 
     def __init__(self, tokenizer):
         self._tokenizer = tokenizer
+        self._macro_trace = set()
+        self._include_trace = set()
 
     def preprocess(self, tokens, defines=None, include_paths=None, included_files=None):
+        """
+        Entry point of preprocessing
+        """
+        self._include_trace = set()
+        self._macro_trace = set()
+        return self._preprocess(tokens, defines, include_paths, included_files)
+
+    def _preprocess(self, tokens, defines=None, include_paths=None, included_files=None):
         """
         Pre-process tokens while filling in defines
         """
@@ -76,10 +87,10 @@ class VerilogPreprocessor(object):
         elif token.value in ("ifdef", "ifndef"):
             try:
                 tokens = self.if_statement(token, stream, defines)
-                return self.preprocess(tokens,
-                                       defines=defines,
-                                       include_paths=include_paths,
-                                       included_files=included_files)
+                return self._preprocess(tokens,
+                                        defines=defines,
+                                        include_paths=include_paths,
+                                        included_files=included_files)
             except EOFException:
                 raise LocationException.warning(
                     "EOF reached when parsing `%s" % token.value,
@@ -94,19 +105,34 @@ class VerilogPreprocessor(object):
             stream.skip_until(NEWLINE)
 
         elif token.value in defines:
-            macro = defines[token.value]
-            return self.preprocess(macro.expand_from_stream(token,
-                                                            stream,
-                                                            previous=token.location),
-                                   defines=defines,
-                                   include_paths=include_paths,
-                                   included_files=included_files)
+            return self.expand_macro(token, stream, defines, include_paths, included_files)
         else:
             raise LocationException.debug(
                 "Verilog undefined name",
                 token.location)
 
         return []
+
+    def expand_macro(self,  # pylint: disable=too-many-arguments
+                     macro_token, stream, defines, include_paths, included_files):
+        """
+        Expand a macro
+        """
+        macro = defines[macro_token.value]
+        macro_point = (strip_previous(macro_token.location), hash(frozenset(defines.keys())))
+        if macro_point in self._macro_trace:
+            raise LocationException.error(
+                "Circular macro expansion of %s detected" % macro_token.value,
+                macro_token.location)
+        self._macro_trace.add(macro_point)
+        tokens = self._preprocess(macro.expand_from_stream(macro_token,
+                                                           stream,
+                                                           previous=macro_token.location),
+                                  defines=defines,
+                                  include_paths=include_paths,
+                                  included_files=included_files)
+        self._macro_trace.remove(macro_point)
+        return tokens
 
     @staticmethod
     def if_statement(if_token, stream, defines):
@@ -195,9 +221,12 @@ class VerilogPreprocessor(object):
                     "Verilog `include argument not defined",
                     tok.location)
 
-            expanded_tokens = macro.expand_from_stream(tok,
-                                                       stream,
-                                                       previous=tok.location)
+            expanded_tokens = self.expand_macro(tok,
+                                                stream,
+                                                defines,
+                                                include_paths,
+                                                included_files)
+
             if len(expanded_tokens) == 0:
                 raise LocationException.warning("Verilog `include has bad argument, empty define `%s" % macro.name,
                                                 tok.location)
@@ -222,10 +251,22 @@ class VerilogPreprocessor(object):
                 "Could not find `include file %s" % file_name_tok.value,
                 file_name_tok.location)
 
+        include_point = (strip_previous(token.location), hash(frozenset(defines.keys())))
+        if include_point in self._include_trace:
+            raise LocationException.error(
+                "Circular `include of %s detected" % file_name_tok.value,
+                file_name_tok.location)
+        self._include_trace.add(include_point)
+
         included_tokens = self._tokenizer.tokenize(read_file(included_file),
                                                    file_name=included_file,
                                                    previous_location=token.location)
-        return self.preprocess(included_tokens, defines, include_paths, included_files)
+        included_tokens = self._preprocess(included_tokens,
+                                           defines,
+                                           include_paths,
+                                           included_files)
+        self._include_trace.remove(include_point)
+        return included_tokens
 
 
 def find_included_file(include_paths, file_name):
@@ -233,7 +274,7 @@ def find_included_file(include_paths, file_name):
     Find the file to include given include_paths
     """
     for include_path in include_paths:
-        full_name = join(include_path, file_name)
+        full_name = abspath(join(include_path, file_name))
         if exists(full_name):
             return full_name
     return None

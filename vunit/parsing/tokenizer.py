@@ -260,3 +260,12 @@ def add_previous(location, previous):
     else:
         current, old_previous = location
         return (current, add_previous(old_previous, previous))
+
+
+def strip_previous(location):
+    """
+    Strip previous location
+    """
+    if location is None:
+        return None
+    return location[0]
