@@ -2,13 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test the DependencyGraph
 """
 
-from vunit.dependency_graph import DependencyGraph
+from vunit.dependency_graph import (DependencyGraph,
+                                    CircularDependencyException)
 import unittest
 
 
@@ -41,14 +42,26 @@ class TestDependencyGraph(unittest.TestCase):
         dependencies = [('a', 'b'), ('a', 'c'), ('b', 'd'), ('d', 'd')]
         graph = DependencyGraph()
         self._add_nodes_and_dependencies(graph, nodes, dependencies)
-        self.assertRaises(RuntimeError, graph.toposort)
+
+        try:
+            graph.toposort()
+        except CircularDependencyException as exc:
+            self.assertEqual(exc.path, ['d', 'd'])
+        else:
+            self.fail("Exception not raised")
 
     def test_should_raise_runtime_error_exception_on_long_circular_dependency(self):
         nodes = ['a', 'b', 'c', 'd']
         dependencies = [('a', 'b'), ('a', 'c'), ('b', 'd'), ('d', 'a')]
         graph = DependencyGraph()
         self._add_nodes_and_dependencies(graph, nodes, dependencies)
-        self.assertRaises(RuntimeError, graph.toposort)
+
+        try:
+            graph.toposort()
+        except CircularDependencyException as exc:
+            self.assertEqual(exc.path, ['a', 'b', 'd', 'a'])
+        else:
+            self.fail("Exception not raised")
 
     def test_should_resort_after_additions(self):
         nodes = ['a', 'b', 'c', 'd', 'e', 'f']
@@ -79,6 +92,48 @@ class TestDependencyGraph(unittest.TestCase):
         result = graph.get_direct_dependencies('c')
         self.assertFalse('b' in result)
         self.assertTrue('a' in result)
+
+    def test_get_dependent(self):
+        nodes = ['a', 'b', 'c', 'd', 'e']
+        dependencies = [('a', 'b'), ('b', 'c'), ('c', 'd'), ('e', 'd')]
+        graph = DependencyGraph()
+        self._add_nodes_and_dependencies(graph, nodes, dependencies)
+        self.assertEqual(graph.get_dependent(set('a')), set(('a', 'b', 'c', 'd')))
+        self.assertEqual(graph.get_dependent(set('e')), set(('d', 'e')))
+
+    def test_get_dependencies(self):
+        nodes = ['a', 'b', 'c', 'd', 'e']
+        dependencies = [('b', 'a'), ('c', 'b'), ('d', 'c'), ('d', 'e')]
+        graph = DependencyGraph()
+        self._add_nodes_and_dependencies(graph, nodes, dependencies)
+        self.assertEqual(graph.get_dependencies(set('a')), set(('a', 'b', 'c', 'd')))
+        self.assertEqual(graph.get_dependencies(set('e')), set(('d', 'e')))
+
+    def test_get_dependent_detects_circular_dependencies(self):
+        nodes = ['a', 'b', 'c']
+        dependencies = [('a', 'b'), ('b', 'c'), ('c', 'a')]
+        graph = DependencyGraph()
+        self._add_nodes_and_dependencies(graph, nodes, dependencies)
+
+        try:
+            graph.get_dependent(set('a'))
+        except CircularDependencyException as exc:
+            self.assertEqual(exc.path, ['a', 'b', 'c', 'a'])
+        else:
+            self.fail("Exception not raised")
+
+    def test_get_dependencies_detects_circular_dependencies(self):
+        nodes = ['a', 'b', 'c']
+        dependencies = [('b', 'a'), ('c', 'b'), ('a', 'c')]
+        graph = DependencyGraph()
+        self._add_nodes_and_dependencies(graph, nodes, dependencies)
+
+        try:
+            graph.get_dependencies(set('a'))
+        except CircularDependencyException as exc:
+            self.assertEqual(exc.path, ['a', 'b', 'c', 'a'])
+        else:
+            self.fail("Exception not raised")
 
     def _check_result(self, result, dependencies):
         """
