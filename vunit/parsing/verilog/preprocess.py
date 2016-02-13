@@ -122,7 +122,7 @@ class VerilogPreprocessor(object):
         macro_point = (strip_previous(macro_token.location), hash(frozenset(defines.keys())))
         if macro_point in self._macro_trace:
             raise LocationException.error(
-                "Recursive macro expansion of %s detected" % macro_token.value,
+                "Circular macro expansion of %s detected" % macro_token.value,
                 macro_token.location)
         self._macro_trace.add(macro_point)
         tokens = self._preprocess(macro.expand_from_stream(macro_token,
@@ -254,7 +254,7 @@ class VerilogPreprocessor(object):
         include_point = (strip_previous(token.location), hash(frozenset(defines.keys())))
         if include_point in self._include_trace:
             raise LocationException.error(
-                "Recursive `include of %s detected" % file_name_tok.value,
+                "Circular `include of %s detected" % file_name_tok.value,
                 file_name_tok.location)
         self._include_trace.add(include_point)
 
