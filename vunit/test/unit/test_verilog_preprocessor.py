@@ -117,6 +117,96 @@ class TestVerilogPreprocessor(TestCase):
         result.assert_has_tokens("hello hey")
         result.assert_included_files([join(self.output_path, "include.svh")])
 
+    def test_detects_recursive_includes(self):
+        self.write_file("include1.svh", '`include "include2.svh"')
+        self.write_file("include2.svh", '`include "include1.svh"')
+        result = self.preprocess('`include "include1.svh"',
+                                 include_paths=[self.output_path])
+        result.logger.error.assert_called_once_with(
+            'Recursive `include of include2.svh detected\n%s',
+            'from fn.v line 1:\n'
+            '`include "include1.svh"\n'
+            '~~~~~~~~\n'
+            'from include1.svh line 1:\n'
+            '`include "include2.svh"\n'
+            '~~~~~~~~\n'
+            'from include2.svh line 1:\n'
+            '`include "include1.svh"\n'
+            '~~~~~~~~\n'
+            'at include1.svh line 1:\n'
+            '`include "include2.svh"\n'
+            '         ~~~~~~~~~~~~~~')
+
+    def test_detects_recursive_include_of_self(self):
+        self.write_file("include.svh", '`include "include.svh"')
+        result = self.preprocess('`include "include.svh"',
+                                 include_paths=[self.output_path])
+        result.logger.error.assert_called_once_with(
+            'Recursive `include of include.svh detected\n%s',
+            'from fn.v line 1:\n'
+            '`include "include.svh"\n'
+            '~~~~~~~~\n'
+            'from include.svh line 1:\n'
+            '`include "include.svh"\n'
+            '~~~~~~~~\n'
+            'at include.svh line 1:\n'
+            '`include "include.svh"\n'
+            '         ~~~~~~~~~~~~~')
+
+    def test_does_not_detect_non_recursive_includes(self):
+        self.write_file("include3.svh", 'keep')
+        self.write_file("include1.svh", '`include "include3.svh"\n`include "include2.svh"')
+        self.write_file("include2.svh", '`include "include3.svh"')
+        result = self.preprocess('`include "include1.svh"\n`include "include2.svh"',
+                                 include_paths=[self.output_path])
+        result.assert_no_log()
+
+    def test_detects_recursive_macro_expansion_of_self(self):
+        result = self.preprocess('''
+`define foo `foo
+`foo
+''')
+        result.logger.error.assert_called_once_with(
+            'Recursive macro expansion of foo detected\n%s',
+            'from fn.v line 3:\n'
+            '`foo\n'
+            '~~~~\n'
+            'from fn.v line 2:\n'
+            '`define foo `foo\n'
+            '            ~~~~\n'
+            'at fn.v line 2:\n'
+            '`define foo `foo\n'
+            '            ~~~~')
+
+    def test_detects_recursive_macro_expansion(self):
+        result = self.preprocess('''
+`define foo `bar
+`define bar `foo
+`foo
+''')
+        result.logger.error.assert_called_once_with(
+            'Recursive macro expansion of bar detected\n%s',
+            'from fn.v line 4:\n'
+            '`foo\n'
+            '~~~~\n'
+            'from fn.v line 2:\n'
+            '`define foo `bar\n'
+            '            ~~~~\n'
+            'from fn.v line 3:\n'
+            '`define bar `foo\n'
+            '            ~~~~\n'
+            'at fn.v line 2:\n'
+            '`define foo `bar\n'
+            '            ~~~~')
+
+    def test_does_not_detect_non_recursive_macro_expansion(self):
+        result = self.preprocess('''
+`define foo bar
+`foo
+`foo
+''')
+        result.assert_no_log()
+
     def test_preprocess_include_directive_from_define(self):
         self.write_file("include.svh", "hello hey")
         result = self.preprocess('''\
