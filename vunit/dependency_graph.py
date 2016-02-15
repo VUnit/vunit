@@ -26,7 +26,9 @@ class DependencyGraph(object):
         every node is located after its dependency nodes
         """
         sorted_nodes = []
-        self._visit(self._nodes, self._forward, sorted_nodes.append)
+        self._visit(sorted(self._nodes),
+                    dict((key, sorted(values)) for key, values in self._forward.items()),
+                    sorted_nodes.append)
         sorted_nodes = list(reversed(sorted_nodes))
         return sorted_nodes
 
