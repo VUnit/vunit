@@ -76,6 +76,19 @@ class SimulatorInterface(object):
         """
         pass
 
+    def compile_project(self, project, vhdl_standard):
+        """
+        Compile the project
+        """
+        pass
+
+    def simulate(self, output_path,  # pylint: disable=too-many-arguments
+                 library_name, entity_name, architecture_name, config):
+        """
+        Simulate
+        """
+        pass
+
 
 def isfile(file_name):
     """

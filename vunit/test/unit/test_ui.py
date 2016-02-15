@@ -22,6 +22,7 @@ from vunit.project import VHDL_EXTENSIONS, VERILOG_EXTENSIONS
 from vunit.test.mock_2or3 import mock
 from vunit.ostools import renew_path
 from vunit.builtins import add_verilog_include_dir
+from vunit.simulator_interface import SimulatorInterface
 
 
 class TestUi(unittest.TestCase):
@@ -402,11 +403,10 @@ Listed 2 files""".splitlines()))
 
         def side_effect():
             "No simulate calls should have occured so far"
-            self.assertEqual(self.mocksim.simulate_calls, [])
+            self.assertEqual(self.mocksim.simulate.mock_calls, [])
             return retval
 
         pre_config = mock.Mock()
-        pre_config.return_value = retval
         pre_config.side_effect = side_effect
 
         obj.add_config(name="", pre_config=pre_config)
@@ -625,7 +625,16 @@ class MockSimulatorFactory(object):
 
     def __init__(self, output_path):
         self._output_path = output_path
-        self.mocksim = MockSimulator()
+        self.mocksim = mock.Mock(spec=SimulatorInterface)
+
+        def compile_side_effect(*args, **kwargs):
+            return True
+
+        def simulate_side_effect(*args, **kwargs):
+            return True
+
+        self.mocksim.compile_project.side_effect = compile_side_effect
+        self.mocksim.simulate.side_effect = simulate_side_effect
 
     @property
     def simulator_output_path(self):
@@ -633,31 +642,3 @@ class MockSimulatorFactory(object):
 
     def create(self):
         return self.mocksim
-
-
-class MockSimulator(object):
-    """
-    Mock a simulator
-    """
-
-    def __init__(self):
-        self.simulate_calls = []
-
-    @staticmethod
-    def compile_project(project, vhdl_standard):  # pylint: disable=unused-argument
-        return True
-
-    def post_process(self, output_path):  # pylint: disable=unused-argument
-        pass
-
-    def simulate(self,   # pylint: disable=too-many-arguments
-                 output_path, library_name, entity_name, architecture_name, config):
-        """
-        Accumulate simulation calls
-        """
-        self.simulate_calls.append((output_path,
-                                    library_name,
-                                    entity_name,
-                                    architecture_name,
-                                    config))
-        return True
