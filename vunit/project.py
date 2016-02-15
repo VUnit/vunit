@@ -17,9 +17,11 @@ LOGGER = logging.getLogger(__name__)
 from vunit.hashing import hash_string
 from os.path import join, basename, dirname, splitext
 
-from vunit.dependency_graph import DependencyGraph
+from vunit.dependency_graph import (DependencyGraph,
+                                    CircularDependencyException)
 from vunit.vhdl_parser import VHDLParser, VHDLReference
 from vunit.parsing.verilog.parser import VerilogParser
+from vunit.exceptions import CompileError
 import vunit.ostools as ostools
 import traceback
 
@@ -269,6 +271,14 @@ class Project(object):
 
         return dependency_graph
 
+    @staticmethod
+    def _handle_circular_dependency(exception):
+        """
+        Pretty print circular dependency to error log
+        """
+        LOGGER.error("Found circular dependency:\n%s",
+                     " ->\n".join(source_file.name for source_file in exception.path))
+
     def get_files_in_compile_order(self, incremental=True):
         """
         Get a list of all files in compile order
@@ -282,8 +292,12 @@ class Project(object):
                 files.append(source_file)
 
         # Get files that are affected by recompiling the modified files
-        affected_files = dependency_graph.get_dependent(files)
-        compile_order = dependency_graph.toposort()
+        try:
+            affected_files = dependency_graph.get_dependent(files)
+            compile_order = dependency_graph.toposort()
+        except CircularDependencyException as exc:
+            self._handle_circular_dependency(exc)
+            raise CompileError
 
         def comparison_key(source_file):
             return compile_order.index(source_file)
@@ -301,8 +315,13 @@ class Project(object):
             target_files = self.get_source_files_in_order()
 
         dependency_graph = self._create_dependency_graph()
-        affected_files = dependency_graph.get_dependencies(set(target_files))
-        compile_order = dependency_graph.toposort()
+
+        try:
+            affected_files = dependency_graph.get_dependencies(set(target_files))
+            compile_order = dependency_graph.toposort()
+        except CircularDependencyException as exc:
+            self._handle_circular_dependency(exc)
+            raise CompileError
 
         def comparison_key(source_file):
             return compile_order.index(source_file)

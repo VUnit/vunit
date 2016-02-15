@@ -19,6 +19,7 @@ from vunit.ostools import renew_path, write_file
 from vunit.project import Project, file_type_of
 from time import sleep
 from vunit.test.mock_2or3 import mock
+from vunit.exceptions import CompileError
 
 
 class TestProject(unittest.TestCase):  # pylint: disable=too-many-public-methods
@@ -856,6 +857,36 @@ end architecture;
 
         self.project.add_manual_dependency(ent2, depends_on=ent1)
         self.assert_compiles(ent1, before=ent2)
+
+    @mock.patch("vunit.project.LOGGER", autospec=True)
+    def test_circular_dependencies_causes_error(self, logger):
+        self.project.add_library("lib", "lib_path")
+        self.add_source_file("lib", "ent1.vhd", """\
+entity ent1 is
+end ent1;
+
+architecture arch of ent1 is
+begin
+   ent2_inst : entity work.ent2;
+end architecture;
+""")
+
+        self.add_source_file("lib", "ent2.vhd", """\
+entity ent2 is
+end ent2;
+
+architecture arch of ent2 is
+begin
+   ent1_inst : entity work.ent1;
+end architecture;
+""")
+
+        self.assertRaises(CompileError, self.project.get_files_in_compile_order)
+        logger.error.assert_called_once_with(
+            "Found circular dependency:\n%s",
+            "ent1.vhd ->\n"
+            "ent2.vhd ->\n"
+            "ent1.vhd")
 
     def test_file_type_of(self):
         self.assertEqual(file_type_of("file.vhd"), "vhdl")
