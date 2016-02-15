@@ -14,10 +14,10 @@ Verilog parsing functionality
 from os.path import dirname
 from vunit.parsing.tokenizer import TokenStream, EOFException, LocationException
 from vunit.parsing.verilog.tokenizer import VerilogTokenizer
-from vunit.parsing.verilog.preprocess import VerilogPreprocessor, find_included_file
+from vunit.parsing.verilog.preprocess import VerilogPreprocessor, find_included_file, Macro
 from vunit.parsing.verilog.tokens import *
 from vunit.hashing import hash_string
-from os.path import exists
+from os.path import exists, abspath
 from vunit.ostools import read_file
 
 import logging
@@ -35,29 +35,34 @@ class VerilogParser(object):
         self._database = database
         self._content_cache = {}
 
-    def parse(self, code, file_name, include_paths, content_hash=None):  # pylint: disable=unused-argument
+    def parse(self, code, file_name, include_paths=None, defines=None):
         """
         Parse verilog code
         """
 
-        cached = self._lookup_parse_cache(file_name, include_paths)
+        defines = {} if defines is None else defines
+        include_paths = [] if include_paths is None else include_paths
+
+        cached = self._lookup_parse_cache(file_name, include_paths, defines)
         if cached is not None:
             return cached
 
-        include_paths = [] if include_paths is None else include_paths
+        initial_defines = dict((key, Macro(key, self._tokenizer.tokenize(value)))
+                               for key, value in defines.items())
         tokens = self._tokenizer.tokenize(code, file_name=file_name)
         included_files = []
         pp_tokens = self._preprocessor.preprocess(tokens,
                                                   include_paths=[dirname(file_name)] + include_paths,
+                                                  defines=initial_defines,
                                                   included_files=included_files)
 
-        included_files_for_design_file = [file_name for _, file_name in included_files if file_name is not None]
+        included_files_for_design_file = [name for _, name in included_files if name is not None]
         result = VerilogDesignFile.parse(pp_tokens, included_files_for_design_file)
 
         if self._database is None:
             return result
 
-        self._store_result(file_name, result, included_files)
+        self._store_result(file_name, result, included_files, defines)
         return result
 
     @staticmethod
@@ -65,16 +70,16 @@ class VerilogParser(object):
         """
         Returns the database key for parse results of file_name
         """
-        return ("CachedVerilogParser.parse(%s)" % file_name).encode()
+        return ("CachedVerilogParser.parse(%s)" % abspath(file_name)).encode()
 
-    def _store_result(self, file_name, result, included_files):
+    def _store_result(self, file_name, result, included_files, defines):
         """
         Store parse result into back into cache
         """
         new_included_files = [(short_name, full_name, self._content_hash(full_name))
                               for short_name, full_name in included_files]
         key = self._key(file_name)
-        self._database[key] = self._content_hash(file_name), new_included_files, result
+        self._database[key] = self._content_hash(file_name), new_included_files, defines, result
         return result
 
     def _content_hash(self, file_name):
@@ -87,10 +92,12 @@ class VerilogParser(object):
             self._content_cache[file_name] = "sha1:" + hash_string(read_file(file_name))
         return self._content_cache[file_name]
 
-    def _lookup_parse_cache(self, file_name, include_paths):
+    def _lookup_parse_cache(self, file_name, include_paths, defines):
         """
         Use verilog code from cache
         """
+        # pylint: disable=too-many-return-statements
+
         if self._database is None:
             return None
 
@@ -98,7 +105,10 @@ class VerilogParser(object):
         if key not in self._database:
             return None
 
-        old_content_hash, old_included_files, old_result = self._database[key]
+        old_content_hash, old_included_files, old_defines, old_result = self._database[key]
+        if old_defines != defines:
+            return None
+
         if old_content_hash != self._content_hash(file_name):
             return None
 

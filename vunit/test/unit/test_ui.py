@@ -372,7 +372,8 @@ Listed 2 files""".splitlines()))
                 project.add_source_file.assert_called_once_with(abspath("verilog.v"),
                                                                 "lib",
                                                                 file_type="verilog",
-                                                                include_dirs=all_include_dirs)
+                                                                include_dirs=all_include_dirs,
+                                                                defines=None)
         ui = self._create_ui()
         check(lambda: ui.add_source_files(file_name, "lib", include_dirs=include_dirs))
 
@@ -386,6 +387,37 @@ Listed 2 files""".splitlines()))
         ui = self._create_ui()
         lib = ui.library("lib")
         check(lambda: lib.add_source_file(file_name, include_dirs=include_dirs))
+
+    def test_add_source_files_has_defines(self):
+        file_name = "verilog.v"
+        self.create_file(file_name)
+        all_include_dirs = add_verilog_include_dir([])
+        defines = {"foo": "bar"}
+
+        def check(action):
+            """
+            Helper to check that project method was called
+            """
+            with mock.patch.object(ui, "_project", autospec=True) as project:
+                action()
+                project.add_source_file.assert_called_once_with(abspath("verilog.v"),
+                                                                "lib",
+                                                                file_type="verilog",
+                                                                include_dirs=all_include_dirs,
+                                                                defines=defines)
+        ui = self._create_ui()
+        check(lambda: ui.add_source_files(file_name, "lib", defines=defines))
+
+        ui = self._create_ui()
+        check(lambda: ui.add_source_file(file_name, "lib", defines=defines))
+
+        ui = self._create_ui()
+        lib = ui.library("lib")
+        check(lambda: lib.add_source_files(file_name, defines=defines))
+
+        ui = self._create_ui()
+        lib = ui.library("lib")
+        check(lambda: lib.add_source_file(file_name, defines=defines))
 
     def _test_pre_config_helper(self, retval, test_not_entity=False):
         """

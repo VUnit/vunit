@@ -125,6 +125,7 @@ class TestVunitArtificial(unittest.TestCase):
             ("failed", "lib.tb_other_file_tests.fail"),
 
             ("passed", "lib.tb_magic_paths.Test magic paths are correct"),
+            ("passed", "lib.tb_with_define.test 1"),
 
             ("failed", "lib.tb_fail_on_warning.fail"),
 

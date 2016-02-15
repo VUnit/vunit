@@ -4,6 +4,8 @@
 #
 # Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
+# pylint: disable=too-many-lines
+
 """
 Test the project functionality
 """
@@ -774,6 +776,64 @@ endmodule
         module = create_project()
         self.assert_should_recompile([module])
 
+    def test_verilog_defines_affects_dependency_scanning(self):
+        self.project.add_library("lib", "lib_path")
+        self.add_source_file("lib", "module.v", """\
+`ifdef foo
+module mod;
+endmodule
+`endif
+""")
+        library = self.project.get_library("lib")
+        modules = library.get_modules()
+        self.assertEqual(len(modules), 0)
+
+        self.project = Project()
+        self.project.add_library("lib", "lib_path")
+        self.add_source_file("lib", "module.v", """\
+`ifdef foo
+module mod;
+endmodule
+`endif
+""", defines={"foo": ""})
+        library = self.project.get_library("lib")
+        modules = library.get_modules()
+        self.assertEqual(len(modules), 1)
+
+    def test_recompile_when_updating_defines(self):
+        contents = """
+module mod;
+endmodule
+"""
+        self.project = Project()
+        self.project.add_library("lib", "lib_path")
+        mod1 = self.add_source_file("lib", "module1.v", contents)
+        mod2 = self.add_source_file("lib", "module2.v", contents)
+        self.assert_should_recompile([mod1, mod2])
+        self.update(mod1)
+        self.update(mod2)
+        self.assert_should_recompile([])
+
+        self.project = Project()
+        self.project.add_library("lib", "lib_path")
+        mod1 = self.add_source_file("lib", "module1.v", contents,
+                                    defines={"foo": "bar"})
+        mod2 = self.add_source_file("lib", "module2.v", contents)
+        self.assert_should_recompile([mod1])
+        self.update(mod1)
+        self.update(mod2)
+        self.assert_should_recompile([])
+
+        self.project = Project()
+        self.project.add_library("lib", "lib_path")
+        mod1 = self.add_source_file("lib", "module1.v", contents,
+                                    defines={"foo": "other_bar"})
+        mod2 = self.add_source_file("lib", "module2.v", contents)
+        self.assert_should_recompile([mod1])
+        self.update(mod1)
+        self.update(mod2)
+        self.assert_should_recompile([])
+
     def test_manual_dependencies(self):
         self.project.add_library("lib", "lib_path")
         ent1 = self.add_source_file("lib", "ent1.vhd", """\
@@ -852,14 +912,15 @@ end architecture;
 """)
         return file1, file2, file3
 
-    def add_source_file(self, library_name, file_name, contents):
+    def add_source_file(self, library_name, file_name, contents, defines=None):
         """
         Convenient wrapper arround project.add_source_file
         """
         write_file(file_name, contents)
         source_file = self.project.add_source_file(file_name,
                                                    library_name,
-                                                   file_type=file_type_of(file_name))
+                                                   file_type=file_type_of(file_name),
+                                                   defines=defines)
         return source_file
 
     def hash_file_name_of(self, source_file):

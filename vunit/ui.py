@@ -251,7 +251,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         project_database_file_name = join(self._output_path, "project_database")
         create_new = False
         key = b"version"
-        version = str((5, sys.version)).encode()
+        version = str((6, sys.version)).encode()
         database = None
         try:
             database = DataBase(project_database_file_name)
@@ -457,13 +457,14 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         return SourceFileList(results)
 
     def add_source_files(self,   # pylint: disable=too-many-arguments
-                         files, library_name, preprocessors=None, include_dirs=None, allow_empty=False):
+                         files, library_name, preprocessors=None, include_dirs=None, defines=None, allow_empty=False):
         """
         Add source files matching wildcard pattern to library
 
         :param files: A wildcard pattern matching the files to add or a list of files
         :param library_name: The name of the library to add files into
         :param include_dirs: A list of include directories
+        :param defines: A dictionary containing Verilog defines to be set
         :param allow_empty: To disable an error if no files matched the pattern
         :returns: A list of files (:class:`.SourceFileList`) which were added
 
@@ -487,16 +488,17 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             file_names += new_file_names
 
         return SourceFileList(source_files=[
-            self.add_source_file(file_name, library_name, preprocessors, include_dirs)
+            self.add_source_file(file_name, library_name, preprocessors, include_dirs, defines)
             for file_name in file_names])
 
-    def add_source_file(self, file_name, library_name, preprocessors=None, include_dirs=None):
+    def add_source_file(self, file_name, library_name, preprocessors=None, include_dirs=None, defines=None):
         """
         Add source file to library
 
         :param file_name: The name of the file
         :param library_name: The name of the library to add the file into
         :param include_dirs: A list of include directories
+        :param defines: A dictionary containing Verilog defines to be set
         :returns: The :class:`.SourceFile` which was added
 
         :example:
@@ -516,7 +518,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         return SourceFile(self._project.add_source_file(file_name,
                                                         library_name,
                                                         file_type=file_type,
-                                                        include_dirs=include_dirs),
+                                                        include_dirs=include_dirs,
+                                                        defines=defines),
                           self._project,
                           self)
 
@@ -903,12 +906,13 @@ class Library(object):
     def get_source_files(self, pattern="*", allow_empty=False):
         return self._parent.get_source_files(pattern, self._library_name, allow_empty)
 
-    def add_source_files(self, pattern, preprocessors=None, include_dirs=None, allow_empty=False):
+    def add_source_files(self, pattern, preprocessors=None, include_dirs=None, defines=None, allow_empty=False):
         """
         Add source files matching wildcard pattern to library
 
         :param pattern: A wildcard pattern match the files to add
         :param include_dirs: A list of include directories
+        :param defines: A dictionary containing Verilog defines to be set
         :param allow_empty: To disable an error if no files matched the pattern
         :returns: A list of files (:class:`.SourceFileList`) which were added
 
@@ -919,15 +923,16 @@ class Library(object):
            library.add_source_files("*.vhd")
 
         """
-        return self._parent.add_source_files(pattern, self._library_name, preprocessors, include_dirs,
+        return self._parent.add_source_files(pattern, self._library_name, preprocessors, include_dirs, defines,
                                              allow_empty=allow_empty)
 
-    def add_source_file(self, pattern, preprocessors=None, include_dirs=None):
+    def add_source_file(self, pattern, preprocessors=None, include_dirs=None, defines=None):
         """
         Add source file to library
 
         :param file_name: The name of the file
         :param include_dirs: A list of include directories
+        :param defines: A dictionary containing Verilog defines to be set
         :returns: The :class:`.SourceFile` which was added
 
         :example:
@@ -937,7 +942,7 @@ class Library(object):
            library.add_source_file("file.vhd")
 
         """
-        return self._parent.add_source_file(pattern, self._library_name, preprocessors, include_dirs)
+        return self._parent.add_source_file(pattern, self._library_name, preprocessors, include_dirs, defines)
 
     def package(self, name):
         """

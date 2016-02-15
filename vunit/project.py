@@ -73,7 +73,7 @@ class Project(object):
             self._libraries[logical_name] = library
             LOGGER.info('Replacing library %s with path %s', logical_name, directory)
 
-    def add_source_file(self, file_name, library_name, file_type='vhdl', include_dirs=None):
+    def add_source_file(self, file_name, library_name, file_type='vhdl', include_dirs=None, defines=None):
         """
         Add a file_name as a source file in library_name with file_type
         """
@@ -89,7 +89,7 @@ class Project(object):
             source_file = VHDLSourceFile(file_name, library, vhdl_parser=self._vhdl_parser)
             library.add_vhdl_design_units(source_file.design_units)
         elif file_type == "verilog":
-            source_file = VerilogSourceFile(file_name, library, self._verilog_parser, include_dirs)
+            source_file = VerilogSourceFile(file_name, library, self._verilog_parser, include_dirs, defines)
             library.add_verilog_design_units(source_file.design_units)
         else:
             raise ValueError(file_type)
@@ -597,13 +597,17 @@ class VerilogSourceFile(SourceFile):
     """
     Represents a Verilog source file
     """
-    def __init__(self, name, library, verilog_parser, include_dirs):
+    def __init__(self, name, library, verilog_parser, include_dirs=None, defines=None):
         SourceFile.__init__(self, name, library, 'verilog')
         self.package_dependencies = []
         self.module_dependencies = []
         self.include_dirs = include_dirs if include_dirs is not None else []
+        self.defines = defines.copy() if defines is not None else {}
         code = ostools.read_file(self.name)
         self._content_hash = hash_string(code)
+        for key, value in self.defines.items():
+            self._content_hash = hash_string(self._content_hash + hash_string(key))
+            self._content_hash = hash_string(self._content_hash + hash_string(value))
         self.parse(code, verilog_parser, include_dirs)
 
     def parse(self, code, parser, include_dirs):
@@ -611,7 +615,7 @@ class VerilogSourceFile(SourceFile):
         Parse Verilog code and adding dependencies and design units
         """
         try:
-            design_file = parser.parse(code, self.name, include_dirs, self._content_hash)
+            design_file = parser.parse(code, self.name, include_dirs, self.defines)
             for included_file_name in design_file.included_files:
                 self._content_hash = hash_string(self._content_hash + ostools.read_file(included_file_name))
             for module in design_file.modules:

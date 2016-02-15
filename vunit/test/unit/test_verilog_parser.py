@@ -11,6 +11,10 @@ Test of the Verilog parser
 from unittest import TestCase
 from vunit.parsing.verilog.parser import VerilogParser
 from vunit.test.mock_2or3 import mock
+from os.path import join, dirname, exists
+import os
+import shutil
+from vunit.ostools import renew_path
 
 
 class TestVerilogParser(TestCase):  # pylint: disable=too-many-public-methods
@@ -18,12 +22,22 @@ class TestVerilogParser(TestCase):  # pylint: disable=too-many-public-methods
     Test of the Verilog parser
     """
 
+    def setUp(self):
+        self.output_path = join(dirname(__file__), "test_verilog_parser_out")
+        renew_path(self.output_path)
+        self.cwd = os.getcwd()
+        os.chdir(self.output_path)
+
+    def tearDown(self):
+        os.chdir(self.cwd)
+        shutil.rmtree(self.output_path)
+
     def test_parsing_empty(self):
-        design_file = parse("")
+        design_file = self.parse("")
         self.assertEqual(design_file.modules, [])
 
     def test_parse_module(self):
-        modules = parse("""\
+        modules = self.parse("""\
 module true1;
   my_module hello
   "module false";
@@ -41,7 +55,7 @@ endmodule
         self.assertEqual(modules[2].name, "true3")
 
     def test_parse_parameter_without_type(self):
-        modules = parse("""\
+        modules = self.parse("""\
 module foo;
   parameter param1;
   parameter param2 = 1;
@@ -56,7 +70,7 @@ endmodule
         self.assertEqual(param2, "param2")
 
     def test_parse_parameter_with_type(self):
-        modules = parse("""\
+        modules = self.parse("""\
 module foo;
   parameter string param1;
   parameter integer param2 = 1;
@@ -71,7 +85,7 @@ endmodule
         self.assertEqual(param2, "param2")
 
     def test_nested_modules_are_ignored(self):
-        modules = parse("""\
+        modules = self.parse("""\
 module foo;
   parameter string param1;
   module nested;
@@ -89,7 +103,7 @@ endmodule
         self.assertEqual(param2, "param2")
 
     def test_parse_package(self):
-        packages = parse("""\
+        packages = self.parse("""\
 package true1;
 endpackage package true2; endpackage
 """).packages
@@ -98,7 +112,7 @@ endpackage package true2; endpackage
         self.assertEqual(packages[1].name, "true2")
 
     def test_parse_imports(self):
-        imports = parse("""\
+        imports = self.parse("""\
 import true1;
 package pkg;
   import true2::*;
@@ -109,7 +123,7 @@ endpackage
         self.assertEqual(imports[1], "true2")
 
     def test_parse_package_references(self):
-        package_references = parse("""\
+        package_references = self.parse("""\
 import false1;
 import false1::false2::*;
 package pkg;
@@ -124,7 +138,7 @@ endpackage
 
     @mock.patch("vunit.parsing.verilog.parser.LOGGER", autospec=True)
     def test_parse_import_with_bad_argument(self, logger):
-        imports = parse("""\
+        imports = self.parse("""\
 import;
 """).imports
         self.assertEqual(len(imports), 0)
@@ -136,7 +150,7 @@ import;
 
     @mock.patch("vunit.parsing.verilog.parser.LOGGER", autospec=True)
     def test_parse_import_eof(self, logger):
-        imports = parse("""\
+        imports = self.parse("""\
 import
 """).imports
         self.assertEqual(len(imports), 0)
@@ -147,7 +161,7 @@ import
             "~~~~~~")
 
     def test_parse_instances(self):
-        instances = parse("""\
+        instances = self.parse("""\
 module name;
   true1 instance_name1();
   true2 instance_name2(.foo(bar));
@@ -160,13 +174,25 @@ endmodule
         self.assertEqual(instances[2], "true3")
 
     def test_parse_instances_without_crashing(self):
-        instances = parse("""\
+        instances = self.parse("""\
 module name;
 endmodule identifier
 """).instances
         self.assertEqual(len(instances), 0)
 
-    def test_cached_parsing_smoketest(self):
+    def test_can_set_pre_defined_defines(self):
+        code = """\
+`ifdef foo
+`foo
+endmodule;
+`endif
+"""
+
+        result = self.parse(code, defines={"foo": "module mod1;"})
+        self.assertEqual(len(result.modules), 1)
+        self.assertEqual(result.modules[0].name, "mod1")
+
+    def test_result_is_cached(self):
         code = """\
 `include "missing.sv"
 module name;
@@ -176,41 +202,127 @@ module name;
 endmodule
 """
         cache = {}
-        parser = VerilogParser(database=cache)
-        result = parse(code, parser=parser)
+        result = self.parse(code, cache=cache)
         instances = result.instances
         self.assertEqual(len(instances), 3)
         self.assertEqual(instances[0], "true1")
         self.assertEqual(instances[1], "true2")
         self.assertEqual(instances[2], "true3")
 
-        result = parse(code, parser=parser)
-        self.assertEqual(instances, result.instances)
+        new_result = self.parse(code, cache=cache)
+        self.assertEqual(id(result), id(new_result))
         cache.clear()
 
-        result = parse(code, parser=parser)
-        self.assertEqual(instances, result.instances)
+        new_result = self.parse(code, cache=cache)
+        self.assertNotEqual(id(result), id(new_result))
 
+    def test_cached_parsing_updated_by_changing_file(self):
+        code = """\
+module mod1;
+endmodule
+"""
+        cache = {}
+        result = self.parse(code, cache=cache)
+        self.assertEqual(len(result.modules), 1)
+        self.assertEqual(result.modules[0].name, "mod1")
 
-def parse(code, parser=None):
-    """
-    Helper function to parse
-    """
-    parser = VerilogParser() if parser is None else parser
-    with mock.patch("vunit.parsing.tokenizer.read_file", autospec=True) as mock_read_file:
-        with mock.patch("vunit.parsing.tokenizer.file_exists", autospec=True) as mock_file_exists:
-            def file_exists_side_effect(filename):
-                return filename == "file_name.sv"
+        code = """\
+module mod2;
+endmodule
+"""
+        result = self.parse(code, cache=cache)
+        self.assertEqual(len(result.modules), 1)
+        self.assertEqual(result.modules[0].name, "mod2")
 
-            def read_file_side_effect(filename):
-                """
-                Side effect of read file
-                """
-                assert filename == "file_name.sv"
-                return code
+    def test_cached_parsing_updated_by_includes(self):
+        self.write_file("include.svh", """
+module mod;
+endmodule;
+""")
+        code = """\
+`include "include.svh"
+"""
+        cache = {}
+        result = self.parse(code, cache=cache, include_paths=[self.output_path])
+        self.assertEqual(len(result.modules), 1)
+        self.assertEqual(result.modules[0].name, "mod")
 
-            mock_file_exists.side_effect = file_exists_side_effect
-            mock_read_file.side_effect = read_file_side_effect
+        self.write_file("include.svh", """
+module mod1;
+endmodule;
 
-            design_file = parser.parse(code, "file_name.sv", [])
-    return design_file
+module mod2;
+endmodule;
+""")
+        result = self.parse(code, cache=cache, include_paths=[self.output_path])
+        self.assertEqual(len(result.modules), 2)
+        self.assertEqual(result.modules[0].name, "mod1")
+        self.assertEqual(result.modules[1].name, "mod2")
+
+    def test_cached_parsing_updated_by_higher_priority_file(self):
+        cache = {}
+        include_paths = [self.output_path, join(self.output_path, "lower_prio")]
+
+        self.write_file(join("lower_prio", "include.svh"), """
+module mod_lower_prio;
+endmodule;
+""")
+
+        code = """\
+`include "include.svh"
+"""
+
+        result = self.parse(code, cache=cache, include_paths=include_paths)
+        self.assertEqual(len(result.modules), 1)
+        self.assertEqual(result.modules[0].name, "mod_lower_prio")
+
+        self.write_file("include.svh", """
+module mod_higher_prio;
+endmodule;
+""")
+        result = self.parse(code, cache=cache, include_paths=include_paths)
+        self.assertEqual(len(result.modules), 1)
+        self.assertEqual(result.modules[0].name, "mod_higher_prio")
+
+    def test_cached_parsing_updated_by_other_defines(self):
+        cache = {}
+
+        code = """\
+`ifdef foo
+module `foo
+endmodule;
+`endif
+"""
+
+        result = self.parse(code, cache=cache)
+        self.assertEqual(len(result.modules), 0)
+
+        result = self.parse(code, cache=cache, defines={"foo": "mod1"})
+        self.assertEqual(len(result.modules), 1)
+        self.assertEqual(result.modules[0].name, "mod1")
+
+        result = self.parse(code, cache=cache, defines={"foo": "mod2"})
+        self.assertEqual(len(result.modules), 1)
+        self.assertEqual(result.modules[0].name, "mod2")
+
+    def write_file(self, file_name, contents):
+        """
+        Write file with contents into output path
+        """
+        full_name = join(self.output_path, file_name)
+        full_path = dirname(full_name)
+        if not exists(full_path):
+            os.makedirs(full_path)
+        with open(full_name, "w") as fptr:
+            fptr.write(contents)
+
+    def parse(self, code, include_paths=None, cache=None, defines=None):
+        """
+        Helper function to parse
+        """
+        self.write_file("file_name.sv", code)
+        cache = cache if cache is not None else {}
+        parser = VerilogParser(database=cache)
+        include_paths = include_paths if include_paths is not None else []
+        design_file = parser.parse(code, "file_name.sv", include_paths, defines)
+        return design_file

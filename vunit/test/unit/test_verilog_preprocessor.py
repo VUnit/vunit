@@ -736,7 +736,7 @@ keep''')
         full_name = join(self.output_path, file_name)
         full_path = dirname(full_name)
         if not exists(full_path):
-            os.makedirs(dirname(full_path))
+            os.makedirs(full_path)
         with open(full_name, "w") as fptr:
             fptr.write(contents)
 

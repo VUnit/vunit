@@ -172,10 +172,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
                                                  vhdl_standard,
                                                  source_file.compile_options)
             elif source_file.file_type == 'verilog':
-                success = self.compile_verilog_file(source_file.name,
-                                                    source_file.library.name,
-                                                    source_file.include_dirs,
-                                                    source_file.compile_options)
+                success = self.compile_verilog_file(source_file)
             else:
                 raise RuntimeError("Unkown file type: " + source_file.file_type)
 
@@ -202,7 +199,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
             return False
         return True
 
-    def compile_verilog_file(self, source_file_name, library_name, include_dirs, compile_options):
+    def compile_verilog_file(self, source_file):
         """
         Compiles a verilog file into a specific library
         """
@@ -214,13 +211,15 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
 
             args = [join(self._prefix, 'vlog'), '-sv', '-quiet', '-modelsimini', self._modelsim_ini]
             args += coverage_args
-            args += compile_options.get("modelsim_vlog_flags", [])
-            args += ['-work', library_name, source_file_name]
+            args += source_file.compile_options.get("modelsim_vlog_flags", [])
+            args += ['-work', source_file.library.name, source_file.name]
 
             for library in self._libraries.values():
                 args += ["-L", library.name]
-            for include_dir in include_dirs:
+            for include_dir in source_file.include_dirs:
                 args += ["+incdir+%s" % include_dir]
+            for key, value in source_file.defines.items():
+                args += ["+define+%s=%s" % (key, value)]
             proc = Process(args)
             proc.consume_output()
         except Process.NonZeroExitCode:

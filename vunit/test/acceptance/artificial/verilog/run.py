@@ -11,7 +11,8 @@ root = dirname(__file__)
 
 ui = VUnit.from_argv()
 lib = ui.add_library("lib")
-lib.add_source_files(join(root, "*.sv"))
+lib.add_source_files(join(root, "*.sv"),
+                     defines={"DEFINE_FROM_RUN_PY": ""})
 
 
 def configure_tb_with_parameter_config(ui):
