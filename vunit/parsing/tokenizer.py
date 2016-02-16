@@ -182,6 +182,10 @@ def describe_location(location, first=True):
     if previous is not None:
         retval += describe_location(previous, first=False) + "\n"
 
+    if file_name is None:
+        retval += "Unknown Python string"
+        return retval
+
     if not file_exists(file_name):
         retval += "Unknown location in %s" % file_name
         return retval

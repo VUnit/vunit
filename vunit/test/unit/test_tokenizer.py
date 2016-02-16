@@ -79,6 +79,18 @@ at filename1 line 3:
   SE
   ~~""")
 
+    def test_describe_location_none(self):
+        self.assertEqual(describe_location(None),
+                         "Unknown location")
+
+    def test_describe_missing_location(self):
+        self.assertEqual(describe_location((("missing.svh", (0, 0)), None)),
+                         "Unknown location in missing.svh")
+
+    def test_describe_none_filename_location(self):
+        self.assertEqual(describe_location(((None, (0, 0)), None)),
+                         "Unknown Python string")
+
 
 def _describe_location(*codes):
     """
