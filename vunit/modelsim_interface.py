@@ -209,7 +209,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
             else:
                 coverage_args = ["+cover=" + to_coverage_args(self._coverage)]
 
-            if source_file_name.endswith(".vams"):
+            if source_file.name.endswith(".vams"):
                 args = [join(self._prefix, 'vlog'), '-ams', '-quiet', '-modelsimini', self._modelsim_ini]
             else:
                 args = [join(self._prefix, 'vlog'), '-sv', '-quiet', '-modelsimini', self._modelsim_ini]
