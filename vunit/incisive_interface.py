@@ -130,11 +130,9 @@ define work "{2}/libraries/work"
                                                  vhdl_standard,
                                                  source_file.compile_options)
             elif source_file.file_type == 'verilog':
-                success = self.compile_verilog_file(source_file.name,
-                                                    source_file.library.name,
-                                                    source_file.library.directory,
-                                                    source_file.include_dirs,
-                                                    source_file.compile_options)
+                success = self.compile_verilog_file(source_file)
+            else:
+                raise RuntimeError("Unkown file type: " + source_file.file_type)
 
             if not success:
                 raise CompileError("Failed to compile '%s'" % source_file.name)
@@ -194,12 +192,7 @@ define work "{2}/libraries/work"
             return False
         return True
 
-    def compile_verilog_file(self,
-                             source_file_name,
-                             library_name,
-                             library_path,
-                             include_dirs,
-                             compile_options):
+    def compile_verilog_file(self, source_file):
         """
         Compiles a Verilog file
         """
@@ -209,12 +202,11 @@ define work "{2}/libraries/work"
             args += ['-compile']
             args += ['-nocopyright']
             args += ['-licqueue']
-            args += ['-libverbose']
             args += ['-nowarn UEXPSC'] # "Ignored unexpected semicolon following SystemVerilog description keyword (endfunction)."
             args += ['-nowarn DLCPTH'] # "cds.lib Invalid path"
             args += ['-nowarn DLCVAR'] # "cds.lib Invalid environment variable ''."
             args += ['-work work']
-            args += compile_options.get('incisive_irun_verilog_flags', [])
+            args += source_file.compile_options.get('incisive_irun_verilog_flags', [])
             args += ['-cdslib "%s"' % self._cdslib]
             if not self._hdlvar == None:
                 args += ['-hdlvar "%s"' % self._hdlvar]
@@ -224,12 +216,14 @@ define work "{2}/libraries/work"
             else:
                 args += ['-messages']
                 args += ['-libverbose']
-            for include_dir in include_dirs:
+            for include_dir in source_file.include_dirs:
                 args += ['-incdir "%s"' % include_dir]
             args += ['-incdir "%s/tools/spectre/etc/ahdl/"' % self._cds_root_irun] # for "disciplines.vams" etc.
-            args += ['-nclibdirname "%s"' % dirname(library_path)]
-            args += ['-makelib %s' % library_name]
-            args += ['"%s"' % source_file_name]
+            for key, value in source_file.defines.items():
+                args += ["-define %s=%s" % (key, value)]
+            args += ['-nclibdirname "%s"' % dirname(source_file.library.directory)]
+            args += ['-makelib %s' % source_file.library.name]
+            args += ['"%s"' % source_file.name]
             args += ['-endlib']
             argsfile = "%s/irun_compile_verilog_file.args" % self._output_path
             write_file(argsfile, "\n".join(args))
@@ -311,7 +305,7 @@ define work "{2}/libraries/work"
                     args += ['-quiet']
                 else:
                     args += ['-messages']
-                    args += ['-libverbose']
+                    #args += ['-libverbose']
                 for name, value in config.generics.items():
                     if _generic_needs_quoting(value):
                         args += ['''-gpg "%s.%s => \\"%s\\""''' % (entity_name, name, value)]
