@@ -176,10 +176,6 @@ class TestExternalRunScripts(unittest.TestCase):
         self.check(join(VHDL_PATH, "com", "run.py"),
                    args=["--use-debug-codecs"])
 
-    def test_vhdl_compile_order_project(self):
-        retcode = call([sys.executable, join(ROOT, "examples", "vhdl", "compile_order", "print_compile_order.py")])
-        self.assertEqual(retcode, 0)
-
     def setUp(self):
         self.output_path = join(dirname(__file__), "external_run_out")
         self.report_file = join(self.output_path, "xunit.xml")
