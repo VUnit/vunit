@@ -20,6 +20,7 @@ from re import MULTILINE
 from vunit.ui import VUnit
 from vunit.project import VHDL_EXTENSIONS, VERILOG_EXTENSIONS
 from vunit.test.mock_2or3 import mock
+from vunit.test.common import set_env
 from vunit.ostools import renew_path
 from vunit.builtins import add_verilog_include_dir
 from vunit.simulator_interface import SimulatorInterface
@@ -557,6 +558,11 @@ endmodule;
         """)
         lib.add_source_file(tb_file_name)
         self.assertRaises(ValueError, lib.module("tb_top").scan_tests_from_file, "missing.sv")
+
+    def test_can_list_tests_without_simulator(self):
+        with set_env(PATH=""):
+            ui = self._create_ui("--list")
+            self._run_main(ui, 0)
 
     def _create_ui(self, *args):
         """ Create an instance of the VUnit public interface class """

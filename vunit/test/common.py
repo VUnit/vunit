@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Common functions re-used between test cases
@@ -11,6 +11,8 @@ Common functions re-used between test cases
 
 from xml.etree import ElementTree
 from vunit.simulator_factory import SimulatorFactory
+import contextlib
+import os
 
 
 def has_simulator():
@@ -63,3 +65,27 @@ def assert_exit(function, code=0):
         assert ex.code == code
     else:
         assert False
+
+
+@contextlib.contextmanager
+def set_env(**environ):
+    """
+    Temporarily set the process environment variables.
+
+    >>> with set_env(PLUGINS_DIR=u'test/plugins'):
+    ...   "PLUGINS_DIR" in os.environ
+    True
+
+    >>> "PLUGINS_DIR" in os.environ
+    False
+
+    :type environ: dict[str, unicode]
+    :param environ: Environment variables to set
+    """
+    old_environ = dict(os.environ)
+    os.environ.update(environ)
+    try:
+        yield
+    finally:
+        os.environ.clear()
+        os.environ.update(old_environ)

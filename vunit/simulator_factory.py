@@ -72,17 +72,19 @@ class SimulatorFactory(object):
         Add command line arguments to parser
         """
 
-        if for_all_simulators or cls.select_simulator().supports_gui_flag:
+        simulator = cls.select_simulator()
+
+        if for_all_simulators or (simulator is not None and simulator.supports_gui_flag):
             parser.add_argument('-g', '--gui',
                                 action="store_true",
                                 default=False,
                                 help=("Open test case(s) in simulator gui with top level pre loaded"))
 
         if for_all_simulators:
-            for simulator in cls.supported_simulators():
-                simulator.add_arguments(parser)
-        else:
-            cls.select_simulator().add_arguments(parser)
+            for sim in cls.supported_simulators():
+                sim.add_arguments(parser)
+        elif simulator is not None:
+            simulator.add_arguments(parser)
 
     def __init__(self, args):
         self._args = args
