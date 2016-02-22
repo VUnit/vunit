@@ -44,7 +44,7 @@ def check_report(report_file, tests):
 
         if test.find("failure") is not None:
             status = "failed"
-        report[test.attrib["name"]] = status
+        report[test.attrib["classname"] + "." + test.attrib["name"]] = status
 
     for status, name in tests:
         if report[name] != status:

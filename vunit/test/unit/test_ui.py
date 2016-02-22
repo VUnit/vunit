@@ -535,7 +535,7 @@ endmodule
 
                 tests = ui._create_tests(None)  # pylint: disable=protected-access
                 # tb_top is a single test case in itself
-                self.assertEqual(tests.test_names(), ["lib.tb_top"])
+                self.assertEqual(tests.test_names(), ["lib.tb_top.all"])
 
                 if tb_type == "vhdl":
                     test_bench = lib.entity("tb_top")

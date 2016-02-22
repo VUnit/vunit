@@ -44,7 +44,7 @@ class TestVunitArtificial(unittest.TestCase):
 
         elab_expected_report = []
         for status, name in EXPECTED_REPORT:
-            if name in ("lib.tb_elab_fail",):
+            if name in ("lib.tb_elab_fail.all",):
                 status = "failed"
             else:
                 status = "passed"
@@ -55,16 +55,16 @@ class TestVunitArtificial(unittest.TestCase):
         self.check(self.artificial_run_vhdl,
                    exit_code=0,
                    clean=False,
-                   args=["--elaborate", "lib.tb_pass"])
+                   args=["--elaborate", "lib.tb_pass.all"])
         check_report(self.report_file, [
-            ("passed", "lib.tb_pass")])
+            ("passed", "lib.tb_pass.all")])
 
         self.check(self.artificial_run_vhdl,
                    exit_code=1,
                    clean=False,
-                   args=["--elaborate", "lib.tb_elab_fail"])
+                   args=["--elaborate", "lib.tb_elab_fail.all"])
         check_report(self.report_file, [
-            ("failed", "lib.tb_elab_fail")])
+            ("failed", "lib.tb_elab_fail.all")])
 
     def _test_artificial(self, args=None):
         """
@@ -172,29 +172,29 @@ class TestVunitArtificial(unittest.TestCase):
     def test_exit_0_flag(self):
         self.check(self.artificial_run_vhdl,
                    exit_code=1,
-                   args=["lib.tb_fail"])
+                   args=["lib.tb_fail.all"])
         self.check(self.artificial_run_vhdl,
                    exit_code=0,
-                   args=["--exit-0", "lib.tb_fail"])
+                   args=["--exit-0", "lib.tb_fail.all"])
 
 
 EXPECTED_REPORT = (
     ("passed", "lib.tb_other_file_tests.pass"),
     ("failed", "lib.tb_other_file_tests.fail"),
-    ("passed", "lib.tb_pass"),
-    ("failed", "lib.tb_fail"),
-    ("passed", "lib.tb_infinite_events"),
-    ("failed", "lib.tb_fail_on_warning"),
-    ("passed", "lib.tb_no_fail_on_warning"),
-    ("passed", "lib.tb_two_architectures.pass"),
-    ("failed", "lib.tb_two_architectures.fail"),
+    ("passed", "lib.tb_pass.all"),
+    ("failed", "lib.tb_fail.all"),
+    ("passed", "lib.tb_infinite_events.all"),
+    ("failed", "lib.tb_fail_on_warning.all"),
+    ("passed", "lib.tb_no_fail_on_warning.all"),
+    ("passed", "lib.tb_two_architectures.pass.all"),
+    ("failed", "lib.tb_two_architectures.fail.all"),
     ("passed", "lib.tb_with_vhdl_runner.pass"),
     ("passed", "lib.tb_with_vhdl_runner.Test with spaces"),
     ("failed", "lib.tb_with_vhdl_runner.fail"),
     ("failed", "lib.tb_with_vhdl_runner.Test that timeouts"),
-    ("passed", "lib.tb_magic_paths"),
-    ("passed", "lib.tb_no_fail_after_cleanup"),
-    ("failed", "lib.tb_elab_fail"),
+    ("passed", "lib.tb_magic_paths.all"),
+    ("passed", "lib.tb_no_fail_after_cleanup.all"),
+    ("failed", "lib.tb_elab_fail.all"),
 
     ("passed", "lib.tb_same_sim_all_pass.Test 1"),
     ("passed", "lib.tb_same_sim_all_pass.Test 2"),
@@ -208,7 +208,7 @@ EXPECTED_REPORT = (
     ("failed", "lib.tb_with_checks.Test failing check"),
     ("failed", "lib.tb_with_checks.Test non-stopping failing check"),
 
-    ("passed", "lib.tb_set_generic"),
+    ("passed", "lib.tb_set_generic.all"),
 
     ("passed", "lib.tb_with_generic_config.Test 0"),
     ("passed", "lib.tb_with_generic_config.Test 1"),
@@ -216,7 +216,7 @@ EXPECTED_REPORT = (
     ("passed", "lib.tb_with_generic_config.Test 3"),
     ("passed", "lib.tb_with_generic_config.Test 4"),
 
-    ("passed", "lib.tb_no_generic_override"),
+    ("passed", "lib.tb_no_generic_override.all"),
 
     ("passed", "lib.tb_ieee_warning.pass"),
     ("failed", "lib.tb_ieee_warning.fail"))
