@@ -10,7 +10,7 @@ Pylint check
 
 
 import unittest
-from subprocess import check_call
+from subprocess import call
 from vunit import ROOT
 from os.path import join, dirname
 import sys
@@ -22,6 +22,7 @@ class TestPylint(unittest.TestCase):
     """
     @staticmethod
     def test_pylint():
-        check_call([sys.executable, "-m", "pylint",
+        ret = call([sys.executable, "-m", "pylint",
                     "--rcfile=" + join(dirname(__file__), "pylintrc"),
                     join(ROOT, "vunit")])
+        assert (ret & ~(4 | 8 | 16)) == 0
