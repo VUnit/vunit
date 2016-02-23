@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test csv log functionality
@@ -11,9 +11,9 @@ Test csv log functionality
 import unittest
 from shutil import rmtree
 from os import remove
+from os.path import join
 from tempfile import NamedTemporaryFile, mkdtemp
 from vunit.csv_logs import CsvLogs
-from os.path import join
 
 
 class TestCsvLogs(unittest.TestCase):

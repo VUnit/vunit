@@ -11,15 +11,14 @@ Interface towards Aldec Active HDL
 
 from __future__ import print_function
 
-from vunit.ostools import Process, write_file, file_exists, renew_path
-from vunit.simulator_interface import SimulatorInterface
 from os.path import join, dirname, abspath
 import os
 import re
-
+import logging
+from vunit.ostools import Process, write_file, file_exists, renew_path
+from vunit.simulator_interface import SimulatorInterface
 from vunit.exceptions import CompileError
 
-import logging
 LOGGER = logging.getLogger(__name__)
 
 
@@ -75,7 +74,7 @@ class ActiveHDLInterface(SimulatorInterface):
             if source_file.file_type == 'vhdl':
                 success = self.compile_vhdl_file(source_file.name, source_file.library.name, vhdl_standard)
             elif source_file.file_type == 'verilog':
-                success = self.compile_verilog_file(source_file.name, source_file.library.name)
+                raise RuntimeError("Verilog compilation not yet implemented for Active-HDL.")
             else:
                 raise RuntimeError("Unkown file type: " + source_file.file_type)
 
@@ -94,12 +93,6 @@ class ActiveHDLInterface(SimulatorInterface):
         except Process.NonZeroExitCode:
             return False
         return True
-
-    def compile_verilog_file(self, source_file_name, library_name):
-        """
-        Compiles a verilog file into a specific library
-        """
-        raise RuntimeError("Verilog compilation not yet implemented for Active-HDL.")
 
     def create_library(self, library_name, path, mapped_libraries=None):
         """
@@ -149,10 +142,9 @@ class ActiveHDLInterface(SimulatorInterface):
             libraries[key] = abspath(join(dirname(self._library_cfg), dirname(value)))
         return libraries
 
-    def _create_load_function(self,  # pylint: disable=too-many-arguments
-                              library_name, entity_name, architecture_name,
-                              config, output_path,
-                              disable_ieee_warnings):
+    @staticmethod
+    def _create_load_function(library_name, entity_name, architecture_name,
+                              config, disable_ieee_warnings):
         """
         Create the vunit_load TCL function that runs the vsim command and loads the design
         """
@@ -234,14 +226,13 @@ proc vunit_run {} {
 
     def _create_common_script(self,   # pylint: disable=too-many-arguments
                               library_name, entity_name, architecture_name,
-                              config,
-                              output_path):
+                              config):
         """
         Create tcl script with functions common to interactive and batch modes
         """
         tcl = ""
         tcl += self._create_load_function(library_name, entity_name, architecture_name,
-                                          config, output_path,
+                                          config,
                                           config.disable_ieee_warnings)
         tcl += self._create_run_function()
         return tcl
@@ -314,8 +305,7 @@ puts "VUnit help: Design already loaded. Use run -all to run the test."
                    self._create_common_script(library_name,
                                               entity_name,
                                               architecture_name,
-                                              config,
-                                              output_path=sim_output_path))
+                                              config))
         write_file(gui_file_name,
                    self._create_gui_script(common_file_name))
         write_file(batch_file_name,

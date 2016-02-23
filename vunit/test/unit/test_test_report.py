@@ -2,17 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test the test report functionality
 """
 
 from unittest import TestCase
-from vunit.test_report import TestReport, PASSED, SKIPPED, FAILED
 from xml.etree import ElementTree
 from os.path import join, dirname
 import os
+from vunit.test_report import TestReport, PASSED, SKIPPED, FAILED
 
 
 class TestTestReport(TestCase):

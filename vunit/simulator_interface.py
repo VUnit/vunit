@@ -35,7 +35,7 @@ class SimulatorInterface(object):
         """
         path = os.environ['PATH']
         paths = path.split(os.pathsep)
-        base, ext = os.path.splitext(executable)
+        _, ext = os.path.splitext(executable)
 
         if (sys.platform == 'win32' or os.name == 'os2') and (ext != '.exe'):
             executable = executable + '.exe'

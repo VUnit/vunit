@@ -10,9 +10,9 @@ Common functions re-used between test cases
 
 
 from xml.etree import ElementTree
-from vunit.simulator_factory import SimulatorFactory
 import contextlib
 import os
+from vunit.simulator_factory import SimulatorFactory
 
 
 def has_simulator():

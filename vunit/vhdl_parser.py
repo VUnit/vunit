@@ -2,16 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 VHDL parsing functionality
 """
 
 import re
-from vunit.hashing import hash_string
 from os.path import abspath
 import logging
+from vunit.hashing import hash_string
 LOGGER = logging.getLogger(__name__)
 
 
@@ -529,10 +529,7 @@ class VHDLSubtypeIndication(object):
         type_mark = subtype_indication_declaration.group('type_mark')
         constraint = subtype_indication_declaration.group('constraint')
 
-        if type_mark == 'std_logic_vector':
-            array_type = True
-        else:
-            array_type = False
+        array_type = type_mark == 'std_logic_vector'
         return cls(code, type_mark, constraint, array_type)
 
     def __str__(self):
@@ -595,10 +592,7 @@ class VHDLInterfaceElement(object):
         """
         Return True if the code is a mode keyword
         """
-        if code in ('in', 'out', 'inout', 'buffer', 'linkage'):
-            return True
-        else:
-            return False
+        return code in ('in', 'out', 'inout', 'buffer', 'linkage')
 
     def __str__(self):
         code = self.identifier + " : "

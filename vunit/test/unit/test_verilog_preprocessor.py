@@ -14,14 +14,13 @@ Test of the Verilog preprocessor
 
 from os.path import join, dirname, exists
 import os
-from vunit.ostools import renew_path, write_file
-
 from unittest import TestCase
+import shutil
+from vunit.ostools import renew_path, write_file
 from vunit.parsing.verilog.preprocess import VerilogPreprocessor, Macro
 from vunit.parsing.verilog.tokenizer import VerilogTokenizer
 from vunit.parsing.tokenizer import Token
 from vunit.test.mock_2or3 import mock
-import shutil
 
 
 class TestVerilogPreprocessor(TestCase):

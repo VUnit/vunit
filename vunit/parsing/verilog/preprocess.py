@@ -11,7 +11,7 @@
 Verilog parsing functionality
 """
 from os.path import join, exists, abspath
-
+import logging
 from vunit.parsing.tokenizer import (TokenStream,
                                      Token,
                                      add_previous,
@@ -20,7 +20,6 @@ from vunit.parsing.tokenizer import (TokenStream,
                                      LocationException)
 from vunit.parsing.verilog.tokens import *
 from vunit.ostools import read_file
-import logging
 LOGGER = logging.getLogger(__name__)
 
 

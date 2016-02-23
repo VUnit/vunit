@@ -8,9 +8,9 @@
 Test the DependencyGraph
 """
 
+import unittest
 from vunit.dependency_graph import (DependencyGraph,
                                     CircularDependencyException)
-import unittest
 
 
 class TestDependencyGraph(unittest.TestCase):

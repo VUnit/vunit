@@ -10,11 +10,8 @@ Functionality to automatically create test suites from a project
 
 
 import logging
-LOGGER = logging.getLogger(__name__)
-
 from os.path import basename, dirname, splitext
 import re
-
 from vunit.test_list import TestList
 from vunit.test_bench import TestBench
 import vunit.ostools as ostools
@@ -22,6 +19,8 @@ from vunit.vhdl_parser import remove_comments
 from vunit.test_suites import IndependentSimTestCase, SameSimTestSuite
 from vunit.test_configuration import create_scope
 from vunit.project import file_type_of
+
+LOGGER = logging.getLogger(__name__)
 
 
 class TestScanner(object):

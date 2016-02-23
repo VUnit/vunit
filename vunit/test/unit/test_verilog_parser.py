@@ -9,12 +9,12 @@ Test of the Verilog parser
 """
 
 from unittest import TestCase
-from vunit.parsing.verilog.parser import VerilogParser
-from vunit.test.mock_2or3 import mock
 from os.path import join, dirname, exists
 import os
 import shutil
 from vunit.ostools import renew_path
+from vunit.parsing.verilog.parser import VerilogParser
+from vunit.test.mock_2or3 import mock
 
 
 class TestVerilogParser(TestCase):  # pylint: disable=too-many-public-methods

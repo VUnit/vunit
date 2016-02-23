@@ -15,11 +15,11 @@ import unittest
 from shutil import rmtree
 from os.path import join, exists, dirname
 import os
-from vunit.ostools import renew_path, write_file
-from vunit.project import Project, file_type_of
 from time import sleep
 from vunit.test.mock_2or3 import mock
 from vunit.exceptions import CompileError
+from vunit.ostools import renew_path, write_file
+from vunit.project import Project, file_type_of
 
 
 class TestProject(unittest.TestCase):  # pylint: disable=too-many-public-methods

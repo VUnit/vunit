@@ -11,10 +11,10 @@ Acceptance test of VUnit end to end functionality
 
 import unittest
 from os.path import join, dirname
-from vunit.test.common import has_simulator, check_report, simulator_is
 from os import environ
 from subprocess import call
 import sys
+from vunit.test.common import has_simulator, check_report, simulator_is
 
 
 @unittest.skipUnless(has_simulator(), "Requires simulator")

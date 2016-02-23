@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Provided functionality to run a suite of test in a robust way
@@ -13,14 +13,12 @@ from __future__ import print_function
 
 from os.path import join
 import traceback
-import vunit.ostools as ostools
-from vunit.test_report import PASSED, FAILED
-
 import threading
 import sys
 import time
-
 import logging
+import vunit.ostools as ostools
+from vunit.test_report import PASSED, FAILED
 LOGGER = logging.getLogger(__name__)
 
 

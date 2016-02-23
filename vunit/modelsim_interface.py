@@ -11,13 +11,11 @@ Interface towards Mentor Graphics ModelSim
 
 from __future__ import print_function
 
-from vunit.ostools import Process, write_file, read_file, file_exists
-from vunit.simulator_interface import SimulatorInterface
-from os.path import join, dirname, abspath
+import logging
+import threading
 import os
+from os.path import join, dirname, abspath
 from argparse import ArgumentTypeError
-
-from vunit.exceptions import CompileError
 try:
     # Python 3
     from configparser import RawConfigParser
@@ -25,9 +23,11 @@ except ImportError:
     # Python 2
     from ConfigParser import RawConfigParser  # pylint: disable=import-error
 
-import logging
+from vunit.ostools import Process, write_file, read_file, file_exists
+from vunit.simulator_interface import SimulatorInterface
+from vunit.exceptions import CompileError
+
 LOGGER = logging.getLogger(__name__)
-import threading
 
 
 class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instance-attributes

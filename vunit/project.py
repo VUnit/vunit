@@ -11,19 +11,17 @@ Functionality to represent and operate on a HDL code project
 """
 
 
-import logging
-LOGGER = logging.getLogger(__name__)
-
-from vunit.hashing import hash_string
 from os.path import join, basename, dirname, splitext
-
+import traceback
+import logging
+from vunit.hashing import hash_string
 from vunit.dependency_graph import (DependencyGraph,
                                     CircularDependencyException)
 from vunit.vhdl_parser import VHDLParser, VHDLReference
 from vunit.parsing.verilog.parser import VerilogParser
 from vunit.exceptions import CompileError
 import vunit.ostools as ostools
-import traceback
+LOGGER = logging.getLogger(__name__)
 
 
 class Project(object):

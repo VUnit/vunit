@@ -8,12 +8,12 @@
 Create simulator instances
 """
 
+from os.path import join, exists
+import os
 from vunit.modelsim_interface import ModelSimInterface
 from vunit.activehdl_interface import ActiveHDLInterface
 from vunit.rivierapro_interface import RivieraProInterface
 from vunit.ghdl_interface import GHDLInterface
-from os.path import join, exists
-import os
 
 
 class SimulatorFactory(object):

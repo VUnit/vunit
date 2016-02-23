@@ -10,8 +10,8 @@ PEP8 check
 
 import unittest
 from subprocess import check_call
-from vunit import ROOT
 import sys
+from vunit import ROOT
 
 
 class TestPep8(unittest.TestCase):

@@ -9,14 +9,13 @@
 Acceptance test of the VUnit public interface class
 """
 
-
 import unittest
 from string import Template
-from os.path import join, dirname, basename, exists, abspath
 import os
+from os.path import join, dirname, basename, exists, abspath
 import re
-from shutil import rmtree
 from re import MULTILINE
+from shutil import rmtree
 from vunit.ui import VUnit
 from vunit.project import VHDL_EXTENSIONS, VERILOG_EXTENSIONS
 from vunit.test.mock_2or3 import mock
@@ -161,10 +160,10 @@ end architecture;
     def test_exception_on_adding_zero_files(self):
         ui = self._create_ui()
         lib = ui.library("lib")
-        self.assertRaisesRegexp(ValueError, "Pattern.*missing1.vhd.*",
-                                lib.add_source_files, join(dirname(__file__), 'missing1.vhd'))
-        self.assertRaisesRegexp(ValueError, "File.*missing2.vhd.*",
-                                lib.add_source_file, join(dirname(__file__), 'missing2.vhd'))
+        self.assertRaisesRegex(ValueError, "Pattern.*missing1.vhd.*",
+                               lib.add_source_files, join(dirname(__file__), 'missing1.vhd'))
+        self.assertRaisesRegex(ValueError, "File.*missing2.vhd.*",
+                               lib.add_source_file, join(dirname(__file__), 'missing2.vhd'))
 
     def test_no_exception_on_adding_zero_files_when_allowed(self):
         ui = self._create_ui()
@@ -209,8 +208,8 @@ end architecture;
         ui = self._create_ui()
         lib = ui.library("lib")
         self.create_file("file.vhd")
-        self.assertRaisesRegexp(ValueError, r"missing\.vhd", lib.add_source_files, ["missing.vhd", "file.vhd"])
-        self.assertRaisesRegexp(ValueError, r"missing\.vhd", lib.add_source_files, "missing.vhd")
+        self.assertRaisesRegex(ValueError, r"missing\.vhd", lib.add_source_files, ["missing.vhd", "file.vhd"])
+        self.assertRaisesRegex(ValueError, r"missing\.vhd", lib.add_source_files, "missing.vhd")
 
     def test_get_source_files(self):
         ui = self._create_ui()
@@ -288,18 +287,18 @@ Listed 2 files""".splitlines()))
         lib2.add_source_file(file_name)
         non_existant_name = "non_existant"
 
-        self.assertRaisesRegexp(ValueError, ".*%s.*allow_empty.*" % non_existant_name,
-                                ui.get_source_files, non_existant_name)
+        self.assertRaisesRegex(ValueError, ".*%s.*allow_empty.*" % non_existant_name,
+                               ui.get_source_files, non_existant_name)
         self.assertEqual(len(ui.get_source_files(non_existant_name, allow_empty=True)), 0)
 
-        self.assertRaisesRegexp(ValueError, ".*named.*%s.*multiple.*library_name.*" % file_name,
-                                ui.get_source_file, file_name)
+        self.assertRaisesRegex(ValueError, ".*named.*%s.*multiple.*library_name.*" % file_name,
+                               ui.get_source_file, file_name)
 
-        self.assertRaisesRegexp(ValueError, ".*Found no file named.*%s'" % non_existant_name,
-                                ui.get_source_file, non_existant_name)
+        self.assertRaisesRegex(ValueError, ".*Found no file named.*%s'" % non_existant_name,
+                               ui.get_source_file, non_existant_name)
 
-        self.assertRaisesRegexp(ValueError, ".*Found no file named.*%s.* in library 'lib1'" % non_existant_name,
-                                ui.get_source_file, non_existant_name, "lib1")
+        self.assertRaisesRegex(ValueError, ".*Found no file named.*%s.* in library 'lib1'" % non_existant_name,
+                               ui.get_source_file, non_existant_name, "lib1")
 
     @mock.patch("vunit.project.Project.add_manual_dependency", autospec=True)
     def test_add_single_file_manual_dependencies(self, add_manual_dependency):
@@ -618,6 +617,15 @@ end architecture;
         """
         with open(file_name, "w") as fptr:
             fptr.write(contents)
+
+    def assertRaisesRegex(self, *args, **kwargs):  # pylint: disable=invalid-name
+        """
+        Python 2/3 compatability
+        """
+        if hasattr(unittest.TestCase, "assertRaisesRegex"):
+            unittest.TestCase.assertRaisesRegex(self, *args, **kwargs)  # pylint: disable=no-member
+        else:
+            unittest.TestCase.assertRaisesRegexp(self, *args, **kwargs)  # pylint: disable=deprecated-method
 
 
 class TestPreprocessor(object):

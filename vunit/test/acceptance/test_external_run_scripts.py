@@ -10,13 +10,13 @@ Verify that all external run scripts work correctly
 
 
 import unittest
+from os import environ
 from os.path import join, dirname
-from vunit.test.common import has_simulator, check_report, simulator_is
 from subprocess import call
 import sys
 from vunit import ROOT
 from vunit.builtins import VHDL_PATH
-from os import environ
+from vunit.test.common import has_simulator, check_report, simulator_is
 
 
 # pylint: disable=too-many-public-methods

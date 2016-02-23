@@ -78,14 +78,13 @@ The following simulation are known.
 from __future__ import print_function
 
 import sys
-import os
 import traceback
-
+import logging
+import os
 from os.path import exists, relpath, abspath, join, basename, splitext
 from glob import glob
 from fnmatch import fnmatch
 from vunit.database import PickledDataBase, DataBase
-
 import vunit.ostools as ostools
 from vunit.vunit_cli import VUnitCLI
 from vunit.simulator_factory import SimulatorFactory
@@ -108,7 +107,6 @@ from vunit.builtins import (add_vhdl_builtins,
                             add_com)
 from vunit.com import codec_generator
 
-import logging
 LOGGER = logging.getLogger(__name__)
 
 
@@ -1413,4 +1411,4 @@ def _is_iterable_not_string(value):
     if sys.version_info.major == 3:
         return isinstance(value, str)
     else:
-        return isinstance(value, (str, unicode))
+        return isinstance(value, (str, unicode))  # pylint: disable=undefined-variable

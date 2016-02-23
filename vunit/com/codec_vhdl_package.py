@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Module containing the CodecVHDLPackage class.
@@ -190,41 +190,46 @@ class CodecVHDLPackage(VHDLPackage):
 
         for record in msg_type_record_types:
             msg_type_values = enumeration_types.get(record.elements[0].subtype_indication.type_mark)
-            if msg_type_values is not None:
-                for value in msg_type_values:
-                    parameter_list = []
-                    parameter_type_list = []
-                    encoding_list = []
-                    for element in record.elements:
-                        for identifier in element.identifier_list:
-                            if identifier != 'msg_type':
-                                parameter_list.append('    constant %s : %s' % (identifier,
-                                                                                element.subtype_indication.code))
-                                parameter_type_list.append(element.subtype_indication.type_mark)
-                                encoding_list.append('encode(%s)' % identifier)
-                            else:
-                                encoding_list.append("encode(%s'(%s))" % (element.subtype_indication.code, value))
-                    if parameter_list == []:
-                        parameter_part = ''
-                        alias_signature = value + '[return string];'
-                    else:
-                        parameter_part = ' (\n' + ';\n'.join(parameter_list) + ')'
-                        alias_signature = value + '[' + ', '.join(parameter_type_list) + ' return string];'
-                    if self._debug:
-                        encodings = ', '.join(encoding_list)
-                    else:
-                        encodings = ' & '.join(encoding_list)
 
-                    declarations += \
-                        self._template.msg_type_record_codec_declaration.substitute(name=value,
-                                                                                    parameter_part=parameter_part,
-                                                                                    alias_signature=alias_signature,
-                                                                                    alias_name=value + '_msg')
-                    definitions += \
-                        self._template.msg_type_record_codec_definition.substitute(name=value,
-                                                                                   parameter_part=parameter_part,
-                                                                                   num_of_encodings=len(encoding_list),
-                                                                                   encodings=encodings)
+            if msg_type_values is None:
+                continue
+
+            for value in msg_type_values:
+                parameter_list = []
+                parameter_type_list = []
+                encoding_list = []
+                for element in record.elements:
+                    for identifier in element.identifier_list:
+                        if identifier != 'msg_type':
+                            parameter_list.append('    constant %s : %s' % (identifier,
+                                                                            element.subtype_indication.code))
+                            parameter_type_list.append(element.subtype_indication.type_mark)
+                            encoding_list.append('encode(%s)' % identifier)
+                        else:
+                            encoding_list.append("encode(%s'(%s))" % (element.subtype_indication.code, value))
+
+                if parameter_list == []:
+                    parameter_part = ''
+                    alias_signature = value + '[return string];'
+                else:
+                    parameter_part = ' (\n' + ';\n'.join(parameter_list) + ')'
+                    alias_signature = value + '[' + ', '.join(parameter_type_list) + ' return string];'
+
+                if self._debug:
+                    encodings = ', '.join(encoding_list)
+                else:
+                    encodings = ' & '.join(encoding_list)
+
+                declarations += \
+                    self._template.msg_type_record_codec_declaration.substitute(name=value,
+                                                                                parameter_part=parameter_part,
+                                                                                alias_signature=alias_signature,
+                                                                                alias_name=value + '_msg')
+                definitions += \
+                    self._template.msg_type_record_codec_definition.substitute(name=value,
+                                                                               parameter_part=parameter_part,
+                                                                               num_of_encodings=len(encoding_list),
+                                                                               encodings=encodings)
 
         return declarations, definitions
 

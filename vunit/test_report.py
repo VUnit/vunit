@@ -9,12 +9,12 @@ Provide test reporting functionality
 """
 
 
-from vunit.color_printer import COLOR_PRINTER
 from xml.etree import ElementTree
 from sys import version_info
 import os
 import socket
 import re
+from vunit.color_printer import COLOR_PRINTER
 
 
 class TestReport(object):
@@ -278,7 +278,7 @@ class TestResult(object):
         Convert the test result to ElementTree XML object
         """
         test = ElementTree.Element("testcase")
-        match = re.search("(.+)\.([^.]+)$", self.name)
+        match = re.search(r"(.+)\.([^.]+)$", self.name)
         if match:
             test.attrib["classname"] = match.group(1)
             test.attrib["name"] = match.group(2)

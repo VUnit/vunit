@@ -10,18 +10,16 @@ Interface for GHDL simulator
 
 from __future__ import print_function
 import logging
-LOGGER = logging.getLogger(__name__)
-
-from vunit.ostools import Process
-from vunit.simulator_interface import SimulatorInterface
-from vunit.exceptions import CompileError
-
 from os.path import exists, join
 import os
 from distutils.spawn import find_executable
 import subprocess
 import shlex
 from sys import stdout  # To avoid output catched in non-verbose mode
+from vunit.ostools import Process
+from vunit.simulator_interface import SimulatorInterface
+from vunit.exceptions import CompileError
+LOGGER = logging.getLogger(__name__)
 
 
 class GHDLInterface(SimulatorInterface):
@@ -46,7 +44,9 @@ class GHDLInterface(SimulatorInterface):
                            help="Arguments to pass to gtkwave")
 
     @classmethod
-    def from_args(cls, output_path, args):
+    def from_args(cls,
+                  output_path,  # pylint: disable=unused-argument
+                  args):
         """
         Create instance from args namespace
         """
@@ -114,7 +114,6 @@ class GHDLInterface(SimulatorInterface):
                 success = self.compile_vhdl_file(source_file.name,
                                                  source_file.library.name,
                                                  source_file.library.directory,
-                                                 vhdl_standard,
                                                  source_file.compile_options)
             elif source_file.file_type == 'verilog':
                 raise RuntimeError("Unkown file type: " + source_file.file_type)
@@ -136,11 +135,10 @@ class GHDLInterface(SimulatorInterface):
         else:
             assert False
 
-    def compile_vhdl_file(self,  # pylint: disable=too-many-arguments
+    def compile_vhdl_file(self,
                           source_file_name,
                           library_name,
                           library_path,
-                          vhdl_standard,
                           compile_options):
         """
         Compile a vhdl file

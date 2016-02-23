@@ -11,16 +11,15 @@
 Verilog parsing functionality
 """
 
-from os.path import dirname
+import logging
+from os.path import dirname, exists, abspath
+from vunit.ostools import read_file
 from vunit.parsing.tokenizer import TokenStream, EOFException, LocationException
 from vunit.parsing.verilog.tokenizer import VerilogTokenizer
 from vunit.parsing.verilog.preprocess import VerilogPreprocessor, find_included_file, Macro
 from vunit.parsing.verilog.tokens import *
 from vunit.hashing import hash_string
-from os.path import exists, abspath
-from vunit.ostools import read_file
 
-import logging
 LOGGER = logging.getLogger(__name__)
 
 
