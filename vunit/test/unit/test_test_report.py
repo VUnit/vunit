@@ -175,6 +175,24 @@ Elapsed time was 3.0 seconds
         self.assert_has_test(root, "passed_test", time="1.0", status="passed")
         self.assert_has_test(root, "failed_test", time="3.0", status="failed")
 
+    def test_junit_report_with_testcase_classname(self):
+        report = self._new_report()
+        report.add_result("test", PASSED, time=1.0,
+                          output_file_name=self.output_file_name)
+        report.add_result("lib.entity", PASSED, time=1.0,
+                          output_file_name=self.output_file_name)
+        report.add_result("lib.entity.test", PASSED, time=1.0,
+                          output_file_name=self.output_file_name)
+        report.add_result("lib.entity.config.test", PASSED, time=1.0,
+                          output_file_name=self.output_file_name)
+        root = ElementTree.fromstring(report.to_junit_xml_str())
+        names = set((elem.attrib.get("classname", None), elem.attrib.get("name", None))
+                    for elem in root.findall("testcase"))
+        self.assertEqual(names, set([(None, "test"),
+                                     ("lib", "entity"),
+                                     ("lib.entity", "test"),
+                                     ("lib.entity.config", "test")]))
+
     def _report_with_all_passed_tests(self):
         " @returns A report with all passed tests "
         report = self._new_report()
