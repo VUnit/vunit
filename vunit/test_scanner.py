@@ -95,7 +95,7 @@ class TestScanner(object):
             for config in configurations:
                 test_list.add_test(
                     IndependentSimTestCase(
-                        name=create_name(config),
+                        name=create_name(config, "all"),
                         test_case=None,
                         test_bench=create_test_bench(config),
                         has_runner_cfg=has_runner_cfg,

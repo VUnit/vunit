@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
 context vunit_lib.vunit_context;
@@ -30,7 +30,7 @@ begin
   begin
     test_runner_setup(runner, runner_cfg);
     check_has_suffix(tb_path, "acceptance/artificial/vhdl/");
-    check_has_suffix(output_path, "acceptance/artificial out/tests/lib.tb_magic_paths/");
+    check_has_suffix(output_path, "acceptance/artificial out/tests/lib.tb_magic_paths.all/");
     test_runner_cleanup(runner);
     wait;
   end process;

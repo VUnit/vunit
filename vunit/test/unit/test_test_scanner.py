@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Tests the test scanner
@@ -46,7 +46,7 @@ class TestTestScanner(unittest.TestCase):
         ent = lib.add_entity("tb_entity")
         ent.set_contents("")
         tests = self.test_scanner.from_project(project)
-        self.assert_has_tests(tests, ["lib.tb_entity"])
+        self.assert_has_tests(tests, ["lib.tb_entity.all"])
 
     def test_that_single_verilog_test_is_created(self):
         project = ProjectStub()
@@ -54,7 +54,7 @@ class TestTestScanner(unittest.TestCase):
         module = lib.add_module("tb_module")
         module.set_contents("")
         tests = self.test_scanner.from_project(project)
-        self.assert_has_tests(tests, ["lib.tb_module"])
+        self.assert_has_tests(tests, ["lib.tb_module.all"])
 
     def test_that_tests_are_filtered(self):
         project = ProjectStub()
@@ -74,9 +74,9 @@ class TestTestScanner(unittest.TestCase):
 
         tests = self.test_scanner.from_project(project, entity_filter=tb_filter)
         self.assert_has_tests(tests,
-                              ["lib.entity_tb",
-                               "lib.tb_entity",
-                               "lib.tb_entity2"])
+                              ["lib.entity_tb.all",
+                               "lib.tb_entity.all",
+                               "lib.tb_entity2.all"])
 
     def test_that_two_tests_are_created_from_two_architectures(self):
         project = ProjectStub()
@@ -89,8 +89,8 @@ class TestTestScanner(unittest.TestCase):
 
         tests = self.test_scanner.from_project(project)
         self.assert_has_tests(tests,
-                              ["lib.tb_entity.arch",
-                               "lib.tb_entity.arch2"])
+                              ["lib.tb_entity.arch.all",
+                               "lib.tb_entity.arch2.all"])
 
     def test_create_tests_with_runner_cfg_generic(self):
         project = ProjectStub()
@@ -206,7 +206,7 @@ if run("Test 2")
 
         tests = self.test_scanner.from_project(project)
         self.assert_has_tests(tests,
-                              ["lib.tb_entity"])
+                              ["lib.tb_entity.all"])
 
     def test_that_pragma_run_in_same_simulation_works(self):
         project = ProjectStub()
@@ -237,8 +237,8 @@ if run("Test_2")
 
         tests = self.test_scanner.from_project(project)
 
-        with_path_generics = find_generics(tests, "lib.tb_entity_with_tb_path")
-        without_path_generics = find_generics(tests, "lib.tb_entity_without_tb_path")
+        with_path_generics = find_generics(tests, "lib.tb_entity_with_tb_path.all")
+        without_path_generics = find_generics(tests, "lib.tb_entity_without_tb_path.all")
         self.assertEqual(with_path_generics["tb_path"], (out() + "/").replace("\\", "/"))
         self.assertNotIn("tb_path", without_path_generics)
 
@@ -262,7 +262,7 @@ if run("Test_2")
         self.assertIn("lib.tb_entity", call_args)
         self.assertIn(tb_path_non_overriden_value, call_args)
         self.assertIn(tb_path_value, call_args)
-        generics = find_generics(tests, "lib.tb_entity")
+        generics = find_generics(tests, "lib.tb_entity.all")
         self.assertEqual(generics["tb_path"], tb_path_value)
 
     @mock.patch("vunit.test_scanner.LOGGER")

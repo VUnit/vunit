@@ -61,7 +61,7 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_vhdl_user_guide_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "user_guide", "run.py"), exit_code=1)
         check_report(self.report_file,
-                     [("passed", "lib.tb_example"),
+                     [("passed", "lib.tb_example.all"),
                       ("passed", "lib.tb_example_many.test_pass"),
                       ("failed", "lib.tb_example_many.test_fail")])
 

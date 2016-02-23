@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Provide test reporting functionality
@@ -14,6 +14,7 @@ from xml.etree import ElementTree
 from sys import version_info
 import os
 import socket
+import re
 
 
 class TestReport(object):
@@ -277,7 +278,12 @@ class TestResult(object):
         Convert the test result to ElementTree XML object
         """
         test = ElementTree.Element("testcase")
-        test.attrib["name"] = self.name
+        match = re.search("(.+)\.([^.]+)$", self.name)
+        if match:
+            test.attrib["classname"] = match.group(1)
+            test.attrib["name"] = match.group(2)
+        else:
+            test.attrib["name"] = self.name
         test.attrib["time"] = "%.1f" % self.time
         if self.failed:
             failure = ElementTree.SubElement(test, "failure")
