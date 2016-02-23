@@ -27,7 +27,7 @@ The :vunit_example:`VHDL User Guide Example <vhdl/user_guide/>` can be run to pr
    :caption: List all tests
 
    > python run.py -l
-   lib.tb_example
+   lib.tb_example.all
    lib.tb_example_many.test_pass
    lib.tb_example_many.test_fail
    Listed 3 tests
@@ -36,14 +36,14 @@ The :vunit_example:`VHDL User Guide Example <vhdl/user_guide/>` can be run to pr
    :caption: Run all tests
 
    > python run.py -v lib.tb_example*
-   Running test: lib.tb_example
+   Running test: lib.tb_example.all
    Running test: lib.tb_example_many.test_pass
    Running test: lib.tb_example_many.test_fail
    Running 3 tests
 
-   running lib.tb_example
+   running lib.tb_example.all
    Hello World!
-   pass( P=1 S=0 F=0 T=3) lib.tb_example (0.1 seconds)
+   pass( P=1 S=0 F=0 T=3) lib.tb_example.all (0.1 seconds)
 
    running lib.tb_example.test_pass
    This will pass
@@ -54,7 +54,7 @@ The :vunit_example:`VHDL User Guide Example <vhdl/user_guide/>` can be run to pr
    fail (P=2 S=0 F=1 T=3) lib.tb_example_many.test_fail (0.1 seconds)
 
    ==== Summary =========================================
-   pass lib.tb_example                (0.1 seconds)
+   pass lib.tb_example.all            (0.1 seconds)
    pass lib.tb_example_many.test_pass (0.1 seconds)
    fail lib.tb_example_many.test_fail (0.1 seconds)
    ======================================================
@@ -69,16 +69,16 @@ The :vunit_example:`VHDL User Guide Example <vhdl/user_guide/>` can be run to pr
 .. code-block:: console
    :caption: Run a specific test
 
-   > python run.py -v lib.tb_example
-   Running test: lib.tb_example
+   > python run.py -v lib.tb_example.all
+   Running test: lib.tb_example.all
    Running 1 tests
 
-   Starting lib.tb_example
+   Starting lib.tb_example.all
    Hello world!
-   pass (P=1 S=0 F=0 T=1) lib.tb_example (0.1 seconds)
+   pass (P=1 S=0 F=0 T=1) lib.tb_example.all (0.1 seconds)
 
    ==== Summary ==========================
-   pass lib.tb_example (0.9 seconds)
+   pass lib.tb_example.all (0.9 seconds)
    =======================================
    pass 1 of 1
    =======================================

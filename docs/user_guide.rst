@@ -72,8 +72,8 @@ In its simplest form a VUnit VHDL test bench looks like this:
    :language: vhdl
    :lines: 7-
 
-From ``tb_example.vhd`` a single test case named ``lib.tb_example`` is
-created.
+From ``tb_example.vhd`` a single test case named
+``lib.tb_example.all`` is created.
 
 It is also possible to put multiple tests in a single test
 bench that are each run in individual, independent, simulations.
