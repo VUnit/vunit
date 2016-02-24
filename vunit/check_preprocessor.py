@@ -36,9 +36,9 @@ class CheckPreprocessor(object):
         for match in check_relation_calls:
             relation, offset_to_point_before_closing_paranthesis = self._extract_relation(code, match)
             if relation:
-                auto_msg_parameter = ', auto_msg => %s' % relation.make_error_msg()
+                context_msg_parameter = ', context_msg => %s' % relation.make_context_msg()
                 code = (code[:match.end('parameters') + offset_to_point_before_closing_paranthesis] +
-                        auto_msg_parameter +
+                        context_msg_parameter +
                         code[match.end('parameters') + offset_to_point_before_closing_paranthesis:])
 
         return code
@@ -206,8 +206,8 @@ class Relation(object):
         self._operand = operand
         self._right = right
 
-    def make_error_msg(self):
-        return ('"Relation %s %s %s failed! Left is " & to_string(%s) & ". Right is " & to_string(%s) & "."'
+    def make_context_msg(self):
+        return ('"Expected %s %s %s. Left is " & to_string(%s) & ". Right is " & to_string(%s) & "."'
                 % (self._left.replace('"', '""'),
                    self._operand,
                    self._right.replace('"', '""'),

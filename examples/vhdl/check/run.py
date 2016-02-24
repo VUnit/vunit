@@ -6,14 +6,19 @@
 
 from os.path import join, dirname
 from vunit import VUnit
-from vunit.builtins import VHDL_PATH
 
 ui = VUnit.from_argv()
+
+# Enable location preprocessing but exclude all but chec_false to make the
+# example less bloated
+ui.enable_location_preprocessing()
+for s in ui._location_preprocessor._subprograms_with_arguments.copy():
+    if s != 'check_false':
+        ui._location_preprocessor.remove_subprogram(s)
+
 ui.enable_check_preprocessing()
+
 lib = ui.add_library("lib")
-lib.add_source_files(join(dirname(__file__), "check_example.vhd"))
-common_path = join(VHDL_PATH, 'common', 'test')
-lib.add_source_files(join(common_path, "test_type_methods_api.vhd"))
-lib.add_source_files(join(common_path, "test_types200x.vhd"))
-lib.add_source_files(join(common_path, "test_type_methods200x.vhd"))
+lib.add_source_files(join(dirname(__file__), "tb_example.vhd"))
+
 ui.main()

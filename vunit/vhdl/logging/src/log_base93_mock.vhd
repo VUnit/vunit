@@ -15,7 +15,9 @@ use work.log_formatting_pkg.all;
 use work.log_types_pkg.all;
 
 package body log_base_pkg is
-  shared variable log_call_args : log_call_args_t :=
+  shared variable log_call_info : log_call_info_t := (false, false);
+
+  constant log_call_args_init_c : log_call_args_t :=
     (false,
      ((others => NUL), 0, (others => NUL), 0, off, off, false, failure, ','),
      (others => NUL),
@@ -23,7 +25,9 @@ package body log_base_pkg is
      (others => NUL),
      0,
      (others => NUL));
-  shared variable logger_init_call_args : logger_init_call_args_t :=
+  shared variable log_call_args : log_call_args_t := log_call_args_init_c;
+
+  constant logger_init_call_args_init_c : logger_init_call_args_t :=
     (false,
      ((others => NUL), 0, (others => NUL), 0, off, off, false, failure, ','),
      (others => NUL),
@@ -33,6 +37,7 @@ package body log_base_pkg is
      failure,
      ',',
      false);
+  shared variable logger_init_call_args : logger_init_call_args_t := logger_init_call_args_init_c;
 
   shared variable log_call_count : natural := 0;
   shared variable logger_init_call_count : natural := 0;
@@ -70,16 +75,32 @@ package body log_base_pkg is
     write(dest, src);
   end procedure write_deallocate;
 
+  procedure get_log_call_info (
+    variable info : out log_call_info_t) is
+  begin
+    info := log_call_info;
+  end;
+
   procedure get_log_call_args (
     variable args : out log_call_args_t) is
   begin
     args := log_call_args;
   end;
 
+  procedure clear_log_call_args is
+  begin
+    log_call_args := log_call_args_init_c;
+  end;
+
   procedure get_logger_init_call_args (
     variable args : out logger_init_call_args_t) is
   begin
     args := logger_init_call_args;
+  end;
+
+  procedure clear_logger_init_call_args is
+  begin
+    logger_init_call_args := logger_init_call_args_init_c;
   end;
 
   procedure append (
@@ -250,6 +271,16 @@ package body log_base_pkg is
       pass := ret_val;
     end procedure pass_filters;
 
+    variable status                : file_open_status;
+    variable l                     : line;
+    file log_file                  : text;
+    variable seq_num               : natural;
+    variable selected_src          : line;
+    variable selected_level        : log_level_t;
+    variable pass_to_display, pass_to_file : boolean;
+    variable selected_level_name : line;
+    variable cfg : logger_cfg_t;
+
     procedure use_mock is
     begin
       log_call_count := log_call_count + 1;
@@ -260,29 +291,14 @@ package body log_base_pkg is
       log_call_args.line_num := line_num;
       log_call_args.file_name(file_name'range) := file_name;
       log_call_args.valid := true;
+
+      log_call_info.pass_to_display := pass_to_display;
+      log_call_info.pass_to_file := pass_to_file;
     end procedure use_mock;
 
-    variable status                : file_open_status;
-    variable l                     : line;
-    file log_file                  : text;
-    variable seq_num               : natural;
-    variable selected_src          : line;
-    variable selected_level        : log_level_t;
-    variable pass_to_display, pass_to_file : boolean;
-    variable selected_level_name : line;
-    variable cfg : logger_cfg_t;
   begin
     -- pragma translate_off
     base_get_logger_cfg(logger, cfg);
-
-    if cfg.log_default_src = null then
-      use_mock;
-      return;
-    elsif (cfg.log_default_src.all(1 to 2) /= "__") and
-          (cfg.log_default_src.all /= "Test Runner") then
-      use_mock;
-      return;
-    end if;
 
     if selected_src /= null then
       deallocate(selected_src);
@@ -307,6 +323,15 @@ package body log_base_pkg is
     else
       pass_filters(logger, pass_to_display, selected_level, "", display_handler);
       pass_filters(logger, pass_to_file, selected_level, "", file_handler);
+    end if;
+
+    if cfg.log_default_src = null then
+      use_mock;
+      return;
+    elsif (cfg.log_default_src.all(1 to 2) /= "__") and
+          (cfg.log_default_src.all /= "Test Runner") then
+      use_mock;
+      return;
     end if;
 
     if pass_to_display or pass_to_file then

@@ -31,4 +31,8 @@ for file_name in glob(join(vhdl_path, "tb_*.vhd")):
         continue
     lib.add_source_files(file_name)
 
+tb_check = lib.entity("tb_check")
+tb_check.add_config(generics=dict(use_check_not_check_true=True), name="using check")
+tb_check.add_config(generics=dict(use_check_not_check_true=False), name="using check_true")
+
 ui.main()

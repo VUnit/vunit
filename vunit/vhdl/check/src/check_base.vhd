@@ -39,16 +39,53 @@ package body check_base_pkg is
     -- pragma translate_on
   end base_init;
 
-  procedure base_check(
+  procedure base_enable_pass_msg (
+    variable checker : inout checker_t;
+    constant handler : in log_handler_t) is
+  begin
+    -- pragma translate_off
+    checker.enable_pass_msg(handler);
+    -- pragma translate_on
+  end;
+
+  procedure base_disable_pass_msg (
+    variable checker : inout checker_t;
+    constant handler : in log_handler_t) is
+  begin
+    -- pragma translate_off
+    checker.disable_pass_msg(handler);
+    -- pragma translate_on
+  end;
+
+  procedure base_pass_msg_enabled (
+    variable checker : inout checker_t;
+    variable en : out boolean) is
+  begin
+    -- pragma translate_off
+    en := checker.pass_msg_enabled;
+    -- pragma translate_on
+  end;
+
+  procedure base_check_true(
     variable checker       : inout checker_t;
-    constant expr         : in    boolean;
-    constant msg          : in    string := "Check failed!";
+    constant msg          : in    string := "";
+    constant line_num : in natural := 0;
+    constant file_name : in string := "") is
+  begin
+    -- pragma translate_off
+    checker.check_true(msg, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  procedure base_check_false(
+    variable checker       : inout checker_t;
+    constant msg          : in    string;
     constant level        : in    log_level_t := dflt;
     constant line_num : in natural := 0;
     constant file_name : in string := "") is
   begin
     -- pragma translate_off
-    checker.check(expr, msg, level, line_num, file_name);
+    checker.check_false(msg, level, line_num, file_name);
     -- pragma translate_on
   end;
 

@@ -10,7 +10,6 @@
 .. autoclass:: vunit.ui.VUnit()
    :members:
    :exclude-members: add_preprocessor,
-      enable_check_preprocessing,
       add_builtins
 
 .. autoclass:: vunit.ui.Library()
@@ -676,7 +675,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
 
     def enable_check_preprocessing(self):
         """
-        Enable check preprocessing, must be called before adding any files
+        Inserts error context information into VUnit check_relation calls
         """
         self._check_preprocessor = CheckPreprocessor()
 

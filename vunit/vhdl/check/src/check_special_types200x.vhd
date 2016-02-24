@@ -26,11 +26,23 @@ package check_special_types_pkg is
       constant separator            : in character   := ',';
       constant append               : in boolean     := false);
 
-    procedure check(expr         :    boolean;
-                    msg          :    string;
-                    level        :    log_level_t := dflt;
-                    line_num     : in natural     := 0;
-                    file_name    : in string      := "");
+    procedure enable_pass_msg (
+      constant handler : in log_handler_t);
+
+    procedure disable_pass_msg (
+      constant handler : in log_handler_t);
+
+    impure function pass_msg_enabled
+      return boolean;
+
+    procedure check_true(msg          :    string;
+                         line_num     : in natural     := 0;
+                         file_name    : in string      := "");
+
+    procedure check_false(msg          :    string;
+                          level        :    log_level_t := dflt;
+                          line_num     : in natural     := 0;
+                          file_name    : in string      := "");
 
     impure function get_stat
       return checker_stat_t;
@@ -50,10 +62,15 @@ package check_special_types_pkg is
 end package;
 
 package body check_special_types_pkg is
+  constant pass_level : log_level_t := debug_low2;
   type checker_t is protected body
     variable default_log_level : log_level_t := error;
     variable stat   : checker_stat_t := (0, 0, 0);
     variable logger : logger_t;
+    variable pass_display_filter : log_filter_t;
+    variable pass_display_filter_inactive : boolean := false;
+    variable pass_file_filter : log_filter_t;
+    variable pass_file_filter_inactive : boolean := false;
 
     procedure init (
       constant default_level        : in log_level_t := error;
@@ -67,24 +84,65 @@ package body check_special_types_pkg is
     begin
       default_log_level := default_level;
       logger.init(default_src, file_name, default_display_mode, default_file_mode, stop_level, separator, append);
+      logger.rename_level(debug_low2, "pass");
+      logger.remove_filter(pass_display_filter);
+      logger.remove_filter(pass_file_filter);
+      logger.add_filter(pass_display_filter, (1 => pass_level), "", false, (1 => display_handler));
+      logger.add_filter(pass_file_filter, (1 => pass_level), "", false, (1 => file_handler));
     end init;
 
-    procedure check(expr         :    boolean;
-                    msg          :    string;
-                    level        :    log_level_t := dflt;
-                    line_num     : in natural     := 0;
-                    file_name    : in string      := "") is
+    procedure enable_pass_msg (
+      constant handler : in log_handler_t) is
+    begin
+      if (handler = display_handler) and not pass_display_filter_inactive then
+        pass_display_filter_inactive := true;
+        logger.remove_filter(pass_display_filter);
+      elsif (handler = file_handler) and not pass_file_filter_inactive then
+        pass_file_filter_inactive := true;
+        logger.remove_filter(pass_file_filter);
+      end if;
+    end;
+
+    procedure disable_pass_msg (
+      constant handler : in log_handler_t) is
+    begin
+      if (handler = display_handler) and pass_display_filter_inactive then
+        pass_display_filter_inactive := false;
+        logger.add_filter(pass_display_filter, (1 => pass_level), "", false, (1 => display_handler));
+      elsif (handler = file_handler) and pass_file_filter_inactive then
+        pass_file_filter_inactive := false;
+        logger.add_filter(pass_file_filter, (1 => pass_level), "", false, (1 => file_handler));
+      end if;
+    end;
+
+    impure function pass_msg_enabled
+      return boolean is
+    begin
+      return pass_display_filter_inactive or pass_file_filter_inactive;
+    end;
+
+    procedure check_true(msg          :    string;
+                         line_num     : in natural     := 0;
+                         file_name    : in string      := "") is
     begin
       stat.n_checks := stat.n_checks + 1;
-      if (expr = false) then
-        stat.n_failed := stat.n_failed + 1;
-        if level = dflt then
-          logger.log(msg, default_log_level, "", line_num, file_name);
-        else
-          logger.log(msg, level, "", line_num, file_name);
-        end if;
+      stat.n_passed := stat.n_passed + 1;
+      if pass_display_filter_inactive or pass_file_filter_inactive then
+        logger.log(msg, pass_level, "", line_num, file_name);
+      end if;
+    end;
+
+    procedure check_false(msg          :    string;
+                          level        :    log_level_t := dflt;
+                          line_num     : in natural     := 0;
+                          file_name    : in string      := "") is
+    begin
+      stat.n_checks := stat.n_checks + 1;
+      stat.n_failed := stat.n_failed + 1;
+      if level = dflt then
+        logger.log(msg, default_log_level, "", line_num, file_name);
       else
-        stat.n_passed := stat.n_passed + 1;
+        logger.log(msg, level, "", line_num, file_name);
       end if;
     end;
 

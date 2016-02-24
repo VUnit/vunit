@@ -14,6 +14,8 @@ use work.log_special_types_pkg.all;
 use work.log_pkg.all;
 
 package check_types_pkg is
+  constant check_result_tag_c : string := "<+/->";
+
   type edge_t is (rising_edge, falling_edge, both_edges);
   type trigger_event_t is (first_pipe, first_no_pipe, penultimate);
   type checker_stat_t is record

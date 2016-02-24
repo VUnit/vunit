@@ -13,6 +13,8 @@ use vunit_lib.run_types_pkg.all;
 use vunit_lib.run_base_pkg.all;
 use vunit_lib.run_pkg.all;
 use vunit_lib.log_types_pkg.all;
+use vunit_lib.log_base_pkg.all;
+use vunit_lib.log_special_types_pkg.all;
 use vunit_lib.check_types_pkg.all;
 use vunit_lib.check_special_types_pkg.all;
 use vunit_lib.check_pkg.all;
@@ -25,43 +27,51 @@ entity tb_check_stable is
 end entity tb_check_stable;
 
 architecture test_fixture of tb_check_stable is
-  signal clk : std_logic := '0';
-  signal one : std_logic := '1';
+  signal clk  : std_logic := '0';
+  signal one  : std_logic := '1';
   signal zero : std_logic := '0';
 
-  signal check_stable_in_1, check_stable_in_2, check_stable_in_3 : std_logic_vector(1 to 5) := "00000";
+  signal check_stable_in_1, check_stable_in_2, check_stable_in_3,
+    check_stable_in_8 : std_logic_vector(1 to 5) := "00000";
   alias check_stable_start_event_1 : std_logic is check_stable_in_1(1);
-  alias check_stable_end_event_1 : std_logic is check_stable_in_1(2);
-  alias check_stable_expr_1 : std_logic_vector(2 downto 0) is check_stable_in_1(3 to 5);
+  alias check_stable_end_event_1   : std_logic is check_stable_in_1(2);
+  alias check_stable_expr_1        : std_logic_vector(2 downto 0) is check_stable_in_1(3 to 5);
   alias check_stable_start_event_2 : std_logic is check_stable_in_2(1);
-  alias check_stable_end_event_2 : std_logic is check_stable_in_2(2);
-  alias check_stable_expr_2 : std_logic_vector(2 downto 0) is check_stable_in_2(3 to 5);
+  alias check_stable_end_event_2   : std_logic is check_stable_in_2(2);
+  alias check_stable_expr_2        : std_logic_vector(2 downto 0) is check_stable_in_2(3 to 5);
   alias check_stable_start_event_3 : std_logic is check_stable_in_3(1);
-  alias check_stable_end_event_3 : std_logic is check_stable_in_3(2);
-  alias check_stable_expr_3 : std_logic_vector(2 downto 0) is check_stable_in_3(3 to 5);
+  alias check_stable_end_event_3   : std_logic is check_stable_in_3(2);
+  alias check_stable_expr_3        : std_logic_vector(2 downto 0) is check_stable_in_3(3 to 5);
+  alias check_stable_start_event_8 : std_logic is check_stable_in_8(1);
+  alias check_stable_end_event_8   : std_logic is check_stable_in_8(2);
+  alias check_stable_expr_8        : std_logic_vector(2 downto 0) is check_stable_in_8(3 to 5);
 
-  signal check_stable_start_event_4 : std_logic := '0';
-  signal check_stable_end_event_4 : std_logic := '0';
-  signal check_stable_expr_4 : std_logic_vector(7 to 9) := "000";
+  signal check_stable_start_event_4 : std_logic                := '0';
+  signal check_stable_end_event_4   : std_logic                := '0';
+  signal check_stable_expr_4        : std_logic_vector(7 to 9) := "000";
 
-  signal check_stable_in_5, check_stable_in_6, check_stable_in_7 : std_logic_vector(1 to 3) := "000";
-  alias check_stable_start_event_5 : std_logic is check_stable_in_5(1);
-  alias check_stable_end_event_5 : std_logic is check_stable_in_5(2);
-  alias check_stable_expr_5 : std_logic is check_stable_in_5(3);
-  alias check_stable_start_event_6 : std_logic is check_stable_in_6(1);
-  alias check_stable_end_event_6 : std_logic is check_stable_in_6(2);
-  alias check_stable_expr_6 : std_logic is check_stable_in_6(3);
-  alias check_stable_start_event_7 : std_logic is check_stable_in_7(1);
-  alias check_stable_end_event_7 : std_logic is check_stable_in_7(2);
-  alias check_stable_expr_7 : std_logic is check_stable_in_7(3);
+  signal check_stable_in_5, check_stable_in_6, check_stable_in_7, check_stable_in_9 : std_logic_vector(1 to 3) := "000";
+  alias check_stable_start_event_5                               : std_logic is check_stable_in_5(1);
+  alias check_stable_end_event_5                                 : std_logic is check_stable_in_5(2);
+  alias check_stable_expr_5                                      : std_logic is check_stable_in_5(3);
+  alias check_stable_start_event_6                               : std_logic is check_stable_in_6(1);
+  alias check_stable_end_event_6                                 : std_logic is check_stable_in_6(2);
+  alias check_stable_expr_6                                      : std_logic is check_stable_in_6(3);
+  alias check_stable_start_event_7                               : std_logic is check_stable_in_7(1);
+  alias check_stable_end_event_7                                 : std_logic is check_stable_in_7(2);
+  alias check_stable_expr_7                                      : std_logic is check_stable_in_7(3);
+  alias check_stable_start_event_9                               : std_logic is check_stable_in_9(1);
+  alias check_stable_end_event_9                                 : std_logic is check_stable_in_9(2);
+  alias check_stable_expr_9                                      : std_logic is check_stable_in_9(3);
 
   signal check_stable_en_1, check_stable_en_2, check_stable_en_3, check_stable_en_4 : std_logic := '1';
-  signal check_stable_en_5, check_stable_en_6, check_stable_en_7 : std_logic := '1';
+  signal check_stable_en_5, check_stable_en_6, check_stable_en_7, check_stable_en_8 : std_logic := '1';
+  signal check_stable_en_9 : std_logic := '1';
 
   shared variable check_stable_checker2, check_stable_checker3 : checker_t;
   shared variable check_stable_checker6, check_stable_checker7 : checker_t;
 begin
-  clock: process is
+  clock : process is
   begin
     while runner.phase < test_runner_exit loop
       clk <= '1', '0' after 5 ns;
@@ -71,162 +81,271 @@ begin
   end process clock;
 
   check_stable_1 : check_stable(clk,
-                                            check_stable_en_1,
-                                            check_stable_start_event_1,
-                                            check_stable_end_event_1,
-                                            check_stable_expr_1);
+                                check_stable_en_1,
+                                check_stable_start_event_1,
+                                check_stable_end_event_1,
+                                check_stable_expr_1);
   check_stable_2 : check_stable(check_stable_checker2,
-                                            clk,
-                                            check_stable_en_2,
-                                            check_stable_start_event_2,
-                                            check_stable_end_event_2,
-                                            check_stable_expr_2,
-                                            active_clock_edge => falling_edge);
+                                clk,
+                                check_stable_en_2,
+                                check_stable_start_event_2,
+                                check_stable_end_event_2,
+                                check_stable_expr_2,
+                                active_clock_edge => falling_edge);
   check_stable_3 : check_stable(check_stable_checker3,
-                                            clk,
-                                            check_stable_en_3,
-                                            check_stable_start_event_3,
-                                            check_stable_end_event_3,
-                                            check_stable_expr_3);
+                                clk,
+                                check_stable_en_3,
+                                check_stable_start_event_3,
+                                check_stable_end_event_3,
+                                check_stable_expr_3);
 
   check_stable_4 : check_stable(clk,
-                                            check_stable_en_4,
-                                            check_stable_start_event_4,
-                                            check_stable_end_event_4,
-                                            check_stable_expr_4);
+                                check_stable_en_4,
+                                check_stable_start_event_4,
+                                check_stable_end_event_4,
+                                check_stable_expr_4);
 
   check_stable_5 : check_stable(clk,
-                                            check_stable_en_5,
-                                            check_stable_start_event_5,
-                                            check_stable_end_event_5,
-                                            check_stable_expr_5);
+                                check_stable_en_5,
+                                check_stable_start_event_5,
+                                check_stable_end_event_5,
+                                check_stable_expr_5);
   check_stable_6 : check_stable(check_stable_checker6,
-                                            clk,
-                                            check_stable_en_6,
-                                            check_stable_start_event_6,
-                                            check_stable_end_event_6,
-                                            check_stable_expr_6,
-                                            active_clock_edge => falling_edge);
+                                clk,
+                                check_stable_en_6,
+                                check_stable_start_event_6,
+                                check_stable_end_event_6,
+                                check_stable_expr_6,
+                                active_clock_edge => falling_edge);
   check_stable_7 : check_stable(check_stable_checker7,
-                                            clk,
-                                            check_stable_en_7,
-                                            check_stable_start_event_7,
-                                            check_stable_end_event_7,
-                                            check_stable_expr_7);
+                                clk,
+                                check_stable_en_7,
+                                check_stable_start_event_7,
+                                check_stable_end_event_7,
+                                check_stable_expr_7);
+  check_stable_8 : check_stable(clk,
+                                check_stable_en_8,
+                                check_stable_start_event_8,
+                                check_stable_end_event_8,
+                                check_stable_expr_8,
+                                "Checking stability");
+  check_stable_9 : check_stable(clk,
+                                check_stable_en_9,
+                                check_stable_start_event_9,
+                                check_stable_end_event_9,
+                                check_stable_expr_9,
+                                result("for my data"));
 
   check_stable_runner : process
-    variable pass : boolean;
-    variable stat : checker_stat_t;
+    variable pass       : boolean;
+    variable stat       : checker_stat_t;
+    constant pass_level : log_level_t := debug_low2;
+    variable call_count : natural;
 
     procedure test_concurrent_std_logic_vector_check (
-      signal clk                        : in  std_logic;
-      signal check_input                : out std_logic_vector(1 to 5);
-      variable checker : inout checker_t ;
-      constant level                    : in  log_level_t := error;
-      constant active_rising_clock_edge : in  boolean := true) is
+      signal clk                        : in    std_logic;
+      signal check_input                : out   std_logic_vector(1 to 5);
+      variable checker                  : inout checker_t;
+      constant level                    : in    log_level_t := error;
+      constant active_rising_clock_edge : in    boolean     := true) is
     begin
       if running_test_case = "Test concurrent checker should pass stable window" then
         get_checker_stat(checker, stat);
         apply_sequence("00.101;10.101;00.101;01.101;00.101", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
-        verify_passed_checks(checker, stat, 6);
+        verify_passed_checks(checker, stat, 1);
+        verify_num_of_log_calls(get_count);
       elsif running_test_case = "Test concurrent checker should pass window with varying drive strength" then
         get_checker_stat(checker, stat);
         apply_sequence("00.101;10.101;00.1LH;01.101;00.101", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
-        verify_passed_checks(checker, stat, 6);
+        verify_passed_checks(checker, stat, 1);
       elsif running_test_case = "Test concurrent checker should handle weak start and end events" then
-        apply_sequence("00.101;HL.101;LL.111;LH.111;00.111", clk, check_input, active_rising_clock_edge);
+        apply_sequence("00.101;HL.101;LL.111;LH.111", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
-        verify_log_call(set_count(get_count + 2), expected_level => level);
+        verify_log_call(inc_count,
+                        "Stability check failed - Got 111 (7) at 2nd active and enabled clock edge. Expected 101 (5).",
+                        level);
+        apply_sequence("LH.111;00.111", clk, check_input, active_rising_clock_edge);
+        wait for 1 ns;
+        verify_log_call(inc_count,
+                        "Stability check failed - Got 111 (7) at 3rd active and enabled clock edge. Expected 101 (5).",
+                        level);
       elsif running_test_case = "Test concurrent checker should fail unstable window" then
-        apply_sequence("00.101;10.101;00.111;01.111;00.111", clk, check_input, active_rising_clock_edge);
+        apply_sequence("00.101;10.101;00.111;00.111", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
-        verify_log_call(set_count(get_count + 2), expected_level => level);
+        verify_log_call(inc_count,
+                        "Stability check failed - Got 111 (7) at 2nd active and enabled clock edge. Expected 101 (5).",
+                        level);
+        apply_sequence("01.111;00.111", clk, check_input, active_rising_clock_edge);
+        wait for 1 ns;
+        verify_log_call(inc_count,
+                        "Stability check failed - Got 111 (7) at 3rd active and enabled clock edge. Expected 101 (5).",
+                        level);
       elsif running_test_case = "Test concurrent checker should fail window with weak changes to opposite level" then
-        apply_sequence("00.101;10.101;00.L01;01.1H1;00.111", clk, check_input, active_rising_clock_edge);
+        apply_sequence("00.101;10.101;00.101;00.L01;01.1H1", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
-        verify_log_call(set_count(get_count + 2), expected_level => level);
+        verify_log_call(inc_count,
+                        "Stability check failed - Got L01 (1) at 3rd active and enabled clock edge. Expected 101 (5).",
+                        level);
+        apply_sequence("01.1H1;00.111", clk, check_input, active_rising_clock_edge);
+        wait for 1 ns;
+        verify_log_call(inc_count,
+                        "Stability check failed - Got 1H1 (7) at 4th active and enabled clock edge. Expected 101 (5).",
+                        level);
       elsif running_test_case = "Test concurrent checker should fail on unknown start event" then
         apply_sequence("00.101;X0.101;00.111;01.101;00.101", clk, check_input, active_rising_clock_edge);
-        verify_log_call(inc_count, "Unknown start event.", level);
+        verify_log_call(inc_count,
+                        "Stability check failed - Start event is X.",
+                        level);
       elsif running_test_case = "Test concurrent checker should fail on unknown end event in active window" then
         apply_sequence("00.101;0X.101;10.101;0X.101;00.101", clk, check_input, active_rising_clock_edge);
-        verify_log_call(inc_count, "Unknown end event.", level);
+        verify_log_call(inc_count,
+                        "Stability check failed - End event is X.",
+                        level);
       elsif running_test_case = "Test concurrent checker should fail on stable unknown window" then
-        apply_sequence("00.101;10.10X;00.10X;01.10X;00.101", clk, check_input, active_rising_clock_edge);
+        apply_sequence("00.101;10.10X;00.10X", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
-        verify_log_call(set_count(get_count + 3), "Unknown data in window.", level);
+        verify_log_call(inc_count,
+                        "Stability check failed - Got 10X at 1st active and enabled clock edge.",
+                        level);
+        apply_sequence("00.10X;01.10X", clk, check_input, active_rising_clock_edge);
+        wait for 1 ns;
+        verify_log_call(inc_count,
+                        "Stability check failed - Got 10X at 2nd active and enabled clock edge.",
+                        level);
+        apply_sequence("01.10X;00.101", clk, check_input, active_rising_clock_edge);
+        wait for 1 ns;
+        verify_log_call(inc_count,
+                        "Stability check failed - Got 10X at 3rd active and enabled clock edge.",
+                        level);
       elsif running_test_case = "Test concurrent checker should handle back to back windows" then
         apply_sequence("00.101;10.101;01.111;10.010", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
-        verify_log_call(inc_count, expected_level => level);
+        verify_log_call(inc_count,
+                        "Stability check failed - Got 111 (7) at 2nd active and enabled clock edge. Expected 101 (5).",
+                        level);
         apply_sequence("10.010;01.101;00.101", clk, check_input, active_rising_clock_edge);
-        verify_log_call(inc_count, expected_level => level);
+        verify_log_call(inc_count,
+                        "Stability check failed - Got 101 (5) at 2nd active and enabled clock edge. Expected 010 (2).",
+                        level);
       elsif running_test_case = "Test concurrent checker should ignore second of two overlapping windows" then
-        apply_sequence("00.101;10.101;10.111;01.111;00.111;00.101;01.101;00.101", clk, check_input, active_rising_clock_edge);
-        verify_log_call(set_count(get_count + 2), expected_level => level);
-      elsif running_test_case = "Test concurrent checker should test one cycle windows" then
+        apply_sequence("00.101;10.101;10.111;01.111", clk, check_input,
+                       active_rising_clock_edge);
+        wait for 1 ns;
+        verify_log_call(inc_count,
+                        "Stability check failed - Got 111 (7) at 2nd active and enabled clock edge. Expected 101 (5).",
+                        level);
+        apply_sequence("01.111;00.111;00.101;01.101;00.101", clk, check_input,
+                       active_rising_clock_edge);
+        verify_log_call(inc_count,
+                        "Stability check failed - Got 111 (7) at 3rd active and enabled clock edge. Expected 101 (5).",
+                        level);
+      elsif running_test_case = "Test concurrent checker should handle one cycle windows" then
         get_checker_stat(checker, stat);
         apply_sequence("00.101;11.101;10.111;01.111;00.111", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
-        verify_passed_checks(checker, stat, 6);
+        verify_passed_checks(checker, stat, 2);
       end if;
     end procedure test_concurrent_std_logic_vector_check;
 
     procedure test_concurrent_std_logic_check (
-      signal clk                        : in  std_logic;
-      signal check_input                : out std_logic_vector(1 to 3);
-      variable checker : inout checker_t ;
-      constant level                    : in  log_level_t := error;
-      constant active_rising_clock_edge : in  boolean := true) is
+      signal clk                        : in    std_logic;
+      signal check_input                : out   std_logic_vector(1 to 3);
+      variable checker                  : inout checker_t;
+      constant level                    : in    log_level_t := error;
+      constant active_rising_clock_edge : in    boolean     := true) is
     begin
       if running_test_case = "Test concurrent checker should pass stable window" then
         get_checker_stat(checker, stat);
         apply_sequence("00.1;10.1;00.1;01.1;00.1", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
-        verify_passed_checks(checker, stat, 6);
+        verify_passed_checks(checker, stat, 1);
+        verify_num_of_log_calls(get_count);
       elsif running_test_case = "Test concurrent checker should pass window with varying drive strength" then
         get_checker_stat(checker, stat);
         apply_sequence("00.1;10.1;00.H;01.1;00.1", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
-        verify_passed_checks(checker, stat, 6);
+        verify_passed_checks(checker, stat, 1);
       elsif running_test_case = "Test concurrent checker should handle weak start and end events" then
-        apply_sequence("00.0;HL.0;LL.1;LH.1;00.1", clk, check_input, active_rising_clock_edge);
+        apply_sequence("00.0;HL.0;LL.1;LH.1", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
-        verify_log_call(set_count(get_count + 2), expected_level => level);
+        verify_log_call(inc_count,
+                        "Stability check failed - Got 1 at 2nd active and enabled clock edge. Expected 0.",
+                        level);
+        apply_sequence("LH.1;00.1", clk, check_input, active_rising_clock_edge);
+        wait for 1 ns;
+        verify_log_call(inc_count,
+                        "Stability check failed - Got 1 at 3rd active and enabled clock edge. Expected 0.",
+                        level);
       elsif running_test_case = "Test concurrent checker should fail unstable window" then
-        apply_sequence("00.0;10.0;00.1;01.1;00.1", clk, check_input, active_rising_clock_edge);
+        apply_sequence("00.0;10.0;00.1;01.1", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
-        verify_log_call(set_count(get_count + 2), expected_level => level);
+        verify_log_call(inc_count,
+                        "Stability check failed - Got 1 at 2nd active and enabled clock edge. Expected 0.",
+                        level);
+        apply_sequence("01.1;00.1", clk, check_input, active_rising_clock_edge);
+        wait for 1 ns;
+        verify_log_call(inc_count,
+                        "Stability check failed - Got 1 at 3rd active and enabled clock edge. Expected 0.",
+                        level);
       elsif running_test_case = "Test concurrent checker should fail window with weak changes to opposite level" then
-        apply_sequence("00.1;10.1;00.L;01.1;00.1", clk, check_input, active_rising_clock_edge);
+        apply_sequence("00.1;10.1;00.1;00.1;00.L;01.1;00.1", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
-        verify_log_call(inc_count, expected_level => level);
+        verify_log_call(inc_count,
+                        "Stability check failed - Got L at 4th active and enabled clock edge. Expected 1.",
+                        level);
       elsif running_test_case = "Test concurrent checker should fail on unknown start event" then
         apply_sequence("00.0;X0.0;00.1;01.0;00.0", clk, check_input, active_rising_clock_edge);
-        verify_log_call(inc_count, "Unknown start event.", level);
+        verify_log_call(inc_count,
+                        "Stability check failed - Start event is X.",
+                        level);
       elsif running_test_case = "Test concurrent checker should fail on unknown end event in active window" then
         apply_sequence("00.1;0X.1;10.1;0X.1;00.1", clk, check_input, active_rising_clock_edge);
-        verify_log_call(inc_count, "Unknown end event.", level);
+        verify_log_call(inc_count,
+                        "Stability check failed - End event is X.",
+                        level);
       elsif running_test_case = "Test concurrent checker should fail on stable unknown window" then
-        apply_sequence("00.1;10.X;00.X;01.X;00.1", clk, check_input, active_rising_clock_edge);
+        apply_sequence("00.1;10.X;00.X", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
-        verify_log_call(set_count(get_count + 3), "Unknown data in window.", level);
+        verify_log_call(inc_count,
+                        "Stability check failed - Got X at 1st active and enabled clock edge.",
+                        level);
+        apply_sequence("00.X;01.X", clk, check_input, active_rising_clock_edge);
+        wait for 1 ns;
+        verify_log_call(inc_count,
+                        "Stability check failed - Got X at 2nd active and enabled clock edge.",
+                        level);
+        apply_sequence("01.X;00.1", clk, check_input, active_rising_clock_edge);
+        wait for 1 ns;
+        verify_log_call(inc_count,
+                        "Stability check failed - Got X at 3rd active and enabled clock edge.",
+                        level);
       elsif running_test_case = "Test concurrent checker should handle back to back windows" then
         apply_sequence("00.0;10.0;01.1;10.1", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
-        verify_log_call(inc_count, expected_level => level);
+        verify_log_call(inc_count,
+                        "Stability check failed - Got 1 at 2nd active and enabled clock edge. Expected 0.",
+                        level);
         apply_sequence("10.1;01.0;00.0", clk, check_input, active_rising_clock_edge);
-        verify_log_call(inc_count, expected_level => level);
+        verify_log_call(inc_count,
+                        "Stability check failed - Got 0 at 2nd active and enabled clock edge. Expected 1.",
+                        level);
       elsif running_test_case = "Test concurrent checker should ignore second of two overlapping windows" then
-        apply_sequence("00.0;10.0;10.1;01.1;00.1;00.0;01.0;00.0", clk, check_input, active_rising_clock_edge);
-        verify_log_call(set_count(get_count + 2), expected_level => level);
+        apply_sequence("00.0;10.0;10.1;01.1", clk, check_input, active_rising_clock_edge);
+        wait for 1 ns;
+        verify_log_call(inc_count,
+                        "Stability check failed - Got 1 at 2nd active and enabled clock edge. Expected 0.",
+                        level);
+        apply_sequence("01.1;00.1;00.0;01.0;00.0", clk, check_input, active_rising_clock_edge);
+        verify_log_call(inc_count,
+                        "Stability check failed - Got 1 at 3rd active and enabled clock edge. Expected 0.",
+                        level);
       elsif running_test_case = "Test concurrent checker should test one cycle windows" then
         get_checker_stat(checker, stat);
         apply_sequence("00.0;11.0;10.1;01.1;00.1", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
-        verify_passed_checks(checker, stat, 6);
+        verify_passed_checks(checker, stat, 2);
       end if;
     end procedure test_concurrent_std_logic_check;
 
@@ -275,7 +394,7 @@ begin
         apply_sequence("01.101;00.101", clk, check_stable_in_1);
         wait until rising_edge(clk);
         wait for 1 ns;
-        verify_passed_checks(stat, 12);
+        verify_passed_checks(stat, 3);
         verify_failed_checks(stat, 0);
       elsif run("Test concurrent checker with std_logic input should pass unstable window if not enabled") then
         wait until rising_edge(clk);
@@ -298,22 +417,50 @@ begin
         apply_sequence("01.0;00.0", clk, check_stable_in_5);
         wait until rising_edge(clk);
         wait for 1 ns;
-        verify_passed_checks(stat, 12);
+        verify_passed_checks(stat, 3);
         verify_failed_checks(stat, 0);
       elsif run("Test should handle reversed and or offset expressions") then
         wait until rising_edge(clk);
         wait for 1 ns;
         get_checker_stat(stat);
         check_stable_start_event_4 <= '1';
-        check_stable_expr_4 <= "101";
+        check_stable_expr_4        <= "101";
         wait until rising_edge(clk);
         check_stable_start_event_4 <= '0';
         wait until rising_edge(clk);
-        check_stable_end_event_4 <= '1';
+        check_stable_end_event_4   <= '1';
         wait until rising_edge(clk);
-        check_stable_end_event_4 <= '0';
+        check_stable_end_event_4   <= '0';
         wait for 1 ns;
-        verify_passed_checks(stat, 6);
+        verify_passed_checks(stat, 1);
+      elsif run("Test pass message and that internal checks don't count for std_logic_vector") then
+        get_checker_stat(stat);
+        enable_pass_msg;
+        apply_sequence("00.101;10.101;00.111;01.101;00.101;00.101", clk, check_stable_in_8);
+        verify_log_call(inc_count,
+                        "Checking stability - Got 111 (7) at 2nd active and enabled clock edge. Expected 101 (5).");
+        apply_sequence("00.101;10.101;00.101;01.101;00.101", clk, check_stable_in_8);
+        wait for 1 ns;
+        verify_log_call(inc_count,
+                        "Checking stability - Got 101 (5) for 3 active and enabled clock edges.",
+                        pass_level);
+        disable_pass_msg;
+        verify_passed_checks(stat, 1);
+        verify_failed_checks(stat, 1);
+      elsif run("Test pass message and that internal checks don't count for std_logic") then
+        get_checker_stat(stat);
+        enable_pass_msg;
+        apply_sequence("00.1;10.1;00.0;01.1;00.1;00.1", clk, check_stable_in_9);
+        verify_log_call(inc_count,
+                        "Stability check failed for my data - Got 0 at 2nd active and enabled clock edge. Expected 1.");
+        apply_sequence("00.1;10.1;00.1;01.1;00.1", clk, check_stable_in_9);
+        wait for 1 ns;
+        verify_log_call(inc_count,
+                        "Stability check passed for my data - Got 1 for 3 active and enabled clock edges.",
+                        pass_level);
+        disable_pass_msg;
+        verify_passed_checks(stat, 1);
+        verify_failed_checks(stat, 1);
       end if;
     end loop;
 

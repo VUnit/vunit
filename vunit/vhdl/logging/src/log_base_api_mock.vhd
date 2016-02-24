@@ -14,6 +14,11 @@ use work.log_special_types_pkg.all;
 use work.log_formatting_pkg.all;
 
 package log_base_pkg is
+  type log_call_info_t is record
+    pass_to_display : boolean;
+    pass_to_file : boolean;
+  end record log_call_info_t;
+
   type log_call_args_t is record
     valid : boolean;
     logger : logger_cfg_export_t;
@@ -42,11 +47,18 @@ package log_base_pkg is
   impure function get_logger_init_call_count
     return natural;
 
+  procedure get_log_call_info (
+    variable info : out log_call_info_t);
+
   procedure get_log_call_args (
     variable args : out log_call_args_t);
 
+  procedure clear_log_call_args;
+
   procedure get_logger_init_call_args (
     variable args : out logger_init_call_args_t);
+
+  procedure clear_logger_init_call_args;
 
   procedure base_init (
     variable logger         : inout logger_t;

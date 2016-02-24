@@ -27,10 +27,27 @@ package check_base_pkg is
     constant separator            : in    character   := ',';
     constant append               : in    boolean     := false);
 
-  procedure base_check(
+  procedure base_enable_pass_msg (
+    variable checker : inout checker_t;
+    constant handler : in log_handler_t);
+
+  procedure base_disable_pass_msg (
+    variable checker : inout checker_t;
+    constant handler : in log_handler_t);
+
+  procedure base_pass_msg_enabled (
+    variable checker : inout checker_t;
+    variable en : out boolean);
+
+  procedure base_check_true(
     variable checker       : inout checker_t;
-    constant expr         : in    boolean;
-    constant msg          : in    string := "Check failed!";
+    constant msg          : in    string := "";
+    constant line_num : in natural := 0;
+    constant file_name : in string := "");
+
+  procedure base_check_false(
+    variable checker       : inout checker_t;
+    constant msg          : in    string;
     constant level        : in    log_level_t := dflt;
     constant line_num : in natural := 0;
     constant file_name : in string := "");

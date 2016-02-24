@@ -58,7 +58,8 @@ begin
   check_implication_1 : check_implication(clk, check_implication_en_1, antecedent_1, consequent_1);
   check_implication_2 : check_implication(check_implication_checker2, clk, check_implication_en_2, antecedent_2, consequent_2, active_clock_edge => falling_edge);
   check_implication_3 : check_implication(check_implication_checker3, clk, check_implication_en_3, antecedent_3, consequent_3);
-  check_implication_4 : check_implication(check_implication_checker4, clk, check_implication_en_4, antecedent_4, consequent_4);
+  check_implication_4 : check_implication(check_implication_checker4, clk, check_implication_en_4,
+                                          antecedent_4, consequent_4, result("between x and y."));
 
   check_implication_runner : process
     variable pass : boolean;
@@ -68,6 +69,7 @@ begin
     constant test_implication_expected_result : boolean_vector(1 to 4) := (true, true, false, true);
     variable stat : checker_stat_t;
     constant metadata : std_logic_vector(1 to 7) := "UXZHLW-";
+    constant pass_level : log_level_t := debug_low2;
 
     procedure test_concurrent_check (
       signal clk                        : in  std_logic;
@@ -85,7 +87,7 @@ begin
       verify_passed_checks(checker, stat, 2);
       wait until clock_edge(clk, active_rising_clock_edge);
       wait for 1 ns;
-      verify_log_call(inc_count, expected_level => level);
+      verify_log_call(inc_count, "Implication check failed.", expected_level => level);
       apply_sequence("11", clk, check_input, active_rising_clock_edge);
       wait until clock_edge(clk, active_rising_clock_edge);
       wait for 1 ns;
@@ -100,7 +102,7 @@ begin
       if test_implication_expected_result(iteration) then
         verify_passed_checks(checker, stat, 1);
       else
-        verify_log_call(inc_count);
+        verify_log_call(inc_count, "Implication check failed.");
       end if;
 
     end verify_result;
@@ -133,6 +135,17 @@ begin
           verify_result(i, check_implication_checker, stat);
 
         end loop;
+      elsif run("Test pass message") then
+        enable_pass_msg;
+        check_implication(true, true);
+        verify_log_call(inc_count, "Implication check passed. - Got true -> true.", pass_level);
+        check_implication(true, true, "");
+        verify_log_call(inc_count, "Got true -> true.", pass_level);
+        check_implication(true, true, "Checking my data");
+        verify_log_call(inc_count, "Checking my data - Got true -> true.", pass_level);
+        check_implication(true, true, result("for my data"));
+        verify_log_call(inc_count, "Implication check passed for my data - Got true -> true.", pass_level);
+        disable_pass_msg;
       elsif run("Test should be possible to use concurrently") then
         test_concurrent_check(clk, check_implication_in_1, default_checker);
       elsif run("Test should be possible to use concurrently with negative active clock edge") then
@@ -148,13 +161,13 @@ begin
         verify_passed_checks(check_implication_checker4, stat, 5);
         apply_sequence("00HL00", clk, check_implication_in_4);
         wait for 1 ns;
-        verify_log_call(inc_count);
+        verify_log_call(inc_count, "Implication check failed between x and y.");
         apply_sequence("00H000", clk, check_implication_in_4);
         wait for 1 ns;
-        verify_log_call(inc_count);
+        verify_log_call(inc_count, "Implication check failed between x and y.");
         apply_sequence("00HX00", clk, check_implication_in_4);
         wait for 1 ns;
-        verify_log_call(inc_count);
+        verify_log_call(inc_count, "Implication check failed between x and y.");
       elsif run("Test should pass on true implies false when not enabled") then
         wait until rising_edge(clk);
         wait for 1 ns;

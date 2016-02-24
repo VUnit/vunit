@@ -52,6 +52,7 @@ begin
     variable pass : boolean;
     variable stat : checker_stat_t;
     variable reversed_and_offset_expr : std_logic_vector(23 downto 20) := "1000";
+    constant pass_level : log_level_t := debug_low2;
 
     procedure test_concurrent_check (
       signal clk                        : in  std_logic;
@@ -70,7 +71,7 @@ begin
       apply_sequence("1001;0000;00LL;100H;000X", clk, check_input, active_rising_clock_edge);
       wait until clock_edge(clk, active_rising_clock_edge);
       wait for 1 ns;
-      verify_log_call(set_count(get_count + 5), expected_level => level);
+      verify_log_call(set_count(get_count + 5), "One-hot check failed - Got 000X.", expected_level => level);
       apply_sequence("1000", clk, check_input, active_rising_clock_edge);
     end procedure test_concurrent_check;
 
@@ -110,77 +111,89 @@ begin
         check_one_hot(check_one_hot_checker3, pass, "HL00");
         counting_assert(pass, "Should return pass = true on passing check");
         verify_passed_checks(check_one_hot_checker3, stat, 2);
+        verify_num_of_log_calls(get_count);
+      elsif run("Test pass message") then
+        enable_pass_msg;
+        check_one_hot("10000");
+        verify_log_call(inc_count, "One-hot check passed - Got 1_0000.", pass_level);
+        check_one_hot("10000", "");
+        verify_log_call(inc_count, "Got 1_0000.", pass_level);
+        check_one_hot("10000", "Checking my data");
+        verify_log_call(inc_count, "Checking my data - Got 1_0000.", pass_level);
+        check_one_hot("10000", result("for my data"));
+        verify_log_call(inc_count, "One-hot check passed for my data - Got 1_0000.", pass_level);
+        disable_pass_msg;
       elsif run("Test should fail on zero or more than one high bit") then
-        check_one_hot("0000");
-        verify_log_call(inc_count);
-        check_one_hot("L00L");
-        verify_log_call(inc_count);
-        check_one_hot(check_one_hot_checker3, "0000");
-        verify_log_call(inc_count, expected_level => info);
-        check_one_hot(check_one_hot_checker3, "L00L");
-        verify_log_call(inc_count, expected_level => info);
+        check_one_hot("00000");
+        verify_log_call(inc_count, "One-hot check failed - Got 0_0000.");
+        check_one_hot("0L00L");
+        verify_log_call(inc_count, "One-hot check failed - Got 0_L00L.");
+        check_one_hot(check_one_hot_checker3, "00000");
+        verify_log_call(inc_count, "One-hot check failed - Got 0_0000.", expected_level => info);
+        check_one_hot(check_one_hot_checker3, "0L00L");
+        verify_log_call(inc_count, "One-hot check failed - Got 0_L00L.", expected_level => info);
 
-        check_one_hot("1001");
-        verify_log_call(inc_count);
-        check_one_hot("100H");
-        verify_log_call(inc_count);
-        check_one_hot(check_one_hot_checker3, "1001");
-        verify_log_call(inc_count, expected_level => info);
-        check_one_hot(check_one_hot_checker3, "100H");
-        verify_log_call(inc_count, expected_level => info);
+        check_one_hot("01001");
+        verify_log_call(inc_count, "One-hot check failed - Got 0_1001.");
+        check_one_hot("0100H");
+        verify_log_call(inc_count, "One-hot check failed - Got 0_100H.");
+        check_one_hot(check_one_hot_checker3, "01001");
+        verify_log_call(inc_count, "One-hot check failed - Got 0_1001.", expected_level => info);
+        check_one_hot(check_one_hot_checker3, "0100H");
+        verify_log_call(inc_count, "One-hot check failed - Got 0_100H.", expected_level => info);
 
-        check_one_hot(pass, "1001");
+        check_one_hot(pass, "01001");
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count);
-        check_one_hot(pass, "100H");
+        verify_log_call(inc_count, "One-hot check failed - Got 0_1001.");
+        check_one_hot(pass, "0100H");
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count);
-        pass := check_one_hot("1001");
+        verify_log_call(inc_count, "One-hot check failed - Got 0_100H.");
+        pass := check_one_hot("01001");
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count);
-        pass := check_one_hot("100H");
+        verify_log_call(inc_count, "One-hot check failed - Got 0_1001.");
+        pass := check_one_hot("0100H");
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count);
-        check_one_hot(check_one_hot_checker3, pass, "1001");
+        verify_log_call(inc_count, "One-hot check failed - Got 0_100H.");
+        check_one_hot(check_one_hot_checker3, pass, "01001");
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, expected_level => info);
-        check_one_hot(check_one_hot_checker3, pass, "100H");
+        verify_log_call(inc_count, "One-hot check failed - Got 0_1001.", expected_level => info);
+        check_one_hot(check_one_hot_checker3, pass, "0100H");
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, expected_level => info);
+        verify_log_call(inc_count, "One-hot check failed - Got 0_100H.", expected_level => info);
 
-        check_one_hot(pass, "0000");
+        check_one_hot(pass, "00000");
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count);
-        check_one_hot(pass, "L00L");
+        verify_log_call(inc_count, "One-hot check failed - Got 0_0000.");
+        check_one_hot(pass, "0L00L");
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count);
-        pass := check_one_hot("0000");
+        verify_log_call(inc_count, "One-hot check failed - Got 0_L00L.");
+        pass := check_one_hot("00000");
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count);
-        pass := check_one_hot("L00L");
+        verify_log_call(inc_count, "One-hot check failed - Got 0_0000.");
+        pass := check_one_hot("0L00L");
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count);
-        check_one_hot(check_one_hot_checker3, pass, "0000");
+        verify_log_call(inc_count, "One-hot check failed - Got 0_L00L.");
+        check_one_hot(check_one_hot_checker3, pass, "00000");
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, expected_level => info);
-        check_one_hot(check_one_hot_checker3, pass, "L00L");
+        verify_log_call(inc_count, "One-hot check failed - Got 0_0000.", expected_level => info);
+        check_one_hot(check_one_hot_checker3, pass, "0L00L");
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, expected_level => info);
+        verify_log_call(inc_count, "One-hot check failed - Got 0_L00L.", expected_level => info);
       elsif run("Test should fail on unknowns") then
-        check_one_hot("000X");
-        verify_log_call(inc_count);
-        check_one_hot(check_one_hot_checker3, "000X");
-        verify_log_call(inc_count, expected_level => info);
+        check_one_hot("0000X");
+        verify_log_call(inc_count, "One-hot check failed - Got 0_000X.");
+        check_one_hot(check_one_hot_checker3, "0000X");
+        verify_log_call(inc_count, "One-hot check failed - Got 0_000X.", expected_level => info);
 
-        check_one_hot(pass, "000X");
+        check_one_hot(pass, "0000X");
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count);
-        pass := check_one_hot("000X");
+        verify_log_call(inc_count, "One-hot check failed - Got 0_000X.");
+        pass := check_one_hot("0000X");
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count);
-        check_one_hot(check_one_hot_checker3, pass, "000X");
+        verify_log_call(inc_count, "One-hot check failed - Got 0_000X.");
+        check_one_hot(check_one_hot_checker3, pass, "0000X");
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, expected_level => info);
+        verify_log_call(inc_count, "One-hot check failed - Got 0_000X.", expected_level => info);
       elsif run("Test should be possible to use concurrently") then
         test_concurrent_check(clk, check_one_hot_in_1, default_checker);
       elsif run("Test should be possible to use concurrently with negative active clock edge") then
@@ -206,6 +219,7 @@ begin
         wait for 1 ns;
         verify_passed_checks(stat, 3);
         verify_failed_checks(stat, 0);
+        verify_num_of_log_calls(get_count);
       elsif run("Test should handle reversed and or offset expressions") then
         get_checker_stat(stat);
         check_zero_one_hot(reversed_and_offset_expr);

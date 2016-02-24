@@ -29,7 +29,8 @@ architecture test_fixture of tb_check_next is
   signal one : std_logic := '1';
   signal zero : std_logic := '0';
 
-  signal check_next_in_1, check_next_in_2, check_next_in_3, check_next_in_4, check_next_in_5 : std_logic_vector(1 to 3) := "001";
+  signal check_next_in_1, check_next_in_2, check_next_in_3, check_next_in_4,
+    check_next_in_5, check_next_in_6 : std_logic_vector(1 to 3) := "001";
   alias check_next_start_event_1 : std_logic is check_next_in_1(1);
   alias check_next_expr_1 : std_logic is check_next_in_1(2);
   alias check_next_en_1 : std_logic is check_next_in_1(3);
@@ -45,6 +46,9 @@ architecture test_fixture of tb_check_next is
   alias check_next_start_event_5 : std_logic is check_next_in_5(1);
   alias check_next_expr_5 : std_logic is check_next_in_5(2);
   alias check_next_en_5 : std_logic is check_next_in_5(3);
+  alias check_next_start_event_6 : std_logic is check_next_in_6(1);
+  alias check_next_expr_6 : std_logic is check_next_in_6(2);
+  alias check_next_en_6 : std_logic is check_next_in_6(3);
 
   shared variable check_next_checker2, check_next_checker3, check_next_checker4, check_next_checker5 : checker_t;
 begin
@@ -62,6 +66,7 @@ begin
                             check_next_start_event_1,
                             check_next_expr_1,
                             num_cks => 4);
+
   check_next_2 : check_next(check_next_checker2,
                             clk,
                             check_next_en_2,
@@ -80,6 +85,7 @@ begin
                             check_next_en_4,
                             check_next_start_event_4,
                             check_next_expr_4,
+                            result("for my data"),
                             num_cks => 4,
                             allow_overlapping => false);
   check_next_5 : check_next(check_next_checker5,
@@ -87,12 +93,20 @@ begin
                             check_next_en_5,
                             check_next_start_event_5,
                             check_next_expr_5,
+                            "Checking my data",
                             num_cks => 4,
                             allow_missing_start => false);
+  check_next_6 : check_next(clk,
+                            check_next_en_6,
+                            check_next_start_event_6,
+                            check_next_expr_6,
+                            result("for my data"),
+                            num_cks => 1);
 
   check_next_runner : process
     variable pass : boolean;
     variable stat : checker_stat_t;
+    constant pass_level : log_level_t := debug_low2;
 
     procedure test_concurrent_check (
       signal clk                        : in  std_logic;
@@ -102,15 +116,15 @@ begin
       constant active_rising_clock_edge : in  boolean := true) is
 
     begin
-      if running_test_case = "Test should pass when expr is true num cks enabled cycles after start event" then
+      if running_test_case = "Test should pass when expr is true num_cks enabled cycles after start_event" then
         get_checker_stat(checker, stat);
         apply_sequence("001;101;001;001;000;001;011;001", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
         verify_passed_checks(checker, stat, 1);
-      elsif running_test_case = "Test should fail when expr is false num cks enabled cycles after start event" then
+      elsif running_test_case = "Test should fail when expr is false num_cks enabled cycles after start_event" then
         apply_sequence("001;111;011;011;010;011;001;011;001", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
-        verify_log_call(inc_count, expected_level => level);
+        verify_log_call(inc_count, "Next check failed - Got 0 at the 4th active and enabled clock edge.", level);
       elsif running_test_case = "Test should handle a mix of passing and failing overlapping checks when allowed" then
         get_checker_stat(checker, stat);
         apply_sequence("001;101;001;101;101;000;011;001", clk, check_input, active_rising_clock_edge);
@@ -123,12 +137,12 @@ begin
         verify_failed_checks(checker, stat, 0);
         apply_sequence("001;001", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
-        verify_log_call(inc_count, expected_level => level);
-      elsif running_test_case = "Test should pass a true expr without start event if missing start is allowed" then
+        verify_log_call(inc_count, "Next check failed - Got 0 at the 4th active and enabled clock edge.", level);
+      elsif running_test_case = "Test should pass a true expr without start_event if missing start is allowed" then
         get_checker_stat(checker, stat);
         apply_sequence("001;001;001;011;001", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
-        verify_passed_checks(checker, stat, 1);
+        verify_passed_checks(checker, stat, 0);
         verify_failed_checks(checker, stat, 0);
       end if;
 
@@ -139,10 +153,10 @@ begin
     test_runner_setup(runner, runner_cfg);
 
     while test_suite loop
-      if run("Test should pass when expr is true num cks enabled cycles after start event") or
-        run("Test should fail when expr is false num cks enabled cycles after start event") or
+      if run("Test should pass when expr is true num_cks enabled cycles after start_event") or
+        run("Test should fail when expr is false num_cks enabled cycles after start_event") or
         run("Test should handle a mix of passing and failing overlapping checks when allowed") or
-        run("Test should pass a true expr without start event if missing start is allowed") then
+        run("Test should pass a true expr without start_event if missing start is allowed") then
 
         test_concurrent_check(clk, check_next_in_1, default_checker);
         test_concurrent_check(clk, check_next_in_2, check_next_checker2, error, false);
@@ -151,8 +165,8 @@ begin
         get_checker_stat(check_next_checker4, stat);
         apply_sequence("001;101;001;101;001;011;001;011;001", clk, check_next_in_4);
         wait for 1 ns;
-        verify_passed_checks(check_next_checker4, stat, 2);
-        verify_log_call(inc_count, "Overlapping not allowed.");
+        verify_passed_checks(check_next_checker4, stat, 1);
+        verify_log_call(inc_count, "Next check failed for my data - Got overlapping start event at the 2nd active and enabled clock edge.");
         get_checker_stat(check_next_checker4, stat);
         apply_sequence("001;101;001;001;001;111;001;001;001;011;001", clk, check_next_in_4);
         wait for 1 ns;
@@ -163,7 +177,7 @@ begin
         apply_sequence("001;001;001;011;001", clk, check_next_in_5);
         wait for 1 ns;
         verify_passed_checks(check_next_checker5, stat, 0);
-        verify_log_call(inc_count, "Missing start event for true expression.");
+        verify_log_call(inc_count, "Checking my data - Missing start event for true expression.");
       elsif run("Test should handle meta values") then
         get_checker_stat(check_next_checker5, stat);
         apply_sequence("00H;10H;00H;00H;00L;00H;01H;00H;00H", clk, check_next_in_5);
@@ -188,6 +202,19 @@ begin
         wait for 1 ns;
         verify_passed_checks(check_next_checker5, stat, 1);
         verify_failed_checks(check_next_checker5, stat, 1);
+        verify_log_call(inc_count, "Checking my data - Start event is X.");
+      elsif run("Test pass message and that internal checks don't count") then
+        get_checker_stat(stat);
+        enable_pass_msg;
+        apply_sequence("001;101;0U1;011", clk, check_next_in_6);
+        wait for 1 ns;
+        verify_log_call(inc_count, "Next check failed for my data - Got U at the 1st active and enabled clock edge.");
+        apply_sequence("011;101;011;001", clk, check_next_in_6);
+        wait for 1 ns;
+        verify_log_call(inc_count, "Next check passed for my data", pass_level);
+        disable_pass_msg;
+        verify_passed_checks(default_checker, stat, 1);
+        verify_failed_checks(default_checker, stat, 1);
       end if;
     end loop;
 

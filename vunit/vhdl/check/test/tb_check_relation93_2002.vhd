@@ -71,83 +71,84 @@ begin
     variable stat : checker_stat_t;
     variable check_relation_checker : checker_t;
     variable cash : cash_t := (99,95);
+    constant pass_level : log_level_t := debug_low2;
+    variable data : natural;
   begin
     test_runner_setup(runner, runner_cfg);
 
     while test_suite loop
       if run("Test that a true relation does not generate an error") then
+        data := 5;
         get_checker_stat(stat);
-        check_relation(5 > 3);
-        check_relation(pass, 5 > 3);
+        check_relation(data > 3);
+        check_relation(pass, data > 3);
         counting_assert(pass, "Should return pass = true on passing check");
-        pass := check_relation(5 > 3);
+        pass := check_relation(data > 3);
         counting_assert(pass, "Should return pass = true on passing check");
         verify_passed_checks(stat, 3);
 
         get_checker_stat(check_relation_checker, stat);
-        check_relation(check_relation_checker, 5 > 3);
-        check_relation(check_relation_checker, pass, 5 > 3);
+        check_relation(check_relation_checker, data > 3);
+        check_relation(check_relation_checker, pass, data > 3);
         counting_assert(pass, "Should return pass = true on passing check");
         verify_passed_checks(check_relation_checker, stat, 2);
-      elsif run("Test that generated message is combined with a custom message") then
-        check_relation(5 < 3, "Something is wrong.");
-        verify_log_call(inc_count, "Relation 5 < 3 failed! Left is 5. Right is 3. Something is wrong.");
-        check_relation(pass, 5 < 3, "Something is wrong.");
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Relation 5 < 3 failed! Left is 5. Right is 3. Something is wrong.");
-        pass := check_relation(5 < 3, "Something is wrong.");
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Relation 5 < 3 failed! Left is 5. Right is 3. Something is wrong.");
-
-        check_relation(check_relation_checker, 5 < 3, "Something is wrong.");
-        verify_log_call(inc_count, "Relation 5 < 3 failed! Left is 5. Right is 3. Something is wrong.");
-        check_relation(check_relation_checker, pass, 5 < 3, "Something is wrong.");
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Relation 5 < 3 failed! Left is 5. Right is 3. Something is wrong.");
+        verify_num_of_log_calls(get_count);
+      elsif run("Test pass message") then
+        enable_pass_msg;
+        data := 5;
+        check_relation(data > 3);
+        verify_log_call(inc_count, "Relation check passed - Expected data > 3. Left is 5. Right is 3.", pass_level);
+        check_relation(data > 3, "");
+        verify_log_call(inc_count, "Expected data > 3. Left is 5. Right is 3.", pass_level);
+        check_relation(data > 3, "Checking my data");
+        verify_log_call(inc_count, "Checking my data - Expected data > 3. Left is 5. Right is 3.", pass_level);
+        check_relation(data > 3, result("for my data"));
+        verify_log_call(inc_count, "Relation check passed for my data - Expected data > 3. Left is 5. Right is 3.", pass_level);
+        disable_pass_msg;
       elsif run("Test that all pre VHDL 2008 relational operators are supported") then
-        check_relation(5 = 3);
-        verify_log_call(inc_count, "Relation 5 = 3 failed! Left is 5. Right is 3.");
-        check_relation(5 /= 5);
-        verify_log_call(inc_count, "Relation 5 /= 5 failed! Left is 5. Right is 5.");
-        check_relation(5 < 5);
-        verify_log_call(inc_count, "Relation 5 < 5 failed! Left is 5. Right is 5.");
-        check_relation(5 <= 4);
-        verify_log_call(inc_count, "Relation 5 <= 4 failed! Left is 5. Right is 4.");
-        check_relation(5 > 5);
-        verify_log_call(inc_count, "Relation 5 > 5 failed! Left is 5. Right is 5.");
-        check_relation(4 >= 5);
-        verify_log_call(inc_count, "Relation 4 >= 5 failed! Left is 4. Right is 5.");
-
+        data := 5;
+        check_relation(data = 3);
+        verify_log_call(inc_count, "Relation check failed - Expected data = 3. Left is 5. Right is 3.");
+        check_relation(data /= 5);
+        verify_log_call(inc_count, "Relation check failed - Expected data /= 5. Left is 5. Right is 5.");
+        check_relation(data < 5);
+        verify_log_call(inc_count, "Relation check failed - Expected data < 5. Left is 5. Right is 5.");
+        check_relation(data <= 4);
+        verify_log_call(inc_count, "Relation check failed - Expected data <= 4. Left is 5. Right is 4.");
+        check_relation(data > 5);
+        verify_log_call(inc_count, "Relation check failed - Expected data > 5. Left is 5. Right is 5.");
+        check_relation(data >= 6);
+        verify_log_call(inc_count, "Relation check failed - Expected data >= 6. Left is 5. Right is 6.");
       elsif run("Test that a generated message can contain string containing operands") then
         check_relation(len("foo") = 4);
-        verify_log_call(inc_count, "Relation len(""foo"") = 4 failed! Left is 3. Right is 4.");
+        verify_log_call(inc_count, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.");
         check_relation(pass, len("foo") = 4);
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Relation len(""foo"") = 4 failed! Left is 3. Right is 4.");
+        verify_log_call(inc_count, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.");
         pass := check_relation(len("foo") = 4);
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Relation len(""foo"") = 4 failed! Left is 3. Right is 4.");
+        verify_log_call(inc_count, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.");
 
         check_relation(check_relation_checker, len("foo") = 4);
-        verify_log_call(inc_count, "Relation len(""foo"") = 4 failed! Left is 3. Right is 4.");
+        verify_log_call(inc_count, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.");
         check_relation(check_relation_checker, pass, len("foo") = 4);
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Relation len(""foo"") = 4 failed! Left is 3. Right is 4.");
+        verify_log_call(inc_count, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.");
       elsif run("Test that custom types can be used") then
         check_relation(cash > cash_t'((100,0)));
-        verify_log_call(inc_count, "Relation cash > cash_t'((100,0)) failed! Left is $99.95. Right is $100.0.");
+        verify_log_call(inc_count, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.");
         check_relation(pass, cash > cash_t'((100,0)));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Relation cash > cash_t'((100,0)) failed! Left is $99.95. Right is $100.0.");
+        verify_log_call(inc_count, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.");
         pass := check_relation(cash > cash_t'((100,0)));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Relation cash > cash_t'((100,0)) failed! Left is $99.95. Right is $100.0.");
+        verify_log_call(inc_count, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.");
 
         check_relation(check_relation_checker, cash > cash_t'((100,0)));
-        verify_log_call(inc_count, "Relation cash > cash_t'((100,0)) failed! Left is $99.95. Right is $100.0.");
+        verify_log_call(inc_count, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.");
         check_relation(check_relation_checker, pass, cash > cash_t'((100,0)));
         counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Relation cash > cash_t'((100,0)) failed! Left is $99.95. Right is $100.0.");
+        verify_log_call(inc_count, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.");
       end if;
     end loop;
 

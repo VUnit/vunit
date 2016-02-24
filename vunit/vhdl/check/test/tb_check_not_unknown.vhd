@@ -16,6 +16,7 @@ use vunit_lib.log_types_pkg.all;
 use vunit_lib.check_types_pkg.all;
 use vunit_lib.check_special_types_pkg.all;
 use vunit_lib.check_pkg.all;
+use vunit_lib.string_ops.all;
 use work.test_support.all;
 use work.test_count.all;
 
@@ -68,6 +69,7 @@ begin
     constant metadata : std_logic_vector(1 to 5) := "UXZW-";
     constant not_unknowns : string(1 to 4) := "01LH";
     variable reversed_and_offset_expr : std_logic_vector(23 downto 16) := "10100101";
+    constant pass_level : log_level_t := debug_low2;
 
     procedure test_concurrent_check (
       signal clk                        : in  std_logic;
@@ -102,7 +104,15 @@ begin
         apply_sequence(test_expr & "1" & test_expr & "H", clk, check_input, active_rising_clock_edge);
         wait until clock_edge(clk, active_rising_clock_edge);
         wait for 1 ns;
-        verify_log_call(set_count(get_count + 2), expected_level => level);
+        if check_input'length - 1 = 8 then
+          verify_log_call(set_count(get_count + 2),
+                          "Not unknown check failed - Got " & test_expr(1 to 4) & "_" & test_expr(5 to 8) & ".",
+                          expected_level => level);
+        else
+          verify_log_call(set_count(get_count + 2),
+                          "Not unknown check failed - Got " & test_expr & ".",
+                          expected_level => level);
+        end if;
       end loop;
       test_expr := (others => '0');
       apply_sequence(test_expr & "0", clk, check_input, active_rising_clock_edge);
@@ -136,36 +146,60 @@ begin
         check_not_unknown(check_not_unknown_checker3, pass, "10100101");
         counting_assert(pass, "Should return pass = true on passing check");
         verify_passed_checks(check_not_unknown_checker3, stat, 4);
+        verify_num_of_log_calls(get_count);
+      elsif run("Test pass message") then
+        enable_pass_msg;
+        check_not_unknown('0');
+        verify_log_call(inc_count, "Not unknown check passed - Got 0.", pass_level);
+        check_not_unknown("00110");
+        verify_log_call(inc_count, "Not unknown check passed - Got 0_0110 (6).", pass_level);
+        check_not_unknown('0', "");
+        verify_log_call(inc_count, "Got 0.", pass_level);
+        check_not_unknown("00110", "");
+        verify_log_call(inc_count, "Got 0_0110 (6).", pass_level);
+        check_not_unknown('0', "Checking my data");
+        verify_log_call(inc_count, "Checking my data - Got 0.", pass_level);
+        check_not_unknown("00110", "Checking my data");
+        verify_log_call(inc_count, "Checking my data - Got 0_0110 (6).", pass_level);
+        check_not_unknown('0', result("for my data"));
+        verify_log_call(inc_count, "Not unknown check passed for my data - Got 0.", pass_level);
+        check_not_unknown("00110", result("for my data"));
+        verify_log_call(inc_count, "Not unknown check passed for my data - Got 0_0110 (6).", pass_level);
+        disable_pass_msg;
       elsif run("Test should fail on all std logic values except zero and one") then
         for i in metadata'range loop
           test_expr := (others => metadata(i));
           check_not_unknown(metadata(i));
-          verify_log_call(inc_count);
+          verify_log_call(inc_count, "Not unknown check failed - Got " & std_logic'image(metadata(i))(2) & ".");
           check_not_unknown(test_expr);
-          verify_log_call(inc_count);
+          verify_log_call(inc_count, "Not unknown check failed - Got " & to_nibble_string(test_expr) & ".");
           check_not_unknown(pass, metadata(i));
           counting_assert(not pass, "Should return pass = false on failing check");
-          verify_log_call(inc_count);
+          verify_log_call(inc_count, "Not unknown check failed - Got " & std_logic'image(metadata(i))(2) & ".");
           check_not_unknown(pass, test_expr);
           counting_assert(not pass, "Should return pass = false on failing check");
-          verify_log_call(inc_count);
+          verify_log_call(inc_count, "Not unknown check failed - Got " & to_nibble_string(test_expr) & ".");
           pass := check_not_unknown(metadata(i));
           counting_assert(not pass, "Should return pass = false on failing check");
-          verify_log_call(inc_count);
+          verify_log_call(inc_count, "Not unknown check failed - Got " & std_logic'image(metadata(i))(2) & ".");
           pass := check_not_unknown(test_expr);
           counting_assert(not pass, "Should return pass = false on failing check");
-          verify_log_call(inc_count);
+          verify_log_call(inc_count, "Not unknown check failed - Got " & to_nibble_string(test_expr) & ".");
 
           check_not_unknown(check_not_unknown_checker3, metadata(i));
-          verify_log_call(inc_count, expected_level => info);
+          verify_log_call(inc_count, "Not unknown check failed - Got " & std_logic'image(metadata(i))(2) & ".",
+                          expected_level => info);
           check_not_unknown(check_not_unknown_checker3, test_expr);
-          verify_log_call(inc_count, expected_level => info);
+          verify_log_call(inc_count, "Not unknown check failed - Got " & to_nibble_string(test_expr) & ".",
+                          expected_level => info);
           check_not_unknown(check_not_unknown_checker3, pass, metadata(i));
           counting_assert(not pass, "Should return pass = false on failing check");
-          verify_log_call(inc_count, expected_level => info);
+          verify_log_call(inc_count, "Not unknown check failed - Got " & std_logic'image(metadata(i))(2) & ".",
+                          expected_level => info);
           check_not_unknown(check_not_unknown_checker3, pass, test_expr);
           counting_assert(not pass, "Should return pass = false on failing check");
-          verify_log_call(inc_count, expected_level => info);
+          verify_log_call(inc_count, "Not unknown check failed - Got " & to_nibble_string(test_expr) & ".",
+                          expected_level => info);
         end loop;
       elsif run("Test should be possible to use concurrently") then
         test_concurrent_check(clk, check_not_unknown_in_1, default_checker);

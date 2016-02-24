@@ -54,12 +54,25 @@ package test_support is
     constant expected_level  : in log_level_t := error;
     constant expected_src : in string := "";
     constant expected_line_num : in natural := 0;
+    constant expected_file_name : in string := "";
+    constant expected_pass_to_display : in boolean := true;
+    constant expected_pass_to_file : in boolean := true);
+
+  procedure verify_time_log_call (
+    constant expected_count  : in natural;
+    constant expected_msg_part_1 : in string;
+    constant got_time : in time;
+    constant expected_msg_part_3 : in string;
+    constant expected_time : in time;
+    constant expected_level  : in log_level_t := error;
+    constant expected_src : in string := "";
+    constant expected_line_num : in natural := 0;
     constant expected_file_name : in string := "");
 
   procedure verify_time_log_call (
     constant expected_count  : in natural;
+    constant expected_msg_part_1 : in string;
     constant got_time : in time;
-    constant expected_time : in time;
     constant expected_level  : in log_level_t := error;
     constant expected_src : in string := "";
     constant expected_line_num : in natural := 0;
@@ -175,54 +188,130 @@ package body test_support is
     constant expected_level  : in log_level_t := error;
     constant expected_src : in string := "";
     constant expected_line_num : in natural := 0;
+    constant expected_file_name : in string := "";
+    constant expected_pass_to_display : in boolean := true;
+    constant expected_pass_to_file : in boolean := true) is
+    variable call_count : natural;
+    variable log_call_args : log_call_args_t;
+    variable log_call_info : log_call_info_t;
+    variable len : natural;
+  begin
+    call_count := get_log_call_count;
+    counting_assert(call_count = expected_count,
+                    "Invalid report call count. Got " & natural'image(call_count) & " but was expecting " &
+                    natural'image(expected_count) & ".");
+    get_log_call_args(log_call_args);
+    clear_log_call_args;
+    counting_assert(log_call_args.valid, "Log not called");
+    len := find(log_call_args.msg, NUL) - 1;
+    counting_assert(len = expected_msg'length,
+                    "Wrong message. Got " &  log_call_args.msg(1 to len) & " but expected " & expected_msg & ".");
+    counting_assert(log_call_args.msg(expected_msg'range) = expected_msg,
+                    "Wrong message. Got " &  log_call_args.msg(1 to len) & " but expected " &
+                    expected_msg & ".");
+    counting_assert(log_call_args.level = expected_level, "Wrong level.", error);
+    len := find(log_call_args.src, NUL) - 1;
+    counting_assert(len = expected_src'length,
+                    "Wrong source. Got " &  log_call_args.src(1 to len) & " but expected " &
+                    expected_src & ".");
+    counting_assert(log_call_args.src(expected_src'range) = expected_src,
+                    "Wrong source. Got " &  log_call_args.src(1 to len) & " but expected " &
+                    expected_src & ".");
+    counting_assert(log_call_args.line_num = expected_line_num, "Wrong line number.", error);
+    counting_assert(log_call_args.file_name(expected_file_name'range) = expected_file_name,
+                    "Wrong file_name. Got " &  log_call_args.file_name(expected_file_name'range) &
+                    " but expected " & expected_file_name & ".");
+    get_log_call_info(log_call_info);
+    counting_assert(log_call_info.pass_to_display = expected_pass_to_display,
+                    "Expected pass message to display to be " & boolean'image(expected_pass_to_display));
+    counting_assert(log_call_info.pass_to_file = expected_pass_to_file,
+                    "Expected pass message to file to be " & boolean'image(expected_pass_to_file));
+
+  end verify_log_call;
+
+  procedure verify_time_log_call (
+    constant expected_count  : in natural;
+    constant expected_msg_part_1 : in string;
+    constant got_time : in time;
+    constant expected_msg_part_3 : in string;
+    constant expected_time : in time;
+    constant expected_level  : in log_level_t := error;
+    constant expected_src : in string := "";
+    constant expected_line_num : in natural := 0;
     constant expected_file_name : in string := "") is
     variable call_count : natural;
     variable log_call_args : log_call_args_t;
+    variable times : lines_t;
+    variable len : natural;
   begin
     call_count := get_log_call_count;
-    counting_assert(call_count = expected_count, "Invalid report call count. Got " & natural'image(call_count) & " but was expecting " & natural'image(expected_count) & ".");
+    counting_assert(call_count = expected_count, "Invalid report call count. Got " & natural'image(call_count) &
+                    " but was expecting " & natural'image(expected_count) & ".");
     get_log_call_args(log_call_args);
+    clear_log_call_args;
     counting_assert(log_call_args.valid, "Log not called");
-    counting_assert(log_call_args.msg(expected_msg'range) = expected_msg, "Wrong message. Got " &  log_call_args.msg(expected_msg'range) & " but expected " & expected_msg & ".");
+
+    times := split(replace(replace(replace(strip(log_call_args.msg, "" & NUL), expected_msg_part_1, ""),
+                                   expected_msg_part_3, "|"), '.', ""), "|");
+    len := find(log_call_args.msg, NUL) - 1;
+    counting_assert(((time'value(times(0).all) = got_time) and (time'value(times(1).all) = expected_time)),
+                    "Wrong message. Got " & log_call_args.msg(1 to len) & " but expected " &
+                    "Got " & time'image(got_time) & ". Expected " &
+                    time'image(expected_time) & ".");
+
     counting_assert(log_call_args.level = expected_level, "Wrong level.", error);
-    counting_assert(log_call_args.src(expected_src'range) = expected_src, "Wrong source. Got " &  log_call_args.src(expected_src'range) & " but expected " & expected_src & ".");
+    len := find(log_call_args.src, NUL) - 1;
+    counting_assert(len = expected_src'length,
+                    "Wrong source. Got " &  log_call_args.src(1 to len) & " but expected " &
+                    expected_src & ".");
+    counting_assert(log_call_args.src(expected_src'range) = expected_src, "Wrong source. Got " &
+                    log_call_args.src(1 to len) & " but expected " & expected_src & ".");
     counting_assert(log_call_args.line_num = expected_line_num, "Wrong line number.", error);
-    counting_assert(log_call_args.file_name(expected_file_name'range) = expected_file_name, "Wrong file_name. Got " &  log_call_args.file_name(expected_file_name'range) & " but expected " & expected_file_name & ".");
-  end verify_log_call;
+    counting_assert(log_call_args.file_name(expected_file_name'range) = expected_file_name,
+                    "Wrong file_name. Got " &  log_call_args.file_name(expected_file_name'range) &
+                    " but expected " & expected_file_name & ".");
+  end verify_time_log_call;
 
-    procedure verify_time_log_call (
-      constant expected_count  : in natural;
-      constant got_time : in time;
-      constant expected_time : in time;
-      constant expected_level  : in log_level_t := error;
-      constant expected_src : in string := "";
-      constant expected_line_num : in natural := 0;
-      constant expected_file_name : in string := "") is
-      variable call_count : natural;
-      variable log_call_args : log_call_args_t;
-      variable times : lines_t;
-    begin
-      call_count := get_log_call_count;
-      counting_assert(call_count = expected_count, "Invalid report call count. Got " & natural'image(call_count) &
-                      " but was expecting " & natural'image(expected_count) & ".");
-      get_log_call_args(log_call_args);
-      counting_assert(log_call_args.valid, "Log not called");
+  procedure verify_time_log_call (
+    constant expected_count  : in natural;
+    constant expected_msg_part_1 : in string;
+    constant got_time : in time;
+    constant expected_level  : in log_level_t := error;
+    constant expected_src : in string := "";
+    constant expected_line_num : in natural := 0;
+    constant expected_file_name : in string := "") is
+    variable call_count : natural;
+    variable log_call_args : log_call_args_t;
+    variable times : lines_t;
+    variable extracted_time : time;
+    variable len : natural;
+  begin
+    call_count := get_log_call_count;
+    counting_assert(call_count = expected_count, "Invalid report call count. Got " & natural'image(call_count) &
+                    " but was expecting " & natural'image(expected_count) & ".");
+    get_log_call_args(log_call_args);
+    clear_log_call_args;
+    counting_assert(log_call_args.valid, "Log not called");
 
-      times := split(replace(replace(replace(strip(log_call_args.msg, "" & NUL),
-                                             "Equality check failed! Got ", ""), ". Expected ", "|"), '.', ""), "|");
-      counting_assert(((time'value(times(0).all) = got_time) and (time'value(times(1).all) = expected_time)),
-                       "Wrong message. Got " & log_call_args.msg & " but expected " &
-                       "Equality check failed! Got " & time'image(got_time) & ". Expected " &
-                       time'image(expected_time) & ".");
+    extracted_time := time'value(replace(replace(strip(log_call_args.msg, "" & NUL),
+                                                 expected_msg_part_1, ""), '.', ""));
+    len := find(log_call_args.msg, NUL) - 1;
+    counting_assert((extracted_time = got_time),
+                    "Wrong message. Got " & log_call_args.msg(1 to len) & " but expected " &
+                    "Got " & time'image(got_time) & ".");
 
-      counting_assert(log_call_args.level = expected_level, "Wrong level.", error);
-      counting_assert(log_call_args.src(expected_src'range) = expected_src, "Wrong source. Got " &
-                      log_call_args.src(expected_src'range) & " but expected " & expected_src & ".");
-      counting_assert(log_call_args.line_num = expected_line_num, "Wrong line number.", error);
-      counting_assert(log_call_args.file_name(expected_file_name'range) = expected_file_name,
-                      "Wrong file_name. Got " &  log_call_args.file_name(expected_file_name'range) &
-                      " but expected " & expected_file_name & ".");
-    end verify_time_log_call;
+    counting_assert(log_call_args.level = expected_level, "Wrong level.", error);
+    len := find(log_call_args.src, NUL) - 1;
+    counting_assert(len = expected_src'length,
+                    "Wrong source. Got " &  log_call_args.src(1 to len) & " but expected " &
+                    expected_src & ".");
+    counting_assert(log_call_args.src(expected_src'range) = expected_src, "Wrong source. Got " &
+                    log_call_args.src(1 to len) & " but expected " & expected_src & ".");
+    counting_assert(log_call_args.line_num = expected_line_num, "Wrong line number.", error);
+    counting_assert(log_call_args.file_name(expected_file_name'range) = expected_file_name,
+                    "Wrong file_name. Got " &  log_call_args.file_name(expected_file_name'range) &
+                    " but expected " & expected_file_name & ".");
+  end verify_time_log_call;
 
   procedure verify_logger_init_call (
     constant expected_count  : in natural;
@@ -239,6 +328,7 @@ package body test_support is
     call_count := get_logger_init_call_count;
     counting_assert(call_count = expected_count, "Invalid report call count. Got " & natural'image(call_count) & " but was expecting " & natural'image(expected_count) & ".");
     get_logger_init_call_args(logger_init_call_args);
+    clear_logger_init_call_args;
     counting_assert(logger_init_call_args.valid, "Init not called");
     counting_assert(logger_init_call_args.default_src(expected_default_src'range) = expected_default_src, "Wrong default source. Got " &  logger_init_call_args.default_src(expected_default_src'range) & " but expected " & expected_default_src & ".");
     counting_assert(logger_init_call_args.file_name(expected_file_name'range) = expected_file_name, "Wrong file name. Got " &  logger_init_call_args.file_name(expected_file_name'range) & " but expected " & expected_file_name & ".");

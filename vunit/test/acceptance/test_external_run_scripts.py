@@ -54,7 +54,7 @@ class TestExternalRunScripts(unittest.TestCase):
         self.check(join(ROOT, "examples", "vhdl", "logging", "compile.py"), args=["--compile"])
 
     def test_vhdl_check_example_project(self):
-        self.check(join(ROOT, "examples", "vhdl", "check", "compile.py"), args=["--compile"])
+        self.check(join(ROOT, "examples", "vhdl", "check", "run.py"))
 
     def test_vhdl_generate_tests_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "generate_tests", "run.py"))

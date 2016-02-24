@@ -21,6 +21,10 @@ package check_special_types_pkg is
     default_log_level : log_level_t;
     stat              : checker_stat_t;
     logger            : logger_t;
+    pass_display_filter : log_filter_t;
+    pass_display_filter_inactive : boolean;
+    pass_file_filter : log_filter_t;
+    pass_file_filter_inactive : boolean;
   end record;
 end package;
 

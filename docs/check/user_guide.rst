@@ -6,7 +6,7 @@ Check Library
 Introduction
 ------------
 
-The check package is an assertion library for VHDL providing the more
+The check library is an assertion library for VHDL providing the more
 commonly used assertions as a number of check procedures and functions.
 
 Architecture
@@ -14,8 +14,7 @@ Architecture
 
 The check subprograms are mainly a number conditional log messages. If
 the condition represents a failing check then an error message is issued
-using the VUnit :doc:`log package <../logging/user_guide>`. A passing
-check has no effect other than updating the passing check statistics.
+using the VUnit :doc:`log package <../logging/user_guide>`.
 
 Every check you do is handled by a checker. There is a default checker
 that is used when none is specified but you can also create multiple
@@ -39,8 +38,8 @@ variable
     variable my_checker : checker_t;
 
 All procedures presented in this user guide are available for both the
-default checker and the custom checkers. The difference is the first
-``checker_t`` parameter which only exists for custom checker procedures.
+default checker and custom checkers. The difference is the first
+``checker`` parameter which only exists for custom checker procedures.
 To make the user guide more compact we present this as an optional
 parameter using brackets. For example
 
@@ -54,7 +53,7 @@ parameter using brackets. For example
 The full verbose API description can always be found in
 `check\_api.vhd <src/check_api.vhd>`__.
 
-There are also a number of functions in the check package. These are
+There are also a number of functions in the check library. These are
 only available for the default checker and the reason is that
 ``checker_t`` is defined as a protected type in the VHDL 2002 and 2008
 implementations. Protected types cannot be input to a function so in
@@ -88,7 +87,7 @@ in the following chapters.
       constant separator      : in    character    := ',';
       constant append         : in    boolean      := false);
 
-It is also possible to initialize a checker to use an already defined
+It is also possible to initialize a checker to use the configuration of an already defined
 logger using the following procedure
 
 .. code-block:: vhdl
@@ -98,20 +97,23 @@ logger using the following procedure
       constant default_level : in    log_level_t := error;
       variable logger        : inout logger_t);
 
-Basic Check
------------
+Note that the default checker with its default parameters covers most use cases such that
+you don't need to call ``checker_init``.
 
-The check package provides a basic ``check`` procedure which is similar
+Check
+-----------------
+
+The check library provides a basic ``check`` procedure which is similar
 to the VHDL ``assert`` statement
 
 .. code-block:: vhdl
 
     check(re = '1', "Expected active read enable at this point");
 
-The first parameter is the expression to check and the second parameter
+The first parameter is the boolean expression to check and the second parameter
 is the error message issued if the expression is false. Assuming this
-check fails and you've initialized the default checker with the default
-values the error message will be
+check fails and you haven't changed the default settings for the default checker
+the error message will be
 
 .. code-block:: console
 
@@ -124,7 +126,7 @@ If you wish to have another log level than the default one set by
 
     check(re = '1', "Expected active read enable at this point", failure);
 
-A failing check is always counted as failing check regardless of the
+A failing check is always counted as a failing check regardless of the
 level but the level affects whether or not the simulation stops as
 controlled by the ``stop_level`` parameter to ``checker_init``.
 
@@ -137,10 +139,121 @@ failing test case doesn't propagate into the next. If you're not using
 the Python test runner and have ``stop_level`` at ``failure`` as a way
 to continue on ``error`` you don't have this guarantee.
 
+Logging Passing Checks
+~~~~~~~~~~~~~~~~~~~~~~
+
+The provided message in a check call can also be logged when the check passes. The
+typical use case is to quickly create a debug trace to investigate what happened
+before a bug occured. This feature is disabled by default but can be enabled
+for all output handlers or just for one output handler.
+
+.. code-block:: vhdl
+
+    enable_pass_msg;
+    enable_pass_msg(file_handler);
+    enable_pass_msg(display_handler);
+
+``disable_pass_msg`` with or without an output handler parameter can be used to disable
+the feature again.
+
+The difference between a passing check log message and a failing check log message is
+the log level used. A passing check like this
+
+.. code-block:: vhdl
+
+    check(re = '1', "Checking that read enable is active");
+
+will result in a log entry like this
+
+.. code-block:: console
+
+    PASS: Checking that read enable is active
+
+Note that a message that reads well for both the pass and the fail cases was used. Note
+also that ``PASS`` isn't a standard log level but a custom log level defined by renaming
+one of the extra log levels, ``debug_low2``, provided by the logging library for the purpose
+of creating custom levels like this.
+
+A number of check subprograms perform several checks for every call, each of which can fail
+and generate an error message. However, there will only be one pass message for such a call
+to avoid confusion. For example, ``check_stable`` checks the stability of a signal for every
+clock cycle in a window. If the window is 100 clock cycles there will be 100 checks for
+stability but there will only be one pass message, not 100, if the signal is stable.
+
+Message Format
+~~~~~~~~~~~~~~
+
+In the previous examples the outputs from passing and failing checks were the messages provided by
+the user with the addition of a log level. If we change the log format to ``raw`` there would be no
+additions at all, just the user message. However, the check subprograms may also add information to the user
+message before the log format additions are applied. For example, checking a pixel value after an image
+processing operation can be done like this:
+
+.. code-block:: vhdl
+
+    check_equal(output_pixel, reference_model(y)(x), "Comparing output pixel with reference model");
+
+Resulting in an error message like this:
+
+.. code-block:: console
+
+    ERROR: Comparing output pixel with reference model - Got 1111_1010 (250). Expected 1111_1001 (249).
+
+The last part of the message provides an error context to help debugging. Such a context is only given
+if that provides extra information. In the case of a failing ``check`` we know that the input boolean is
+false so there is no need to provide that information. The context may also be different between pass and
+error messages. For example, a pass message from ``check_equal`` looks like this:
+
+.. code-block:: console
+
+    PASS: Comparing output pixel with reference model - Got 1111_1010 (250).
+
+Redundancy is avoided by excluding the expected value which is the same as the value received.
+
+So far I've used a message that reads well in both the passing and the failing case. The check library
+also provides another way of doing this using the ``result`` function. The call
+
+.. code-block:: vhdl
+
+    check_equal(output_pixel, reference_model(y)(x), result("for output pixel"));
+
+gives the following messages:
+
+.. code-block:: console
+
+    ERROR: Equality check failed for output pixel - Got 1111_1010 (250). Expected 1111_1001 (249).
+
+and
+
+.. code-block:: console
+
+    PASS: Equality check passed for output pixel - Got 1111_1010 (250).
+
+The ``result`` function prepends the provided string with the check type (equality check in this case)
+and passed/failed depending on the result. The ``result`` function is also used as the default value for
+check calls so
+
+.. code-block:: vhdl
+
+    check_equal(output_pixel, reference_model(y)(x));
+
+gives the following messages:
+
+.. code-block:: console
+
+    ERROR: Equality check failed - Got 1111_1010 (250). Expected 1111_1001 (249).
+
+and
+
+.. code-block:: console
+
+    PASS: Equality check passed - Got 1111_1010 (250).
+
+
 Check Location
 ~~~~~~~~~~~~~~
 
-The ``check`` procedure described in the previous section has two
+The ``check`` procedures described in the previous sections have two
 additional parameters, ``line_num`` and ``file_name``. These are
 normally not set by the user but by the location preprocessor such that
 the location of a failing check is included in the error message. The
@@ -155,7 +268,7 @@ isn't used.
     procedure check(
      [variable checker   : inout checker_t;]
       constant expr      : in    boolean;
-      constant msg       : in    string      := "Check failed!";
+      constant msg       : in    string      := result(".");
       constant level     : in    log_level_t := dflt;
       constant line_num  : in    natural     := 0;
       constant file_name : in    string      := "");
@@ -173,9 +286,9 @@ output is ``false`` on a failing check
 
     procedure check(
      [variable checker   : inout checker_t;]
-     [variable pass      : out   boolean;]
+      variable pass      : out   boolean;
       constant expr      : in    boolean;
-      constant msg       : in    string      := "Check failed!";
+      constant msg       : in    string      := result(".");
       constant level     : in    log_level_t := dflt;
       constant line_num  : in    natural     := 0;
       constant file_name : in   string      := "");
@@ -186,7 +299,7 @@ or you can use this function which returns the same information
 
     impure function check(
       constant expr      : in  boolean;
-      constant msg       : in  string      := "Check failed!";
+      constant msg       : in  string      := result(".");
       constant level     : in  log_level_t := dflt;
       constant line_num  : in  natural     := 0;
       constant file_name : in  string      := "")
@@ -228,8 +341,16 @@ or you can use any of the following subprograms to get more details.
       n_passed : natural;
     end record;
 
-Manage Checker Statistics
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Note that a check subprogram with many internal checks may
+generate several error messages if the simulation isn't stopped by an error.
+Each such error will add one to ``n_checks`` and ``n_failed``. However, if
+the check pass ``n_checks`` and ``n_passed`` will only be increase by one.
+The reason for this is the same as for the single pass message approach, that
+is to avoid mismatch between the pass statistics and the number of passing
+check subprogram calls.
+
+Managing Checker Statistics
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A checker will continuously update its statistics counters as new check
 subprograms are called. If you want to collect the statistics for parts
@@ -254,10 +375,10 @@ statistics, for example
 
     info(to_string(get_checker_stat));
 
-Specialized Checks
-------------------
+Check Types
+-----------
 
-In addition to the basic check subprograms the check package also
+In addition to the basic ``check`` subprograms the check library also
 provides a number of more specialized checks. These checks can be
 divided into four different types
 
@@ -277,7 +398,7 @@ evaluated at a single point in time, either when the subprogram is
 called as part of sequential code or synchronous to a clock in a clocked
 and usually concurrent procedure call. There are five unclocked versions
 of each point check and they correspond to the function and four
-procedures available for the basic check. The only difference to the
+procedures previously described for ``check``. The only difference to the
 parameter lists is that the boolean ``expr`` parameter is replaced by
 one or more parameters specific to the point check.
 
@@ -287,11 +408,11 @@ parameters.
 
 .. code-block:: vhdl
 
-    procedure check_<name>(
+    procedure check<_name>(
       [variable checker   : inout checker_t;]
       [variable pass      : out   boolean;]
       <specific parameters>
-      constant msg       : in    string      := "Check failed!";
+      constant msg       : in    string      := result<(".")>;
       constant level     : in    log_level_t := dflt;
       constant line_num  : in    natural     := 0;
       constant file_name : in    string      := "");
@@ -300,25 +421,25 @@ The function has the following format.
 
 .. code-block:: vhdl
 
-    impure function check_<name>(
+    impure function check<_name>(
       <specific parameters>
-      constant msg       : in  string      := "Check failed!";
+      constant msg       : in  string      := result<(".")>;
       constant level     : in  log_level_t := dflt;
       constant line_num  : in  natural     := 0;
       constant file_name : in  string      := "")
       return boolean;
 
 The clocked procedures come from the following format with and without
-the optional parameter.
+the optional parameter. These procedures are also available for ``check``.
 
 .. code-block:: vhdl
 
-    procedure check_<name>(
+    procedure check<_name>(
      [variable checker           : inout checker_t;]
       signal clock               : in    std_logic;
       signal en                  : in    std_logic;
       <specific parameters>
-      constant msg               : in    string      := "Check failed!";
+      constant msg               : in    string      := result<(".")>;
       constant level             : in    log_level_t := dflt;
       constant active_clock_edge : in    edge_t      := rising_edge;
       constant line_num          : in    natural     := 0;
@@ -334,44 +455,66 @@ The condition for failure is continuously evaluated on the clock edge(s)
 specified by ``active_clock_edge`` as long as ``en = '1'``.
 
 The figure below shows an example using the concurrent version of
-``check_true`` which evaluates a boolean ``expr`` just like the basic
-check. The only difference is that ``check_true`` provides the two
-concurrent procedure formats which the basic check does not.
+``check``.
 
 .. figure:: images/check_true.png
    :alt:
 
 ``expr`` is evaluated on every rising clock edge except for edge 3 where
-``en`` is low. This means that the check doesn't fail despite the clock
-cycle where ``expr`` is false.
+``en`` is low. This means that the check will pass despite the false ``expr`` in
+the third clock cycle.
 
-check\_true
-^^^^^^^^^^^
+(True) Check (check and check\_true)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 +---------------------+-------------------------+
-| Special Parameter   | Type                    |
+| Specific Parameter  | Type                    |
 +=====================+=========================+
 | expr                | boolean or std\_logic   |
 +---------------------+-------------------------+
 
-``check_true`` passes when ``expr`` is ``true``/``1``/``H``.
+``check_true`` is a more verbose version of ``check`` which
+emphasises that we're expecting ``expr`` to be ``true``/``1``/``H``.
+The extra verbosity is also present when the ``result`` function is used.
 
-check\_false
-^^^^^^^^^^^^
+.. code-block:: vhdl
+
+    check(false, result("for my data.");
+
+will result in
+
+.. code-block:: console
+
+    ERROR: Check failed for my data.
+
+while
+
+.. code-block:: vhdl
+
+    check_true(false, result("for my data.");
+
+will result in
+
+.. code-block:: console
+
+    ERROR: True check failed for my data.
+
+False Check (check\_false)
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 +---------------------+-------------------------+
-| Special Parameter   | Type                    |
+| Specific Parameter  | Type                    |
 +=====================+=========================+
 | expr                | boolean or std\_logic   |
 +---------------------+-------------------------+
 
 ``check_false`` passes when ``expr`` is ``false``/``0``/``L``.
 
-check\_implication
-^^^^^^^^^^^^^^^^^^
+Implication Check (check\_implication)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 +---------------------+-------------------------+
-| Special Parameter   | Type                    |
+| Specific Parameter  | Type                    |
 +=====================+=========================+
 | antecedent\_expr    | boolean or std\_logic   |
 +---------------------+-------------------------+
@@ -385,11 +528,11 @@ procedures use ``std_logic``.
 ``antecedent_expr`` is ``true``/``1``/``H`` and ``consequent_expr`` is
 ``false``/``0``/``L``.
 
-check\_not\_unknown
-^^^^^^^^^^^^^^^^^^^
+Not Unknown Check (check\_not\_unknown)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 +---------------------+------------------------------------+
-| Special Parameter   | Type                               |
+| Specific Parameter  | Type                               |
 +=====================+====================================+
 | expr                | std\_logic\_vector or std\_logic   |
 +---------------------+------------------------------------+
@@ -397,11 +540,11 @@ check\_not\_unknown
 ``check_not_unknown`` passes when ``expr`` contains none of the
 metavalues ``U``, ``X``, ``Z``, ``W``, or ``-``.
 
-check\_zero\_one\_hot
-^^^^^^^^^^^^^^^^^^^^^
+Zero One-Hot Check (check\_zero\_one\_hot)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 +---------------------+----------------------+
-| Special Parameter   | Type                 |
+| Specific Parameter  | Type                 |
 +=====================+======================+
 | expr                | std\_logic\_vector   |
 +---------------------+----------------------+
@@ -410,11 +553,11 @@ check\_zero\_one\_hot
 metavalues ``U``, ``X``, ``Z``, ``W``, or ``-`` and there are zero or
 one bit equal to ``1`` or ``H`` .
 
-check\_one\_hot
-^^^^^^^^^^^^^^^
+One-Hot Check (check\_one\_hot)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 +---------------------+----------------------+
-| Special Parameter   | Type                 |
+| Specific Parameter  | Type                 |
 +=====================+======================+
 | expr                | std\_logic\_vector   |
 +---------------------+----------------------+
@@ -436,7 +579,7 @@ the following five unclocked formats.
      [variable checker         : inout checker_t;]
      [variable pass            : out boolean;]
       <specific parameters>
-      constant msg             : in string := "";
+      constant msg             : in string := result;
       constant level           : in log_level_t := dflt;
       <preprocessor parameters>);
 
@@ -444,32 +587,20 @@ the following five unclocked formats.
 
     impure function check_<name>(
       <specific parameters>
-      constant msg             : in string := "";
+      constant msg             : in string := result;
       constant level           : in log_level_t := dflt;
       <preprocessor parameters>)
       return boolean;
 
-Note the difference in default value for ``msg`` when compared to the
-point checks. Point checks have ``Check failed!`` as default while
-relation checks use an empty string. The reason is that relation checks
-generate error messages of their own that describes how the relation
-failed. Any ``msg`` input provided by the user is added to that error
-message as additional information.
-
-There's also a difference in the preprocessor parameters.
-``check_equal`` and ``check_match`` have the ``line_num`` and
-``file_name`` parameters just as the point checks but ``check_relation``
-also has a parameter called ``auto_msg`` described later.
-
-check\_equal
-^^^^^^^^^^^^
-+------------------+
-| Special Parameter|
-+==================+
-| got              |
-+------------------+
-| expected         |
-+------------------+
+Equality Check (check\_equal)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++-------------------+
+| Specific Parameter|
++===================+
+| got               |
++-------------------+
+| expected          |
++-------------------+
 
 The ``got`` and ``expected`` parameters can have the following
 combination of types
@@ -529,26 +660,26 @@ only equals itself. If you want an equality like ``"0011" = "00--"`` to
 pass you should use ``check_relation`` with the matching equality
 operator (``?=``) or ``check_match`` instead.
 
-If an check fails you will get an error message on the following format.
+If a check fails you will get a context on the following format.
 
 .. code-block:: console
 
-    ERROR: Equality check failed! Got <got value>. Expected <expected value>. <msg input string if any>.
+    Got <got value>. Expected <expected value>.
 
 When you compare bit vectors, ``integer`` and ``natural`` type of values
 the error message will output the values on both formats. For example,
-here is an error message when a ``check_equal`` between a ``signed`` and
-an ``integer`` value fails.
+here is a context when a ``check_equal`` between an ``integer`` and a ``signed``
+value fails.
 
 .. code-block:: console
 
-    ERROR: Equality check failed! Got -256 (1_0000_0000). Expected 1010_0101 (-91).
+    Got 17 (0001_0001). Expected 0001_0000 (16).
 
-check\_relation
-^^^^^^^^^^^^^^^
+Relation Check (check\_relation)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 +---------------------+--------------------------------+
-| Special Parameter   | Type                           |
+| Specific Parameter  | Type                           |
 +=====================+================================+
 | expr                | boolean, std\_ulogic, or bit   |
 +---------------------+--------------------------------+
@@ -556,7 +687,7 @@ check\_relation
 +--------------------------+-----------+-----------------+
 | Preprocessor Parameter   | Type      | Default Value   |
 +==========================+===========+=================+
-| auto\_msg                | string    | ""              |
+| context\_msg             | string    | ""              |
 +--------------------------+-----------+-----------------+
 | line\_num                | natural   | 0               |
 +--------------------------+-----------+-----------------+
@@ -570,7 +701,7 @@ operands. All other relations will return a boolean.
 
 ``check_relation`` passes when ``expr`` evaluates to ``true`` in the
 boolean case and to ``1`` in the ``std_ulogic`` and ``bit`` cases. This
-means that the ``boolean`` case behaves just like ``check_true``. The
+means that the ``boolean`` case behaves just like ``check`` and ``check_true``. The
 additional value of this check comes when you enable the check
 preprocessor in your VUnit run script.
 
@@ -581,8 +712,8 @@ preprocessor in your VUnit run script.
 
 The check preprocessor scans your code for calls to ``check_relation``
 and then parses ``expr`` as a VHDL relation. From that it will generate
-an error message describing how the relation failed. For example, the
-check
+a context (context\_msg parameter) describing how the relation failed.
+For example, the check
 
 .. code-block:: vhdl
 
@@ -592,20 +723,17 @@ will generate the following error message if it fails.
 
 .. code-block:: console
 
-    ERROR: Relation real_time_clock <= timeout failed! Left is 23:15:02. Right is 23:15:04. Response too late.
+    ERROR: Response too late - Expected real_time_clock <= timeout. Left is 23:15:06. Right is 23:15:04.
 
 This works for **any** type of relation between **any** types as long as
 the operator and the ``to_string`` function are defined for the types
-involved. In the example the operands are of a custom ``clock_t`` for
+involved. In the example the operands are of a custom ``clock_t`` type for
 which both the ``<=`` operator and the ``to_string`` function have been
 defined.
 
-In addition to the ``line_num`` and ``file_name`` preprocessor
-parameters all ``check_relation`` subprograms have another preprocessor
-parameter ``auto_msg`` which is set by the check preprocessor and forms
-the first sentence of the error message. ``auto_msg`` is the empty
+Note that ``context_msg`` is the empty
 string by default so without the check preprocessor the error message
-will be just the ``msg`` provided by the user
+will be just the ``msg`` provided by the user.
 
 Relations with Side Effects
 '''''''''''''''''''''''''''
@@ -620,7 +748,7 @@ if you have a call like this
 
 The reference counter will be incremented with 6 which is not what you
 expect by just looking at the code before the preprocessor has generated
-the ``auto_msg`` which will be a string containing
+the ``context_msg`` which will be a string containing
 ``to_string(get_and_increment_reference_counter(increment_with => 3))``.
 
 Conclusion: Do not use impure functions in your expression. If you have
@@ -675,10 +803,6 @@ was the left value and ``to_string(b and c)`` was the right value.
 
 Conclusion: Use ``check_relation`` for relations as intended!
 
-The `check example
-testbench <../../../examples/vhdl/check/check_example.vhd>`__ also
-contain another highly unlikely way to fool the parser.
-
 It should also be noted that the parser can handle that there are
 relational operators within the check call but outside of the ``expr``
 parameter. For example, it won't be fooled by the relational operators
@@ -690,16 +814,16 @@ appearing within strings and comments of this call.
                                             -- this comment
                    12, "Incorrect length of ""<3 string"".");
 
-check\_match
-^^^^^^^^^^^^
+Match Check (check\_match)
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-+------------------+
-| Special Parameter|
-+==================+
-| got              |
-+------------------+
-| expected         |
-+------------------+
++-------------------+
+| Specific Parameter|
++===================+
+| got               |
++-------------------+
+| expected          |
++-------------------+
 
 The ``got`` and ``expected`` parameters can have the following
 combination of types
@@ -733,8 +857,8 @@ Sequence Checks
 Sequence checks are checks that use several clock cycles to determine
 whether or not the desired property holds.
 
-check\_stable
-^^^^^^^^^^^^^
+Stability Check (check\_stable)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``check_stable`` supports four different clocked formats. The ``expr``
 parameter can be ``std_logic`` or ``std_logic_vector`` and the call can
@@ -749,7 +873,7 @@ be made with or without the initial custom checker parameter.
       signal start_event         : in    std_logic;
       signal end_event           : in    std_logic;
       signal expr                : in    std_logic or std_logic_vector;
-      constant msg               : in    string      := "Check failed!";
+      constant msg               : in    string      := result;
       constant level             : in    log_level_t := dflt;
       constant active_clock_edge : in    edge_t      := rising_edge;
       constant line_num          : in    natural     := 0;
@@ -784,8 +908,8 @@ windows. If a second window is started before the previous is completed
 the second start event will be ignored and the window will be completed
 by the next end event.
 
-check\_next
-^^^^^^^^^^^
+Next Check (check\_next)
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``check_next`` supports two different formats. One with and one without
 the initial custom checker parameter.
@@ -798,7 +922,7 @@ the initial custom checker parameter.
       signal en                    : in    std_logic;
       signal start_event           : in    std_logic;
       signal expr                  : in    std_logic;
-      constant msg                 : in    string      := "Check failed!";
+      constant msg                 : in    string      := result;
       constant num_cks             : in    positive    := 1;
       constant allow_overlapping   : in    boolean     := true;
       constant allow_missing_start : in    boolean     := true;
@@ -834,11 +958,14 @@ When ``allow_missing_start`` is ``true`` ``check_next`` will allow
 ``allow_missing_start`` is ``false`` such a situation will lead to a
 failure.
 
+Any unknown value  (``U``, ``X``, ``Z``, ``W``, or ``-``) on ``start_event``
+will cause an error.
+
 ``check_next`` will handle the weak values ``L`` and ``H`` in the same
 way as ``0`` and ``1``, respectively.
 
-check\_sequence
-^^^^^^^^^^^^^^^
+Sequence Check (check\_sequence)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``check_sequence`` supports two different formats. One with and one
 without the initial custom checker parameter.
@@ -850,7 +977,7 @@ without the initial custom checker parameter.
       signal clock                 : in    std_logic;
       signal en                    : in    std_logic;
       signal event_sequence        : in    std_logic_vector;
-      constant msg                 : in    string          := "Check failed!";
+      constant msg                 : in    string          := result;
       constant trigger_event       : in    trigger_event_t := penultimate;
       constant level               : in    log_level_t     := dflt;
       constant active_clock_edge   : in    edge_t          := rising_edge;
@@ -912,10 +1039,14 @@ is activated and the check fails.
 .. figure:: images/check_sequence_penultimate_failing.png
    :alt:
 
+
+Any unknown values (``U``, ``X``, ``Z``, ``W``, or ``-``) in ``event_sequence``
+will lead to a an error. This is regardless of the mode of operation.
+
 Unconditional Checks
 ~~~~~~~~~~~~~~~~~~~~
 
-The check package has two unconditional checks, ``check_passed`` and
+The check library has two unconditional checks, ``check_passed`` and
 ``check_failed``, that contains no expression parameter to evaluate.
 They are used when the pass/fail status is already given by the program
 flow. For example,
@@ -935,14 +1066,17 @@ checkers.
 
 .. code-block:: vhdl
 
-    procedure check_passed [(
-      variable checker   : inout checker_t)];
+    procedure check_passed(
+      [variable checker   : inout checker_t;]
+      constant msg       : in    string      := result(".");
+      constant line_num  : in    natural     := 0;
+      constant file_name : in    string      := "");
 
 .. code-block:: vhdl
 
     procedure check_failed(
      [variable checker   : inout checker_t;]
-      constant msg       : in    string      := "Check failed!";
+      constant msg       : in    string      := result(".");
       constant level     : in    log_level_t := dflt;
       constant line_num  : in    natural     := 0;
       constant file_name : in    string      := "");
