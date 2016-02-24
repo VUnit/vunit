@@ -19,33 +19,50 @@ The test suite is divided into three parts:
 **vunit/test/lint/**
    Style checks such as PEP8 and license header verification.
 
-.. code-block:: console
+The test suites must with both Python 2.7 and Python 3.x as well
+as with all supported simulators.
 
-    # Run all tests
-    vunit/ > python -m unittest discover vunit/test
-
-    # Run just the unit tests
-    vunit/ > python -m unittest discover vunit/test/unit
-
-The test suites must work using both Python 2.7 and Python 3.x.
-
-Running with different simulator back-ends
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-VUnit supports ModelSim, GHDL, ActiveHDL, and RivieraPRO and the
-acceptance tests must work for all simulators. The acceptance tests can
-be run for a specific simulator by setting the ``VUNIT_SIMULATOR``
-environment variable:
+Testing with Tox
+~~~~~~~~~~~~~~~~
+VUnit uses the Python `tox <http://tox.readthedocs.org/>`__ tool. Tox
+makes it easier to automatically test VUnit in various
+configurations. Tox automates creation of virtual environments and
+installation of dependencies needed for testing. In fact, all of the
+tests can be run in a single command:
 
 .. code-block:: console
 
-    vunit/ > VUNIT_SIMULATOR=ghdl python -m unittest discover vunit/test/acceptance/
+    vunit/ > tox
+
+If tox is not available in your Python environment, it can be installed from
+PyPI with pip:
+
+.. code-block:: console
+
+    vunit/ > pip install tox
+
+For most developers, running the full testsuite will likely lead to failed test
+cases because not all Python interpreters or HDL simulators are installed in
+their environment. More focused testing is possible by specifying which tox
+"environments" should be tested. For example, assume a developer uses Python 2.7
+and Modelsim and would like to test changes using tools available in his
+environment:
+
+.. code-block:: console
+
+    vunit/ > tox -e py27-unit,py27-acceptance-modelsim
+
+A full list of test environments can be seen by issuing the following command:
+
+.. code-block:: console
+
+    vunit/ > tox -l
 
 Dependencies
 ------------
 
-Other that the dependencies required to use VUnit as a user the
-following are also required for developers to run the test suite:
+Other than the dependencies required to use VUnit as a user the
+following are also required for developers to run the test suite manually:
 
 `mock <https://pypi.python.org/pypi/mock>`__
    For Python 2.7 only, built into Python 3.x

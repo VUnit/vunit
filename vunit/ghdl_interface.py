@@ -12,7 +12,6 @@ from __future__ import print_function
 import logging
 from os.path import exists, join
 import os
-from distutils.spawn import find_executable
 import subprocess
 import shlex
 from sys import stdout  # To avoid output catched in non-verbose mode
@@ -53,12 +52,12 @@ class GHDLInterface(SimulatorInterface):
         return cls(gtkwave=args.gtkwave,
                    gtkwave_args=args.gtkwave_args)
 
-    @staticmethod
-    def is_available():
+    @classmethod
+    def is_available(cls):
         """
         Return True if GHDL is installed
         """
-        return find_executable('ghdl') is not None
+        return len(cls.find_executable('ghdl')) != 0
 
     def __init__(self, gtkwave=None, gtkwave_args=""):
         self._libraries = {}

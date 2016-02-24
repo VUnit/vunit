@@ -37,6 +37,8 @@ class TestLicense(unittest.TestCase):
                     continue
                 if root == join(ROOT, "docs"):
                     continue
+                if join(ROOT, ".tox") in root:
+                    continue
                 osvvm_directory = abspath(join(VHDL_PATH, 'osvvm'))
                 if is_prefix_of(osvvm_directory, abspath(join(root, file_name))):
                     continue
