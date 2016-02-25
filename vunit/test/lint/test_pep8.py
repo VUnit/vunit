@@ -11,6 +11,7 @@ PEP8 check
 import unittest
 from subprocess import check_call
 import sys
+from os.path import join
 from vunit import ROOT
 
 
@@ -25,5 +26,4 @@ class TestPep8(unittest.TestCase):
                     "--show-pep8",
                     "--max-line-length=120",
                     "--ignore=E402",
-                    "--exclude=docs/conf.py",
-                    ROOT])
+                    join(ROOT, "vunit")])
