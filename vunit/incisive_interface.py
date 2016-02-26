@@ -173,7 +173,7 @@ define work "{2}/libraries/work"
             args += ['-cdslib "%s"' % self._cdslib]
             if not self._hdlvar == None:
                 args += ['-hdlvar "%s"' % self._hdlvar]
-            args += ['-log "%s/irun_compile_vhdl_file.log"' % self._output_path]
+            args += ['-log "%s/irun_compile_vhdl_file_%s.log"' % (self._output_path, library_name)]
             if not self._log_level == "debug":
                 args += ['-quiet']
             else:
@@ -184,7 +184,7 @@ define work "{2}/libraries/work"
             args += ['-makelib %s' % library_path]
             args += ['"%s"' % source_file_name]
             args += ['-endlib']
-            argsfile = "%s/irun_compile_vhdl_file.args" % self._output_path
+            argsfile = "%s/irun_compile_vhdl_file_%s.args" % (self._output_path, library_name)
             write_file(argsfile, "\n".join(args))
             proc = Process([cmd, '-f', argsfile])
             proc.consume_output()
@@ -210,7 +210,7 @@ define work "{2}/libraries/work"
             args += ['-cdslib "%s"' % self._cdslib]
             if not self._hdlvar == None:
                 args += ['-hdlvar "%s"' % self._hdlvar]
-            args += ['-log "%s/irun_compile_verilog_file.log"' % self._output_path]
+            args += ['-log "%s/irun_compile_verilog_file_%s.log"' % (self._output_path, source_file.library.name)]
             if not self._log_level == "debug":
                 args += ['-quiet']
             else:
@@ -220,12 +220,12 @@ define work "{2}/libraries/work"
                 args += ['-incdir "%s"' % include_dir]
             args += ['-incdir "%s/tools/spectre/etc/ahdl/"' % self._cds_root_irun] # for "disciplines.vams" etc.
             for key, value in source_file.defines.items():
-                args += ["-define %s=%s" % (key, value)]
+                args += ['-define %s=%s' % (key, value.replace('"','\\"'))]
             args += ['-nclibdirname "%s"' % dirname(source_file.library.directory)]
             args += ['-makelib %s' % source_file.library.name]
             args += ['"%s"' % source_file.name]
             args += ['-endlib']
-            argsfile = "%s/irun_compile_verilog_file.args" % self._output_path
+            argsfile = "%s/irun_compile_verilog_file_%s.args" % (self._output_path, source_file.library.name)
             write_file(argsfile, "\n".join(args))
             proc = Process([cmd, '-f', argsfile])
             proc.consume_output()
@@ -315,10 +315,10 @@ define work "{2}/libraries/work"
                     args += ['-reflib "%s"' % library.directory]
                 if launch_gui:
                     args += ['-access +rwc']
+                    #args += ['-linedebug']
                     args += ['-gui']
                 else:
                     args += ['-access +r']
-                    args += ['-input "@stop -delta 10000 -timestep -delbreak 1"']
                     args += ['-input "@run"']
                     # Try hierarchical path formats for both VHDL and Verilog, but don't throw an error if not found.
                     #args += ['-input "@catch {puts #vunit_pkg::__runner__.exit_without_errors}"']
