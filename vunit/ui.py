@@ -392,6 +392,16 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         for source_file in self._project.get_source_files_in_order():
             source_file.set_compile_option(name, value)
 
+    def add_compile_option(self, name, value):
+        """
+        Globally add compile option
+
+        :param name: |compile_option|
+        :param value: The value of the compile option
+        """
+        for source_file in self._project.get_source_files_in_order():
+            source_file.add_compile_option(name, value)
+
     def set_pli(self, value):
         """
         Globally Set pli
@@ -884,6 +894,17 @@ class Library(object):
             if source_file.library.name == self._library_name:
                 source_file.set_compile_option(name, value)
 
+    def add_compile_option(self, name, value):
+        """
+        Add compile option to all files within the library
+
+        :param name: |compile_option|
+        :param value: The value of the compile option
+        """
+        for source_file in self._project.get_source_files_in_order():
+            if source_file.library.name == self._library_name:
+                source_file.add_compile_option(name, value)
+
     def set_pli(self, value):
         """
         Set pli within library
@@ -1308,6 +1329,16 @@ class SourceFileList(list):
         for source_file in self:
             source_file.set_compile_option(name, value)
 
+    def add_compile_option(self, name, value):
+        """
+        Add compile option to all files in the list
+
+        :param name: |compile_option|
+        :param value: The value of the compile option
+        """
+        for source_file in self:
+            source_file.add_compile_option(name, value)
+
     def depends_on(self, source_file):
         """
         Add manual dependency of these files on other file(s)
@@ -1362,6 +1393,23 @@ class SourceFile(object):
            my_file.set_compile_option("ghdl_flags", ["--no-vital-checks"])
         """
         self._source_file.set_compile_option(name, value)
+
+    def add_compile_option(self, name, value):
+        """
+        Add compile option to this file
+
+        :param name: |compile_option|
+        :param value: The value of the compile option
+        """
+        self._source_file.add_compile_option(name, value)
+
+    def get_compile_option(self, name):
+        """
+        Return compile option of this file
+
+        :param name: |compile_option|
+        """
+        return self._source_file.get_compile_option(name)
 
     def depends_on(self, source_file):
         """

@@ -561,6 +561,15 @@ end context;
         file2.set_compile_option("ghdl_flags", ["--no-vital-checks"])
         self.assert_should_recompile([file2, file3])
 
+    def test_add_compile_option(self):
+        file1, _, _ = self.create_dummy_three_file_project()
+        file1.add_compile_option("ghdl_flags", ["--foo"])
+        self.assertEqual(file1.get_compile_option("ghdl_flags"), ["--foo"])
+        file1.add_compile_option("ghdl_flags", ["--bar"])
+        self.assertEqual(file1.get_compile_option("ghdl_flags"), ["--foo", "--bar"])
+        file1.set_compile_option("ghdl_flags", ["--xyz"])
+        self.assertEqual(file1.get_compile_option("ghdl_flags"), ["--xyz"])
+
     def test_should_recompile_files_affected_by_change_with_later_timestamp(self):
         file1, file2, file3 = self.create_dummy_three_file_project()
 

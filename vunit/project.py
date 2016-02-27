@@ -582,17 +582,39 @@ class SourceFile(object):
                                 "modelsim_vcom_flags",
                                 "modelsim_vlog_flags"]
 
+    def _check_compile_option(self, name):
+        if name not in self._allowed_compile_options:
+            raise ValueError("Unknown compile option %r" % name)
+
     def set_compile_option(self, name, value):
         """
         Set compile option
         """
-        if name not in self._allowed_compile_options:
-            raise ValueError("Unknown compile option %r" % name)
+        self._check_compile_option(name)
         self._compile_options[name] = value
 
+    def add_compile_option(self, name, value):
+        """
+        Add compile option
+        """
+        self._check_compile_option(name)
+        self._compile_options[name] = self._compile_options.get(name, []) + value
+
     @property
-    def compile_options(self):
+    def get_compile_options(self):
         return self._compile_options
+
+    def get_compile_option(self, name):
+        """
+        Return a copy of the compile option list
+        """
+        self._check_compile_option(name)
+
+        if name not in self._compile_options:
+            self._compile_options[name] = []
+
+        # Copy
+        return [option for option in self._compile_options[name]]
 
     def _compile_options_hash(self):
         """
