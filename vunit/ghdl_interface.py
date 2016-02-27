@@ -62,6 +62,10 @@ class GHDLInterface(SimulatorInterface):
     def __init__(self, gtkwave=None, gtkwave_args=""):
         self._libraries = {}
         self._vhdl_standard = None
+
+        if gtkwave is not None and len(self.find_executable('gtkwave')) == 0:
+            raise RuntimeError("Cannot find the gtkwave executable in the PATH environment variable.")
+
         self._gtkwave = gtkwave
         self._gtkwave_args = gtkwave_args
         self._backend = self.determine_backend()

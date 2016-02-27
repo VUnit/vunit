@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test the GHDL interface
@@ -12,12 +12,18 @@ Test the GHDL interface
 import unittest
 from vunit.ghdl_interface import GHDLInterface
 from vunit.test.mock_2or3 import mock
+from vunit.test.common import set_env
 
 
 class TestGHDLInterface(unittest.TestCase):
     """
     Test the GHDL interface
     """
+
+    def test_runtime_error_on_missing_gtkwave(self):
+        GHDLInterface(gtkwave="ghw")
+        with set_env(PATH=""):
+            self.assertRaises(RuntimeError, GHDLInterface, gtkwave="ghw")
 
     @mock.patch('subprocess.check_output')
     def test_parses_llvm_backend(self, check_output):
