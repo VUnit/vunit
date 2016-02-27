@@ -34,7 +34,7 @@ Main Features
    suites.
 -  Can run test cases in parallel to take advantage of multi-core
    machines.
--  :ref:`Scriptable API <python_interface>` as well as :ref:`command line <cli>` 
+-  :ref:`Scriptable API <python_interface>` as well as :ref:`command line <cli>`
    support.
 -  Support for running same test suite with different generics.
 -  VHDL test runner which enables test execution for not fully supported
@@ -120,9 +120,7 @@ Support
 -------
 
 Any bug reports, feature requests or questions about the usage of VUnit
-can be made by creating a `new issue`_. The issue should be labeled
-accordingly using the built-in labels; *bug*, *enhancement* or
-*question*.
+can be made by creating a `new issue`_.
 
 Main Contributors
 -----------------
