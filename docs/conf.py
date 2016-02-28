@@ -255,11 +255,12 @@ html_theme = 'alabaster'
 # documentation.
 html_theme_options = {
     'github_button': True,
-    'github_user': 'vunit',
+    'github_user': 'VUnit',
     'github_repo': 'vunit',
     'description': 'A test framework for HDL',
     'logo': 'VUnit_logo_420x420.png',
     'logo_name': True,
+    'travis_button':True,
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
