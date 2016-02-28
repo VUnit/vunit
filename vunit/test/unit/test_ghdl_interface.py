@@ -12,7 +12,6 @@ Test the GHDL interface
 import unittest
 from vunit.ghdl_interface import GHDLInterface
 from vunit.test.mock_2or3 import mock
-from vunit.test.common import set_env
 
 
 class TestGHDLInterface(unittest.TestCase):
@@ -20,10 +19,27 @@ class TestGHDLInterface(unittest.TestCase):
     Test the GHDL interface
     """
 
-    def test_runtime_error_on_missing_gtkwave(self):
-        GHDLInterface(gtkwave="ghw")
-        with set_env(PATH=""):
-            self.assertRaises(RuntimeError, GHDLInterface, gtkwave="ghw")
+    @mock.patch("vunit.ghdl_interface.GHDLInterface.find_executable")
+    @mock.patch("vunit.ghdl_interface.GHDLInterface.determine_backend")
+    def test_runtime_error_on_missing_gtkwave(self, determine_backend, find_executable):
+
+        def determine_backend_side_effect():
+            return "llvm"
+        determine_backend.side_effect = determine_backend_side_effect
+
+        executables = {}
+
+        def find_executable_side_effect(name):
+            return executables[name]
+
+        find_executable.side_effect = find_executable_side_effect
+
+        executables["gtkwave"] = ["path"]
+        GHDLInterface()
+
+        executables["gtkwave"] = []
+        GHDLInterface()
+        self.assertRaises(RuntimeError, GHDLInterface, gtkwave="ghw")
 
     @mock.patch('subprocess.check_output')
     def test_parses_llvm_backend(self, check_output):
