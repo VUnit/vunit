@@ -601,7 +601,7 @@ class SourceFile(object):
         self._compile_options[name] = self._compile_options.get(name, []) + value
 
     @property
-    def get_compile_options(self):
+    def compile_options(self):
         return self._compile_options
 
     def get_compile_option(self, name):
