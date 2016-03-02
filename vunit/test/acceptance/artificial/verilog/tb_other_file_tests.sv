@@ -6,5 +6,5 @@
 
 module tb_other_file_tests;
    parameter string runner_cfg = "";
-   other_file_tests #(.runner_cfg(runner_cfg)) other_file_tests_inst();
+   other_file_tests #(.nested_runner_cfg(runner_cfg)) other_file_tests_inst();
 endmodule

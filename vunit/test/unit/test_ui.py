@@ -516,7 +516,7 @@ end architecture;
                     self.create_file(tb_file_name, """
 module tb_top
   parameter string runner_cfg = "";
-  tb_top #(.runner_cfg(runner_cfg)) tb();
+  tests #(.nested_runner_cfg(runner_cfg)) tests_inst();
 endmodule;
                     """)
 
@@ -524,7 +524,7 @@ endmodule;
                     tests_file_name = "tests.vhd"
                     self.create_file(tests_file_name, """
 entity tests is
-  generic (runner_cfg : string);
+  generic (nested_runner_cfg : string);
 end entity;
 
 architecture a of tests is
@@ -541,7 +541,7 @@ end architecture;
                     self.create_file(tests_file_name, """
 `include "vunit_defines.svh"
 module tests;
-   `TEST_SUITE begin
+   `NESTED_TEST_SUITE begin
       `TEST_CASE("test1") begin
       end
       `TEST_CASE("test2") begin

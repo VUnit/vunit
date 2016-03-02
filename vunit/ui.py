@@ -36,8 +36,6 @@ Compilation Options
 -------------------
 The following compilation are known.
 
-**NOTE**: Only affects source files added *before* the option is set.
-
 ``ghdl_flags``
    Extra arguments passed to ``ghdl -a`` command during compilation.
    Must be a list of strings.
@@ -49,6 +47,9 @@ The following compilation are known.
 ``modelsim_vlog_flags``
    Extra arguments passed to ModelSim ``vlog`` command.
    Must be a list of strings.
+
+.. note::
+   Only affects source files added *before* the option is set.
 
 .. _sim_options:
 
@@ -1153,6 +1154,15 @@ class TestBench(object):
 
         :param file_name: The name of another file to scan for tests
 
+        .. warning::
+           The nested module containing the tests needs to be given
+           the ``runner_cfg`` parameter or generic by the
+           instantiating top level test bench. The nested module
+           should not call its parameter or generic `runner_cfg` but
+           rather `nested_runner_cfg` to avoid the VUnit test scanner
+           detecting and running it as a test bench. In SystemVerilog
+           the ``NESTED_TEST_SUITE`` macro should be used instead of
+           the ``TEST_SUITE`` macro.
         """
         if not ostools.file_exists(file_name):
             raise ValueError("File %r does not exist" % file_name)

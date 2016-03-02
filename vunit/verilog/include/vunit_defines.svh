@@ -9,12 +9,15 @@
       __runner__.watchdog(runtime); \
    end
 
-`define TEST_SUITE \
-   parameter string runner_cfg = ""; \
+`define TEST_SUITE_FROM_PARAMETER(parameter_name) \
+   parameter string parameter_name = ""; \
    import vunit_pkg::*; \
    initial \
-     if (__runner__.setup(runner_cfg)) \
+     if (__runner__.setup(parameter_name)) \
       while (__runner__.loop)
+
+`define TEST_SUITE `TEST_SUITE_FROM_PARAMETER(runner_cfg)
+`define NESTED_TEST_SUITE `TEST_SUITE_FROM_PARAMETER(nested_runner_cfg)
 
 `define TEST_CASE(test_name) if (__runner__.run(test_name))
 

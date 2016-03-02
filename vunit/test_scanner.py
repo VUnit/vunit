@@ -10,7 +10,7 @@ Functionality to automatically create test suites from a project
 
 
 import logging
-from os.path import basename, dirname, splitext
+from os.path import dirname
 import re
 from vunit.test_list import TestList
 from vunit.test_bench import TestBench
@@ -272,18 +272,47 @@ class TestScanner(object):
             pragmas.append(pragma)
         return pragmas
 
+TB_PATTERN = "(tb_.*)|(.*_tb)"
+TB_RE = re.compile(TB_PATTERN,
+                   re.IGNORECASE)
 
-def tb_filter(entity):
+
+def tb_filter(design_unit):
     """
-    Filters entities with both file name and entity name matching tb_* or *_tb.
+    Filters entities and modules that have a runner_cfg generic/parameter
+
+    Gives warning when design_unit matches tb_* or *_tb without having a runner_cfg
+    Gives warning when a design_unit has  a runner_cfg but the name does not match tb_* or *_tb
     """
     # Above docstring can show up in ui.py warnings
-    file_ok = basename(entity.file_name).startswith("tb_") or splitext(basename(entity.file_name))[0].endswith("_tb")
-    entity_ok = entity.name.startswith("tb_") or entity.name.endswith("_tb")
+    has_runner_cfg = "runner_cfg" in design_unit.generic_names
+    has_tb_name = TB_RE.match(design_unit.name) is not None
 
-    if file_ok and entity_ok:
-        return True
-    return False
+    design_unit_type = "Entity" if design_unit.is_entity else "Module"
+    generic_type = "generic" if design_unit.is_entity else "parameter"
+
+    if (not has_runner_cfg) and has_tb_name:
+        LOGGER.warning(
+            "%s %s matches testbench name regex %s but has no %s runner_cfg and will therefore not be run.\n"
+            "in file %s",
+            design_unit_type,
+            design_unit.name,
+            TB_PATTERN,
+            generic_type,
+            design_unit.file_name)
+
+    elif has_runner_cfg and not has_tb_name:
+        LOGGER.warning(
+            "%s %s has runner_cfg %s but the file name and the %s name does not match regex %s\n"
+            "in file %s",
+            design_unit_type,
+            design_unit.name,
+            generic_type,
+            design_unit_type.lower(),
+            TB_PATTERN,
+            design_unit.file_name)
+
+    return has_runner_cfg
 
 
 class TestScannerError(Exception):

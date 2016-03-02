@@ -9,14 +9,14 @@ context vunit_lib.vunit_context;
 
 entity other_file_tests is
   generic (
-    runner_cfg : runner_cfg_t);
+    nested_runner_cfg : runner_cfg_t);
 end entity;
 
 architecture vunit_test_bench of other_file_tests is
 begin
   test_runner : process
   begin
-    test_runner_setup(runner, runner_cfg);
+    test_runner_setup(runner, nested_runner_cfg);
     while test_suite loop
       if run("pass") then
         report "Test pass";

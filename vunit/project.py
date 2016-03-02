@@ -788,6 +788,14 @@ class DesignUnit(object):
     def library_name(self):
         return self.source_file.library.name
 
+    @property
+    def is_entity(self):
+        return False
+
+    @property
+    def is_module(self):
+        return False
+
 
 class VHDLDesignUnit(DesignUnit):
     """
@@ -809,6 +817,10 @@ class Entity(VHDLDesignUnit):
         self.generic_names = [] if generic_names is None else generic_names
         self.architecture_names = {}
 
+    @property
+    def is_entity(self):
+        return True
+
 
 class VerilogDesignUnit(DesignUnit):
     """
@@ -818,9 +830,16 @@ class VerilogDesignUnit(DesignUnit):
 
 
 class ModuleDesignUnit(VerilogDesignUnit):
+    """
+    Represents a Verilog Module
+    """
     def __init__(self, name, source_file, generic_names=None):
         VerilogDesignUnit.__init__(self, name, source_file, 'module')
         self.generic_names = [] if generic_names is None else generic_names
+
+    @property
+    def is_module(self):
+        return True
 
 
 def more_recent(file_name, than_file_name):

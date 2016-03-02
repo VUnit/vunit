@@ -43,49 +43,80 @@ class TestTestScanner(unittest.TestCase):
     def test_that_single_vhdl_test_is_created(self):
         project = ProjectStub()
         lib = project.add_library("lib")
-        ent = lib.add_entity("tb_entity")
-        ent.set_contents("")
+        lib.add_entity("tb_entity")
         tests = self.test_scanner.from_project(project)
         self.assert_has_tests(tests, ["lib.tb_entity.all"])
 
     def test_that_single_verilog_test_is_created(self):
         project = ProjectStub()
         lib = project.add_library("lib")
-        module = lib.add_module("tb_module")
-        module.set_contents("")
+        lib.add_module("tb_module")
         tests = self.test_scanner.from_project(project)
         self.assert_has_tests(tests, ["lib.tb_module.all"])
 
-    def test_that_tests_are_filtered(self):
+    def test_runner_cfg_creates_tests_from_entity(self):
         project = ProjectStub()
         lib = project.add_library("lib")
 
-        tb1 = lib.add_entity("tb_entity")
-        tb1.set_contents("")
-
-        tb2 = lib.add_entity("tb_entity2")
-        tb2.set_contents("")
-
-        ent = lib.add_entity("entity_tb")
-        ent.set_contents("")
-
-        ent2 = lib.add_entity("entity2")
-        ent2.set_contents("")
+        lib.add_entity("entity_ok", generic_names=["runner_cfg"])
+        lib.add_entity("entity_not_ok")
 
         tests = self.test_scanner.from_project(project, entity_filter=tb_filter)
         self.assert_has_tests(tests,
-                              ["lib.entity_tb.all",
-                               "lib.tb_entity.all",
-                               "lib.tb_entity2.all"])
+                              ["lib.entity_ok.all"])
+
+    def test_runner_cfg_creates_tests_from_module(self):
+        project = ProjectStub()
+        lib = project.add_library("lib")
+
+        lib.add_module("module_ok", generic_names=["runner_cfg"])
+        lib.add_module("module_not_ok")
+
+        tests = self.test_scanner.from_project(project, entity_filter=tb_filter)
+        self.assert_has_tests(tests,
+                              ["lib.module_ok.all"])
+
+    def test_warning_on_missing_runner_cfg_when_matching_tb_pattern(self):
+        project = ProjectStub()
+        lib = project.add_library("lib")
+        module = lib.add_module("tb_module_not_ok")
+
+        with mock.patch("vunit.test_scanner.LOGGER", autospec=True) as logger:
+            tests = self.test_scanner.from_project(project, entity_filter=tb_filter)
+            logger.warning.assert_has_calls([
+                mock.call('%s %s matches testbench name regex %s '
+                          'but has no %s runner_cfg and will therefore not be run.\n'
+                          'in file %s',
+                          'Module',
+                          'tb_module_not_ok',
+                          '(tb_.*)|(.*_tb)',
+                          'parameter',
+                          module.file_name)])
+        self.assert_has_tests(tests, [])
+
+    def test_warning_on_runner_cfg_but_not_matching_tb_pattern(self):
+        project = ProjectStub()
+        lib = project.add_library("lib")
+        entity = lib.add_entity("entity_ok_but_warning", generic_names=["runner_cfg"])
+
+        with mock.patch("vunit.test_scanner.LOGGER", autospec=True) as logger:
+            tests = self.test_scanner.from_project(project, entity_filter=tb_filter)
+            logger.warning.assert_has_calls([
+                mock.call('%s %s has runner_cfg %s but the file name and the %s name does not match regex %s\n'
+                          'in file %s',
+                          'Entity',
+                          'entity_ok_but_warning',
+                          'generic',
+                          'entity',
+                          '(tb_.*)|(.*_tb)',
+                          entity.file_name)])
+        self.assert_has_tests(tests, ["lib.entity_ok_but_warning.all"])
 
     def test_that_two_tests_are_created_from_two_architectures(self):
         project = ProjectStub()
         lib = project.add_library("lib")
         ent = lib.add_entity("tb_entity")
-        ent.set_contents("")
-
-        arch2 = ent.add_architecture("arch2")
-        arch2.set_contents("")
+        ent.add_architecture("arch2")
 
         tests = self.test_scanner.from_project(project)
         self.assert_has_tests(tests,
@@ -95,10 +126,9 @@ class TestTestScanner(unittest.TestCase):
     def test_create_tests_with_runner_cfg_generic(self):
         project = ProjectStub()
         lib = project.add_library("lib")
-        ent = lib.add_entity("tb_entity",
-                             generic_names=["runner_cfg"])
-
-        ent.set_contents('''\
+        lib.add_entity("tb_entity",
+                       generic_names=["runner_cfg"],
+                       contents='''\
 if run("Test_1")
 --if run("Test_2")
 if run("Test_3")
@@ -114,9 +144,8 @@ if run("Test_3")
         project = ProjectStub()
         lib = project.add_library("lib")
         ent = lib.add_entity("tb_entity",
-                             generic_names=["runner_cfg"])
-
-        ent.set_contents('''\
+                             generic_names=["runner_cfg"],
+                             contents='''\
 if run("Test_1")
 --if run("Test_1")
 if run("Test_3")
@@ -142,10 +171,9 @@ if run("Test_2")
     def test_warning_on_configuration_of_non_existent_test(self, mock_logger):
         project = ProjectStub()
         lib = project.add_library("lib")
-        ent = lib.add_entity("tb_entity",
-                             generic_names=["runner_cfg", "name"])
-
-        ent.set_contents('if run("Test")')
+        lib.add_entity("tb_entity",
+                       generic_names=["runner_cfg", "name"],
+                       contents='if run("Test")')
 
         test_scope = create_scope("lib", "tb_entity", "Test")
         self.configuration.set_generic("name", "value",
@@ -175,10 +203,9 @@ if run("Test_2")
     def test_warning_on_configuration_of_individual_test_with_same_sim(self, mock_logger):
         project = ProjectStub()
         lib = project.add_library("lib")
-        ent = lib.add_entity("tb_entity",
-                             generic_names=["runner_cfg"])
-
-        ent.set_contents('''\
+        lib.add_entity("tb_entity",
+                       generic_names=["runner_cfg"],
+                       contents='''\
 if run("Test 1")
 if run("Test 2")
 -- vunit_pragma run_all_in_same_sim
@@ -199,10 +226,8 @@ if run("Test 2")
     def test_create_default_test_with_runner_cfg_generic(self):
         project = ProjectStub()
         lib = project.add_library("lib")
-        ent = lib.add_entity("tb_entity",
-                             generic_names=["runner_cfg"])
-
-        ent.set_contents('')
+        lib.add_entity("tb_entity",
+                       generic_names=["runner_cfg"])
 
         tests = self.test_scanner.from_project(project)
         self.assert_has_tests(tests,
@@ -211,10 +236,9 @@ if run("Test 2")
     def test_that_pragma_run_in_same_simulation_works(self):
         project = ProjectStub()
         lib = project.add_library("lib")
-        ent = lib.add_entity("tb_entity",
-                             generic_names=["runner_cfg"])
-
-        ent.set_contents('''\
+        lib.add_entity("tb_entity",
+                       generic_names=["runner_cfg"],
+                       contents='''\
 -- vunit_pragma run_all_in_same_sim
 if run("Test_1")
 if run("Test_2")
@@ -228,12 +252,10 @@ if run("Test_2")
     def test_adds_tb_path_generic(self):
         project = ProjectStub()
         lib = project.add_library("lib")
-        with_path = lib.add_entity("tb_entity_with_tb_path",
-                                   generic_names=["tb_path"])
-        with_path.set_contents("")
+        lib.add_entity("tb_entity_with_tb_path",
+                       generic_names=["tb_path"])
 
-        without_path = lib.add_entity("tb_entity_without_tb_path")
-        without_path.set_contents("")
+        lib.add_entity("tb_entity_without_tb_path")
 
         tests = self.test_scanner.from_project(project)
 
@@ -247,9 +269,8 @@ if run("Test_2")
         project = ProjectStub()
         lib = project.add_library("lib")
 
-        ent = lib.add_entity("tb_entity",
-                             generic_names=["tb_path"])
-        ent.set_contents("")
+        lib.add_entity("tb_entity",
+                       generic_names=["tb_path"])
 
         tb_path_non_overriden_value = "foo"
         self.configuration.set_generic("tb_path", tb_path_non_overriden_value)
@@ -270,9 +291,8 @@ if run("Test_2")
         project = ProjectStub()
         lib = project.add_library("lib")
 
-        ent = lib.add_entity("tb_entity",
-                             generic_names=[""])
-        ent.set_contents("")
+        lib.add_entity("tb_entity",
+                       generic_names=[""])
         self.configuration.set_generic("name123", "value123")
         self.test_scanner.from_project(project)
         warning_calls = mock_logger.warning.call_args_list
@@ -290,7 +310,7 @@ if run("Test_2")
         tuple to represent multiple tests within a test suite.
         """
         self.assertEqual(len(test_list), len(tests))
-        for test1, test2 in zip(test_list, tests):
+        for test1, test2 in zip(test_list, sorted(tests)):
             if isinstance(test2, tuple):
                 name, test_cases = test2
                 self.assertEqual(test1.name, name)
@@ -337,7 +357,8 @@ class LibraryStub(object):
                    name,
                    file_name=None,
                    architecture_names=None,
-                   generic_names=None):
+                   generic_names=None,
+                   contents=""):
         """
         Add a stubbed entity
         """
@@ -355,12 +376,15 @@ class LibraryStub(object):
                             file_name,
                             architecture_names,
                             generic_names)
+        entity.set_contents(contents)
         self._entities.append(entity)
         return entity
 
     def add_module(self,
                    name,
-                   file_name=None):
+                   file_name=None,
+                   generic_names=None,
+                   contents=""):
         """
         Add a stubbed entity
         """
@@ -369,8 +393,10 @@ class LibraryStub(object):
 
         module = ModuleStub(name,
                             self.name,
-                            file_name)
+                            file_name,
+                            generic_names if generic_names is not None else [])
         self._modules.append(module)
+        module.set_contents(contents)
         return module
 
 
@@ -378,11 +404,11 @@ class ModuleStub(object):
     """
     A stub of a Module
     """
-    def __init__(self, name, library_name, file_name):
+    def __init__(self, name, library_name, file_name, generic_names):
         self.name = name
         self.library_name = library_name
         self.file_name = file_name
-        self.generic_names = []
+        self.generic_names = generic_names
 
     def set_contents(self, contents):
         """
@@ -390,6 +416,10 @@ class ModuleStub(object):
         """
         with open(self.file_name, "w") as fwrite:
             fwrite.write(contents)
+
+    @property
+    def is_entity(self):
+        return False
 
 
 class EntityStub(object):
@@ -405,6 +435,10 @@ class EntityStub(object):
         self.architecture_names = architecture_names
         self.generic_names = generic_names
 
+    @property
+    def is_entity(self):
+        return True
+
     def set_contents(self, contents, architecture_name=None):
         """
         Set contents of architecture file
@@ -418,14 +452,15 @@ class EntityStub(object):
         with open(file_name, "w") as fwrite:
             fwrite.write(contents)
 
-    def add_architecture(self, name, file_name=None):
+    def add_architecture(self, name, file_name=None, contents=""):
         """
         Add architecture
         """
         if file_name is None:
             file_name = out(name + "_arch.vhd")
         self.architecture_names[name] = file_name
-        return ArchitectureStub(self, name)
+        arch = ArchitectureStub(self, name)
+        arch.set_contents(contents)
 
 
 class ArchitectureStub(object):

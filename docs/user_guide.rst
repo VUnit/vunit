@@ -5,11 +5,12 @@ User Guide
 
 Introduction
 ------------
-VUnit is invoked by a user-defined project specified in a Python script.
-At minimum, a VUnit project consists of a set of HDL source files mapped to
-libraries. The project serves as single point of entry for compiling and
-running all tests within an HDL project. VUnit provides automatic scanning
-for unit tests (test benches), automatic determination of compilation order,
+VUnit is invoked by a user-defined project specified in a Python
+script.  At minimum, a VUnit project consists of a set of HDL source
+files mapped to libraries. The project serves as single point of entry
+for compiling and running all tests within an HDL project. VUnit
+provides automatic :ref:`scanning <test_bench_scanning>` for unit
+tests (test benches), automatic determination of compilation order,
 and incremental recompilation of modified sources.
 
 The top level Python script is typically named ``run.py``.
@@ -115,6 +116,23 @@ in the same test bench is a good way to share a common test
 environment.
 
 The above example code can be found in :vunit_example:`verilog/user_guide`.
+
+.. _test_bench_scanning:
+
+Scanning for Test Benches
+-------------------------
+VUnit will recognize a module or entity as a test bench and run it if
+it has a ``runner_cfg`` generic or parameter. A SystemVerilog test
+bench using the ``TEST_SUITE`` macro will have a ``runner_cfg``
+parameter created by the macro and thus match the criteria.
+
+A warning will be given if the test bench entity or module name does
+not match the pattern ``tb_*`` or ``*_tb``.
+
+A warning will be given if the name *does* match the above pattern but
+lacks a ``runner_cfg`` generic or parameter preventing it to be run
+by VUnit.
+
 
 .. _examples:
 

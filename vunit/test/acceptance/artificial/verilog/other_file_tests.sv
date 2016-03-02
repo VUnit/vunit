@@ -8,7 +8,7 @@
 `include "vunit_defines.svh"
 
 module other_file_tests;
-   `TEST_SUITE begin
+   `NESTED_TEST_SUITE begin
 
       `TEST_CASE("pass") begin
          $info("pass");

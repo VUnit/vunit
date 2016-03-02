@@ -16,5 +16,5 @@ architecture vunit_test_bench of tb_other_file_tests is
 begin
   tests : entity work.other_file_tests
     generic map (
-       runner_cfg => runner_cfg);
+       nested_runner_cfg => runner_cfg);
 end architecture;
