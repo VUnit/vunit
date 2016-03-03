@@ -119,7 +119,7 @@ class GHDLInterface(SimulatorInterface):
                                                  source_file.library.directory,
                                                  source_file.compile_options)
             elif source_file.file_type == 'verilog':
-                raise RuntimeError("Unkown file type: " + source_file.file_type)
+                raise RuntimeError("Unknown file type: " + source_file.file_type)
 
             if not success:
                 raise CompileError("Failed to compile '%s'" % source_file.name)
