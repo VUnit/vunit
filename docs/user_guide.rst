@@ -171,7 +171,8 @@ There are many examples demonstrating more specific usage of VUnit listed below:
 
 :vunit_example:`Generating tests <vhdl/generate_tests/>`
   Demonstrates generating multiple test runs of the same test bench
-  with different generic values.
+  with different generic values. Also demonstrates use of ``output_path`` generic
+  to create test bench output files in location specified by VUnit python runner.
 
 :vunit_example:`Vivado IP example <vhdl/vivado/>`
   Demonstrates compiling and performing behavioral simulation of

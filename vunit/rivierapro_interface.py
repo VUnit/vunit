@@ -78,7 +78,7 @@ class RivieraProInterface(SimulatorInterface):
                                                     source_file.library.name,
                                                     source_file.include_dirs)
             else:
-                raise RuntimeError("Unkown file type: " + source_file.file_type)
+                raise RuntimeError("Unknown file type: " + source_file.file_type)
 
             if not success:
                 raise CompileError("Failed to compile '%s'" % source_file.name)
@@ -86,7 +86,7 @@ class RivieraProInterface(SimulatorInterface):
 
     def compile_vhdl_file(self, source_file_name, library_name, vhdl_standard):
         """
-        Compiles a vhdl file into a specific library using a specfic vhdl_standard
+        Compiles a vhdl file into a specific library using a specific vhdl_standard
         """
         try:
             proc = Process([join(self._prefix, 'vcom'), '-dbg', '-quiet', '-j', dirname(self._library_cfg),
@@ -134,7 +134,7 @@ class RivieraProInterface(SimulatorInterface):
 
     def _create_library_cfg(self):
         """
-        Create the modelsim.ini file if it does not exist
+        Create the library.cfg file if it does not exist
         """
         if file_exists(self._library_cfg):
             return

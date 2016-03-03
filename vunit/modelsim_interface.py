@@ -174,7 +174,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
             elif source_file.file_type == 'verilog':
                 success = self.compile_verilog_file(source_file)
             else:
-                raise RuntimeError("Unkown file type: " + source_file.file_type)
+                raise RuntimeError("Unknown file type: " + source_file.file_type)
 
             if not success:
                 raise CompileError("Failed to compile '%s'" % source_file.name)
@@ -182,7 +182,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
 
     def compile_vhdl_file(self, source_file_name, library_name, vhdl_standard, compile_options):
         """
-        Compiles a vhdl file into a specific library using a specfic vhdl_standard
+        Compiles a vhdl file into a specific library using a specific vhdl_standard
         """
         try:
             if self._coverage is None:

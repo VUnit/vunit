@@ -1011,7 +1011,9 @@ class Library(object):
 
 class TestBench(object):
     """
-    A test bench
+    User interface of a test bench.
+    A test bench consists of one or more :class:`.Test` cases. Setting options for a test
+    bench will apply that option all test cases belonging to that test bench.
     """
     def __init__(self, library_name, entity_name, config):
         self._library_name = library_name
