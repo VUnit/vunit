@@ -94,7 +94,7 @@ Simulators
    -  Only VHDL 2008
 -  `Mentor Graphics ModelSim/Questa`_
 
-   -  Tested with 10.1 - 10.3
+   -  Tested with 10.1 - 10.4
 -  `GHDL`_
 
    -  Only VHDL 2008
