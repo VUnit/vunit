@@ -78,12 +78,6 @@ class TestScanner(object):
             fail_on_warning = "fail_on_warning" in pragmas
             return self._create_test_bench(entity, architecture_name, config, fail_on_warning, verilog)
 
-        def create_name(config, run_string=None):
-            """
-            Helper function to create a test name
-            """
-            return create_test_name(entity, architecture_name, config.name, run_string)
-
         self._warn_on_individual_configuration(create_scope(entity.library_name, entity.name),
                                                run_strings,
                                                should_run_in_same_sim)
@@ -94,7 +88,8 @@ class TestScanner(object):
             for config in configurations:
                 test_list.add_test(
                     IndependentSimTestCase(
-                        name=create_name(config, "all"),
+                        name=dotjoin(create_design_unit_name(entity, architecture_name), config.name,
+                                     "all" if config.name in (None, "") else None),
                         test_case=None,
                         test_bench=create_test_bench(config),
                         has_runner_cfg=has_runner_cfg,
@@ -105,7 +100,7 @@ class TestScanner(object):
             configurations = self._cfg.get_configurations(scope)
             for config in configurations:
                 test_list.add_suite(
-                    SameSimTestSuite(name=create_name(config),
+                    SameSimTestSuite(name=dotjoin(create_design_unit_name(entity, architecture_name), config.name),
                                      test_cases=run_strings,
                                      test_bench=create_test_bench(config),
                                      pre_config=config.pre_config,
@@ -117,7 +112,7 @@ class TestScanner(object):
                 for config in configurations:
                     test_list.add_test(
                         IndependentSimTestCase(
-                            name=create_name(config, run_string),
+                            name=dotjoin(create_design_unit_name(entity, architecture_name), config.name, run_string),
                             test_case=run_string,
                             test_bench=create_test_bench(config),
                             has_runner_cfg=has_runner_cfg,
@@ -143,7 +138,7 @@ class TestScanner(object):
                 LOGGER.warning(("The '%s' generic from a configuration of %s of was overwritten, "
                                 "old value was '%s', new value is '%s'"),
                                name,
-                               create_test_name(entity, architecture_name, config.name),
+                               create_design_unit_name(entity, architecture_name),
                                generics["tb_path"],
                                new_value)
 
@@ -340,8 +335,8 @@ def prune_generics(generics, entity):
     return generics
 
 
-def create_test_name(entity, architecture_name, config_name, test_name=None):
+def create_design_unit_name(entity, architecture_name):
     if (architecture_name is None) or (len(entity.architecture_names) > 1):
-        return dotjoin(entity.library_name, entity.name, architecture_name, config_name, test_name)
+        return dotjoin(entity.library_name, entity.name, architecture_name)
     else:
-        return dotjoin(entity.library_name, entity.name, config_name, test_name)
+        return dotjoin(entity.library_name, entity.name)

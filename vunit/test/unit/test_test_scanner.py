@@ -4,6 +4,8 @@
 #
 # Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
+# pylint: disable=too-many-public-methods
+
 """
 Tests the test scanner
 """
@@ -232,6 +234,28 @@ if run("Test 2")
         tests = self.test_scanner.from_project(project)
         self.assert_has_tests(tests,
                               ["lib.tb_entity.all"])
+
+    def test_does_not_add_all_suffix_with_named_configurations(self):
+
+        def helper(config_name, suffix):
+            """
+            Add config with name and check that the test has the given suffix
+            """
+            project = ProjectStub()
+            lib = project.add_library("lib")
+            lib.add_entity("tb_entity",
+                           generic_names=["runner_cfg"])
+            self.configuration = TestConfiguration()
+            self.test_scanner = TestScanner(self.simulator_if, self.configuration)
+            self.configuration.add_config(scope=create_scope("lib", "tb_entity"),
+                                          name=config_name,
+                                          generics=dict())
+            tests = self.test_scanner.from_project(project)
+            self.assert_has_tests(tests,
+                                  ["lib.tb_entity" + suffix])
+        helper("config", ".config")
+        helper("", ".all")
+        helper(None, ".all")
 
     def test_that_pragma_run_in_same_simulation_works(self):
         project = ProjectStub()
