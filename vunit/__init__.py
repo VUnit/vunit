@@ -9,6 +9,7 @@ Public VUnit interface
 """
 
 from os.path import dirname, join, abspath
+import vunit.version_check
 from vunit.ui import VUnit
 from vunit.vunit_cli import VUnitCLI
 
