@@ -14,11 +14,13 @@ use vunit_lib.log_types_pkg.all;
 use vunit_lib.log_special_types_pkg.all;
 use vunit_lib.log_pkg.all;
 use vunit_lib.run_base_pkg.all;
+use vunit_lib.run_pkg.all;
 use work.test_types.all;
 use work.test_type_methods.all;
 
 entity tb_logging is
-  generic (output_path : string);
+  generic (output_path : string;
+           runner_cfg : string);
 end entity tb_logging;
 
 architecture test_fixture of tb_logging is
@@ -208,8 +210,8 @@ begin
     temp_sensor: logger_init(test_fixture'path_name & "temp_sensor", output_path & "temperature_sensor.csv", verbose, verbose_csv);
 
     info("High temp");
-    verify_write_call(15, time'image(0 ps) & ": INFO in .tb_logging.temp_sensor (tb_logging.vhd:210): High temp");
-    write(entries(1), string'("0," & time'image(0 ps) & ",info,tb_logging.vhd,210,.tb_logging.temp_sensor,High temp"));
+    verify_write_call(15, time'image(0 ps) & ": INFO in .tb_logging.temp_sensor (tb_logging.vhd:212): High temp");
+    write(entries(1), string'("0," & time'image(0 ps) & ",info,tb_logging.vhd,212,.tb_logging.temp_sensor,High temp"));
 
     -- Different loggers with different configurations
     banner("Verify custom loggers");
@@ -255,8 +257,8 @@ begin
     error(l,"Error should not pass");
     verify_num_of_write_calls(23);
     error("Error on default logger should pass");
-    verify_write_call(24, time'image(0 ps) & ": ERROR in .tb_logging.temp_sensor (tb_logging.vhd:257): Error on default logger should pass");
-    write(entries(2), string'("1," & time'image(0 ps) & ",error,tb_logging.vhd,257,.tb_logging.temp_sensor,Error on default logger should pass"));
+    verify_write_call(24, time'image(0 ps) & ": ERROR in .tb_logging.temp_sensor (tb_logging.vhd:259): Error on default logger should pass");
+    write(entries(2), string'("1," & time'image(0 ps) & ",error,tb_logging.vhd,259,.tb_logging.temp_sensor,Error on default logger should pass"));
     verify_log_file(output_path & "temperature_sensor.csv", entries(1 to 2));
 
     stop_level(l, warning, file_handler, f2);
@@ -309,10 +311,10 @@ begin
     rename_level(l2, error, "error");
     remove_filter(l2, f3);
 
-    write(entries(18), string'("2," & time'image(0 ps) & ",error,tb_logging.vhd,291,pressure_sensor,Error should pass"));
-    write(entries(19), string'("3," & time'image(0 ps) & ",error,tb_logging.vhd,295,pressure_sensor,Error should pass"));
-    write(entries(20), string'("4," & time'image(0 ps) & ",error,tb_logging.vhd,299,pressure_sensor,Error should not pass"));
-    write(entries(21), string'("5," & time'image(0 ps) & ",test_level,tb_logging.vhd,307,pressure_sensor,Error should pass"));
+    write(entries(18), string'("2," & time'image(0 ps) & ",error,tb_logging.vhd,293,pressure_sensor,Error should pass"));
+    write(entries(19), string'("3," & time'image(0 ps) & ",error,tb_logging.vhd,297,pressure_sensor,Error should pass"));
+    write(entries(20), string'("4," & time'image(0 ps) & ",error,tb_logging.vhd,301,pressure_sensor,Error should not pass"));
+    write(entries(21), string'("5," & time'image(0 ps) & ",test_level,tb_logging.vhd,309,pressure_sensor,Error should pass"));
     verify_log_file(output_path & "pressure_sensor.csv", entries(18 to 21));
 
     -- Source level filters
@@ -339,10 +341,10 @@ begin
     error(l2,"Error should pass");
     remove_filter(l2, f3);
 
-    write(entries(22), string'("6," & time'image(0 ps) & ",error,tb_logging.vhd,323,pressure_sensor,Error should pass"));
-    write(entries(23), string'("7," & time'image(0 ps) & ",error,tb_logging.vhd,327,pressure_sensor,Error should pass"));
-    write(entries(24), string'("8," & time'image(0 ps) & ",error,tb_logging.vhd,331,pressure_sensor,Error should not pass"));
-    write(entries(25), string'("9," & time'image(0 ps) & ",error,tb_logging.vhd,339,pressure_sensor,Error should pass"));
+    write(entries(22), string'("6," & time'image(0 ps) & ",error,tb_logging.vhd,325,pressure_sensor,Error should pass"));
+    write(entries(23), string'("7," & time'image(0 ps) & ",error,tb_logging.vhd,329,pressure_sensor,Error should pass"));
+    write(entries(24), string'("8," & time'image(0 ps) & ",error,tb_logging.vhd,333,pressure_sensor,Error should not pass"));
+    write(entries(25), string'("9," & time'image(0 ps) & ",error,tb_logging.vhd,341,pressure_sensor,Error should pass"));
     verify_log_file(output_path & "pressure_sensor.csv", entries(22 to 25));
 
     -- Hierarchical source filters
@@ -352,11 +354,11 @@ begin
 
     wait on test_component1_done, test_component2_done until test_component1_done and test_component2_done;
 
-    write(entries(26), string'("10," & time'image(1000 ps) & ",info,tb_logging.vhd,125,.tb_logging.test_component2.init,I'm test component 2"));
-    write(entries(27), string'("11," & time'image(1000 ps) & ",info,tb_logging.vhd,126,.tb_logging.test_component2.purpose,I'm logging time"));
-    write(entries(28), string'("12," & time'image(1000 ps) & ",info,tb_logging.vhd,128,.tb_logging.test_component2.clock.time,Time is " & time'image(1000 ps)));
-    write(entries(29), string'("13," & time'image(11000 ps) & ",info,tb_logging.vhd,128,.tb_logging.test_component2.clock.time,Time is " & time'image(11000 ps)));
-    write(entries(30), string'("14," & time'image(21000 ps) & ",info,tb_logging.vhd,128,.tb_logging.test_component2.clock.time,Time is " & time'image(21000 ps)));
+    write(entries(26), string'("10," & time'image(1000 ps) & ",info,tb_logging.vhd,127,.tb_logging.test_component2.init,I'm test component 2"));
+    write(entries(27), string'("11," & time'image(1000 ps) & ",info,tb_logging.vhd,128,.tb_logging.test_component2.purpose,I'm logging time"));
+    write(entries(28), string'("12," & time'image(1000 ps) & ",info,tb_logging.vhd,130,.tb_logging.test_component2.clock.time,Time is " & time'image(1000 ps)));
+    write(entries(29), string'("13," & time'image(11000 ps) & ",info,tb_logging.vhd,130,.tb_logging.test_component2.clock.time,Time is " & time'image(11000 ps)));
+    write(entries(30), string'("14," & time'image(21000 ps) & ",info,tb_logging.vhd,130,.tb_logging.test_component2.clock.time,Time is " & time'image(21000 ps)));
     verify_log_file(output_path & "log.csv", entries(26 to 30));
 
     -- get_logger_cfg
@@ -453,8 +455,8 @@ begin
     write(output, "Number of assertions: " & integer'image(n_asserts_value) & LF);
     write(output, "Number of errors: " & integer'image(n_errors_value) & LF);
 
-    runner.exit_without_errors <= true;
-    runner.exit_simulation <= true;
+    test_runner_setup(runner, runner_cfg);
+    test_runner_cleanup(runner);
     wait;
   end process;
 end test_fixture;
