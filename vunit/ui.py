@@ -196,7 +196,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         self._configure_logging(log_level)
 
-        self._output_path = output_path
+        self._output_path = abspath(output_path)
 
         if no_color:
             self._printer = NO_COLOR_PRINTER
