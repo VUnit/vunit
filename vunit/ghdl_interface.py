@@ -28,6 +28,14 @@ class GHDLInterface(SimulatorInterface):
 
     name = "ghdl"
 
+    compile_options = [
+        "ghdl.flags",
+    ]
+
+    sim_options = [
+        "ghdl.flags",
+    ]
+
     @staticmethod
     def add_arguments(parser):
         """
@@ -152,7 +160,7 @@ class GHDLInterface(SimulatorInterface):
                    '--std=%s' % self._std_str()]
             for library_name, library_path in self._libraries.items():
                 cmd += ["-P%s" % library_path]
-            cmd += compile_options.get("ghdl_flags", [])
+            cmd += compile_options.get("ghdl.flags", [])
             cmd += [source_file_name]
             proc = Process(cmd)
             proc.consume_output()
@@ -185,7 +193,7 @@ class GHDLInterface(SimulatorInterface):
 
             if self._has_output_flag():
                 cmd += ['-o', join(ghdl_output_path, "%s-%s" % (entity_name, architecture_name))]
-            cmd += config.options.get("ghdl_flags", [])
+            cmd += config.options.get("ghdl.flags", [])
 
             cmd += [entity_name, architecture_name]
 

@@ -41,6 +41,30 @@ class SimulatorFactory(object):
                 if simulator_class.is_available()]
 
     @classmethod
+    def compile_options(cls):
+        """
+        Return all supported compile options
+        """
+        result = []
+        for sim_class in cls.supported_simulators():
+            for opt in sim_class.compile_options:
+                assert opt.startswith(sim_class.name + ".")
+                result.append(opt)
+        return result
+
+    @classmethod
+    def sim_options(cls):
+        """
+        Return all supported sim options
+        """
+        result = []
+        for sim_class in cls.supported_simulators():
+            for opt in sim_class.sim_options:
+                assert opt.startswith(sim_class.name + ".")
+                result.append(opt)
+        return result
+
+    @classmethod
     def select_simulator(cls):
         """
         Select simulator class, either from VUNIT_SIMULATOR environment variable

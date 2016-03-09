@@ -10,6 +10,7 @@ Contains functionality to manage the configuration of tests
 
 
 import logging
+from vunit.simulator_factory import SimulatorFactory
 LOGGER = logging.getLogger(__name__)
 
 
@@ -70,17 +71,27 @@ class TestConfiguration(object):
             self._generics[scope] = {}
         self._generics[scope][name] = value
 
-    _known_options = ["vsim_extra_args",
-                      "vsim_extra_args.gui",
-                      "ghdl_flags"]
+    # Deprecated aliases To be removed in a future release
+    _alias = {"vsim_extra_args": "modelsim.vsim_flags",
+              "vsim_extra_args.gui": "modelsim.vsim_flags.gui",
+              "ghdl_flags": "ghdl.flags"}
 
     def set_sim_option(self, name, value, scope=create_scope()):
         """
         Set sim option within scope
         """
-        if name not in self._known_options:
+
+        if name in self._alias:
+            new_name = self._alias[name]
+            LOGGER.warning("Deprecated sim_option %r use %r instead", name, new_name)
+            name = new_name
+            if name.startswith("vsim_extra_args"):
+                value = value.split()
+
+        known_options = SimulatorFactory.sim_options()
+        if name not in known_options:
             LOGGER.error("Unknown sim_option %r, expected one of %r",
-                         name, self._known_options)
+                         name, known_options)
             raise ValueError(name)
 
         if scope not in self._sim_options:

@@ -20,6 +20,7 @@ from vunit.dependency_graph import (DependencyGraph,
 from vunit.vhdl_parser import VHDLParser, VHDLReference
 from vunit.parsing.verilog.parser import VerilogParser
 from vunit.exceptions import CompileError
+from vunit.simulator_factory import SimulatorFactory
 import vunit.ostools as ostools
 LOGGER = logging.getLogger(__name__)
 
@@ -578,13 +579,25 @@ class SourceFile(object):
     def __repr__(self):
         return "SourceFile(%s, %s)" % (self.name, self.library.name)
 
-    _allowed_compile_options = ["ghdl_flags",
-                                "modelsim_vcom_flags",
-                                "modelsim_vlog_flags"]
+    # Deprecated aliases To be removed in a future release
+    _alias = {"ghdl_flags": "ghdl.flags",
+              "modelsim_vcom_flags": "modelsim.vcom_flags",
+              "modelsim_vlog_flags": "modelsim.vlog_flags"}
 
     def _check_compile_option(self, name):
-        if name not in self._allowed_compile_options:
-            raise ValueError("Unknown compile option %r" % name)
+        """
+        Check that the compile option is valid
+        """
+        if name in self._alias:
+            new_name = self._alias[name]
+            LOGGER.warning("Deprecated sim_option %r use %r instead", name, new_name)
+            name = new_name
+
+        known_options = SimulatorFactory.compile_options()
+        if name not in known_options:
+            LOGGER.error("Unknown compile_option %r, expected one of %r",
+                         name, known_options)
+            raise ValueError(name)
 
     def set_compile_option(self, name, value):
         """

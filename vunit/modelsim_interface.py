@@ -41,6 +41,16 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
     supports_gui_flag = True
     package_users_depend_on_bodies = False
 
+    compile_options = [
+        "modelsim.vcom_flags",
+        "modelsim.vlog_flags",
+    ]
+
+    sim_options = [
+        "modelsim.vsim_flags",
+        "modelsim.vsim_flags.gui",
+    ]
+
     @staticmethod
     def add_arguments(parser):
         """
@@ -191,7 +201,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
                 coverage_args = ["+cover=" + to_coverage_args(self._coverage)]
 
             proc = Process([join(self._prefix, 'vcom'), '-quiet', '-modelsimini', self._modelsim_ini] +
-                           coverage_args + compile_options.get("modelsim_vcom_flags", []) +
+                           coverage_args + compile_options.get("modelsim.vcom_flags", []) +
                            ['-' + vhdl_standard, '-work', library_name, source_file_name])
 
             proc.consume_output()
@@ -211,7 +221,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
 
             args = [join(self._prefix, 'vlog'), '-sv', '-quiet', '-modelsimini', self._modelsim_ini]
             args += coverage_args
-            args += source_file.compile_options.get("modelsim_vlog_flags", [])
+            args += source_file.compile_options.get("modelsim.vlog_flags", [])
             args += ['-work', source_file.library.name, source_file.name]
 
             for library in self._libraries.values():
@@ -413,15 +423,15 @@ proc vunit_run {} {
         """
         Determine vsim_extra_args
         """
-        vsim_extra_args = ""
-        vsim_extra_args = config.options.get("vsim_extra_args",
+        vsim_extra_args = []
+        vsim_extra_args = config.options.get("modelsim.vsim_flags",
                                              vsim_extra_args)
 
         if self._gui_mode is not None:
-            vsim_extra_args = config.options.get("vsim_extra_args.gui",
+            vsim_extra_args = config.options.get("modelsim.vsim_flags.gui",
                                                  vsim_extra_args)
 
-        return vsim_extra_args
+        return " ".join(vsim_extra_args)
 
     def _create_common_script(self,   # pylint: disable=too-many-arguments
                               library_name, entity_name, architecture_name,

@@ -428,17 +428,17 @@ Listed 2 files""".splitlines()))
 
         # Use methods on all types of interface objects
         for obj in [source_file, ui, lib, lib.get_source_files(file_name)]:
-            obj.set_compile_option("ghdl_flags", [])
-            self.assertEqual(source_file.get_compile_option("ghdl_flags"), [])
+            obj.set_compile_option("ghdl.flags", [])
+            self.assertEqual(source_file.get_compile_option("ghdl.flags"), [])
 
-            obj.add_compile_option("ghdl_flags", ["1"])
-            self.assertEqual(source_file.get_compile_option("ghdl_flags"), ["1"])
+            obj.add_compile_option("ghdl.flags", ["1"])
+            self.assertEqual(source_file.get_compile_option("ghdl.flags"), ["1"])
 
-            obj.add_compile_option("ghdl_flags", ["2"])
-            self.assertEqual(source_file.get_compile_option("ghdl_flags"), ["1", "2"])
+            obj.add_compile_option("ghdl.flags", ["2"])
+            self.assertEqual(source_file.get_compile_option("ghdl.flags"), ["1", "2"])
 
-            obj.set_compile_option("ghdl_flags", ["3"])
-            self.assertEqual(source_file.get_compile_option("ghdl_flags"), ["3"])
+            obj.set_compile_option("ghdl.flags", ["3"])
+            self.assertEqual(source_file.get_compile_option("ghdl.flags"), ["3"])
 
     def _test_pre_config_helper(self, retval, test_not_entity=False):
         """

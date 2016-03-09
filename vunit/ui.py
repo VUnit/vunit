@@ -36,16 +36,24 @@ Compilation Options
 -------------------
 The following compilation are known.
 
-``ghdl_flags``
+``ghdl.flags``
    Extra arguments passed to ``ghdl -a`` command during compilation.
    Must be a list of strings.
 
-``modelsim_vcom_flags``
+``modelsim.vcom_flags``
    Extra arguments passed to ModelSim ``vcom`` command.
    Must be a list of strings.
 
-``modelsim_vlog_flags``
+``modelsim.vlog_flags``
    Extra arguments passed to ModelSim ``vlog`` command.
+   Must be a list of strings.
+
+``rivierapro.vcom_flags``
+   Extra arguments passed to Riviera PRO ``vcom`` command.
+   Must be a list of strings.
+
+``rivierapro.vlog_flags``
+   Extra arguments passed to Riviera PRO ``vlog`` command.
    Must be a list of strings.
 
 .. note::
@@ -57,15 +65,27 @@ Simulation Options
 -------------------
 The following simulation are known.
 
-``vsim_extra_args``
+``modelsim.vsim_flags``
    Extra arguments passed to ``vsim`` when loading the design.
+   Must be a list of strings.
 
-``vsim_extra_args.gui``
+``modelsim.vsim_flags.gui``
    Extra arguments passed to ``vsim`` when loading the design in GUI
    mode where it takes precedence over ``vsim_extra_args``.
+   Must be a list of strings.
 
-``ghdl_flags``
+``rivierapro.vsim_flags``
+   Extra arguments passed to ``vsim`` when loading the design.
+   Must be a list of strings.
+
+``rivierapro.vsim_flags.gui``
+   Extra arguments passed to ``vsim`` when loading the design in GUI
+   mode where it takes precedence over ``rivierapro_vsim_extra_args``.
+   Must be a list of strings.
+
+``ghdl.flags``
    Extra arguments passed to ``ghdl --elab-run`` command *before* executable specific flags. Must be a list of strings.
+   Must be a list of strings.
 
 .. |compile_option| replace::
    The name of the compile option (See :ref:`Compilation options <compile_options>`)
@@ -371,7 +391,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         .. code-block:: python
 
-           prj.set_sim_option("ghdl_flags", ["--no-vital-checks"])
+           prj.set_sim_option("ghdl.flags", ["--no-vital-checks"])
 
         """
         self._configuration.set_sim_option(name, value, scope=create_scope())
@@ -387,7 +407,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         .. code-block:: python
 
-           prj.set_compile_option("ghdl_flags", ["--no-vital-checks"])
+           prj.set_compile_option("ghdl.flags", ["--no-vital-checks"])
 
         """
         for source_file in self._project.get_source_files_in_order():
@@ -872,7 +892,7 @@ class Library(object):
 
         .. code-block:: python
 
-           lib.set_sim_option("ghdl_flags", ["--no-vital-checks"])
+           lib.set_sim_option("ghdl.flags", ["--no-vital-checks"])
 
         """
         self._configuration.set_sim_option(name, value, scope=self._scope)
@@ -888,7 +908,7 @@ class Library(object):
 
         .. code-block:: python
 
-           lib.set_compile_option("ghdl_flags", ["--no-vital-checks"])
+           lib.set_compile_option("ghdl.flags", ["--no-vital-checks"])
 
         """
         for source_file in self._project.get_source_files_in_order():
@@ -1064,7 +1084,7 @@ class TestBench(object):
 
         .. code-block:: python
 
-           test_bench.set_sim_option("ghdl_flags", ["--no-vital-checks"])
+           test_bench.set_sim_option("ghdl.flags", ["--no-vital-checks"])
 
         """
         self._config.set_sim_option(name, value, scope=self._scope)
@@ -1305,7 +1325,7 @@ class Test(object):
 
         .. code-block:: python
 
-           test.set_sim_option("ghdl_flags", ["--no-vital-checks"])
+           test.set_sim_option("ghdl.flags", ["--no-vital-checks"])
 
         """
         self._config.set_sim_option(name, value, scope=self._scope)
@@ -1336,7 +1356,7 @@ class SourceFileList(list):
 
         .. code-block:: python
 
-           files.set_compile_option("ghdl_flags", ["--no-vital-checks"])
+           files.set_compile_option("ghdl.flags", ["--no-vital-checks"])
         """
         for source_file in self:
             source_file.set_compile_option(name, value)
@@ -1402,7 +1422,7 @@ class SourceFile(object):
 
         .. code-block:: python
 
-           my_file.set_compile_option("ghdl_flags", ["--no-vital-checks"])
+           my_file.set_compile_option("ghdl.flags", ["--no-vital-checks"])
         """
         self._source_file.set_compile_option(name, value)
 

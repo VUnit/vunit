@@ -31,6 +31,16 @@ class RivieraProInterface(SimulatorInterface):
     supports_gui_flag = True
     package_users_depend_on_bodies = True
 
+    compile_options = [
+        "rivierapro.vcom_flags",
+        "rivierapro.vlog_flags",
+    ]
+
+    sim_options = [
+        "rivierapro.vsim_flags",
+        "rivierapro.vsim_flags.gui",
+    ]
+
     @classmethod
     def from_args(cls, output_path, args):
         """
@@ -72,11 +82,9 @@ class RivieraProInterface(SimulatorInterface):
             print('Compiling ' + source_file.name + ' into ' + source_file.library.name + ' ...')
 
             if source_file.file_type == 'vhdl':
-                success = self.compile_vhdl_file(source_file.name, source_file.library.name, vhdl_standard)
+                success = self.compile_vhdl_file(source_file, vhdl_standard)
             elif source_file.file_type == 'verilog':
-                success = self.compile_verilog_file(source_file.name,
-                                                    source_file.library.name,
-                                                    source_file.include_dirs)
+                success = self.compile_verilog_file(source_file)
             else:
                 raise RuntimeError("Unknown file type: " + source_file.file_type)
 
@@ -84,27 +92,29 @@ class RivieraProInterface(SimulatorInterface):
                 raise CompileError("Failed to compile '%s'" % source_file.name)
             project.update(source_file)
 
-    def compile_vhdl_file(self, source_file_name, library_name, vhdl_standard):
+    def compile_vhdl_file(self, source_file, vhdl_standard):
         """
         Compiles a vhdl file into a specific library using a specific vhdl_standard
         """
         try:
-            proc = Process([join(self._prefix, 'vcom'), '-dbg', '-quiet', '-j', dirname(self._library_cfg),
-                            '-' + vhdl_standard, '-work', library_name, source_file_name])
+            proc = Process([join(self._prefix, 'vcom'), '-dbg', '-quiet', '-j', dirname(self._library_cfg)] +
+                           source_file.compile_options.get("rivierapro.vcom_flags", []) +
+                           ['-' + vhdl_standard, '-work', source_file.library.name, source_file.name])
             proc.consume_output()
         except Process.NonZeroExitCode:
             return False
         return True
 
-    def compile_verilog_file(self, source_file_name, library_name, include_dirs):
+    def compile_verilog_file(self, source_file):
         """
         Compiles a verilog file into a specific library
         """
-        args = [join(self._prefix, 'vlog'), '-quiet', '-sv2k12', '-lc', self._library_cfg,
-                '-work', library_name, source_file_name]
+        args = [join(self._prefix, 'vlog'), '-quiet', '-sv2k12', '-lc', self._library_cfg]
+        args += source_file.compile_options.get("rivierapro.vlog_flags", [])
+        args += ['-work', source_file.library.name, source_file.name]
         for library in self._libraries.values():
             args += ["-l", library.name]
-        for include_dir in include_dirs:
+        for include_dir in source_file.include_dirs:
             args += ["+incdir+%s" % include_dir]
         try:
             proc = Process(args)
@@ -161,8 +171,7 @@ class RivieraProInterface(SimulatorInterface):
             libraries[key] = abspath(join(dirname(self._library_cfg), dirname(value)))
         return libraries
 
-    @staticmethod
-    def _create_load_function(library_name, entity_name, architecture_name,
+    def _create_load_function(self, library_name, entity_name, architecture_name,
                               config, disable_ieee_warnings):
         """
         Create the vunit_load TCL function that runs the vsim command and loads the design
@@ -175,7 +184,8 @@ class RivieraProInterface(SimulatorInterface):
                       set_generic_str,
                       "-lib",
                       library_name,
-                      entity_name]
+                      entity_name,
+                      self._vsim_extra_args(config)]
 
         if architecture_name is not None:
             vsim_flags.append(architecture_name)
@@ -203,6 +213,20 @@ proc vunit_load {{}} {{
 """.format(vsim_flags=" ".join(vsim_flags))
 
         return tcl
+
+    def _vsim_extra_args(self, config):
+        """
+        Determine vsim_extra_args
+        """
+        vsim_extra_args = []
+        vsim_extra_args = config.options.get("rivierapro.vsim_flags",
+                                             vsim_extra_args)
+
+        if self._gui:
+            vsim_extra_args = config.options.get("rivierapro.vsim_flags.gui",
+                                                 vsim_extra_args)
+
+        return " ".join(vsim_extra_args)
 
     @staticmethod
     def _create_run_function(fail_on_warning=False):

@@ -123,7 +123,7 @@ class TestTestConfiguration(unittest.TestCase):
         self.cfg.set_generic("name", "value", scope=create_scope("lib", "entity", "test"))
         self.cfg.disable_ieee_warnings(scope=create_scope("lib", "entity_ieee", "test"))
         self.cfg.add_config(name="name", generics=dict(), scope=create_scope("lib", "entity2", "test"))
-        self.cfg.set_sim_option("vsim_extra_args", "", scope=create_scope("lib", "entity4", "test"))
+        self.cfg.set_sim_option("ghdl.flags", [], scope=create_scope("lib", "entity4", "test"))
         self.assertEqual(self.cfg.more_specific_configurations(create_scope("lib", "entity")),
                          [create_scope("lib", "entity", "test")])
         self.assertEqual(self.cfg.more_specific_configurations(create_scope("lib", "entity2")),
@@ -184,7 +184,7 @@ class TestTestConfiguration(unittest.TestCase):
 
     def test_sim_options(self):
         scope = create_scope("lib", "entity")
-        sim_options = {"vsim_extra_args": "-voptargs=+acc"}
+        sim_options = {"modelsim.vsim_flags": "-voptargs=+acc"}
 
         for name, value in sim_options.items():
             self.cfg.set_sim_option(name=name,
@@ -205,7 +205,7 @@ class TestTestConfiguration(unittest.TestCase):
 
     def test_issue_65(self):
         self.cfg.set_generic(name="name", value=1, scope=create_scope())
-        self.cfg.set_sim_option(name="vsim_extra_args", value="-quiet", scope=create_scope())
+        self.cfg.set_sim_option(name="modelsim.vsim_flags", value="-quiet", scope=create_scope())
 
     @staticmethod
     def write_file(name, contents):

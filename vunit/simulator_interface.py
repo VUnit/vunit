@@ -20,6 +20,8 @@ class SimulatorInterface(object):
     name = None
     supports_gui_flag = False
     package_users_depend_on_bodies = False
+    compile_options = []
+    sim_options = []
 
     @staticmethod
     def add_arguments(parser):
