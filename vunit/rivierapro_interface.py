@@ -62,6 +62,7 @@ class RivieraProInterface(SimulatorInterface):
         return cls._find_prefix() is not None
 
     def __init__(self, library_cfg="library.cfg", gui=False):
+        self._vhdl_standard = None
         self._library_cfg = abspath(library_cfg)
         self._prefix = self._find_prefix()
         self._gui = gui
@@ -73,41 +74,36 @@ class RivieraProInterface(SimulatorInterface):
         Compile the project using vhdl_standard
         """
         mapped_libraries = self._get_mapped_libraries()
-
         for library in project.get_libraries():
             self._libraries[library.name] = library
             self.create_library(library.name, library.directory, mapped_libraries)
 
-        for source_file in project.get_files_in_compile_order():
-            print('Compiling ' + source_file.name + ' into ' + source_file.library.name + ' ...')
+        self._vhdl_standard = vhdl_standard
+        self.compile_source_files(project)
 
-            if source_file.file_type == 'vhdl':
-                success = self.compile_vhdl_file(source_file, vhdl_standard)
-            elif source_file.file_type == 'verilog':
-                success = self.compile_verilog_file(source_file)
-            else:
-                raise RuntimeError("Unknown file type: " + source_file.file_type)
-
-            if not success:
-                raise CompileError("Failed to compile '%s'" % source_file.name)
-            project.update(source_file)
-
-    def compile_vhdl_file(self, source_file, vhdl_standard):
+    def compile_source_file_command(self, source_file):
         """
-        Compiles a vhdl file into a specific library using a specific vhdl_standard
+        Returns the command to compile a single source_file
         """
-        try:
-            proc = Process([join(self._prefix, 'vcom'), '-dbg', '-quiet', '-j', dirname(self._library_cfg)] +
-                           source_file.compile_options.get("rivierapro.vcom_flags", []) +
-                           ['-' + vhdl_standard, '-work', source_file.library.name, source_file.name])
-            proc.consume_output()
-        except Process.NonZeroExitCode:
-            return False
-        return True
+        if source_file.file_type == 'vhdl':
+            return self.compile_vhdl_file_command(source_file)
+        elif source_file.file_type == 'verilog':
+            return self.compile_verilog_file_command(source_file)
 
-    def compile_verilog_file(self, source_file):
+        LOGGER.error("Unknown file type: %s", source_file.file_type)
+        raise CompileError
+
+    def compile_vhdl_file_command(self, source_file):
         """
-        Compiles a verilog file into a specific library
+        Returns the command to compile a VHDL file
+        """
+        return ([join(self._prefix, 'vcom'), '-dbg', '-quiet', '-j', dirname(self._library_cfg)] +
+                source_file.compile_options.get("rivierapro.vcom_flags", []) +
+                ['-' + self._vhdl_standard, '-work', source_file.library.name, source_file.name])
+
+    def compile_verilog_file_command(self, source_file):
+        """
+        Returns the command to compile a Verilog file
         """
         args = [join(self._prefix, 'vlog'), '-quiet', '-sv2k12', '-lc', self._library_cfg]
         args += source_file.compile_options.get("rivierapro.vlog_flags", [])
@@ -116,12 +112,7 @@ class RivieraProInterface(SimulatorInterface):
             args += ["-l", library.name]
         for include_dir in source_file.include_dirs:
             args += ["+incdir+%s" % include_dir]
-        try:
-            proc = Process(args)
-            proc.consume_output()
-        except Process.NonZeroExitCode:
-            return False
-        return True
+        return args
 
     def create_library(self, library_name, path, mapped_libraries=None):
         """

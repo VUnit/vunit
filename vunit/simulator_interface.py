@@ -8,8 +8,11 @@
 Generic simulator interface
 """
 
+from __future__ import print_function
 import sys
 import os
+from vunit.ostools import Process
+from vunit.exceptions import CompileError
 
 
 class SimulatorInterface(object):
@@ -91,6 +94,29 @@ class SimulatorInterface(object):
         """
         pass
 
+    def compile_source_files(self, project):
+        """
+        Use _compile_source_file to compile all source_files
+        """
+
+        for source_file in project.get_files_in_compile_order():
+            print('Compiling ' + source_file.name + ' into ' + source_file.library.name + ' ...')
+            success = False
+            try:
+                command = self.compile_source_file_command(source_file)
+                success = run_command(command)
+
+            except CompileError:
+                pass
+
+            if success:
+                project.update(source_file)
+            else:
+                raise CompileError
+
+    def compile_source_file_command(self, source_file):  # pylint: disable=unused-argument
+        raise NotImplementedError
+
 
 def isfile(file_name):
     """
@@ -100,3 +126,16 @@ def isfile(file_name):
         return False
 
     return os.path.basename(file_name) in os.listdir(os.path.dirname(file_name))
+
+
+def run_command(command):
+    """
+    Run a command
+    """
+    try:
+        proc = Process(command)
+        proc.consume_output()
+        return True
+    except Process.NonZeroExitCode:
+        pass
+    return False

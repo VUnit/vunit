@@ -118,20 +118,20 @@ class GHDLInterface(SimulatorInterface):
                 os.makedirs(library.directory)
             self._libraries[library.name] = library.directory
 
-        for source_file in project.get_files_in_compile_order():
-            print('Compiling ' + source_file.name + ' into ' + source_file.library.name + ' ...')
+        self.compile_source_files(project)
 
-            if source_file.file_type == 'vhdl':
-                success = self.compile_vhdl_file(source_file.name,
-                                                 source_file.library.name,
-                                                 source_file.library.directory,
-                                                 source_file.compile_options)
-            elif source_file.file_type == 'verilog':
-                raise RuntimeError("Unknown file type: " + source_file.file_type)
+    def compile_source_file_command(self, source_file):
+        """
+        Returns the command to compile a single source_file
+        """
+        if source_file.file_type == 'vhdl':
+            return self.compile_vhdl_file_command(source_file.name,
+                                                  source_file.library.name,
+                                                  source_file.library.directory,
+                                                  source_file.compile_options)
 
-            if not success:
-                raise CompileError("Failed to compile '%s'" % source_file.name)
-            project.update(source_file)
+        LOGGER.error("Unknown file type: %s", source_file.file_type)
+        raise CompileError
 
     def _std_str(self):
         """
@@ -146,27 +146,22 @@ class GHDLInterface(SimulatorInterface):
         else:
             assert False
 
-    def compile_vhdl_file(self,
-                          source_file_name,
-                          library_name,
-                          library_path,
-                          compile_options):
+    def compile_vhdl_file_command(self,
+                                  source_file_name,
+                                  library_name,
+                                  library_path,
+                                  compile_options):
         """
-        Compile a vhdl file
+        Returns the command to compile a vhdl file
         """
-        try:
-            cmd = ['ghdl', '-a', '--workdir=%s' % library_path,
-                   '--work=%s' % library_name,
-                   '--std=%s' % self._std_str()]
-            for library_name, library_path in self._libraries.items():
-                cmd += ["-P%s" % library_path]
-            cmd += compile_options.get("ghdl.flags", [])
-            cmd += [source_file_name]
-            proc = Process(cmd)
-            proc.consume_output()
-        except Process.NonZeroExitCode:
-            return False
-        return True
+        cmd = ['ghdl', '-a', '--workdir=%s' % library_path,
+               '--work=%s' % library_name,
+               '--std=%s' % self._std_str()]
+        for library_name, library_path in self._libraries.items():
+            cmd += ["-P%s" % library_path]
+        cmd += compile_options.get("ghdl.flags", [])
+        cmd += [source_file_name]
+        return cmd
 
     def simulate(self,  # pylint: disable=too-many-arguments, too-many-locals
                  output_path, library_name, entity_name, architecture_name, config):

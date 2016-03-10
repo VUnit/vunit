@@ -52,6 +52,7 @@ class ActiveHDLInterface(SimulatorInterface):
         return cls._find_prefix() is not None
 
     def __init__(self, library_cfg="library.cfg", gui=False):
+        self._vhdl_standard = None
         self._library_cfg = abspath(library_cfg)
         self._prefix = self._find_prefix()
         self._gui = gui
@@ -68,31 +69,25 @@ class ActiveHDLInterface(SimulatorInterface):
             self._libraries[library.name] = library
             self.create_library(library.name, library.directory, mapped_libraries)
 
-        for source_file in project.get_files_in_compile_order():
-            print('Compiling ' + source_file.name + ' into ' + source_file.library.name + ' ...')
+        self._vhdl_standard = vhdl_standard
+        self.compile_source_files(project)
 
-            if source_file.file_type == 'vhdl':
-                success = self.compile_vhdl_file(source_file.name, source_file.library.name, vhdl_standard)
-            elif source_file.file_type == 'verilog':
-                raise RuntimeError("Verilog compilation not yet implemented for Active-HDL.")
-            else:
-                raise RuntimeError("Unknown file type: " + source_file.file_type)
-
-            if not success:
-                raise CompileError("Failed to compile '%s'" % source_file.name)
-            project.update(source_file)
-
-    def compile_vhdl_file(self, source_file_name, library_name, vhdl_standard):
+    def compile_source_file_command(self, source_file):
         """
-        Compiles a vhdl file into a specific library using a specific vhdl_standard
+        Returns the command to compile a single source file
         """
-        try:
-            proc = Process([join(self._prefix, 'vcom'), '-dbg', '-quiet', '-j', dirname(self._library_cfg),
-                            '-' + vhdl_standard, '-work', library_name, source_file_name])
-            proc.consume_output()
-        except Process.NonZeroExitCode:
-            return False
-        return True
+        if source_file.file_type == 'vhdl':
+            return self.compile_vhdl_file_command(source_file.name, source_file.library.name)
+
+        LOGGER.error("Unknown file type: %s", source_file.file_type)
+        raise CompileError
+
+    def compile_vhdl_file_command(self, source_file_name, library_name):
+        """
+        Returns the command to compile a vhdl file
+        """
+        return [join(self._prefix, 'vcom'), '-dbg', '-quiet', '-j', dirname(self._library_cfg),
+                '-' + self._vhdl_standard, '-work', library_name, source_file_name]
 
     def create_library(self, library_name, path, mapped_libraries=None):
         """

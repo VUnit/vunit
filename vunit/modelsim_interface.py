@@ -105,6 +105,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         return cls._find_prefix() is not None
 
     def __init__(self, modelsim_ini="modelsim.ini", persistent=False, gui_mode=None, coverage=None):
+        self._vhdl_standard = None
         self._modelsim_ini = abspath(modelsim_ini)
 
         # Workaround for Microsemi 10.3a which does not
@@ -168,73 +169,62 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         Compile the project using vhdl_standard
         """
         mapped_libraries = self._get_mapped_libraries()
+        self._vhdl_standard = vhdl_standard
 
         for library in project.get_libraries():
             self._libraries[library.name] = library
             self.create_library(library.name, library.directory, mapped_libraries)
 
-        for source_file in project.get_files_in_compile_order():
-            print('Compiling ' + source_file.name + ' into ' + source_file.library.name + ' ...')
+        self.compile_source_files(project)
 
-            if source_file.file_type == 'vhdl':
-                success = self.compile_vhdl_file(source_file.name,
-                                                 source_file.library.name,
-                                                 vhdl_standard,
-                                                 source_file.compile_options)
-            elif source_file.file_type == 'verilog':
-                success = self.compile_verilog_file(source_file)
-            else:
-                raise RuntimeError("Unknown file type: " + source_file.file_type)
-
-            if not success:
-                raise CompileError("Failed to compile '%s'" % source_file.name)
-            project.update(source_file)
-
-    def compile_vhdl_file(self, source_file_name, library_name, vhdl_standard, compile_options):
+    def compile_source_file_command(self, source_file):
         """
-        Compiles a vhdl file into a specific library using a specific vhdl_standard
+        Returns the command to compile a single source file
         """
-        try:
-            if self._coverage is None:
-                coverage_args = []
-            else:
-                coverage_args = ["+cover=" + to_coverage_args(self._coverage)]
+        if source_file.file_type == 'vhdl':
+            return self.compile_vhdl_file_command(source_file.name,
+                                                  source_file.library.name,
+                                                  source_file.compile_options)
+        elif source_file.file_type == 'verilog':
+            return self.compile_verilog_file_command(source_file)
 
-            proc = Process([join(self._prefix, 'vcom'), '-quiet', '-modelsimini', self._modelsim_ini] +
-                           coverage_args + compile_options.get("modelsim.vcom_flags", []) +
-                           ['-' + vhdl_standard, '-work', library_name, source_file_name])
+        LOGGER.error("Unknown file type: %s", source_file.file_type)
+        raise CompileError
 
-            proc.consume_output()
-        except Process.NonZeroExitCode:
-            return False
-        return True
-
-    def compile_verilog_file(self, source_file):
+    def compile_vhdl_file_command(self, source_file_name, library_name, compile_options):
         """
-        Compiles a verilog file into a specific library
+        Returns the command to compile a vhdl file
         """
-        try:
-            if self._coverage is None:
-                coverage_args = []
-            else:
-                coverage_args = ["+cover=" + to_coverage_args(self._coverage)]
+        if self._coverage is None:
+            coverage_args = []
+        else:
+            coverage_args = ["+cover=" + to_coverage_args(self._coverage)]
 
-            args = [join(self._prefix, 'vlog'), '-sv', '-quiet', '-modelsimini', self._modelsim_ini]
-            args += coverage_args
-            args += source_file.compile_options.get("modelsim.vlog_flags", [])
-            args += ['-work', source_file.library.name, source_file.name]
+        return ([join(self._prefix, 'vcom'), '-quiet', '-modelsimini', self._modelsim_ini] +
+                coverage_args + compile_options.get("modelsim.vcom_flags", []) +
+                ['-' + self._vhdl_standard, '-work', library_name, source_file_name])
 
-            for library in self._libraries.values():
-                args += ["-L", library.name]
-            for include_dir in source_file.include_dirs:
-                args += ["+incdir+%s" % include_dir]
-            for key, value in source_file.defines.items():
-                args += ["+define+%s=%s" % (key, value)]
-            proc = Process(args)
-            proc.consume_output()
-        except Process.NonZeroExitCode:
-            return False
-        return True
+    def compile_verilog_file_command(self, source_file):
+        """
+        Returns the command to compile a verilog file
+        """
+        if self._coverage is None:
+            coverage_args = []
+        else:
+            coverage_args = ["+cover=" + to_coverage_args(self._coverage)]
+
+        args = [join(self._prefix, 'vlog'), '-sv', '-quiet', '-modelsimini', self._modelsim_ini]
+        args += coverage_args
+        args += source_file.compile_options.get("modelsim.vlog_flags", [])
+        args += ['-work', source_file.library.name, source_file.name]
+
+        for library in self._libraries.values():
+            args += ["-L", library.name]
+        for include_dir in source_file.include_dirs:
+            args += ["+incdir+%s" % include_dir]
+        for key, value in source_file.defines.items():
+            args += ["+define+%s=%s" % (key, value)]
+        return args
 
     def create_library(self, library_name, path, mapped_libraries=None):
         """
