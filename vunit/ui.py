@@ -34,7 +34,9 @@
 
 Compilation Options
 -------------------
-The following compilation are known.
+Compilation options allow customization of compilation behavior. Since simulators have
+differing options available, generic options may be specified through this interface.
+The following compilation options are known.
 
 ``ghdl.flags``
    Extra arguments passed to ``ghdl -a`` command during compilation.
@@ -63,7 +65,9 @@ The following compilation are known.
 
 Simulation Options
 -------------------
-The following simulation are known.
+Simulation options allow customization of simulation behavior. Since simulators have
+differing options available, generic options may be specified through this interface.
+The following simulation options are known.
 
 ``modelsim.vsim_flags``
    Extra arguments passed to ``vsim`` when loading the design.
@@ -71,7 +75,7 @@ The following simulation are known.
 
 ``modelsim.vsim_flags.gui``
    Extra arguments passed to ``vsim`` when loading the design in GUI
-   mode where it takes precedence over ``vsim_extra_args``.
+   mode where it takes precedence over ``modelsim.vsim_flags``.
    Must be a list of strings.
 
 ``rivierapro.vsim_flags``
@@ -80,11 +84,11 @@ The following simulation are known.
 
 ``rivierapro.vsim_flags.gui``
    Extra arguments passed to ``vsim`` when loading the design in GUI
-   mode where it takes precedence over ``rivierapro_vsim_extra_args``.
+   mode where it takes precedence over ``rivierapro.vsim_flags``.
    Must be a list of strings.
 
 ``ghdl.flags``
-   Extra arguments passed to ``ghdl --elab-run`` command *before* executable specific flags. Must be a list of strings.
+   Extra arguments passed to ``ghdl --elab-run`` command *before* executable specific flags.
    Must be a list of strings.
 
 .. |compile_option| replace::
@@ -1110,6 +1114,8 @@ class TestBench(object):
         :param pre_config: A function to be called before test execution.
            The function must return `True` or the test will fail
         :param post_check: A function to be called after test execution.
+           The function must accept a string which is the filesystem path to the
+           directory where test outputs are stored.
            The function must return `True` or the test will fail
 
         :example:
@@ -1247,6 +1253,8 @@ class Test(object):
         :param pre_config: A function to be called before test execution.
            The function must return `True` or the test will fail
         :param post_check: A function to be called after test execution.
+           The function must accept a string which is the filesystem path to the
+           directory where test outputs are stored.
            The function must return `True` or the test will fail
 
         :example:
