@@ -1114,6 +1114,8 @@ class TestBench(object):
         :param pre_config: A function to be called before test execution.
            The function must return `True` or the test will fail
         :param post_check: A function to be called after test execution.
+           The function must accept a string which is the filesystem path to the
+           directory where test outputs are stored.
            The function must return `True` or the test will fail
 
         :example:
@@ -1251,6 +1253,8 @@ class Test(object):
         :param pre_config: A function to be called before test execution.
            The function must return `True` or the test will fail
         :param post_check: A function to be called after test execution.
+           The function must accept a string which is the filesystem path to the
+           directory where test outputs are stored.
            The function must return `True` or the test will fail
 
         :example:
