@@ -58,7 +58,8 @@ class GHDLInterface(SimulatorInterface):
         Create instance from args namespace
         """
         return cls(gtkwave=args.gtkwave,
-                   gtkwave_args=args.gtkwave_args)
+                   gtkwave_args=args.gtkwave_args,
+                   backend=cls.determine_backend())
 
     @classmethod
     def is_available(cls):
@@ -67,7 +68,7 @@ class GHDLInterface(SimulatorInterface):
         """
         return len(cls.find_executable('ghdl')) != 0
 
-    def __init__(self, gtkwave=None, gtkwave_args=""):
+    def __init__(self, gtkwave=None, gtkwave_args="", backend="llvm"):
         self._libraries = {}
         self._vhdl_standard = None
 
@@ -76,7 +77,7 @@ class GHDLInterface(SimulatorInterface):
 
         self._gtkwave = gtkwave
         self._gtkwave_args = gtkwave_args
-        self._backend = self.determine_backend()
+        self._backend = backend
 
     @staticmethod
     def determine_backend():

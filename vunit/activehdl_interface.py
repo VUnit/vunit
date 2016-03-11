@@ -30,13 +30,18 @@ class ActiveHDLInterface(SimulatorInterface):
     name = "activehdl"
     supports_gui_flag = True
     package_users_depend_on_bodies = True
+    compile_options = [
+        "activehdl.vcom_flags",
+        "activehdl.vlog_flags",
+    ]
 
     @classmethod
     def from_args(cls, output_path, args):
         """
         Create new instance from command line arguments object
         """
-        return cls(join(output_path, "library.cfg"),
+        return cls(prefix=cls._find_prefix(),
+                   library_cfg=join(output_path, "library.cfg"),
                    gui=args.gui)
 
     @classmethod
@@ -51,10 +56,10 @@ class ActiveHDLInterface(SimulatorInterface):
         """
         return cls._find_prefix() is not None
 
-    def __init__(self, library_cfg="library.cfg", gui=False):
+    def __init__(self, prefix, library_cfg="library.cfg", gui=False):
         self._vhdl_standard = None
         self._library_cfg = abspath(library_cfg)
-        self._prefix = self._find_prefix()
+        self._prefix = prefix
         self._gui = gui
         self._create_library_cfg()
         self._libraries = {}
@@ -74,20 +79,38 @@ class ActiveHDLInterface(SimulatorInterface):
 
     def compile_source_file_command(self, source_file):
         """
-        Returns the command to compile a single source file
+        Returns the command to compile a single source_file
         """
         if source_file.file_type == 'vhdl':
-            return self.compile_vhdl_file_command(source_file.name, source_file.library.name)
+            return self.compile_vhdl_file_command(source_file)
+        elif source_file.file_type == 'verilog':
+            return self.compile_verilog_file_command(source_file)
 
         LOGGER.error("Unknown file type: %s", source_file.file_type)
         raise CompileError
 
-    def compile_vhdl_file_command(self, source_file_name, library_name):
+    def compile_vhdl_file_command(self, source_file):
         """
-        Returns the command to compile a vhdl file
+        Returns the command to compile a VHDL file
         """
-        return [join(self._prefix, 'vcom'), '-dbg', '-quiet', '-j', dirname(self._library_cfg),
-                '-' + self._vhdl_standard, '-work', library_name, source_file_name]
+        return ([join(self._prefix, 'vcom'), '-dbg', '-quiet', '-j', dirname(self._library_cfg)] +
+                source_file.compile_options.get("activehdl.vcom_flags", []) +
+                ['-' + self._vhdl_standard, '-work', source_file.library.name, source_file.name])
+
+    def compile_verilog_file_command(self, source_file):
+        """
+        Returns the command to compile a Verilog file
+        """
+        args = [join(self._prefix, 'vlog'), '-quiet', '-sv2k12', '-lc', self._library_cfg]
+        args += source_file.compile_options.get("activehdl.vlog_flags", [])
+        args += ['-work', source_file.library.name, source_file.name]
+        for library in self._libraries.values():
+            args += ["-l", library.name]
+        for include_dir in source_file.include_dirs:
+            args += ["+incdir+%s" % include_dir]
+        for key, value in source_file.defines.items():
+            args += ["+define+%s=%s" % (key, value)]
+        return args
 
     def create_library(self, library_name, path, mapped_libraries=None):
         """
@@ -95,8 +118,8 @@ class ActiveHDLInterface(SimulatorInterface):
         """
         mapped_libraries = mapped_libraries if mapped_libraries is not None else {}
 
-        if not file_exists(dirname(path)):
-            os.makedirs(dirname(path))
+        if not file_exists(dirname(abspath(path))):
+            os.makedirs(dirname(abspath(path)))
 
         if not file_exists(path):
             proc = Process([join(self._prefix, 'vlib'), library_name, path], cwd=dirname(self._library_cfg))

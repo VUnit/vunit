@@ -80,7 +80,8 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         """
         persistent = not (args.new_vsim or args.gui)
 
-        return cls(join(output_path, "modelsim.ini"),
+        return cls(prefix=cls._find_prefix(),
+                   modelsim_ini=join(output_path, "modelsim.ini"),
                    persistent=persistent,
                    coverage=args.coverage,
                    gui_mode="load" if args.gui else None)
@@ -104,7 +105,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         """
         return cls._find_prefix() is not None
 
-    def __init__(self, modelsim_ini="modelsim.ini", persistent=False, gui_mode=None, coverage=None):
+    def __init__(self, prefix, modelsim_ini="modelsim.ini", persistent=False, gui_mode=None, coverage=None):
         self._vhdl_standard = None
         self._modelsim_ini = abspath(modelsim_ini)
 
@@ -117,11 +118,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         self._vsim_processes = {}
         self._lock = threading.Lock()
         self._transcript_id = 0
-        self._prefix = self._find_prefix()
-
-        if self._prefix is None:
-            raise RuntimeError("Cannot find any ModelSim toolchain.")
-
+        self._prefix = prefix
         self._libraries = {}
 
         self._persistent = persistent
@@ -232,8 +229,8 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         """
         mapped_libraries = mapped_libraries if mapped_libraries is not None else {}
 
-        if not file_exists(dirname(path)):
-            os.makedirs(dirname(path))
+        if not file_exists(dirname(abspath(path))):
+            os.makedirs(dirname(abspath(path)))
 
         if not file_exists(path):
             proc = Process([join(self._prefix, 'vlib'), '-unix', path])

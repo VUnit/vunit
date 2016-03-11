@@ -58,6 +58,14 @@ The following compilation options are known.
    Extra arguments passed to Riviera PRO ``vlog`` command.
    Must be a list of strings.
 
+``activehdl.vcom_flags``
+   Extra arguments passed to Active HDL ``vcom`` command.
+   Must be a list of strings.
+
+``activehdl.vlog_flags``
+   Extra arguments passed to Active HDL ``vcom`` command.
+   Must be a list of strings.
+
 .. note::
    Only affects source files added *before* the option is set.
 

@@ -46,7 +46,8 @@ class RivieraProInterface(SimulatorInterface):
         """
         Create new instance from command line arguments object
         """
-        return cls(join(output_path, "library.cfg"),
+        return cls(prefix=cls._find_prefix(),
+                   library_cfg=join(output_path, "library.cfg"),
                    gui=args.gui)
 
     @classmethod
@@ -61,10 +62,10 @@ class RivieraProInterface(SimulatorInterface):
         """
         return cls._find_prefix() is not None
 
-    def __init__(self, library_cfg="library.cfg", gui=False):
+    def __init__(self, prefix, library_cfg="library.cfg", gui=False):
         self._vhdl_standard = None
         self._library_cfg = abspath(library_cfg)
-        self._prefix = self._find_prefix()
+        self._prefix = prefix
         self._gui = gui
         self._create_library_cfg()
         self._libraries = {}
@@ -112,6 +113,8 @@ class RivieraProInterface(SimulatorInterface):
             args += ["-l", library.name]
         for include_dir in source_file.include_dirs:
             args += ["+incdir+%s" % include_dir]
+        for key, value in source_file.defines.items():
+            args += ["+define+%s=%s" % (key, value)]
         return args
 
     def create_library(self, library_name, path, mapped_libraries=None):
@@ -120,8 +123,8 @@ class RivieraProInterface(SimulatorInterface):
         """
         mapped_libraries = mapped_libraries if mapped_libraries is not None else {}
 
-        if not file_exists(dirname(path)):
-            os.makedirs(dirname(path))
+        if not file_exists(dirname(abspath(path))):
+            os.makedirs(dirname(abspath(path)))
 
         if not file_exists(path):
             proc = Process([join(self._prefix, 'vlib'), library_name, path], cwd=dirname(self._library_cfg))
