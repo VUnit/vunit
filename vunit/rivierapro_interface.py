@@ -52,8 +52,16 @@ class RivieraProInterface(SimulatorInterface):
 
     @classmethod
     def _find_prefix(cls):
+        """
+        Find RivieraPro toolchain.
+
+        Must have vsim and vsimsa binaries but no avhdl.exe
+        """
+        def no_avhdl(path):
+            return not file_exists(join(path, "avhdl.exe"))
         return cls.find_toolchain(["vsim",
-                                   "vsimsa"])
+                                   "vsimsa"],
+                                  constraints=[no_avhdl])
 
     @classmethod
     def is_available(cls):

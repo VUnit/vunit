@@ -47,7 +47,7 @@ class ActiveHDLInterface(SimulatorInterface):
     @classmethod
     def _find_prefix(cls):
         return cls.find_toolchain(["vsim",
-                                   "VSimSA"])
+                                   "avhdl"])
 
     @classmethod
     def is_available(cls):
