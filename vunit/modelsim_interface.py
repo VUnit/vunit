@@ -161,9 +161,9 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
             return
         write_file(self._modelsim_ini, read_file(join(self._prefix, "..", "modelsim.ini")))
 
-    def compile_project(self, project, vhdl_standard):
+    def setup_library_mapping(self, project, vhdl_standard):
         """
-        Compile the project using vhdl_standard
+        Setup library mapping
         """
         mapped_libraries = self._get_mapped_libraries()
         self._vhdl_standard = vhdl_standard
@@ -171,8 +171,6 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         for library in project.get_libraries():
             self._libraries[library.name] = library
             self.create_library(library.name, library.directory, mapped_libraries)
-
-        self.compile_source_files(project)
 
     def compile_source_file_command(self, source_file):
         """

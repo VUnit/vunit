@@ -9,10 +9,14 @@ Test the SimulatorInterface class
 """
 
 import unittest
+from os.path import join, dirname, exists
+import os
+from shutil import rmtree
 from vunit.project import Project
 from vunit.simulator_interface import SimulatorInterface
 from vunit.test.mock_2or3 import mock
 from vunit.exceptions import CompileError
+from vunit.ostools import renew_path, write_file
 
 
 class TestSimulatorInterface(unittest.TestCase):
@@ -20,38 +24,103 @@ class TestSimulatorInterface(unittest.TestCase):
     Test the SimulatorInterface class
     """
 
-    @staticmethod
-    def test_compile_source_files():
+    def test_compile_source_files(self):
         simif = create_simulator_interface()
-        source_files = [create_mock_source_file("file.vhd", "lib", ["command"])]
-        project = create_mock_project(source_files)
+        simif.compile_source_file_command.side_effect = iter([["command1"], ["command2"]])
+        project = Project()
+        project.add_library("lib", "lib_path")
+        write_file("file1.vhd", "")
+        file1 = project.add_source_file("file1.vhd", "lib", file_type="vhdl")
+        write_file("file2.vhd", "")
+        file2 = project.add_source_file("file2.vhd", "lib", file_type="vhdl")
+        project.add_manual_dependency(file2, depends_on=file1)
 
         with mock.patch("vunit.simulator_interface.run_command", autospec=True) as run_command:
-            run_command.return_value = True
+            run_command.side_effect = iter([True, True])
             simif.compile_source_files(project)
-            run_command.assert_called_once_with(source_files[0].command)
-        project.update.assert_called_once_with(source_files[0])
+            run_command.assert_has_calls([mock.call(["command1"]),
+                                          mock.call(["command2"])])
+        self.assertEqual(project.get_files_in_compile_order(incremental=True), [])
+
+    def test_compile_source_files_continue_on_error(self):
+        simif = create_simulator_interface()
+
+        project = Project()
+        project.add_library("lib", "lib_path")
+        write_file("file1.vhd", "")
+        file1 = project.add_source_file("file1.vhd", "lib", file_type="vhdl")
+        write_file("file2.vhd", "")
+        file2 = project.add_source_file("file2.vhd", "lib", file_type="vhdl")
+        write_file("file3.vhd", "")
+        file3 = project.add_source_file("file3.vhd", "lib", file_type="vhdl")
+        project.add_manual_dependency(file2, depends_on=file1)
+
+        def compile_source_file_command(source_file):
+            if source_file == file1:
+                return ["command1"]
+            elif source_file == file2:
+                return ["command2"]
+            elif source_file == file3:
+                return ["command3"]
+
+        def run_command_side_effect(command):
+            if command == ["command1"]:
+                return False
+            else:
+                return True
+
+        simif.compile_source_file_command.side_effect = compile_source_file_command
+
+        with mock.patch("vunit.simulator_interface.run_command", autospec=True) as run_command:
+            run_command.side_effect = run_command_side_effect
+            self.assertRaises(CompileError, simif.compile_source_files, project, continue_on_error=True)
+            self.assertEqual(len(run_command.mock_calls), 2)
+            run_command.assert_has_calls([mock.call(["command1"]),
+                                          mock.call(["command3"])], any_order=True)
+        self.assertEqual(project.get_files_in_compile_order(incremental=True), [file1, file2])
 
     def test_compile_source_files_run_command_error(self):
         simif = create_simulator_interface()
-        source_files = [create_mock_source_file("file.vhd", "lib", ["command"])]
-        project = create_mock_project(source_files)
+        simif.compile_source_file_command.return_value = ["command"]
+        project = Project()
+        project.add_library("lib", "lib_path")
+        write_file("file.vhd", "")
+        source_file = project.add_source_file("file.vhd", "lib", file_type="vhdl")
 
         with mock.patch("vunit.simulator_interface.run_command", autospec=True) as run_command:
             run_command.return_value = False
             self.assertRaises(CompileError, simif.compile_source_files, project)
-            run_command.assert_called_once_with(source_files[0].command)
-        self.assertFalse(project.update.called)
+            run_command.assert_called_once_with(["command"])
+        self.assertEqual(project.get_files_in_compile_order(incremental=True), [source_file])
 
     def test_compile_source_files_create_command_error(self):
         simif = create_simulator_interface()
-        source_files = [create_mock_source_file("file.vhd", "lib", CompileError)]
-        project = create_mock_project(source_files)
+        project = Project()
+        project.add_library("lib", "lib_path")
+        write_file("file.vhd", "")
+        source_file = project.add_source_file("file.vhd", "lib", file_type="vhdl")
 
         with mock.patch("vunit.simulator_interface.run_command", autospec=True) as run_command:
-            run_command.return_value = False
+            run_command.return_value = True
+
+            def raise_compile_error(*args, **kwargs):
+                raise CompileError
+
+            simif.compile_source_file_command.side_effect = raise_compile_error
             self.assertRaises(CompileError, simif.compile_source_files, project)
-        self.assertFalse(project.update.called)
+        self.assertEqual(project.get_files_in_compile_order(incremental=True), [source_file])
+
+    def setUp(self):
+        self.output_path = join(dirname(__file__), "test_simulator_interface__out")
+        renew_path(self.output_path)
+        self.project = Project()
+        self.cwd = os.getcwd()
+        os.chdir(self.output_path)
+
+    def tearDown(self):
+        os.chdir(self.cwd)
+        if exists(self.output_path):
+            rmtree(self.output_path)
 
 
 def create_simulator_interface():
@@ -59,43 +128,5 @@ def create_simulator_interface():
     Create a simulator interface with fake method
     """
     simif = SimulatorInterface()
-
-    def compile_source_file_command(source_file):
-        if source_file.command == CompileError:
-            raise CompileError
-        else:
-            return source_file.command
-
-    simif.compile_source_file_command = compile_source_file_command
+    simif.compile_source_file_command = mock.create_autospec(simif.compile_source_file_command)
     return simif
-
-
-def create_mock_project(source_files):
-    """
-    Create a mock project containing source_files
-    """
-    project = mock.create_autospec(Project)
-
-    def get_files_in_compile_order():
-        return source_files
-
-    project.get_files_in_compile_order.side_effect = get_files_in_compile_order
-    return project
-
-
-def create_mock_source_file(name, library_name, command):
-    """
-    Createa mock SourceFile
-    """
-    class MockLibrary(object):
-        def __init__(self, name):
-            self.name = name
-
-    class MockSourceFile(object):
-
-        def __init__(self, name, command, library_name):
-            self.name = name
-            self.command = command
-            self.library = MockLibrary(library_name)
-
-    return MockSourceFile(name, command, library_name)

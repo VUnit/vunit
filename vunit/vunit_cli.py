@@ -96,6 +96,10 @@ def _create_argument_parser(description=None, for_documentation=False):
                         default=False,
                         help='Only compile project without running tests')
 
+    parser.add_argument('-k', '--keep-compiling', action='store_true',
+                        default=False,
+                        help='Continue compiling even after errors only skipping files that depend on failed files')
+
     parser.add_argument('--elaborate', action='store_true',
                         default=False,
                         help='Only elaborate test benches without running')

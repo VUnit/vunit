@@ -11,6 +11,7 @@ Generic simulator interface
 from __future__ import print_function
 import sys
 import os
+from os.path import relpath
 from vunit.ostools import Process
 from vunit.exceptions import CompileError
 
@@ -81,11 +82,12 @@ class SimulatorInterface(object):
         """
         pass
 
-    def compile_project(self, project, vhdl_standard):
+    def compile_project(self, project, vhdl_standard, continue_on_error=False):
         """
         Compile the project
         """
-        pass
+        self.setup_library_mapping(project, vhdl_standard)
+        self.compile_source_files(project, continue_on_error)
 
     def simulate(self, output_path,  # pylint: disable=too-many-arguments
                  library_name, entity_name, architecture_name, config):
@@ -94,25 +96,56 @@ class SimulatorInterface(object):
         """
         pass
 
-    def compile_source_files(self, project):
+    def setup_library_mapping(self, project, vhdl_standard):
         """
-        Use _compile_source_file to compile all source_files
+        Implemented by specific simulators
         """
+        pass
 
-        for source_file in project.get_files_in_compile_order():
-            print('Compiling ' + source_file.name + ' into ' + source_file.library.name + ' ...')
-            success = False
+    def compile_source_files(self, project, continue_on_error=False):
+        """
+        Use compile_source_file_command to compile all source_files
+        """
+        dependency_graph = project.create_dependency_graph()
+        all_ok = True
+        failures = []
+        source_files = project.get_files_in_compile_order(dependency_graph=dependency_graph)
+        source_files_to_skip = set()
+        for source_file in source_files:
+            if source_file in source_files_to_skip:
+                print("Skipping %s due to failed dependencies" % source_file.name)
+                continue
+
+            print('Compiling %s into %s ...' % (relpath(source_file.name), source_file.library.name))
             try:
+                command = None
                 command = self.compile_source_file_command(source_file)
                 success = run_command(command)
 
             except CompileError:
-                pass
+                success = False
 
             if success:
                 project.update(source_file)
             else:
-                raise CompileError
+                source_files_to_skip.update(dependency_graph.get_dependent([source_file]))
+                failures.append(source_file)
+
+                if command is None:
+                    print("Failed to compile %s. File type not supported by %s simulator"
+                          % (relpath(source_file.name), self.name))
+                else:
+                    print("Failed to compile %s with command:\n%s"
+                          % (relpath(source_file.name), " ".join(command)))
+
+                all_ok = False
+                if not continue_on_error:
+                    break
+
+        if not all_ok:
+            if continue_on_error:
+                print("Failed to compile some files")
+            raise CompileError
 
     def compile_source_file_command(self, source_file):  # pylint: disable=unused-argument
         raise NotImplementedError

@@ -108,9 +108,9 @@ class GHDLInterface(SimulatorInterface):
         """
         return self._backend in ("llvm", "gcc")
 
-    def compile_project(self, project, vhdl_standard):
+    def setup_library_mapping(self, project, vhdl_standard):
         """
-        Compile project using vhdl_standard
+        Setup library mapping
         """
         self._libraries = {}
         self._vhdl_standard = vhdl_standard
@@ -118,8 +118,6 @@ class GHDLInterface(SimulatorInterface):
             if not exists(library.directory):
                 os.makedirs(library.directory)
             self._libraries[library.name] = library.directory
-
-        self.compile_source_files(project)
 
     def compile_source_file_command(self, source_file):
         """

@@ -220,7 +220,7 @@ class Project(object):
             if not found_component_entity:
                 LOGGER.debug("failed to find a matching entity for component '%s' ", unit_name)
 
-    def _create_dependency_graph(self):
+    def create_dependency_graph(self):
         """
         Create a DependencyGraph object of the HDL code project
         """
@@ -278,12 +278,13 @@ class Project(object):
         LOGGER.error("Found circular dependency:\n%s",
                      " ->\n".join(source_file.name for source_file in exception.path))
 
-    def get_files_in_compile_order(self, incremental=True):
+    def get_files_in_compile_order(self, incremental=True, dependency_graph=None):
         """
         Get a list of all files in compile order
         incremental -- Only return files that need recompile if True
         """
-        dependency_graph = self._create_dependency_graph()
+        if dependency_graph is None:
+            dependency_graph = self.create_dependency_graph()
 
         files = []
         for source_file in self.get_source_files_in_order():
@@ -313,7 +314,7 @@ class Project(object):
         if target_files is None:
             target_files = self.get_source_files_in_order()
 
-        dependency_graph = self._create_dependency_graph()
+        dependency_graph = self.create_dependency_graph()
 
         try:
             affected_files = dependency_graph.get_dependencies(set(target_files))

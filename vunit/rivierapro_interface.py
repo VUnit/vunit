@@ -78,17 +78,15 @@ class RivieraProInterface(SimulatorInterface):
         self._create_library_cfg()
         self._libraries = {}
 
-    def compile_project(self, project, vhdl_standard):
+    def setup_library_mapping(self, project, vhdl_standard):
         """
-        Compile the project using vhdl_standard
+        Setup library mapping
         """
         mapped_libraries = self._get_mapped_libraries()
         for library in project.get_libraries():
             self._libraries[library.name] = library
             self.create_library(library.name, library.directory, mapped_libraries)
-
         self._vhdl_standard = vhdl_standard
-        self.compile_source_files(project)
 
     def compile_source_file_command(self, source_file):
         """

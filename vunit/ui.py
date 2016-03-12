@@ -201,6 +201,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                    list_only=args.list,
                    list_files_only=args.files,
                    compile_only=args.compile,
+                   keep_compiling=args.keep_compiling,
                    elaborate_only=args.elaborate,
                    compile_builtins=compile_builtins,
                    simulator_factory=SimulatorFactory(args),
@@ -220,6 +221,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                  list_only=False,
                  list_files_only=False,
                  compile_only=False,
+                 keep_compiling=False,
                  elaborate_only=False,
                  vhdl_standard='2008',
                  compile_builtins=True,
@@ -242,6 +244,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._list_only = list_only
         self._list_files_only = list_files_only
         self._compile_only = compile_only
+        self._keep_compiling = keep_compiling
         self._vhdl_standard = vhdl_standard
 
         self._tb_filter = tb_filter
@@ -758,7 +761,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         Compile entire project
         """
-        simulator_if.compile_project(self._project, self._vhdl_standard)
+        simulator_if.compile_project(self._project, self._vhdl_standard,
+                                     continue_on_error=self._keep_compiling)
 
     def _run_test(self, test_cases, report):
         """
