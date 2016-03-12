@@ -39,7 +39,6 @@ class TestRivieraProInterface(unittest.TestCase):
         process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"], cwd=self.output_path)
         run_command.assert_called_once_with(
             [join('prefix', 'vcom'),
-             '-dbg',
              '-quiet',
              '-j',
              self.output_path,
@@ -63,7 +62,6 @@ class TestRivieraProInterface(unittest.TestCase):
         process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"], cwd=self.output_path)
         process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"], cwd=self.output_path)
         run_command.assert_called_once_with([join('prefix', 'vcom'),
-                                             '-dbg',
                                              '-quiet',
                                              '-j',
                                              self.output_path,

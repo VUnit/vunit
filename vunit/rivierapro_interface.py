@@ -98,7 +98,7 @@ class RivieraProInterface(SimulatorInterface):
         """
         Returns the command to compile a VHDL file
         """
-        return ([join(self._prefix, 'vcom'), '-dbg', '-quiet', '-j', dirname(self._library_cfg)] +
+        return ([join(self._prefix, 'vcom'), '-quiet', '-j', dirname(self._library_cfg)] +
                 source_file.compile_options.get("rivierapro.vcom_flags", []) +
                 ['-' + self._vhdl_standard, '-work', source_file.library.name, source_file.name])
 
