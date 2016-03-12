@@ -10,7 +10,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 use std.textio.all;
 use work.lang.all;
-use work.textio.all;
 use work.string_ops.all;
 use work.log_formatting_pkg.all;
 use work.log_types_pkg.all;
@@ -410,4 +409,3 @@ package body log_special_types_pkg is
 
   end protected body logger_t;
 end package body log_special_types_pkg;
-
