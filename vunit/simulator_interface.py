@@ -191,12 +191,12 @@ def isfile(file_name):
     return os.path.basename(file_name) in os.listdir(os.path.dirname(file_name))
 
 
-def run_command(command):
+def run_command(command, cwd=None):
     """
     Run a command
     """
     try:
-        proc = Process(command)
+        proc = Process(command, cwd=cwd)
         proc.consume_output()
         return True
     except Process.NonZeroExitCode:

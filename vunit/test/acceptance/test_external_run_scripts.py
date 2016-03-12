@@ -23,7 +23,7 @@ def simulator_supports_verilog():
     """
     Returns True if simulator supports Verilog
     """
-    return simulator_is("modelsim")
+    return simulator_is("modelsim", "incisive")
 
 
 # pylint: disable=too-many-public-methods

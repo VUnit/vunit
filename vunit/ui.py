@@ -42,6 +42,14 @@ The following compilation options are known.
    Extra arguments passed to ``ghdl -a`` command during compilation.
    Must be a list of strings.
 
+``incisive.irun_vhdl_flags``
+   Extra arguments passed to the Incisive ``irun`` command when compiling VHDL files.
+   Must be a list of strings.
+
+``incisive.irun_verilog_flags``
+   Extra arguments passed to the Incisive ``irun`` command when compiling Verilog files.
+   Must be a list of strings.
+
 ``modelsim.vcom_flags``
    Extra arguments passed to ModelSim ``vcom`` command.
    Must be a list of strings.
@@ -76,6 +84,14 @@ Simulation Options
 Simulation options allow customization of simulation behavior. Since simulators have
 differing options available, generic options may be specified through this interface.
 The following simulation options are known.
+
+``ghdl.flags``
+   Extra arguments passed to ``ghdl --elab-run`` command *before* executable specific flags. Must be a list of strings.
+   Must be a list of strings.
+
+``incisive.irun_sim_flags``
+   Extra arguments passed to the Incisive ``irun`` command when loading the design.
+   Must be a list of strings.
 
 ``modelsim.vsim_flags``
    Extra arguments passed to ``vsim`` when loading the design.
