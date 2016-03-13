@@ -109,7 +109,7 @@ begin
     variable null_array5_2_t     : array5_t(0 to 1, 1 to 0);
     variable null_array5_3_t     : array5_t(1 to 0, 0 to 1);
     variable null_array6_t       : array6_t(apple downto banana);
-    variable null_array7_t       : array7_t(1 to 2, apple downto banana);
+--    variable null_array7_t       : array7_t(1 to 2, apple downto banana);
     variable t1, t2, t3, t4, t5  : time;
     variable my_record4          : record4_t;
     variable my_record5          : record5_t;
@@ -141,8 +141,8 @@ begin
     variable a5 : array5_t(1 to 5, 1 to 3);
     variable a6_null : array6_t(apple downto orange);
     variable a6 : array6_t(apple to orange);
-    variable a7_null : array7_t(1 to 2, apple downto banana);
-    variable a7 : array7_t(1 to 5, apple to melon);
+--    variable a7_null : array7_t(1 to 2, apple downto banana);
+--    variable a7 : array7_t(1 to 5, apple to melon);
     variable a8 : array8_t;
     variable a9 : array9_t;
     variable a10 : array10_t;

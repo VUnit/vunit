@@ -101,7 +101,7 @@ package custom_types_pkg is
   type array5_t is array (integer range <>, integer range <>) of natural;
   type fruit_t is (apple, banana, melon, kiwi, orange, papaya);
   type array6_t is array (fruit_t range <>) of natural;
-  type array7_t is array (integer range <>, fruit_t range <>) of natural;
+--  type--array7_t is array (integer range <>, fruit_t range <>) of natural;
   type array8_t is array (2 * (3 - 4) to 2, -1 to -1 + 2) of natural;
   type array9_t is array (array1_t'range) of natural;
   type array10_t is array (array1_t'range, -1 to 1) of natural;
