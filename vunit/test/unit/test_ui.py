@@ -459,7 +459,7 @@ Listed 2 files""".splitlines()))
             self.assertEqual(self.mocksim.simulate.mock_calls, [])
             return retval
 
-        pre_config = mock.Mock()
+        pre_config = mock.create_autospec(lambda: None)
         pre_config.side_effect = side_effect
 
         obj.add_config(name="", pre_config=pre_config)

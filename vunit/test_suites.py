@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Contains different kinds of test suites
@@ -10,7 +10,7 @@ Contains different kinds of test suites
 
 
 from os.path import join
-
+import inspect
 import vunit.ostools as ostools
 from vunit.test_report import (PASSED, SKIPPED, FAILED)
 
@@ -39,9 +39,8 @@ class IndependentSimTestCase(object):
         """
         generics = {}
 
-        if self._pre_config is not None:
-            if not self._pre_config():
-                return False
+        if not call_pre_config(self._pre_config, output_path):
+            return False
 
         if self._has_runner_cfg:
             runner_cfg = {
@@ -100,10 +99,8 @@ class SameSimTestSuite(object):
         """
         Run the test suite using output_path
         """
-
-        if self._pre_config is not None:
-            if not self._pre_config():
-                return False
+        if not call_pre_config(self._pre_config, output_path):
+            return False
 
         runner_cfg = {
             "enabled_test_cases": ",".join(self._test_cases),
@@ -186,3 +183,18 @@ def encode_dict_value(value):
         return str(value).lower()
     else:
         return str(value)
+
+
+def call_pre_config(pre_config, output_path):
+    """
+    Call pre_config if available. Setting optional output_path
+    """
+    if pre_config is not None:
+        args = inspect.getargspec(pre_config).args  # pylint: disable=deprecated-method
+        if "output_path" in args:
+            if not pre_config(output_path):
+                return False
+        else:
+            if not pre_config():
+                return False
+    return True

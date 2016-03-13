@@ -12,7 +12,6 @@ Test the global test bench configuration
 import unittest
 from os.path import join, dirname
 from vunit.ostools import renew_path
-
 from vunit.test_configuration import TestConfiguration, Configuration, SimConfig, create_scope
 
 

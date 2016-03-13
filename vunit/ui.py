@@ -1124,6 +1124,8 @@ class TestBench(object):
         :param generics: A `dict` containing the generics to be set
         :param parameters: A `dict` containing the parameters to be set
         :param pre_config: A function to be called before test execution.
+           The function may accept a string which is the filesystem path to the
+           directory where test outputs are stored.
            The function must return `True` or the test will fail
         :param post_check: A function to be called after test execution.
            The function must accept a string which is the filesystem path to the
@@ -1263,6 +1265,8 @@ class Test(object):
         :param generics: A `dict` containing the generics to be set
         :param parameters: A `dict` containing the parameters to be set
         :param pre_config: A function to be called before test execution.
+           The function may accept a string which is the filesystem path to the
+           directory where test outputs are stored.
            The function must return `True` or the test will fail
         :param post_check: A function to be called after test execution.
            The function must accept a string which is the filesystem path to the
