@@ -58,6 +58,30 @@ class SimulatorInterface(object):
         return result
 
     @classmethod
+    def find_prefix(cls):
+        """
+        Find prefix by looking at VUNIT_<SIMULATOR_NAME>_PATH environment variable
+        """
+        prefix = os.environ.get("VUNIT_" + cls.name.upper() + "_PATH", None)
+        if prefix is not None:
+            return prefix
+        return cls.find_prefix_from_path()
+
+    @classmethod
+    def find_prefix_from_path(cls):
+        """
+        Find simulator toolchain prefix from PATH environment variable
+        """
+        return None
+
+    @classmethod
+    def is_available(cls):
+        """
+        Returns True if simulator is available
+        """
+        return cls.find_prefix() is not None
+
+    @classmethod
     def find_toolchain(cls, executables, constraints=None):
         """
         Find the first path prefix containing all executables

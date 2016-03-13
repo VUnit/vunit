@@ -46,12 +46,12 @@ class RivieraProInterface(SimulatorInterface):
         """
         Create new instance from command line arguments object
         """
-        return cls(prefix=cls._find_prefix(),
+        return cls(prefix=cls.find_prefix(),
                    library_cfg=join(output_path, "library.cfg"),
                    gui=args.gui)
 
     @classmethod
-    def _find_prefix(cls):
+    def find_prefix_from_path(cls):
         """
         Find RivieraPro toolchain.
 
@@ -62,13 +62,6 @@ class RivieraProInterface(SimulatorInterface):
         return cls.find_toolchain(["vsim",
                                    "vsimsa"],
                                   constraints=[no_avhdl])
-
-    @classmethod
-    def is_available(cls):
-        """
-        Return True if installed
-        """
-        return cls._find_prefix() is not None
 
     def __init__(self, prefix, library_cfg="library.cfg", gui=False):
         self._vhdl_standard = None

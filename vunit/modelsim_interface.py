@@ -80,30 +80,22 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         """
         persistent = not (args.new_vsim or args.gui)
 
-        return cls(prefix=cls._find_prefix(),
+        return cls(prefix=cls.find_prefix(),
                    modelsim_ini=join(output_path, "modelsim.ini"),
                    persistent=persistent,
                    coverage=args.coverage,
                    gui_mode="load" if args.gui else None)
 
     @classmethod
-    def _find_prefix(cls):
+    def find_prefix_from_path(cls):
         """
         Find first valid modelsim toolchain prefix
         """
-
         def has_modelsim_ini(path):
             return os.path.isfile(join(path, "..", "modelsim.ini"))
 
         return cls.find_toolchain(["vsim"],
                                   constraints=[has_modelsim_ini])
-
-    @classmethod
-    def is_available(cls):
-        """
-        Return True if ModelSim is installed
-        """
-        return cls._find_prefix() is not None
 
     def __init__(self, prefix, modelsim_ini="modelsim.ini", persistent=False, gui_mode=None, coverage=None):
         self._vhdl_standard = None

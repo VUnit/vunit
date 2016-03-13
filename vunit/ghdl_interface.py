@@ -57,25 +57,18 @@ class GHDLInterface(SimulatorInterface):
         """
         Create instance from args namespace
         """
-        prefix = cls._find_prefix()
+        prefix = cls.find_prefix()
         return cls(prefix=prefix,
                    gtkwave=args.gtkwave,
                    gtkwave_args=args.gtkwave_args,
                    backend=cls.determine_backend(prefix))
 
     @classmethod
-    def _find_prefix(cls):
+    def find_prefix_from_path(cls):
         """
         Find first valid ghdl toolchain prefix
         """
         return cls.find_toolchain(["ghdl"])
-
-    @classmethod
-    def is_available(cls):
-        """
-        Return True if GHDL is installed
-        """
-        return cls._find_prefix() is not None
 
     def __init__(self, prefix, gtkwave=None, gtkwave_args="", backend="llvm"):
         self._prefix = prefix

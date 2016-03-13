@@ -110,6 +110,37 @@ class TestSimulatorInterface(unittest.TestCase):
             self.assertRaises(CompileError, simif.compile_source_files, project)
         self.assertEqual(project.get_files_in_compile_order(incremental=True), [source_file])
 
+    @mock.patch("os.environ", autospec=True)
+    def test_find_prefix(self, environ):
+
+        class MySimulatorInterface(SimulatorInterface):  # pylint: disable=abstract-method
+            """
+            Dummy simulator interface for testing
+            """
+            name = "simname"
+            prefix_from_path = None
+
+            @classmethod
+            def find_prefix_from_path(cls):
+                return cls.prefix_from_path
+
+        simif = MySimulatorInterface()
+        simif.name = "simname"
+        environ.get.return_value = None
+        self.assertEqual(simif.find_prefix(), None)
+        environ.get.assert_called_once_with("VUNIT_SIMNAME_PATH", None)
+
+        environ.reset_mock()
+        environ.get.return_value = "simname/bin"
+        self.assertEqual(simif.find_prefix(), "simname/bin")
+        environ.get.assert_called_once_with("VUNIT_SIMNAME_PATH", None)
+
+        environ.reset_mock()
+        environ.get.return_value = None
+        MySimulatorInterface.prefix_from_path = "prefix_from_path"
+        self.assertEqual(simif.find_prefix(), "prefix_from_path")
+        environ.get.assert_called_once_with("VUNIT_SIMNAME_PATH", None)
+
     def setUp(self):
         self.output_path = join(dirname(__file__), "test_simulator_interface__out")
         renew_path(self.output_path)

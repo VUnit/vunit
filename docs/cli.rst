@@ -154,4 +154,13 @@ VUnit automatically detects which simulators are available on the
 found. For people who have multiple simulators installed the
 ``VUNIT_SIMULATOR`` environment variable can be set to one of
 ``activehdl``, ``rivierapro``, ``ghdl`` or ``modelsim`` to explicitly
-specify the simulator.
+specify which simulator to use.
+
+In addition to VUnit scanning the ``PATH`` the simulator executable
+path can be explicitly configured by setting a
+``VUNIT_<SIMULATOR_NAME>_PATH`` environment variable.
+
+.. code-block:: console
+   :caption: Explicitly set path to GHDL executables
+
+   VUNIT_GHDL_PATH=/opt/ghdl/bin
