@@ -35,11 +35,11 @@ class TestGHDLInterface(unittest.TestCase):
         find_executable.side_effect = find_executable_side_effect
 
         executables["gtkwave"] = ["path"]
-        GHDLInterface()
+        GHDLInterface(prefix="prefix")
 
         executables["gtkwave"] = []
-        GHDLInterface()
-        self.assertRaises(RuntimeError, GHDLInterface, gtkwave="ghw")
+        GHDLInterface(prefix="prefix")
+        self.assertRaises(RuntimeError, GHDLInterface, prefix="prefix", gtkwave="ghw")
 
     @mock.patch('subprocess.check_output', autospec=True)
     def test_parses_llvm_backend(self, check_output):
@@ -54,7 +54,7 @@ GHDL is free software, covered by the GNU General Public License.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 """
         check_output.return_value = version
-        self.assertEqual(GHDLInterface.determine_backend(), "llvm")
+        self.assertEqual(GHDLInterface.determine_backend("prefix"), "llvm")
 
     @mock.patch('subprocess.check_output', autospec=True)
     def test_parses_mcode_backend(self, check_output):
@@ -69,7 +69,7 @@ GHDL is free software, covered by the GNU General Public License.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 """
         check_output.return_value = version
-        self.assertEqual(GHDLInterface.determine_backend(), "mcode")
+        self.assertEqual(GHDLInterface.determine_backend("prefix"), "mcode")
 
     @mock.patch('subprocess.check_output', autospec=True)
     def test_parses_gcc_backend(self, check_output):
@@ -84,7 +84,7 @@ GHDL is free software, covered by the GNU General Public License.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 """
         check_output.return_value = version
-        self.assertEqual(GHDLInterface.determine_backend(), "gcc")
+        self.assertEqual(GHDLInterface.determine_backend("prefix"), "gcc")
 
     @mock.patch('subprocess.check_output', autospec=True)
     def test_assertion_on_unknown_backend(self, check_output):
@@ -99,11 +99,11 @@ GHDL is free software, covered by the GNU General Public License.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
 
         check_output.return_value = version
-        self.assertRaises(AssertionError, GHDLInterface.determine_backend)
+        self.assertRaises(AssertionError, GHDLInterface.determine_backend, "prefix")
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     def test_compile_project_2008(self, run_command):  # pylint: disable=no-self-use
-        simif = GHDLInterface()
+        simif = GHDLInterface(prefix="prefix")
         write_file("file.vhd", "")
 
         project = Project()
@@ -111,12 +111,12 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         project.add_source_file("file.vhd", "lib", file_type="vhdl")
         simif.compile_project(project, vhdl_standard="2008")
         run_command.assert_called_once_with(
-            ['ghdl', '-a', '--workdir=lib_path', '--work=lib',
+            [join("prefix", 'ghdl'), '-a', '--workdir=lib_path', '--work=lib',
              '--std=08', '-Plib_path', 'file.vhd'])
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     def test_compile_project_2002(self, run_command):  # pylint: disable=no-self-use
-        simif = GHDLInterface()
+        simif = GHDLInterface(prefix="prefix")
         write_file("file.vhd", "")
 
         project = Project()
@@ -124,12 +124,12 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         project.add_source_file("file.vhd", "lib", file_type="vhdl")
         simif.compile_project(project, vhdl_standard="2002")
         run_command.assert_called_once_with(
-            ['ghdl', '-a', '--workdir=lib_path', '--work=lib',
+            [join("prefix", 'ghdl'), '-a', '--workdir=lib_path', '--work=lib',
              '--std=02', '-Plib_path', 'file.vhd'])
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     def test_compile_project_93(self, run_command):  # pylint: disable=no-self-use
-        simif = GHDLInterface()
+        simif = GHDLInterface(prefix="prefix")
         write_file("file.vhd", "")
 
         project = Project()
@@ -137,12 +137,12 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         project.add_source_file("file.vhd", "lib", file_type="vhdl")
         simif.compile_project(project, vhdl_standard="93")
         run_command.assert_called_once_with(
-            ['ghdl', '-a', '--workdir=lib_path', '--work=lib',
+            [join("prefix", 'ghdl'), '-a', '--workdir=lib_path', '--work=lib',
              '--std=93', '-Plib_path', 'file.vhd'])
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     def test_compile_project_extra_flags(self, run_command):  # pylint: disable=no-self-use
-        simif = GHDLInterface()
+        simif = GHDLInterface(prefix="prefix")
         write_file("file.vhd", "")
 
         project = Project()
@@ -151,11 +151,11 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         source_file.set_compile_option("ghdl.flags", ["custom", "flags"])
         simif.compile_project(project, vhdl_standard="2008")
         run_command.assert_called_once_with(
-            ['ghdl', '-a', '--workdir=lib_path', '--work=lib', '--std=08',
+            [join("prefix", 'ghdl'), '-a', '--workdir=lib_path', '--work=lib', '--std=08',
              '-Plib_path', 'custom', 'flags', 'file.vhd'])
 
     def test_compile_project_verilog_error(self):
-        simif = GHDLInterface()
+        simif = GHDLInterface(prefix="prefix")
         write_file("file.v", "")
 
         project = Project()

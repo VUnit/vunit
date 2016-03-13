@@ -57,18 +57,28 @@ class GHDLInterface(SimulatorInterface):
         """
         Create instance from args namespace
         """
-        return cls(gtkwave=args.gtkwave,
+        prefix = cls._find_prefix()
+        return cls(prefix=prefix,
+                   gtkwave=args.gtkwave,
                    gtkwave_args=args.gtkwave_args,
-                   backend=cls.determine_backend())
+                   backend=cls.determine_backend(prefix))
+
+    @classmethod
+    def _find_prefix(cls):
+        """
+        Find first valid ghdl toolchain prefix
+        """
+        return cls.find_toolchain(["ghdl"])
 
     @classmethod
     def is_available(cls):
         """
         Return True if GHDL is installed
         """
-        return len(cls.find_executable('ghdl')) != 0
+        return cls._find_prefix() is not None
 
-    def __init__(self, gtkwave=None, gtkwave_args="", backend="llvm"):
+    def __init__(self, prefix, gtkwave=None, gtkwave_args="", backend="llvm"):
+        self._prefix = prefix
         self._libraries = {}
         self._vhdl_standard = None
 
@@ -80,7 +90,7 @@ class GHDLInterface(SimulatorInterface):
         self._backend = backend
 
     @staticmethod
-    def determine_backend():
+    def determine_backend(prefix):
         """
         Determine the GHDL backend
         """
@@ -89,7 +99,7 @@ class GHDLInterface(SimulatorInterface):
             "llvm code generator": "llvm",
             "GCC back-end code generator": "gcc"
         }
-        output = subprocess.check_output(["ghdl", "--version"]).decode()
+        output = subprocess.check_output([join(prefix, "ghdl"), "--version"]).decode()
         for name, backend in mapping.items():
             if name in output:
                 LOGGER.info("Detected GHDL %s", name)
@@ -153,7 +163,7 @@ class GHDLInterface(SimulatorInterface):
         """
         Returns the command to compile a vhdl file
         """
-        cmd = ['ghdl', '-a', '--workdir=%s' % library_path,
+        cmd = [join(self._prefix, 'ghdl'), '-a', '--workdir=%s' % library_path,
                '--work=%s' % library_name,
                '--std=%s' % self._std_str()]
         for library_name, library_path in self._libraries.items():
@@ -210,7 +220,7 @@ class GHDLInterface(SimulatorInterface):
                 elif self._gtkwave == "vcd":
                     cmd += ['--vcd=%s' % data_file_name]
 
-            proc = Process(['ghdl'] + cmd)
+            proc = Process([join(self._prefix, 'ghdl')] + cmd)
             proc.consume_output()
         except Process.NonZeroExitCode:
             status = False
