@@ -502,7 +502,8 @@ class ArrayDebugCodecTemplate(DatatypeDebugCodecTemplate, ArrayCodecTemplate):
         return ret_val_descending;
       end if;
     end function ret_val_range;
-    variable ret_val : $array_type(ret_val_range(code)'range)$init_value;
+    constant array_of_correct_range : $array_type := ret_val_range(code);
+    variable ret_val : $array_type(array_of_correct_range'range)$init_value;
     variable elements : lines_t;
     variable length : natural;
     variable index : natural := 0;
@@ -562,7 +563,8 @@ class ArrayDebugCodecTemplate(DatatypeDebugCodecTemplate, ArrayCodecTemplate):
         end if;
       end if;
     end function ret_val_range;
-    variable ret_val : $array_type(ret_val_range(code)'range(1), ret_val_range(code)'range(2));
+    constant array_of_correct_range : $array_type := ret_val_range(code);
+    variable ret_val : $array_type(array_of_correct_range'range(1), array_of_correct_range'range(2));
     variable elements : lines_t;
     variable length : natural;
     variable index : natural := 0;
