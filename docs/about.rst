@@ -86,11 +86,11 @@ Simulators
 
 -  `Aldec Riviera-PRO`_
 
-   -  Tested with Riviera-PRO-2015.06 (x64/x86).
+   -  Tested with Riviera-PRO 2015.06, 2015.10 (x64/x86).
    -  Only VHDL 2008
 -  `Aldec Active-HDL`_
 
-   -  Tested with Active-HDL-10.2 (x64/x86)
+   -  Tested with Active-HDL 9.3, 10.1, 10.2 (x64/x86)
    -  Only VHDL 2008
 -  `Mentor Graphics ModelSim/Questa`_
 
