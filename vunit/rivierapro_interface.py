@@ -334,7 +334,7 @@ proc vunit_help {} {
         return True
 
     def simulate(self, output_path,  # pylint: disable=too-many-arguments
-                 library_name, entity_name, architecture_name, config):
+                 library_name, entity_name, architecture_name, config, elaborate_only):
         """
         Run a test bench
         """
@@ -351,7 +351,7 @@ proc vunit_help {} {
         write_file(gui_file_name,
                    self._create_gui_script(common_file_name))
         write_file(batch_file_name,
-                   self._create_batch_script(common_file_name, config.elaborate_only))
+                   self._create_batch_script(common_file_name, elaborate_only))
 
         if self._gui:
             return self._run_batch_file(gui_file_name, gui=True)

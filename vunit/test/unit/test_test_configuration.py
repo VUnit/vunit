@@ -134,25 +134,6 @@ class TestTestConfiguration(unittest.TestCase):
         self.assertEqual(self.cfg.more_specific_configurations(create_scope("lib", "entity_ieee")),
                          [create_scope("lib", "entity_ieee", "test")])
 
-    def test_no_post_check_when_elaborate_only(self):
-        self.cfg = TestConfiguration(elaborate_only=True)
-        scope = create_scope("lib", "entity")
-
-        def pre_config():
-            return True
-
-        def post_check():
-            return True
-
-        self.cfg.add_config(name="name",
-                            generics=dict(),
-                            pre_config=pre_config,
-                            post_check=post_check,
-                            scope=scope)
-
-        self.assertEqual(self.cfg.get_configurations(scope),
-                         [cfg("name", pre_config=pre_config, elaborate_only=True)])
-
     def test_config_with_post_check(self):
         scope = create_scope("lib", "entity")
 
@@ -222,7 +203,6 @@ def cfg(name="",  # pylint: disable=too-many-arguments
         post_check=None,
         pli=None,
         disable_ieee_warnings=False,
-        elaborate_only=False,
         sim_options=None):
     """
     Helper method to build configuration hierarchy
@@ -231,7 +211,6 @@ def cfg(name="",  # pylint: disable=too-many-arguments
                          sim_config=SimConfig(generics=generics,
                                               pli=pli,
                                               disable_ieee_warnings=disable_ieee_warnings,
-                                              elaborate_only=elaborate_only,
                                               options=sim_options),
                          pre_config=pre_config,
                          post_check=post_check)

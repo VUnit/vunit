@@ -28,8 +28,9 @@ class TestScanner(object):
     Scans a project for test benches
     """
 
-    def __init__(self, simulator_if, configuration):
+    def __init__(self, simulator_if, configuration, elaborate_only=False):
         self._simulator_if = simulator_if
+        self._elaborate_only = elaborate_only
         self._cfg = configuration
 
     def from_project(self, project, entity_filter=None):
@@ -94,7 +95,8 @@ class TestScanner(object):
                         test_bench=create_test_bench(config),
                         has_runner_cfg=has_runner_cfg,
                         pre_config=config.pre_config,
-                        post_check=config.post_check))
+                        post_check=config.post_check,
+                        elaborate_only=self._elaborate_only))
         elif should_run_in_same_sim:
             scope = create_scope(entity.library_name, entity.name)
             configurations = self._cfg.get_configurations(scope)
@@ -104,7 +106,8 @@ class TestScanner(object):
                                      test_cases=run_strings,
                                      test_bench=create_test_bench(config),
                                      pre_config=config.pre_config,
-                                     post_check=config.post_check))
+                                     post_check=config.post_check,
+                                     elaborate_only=self._elaborate_only))
         else:
             for run_string in run_strings:
                 scope = create_scope(entity.library_name, entity.name, run_string)
@@ -117,7 +120,8 @@ class TestScanner(object):
                             test_bench=create_test_bench(config),
                             has_runner_cfg=has_runner_cfg,
                             pre_config=config.pre_config,
-                            post_check=config.post_check))
+                            post_check=config.post_check,
+                            elaborate_only=self._elaborate_only))
 
     def _create_test_bench(self,  # pylint: disable=too-many-arguments
                            entity, architecture_name, config, fail_on_warning, verilog):

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Class to run a single test bench
@@ -27,7 +27,7 @@ class TestBench(object):  # pylint: disable=too-many-instance-attributes
         self._sim_config = sim_config
         self._has_output_path = has_output_path
 
-    def run(self, output_path, extra_generics=None):
+    def run(self, output_path, extra_generics=None, elaborate_only=False):
         """
         Run test bench with output_path and extra_generics
         """
@@ -45,4 +45,5 @@ class TestBench(object):  # pylint: disable=too-many-instance-attributes
                                            self._library_name,
                                            self._entity_name,
                                            self._architecture_name,
-                                           self._sim_config)
+                                           self._sim_config,
+                                           elaborate_only=elaborate_only)

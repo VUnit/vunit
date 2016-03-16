@@ -229,7 +229,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                  exit_0=False):
 
         self._configure_logging(log_level)
-
+        self._elaborate_only = elaborate_only
         self._output_path = abspath(output_path)
 
         if no_color:
@@ -248,7 +248,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._vhdl_standard = vhdl_standard
 
         self._tb_filter = tb_filter
-        self._configuration = TestConfiguration(elaborate_only=elaborate_only)
+        self._configuration = TestConfiguration()
         self._external_preprocessors = []
         self._location_preprocessor = None
         self._check_preprocessor = None
@@ -747,7 +747,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         Create the test suites by scanning the project
         """
         scanner = TestScanner(simulator_if,
-                              self._configuration)
+                              self._configuration,
+                              elaborate_only=self._elaborate_only)
         test_list = scanner.from_project(self._project, entity_filter=self._tb_filter)
 
         if test_list.num_tests() == 0:

@@ -301,7 +301,7 @@ puts "VUnit help: Design already loaded. Use run -all to run the test."
         return True
 
     def simulate(self, output_path,  # pylint: disable=too-many-arguments
-                 library_name, entity_name, architecture_name, config):
+                 library_name, entity_name, architecture_name, config, elaborate_only):
         """
         Run a test bench
         """
@@ -318,7 +318,7 @@ puts "VUnit help: Design already loaded. Use run -all to run the test."
         write_file(gui_file_name,
                    self._create_gui_script(common_file_name))
         write_file(batch_file_name,
-                   self._create_batch_script(common_file_name, config.elaborate_only))
+                   self._create_batch_script(common_file_name, elaborate_only))
 
         if self._gui:
             gui_path = join(sim_output_path, "gui")

@@ -166,7 +166,7 @@ class GHDLInterface(SimulatorInterface):
         return cmd
 
     def simulate(self,  # pylint: disable=too-many-arguments, too-many-locals
-                 output_path, library_name, entity_name, architecture_name, config):
+                 output_path, library_name, entity_name, architecture_name, config, elaborate_only):
         """
         Simulate with entity as top level using generics
         """
@@ -177,7 +177,7 @@ class GHDLInterface(SimulatorInterface):
         if not exists(ghdl_output_path):
             os.makedirs(ghdl_output_path)
 
-        launch_gtkwave = self._gtkwave is not None and not config.elaborate_only
+        launch_gtkwave = self._gtkwave is not None and not elaborate_only
 
         status = True
         try:
@@ -202,7 +202,7 @@ class GHDLInterface(SimulatorInterface):
             if config.disable_ieee_warnings:
                 cmd += ["--ieee-asserts=disable"]
 
-            if config.elaborate_only:
+            if elaborate_only:
                 cmd += ["--no-run"]
 
             if launch_gtkwave:

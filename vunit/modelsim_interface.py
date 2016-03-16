@@ -548,7 +548,7 @@ if {![vunit_load -vhdlvariablelogging]} {
             return False
 
     def simulate(self, output_path,  # pylint: disable=too-many-arguments
-                 library_name, entity_name, architecture_name, config):
+                 library_name, entity_name, architecture_name, config, elaborate_only):
         """
         Run a test bench
         """
@@ -569,14 +569,14 @@ if {![vunit_load -vhdlvariablelogging]} {
         write_file(gui_run_file_name,
                    self._create_gui_run_script(common_file_name))
         write_file(batch_file_name,
-                   self._create_batch_script(common_file_name, config.elaborate_only))
+                   self._create_batch_script(common_file_name, elaborate_only))
 
         if self._gui_mode == "load":
             return self._run_batch_file(gui_load_file_name, gui=True)
         elif self._gui_mode == "run":
             return self._run_batch_file(gui_run_file_name, gui=True)
         elif self._persistent:
-            return self._run_persistent(common_file_name, config.elaborate_only)
+            return self._run_persistent(common_file_name, elaborate_only)
         else:
             return self._run_batch_file(batch_file_name)
 

@@ -20,14 +20,18 @@ class IndependentSimTestCase(object):
     A test case to be run in an independent simulation
     """
     def __init__(self,  # pylint: disable=too-many-arguments
-                 name, test_case, test_bench, has_runner_cfg=False,
-                 pre_config=None, post_check=None):
+                 name, test_case, test_bench,
+                 has_runner_cfg=False,
+                 pre_config=None,
+                 post_check=None,
+                 elaborate_only=False):
         self._name = name
         self._test_case = test_case
         self._test_bench = test_bench
         self._has_runner_cfg = has_runner_cfg
         self._pre_config = pre_config
         self._post_check = post_check
+        self._elaborate_only = elaborate_only
 
     @property
     def name(self):
@@ -51,10 +55,10 @@ class IndependentSimTestCase(object):
 
             generics["runner_cfg"] = encode_dict(runner_cfg)
 
-        if not self._test_bench.run(output_path, generics):
+        if not self._test_bench.run(output_path, generics, elaborate_only=self._elaborate_only):
             return False
 
-        if self._post_check is None:
+        if self._post_check is None or self._elaborate_only:
             return True
         else:
             return self._post_check(output_path)
@@ -66,12 +70,18 @@ class SameSimTestSuite(object):
     """
 
     def __init__(self,  # pylint: disable=too-many-arguments
-                 name, test_cases, test_bench, pre_config=None, post_check=None):
+                 name,
+                 test_cases,
+                 test_bench,
+                 pre_config=None,
+                 post_check=None,
+                 elaborate_only=False):
         self._name = name
         self._test_cases = test_cases
         self._test_bench = test_bench
         self._pre_config = pre_config
         self._post_check = post_check
+        self._elaborate_only = elaborate_only
 
     @property
     def test_cases(self):
@@ -112,7 +122,7 @@ class SameSimTestSuite(object):
             "runner_cfg": encode_dict(runner_cfg),
         }
 
-        passed = self._test_bench.run(output_path, generics)
+        passed = self._test_bench.run(output_path, generics, elaborate_only=self._elaborate_only)
 
         if passed:
             retval = {}
@@ -121,7 +131,7 @@ class SameSimTestSuite(object):
         else:
             retval = self._determine_partial_pass(output_path)
 
-        if self._post_check is None:
+        if self._post_check is None or self._elaborate_only:
             return retval
 
         # Do not run post check unless all passed

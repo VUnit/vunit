@@ -41,14 +41,13 @@ class TestConfiguration(object):
 
     Specific scopes have priority over general scopes in case of conflict
     """
-    def __init__(self, elaborate_only=False):
+    def __init__(self):
         self._generics = {}
         self._sim_options = {}
         self._configs = {}
         self._plis = {}
         self._disable_ieee_warnings = set()
         self._scan_tests_from_file = {}
-        self._elaborate_only = elaborate_only
 
     def scan_tests_from_file(self, scope, file_name):
         """
@@ -137,8 +136,6 @@ class TestConfiguration(object):
         configs = []
         for config_name in sorted(configs_for_scope.keys()):
             cfg_generics, pre_config, post_check = configs_for_scope[config_name]
-            if self._elaborate_only:
-                post_check = None
             generics = global_generics.copy()
             generics.update(cfg_generics)
             configs.append(Configuration(name=config_name,
@@ -146,7 +143,6 @@ class TestConfiguration(object):
                                              generics=generics,
                                              pli=pli,
                                              disable_ieee_warnings=disable_ieee_warnings,
-                                             elaborate_only=self._elaborate_only,
                                              options=sim_options_for_scope.copy()),
                                          pre_config=pre_config,
                                          post_check=post_check))
@@ -157,7 +153,6 @@ class TestConfiguration(object):
                                          generics=global_generics.copy(),
                                          pli=pli,
                                          disable_ieee_warnings=disable_ieee_warnings,
-                                         elaborate_only=self._elaborate_only,
                                          options=sim_options_for_scope.copy()),
                                      pre_config=None,
                                      post_check=None)]
@@ -269,13 +264,11 @@ class SimConfig(object):
                  pli=None,
                  disable_ieee_warnings=False,
                  fail_on_warning=False,
-                 elaborate_only=False,
                  options=None):
         self.generics = generics if generics is not None else {}
         self.pli = [] if pli is None else pli
         self.disable_ieee_warnings = disable_ieee_warnings
         self.fail_on_warning = fail_on_warning
-        self.elaborate_only = elaborate_only
         self.options = {} if options is None else options
 
     def __eq__(self, other):
@@ -283,16 +276,14 @@ class SimConfig(object):
                 self.pli == other.pli and
                 self.disable_ieee_warnings == other.disable_ieee_warnings and
                 self.fail_on_warning == other.fail_on_warning and
-                self.elaborate_only == other.elaborate_only and
                 self.options == other.options)
 
     def __repr__(self):
-        return("SimConfig(%r, %r, %r, %r, %r, %r)"
+        return("SimConfig(%r, %r, %r, %r, %r)"
                % (self.generics,
                   self.pli,
                   self.disable_ieee_warnings,
                   self.fail_on_warning,
-                  self.elaborate_only,
                   self.options))
 
 
