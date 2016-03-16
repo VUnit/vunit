@@ -51,11 +51,13 @@ def add_vhdl_builtins(library, vhdl_standard, mock_lang=False, mock_log=False):
                   join("check", "src", "check_api.vhd"),
                   join("check", "src", "check_base_api.vhd"),
                   join("check", "src", "check_types.vhd"),
-                  join("run", "src", "stop_api.vhd"),
+                  join("core", "src", "stop_api.vhd"),
                   join("run", "src", "run.vhd"),
                   join("run", "src", "run_api.vhd"),
                   join("run", "src", "run_types.vhd"),
                   join("run", "src", "run_base_api.vhd")]
+
+        files += [join("core", "src", "core_pkg.vhd")]
 
         files += [join("logging", "src", "log_api.vhd"),
                   join("logging", "src", "log_formatting.vhd"),
@@ -127,7 +129,7 @@ def add_vhdl_builtins(library, vhdl_standard, mock_lang=False, mock_log=False):
 
         files += ["vunit_context.vhd"]
         files += ["vunit_run_context.vhd"]
-        files += [join("run", "src", "stop_body_2008.vhd")]
+        files += [join("core", "src", "stop_body_2008.vhd")]
 
         return files
 
@@ -135,7 +137,7 @@ def add_vhdl_builtins(library, vhdl_standard, mock_lang=False, mock_log=False):
         """Return built-in VHDL files present both in VHDL 93 and 2002"""
         files = []
 
-        files += [join("run", "src", "stop_body_dummy.vhd")]
+        files += [join("core", "src", "stop_body_93.vhd")]
 
         return files
 

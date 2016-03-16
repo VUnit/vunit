@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
 use vunit_lib.lang.all;
@@ -21,6 +21,8 @@ use vunit_lib.run_types_pkg.all;
 use vunit_lib.run_special_types_pkg.all;
 use vunit_lib.run_base_pkg.all;
 use vunit_lib.run_pkg.all;
+use vunit_lib.vunit_core_pkg;
+use vunit_lib.vunit_stop_pkg;
 
 entity tb_run is
   generic (output_path : string);
@@ -780,7 +782,7 @@ begin
     banner("Should set stop level to the default level but maintain all other setting when Python runner is active");
     test_case_setup;
     checker_init(warning, "my_default_checker", output_path & "problems.csv", verbose, level, failure, ';');
-    test_runner_setup(runner, "active python runner : true");
+    test_runner_setup(runner, "active python runner : true, fake active python runner : true");
     get_checker_cfg(checker_cfg);
     check(c, checker_cfg.default_level = warning, "Expected default level to be warning");
     check(c, checker_cfg.logger_cfg.log_default_src.all = "my_default_checker", "Expected default src to be ""my_default_checker""");
@@ -832,8 +834,9 @@ begin
     info("Number of passing checks: " & natural'image(checker_stat.n_passed));
     info("Number of failing checks: " & natural'image(checker_stat.n_failed));
 
-    runner.exit_without_errors <= true;
-    runner.exit_simulation <= true;
+    vunit_core_pkg.setup(output_path & "vunit_results");
+    vunit_core_pkg.test_suite_done;
+    vunit_stop_pkg.vunit_stop(0);
     wait;
   end process;
 end test_fixture;

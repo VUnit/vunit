@@ -130,7 +130,7 @@ class test_runner;
       exit_without_errors = 0;
       exit_simulation = 0;
 
-      trace_fd = $fopen({output_path, "test_runner_trace.csv"}, "w");
+      trace_fd = $fopen({output_path, "vunit_results"}, "w");
       return 1;
    endfunction;
 
@@ -173,6 +173,7 @@ class test_runner;
             phase = test_suite_cleanup;
          end
       end else if (phase == test_suite_cleanup) begin
+         $fwrite(trace_fd, "test_suite_done\n");
          cleanup();
          return 0;
       end else begin
@@ -187,7 +188,7 @@ class test_runner;
          test_cases_found.push_back(test_name);
          return 0;
       end else if (phase == test_case && test_name == test_cases_to_run[test_idx]) begin
-         $fwrite(trace_fd, "Test Runner,Test case: %s\n", test_name);
+         $fwrite(trace_fd, "test_start:%s\n", test_name);
          return 1;
       end else begin
          return 0;

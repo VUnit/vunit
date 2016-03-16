@@ -440,39 +440,39 @@ Listed 2 files""".splitlines()))
             obj.set_compile_option("ghdl.flags", ["3"])
             self.assertEqual(source_file.get_compile_option("ghdl.flags"), ["3"])
 
-    def _test_pre_config_helper(self, retval, test_not_entity=False):
-        """
-        Helper method to test pre_config where the pre config can return different values
-        and it can be configured on both entity and test objects
-        """
+    def test_entity_has_pre_config(self):
+        # pylint: disable=protected-access
+        def pre_config():
+            return False
         ui = self._create_ui("lib.test_ui_tb.test_one")
+        ui._configuration.add_config = mock.create_autospec(ui._configuration.add_config)
         lib = ui.library("lib")
         lib.add_source_files(join(dirname(__file__), 'test_ui_tb.vhd'))
-
-        if test_not_entity:
-            obj = lib.entity("test_ui_tb").test("test_one")
-        else:
-            obj = lib.entity("test_ui_tb")
-
-        def side_effect():
-            "No simulate calls should have occured so far"
-            self.assertEqual(self.mocksim.simulate.mock_calls, [])
-            return retval
-
-        pre_config = mock.create_autospec(lambda: None)
-        pre_config.side_effect = side_effect
-
-        obj.add_config(name="", pre_config=pre_config)
-        self._run_main(ui, 0 if retval else 1)
-
-        pre_config.assert_has_calls([mock.call()])
-
-    def test_entity_has_pre_config(self):
-        for retval in (True, False, None):
-            self._test_pre_config_helper(retval)
+        ent = lib.entity("test_ui_tb")
+        ent.add_config(name="cfg", pre_config=pre_config)
+        ui._configuration.add_config.assert_called_once_with(
+            name="cfg",
+            scope=('lib', 'test_ui_tb'),
+            post_check=None,
+            pre_config=pre_config,
+            generics={})
 
     def test_test_has_pre_config(self):
-        self._test_pre_config_helper(True, test_not_entity=False)
+        # pylint: disable=protected-access
+        def pre_config():
+            return False
+        ui = self._create_ui("lib.test_ui_tb.test_one")
+        ui._configuration.add_config = mock.create_autospec(ui._configuration.add_config)
+        lib = ui.library("lib")
+        lib.add_source_files(join(dirname(__file__), 'test_ui_tb.vhd'))
+        test = lib.entity("test_ui_tb").test("test_one")
+        test.add_config(name="cfg", pre_config=pre_config)
+        ui._configuration.add_config.assert_called_once_with(
+            name="cfg",
+            scope=('lib', 'test_ui_tb', 'test_one'),
+            post_check=None,
+            pre_config=pre_config,
+            generics={})
 
     @mock.patch("vunit.ui.LOGGER", autospec=True)
     def test_warning_on_no_tests(self, logger):

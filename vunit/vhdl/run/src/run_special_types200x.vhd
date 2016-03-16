@@ -4,14 +4,16 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 use std.textio.all;
 use work.run_types_pkg.all;
 
 package run_special_types_pkg is
   type runner_t is protected
-     procedure init;
+     procedure init(active_python_runner : boolean);
+
+     impure function has_active_python_runner return boolean;
 
      procedure set_phase (
        constant new_phase  : in runner_phase_t);
@@ -118,6 +120,7 @@ end package;
 package body run_special_types_pkg is
   type runner_t is protected body
     variable state : runner_state_t := (
+      active_python_runner => false,
       runner_phase => runner_phase_t'left,
       test_case_names => (others => null),
       n_test_cases => unknown_num_of_test_cases_c,
@@ -134,8 +137,10 @@ package body run_special_types_pkg is
       test_suite_exit_after_error => false,
       runner_cfg => (others => ' '));
 
-     procedure init is
+     procedure init(active_python_runner : boolean) is
      begin
+       state.active_python_runner := active_python_runner;
+
        for i in state.test_case_names'range loop
          if state.test_case_names(i) /= null then
            deallocate(state.test_case_names(i));
@@ -167,6 +172,11 @@ package body run_special_types_pkg is
        state.runner_cfg(runner_cfg_default'range) := runner_cfg_default;
 
      end procedure init;
+
+     impure function has_active_python_runner return boolean is
+     begin
+       return state.active_python_runner;
+     end function;
 
      procedure set_phase (
        constant new_phase  : in runner_phase_t) is

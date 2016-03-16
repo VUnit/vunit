@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -592,7 +592,7 @@ package body string_ops is
   begin
     q := (others => '0');
     r := (others => '0');
-    for i in n'length - 1 downto 0 loop
+    for i in integer(n'length) - 1 downto 0 loop
       r := r sll 1;
       r(0) := n(i);
       if r >= 10 then

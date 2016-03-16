@@ -4,15 +4,20 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 package body run_base_pkg is
   shared variable default_runner : runner_t;
 
-  procedure runner_init is
+  procedure runner_init(active_python_runner : boolean) is
   begin
-    default_runner.init;
+    default_runner.init(active_python_runner);
   end;
+
+  impure function has_active_python_runner return boolean is
+  begin
+    return default_runner.has_active_python_runner;
+  end function;
 
   procedure set_phase (
     constant new_phase  : in runner_phase_t) is

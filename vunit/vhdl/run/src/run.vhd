@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.log_types_pkg.all;
 use work.log_special_types_pkg.all;
@@ -15,6 +15,7 @@ use work.string_ops.all;
 use work.dictionary.all;
 use work.path.all;
 use work.vunit_stop_pkg.vunit_stop;
+use work.vunit_core_pkg;
 use std.textio.all;
 
 package body run_pkg is
@@ -26,7 +27,16 @@ package body run_pkg is
     variable checker_cfg : checker_cfg_export_t;
     variable selected_enabled_test_cases : line;
   begin
-    runner_init;
+
+    -- fake active python runner key is only used during testing in tb_run.vhd
+    -- to avoid creating vunit_results file
+    runner_init(active_python_runner => (active_python_runner(runner_cfg) and
+                                         not has_key(runner_cfg, "fake active python runner")));
+
+    if has_active_python_runner then
+      vunit_core_pkg.setup(output_path(runner_cfg) & "vunit_results");
+    end if;
+
     get_logger_cfg(runner_trace_logger, logger_cfg);
     if not logger_cfg.log_file_is_initialized then
         logger_init(runner_trace_logger,
@@ -118,10 +128,16 @@ package body run_pkg is
     get_checker_stat(stat);
     runner.exit_without_errors <= (stat.n_failed = 0) and not external_failure;
 
-    runner_init;
+    runner_init(has_active_python_runner); -- @TODO Why?
     runner.locks(test_runner_setup to test_runner_cleanup) <= (others => (false, false));
 
     wait for 0 ns;
+
+    if runner.exit_without_errors then
+      if has_active_python_runner then
+        vunit_core_pkg.test_suite_done;
+      end if;
+    end if;
 
     if not disable_simulation_exit then
       runner.exit_simulation <= true;
@@ -249,11 +265,17 @@ package body run_pkg is
       if not has_run(name) then
         register_run(name);
         info(runner_trace_logger, "Test case: " & name);
+        if has_active_python_runner then
+          vunit_core_pkg.test_start(name);
+        end if;
         set_running_test_case(name);
         return true;
       end if;
     elsif get_test_case_name(get_active_test_case_index) = name then
       info(runner_trace_logger, "Test case: " & name);
+      if has_active_python_runner then
+        vunit_core_pkg.test_start(name);
+      end if;
       set_running_test_case(name);
       return true;
     end if;

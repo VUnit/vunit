@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 use std.textio.all;
 use work.log_special_types_pkg.all;
@@ -28,7 +28,9 @@ package run_base_pkg is
 
   shared variable runner_trace_logger : logger_t;
 
-  procedure runner_init;
+  procedure runner_init(active_python_runner : boolean);
+
+  impure function has_active_python_runner return boolean;
 
   procedure set_phase (
       constant new_phase  : in runner_phase_t);

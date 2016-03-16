@@ -55,13 +55,28 @@ class IndependentSimTestCase(object):
 
             generics["runner_cfg"] = encode_dict(runner_cfg)
 
-        if not self._test_bench.run(output_path, generics, elaborate_only=self._elaborate_only):
+        sim_ok = self._test_bench.run(output_path, generics, elaborate_only=self._elaborate_only)
+
+        if self._elaborate_only:
+            return sim_ok
+
+        vunit_results_file = join(output_path, "vunit_results")
+        if not ostools.file_exists(vunit_results_file):
+            return False
+        test_results = ostools.read_file(vunit_results_file)
+
+        expected_results = ""
+        if self._test_case is not None:
+            expected_results += "test_start:%s\n" % self._test_case
+        expected_results += "test_suite_done\n"
+
+        if not test_results == expected_results:
             return False
 
-        if self._post_check is None or self._elaborate_only:
+        if self._post_check is None:
             return True
-        else:
-            return self._post_check(output_path)
+
+        return self._post_check(output_path)
 
 
 class SameSimTestSuite(object):
@@ -122,16 +137,16 @@ class SameSimTestSuite(object):
             "runner_cfg": encode_dict(runner_cfg),
         }
 
-        passed = self._test_bench.run(output_path, generics, elaborate_only=self._elaborate_only)
-
-        if passed:
+        sim_ok = self._test_bench.run(output_path, generics, elaborate_only=self._elaborate_only)
+        if self._elaborate_only:
             retval = {}
             for name in self.test_cases:
-                retval[name] = PASSED
-        else:
-            retval = self._determine_partial_pass(output_path)
+                retval[name] = PASSED if sim_ok else FAILED
+            return retval
 
-        if self._post_check is None or self._elaborate_only:
+        retval = self._read_test_results(output_path)
+
+        if self._post_check is None:
             return retval
 
         # Do not run post check unless all passed
@@ -145,32 +160,42 @@ class SameSimTestSuite(object):
 
         return retval
 
-    def _determine_partial_pass(self, output_path):
+    def _read_test_results(self, output_path):
         """
-        In case of simulation failure determine which of the individual test cases failed.
-        This is done by reading the test_runner_trace.csv file and checking for test case entry points.
+        Read test results from vunit_results file
         """
-        log_file = join(output_path, "test_runner_trace.csv")
+        vunit_results_file = join(output_path, "vunit_results")
 
         retval = {}
         for name in self.test_cases:
             retval[name] = FAILED
 
-        if not ostools.file_exists(log_file):
+        if not ostools.file_exists(vunit_results_file):
             return retval
 
-        test_log = ostools.read_file(log_file)
+        test_results = ostools.read_file(vunit_results_file)
         test_starts = []
-        for test_name in self._test_cases:
-            if "Test Runner,Test case: " + test_name in test_log:
-                test_starts.append(test_name)
+        test_suite_done = False
 
-        for test_name in test_starts[:-1]:
-            retval[self._full_name(test_name)] = PASSED
+        for line in test_results.splitlines():
 
-        for test_name in self._test_cases:
+            if line.startswith("test_start:"):
+                test_name = line[len("test_start:"):]
+                test_starts.append(self._full_name(test_name))
+
+            elif line.startswith("test_suite_done"):
+                test_suite_done = True
+
+        for idx, test_name in enumerate(test_starts):
+            last_start = idx == len(test_starts) - 1
+
+            if test_suite_done or not last_start:
+                retval[test_name] = PASSED
+
+        for test_name in self.test_cases:
             if test_name not in test_starts:
-                retval[self._full_name(test_name)] = SKIPPED
+                retval[test_name] = SKIPPED
+
         return retval
 
 

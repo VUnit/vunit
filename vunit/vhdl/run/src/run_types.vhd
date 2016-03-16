@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 use std.textio.all;
 use work.dictionary.all;
@@ -56,6 +56,7 @@ package run_types_pkg is
   type test_case_names_t is array (positive range <>) of line;
 
   type runner_state_t is record
+    active_python_runner : boolean;
     runner_phase : runner_phase_t;
     test_case_names : test_case_names_t(1 to max_n_test_cases_c);
     n_test_cases : integer;

@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -384,9 +384,9 @@ package body log_base_pkg is
     if not logger.log_file_is_initialized then
       return;
     end if;
-    cfg.log_default_src := logger.log_default_src.all;
+    cfg.log_default_src(logger.log_default_src.all'range) := logger.log_default_src.all;
     cfg.log_default_src_length := logger.log_default_src'length;
-    cfg.log_file_name := logger.log_file_name.all;
+    cfg.log_file_name(logger.log_file_name.all'range) := logger.log_file_name.all;
     cfg.log_file_name_length := logger.log_file_name'length;
     cfg.log_display_format := logger.log_display_format;
     cfg.log_file_format := logger.log_file_format;
@@ -440,4 +440,3 @@ package body log_base_pkg is
     -- pragma translate_on
   end;
 end package body log_base_pkg;
-

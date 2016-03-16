@@ -94,12 +94,10 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_check_vhdl_2008(self):
         self.check(join(VHDL_PATH, "check", "run.py"))
 
-    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_check_vhdl_2002(self):
         self.check(join(VHDL_PATH, "check", "run.py"),
                    vhdl_standard='2002')
 
-    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_check_vhdl_93(self):
         self.check(join(VHDL_PATH, "check", "run.py"),
                    vhdl_standard='93')
@@ -107,12 +105,10 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_logging_vhdl_2008(self):
         self.check(join(VHDL_PATH, "logging", "run.py"))
 
-    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_logging_vhdl_2002(self):
         self.check(join(VHDL_PATH, "logging", "run.py"),
                    vhdl_standard='2002')
 
-    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_logging_vhdl_93(self):
         self.check(join(VHDL_PATH, "logging", "run.py"),
                    vhdl_standard='93')
@@ -120,12 +116,10 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_run_vhdl_2008(self):
         self.check(join(VHDL_PATH, "run", "run.py"))
 
-    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_run_vhdl_2002(self):
         self.check(join(VHDL_PATH, "run", "run.py"),
                    vhdl_standard='2002')
 
-    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_run_vhdl_93(self):
         self.check(join(VHDL_PATH, "run", "run.py"),
                    vhdl_standard='93')
@@ -133,12 +127,10 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_string_ops_vhdl_2008(self):
         self.check(join(VHDL_PATH, "string_ops", "run.py"))
 
-    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_string_ops_vhdl_2002(self):
         self.check(join(VHDL_PATH, "string_ops", "run.py"),
                    vhdl_standard='2002')
 
-    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_string_ops_vhdl_93(self):
         self.check(join(VHDL_PATH, "string_ops", "run.py"),
                    vhdl_standard='93')
@@ -146,12 +138,10 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_dictionary_vhdl_2008(self):
         self.check(join(VHDL_PATH, "dictionary", "run.py"))
 
-    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_dictionary_vhdl_2002(self):
         self.check(join(VHDL_PATH, "dictionary", "run.py"),
                    vhdl_standard='2002')
 
-    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_dictionary_vhdl_93(self):
         self.check(join(VHDL_PATH, "dictionary", "run.py"),
                    vhdl_standard='93')
@@ -159,12 +149,10 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_path_vhdl_2008(self):
         self.check(join(VHDL_PATH, "path", "run.py"))
 
-    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_path_vhdl_2002(self):
         self.check(join(VHDL_PATH, "path", "run.py"),
                    vhdl_standard='2002')
 
-    @unittest.skipUnless(simulator_is("modelsim"), "Only 2008 support")
     def test_path_vhdl_93(self):
         self.check(join(VHDL_PATH, "path", "run.py"),
                    vhdl_standard='93')
