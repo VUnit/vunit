@@ -114,7 +114,7 @@ import sys
 import traceback
 import logging
 import os
-from os.path import exists, relpath, abspath, join, basename, splitext
+from os.path import exists, abspath, join, basename, splitext
 from glob import glob
 from fnmatch import fnmatch
 from vunit.database import PickledDataBase, DataBase
@@ -489,7 +489,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                     continue
 
             if not (fnmatch(abspath(source_file.name), pattern) or
-                    fnmatch(relpath(source_file.name), pattern)):
+                    fnmatch(ostools.simplify_path(source_file.name), pattern)):
                 continue
 
             results.append(SourceFile(source_file, self._project, self))
@@ -1434,7 +1434,7 @@ class SourceFile(object):
         """
         The name of the SourceFile
         """
-        return relpath(self._source_file.name)
+        return ostools.simplify_path(self._source_file.name)
 
     @property
     def library(self):

@@ -11,7 +11,7 @@ Generic simulator interface
 from __future__ import print_function
 import sys
 import os
-from vunit.ostools import Process
+from vunit.ostools import Process, simplify_path
 from vunit.exceptions import CompileError
 
 
@@ -143,10 +143,10 @@ class SimulatorInterface(object):
         source_files_to_skip = set()
         for source_file in source_files:
             if source_file in source_files_to_skip:
-                print("Skipping %s due to failed dependencies" % source_file.name)
+                print("Skipping %s due to failed dependencies" % simplify_path(source_file.name))
                 continue
 
-            print('Compiling %s into %s ...' % (source_file.name, source_file.library.name))
+            print('Compiling %s into %s ...' % (simplify_path(source_file.name), source_file.library.name))
             try:
                 command = None
                 command = self.compile_source_file_command(source_file)
@@ -163,10 +163,10 @@ class SimulatorInterface(object):
 
                 if command is None:
                     print("Failed to compile %s. File type not supported by %s simulator"
-                          % (source_file.name, self.name))
+                          % (simplify_path(source_file.name), self.name))
                 else:
                     print("Failed to compile %s with command:\n%s"
-                          % (source_file.name, " ".join(command)))
+                          % (simplify_path(source_file.name), " ".join(command)))
 
                 all_ok = False
                 if not continue_on_error:

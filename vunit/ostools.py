@@ -23,7 +23,7 @@ except ImportError:
     # Python 2.7
     from Queue import Queue, Empty  # pylint: disable=import-error
 
-from os.path import exists, getmtime, dirname
+from os.path import exists, getmtime, dirname, relpath, splitdrive
 import os
 import io
 
@@ -316,3 +316,17 @@ def change_encoding(textio):
         return io.TextIOWrapper(textio.buffer, encoding='latin-1', errors="ignore")
     else:
         return textio
+
+
+def simplify_path(path):
+    """
+    Return relative path towards current working directory
+    unless it is a separate Windows drive
+    """
+    cwd = os.getcwd()
+    drive_cwd = splitdrive(cwd)[0]
+    drive_path = splitdrive(path)[0]
+    if drive_path == drive_cwd:
+        return relpath(path, cwd)
+    else:
+        return path

@@ -10,8 +10,7 @@ A general tokenizer
 
 import collections
 import re
-from os.path import relpath
-from vunit.ostools import read_file, file_exists
+from vunit.ostools import read_file, file_exists, simplify_path
 
 TokenType = collections.namedtuple("Token", ["kind", "value", "location"])
 
@@ -202,7 +201,7 @@ def describe_location(location, first=True):
         lstart = count
         lend = lstart + len(line)
         if lstart <= start and start <= lend:
-            retval += "%s %s line %i:\n" % (prefix, relpath(file_name), lineno + 1)
+            retval += "%s %s line %i:\n" % (prefix, simplify_path(file_name), lineno + 1)
             retval += line + "\n"
             retval += (" " * (start - lstart)) + ("~" * (min(lend - 1, end) - start + 1))
             return retval
