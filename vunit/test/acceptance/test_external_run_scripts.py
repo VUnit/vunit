@@ -19,6 +19,13 @@ from vunit.builtins import VHDL_PATH
 from vunit.test.common import has_simulator, check_report, simulator_is
 
 
+def simulator_supports_verilog():
+    """
+    Returns True if simulator supports Verilog
+    """
+    return simulator_is("modelsim")
+
+
 # pylint: disable=too-many-public-methods
 @unittest.skipUnless(has_simulator(), "Requires simulator")
 class TestExternalRunScripts(unittest.TestCase):
@@ -32,9 +39,16 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_vhdl_preprocessed_uart_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "uart", "run_with_preprocessing.py"))
 
-    @unittest.skipUnless(simulator_is("modelsim"), "Only modelsim supports verilog")
+    @unittest.skipUnless(simulator_supports_verilog(), "Verilog")
     def test_verilog_uart_example_project(self):
         self.check(join(ROOT, "examples", "verilog", "uart", "run.py"))
+
+    @unittest.skipUnless(simulator_supports_verilog(), "Verilog")
+    def test_verilog_ams_example(self):
+        self.check(join(ROOT, "examples", "verilog", "verilog_ams", "run.py"))
+        check_report(self.report_file,
+                     [("passed", "lib.tb_dut.Test that pass"),
+                      ("failed", "lib.tb_dut.Test that fail")])
 
     def test_vhdl_logging_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "logging", "compile.py"), args=["--compile"])
@@ -65,7 +79,7 @@ class TestExternalRunScripts(unittest.TestCase):
                       ("passed", "lib.tb_example_many.test_pass"),
                       ("failed", "lib.tb_example_many.test_fail")])
 
-    @unittest.skipUnless(simulator_is("modelsim"), "Only modelsim supports verilog")
+    @unittest.skipUnless(simulator_supports_verilog(), "Verilog")
     def test_verilog_user_guide_example_project(self):
         self.check(join(ROOT, "examples", "verilog", "user_guide", "run.py"), exit_code=1)
         check_report(self.report_file,
