@@ -135,7 +135,7 @@ package body run_special_types_pkg is
       test_case_iteration => 0,
       test_case_exit_after_error => false,
       test_suite_exit_after_error => false,
-      runner_cfg => (others => ' '));
+      runner_cfg => null);
 
      procedure init(active_python_runner : boolean) is
      begin
@@ -168,8 +168,7 @@ package body run_special_types_pkg is
        state.test_case_iteration := 0;
        state.test_case_exit_after_error := false;
        state.test_suite_exit_after_error := false;
-       state.runner_cfg := (others => ' ');
-       state.runner_cfg(runner_cfg_default'range) := runner_cfg_default;
+       state.runner_cfg := new string'(runner_cfg_default);
 
      end procedure init;
 
@@ -396,14 +395,16 @@ package body run_special_types_pkg is
     procedure set_cfg (
       constant new_value : in string) is
     begin
-      state.runner_cfg := (others => ' ');
-      state.runner_cfg(new_value'range) := new_value;
+      if state.runner_cfg /= null then
+        deallocate(state.runner_cfg);
+      end if;
+      state.runner_cfg := new string'(new_value);
     end;
 
     impure function get_cfg
       return string is
     begin
-      return state.runner_cfg;
+      return state.runner_cfg.all;
     end;
 
   end protected body runner_t;

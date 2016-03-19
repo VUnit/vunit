@@ -40,8 +40,7 @@ package body run_base_pkg is
     default_runner.test_case_iteration := 0;
     default_runner.test_case_exit_after_error := false;
     default_runner.test_suite_exit_after_error := false;
-    default_runner.runner_cfg := (others => ' ');
-    default_runner.runner_cfg(runner_cfg_default'range) := runner_cfg_default;
+    default_runner.runner_cfg := new string'(runner_cfg_default);
   end;
 
   impure function has_active_python_runner return boolean is
@@ -267,14 +266,16 @@ package body run_base_pkg is
   procedure set_cfg (
     constant new_value : in string) is
   begin
-    default_runner.runner_cfg := (others => ' ');
-    default_runner.runner_cfg(new_value'range) := new_value;
+      if default_runner.runner_cfg /= null then
+        deallocate(default_runner.runner_cfg);
+      end if;
+    default_runner.runner_cfg := new string'(new_value);
   end;
 
   impure function get_cfg
     return string is
   begin
-    return default_runner.runner_cfg;
+    return default_runner.runner_cfg.all;
   end;
 
 end package body run_base_pkg;

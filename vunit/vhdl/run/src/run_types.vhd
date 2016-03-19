@@ -18,8 +18,7 @@ package run_types_pkg is
   constant unknown_num_of_test_cases_c : integer := integer'left;
 
   subtype runner_cfg_t is string; -- Subtype deprecated, use string instead
-  constant max_dictionary_length_c : positive := 10000;
-  constant runner_cfg_default : string(1 to max_dictionary_length_c) := "enabled_test_cases : __all__, output path : , active python runner : false" & (75 to max_dictionary_length_c => ' ');
+  constant runner_cfg_default : string := "enabled_test_cases : __all__, output path : , active python runner : false";
   subtype test_cases_t is string;
 
   type runner_phase_unresolved_t is (test_runner_entry, test_runner_setup, test_suite_setup, test_case_setup, test_case, test_case_cleanup, test_suite_cleanup, test_runner_cleanup, test_runner_exit, multiple_drivers);
@@ -71,7 +70,7 @@ package run_types_pkg is
     test_case_iteration : natural;
     test_case_exit_after_error : boolean;
     test_suite_exit_after_error : boolean;
-    runner_cfg : string(1 to max_dictionary_length_c);
+    runner_cfg : line;
   end record runner_state_t;
 
 end package;
