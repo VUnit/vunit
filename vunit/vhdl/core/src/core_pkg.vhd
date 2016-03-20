@@ -7,13 +7,13 @@
 use std.textio.all;
 
 package vunit_core_pkg is
+  file test_results : text;
   procedure setup(file_name : string);
   procedure test_start(test_name : string);
   procedure test_suite_done;
 end package;
 
 package body vunit_core_pkg is
-  file test_results : text;
 
   procedure setup(file_name : string) is
   begin
