@@ -368,7 +368,7 @@ package body run_pkg is
   begin
     runner.locks(index_of(phase)).entry_is_locked <= resolved_true_c;
     wait for 0 ns;
-    debug(runner_trace_logger, "Locked " & to_string(phase) & " entry gate.", me, line_num, file_name);
+    debug(runner_trace_logger, "Locked " & phase_to_string(phase) & " entry gate.", me, line_num, file_name);
   end;
 
   procedure unlock_entry (
@@ -379,7 +379,7 @@ package body run_pkg is
     constant file_name : in string := "") is
   begin
     runner.locks(index_of(phase)).entry_is_locked <= resolved_false_c;
-    debug(runner_trace_logger, "Unlocked " & to_string(phase) & " entry gate.", me, line_num, file_name);
+    debug(runner_trace_logger, "Unlocked " & phase_to_string(phase) & " entry gate.", me, line_num, file_name);
     wait for 0 ns;
   end;
 
@@ -392,7 +392,7 @@ package body run_pkg is
   begin
     runner.locks(index_of(phase)).exit_is_locked <= resolved_true_c;
     wait for 0 ns;
-    debug(runner_trace_logger, "Locked " & to_string(phase) & " exit gate.", me, line_num, file_name);
+    debug(runner_trace_logger, "Locked " & phase_to_string(phase) & " exit gate.", me, line_num, file_name);
   end;
 
   procedure unlock_exit (
@@ -403,7 +403,7 @@ package body run_pkg is
     constant file_name : in string := "") is
   begin
     runner.locks(index_of(phase)).exit_is_locked <= resolved_false_c;
-    debug(runner_trace_logger, "Unlocked " & to_string(phase) & " exit gate.", me, line_num, file_name);
+    debug(runner_trace_logger, "Unlocked " & phase_to_string(phase) & " exit gate.", me, line_num, file_name);
     wait for 0 ns;
   end;
 
@@ -415,9 +415,9 @@ package body run_pkg is
     constant file_name : in string := "") is
   begin
     if runner.phase /= phase then
-      debug(runner_trace_logger, "Waiting for phase = " & to_string(phase) & ".", me, line_num, file_name);
+      debug(runner_trace_logger, "Waiting for phase = " & phase_to_string(phase) & ".", me, line_num, file_name);
       wait until runner.phase = phase;
-      debug(runner_trace_logger, "Waking up. Phase is " & to_string(phase) & ".", me, line_num, file_name);
+      debug(runner_trace_logger, "Waking up. Phase is " & phase_to_string(phase) & ".", me, line_num, file_name);
     end if;
   end;
 
@@ -425,22 +425,22 @@ package body run_pkg is
     signal runner : inout runner_sync_t) is
   begin
     if runner.locks(index_of(get_phase)).entry_is_locked = resolved_true_c then
-      debug(runner_trace_logger, "Halting on " & to_string(get_phase) & " entry gate.");
+      debug(runner_trace_logger, "Halting on " & phase_to_string(get_phase) & " entry gate.");
       wait on runner.locks until runner.locks(index_of(get_phase)).entry_is_locked = resolved_false_c for max_locked_time_c;
     end if;
     runner.phase <= get_phase;
     wait for 0 ns;
-    debug(runner_trace_logger, "Passed " & to_string(get_phase) & " entry gate.");
+    debug(runner_trace_logger, "Passed " & phase_to_string(get_phase) & " entry gate.");
   end procedure entry_gate;
 
   procedure exit_gate (
     signal runner : in runner_sync_t) is
   begin
     if runner.locks(index_of(get_phase)).exit_is_locked = resolved_true_c then
-      debug(runner_trace_logger, "Halting on " & to_string(get_phase) & " exit gate.");
+      debug(runner_trace_logger, "Halting on " & phase_to_string(get_phase) & " exit gate.");
       wait on runner.locks until runner.locks(index_of(get_phase)).exit_is_locked = resolved_false_c for max_locked_time_c;
     end if;
-    debug(runner_trace_logger, "Passed " & to_string(get_phase) & " exit gate.");
+    debug(runner_trace_logger, "Passed " & phase_to_string(get_phase) & " exit gate.");
   end procedure exit_gate;
 
   impure function active_python_runner (

@@ -366,9 +366,9 @@ begin
     check(c, get_phase = test_suite_setup_phase, "Phase should be test suite setup");
     i := 0;
     while test_suite loop
-      check(c, get_phase = test_case_setup_phase, "Phase should be test case setup." & " Got " & to_string(get_phase) & ".");
+      check(c, get_phase = test_case_setup_phase, "Phase should be test case setup." & " Got " & phase_to_string(get_phase) & ".");
       while in_test_case loop
-        check(c, get_phase = test_case_phase, "Phase should be test case main."  & " Got " & to_string(get_phase) & ".");
+        check(c, get_phase = test_case_phase, "Phase should be test case main."  & " Got " & phase_to_string(get_phase) & ".");
         if i = 0 then
           check_false(c, run("test b"), "Test b should not be enabled at this time.");
           check(c, run("test a"), "Test a should be enabled at this time");
@@ -379,9 +379,9 @@ begin
         i := i + 1;
       end loop;
     end loop;
-    check(c, get_phase = test_suite_cleanup_phase, "Phase should be test suite cleanup" & " Got " & to_string(get_phase) & ".");
+    check(c, get_phase = test_suite_cleanup_phase, "Phase should be test suite cleanup" & " Got " & phase_to_string(get_phase) & ".");
     test_runner_cleanup(runner, disable_simulation_exit => true);
-    check(c, get_phase = test_runner_exit_phase, "Phase should be test runner exit" & " Got " & to_string(get_phase) & ".");
+    check(c, get_phase = test_runner_exit_phase, "Phase should be test runner exit" & " Got " & phase_to_string(get_phase) & ".");
 
 
 
@@ -393,9 +393,9 @@ begin
     check(c, get_phase = test_suite_setup_phase, "Phase should be test suite setup");
     i := 0;
     while test_suite loop
-      check(c, get_phase = test_case_setup_phase, "Phase should be test case setup." & " Got " & to_string(get_phase) & ".");
+      check(c, get_phase = test_case_setup_phase, "Phase should be test case setup." & " Got " & phase_to_string(get_phase) & ".");
       while in_test_case loop
-        check(c, get_phase = test_case_phase, "Phase should be test case main."  & " Got " & to_string(get_phase) & ".");
+        check(c, get_phase = test_case_phase, "Phase should be test case main."  & " Got " & phase_to_string(get_phase) & ".");
         if i = 0 then
           check_false(c, run("test b"), "Test b should not be enabled at this time.");
           check(c, run("test a"), "Test a should be enabled at this time");
@@ -407,11 +407,11 @@ begin
           i := i + 1;
         end if;
       end loop;
-      check(c, get_phase = test_case_cleanup_phase, "Phase should be test case cleanup."  & " Got " & to_string(get_phase) & ".");
+      check(c, get_phase = test_case_cleanup_phase, "Phase should be test case cleanup."  & " Got " & phase_to_string(get_phase) & ".");
     end loop;
-    check(c, get_phase = test_suite_cleanup_phase, "Phase should be test suite cleanup" & " Got " & to_string(get_phase) & ".");
+    check(c, get_phase = test_suite_cleanup_phase, "Phase should be test suite cleanup" & " Got " & phase_to_string(get_phase) & ".");
     test_runner_cleanup(runner, disable_simulation_exit => true);
-    check(c, get_phase = test_runner_exit_phase, "Phase should be test runner exit" & " Got " & to_string(get_phase) & ".");
+    check(c, get_phase = test_runner_exit_phase, "Phase should be test runner exit" & " Got " & phase_to_string(get_phase) & ".");
 
 
 
@@ -423,20 +423,20 @@ begin
     check(c, get_phase = test_suite_setup_phase, "Phase should be test suite setup");
     i := 0;
     while test_suite loop
-      check(c, get_phase = test_case_setup_phase, "Phase should be test case setup." & " Got " & to_string(get_phase) & ".");
+      check(c, get_phase = test_case_setup_phase, "Phase should be test case setup." & " Got " & phase_to_string(get_phase) & ".");
       while in_test_case loop
-        check(c, get_phase = test_case_phase, "Phase should be test case main."  & " Got " & to_string(get_phase) & ".");
+        check(c, get_phase = test_case_phase, "Phase should be test case main."  & " Got " & phase_to_string(get_phase) & ".");
         check(c, i = 0, "The second test case should never be activated");
         check_false(c, run("test b"), "Test b should not be enabled at this time.");
         check(c, run("test a"), "Test a should be enabled at this time");
         i := i + 1;
         exit when test_suite_error(true);
       end loop;
-      check(c, get_phase = test_case_cleanup_phase, "Phase should be test case cleanup."  & " Got " & to_string(get_phase) & ".");
+      check(c, get_phase = test_case_cleanup_phase, "Phase should be test case cleanup."  & " Got " & phase_to_string(get_phase) & ".");
     end loop;
-    check(c, get_phase = test_suite_cleanup_phase, "Phase should be test suite cleanup." & " Got " & to_string(get_phase) & ".");
+    check(c, get_phase = test_suite_cleanup_phase, "Phase should be test suite cleanup." & " Got " & phase_to_string(get_phase) & ".");
     test_runner_cleanup(runner, disable_simulation_exit => true);
-    check(c, get_phase = test_runner_exit_phase, "Phase should be test runner exit" & " Got " & to_string(get_phase) & ".");
+    check(c, get_phase = test_runner_exit_phase, "Phase should be test runner exit" & " Got " & phase_to_string(get_phase) & ".");
 
     ---------------------------------------------------------------------------
     --banner("Should be possible to exit a test case or test suite with an error message that can be caught afterwards.");

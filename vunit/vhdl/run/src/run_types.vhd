@@ -45,7 +45,7 @@ package run_types_pkg is
     constant phase : runner_phase_t)
     return natural;
 
-  function to_string (
+  function phase_to_string (
     constant phase : runner_phase_t)
     return string;
 
@@ -118,7 +118,7 @@ package body run_types_pkg is
     return index_of(l) > index_of(r);
   end function;
 
-  function to_string (
+  function phase_to_string (
     constant phase : runner_phase_t)
     return string is
   begin
@@ -144,6 +144,6 @@ package body run_types_pkg is
       when others =>
         return "unknown";
     end case;
-  end function to_string;
+  end function phase_to_string;
 
 end package body run_types_pkg;
