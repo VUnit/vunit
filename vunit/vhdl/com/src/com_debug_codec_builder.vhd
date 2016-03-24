@@ -95,9 +95,11 @@ package body com_debug_codec_builder_pkg is
     variable code   : out   string;
     variable length : out   natural) is
     variable final : line;
+    variable line_length : integer;
   begin
     if l.all /= "(" then
-      write(final, l.all(1 to l.all'length - 1));
+      line_length := l.all'length;
+      write(final, l.all(1 to line_length - 1));
       deallocate(l);
     else
       final := l;
