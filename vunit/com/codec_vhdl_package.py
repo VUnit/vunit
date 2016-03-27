@@ -9,6 +9,7 @@ Module containing the CodecVHDLPackage class.
 """
 from string import Template
 from vunit.vhdl_parser import VHDLPackage
+from vunit.vhdl_parser import remove_comments
 from vunit.com.codec_vhdl_enumeration_type import CodecVHDLEnumerationType
 from vunit.com.codec_vhdl_array_type import CodecVHDLArrayType
 from vunit.com.codec_vhdl_record_type import CodecVHDLRecordType
@@ -32,6 +33,7 @@ class CodecVHDLPackage(VHDLPackage):
         """
         Return a new VHDLPackage instance for a single package found within the code
         """
+        code = remove_comments(code).lower()
         # Extract identifier
         identifier = cls._package_start_re.match(code).group('id')
         enumeration_types = [e for e in CodecVHDLEnumerationType.find(code)]

@@ -25,6 +25,8 @@ use work.more_constants_pkg.all;
 
 package custom_types_pkg is
   type enum1_t is (red, green, blue);
+  -- Commented type should be ignored, if not this will cause a compile error
+--  type enum1_t is (foo,bar);
 
   type record1_t is record
     a       : natural;
