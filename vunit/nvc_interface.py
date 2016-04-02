@@ -11,7 +11,7 @@ https://github.com/nickg/nvc
 
 from __future__ import print_function
 import os
-from os.path import dirname, exists, join
+from os.path import dirname, exists, join, expanduser
 import subprocess
 from vunit.simulator_interface import SimulatorInterface
 from vunit.exceptions import CompileError
@@ -51,7 +51,8 @@ class NvcInterface(SimulatorInterface):
         """
         Setup the library mapping according to project
         """
-
+        project.add_external_library("ieee_proposed",
+                                     expanduser("~/.nvc/lib/ieee_proposed"))
         libraries = project.get_libraries()
         self._libraries = libraries
         self._vhdl_standard = vhdl_standard
