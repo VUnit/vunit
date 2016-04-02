@@ -17,9 +17,10 @@
 --  Latest standard version available at:
 --        http://www.SynthWorks.com/downloads
 --
---  Revision History:      For more details, see CoveragePkg_release_notes.pdf
+--  Revision History:
 --    Date      Version    Description
 --    01/2015   2015.01    Initial Revision
+--    06/2015   205.06     Added MemoryPkg
 --
 --
 --  Copyright (c) 2015 by SynthWorks Design Inc.  All rights reserved.
@@ -44,14 +45,15 @@
 --
 
 context OsvvmContext is
-    library OSVVM ;  
+    library OSVVM ;
 
     use OSVVM.NamePkg.all ;
-    use OSVVM.TranscriptPkg.all ; 
+    use OSVVM.TranscriptPkg.all ;
     use OSVVM.OsvvmGlobalPkg.all ;
-    use OSVVM.AlertLogPkg.all ; 
+    use OSVVM.AlertLogPkg.all ;
     use OSVVM.RandomPkg.all ;
     use OSVVM.CoveragePkg.all ;
-    
-end context OsvvmContext ; 
+    use OSVVM.MemoryPkg.all ;
+
+end context OsvvmContext ;
 

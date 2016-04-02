@@ -1,7 +1,7 @@
 --
 --  File Name:         RandomBasePkg.vhd
 --  Design Unit Name:  RandomBasePkg
---  Revision:          STANDARD VERSION,  revision 2015.01
+--  Revision:          STANDARD VERSION
 --
 --  Maintainer:        Jim Lewis      email:  jim@synthworks.com
 --  Contributor(s):
@@ -12,7 +12,7 @@
 --        Defines Base randomization, seed definition, seed generation,
 --        and seed IO functionality for RandomPkg.vhd
 --        Defines:
---          Procedure Uniform - baseline randomization 
+--          Procedure Uniform - baseline randomization
 --          Type RandomSeedType - the seed as a single object
 --          function GenRandSeed from integer_vector, integer, or string
 --          IO function to_string, & procedures write, read
@@ -32,13 +32,14 @@
 --    01/2008:   0.1        Initial revision
 --                          Numerous revisions for VHDL Testbenches and Verification
 --    02/2009:   1.0        First Public Released Version
---    02/25/2009 1.1        Replaced reference to std_2008 with a reference 
+--    02/25/2009 1.1        Replaced reference to std_2008 with a reference
 --                          to ieee_proposed.standard_additions.all ;
 --    03/01/2011 2.0        STANDARD VERSION
---                          Fixed abstraction by moving RandomParmType to RandomPkg.vhd 
+--                          Fixed abstraction by moving RandomParmType to RandomPkg.vhd
 --    4/2013     2013.04    No Changes
 --    5/2013     2013.05    No Changes
 --    1/2015     2015.01    Changed Assert/Report to Alert
+--    6/2015     2015.06    Changed GenRandSeed to impure
 --
 --
 --  Copyright (c) 2008 - 2015 by SynthWorks Design Inc.  All rights reserved.
@@ -65,12 +66,12 @@ library ieee ;
 use ieee.math_real.all ;
 use std.textio.all ;
 
-use work.OsvvmGlobalPkg.all ; 
-use work.AlertLogPkg.all ; 
+use work.OsvvmGlobalPkg.all ;
+use work.AlertLogPkg.all ;
 
--- comment out following 2 lines with VHDL-2008.  Leave in for VHDL-2002 
--- library ieee_proposed ;						          -- remove with VHDL-2008
--- use ieee_proposed.standard_additions.all ;   -- remove with VHDL-2008
+-- comment out following 2 lines with VHDL-2008.  Leave in for VHDL-2002
+library ieee_proposed ;						          -- remove with VHDL-2008
+use ieee_proposed.standard_additions.all ;   -- remove with VHDL-2008
 
 
 package RandomBasePkg is
@@ -87,7 +88,7 @@ package RandomBasePkg is
   impure function  GenRandSeed(IV : integer_vector) return RandomSeedType ;
   impure function  GenRandSeed(I : integer) return RandomSeedType ;
   impure function  GenRandSeed(S : string) return RandomSeedType ;
-  
+
   -- IO for RandomSeedType.  If use subtype, then create aliases here
   -- in a similar fashion VHDL-2008 std_logic_textio.
   -- Not required by RandomPkg
@@ -108,16 +109,16 @@ package body RandomBasePkg is
   -- Uniform
   --   Generate a random number with a Uniform distribution
   --   Required by RandomPkg.  All randomization is derived from here.
-  --   Value produced must be either: 
+  --   Value produced must be either:
   --     0 <= Value < 1  or  0 < Value < 1
   --
   --   Current version uses ieee.math_real.Uniform
-  --   This abstraction allows higher precision version 
+  --   This abstraction allows higher precision version
   --   of a uniform distribution to be used provided
   --
   procedure Uniform (
     Result : out   real ;
-    Seed   : inout RandomSeedType 
+    Seed   : inout RandomSeedType
   ) is
   begin
     ieee.math_real.Uniform (Seed(Seed'left), Seed(Seed'right), Result) ;
@@ -130,7 +131,7 @@ package body RandomBasePkg is
   --    Uniform requires two seed values of the form:
   --        1 <= SEED1 <= 2147483562; 1 <= SEED2 <= 2147483398
   --
-  --    if 2 seed values are passed to GenRandSeed and they are 
+  --    if 2 seed values are passed to GenRandSeed and they are
   --    in the above range, then they must remain unmodified.
   --
   impure function GenRandSeed(IV : integer_vector) return RandomSeedType is
@@ -141,7 +142,7 @@ package body RandomBasePkg is
     constant SEED2_MAX : integer := 2147483398 ;
   begin
     if iIV'Length <= 0 then  -- no seed
-      Alert(OSVVM_ALERTLOG_ID, "RandomBasePkg.GenRandSeed received NULL integer_vector", FAILURE) ; 
+      Alert(OSVVM_ALERTLOG_ID, "RandomBasePkg.GenRandSeed received NULL integer_vector", FAILURE) ;
       return (3, 17) ;  -- if continue seed = (3, 17)
 
     elsif iIV'Length = 1 then  -- one seed value
@@ -227,7 +228,7 @@ package body RandomBasePkg is
     variable ReadValid : boolean ;
   begin
       read(L, A, ReadValid) ;
-      AlertIfNot(ReadValid, OSVVM_ALERTLOG_ID, "RandomBasePkg.read[line, RandomSeedType] failed", FAILURE) ;  
+      AlertIfNot(ReadValid, OSVVM_ALERTLOG_ID, "RandomBasePkg.read[line, RandomSeedType] failed", FAILURE) ;
   end procedure read ;
-  
+
 end RandomBasePkg ;

@@ -1,7 +1,7 @@
 --
 --  File Name:         NamePkg.vhd
 --  Design Unit Name:  NamePkg
---  Revision:          STANDARD VERSION,  revision 2014.07
+--  Revision:          STANDARD VERSION
 --
 --  Maintainer:        Jim Lewis      email:  jim@synthworks.com
 --  Contributor(s):
@@ -9,7 +9,7 @@
 --
 --
 --  Package Defines
---      Data structure for name. 
+--      Data structure for name.
 --
 --  Developed for:
 --        SynthWorks Design Inc.
@@ -26,9 +26,10 @@
 --    07/2014:  2014.07    Moved specialization required by CoveragePkg to CoveragePkg
 --                         Separated name handling from message handling to simplify naming
 --    12/2014:  2014.07a   Removed initialized pointers which can lead to memory leaks.
+--    05/2015   2015.06    Added input to Get to return when not initialized
 --
 --
---  Copyright (c) 2010 - 2014 by SynthWorks Design Inc.  All rights reserved.
+--  Copyright (c) 2010 - 2015 by SynthWorks Design Inc.  All rights reserved.
 --
 --  Verbatim copies of this source file may be used and
 --  distributed without restriction.
@@ -54,9 +55,9 @@ package NamePkg is
 
   type NamePType is protected
     procedure Set (NameIn : String) ;
-    impure function Get return string ;
+    impure function Get (DefaultName : string := "") return string ;
     impure function GetOpt return string ;
-    impure function IsSet return boolean ; 
+    impure function IsSet return boolean ;
     procedure Clear ; -- clear name
     procedure Deallocate ; -- effectively alias to clear name
   end protected NamePType ;
@@ -69,7 +70,7 @@ end package NamePkg ;
 
 package body NamePkg is
   type NamePType is protected body
-  
+
     variable NamePtr   : line ;
 
     ------------------------------------------------------------
@@ -81,46 +82,46 @@ package body NamePkg is
     end procedure Set ;
 
     ------------------------------------------------------------
-    impure function Get return string is
+    impure function Get (DefaultName : string := "") return string is
     ------------------------------------------------------------
     begin
-      if NamePtr = NULL then 
-        return "" ; 
+      if NamePtr = NULL then
+        return DefaultName ;
       else
-        return NamePtr.all ; 
-      end if ; 
+        return NamePtr.all ;
+      end if ;
     end function Get ;
 
     ------------------------------------------------------------
     impure function GetOpt return string is
     ------------------------------------------------------------
     begin
-      if NamePtr = NULL then 
-        return NUL & "" ; 
+      if NamePtr = NULL then
+        return NUL & "" ;
       else
-        return NamePtr.all ; 
-      end if ; 
+        return NamePtr.all ;
+      end if ;
     end function GetOpt ;
 
     ------------------------------------------------------------
-    impure function IsSet return boolean is 
+    impure function IsSet return boolean is
     ------------------------------------------------------------
     begin
-      return NamePtr /= NULL ; 
-    end function IsSet ;      
-    
+      return NamePtr /= NULL ;
+    end function IsSet ;
+
     ------------------------------------------------------------
     procedure Clear is  -- clear name
     ------------------------------------------------------------
     begin
       deallocate(NamePtr) ;
     end procedure Clear ;
-    
+
     ------------------------------------------------------------
     procedure Deallocate is  -- clear name
     ------------------------------------------------------------
     begin
-      Clear ; 
+      Clear ;
     end procedure Deallocate ;
 
   end protected body NamePType ;

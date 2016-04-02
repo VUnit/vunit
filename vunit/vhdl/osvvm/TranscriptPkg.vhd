@@ -1,7 +1,7 @@
 --
 --  File Name:         TranscriptPkg.vhd
 --  Design Unit Name:  TranscriptPkg
---  Revision:          STANDARD VERSION,  revision 2015.01
+--  Revision:          STANDARD VERSION
 --
 --  Maintainer:        Jim Lewis      email:  jim@synthworks.com
 --  Contributor(s):
@@ -11,7 +11,7 @@
 --  Description:
 --        Define file identifier TranscriptFile
 --        provide subprograms to open, close, and print to it.
---          
+--
 --
 --  Developed for:
 --        SynthWorks Design Inc.
@@ -22,9 +22,10 @@
 --  Revision History:
 --    Date       Version    Description
 --    01/2015:   2015.01    Initial revision
+--    01/2016:   2016.01    TranscriptOpen function now calls procedure of same name
 --
 --
---  Copyright (c) 2015 by SynthWorks Design Inc.  All rights reserved.
+--  Copyright (c) 2015-2016 by SynthWorks Design Inc.  All rights reserved.
 --
 --  Verbatim copies of this source file may be used and
 --  distributed without restriction.
@@ -45,83 +46,93 @@
 --
 
 use std.textio.all ;
+library ieee_proposed ;
+use ieee_proposed.standard_additions.all ;
+use ieee_proposed.standard_textio_additions.all ;
+
 package TranscriptPkg is
 
-  -- File Identifier to facilitate usage of one transcript file 
+  -- File Identifier to facilitate usage of one transcript file
   file             TranscriptFile : text ;
-  
+
   -- Cause compile errors if READ_MODE is passed to TranscriptOpen
-  subtype WRITE_APPEND_OPEN_KIND is FILE_OPEN_KIND range WRITE_MODE to APPEND_MODE ; 
-  
-  -- Open and close TranscriptFile.  Function allows declarative opens 
+  subtype WRITE_APPEND_OPEN_KIND is FILE_OPEN_KIND range WRITE_MODE to APPEND_MODE ;
+
+  -- Open and close TranscriptFile.  Function allows declarative opens
   procedure        TranscriptOpen (Status: out FILE_OPEN_STATUS; ExternalName: STRING; OpenKind: WRITE_APPEND_OPEN_KIND := WRITE_MODE) ;
-  procedure        TranscriptOpen (ExternalName: STRING; OpenKind: WRITE_APPEND_OPEN_KIND := WRITE_MODE) ;  
+  procedure        TranscriptOpen (ExternalName: STRING; OpenKind: WRITE_APPEND_OPEN_KIND := WRITE_MODE) ;
   impure function  TranscriptOpen (ExternalName: STRING; OpenKind: WRITE_APPEND_OPEN_KIND := WRITE_MODE) return FILE_OPEN_STATUS ;
-  procedure        TranscriptClose ;  
-  impure function  IsTranscriptOpen return boolean ; 
-  alias            IsTranscriptEnabled is IsTranscriptOpen [return boolean] ;  
-  
-  -- Mirroring.  When using TranscriptPkw WriteLine and Print, uses both TranscriptFile and OUTPUT 
-  procedure        SetTranscriptMirror (A : boolean := TRUE) ; 
-  impure function  IsTranscriptMirrored return boolean ; 
+
+  procedure        TranscriptClose ;
+  impure function  IsTranscriptOpen return boolean ;
+  alias            IsTranscriptEnabled is IsTranscriptOpen [return boolean] ;
+
+  -- Mirroring.  When using TranscriptPkw WriteLine and Print, uses both TranscriptFile and OUTPUT
+  procedure        SetTranscriptMirror (A : boolean := TRUE) ;
+  impure function  IsTranscriptMirrored return boolean ;
   alias            GetTranscriptMirror is IsTranscriptMirrored [return boolean] ;
 
   -- Write to TranscriptFile when open.  Write to OUTPUT when not open or IsTranscriptMirrored
-  procedure        WriteLine(buf : inout line)  ; 
-  procedure        Print(s : string) ; 
+  procedure        WriteLine(buf : inout line)  ;
+  procedure        Print(s : string) ;
 
 end TranscriptPkg ;
-  
+
 --- ///////////////////////////////////////////////////////////////////////////
 --- ///////////////////////////////////////////////////////////////////////////
 --- ///////////////////////////////////////////////////////////////////////////
 
 package body TranscriptPkg is
   ------------------------------------------------------------
-  type LocalBooleanPType is protected 
-    procedure Set (A : boolean) ; 
-    impure function get return boolean ; 
-  end protected LocalBooleanPType ; 
+  type LocalBooleanPType is protected
+    procedure Set (A : boolean) ;
+    impure function get return boolean ;
+  end protected LocalBooleanPType ;
   type LocalBooleanPType is protected body
-    variable GlobalVar : boolean := FALSE ; 
+    variable GlobalVar : boolean := FALSE ;
     procedure Set (A : boolean) is
     begin
-       GlobalVar := A ; 
-    end procedure Set ; 
+       GlobalVar := A ;
+    end procedure Set ;
     impure function get return boolean is
     begin
-      return GlobalVar ; 
-    end function get ; 
-  end protected body LocalBooleanPType ; 
-  
+      return GlobalVar ;
+    end function get ;
+  end protected body LocalBooleanPType ;
+
   ------------------------------------------------------------
-  shared variable TranscriptEnable : LocalBooleanPType ; 
-  shared variable TranscriptMirror : LocalBooleanPType ; 
+  shared variable TranscriptEnable : LocalBooleanPType ;
+  shared variable TranscriptMirror : LocalBooleanPType ;
 
   ------------------------------------------------------------
   procedure TranscriptOpen (Status: out FILE_OPEN_STATUS; ExternalName: STRING; OpenKind: WRITE_APPEND_OPEN_KIND := WRITE_MODE) is
   ------------------------------------------------------------
   begin
     file_open(Status, TranscriptFile, ExternalName, OpenKind) ;
-    TranscriptEnable.Set(TRUE) ;
-  end procedure TranscriptOpen ; 
-  
+    if Status = OPEN_OK then
+      TranscriptEnable.Set(TRUE) ;
+    end if ;
+  end procedure TranscriptOpen ;
+
   ------------------------------------------------------------
   procedure TranscriptOpen (ExternalName: STRING; OpenKind: WRITE_APPEND_OPEN_KIND := WRITE_MODE) is
   ------------------------------------------------------------
+    variable Status : FILE_OPEN_STATUS ;
   begin
-    file_open(TranscriptFile, ExternalName, OpenKind) ;
-    TranscriptEnable.Set(TRUE) ;
-  end procedure TranscriptOpen ; 
-  
+    TranscriptOpen(Status, ExternalName, OpenKind) ;
+    if Status /= OPEN_OK then
+      report "TranscriptPkg.TranscriptOpen file: " &
+             ExternalName & " status is: " & to_string(status) & " and is not OPEN_OK" severity FAILURE ;
+    end if ;
+  end procedure TranscriptOpen ;
+
   ------------------------------------------------------------
   impure function  TranscriptOpen (ExternalName: STRING; OpenKind: WRITE_APPEND_OPEN_KIND := WRITE_MODE) return FILE_OPEN_STATUS is
   ------------------------------------------------------------
-    variable Status : FILE_OPEN_STATUS ; 
+    variable Status : FILE_OPEN_STATUS ;
   begin
-    file_open(Status, TranscriptFile, ExternalName, OpenKind) ;
-    TranscriptEnable.Set(TRUE) ;
-    return status ; 
+    TranscriptOpen(Status, ExternalName, OpenKind) ;
+    return Status ;
   end function TranscriptOpen ;
 
   ------------------------------------------------------------
@@ -130,23 +141,23 @@ package body TranscriptPkg is
   begin
     if TranscriptEnable.Get then
       file_close(TranscriptFile) ;
-    end if ; 
+    end if ;
     TranscriptEnable.Set(FALSE) ;
-  end procedure TranscriptClose ; 
-  
+  end procedure TranscriptClose ;
+
   ------------------------------------------------------------
   impure function IsTranscriptOpen return boolean is
   ------------------------------------------------------------
   begin
     return TranscriptEnable.Get ;
   end function IsTranscriptOpen ;
-  
+
   ------------------------------------------------------------
-  procedure SetTranscriptMirror (A : boolean := TRUE) is 
+  procedure SetTranscriptMirror (A : boolean := TRUE) is
   ------------------------------------------------------------
   begin
       TranscriptMirror.Set(A) ;
-  end procedure SetTranscriptMirror ; 
+  end procedure SetTranscriptMirror ;
 
   ------------------------------------------------------------
   impure function IsTranscriptMirrored return boolean is
@@ -154,27 +165,27 @@ package body TranscriptPkg is
   begin
     return TranscriptMirror.Get ;
   end function IsTranscriptMirrored ;
-    
+
   ------------------------------------------------------------
-  procedure WriteLine(buf : inout line) is 
+  procedure WriteLine(buf : inout line) is
   ------------------------------------------------------------
   begin
     if not TranscriptEnable.Get then
-      WriteLine(OUTPUT, buf) ; 
+      WriteLine(OUTPUT, buf) ;
     elsif TranscriptMirror.Get then
-      TEE(TranscriptFile, buf) ; 
+      TEE(TranscriptFile, buf) ;
     else
-      WriteLine(TranscriptFile, buf) ; 
-    end if ; 
-  end procedure WriteLine ; 
+      WriteLine(TranscriptFile, buf) ;
+    end if ;
+  end procedure WriteLine ;
 
   ------------------------------------------------------------
-  procedure Print(s : string) is 
+  procedure Print(s : string) is
   ------------------------------------------------------------
-    variable buf : line ; 
+    variable buf : line ;
   begin
-    write(buf, s) ; 
-    WriteLine(buf) ; 
-  end procedure Print ; 
+    write(buf, s) ;
+    WriteLine(buf) ;
+  end procedure Print ;
 
 end package body TranscriptPkg ;

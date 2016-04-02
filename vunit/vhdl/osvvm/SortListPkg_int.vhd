@@ -28,7 +28,7 @@
 --    3/2011     2.0        added inside as non protected type
 --    6/2011     2.1        added sort as non protected type
 --    4/2013     2013.04    No Changes
---    5/2013     2013.05    No changes of substance. 
+--    5/2013     2013.05    No changes of substance.
 --                          Deleted extra variable declaration in procedure remove
 --    1/2014     2014.01    Added RevSort.  Added AllowDuplicate paramter to Add procedure
 --    1/2015     2015.01    Changed Assert/Report to Alert
@@ -55,8 +55,8 @@
 --     http://www.perlfoundation.org/artistic_license_2_0
 --
 
-use work.OsvvmGlobalPkg.all ; 
-use work.AlertLogPkg.all ; 
+use work.OsvvmGlobalPkg.all ;
+use work.AlertLogPkg.all ;
 use std.textio.all ;
 
 library ieee ;
@@ -64,9 +64,9 @@ use ieee.std_logic_1164.all ;
 use ieee.numeric_std.all ;
 use ieee.std_logic_textio.all ;
 
--- comment out following 2 lines with VHDL-2008.  Leave in for VHDL-2002 
--- library ieee_proposed ;						          -- remove with VHDL-2008
--- use ieee_proposed.standard_additions.all ;   -- remove with VHDL-2008
+-- comment out following 2 lines with VHDL-2008.  Leave in for VHDL-2002
+library ieee_proposed ;						          -- remove with VHDL-2008
+use ieee_proposed.standard_additions.all ;   -- remove with VHDL-2008
 
 
 package SortListPkg_int is
@@ -120,7 +120,7 @@ package body SortListPkg_int is
     end loop ;
     return FALSE ;
   end function inside ;
-  
+
   type SortListPType is protected body
     type ListType ;
     type ListPointerType is access ListType ;
@@ -142,7 +142,7 @@ package body SortListPkg_int is
         if AllowDuplicate then
           tempPtr := HeadPointer ;
           HeadPointer   := new ListType'(A, tempPtr) ;
-        end if ; 
+        end if ;
       elsif A < HeadPointer.A  then
         tempPtr := HeadPointer ;
         HeadPointer   := new ListType'(A, tempPtr) ;
@@ -151,20 +151,20 @@ package body SortListPkg_int is
         AddLoop : loop
           exit AddLoop when CurPtr.NextPtr = NULL ;
           exit AddLoop when A < CurPtr.NextPtr.A  ;
-          if A = CurPtr.NextPtr.A then 
-            if AllowDuplicate then 
-              exit AddLoop ;    -- insert 
+          if A = CurPtr.NextPtr.A then
+            if AllowDuplicate then
+              exit AddLoop ;    -- insert
             else
               return ;  -- return without insert
-            end if; 
-          end if ; 
+            end if;
+          end if ;
           CurPtr := CurPtr.NextPtr ;
         end loop AddLoop ;
         tempPtr := CurPtr.NextPtr ;
         CurPtr.NextPtr := new ListType'(A, tempPtr) ;
       end if ;
     end procedure add ;
-    
+
     procedure add ( constant A : in ArrayofElementType ) is
     begin
       for i in A'range loop
@@ -392,24 +392,24 @@ package body SortListPkg_int is
     end function to_rev_array ;
 
     end protected body SortListPType ;
- 
- 
+
+
   impure function sort (constant A : in ArrayofElementType) return ArrayofElementType is
     variable Result : SortListPType ;
   begin
-    for i in A'range loop 
+    for i in A'range loop
       Result.Add(A(i), TRUE) ;
     end loop ;
-    return Result.to_array(EraseList => TRUE)  ; 
+    return Result.to_array(EraseList => TRUE)  ;
   end function sort ;
 
   impure function revsort (constant A : in ArrayofElementType) return ArrayofElementType is
     variable Result : SortListPType ;
   begin
-    for i in A'range loop 
+    for i in A'range loop
       Result.Add(A(i), TRUE) ;
     end loop ;
-    return Result.to_rev_array(EraseList => TRUE)  ; 
+    return Result.to_rev_array(EraseList => TRUE)  ;
   end function revsort ;
 end SortListPkg_int ;
 
