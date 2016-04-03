@@ -30,7 +30,7 @@ elif BUILD_NAME == "LINT":
 
 elif BUILD_NAME == "DOCS":
     call("pip install sphinx sphinx-argparse ablog")
-    call("sphinx-build -T -W -E -a -n -b html docs docs/_build")
+    call("sphinx-build -T -E -a -n -b html docs docs/_build")
 
 elif BUILD_NAME == "ACCEPTANCE":
     call('python -m unittest discover vunit/test/acceptance')

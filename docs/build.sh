@@ -1,1 +1,1 @@
-sphinx-build -T -W -E -a -n -b html . ./_build
+sphinx-build -T -E -a -n -b html . ./_build
