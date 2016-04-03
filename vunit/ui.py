@@ -393,7 +393,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
            prj.set_parameter("data_width", 16)
 
         """
-        self.set_generic(name, value)
+        self._configuration.set_generic(name, value, scope=create_scope())
 
     def set_sim_option(self, name, value):
         """
@@ -903,7 +903,7 @@ class Library(object):
            lib.set_parameter("data_width", 16)
 
         """
-        self.set_generic(name, value)
+        self._configuration.set_generic(name, value, scope=self._scope)
 
     def set_sim_option(self, name, value):
         """
@@ -1095,7 +1095,7 @@ class TestBench(object):
            test_bench.set_parameter("data_width", 16)
 
         """
-        self.set_generic(name, value)
+        self._config.set_generic(name, value, scope=self._scope)
 
     def set_sim_option(self, name, value):
         """
@@ -1344,7 +1344,7 @@ class Test(object):
            test.set_parameter("data_width", 16)
 
         """
-        self.set_generic(name, value)
+        self._config.set_generic(name, value, scope=self._scope)
 
     def set_sim_option(self, name, value):
         """
