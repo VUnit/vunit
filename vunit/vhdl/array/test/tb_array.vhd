@@ -47,9 +47,9 @@ begin
       impure function file_name return string is
       begin
         if is_signed then
-          return output_path & "s" & to_string(bit_width) & ".raw";
+          return output_path & "s" & integer'image(bit_width) & ".raw";
         else
-          return output_path & "u" & to_string(bit_width) & ".raw";
+          return output_path & "u" & integer'image(bit_width) & ".raw";
         end if;
       end function;
 

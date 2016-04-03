@@ -62,6 +62,7 @@ end package;
 
 package body array_pkg is
   type binary_file_t is file of character;
+  type integer_vector is array (natural range <>) of integer;
   type integer_vector_access_t is access integer_vector;
 
   procedure read_byte(file fread : binary_file_t;
