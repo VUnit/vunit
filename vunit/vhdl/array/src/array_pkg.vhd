@@ -7,6 +7,9 @@
 -- @TODO > 32-bit ieee signed/unsigned
 
 use std.textio.all;
+library ieee_proposed;
+use ieee_proposed.numeric_std_additions.all;
+use ieee_proposed.standard_additions.all;
 
 package array_pkg is
 

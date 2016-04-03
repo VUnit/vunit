@@ -51,7 +51,6 @@ class NvcInterface(SimulatorInterface):
         """
         Setup the library mapping according to project
         """
-
         libraries = project.get_libraries()
         self._libraries = libraries
         self._vhdl_standard = vhdl_standard

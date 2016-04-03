@@ -46,7 +46,7 @@
 library ieee ;
 use std.textio.all ;
 
-use work.NamePkg.all ; 
+use work.NamePkg.all ;
 
 package OsvvmGlobalPkg is
   -- FILE IO Global File Identifier -- Open using AlertLogPkg.TranscriptOpen
@@ -55,6 +55,7 @@ package OsvvmGlobalPkg is
   -- Shared Options Type used in OSVVM
   type OsvvmOptionsType is (OPT_INIT_PARM_DETECT, OPT_USE_DEFAULT, DISABLED, FALSE, ENABLED, TRUE) ;
   function IsEnabled (A : OsvvmOptionsType) return boolean ;  -- Requires that TRUE is last and ENABLED is 2nd to last
+  function to_OsvvmOptionsType (A : boolean) return OsvvmOptionsType ;
 
   -- Defaults for String values
   constant OSVVM_DEFAULT_ALERT_PREFIX     : string := "%% Alert" ;
@@ -63,8 +64,8 @@ package OsvvmGlobalPkg is
   constant OSVVM_DEFAULT_DONE_NAME        : string := "DONE" ;
   constant OSVVM_DEFAULT_PASS_NAME        : string := "PASSED" ;
   constant OSVVM_DEFAULT_FAIL_NAME        : string := "FAILED" ;
-  constant OSVVM_STRING_INIT_PARM_DETECT  : string := NUL & NUL & NUL ; 
-  constant OSVVM_STRING_USE_DEFAULT       : string := NUL & "" ; 
+  constant OSVVM_STRING_INIT_PARM_DETECT  : string := NUL & NUL & NUL ;
+  constant OSVVM_STRING_USE_DEFAULT       : string := NUL & "" ;
 
   -- Coverage Settings
   constant OSVVM_DEFAULT_WRITE_PASS_FAIL   : OsvvmOptionsType := FALSE ;
@@ -84,34 +85,34 @@ package OsvvmGlobalPkg is
     PassName        : string := OSVVM_STRING_INIT_PARM_DETECT ;
     FailName        : string := OSVVM_STRING_INIT_PARM_DETECT
   ) ;
-  
+
   ------------------------------------------------------------
   -- Accessor Functions
-  function ResolveOsvvmOption(A, B, C : OsvvmOptionsType) return OsvvmOptionsType ; 
-  function ResolveOsvvmOption(A, B, C, D : OsvvmOptionsType) return OsvvmOptionsType ; 
+  function ResolveOsvvmOption(A, B, C : OsvvmOptionsType) return OsvvmOptionsType ;
+  function ResolveOsvvmOption(A, B, C, D : OsvvmOptionsType) return OsvvmOptionsType ;
   function IsOsvvmStringSet (A : string) return boolean ;
-  function ResolveOsvvmOption(A, B : string) return string ; 
-  function ResolveOsvvmOption(A, B, C : string) return string ; 
-  function ResolveOsvvmOption(A, B, C, D : string) return string ; 
-  
-  impure function ResolveOsvvmWritePrefix(A : String)  return string ; 
-  impure function ResolveOsvvmWritePrefix(A, B : String)  return string ; 
-  impure function ResolveOsvvmDoneName(A : String)  return string ; 
-  impure function ResolveOsvvmDoneName(A, B : String)  return string ; 
-  impure function ResolveOsvvmPassName(A : String)  return string ; 
-  impure function ResolveOsvvmPassName(A, B : String)  return string ; 
-  impure function ResolveOsvvmFailName(A : String)  return string ; 
-  impure function ResolveOsvvmFailName(A, B : String)  return string ; 
+  function ResolveOsvvmOption(A, B : string) return string ;
+  function ResolveOsvvmOption(A, B, C : string) return string ;
+  function ResolveOsvvmOption(A, B, C, D : string) return string ;
+
+  impure function ResolveOsvvmWritePrefix(A : String)  return string ;
+  impure function ResolveOsvvmWritePrefix(A, B : String)  return string ;
+  impure function ResolveOsvvmDoneName(A : String)  return string ;
+  impure function ResolveOsvvmDoneName(A, B : String)  return string ;
+  impure function ResolveOsvvmPassName(A : String)  return string ;
+  impure function ResolveOsvvmPassName(A, B : String)  return string ;
+  impure function ResolveOsvvmFailName(A : String)  return string ;
+  impure function ResolveOsvvmFailName(A, B : String)  return string ;
 
   impure function ResolveCovWritePassFail(A, B : OsvvmOptionsType) return OsvvmOptionsType ;  -- Cov
   impure function ResolveCovWriteBinInfo(A, B : OsvvmOptionsType) return OsvvmOptionsType ; -- Cov
   impure function ResolveCovWriteCount(A, B : OsvvmOptionsType) return OsvvmOptionsType ; -- Cov
   impure function ResolveCovWriteAnyIllegal(A, B : OsvvmOptionsType) return OsvvmOptionsType ;  -- Cov
-  
+
   procedure OsvvmDeallocate ;
-  
-  type OptionsPType is protected 
-    procedure Set (A: OsvvmOptionsType) ; 
+
+  type OptionsPType is protected
+    procedure Set (A: OsvvmOptionsType) ;
     impure function get return OsvvmOptionsType ;
   end protected OptionsPType ;
 end OsvvmGlobalPkg ;
@@ -122,17 +123,17 @@ end OsvvmGlobalPkg ;
 
 package body OsvvmGlobalPkg is
   type OptionsPType is protected body
-    variable GlobalVar : OsvvmOptionsType ; 
+    variable GlobalVar : OsvvmOptionsType ;
     procedure Set (A : OsvvmOptionsType) is
     begin
-       GlobalVar := A ; 
-    end procedure Set ; 
+       GlobalVar := A ;
+    end procedure Set ;
     impure function get return OsvvmOptionsType is
     begin
-      return GlobalVar ; 
-    end function get ; 
-  end protected body OptionsPType ; 
-  
+      return GlobalVar ;
+    end function get ;
+  end protected body OptionsPType ;
+
   shared variable WritePrefixVar     : NamePType ;
   shared variable DoneNameVar        : NamePType ;
   shared variable PassNameVar        : NamePType ;
@@ -144,8 +145,18 @@ package body OsvvmGlobalPkg is
 
   function IsEnabled (A : OsvvmOptionsType) return boolean is
   begin
-    return A >= ENABLED ; 
-  end function IsEnabled ; 
+    return A >= ENABLED ;
+  end function IsEnabled ;
+
+  function to_OsvvmOptionsType (A : boolean) return OsvvmOptionsType is
+  begin
+    if A then
+      return TRUE ;
+    else
+      return FALSE ;
+    end if ;
+  end function to_OsvvmOptionsType ;
+
 
   ------------------------------------------------------------
   procedure SetOsvvmGlobalOptions (
@@ -173,25 +184,25 @@ package body OsvvmGlobalPkg is
       WriteAnyIllegalVar.Set(WriteAnyIllegal) ;
     end if ;
     if WritePrefix /= OSVVM_STRING_INIT_PARM_DETECT then
-      WritePrefixVar.Set(WritePrefix) ; 
+      WritePrefixVar.Set(WritePrefix) ;
     end if ;
     if DoneName /= OSVVM_STRING_INIT_PARM_DETECT then
-      DoneNameVar.Set(DoneName) ; 
+      DoneNameVar.Set(DoneName) ;
     end if ;
     if PassName /= OSVVM_STRING_INIT_PARM_DETECT then
-      PassNameVar.Set(PassName) ; 
+      PassNameVar.Set(PassName) ;
     end if ;
     if FailName /= OSVVM_STRING_INIT_PARM_DETECT then
-      FailNameVar.Set(FailName) ; 
+      FailNameVar.Set(FailName) ;
     end if ;
-  end procedure SetOsvvmGlobalOptions ;  
+  end procedure SetOsvvmGlobalOptions ;
 
   ------------------------------------------------------------
   -- Accessor Functions
   -- Local Function
   function IsOsvvmOptionSet (A : OsvvmOptionsType) return boolean is
   begin
-    return A > OPT_USE_DEFAULT ; 
+    return A > OPT_USE_DEFAULT ;
   end function IsOsvvmOptionSet ;
 
   function ResolveOsvvmOption(A, B, C : OsvvmOptionsType) return OsvvmOptionsType is
@@ -204,7 +215,7 @@ package body OsvvmGlobalPkg is
       return C ;
     end if ;
   end function ResolveOsvvmOption ;
- 
+
   function ResolveOsvvmOption(A, B, C, D : OsvvmOptionsType) return OsvvmOptionsType is
   begin
     if IsOsvvmOptionSet(A) then
@@ -217,17 +228,17 @@ package body OsvvmGlobalPkg is
       return D ;
     end if ;
   end function ResolveOsvvmOption ;
-  
+
   -- Local Function
   function IsOsvvmStringSet (A : string) return boolean is
   begin
     if A'length = 0 then   -- Null strings permitted
-      return TRUE ;     
-    else 
+      return TRUE ;
+    else
       return A(A'left) /= NUL ;
-    end if; 
+    end if;
   end function IsOsvvmStringSet ;
-  
+
   function ResolveOsvvmOption(A, B : string) return string is
   begin
     if IsOsvvmStringSet(A) then
@@ -235,8 +246,8 @@ package body OsvvmGlobalPkg is
     else
       return B ;
     end if ;
-  end function ResolveOsvvmOption ; 
-  
+  end function ResolveOsvvmOption ;
+
   function ResolveOsvvmOption(A, B, C : string) return string is
   begin
     if IsOsvvmStringSet(A) then
@@ -246,8 +257,8 @@ package body OsvvmGlobalPkg is
     else
       return C ;
     end if ;
-  end function ResolveOsvvmOption ; 
-  
+  end function ResolveOsvvmOption ;
+
   function ResolveOsvvmOption(A, B, C, D : string) return string is
   begin
     if IsOsvvmStringSet(A) then
@@ -260,53 +271,53 @@ package body OsvvmGlobalPkg is
       return D ;
     end if ;
   end function ResolveOsvvmOption ;
-  
+
 
   impure function ResolveOsvvmWritePrefix(A : String)  return string is
   begin
     return ResolveOsvvmOption(A, WritePrefixVar.GetOpt, OSVVM_DEFAULT_WRITE_PREFIX) ;
-  end function ResolveOsvvmWritePrefix ; 
-  
+  end function ResolveOsvvmWritePrefix ;
+
   impure function ResolveOsvvmWritePrefix(A, B : String)  return string is
   begin
     return ResolveOsvvmOption(A, B, WritePrefixVar.GetOpt, OSVVM_DEFAULT_WRITE_PREFIX) ;
-  end function ResolveOsvvmWritePrefix ; 
-  
+  end function ResolveOsvvmWritePrefix ;
+
   impure function ResolveOsvvmDoneName(A : String)  return string is
   begin
     return ResolveOsvvmOption(A, DoneNameVar.GetOpt, OSVVM_DEFAULT_DONE_NAME) ;
-  end function ResolveOsvvmDoneName ; 
-  
+  end function ResolveOsvvmDoneName ;
+
   impure function ResolveOsvvmDoneName(A, B : String)  return string is
   begin
     return ResolveOsvvmOption(A, DoneNameVar.GetOpt, OSVVM_DEFAULT_DONE_NAME) ;
-  end function ResolveOsvvmDoneName ; 
-  
+  end function ResolveOsvvmDoneName ;
+
   impure function ResolveOsvvmPassName(A : String)  return string is
   begin
     return ResolveOsvvmOption(A, PassNameVar.GetOpt, OSVVM_DEFAULT_PASS_NAME) ;
-  end function ResolveOsvvmPassName ; 
-  
+  end function ResolveOsvvmPassName ;
+
   impure function ResolveOsvvmPassName(A, B : String)  return string is
   begin
     return ResolveOsvvmOption(A, B, PassNameVar.GetOpt, OSVVM_DEFAULT_PASS_NAME) ;
-  end function ResolveOsvvmPassName ; 
-  
+  end function ResolveOsvvmPassName ;
+
   impure function ResolveOsvvmFailName(A : String)  return string is
   begin
     return ResolveOsvvmOption(A, FailNameVar.GetOpt, OSVVM_DEFAULT_FAIL_NAME) ;
-  end function ResolveOsvvmFailName ;  
- 
+  end function ResolveOsvvmFailName ;
+
   impure function ResolveOsvvmFailName(A, B : String)  return string is
   begin
     return ResolveOsvvmOption(A, B, FailNameVar.GetOpt, OSVVM_DEFAULT_FAIL_NAME) ;
-  end function ResolveOsvvmFailName ;  
+  end function ResolveOsvvmFailName ;
 
   impure function ResolveCovWritePassFail(A, B : OsvvmOptionsType) return OsvvmOptionsType is
   begin
     return ResolveOsvvmOption(A, B, WritePassFailVar.Get, OSVVM_DEFAULT_WRITE_PASS_FAIL) ;
   end function ResolveCovWritePassFail ;  -- Cov
-  
+
   impure function ResolveCovWriteBinInfo(A, B : OsvvmOptionsType) return OsvvmOptionsType is
   begin
     return ResolveOsvvmOption(A, B, WriteBinInfoVar.Get, OSVVM_DEFAULT_WRITE_BIN_INFO) ;
@@ -321,7 +332,7 @@ package body OsvvmGlobalPkg is
   begin
     return ResolveOsvvmOption(A, B, WriteAnyIllegalVar.Get, OSVVM_DEFAULT_WRITE_ANY_ILLEGAL) ;
   end function ResolveCovWriteAnyIllegal ;  -- Cov
-  
+
   procedure OsvvmDeallocate is
   begin
     -- Free up space used by NamePType within OsvvmGlobalPkg
@@ -334,6 +345,6 @@ package body OsvvmGlobalPkg is
     WriteCountVar.Set(TRUE ) ; -- := TRUE  ;
     WriteAnyIllegalVar.Set(FALSE) ; -- := FALSE ;
 
-  end procedure OsvvmDeallocate ; 
-   
+  end procedure OsvvmDeallocate ;
+
 end package body OsvvmGlobalPkg ;

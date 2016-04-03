@@ -1,7 +1,7 @@
 --
 --  File Name :         RandomPkg.vhd
 --  Design Unit Name :  RandomPkg
---  Revision :          STANDARD VERSION,  revision 2015.01
+--  Revision :          STANDARD VERSION
 --
 --  Maintainer :        Jim Lewis      email :  jim@synthworks.com
 --  Contributor(s) :
@@ -44,6 +44,7 @@
 --    1/2014     2014.01    Added RandTime, RandReal(set), RandIntV, RandRealV, RandTimeV
 --                          Made sort, revsort from SortListPkg_int visible via aliases
 --    1/2015     2015.01    Changed Assert/Report to Alert
+--    5/2015     2015.06    Revised Alerts to Alert(OSVVM_ALERTLOG_ID, ...) ;
 --
 --  Copyright (c) 2006 - 2015 by SynthWorks Design Inc.  All rights reserved.
 --
@@ -65,8 +66,8 @@
 --     http ://www.perlfoundation.org/artistic_license_2_0
 --
 
-use work.OsvvmGlobalPkg.all ; 
-use work.AlertLogPkg.all ; 
+use work.OsvvmGlobalPkg.all ;
+use work.AlertLogPkg.all ;
 use work.RandomBasePkg.all ;
 use work.SortListPkg_int.all ;
 
@@ -79,9 +80,9 @@ use ieee.numeric_std_unsigned.all ;
 use ieee.math_real.all ;
 
 -- comment out following 3 lines with VHDL-2008.  Leave in for VHDL-2002
--- library ieee_proposed ;						               -- remove with VHDL-2008
--- use ieee_proposed.standard_additions.all ;        -- remove with VHDL-2008
--- use ieee_proposed.standard_textio_additions.all ; -- remove with VHDL-2008
+library ieee_proposed ;						               -- remove with VHDL-2008
+use ieee_proposed.standard_additions.all ;        -- remove with VHDL-2008
+use ieee_proposed.standard_textio_additions.all ; -- remove with VHDL-2008
 
 
 package RandomPkg is
@@ -331,18 +332,26 @@ package body RandomPkg is
   function Scale (A, Min, Max : real) return real is
     variable ValRange : Real ;
   begin
-    ValRange := Max - Min ;
-    return A * ValRange + Min ;
+    if Max >= Min then
+      ValRange := Max - Min ;
+      return A * ValRange + Min ;
+    else
+      return real'left ;
+    end if ;
   end function Scale ;
 
   function Scale (A : real ; Min, Max : integer) return integer is
     variable ValRange : real ;
     variable rMin, rMax : real ;
   begin
-    rMin := real(Min) - 0.5 ;
-    rMax := real(Max) + 0.5 ;
-    ValRange := rMax - rMin ;
-    return integer(round(A * ValRange + rMin)) ;
+    if Max >= Min then
+      rMin := real(Min) - 0.5 ;
+      rMax := real(Max) + 0.5 ;
+      ValRange := rMax - rMin ;
+      return integer(round(A * ValRange + rMin)) ;
+    else
+      return integer'left ;
+    end if ;
   end function Scale ;
 
   -- create more smaller values
@@ -358,7 +367,7 @@ package body RandomPkg is
     return sqrt(A) ;
   end FavorBig ;
 
-  -- local.  
+  -- local.
   function to_time_vector (A : integer_vector ; Unit : time) return time_vector is
     variable result : time_vector(A'range) ;
   begin
@@ -377,7 +386,7 @@ package body RandomPkg is
     end loop ;
     return result ;
   end function to_integer_vector ;
-  
+
   -- Local.  Remove the exclude list from the list - integer_vector
   procedure RemoveExclude(A, Exclude : integer_vector ; variable NewA : out integer_vector ; variable NewALength : inout natural ) is
     alias norm_NewA : integer_vector(1 to NewA'length) is NewA ;
@@ -394,14 +403,14 @@ package body RandomPkg is
   -- Local.  Inside - real_vector
   function inside(A : real ; Exclude : real_vector) return boolean is
   begin
-    for i in Exclude'range loop 
-      if A = Exclude(i) then 
-        return TRUE ; 
-      end if ; 
+    for i in Exclude'range loop
+      if A = Exclude(i) then
+        return TRUE ;
+      end if ;
     end loop ;
     return FALSE ;
-  end function inside ; 
-  
+  end function inside ;
+
   -- Local.  Remove the exclude list from the list - real_vector
   procedure RemoveExclude(A, Exclude : real_vector ; variable NewA : out real_vector ; variable NewALength : inout natural ) is
     alias norm_NewA : real_vector(1 to NewA'length) is NewA ;
@@ -418,14 +427,14 @@ package body RandomPkg is
   -- Local.  Inside - time_vector
   function inside(A : time ; Exclude : time_vector) return boolean is
   begin
-    for i in Exclude'range loop 
-      if A = Exclude(i) then 
-        return TRUE ; 
-      end if ; 
+    for i in Exclude'range loop
+      if A = Exclude(i) then
+        return TRUE ;
+      end if ;
     end loop ;
     return FALSE ;
-  end function inside ; 
-  
+  end function inside ;
+
   -- Local.  Remove the exclude list from the list - time_vector
   procedure RemoveExclude(A, Exclude : time_vector ; variable NewA : out time_vector ; variable NewALength : inout natural ) is
     alias norm_NewA : time_vector(1 to NewA'length) is NewA ;
@@ -474,7 +483,7 @@ package body RandomPkg is
     variable ReadValid : boolean ;
   begin
       read(L, A, ReadValid) ;
-      AlertIfNot( ReadValid, OSVVM_ALERTLOG_ID, "RandomPkg.read[line, RandomDistType] failed", FAILURE) ;
+      AlertIfNot( OSVVM_ALERTLOG_ID, ReadValid, "RandomPkg.read[line, RandomDistType] failed", FAILURE) ;
   end procedure read ;
 
 
@@ -521,7 +530,7 @@ package body RandomPkg is
     variable ReadValid : boolean ;
   begin
       read(L, A, ReadValid) ;
-      AlertIfNot( ReadValid, OSVVM_ALERTLOG_ID, "RandomPkg.read[line, RandomParmType] failed", FAILURE) ; 
+      AlertIfNot( OSVVM_ALERTLOG_ID, ReadValid, "RandomPkg.read[line, RandomParmType] failed", FAILURE) ;
   end procedure read ;
 
 
@@ -618,7 +627,7 @@ package body RandomPkg is
     impure function Uniform (Min, Max : in real) return real is
       variable rRandomVal : real ;
     begin
-      AlertIf (Max < Min, OSVVM_ALERTLOG_ID, "RandomPkg.Uniform: Max < Min", FAILURE) ;
+      AlertIf (OSVVM_ALERTLOG_ID, Max < Min, "RandomPkg.Uniform: Max < Min", FAILURE) ;
       Uniform(rRandomVal, RandomSeed) ;
       return scale(rRandomVal, Min, Max) ;
     end function Uniform ;
@@ -626,7 +635,7 @@ package body RandomPkg is
     impure function Uniform (Min, Max : integer) return integer is
       variable rRandomVal : real ;
     begin
-      AlertIf (Max < Min, OSVVM_ALERTLOG_ID, "RandomPkg.Uniform: Max < Min", FAILURE) ;
+      AlertIf (OSVVM_ALERTLOG_ID, Max < Min, "RandomPkg.Uniform: Max < Min", FAILURE) ;
       Uniform(rRandomVal, RandomSeed) ;
       return scale(rRandomVal, Min, Max) ;
     end function Uniform ;
@@ -657,7 +666,7 @@ package body RandomPkg is
     impure function FavorSmall (Min, Max : real) return real is
       variable rRandomVal : real ;
     begin
-      AlertIf (Max < Min, OSVVM_ALERTLOG_ID, "RandomPkg.FavorSmall: Max < Min", FAILURE) ;
+      AlertIf (OSVVM_ALERTLOG_ID, Max < Min, "RandomPkg.FavorSmall: Max < Min", FAILURE) ;
       Uniform(rRandomVal, RandomSeed) ;
       return scale(FavorSmall(rRandomVal), Min, Max) ; -- real
     end function FavorSmall ;
@@ -665,7 +674,7 @@ package body RandomPkg is
     impure function FavorSmall (Min, Max : integer) return integer is
       variable rRandomVal : real ;
     begin
-      AlertIf (Max < Min, OSVVM_ALERTLOG_ID, "RandomPkg.FavorSmall: Max < Min", FAILURE) ;
+      AlertIf (OSVVM_ALERTLOG_ID, Max < Min, "RandomPkg.FavorSmall: Max < Min", FAILURE) ;
       Uniform(rRandomVal, RandomSeed) ;
       return scale(FavorSmall(rRandomVal), Min, Max) ; -- integer
     end function FavorSmall ;
@@ -696,7 +705,7 @@ package body RandomPkg is
     impure function FavorBig (Min, Max : real) return real is
       variable rRandomVal : real ;
     begin
-      AlertIf (Max < Min, OSVVM_ALERTLOG_ID, "RandomPkg.FavorBig: Max < Min", FAILURE) ;
+      AlertIf (OSVVM_ALERTLOG_ID, Max < Min, "RandomPkg.FavorBig: Max < Min", FAILURE) ;
       Uniform(rRandomVal, RandomSeed) ;
       return scale(FavorBig(rRandomVal), Min, Max) ; -- real
     end function FavorBig ;
@@ -704,7 +713,7 @@ package body RandomPkg is
     impure function FavorBig (Min, Max : integer) return integer is
       variable rRandomVal : real ;
     begin
-      AlertIf (Max < Min, OSVVM_ALERTLOG_ID, "RandomPkg.FavorBig: Max < Min", FAILURE) ;
+      AlertIf (OSVVM_ALERTLOG_ID, Max < Min, "RandomPkg.FavorBig: Max < Min", FAILURE) ;
       Uniform(rRandomVal, RandomSeed) ;
       return scale(FavorBig(rRandomVal), Min, Max) ; -- integer
     end function FavorBig ;
@@ -779,6 +788,7 @@ package body RandomPkg is
     begin
       if Max < Min then
          Alert(OSVVM_ALERTLOG_ID, "RandomPkg.Normal: Max < Min", FAILURE) ;
+         return Mean ;
       else
         loop
           rRandomVal := Normal (Mean, StdDeviation) ;
@@ -800,6 +810,7 @@ package body RandomPkg is
     begin
       if Max < Min then
         Alert(OSVVM_ALERTLOG_ID, "RandomPkg.Normal: Max < Min", FAILURE) ;
+        return integer(round(Mean)) ;
       else
         loop
           iRandomVal := integer(round(  Normal(Mean, StdDeviation)  )) ;
@@ -831,7 +842,7 @@ package body RandomPkg is
       -- add this check to set parameters?
       if Mean <= 0.0 or Bound <= 0.0 then
         Alert(OSVVM_ALERTLOG_ID, "RandomPkg.Poisson: Mean < 0 or too large.  Mean = " & real'image(Mean), FAILURE) ;
-        return -1.0 ;
+        return Mean ;
       end if ;
 
       while (Product >= Bound) loop
@@ -848,6 +859,7 @@ package body RandomPkg is
     begin
       if Max < Min then
         Alert(OSVVM_ALERTLOG_ID, "RandomPkg.Poisson: Max < Min", FAILURE) ;
+        return Mean ;
       else
         loop
           rRandomVal := Poisson (Mean) ;
@@ -867,6 +879,7 @@ package body RandomPkg is
     begin
       if Max < Min then
         Alert(OSVVM_ALERTLOG_ID, "RandomPkg.Poisson: Max < Min", FAILURE) ;
+        return integer(round(Mean)) ;
       else
         loop
           iRandomVal := integer(round(  Poisson (Mean)  )) ;
@@ -876,7 +889,7 @@ package body RandomPkg is
       end if ;
       return iRandomVal ;
     end function  Poisson ;
-    
+
 
     --
     --  integer randomization with a range
@@ -948,14 +961,14 @@ package body RandomPkg is
 
     impure function RandIntV (Min, Max : integer ; Unique : natural ; Size : natural) return integer_vector is
       variable result : integer_vector(1 to Size) ;
-      variable iUnique : natural ; 
+      variable iUnique : natural ;
     begin
       -- if Unique = 0, it is more efficient to call RandIntV(Min, Max, Size)
-      iUnique := Unique ; 
+      iUnique := Unique ;
       if Max-Min+1 < Unique then
         Alert(OSVVM_ALERTLOG_ID, "RandomPkg.(RandIntV | RandRealV | RandTimeV): Unique > number of values available", FAILURE) ;
-        iUnique := Max-Min+1 ; 
-      end if ; 
+        iUnique := Max-Min+1 ;
+      end if ;
       for i in result'range loop
         result(i) := RandInt(Min, Max, result(maximum(1, 1 + i - iUnique) to Size)) ;
       end loop ;
@@ -979,11 +992,11 @@ package body RandomPkg is
       end loop ;
       return result ;
     end function RandTimeV ;
-    
+
     impure function RandTimeV (Min, Max : time ; Unique : natural ; Size : natural ; Unit : time := ns) return time_vector is
     begin
       -- if Unique = 0, it is more efficient to call RandTimeV(Min, Max, Size)
-      return to_time_vector(RandIntV(Min/Unit, Max/Unit, Unique, Size), Unit) ; 
+      return to_time_vector(RandIntV(Min/Unit, Max/Unit, Unique, Size), Unit) ;
     end function RandTimeV ;
 
 
@@ -1049,13 +1062,13 @@ package body RandomPkg is
 
     impure function RandTimeV (Min, Max : time ; Exclude : time_vector ; Size : natural ; Unit : in time := ns) return time_vector is
     begin
-      return to_time_vector( RandIntV(Min/Unit, Max/Unit, to_integer_vector(Exclude, Unit), Size), Unit ) ; 
+      return to_time_vector( RandIntV(Min/Unit, Max/Unit, to_integer_vector(Exclude, Unit), Size), Unit ) ;
    end function RandTimeV ;
 
     impure function RandTimeV (Min, Max : time ; Exclude : time_vector ; Unique : natural ; Size : natural ; Unit : in time := ns) return time_vector is
     begin
       -- if Unique = 0, it is more efficient to call RandIntV(Min, Max, Size)
-      return to_time_vector( RandIntV(Min/Unit, Max/Unit, to_integer_vector(Exclude, Unit), Unique, Size), Unit ) ; 
+      return to_time_vector( RandIntV(Min/Unit, Max/Unit, to_integer_vector(Exclude, Unit), Unique, Size), Unit ) ;
     end function RandTimeV ;
 
 
@@ -1108,15 +1121,15 @@ package body RandomPkg is
 
     impure function RandIntV (A : integer_vector ; Unique : natural ; Size : natural) return integer_vector is
       variable result : integer_vector(1 to Size) ;
-      variable iUnique : natural ; 
+      variable iUnique : natural ;
     begin
       -- if Unique = 0, it is more efficient to call RandIntV(A, Size)
       -- require A'length >= Unique
-      iUnique := Unique ; 
+      iUnique := Unique ;
       if A'length < Unique then
         Alert(OSVVM_ALERTLOG_ID, "RandomPkg.RandIntV: Unique > length of set of values", FAILURE) ;
-        iUnique := A'length ; 
-      end if ; 
+        iUnique := A'length ;
+      end if ;
       for i in result'range loop
         result(i) := RandInt(A, result(maximum(1, 1 + i - iUnique) to Size)) ;
       end loop ;
@@ -1243,11 +1256,11 @@ package body RandomPkg is
       -- Remove Exclude from A
       RemoveExclude(A, Exclude, NewA, NewALength) ;
       -- Require NewALength >= Unique
-      iUnique := Unique ; 
-      if NewALength < Unique then 
+      iUnique := Unique ;
+      if NewALength < Unique then
         Alert(OSVVM_ALERTLOG_ID, "RandomPkg.RandIntV: Unique > Length of Set A - Exclude", FAILURE) ;
-        iUnique := NewALength ; 
-      end if ; 
+        iUnique := NewALength ;
+      end if ;
       -- Randomize using exclude list of Unique # of newly generated values
       for i in result'range loop
         result(i) := RandInt(NewA(1 to NewALength), result(maximum(1, 1 + i - iUnique) to Size)) ;
@@ -1278,11 +1291,11 @@ package body RandomPkg is
       -- Remove Exclude from A
       RemoveExclude(A, Exclude, NewA, NewALength) ;
       -- Require NewALength >= Unique
-      iUnique := Unique ; 
-      if NewALength < Unique then 
+      iUnique := Unique ;
+      if NewALength < Unique then
         Alert(OSVVM_ALERTLOG_ID, "RandomPkg.RandRealV: Unique > Length of Set A - Exclude", FAILURE) ;
-        iUnique := NewALength ; 
-      end if ; 
+        iUnique := NewALength ;
+      end if ;
       -- Randomize using exclude list of Unique # of newly generated values
       for i in result'range loop
         result(i) := RandReal(NewA(1 to NewALength), result(maximum(1, 1 + i - iUnique) to Size)) ;
@@ -1313,11 +1326,11 @@ package body RandomPkg is
       -- Remove Exclude from A
       RemoveExclude(A, Exclude, NewA, NewALength) ;
       -- Require NewALength >= Unique
-      iUnique := Unique ; 
-      if NewALength < Unique then 
+      iUnique := Unique ;
+      if NewALength < Unique then
         Alert(OSVVM_ALERTLOG_ID, "RandomPkg.RandTimeV: Unique > Length of Set A - Exclude", FAILURE) ;
-        iUnique := NewALength ; 
-      end if ; 
+        iUnique := NewALength ;
+      end if ;
       -- Randomize using exclude list of Unique # of newly generated values
       for i in result'range loop
         result(i) := RandTime(NewA(1 to NewALength), result(maximum(1, 1 + i - iUnique) to Size)) ;
@@ -1542,7 +1555,7 @@ package body RandomPkg is
     impure function RandSigned (Max : signed) return signed is
     begin
       if max'length > 0 then
-        AlertIf (Max < 0, OSVVM_ALERTLOG_ID, "RandomPkg.RandSigned: Max < 0", FAILURE) ;
+        AlertIf (OSVVM_ALERTLOG_ID, Max < 0, "RandomPkg.RandSigned: Max < 0", FAILURE) ;
         return signed(RandUnsigned( unsigned(Max))) ;
       else
         return NULL_SV ; -- Null Array
