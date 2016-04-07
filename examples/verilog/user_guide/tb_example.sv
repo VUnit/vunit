@@ -11,45 +11,63 @@
 
 module tb_example;
    `TEST_SUITE begin
-      // Note: Do not place any code here (unless you are debuggnig
+      // Note: Do not place any code here (unless you are debugging
       // VUnit internals).
       
       `TEST_SUITE_SETUP begin
          // Here you will typically place things that are common to
          // all tests, such as asserting the reset signal, starting
          // the clock.
-         $display("test suite setup");
+         $display("Running test suite setup code");
       end
 
       `TEST_CASE_SETUP begin
-         $display("test case setup");
+	 // By default VUnit will run each test separately. However,
+	 // advanced users may want to run tests consecutively rather
+	 // than in separate instances of the HDL-simulator. In that
+	 // case the code placed in a TEST_CASE_SETUP block should
+	 // restore the unit under test to the state expected by the
+	 // test cases below. This may be as easy as asserting the
+	 // reset signal for a couple of clock-cycles but could be
+	 // more 
+         $display("Running test case setup code");
       end
 
-      `TEST_CASE("Test that pass") begin
-         $display("this test is expected to pass");
+      `TEST_CASE("Test that a successful test case passes") begin
+         $display("This test case is expected to pass");
          `CHECK_EQUAL(1, 1);
       end
 
-      `TEST_CASE("Test that fail") begin
-         $display("this test is expected to fail");
+      `TEST_CASE("Test that a failed case actually fails") begin
+         $display("This test case is expected to fail");
          `CHECK_EQUAL(0, 1, "You may also optionally add a diagnostic message to CHECK_EQUAL");
+	 // Note: A test case will also be marked as failing if the
+	 // simulator stops for other reasons before the end of the
+	 // TEST_SUITE block is reached. This means that you don't
+	 // need to use CHECK_EQUAL if the testbench you want to
+	 // convert to VUnit already contains code that for example
+	 // calls $stop if an error-condition is detected.
       end
 
-      `TEST_CASE("Test that timeouts") begin
-         $display("this test is expected to timeout");
-         #2ns;
+      `TEST_CASE("Test that a test that takes too long time fails with a timeout") begin
+         $display("This test is expected to timeout because of the watch dog below.");
+         #2ns; // 
       end
 
       `TEST_CASE_CLEANUP begin
-         $display("test case cleanup");
+	 // This section will run after the end of a test case. In
+	 // many cases this section will not be needed.
+         $display("Cleaning up after a test case");
       end
 
       `TEST_SUITE_CLEANUP begin
-         $display("test suite cleanup");
+	 // This section will run last before the TEST_SUITE block
+	 // exits. In many cases this section will not be needed.
+         $display("Cleaning up after running the complete test suite");
       end
    end;
 
-   // The watchdog macro is optional, but recommended. If you use it
-   // it must not be placed inside any initial or always-block
+   // The watchdog macro is optional, but recommended. If present, it
+   // must not be placed inside any initial or always-block.
    `WATCHDOG(1ns);
 endmodule
