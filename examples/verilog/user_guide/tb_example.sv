@@ -5,8 +5,8 @@
 // Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 // You do not need to worry about adding vunit_defines.svh to your
-// include path, VUnit will automatically do that for you if your
-// python run-script is correct.
+// include path, VUnit will automatically do that for you if VUnit is
+// correctly installed (and your python run-script is correct).
 `include "vunit_defines.svh"
 
 module tb_example;
@@ -16,8 +16,8 @@ module tb_example;
       
       `TEST_SUITE_SETUP begin
          // Here you will typically place things that are common to
-         // all tests, such as asserting the reset signal, starting
-         // the clock.
+         // all tests, such as asserting the reset signal and starting
+         // the clock(s).
          $display("Running test suite setup code");
       end
 
@@ -27,9 +27,12 @@ module tb_example;
 	 // than in separate instances of the HDL-simulator. In that
 	 // case the code placed in a TEST_CASE_SETUP block should
 	 // restore the unit under test to the state expected by the
-	 // test cases below. This may be as easy as asserting the
-	 // reset signal for a couple of clock-cycles but could be
-	 // more 
+	 // test cases below. In many cases this block would only
+	 // assert/deassert the reset signal for a couple of
+	 // clock-cycles.
+	 //
+	 // When trying out VUnit for the first time this section
+	 // should probably be left empty.
          $display("Running test case setup code");
       end
 
