@@ -41,7 +41,7 @@ module tb_example;
          `CHECK_EQUAL(1, 1);
       end
 
-      `TEST_CASE("Test that a failed case actually fails") begin
+      `TEST_CASE("Test that a failing test case actually fails") begin
          $display("This test case is expected to fail");
          `CHECK_EQUAL(0, 1, "You may also optionally add a diagnostic message to CHECK_EQUAL");
 	 // Note: A test case will also be marked as failing if the
@@ -52,7 +52,7 @@ module tb_example;
 	 // calls $stop if an error-condition is detected.
       end
 
-      `TEST_CASE("Test that a test that takes too long time fails with a timeout") begin
+      `TEST_CASE("Test that a test case that takes too long time fails with a timeout") begin
          $display("This test is expected to timeout because of the watch dog below.");
          #2ns; // 
       end
