@@ -609,11 +609,11 @@ if {![vunit_load -vhdlvariablelogging]} {
         self.teardown()
 
         merged_coverage_file = join(output_path, "merged_coverage.ucdb")
-        vcover_cmd = "vcover merge -strip 1 " + merged_coverage_file
+        vcover_cmd = [join(self._prefix, 'vcover'), 'merge', '-strip', '1', merged_coverage_file]
 
         for coverage_file in self._coverage_files:
             if file_exists(coverage_file):
-                vcover_cmd = vcover_cmd + " " + coverage_file
+                vcover_cmd.append(coverage_file)
             else:
                 LOGGER.warning("Missing coverage ucdb file: %s", coverage_file)
 
