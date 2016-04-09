@@ -13,7 +13,7 @@ module tb_example;
    `TEST_SUITE begin
       // Note: Do not place any code here (unless you are debugging
       // VUnit internals).
-      
+
       `TEST_SUITE_SETUP begin
          // Here you will typically place things that are common to
          // all tests, such as asserting the reset signal and starting
@@ -54,7 +54,7 @@ module tb_example;
 
       `TEST_CASE("Test that a test case that takes too long time fails with a timeout") begin
          $display("This test is expected to timeout because of the watch dog below.");
-         #2ns; // 
+         #2ns; //
       end
 
       `TEST_CASE_CLEANUP begin
