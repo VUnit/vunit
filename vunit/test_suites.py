@@ -48,7 +48,7 @@ class IndependentSimTestCase(object):
 
         if self._has_runner_cfg:
             runner_cfg = {
-                "enabled_test_cases": self._test_case,
+                "enabled_test_cases": encode_test_case(self._test_case),
                 "output path": output_path.replace("\\", "/") + "/",
                 "active python runner": True,
             }
@@ -128,7 +128,7 @@ class SameSimTestSuite(object):
             return False
 
         runner_cfg = {
-            "enabled_test_cases": ",".join(self._test_cases),
+            "enabled_test_cases": ",".join([encode_test_case(test_case) for test_case in self._test_cases]),
             "output path": output_path.replace("\\", "/") + "/",
             "active python runner": True,
         }
@@ -197,6 +197,18 @@ class SameSimTestSuite(object):
                 retval[test_name] = SKIPPED
 
         return retval
+
+
+def encode_test_case(test_case):
+    """
+    Encode test case name to escape commas. Avoids that test case names including commas
+    are interpreted as several test cases in the comma separated list of enabled test cases
+    included in the runner_cfg string.
+    """
+    if test_case is not None:
+        return test_case.replace(',', ',,')
+    else:
+        return None
 
 
 def encode_dict(dictionary):
