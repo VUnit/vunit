@@ -83,9 +83,9 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_verilog_user_guide_example_project(self):
         self.check(join(ROOT, "examples", "verilog", "user_guide", "run.py"), exit_code=1)
         check_report(self.report_file,
-                     [("passed", "lib.tb_example.Test that pass"),
-                      ("failed", "lib.tb_example.Test that fail"),
-                      ("failed", "lib.tb_example.Test that timeouts")])
+                     [("passed", "lib.tb_example.Test that a successful test case passes"),
+                      ("failed", "lib.tb_example.Test that a failing test case actually fails"),
+                      ("failed", "lib.tb_example.Test that a test case that takes too long time fails with a timeout")])
 
     def test_vhdl_osvvm_integration_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "osvvm_integration", "run.py"), exit_code=1)
