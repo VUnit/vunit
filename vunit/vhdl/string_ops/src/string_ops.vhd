@@ -306,8 +306,12 @@ package body string_ops is
     constant cnt : in natural := natural'high)
     return string is
     constant n_occurences : natural := count(s, old_segment);
-    function string_length_after_replace (constant n_occurences_i : natural) return natural is
-      variable n_replacements : natural := n_occurences_i;
+    function string_length_after_replace (
+      -- Modelsim 10.1a has problem handling n_occurances unless it's
+      -- passed as a paramter to the fuction.
+      constant n_occurences : natural)
+      return natural is
+      variable n_replacements : natural := n_occurences;
     begin
       if cnt < n_replacements  then
         n_replacements := cnt;
