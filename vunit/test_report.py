@@ -27,12 +27,19 @@ class TestReport(object):
         self._test_names_in_order = []
         self._printer = printer
         self._real_total_time = 0.0
+        self._expected_num_tests = 0
 
     def set_real_total_time(self, real_total_time):
         """
         Set the real total execution time
         """
         self._real_total_time = real_total_time
+
+    def set_expected_num_tests(self, expected_num_tests):
+        """
+        Set the number of tests that we expect to run
+        """
+        self._expected_num_tests = expected_num_tests
 
     def num_tests(self):
         """
@@ -112,6 +119,8 @@ class TestReport(object):
             self._printer.write("No tests were run!", fg="rgi")
             self._printer.write("\n")
             return
+        
+
 
         prefix = "==== Summary "
         max_len = max(len(test.name) for test in all_tests)
@@ -150,6 +159,13 @@ class TestReport(object):
         else:
             self._printer.write("All passed!", fg='gi')
         self._printer.write("\n")
+
+        if len(all_tests) < self._expected_num_tests:
+            self._printer.write("WARNING: Expected to run %d tests, but only ran %d tests" % (self._expected_num_tests, len(all_tests)), fg='rgi')
+        elif len(all_tests) > self._expected_num_tests:
+            self._printer.write("ERROR: Ran more tests than expected (%d > %d)" % (len(all_tests), self._expected_num_tests), fg='ri')
+        self._printer.write("\n")
+        
 
     def _split(self):
         """
