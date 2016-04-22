@@ -52,7 +52,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             print()
 
         self._report.set_expected_num_tests(num_tests)
-        
+
         scheduler = TestScheduler(test_suites)
 
         threads = []
