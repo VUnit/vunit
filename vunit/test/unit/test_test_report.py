@@ -79,7 +79,7 @@ Elapsed time was 1.0 seconds
         self.assertTrue(report.result_of("passed_test1").passed)
         self.assertRaises(KeyError,
                           report.result_of, "invalid_test")
-        
+
     def test_report_with_failed_tests(self):
         report = self._report_with_some_failed_tests()
         report.set_real_total_time(12.0)
@@ -234,7 +234,7 @@ Elapsed time was 3.0 seconds
                           output_file_name=self.output_file_name)
         report.set_expected_num_tests(3)
         return report
-    
+
     def _report_with_some_failed_tests(self):
         " @returns A report with some failed tests "
         report = self._new_report()
