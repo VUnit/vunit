@@ -58,6 +58,28 @@ Elapsed time was 1.0 seconds
         self.assertRaises(KeyError,
                           report.result_of, "invalid_test")
 
+    def test_report_with_missing_tests(self):
+        report = self._report_with_missing_tests()
+        report.set_real_total_time(1.0)
+        self.assertEqual(self.report_to_str(report), """\
+==== Summary ========================
+{gi}pass{x} passed_test0 (1.0 seconds)
+{gi}pass{x} passed_test1 (2.0 seconds)
+=====================================
+{gi}pass{x} 2 of 2
+=====================================
+Total time was 3.0 seconds
+Elapsed time was 1.0 seconds
+=====================================
+{gi}All passed!{x}
+{rgi}WARNING: Expected to run 3 tests, but only ran 2 tests{x}
+""")
+        self.assertTrue(report.all_ok())
+        self.assertTrue(report.result_of("passed_test0").passed)
+        self.assertTrue(report.result_of("passed_test1").passed)
+        self.assertRaises(KeyError,
+                          report.result_of, "invalid_test")
+
     def test_report_with_failed_tests(self):
         report = self._report_with_some_failed_tests()
         report.set_real_total_time(12.0)
@@ -200,6 +222,17 @@ Elapsed time was 3.0 seconds
                           output_file_name=self.output_file_name)
         report.add_result("passed_test1", PASSED, time=2.0,
                           output_file_name=self.output_file_name)
+        report.set_expected_num_tests(2)
+        return report
+
+    def _report_with_missing_tests(self):
+        " @returns A report with all passed tests "
+        report = self._new_report()
+        report.add_result("passed_test0", PASSED, time=1.0,
+                          output_file_name=self.output_file_name)
+        report.add_result("passed_test1", PASSED, time=2.0,
+                          output_file_name=self.output_file_name)
+        report.set_expected_num_tests(3)
         return report
 
     def _report_with_some_failed_tests(self):
@@ -211,6 +244,7 @@ Elapsed time was 3.0 seconds
                           output_file_name=self.output_file_name)
         report.add_result("failed_test1", FAILED, time=3.0,
                           output_file_name=self.output_file_name)
+        report.set_expected_num_tests(3)
         return report
 
     def _report_with_some_skipped_tests(self):
@@ -222,6 +256,7 @@ Elapsed time was 3.0 seconds
                           output_file_name=self.output_file_name)
         report.add_result("failed_test", FAILED, time=3.0,
                           output_file_name=self.output_file_name)
+        report.set_expected_num_tests(3)
         return report
 
     def _new_report(self):
