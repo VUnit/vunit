@@ -72,7 +72,7 @@ Total time was 3.0 seconds
 Elapsed time was 1.0 seconds
 =====================================
 {gi}All passed!{x}
-{rgi}WARNING: Expected to run 3 tests, but only ran 2 tests{x}
+{rgi}WARNING: Test execution aborted after running 2 out of 3 tests{x}
 """)
         self.assertTrue(report.all_ok())
         self.assertTrue(report.result_of("passed_test0").passed)

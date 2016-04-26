@@ -160,8 +160,8 @@ class TestReport(object):
 
         assert len(all_tests) <= self._expected_num_tests
         if len(all_tests) < self._expected_num_tests:
-            self._printer.write("WARNING: Expected to run %d tests, but only ran %d tests"
-                                % (self._expected_num_tests, len(all_tests)), fg='rgi')
+            self._printer.write("WARNING: Test execution aborted after running %d out of %d tests"
+                                % (len(all_tests), self._expected_num_tests), fg='rgi')
             self._printer.write("\n")
 
     def _split(self):
