@@ -76,6 +76,14 @@ In its simplest form a VUnit VHDL test bench looks like this:
 From ``tb_example.vhd`` a single test case named
 ``lib.tb_example.all`` is created.
 
+This example also outlines what you have to do with existing testbenches to
+make them VUnit compatible. Include the VUnit context, add the ``runner_cfg``
+generic, and wrap your existing code in your main controlling process with
+the calls to ``test_runner_setup`` and ``test_runner_cleanup``. Remember to
+remove your testbench termination code, for example calls to ``std.env.finish``,
+end of simulation asserts, or similar. A VUnit testbench must be terminated
+with the ``test_runner_cleanup`` call.
+
 It is also possible to put multiple tests in a single test
 bench that are each run in individual, independent, simulations.
 Putting multiple tests in the same test bench is a good way to share a common

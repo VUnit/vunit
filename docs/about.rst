@@ -87,17 +87,17 @@ Simulators
 -  `Aldec Riviera-PRO`_
 
    -  Tested with Riviera-PRO 2015.06, 2015.10, 2016.02 (x64/x86).
-   -  Only VHDL 2008
+   -  Only VHDL
 -  `Aldec Active-HDL`_
 
    -  Tested with Active-HDL 9.3, 10.1, 10.2, 10.3 (x64/x86)
-   -  Only VHDL 2008
+   -  Only VHDL
 -  `Mentor Graphics ModelSim/Questa`_
 
    -  Tested with 10.1 - 10.4
 -  `GHDL`_
 
-   -  Only VHDL 2008
+   -  Only VHDL
    -  Works with versions >= 0.33
    -  Tested with LLVM and mcode backends, gcc backend might work aswell.
    -  Integrated support for using `GTKWave`_ to view waveforms.
