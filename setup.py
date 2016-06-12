@@ -5,6 +5,7 @@
 # Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 from setuptools import setup
+from vunit.about import version, doc
 import os
 
 
@@ -30,7 +31,7 @@ data_files = [os.path.relpath(file_name, 'vunit') for file_name in data_files]
 
 setup(
     name='vunit_hdl',
-    version='0.66.0',
+    version=version(),
     packages=['vunit',
               'vunit.com',
               'vunit.test',
@@ -56,5 +57,5 @@ setup(
                  'Topic :: Software Development :: Testing'],
     author='Lars Asplund',
     author_email='lars.anders.asplund@gmail.com',
-    description="VUnit is an open source unit testing framework for VHDL.",
-    long_description=open('README.rst').read())  # nopep8
+    description="VUnit is an open source unit testing framework for VHDL/SystemVerilog.",
+    long_description=doc())

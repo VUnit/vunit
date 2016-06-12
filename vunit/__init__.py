@@ -12,7 +12,10 @@ from os.path import dirname, join, abspath
 import vunit.version_check
 from vunit.ui import VUnit
 from vunit.vunit_cli import VUnitCLI
-
+from vunit.about import version, doc
 
 # Repository root
 ROOT = abspath(join(dirname(__file__), ".."))
+
+__version__ = version()
+__doc__ = doc() # pylint: disable=redefined-builtin
