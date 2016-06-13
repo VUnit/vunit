@@ -18,4 +18,4 @@ from vunit.about import version, doc
 ROOT = abspath(join(dirname(__file__), ".."))
 
 __version__ = version()
-__doc__ = doc() # pylint: disable=redefined-builtin
+__doc__ = doc()  # pylint: disable=redefined-builtin
