@@ -106,6 +106,24 @@ begin
         check_equal(arr.bit_width, 28);
         check_equal(arr.is_signed, true);
 
+     elsif run("Has copy_from") then
+        arr.init_3d(width => 7, height => 13, depth => 5,
+                    bit_width => 28, is_signed => true);
+        for i in 0 to arr.length-1 loop
+          arr.set(idx=>i, value => i);
+        end loop;
+
+        other_arr.copy_from(arr);
+        check_equal(arr.width, other_arr.width);
+        check_equal(arr.height, other_arr.height);
+        check_equal(arr.depth, other_arr.depth);
+        check_equal(arr.length, other_arr.length);
+        check_equal(arr.bit_width, other_arr.bit_width);
+        check_equal(arr.is_signed, other_arr.is_signed);
+        for i in 0 to other_arr.length-1 loop
+          check_equal(arr.get(i), other_arr.get(i));
+        end loop;
+
       elsif run("Has set") then
         arr.init(length => 1);
         arr.set(0,7);
