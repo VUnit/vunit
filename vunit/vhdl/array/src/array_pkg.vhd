@@ -26,6 +26,8 @@ package array_pkg is
                       bit_width : natural := 32;
                       is_signed : boolean := true);
 
+    procedure copy_from(input : inout array_t);
+
     procedure load_csv(file_name : string;
                        bit_width : natural := 32;
                        is_signed : boolean := true);
@@ -353,6 +355,14 @@ package body array_pkg is
       else
         my_data := null;
       end if;
+    end procedure;
+
+    procedure copy_from(input : inout array_t) is
+    begin
+      init_3d(input.width, input.height, input.depth, input.bit_width, input.is_signed);
+      for i in 0 to input.length-1 loop
+        my_data(i) := input.get(i);
+      end loop;
     end procedure;
 
     procedure clear is
