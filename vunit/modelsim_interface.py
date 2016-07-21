@@ -13,6 +13,7 @@ from __future__ import print_function
 
 import logging
 import threading
+import sys
 import os
 from os.path import join, dirname, abspath
 from argparse import ArgumentTypeError
@@ -403,6 +404,20 @@ proc vunit_run {} {
 }
 """ % (1 if fail_on_warning else 2, no_warnings, no_warnings)
 
+    @staticmethod
+    def _create_restart_function():
+        """"
+        Create the vunit_restart function to recompile and restart the simulation
+        """
+        tcl = """
+proc vunit_restart {} {
+    echo [exec -ignorestderr %s %s --compile]
+    restart -f
+    vunit_run
+}
+""" % (fix_path(sys.executable), fix_path(sys.argv[0]))
+        return tcl
+
     def _vsim_extra_args(self, config):
         """
         Determine vsim_extra_args
@@ -434,12 +449,16 @@ proc vunit_help {} {
     echo {  - Optional first argument are passed as extra flags to vsim}
     echo {vunit_run}
     echo {  - Run test, must do vunit_load first}
+    echo {vunit_restart}
+    echo {  - Recompiles the source files}
+    echo {  - Restarts the simulation and does vunit_run}
 }
 """
         tcl += self._create_load_function(library_name, entity_name, architecture_name,
                                           config, output_path)
         tcl += self._create_run_function(config.fail_on_warning,
                                          config.disable_ieee_warnings)
+        tcl += self._create_restart_function()
         return tcl
 
     @staticmethod
