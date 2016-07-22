@@ -164,8 +164,9 @@ class RivieraProInterface(SimulatorInterface):
             libraries[key] = abspath(join(dirname(self._library_cfg), dirname(value)))
         return libraries
 
-    def _create_load_function(self, library_name, entity_name, architecture_name,
-                              config, disable_ieee_warnings):
+    def _create_load_function(self,  # pylint: disable=too-many-arguments
+                              library_name, entity_name, architecture_name,
+                              config, disable_ieee_warnings, output_path):
         """
         Create the vunit_load TCL function that runs the vsim command and loads the design
         """
@@ -173,7 +174,8 @@ class RivieraProInterface(SimulatorInterface):
                                     for name, value in config.generics.items()))
         pli_str = " ".join("-pli \"%s\"" % fix_path(name) for name in config.pli)
 
-        vsim_flags = [pli_str,
+        vsim_flags = ["-dataset {%s}" % fix_path(join(output_path, "dataset.asdb")),
+                      pli_str,
                       set_generic_str,
                       "-lib",
                       library_name,
@@ -267,7 +269,7 @@ proc vunit_run {} {
 
     def _create_common_script(self,   # pylint: disable=too-many-arguments
                               library_name, entity_name, architecture_name,
-                              config):
+                              config, output_path):
         """
         Create tcl script with functions common to interactive and batch modes
         """
@@ -285,7 +287,8 @@ proc vunit_help {} {
 """
         tcl += self._create_load_function(library_name, entity_name, architecture_name,
                                           config,
-                                          config.disable_ieee_warnings)
+                                          config.disable_ieee_warnings,
+                                          output_path)
         tcl += self._create_run_function(config.fail_on_warning)
         return tcl
 
@@ -347,7 +350,8 @@ proc vunit_help {} {
                    self._create_common_script(library_name,
                                               entity_name,
                                               architecture_name,
-                                              config))
+                                              config,
+                                              output_path))
         write_file(gui_file_name,
                    self._create_gui_script(common_file_name))
         write_file(batch_file_name,
