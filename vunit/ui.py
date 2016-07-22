@@ -95,8 +95,12 @@ The following simulation options are known.
    mode where it takes precedence over ``rivierapro.vsim_flags``.
    Must be a list of strings.
 
-``ghdl.flags``
-   Extra arguments passed to ``ghdl --elab-run`` command *before* executable specific flags.
+``ghdl.elab_flags``
+   Extra elaboration flags passed to ``ghdl --elab-run``.
+   Must be a list of strings.
+
+``ghdl.sim_flags``
+   Extra simulation flags passed to ``ghdl --elab-run``.
    Must be a list of strings.
 
 .. |compile_option| replace::

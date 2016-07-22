@@ -591,7 +591,7 @@ class SourceFile(object):
         """
         if name in self._alias:
             new_name = self._alias[name]
-            LOGGER.warning("Deprecated sim_option %r use %r instead", name, new_name)
+            LOGGER.warning("Deprecated compile_option %r use %r instead", name, new_name)
             name = new_name
 
         known_options = SimulatorFactory.compile_options()
