@@ -12,13 +12,21 @@ from __future__ import print_function
 import logging
 from os.path import exists, join
 import os
+import re
 import subprocess
 import shlex
 from sys import stdout  # To avoid output catched in non-verbose mode
 from vunit.ostools import Process
 from vunit.simulator_interface import SimulatorInterface
 from vunit.exceptions import CompileError
+from vunit.color_printer import (NO_COLOR_PRINTER, COLOR_PRINTER)
 LOGGER = logging.getLogger(__name__)
+
+_COMPILE_MSG_MATCH = re.compile(
+    r"^(?P<filename>.*):(?=\d)"
+    r"(?P<line_number>\d+):"
+    r"(?P<column_number>\d+):"
+    r"((?P<is_warning>warning:)\s*|\s*).*").match
 
 
 class GHDLInterface(SimulatorInterface):
@@ -50,6 +58,16 @@ class GHDLInterface(SimulatorInterface):
                            default="",
                            help="Arguments to pass to gtkwave")
 
+    @staticmethod
+    def _get_color_category(line):
+        match = _COMPILE_MSG_MATCH(line)
+        if not match:
+            return False
+        elif match.groupdict()['is_warning']:
+            return 'warning'
+        else:
+            return 'error'
+
     @classmethod
     def from_args(cls,
                   output_path,  # pylint: disable=unused-argument
@@ -58,6 +76,7 @@ class GHDLInterface(SimulatorInterface):
         Create instance from args namespace
         """
         prefix = cls.find_prefix()
+        cls._printer = NO_COLOR_PRINTER if args.no_color else COLOR_PRINTER
         return cls(prefix=prefix,
                    gtkwave=args.gtkwave,
                    gtkwave_args=args.gtkwave_args,

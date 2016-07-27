@@ -15,6 +15,7 @@ import logging
 import threading
 import os
 from os.path import join, dirname, abspath
+import re
 from argparse import ArgumentTypeError
 try:
     # Python 3
@@ -26,8 +27,12 @@ except ImportError:
 from vunit.ostools import Process, write_file, file_exists
 from vunit.simulator_interface import SimulatorInterface
 from vunit.exceptions import CompileError
+from vunit.color_printer import (COLOR_PRINTER, NO_COLOR_PRINTER)
 
 LOGGER = logging.getLogger(__name__)
+
+_COMPILE_MSG_MATCH = re.compile(
+    r"^\*\* (?P<error_type>[WE])\w+\s*(:\s*|\(suppressible\):\s*).*").match
 
 
 class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instance-attributes
@@ -51,6 +56,8 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         "modelsim.vsim_flags.gui",
     ]
 
+    _printer = NO_COLOR_PRINTER
+
     @staticmethod
     def add_arguments(parser):
         """
@@ -73,12 +80,23 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
                                  'Remember to run --clean when changing this as re-compilation is not triggered. '
                                  'Experimental feature not supported by VUnit main developers.'))
 
+    @staticmethod
+    def _get_color_category(line):
+        match = _COMPILE_MSG_MATCH(line)
+        if not match:
+            return False
+        elif match.groupdict()['error_type'] == 'W':
+            return 'warning'
+        elif match.groupdict()['error_type'] == 'E':
+            return 'error'
+
     @classmethod
     def from_args(cls, output_path, args):
         """
         Create new instance from command line arguments object
         """
         persistent = not (args.new_vsim or args.gui)
+        cls._printer = NO_COLOR_PRINTER if args.no_color else COLOR_PRINTER
 
         return cls(prefix=cls.find_prefix(),
                    modelsim_ini=join(output_path, "modelsim.ini"),
@@ -137,8 +155,10 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
 
             transcript_id = self._transcript_id
             self._transcript_id += 1
-            vsim_process = Process([join(self._prefix, "vsim"), "-c",
-                                    "-l", join(dirname(self._modelsim_ini), "transcript%i" % transcript_id)])
+            vsim_process = Process([
+                join(self._prefix, "vsim"), "-c", "-l",
+                join(dirname(self._modelsim_ini),
+                     "transcript%i" % transcript_id)])
             self._vsim_processes[ident] = vsim_process
 
         vsim_process.write("#VUNIT_RETURN\n")

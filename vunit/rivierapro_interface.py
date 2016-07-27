@@ -18,6 +18,7 @@ import logging
 from vunit.ostools import Process, write_file, file_exists
 from vunit.simulator_interface import SimulatorInterface
 from vunit.exceptions import CompileError
+from vunit.color_printer import (COLOR_PRINTER, NO_COLOR_PRINTER)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -46,6 +47,7 @@ class RivieraProInterface(SimulatorInterface):
         """
         Create new instance from command line arguments object
         """
+        cls._printer = NO_COLOR_PRINTER if args.no_color else COLOR_PRINTER
         return cls(prefix=cls.find_prefix(),
                    library_cfg=join(output_path, "library.cfg"),
                    gui=args.gui)
