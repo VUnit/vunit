@@ -1,13 +1,15 @@
-All files except for OSVVM under vhdl/osvvm
-===========================================
-This Source Code Form is subject to the terms of the Mozilla Public
-License, v. 2.0. If a copy of the MPL was not distributed with this file,
-You can obtain one at http://mozilla.org/MPL/2.0/.
+VUnit
+-----
+
+VUnit except for OSVVM (see below) is released under the terms of
+Mozilla Public License, v. 2.0.
 
 Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
-OSSVM under vhdl/osvvm
-======================
-License according to http://www.perlfoundation.org/artistic_license_2_0
+OSVVM
+-----
 
-Copyright (c) 2010 - 2015 by SynthWorks Design Inc.  All rights reserved.
+OSVVM is redistributed as a submodule to VUnit for your convenience. OSVVM and derivative work
+located under examples/vhdl/osvvm_integration/src are licensed under the terms of Artistic License 2.0.
+
+Copyright (c) 2006-2016, SynthWorks Design Inc http://www.synthworks.com

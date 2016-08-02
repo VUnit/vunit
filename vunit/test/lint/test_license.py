@@ -18,6 +18,7 @@ from subprocess import Popen, PIPE, STDOUT
 from vunit import ROOT
 from vunit.builtins import VHDL_PATH
 import vunit.ostools as ostools
+from vunit.about import license_text
 
 RE_LICENSE_NOTICE = re.compile(
     r"(?P<comment_start>#|--|//) This Source Code Form is subject to the terms of the Mozilla Public" + "\n"
@@ -43,6 +44,10 @@ class TestLicense(unittest.TestCase):
             self._check_license(code, file_name)
             if splitext(file_name)[1] in ('.vhd', '.vhdl', '.v', '.sv'):
                 self._check_no_trailing_whitespace(code, file_name)
+
+    def test_that_license_file_matches_vunit_license_text(self):
+        with open(join(ROOT, 'LICENSE.txt')) as lic:
+            self.assertEqual(lic.read(), license_text())
 
     def _check_license(self, code, file_name):
         """

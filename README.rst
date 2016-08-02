@@ -12,29 +12,18 @@ often" approach through automation.
 
 License
 =======
-
-.. |copy|   unicode:: U+000A9 .. COPYRIGHT SIGN
-
 VUnit
 -----
 
 VUnit except for OSVVM (see below) is released under the terms of
-`Mozilla Public License, v. 2.0`_.
+Mozilla Public License, v. 2.0.
 
-|copy| 2014-2016 Lars Asplund, lars.anders.asplund@gmail.com.
+Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 OSVVM
 -----
 
-OSVVM 2015.03 is `redistributed`_ with VUnit for your convenience. Minor
-`modifications`_ have been made to enable GHDL support. Derivative work
-is also located under `examples/vhdl/osvvm\_integration/src`_. These
-files are licensed under the terms of `ARTISTIC License`_.
+OSVVM is redistributed as a submodule to VUnit for your convenience. OSVVM and derivative work
+located under examples/vhdl/osvvm_integration/src are licensed under the terms of Artistic License 2.0.
 
-|copy| 2010 - 2015 by SynthWorks Design Inc. All rights reserved.
-
-.. _Mozilla Public License, v. 2.0: http://mozilla.org/MPL/2.0/
-.. _redistributed: https://github.com/VUnit/vunit/blob/master/vunit/vhdl/osvvm
-.. _modifications: https://github.com/VUnit/vunit/commit/25fce1b3700e746c3fa23bd7157777dd4f20f0d6
-.. _examples/vhdl/osvvm\_integration/src: https://github.com/VUnit/vunit/blob/master/examples/vhdl/osvvm_integration/src
-.. _ARTISTIC License: http://www.perlfoundation.org/artistic_license_2_0
+Copyright (c) 2006-2016, SynthWorks Design Inc http://www.synthworks.com

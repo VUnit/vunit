@@ -171,10 +171,25 @@ def add_array_util(library, vhdl_standard):
     library.add_source_files(join(VHDL_PATH, "array", "src", "array_pkg.vhd"))
 
 
+def osvvm_is_installed():
+    """
+    Checks if OSVVM is installed within the VUnit directory structure
+    """
+    return len(glob(join(VHDL_PATH, "osvvm", "*.vhd"))) != 0
+
+
 def add_osvvm(library):
     """
     Add osvvm library
     """
+    if not osvvm_is_installed():
+        raise RuntimeError("""
+Found no OSVVM VHDL files. Did you forget to run
+
+git submodule update --init --recursive
+
+in your VUnit Git repository? You have to do this first if installing using setup.py.""")
+
     for file_name in glob(join(VHDL_PATH, "osvvm", "*.vhd")):
         if basename(file_name) != 'AlertLogPkg_body_BVUL.vhd':
             library.add_source_files(file_name, preprocessors=[])

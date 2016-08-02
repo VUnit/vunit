@@ -6,8 +6,9 @@
 
 from setuptools import setup
 from vunit.about import version, doc
+from vunit.builtins import osvvm_is_installed
 import os
-
+from logging import warning
 
 def find_all_files(directory, endings=None):
     """
@@ -59,3 +60,12 @@ setup(
     author_email='lars.anders.asplund@gmail.com',
     description="VUnit is an open source unit testing framework for VHDL/SystemVerilog.",
     long_description=doc())
+
+if not osvvm_is_installed():
+         warning("""
+Found no OSVVM VHDL files. If you're installing from a Git repository and plan to use VUnit's integration
+of OSVVM you should run
+
+git submodule update --init --recursive
+
+in your VUnit repository before running setup.py.""")
