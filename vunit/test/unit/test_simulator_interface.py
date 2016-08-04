@@ -38,8 +38,9 @@ class TestSimulatorInterface(unittest.TestCase):
         with mock.patch("vunit.simulator_interface.run_command", autospec=True) as run_command:
             run_command.side_effect = iter([True, True])
             simif.compile_source_files(project)
-            run_command.assert_has_calls([mock.call(["command1"]),
-                                          mock.call(["command2"])])
+            run_command.assert_has_calls([
+                mock.call(["command1"], simif._compile_output_consumer),   # pylint: disable=protected-access
+                mock.call(["command2"], simif._compile_output_consumer)])  # pylint: disable=protected-access
         self.assertEqual(project.get_files_in_compile_order(incremental=True), [])
 
     def test_compile_source_files_continue_on_error(self):
@@ -63,11 +64,13 @@ class TestSimulatorInterface(unittest.TestCase):
             elif source_file == file3:
                 return ["command3"]
 
-        def run_command_side_effect(command):
-            if command == ["command1"]:
-                return False
-            else:
+        def run_command_side_effect(command, consumer):
+            if command != ["command1"]:
                 return True
+            elif consumer != simif._compile_output_consumer:  # pylint: disable=protected-access
+                return True
+            else:
+                return False
 
         simif.compile_source_file_command.side_effect = compile_source_file_command
 
@@ -75,8 +78,11 @@ class TestSimulatorInterface(unittest.TestCase):
             run_command.side_effect = run_command_side_effect
             self.assertRaises(CompileError, simif.compile_source_files, project, continue_on_error=True)
             self.assertEqual(len(run_command.mock_calls), 2)
-            run_command.assert_has_calls([mock.call(["command1"]),
-                                          mock.call(["command3"])], any_order=True)
+            run_command.assert_has_calls([
+                mock.call(["command1"],
+                          simif._compile_output_consumer),   # pylint: disable=protected-access
+                mock.call(["command3"],
+                          simif._compile_output_consumer)], any_order=True)  # pylint: disable=protected-access
         self.assertEqual(project.get_files_in_compile_order(incremental=True), [file1, file2])
 
     def test_compile_source_files_run_command_error(self):
@@ -90,7 +96,8 @@ class TestSimulatorInterface(unittest.TestCase):
         with mock.patch("vunit.simulator_interface.run_command", autospec=True) as run_command:
             run_command.return_value = False
             self.assertRaises(CompileError, simif.compile_source_files, project)
-            run_command.assert_called_once_with(["command"])
+            run_command.assert_called_once_with(
+                ["command"], simif._compile_output_consumer)  # pylint: disable=protected-access
         self.assertEqual(project.get_files_in_compile_order(incremental=True), [source_file])
 
     def test_compile_source_files_create_command_error(self):

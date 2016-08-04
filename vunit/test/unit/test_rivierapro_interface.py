@@ -45,7 +45,8 @@ class TestRivieraProInterface(unittest.TestCase):
              '-2008',
              '-work',
              'lib',
-             'file.vhd'])
+             'file.vhd'],
+            simif._compile_output_consumer)  # pylint: disable=protected-access
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.rivierapro_interface.Process", autospec=True)
@@ -70,7 +71,8 @@ class TestRivieraProInterface(unittest.TestCase):
                                              '-2008',
                                              '-work',
                                              'lib',
-                                             'file.vhd'])
+                                             'file.vhd'],
+                                            simif._compile_output_consumer)  # pylint: disable=protected-access
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.rivierapro_interface.Process", autospec=True)
@@ -93,7 +95,8 @@ class TestRivieraProInterface(unittest.TestCase):
                                              '-work',
                                              'lib',
                                              'file.v',
-                                             '-l', 'lib'])
+                                             '-l', 'lib'],
+                                            simif._compile_output_consumer)  # pylint: disable=protected-access
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.rivierapro_interface.Process", autospec=True)
@@ -119,7 +122,8 @@ class TestRivieraProInterface(unittest.TestCase):
                                              '-work',
                                              'lib',
                                              'file.v',
-                                             '-l', 'lib'])
+                                             '-l', 'lib'],
+                                            simif._compile_output_consumer)  # pylint: disable=protected-access
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.rivierapro_interface.Process", autospec=True)
@@ -143,7 +147,8 @@ class TestRivieraProInterface(unittest.TestCase):
                                              'lib',
                                              'file.v',
                                              '-l', 'lib',
-                                             '+incdir+include'])
+                                             '+incdir+include'],
+                                            simif._compile_output_consumer)  # pylint: disable=protected-access
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.rivierapro_interface.Process", autospec=True)
@@ -167,7 +172,8 @@ class TestRivieraProInterface(unittest.TestCase):
                                              'lib',
                                              'file.v',
                                              '-l', 'lib',
-                                             '+define+defname=defval'])
+                                             '+define+defname=defval'],
+                                            simif._compile_output_consumer)  # pylint: disable=protected-access
 
     def setUp(self):
         self.output_path = join(dirname(__file__), "test_rivierapro_out")
