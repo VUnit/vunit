@@ -166,6 +166,58 @@ default file format is ``off``. By default an existing file will be
 replaced when calling ``logger_init`` but you can change that by setting
 the input parameter ``append`` true.
 
+Colors
+------
+
+The ``verbose`` formatter colorizes the log records according to their
+severity. The default colors are shown below:
+
+.. image:: vunit_log.png 
+    :alt: VUnit colorized log example
+    :align: center
+
+The colors can be customized using the ``VUNIT_LOG_COLORS`` environment variable.
+
+The spec for changing  a single color is:
+
+``<key>[<scope>]=<color>``
+
+where
+
+* ``<key>`` is one of:
+
+  .. code-block::
+  
+      0 fs: INFO in vunit_logger (foo.vhd:276): Hello from info level
+      |--|  |--|    |----------|  |---------|   |-------------------| 
+        \     \           \            \                 \__ Message
+         \     \           \            \__ <file_and_line>
+          \     \           \__ <logger_name>
+           \     \__ <log_level>
+            \__ <log_time>
+
+  * ``log_time``, ``log_level``, ``logger_name``, ``file_and_line``: Configures
+    the color of the given section
+  * ``verbose``, ``debug``, ``info``, ``warning``, ``error``, ``failure``:
+    Configures the color of the log **message** given its severity
+
+* ``<scope>`` is ``fg`` (foreground) or ``bg`` (background)
+* ``<color>`` specifies the output color by composing red (``r``), green
+  (``g``), blue (``b``) and highlight (``i``), i.e., ``rg`` yields yellow and
+  ``bi`` yields bold blue. Use ``None`` to clear the default value.
+
+Multiple specs are separated by the ``;`` character.
+
+Example:
+
+``VUNIT_LOG_COLORS=logger_name[fg]=r;log_time[bg]=None;error[bg]=rg``
+
+Will set:
+
+* Logger name foreground color to red
+* Clear the log time background color 
+* Background color of error messages to yellow
+
 Grouping
 --------
 

@@ -12,7 +12,7 @@ Verify that all external run scripts work correctly
 import unittest
 from os import environ
 from os.path import join, dirname
-from subprocess import call
+from subprocess import check_output, STDOUT, CalledProcessError
 import sys
 from vunit import ROOT
 from vunit.builtins import VHDL_PATH
@@ -26,7 +26,7 @@ def simulator_supports_verilog():
     return simulator_is("modelsim")
 
 
-# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-public-methods,missing-docstring
 @unittest.skipUnless(has_simulator(), "Requires simulator")
 class TestExternalRunScripts(unittest.TestCase):
     """
@@ -120,12 +120,10 @@ class TestExternalRunScripts(unittest.TestCase):
         self.check(join(VHDL_PATH, "logging", "run.py"))
 
     def test_logging_vhdl_2002(self):
-        self.check(join(VHDL_PATH, "logging", "run.py"),
-                   vhdl_standard='2002')
+        self.check(join(VHDL_PATH, "logging", "run.py"), vhdl_standard='2002')
 
     def test_logging_vhdl_93(self):
-        self.check(join(VHDL_PATH, "logging", "run.py"),
-                   vhdl_standard='93')
+        self.check(join(VHDL_PATH, "logging", "run.py"), vhdl_standard='93')
 
     def test_run_vhdl_2008(self):
         self.check(join(VHDL_PATH, "run", "run.py"))
@@ -189,9 +187,23 @@ class TestExternalRunScripts(unittest.TestCase):
         args = args if args is not None else []
         new_env = environ.copy()
         new_env["VUNIT_VHDL_STANDARD"] = vhdl_standard
-        retcode = call([sys.executable, run_file,
-                        "--clean",
-                        "--output-path=%s" % self.output_path,
-                        "--xunit-xml=%s" % self.report_file] + args,
-                       env=new_env)
-        self.assertEqual(retcode, exit_code)
+
+        cmd = [sys.executable, run_file,
+               "--clean",
+               "--output-path=%s" % self.output_path,
+               "--xunit-xml=%s" % self.report_file] + args
+
+        try:
+            stderr = check_output(cmd, stderr=STDOUT, env=new_env)
+            retcode = 0
+        except CalledProcessError as exc:
+            retcode = exc.returncode
+            stderr = exc.output
+
+        self.assertEqual(
+            retcode, exit_code,
+            '\n'.join(["Return code error: got %d, expected %d" % (retcode, exit_code),
+                       "Command: " + ' '.join([str(x) for x in cmd]),
+                       "= [stderr start] =",
+                       str(stderr),
+                       "= [stderr end] ="]))

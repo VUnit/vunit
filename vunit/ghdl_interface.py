@@ -59,14 +59,27 @@ class GHDLInterface(SimulatorInterface):
                            help="Arguments to pass to gtkwave")
 
     @staticmethod
-    def _get_color_category(line):
+    def _get_compilation_message_level(line):
         match = _COMPILE_MSG_MATCH(line)
         if not match:
-            return False
+            return
         elif match.groupdict()['is_warning']:
             return 'warning'
         else:
             return 'error'
+
+    @staticmethod
+    def get_vhdl_assertion_level(line):
+        _re = re.compile(
+            r"^[^:]+:(?P<line_num>\d+):"
+            r"(?P<column>\d+):"
+            r"(?P<time>[^:]+):"
+            r"\((report|assertion) (?P<severity_level>\w+)\):.*").search
+        match = _re(line)
+        if not match:
+            return
+
+        return match.groupdict()['severity_level']
 
     @classmethod
     def from_args(cls,

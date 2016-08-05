@@ -66,11 +66,24 @@ class SimulatorInterface(object):
         return result
 
     @staticmethod
-    def _get_color_category(line):  # pylint: disable=unused-argument
+    def _get_compilation_message_level(line):  # pylint: disable=unused-argument
         """
-        Addes some colors on the compilation output for warnings and errors
+        Method should be overridden by child classes and return an
+        identification of the line content. Supported values are:
+        - None: won't add any color
+        - 'error': triggers printing the line in red
+        - 'warning': triggers printing the line in yellow
         """
-        return False
+        return None
+
+    @staticmethod
+    def get_vhdl_assertion_level(line):  # pylint: disable=unused-argument
+        """
+        Method should be overridden by child classes and return a string
+        identifying the level of the VHDL assertion. If the line doesn't
+        contains any assertion, it should return None
+        """
+        return None
 
     @classmethod
     def find_prefix(cls):
@@ -194,11 +207,15 @@ class SimulatorInterface(object):
         Consumes the output of the compilation process.
         """
         if self._printer is NO_COLOR_PRINTER:
-            print(line)
+            # Avoid parsing simulator output if not configured with the color
+            # printer
+            self._printer.write(line, sys.stdout)
         else:
-            color_category = self._get_color_category(line)
-            assert color_category in (False, 'error', 'warning')
-            if not color_category:
+            # Use the return of the _get_compilation_message_level to colorize the
+            # given line
+            color_category = self._get_compilation_message_level(line)  # pylint: disable=assignment-from-none
+            assert color_category in (None, 'error', 'warning')
+            if color_category is None:
                 print(line)
             elif color_category == 'warning':
                 self._printer.write(line + '\n', sys.stdout, fg='rg', bg=None)

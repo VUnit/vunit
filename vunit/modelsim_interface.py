@@ -81,14 +81,25 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
                                  'Experimental feature not supported by VUnit main developers.'))
 
     @staticmethod
-    def _get_color_category(line):
+    def _get_compilation_message_level(line):
         match = _COMPILE_MSG_MATCH(line)
         if not match:
-            return False
+            return
         elif match.groupdict()['error_type'] == 'W':
             return 'warning'
         elif match.groupdict()['error_type'] == 'E':
             return 'error'
+
+    @staticmethod
+    def get_vhdl_assertion_level(line):
+        _re = re.compile(
+            r"^# \*\* (?P<severity_level>\w+): .*").search
+        match = _re(line)
+
+        if not match:
+            return
+
+        return match.groupdict()['severity_level'].lower()
 
     @classmethod
     def from_args(cls, output_path, args):

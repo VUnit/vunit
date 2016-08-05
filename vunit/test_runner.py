@@ -18,6 +18,8 @@ import sys
 import time
 import logging
 import vunit.ostools as ostools
+from vunit.color_printer import COLOR_PRINTER
+from vunit.hdl_log_formatter import VerboseLogFormatter
 from vunit.test_report import PASSED, FAILED
 LOGGER = logging.getLogger(__name__)
 
@@ -26,15 +28,19 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
     """
     Administer the execution of a list of test suites
     """
-    def __init__(self, report, output_path, verbose=False, num_threads=1):
+    def __init__(self,  # pylint: disable=too-many-arguments
+                 report, output_path, verbose=False, printer=COLOR_PRINTER,
+                 num_threads=1, simulator_if=None):
         self._lock = threading.Lock()
         self._local = threading.local()
         self._report = report
         self._output_path = output_path
         self._verbose = verbose
+        self._printer = printer
         self._num_threads = num_threads
         self._stdout = sys.stdout
         self._stderr = sys.stderr
+        self._simulator_if = simulator_if
 
     def run(self, test_suites):
         """
@@ -144,7 +150,11 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
         try:
             if write_stdout:
-                self._local.output = TeeToFile([self._stdout, output_file])
+                stdout = VerboseLogFormatter(
+                    self._stdout,
+                    self._printer,
+                    self._simulator_if.get_vhdl_assertion_level)
+                self._local.output = TeeToFile([stdout, output_file])
             else:
                 self._local.output = TeeToFile([output_file])
 
