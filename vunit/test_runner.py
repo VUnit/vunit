@@ -19,7 +19,7 @@ import time
 import logging
 import vunit.ostools as ostools
 from vunit.color_printer import COLOR_PRINTER
-from vunit.hdl_log_formatter import VerboseLogFormatter
+from vunit.log_color_overlay import LogColorOverlay
 from vunit.test_report import PASSED, FAILED
 LOGGER = logging.getLogger(__name__)
 
@@ -150,10 +150,10 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
         try:
             if write_stdout:
-                stdout = VerboseLogFormatter(
-                    self._stdout,
-                    self._printer,
-                    self._simulator_if.get_vhdl_assertion_level)
+                stdout = LogColorOverlay(
+                    stream=self._stdout,
+                    printer=self._printer,
+                    assertion_parser_callback=self._simulator_if.get_vhdl_assertion_level)
                 self._local.output = TeeToFile([stdout, output_file])
             else:
                 self._local.output = TeeToFile([output_file])

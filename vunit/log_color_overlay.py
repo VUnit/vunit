@@ -18,7 +18,7 @@ LOGGER = logging.getLogger(__name__)
 _ENV_COLOR_DEF_RE = re.compile(r"(?P<key>\w+)\[(?P<scope>\w+)\]=(?P<color>\w+)(;|$)")
 
 
-class VerboseLogFormatter(object):
+class LogColorOverlay(object):
     """
     Handles the 'verbose' log type, which means converting the CSV
     records into 'real' log records and adding colors if applicable
@@ -38,13 +38,13 @@ class VerboseLogFormatter(object):
         r': ' +
         r'(?P<message>.*)').search  # The message is the rest of the line
 
-    def __init__(self, stream, printer=COLOR_PRINTER, vhdl_assertion_cb=None):
+    def __init__(self, stream, printer=COLOR_PRINTER, assertion_parser_callback=None):
         self._stream = stream
         self._printer = printer
-        if vhdl_assertion_cb is None:
-            self._vhdl_assertion_cb = lambda x: None
+        if assertion_parser_callback is None:
+            self._parse_assertion = lambda x: None
         else:
-            self._vhdl_assertion_cb = vhdl_assertion_cb
+            self._parse_assertion = assertion_parser_callback
 
     def _print(self, *args, **kwargs):
         self._printer.write(*args, **kwargs)
@@ -65,7 +65,7 @@ class VerboseLogFormatter(object):
             self._stream.write(line[vunit_log.end():])
             return
 
-        vhdl_assertion = self._vhdl_assertion_cb(line)
+        vhdl_assertion = self._parse_assertion(line)
 
         if vhdl_assertion is not None:
             self._write_vhdl_assertion(str(vhdl_assertion).lower(), line)
@@ -136,7 +136,7 @@ class VerboseLogFormatter(object):
         warning if this happens
         """
         if self._stream is stdout:
-            LOGGER.warning("Closing sys.stdout within VerboseLogFormatter!")
+            LOGGER.warning("Closing sys.stdout within LogColorOverlay!")
         self._stream.close()
 
 

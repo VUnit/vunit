@@ -192,11 +192,11 @@ where
       |--|  |--|    |----------|  |---------|   |-------------------| 
         \     \           \            \                 \__ Message
          \     \           \            \__ <file_and_line>
-          \     \           \__ <logger_name>
+          \     \           \__ <log_source>
            \     \__ <log_level>
             \__ <log_time>
 
-  * ``log_time``, ``log_level``, ``logger_name``, ``file_and_line``: Configures
+  * ``log_time``, ``log_level``, ``log_source``, ``file_and_line``: Configures
     the color of the given section
   * ``verbose``, ``debug``, ``info``, ``warning``, ``error``, ``failure``:
     Configures the color of the log **message** given its severity
@@ -210,7 +210,7 @@ Multiple specs are separated by the ``;`` character.
 
 Example:
 
-``VUNIT_LOG_COLORS=logger_name[fg]=r;log_time[bg]=None;error[bg]=rg``
+``VUNIT_LOG_COLORS=log_source[fg]=r;log_time[bg]=None;error[bg]=rg``
 
 Will set:
 

@@ -31,8 +31,11 @@ from vunit.color_printer import (COLOR_PRINTER, NO_COLOR_PRINTER)
 
 LOGGER = logging.getLogger(__name__)
 
-_COMPILE_MSG_MATCH = re.compile(
+_COMPILE_MSG_MATCH_REGEX = re.compile(
     r"^\*\* (?P<error_type>[WE])\w+\s*(:\s*|\(suppressible\):\s*).*").match
+
+_VHDL_ASSERTION_SEARCH_REGEX = re.compile(
+    r"^# \*\* (?P<severity_level>\w+): .*").search
 
 
 class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instance-attributes
@@ -82,7 +85,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
 
     @staticmethod
     def _get_compilation_message_level(line):
-        match = _COMPILE_MSG_MATCH(line)
+        match = _COMPILE_MSG_MATCH_REGEX(line)
         if not match:
             return
         elif match.groupdict()['error_type'] == 'W':
@@ -92,9 +95,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
 
     @staticmethod
     def get_vhdl_assertion_level(line):
-        _re = re.compile(
-            r"^# \*\* (?P<severity_level>\w+): .*").search
-        match = _re(line)
+        match = _VHDL_ASSERTION_SEARCH_REGEX(line)
 
         if not match:
             return

@@ -22,11 +22,17 @@ from vunit.exceptions import CompileError
 from vunit.color_printer import (NO_COLOR_PRINTER, COLOR_PRINTER)
 LOGGER = logging.getLogger(__name__)
 
-_COMPILE_MSG_MATCH = re.compile(
+_COMPILE_MSG_MATCH_REGEX = re.compile(
     r"^(?P<filename>.*):(?=\d)"
     r"(?P<line_number>\d+):"
     r"(?P<column_number>\d+):"
     r"((?P<is_warning>warning:)\s*|\s*).*").match
+
+_VHDL_ASSERTION_SEARCH_REGEX = re.compile(
+    r"^[^:]+:(?P<line_num>\d+):"
+    r"(?P<column>\d+):"
+    r"(?P<time>[^:]+):"
+    r"\((report|assertion) (?P<severity_level>\w+)\):.*").search
 
 
 class GHDLInterface(SimulatorInterface):
@@ -60,7 +66,7 @@ class GHDLInterface(SimulatorInterface):
 
     @staticmethod
     def _get_compilation_message_level(line):
-        match = _COMPILE_MSG_MATCH(line)
+        match = _COMPILE_MSG_MATCH_REGEX(line)
         if not match:
             return
         elif match.groupdict()['is_warning']:
@@ -70,12 +76,7 @@ class GHDLInterface(SimulatorInterface):
 
     @staticmethod
     def get_vhdl_assertion_level(line):
-        _re = re.compile(
-            r"^[^:]+:(?P<line_num>\d+):"
-            r"(?P<column>\d+):"
-            r"(?P<time>[^:]+):"
-            r"\((report|assertion) (?P<severity_level>\w+)\):.*").search
-        match = _re(line)
+        match = _VHDL_ASSERTION_SEARCH_REGEX(line)
         if not match:
             return
 
