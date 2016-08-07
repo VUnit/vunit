@@ -33,7 +33,8 @@ class GHDLInterface(SimulatorInterface):
     ]
 
     sim_options = [
-        "ghdl.flags",
+        "ghdl.sim_flags",
+        "ghdl.elab_flags",
     ]
 
     @staticmethod
@@ -190,9 +191,9 @@ class GHDLInterface(SimulatorInterface):
 
             if self._has_output_flag():
                 cmd += ['-o', join(ghdl_output_path, "%s-%s" % (entity_name, architecture_name))]
-            cmd += config.options.get("ghdl.flags", [])
-
+            cmd += config.options.get("ghdl.elab_flags", [])
             cmd += [entity_name, architecture_name]
+            cmd += config.options.get("ghdl.sim_flags", [])
 
             for name, value in config.generics.items():
                 cmd += ['-g%s=%s' % (name, value)]

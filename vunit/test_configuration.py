@@ -71,9 +71,7 @@ class TestConfiguration(object):
         self._generics[scope][name] = value
 
     # Deprecated aliases To be removed in a future release
-    _alias = {"vsim_extra_args": "modelsim.vsim_flags",
-              "vsim_extra_args.gui": "modelsim.vsim_flags.gui",
-              "ghdl_flags": "ghdl.flags"}
+    _alias = {"ghdl.flags": "ghdl.elab_flags"}
 
     def set_sim_option(self, name, value, scope=create_scope()):
         """
