@@ -206,8 +206,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                    compile_builtins=compile_builtins,
                    simulator_factory=SimulatorFactory(args),
                    num_threads=args.num_threads,
-                   exit_0=args.exit_0,
-                   on_gui=getattr(args, 'gui', False))
+                   exit_0=args.exit_0)
 
     def __init__(self,  # pylint: disable=too-many-locals, too-many-arguments
                  output_path,
@@ -227,14 +226,13 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                  vhdl_standard='2008',
                  compile_builtins=True,
                  num_threads=1,
-                 exit_0=False,
-                 on_gui=False):
+                 exit_0=False):
 
         self._configure_logging(log_level)
         self._elaborate_only = elaborate_only
         self._output_path = abspath(output_path)
 
-        if no_color or on_gui:
+        if no_color:
             self._printer = NO_COLOR_PRINTER
         else:
             self._printer = COLOR_PRINTER
