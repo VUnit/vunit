@@ -25,7 +25,7 @@ Start by cloning our `GIT repository on GitHub <https://github.com/vunit/vunit/>
 
    git clone --recursive https://github.com/VUnit/vunit.git
 
-The ``--recursive`` option initializes `OSVVM https://github.com/JimLewis/OSVVM>`__ which is included as a submodule in the VUnit repository.
+The ``--recursive`` option initializes `OSVVM <https://github.com/JimLewis/OSVVM>`__ which is included as a submodule in the VUnit repository.
 
 To be able to import :class:`VUnit <vunit.ui.VUnit>` in your ``run.py`` script
 you need to make it visible to Python or else the following error
