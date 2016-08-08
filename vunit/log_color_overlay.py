@@ -38,13 +38,13 @@ class LogColorOverlay(object):
         r': ' +
         r'(?P<message>.*)').search  # The message is the rest of the line
 
-    def __init__(self, stream, printer=COLOR_PRINTER, assertion_parser_callback=None):
+    def __init__(self, stream, printer=COLOR_PRINTER, vhdl_report_parser_callback=None):
         self._stream = stream
         self._printer = printer
-        if assertion_parser_callback is None:
-            self._parse_assertion = lambda x: None
+        if vhdl_report_parser_callback is None:
+            self._report_parser = lambda x: None
         else:
-            self._parse_assertion = assertion_parser_callback
+            self._report_parser = vhdl_report_parser_callback
 
     def _print(self, *args, **kwargs):
         self._printer.write(*args, **kwargs)
@@ -65,7 +65,7 @@ class LogColorOverlay(object):
             self._stream.write(line[vunit_log.end():])
             return
 
-        vhdl_assertion = self._parse_assertion(line)
+        vhdl_assertion = self._report_parser(line)
 
         if vhdl_assertion is not None:
             self._write_vhdl_assertion(str(vhdl_assertion).lower(), line)
@@ -185,8 +185,8 @@ LOG_COLORS = {
     'verbose': {'fg': 'di', 'bg': None},
     'debug': {'fg': 'di', 'bg': None},
     'info': {'fg': None, 'bg': None},
-    'warning': {'fg': 'rg', 'bg': None},
-    'error': {'fg': 'r', 'bg': None},
+    'warning': {'fg': 'rgi', 'bg': None},
+    'error': {'fg': 'ri', 'bg': None},
     'failure': {'fg': 'rgbi', 'bg': 'r'}}
 
 if 'VUNIT_LOG_COLORS' in os.environ:

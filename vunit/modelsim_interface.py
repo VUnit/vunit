@@ -34,7 +34,7 @@ LOGGER = logging.getLogger(__name__)
 _COMPILE_MSG_MATCH_REGEX = re.compile(
     r"^\*\* (?P<error_type>[WE])\w+\s*(:\s*|\(suppressible\):\s*).*").match
 
-_VHDL_ASSERTION_SEARCH_REGEX = re.compile(
+_VHDL_REPORT_SEARCH_REGEX = re.compile(
     r"^# \*\* (?P<severity_level>\w+): .*").search
 
 
@@ -95,7 +95,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
 
     @staticmethod
     def get_vhdl_assertion_level(line):
-        match = _VHDL_ASSERTION_SEARCH_REGEX(line)
+        match = _VHDL_REPORT_SEARCH_REGEX(line)
 
         if not match:
             return

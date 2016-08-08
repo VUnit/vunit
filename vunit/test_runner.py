@@ -40,7 +40,10 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         self._num_threads = num_threads
         self._stdout = sys.stdout
         self._stderr = sys.stderr
-        self._simulator_if = simulator_if
+        if simulator_if is not None:
+            self.vhdl_report_parser_callback = simulator_if.get_vhdl_assertion_level
+        else:
+            self.vhdl_report_parser_callback = lambda x: None
 
     def run(self, test_suites):
         """
@@ -153,7 +156,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                 stdout = LogColorOverlay(
                     stream=self._stdout,
                     printer=self._printer,
-                    assertion_parser_callback=self._simulator_if.get_vhdl_assertion_level)
+                    vhdl_report_parser_callback=self.vhdl_report_parser_callback)
                 self._local.output = TeeToFile([stdout, output_file])
             else:
                 self._local.output = TeeToFile([output_file])
@@ -173,17 +176,21 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
         with self._lock:
             if (not write_stdout) and (any_not_passed or self._verbose):
-                self._print_output(output_file_name)
+                stdout = LogColorOverlay(
+                    stream=sys.stdout,
+                    printer=self._printer,
+                    vhdl_report_parser_callback=self.vhdl_report_parser_callback)
+                self._print_output(output_file_name, stdout)
             self._add_results(test_suite, results, start_time, num_tests)
 
     @staticmethod
-    def _print_output(output_file_name):
+    def _print_output(output_file_name, stream=sys.stdout):
         """
         Print contents of output file if it exists
         """
         with open(output_file_name, "r") as fread:
             for line in fread:
-                print(line, end="")
+                stream.write(line)
 
     def _add_results(self, test_suite, results, start_time, num_tests):
         """

@@ -34,8 +34,8 @@ class TestVerboseLogFormatter(unittest.TestCase):
             'verbose': {'fg': 'di', 'bg': None},
             'debug': {'fg': 'di', 'bg': None},
             'info': {'fg': None, 'bg': None},
-            'warning': {'fg': 'rg', 'bg': None},
-            'error': {'fg': 'r', 'bg': None},
+            'warning': {'fg': 'rgi', 'bg': None},
+            'error': {'fg': 'ri', 'bg': None},
             'failure': {'fg': 'rgbi', 'bg': 'r'}}
 
     def test_coloring_vunit_logs_to_stdout(self):
@@ -129,7 +129,7 @@ class TestVerboseLogFormatter(unittest.TestCase):
         stream.write.side_effect = stream_side_effect
 
         # Create a simple parser to the assertion format below
-        def assertion_parser_callback(line):
+        def vhdl_report_parser_callback(line):
             """
             Custom VHDL assertion callback
             """
@@ -141,7 +141,7 @@ class TestVerboseLogFormatter(unittest.TestCase):
         formatter = log_color_overlay.LogColorOverlay(
             stream=stream,
             printer=printer,
-            assertion_parser_callback=assertion_parser_callback)
+            vhdl_report_parser_callback=vhdl_report_parser_callback)
 
         for test_str in (
                 "severity level: note\n",     # Should be printed as info
@@ -156,8 +156,8 @@ class TestVerboseLogFormatter(unittest.TestCase):
         self.assertEqual(
             printer_calls,
             [["severity level: note\n", stream, None, None],
-             ["severity level: warning\n", stream, 'rg', None],
-             ["severity level: error\n", stream, 'r', None],
+             ["severity level: warning\n", stream, 'rgi', None],
+             ["severity level: error\n", stream, 'ri', None],
              ["severity level: failure\n", stream, 'rgbi', 'r']])
 
         # Assertions that weren't identified by the callback should be
@@ -179,8 +179,8 @@ class TestVerboseLogFormatter(unittest.TestCase):
                  'verbose': {'fg': 'di', 'bg': None},
                  'debug': {'fg': 'di', 'bg': None},
                  'info': {'fg': None, 'bg': None},
-                 'warning': {'fg': 'rg', 'bg': None},
-                 'error': {'fg': 'r', 'bg': None}})
+                 'warning': {'fg': 'rgi', 'bg': None},
+                 'error': {'fg': 'ri', 'bg': None}})
 
     def test_get_env_color_fails_with_with_wrong_key(self):
         with self.assertRaises(AssertionError):

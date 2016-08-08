@@ -28,7 +28,7 @@ _COMPILE_MSG_MATCH_REGEX = re.compile(
     r"(?P<column_number>\d+):"
     r"((?P<is_warning>warning:)\s*|\s*).*").match
 
-_VHDL_ASSERTION_SEARCH_REGEX = re.compile(
+_VHDL_REPORT_SEARCH_REGEX = re.compile(
     r"^[^:]+:(?P<line_num>\d+):"
     r"(?P<column>\d+):"
     r"(?P<time>[^:]+):"
@@ -76,7 +76,7 @@ class GHDLInterface(SimulatorInterface):
 
     @staticmethod
     def get_vhdl_assertion_level(line):
-        match = _VHDL_ASSERTION_SEARCH_REGEX(line)
+        match = _VHDL_REPORT_SEARCH_REGEX(line)
         if not match:
             return
 
