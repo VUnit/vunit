@@ -4,7 +4,7 @@
 #
 # Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 """
-Provides the formatter class for the 'verbose' log format
+Provides an overlay for adding colors based on regexes
 """
 
 import os
@@ -20,8 +20,7 @@ _ENV_COLOR_DEF_RE = re.compile(r"(?P<key>\w+)\[(?P<scope>\w+)\]=(?P<color>\w+)(;
 
 class LogColorOverlay(object):
     """
-    Handles the 'verbose' log type, which means converting the CSV
-    records into 'real' log records and adding colors if applicable
+    Provides an overlay for adding colors based on regexes
     """
     custom_levels = []  # Allows configuration of regexp
     _standard_levels = ['FAILURE', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'VERBOSE']
