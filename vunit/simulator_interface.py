@@ -14,6 +14,7 @@ import os
 from vunit.ostools import Process, simplify_path
 from vunit.exceptions import CompileError
 from vunit.color_printer import NO_COLOR_PRINTER
+from vunit.log_color_overlay import LOG_COLORS
 
 
 class SimulatorInterface(object):
@@ -218,9 +219,13 @@ class SimulatorInterface(object):
             if color_category is None:
                 print(line)
             elif color_category == 'warning':
-                self._printer.write(line + '\n', sys.stdout, fg='rg', bg=None)
+                self._printer.write(line + '\n', sys.stdout,
+                                    fg=LOG_COLORS['warning']['fg'],
+                                    bg=LOG_COLORS['warning']['bg'])
             elif color_category == 'error':
-                self._printer.write(line + '\n', sys.stdout, fg='r', bg=None)
+                self._printer.write(line + '\n', sys.stdout,
+                                    fg=LOG_COLORS['error']['fg'],
+                                    bg=LOG_COLORS['error']['bg'])
 
 
 def isfile(file_name):
