@@ -1826,6 +1826,22 @@ package body check_pkg is
   end function "=";
 
   function "=" (
+    constant left  : natural;
+    constant right : std_logic_vector)
+    return boolean is
+  begin
+    return left = unsigned(right);
+  end function "=";
+
+  function "=" (
+    constant left : std_logic_vector;
+    constant right : natural)
+    return boolean is
+  begin
+    return unsigned(left) = right;
+  end function "=";
+
+  function "=" (
     constant left  : boolean;
     constant right : std_logic)
     return boolean is
@@ -2411,6 +2427,170 @@ package body check_pkg is
 
   impure function check_equal(
     constant got             : in std_logic_vector;
+    constant expected        : in std_logic_vector;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "")
+    return boolean is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_equal(default_checker, pass, got, expected, msg, level, line_num, file_name);
+    -- pragma translate_on
+    return pass;
+  end;
+
+  procedure check_equal(
+    constant got             : in std_logic_vector;
+    constant expected        : in natural;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "") is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_equal(default_checker, pass, got, expected, msg, level, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  procedure check_equal(
+    variable pass            : out boolean;
+    constant got             : in std_logic_vector;
+    constant expected        : in natural;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "") is
+  begin
+    -- pragma translate_off
+    check_equal(default_checker, pass, got, expected, msg, level, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  procedure check_equal(
+    variable checker         : inout checker_t;
+    variable pass            : out boolean;
+    constant got             : in std_logic_vector;
+    constant expected        : in natural;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "") is
+  begin
+    -- pragma translate_off
+    if got = expected then
+      pass := true;
+      check_passed(checker);
+    else
+      pass := false;
+      check_failed(checker,
+                   failed_expectation_msg("Equality check", to_nibble_string(got) & " (" & to_integer_string(got) & ")", to_string(expected) & " (" & to_nibble_string(to_sufficient_unsigned(expected, got'length)) & ")", msg),
+                   level, line_num, file_name);
+    end if;
+    -- pragma translate_on
+  end;
+
+  procedure check_equal(
+    variable checker         : inout checker_t;
+    constant got             : in std_logic_vector;
+    constant expected        : in natural;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "") is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_equal(checker, pass, got, expected, msg, level, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  impure function check_equal(
+    constant got             : in std_logic_vector;
+    constant expected        : in natural;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "")
+    return boolean is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_equal(default_checker, pass, got, expected, msg, level, line_num, file_name);
+    -- pragma translate_on
+    return pass;
+  end;
+
+  procedure check_equal(
+    constant got             : in natural;
+    constant expected        : in std_logic_vector;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "") is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_equal(default_checker, pass, got, expected, msg, level, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  procedure check_equal(
+    variable pass            : out boolean;
+    constant got             : in natural;
+    constant expected        : in std_logic_vector;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "") is
+  begin
+    -- pragma translate_off
+    check_equal(default_checker, pass, got, expected, msg, level, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  procedure check_equal(
+    variable checker         : inout checker_t;
+    variable pass            : out boolean;
+    constant got             : in natural;
+    constant expected        : in std_logic_vector;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "") is
+  begin
+    -- pragma translate_off
+    if got = expected then
+      pass := true;
+      check_passed(checker);
+    else
+      pass := false;
+      check_failed(checker,
+                   failed_expectation_msg("Equality check", to_string(got) & " (" & to_nibble_string(to_sufficient_unsigned(got, expected'length)) & ")", to_nibble_string(expected) & " (" & to_integer_string(expected) & ")", msg),
+                   level, line_num, file_name);
+    end if;
+    -- pragma translate_on
+  end;
+
+  procedure check_equal(
+    variable checker         : inout checker_t;
+    constant got             : in natural;
+    constant expected        : in std_logic_vector;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "") is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_equal(checker, pass, got, expected, msg, level, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  impure function check_equal(
+    constant got             : in natural;
     constant expected        : in std_logic_vector;
     constant msg             : in string := "";
     constant level           : in log_level_t := dflt;

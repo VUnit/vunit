@@ -1217,6 +1217,96 @@ package check_pkg is
     return boolean;
 
   procedure check_equal(
+    constant got             : in std_logic_vector;
+    constant expected        : in natural;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  procedure check_equal(
+    variable pass            : out boolean;
+    constant got             : in std_logic_vector;
+    constant expected        : in natural;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  procedure check_equal(
+    variable checker         : inout checker_t;
+    variable pass            : out boolean;
+    constant got             : in std_logic_vector;
+    constant expected        : in natural;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  procedure check_equal(
+    variable checker         : inout checker_t;
+    constant got             : in std_logic_vector;
+    constant expected        : in natural;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  impure function check_equal(
+    constant got             : in std_logic_vector;
+    constant expected        : in natural;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "")
+    return boolean;
+
+  procedure check_equal(
+    constant got             : in natural;
+    constant expected        : in std_logic_vector;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  procedure check_equal(
+    variable pass            : out boolean;
+    constant got             : in natural;
+    constant expected        : in std_logic_vector;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  procedure check_equal(
+    variable checker         : inout checker_t;
+    variable pass            : out boolean;
+    constant got             : in natural;
+    constant expected        : in std_logic_vector;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  procedure check_equal(
+    variable checker         : inout checker_t;
+    constant got             : in natural;
+    constant expected        : in std_logic_vector;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  impure function check_equal(
+    constant got             : in natural;
+    constant expected        : in std_logic_vector;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "")
+    return boolean;
+
+  procedure check_equal(
     constant got             : in signed;
     constant expected        : in signed;
     constant msg             : in string := "";
@@ -1575,7 +1665,7 @@ package check_pkg is
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
     return boolean;
-
+  
   -----------------------------------------------------------------------------
   -- check_match
   -----------------------------------------------------------------------------
