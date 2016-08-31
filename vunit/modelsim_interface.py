@@ -276,7 +276,8 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         else:
             coverage_file = join(output_path, "coverage.ucdb")
             self._coverage_files.add(coverage_file)
-            coverage_save_cmd = "coverage save -onexit -assert -directive -cvg -codeAll {%s}" % fix_path(coverage_file)
+            coverage_save_cmd = "coverage save -onexit -assert -directive -cvg -codeAll {%s}" \
+			% (os.path.basename(os.path.dirname(output_path)), fix_path(coverage_file))
             coverage_args = "-coverage=" + to_coverage_args(self._coverage)
 
         vsim_flags = ["-wlf {%s}" % fix_path(join(output_path, "vsim.wlf")),
