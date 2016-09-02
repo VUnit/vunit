@@ -8,7 +8,6 @@
 Interface towards Mentor Graphics ModelSim
 """
 
-
 from __future__ import print_function
 
 import logging
@@ -17,6 +16,7 @@ import sys
 import os
 from os.path import join, dirname, abspath
 from argparse import ArgumentTypeError
+
 try:
     # Python 3
     from configparser import RawConfigParser
@@ -92,6 +92,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         """
         Find first valid modelsim toolchain prefix
         """
+
         def has_modelsim_ini(path):
             return os.path.isfile(join(path, "..", "modelsim.ini"))
 
@@ -276,8 +277,8 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         else:
             coverage_file = join(output_path, "coverage.ucdb")
             self._coverage_files.add(coverage_file)
-            coverage_save_cmd = "coverage save -onexit -assert -directive -cvg -codeAll {%s}" \
-			% (os.path.basename(os.path.dirname(output_path)), fix_path(coverage_file))
+            coverage_save_cmd = "coverage save -onexit -testname %s -assert -directive -cvg -codeAll {%s}" \
+                                % (os.path.basename(os.path.dirname(output_path)), fix_path(coverage_file))
             coverage_args = "-coverage=" + to_coverage_args(self._coverage)
 
         vsim_flags = ["-wlf {%s}" % fix_path(join(output_path, "vsim.wlf")),
@@ -433,7 +434,7 @@ proc vunit_restart {} {
 
         return " ".join(vsim_extra_args)
 
-    def _create_common_script(self,   # pylint: disable=too-many-arguments
+    def _create_common_script(self,  # pylint: disable=too-many-arguments
                               library_name, entity_name, architecture_name,
                               config,
                               output_path):
@@ -672,6 +673,7 @@ class ReadVarOutputConsumer(object):
     """
     Consume output from modelsim and print with indentation
     """
+
     def __init__(self):
         self.var = None
 
