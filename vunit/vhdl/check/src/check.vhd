@@ -1632,6 +1632,99 @@ package body check_pkg is
   end;
 
   -----------------------------------------------------------------------------
+  -- Manually generated check_equals
+  -----------------------------------------------------------------------------
+
+  function to_string (
+    constant data : time)
+    return string is
+  begin
+    return time'image(data);
+  end function to_string;
+
+  procedure check_equal(
+    constant got             : in time;
+    constant expected        : in time;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "") is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_equal(default_checker, pass, got, expected, msg, level, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  procedure check_equal(
+    variable pass            : out boolean;
+    constant got             : in time;
+    constant expected        : in time;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "") is
+  begin
+    -- pragma translate_off
+    check_equal(default_checker, pass, got, expected, msg, level, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  procedure check_equal(
+    variable checker         : inout checker_t;
+    variable pass            : out boolean;
+    constant got             : in time;
+    constant expected        : in time;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "") is
+  begin
+    -- pragma translate_off
+    if got = expected then
+      pass := true;
+      check_passed(checker);
+    else
+      pass := false;
+      check_failed(checker,
+                   failed_expectation_msg("Equality check", to_string(got), to_string(expected), msg),
+                   level, line_num, file_name);
+    end if;
+    -- pragma translate_on
+  end;
+
+  procedure check_equal(
+    variable checker         : inout checker_t;
+    constant got             : in time;
+    constant expected        : in time;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "") is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_equal(checker, pass, got, expected, msg, level, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  impure function check_equal(
+    constant got             : in time;
+    constant expected        : in time;
+    constant msg             : in string := "";
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "")
+    return boolean is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_equal(default_checker, pass, got, expected, msg, level, line_num, file_name);
+    -- pragma translate_on
+    return pass;
+  end;
+
+  -----------------------------------------------------------------------------
   -- check_equal
   -----------------------------------------------------------------------------
   function "=" (

@@ -579,6 +579,41 @@ begin
         check_equal(check_equal_checker, pass, natural'(165), natural'(90));
         counting_assert(not pass, "Should return pass = false on failing check");
         verify_log_call(inc_count, "Equality check failed! Got 165. Expected 90.");
+
+      elsif run("Test should pass on time equal time") then
+        get_checker_stat(stat);
+        check_equal(-91 ns, -91 ns);
+        check_equal(pass, -91 ns, -91 ns);
+        counting_assert(pass, "Should return pass = true on passing check");
+        pass := check_equal(-91 ns, -91 ns);
+        counting_assert(pass, "Should return pass = true on passing check");
+        check_equal(time'left, time'left);
+        check_equal(time'right, time'right);
+        verify_passed_checks(stat, 5);
+
+        get_checker_stat(check_equal_checker, stat);
+        check_equal(check_equal_checker, -91 ns, -91 ns);
+        check_equal(check_equal_checker, pass, -91 ns, -91 ns);
+        counting_assert(pass, "Should return pass = true on passing check");
+        verify_passed_checks(check_equal_checker,stat, 2);
+
+      elsif run("Test should fail on time not equal time") then
+        check_equal(-91 ns, 90 ns);
+        verify_time_log_call(inc_count, -91 ns, 90 ns);
+        check_equal(-91 ns, 90 ns);
+        verify_time_log_call(inc_count, -91 ns, 90 ns);
+        check_equal(pass, -91 ns, 90 ns);
+        counting_assert(not pass, "Should return pass = false on failing check");
+        verify_time_log_call(inc_count, -91 ns, 90 ns);
+        pass := check_equal(-91 ns, 90 ns);
+        counting_assert(not pass, "Should return pass = false on failing check");
+        verify_time_log_call(inc_count, -91 ns, 90 ns);
+
+        check_equal(check_equal_checker, -91 ns, 90 ns);
+        verify_time_log_call(inc_count, -91 ns, 90 ns);
+        check_equal(check_equal_checker, pass, -91 ns, 90 ns);
+        counting_assert(not pass, "Should return pass = false on failing check");
+        verify_time_log_call(inc_count, -91 ns, 90 ns);
       end if;
     end loop;
 

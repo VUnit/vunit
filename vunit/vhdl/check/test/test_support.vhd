@@ -56,6 +56,15 @@ package test_support is
     constant expected_line_num : in natural := 0;
     constant expected_file_name : in string := "");
 
+  procedure verify_time_log_call (
+    constant expected_count  : in natural;
+    constant got_time : in time;
+    constant expected_time : in time;
+    constant expected_level  : in log_level_t := error;
+    constant expected_src : in string := "";
+    constant expected_line_num : in natural := 0;
+    constant expected_file_name : in string := "");
+
   procedure verify_logger_init_call (
     constant expected_count  : in natural;
     constant expected_default_src : in string := "";
@@ -180,6 +189,40 @@ package body test_support is
     counting_assert(log_call_args.line_num = expected_line_num, "Wrong line number.", error);
     counting_assert(log_call_args.file_name(expected_file_name'range) = expected_file_name, "Wrong file_name. Got " &  log_call_args.file_name(expected_file_name'range) & " but expected " & expected_file_name & ".");
   end verify_log_call;
+
+    procedure verify_time_log_call (
+      constant expected_count  : in natural;
+      constant got_time : in time;
+      constant expected_time : in time;
+      constant expected_level  : in log_level_t := error;
+      constant expected_src : in string := "";
+      constant expected_line_num : in natural := 0;
+      constant expected_file_name : in string := "") is
+      variable call_count : natural;
+      variable log_call_args : log_call_args_t;
+      variable times : lines_t;
+    begin
+      call_count := get_log_call_count;
+      counting_assert(call_count = expected_count, "Invalid report call count. Got " & natural'image(call_count) &
+                      " but was expecting " & natural'image(expected_count) & ".");
+      get_log_call_args(log_call_args);
+      counting_assert(log_call_args.valid, "Log not called");
+
+      times := split(replace(replace(replace(strip(log_call_args.msg, "" & NUL),
+                                             "Equality check failed! Got ", ""), ". Expected ", "|"), '.', ""), "|");
+      counting_assert(((time'value(times(0).all) = got_time) and (time'value(times(1).all) = expected_time)),
+                       "Wrong message. Got " & log_call_args.msg & " but expected " &
+                       "Equality check failed! Got " & time'image(got_time) & ". Expected " &
+                       time'image(expected_time) & ".");
+
+      counting_assert(log_call_args.level = expected_level, "Wrong level.", error);
+      counting_assert(log_call_args.src(expected_src'range) = expected_src, "Wrong source. Got " &
+                      log_call_args.src(expected_src'range) & " but expected " & expected_src & ".");
+      counting_assert(log_call_args.line_num = expected_line_num, "Wrong line number.", error);
+      counting_assert(log_call_args.file_name(expected_file_name'range) = expected_file_name,
+                      "Wrong file_name. Got " &  log_call_args.file_name(expected_file_name'range) &
+                      " but expected " & expected_file_name & ".");
+    end verify_time_log_call;
 
   procedure verify_logger_init_call (
     constant expected_count  : in natural;
