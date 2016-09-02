@@ -625,5 +625,3 @@ begin
   test_runner_watchdog(runner, 2 us);
 
 end test_fixture;
-
--- vunit_pragma run_all_in_same_sim
