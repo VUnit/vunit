@@ -32,7 +32,7 @@ class TestVHDLParser(TestCase):  # pylint: disable=too-many-public-methods
     def test_parsing_simple_entity(self):
         entity = self.parse_single_entity("""\
 entity simple is
-end entity;ace
+end entity;
 """)
         self.assertEqual(entity.identifier, "simple")
         self.assertEqual(entity.ports, [])
