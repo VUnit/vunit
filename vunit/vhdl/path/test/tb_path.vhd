@@ -20,12 +20,6 @@ end entity tb_path;
 architecture test_fixture of tb_path is
 begin
   test_runner: process is
-    procedure check_equal (
-      constant got      : in string;
-      constant expected : in string) is
-    begin
-        check(got = expected, "Expected """ & expected & """ but got """ & got & """.");
-    end procedure check_equal;
   begin
     test_runner_setup(runner, runner_cfg);
 

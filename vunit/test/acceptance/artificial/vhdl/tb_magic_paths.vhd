@@ -17,12 +17,6 @@ end entity;
 architecture vunit_test_bench of tb_magic_paths is
 begin
   test_runner : process
-
-    procedure check_equal(got, expected : string) is
-    begin
-      assert got = expected report "Got '" & got & "' expected '" & expected & "'";
-    end procedure;
-
     procedure check_has_suffix(value : string; suffix : string) is
     begin
       check_equal(value(value'length+1-suffix'length to value'length), suffix);
