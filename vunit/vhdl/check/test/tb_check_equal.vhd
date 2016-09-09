@@ -580,6 +580,10 @@ begin
         counting_assert(not pass, "Should return pass = false on failing check");
         verify_log_call(inc_count, "Equality check failed! Got 165. Expected 90.");
 
+      -------------------------------------------------------------------------
+      -- Manually added test cases
+      -------------------------------------------------------------------------
+
       elsif run("Test should pass on time equal time") then
         get_checker_stat(stat);
         check_equal(-91 ns, -91 ns);
@@ -614,6 +618,40 @@ begin
         check_equal(check_equal_checker, pass, -91 ns, 90 ns);
         counting_assert(not pass, "Should return pass = false on failing check");
         verify_time_log_call(inc_count, -91 ns, 90 ns);
+
+      elsif run("Test should pass on string equal string") then
+        get_checker_stat(stat);
+        check_equal(string'("test"), string'("test"));
+        check_equal(pass, string'("test"), string'("test"));
+        counting_assert(pass, "Should return pass = true on passing check");
+        pass := check_equal(string'("test"), string'("test"));
+        counting_assert(pass, "Should return pass = true on passing check");
+        check_equal(string'(""), string'(""));
+        verify_passed_checks(stat, 4);
+
+        get_checker_stat(check_equal_checker, stat);
+        check_equal(check_equal_checker, string'("test"), string'("test"));
+        check_equal(check_equal_checker, pass, string'("test"), string'("test"));
+        counting_assert(pass, "Should return pass = true on passing check");
+        verify_passed_checks(check_equal_checker,stat, 2);
+
+      elsif run("Test should fail on string not equal string") then
+        check_equal(string'("test"), string'("tests"));
+        verify_log_call(inc_count, "Equality check failed! Got test. Expected tests.");
+        check_equal(string'("test"), string'("tests"), "Extra info.");
+        verify_log_call(inc_count, "Equality check failed! Got test. Expected tests. Extra info.");
+        check_equal(pass, string'("test"), string'("tests"));
+        counting_assert(not pass, "Should return pass = false on failing check");
+        verify_log_call(inc_count, "Equality check failed! Got test. Expected tests.");
+        pass := check_equal(string'("test"), string'("tests"));
+        counting_assert(not pass, "Should return pass = false on failing check");
+        verify_log_call(inc_count, "Equality check failed! Got test. Expected tests.");
+
+        check_equal(check_equal_checker, string'("test"), string'("tests"));
+        verify_log_call(inc_count, "Equality check failed! Got test. Expected tests.");
+        check_equal(check_equal_checker, pass, string'("test"), string'("tests"));
+        counting_assert(not pass, "Should return pass = false on failing check");
+        verify_log_call(inc_count, "Equality check failed! Got test. Expected tests.");
       end if;
     end loop;
 
