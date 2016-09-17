@@ -53,7 +53,7 @@ begin
         verify_log_call(inc_count, "Equality check failed! Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).");
         check_equal(std_logic_vector'(X"A5A5A5A5A"), std_logic_vector'(X"B5A5A5A5A"));
         verify_log_call(inc_count, "Equality check failed! Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).");
-      elsif run("Test print full integer vector representation when check fails on comparison with vector too short to contain the integer") then
+      elsif run("Test when integer check fails on comparison with short vector") then
         check_equal(unsigned'(X"A5"), natural'(256));
         verify_log_call(inc_count, "Equality check failed! Got 1010_0101 (165). Expected 256 (1_0000_0000).");
         check_equal(natural'(256), unsigned'(X"A5"));
