@@ -32,6 +32,3 @@ package check_types_pkg is
     logger_cfg    : logger_cfg_export_t;
   end record;
 end package;
-
-package body check_types_pkg is
-end package body check_types_pkg;

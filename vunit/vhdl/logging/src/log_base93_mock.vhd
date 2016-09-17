@@ -269,7 +269,6 @@ package body log_base_pkg is
     variable selected_src          : line;
     variable selected_level        : log_level_t;
     variable pass_to_display, pass_to_file : boolean;
-    variable sev_level : severity_level := note;
     variable selected_level_name : line;
     variable cfg : logger_cfg_t;
   begin
@@ -314,16 +313,6 @@ package body log_base_pkg is
       if (logger.log_display_format = verbose_csv) or (logger.log_file_format = verbose_csv) or
          (logger.log_display_format = verbose) or (logger.log_file_format = verbose) then
         seq_num := get_seq_num;
-      end if;
-
-      if (selected_level >= info_high2) and (selected_level <= verbose_low2) then
-        sev_level := note;
-      elsif (selected_level >= warning_high2) and (selected_level <= warning_low2) then
-        sev_level := warning;
-      elsif (selected_level >= error_high2) and (selected_level <= error_low2) then
-        sev_level := error;
-      else
-        sev_level := failure;
       end if;
 
       if selected_level_name /= null then

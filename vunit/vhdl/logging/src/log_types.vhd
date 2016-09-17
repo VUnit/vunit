@@ -59,6 +59,3 @@ package log_types_pkg is
   end record;
 
 end package;
-
-package body log_types_pkg is
-end package body log_types_pkg;
