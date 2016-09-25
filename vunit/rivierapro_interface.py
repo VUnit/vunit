@@ -18,8 +18,21 @@ import logging
 from vunit.ostools import Process, write_file, file_exists
 from vunit.simulator_interface import SimulatorInterface
 from vunit.exceptions import CompileError
+from vunit.color_printer import (COLOR_PRINTER, NO_COLOR_PRINTER)
 
 LOGGER = logging.getLogger(__name__)
+
+_COMPILE_MSG_MATCH_REGEX = re.compile(
+    r"^COMP96\s+"
+    r"((?P<warning>WARNING)|(?P<error>ERROR))\s+"
+    r"(?P<error_number>[^:]+):.*").match
+
+# This only includes fatal errors detected on simulation start.
+# VHDL reports are not included because the author didn't had Riviera
+# PRO with simulation license available
+_VHDL_REPORT_SEARCH_REGEX = re.compile(
+    r"^(?P<phase>[^:]+):\s*"
+    r"(?P<severity_level>\w+)\s+\w+:.*").search
 
 
 class RivieraProInterface(SimulatorInterface):
@@ -46,6 +59,7 @@ class RivieraProInterface(SimulatorInterface):
         """
         Create new instance from command line arguments object
         """
+        cls._printer = NO_COLOR_PRINTER if args.no_color else COLOR_PRINTER
         return cls(prefix=cls.find_prefix(),
                    library_cfg=join(output_path, "library.cfg"),
                    gui=args.gui)
@@ -62,6 +76,24 @@ class RivieraProInterface(SimulatorInterface):
         return cls.find_toolchain(["vsim",
                                    "vsimsa"],
                                   constraints=[no_avhdl])
+
+    @staticmethod
+    def _get_compilation_message_level(line):
+        match = _COMPILE_MSG_MATCH_REGEX(line)
+        if not match:
+            return
+        elif match.groupdict()['warning']:
+            return 'warning'
+        elif match.groupdict()['error']:
+            return 'error'
+
+    @staticmethod
+    def get_vhdl_assertion_level(line):
+        match = _VHDL_REPORT_SEARCH_REGEX(line)
+        if not match:
+            return
+
+        return match.groupdict()['severity_level']
 
     def __init__(self, prefix, library_cfg="library.cfg", gui=False):
         self._vhdl_standard = None

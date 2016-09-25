@@ -36,7 +36,8 @@ class LinuxColorPrinter(object):
         if output_file is None:
             output_file = sys.stdout
 
-        text = self._ansi_wrap(text, fg, bg)
+        if fg is not None or bg is not None:
+            text = self._ansi_wrap(text, fg, bg)
         output_file.write(text)
 
     @staticmethod
@@ -127,9 +128,12 @@ class Win32ColorPrinter(LinuxColorPrinter):
         if output_file is None:
             output_file = sys.stdout
 
-        if output_file is sys.stdout:
+        # At this point, sys.stdout and sys.stderr may have been
+        # reassigned to another streams, so we check against
+        # sys.__stdout__ and sys.__stderr__ respectively.
+        if output_file is sys.__stdout__:
             handle = self._stdout_handle
-        elif output_file is sys.stderr:
+        elif output_file is sys.__stderr__:
             handle = self._stderr_handle
         else:
             handle = None

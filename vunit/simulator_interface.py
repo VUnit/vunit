@@ -13,6 +13,8 @@ import sys
 import os
 from vunit.ostools import Process, simplify_path
 from vunit.exceptions import CompileError
+from vunit.color_printer import NO_COLOR_PRINTER
+from vunit.log_color_overlay import LOG_COLORS
 
 
 class SimulatorInterface(object):
@@ -25,6 +27,7 @@ class SimulatorInterface(object):
     package_users_depend_on_bodies = False
     compile_options = []
     sim_options = []
+    _printer = NO_COLOR_PRINTER
 
     @staticmethod
     def add_arguments(parser):
@@ -62,6 +65,26 @@ class SimulatorInterface(object):
                 # the file exists, we have a shot at spawn working
                 result.append(file_name)
         return result
+
+    @staticmethod
+    def _get_compilation_message_level(line):  # pylint: disable=unused-argument
+        """
+        Method should be overridden by child classes and return an
+        identification of the line content. Supported values are:
+        - None: won't add any color
+        - 'error': triggers printing the line in red
+        - 'warning': triggers printing the line in yellow
+        """
+        return None
+
+    @staticmethod
+    def get_vhdl_assertion_level(line):  # pylint: disable=unused-argument
+        """
+        Method should be overridden by child classes and return a string
+        identifying the level of the VHDL assertion. If the line doesn't
+        contains any assertion, it should return None
+        """
+        return None
 
     @classmethod
     def find_prefix(cls):
@@ -150,7 +173,7 @@ class SimulatorInterface(object):
             try:
                 command = None
                 command = self.compile_source_file_command(source_file)
-                success = run_command(command)
+                success = run_command(command, self._compile_output_consumer)
 
             except CompileError:
                 success = False
@@ -180,6 +203,30 @@ class SimulatorInterface(object):
     def compile_source_file_command(self, source_file):  # pylint: disable=unused-argument
         raise NotImplementedError
 
+    def _compile_output_consumer(self, line):  # pylint: disable=unused-argument
+        """
+        Consumes the output of the compilation process.
+        """
+        if self._printer is NO_COLOR_PRINTER:
+            # Avoid parsing simulator output if not configured with the color
+            # printer
+            self._printer.write(line, sys.stdout)
+        else:
+            # Use the return of the _get_compilation_message_level to colorize the
+            # given line
+            color_category = self._get_compilation_message_level(line)  # pylint: disable=assignment-from-none
+            assert color_category in (None, 'error', 'warning')
+            if color_category is None:
+                print(line)
+            elif color_category == 'warning':
+                self._printer.write(line + '\n', sys.stdout,
+                                    fg=LOG_COLORS['warning']['fg'],
+                                    bg=LOG_COLORS['warning']['bg'])
+            elif color_category == 'error':
+                self._printer.write(line + '\n', sys.stdout,
+                                    fg=LOG_COLORS['error']['fg'],
+                                    bg=LOG_COLORS['error']['bg'])
+
 
 def isfile(file_name):
     """
@@ -191,13 +238,13 @@ def isfile(file_name):
     return os.path.basename(file_name) in os.listdir(os.path.dirname(file_name))
 
 
-def run_command(command):
+def run_command(command, callback=print):
     """
     Run a command
     """
     try:
         proc = Process(command)
-        proc.consume_output()
+        proc.consume_output(callback)
         return True
     except Process.NonZeroExitCode:
         pass

@@ -48,7 +48,8 @@ class TestModelSimInterface(unittest.TestCase):
              '-2008',
              '-work',
              'lib',
-             'file.vhd'])
+             'file.vhd'],
+            simif._compile_output_consumer)  # pylint: disable=protected-access
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
@@ -74,7 +75,8 @@ class TestModelSimInterface(unittest.TestCase):
              '-2002',
              '-work',
              'lib',
-             'file.vhd'])
+             'file.vhd'],
+            simif._compile_output_consumer)  # pylint: disable=protected-access
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
@@ -100,7 +102,8 @@ class TestModelSimInterface(unittest.TestCase):
              '-93',
              '-work',
              'lib',
-             'file.vhd'])
+             'file.vhd'],
+            simif._compile_output_consumer)  # pylint: disable=protected-access
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
@@ -128,7 +131,8 @@ class TestModelSimInterface(unittest.TestCase):
                                              '-2008',
                                              '-work',
                                              'lib',
-                                             'file.vhd'])
+                                             'file.vhd'],
+                                            simif._compile_output_consumer)  # pylint: disable=protected-access
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
@@ -155,7 +159,8 @@ class TestModelSimInterface(unittest.TestCase):
                                              '-2008',
                                              '-work',
                                              'lib',
-                                             'file.vhd'])
+                                             'file.vhd'],
+                                            simif._compile_output_consumer)  # pylint: disable=protected-access
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
@@ -181,7 +186,8 @@ class TestModelSimInterface(unittest.TestCase):
                                              '-work',
                                              'lib',
                                              'file.v',
-                                             '-L', 'lib'])
+                                             '-L', 'lib'],
+                                            simif._compile_output_consumer)  # pylint: disable=protected-access
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
@@ -210,7 +216,8 @@ class TestModelSimInterface(unittest.TestCase):
                                              '-work',
                                              'lib',
                                              'file.v',
-                                             '-L', 'lib'])
+                                             '-L', 'lib'],
+                                            simif._compile_output_consumer)  # pylint: disable=protected-access
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
@@ -238,7 +245,8 @@ class TestModelSimInterface(unittest.TestCase):
                                              '-work',
                                              'lib',
                                              'file.v',
-                                             '-L', 'lib'])
+                                             '-L', 'lib'],
+                                            simif._compile_output_consumer)  # pylint: disable=protected-access
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
@@ -265,7 +273,8 @@ class TestModelSimInterface(unittest.TestCase):
                                              'lib',
                                              'file.v',
                                              '-L', 'lib',
-                                             '+incdir+include'])
+                                             '+incdir+include'],
+                                            simif._compile_output_consumer)  # pylint: disable=protected-access
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
@@ -292,7 +301,8 @@ class TestModelSimInterface(unittest.TestCase):
                                              'lib',
                                              'file.v',
                                              '-L', 'lib',
-                                             '+define+defname=defval'])
+                                             '+define+defname=defval'],
+                                            simif._compile_output_consumer)  # pylint: disable=protected-access
 
     def setUp(self):
         self.output_path = join(dirname(__file__), "test_modelsim_out")

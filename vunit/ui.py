@@ -668,7 +668,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         start_time = ostools.get_time()
         report = TestReport(printer=self._printer)
         try:
-            self._run_test(test_cases, report)
+            self._run_test(test_cases, report, simulator_if)
             simulator_if.post_process(self._simulator_factory.simulator_output_path)
         except KeyboardInterrupt:
             print()
@@ -769,14 +769,16 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         simulator_if.compile_project(self._project, self._vhdl_standard,
                                      continue_on_error=self._keep_compiling)
 
-    def _run_test(self, test_cases, report):
+    def _run_test(self, test_cases, report, simulator_if):
         """
         Run the test suites and return the report
         """
         runner = TestRunner(report,
                             join(self._output_path, "tests"),
                             verbose=self._verbose,
-                            num_threads=self._num_threads)
+                            printer=self._printer,
+                            num_threads=self._num_threads,
+                            simulator_if=simulator_if)
         runner.run(test_cases)
 
     def _post_process(self, report):

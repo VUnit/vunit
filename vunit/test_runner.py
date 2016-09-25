@@ -18,6 +18,8 @@ import sys
 import time
 import logging
 import vunit.ostools as ostools
+from vunit.color_printer import COLOR_PRINTER
+from vunit.log_color_overlay import LogColorOverlay
 from vunit.test_report import PASSED, FAILED
 LOGGER = logging.getLogger(__name__)
 
@@ -26,15 +28,22 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
     """
     Administer the execution of a list of test suites
     """
-    def __init__(self, report, output_path, verbose=False, num_threads=1):
+    def __init__(self,  # pylint: disable=too-many-arguments
+                 report, output_path, verbose=False, printer=COLOR_PRINTER,
+                 num_threads=1, simulator_if=None):
         self._lock = threading.Lock()
         self._local = threading.local()
         self._report = report
         self._output_path = output_path
         self._verbose = verbose
+        self._printer = printer
         self._num_threads = num_threads
         self._stdout = sys.stdout
         self._stderr = sys.stderr
+        if simulator_if is not None:
+            self.vhdl_report_parser_callback = simulator_if.get_vhdl_assertion_level
+        else:
+            self.vhdl_report_parser_callback = lambda x: None
 
     def run(self, test_suites):
         """
@@ -144,7 +153,11 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
         try:
             if write_stdout:
-                self._local.output = TeeToFile([self._stdout, output_file])
+                stdout = LogColorOverlay(
+                    stream=self._stdout,
+                    printer=self._printer,
+                    vhdl_report_parser_callback=self.vhdl_report_parser_callback)
+                self._local.output = TeeToFile([stdout, output_file])
             else:
                 self._local.output = TeeToFile([output_file])
 
@@ -163,17 +176,21 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
         with self._lock:
             if (not write_stdout) and (any_not_passed or self._verbose):
-                self._print_output(output_file_name)
+                stdout = LogColorOverlay(
+                    stream=sys.stdout,
+                    printer=self._printer,
+                    vhdl_report_parser_callback=self.vhdl_report_parser_callback)
+                self._print_output(output_file_name, stdout)
             self._add_results(test_suite, results, start_time, num_tests)
 
     @staticmethod
-    def _print_output(output_file_name):
+    def _print_output(output_file_name, stream=sys.stdout):
         """
         Print contents of output file if it exists
         """
         with open(output_file_name, "r") as fread:
             for line in fread:
-                print(line, end="")
+                stream.write(line)
 
     def _add_results(self, test_suite, results, start_time, num_tests):
         """
