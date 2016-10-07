@@ -22,7 +22,6 @@ module tb_magic_paths;
    `TEST_SUITE begin
       `TEST_CASE("Test magic paths are correct") begin
          check_has_suffix(tb_path, "acceptance/artificial/verilog/");
-         check_has_suffix(output_path, "tests/lib.tb_magic_paths.Test magic paths are correct/");
       end
    end;
 

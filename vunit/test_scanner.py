@@ -213,8 +213,6 @@ class TestScanner(object):
                 LOGGER.warning("Found configuration of non-existent test \"%s\"",
                                dotjoin(*specific_scope))
 
-    _valid_run_string_fmt = r'[A-Za-z0-9_\-\. ]+'
-    _re_valid_run_string = re.compile(_valid_run_string_fmt + "$")
     _re_vhdl_run_string = re.compile(r'\s+run\("(.*?)"\)', re.IGNORECASE)
     _re_verilog_run_string = re.compile(r'`TEST_CASE\("(.*?)"\)')
 
@@ -244,11 +242,6 @@ class TestScanner(object):
 
         if len(not_unique) > 0:
             raise TestScannerError
-
-        for run_string in run_strings:
-            if self._re_valid_run_string.match(run_string) is None:
-                LOGGER.warning('Test name "%s" does not match %s in %s',
-                               run_string, self._valid_run_string_fmt, file_name)
 
         return run_strings
 

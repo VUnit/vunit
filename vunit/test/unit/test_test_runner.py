@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test the test runner
@@ -14,7 +14,7 @@ from __future__ import print_function
 import unittest
 from os.path import join, dirname
 
-from vunit.test_runner import TestRunner
+from vunit.test_runner import TestRunner, create_output_path
 from vunit.test_report import TestReport
 from vunit.test_list import TestList
 from vunit.ostools import renew_path
@@ -40,8 +40,8 @@ class TestTestRunner(unittest.TestCase):
         test_list.add_test(test_case1)
         test_list.add_test(test_case2)
         self.runner.run(test_list)
-        test_case1.run.assert_called_once_with(join(self.output_path, "test1"))
-        test_case2.run.assert_called_once_with(join(self.output_path, "test2"))
+        test_case1.run.assert_called_once_with(create_output_path(self.output_path, "test1"))
+        test_case2.run.assert_called_once_with(create_output_path(self.output_path, "test2"))
         self.assertEqual(self._tests, ["test1", "test2"])
         self.assertTrue(self.report.result_of("test1").passed)
         self.assertTrue(self.report.result_of("test2").failed)

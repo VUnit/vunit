@@ -99,4 +99,3 @@ package body log_base_pkg is
   end;
 
 end package body log_base_pkg;
-

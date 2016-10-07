@@ -11,7 +11,8 @@ Provided functionality to run a suite of test in a robust way
 
 from __future__ import print_function
 
-from os.path import join
+import os
+from os.path import join, basename, exists
 import traceback
 import threading
 import sys
@@ -19,6 +20,7 @@ import time
 import logging
 import vunit.ostools as ostools
 from vunit.test_report import PASSED, FAILED
+from vunit.hashing import hash_string
 LOGGER = logging.getLogger(__name__)
 
 
@@ -40,6 +42,12 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         """
         Run a list of test suites
         """
+
+        if not exists(self._output_path):
+            os.makedirs(self._output_path)
+
+        self._create_test_mapping_file(test_suites)
+
         num_tests = 0
         for test_suite in test_suites:
             for test_name in test_suite.test_cases:
@@ -124,10 +132,9 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         """
         Run the actual test suite
         """
-        start_time = ostools.get_time()
-
-        output_path = join(self._output_path, test_suite.name)
+        output_path = create_output_path(self._output_path, test_suite.name)
         output_file_name = join(output_path, "output.txt")
+        start_time = ostools.get_time()
 
         try:
             # If we could not clean output path, fail all tests
@@ -139,7 +146,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             results = self._fail_suite(test_suite)
             with self._lock:
                 traceback.print_exc()
-                self._add_results(test_suite, results, start_time, num_tests)
+                self._add_results(test_suite, results, start_time, num_tests, output_file_name)
             return
 
         try:
@@ -164,7 +171,33 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         with self._lock:
             if (not write_stdout) and (any_not_passed or self._verbose):
                 self._print_output(output_file_name)
-            self._add_results(test_suite, results, start_time, num_tests)
+            self._add_results(test_suite, results, start_time, num_tests, output_file_name)
+
+    def _create_test_mapping_file(self, test_suites):
+        """
+        Create a file mapping test name to test output folder.
+        This is to allow the user to find the test output folder when it is hashed
+        """
+        mapping_file_name = join(self._output_path, "test_name_to_path_mapping.txt")
+
+        # Load old mapping to remember non-deleted test folders as well
+        # even when re-running only a single test case
+        if exists(mapping_file_name):
+            with open(mapping_file_name, "r") as fptr:
+                mapping = set(fptr.read().splitlines())
+        else:
+            mapping = set()
+
+        for test_suite in test_suites:
+            mapping.add("%s %s" % (basename(create_output_path(self._output_path, test_suite.name)),
+                                   test_suite.name))
+
+        # Sort by everything except hash
+        mapping = sorted(mapping, key=lambda value: value[value.index(" "):])
+
+        with open(mapping_file_name, "w") as fptr:
+            for value in mapping:
+                fptr.write(value + "\n")
 
     @staticmethod
     def _print_output(output_file_name):
@@ -175,11 +208,10 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             for line in fread:
                 print(line, end="")
 
-    def _add_results(self, test_suite, results, start_time, num_tests):
+    def _add_results(self, test_suite, results, start_time, num_tests, output_file_name):
         """
         Add results to test report
         """
-        output_file_name = join(self._output_path, test_suite.name, "output.txt")
         runtime = ostools.get_time() - start_time
         time_per_test = runtime / len(results)
 
@@ -290,3 +322,12 @@ class TestScheduler(object):
         """
         while not self.is_finished():
             time.sleep(0.05)
+
+
+def create_output_path(output_file, test_suite_name):
+    """
+    Create the full output path of a test case.
+    Ensure no bad characters and no long path names.
+    """
+    hash_name = hash_string(test_suite_name)
+    return join(output_file, hash_name)

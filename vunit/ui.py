@@ -774,7 +774,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         Run the test suites and return the report
         """
         runner = TestRunner(report,
-                            join(self._output_path, "tests"),
+                            join(self._output_path, "test_output"),
                             verbose=self._verbose,
                             num_threads=self._num_threads)
         runner.run(test_cases)

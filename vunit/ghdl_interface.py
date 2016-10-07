@@ -96,7 +96,7 @@ class GHDLInterface(SimulatorInterface):
         output = subprocess.check_output([join(prefix, "ghdl"), "--version"]).decode()
         for name, backend in mapping.items():
             if name in output:
-                LOGGER.info("Detected GHDL %s", name)
+                LOGGER.debug("Detected GHDL %s", name)
                 return backend
 
         LOGGER.error("Could not detect known LLVM backend by parsing 'ghdl --version'")

@@ -67,12 +67,12 @@ class Project(object):
         if logical_name not in self._libraries:
             library = Library(logical_name, directory, is_external=is_external)
             self._libraries[logical_name] = library
-            LOGGER.info('Adding library %s with path %s', logical_name, directory)
+            LOGGER.debug('Adding library %s with path %s', logical_name, directory)
         else:
             assert allow_replacement
             library = Library(logical_name, directory, is_external=is_external)
             self._libraries[logical_name] = library
-            LOGGER.info('Replacing library %s with path %s', logical_name, directory)
+            LOGGER.debug('Replacing library %s with path %s', logical_name, directory)
 
     def add_source_file(self, file_name, library_name, file_type='vhdl', include_dirs=None, defines=None):
         """
@@ -81,7 +81,7 @@ class Project(object):
         if not ostools.file_exists(file_name):
             raise ValueError("File %r does not exist" % file_name)
 
-        LOGGER.info('Adding source file %s to library %s', file_name, library_name)
+        LOGGER.debug('Adding source file %s to library %s', file_name, library_name)
         self._validate_library_name(library_name)
         library = self._libraries[library_name]
 
@@ -234,7 +234,7 @@ class Project(object):
             is_new = dependency_graph.add_dependency(start, end)
 
             if is_new:
-                LOGGER.info('Adding dependency: %s depends on %s', end.name, start.name)
+                LOGGER.debug('Adding dependency: %s depends on %s', end.name, start.name)
 
         def add_dependencies(dependency_function, files):
             """

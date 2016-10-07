@@ -24,7 +24,6 @@ begin
   begin
     test_runner_setup(runner, runner_cfg);
     check_has_suffix(tb_path, "acceptance/artificial/vhdl/");
-    check_has_suffix(output_path, "acceptance/artificial out/tests/lib.tb_magic_paths.all/");
     test_runner_cleanup(runner);
     wait;
   end process;
