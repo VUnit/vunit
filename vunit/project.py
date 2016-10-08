@@ -868,7 +868,7 @@ def more_recent(file_name, than_file_name):
 
 # lower case representation of supported extensions
 VHDL_EXTENSIONS = (".vhd", ".vhdl", ".vho")
-VERILOG_EXTENSIONS = (".v", ".vp", ".sv", ".vams")
+VERILOG_EXTENSIONS = (".v", ".vp", ".sv", ".vams", ".vo")
 
 
 def file_type_of(file_name):
