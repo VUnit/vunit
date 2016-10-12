@@ -108,8 +108,8 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
 
         project = Project()
         project.add_library("lib", "lib_path")
-        project.add_source_file("file.vhd", "lib", file_type="vhdl")
-        simif.compile_project(project, vhdl_standard="2008")
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="2008")
+        simif.compile_project(project)
         run_command.assert_called_once_with(
             [join("prefix", 'ghdl'), '-a', '--workdir=lib_path', '--work=lib',
              '--std=08', '-Plib_path', 'file.vhd'])
@@ -121,8 +121,8 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
 
         project = Project()
         project.add_library("lib", "lib_path")
-        project.add_source_file("file.vhd", "lib", file_type="vhdl")
-        simif.compile_project(project, vhdl_standard="2002")
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="2002")
+        simif.compile_project(project)
         run_command.assert_called_once_with(
             [join("prefix", 'ghdl'), '-a', '--workdir=lib_path', '--work=lib',
              '--std=02', '-Plib_path', 'file.vhd'])
@@ -134,8 +134,8 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
 
         project = Project()
         project.add_library("lib", "lib_path")
-        project.add_source_file("file.vhd", "lib", file_type="vhdl")
-        simif.compile_project(project, vhdl_standard="93")
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="93")
+        simif.compile_project(project)
         run_command.assert_called_once_with(
             [join("prefix", 'ghdl'), '-a', '--workdir=lib_path', '--work=lib',
              '--std=93', '-Plib_path', 'file.vhd'])
@@ -149,7 +149,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         project.add_library("lib", "lib_path")
         source_file = project.add_source_file("file.vhd", "lib", file_type="vhdl")
         source_file.set_compile_option("ghdl.flags", ["custom", "flags"])
-        simif.compile_project(project, vhdl_standard="2008")
+        simif.compile_project(project)
         run_command.assert_called_once_with(
             [join("prefix", 'ghdl'), '-a', '--workdir=lib_path', '--work=lib', '--std=08',
              '-Plib_path', 'custom', 'flags', 'file.vhd'])
@@ -161,7 +161,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         project = Project()
         project.add_library("lib", "lib_path")
         project.add_source_file("file.v", "lib", file_type="verilog")
-        self.assertRaises(CompileError, simif.compile_project, project, vhdl_standard="2008")
+        self.assertRaises(CompileError, simif.compile_project, project)
 
     def setUp(self):
         self.output_path = join(dirname(__file__), "test_ghdl_interface_out")

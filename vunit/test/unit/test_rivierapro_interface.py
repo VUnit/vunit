@@ -34,7 +34,7 @@ class TestRivieraProInterface(unittest.TestCase):
         project.add_library("lib", "lib_path")
         write_file("file.vhd", "")
         project.add_source_file("file.vhd", "lib", file_type="vhdl")
-        simif.compile_project(project, vhdl_standard="2008")
+        simif.compile_project(project)
         process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"], cwd=self.output_path)
         process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"], cwd=self.output_path)
         run_command.assert_called_once_with(
@@ -58,7 +58,7 @@ class TestRivieraProInterface(unittest.TestCase):
         write_file("file.vhd", "")
         source_file = project.add_source_file("file.vhd", "lib", file_type="vhdl")
         source_file.set_compile_option("rivierapro.vcom_flags", ["custom", "flags"])
-        simif.compile_project(project, vhdl_standard="2008")
+        simif.compile_project(project)
         process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"], cwd=self.output_path)
         process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"], cwd=self.output_path)
         run_command.assert_called_once_with([join('prefix', 'vcom'),
@@ -82,7 +82,7 @@ class TestRivieraProInterface(unittest.TestCase):
         project.add_library("lib", "lib_path")
         write_file("file.v", "")
         project.add_source_file("file.v", "lib", file_type="verilog")
-        simif.compile_project(project, vhdl_standard="2008")
+        simif.compile_project(project)
         process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"], cwd=self.output_path)
         process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"], cwd=self.output_path)
         run_command.assert_called_once_with([join('prefix', 'vlog'),
@@ -106,7 +106,7 @@ class TestRivieraProInterface(unittest.TestCase):
         write_file("file.v", "")
         source_file = project.add_source_file("file.v", "lib", file_type="verilog")
         source_file.set_compile_option("rivierapro.vlog_flags", ["custom", "flags"])
-        simif.compile_project(project, vhdl_standard="2008")
+        simif.compile_project(project)
         process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"], cwd=self.output_path)
         process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"], cwd=self.output_path)
         run_command.assert_called_once_with([join('prefix', 'vlog'),
@@ -131,7 +131,7 @@ class TestRivieraProInterface(unittest.TestCase):
         project.add_library("lib", "lib_path")
         write_file("file.v", "")
         project.add_source_file("file.v", "lib", file_type="verilog", include_dirs=["include"])
-        simif.compile_project(project, vhdl_standard="2008")
+        simif.compile_project(project)
         process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"], cwd=self.output_path)
         process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"], cwd=self.output_path)
         run_command.assert_called_once_with([join('prefix', 'vlog'),
@@ -155,7 +155,7 @@ class TestRivieraProInterface(unittest.TestCase):
         project.add_library("lib", "lib_path")
         write_file("file.v", "")
         project.add_source_file("file.v", "lib", file_type="verilog", defines={"defname": "defval"})
-        simif.compile_project(project, vhdl_standard="2008")
+        simif.compile_project(project)
         process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"], cwd=self.output_path)
         process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"], cwd=self.output_path)
         run_command.assert_called_once_with([join('prefix', 'vlog'),

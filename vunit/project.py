@@ -74,7 +74,9 @@ class Project(object):
             self._libraries[logical_name] = library
             LOGGER.debug('Replacing library %s with path %s', logical_name, directory)
 
-    def add_source_file(self, file_name, library_name, file_type='vhdl', include_dirs=None, defines=None):
+    def add_source_file(self,    # pylint: disable=too-many-arguments
+                        file_name, library_name, file_type='vhdl', include_dirs=None, defines=None,
+                        vhdl_standard='2008'):
         """
         Add a file_name as a source file in library_name with file_type
         """
@@ -87,7 +89,8 @@ class Project(object):
 
         if file_type == "vhdl":
             assert include_dirs is None
-            source_file = VHDLSourceFile(file_name, library, vhdl_parser=self._vhdl_parser)
+            source_file = VHDLSourceFile(file_name, library,
+                                         vhdl_parser=self._vhdl_parser, vhdl_standard=vhdl_standard)
             library.add_vhdl_design_units(source_file.design_units)
         elif file_type == "verilog":
             source_file = VerilogSourceFile(file_name, library, self._verilog_parser, include_dirs, defines)
@@ -406,7 +409,6 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
 
         self._source_files = {}
 
-        # VHDL specific
         # Entity objects
         self._entities = {}
         self._package_bodies = {}
@@ -697,13 +699,21 @@ class VHDLSourceFile(SourceFile):
     """
     Represents a VHDL source file
     """
-    def __init__(self, name, library, vhdl_parser):
+    def __init__(self, name, library, vhdl_parser, vhdl_standard):
         SourceFile.__init__(self, name, library, 'vhdl')
         self.dependencies = []
         self.depending_components = []
+        self._vhdl_standard = vhdl_standard
+        check_vhdl_standard(vhdl_standard)
         code = ostools.read_file(self.name)
         self._content_hash = hash_string(code)
         self.parse(code, vhdl_parser)
+
+    def get_vhdl_standard(self):
+        """
+        Return the VHDL standard used to create this file
+        """
+        return self._vhdl_standard
 
     def parse(self, code, parser):
         """
@@ -783,6 +793,13 @@ class VHDLSourceFile(SourceFile):
                                          self, 'package body', False, body.identifier))
 
         return result
+
+    @property
+    def content_hash(self):
+        """
+        Compute hash of contents and compile options
+        """
+        return hash_string(self._content_hash + self._compile_options_hash() + hash_string(self._vhdl_standard))
 
 
 class DesignUnit(object):
@@ -882,3 +899,17 @@ def file_type_of(file_name):
         return "verilog"
     else:
         raise RuntimeError("Unknown file ending '%s' of %s" % (ext, file_name))
+
+
+def check_vhdl_standard(vhdl_standard, from_str=None):
+    """
+    Check the VHDL standard selected is recognized
+    """
+    if from_str is None:
+        from_str = ""
+    else:
+        from_str += " "
+
+    valid_standards = ('93', '2002', '2008')
+    if vhdl_standard not in valid_standards:
+        raise ValueError("Unknown VHDL standard '%s' %snot one of %r" % (vhdl_standard, from_str, valid_standards))

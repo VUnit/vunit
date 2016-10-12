@@ -100,7 +100,6 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
                                   constraints=[has_modelsim_ini])
 
     def __init__(self, prefix, modelsim_ini="modelsim.ini", persistent=False, gui_mode=None, coverage=None):
-        self._vhdl_standard = None
         self._modelsim_ini = abspath(modelsim_ini)
 
         # Workaround for Microsemi 10.3a which does not
@@ -162,12 +161,11 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
             with open(self._modelsim_ini, 'wb') as fwrite:
                 fwrite.write(fread.read())
 
-    def setup_library_mapping(self, project, vhdl_standard):
+    def setup_library_mapping(self, project):
         """
         Setup library mapping
         """
         mapped_libraries = self._get_mapped_libraries()
-        self._vhdl_standard = vhdl_standard
 
         for library in project.get_libraries():
             self._libraries[library.name] = library
@@ -178,16 +176,14 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         Returns the command to compile a single source file
         """
         if source_file.file_type == 'vhdl':
-            return self.compile_vhdl_file_command(source_file.name,
-                                                  source_file.library.name,
-                                                  source_file.compile_options)
+            return self.compile_vhdl_file_command(source_file)
         elif source_file.file_type == 'verilog':
             return self.compile_verilog_file_command(source_file)
 
         LOGGER.error("Unknown file type: %s", source_file.file_type)
         raise CompileError
 
-    def compile_vhdl_file_command(self, source_file_name, library_name, compile_options):
+    def compile_vhdl_file_command(self, source_file):
         """
         Returns the command to compile a vhdl file
         """
@@ -197,8 +193,8 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
             coverage_args = ["+cover=" + to_coverage_args(self._coverage)]
 
         return ([join(self._prefix, 'vcom'), '-quiet', '-modelsimini', self._modelsim_ini] +
-                coverage_args + compile_options.get("modelsim.vcom_flags", []) +
-                ['-' + self._vhdl_standard, '-work', library_name, source_file_name])
+                coverage_args + source_file.compile_options.get("modelsim.vcom_flags", []) +
+                ['-' + source_file.get_vhdl_standard(), '-work', source_file.library.name, source_file.name])
 
     def compile_verilog_file_command(self, source_file):
         """

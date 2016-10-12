@@ -112,11 +112,11 @@ class SimulatorInterface(object):
         """
         pass
 
-    def compile_project(self, project, vhdl_standard, continue_on_error=False):
+    def compile_project(self, project, continue_on_error=False):
         """
         Compile the project
         """
-        self.setup_library_mapping(project, vhdl_standard)
+        self.setup_library_mapping(project)
         self.compile_source_files(project, continue_on_error)
 
     def simulate(self, output_path,  # pylint: disable=too-many-arguments
@@ -126,7 +126,7 @@ class SimulatorInterface(object):
         """
         pass
 
-    def setup_library_mapping(self, project, vhdl_standard):
+    def setup_library_mapping(self, project):
         """
         Implemented by specific simulators
         """

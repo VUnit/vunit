@@ -561,6 +561,21 @@ end context;
         file2.set_compile_option("ghdl.flags", ["--no-vital-checks"])
         self.assert_should_recompile([file2, file3])
 
+    def test_should_recompile_files_after_changing_vhdl_standard(self):
+        write_file("file_name.vhd", "")
+
+        self.project = Project()
+        self.project.add_library("lib", "lib_path")
+        source_file = self.project.add_source_file("file_name.vhd", library_name="lib", vhdl_standard='2008')
+        self.assert_should_recompile([source_file])
+        self.update(source_file)
+        self.assert_should_recompile([])
+
+        self.project = Project()
+        self.project.add_library("lib", "lib_path")
+        source_file = self.project.add_source_file("file_name.vhd", library_name="lib", vhdl_standard='2002')
+        self.assert_should_recompile([source_file])
+
     def test_add_compile_option(self):
         file1, _, _ = self.create_dummy_three_file_project()
         file1.add_compile_option("ghdl.flags", ["--foo"])
@@ -952,6 +967,24 @@ begin
 end architecture;
 """)
         return file1, file2, file3
+
+    def test_add_source_file_has_vhdl_standard(self):
+        write_file("file.vhd", "")
+
+        for std in ('93', '2002', '2008'):
+            project = Project()
+            project.add_library("lib", "lib_path")
+            source_file = project.add_source_file("file.vhd",
+                                                  library_name="lib", file_type='vhdl', vhdl_standard=std)
+            self.assertEqual(source_file.get_vhdl_standard(), std)
+
+    def test_add_source_file_detects_illegal_vhdl_standard(self):
+        write_file("file.vhd", "")
+
+        project = Project()
+        project.add_library("lib", "lib_path")
+        self.assertRaises(ValueError, project.add_source_file, "file.vhd",
+                          library_name="lib", file_type='vhdl', vhdl_standard='2007')
 
     def add_source_file(self, library_name, file_name, contents, defines=None):
         """

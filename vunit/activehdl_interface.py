@@ -50,14 +50,13 @@ class ActiveHDLInterface(SimulatorInterface):
                                    "avhdl"])
 
     def __init__(self, prefix, library_cfg="library.cfg", gui=False):
-        self._vhdl_standard = None
         self._library_cfg = abspath(library_cfg)
         self._prefix = prefix
         self._gui = gui
         self._create_library_cfg()
         self._libraries = {}
 
-    def setup_library_mapping(self, project, vhdl_standard):
+    def setup_library_mapping(self, project):
         """
         Setup library mapping
         """
@@ -66,7 +65,6 @@ class ActiveHDLInterface(SimulatorInterface):
         for library in project.get_libraries():
             self._libraries[library.name] = library
             self.create_library(library.name, library.directory, mapped_libraries)
-        self._vhdl_standard = vhdl_standard
 
     def compile_source_file_command(self, source_file):
         """
@@ -86,7 +84,7 @@ class ActiveHDLInterface(SimulatorInterface):
         """
         return ([join(self._prefix, 'vcom'), '-quiet', '-j', dirname(self._library_cfg)] +
                 source_file.compile_options.get("activehdl.vcom_flags", []) +
-                ['-' + self._vhdl_standard, '-work', source_file.library.name, source_file.name])
+                ['-' + source_file.get_vhdl_standard(), '-work', source_file.library.name, source_file.name])
 
     def compile_verilog_file_command(self, source_file):
         """

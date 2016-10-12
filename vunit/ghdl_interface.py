@@ -74,7 +74,6 @@ class GHDLInterface(SimulatorInterface):
     def __init__(self, prefix, gtkwave=None, gtkwave_args="", backend="llvm"):
         self._prefix = prefix
         self._libraries = {}
-        self._vhdl_standard = None
 
         if gtkwave is not None and len(self.find_executable('gtkwave')) == 0:
             raise RuntimeError("Cannot find the gtkwave executable in the PATH environment variable.")
@@ -82,6 +81,7 @@ class GHDLInterface(SimulatorInterface):
         self._gtkwave = gtkwave
         self._gtkwave_args = gtkwave_args
         self._backend = backend
+        self._vhdl_standard = None
 
     @staticmethod
     def determine_backend(prefix):
@@ -112,58 +112,62 @@ class GHDLInterface(SimulatorInterface):
         """
         return self._backend in ("llvm", "gcc")
 
-    def setup_library_mapping(self, project, vhdl_standard):
+    def setup_library_mapping(self, project):
         """
         Setup library mapping
         """
         self._libraries = {}
-        self._vhdl_standard = vhdl_standard
         for library in project.get_libraries():
             if not exists(library.directory):
                 os.makedirs(library.directory)
             self._libraries[library.name] = library.directory
+
+        vhdl_standards = set(source_file.get_vhdl_standard()
+                             for source_file in project.get_source_files_in_order()
+                             if source_file.file_type is 'vhdl')
+
+        if len(vhdl_standards) == 0:
+            self._vhdl_standard = '2008'
+        elif len(vhdl_standards) != 1:
+            raise RuntimeError("GHDL cannot handle mixed VHDL standards, found %r" % list(vhdl_standards))
+        else:
+            self._vhdl_standard = list(vhdl_standards)[0]
 
     def compile_source_file_command(self, source_file):
         """
         Returns the command to compile a single source_file
         """
         if source_file.file_type == 'vhdl':
-            return self.compile_vhdl_file_command(source_file.name,
-                                                  source_file.library.name,
-                                                  source_file.library.directory,
-                                                  source_file.compile_options)
+            return self.compile_vhdl_file_command(source_file)
 
         LOGGER.error("Unknown file type: %s", source_file.file_type)
         raise CompileError
 
-    def _std_str(self):
+    @staticmethod
+    def _std_str(vhdl_standard):
         """
         Convert standard to format of GHDL command line flag
         """
-        if self._vhdl_standard == "2002":
+        if vhdl_standard == "2002":
             return "02"
-        elif self._vhdl_standard == "2008":
+        elif vhdl_standard == "2008":
             return "08"
-        elif self._vhdl_standard == "93":
+        elif vhdl_standard == "93":
             return "93"
         else:
             assert False
 
-    def compile_vhdl_file_command(self,
-                                  source_file_name,
-                                  library_name,
-                                  library_path,
-                                  compile_options):
+    def compile_vhdl_file_command(self, source_file):
         """
         Returns the command to compile a vhdl file
         """
-        cmd = [join(self._prefix, 'ghdl'), '-a', '--workdir=%s' % library_path,
-               '--work=%s' % library_name,
-               '--std=%s' % self._std_str()]
-        for library_name, library_path in self._libraries.items():
+        cmd = [join(self._prefix, 'ghdl'), '-a', '--workdir=%s' % source_file.library.directory,
+               '--work=%s' % source_file.library.name,
+               '--std=%s' % self._std_str(source_file.get_vhdl_standard())]
+        for _, library_path in self._libraries.items():
             cmd += ["-P%s" % library_path]
-        cmd += compile_options.get("ghdl.flags", [])
-        cmd += [source_file_name]
+        cmd += source_file.compile_options.get("ghdl.flags", [])
+        cmd += [source_file.name]
         return cmd
 
     def simulate(self,  # pylint: disable=too-many-arguments, too-many-locals
@@ -184,7 +188,7 @@ class GHDLInterface(SimulatorInterface):
         try:
             cmd = []
             cmd += ['--elab-run']
-            cmd += ['--std=%s' % self._std_str()]
+            cmd += ['--std=%s' % self._std_str(self._vhdl_standard)]
             cmd += ['--work=%s' % library_name]
             cmd += ['--workdir=%s' % self._libraries[library_name]]
             cmd += ['-P%s' % path for path in self._libraries.values()]

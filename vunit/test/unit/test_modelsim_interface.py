@@ -37,8 +37,8 @@ class TestModelSimInterface(unittest.TestCase):
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.vhd", "")
-        project.add_source_file("file.vhd", "lib", file_type="vhdl")
-        simif.compile_project(project, vhdl_standard="2008")
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="2008")
+        simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"])
         run_command.assert_called_once_with(
             [join('prefix', 'vcom'),
@@ -63,8 +63,8 @@ class TestModelSimInterface(unittest.TestCase):
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.vhd", "")
-        project.add_source_file("file.vhd", "lib", file_type="vhdl")
-        simif.compile_project(project, vhdl_standard="2002")
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="2002")
+        simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"])
         run_command.assert_called_once_with(
             [join('prefix', 'vcom'),
@@ -89,8 +89,8 @@ class TestModelSimInterface(unittest.TestCase):
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.vhd", "")
-        project.add_source_file("file.vhd", "lib", file_type="vhdl")
-        simif.compile_project(project, vhdl_standard="93")
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="93")
+        simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"])
         run_command.assert_called_once_with(
             [join('prefix', 'vcom'),
@@ -117,7 +117,7 @@ class TestModelSimInterface(unittest.TestCase):
         write_file("file.vhd", "")
         source_file = project.add_source_file("file.vhd", "lib", file_type="vhdl")
         source_file.set_compile_option("modelsim.vcom_flags", ["custom", "flags"])
-        simif.compile_project(project, vhdl_standard="2008")
+        simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"])
         run_command.assert_called_once_with([join('prefix', 'vcom'),
                                              '-quiet',
@@ -145,7 +145,7 @@ class TestModelSimInterface(unittest.TestCase):
         project.add_library("lib", "lib_path")
         write_file("file.vhd", "")
         project.add_source_file("file.vhd", "lib", file_type="vhdl")
-        simif.compile_project(project, vhdl_standard="2008")
+        simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"])
         run_command.assert_called_once_with([join('prefix', 'vcom'),
                                              '-quiet',
@@ -171,7 +171,7 @@ class TestModelSimInterface(unittest.TestCase):
         project.add_library("lib", "lib_path")
         write_file("file.v", "")
         project.add_source_file("file.v", "lib", file_type="verilog")
-        simif.compile_project(project, vhdl_standard="2008")
+        simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"])
         run_command.assert_called_once_with([join('prefix', 'vlog'),
                                              '-sv',
@@ -198,7 +198,7 @@ class TestModelSimInterface(unittest.TestCase):
         write_file("file.v", "")
         source_file = project.add_source_file("file.v", "lib", file_type="verilog")
         source_file.set_compile_option("modelsim.vlog_flags", ["custom", "flags"])
-        simif.compile_project(project, vhdl_standard="2008")
+        simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"])
         run_command.assert_called_once_with([join('prefix', 'vlog'),
                                              '-sv',
@@ -227,7 +227,7 @@ class TestModelSimInterface(unittest.TestCase):
         project.add_library("lib", "lib_path")
         write_file("file.v", "")
         project.add_source_file("file.v", "lib", file_type="verilog")
-        simif.compile_project(project, vhdl_standard="2008")
+        simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"])
         run_command.assert_called_once_with([join('prefix', 'vlog'),
                                              '-sv',
@@ -254,7 +254,7 @@ class TestModelSimInterface(unittest.TestCase):
         project.add_library("lib", "lib_path")
         write_file("file.v", "")
         project.add_source_file("file.v", "lib", file_type="verilog", include_dirs=["include"])
-        simif.compile_project(project, vhdl_standard="2008")
+        simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"])
         run_command.assert_called_once_with([join('prefix', 'vlog'),
                                              '-sv',
@@ -281,7 +281,7 @@ class TestModelSimInterface(unittest.TestCase):
         project.add_library("lib", "lib_path")
         write_file("file.v", "")
         project.add_source_file("file.v", "lib", file_type="verilog", defines={"defname": "defval"})
-        simif.compile_project(project, vhdl_standard="2008")
+        simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"])
         run_command.assert_called_once_with([join('prefix', 'vlog'),
                                              '-sv',

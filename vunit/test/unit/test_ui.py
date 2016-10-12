@@ -47,6 +47,7 @@ class TestUi(unittest.TestCase):
 
     def test_global_custom_preprocessors_should_be_applied_in_the_order_they_are_added(self):
         ui = self._create_ui()
+        ui.add_library('lib')
         ui.add_preprocessor(VUnitfier())
         ui.add_preprocessor(ParentalControl())
 
@@ -72,6 +73,7 @@ end architecture;
 
     def test_global_check_and_location_preprocessors_should_be_applied_after_global_custom_preprocessors(self):
         ui = self._create_ui()
+        ui.add_library('lib')
         ui.enable_location_preprocessing()
         ui.enable_check_preprocessing()
         ui.add_preprocessor(TestPreprocessor())
@@ -102,6 +104,7 @@ end architecture;
 
     def test_locally_specified_preprocessors_should_be_used_instead_of_any_globally_defined_preprocessors(self):
         ui = self._create_ui()
+        ui.add_library('lib')
         ui.enable_location_preprocessing()
         ui.enable_check_preprocessing()
         ui.add_preprocessor(TestPreprocessor())
@@ -136,6 +139,7 @@ end architecture;
     def test_supported_source_file_suffixes(self):
         """Test adding a supported filetype, of any case, is accepted."""
         ui = self._create_ui()
+        ui.add_library('lib')
         accepted_extensions = VHDL_EXTENSIONS + VERILOG_EXTENSIONS
         allowable_extensions = [ext for ext in accepted_extensions]
         allowable_extensions.extend([ext.upper() for ext in accepted_extensions])
@@ -148,19 +152,20 @@ end architecture;
     def test_unsupported_source_file_suffixes(self):
         """Test adding an unsupported filetype is rejected"""
         ui = self._create_ui()
+        ui.add_library('lib')
         unsupported_name = "unsupported.docx"
         self.create_file(unsupported_name)
         self.assertRaises(RuntimeError, ui.add_source_files, unsupported_name, 'lib')
 
     def test_can_add_non_ascii_encoded_files(self):
         ui = self._create_ui()
-        lib = ui.library("lib")
+        lib = ui.add_library('lib')
         lib.add_source_files(join(dirname(__file__), 'test_ui_encoding.vhd'))
         lib.entity("encoding")  # Fill raise exception of not found
 
     def test_exception_on_adding_zero_files(self):
         ui = self._create_ui()
-        lib = ui.library("lib")
+        lib = ui.add_library("lib")
         self.assertRaisesRegex(ValueError, "Pattern.*missing1.vhd.*",
                                lib.add_source_files, join(dirname(__file__), 'missing1.vhd'))
         self.assertRaisesRegex(ValueError, "File.*missing2.vhd.*",
@@ -168,7 +173,7 @@ end architecture;
 
     def test_no_exception_on_adding_zero_files_when_allowed(self):
         ui = self._create_ui()
-        lib = ui.library("lib")
+        lib = ui.add_library("lib")
         lib.add_source_files(join(dirname(__file__), 'missing.vhd'), allow_empty=True)
 
     def test_add_source_files(self):
@@ -181,33 +186,33 @@ end architecture;
             self.create_file(file_name)
 
         ui = self._create_ui()
-        lib = ui.library("lib")
+        lib = ui.add_library("lib")
         lib.add_source_files("file*.vhd")
         lib.add_source_files("file_foo.vhd")
         for file_name in files:
             lib.get_source_file(file_name)
 
         ui = self._create_ui()
-        lib = ui.library("lib")
+        lib = ui.add_library("lib")
         lib.add_source_files(["file*.vhd", "file_foo.vhd"])
         for file_name in files:
             lib.get_source_file(file_name)
 
         ui = self._create_ui()
-        lib = ui.library("lib")
+        lib = ui.add_library("lib")
         lib.add_source_files(("file*.vhd", "file_foo.vhd"))
         for file_name in files:
             lib.get_source_file(file_name)
 
         ui = self._create_ui()
-        lib = ui.library("lib")
+        lib = ui.add_library("lib")
         lib.add_source_files(iter(["file*.vhd", "file_foo.vhd"]))
         for file_name in files:
             lib.get_source_file(file_name)
 
     def test_add_source_files_errors(self):
         ui = self._create_ui()
-        lib = ui.library("lib")
+        lib = ui.add_library("lib")
         self.create_file("file.vhd")
         self.assertRaisesRegex(ValueError, r"missing\.vhd", lib.add_source_files, ["missing.vhd", "file.vhd"])
         self.assertRaisesRegex(ValueError, r"missing\.vhd", lib.add_source_files, "missing.vhd")
@@ -273,7 +278,7 @@ Listed 2 files""".splitlines()))
 
     def test_source_file_attributes(self):
         ui = self._create_ui()
-        lib = ui.library("lib")
+        lib = ui.add_library("lib")
         self.create_file("file_name.vhd")
         source_file = lib.add_source_file("file_name.vhd")
         self.assertEqual(source_file.name, "file_name.vhd")
@@ -305,7 +310,7 @@ Listed 2 files""".splitlines()))
     def test_add_single_file_manual_dependencies(self, add_manual_dependency):
         # pylint: disable=protected-access
         ui = self._create_ui()
-        lib = ui.library("lib")
+        lib = ui.add_library("lib")
         file_name1 = self.create_entity_file(1)
         file_name2 = self.create_entity_file(2)
         file1 = lib.add_source_file(file_name1)
@@ -322,7 +327,7 @@ Listed 2 files""".splitlines()))
     def test_add_multiple_file_manual_dependencies(self, add_manual_dependency):
         # pylint: disable=protected-access
         ui = self._create_ui()
-        lib = ui.library("lib")
+        lib = ui.add_library("lib")
         self.create_file("foo1.vhd")
         self.create_file("foo2.vhd")
         self.create_file("foo3.vhd")
@@ -342,7 +347,7 @@ Listed 2 files""".splitlines()))
     def test_add_fileset_manual_dependencies(self, add_manual_dependency):
         # pylint: disable=protected-access
         ui = self._create_ui()
-        lib = ui.library("lib")
+        lib = ui.add_library("lib")
         self.create_file("foo1.vhd")
         self.create_file("foo2.vhd")
         self.create_file("foo3.vhd")
@@ -374,19 +379,22 @@ Listed 2 files""".splitlines()))
                                                                 "lib",
                                                                 file_type="verilog",
                                                                 include_dirs=all_include_dirs,
-                                                                defines=None)
+                                                                defines=None,
+                                                                vhdl_standard='2008')
         ui = self._create_ui()
+        ui.add_library("lib")
         check(lambda: ui.add_source_files(file_name, "lib", include_dirs=include_dirs))
 
         ui = self._create_ui()
+        ui.add_library("lib")
         check(lambda: ui.add_source_file(file_name, "lib", include_dirs=include_dirs))
 
         ui = self._create_ui()
-        lib = ui.library("lib")
+        lib = ui.add_library("lib")
         check(lambda: lib.add_source_files(file_name, include_dirs=include_dirs))
 
         ui = self._create_ui()
-        lib = ui.library("lib")
+        lib = ui.add_library("lib")
         check(lambda: lib.add_source_file(file_name, include_dirs=include_dirs))
 
     def test_add_source_files_has_defines(self):
@@ -405,26 +413,29 @@ Listed 2 files""".splitlines()))
                                                                 "lib",
                                                                 file_type="verilog",
                                                                 include_dirs=all_include_dirs,
-                                                                defines=defines)
+                                                                defines=defines,
+                                                                vhdl_standard='2008')
         ui = self._create_ui()
+        ui.add_library("lib")
         check(lambda: ui.add_source_files(file_name, "lib", defines=defines))
 
         ui = self._create_ui()
+        ui.add_library("lib")
         check(lambda: ui.add_source_file(file_name, "lib", defines=defines))
 
         ui = self._create_ui()
-        lib = ui.library("lib")
+        lib = ui.add_library("lib")
         check(lambda: lib.add_source_files(file_name, defines=defines))
 
         ui = self._create_ui()
-        lib = ui.library("lib")
+        lib = ui.add_library("lib")
         check(lambda: lib.add_source_file(file_name, defines=defines))
 
     def test_compile_options(self):
         file_name = "foo.vhd"
         self.create_file(file_name)
         ui = self._create_ui()
-        lib = ui.library("lib")
+        lib = ui.add_library("lib")
         source_file = lib.add_source_file(file_name)
 
         # Use methods on all types of interface objects
@@ -441,13 +452,59 @@ Listed 2 files""".splitlines()))
             obj.set_compile_option("ghdl.flags", ["3"])
             self.assertEqual(source_file.get_compile_option("ghdl.flags"), ["3"])
 
+    def test_default_vhdl_standard_is_used(self):
+        file_name = "foo.vhd"
+        self.create_file(file_name)
+        with set_env(VUNIT_VHDL_STANDARD="93"):
+            ui = self._create_ui()
+        lib = ui.add_library("lib")
+        source_file = lib.add_source_file(file_name)
+        self.assertEqual(source_file.vhdl_standard, "93")
+
+    def test_library_default_vhdl_standard_is_used(self):
+        file_name = "foo.vhd"
+        self.create_file(file_name)
+        with set_env(VUNIT_VHDL_STANDARD="93"):
+            ui = self._create_ui()
+        lib = ui.add_library("lib", vhdl_standard="2002")
+        source_file = lib.add_source_file(file_name)
+        self.assertEqual(source_file.vhdl_standard, "2002")
+
+    def test_add_source_file_vhdl_standard_is_used(self):
+        file_name = "foo.vhd"
+        self.create_file(file_name)
+
+        for method in range(4):
+            with set_env(VUNIT_VHDL_STANDARD="93"):
+                ui = self._create_ui()
+            lib = ui.add_library("lib", vhdl_standard="2002")
+
+            if method == 0:
+                source_file = lib.add_source_file(file_name, vhdl_standard="2008")
+            elif method == 1:
+                source_file = lib.add_source_files(file_name, vhdl_standard="2008")[0]
+            elif method == 2:
+                source_file = ui.add_source_file(file_name, "lib", vhdl_standard="2008")
+            elif method == 3:
+                source_file = ui.add_source_files(file_name, "lib", vhdl_standard="2008")[0]
+
+            self.assertEqual(source_file.vhdl_standard, "2008")
+
+    def test_verilog_file_has_vhdl_standard_none(self):
+        file_name = "foo.v"
+        self.create_file(file_name)
+        ui = self._create_ui()
+        lib = ui.add_library("lib")
+        source_file = lib.add_source_file(file_name)
+        self.assertEqual(source_file.vhdl_standard, None)
+
     def test_entity_has_pre_config(self):
         # pylint: disable=protected-access
         def pre_config():
             return False
         ui = self._create_ui("lib.test_ui_tb.test_one")
         ui._configuration.add_config = mock.create_autospec(ui._configuration.add_config)
-        lib = ui.library("lib")
+        lib = ui.add_library("lib")
         lib.add_source_files(join(dirname(__file__), 'test_ui_tb.vhd'))
         ent = lib.entity("test_ui_tb")
         ent.add_config(name="cfg", pre_config=pre_config)
@@ -464,7 +521,7 @@ Listed 2 files""".splitlines()))
             return False
         ui = self._create_ui("lib.test_ui_tb.test_one")
         ui._configuration.add_config = mock.create_autospec(ui._configuration.add_config)
-        lib = ui.library("lib")
+        lib = ui.add_library("lib")
         lib.add_source_files(join(dirname(__file__), 'test_ui_tb.vhd'))
         test = lib.entity("test_ui_tb").test("test_one")
         test.add_config(name="cfg", pre_config=pre_config)
@@ -498,7 +555,7 @@ Listed 2 files""".splitlines()))
         for tb_type in ["vhdl", "verilog"]:
             for tests_type in ["vhdl", "verilog"]:
                 ui = self._create_ui()
-                lib = ui.library("lib")
+                lib = ui.add_library("lib")
 
                 print(tb_type, tests_type)
                 if tb_type == "vhdl":
@@ -571,7 +628,7 @@ endmodule
 
     def test_scan_tests_from_other_file_missing(self):
         ui = self._create_ui()
-        lib = ui.library("lib")
+        lib = ui.add_library("lib")
         tb_file_name = "tb_top.sv"
         self.create_file(tb_file_name, """
 module tb_top
@@ -590,7 +647,6 @@ endmodule;
         ui = VUnit.from_argv(argv=["--output-path=%s" % self._output_path,
                                    "--clean"] + list(args),
                              compile_builtins=False)
-        ui.add_library('lib')
 
         factory = MockSimulatorFactory(self._output_path)
         self.mocksim = factory.mocksim
