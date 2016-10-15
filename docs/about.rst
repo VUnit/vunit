@@ -101,6 +101,10 @@ Simulators
    -  Works with versions >= 0.33
    -  Tested with LLVM and mcode backends, gcc backend might work aswell.
    -  Integrated support for using `GTKWave`_ to view waveforms.
+-  `Cadence Incisive`_ (**Experimental**)
+
+   -  Community contribution. VUnit maintainers does not have access to this simulator to verify the functionality.
+   -  Run ``incisive_vhdl_fixup.py`` to remove VHDL constructs that are not compatible with Incisive
 
 Getting Started
 ---------------
@@ -156,6 +160,7 @@ files are licensed under the terms of `ARTISTIC License`_.
 .. _Aldec Riviera-PRO: https://www.aldec.com/en/products/functional_verification/riviera-pro
 .. _Aldec Active-HDL: https://www.aldec.com/en/products/fpga_simulation/active-hdl
 .. _Mentor Graphics ModelSim/Questa: http://www.mentor.com/products/fv/modelsim/
+.. _Cadence Incisive: https://www.cadence.com/content/cadence-www/global/en_US/home/tools/system-design-and-verification/simulation-and-testbench-verification/incisive-enterprise-simulator.html
 .. _GHDL: https://sourceforge.net/projects/ghdl-updates/
 .. _GTKWave: http://gtkwave.sourceforge.net/
 .. _YouTube: https://www.youtube.com/channel/UCCPVCaeWkz6C95aRUTbIwdg
