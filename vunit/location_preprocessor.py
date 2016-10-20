@@ -40,6 +40,19 @@ class LocationPreprocessor(object):
         self._subprograms_without_arguments.append(subprogram)
         self._subprograms_with_arguments.append(subprogram)
 
+    def remove_subprogram(self, subprogram):
+        """
+        Remove a subprogram name from the list of known names to preprocess
+        """
+        if subprogram not in self._subprograms_without_arguments + self._subprograms_with_arguments:
+            raise RuntimeError('Unable to remove unknown subprogram %s' % subprogram)
+
+        if subprogram in self._subprograms_without_arguments:
+            self._subprograms_without_arguments.remove(subprogram)
+
+        if subprogram in self._subprograms_with_arguments:
+            self._subprograms_with_arguments.remove(subprogram)
+
     @staticmethod
     def _find_closing_parenthesis(args):
         """
@@ -57,6 +70,7 @@ class LocationPreprocessor(object):
     _already_fixed_file_name_pattern = re.compile(r'file_name\s*=>', re.MULTILINE)
     _already_fixed_line_num_pattern = re.compile(r'line_num\s*=>', re.MULTILINE)
     _subprogram_declaration_start_backwards_pattern = re.compile(r'\s+(erudecorp|noitcnuf)')
+    _assignment_pattern = re.compile(r'\s*(:=|<=)', re.MULTILINE)
 
     def run(self, code, file_name):
         """
@@ -82,6 +96,9 @@ class LocationPreprocessor(object):
             line_num_association = ', line_num => ' + str(1 + code[:match.start('subprogram')].count('\n'))
             if 'args' in match.groupdict():
                 closing_paranthesis_start = self._find_closing_parenthesis(code[match.start('args'):])
+
+                if self._assignment_pattern.match(code[match.start('args') + closing_paranthesis_start + 1:]):
+                    continue
 
                 args = code[match.start('args'): match.start('args') + closing_paranthesis_start]
                 already_fixed_file_name = self._already_fixed_file_name_pattern.search(args) is not None

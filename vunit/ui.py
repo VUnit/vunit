@@ -10,8 +10,7 @@
 .. autoclass:: vunit.ui.VUnit()
    :members:
    :exclude-members: add_preprocessor,
-      enable_location_preprocessing,
-      enable_check_preprocessing
+      enable_check_preprocessing,
       add_builtins
 
 .. autoclass:: vunit.ui.Library()
@@ -649,14 +648,31 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         self._external_preprocessors.append(preprocessor)
 
-    def enable_location_preprocessing(self, additional_subprograms=None):
+    def enable_location_preprocessing(self, additional_subprograms=None, exclude_subprograms=None):
         """
-        Enable location preprocessing, must be called before adding any files
+        Inserts file name and line number information into VUnit check and log subprograms calls. Custom
+        subprograms can also be added. Must be called before adding any files.
+
+        :param additional_subprograms: List of custom subprograms to add the line_num and file_name parameters to.
+        :param exclude_subprograms: List of VUnit subprograms to exclude from location preprocessing. Used to \
+avoid location preprocessing of other functions sharing name with a VUnit log or check subprogram.
+
+        :example:
+
+        .. code-block:: python
+
+           prj.enable_location_preprocessing(additional_subprograms=['my_check'],
+                                             exclude_subprograms=['log'])
+
         """
         preprocessor = LocationPreprocessor()
         if additional_subprograms is not None:
             for subprogram in additional_subprograms:
                 preprocessor.add_subprogram(subprogram)
+
+        if exclude_subprograms is not None:
+            for subprogram in exclude_subprograms:
+                preprocessor.remove_subprogram(subprogram)
         self._location_preprocessor = preprocessor
 
     def enable_check_preprocessing(self):
