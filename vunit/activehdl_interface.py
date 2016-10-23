@@ -35,6 +35,11 @@ class ActiveHDLInterface(SimulatorInterface):
         "activehdl.vlog_flags",
     ]
 
+    sim_options = [
+        "activehdl.vsim_flags",
+        "activehdl.vsim_flags.gui",
+    ]
+
     @classmethod
     def from_args(cls, output_path, args):
         """
@@ -149,8 +154,22 @@ class ActiveHDLInterface(SimulatorInterface):
             libraries[key] = abspath(join(dirname(self._library_cfg), dirname(value)))
         return libraries
 
-    @staticmethod
-    def _create_load_function(library_name, entity_name, architecture_name,
+    def _vsim_extra_args(self, config):
+        """
+        Determine vsim_extra_args
+        """
+        vsim_extra_args = []
+        vsim_extra_args = config.options.get("activehdl.vsim_flags",
+                                             vsim_extra_args)
+
+        if self._gui:
+            vsim_extra_args = config.options.get("activehdl.vsim_flags.gui",
+                                                 vsim_extra_args)
+
+        return " ".join(vsim_extra_args)
+
+    def _create_load_function(self,
+                              library_name, entity_name, architecture_name,
                               config, disable_ieee_warnings):
         """
         Create the vunit_load TCL function that runs the vsim command and loads the design
@@ -166,7 +185,10 @@ class ActiveHDLInterface(SimulatorInterface):
                       "-lib",
                       library_name,
                       entity_name,
-                      architecture_name]
+                      self._vsim_extra_args(config)]
+
+        if architecture_name is not None:
+            vsim_flags.append(architecture_name)
 
         if disable_ieee_warnings:
             vsim_flags.append("-ieee_nowarn")

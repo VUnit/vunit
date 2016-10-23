@@ -110,6 +110,15 @@ The following simulation options are known.
    mode where it takes precedence over ``rivierapro.vsim_flags``.
    Must be a list of strings.
 
+``activehdl.vsim_flags``
+   Extra arguments passed to ``vsim`` when loading the design.
+   Must be a list of strings.
+
+``activehdl.vsim_flags.gui``
+   Extra arguments passed to ``vsim`` when loading the design in GUI
+   mode where it takes precedence over ``activehdl.vsim_flags``.
+   Must be a list of strings.
+
 ``ghdl.elab_flags``
    Extra elaboration flags passed to ``ghdl --elab-run``.
    Must be a list of strings.
