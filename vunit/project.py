@@ -14,6 +14,7 @@ Functionality to represent and operate on a HDL code project
 from os.path import join, basename, dirname, splitext
 import traceback
 import logging
+from collections import OrderedDict
 from vunit.hashing import hash_string
 from vunit.dependency_graph import (DependencyGraph,
                                     CircularDependencyException)
@@ -41,7 +42,7 @@ class Project(object):
         """
         self._vhdl_parser = vhdl_parser
         self._verilog_parser = verilog_parser
-        self._libraries = {}
+        self._libraries = OrderedDict()
         self._source_files_in_order = []
         self._manual_dependencies = []
         self._depend_on_components = depend_on_components

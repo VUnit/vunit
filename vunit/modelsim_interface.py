@@ -112,7 +112,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         self._lock = threading.Lock()
         self._transcript_id = 0
         self._prefix = prefix
-        self._libraries = {}
+        self._libraries = []
 
         self._persistent = persistent
         self._gui_mode = gui_mode
@@ -168,7 +168,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         mapped_libraries = self._get_mapped_libraries()
 
         for library in project.get_libraries():
-            self._libraries[library.name] = library
+            self._libraries.append(library)
             self.create_library(library.name, library.directory, mapped_libraries)
 
     def compile_source_file_command(self, source_file):
@@ -210,7 +210,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         args += source_file.compile_options.get("modelsim.vlog_flags", [])
         args += ['-work', source_file.library.name, source_file.name]
 
-        for library in self._libraries.values():
+        for library in self._libraries:
             args += ["-L", library.name]
         for include_dir in source_file.include_dirs:
             args += ["+incdir+%s" % include_dir]
@@ -296,7 +296,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         if " " not in self._modelsim_ini:
             vsim_flags.insert(0, "-modelsimini %s" % fix_path(self._modelsim_ini))
 
-        for library in self._libraries.values():
+        for library in self._libraries:
             vsim_flags += ["-L", library.name]
 
         tcl = """

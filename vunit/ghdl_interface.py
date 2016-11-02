@@ -73,7 +73,7 @@ class GHDLInterface(SimulatorInterface):
 
     def __init__(self, prefix, gtkwave=None, gtkwave_args="", backend="llvm"):
         self._prefix = prefix
-        self._libraries = {}
+        self._project = None
 
         if gtkwave is not None and len(self.find_executable('gtkwave')) == 0:
             raise RuntimeError("Cannot find the gtkwave executable in the PATH environment variable.")
@@ -116,11 +116,10 @@ class GHDLInterface(SimulatorInterface):
         """
         Setup library mapping
         """
-        self._libraries = {}
+        self._project = project
         for library in project.get_libraries():
             if not exists(library.directory):
                 os.makedirs(library.directory)
-            self._libraries[library.name] = library.directory
 
         vhdl_standards = set(source_file.get_vhdl_standard()
                              for source_file in project.get_source_files_in_order()
@@ -164,8 +163,8 @@ class GHDLInterface(SimulatorInterface):
         cmd = [join(self._prefix, 'ghdl'), '-a', '--workdir=%s' % source_file.library.directory,
                '--work=%s' % source_file.library.name,
                '--std=%s' % self._std_str(source_file.get_vhdl_standard())]
-        for _, library_path in self._libraries.items():
-            cmd += ["-P%s" % library_path]
+        for library in self._project.get_libraries():
+            cmd += ["-P%s" % library.directory]
         cmd += source_file.compile_options.get("ghdl.flags", [])
         cmd += [source_file.name]
         return cmd
@@ -190,8 +189,8 @@ class GHDLInterface(SimulatorInterface):
             cmd += ['--elab-run']
             cmd += ['--std=%s' % self._std_str(self._vhdl_standard)]
             cmd += ['--work=%s' % library_name]
-            cmd += ['--workdir=%s' % self._libraries[library_name]]
-            cmd += ['-P%s' % path for path in self._libraries.values()]
+            cmd += ['--workdir=%s' % self._project.get_library(library_name).directory]
+            cmd += ['-P%s' % lib.directory for lib in self._project.get_libraries()]
 
             if self._has_output_flag():
                 cmd += ['-o', join(ghdl_output_path, "%s-%s" % (entity_name, architecture_name))]

@@ -59,7 +59,7 @@ class ActiveHDLInterface(SimulatorInterface):
         self._prefix = prefix
         self._gui = gui
         self._create_library_cfg()
-        self._libraries = {}
+        self._libraries = []
 
     def setup_library_mapping(self, project):
         """
@@ -68,7 +68,7 @@ class ActiveHDLInterface(SimulatorInterface):
         mapped_libraries = self._get_mapped_libraries()
 
         for library in project.get_libraries():
-            self._libraries[library.name] = library
+            self._libraries.append(library)
             self.create_library(library.name, library.directory, mapped_libraries)
 
     def compile_source_file_command(self, source_file):
@@ -98,7 +98,7 @@ class ActiveHDLInterface(SimulatorInterface):
         args = [join(self._prefix, 'vlog'), '-quiet', '-sv2k12', '-lc', self._library_cfg]
         args += source_file.compile_options.get("activehdl.vlog_flags", [])
         args += ['-work', source_file.library.name, source_file.name]
-        for library in self._libraries.values():
+        for library in self._libraries:
             args += ["-l", library.name]
         for include_dir in source_file.include_dirs:
             args += ["+incdir+%s" % include_dir]
@@ -286,7 +286,7 @@ proc vunit_run {} {
         Create the user facing script which loads common functions and prints a help message
         """
         library_mapping = ""
-        for library in self._libraries.values():
+        for library in self._libraries:
             library_mapping += "vmap %s %s\n" % (library.name,
                                                  fix_path(library.directory))
 

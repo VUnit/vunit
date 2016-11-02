@@ -82,7 +82,7 @@ class IncisiveInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
     def __init__(self,  # pylint: disable=too-many-arguments
                  prefix, output_path, gui=False, log_level=None, cdslib=None, hdlvar=None):
         self._prefix = prefix
-        self._libraries = {}
+        self._libraries = []
         self._output_path = output_path
         self._gui = gui
         self._log_level = log_level
@@ -142,7 +142,7 @@ define work "{2}/libraries/work"
         mapped_libraries = self._get_mapped_libraries()
 
         for library in project.get_libraries():
-            self._libraries[library.name] = library
+            self._libraries.append(library)
             self.create_library(library.name, library.directory, mapped_libraries)
 
     def compile_source_file_command(self, source_file):
@@ -310,7 +310,7 @@ define work "{2}/libraries/work"
                 args += ['-messages']
                 # args += ['-libverbose']
             args += self._generic_args(entity_name, config.generics)
-            for library in self._libraries.values():
+            for library in self._libraries:
                 args += ['-reflib "%s"' % library.directory]
             if launch_gui:
                 args += ['-access +rwc']

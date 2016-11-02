@@ -16,6 +16,7 @@ from shutil import rmtree
 from os.path import join, exists, dirname
 import os
 from time import sleep
+import itertools
 from vunit.test.mock_2or3 import mock
 from vunit.exceptions import CompileError
 from vunit.ostools import renew_path, write_file
@@ -911,6 +912,15 @@ end architecture;
             "ent1.vhd ->\n"
             "ent2.vhd ->\n"
             "ent1.vhd")
+
+    def test_order_of_adding_libraries_is_kept(self):
+        for order in itertools.combinations(range(4), 4):
+            project = Project()
+            for idx in order:
+                project.add_library("lib%i" % idx, "lib%i_path" % idx)
+
+            library_names = [lib.name for lib in project.get_libraries()]
+            self.assertEqual(library_names, ["lib%i" % idx for idx in order])
 
     def test_file_type_of(self):
         self.assertEqual(file_type_of("file.vhd"), "vhdl")
