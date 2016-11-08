@@ -373,29 +373,20 @@ Listed 2 files""".splitlines()))
             """
             Helper to check that project method was called
             """
+            ui = self._create_ui()
             with mock.patch.object(ui, "_project", autospec=True) as project:
-                action()
+                lib = ui.add_library("lib")
+                action(ui, lib)
                 project.add_source_file.assert_called_once_with(abspath("verilog.v"),
                                                                 "lib",
                                                                 file_type="verilog",
                                                                 include_dirs=all_include_dirs,
                                                                 defines=None,
                                                                 vhdl_standard='2008')
-        ui = self._create_ui()
-        ui.add_library("lib")
-        check(lambda: ui.add_source_files(file_name, "lib", include_dirs=include_dirs))
-
-        ui = self._create_ui()
-        ui.add_library("lib")
-        check(lambda: ui.add_source_file(file_name, "lib", include_dirs=include_dirs))
-
-        ui = self._create_ui()
-        lib = ui.add_library("lib")
-        check(lambda: lib.add_source_files(file_name, include_dirs=include_dirs))
-
-        ui = self._create_ui()
-        lib = ui.add_library("lib")
-        check(lambda: lib.add_source_file(file_name, include_dirs=include_dirs))
+        check(lambda ui, _: ui.add_source_files(file_name, "lib", include_dirs=include_dirs))
+        check(lambda ui, _: ui.add_source_file(file_name, "lib", include_dirs=include_dirs))
+        check(lambda _, lib: lib.add_source_files(file_name, include_dirs=include_dirs))
+        check(lambda _, lib: lib.add_source_file(file_name, include_dirs=include_dirs))
 
     def test_add_source_files_has_defines(self):
         file_name = "verilog.v"
@@ -407,29 +398,20 @@ Listed 2 files""".splitlines()))
             """
             Helper to check that project method was called
             """
+            ui = self._create_ui()
             with mock.patch.object(ui, "_project", autospec=True) as project:
-                action()
+                lib = ui.add_library("lib")
+                action(ui, lib)
                 project.add_source_file.assert_called_once_with(abspath("verilog.v"),
                                                                 "lib",
                                                                 file_type="verilog",
                                                                 include_dirs=all_include_dirs,
                                                                 defines=defines,
                                                                 vhdl_standard='2008')
-        ui = self._create_ui()
-        ui.add_library("lib")
-        check(lambda: ui.add_source_files(file_name, "lib", defines=defines))
-
-        ui = self._create_ui()
-        ui.add_library("lib")
-        check(lambda: ui.add_source_file(file_name, "lib", defines=defines))
-
-        ui = self._create_ui()
-        lib = ui.add_library("lib")
-        check(lambda: lib.add_source_files(file_name, defines=defines))
-
-        ui = self._create_ui()
-        lib = ui.add_library("lib")
-        check(lambda: lib.add_source_file(file_name, defines=defines))
+        check(lambda ui, _: ui.add_source_files(file_name, "lib", defines=defines))
+        check(lambda ui, _: ui.add_source_file(file_name, "lib", defines=defines))
+        check(lambda _, lib: lib.add_source_files(file_name, defines=defines))
+        check(lambda _, lib: lib.add_source_file(file_name, defines=defines))
 
     def test_compile_options(self):
         file_name = "foo.vhd"
@@ -464,11 +446,25 @@ Listed 2 files""".splitlines()))
     def test_library_default_vhdl_standard_is_used(self):
         file_name = "foo.vhd"
         self.create_file(file_name)
-        with set_env(VUNIT_VHDL_STANDARD="93"):
-            ui = self._create_ui()
-        lib = ui.add_library("lib", vhdl_standard="2002")
-        source_file = lib.add_source_file(file_name)
-        self.assertEqual(source_file.vhdl_standard, "2002")
+
+        for method in range(4):
+            with set_env(VUNIT_VHDL_STANDARD="93"):
+                ui = self._create_ui()
+
+            if method == 0:
+                lib = ui.add_library("lib", vhdl_standard="2002")
+                source_file = lib.add_source_file(file_name)
+            elif method == 1:
+                lib = ui.add_library("lib", vhdl_standard="2002")
+                source_file = ui.add_source_file(file_name, "lib")
+            elif method == 2:
+                lib = ui.add_library("lib", vhdl_standard="2002")
+                source_file = lib.add_source_files(file_name)[0]
+            elif method == 3:
+                lib = ui.add_library("lib", vhdl_standard="2002")
+                source_file = ui.add_source_files(file_name, "lib")[0]
+
+            self.assertEqual(source_file.vhdl_standard, "2002")
 
     def test_add_source_file_vhdl_standard_is_used(self):
         file_name = "foo.vhd"

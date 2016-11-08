@@ -540,12 +540,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         return SourceFileList(results)
 
     def add_source_files(self,   # pylint: disable=too-many-arguments
-                         files, library_name, preprocessors=None, include_dirs=None, defines=None, allow_empty=False,
+                         pattern, library_name, preprocessors=None, include_dirs=None, defines=None, allow_empty=False,
                          vhdl_standard=None):
         """
         Add source files matching wildcard pattern to library
 
-        :param files: A wildcard pattern matching the files to add or a list of files
+        :param pattern: A wildcard pattern matching the files to add or a list of files
         :param library_name: The name of the library to add files into
         :param include_dirs: A list of include directories
         :param defines: A dictionary containing Verilog defines to be set
@@ -561,24 +561,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
            prj.add_source_files("*.vhd", "lib")
 
         """
-        if _is_iterable_not_string(files):
-            files = [files]
-
-        if vhdl_standard is None:
-            vhdl_standard = self._vhdl_standard
-
-        file_names = []
-        for pattern in files:
-            new_file_names = glob(pattern)
-
-            if (not allow_empty) and len(new_file_names) == 0:
-                raise ValueError(("Pattern %r did not match any file. "
-                                  "Use allow_empty=True to avoid exception,") % pattern)
-            file_names += new_file_names
-
-        return SourceFileList(source_files=[
-            self.add_source_file(file_name, library_name, preprocessors, include_dirs, defines, vhdl_standard)
-            for file_name in file_names])
+        return self.library(library_name).add_source_files(pattern=pattern,
+                                                           preprocessors=preprocessors,
+                                                           include_dirs=include_dirs,
+                                                           defines=defines,
+                                                           allow_empty=allow_empty,
+                                                           vhdl_standard=vhdl_standard)
 
     def add_source_file(self,   # pylint: disable=too-many-arguments
                         file_name, library_name, preprocessors=None, include_dirs=None, defines=None,
@@ -601,24 +589,11 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
            prj.add_source_file("file.vhd", "lib")
 
         """
-        file_type = file_type_of(file_name)
-
-        if file_type == "verilog":
-            include_dirs = include_dirs if include_dirs is not None else []
-            include_dirs = add_verilog_include_dir(include_dirs)
-
-        if vhdl_standard is None:
-            vhdl_standard = self._vhdl_standard
-
-        file_name = self._preprocess(library_name, abspath(file_name), preprocessors)
-        return SourceFile(self._project.add_source_file(file_name,
-                                                        library_name,
-                                                        file_type=file_type,
-                                                        include_dirs=include_dirs,
-                                                        defines=defines,
-                                                        vhdl_standard=vhdl_standard),
-                          self._project,
-                          self)
+        return self.library(library_name).add_source_file(file_name=file_name,
+                                                          preprocessors=preprocessors,
+                                                          include_dirs=include_dirs,
+                                                          defines=defines,
+                                                          vhdl_standard=vhdl_standard)
 
     def _preprocess(self, library_name, file_name, preprocessors):
         """
@@ -1061,14 +1036,23 @@ class Library(object):
            library.add_source_files("*.vhd")
 
         """
+        if _is_iterable_not_string(pattern):
+            pattern = [pattern]
 
-        if vhdl_standard is None:
-            vhdl_standard = self._vhdl_standard
+        file_names = []
+        for pattern in pattern:
+            new_file_names = glob(pattern)
 
-        return self._parent.add_source_files(pattern, self._library_name, preprocessors, include_dirs, defines,
-                                             allow_empty=allow_empty, vhdl_standard=vhdl_standard)
+            if (not allow_empty) and len(new_file_names) == 0:
+                raise ValueError(("Pattern %r did not match any file. "
+                                  "Use allow_empty=True to avoid exception,") % pattern)
+            file_names += new_file_names
 
-    def add_source_file(self, pattern, preprocessors=None, include_dirs=None, defines=None, vhdl_standard=None):
+        return SourceFileList(source_files=[
+            self.add_source_file(file_name, preprocessors, include_dirs, defines, vhdl_standard)
+            for file_name in file_names])
+
+    def add_source_file(self, file_name, preprocessors=None, include_dirs=None, defines=None, vhdl_standard=None):
         """
         Add source file to library
 
@@ -1085,11 +1069,26 @@ class Library(object):
            library.add_source_file("file.vhd")
 
         """
+
+        file_type = file_type_of(file_name)
+
+        if file_type == "verilog":
+            include_dirs = include_dirs if include_dirs is not None else []
+            include_dirs = add_verilog_include_dir(include_dirs)
+
         if vhdl_standard is None:
             vhdl_standard = self._vhdl_standard
 
-        return self._parent.add_source_file(pattern, self._library_name, preprocessors, include_dirs, defines,
-                                            vhdl_standard)
+        file_name = self._parent._preprocess(  # pylint: disable=protected-access
+            self._library_name, abspath(file_name), preprocessors)
+        return SourceFile(self._project.add_source_file(file_name,
+                                                        self._library_name,
+                                                        file_type=file_type,
+                                                        include_dirs=include_dirs,
+                                                        defines=defines,
+                                                        vhdl_standard=vhdl_standard),
+                          self._project,
+                          self._parent)
 
     def package(self, name):
         """
