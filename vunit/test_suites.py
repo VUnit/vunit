@@ -219,7 +219,8 @@ def encode_dict(dictionary):
         return value.replace(':', '::').replace(',', ',,')
 
     encoded = []
-    for key, value in dictionary.items():
+    for key in sorted(dictionary.keys()):
+        value = dictionary[key]
         encoded.append("%s : %s" % (escape(key),
                                     escape(encode_dict_value(value))))
     return ",".join(encoded)
