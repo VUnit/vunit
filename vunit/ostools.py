@@ -266,7 +266,7 @@ def write_file(file_name, contents):
     if not file_exists(path):
         os.makedirs(path)
 
-    with open(file_name, "w") as file_to_write:
+    with open(file_name, "w", errors="replace") as file_to_write:
         file_to_write.write(contents)
 
 
