@@ -46,7 +46,7 @@ class TestLicense(unittest.TestCase):
                 self._check_no_trailing_whitespace(code, file_name)
 
     def test_that_license_file_matches_vunit_license_text(self):
-        with open(join(ROOT, 'LICENSE.txt')) as lic:
+        with open(join(ROOT, 'LICENSE.txt'), "rU") as lic:
             self.assertEqual(lic.read(), license_text())
 
     def _check_license(self, code, file_name):
