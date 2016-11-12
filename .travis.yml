@@ -1,27 +1,27 @@
 language: python
 matrix:
   include:
-  - env: BUILD_NAME=UNIT
+  - env: BUILD_NAME=py27-unit
     python: '2.7'
-  - env: BUILD_NAME=UNIT
+  - env: BUILD_NAME=py33-unit
     python: '3.3'
-  - env: BUILD_NAME=UNIT
+  - env: BUILD_NAME=py34-unit
     python: '3.4'
-  - env: BUILD_NAME=UNIT
+  - env: BUILD_NAME=py35-unit
     python: '3.5'
 
-  - env: BUILD_NAME=LINT
+  - env: BUILD_NAME=py27-lint
     python: '2.7'
-  - env: BUILD_NAME=LINT
+  - env: BUILD_NAME=py35-lint
     python: '3.5'
 
-  - env: BUILD_NAME=DOCS
+  - env: BUILD_NAME=py27-docs
     python: '2.7'
-  - env: BUILD_NAME=DOCS
+  - env: BUILD_NAME=py35-docs
     python: '3.5'
 
   # Python 2.7 with ghdl mcode
-  - env: BUILD_NAME=ACCEPTANCE
+  - env: BUILD_NAME=py27-acceptance-ghdl
     python: '2.7'
     os: linux
     sudo: false
@@ -42,7 +42,7 @@ matrix:
     - export VUNIT_SIMULATOR=ghdl
 
   # Python 3.5 with ghdl llvm
-  - env: BUILD_NAME=ACCEPTANCE
+  - env: BUILD_NAME=py33-acceptance-ghdl
     python: '3.5'
     os: linux
     sudo: required
@@ -67,4 +67,4 @@ install:
 - pip install tox
 
 script:
-- python travis.py ${BUILD_NAME}
+- tox -e $BUILD_NAME
