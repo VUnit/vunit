@@ -39,10 +39,9 @@ matrix:
     - make install
     - cd ../../
     - export PATH=$PATH:install-ghdl-mcode/bin/
-    - export VUNIT_SIMULATOR=ghdl
 
   # Python 3.5 with ghdl llvm
-  - env: BUILD_NAME=py33-acceptance-ghdl
+  - env: BUILD_NAME=py35-acceptance-ghdl
     python: '3.5'
     os: linux
     sudo: required
@@ -61,7 +60,6 @@ matrix:
     - make install
     - cd ../../
     - export PATH=$PATH:install-ghdl-llvm/bin/
-    - export VUNIT_SIMULATOR=ghdl
 
 install:
 - pip install tox
