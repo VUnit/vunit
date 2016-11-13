@@ -1,0 +1,37 @@
+# For Windows based CI
+
+environment:
+
+  matrix:
+
+    # For Python versions available on Appveyor, see
+    # http://www.appveyor.com/docs/installed-software#python
+    # The list here is complete (excluding Python 2.6, which
+    # isn't covered by this document) at the time of writing.
+
+    - BUILD_NAME: py27-unit
+      PYTHON: "C:\\Python27"
+    - BUILD_NAME: py33-unit
+      PYTHON: "C:\\Python33"
+    - BUILD_NAME: py34-unit
+      PYTHON: "C:\\Python34"
+    - BUILD_NAME: py35-unit
+      PYTHON: "C:\\Python35"
+
+    - BUILD_NAME: py27-lint
+      PYTHON: "C:\\Python27"
+    - BUILD_NAME: py35-lint
+      PYTHON: "C:\\Python35"
+
+    - BUILD_NAME: py27-docs
+      PYTHON: "C:\\Python27"
+    - BUILD_NAME: py35-docs
+      PYTHON: "C:\\Python35"
+
+install:
+  - "%PYTHON%\\python.exe -m pip install tox"
+
+build: off
+
+test_script:
+  - "%PYTHON%\\python.exe -m tox -e %BUILD_NAME%"

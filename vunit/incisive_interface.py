@@ -185,8 +185,7 @@ define work "{2}/libraries/work"
         args += ['-work work']
         args += ['-cdslib "%s"' % self._cdslib]
         args += self._hdlvar_args()
-        args += ['-log "%s/irun_compile_vhdl_file_%s.log"'
-                 % (self._output_path, source_file.library.name)]
+        args += ['-log "%s"' % join(self._output_path, "irun_compile_vhdl_file_%s.log" % source_file.library.name)]
         if not self._log_level == "debug":
             args += ['-quiet']
         else:
@@ -197,8 +196,7 @@ define work "{2}/libraries/work"
         args += ['-makelib %s' % source_file.library.directory]
         args += ['"%s"' % source_file.name]
         args += ['-endlib']
-        argsfile = "%s/irun_compile_vhdl_file_%s.args" % (self._output_path,
-                                                          source_file.library.name)
+        argsfile = join(self._output_path, "irun_compile_vhdl_file_%s.args" % source_file.library.name)
         write_file(argsfile, "\n".join(args))
         return [cmd, '-f', argsfile]
 
@@ -221,7 +219,7 @@ define work "{2}/libraries/work"
         args += source_file.compile_options.get('incisive.irun_verilog_flags', [])
         args += ['-cdslib "%s"' % self._cdslib]
         args += self._hdlvar_args()
-        args += ['-log "%s/irun_compile_verilog_file_%s.log"' % (self._output_path, source_file.library.name)]
+        args += ['-log "%s"' % join(self._output_path, "irun_compile_verilog_file_%s.log" % source_file.library.name)]
         if not self._log_level == "debug":
             args += ['-quiet']
         else:
@@ -239,7 +237,7 @@ define work "{2}/libraries/work"
         args += ['-makelib %s' % source_file.library.name]
         args += ['"%s"' % source_file.name]
         args += ['-endlib']
-        argsfile = "%s/irun_compile_verilog_file_%s.args" % (self._output_path, source_file.library.name)
+        argsfile = join(self._output_path, "irun_compile_verilog_file_%s.args" % source_file.library.name)
         write_file(argsfile, "\n".join(args))
         return [cmd, '-f', argsfile]
 
