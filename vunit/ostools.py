@@ -26,6 +26,7 @@ except ImportError:
 from os.path import exists, getmtime, dirname, relpath, splitdrive
 import os
 import io
+import sys
 
 import logging
 LOGGER = logging.getLogger(__name__)
@@ -266,8 +267,13 @@ def write_file(file_name, contents):
     if not file_exists(path):
         os.makedirs(path)
 
-    with open(file_name, "w") as file_to_write:
-        file_to_write.write(contents)
+    # special handling for python 2.x.x
+    if sys.version_info[:1] == (2,):
+        with open(file_name, "w") as file_to_write:
+            file_to_write.write(contents.encode(errors="ignore"))
+    else:
+        with open(file_name, "w", errors="ignore") as file_to_write:
+            file_to_write.write(contents)
 
 
 def file_exists(file_name):

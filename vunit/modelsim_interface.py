@@ -24,7 +24,7 @@ except ImportError:
     # Python 2
     from ConfigParser import RawConfigParser  # pylint: disable=import-error
 
-from vunit.ostools import Process, write_file, file_exists
+from vunit.ostools import Process, write_file, read_file, file_exists
 from vunit.simulator_interface import SimulatorInterface
 from vunit.exceptions import CompileError
 from vunit.test_runner import HASH_TO_TEST_NAME
@@ -153,13 +153,7 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         if file_exists(self._modelsim_ini):
             return
 
-        parent = dirname(self._modelsim_ini)
-        if not file_exists(parent):
-            os.makedirs(parent)
-
-        with open(join(self._prefix, "..", "modelsim.ini"), 'rb') as fread:
-            with open(self._modelsim_ini, 'wb') as fwrite:
-                fwrite.write(fread.read())
+        write_file(self._modelsim_ini, read_file(join(self._prefix, "..", "modelsim.ini")))
 
     def setup_library_mapping(self, project):
         """
