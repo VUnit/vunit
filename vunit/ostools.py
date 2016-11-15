@@ -16,6 +16,7 @@ import time
 import subprocess
 import threading
 import shutil
+import sys
 try:
     # Python 3.x
     from queue import Queue, Empty
@@ -121,7 +122,7 @@ class Process(object):
         LOGGER.debug("Started process with pid=%i: '%s'", self._process.pid, (" ".join(args)))
 
         self._queue = InterruptableQueue()
-        self._reader = AsynchronousFileReader(change_encoding(self._process.stdout), self._queue)
+        self._reader = AsynchronousFileReader(self._process.stdout, self._queue)
         self._reader.start()
 
     def write(self, *args, **kwargs):
@@ -163,7 +164,9 @@ class Process(object):
 
     def consume_output(self, callback=print):
         """
-        Consume the output of the process
+        Consume the output of the process.
+        The output is interpreted as UTF-8 text.
+
         @param callback Called for each line of output
         @raises Process.NonZeroExitCode when the process does not exit with code zero
         """
@@ -231,17 +234,30 @@ class AsynchronousFileReader(threading.Thread):
     be consumed in another thread.
     """
 
-    def __init__(self, fd, queue):
+    def __init__(self, fd, queue, encoding="utf-8"):
         threading.Thread.__init__(self)
+
+        # If Python 3 change encoding of TextIOWrapper to utf-8 ignoring decode errors
+        if isinstance(fd, io.TextIOWrapper):
+            fd = io.TextIOWrapper(fd.buffer, encoding=encoding, errors="ignore")
+
         self._fd = fd
         self._queue = queue
+        self._encoding = encoding
 
     def run(self):
         """The body of the tread: read lines and put them on the queue."""
         for line in iter(self._fd.readline, ''):
             if PROGRAM_STATUS.is_shutting_down:
                 break
-            self._queue.put(line[:-1])
+
+            # Convert string into utf-8 if necessary
+            if sys.version_info.major == 2:
+                string = line[:-1].decode(encoding=self._encoding, errors="ignore")
+            else:
+                string = line[:-1]
+
+            self._queue.put(string)
         self._queue.put(None)
 
     def eof(self):
@@ -249,14 +265,21 @@ class AsynchronousFileReader(threading.Thread):
         return not self.is_alive() and self._queue.empty()
 
 
-def read_file(file_name):
+def read_file(file_name, encoding="utf-8"):
     """ To stub during testing """
-    with io.open(file_name, "r", encoding="latin_1") as file_to_read:
-        data = file_to_read.read()
+    try:
+        with io.open(file_name, "r", encoding=encoding) as file_to_read:
+            data = file_to_read.read()
+    except UnicodeDecodeError:
+        LOGGER.warning("Could not decode file %s using encoding %s, ignoring encoding errors",
+                       file_name, encoding)
+        with io.open(file_name, "r", encoding=encoding, errors="ignore") as file_to_read:
+            data = file_to_read.read()
+
     return data
 
 
-def write_file(file_name, contents):
+def write_file(file_name, contents, encoding="utf-8"):
     """ To stub during testing """
 
     path = dirname(file_name)
@@ -266,8 +289,8 @@ def write_file(file_name, contents):
     if not file_exists(path):
         os.makedirs(path)
 
-    with open(file_name, "w") as file_to_write:
-        file_to_write.write(contents)
+    with io.open(file_name, "wb") as file_to_write:
+        file_to_write.write(contents.encode(encoding=encoding))
 
 
 def file_exists(file_name):
@@ -305,17 +328,6 @@ def renew_path(path):
         if exists(path):
             shutil.rmtree(path)
     os.makedirs(path)
-
-
-def change_encoding(textio):
-    """
-    If Python 3 change encoding of TextIOWrapper to latin-1 ignoring decode errors
-    """
-    if isinstance(textio, io.TextIOWrapper):
-        # Python 3
-        return io.TextIOWrapper(textio.buffer, encoding='latin-1', errors="ignore")
-    else:
-        return textio
 
 
 def simplify_path(path):

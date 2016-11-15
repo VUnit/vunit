@@ -157,12 +157,6 @@ end architecture;
         self.create_file(unsupported_name)
         self.assertRaises(RuntimeError, ui.add_source_files, unsupported_name, 'lib')
 
-    def test_can_add_non_ascii_encoded_files(self):
-        ui = self._create_ui()
-        lib = ui.add_library('lib')
-        lib.add_source_files(join(dirname(__file__), 'test_ui_encoding.vhd'))
-        lib.entity("encoding")  # Fill raise exception of not found
-
     def test_exception_on_adding_zero_files(self):
         ui = self._create_ui()
         lib = ui.add_library("lib")

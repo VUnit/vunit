@@ -151,7 +151,10 @@ from vunit.vunit_cli import VUnitCLI
 from vunit.simulator_factory import SimulatorFactory
 from vunit.color_printer import (COLOR_PRINTER,
                                  NO_COLOR_PRINTER)
-from vunit.project import Project, file_type_of, check_vhdl_standard
+from vunit.project import (Project,
+                           file_type_of,
+                           check_vhdl_standard,
+                           HDL_FILE_ENCODING)
 from vunit.test_runner import TestRunner
 from vunit.test_report import TestReport
 from vunit.test_scanner import TestScanner, TestScannerError, tb_filter
@@ -623,7 +626,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                                 library_name, "%i_%s" % (idx, basename(file_name)))
             idx += 1
 
-        ostools.write_file(pp_file_name, code)
+        ostools.write_file(pp_file_name, code, encoding=HDL_FILE_ENCODING)
         return pp_file_name
 
     def add_preprocessor(self, preprocessor):

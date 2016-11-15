@@ -92,4 +92,4 @@ sleep(1000)
         output = []
         process = Process([sys.executable, python_script])
         process.consume_output(output.append)
-        self.assertEqual(output, [chr(0x87)])
+        self.assertEqual(output, ["ac"])

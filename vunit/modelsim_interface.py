@@ -14,6 +14,7 @@ from __future__ import print_function
 import logging
 import threading
 import sys
+import io
 import os
 from os.path import join, dirname, abspath
 from argparse import ArgumentTypeError
@@ -234,18 +235,15 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         if library_name in mapped_libraries and mapped_libraries[library_name] == path:
             return
 
-        cfg = RawConfigParser()
-        cfg.read(self._modelsim_ini)
+        cfg = parse_modelsimini(self._modelsim_ini)
         cfg.set("Library", library_name, path)
-        with open(self._modelsim_ini, "w") as optr:
-            cfg.write(optr)
+        write_modelsimini(cfg, self._modelsim_ini)
 
     def _get_mapped_libraries(self):
         """
         Get mapped libraries from modelsim.ini file
         """
-        cfg = RawConfigParser()
-        cfg.read(self._modelsim_ini)
+        cfg = parse_modelsimini(self._modelsim_ini)
         libraries = dict(cfg.items("Library"))
         if "others" in libraries:
             del libraries["others"]
@@ -719,3 +717,34 @@ def encode_generic_value(value):
         return '{"%s"}' % s_value
     else:
         return s_value
+
+
+def parse_modelsimini(file_name):
+    """
+    Parse a modelsim.ini file
+    :returns: A RawConfigParser object
+    """
+    cfg = RawConfigParser()
+    if sys.version_info.major == 2:
+        # For Python 2 read modelsim.ini as binary file since ConfigParser
+        # does not support unicode
+        with io.open(file_name, "rb") as fptr:
+            cfg.readfp(fptr)  # pylint: disable=deprecated-method
+    else:
+        with io.open(file_name, "r", encoding="utf-8") as fptr:
+            cfg.read_file(fptr)
+    return cfg
+
+
+def write_modelsimini(cfg, file_name):
+    """
+    Writes a modelsim.ini file
+    """
+    if sys.version_info.major == 2:
+        # For Python 2 write modelsim.ini as binary file since ConfigParser
+        # does not support unicode
+        with io.open(file_name, "wb") as optr:
+            cfg.write(optr)
+    else:
+        with io.open(file_name, "w", encoding="utf-8") as optr:
+            cfg.write(optr)

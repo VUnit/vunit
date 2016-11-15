@@ -659,7 +659,7 @@ class VerilogSourceFile(SourceFile):
         self.module_dependencies = []
         self.include_dirs = include_dirs if include_dirs is not None else []
         self.defines = defines.copy() if defines is not None else {}
-        code = ostools.read_file(self.name)
+        code = ostools.read_file(self.name, encoding=HDL_FILE_ENCODING)
         self._content_hash = hash_string(code)
         for key, value in self.defines.items():
             self._content_hash = hash_string(self._content_hash + hash_string(key))
@@ -673,7 +673,8 @@ class VerilogSourceFile(SourceFile):
         try:
             design_file = parser.parse(code, self.name, include_dirs, self.defines)
             for included_file_name in design_file.included_files:
-                self._content_hash = hash_string(self._content_hash + ostools.read_file(included_file_name))
+                self._content_hash = hash_string(self._content_hash +
+                                                 ostools.read_file(included_file_name, encoding=HDL_FILE_ENCODING))
             for module in design_file.modules:
                 self.design_units.append(ModuleDesignUnit(module.name, self, module.parameters))
 
@@ -706,7 +707,7 @@ class VHDLSourceFile(SourceFile):
         self.depending_components = []
         self._vhdl_standard = vhdl_standard
         check_vhdl_standard(vhdl_standard)
-        code = ostools.read_file(self.name)
+        code = ostools.read_file(self.name, encoding=HDL_FILE_ENCODING)
         self._content_hash = hash_string(code)
         self.parse(code, vhdl_parser)
 
@@ -914,3 +915,7 @@ def check_vhdl_standard(vhdl_standard, from_str=None):
     valid_standards = ('93', '2002', '2008')
     if vhdl_standard not in valid_standards:
         raise ValueError("Unknown VHDL standard '%s' %snot one of %r" % (vhdl_standard, from_str, valid_standards))
+
+
+# Both VHDL and Verilog standardize on ISO-8859-1 which is latin-1
+HDL_FILE_ENCODING = "latin-1"
