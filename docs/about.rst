@@ -15,11 +15,11 @@ often" approach through automation.
 Project Mission
 ---------------
 
-The VUnit project mission is to apply best SW testing practises to the
+The VUnit project mission is to apply best SW testing practices to the
 world of HDLs by providing the tools missing to adapt to such
-practises. The major missing piece is the unit testing framework,
+practices. The major missing piece is the unit testing framework,
 hence the name V(HDL)Unit. However, VUnit also provides supporting
-functionality not normally considered as a part of an unit testing
+functionality not normally considered as a part of a unit testing
 framework.
 
 Main Features
