@@ -77,9 +77,12 @@ class Project(object):
 
     def add_source_file(self,    # pylint: disable=too-many-arguments
                         file_name, library_name, file_type='vhdl', include_dirs=None, defines=None,
-                        vhdl_standard='2008'):
+                        vhdl_standard='2008',
+                        no_parse=False):
         """
         Add a file_name as a source file in library_name with file_type
+
+        :param no_parse: Do not parse file contents
         """
         if not ostools.file_exists(file_name):
             raise ValueError("File %r does not exist" % file_name)
@@ -91,10 +94,12 @@ class Project(object):
         if file_type == "vhdl":
             assert include_dirs is None
             source_file = VHDLSourceFile(file_name, library,
-                                         vhdl_parser=self._vhdl_parser, vhdl_standard=vhdl_standard)
+                                         vhdl_parser=self._vhdl_parser,
+                                         vhdl_standard=vhdl_standard,
+                                         no_parse=no_parse)
             library.add_vhdl_design_units(source_file.design_units)
         elif file_type == "verilog":
-            source_file = VerilogSourceFile(file_name, library, self._verilog_parser, include_dirs, defines)
+            source_file = VerilogSourceFile(file_name, library, self._verilog_parser, include_dirs, defines, no_parse)
             library.add_verilog_design_units(source_file.design_units)
         else:
             raise ValueError(file_type)
@@ -653,7 +658,8 @@ class VerilogSourceFile(SourceFile):
     """
     Represents a Verilog source file
     """
-    def __init__(self, name, library, verilog_parser, include_dirs=None, defines=None):
+    def __init__(self,  # pylint: disable=too-many-arguments
+                 name, library, verilog_parser, include_dirs=None, defines=None, no_parse=False):
         SourceFile.__init__(self, name, library, 'verilog')
         self.package_dependencies = []
         self.module_dependencies = []
@@ -661,10 +667,16 @@ class VerilogSourceFile(SourceFile):
         self.defines = defines.copy() if defines is not None else {}
         code = ostools.read_file(self.name, encoding=HDL_FILE_ENCODING)
         self._content_hash = hash_string(code)
+
+        for path in self.include_dirs:
+            self._content_hash = hash_string(self._content_hash + hash_string(path))
+
         for key, value in self.defines.items():
             self._content_hash = hash_string(self._content_hash + hash_string(key))
             self._content_hash = hash_string(self._content_hash + hash_string(value))
-        self.parse(code, verilog_parser, include_dirs)
+
+        if not no_parse:
+            self.parse(code, verilog_parser, include_dirs)
 
     def parse(self, code, parser, include_dirs):
         """
@@ -701,7 +713,7 @@ class VHDLSourceFile(SourceFile):
     """
     Represents a VHDL source file
     """
-    def __init__(self, name, library, vhdl_parser, vhdl_standard):
+    def __init__(self, name, library, vhdl_parser, vhdl_standard, no_parse=False):
         SourceFile.__init__(self, name, library, 'vhdl')
         self.dependencies = []
         self.depending_components = []
@@ -709,7 +721,9 @@ class VHDLSourceFile(SourceFile):
         check_vhdl_standard(vhdl_standard)
         code = ostools.read_file(self.name, encoding=HDL_FILE_ENCODING)
         self._content_hash = hash_string(code)
-        self.parse(code, vhdl_parser)
+
+        if not no_parse:
+            self.parse(code, vhdl_parser)
 
     def get_vhdl_standard(self):
         """

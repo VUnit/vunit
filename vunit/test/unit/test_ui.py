@@ -376,7 +376,8 @@ Listed 2 files""".splitlines()))
                                                                 file_type="verilog",
                                                                 include_dirs=all_include_dirs,
                                                                 defines=None,
-                                                                vhdl_standard='2008')
+                                                                vhdl_standard='2008',
+                                                                no_parse=False)
         check(lambda ui, _: ui.add_source_files(file_name, "lib", include_dirs=include_dirs))
         check(lambda ui, _: ui.add_source_file(file_name, "lib", include_dirs=include_dirs))
         check(lambda _, lib: lib.add_source_files(file_name, include_dirs=include_dirs))
@@ -401,11 +402,41 @@ Listed 2 files""".splitlines()))
                                                                 file_type="verilog",
                                                                 include_dirs=all_include_dirs,
                                                                 defines=defines,
-                                                                vhdl_standard='2008')
+                                                                vhdl_standard='2008',
+                                                                no_parse=False)
         check(lambda ui, _: ui.add_source_files(file_name, "lib", defines=defines))
         check(lambda ui, _: ui.add_source_file(file_name, "lib", defines=defines))
         check(lambda _, lib: lib.add_source_files(file_name, defines=defines))
         check(lambda _, lib: lib.add_source_file(file_name, defines=defines))
+
+    def test_add_source_files_has_no_parse(self):
+        file_name = "verilog.v"
+        self.create_file(file_name)
+        all_include_dirs = add_verilog_include_dir([])
+
+        for no_parse in (True, False):
+            for method in range(4):
+
+                ui = self._create_ui()
+                with mock.patch.object(ui, "_project", autospec=True) as project:
+                    lib = ui.add_library("lib")
+
+                    if method == 0:
+                        ui.add_source_files(file_name, "lib", no_parse=no_parse)
+                    elif method == 1:
+                        ui.add_source_file(file_name, "lib", no_parse=no_parse)
+                    elif method == 2:
+                        lib.add_source_files(file_name, no_parse=no_parse)
+                    elif method == 3:
+                        lib.add_source_file(file_name, no_parse=no_parse)
+
+                    project.add_source_file.assert_called_once_with(abspath("verilog.v"),
+                                                                    "lib",
+                                                                    file_type="verilog",
+                                                                    include_dirs=all_include_dirs,
+                                                                    defines=None,
+                                                                    vhdl_standard='2008',
+                                                                    no_parse=no_parse)
 
     def test_compile_options(self):
         file_name = "foo.vhd"

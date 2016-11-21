@@ -548,7 +548,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
     def add_source_files(self,   # pylint: disable=too-many-arguments
                          pattern, library_name, preprocessors=None, include_dirs=None, defines=None, allow_empty=False,
-                         vhdl_standard=None):
+                         vhdl_standard=None, no_parse=False):
         """
         Add source files matching wildcard pattern to library
 
@@ -559,6 +559,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         :param allow_empty: To disable an error if no files matched the pattern
         :param vhdl_standard: The VHDL standard used to compile these files,
                               if None VUNIT_VHDL_STANDARD environment variable is used
+        :param no_parse: Do not parse file(s) for dependency or test scanning purposes
         :returns: A list of files (:class:`.SourceFileList`) which were added
 
         :example:
@@ -573,11 +574,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                                                            include_dirs=include_dirs,
                                                            defines=defines,
                                                            allow_empty=allow_empty,
-                                                           vhdl_standard=vhdl_standard)
+                                                           vhdl_standard=vhdl_standard,
+                                                           no_parse=no_parse)
 
     def add_source_file(self,   # pylint: disable=too-many-arguments
                         file_name, library_name, preprocessors=None, include_dirs=None, defines=None,
-                        vhdl_standard=None):
+                        vhdl_standard=None, no_parse=False):
         """
         Add source file to library
 
@@ -587,6 +589,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         :param defines: A dictionary containing Verilog defines to be set
         :param vhdl_standard: The VHDL standard used to compile this file,
                               if None VUNIT_VHDL_STANDARD environment variable is used
+        :param no_parse: Do not parse file for dependency or test scanning purposes
         :returns: The :class:`.SourceFile` which was added
 
         :example:
@@ -600,7 +603,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                                                           preprocessors=preprocessors,
                                                           include_dirs=include_dirs,
                                                           defines=defines,
-                                                          vhdl_standard=vhdl_standard)
+                                                          vhdl_standard=vhdl_standard,
+                                                          no_parse=no_parse)
 
     def _preprocess(self, library_name, file_name, preprocessors):
         """
@@ -1025,7 +1029,7 @@ class Library(object):
 
     def add_source_files(self,   # pylint: disable=too-many-arguments
                          pattern, preprocessors=None, include_dirs=None, defines=None, allow_empty=False,
-                         vhdl_standard=None):
+                         vhdl_standard=None, no_parse=False):
         """
         Add source files matching wildcard pattern to library
 
@@ -1034,6 +1038,7 @@ class Library(object):
         :param defines: A dictionary containing Verilog defines to be set
         :param allow_empty: To disable an error if no files matched the pattern
         :param vhdl_standard: The VHDL standard used to compile these files, if None library default is used
+        :param no_parse: Do not parse file(s) for dependency or test scanning purposes
         :returns: A list of files (:class:`.SourceFileList`) which were added
 
         :example:
@@ -1056,10 +1061,12 @@ class Library(object):
             file_names += new_file_names
 
         return SourceFileList(source_files=[
-            self.add_source_file(file_name, preprocessors, include_dirs, defines, vhdl_standard)
+            self.add_source_file(file_name, preprocessors, include_dirs, defines, vhdl_standard, no_parse=no_parse)
             for file_name in file_names])
 
-    def add_source_file(self, file_name, preprocessors=None, include_dirs=None, defines=None, vhdl_standard=None):
+    def add_source_file(self,  # pylint: disable=too-many-arguments
+                        file_name, preprocessors=None, include_dirs=None, defines=None,
+                        vhdl_standard=None, no_parse=False):
         """
         Add source file to library
 
@@ -1067,6 +1074,7 @@ class Library(object):
         :param include_dirs: A list of include directories
         :param defines: A dictionary containing Verilog defines to be set
         :param vhdl_standard: The VHDL standard used to compile this file, if None library default is used
+        :param no_parse: Do not parse file for dependency or test scanning purposes
         :returns: The :class:`.SourceFile` which was added
 
         :example:
@@ -1093,7 +1101,8 @@ class Library(object):
                                                         file_type=file_type,
                                                         include_dirs=include_dirs,
                                                         defines=defines,
-                                                        vhdl_standard=vhdl_standard),
+                                                        vhdl_standard=vhdl_standard,
+                                                        no_parse=no_parse),
                           self._project,
                           self._parent)
 

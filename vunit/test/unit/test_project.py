@@ -996,6 +996,38 @@ end architecture;
         self.assertRaises(ValueError, project.add_source_file, "file.vhd",
                           library_name="lib", file_type='vhdl', vhdl_standard='2007')
 
+    def test_add_source_file_has_no_parse_vhdl(self):
+
+        for no_parse in (True, False):
+            project = Project()
+            file_name = "file.vhd"
+            write_file(file_name, """
+    entity ent is
+    end entity;
+                       """)
+            project.add_library("lib", "work_path")
+            source_file = project.add_source_file(file_name,
+                                                  "lib",
+                                                  file_type=file_type_of(file_name),
+                                                  no_parse=no_parse)
+            self.assertEqual(len(source_file.design_units), int(not no_parse))
+
+    def test_add_source_file_has_no_parse_verilog(self):
+
+        for no_parse in (True, False):
+            project = Project()
+            file_name = "file.v"
+            write_file(file_name, """
+    module mod;
+    endmodule
+                       """)
+            project.add_library("lib", "work_path")
+            source_file = project.add_source_file(file_name,
+                                                  "lib",
+                                                  file_type=file_type_of(file_name),
+                                                  no_parse=no_parse)
+            self.assertEqual(len(source_file.design_units), int(not no_parse))
+
     def add_source_file(self, library_name, file_name, contents, defines=None):
         """
         Convenient wrapper arround project.add_source_file
