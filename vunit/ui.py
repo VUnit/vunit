@@ -1501,7 +1501,7 @@ class SourceFileList(list):
         for source_file in self:
             source_file.add_compile_option(name, value)
 
-    def depends_on(self, source_file):
+    def add_dependency_on(self, source_file):
         """
         Add manual dependency of these files on other file(s)
 
@@ -1512,10 +1512,10 @@ class SourceFileList(list):
         .. code-block:: python
 
            other_file = lib.get_source_file("other_file.vhd")
-           files.depends_on(other_file)
+           files.add_dependency_on(other_file)
         """
         for my_source_file in self:
-            my_source_file.depends_on(source_file)
+            my_source_file.add_dependency_on(source_file)
 
 
 class SourceFile(object):
@@ -1584,7 +1584,7 @@ class SourceFile(object):
         """
         return self._source_file.get_compile_option(name)
 
-    def depends_on(self, source_file):
+    def add_dependency_on(self, source_file):
         """
         Add manual dependency of this file other file(s)
 
@@ -1595,7 +1595,7 @@ class SourceFile(object):
         .. code-block:: python
 
            other_files = lib.get_source_files("*.vhd")
-           my_file.depends_on(other_files)
+           my_file.add_dependency_on(other_files)
         """
         if isinstance(source_file, SourceFile):
             private_source_file = source_file._source_file  # pylint: disable=protected-access
@@ -1603,7 +1603,7 @@ class SourceFile(object):
                                                 depends_on=private_source_file)
         elif hasattr(source_file, "__iter__"):
             for element in source_file:
-                self.depends_on(element)
+                self.add_dependency_on(element)
         else:
             raise ValueError(source_file)
 

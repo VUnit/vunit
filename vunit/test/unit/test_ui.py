@@ -311,7 +311,7 @@ Listed 2 files""".splitlines()))
         file2 = lib.add_source_file(file_name2)
 
         add_manual_dependency.assert_has_calls([])
-        file1.depends_on(file2)
+        file1.add_dependency_on(file2)
         add_manual_dependency.assert_has_calls([
             mock.call(ui._project,
                       file1._source_file,
@@ -330,7 +330,7 @@ Listed 2 files""".splitlines()))
         bar_file = lib.add_source_file("bar.vhd")
 
         add_manual_dependency.assert_has_calls([])
-        bar_file.depends_on(foo_files)
+        bar_file.add_dependency_on(foo_files)
         add_manual_dependency.assert_has_calls([
             mock.call(ui._project,
                       bar_file._source_file,
@@ -350,7 +350,7 @@ Listed 2 files""".splitlines()))
         bar_file = lib.add_source_file("bar.vhd")
 
         add_manual_dependency.assert_has_calls([])
-        foo_files.depends_on(bar_file)
+        foo_files.add_dependency_on(bar_file)
         add_manual_dependency.assert_has_calls([
             mock.call(ui._project,
                       foo_file._source_file,
