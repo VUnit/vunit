@@ -93,6 +93,8 @@ class TestScanner(object):
                                      "all" if config.name in (None, "") else None),
                         test_case=None,
                         test_bench=create_test_bench(config),
+                        file_name=entity.file_name,
+                        line=1,
                         has_runner_cfg=has_runner_cfg,
                         pre_config=config.pre_config,
                         post_check=config.post_check,
@@ -103,13 +105,14 @@ class TestScanner(object):
             for config in configurations:
                 test_list.add_suite(
                     SameSimTestSuite(name=dotjoin(create_design_unit_name(entity, architecture_name), config.name),
-                                     test_cases=run_strings,
+                                     entity=entity,
+                                     run_strings=run_strings,
                                      test_bench=create_test_bench(config),
                                      pre_config=config.pre_config,
                                      post_check=config.post_check,
                                      elaborate_only=self._elaborate_only))
         else:
-            for run_string in run_strings:
+            for (run_string,line) in run_strings:
                 scope = create_scope(entity.library_name, entity.name, run_string)
                 configurations = self._cfg.get_configurations(scope)
                 for config in configurations:
@@ -118,6 +121,8 @@ class TestScanner(object):
                             name=dotjoin(create_design_unit_name(entity, architecture_name), config.name, run_string),
                             test_case=run_string,
                             test_bench=create_test_bench(config),
+                            file_name=entity.file_name,
+                            line=line,
                             has_runner_cfg=has_runner_cfg,
                             pre_config=config.pre_config,
                             post_check=config.post_check,

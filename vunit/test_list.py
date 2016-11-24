@@ -50,7 +50,7 @@ class TestList(object):
         """
         names = []
         for test_suite in self:
-            names += test_suite.test_cases
+            names += [test_case.name for test_case in test_suite.test_cases]
         return names
 
     def __iter__(self):
@@ -72,7 +72,7 @@ class TestSuiteWrapper(object):
 
     @property
     def test_cases(self):
-        return [self._test_case.name]
+        return [self._test_case]
 
     @property
     def name(self):

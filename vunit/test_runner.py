@@ -50,10 +50,10 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
         num_tests = 0
         for test_suite in test_suites:
-            for test_name in test_suite.test_cases:
+            for test_case in test_suite.test_cases:
                 num_tests += 1
                 if self._verbose:
-                    print("Running test: " + test_name)
+                    print("Running test: " + test_case.name)
 
         if self._verbose:
             print("Running %i tests" % num_tests)
@@ -109,8 +109,8 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                 test_suite = scheduler.next()
 
                 with self._lock:
-                    for test_name in test_suite.test_cases:
-                        print("Starting %s" % test_name)
+                    for test_case in test_suite.test_cases:
+                        print("Starting %s" % test_case.name)
 
                 self._run_test_suite(test_suite, write_stdout, num_tests)
 
@@ -216,9 +216,9 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         runtime = ostools.get_time() - start_time
         time_per_test = runtime / len(results)
 
-        for test_name in test_suite.test_cases:
-            status = results[test_name]
-            self._report.add_result(test_name,
+        for test_case in test_suite.test_cases:
+            status = results[test_case.name]
+            self._report.add_result(test_case.name,
                                     status,
                                     time_per_test,
                                     output_file_name)
@@ -229,8 +229,8 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
     def _fail_suite(test_suite):
         """ Return failure for all tests in suite """
         results = {}
-        for test_name in test_suite.test_cases:
-            results[test_name] = FAILED
+        for test_case in test_suite.test_cases:
+            results[test_case.name] = FAILED
         return results
 
 

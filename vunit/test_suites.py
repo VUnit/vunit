@@ -15,12 +15,13 @@ import vunit.ostools as ostools
 from vunit.test_report import (PASSED, SKIPPED, FAILED)
 
 
-class IndependentSimTestCase(object):
+class IndependentSimTestCase(object): # pylint: disable=too-many-instance-attributes
     """
     A test case to be run in an independent simulation
     """
+
     def __init__(self,  # pylint: disable=too-many-arguments
-                 name, test_case, test_bench,
+                 name, test_case, test_bench, file_name, line,
                  has_runner_cfg=False,
                  pre_config=None,
                  post_check=None,
@@ -28,6 +29,8 @@ class IndependentSimTestCase(object):
         self._name = name
         self._test_case = test_case
         self._test_bench = test_bench
+        self._file_name = file_name
+        self._line = line
         self._has_runner_cfg = has_runner_cfg
         self._pre_config = pre_config
         self._post_check = post_check
@@ -36,6 +39,10 @@ class IndependentSimTestCase(object):
     @property
     def name(self):
         return self._name
+
+    @property
+    def discriptor(self):
+        return ':'.join([self._file_name, "{}".format(self._line), self._name])
 
     def run(self, output_path):
         """
@@ -79,6 +86,24 @@ class IndependentSimTestCase(object):
         return self._post_check(output_path)
 
 
+class SameSimTestCase(object):
+    """
+    A test case in a SameSimTestSuite
+    """
+
+    def __init__(self, name, file_name, line):
+        self._name = name
+        self._file_name = file_name
+        self._line = line
+
+    @property
+    def name(self):
+        return self._name
+
+    def descriptor(self):
+        return ':'.join([self._file_name, self._line, self._name])
+
+
 class SameSimTestSuite(object):
     """
     A test suite where multiple test cases are run within the same simulation
@@ -86,13 +111,16 @@ class SameSimTestSuite(object):
 
     def __init__(self,  # pylint: disable=too-many-arguments
                  name,
-                 test_cases,
+                 entity,
+                 run_strings,
                  test_bench,
                  pre_config=None,
                  post_check=None,
                  elaborate_only=False):
         self._name = name
-        self._test_cases = test_cases
+        self._entity = entity
+        self._test_cases = [SameSimTestCase(self._full_name(run_string), entity.file_name, line)
+                            for run_string, line in run_strings]
         self._test_bench = test_bench
         self._pre_config = pre_config
         self._post_check = post_check
@@ -100,7 +128,7 @@ class SameSimTestSuite(object):
 
     @property
     def test_cases(self):
-        return [self._full_name(name) for name in self._test_cases]
+        return self._test_cases
 
     @property
     def name(self):
@@ -116,8 +144,9 @@ class SameSimTestSuite(object):
         """
         Keep tests which pattern return False if no remaining tests
         """
-        self._test_cases = [name for name in self._test_cases
-                            if test_filter(self._full_name(name))]
+        # TODO: Tests
+        self._test_cases = [test_case.name for test_case in self._test_cases
+                            if test_filter(self._full_name(test_case.name))]
         return len(self._test_cases) > 0
 
     def run(self, output_path):
@@ -140,8 +169,8 @@ class SameSimTestSuite(object):
         sim_ok = self._test_bench.run(output_path, generics, elaborate_only=self._elaborate_only)
         if self._elaborate_only:
             retval = {}
-            for name in self.test_cases:
-                retval[name] = PASSED if sim_ok else FAILED
+            for test_case in self.test_cases:
+                retval[test_case.name] = PASSED if sim_ok else FAILED
             return retval
 
         retval = self._read_test_results(output_path)
@@ -155,8 +184,8 @@ class SameSimTestSuite(object):
                 return retval
 
         if not self._post_check(output_path):
-            for name in self.test_cases:
-                retval[name] = FAILED
+            for test_case in self.test_cases:
+                retval[test_case.name] = FAILED
 
         return retval
 
@@ -167,8 +196,8 @@ class SameSimTestSuite(object):
         vunit_results_file = join(output_path, "vunit_results")
 
         retval = {}
-        for name in self.test_cases:
-            retval[name] = FAILED
+        for test_case in self.test_cases:
+            retval[test_case.name] = FAILED
 
         if not ostools.file_exists(vunit_results_file):
             return retval
