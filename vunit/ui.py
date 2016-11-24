@@ -342,7 +342,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         level = getattr(logging, log_level.upper())
         logging.basicConfig(filename=None, format='%(levelname)7s - %(message)s', level=level)
 
-    def add_external_library(self, library_name, path, vhdl_standard=None):
+    def add_external_library(self, library_name, path=None, vhdl_standard=None):
         """
         Add an externally compiled library as a black-box
 
@@ -361,6 +361,10 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         if vhdl_standard is None:
             vhdl_standard = self._vhdl_standard
+
+        if path is None:
+            path = join(self._simulator_factory.simulator_output_path, "libraries", library_name)
+
         self._project.add_library(library_name, abspath(path), is_external=True)
         return self._create_library_facade(library_name, vhdl_standard)
 

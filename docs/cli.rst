@@ -105,26 +105,26 @@ a help text is printed were a few TCL functions are pre-defined:
 
 .. code-block:: tcl
 
-   # List of VUnit commands:
    # vunit_help
    #   - Prints this help
-   # vunit_load
+   # vunit_load [vsim_extra_args]
    #   - Load design with correct generics for the test
+   #   - Optional first argument are passed as extra flags to vsim
    # vunit_run
-   #   - Run test
+   #   - Run test, must do vunit_load first
+   # vunit_compile
+   #   - Recompiles the source files
+   # vunit_restart
+   #   - Recompiles the source files
+   #   - and re-runs the simulation if the compile was successful
 
 The test bench has already been loaded with the ``vunit_load``
 command. Breakpoints can now be set and signals added to the log or to
 the waveform viewer manually by the user. The test case is then run
 using the ``vunit_run`` command. Recompilation can be performed
-without closing the GUI by running ``run.py`` with the ``--compile``
-flag in a separate terminal. To re-run the test after compilation in
-ModelSim:
-
-.. code-block:: tcl
-
-  restart -f
-  vunit_run
+without closing the GUI by running ``vunit_compile``. It is also
+possible to perform ``run.py`` with the ``--compile`` flag in a
+separate terminal.
 
 .. _continuous_integration:
 

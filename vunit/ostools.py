@@ -130,6 +130,12 @@ class Process(object):
         if not self._process.stdin.closed:
             self._process.stdin.write(*args, **kwargs)
 
+    def writeline(self, line):
+        """ Write a line to stdin """
+        if not self._process.stdin.closed:
+            self._process.stdin.write(line + "\n")
+            self._process.stdin.flush()
+
     def next_line(self):
         """
         Return either the next line or the exit code

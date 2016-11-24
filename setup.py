@@ -25,6 +25,7 @@ def find_all_files(directory, endings=None):
     return result
 
 data_files = []
+data_files += find_all_files(os.path.join('vunit'), endings=[".tcl"])
 data_files += find_all_files(os.path.join('vunit', 'vhdl'))
 data_files += find_all_files(os.path.join('vunit', 'verilog'),
                              endings=[".v", ".sv", ".svh"])

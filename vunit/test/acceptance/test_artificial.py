@@ -30,9 +30,10 @@ class TestVunitArtificial(unittest.TestCase):
         self.artificial_run_vhdl = join(dirname(__file__), "artificial", "vhdl", "run.py")
         self.artificial_run_verilog = join(dirname(__file__), "artificial", "verilog", "run.py")
 
-    @unittest.skipUnless(simulator_is("modelsim"), "Only modelsim has --new-vsim flag")
-    def test_artificial_modelsim_new_vsim(self):
-        self._test_artificial(args=["--new-vsim"])
+    @unittest.skipUnless(simulator_is("modelsim", "rivierapro"),
+                         "Only simulators with persistance functionality")
+    def test_artificial_modelsim_unique_sim(self):
+        self._test_artificial(args=["--unique-sim"])
 
     def test_artificial(self):
         self._test_artificial()
@@ -152,15 +153,13 @@ class TestVunitArtificial(unittest.TestCase):
             ("failed", "lib.tb_with_runner.fail")])
 
     # pylint: disable=too-many-arguments
-    def check(self, run_file, args=None, persistent_sim=True, clean=True, exit_code=0):
+    def check(self, run_file, args=None, clean=True, exit_code=0):
         """
         Run external run file and verify exit code
         """
         args = args if args is not None else []
         new_env = environ.copy()
         new_env["VUNIT_VHDL_STANDARD"] = '2008'
-        if not persistent_sim:
-            args += ["--new-vsim"]
         if clean:
             args += ["--clean"]
         retcode = call([sys.executable, run_file,

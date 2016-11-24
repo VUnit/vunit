@@ -141,6 +141,10 @@ def _create_argument_parser(description=None, for_documentation=False):
                         help=('Number of tests to run in parallel. '
                               'Test output is not continuously written in verbose mode with p > 1'))
 
+    parser.add_argument("-u", "--unique-sim",
+                        action="store_true",
+                        default=False,
+                        help="Do not re-use the same simulator process for running different test cases (slower)")
     SimulatorFactory.add_arguments(parser,
                                    for_all_simulators=for_documentation)
 

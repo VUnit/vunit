@@ -15,14 +15,16 @@ from os.path import join, dirname, abspath
 import os
 import re
 import logging
-from vunit.ostools import Process, write_file, file_exists
+from vunit.ostools import Process, file_exists
 from vunit.simulator_interface import SimulatorInterface
 from vunit.exceptions import CompileError
+from vunit.vsim_simulator_mixin import (VsimSimulatorMixin,
+                                        fix_path)
 
 LOGGER = logging.getLogger(__name__)
 
 
-class RivieraProInterface(SimulatorInterface):
+class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
     """
     Riviera Pro interface
     """
@@ -46,8 +48,11 @@ class RivieraProInterface(SimulatorInterface):
         """
         Create new instance from command line arguments object
         """
+        persistent = not (args.unique_sim or args.gui)
+
         return cls(prefix=cls.find_prefix(),
                    library_cfg=join(output_path, "library.cfg"),
+                   persistent=persistent,
                    gui=args.gui)
 
     @classmethod
@@ -63,10 +68,8 @@ class RivieraProInterface(SimulatorInterface):
                                    "vsimsa"],
                                   constraints=[no_avhdl])
 
-    def __init__(self, prefix, library_cfg="library.cfg", gui=False):
-        self._library_cfg = abspath(library_cfg)
-        self._prefix = prefix
-        self._gui = gui
+    def __init__(self, prefix, library_cfg="library.cfg", persistent=False, gui=False):
+        VsimSimulatorMixin.__init__(self, prefix, persistent, gui, library_cfg)
         self._create_library_cfg()
         self._libraries = []
 
@@ -95,7 +98,7 @@ class RivieraProInterface(SimulatorInterface):
         """
         Returns the command to compile a VHDL file
         """
-        return ([join(self._prefix, 'vcom'), '-quiet', '-j', dirname(self._library_cfg)] +
+        return ([join(self._prefix, 'vcom'), '-quiet', '-j', dirname(self._sim_cfg_file_name)] +
                 source_file.compile_options.get("rivierapro.vcom_flags", []) +
                 ['-' + source_file.get_vhdl_standard(), '-work', source_file.library.name, source_file.name])
 
@@ -103,7 +106,7 @@ class RivieraProInterface(SimulatorInterface):
         """
         Returns the command to compile a Verilog file
         """
-        args = [join(self._prefix, 'vlog'), '-quiet', '-sv2k12', '-lc', self._library_cfg]
+        args = [join(self._prefix, 'vlog'), '-quiet', '-sv2k12', '-lc', self._sim_cfg_file_name]
         args += source_file.compile_options.get("rivierapro.vlog_flags", [])
         args += ['-work', source_file.library.name, source_file.name]
         for library in self._libraries:
@@ -124,23 +127,23 @@ class RivieraProInterface(SimulatorInterface):
             os.makedirs(dirname(abspath(path)))
 
         if not file_exists(path):
-            proc = Process([join(self._prefix, 'vlib'), library_name, path], cwd=dirname(self._library_cfg))
+            proc = Process([join(self._prefix, 'vlib'), library_name, path], cwd=dirname(self._sim_cfg_file_name))
             proc.consume_output(callback=None)
 
         if library_name in mapped_libraries and mapped_libraries[library_name] == path:
             return
 
-        proc = Process([join(self._prefix, 'vmap'), library_name, path], cwd=dirname(self._library_cfg))
+        proc = Process([join(self._prefix, 'vmap'), library_name, path], cwd=dirname(self._sim_cfg_file_name))
         proc.consume_output(callback=None)
 
     def _create_library_cfg(self):
         """
         Create the library.cfg file if it does not exist
         """
-        if file_exists(self._library_cfg):
+        if file_exists(self._sim_cfg_file_name):
             return
 
-        with open(self._library_cfg, "w") as ofile:
+        with open(self._sim_cfg_file_name, "w") as ofile:
             ofile.write('$INCLUDE = "%s"\n' % join(self._prefix, "..", "vlib", "library.cfg"))
 
     _library_re = re.compile(r'([a-zA-Z_]+)\s=\s"(.*)"')
@@ -149,7 +152,7 @@ class RivieraProInterface(SimulatorInterface):
         """
         Get mapped libraries from library.cfg file
         """
-        with open(self._library_cfg, "r") as fptr:
+        with open(self._sim_cfg_file_name, "r") as fptr:
             text = fptr.read()
 
         libraries = {}
@@ -159,12 +162,12 @@ class RivieraProInterface(SimulatorInterface):
                 continue
             key = match.group(1)
             value = match.group(2)
-            libraries[key] = abspath(join(dirname(self._library_cfg), dirname(value)))
+            libraries[key] = abspath(join(dirname(self._sim_cfg_file_name), dirname(value)))
         return libraries
 
     def _create_load_function(self,  # pylint: disable=too-many-arguments
                               library_name, entity_name, architecture_name,
-                              config, disable_ieee_warnings, output_path):
+                              config, output_path):
         """
         Create the vunit_load TCL function that runs the vsim command and loads the design
         """
@@ -183,13 +186,13 @@ class RivieraProInterface(SimulatorInterface):
         if architecture_name is not None:
             vsim_flags.append(architecture_name)
 
-        if disable_ieee_warnings:
+        if config.disable_ieee_warnings:
             vsim_flags.append("-ieee_nowarn")
 
         tcl = """
 proc vunit_load {{}} {{
     set vsim_failed [catch {{
-        vsim {vsim_flags}
+        eval vsim {{{vsim_flags}}}
     }}]
     if {{${{vsim_failed}}}} {{
         return 1
@@ -222,11 +225,11 @@ proc vunit_load {{}} {{
         return " ".join(vsim_extra_args)
 
     @staticmethod
-    def _create_run_function(fail_on_warning=False):
+    def _create_run_function(config):
         """
         Create the vunit_run function to run the test bench
         """
-        breaklevel = "warning" if fail_on_warning else "error"
+        breaklevel = "warning" if config.fail_on_warning else "error"
         return """
 proc vunit_run {} {
     vhdlassert.break %s
@@ -263,107 +266,11 @@ proc vunit_run {} {
     }
     return $failed
 }
-""" % (breaklevel, breaklevel)
 
-    def _create_common_script(self,   # pylint: disable=too-many-arguments
-                              library_name, entity_name, architecture_name,
-                              config, output_path):
-        """
-        Create tcl script with functions common to interactive and batch modes
-        """
-        tcl = """
-proc vunit_help {} {
-    echo {List of VUnit commands:}
-    echo {vunit_help}
-    echo {  - Prints this help}
-    echo {vunit_load}
-    echo {  - Load design with correct generics for the test}
-    echo {  - Optional first argument are passed as extra flags to vsim}
-    echo {vunit_run}
-    echo {  - Run test, must do vunit_load first}
+proc _vunit_sim_restart {} {
+    restart
 }
-"""
-        tcl += self._create_load_function(library_name, entity_name, architecture_name,
-                                          config,
-                                          config.disable_ieee_warnings,
-                                          output_path)
-        tcl += self._create_run_function(config.fail_on_warning)
-        return tcl
-
-    @staticmethod
-    def _create_batch_script(common_file_name, load_only=False):
-        """
-        Create tcl script to run in batch mode
-        """
-        batch_do = ""
-        batch_do += "onerror {quit -code 1}\n"
-        batch_do += "source \"%s\"\n" % fix_path(common_file_name)
-        batch_do += "set failed [vunit_load]\n"
-        batch_do += "if {$failed} {quit -code 1}\n"
-        if not load_only:
-            batch_do += "set failed [vunit_run]\n"
-            batch_do += "if {$failed} {quit -code 1}\n"
-        batch_do += "quit -code 0\n"
-        return batch_do
-
-    @staticmethod
-    def _create_gui_script(common_file_name):
-        """
-        Create tcl script to run in batch mode
-        """
-        batch_do = ""
-        batch_do += "source \"%s\"\n" % fix_path(common_file_name)
-        batch_do += "vunit_load\n"
-        batch_do += "vunit_help\n"
-        return batch_do
-
-    def _run_batch_file(self, batch_file_name, gui):
-        """
-        Run a test bench in batch by invoking a new vsim process from the command line
-        """
-
-        try:
-            args = [join(self._prefix, "vsim"), "-gui" if gui else "-c",
-                    "-l", join(dirname(batch_file_name), "transcript"),
-                    '-do', "source \"%s\"" % fix_path(batch_file_name)]
-
-            os.environ["VSIMSALIBRARYCFG"] = dirname(self._library_cfg)
-            proc = Process(args, cwd=dirname(self._library_cfg))
-            proc.consume_output()
-        except Process.NonZeroExitCode:
-            return False
-        return True
-
-    def simulate(self, output_path,  # pylint: disable=too-many-arguments
-                 library_name, entity_name, architecture_name, config, elaborate_only):
-        """
-        Run a test bench
-        """
-        sim_output_path = abspath(join(output_path, self.name))
-        common_file_name = join(sim_output_path, "common.do")
-        batch_file_name = join(sim_output_path, "batch.do")
-        gui_file_name = join(sim_output_path, "gui.do")
-
-        write_file(common_file_name,
-                   self._create_common_script(library_name,
-                                              entity_name,
-                                              architecture_name,
-                                              config,
-                                              output_path))
-        write_file(gui_file_name,
-                   self._create_gui_script(common_file_name))
-        write_file(batch_file_name,
-                   self._create_batch_script(common_file_name, elaborate_only))
-
-        if self._gui:
-            return self._run_batch_file(gui_file_name, gui=True)
-        else:
-            return self._run_batch_file(batch_file_name, gui=False)
-
-
-def fix_path(path):
-    """ Remove backslash """
-    return path.replace("\\", "/")
+""" % (breaklevel, breaklevel)
 
 
 def format_generic(value):
