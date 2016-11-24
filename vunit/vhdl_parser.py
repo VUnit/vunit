@@ -966,4 +966,4 @@ def remove_comments(code):
     """
     Return the code with comments removed
     """
-    return re.sub(r'--[^\n]*', '', code)
+    return re.sub(r'--.+$', '', code)

@@ -80,7 +80,7 @@ class TestScanner(object):
             return self._create_test_bench(entity, architecture_name, config, fail_on_warning, verilog)
 
         self._warn_on_individual_configuration(create_scope(entity.library_name, entity.name),
-                                               run_strings,
+                                               [run_string for run_string, _ in run_strings],
                                                should_run_in_same_sim)
 
         if len(run_strings) == 0 or not has_runner_cfg:
@@ -112,7 +112,7 @@ class TestScanner(object):
                                      post_check=config.post_check,
                                      elaborate_only=self._elaborate_only))
         else:
-            for (run_string,line) in run_strings:
+            for (run_string, line) in run_strings:
                 scope = create_scope(entity.library_name, entity.name, run_string)
                 configurations = self._cfg.get_configurations(scope)
                 for config in configurations:
@@ -229,15 +229,19 @@ class TestScanner(object):
             # @TODO verilog
             regexp = self._re_verilog_run_string
         else:
-            code = remove_comments(code)
             regexp = self._re_vhdl_run_string
 
-        run_strings = [match.group(1)
-                       for match in regexp.finditer(code)]
+        lines = code.split("\n")
+        run_strings = list()
+        for line in range(0, len(lines)):
+            if not verilog:
+                lines[line] = remove_comments(lines[line])
+            run_strings.extend([(match.group(1), line + 1)
+                                for match in regexp.finditer(lines[line])])
 
         unique = set()
         not_unique = set()
-        for run_string in run_strings:
+        for run_string, _ in run_strings:
             if run_string in unique and run_string not in not_unique:
                 # @TODO line number information could be useful
                 LOGGER.error('Duplicate test case "%s" in %s',
