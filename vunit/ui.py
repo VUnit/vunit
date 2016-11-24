@@ -742,8 +742,11 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         test_suites = self._create_tests(simulator_if)
 
         for test_suite in test_suites:
-            for name in test_suite.test_cases:
-                print(name)
+            for test_case in test_suite.test_cases:
+                if self._verbose:
+                    print(test_case.discriptor)
+                else:
+                    print(test_case.name)
         print("Listed %i tests" % test_suites.num_tests())
         return True
 
