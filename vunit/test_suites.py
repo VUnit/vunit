@@ -91,17 +91,23 @@ class SameSimTestCase(object):
     A test case in a SameSimTestSuite
     """
 
-    def __init__(self, name, file_name, line):
+    def __init__(self, name, file_name, line, run_string):
         self._name = name
         self._file_name = file_name
         self._line = line
+        self._run_string = run_string
 
     @property
     def name(self):
         return self._name
 
+    @property
     def descriptor(self):
         return ':'.join([self._file_name, self._line, self._name])
+    
+    @property
+    def run_string(self):
+        return self._run_string
 
 
 class SameSimTestSuite(object):
@@ -119,7 +125,7 @@ class SameSimTestSuite(object):
                  elaborate_only=False):
         self._name = name
         self._entity = entity
-        self._test_cases = [SameSimTestCase(self._full_name(run_string), entity.file_name, line)
+        self._test_cases = [SameSimTestCase(self._full_name(run_string), entity.file_name, line, run_string)
                             for run_string, line in run_strings]
         self._test_bench = test_bench
         self._pre_config = pre_config
@@ -145,8 +151,8 @@ class SameSimTestSuite(object):
         Keep tests which pattern return False if no remaining tests
         """
         # TODO: Tests
-        self._test_cases = [test_case.name for test_case in self._test_cases
-                            if test_filter(self._full_name(test_case.name))]
+        self._test_cases = [test_case for test_case in self._test_cases
+                            if test_filter(test_case.name)]
         return len(self._test_cases) > 0
 
     def run(self, output_path):
@@ -157,7 +163,7 @@ class SameSimTestSuite(object):
             return False
 
         runner_cfg = {
-            "enabled_test_cases": ",".join([encode_test_case(test_case) for test_case in self._test_cases]),
+            "enabled_test_cases": ",".join([encode_test_case(test_case.run_string) for test_case in self._test_cases]),
             "output path": output_path.replace("\\", "/") + "/",
             "active python runner": True,
         }
