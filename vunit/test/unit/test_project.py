@@ -417,72 +417,64 @@ end architecture;
         self.assertIn("a2", log_msg)
         self.assertIn("lib.ent", log_msg)
 
-    def _test_warning_on_duplicate(self, mock_logger, code, message):
+    def _test_error_on_duplicate(self, code, message, verilog=False):
         """
         Utility function to test adding the same duplicate code under
-        file.vhd and file_copy.vhd where the duplication should cause a warning message.
+        file.vhd and file_copy.vhd where the duplication should cause a error message.
         """
-        self.add_source_file("lib", "file.vhd", code)
+        suffix = "v" if verilog else "vhd"
 
-        warning_calls = mock_logger.warning.call_args_list
+        self.add_source_file("lib", "file." + suffix, code)
 
-        self.assertEqual(len(warning_calls), 0)
+        try:
+            self.add_source_file("lib", "file_copy." + suffix, code)
+        except RuntimeError as exc:
+            self.assertEqual(str(exc), message)
+        else:
+            self.fail("RuntimeError not raised")
 
-        self.add_source_file("lib", "file_copy.vhd", code)
-
-        warning_calls = mock_logger.warning.call_args_list
-        self.assertEqual(len(warning_calls), 1)
-
-        log_msg = warning_calls[0][0][0] % warning_calls[0][0][1:]
-        self.assertEqual(log_msg, message)
-
-    @mock.patch("vunit.project.LOGGER")
-    def test_warning_on_duplicate_entity(self, mock_logger):
+    def test_error_on_duplicate_entity(self):
         self.project.add_library("lib", "lib_path")
-        self._test_warning_on_duplicate(
-            mock_logger, """
+        self._test_error_on_duplicate(
+            """
 entity ent is
 end entity;
 """,
             "file_copy.vhd: entity 'ent' previously defined in file.vhd")
 
-    @mock.patch("vunit.project.LOGGER")
-    def test_warning_on_duplicate_package(self, mock_logger):
+    def test_error_on_duplicate_package(self):
         self.project.add_library("lib", "lib_path")
-        self._test_warning_on_duplicate(
-            mock_logger, """
+        self._test_error_on_duplicate(
+            """
 package pkg is
 end package;
 """,
             "file_copy.vhd: package 'pkg' previously defined in file.vhd")
 
-    @mock.patch("vunit.project.LOGGER")
-    def test_warning_on_duplicate_configuration(self, mock_logger):
+    def test_error_on_duplicate_configuration(self):
         self.project.add_library("lib", "lib_path")
-        self._test_warning_on_duplicate(
-            mock_logger, """
+        self._test_error_on_duplicate(
+            """
 configuration cfg of ent is
 end configuration;
 """,
             "file_copy.vhd: configuration 'cfg' previously defined in file.vhd")
 
-    @mock.patch("vunit.project.LOGGER")
-    def test_warning_on_duplicate_package_body(self, mock_logger):
+    def test_error_on_duplicate_package_body(self):
         self.project.add_library("lib", "lib_path")
         self.add_source_file("lib", "pkg.vhd", """
 package pkg is
 end package;
 """)
 
-        self._test_warning_on_duplicate(
-            mock_logger, """
+        self._test_error_on_duplicate(
+            """
 package body pkg is
 end package bodY;
 """,
             "file_copy.vhd: package body 'pkg' previously defined in file.vhd")
 
-    @mock.patch("vunit.project.LOGGER")
-    def test_warning_on_duplicate_architecture(self, mock_logger):
+    def test_error_on_duplicate_architecture(self):
         self.project.add_library("lib", "lib_path")
         self.add_source_file("lib", "ent.vhd", """
 entity ent is
@@ -495,23 +487,42 @@ begin
 end architecture;
 """)
 
-        self._test_warning_on_duplicate(
-            mock_logger, """
+        self._test_error_on_duplicate(
+            """
 architecture a of ent is
 begin
 end architecture;
 """,
             "file_copy.vhd: architecture 'a' previously defined in file.vhd")
 
-    @mock.patch("vunit.project.LOGGER")
-    def test_warning_on_duplicate_context(self, mock_logger):
+    def test_error_on_duplicate_context(self):
         self.project.add_library("lib", "lib_path")
-        self._test_warning_on_duplicate(
-            mock_logger, """
+        self._test_error_on_duplicate(
+            """
 context ctx is
 end context;
 """,
             "file_copy.vhd: context 'ctx' previously defined in file.vhd")
+
+    def test_error_on_duplicate_verilog_module(self):
+        self.project.add_library("lib", "lib_path")
+        self._test_error_on_duplicate(
+            """
+module foo;
+endmodule
+""",
+            "file_copy.v: module 'foo' previously defined in file.v",
+            verilog=True)
+
+    def test_error_on_duplicate_verilog_package(self):
+        self.project.add_library("lib", "lib_path")
+        self._test_error_on_duplicate(
+            """
+package pkg;
+endpackage
+""",
+            "file_copy.v: package 'pkg' previously defined in file.v",
+            verilog=True)
 
     def test_should_recompile_all_files_initially(self):
         file1, file2, file3 = self.create_dummy_three_file_project()
@@ -847,14 +858,18 @@ endmodule
         self.assertEqual(len(modules), 1)
 
     def test_recompile_when_updating_defines(self):
-        contents = """
-module mod;
+        contents1 = """
+module mod1;
+endmodule
+"""
+        contents2 = """
+module mod2;
 endmodule
 """
         self.project = Project()
         self.project.add_library("lib", "lib_path")
-        mod1 = self.add_source_file("lib", "module1.v", contents)
-        mod2 = self.add_source_file("lib", "module2.v", contents)
+        mod1 = self.add_source_file("lib", "module1.v", contents1)
+        mod2 = self.add_source_file("lib", "module2.v", contents2)
         self.assert_should_recompile([mod1, mod2])
         self.update(mod1)
         self.update(mod2)
@@ -862,9 +877,9 @@ endmodule
 
         self.project = Project()
         self.project.add_library("lib", "lib_path")
-        mod1 = self.add_source_file("lib", "module1.v", contents,
+        mod1 = self.add_source_file("lib", "module1.v", contents1,
                                     defines={"foo": "bar"})
-        mod2 = self.add_source_file("lib", "module2.v", contents)
+        mod2 = self.add_source_file("lib", "module2.v", contents2)
         self.assert_should_recompile([mod1])
         self.update(mod1)
         self.update(mod2)
@@ -872,9 +887,9 @@ endmodule
 
         self.project = Project()
         self.project.add_library("lib", "lib_path")
-        mod1 = self.add_source_file("lib", "module1.v", contents,
+        mod1 = self.add_source_file("lib", "module1.v", contents1,
                                     defines={"foo": "other_bar"})
-        mod2 = self.add_source_file("lib", "module2.v", contents)
+        mod2 = self.add_source_file("lib", "module2.v", contents2)
         self.assert_should_recompile([mod1])
         self.update(mod1)
         self.update(mod2)
