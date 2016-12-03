@@ -772,6 +772,26 @@ endmodule
 """)
         self.assert_compiles(module1, before=module2)
 
+    def test_finds_verilog_module_instantiation_dependencies_in_vhdl(self):
+        self.project.add_library("lib1", "lib_path")
+        self.project.add_library("lib2", "lib_path")
+        module1 = self.add_source_file("lib1", "module1.sv", """\
+module module1;
+endmodule
+""")
+        module2 = self.add_source_file("lib2", "module2.vhd", """\
+library lib1;
+
+entity ent is
+end entity;
+
+architecture a of ent is
+begin
+  inst : entity lib1.module1;
+end architecture;
+""")
+        self.assert_compiles(module1, before=module2)
+
     def test_finds_verilog_include_dependencies(self):
         def create_project():
             """
