@@ -35,13 +35,13 @@ class Project(object):
     def __init__(self,
                  depend_on_components=False,
                  depend_on_package_body=False,
-                 vhdl_parser=VHDLParser(),
-                 verilog_parser=VerilogParser()):
+                 vhdl_parser=None,
+                 verilog_parser=None):
         """
         depend_on_package_body - Package users depend also on package body
         """
-        self._vhdl_parser = vhdl_parser
-        self._verilog_parser = verilog_parser
+        self._vhdl_parser = VHDLParser() if vhdl_parser is None else vhdl_parser
+        self._verilog_parser = VerilogParser() if verilog_parser is None else verilog_parser
         self._libraries = OrderedDict()
         self._source_files_in_order = []
         self._manual_dependencies = []
