@@ -144,7 +144,16 @@ class ModelSimInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
             self._vsim_processes[ident] = vsim_process
 
         vsim_process.write("#VUNIT_RETURN\n")
-        vsim_process.consume_output(silent_output_consumer)
+
+        try:
+            consumer = SilentOutputConsumer()
+            vsim_process.consume_output(consumer)
+        except Process.NonZeroExitCode:
+            # Print output if background vsim process startup failed
+            LOGGER.error("Failed to start re-usable background vsim process")
+            print(consumer.output)
+            raise
+
         return vsim_process
 
     def _create_modelsim_ini(self):
@@ -658,12 +667,18 @@ def output_consumer(line):
     print(line)
 
 
-def silent_output_consumer(line):
+class SilentOutputConsumer(object):
     """
     Consume output until reaching #VUNIT_RETURN, silent
     """
-    if line.endswith("#VUNIT_RETURN"):
-        return True
+    def __init__(self):
+        self.output = ""
+
+    def __call__(self, line):
+        if line.endswith("#VUNIT_RETURN"):
+            return True
+        else:
+            self.output += line + "\n"
 
 
 class ReadVarOutputConsumer(object):
