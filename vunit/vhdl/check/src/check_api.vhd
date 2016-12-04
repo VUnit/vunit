@@ -1665,7 +1665,7 @@ package check_pkg is
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
     return boolean;
-  
+
   -----------------------------------------------------------------------------
   -- check_match
   -----------------------------------------------------------------------------
