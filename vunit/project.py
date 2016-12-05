@@ -149,7 +149,7 @@ class Project(object):
             if ref.is_entity_reference() and ref.design_unit in library.modules:
                 # Is a verilog module instantiation
                 yield library.modules[ref.design_unit].source_file
-                return
+                continue
 
             try:
                 primary_unit = library.primary_design_units[ref.design_unit]
