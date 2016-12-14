@@ -97,6 +97,13 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         return cls.find_toolchain(["vsim"],
                                   constraints=[has_modelsim_ini])
 
+    @classmethod
+    def supports_vhdl_package_generics(cls):
+        """
+        Returns True when this simulator supports VHDL package generics
+        """
+        return True
+
     def __init__(self, prefix, modelsim_ini="modelsim.ini", persistent=False, gui=False, coverage=None):
         VsimSimulatorMixin.__init__(self, prefix, persistent, gui, modelsim_ini)
         self._libraries = []

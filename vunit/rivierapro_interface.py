@@ -68,6 +68,27 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
                                    "vsimsa"],
                                   constraints=[no_avhdl])
 
+    @classmethod
+    def get_osvvm_coverage_api(cls):
+        """
+        Returns simulator name when OSVVM coverage API is supported, None otherwise.
+        """
+        proc = Process([join(cls.find_prefix(), 'vcom'), '-version'])
+        consumer = VersionConsumer()
+        proc.consume_output(consumer)
+        if consumer.year is not None:
+            if (consumer.year == 2016 and consumer.month >= 10) or (consumer.year > 2016):
+                return cls.name
+
+        return None
+
+    @classmethod
+    def supports_vhdl_package_generics(cls):
+        """
+        Returns True when this simulator supports VHDL package generics
+        """
+        return True
+
     def __init__(self, prefix, library_cfg="library.cfg", persistent=False, gui=False):
         VsimSimulatorMixin.__init__(self, prefix, persistent, gui, library_cfg)
         self._create_library_cfg()
@@ -282,3 +303,21 @@ def format_generic(value):
         return '"%s"' % value_str
     else:
         return value_str
+
+
+class VersionConsumer(object):
+    """
+    Consume version information
+    """
+    def __init__(self):
+        self.year = None
+        self.month = None
+
+    _version_re = re.compile(r'(?P<year>\d+)\.(?P<month>\d+)\.\d+')
+
+    def __call__(self, line):
+        match = self._version_re.search(line)
+        if match is not None:
+            self.year = int(match.group('year'))
+            self.month = int(match.group('month'))
+        return True

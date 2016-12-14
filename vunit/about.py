@@ -56,4 +56,4 @@ def version():
     """
     Returns VUnit version
     """
-    return '1.1.1'
+    return '1.2.0'

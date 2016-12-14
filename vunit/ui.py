@@ -895,7 +895,9 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
             library = self.add_library(library_name)
         else:
             library = self.library(library_name)
-        add_osvvm(library)
+        simulator_coverage_api = self._simulator_factory.get_osvvm_coverage_api()
+        supports_vhdl_package_generics = self._simulator_factory.supports_vhdl_package_generics()
+        add_osvvm(library, simulator_coverage_api, supports_vhdl_package_generics)
 
     def get_compile_order(self, source_files=None):
         """

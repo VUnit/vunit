@@ -178,7 +178,7 @@ def osvvm_is_installed():
     return len(glob(join(VHDL_PATH, "osvvm", "*.vhd"))) != 0
 
 
-def add_osvvm(library):
+def add_osvvm(library, simulator_coverage_api=None, supports_vhdl_package_generics=False):
     """
     Add osvvm library
     """
@@ -191,8 +191,21 @@ git submodule update --init --recursive
 in your VUnit Git repository? You have to do this first if installing using setup.py.""")
 
     for file_name in glob(join(VHDL_PATH, "osvvm", "*.vhd")):
-        if basename(file_name) != 'AlertLogPkg_body_BVUL.vhd':
-            library.add_source_files(file_name, preprocessors=[])
+        if basename(file_name) == "AlertLogPkg_body_BVUL.vhd":
+            continue
+
+        if (simulator_coverage_api != "rivierapro") and (basename(file_name) == "VendorCovApiPkg_Aldec.vhd"):
+            continue
+
+        if (simulator_coverage_api == "rivierapro") and (basename(file_name) == "VendorCovApiPkg.vhd"):
+            continue
+
+        if not supports_vhdl_package_generics and (basename(file_name) in ["ScoreboardGenericPkg.vhd",
+                                                                           "ScoreboardPkg_int.vhd",
+                                                                           "ScoreboardPkg_slv.vhd"]):
+            continue
+
+        library.add_source_files(file_name, preprocessors=[])
 
 
 def add_com(library, vhdl_standard, use_debug_codecs=False, supports_context=True):

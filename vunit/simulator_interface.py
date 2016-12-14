@@ -106,6 +106,20 @@ class SimulatorInterface(object):
                    [constraint(path0) for constraint in constraints]):
                 return path0
 
+    @classmethod
+    def get_osvvm_coverage_api(cls):
+        """
+        Returns simulator name when OSVVM coverage API is supported, None otherwise.
+        """
+        return None
+
+    @classmethod
+    def supports_vhdl_package_generics(cls):
+        """
+        Returns True when this simulator supports VHDL package generics
+        """
+        return False
+
     def post_process(self, output_path):
         """
         Hook for simulator interface to perform post processing such as creating coverage reports

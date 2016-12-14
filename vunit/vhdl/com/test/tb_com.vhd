@@ -239,7 +239,7 @@ begin
         receive(net, self, message);
         check(message.id = 2, "Expected second message id to be 2");
         delete(message);
-      elsif run("Test that a client can wait for a specific request reply from a server even if it is not the first message to arrive") then
+      elsif run("Test that a client can wait for an out-of-order request reply") then
         start_server2 <= true;
         server        := find("server2");
         send(net, self, server, "request1", receipt);

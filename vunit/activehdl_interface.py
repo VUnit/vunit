@@ -54,6 +54,19 @@ class ActiveHDLInterface(SimulatorInterface):
         return cls.find_toolchain(["vsim",
                                    "avhdl"])
 
+    @classmethod
+    def supports_vhdl_package_generics(cls):
+        """
+        Returns True when this simulator supports VHDL package generics
+        """
+        proc = Process([join(cls.find_prefix(), 'vcom'), '-version'])
+        consumer = VersionConsumer()
+        proc.consume_output(consumer)
+        if consumer.major is not None:
+            return (consumer.major == 10 and consumer.minor >= 1) or (consumer.major > 10)
+
+        return False
+
     def __init__(self, prefix, library_cfg="library.cfg", gui=False):
         self._library_cfg = abspath(library_cfg)
         self._prefix = prefix
@@ -348,6 +361,24 @@ puts "VUnit help: Design already loaded. Use run -all to run the test."
         else:
             return self._run_batch_file(batch_file_name, gui=False,
                                         cwd=dirname(self._library_cfg))
+
+
+class VersionConsumer(object):
+    """
+    Consume version information
+    """
+    def __init__(self):
+        self.major = None
+        self.minor = None
+
+    _version_re = re.compile(r'(?P<major>\d+)\.(?P<minor>\d+)\.\d+\.\d+')
+
+    def __call__(self, line):
+        match = self._version_re.search(line)
+        if match is not None:
+            self.major = int(match.group('major'))
+            self.minor = int(match.group('minor'))
+        return True
 
 
 def fix_path(path):

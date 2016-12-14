@@ -135,6 +135,24 @@ class SimulatorFactory(object):
         else:
             return True
 
+    def get_osvvm_coverage_api(self):
+        """
+        Returns simulator name when OSVVM coverage API is supported, None otherwise.
+        """
+        if self._simulator_class is not None:
+            return self._simulator_class.get_osvvm_coverage_api()
+        else:
+            return None
+
+    def supports_vhdl_package_generics(self):
+        """
+        Returns True when this simulator supports VHDL package generics
+        """
+        if self._simulator_class is not None:
+            return self._simulator_class.supports_vhdl_package_generics()
+        else:
+            return False
+
     @property
     def simulator_name(self):
         if self._simulator_class is None:
