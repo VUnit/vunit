@@ -256,6 +256,7 @@ html_theme = 'alabaster'
 # documentation.
 html_theme_options = {
     'github_button': True,
+    'github_type' : 'star',
     'github_user': 'VUnit',
     'github_repo': 'vunit',
     'description': 'A test framework for HDL',
