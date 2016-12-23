@@ -137,6 +137,11 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
             self._libraries.append(library)
             self.create_library(library.name, library.directory, mapped_libraries)
 
+        for library_name in mapped_libraries:
+            if not project.has_library(library_name):
+                library_dir = mapped_libraries[library_name]
+                project.add_library(library_name, library_dir, is_external=True)
+
     def compile_source_file_command(self, source_file):
         """
         Returns the command to compile a single source file
