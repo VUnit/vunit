@@ -83,7 +83,7 @@ end architecture;
 
         pp_source = Template("""\
 -- check_relation(a = b, line_num => 1, file_name => "$file", \
-auto_msg => "Relation a = b failed! Left is " & to_string(a) & ". Right is " & to_string(b) & ".");
+context_msg => "Expected a = b. Left is " & to_string(a) & ". Right is " & to_string(b) & ".");
 
 library vunit_lib;
 context vunit_lib.vunit_context;
@@ -95,7 +95,7 @@ architecture arch of $entity is
 begin
     log("Hello World", line_num => 11, file_name => "$file");
     check_relation(1 /= 2, line_num => 12, file_name => "$file", \
-auto_msg => "Relation 1 /= 2 failed! Left is " & to_string(1) & ". Right is " & to_string(2) & ".");
+context_msg => "Expected 1 /= 2. Left is " & to_string(1) & ". Right is " & to_string(2) & ".");
     report "Here I am!";
 end architecture;
 """)

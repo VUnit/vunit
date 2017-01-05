@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test the check preprocessor
@@ -34,9 +34,9 @@ check_relation(a /= b);
 check(a /= b or c); -- Same as (a /= b) or c. Not a relation
 """
         expected_result = """
-check_relation(a /= b, auto_msg => %s);
+check_relation(a /= b, context_msg => %s);
 check(a /= b or c); -- Same as (a /= b) or c. Not a relation
-""" % make_auto_msg('a', '/=', 'b')
+""" % make_context_msg('a', '/=', 'b')
 
         self._verify_result(code, expected_result)
 
@@ -45,8 +45,8 @@ check(a /= b or c); -- Same as (a /= b) or c. Not a relation
 check_relation(age("John") >= 0, "Age must not be negative.");
 """
         expected_result = """
-check_relation(age("John") >= 0, "Age must not be negative.", auto_msg => %s);
-""" % make_auto_msg('age("John")', '>=', '0')
+check_relation(age("John") >= 0, "Age must not be negative.", context_msg => %s);
+""" % make_context_msg('age("John")', '>=', '0')
 
         self._verify_result(code, expected_result)
 
@@ -58,13 +58,13 @@ check_relation(a > (b = c));
 check_relation(( (a > b))  );"""
 
         expected_result = """
-check_relation(foo(a > b) = c, auto_msg => %s);
-check_relation((a > b) = c, auto_msg => %s);
-check_relation(a > (b = c), auto_msg => %s);
-check_relation(( (a > b))  , auto_msg => %s);""" % (make_auto_msg('foo(a > b)', '=', 'c'),
-                                                    make_auto_msg('(a > b)', '=', 'c'),
-                                                    make_auto_msg('a', '>', '(b = c)'),
-                                                    make_auto_msg('a', '>', 'b'))
+check_relation(foo(a > b) = c, context_msg => %s);
+check_relation((a > b) = c, context_msg => %s);
+check_relation(a > (b = c), context_msg => %s);
+check_relation(( (a > b))  , context_msg => %s);""" % (make_context_msg('foo(a > b)', '=', 'c'),
+                                                    make_context_msg('(a > b)', '=', 'c'),
+                                                    make_context_msg('a', '>', '(b = c)'),
+                                                    make_context_msg('a', '>', 'b'))
 
         self._verify_result(code, expected_result)
 
@@ -81,23 +81,23 @@ check_relation(39 = ascii('''), "Incorrect ascii for '''");
 check_relation(byte'high = 7);"""
 
         expected_result = """
-check_relation(41 = ascii(')'), "Incorrect ascii for ')'", auto_msg => %s);
-check_relation(9 = len("Smile :-)"), "Incorrect length of :-) message", auto_msg => %s);
-check_relation(8 = len("Heart => <3"), "Incorrect length of <3 message", auto_msg => %s);
-check_relation(a = integer'(9), "This wasn't expected", auto_msg => %s);
-check_relation(a = std_logic'('1'), "This wasn't expected", auto_msg => %s);
-check_relation(a = func('(','x'), "This wasn't expected", auto_msg => %s);
-check_relation(a = std_logic'('1'+'1'), "This wasn't expected", auto_msg => %s);
-check_relation(39 = ascii('''), "Incorrect ascii for '''", auto_msg => %s);
-check_relation(byte'high = 7, auto_msg => %s);""" % (make_auto_msg('41', '=', "ascii(')')"),
-                                                     make_auto_msg('9', '=', 'len("Smile :-)")'),
-                                                     make_auto_msg('8', '=', 'len("Heart => <3")'),
-                                                     make_auto_msg('a', '=', "integer'(9)"),
-                                                     make_auto_msg('a', '=', "std_logic'('1')"),
-                                                     make_auto_msg('a', '=', "func('(','x')"),
-                                                     make_auto_msg('a', '=', "std_logic'('1'+'1')"),
-                                                     make_auto_msg('39', '=', "ascii(''')"),
-                                                     make_auto_msg("byte'high", '=', '7'))
+check_relation(41 = ascii(')'), "Incorrect ascii for ')'", context_msg => %s);
+check_relation(9 = len("Smile :-)"), "Incorrect length of :-) message", context_msg => %s);
+check_relation(8 = len("Heart => <3"), "Incorrect length of <3 message", context_msg => %s);
+check_relation(a = integer'(9), "This wasn't expected", context_msg => %s);
+check_relation(a = std_logic'('1'), "This wasn't expected", context_msg => %s);
+check_relation(a = func('(','x'), "This wasn't expected", context_msg => %s);
+check_relation(a = std_logic'('1'+'1'), "This wasn't expected", context_msg => %s);
+check_relation(39 = ascii('''), "Incorrect ascii for '''", context_msg => %s);
+check_relation(byte'high = 7, context_msg => %s);""" % (make_context_msg('41', '=', "ascii(')')"),
+                                                     make_context_msg('9', '=', 'len("Smile :-)")'),
+                                                     make_context_msg('8', '=', 'len("Heart => <3")'),
+                                                     make_context_msg('a', '=', "integer'(9)"),
+                                                     make_context_msg('a', '=', "std_logic'('1')"),
+                                                     make_context_msg('a', '=', "func('(','x')"),
+                                                     make_context_msg('a', '=', "std_logic'('1'+'1')"),
+                                                     make_context_msg('39', '=', "ascii(''')"),
+                                                     make_context_msg("byte'high", '=', '7'))
 
         self._verify_result(code, expected_result)
 
@@ -111,11 +111,11 @@ check_relation(42 = /* Meaning of
 """
         expected_result = """
 check_relation(42 = -- Meaning of life :-)
-               hex(66), auto_msg => %s);
+               hex(66), context_msg => %s);
 check_relation(42 = /* Meaning of
                        life :-) */
-               hex(66), auto_msg => %s);
-""" % (make_auto_msg('42', '=', 'hex(66)'), make_auto_msg('42', '=', 'hex(66)'))
+               hex(66), context_msg => %s);
+""" % (make_context_msg('42', '=', 'hex(66)'), make_context_msg('42', '=', 'hex(66)'))
 
         self._verify_result(code, expected_result)
 
@@ -132,11 +132,11 @@ check_relation(my_checker, a = b);
 check_relation(msg => "Error!", expr => a('<') = b);"""
 
         expected_result = """
-check_relation(a = b, level => warning, auto_msg => %s);
-check_relation(my_checker, a = b, auto_msg => %s);
-check_relation(msg => "Error!", expr => a('<') = b, auto_msg => %s);""" % (make_auto_msg('a', '=', 'b'),
-                                                                           make_auto_msg('a', '=', 'b'),
-                                                                           make_auto_msg("a('<')", '=', 'b'))
+check_relation(a = b, level => warning, context_msg => %s);
+check_relation(my_checker, a = b, context_msg => %s);
+check_relation(msg => "Error!", expr => a('<') = b, context_msg => %s);""" % (make_context_msg('a', '=', 'b'),
+                                                                           make_context_msg('a', '=', 'b'),
+                                                                           make_context_msg("a('<')", '=', 'b'))
 
         self._verify_result(code, expected_result)
 
@@ -156,34 +156,34 @@ check_relation(a ?> b);
 check_relation(a ?>= b);"""
 
         expected_result = """
-check_relation(a = b, auto_msg => %s);
-check_relation(a /= b, auto_msg => %s);
-check_relation(a < b, auto_msg => %s);
-check_relation(a <= b, auto_msg => %s);
-check_relation(a > b, auto_msg => %s);
-check_relation(a >= b, auto_msg => %s);
-check_relation(a ?= b, auto_msg => %s);
-check_relation(a ?/= b, auto_msg => %s);
-check_relation(a ?< b, auto_msg => %s);
-check_relation(a ?<= b, auto_msg => %s);
-check_relation(a ?> b, auto_msg => %s);
-check_relation(a ?>= b, auto_msg => %s);""" % (make_auto_msg("a", '=', 'b'),
-                                               make_auto_msg("a", '/=', 'b'),
-                                               make_auto_msg("a", '<', 'b'),
-                                               make_auto_msg("a", '<=', 'b'),
-                                               make_auto_msg("a", '>', 'b'),
-                                               make_auto_msg("a", '>=', 'b'),
-                                               make_auto_msg("a", '?=', 'b'),
-                                               make_auto_msg("a", '?/=', 'b'),
-                                               make_auto_msg("a", '?<', 'b'),
-                                               make_auto_msg("a", '?<=', 'b'),
-                                               make_auto_msg("a", '?>', 'b'),
-                                               make_auto_msg("a", '?>=', 'b'))
+check_relation(a = b, context_msg => %s);
+check_relation(a /= b, context_msg => %s);
+check_relation(a < b, context_msg => %s);
+check_relation(a <= b, context_msg => %s);
+check_relation(a > b, context_msg => %s);
+check_relation(a >= b, context_msg => %s);
+check_relation(a ?= b, context_msg => %s);
+check_relation(a ?/= b, context_msg => %s);
+check_relation(a ?< b, context_msg => %s);
+check_relation(a ?<= b, context_msg => %s);
+check_relation(a ?> b, context_msg => %s);
+check_relation(a ?>= b, context_msg => %s);""" % (make_context_msg("a", '=', 'b'),
+                                               make_context_msg("a", '/=', 'b'),
+                                               make_context_msg("a", '<', 'b'),
+                                               make_context_msg("a", '<=', 'b'),
+                                               make_context_msg("a", '>', 'b'),
+                                               make_context_msg("a", '>=', 'b'),
+                                               make_context_msg("a", '?=', 'b'),
+                                               make_context_msg("a", '?/=', 'b'),
+                                               make_context_msg("a", '?<', 'b'),
+                                               make_context_msg("a", '?<=', 'b'),
+                                               make_context_msg("a", '?>', 'b'),
+                                               make_context_msg("a", '?>=', 'b'))
         self._verify_result(code, expected_result)
 
 
-def make_auto_msg(left, relation, right):
-    return ('"Relation %s %s %s failed! Left is " & to_string(%s) & ". Right is " & to_string(%s) & "."' %
+def make_context_msg(left, relation, right):
+    return ('"Expected %s %s %s. Left is " & to_string(%s) & ". Right is " & to_string(%s) & "."' %
             (left.replace('"', '""'),
              relation,
              right.replace('"', '""'),
