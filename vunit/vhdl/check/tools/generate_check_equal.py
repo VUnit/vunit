@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2017, Lars Asplund lars.anders.asplund@gmail.com
 
 from string import Template
 
@@ -188,7 +188,8 @@ test_template = """      elsif run("Test should pass on $left_type equal $right_
         check_equal($left_pass, $right_fail, "Checking my data");
         verify_log_call(inc_count, "Checking my data - Got ", $left_pass_str, ". Expected ", $fail_str);
         check_equal($left_pass, $right_fail, result("for my data"));
-        verify_log_call(inc_count, "Equality check failed for my data - Got ", $left_pass_str, ". Expected ", $fail_str);
+        verify_log_call(inc_count, "Equality check failed for my data - Got ", $left_pass_str,
+                        ". Expected ", $fail_str);
         check_equal(pass, $left_pass, $right_fail);
         counting_assert(not pass, "Should return pass = false on failing check");
         verify_log_call(inc_count, "Equality check failed - Got ", $left_pass_str, ". Expected ", $fail_str);

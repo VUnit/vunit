@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2017, Lars Asplund lars.anders.asplund@gmail.com
 
 from string import Template
 
@@ -181,7 +181,8 @@ test_template = """      elsif run("Test should pass on $left_type matching $rig
         check_match($left_pass, $right_pass_dc, "Checking my data");
         verify_log_call(inc_count, "Checking my data - Got $pass_str. Expected $pass_dc_str.", pass_level);
         check_match($left_pass_dc, $right_pass_dc, result("for my data"));
-        verify_log_call(inc_count, "Match check passed for my data - Got $pass_dc_str. Expected $pass_dc_str.", pass_level);
+        verify_log_call(inc_count, "Match check passed for my data - Got $pass_dc_str. Expected $pass_dc_str.",
+                        pass_level);
         disable_pass_msg;
       elsif run("Test should fail on $left_type not matching $right_type") then
         check_match($left_pass, $right_fail_dc);

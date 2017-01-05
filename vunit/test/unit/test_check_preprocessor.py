@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2017, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test the check preprocessor
@@ -62,9 +62,9 @@ check_relation(foo(a > b) = c, context_msg => %s);
 check_relation((a > b) = c, context_msg => %s);
 check_relation(a > (b = c), context_msg => %s);
 check_relation(( (a > b))  , context_msg => %s);""" % (make_context_msg('foo(a > b)', '=', 'c'),
-                                                    make_context_msg('(a > b)', '=', 'c'),
-                                                    make_context_msg('a', '>', '(b = c)'),
-                                                    make_context_msg('a', '>', 'b'))
+                                                       make_context_msg('(a > b)', '=', 'c'),
+                                                       make_context_msg('a', '>', '(b = c)'),
+                                                       make_context_msg('a', '>', 'b'))
 
         self._verify_result(code, expected_result)
 
@@ -90,14 +90,14 @@ check_relation(a = func('(','x'), "This wasn't expected", context_msg => %s);
 check_relation(a = std_logic'('1'+'1'), "This wasn't expected", context_msg => %s);
 check_relation(39 = ascii('''), "Incorrect ascii for '''", context_msg => %s);
 check_relation(byte'high = 7, context_msg => %s);""" % (make_context_msg('41', '=', "ascii(')')"),
-                                                     make_context_msg('9', '=', 'len("Smile :-)")'),
-                                                     make_context_msg('8', '=', 'len("Heart => <3")'),
-                                                     make_context_msg('a', '=', "integer'(9)"),
-                                                     make_context_msg('a', '=', "std_logic'('1')"),
-                                                     make_context_msg('a', '=', "func('(','x')"),
-                                                     make_context_msg('a', '=', "std_logic'('1'+'1')"),
-                                                     make_context_msg('39', '=', "ascii(''')"),
-                                                     make_context_msg("byte'high", '=', '7'))
+                                                        make_context_msg('9', '=', 'len("Smile :-)")'),
+                                                        make_context_msg('8', '=', 'len("Heart => <3")'),
+                                                        make_context_msg('a', '=', "integer'(9)"),
+                                                        make_context_msg('a', '=', "std_logic'('1')"),
+                                                        make_context_msg('a', '=', "func('(','x')"),
+                                                        make_context_msg('a', '=', "std_logic'('1'+'1')"),
+                                                        make_context_msg('39', '=', "ascii(''')"),
+                                                        make_context_msg("byte'high", '=', '7'))
 
         self._verify_result(code, expected_result)
 
@@ -135,8 +135,8 @@ check_relation(msg => "Error!", expr => a('<') = b);"""
 check_relation(a = b, level => warning, context_msg => %s);
 check_relation(my_checker, a = b, context_msg => %s);
 check_relation(msg => "Error!", expr => a('<') = b, context_msg => %s);""" % (make_context_msg('a', '=', 'b'),
-                                                                           make_context_msg('a', '=', 'b'),
-                                                                           make_context_msg("a('<')", '=', 'b'))
+                                                                              make_context_msg('a', '=', 'b'),
+                                                                              make_context_msg("a('<')", '=', 'b'))
 
         self._verify_result(code, expected_result)
 
@@ -168,17 +168,17 @@ check_relation(a ?< b, context_msg => %s);
 check_relation(a ?<= b, context_msg => %s);
 check_relation(a ?> b, context_msg => %s);
 check_relation(a ?>= b, context_msg => %s);""" % (make_context_msg("a", '=', 'b'),
-                                               make_context_msg("a", '/=', 'b'),
-                                               make_context_msg("a", '<', 'b'),
-                                               make_context_msg("a", '<=', 'b'),
-                                               make_context_msg("a", '>', 'b'),
-                                               make_context_msg("a", '>=', 'b'),
-                                               make_context_msg("a", '?=', 'b'),
-                                               make_context_msg("a", '?/=', 'b'),
-                                               make_context_msg("a", '?<', 'b'),
-                                               make_context_msg("a", '?<=', 'b'),
-                                               make_context_msg("a", '?>', 'b'),
-                                               make_context_msg("a", '?>=', 'b'))
+                                                  make_context_msg("a", '/=', 'b'),
+                                                  make_context_msg("a", '<', 'b'),
+                                                  make_context_msg("a", '<=', 'b'),
+                                                  make_context_msg("a", '>', 'b'),
+                                                  make_context_msg("a", '>=', 'b'),
+                                                  make_context_msg("a", '?=', 'b'),
+                                                  make_context_msg("a", '?/=', 'b'),
+                                                  make_context_msg("a", '?<', 'b'),
+                                                  make_context_msg("a", '?<=', 'b'),
+                                                  make_context_msg("a", '?>', 'b'),
+                                                  make_context_msg("a", '?>=', 'b'))
         self._verify_result(code, expected_result)
 
 
