@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2017, Lars Asplund lars.anders.asplund@gmail.com
 
 # pylint: disable=too-many-lines
 
@@ -417,64 +417,64 @@ end architecture;
         self.assertIn("a2", log_msg)
         self.assertIn("lib.ent", log_msg)
 
-    def _test_error_on_duplicate(self, code, message, verilog=False):
+    def _test_warning_on_duplicate(self, code, message, verilog=False):
         """
         Utility function to test adding the same duplicate code under
-        file.vhd and file_copy.vhd where the duplication should cause a error message.
+        file.vhd and file_copy.vhd where the duplication should cause a warning message.
         """
         suffix = "v" if verilog else "vhd"
 
         self.add_source_file("lib", "file." + suffix, code)
 
-        try:
+        with mock.patch("vunit.project.LOGGER") as mock_logger:
             self.add_source_file("lib", "file_copy." + suffix, code)
-        except RuntimeError as exc:
-            self.assertEqual(str(exc), message)
-        else:
-            self.fail("RuntimeError not raised")
+            warning_calls = mock_logger.warning.call_args_list
+            log_msg = warning_calls[0][0][0] % warning_calls[0][0][1:]
+            self.assertEqual(len(warning_calls), 1)
+            self.assertEqual(log_msg, message)
 
-    def test_error_on_duplicate_entity(self):
+    def test_warning_on_duplicate_entity(self):
         self.project.add_library("lib", "lib_path")
-        self._test_error_on_duplicate(
+        self._test_warning_on_duplicate(
             """
 entity ent is
 end entity;
 """,
             "file_copy.vhd: entity 'ent' previously defined in file.vhd")
 
-    def test_error_on_duplicate_package(self):
+    def test_warning_on_duplicate_package(self):
         self.project.add_library("lib", "lib_path")
-        self._test_error_on_duplicate(
+        self._test_warning_on_duplicate(
             """
 package pkg is
 end package;
 """,
             "file_copy.vhd: package 'pkg' previously defined in file.vhd")
 
-    def test_error_on_duplicate_configuration(self):
+    def test_warning_on_duplicate_configuration(self):
         self.project.add_library("lib", "lib_path")
-        self._test_error_on_duplicate(
+        self._test_warning_on_duplicate(
             """
 configuration cfg of ent is
 end configuration;
 """,
             "file_copy.vhd: configuration 'cfg' previously defined in file.vhd")
 
-    def test_error_on_duplicate_package_body(self):
+    def test_warning_on_duplicate_package_body(self):
         self.project.add_library("lib", "lib_path")
         self.add_source_file("lib", "pkg.vhd", """
 package pkg is
 end package;
 """)
 
-        self._test_error_on_duplicate(
+        self._test_warning_on_duplicate(
             """
 package body pkg is
 end package bodY;
 """,
             "file_copy.vhd: package body 'pkg' previously defined in file.vhd")
 
-    def test_error_on_duplicate_architecture(self):
+    def test_warning_on_duplicate_architecture(self):
         self.project.add_library("lib", "lib_path")
         self.add_source_file("lib", "ent.vhd", """
 entity ent is
@@ -487,7 +487,7 @@ begin
 end architecture;
 """)
 
-        self._test_error_on_duplicate(
+        self._test_warning_on_duplicate(
             """
 architecture a of ent is
 begin
@@ -495,18 +495,18 @@ end architecture;
 """,
             "file_copy.vhd: architecture 'a' previously defined in file.vhd")
 
-    def test_error_on_duplicate_context(self):
+    def test_warning_on_duplicate_context(self):
         self.project.add_library("lib", "lib_path")
-        self._test_error_on_duplicate(
+        self._test_warning_on_duplicate(
             """
 context ctx is
 end context;
 """,
             "file_copy.vhd: context 'ctx' previously defined in file.vhd")
 
-    def test_error_on_duplicate_verilog_module(self):
+    def test_warning_on_duplicate_verilog_module(self):
         self.project.add_library("lib", "lib_path")
-        self._test_error_on_duplicate(
+        self._test_warning_on_duplicate(
             """
 module foo;
 endmodule
@@ -514,9 +514,9 @@ endmodule
             "file_copy.v: module 'foo' previously defined in file.v",
             verilog=True)
 
-    def test_error_on_duplicate_verilog_package(self):
+    def test_warning_on_duplicate_verilog_package(self):
         self.project.add_library("lib", "lib_path")
-        self._test_error_on_duplicate(
+        self._test_warning_on_duplicate(
             """
 package pkg;
 endpackage
