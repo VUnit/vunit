@@ -19,7 +19,7 @@ def license_text():
 VUnit except for OSVVM (see below) is released under the terms of
 Mozilla Public License, v. 2.0.
 
-Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
+Copyright (c) 2014-2017, Lars Asplund lars.anders.asplund@gmail.com
 
 OSVVM
 -----

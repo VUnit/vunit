@@ -143,7 +143,7 @@ VUnit
 VUnit except for OSVVM (see below) is released under the terms of
 `Mozilla Public License, v. 2.0`_.
 
-|copy| 2014-2016 Lars Asplund, lars.anders.asplund@gmail.com.
+|copy| 2014-2017 Lars Asplund, lars.anders.asplund@gmail.com.
 
 OSVVM
 *****
@@ -153,7 +153,7 @@ OSVVM 2015.03 is `redistributed`_ with VUnit for your convenience. Minor
 is also located under `examples/vhdl/osvvm\_integration/src`_. These
 files are licensed under the terms of `ARTISTIC License`_.
 
-|copy| 2010 - 2015 by SynthWorks Design Inc. All rights reserved.
+|copy| 2010 - 2016 by SynthWorks Design Inc. All rights reserved.
 
 .. _xUnit: http://en.wikipedia.org/wiki/XUnit
 .. _Jenkins: http://jenkins-ci.org/
