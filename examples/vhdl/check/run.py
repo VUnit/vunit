@@ -9,13 +9,11 @@ from vunit import VUnit
 
 ui = VUnit.from_argv()
 
-# Enable location preprocessing but exclude all but chec_false to make the
-# example less bloated
-ui.enable_location_preprocessing()
-subprograms = list(ui._location_preprocessor._subprograms_with_arguments)
-for s in subprograms:
-    if s != 'check_false':
-        ui._location_preprocessor.remove_subprogram(s)
+# Enable location preprocessing but exclude all but check_false to make the example less bloated
+ui.enable_location_preprocessing(
+    exclude_subprograms=['debug', 'info', 'check', 'check_failed', 'check_true', 'check_implication',
+                         'check_stable', 'check_equal', 'check_not_unknown', 'check_zero_one_hot',
+                         'check_one_hot', 'check_next', 'check_sequence', 'check_relation'])
 
 ui.enable_check_preprocessing()
 
