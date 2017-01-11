@@ -965,7 +965,7 @@ will cause an error.
 way as ``0`` and ``1``, respectively.
 
 Sequence Check (check\_sequence)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``check_sequence`` supports two different formats. One with and one
 without the initial custom checker parameter.
