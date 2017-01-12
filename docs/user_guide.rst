@@ -142,6 +142,28 @@ lacks a ``runner_cfg`` generic or parameter preventing it to be run
 by VUnit.
 
 
+Special generics/parameters
+---------------------------
+A VUnit test bench can have several special generics/parameters.
+Optional generics are filled in automatically by VUnit if detected on
+the test bench.
+
+- ``runner_cfg : string``
+
+  Required by VUnit to pass private information between Python and the HDL test runner
+
+- ``output_path : string``
+
+  Optional path to the output directory of the current test.
+  This is useful to create additional output files that can be checked
+  after simulation by a **post_check** Python function.
+
+- ``tb_path : string``
+
+  Optional path to the directory containing the test bench.
+  This is useful to read input data with a known location relative to
+  the test bench location.
+
 .. _examples:
 
 Examples
