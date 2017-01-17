@@ -249,6 +249,11 @@ and
 
     PASS: Equality check passed - Got 1111_1010 (250).
 
+If you look at the default value for the user message in the check subprogram APIs you will see that the
+``result`` function isn't used. This is a workaround for one of the supported simulators which exposes the
+internal implementation of the ``result`` function (a magic constant prepending the user message).
+You shouldn't use the magic constant yourself since that implementation may change at any time. For that reason
+I'm also keeping the ``result`` function in the APIs presented in this user guide.
 
 Check Location
 ~~~~~~~~~~~~~~
