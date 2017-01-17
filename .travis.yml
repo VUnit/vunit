@@ -30,7 +30,7 @@ matrix:
         packages:
         - gnat
     before_script:
-    - git clone --branch ghdl-0.33 --depth 1 https://github.com/tgingold/ghdl.git ghdl
+    - git clone --depth 1 https://github.com/tgingold/ghdl.git ghdl
     - cd ghdl
     - mkdir build-mcode
     - cd build-mcode
@@ -51,7 +51,7 @@ matrix:
     - sudo apt-get install -y gnat-4.8 zlib1g-dev
     - sudo apt-get install -y llvm-3.5-dev llvm-3.5-tools libedit-dev
     before_script:
-    - git clone --branch ghdl-0.33 --depth 1 https://github.com/tgingold/ghdl.git ghdl
+    - git clone --depth 1 https://github.com/tgingold/ghdl.git ghdl
     - cd ghdl
     - mkdir build-llvm
     - cd build-llvm
