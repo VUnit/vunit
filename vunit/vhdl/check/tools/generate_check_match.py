@@ -9,7 +9,7 @@ from string import Template
 api_template = """  procedure check_match(
     constant got             : in $got_type;
     constant expected        : in $expected_type;
-    constant msg             : in string := result;
+    constant msg             : in string := check_result_tag_c;
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "");
@@ -18,7 +18,7 @@ api_template = """  procedure check_match(
     variable pass            : out boolean;
     constant got             : in $got_type;
     constant expected        : in $expected_type;
-    constant msg             : in string := result;
+    constant msg             : in string := check_result_tag_c;
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "");
@@ -28,7 +28,7 @@ api_template = """  procedure check_match(
     variable pass            : out boolean;
     constant got             : in $got_type;
     constant expected        : in $expected_type;
-    constant msg             : in string := result;
+    constant msg             : in string := check_result_tag_c;
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "");
@@ -37,7 +37,7 @@ api_template = """  procedure check_match(
     variable checker         : inout checker_t;
     constant got             : in $got_type;
     constant expected        : in $expected_type;
-    constant msg             : in string := result;
+    constant msg             : in string := check_result_tag_c;
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "");
@@ -45,7 +45,7 @@ api_template = """  procedure check_match(
   impure function check_match(
     constant got             : in $got_type;
     constant expected        : in $expected_type;
-    constant msg             : in string := result;
+    constant msg             : in string := check_result_tag_c;
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
@@ -56,7 +56,7 @@ api_template = """  procedure check_match(
 impl_template = """  procedure check_match(
     constant got             : in $got_type;
     constant expected        : in $expected_type;
-    constant msg             : in string := result;
+    constant msg             : in string := check_result_tag_c;
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -71,7 +71,7 @@ impl_template = """  procedure check_match(
     variable pass            : out boolean;
     constant got             : in $got_type;
     constant expected        : in $expected_type;
-    constant msg             : in string := result;
+    constant msg             : in string := check_result_tag_c;
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -86,7 +86,7 @@ impl_template = """  procedure check_match(
     variable pass            : out boolean;
     constant got             : in $got_type;
     constant expected        : in $expected_type;
-    constant msg             : in string := result;
+    constant msg             : in string := check_result_tag_c;
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -125,7 +125,7 @@ impl_template = """  procedure check_match(
     variable checker         : inout checker_t;
     constant got             : in $got_type;
     constant expected        : in $expected_type;
-    constant msg             : in string := result;
+    constant msg             : in string := check_result_tag_c;
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
@@ -139,7 +139,7 @@ impl_template = """  procedure check_match(
   impure function check_match(
     constant got             : in $got_type;
     constant expected        : in $expected_type;
-    constant msg             : in string := result;
+    constant msg             : in string := check_result_tag_c;
     constant level           : in log_level_t := dflt;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
