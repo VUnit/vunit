@@ -108,7 +108,7 @@ class ActiveHDLInterface(SimulatorInterface):
         """
         Returns the command to compile a Verilog file
         """
-        args = [join(self._prefix, 'vlog'), '-quiet', '-sv2k12', '-lc', self._library_cfg]
+        args = [join(self._prefix, 'vlog'), '-quiet', '-lc', self._library_cfg]
         args += source_file.compile_options.get("activehdl.vlog_flags", [])
         args += ['-work', source_file.library.name, source_file.name]
         for library in self._libraries:
