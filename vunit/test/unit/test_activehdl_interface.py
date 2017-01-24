@@ -87,7 +87,6 @@ class TestActiveHDLInterface(unittest.TestCase):
         process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"], cwd=self.output_path)
         run_command.assert_called_once_with([join('prefix', 'vlog'),
                                              '-quiet',
-                                             '-sv2k12',
                                              '-lc',
                                              library_cfg,
                                              '-work',
@@ -111,7 +110,6 @@ class TestActiveHDLInterface(unittest.TestCase):
         process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"], cwd=self.output_path)
         run_command.assert_called_once_with([join('prefix', 'vlog'),
                                              '-quiet',
-                                             '-sv2k12',
                                              '-lc',
                                              library_cfg,
                                              'custom',
@@ -136,7 +134,6 @@ class TestActiveHDLInterface(unittest.TestCase):
         process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"], cwd=self.output_path)
         run_command.assert_called_once_with([join('prefix', 'vlog'),
                                              '-quiet',
-                                             '-sv2k12',
                                              '-lc',
                                              library_cfg,
                                              '-work',
@@ -160,7 +157,6 @@ class TestActiveHDLInterface(unittest.TestCase):
         process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"], cwd=self.output_path)
         run_command.assert_called_once_with([join('prefix', 'vlog'),
                                              '-quiet',
-                                             '-sv2k12',
                                              '-lc',
                                              library_cfg,
                                              '-work',
