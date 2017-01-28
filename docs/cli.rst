@@ -110,6 +110,8 @@ a help text is printed were a few TCL functions are pre-defined:
    # vunit_load [vsim_extra_args]
    #   - Load design with correct generics for the test
    #   - Optional first argument are passed as extra flags to vsim
+   # vunit_user_init
+   #   - Re-runs the user defined init file
    # vunit_run
    #   - Run test, must do vunit_load first
    # vunit_compile

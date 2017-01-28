@@ -122,6 +122,8 @@ proc vunit_help {} {
     puts {vunit_load [vsim_extra_args]}
     puts {  - Load design with correct generics for the test}
     puts {  - Optional first argument are passed as extra flags to vsim}
+    puts {vunit_user_init}
+    puts {  - Re-runs the user defined init file}
     puts {vunit_run}
     puts {  - Run test, must do vunit_load first}
     puts {vunit_compile}
@@ -153,17 +155,28 @@ proc vunit_help {} {
         batch_do += "quit -code 0\n"
         return batch_do
 
-    @staticmethod
-    def _create_gui_script(common_file_name):
+    def _create_user_init_function(self, config):
+        """
+        Create the vunit_user_init function which sources the user defined TCL file in
+        simulator_name.init_file.gui
+        """
+        init_file = config.options.get(self.name + ".init_file.gui", None)
+        tcl = "proc vunit_user_init {} {\n"
+        if init_file is not None:
+            tcl += '  source "%s"\n' % fix_path(abspath(init_file))
+        tcl += "}\n"
+        return tcl
+
+    def _create_gui_script(self, common_file_name, config):
         """
         Create the user facing script which loads common functions and prints a help message
         """
-        tcl = """
-source "%s"
-if {![vunit_load]} {
-  vunit_help
-}
-""" % fix_path(common_file_name)
+        tcl = 'source "%s"\n' % fix_path(common_file_name)
+        tcl += self._create_user_init_function(config)
+        tcl += "if {![vunit_load]} {\n"
+        tcl += "  vunit_user_init\n"
+        tcl += "  vunit_help\n"
+        tcl += "}\n"
         return tcl
 
     def _run_batch_file(self, batch_file_name, gui=False):
@@ -218,7 +231,7 @@ if {![vunit_load]} {
                                               config,
                                               output_path))
         write_file(gui_file_name,
-                   self._create_gui_script(common_file_name))
+                   self._create_gui_script(common_file_name, config))
         write_file(batch_file_name,
                    self._create_batch_script(common_file_name, elaborate_only))
 

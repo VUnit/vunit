@@ -41,6 +41,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
     sim_options = [
         "rivierapro.vsim_flags",
         "rivierapro.vsim_flags.gui",
+        "rivierapro.init_file.gui",
     ]
 
     @classmethod

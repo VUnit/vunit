@@ -100,6 +100,11 @@ The following simulation options are known.
    mode where it takes precedence over ``modelsim.vsim_flags``.
    Must be a list of strings.
 
+``modelsim.init_file.gui``
+   A user defined TCL-file that is sourced after the design has been loaded in the GUI.
+   For example this can be used to configure the waveform viewer.
+   Must be a string.
+
 ``rivierapro.vsim_flags``
    Extra arguments passed to ``vsim`` when loading the design.
    Must be a list of strings.
@@ -109,6 +114,11 @@ The following simulation options are known.
    mode where it takes precedence over ``rivierapro.vsim_flags``.
    Must be a list of strings.
 
+``rivierapro.init_file.gui``
+   A user defined TCL-file that is sourced after the design has been loaded in the GUI.
+   For example this can be used to configure the waveform viewer.
+   Must be a string.
+
 ``activehdl.vsim_flags``
    Extra arguments passed to ``vsim`` when loading the design.
    Must be a list of strings.
@@ -117,6 +127,11 @@ The following simulation options are known.
    Extra arguments passed to ``vsim`` when loading the design in GUI
    mode where it takes precedence over ``activehdl.vsim_flags``.
    Must be a list of strings.
+
+``activehdl.init_file.gui``
+   A user defined TCL-file that is sourced after the design has been loaded in the GUI.
+   For example this can be used to configure the waveform viewer.
+   Must be a string.
 
 ``ghdl.elab_flags``
    Extra elaboration flags passed to ``ghdl --elab-run``.

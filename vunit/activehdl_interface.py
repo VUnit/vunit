@@ -38,6 +38,7 @@ class ActiveHDLInterface(SimulatorInterface):
     sim_options = [
         "activehdl.vsim_flags",
         "activehdl.vsim_flags.gui",
+        "activehdl.init_file.gui",
     ]
 
     @classmethod
@@ -294,23 +295,27 @@ proc vunit_run {} {
         batch_do += "quit -code 0\n"
         return batch_do
 
-    def _create_gui_script(self, common_file_name):
+    def _create_gui_script(self, common_file_name, config):
         """
         Create the user facing script which loads common functions and prints a help message
         """
-        library_mapping = ""
-        for library in self._libraries:
-            library_mapping += "vmap %s %s\n" % (library.name,
-                                                 fix_path(library.directory))
 
-        tcl = """
-source "%s"
-workspace create workspace
-design create -a design .
-%s
-vunit_load
-puts "VUnit help: Design already loaded. Use run -all to run the test."
-""" % (fix_path(common_file_name), library_mapping)
+        tcl = ""
+        tcl += 'source "%s"\n' % fix_path(common_file_name)
+        tcl += 'workspace create workspace\n'
+        tcl += 'design create -a design .\n'
+
+        for library in self._libraries:
+            tcl += "vmap %s %s\n" % (library.name, fix_path(library.directory))
+
+        tcl += 'vunit_load\n'
+
+        init_file = config.options.get(self.name + ".init_file.gui", None)
+        if init_file is not None:
+            tcl += 'source "%s"\n' % fix_path(abspath(init_file))
+
+        tcl += 'puts "VUnit help: Design already loaded. Use run -all to run the test."\n'
+
         return tcl
 
     def _run_batch_file(self, batch_file_name, gui, cwd):
@@ -349,7 +354,7 @@ puts "VUnit help: Design already loaded. Use run -all to run the test."
                                               architecture_name,
                                               config))
         write_file(gui_file_name,
-                   self._create_gui_script(common_file_name))
+                   self._create_gui_script(common_file_name, config))
         write_file(batch_file_name,
                    self._create_batch_script(common_file_name, elaborate_only))
 
