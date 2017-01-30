@@ -226,9 +226,14 @@ proc vunit_load {{}} {{
         echo {{Error: No vunit test runner package used}}
         return 1
     }}
+
+    vhdlassert.break {break_level}
+    vhdlassert.break -builtin {break_level}
+
     return 0
 }}
-""".format(vsim_flags=" ".join(vsim_flags))
+""".format(vsim_flags=" ".join(vsim_flags),
+           break_level="warning" if config.fail_on_warning else "error")
 
         return tcl
 
@@ -247,16 +252,12 @@ proc vunit_load {{}} {{
         return " ".join(vsim_extra_args)
 
     @staticmethod
-    def _create_run_function(config):
+    def _create_run_function():
         """
         Create the vunit_run function to run the test bench
         """
-        breaklevel = "warning" if config.fail_on_warning else "error"
         return """
 proc vunit_run {} {
-    vhdlassert.break %s
-    vhdlassert.break -builtin %s
-
     proc on_break {} {
         resume
     }
@@ -292,7 +293,7 @@ proc vunit_run {} {
 proc _vunit_sim_restart {} {
     restart
 }
-""" % (breaklevel, breaklevel)
+"""
 
 
 def format_generic(value):

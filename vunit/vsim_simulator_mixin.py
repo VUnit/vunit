@@ -135,7 +135,7 @@ proc vunit_help {} {
 """
         tcl += self._create_load_function(library_name, entity_name, architecture_name,
                                           config, output_path)
-        tcl += self._create_run_function(config)
+        tcl += self._create_run_function()
         tcl += self._create_restart_function()
         return tcl
 

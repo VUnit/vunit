@@ -273,11 +273,13 @@ proc vunit_load {{{{vsim_extra_args ""}}}} {{
     set vsim_failed [catch {{
         eval vsim ${{vsim_extra_args}} {{{vsim_flags}}}
     }}]
+
     if {{${{vsim_failed}}}} {{
        echo Command 'vsim ${{vsim_extra_args}} {vsim_flags}' failed
        echo Bad flag from vsim_extra_args?
        return 1
     }}
+
     set no_finished_signal [catch {{examine -internal {{/vunit_finished}}}}]
     set no_vhdl_test_runner_exit [catch {{examine -internal {{/run_base_pkg/runner.exit_simulation}}}}]
     set no_verilog_test_runner_exit [catch {{examine -internal {{/vunit_pkg/__runner__}}}}]
@@ -289,34 +291,33 @@ proc vunit_load {{{{vsim_extra_args ""}}}} {{
         return 1
     }}
 
+
+    global BreakOnAssertion
+    set BreakOnAssertion {break_on_assert}
+
+    global NumericStdNoWarnings
+    set NumericStdNoWarnings {no_warnings}
+
+    global StdArithNoWarnings
+    set StdArithNoWarnings {no_warnings}
+
     {coverage_save_cmd}
     return 0
 }}
 """.format(coverage_save_cmd=coverage_save_cmd,
-           vsim_flags=" ".join(vsim_flags))
+           vsim_flags=" ".join(vsim_flags),
+           break_on_assert=1 if config.fail_on_warning else 2,
+           no_warnings=1 if config.disable_ieee_warnings else 0)
 
         return tcl
 
     @staticmethod
-    def _create_run_function(config):
+    def _create_run_function():
         """
         Create the vunit_run function to run the test bench
         """
-        if config.disable_ieee_warnings:
-            no_warnings = 1
-        else:
-            no_warnings = 0
         return """
 proc _vunit_run {} {
-    global BreakOnAssertion
-    set BreakOnAssertion %i
-
-    global NumericStdNoWarnings
-    set NumericStdNoWarnings %i
-
-    global StdArithNoWarnings
-    set StdArithNoWarnings %i
-
     proc on_break {} {
         resume
     }
@@ -376,7 +377,7 @@ proc vunit_run {} {
 proc _vunit_sim_restart {} {
     restart -f
 }
-""" % (1 if config.fail_on_warning else 2, no_warnings, no_warnings)
+"""
 
     def _vsim_extra_args(self, config):
         """
