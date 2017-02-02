@@ -23,7 +23,7 @@ class TestBench(object):  # pylint: disable=too-many-instance-attributes
         self._sim_config = sim_config
         self._has_output_path = has_output_path
 
-    def run(self, output_path, extra_generics=None, elaborate_only=False):
+    def run(self, output_path, test_suite_name, extra_generics=None, elaborate_only=False):
         """
         Run test bench with output_path and extra_generics
         """
@@ -38,5 +38,6 @@ class TestBench(object):  # pylint: disable=too-many-instance-attributes
         self._sim_config.generics = generics
 
         return self._simulator_if.simulate(join(output_path, self._simulator_if.name),
+                                           test_suite_name,
                                            self._sim_config,
                                            elaborate_only=elaborate_only)

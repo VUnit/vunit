@@ -182,29 +182,29 @@ class ActiveHDLInterface(SimulatorInterface):
 
         return " ".join(vsim_extra_args)
 
-    def _create_load_function(self,
-                              library_name, entity_name, architecture_name,
-                              config, disable_ieee_warnings):
+    def _create_load_function(self, config):
         """
         Create the vunit_load TCL function that runs the vsim command and loads the design
         """
         set_generic_str = "\n    ".join(('set vunit_generic_%s {%s}' % (name, value)
                                          for name, value in config.generics.items()))
-        set_generic_name_str = " ".join(('-g/%s/%s=${vunit_generic_%s}' % (entity_name, name, name)
+        set_generic_name_str = " ".join(('-g/%s/%s=${vunit_generic_%s}' % (config.entity_name,
+                                                                           name,
+                                                                           name)
                                          for name in config.generics))
         pli_str = " ".join("-pli \"%s\"" % fix_path(name) for name in config.pli)
 
         vsim_flags = [pli_str,
                       set_generic_name_str,
                       "-lib",
-                      library_name,
-                      entity_name,
+                      config.library_name,
+                      config.entity_name,
                       self._vsim_extra_args(config)]
 
-        if architecture_name is not None:
-            vsim_flags.append(architecture_name)
+        if config.architecture_name is not None:
+            vsim_flags.append(config.architecture_name)
 
-        if disable_ieee_warnings:
+        if config.disable_ieee_warnings:
             vsim_flags.append("-ieee_nowarn")
 
         tcl = """
@@ -267,16 +267,12 @@ proc vunit_run {} {
 }
 """
 
-    def _create_common_script(self,   # pylint: disable=too-many-arguments
-                              library_name, entity_name, architecture_name,
-                              config):
+    def _create_common_script(self, config):
         """
         Create tcl script with functions common to interactive and batch modes
         """
         tcl = ""
-        tcl += self._create_load_function(library_name, entity_name, architecture_name,
-                                          config,
-                                          config.disable_ieee_warnings)
+        tcl += self._create_load_function(config)
         tcl += self._create_run_function()
         return tcl
 
@@ -338,7 +334,7 @@ proc vunit_run {} {
             return False
         return True
 
-    def simulate(self, output_path, config, elaborate_only):
+    def simulate(self, output_path, test_suite_name, config, elaborate_only):
         """
         Run a test bench
         """
@@ -347,10 +343,7 @@ proc vunit_run {} {
         gui_file_name = join(output_path, "gui.tcl")
 
         write_file(common_file_name,
-                   self._create_common_script(config.library_name,
-                                              config.entity_name,
-                                              config.architecture_name,
-                                              config))
+                   self._create_common_script(config))
         write_file(gui_file_name,
                    self._create_gui_script(common_file_name, config))
         write_file(batch_file_name,

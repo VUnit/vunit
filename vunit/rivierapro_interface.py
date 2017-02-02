@@ -187,13 +187,15 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
             libraries[key] = abspath(join(dirname(self._sim_cfg_file_name), dirname(value)))
         return libraries
 
-    def _create_load_function(self,  # pylint: disable=too-many-arguments
-                              library_name, entity_name, architecture_name,
+    def _create_load_function(self,
+                              test_suite_name,  # pylint: disable=unused-argument
                               config, output_path):
         """
         Create the vunit_load TCL function that runs the vsim command and loads the design
         """
-        set_generic_str = " ".join(('-g/%s/%s=%s' % (entity_name, name, format_generic(value))
+        set_generic_str = " ".join(('-g/%s/%s=%s' % (config.entity_name,
+                                                     name,
+                                                     format_generic(value))
                                     for name, value in config.generics.items()))
         pli_str = " ".join("-pli \"%s\"" % fix_path(name) for name in config.pli)
 
@@ -201,12 +203,12 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
                       pli_str,
                       set_generic_str,
                       "-lib",
-                      library_name,
-                      entity_name,
+                      config.library_name,
+                      config.entity_name,
                       self._vsim_extra_args(config)]
 
-        if architecture_name is not None:
-            vsim_flags.append(architecture_name)
+        if config.architecture_name is not None:
+            vsim_flags.append(config.architecture_name)
 
         if config.disable_ieee_warnings:
             vsim_flags.append("-ieee_nowarn")

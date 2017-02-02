@@ -190,7 +190,6 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
         for test_suite in test_suites:
             name_hash = hash_string(test_suite.name)
-            HASH_TO_TEST_NAME[name_hash] = test_suite.name
             mapping.add("%s %s" % (name_hash, test_suite.name))
 
         # Sort by everything except hash
@@ -332,8 +331,3 @@ def create_output_path(output_file, test_suite_name):
     """
     hash_name = hash_string(test_suite_name)
     return join(output_file, hash_name)
-
-# Ugly static dictionary to map hash to test name when figuring out
-# the test name from the hash. Only used for finding the name during Modelsim coverage
-# The simulator interfaces should get the names directly in the future
-HASH_TO_TEST_NAME = {}

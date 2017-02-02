@@ -265,7 +265,7 @@ define work "{2}/libraries/work"
         return cds
 
     def simulate(self,  # pylint: disable=too-many-locals
-                 output_path, config, elaborate_only=False):
+                 output_path, test_suite_name, config, elaborate_only=False):
         """
         Elaborates and Simulates with entity as top level using generics
         """

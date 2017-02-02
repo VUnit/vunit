@@ -107,8 +107,8 @@ proc vunit_restart {} {
 """ % (recompile_command_visual, recompile_command_eval_tcl)
         return tcl
 
-    def _create_common_script(self,   # pylint: disable=too-many-arguments
-                              library_name, entity_name, architecture_name,
+    def _create_common_script(self,
+                              test_suite_name,
                               config,
                               output_path):
         """
@@ -133,8 +133,7 @@ proc vunit_help {} {
     puts {  - and re-runs the simulation if the compile was successful}
 }
 """
-        tcl += self._create_load_function(library_name, entity_name, architecture_name,
-                                          config, output_path)
+        tcl += self._create_load_function(test_suite_name, config, output_path)
         tcl += self._create_run_function()
         tcl += self._create_restart_function()
         return tcl
@@ -214,7 +213,7 @@ proc vunit_help {} {
         except Process.NonZeroExitCode:
             return False
 
-    def simulate(self, output_path, config, elaborate_only):
+    def simulate(self, output_path, test_suite_name, config, elaborate_only):
         """
         Run a test bench
         """
@@ -224,9 +223,7 @@ proc vunit_help {} {
         batch_file_name = join(sim_output_path, "batch.do")
 
         write_file(common_file_name,
-                   self._create_common_script(config.library_name,
-                                              config.entity_name,
-                                              config.architecture_name,
+                   self._create_common_script(test_suite_name,
                                               config,
                                               sim_output_path))
         write_file(gui_file_name,

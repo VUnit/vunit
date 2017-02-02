@@ -133,7 +133,7 @@ class SimulatorInterface(object):
         self.setup_library_mapping(project)
         self.compile_source_files(project, continue_on_error)
 
-    def simulate(self, output_path, config, elaborate_only):
+    def simulate(self, output_path, test_suite_name, config, elaborate_only):
         """
         Simulate
         """

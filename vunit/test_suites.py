@@ -55,7 +55,7 @@ class IndependentSimTestCase(object):
 
             generics["runner_cfg"] = encode_dict(runner_cfg)
 
-        sim_ok = self._test_bench.run(output_path, generics, elaborate_only=self._elaborate_only)
+        sim_ok = self._test_bench.run(output_path, self.name, generics, elaborate_only=self._elaborate_only)
 
         if self._elaborate_only:
             return sim_ok
@@ -137,7 +137,7 @@ class SameSimTestSuite(object):
             "runner_cfg": encode_dict(runner_cfg),
         }
 
-        sim_ok = self._test_bench.run(output_path, generics, elaborate_only=self._elaborate_only)
+        sim_ok = self._test_bench.run(output_path, self._name, generics, elaborate_only=self._elaborate_only)
         if self._elaborate_only:
             retval = {}
             for name in self.test_cases:

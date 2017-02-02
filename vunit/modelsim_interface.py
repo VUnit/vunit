@@ -27,7 +27,6 @@ except ImportError:
 from vunit.ostools import Process, file_exists
 from vunit.simulator_interface import SimulatorInterface
 from vunit.exceptions import CompileError
-from vunit.test_runner import HASH_TO_TEST_NAME
 from vunit.vsim_simulator_mixin import (VsimSimulatorMixin,
                                         fix_path)
 
@@ -220,21 +219,22 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
             del libraries["others"]
         return libraries
 
-    def _create_load_function(self,  # pylint: disable=too-many-arguments,too-many-locals
-                              library_name, entity_name, architecture_name,
-                              config, output_path):
+    def _create_load_function(self,  # pylint: disable=too-many-arguments
+                              test_suite_name, config, output_path):
         """
         Create the vunit_load TCL function that runs the vsim command and loads the design
         """
 
-        set_generic_str = " ".join(('-g/%s/%s=%s' % (entity_name, name, encode_generic_value(value))
+        set_generic_str = " ".join(('-g/%s/%s=%s' % (config.entity_name,
+                                                     name,
+                                                     encode_generic_value(value))
                                     for name, value in config.generics.items()))
         pli_str = " ".join("-pli {%s}" % fix_path(name) for name in config.pli)
 
-        if architecture_name is None:
+        if config.architecture_name is None:
             architecture_suffix = ""
         else:
-            architecture_suffix = "(%s)" % architecture_name
+            architecture_suffix = "(%s)" % config.architecture_name
 
         if self._coverage is None:
             coverage_save_cmd = ""
@@ -242,10 +242,9 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         else:
             coverage_file = join(output_path, "coverage.ucdb")
             self._coverage_files.add(coverage_file)
-            coverage_save_cmd = "coverage save -onexit -testname {%s} -assert -directive -cvg -codeAll {%s}" % (
-                # Ugly output path to test name translation until this is passed to simulator interfaces
-                HASH_TO_TEST_NAME[os.path.basename(os.path.dirname(output_path))],
-                fix_path(coverage_file))
+            coverage_save_cmd = (
+                "coverage save -onexit -testname {%s} -assert -directive -cvg -codeAll {%s}"
+                % (test_suite_name, fix_path(coverage_file)))
 
             coverage_args = "-coverage=" + to_coverage_args(self._coverage)
 
@@ -256,7 +255,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
                       "-onfinish stop",
                       pli_str,
                       set_generic_str,
-                      library_name + "." + entity_name + architecture_suffix,
+                      config.library_name + "." + config.entity_name + architecture_suffix,
                       coverage_args,
                       self._vsim_extra_args(config)]
 
