@@ -9,6 +9,7 @@ Contains functionality to manage the configuration of tests
 """
 
 
+from copy import deepcopy
 import logging
 from vunit.simulator_factory import SimulatorFactory
 LOGGER = logging.getLogger(__name__)
@@ -121,46 +122,35 @@ class TestConfiguration(object):
             self._configs[scope] = {}
         self._configs[scope][name] = (generics, pre_config, post_check)
 
-    def get_configurations(self, scope):
+    def get_configurations(self, library_name, entity_name, architecture_name, scope):
         """
         Get all configurations for scope
         """
-        global_generics = self._get_generics_for_scope(scope)
-        pli = self._get_pli_for_scope(scope)
+        sim_config = SimConfig(
+            library_name,
+            entity_name,
+            architecture_name,
+            generics=self._get_generics_for_scope(scope).copy(),
+            pli=self._get_pli_for_scope(scope),
+            disable_ieee_warnings=self._ieee_warnings_disabled_in_scope(scope),
+            options=self._get_sim_options_for_scope(scope).copy())
+
         configs_for_scope = self._get_configs_for_scope(scope)
-        sim_options_for_scope = self._get_sim_options_for_scope(scope)
-        disable_ieee_warnings = self._ieee_warnings_disabled_in_scope(scope)
+        if len(configs_for_scope) == 0:
+            # Default config
+            configs_for_scope = {"": ({}, None, None)}
 
         configs = []
         for config_name in sorted(configs_for_scope.keys()):
             cfg_generics, pre_config, post_check = configs_for_scope[config_name]
-            generics = global_generics.copy()
-            generics.update(cfg_generics)
+            cfg_sim_config = deepcopy(sim_config)
+            cfg_sim_config.generics.update(cfg_generics)
             configs.append(Configuration(name=config_name,
-                                         sim_config=SimConfig(
-                                             generics=generics,
-                                             pli=pli,
-                                             disable_ieee_warnings=disable_ieee_warnings,
-                                             options=sim_options_for_scope.copy()),
+                                         sim_config=cfg_sim_config,
                                          pre_config=pre_config,
                                          post_check=post_check))
 
-        if len(configs) == 0:
-            configs = [Configuration(name="",
-                                     sim_config=SimConfig(
-                                         generics=global_generics.copy(),
-                                         pli=pli,
-                                         disable_ieee_warnings=disable_ieee_warnings,
-                                         options=sim_options_for_scope.copy()),
-                                     pre_config=None,
-                                     post_check=None)]
-
         return configs
-
-    def _get_configurations_for_scope(self, scope):
-        """
-        Helper function to get all configurations for a scope
-        """
 
     def _get_configs_for_scope(self, scope):
         """
@@ -237,7 +227,7 @@ class Configuration(object):
                  pre_config=None,
                  post_check=None):
         self.name = name
-        self.sim_config = sim_config if sim_config is not None else SimConfig()
+        self.sim_config = sim_config
         self.pre_config = pre_config
         self.post_check = post_check
 
@@ -252,17 +242,23 @@ class Configuration(object):
                % (self.name, self.sim_config, self.pre_config, self.post_check))
 
 
-class SimConfig(object):
+class SimConfig(object):  # pylint: disable=too-many-instance-attributes
     """
     Simulation related configuration
     """
 
     def __init__(self,  # pylint: disable=too-many-arguments
+                 library_name,
+                 entity_name,
+                 architecture_name,
                  generics=None,
                  pli=None,
                  disable_ieee_warnings=False,
                  fail_on_warning=False,
                  options=None):
+        self.library_name = library_name
+        self.entity_name = entity_name
+        self.architecture_name = architecture_name
         self.generics = generics if generics is not None else {}
         self.pli = [] if pli is None else pli
         self.disable_ieee_warnings = disable_ieee_warnings
@@ -270,15 +266,21 @@ class SimConfig(object):
         self.options = {} if options is None else options
 
     def __eq__(self, other):
-        return (self.generics == other.generics and
+        return (self.library_name == other.library_name and
+                self.entity_name == other.entity_name and
+                self.architecture_name == other.architecture_name and
+                self.generics == other.generics and
                 self.pli == other.pli and
                 self.disable_ieee_warnings == other.disable_ieee_warnings and
                 self.fail_on_warning == other.fail_on_warning and
                 self.options == other.options)
 
     def __repr__(self):
-        return("SimConfig(%r, %r, %r, %r, %r)"
-               % (self.generics,
+        return("SimConfig(%r, %r, %r, %r, %r, %r, %r, %r)"
+               % (self.library_name,
+                  self.entity_name,
+                  self.architecture_name,
+                  self.generics,
                   self.pli,
                   self.disable_ieee_warnings,
                   self.fail_on_warning,

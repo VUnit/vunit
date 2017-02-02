@@ -214,8 +214,7 @@ proc vunit_help {} {
         except Process.NonZeroExitCode:
             return False
 
-    def simulate(self, output_path,  # pylint: disable=too-many-arguments
-                 library_name, entity_name, architecture_name, config, elaborate_only):
+    def simulate(self, output_path, config, elaborate_only):
         """
         Run a test bench
         """
@@ -225,11 +224,11 @@ proc vunit_help {} {
         batch_file_name = join(sim_output_path, "batch.do")
 
         write_file(common_file_name,
-                   self._create_common_script(library_name,
-                                              entity_name,
-                                              architecture_name,
+                   self._create_common_script(config.library_name,
+                                              config.entity_name,
+                                              config.architecture_name,
                                               config,
-                                              output_path))
+                                              sim_output_path))
         write_file(gui_file_name,
                    self._create_gui_script(common_file_name, config))
         write_file(batch_file_name,

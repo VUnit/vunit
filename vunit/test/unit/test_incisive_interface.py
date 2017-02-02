@@ -416,8 +416,8 @@ define work "%s/libraries/work"
         with mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True) as dummy:
             simif.compile_project(project)
 
-        config = SimConfig()
-        self.assertTrue(simif.simulate("sim_output_path", "lib", "ent", "arch", config))
+        config = SimConfig("lib", "ent", "arch")
+        self.assertTrue(simif.simulate("sim_output_path", config))
         elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
         simulate_args_file = join('sim_output_path', 'irun_simulate.args')
         run_command.assert_has_calls([
@@ -490,8 +490,8 @@ define work "%s/libraries/work"
         with mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True) as dummy:
             simif.compile_project(project)
 
-        config = SimConfig()
-        self.assertTrue(simif.simulate("sim_output_path", "lib", "modulename", None, config))
+        config = SimConfig("lib", "modulename", None)
+        self.assertTrue(simif.simulate("sim_output_path", config))
         elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
         simulate_args_file = join('sim_output_path', 'irun_simulate.args')
         run_command.assert_has_calls([
@@ -555,8 +555,9 @@ define work "%s/libraries/work"
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
-        config = SimConfig(options={"incisive.irun_sim_flags": ["custom", "flags"]})
-        self.assertTrue(simif.simulate("sim_output_path", "lib", "modulename", None, config))
+        config = SimConfig("lib", "modulename", None,
+                           options={"incisive.irun_sim_flags": ["custom", "flags"]})
+        self.assertTrue(simif.simulate("sim_output_path", config))
         elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
         simulate_args_file = join('sim_output_path', 'irun_simulate.args')
         run_command.assert_has_calls([
@@ -581,10 +582,11 @@ define work "%s/libraries/work"
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
-        config = SimConfig(generics={"genstr": "genval",
+        config = SimConfig("lib", "modulename", None,
+                           generics={"genstr": "genval",
                                      "genint": 1,
                                      "genbool": True})
-        self.assertTrue(simif.simulate("sim_output_path", "lib", "modulename", None, config))
+        self.assertTrue(simif.simulate("sim_output_path", config))
         elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
         simulate_args_file = join('sim_output_path', 'irun_simulate.args')
         run_command.assert_has_calls([
@@ -608,8 +610,8 @@ define work "%s/libraries/work"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path,
                                   hdlvar="custom_hdlvar")
-        config = SimConfig()
-        self.assertTrue(simif.simulate("sim_output_path", "lib", "modulename", None, config))
+        config = SimConfig("lib", "modulename", None, )
+        self.assertTrue(simif.simulate("sim_output_path", config))
         elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
         simulate_args_file = join('sim_output_path', 'irun_simulate.args')
         run_command.assert_has_calls([
@@ -630,8 +632,8 @@ define work "%s/libraries/work"
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
-        config = SimConfig()
-        self.assertTrue(simif.simulate("sim_output_path", "lib", "modulename", None, config, elaborate_only=True))
+        config = SimConfig("lib", "modulename", None)
+        self.assertTrue(simif.simulate("sim_output_path", config, elaborate_only=True))
         elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
         run_command.assert_has_calls([
             mock.call([join('prefix', 'irun'), '-f', basename(elaborate_args_file)],
@@ -668,8 +670,8 @@ define work "%s/libraries/work"
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
-        config = SimConfig()
-        self.assertFalse(simif.simulate("sim_output_path", "lib", "modulename", None, config))
+        config = SimConfig("lib", "modulename", None)
+        self.assertFalse(simif.simulate("sim_output_path", config))
         elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
         run_command.assert_has_calls([
             mock.call([join('prefix', 'irun'), '-f', basename(elaborate_args_file)],
@@ -683,8 +685,8 @@ define work "%s/libraries/work"
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
-        config = SimConfig()
-        self.assertFalse(simif.simulate("sim_output_path", "lib", "modulename", None, config))
+        config = SimConfig("lib", "modulename", None)
+        self.assertFalse(simif.simulate("sim_output_path", config))
         elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
         simulate_args_file = join('sim_output_path', 'irun_simulate.args')
         run_command.assert_has_calls([
@@ -709,8 +711,8 @@ define work "%s/libraries/work"
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path, gui=True)
         with mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True) as dummy:
             simif.compile_project(project)
-        config = SimConfig()
-        self.assertTrue(simif.simulate("sim_output_path", "lib", "ent", "arch", config))
+        config = SimConfig("lib", "ent", "arch")
+        self.assertTrue(simif.simulate("sim_output_path", config))
         elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
         simulate_args_file = join('sim_output_path', 'irun_simulate.args')
         run_command.assert_has_calls([

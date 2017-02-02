@@ -8,6 +8,8 @@
 Class to run a single test bench
 """
 
+from os.path import join
+
 
 class TestBench(object):  # pylint: disable=too-many-instance-attributes
     """
@@ -15,15 +17,9 @@ class TestBench(object):  # pylint: disable=too-many-instance-attributes
     """
     def __init__(self,  # pylint: disable=too-many-arguments
                  simulator_if,
-                 library_name,
-                 entity_name,
-                 architecture_name,
                  sim_config,
                  has_output_path=False):
         self._simulator_if = simulator_if
-        self._library_name = library_name
-        self._entity_name = entity_name
-        self._architecture_name = architecture_name
         self._sim_config = sim_config
         self._has_output_path = has_output_path
 
@@ -41,9 +37,6 @@ class TestBench(object):  # pylint: disable=too-many-instance-attributes
 
         self._sim_config.generics = generics
 
-        return self._simulator_if.simulate(output_path,
-                                           self._library_name,
-                                           self._entity_name,
-                                           self._architecture_name,
+        return self._simulator_if.simulate(join(output_path, self._simulator_if.name),
                                            self._sim_config,
                                            elaborate_only=elaborate_only)

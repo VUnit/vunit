@@ -169,17 +169,16 @@ class GHDLInterface(SimulatorInterface):
         cmd += [source_file.name]
         return cmd
 
-    def simulate(self,  # pylint: disable=too-many-arguments, too-many-locals
-                 output_path, library_name, entity_name, architecture_name, config, elaborate_only):
+    def simulate(self,  # pylint: disable=too-many-locals
+                 output_path, config, elaborate_only):
         """
         Simulate with entity as top level using generics
         """
         assert config.pli == []
 
-        ghdl_output_path = join(output_path, self.name)
-        data_file_name = join(ghdl_output_path, "wave.%s" % self._gtkwave)
-        if not exists(ghdl_output_path):
-            os.makedirs(ghdl_output_path)
+        data_file_name = join(output_path, "wave.%s" % self._gtkwave)
+        if not exists(output_path):
+            os.makedirs(output_path)
 
         launch_gtkwave = self._gtkwave is not None and not elaborate_only
 
@@ -188,14 +187,15 @@ class GHDLInterface(SimulatorInterface):
             cmd = []
             cmd += ['--elab-run']
             cmd += ['--std=%s' % self._std_str(self._vhdl_standard)]
-            cmd += ['--work=%s' % library_name]
-            cmd += ['--workdir=%s' % self._project.get_library(library_name).directory]
+            cmd += ['--work=%s' % config.library_name]
+            cmd += ['--workdir=%s' % self._project.get_library(config.library_name).directory]
             cmd += ['-P%s' % lib.directory for lib in self._project.get_libraries()]
 
             if self._has_output_flag():
-                cmd += ['-o', join(ghdl_output_path, "%s-%s" % (entity_name, architecture_name))]
+                cmd += ['-o', join(output_path, "%s-%s" % (config.entity_name,
+                                                           config.architecture_name))]
             cmd += config.options.get("ghdl.elab_flags", [])
-            cmd += [entity_name, architecture_name]
+            cmd += [config.entity_name, config.architecture_name]
             cmd += config.options.get("ghdl.sim_flags", [])
 
             for name, value in config.generics.items():

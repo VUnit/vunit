@@ -133,8 +133,7 @@ class SimulatorInterface(object):
         self.setup_library_mapping(project)
         self.compile_source_files(project, continue_on_error)
 
-    def simulate(self, output_path,  # pylint: disable=too-many-arguments
-                 library_name, entity_name, architecture_name, config, elaborate_only):
+    def simulate(self, output_path, config, elaborate_only):
         """
         Simulate
         """

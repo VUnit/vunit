@@ -85,7 +85,7 @@ class TestScanner(object):
 
         if len(run_strings) == 0 or not has_runner_cfg:
             scope = create_scope(entity.library_name, entity.name)
-            configurations = self._cfg.get_configurations(scope)
+            configurations = self._cfg.get_configurations(entity.library_name, entity.name, architecture_name, scope)
             for config in configurations:
                 test_list.add_test(
                     IndependentSimTestCase(
@@ -99,7 +99,7 @@ class TestScanner(object):
                         elaborate_only=self._elaborate_only))
         elif should_run_in_same_sim:
             scope = create_scope(entity.library_name, entity.name)
-            configurations = self._cfg.get_configurations(scope)
+            configurations = self._cfg.get_configurations(entity.library_name, entity.name, architecture_name, scope)
             for config in configurations:
                 test_list.add_suite(
                     SameSimTestSuite(name=dotjoin(create_design_unit_name(entity, architecture_name), config.name),
@@ -111,7 +111,8 @@ class TestScanner(object):
         else:
             for run_string in run_strings:
                 scope = create_scope(entity.library_name, entity.name, run_string)
-                configurations = self._cfg.get_configurations(scope)
+                configurations = self._cfg.get_configurations(entity.library_name,
+                                                              entity.name, architecture_name, scope)
                 for config in configurations:
                     test_list.add_test(
                         IndependentSimTestCase(
@@ -157,9 +158,6 @@ class TestScanner(object):
         config.sim_config.generics = prune_generics(generics, entity)
 
         return TestBench(simulator_if=self._simulator_if,
-                         library_name=entity.library_name,
-                         entity_name=entity.name,
-                         architecture_name=architecture_name,
                          sim_config=config.sim_config,
                          has_output_path="output_path" in entity.generic_names)
 

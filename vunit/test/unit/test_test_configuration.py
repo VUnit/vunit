@@ -27,42 +27,42 @@ class TestTestConfiguration(unittest.TestCase):
 
     def test_has_default_configuration(self):
         scope = create_scope("lib", "tb_entity")
-        self.assertEqual(self.cfg.get_configurations(scope),
+        self.assertEqual(self.get_configurations(scope),
                          [cfg()])
 
     def test_set_generic(self):
         scope = create_scope("lib", "tb_entity")
-        self.assertEqual(self.cfg.get_configurations(scope),
+        self.assertEqual(self.get_configurations(scope),
                          [cfg()])
 
         self.cfg.set_generic("global_generic", "global", scope=create_scope())
-        self.assertEqual(self.cfg.get_configurations(scope),
+        self.assertEqual(self.get_configurations(scope),
                          [cfg(generics={"global_generic": "global"})])
 
         self.cfg.set_generic("global_generic", "library", scope=create_scope("lib"))
-        self.assertEqual(self.cfg.get_configurations(scope),
+        self.assertEqual(self.get_configurations(scope),
                          [cfg(generics={"global_generic": "library"})])
 
         self.cfg.set_generic("global_generic", "entity", scope=create_scope("lib", "tb_entity"))
-        self.assertEqual(self.cfg.get_configurations(scope),
+        self.assertEqual(self.get_configurations(scope),
                          [cfg(generics={"global_generic": "entity"})])
 
     def test_set_pli(self):
         scope = create_scope("lib", "tb_entity")
-        self.assertEqual(self.cfg.get_configurations(scope),
+        self.assertEqual(self.get_configurations(scope),
                          [cfg("")])
 
         self.cfg.set_pli(["libglobal.so"], scope=create_scope())
         self.cfg.set_pli(["libfoo.so"], scope=create_scope("lib2"))
-        self.assertEqual(self.cfg.get_configurations(scope),
+        self.assertEqual(self.get_configurations(scope),
                          [cfg(pli=["libglobal.so"])])
 
         self.cfg.set_pli(["libfoo.so"], scope=create_scope("lib"))
-        self.assertEqual(self.cfg.get_configurations(scope),
+        self.assertEqual(self.get_configurations(scope),
                          [cfg(pli=["libfoo.so"])])
 
         self.cfg.set_pli(["libfoo2.so"], scope=create_scope("lib", "tb_entity"))
-        self.assertEqual(self.cfg.get_configurations(scope),
+        self.assertEqual(self.get_configurations(scope),
                          [cfg(pli=["libfoo2.so"])])
 
     def test_add_config(self):
@@ -79,42 +79,42 @@ class TestTestConfiguration(unittest.TestCase):
         # Local value should take precedence
         self.cfg.set_generic("global_value", "global value")
 
-        self.assertEqual(self.cfg.get_configurations(create_scope("lib", "tb_entity")),
+        self.assertEqual(self.get_configurations(create_scope("lib", "tb_entity")),
                          [cfg("value=1",
                               generics={"value": 1, "global_value": "local value"}),
                           cfg("value=2",
                               generics={"value": 2, "global_value": "local value"})])
 
-        self.assertEqual(self.cfg.get_configurations(create_scope("lib", "tb_entity", "test")),
+        self.assertEqual(self.get_configurations(create_scope("lib", "tb_entity", "test")),
                          [cfg("value=1",
                               generics={"value": 1, "global_value": "local value"}),
                           cfg("value=2",
                               generics={"value": 2, "global_value": "local value"})])
 
-        self.assertEqual(self.cfg.get_configurations(create_scope("lib", "tb_entity", "configured test")),
+        self.assertEqual(self.get_configurations(create_scope("lib", "tb_entity", "configured test")),
                          [cfg("specific_test_config", dict(global_value="global value"))])
 
     def test_disable_ieee_warnings(self):
         lib_scope = create_scope("lib")
         ent_scope = create_scope("lib", "entity")
-        self.assertEqual(self.cfg.get_configurations(lib_scope),
+        self.assertEqual(self.get_configurations(lib_scope),
                          [cfg(disable_ieee_warnings=False)])
 
-        self.assertEqual(self.cfg.get_configurations(ent_scope),
+        self.assertEqual(self.get_configurations(ent_scope),
                          [cfg(disable_ieee_warnings=False)])
 
         self.cfg.disable_ieee_warnings(ent_scope)
-        self.assertEqual(self.cfg.get_configurations(lib_scope),
+        self.assertEqual(self.get_configurations(lib_scope),
                          [cfg(disable_ieee_warnings=False)])
 
-        self.assertEqual(self.cfg.get_configurations(ent_scope),
+        self.assertEqual(self.get_configurations(ent_scope),
                          [cfg(disable_ieee_warnings=True)])
 
         self.cfg.disable_ieee_warnings(lib_scope)
-        self.assertEqual(self.cfg.get_configurations(lib_scope),
+        self.assertEqual(self.get_configurations(lib_scope),
                          [cfg(disable_ieee_warnings=True)])
 
-        self.assertEqual(self.cfg.get_configurations(ent_scope),
+        self.assertEqual(self.get_configurations(ent_scope),
                          [cfg(disable_ieee_warnings=True)])
 
     def test_more_specific_configurations(self):
@@ -145,7 +145,7 @@ class TestTestConfiguration(unittest.TestCase):
                             post_check=post_check,
                             scope=scope)
 
-        self.assertEqual(self.cfg.get_configurations(scope),
+        self.assertEqual(self.get_configurations(scope),
                          [cfg("name", post_check=post_check)])
 
     def test_config_with_pre_config(self):
@@ -159,7 +159,7 @@ class TestTestConfiguration(unittest.TestCase):
                             pre_config=pre_config,
                             scope=scope)
 
-        self.assertEqual(self.cfg.get_configurations(scope),
+        self.assertEqual(self.get_configurations(scope),
                          [cfg("name", pre_config=pre_config)])
 
     def test_sim_options(self):
@@ -171,13 +171,13 @@ class TestTestConfiguration(unittest.TestCase):
                                     value=value,
                                     scope=scope)
 
-        self.assertEqual(self.cfg.get_configurations(create_scope("lib")),
+        self.assertEqual(self.get_configurations(create_scope("lib")),
                          [cfg()])
 
-        self.assertEqual(self.cfg.get_configurations(scope),
+        self.assertEqual(self.get_configurations(scope),
                          [cfg(sim_options=sim_options)])
 
-        self.assertEqual(self.cfg.get_configurations(create_scope("lib", "entity", "test")),
+        self.assertEqual(self.get_configurations(create_scope("lib", "entity", "test")),
                          [cfg(sim_options=sim_options)])
 
     def test_fail_on_unknown_sim_option(self):
@@ -191,6 +191,9 @@ class TestTestConfiguration(unittest.TestCase):
     def write_file(name, contents):
         with open(name, "w") as fwrite:
             fwrite.write(contents)
+
+    def get_configurations(self, scope):
+        return self.cfg.get_configurations('l', 'e', 'a', scope)
 
 
 def out(*args):
@@ -208,7 +211,8 @@ def cfg(name="",  # pylint: disable=too-many-arguments
     Helper method to build configuration hierarchy
     """
     return Configuration(name=name,
-                         sim_config=SimConfig(generics=generics,
+                         sim_config=SimConfig('l', 'e', 'a',
+                                              generics=generics,
                                               pli=pli,
                                               disable_ieee_warnings=disable_ieee_warnings,
                                               options=sim_options),

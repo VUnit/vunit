@@ -264,8 +264,8 @@ define work "{2}/libraries/work"
         cds = CDSFile.parse(self._cdslib)
         return cds
 
-    def simulate(self,  # pylint: disable=too-many-arguments, too-many-locals
-                 output_path, library_name, entity_name, architecture_name, config, elaborate_only=False):
+    def simulate(self,  # pylint: disable=too-many-locals
+                 output_path, config, elaborate_only=False):
         """
         Elaborates and Simulates with entity as top level using generics
         """
@@ -307,7 +307,7 @@ define work "{2}/libraries/work"
             else:
                 args += ['-messages']
                 # args += ['-libverbose']
-            args += self._generic_args(entity_name, config.generics)
+            args += self._generic_args(config.entity_name, config.generics)
             for library in self._libraries:
                 args += ['-reflib "%s"' % library.directory]
             if launch_gui:
@@ -325,12 +325,13 @@ define work "{2}/libraries/work"
                          '{if {#vunit_pkg::__runner__.exit_without_errors == 1} {exit 0} else {exit 42}}"']
                 args += ['-input "@catch '
                          '{if {#run_base_pkg.runner.exit_without_errors == \\"TRUE\\"} {exit 0} else {exit 42}}"']
-            if architecture_name is None:
+            if config.architecture_name is None:
                 # we have a SystemVerilog toplevel:
-                args += ['-top %s' % join('%s.%s:sv' % (library_name, entity_name))]
+                args += ['-top %s' % join('%s.%s:sv' % (config.library_name, config.entity_name))]
             else:
                 # we have a VHDL toplevel:
-                args += ['-top %s' % join('%s.%s:%s' % (library_name, entity_name, architecture_name))]
+                args += ['-top %s' % join('%s.%s:%s' % (config.library_name, config.entity_name,
+                                                        config.architecture_name))]
             argsfile = "%s/irun_%s.args" % (output_path, step)
             write_file(argsfile, "\n".join(args))
             if not run_command([cmd, '-f', relpath(argsfile, output_path)], cwd=output_path):

@@ -338,20 +338,18 @@ proc vunit_run {} {
             return False
         return True
 
-    def simulate(self, output_path,  # pylint: disable=too-many-arguments
-                 library_name, entity_name, architecture_name, config, elaborate_only):
+    def simulate(self, output_path, config, elaborate_only):
         """
         Run a test bench
         """
-        sim_output_path = abspath(join(output_path, self.name))
-        common_file_name = join(sim_output_path, "common.tcl")
-        batch_file_name = join(sim_output_path, "batch.tcl")
-        gui_file_name = join(sim_output_path, "gui.tcl")
+        common_file_name = join(output_path, "common.tcl")
+        batch_file_name = join(output_path, "batch.tcl")
+        gui_file_name = join(output_path, "gui.tcl")
 
         write_file(common_file_name,
-                   self._create_common_script(library_name,
-                                              entity_name,
-                                              architecture_name,
+                   self._create_common_script(config.library_name,
+                                              config.entity_name,
+                                              config.architecture_name,
                                               config))
         write_file(gui_file_name,
                    self._create_gui_script(common_file_name, config))
@@ -359,7 +357,7 @@ proc vunit_run {} {
                    self._create_batch_script(common_file_name, elaborate_only))
 
         if self._gui:
-            gui_path = join(sim_output_path, "gui")
+            gui_path = join(output_path, "gui")
             renew_path(gui_path)
             return self._run_batch_file(gui_file_name, gui=True,
                                         cwd=gui_path)
