@@ -64,6 +64,7 @@ def configure_tb_set_generic(ui):
     tb.set_generic("str_space_val", "1 2 3")
     tb.set_generic("str_quote_val", 'a"b')
 
+
 def configure_tb_assert_stop_level(ui):
     tb = ui.library("lib").entity("tb_assert_stop_level")
 

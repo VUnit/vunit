@@ -20,11 +20,6 @@ matrix:
   - env: BUILD_NAME=py35-docs
     python: '3.5'
 
-  - env: BUILD_NAME=py27-license
-    python: '2.7'
-  - env: BUILD_NAME=py35-license
-    python: '3.5'
-
   # Python 2.7 with ghdl mcode
   - env: BUILD_NAME=py27-acceptance-ghdl
     python: '2.7'
