@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2017, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Interface towards Mentor Graphics ModelSim
@@ -53,6 +53,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         "modelsim.vsim_flags",
         "modelsim.vsim_flags.gui",
         "modelsim.init_file.gui",
+        "vhdl_assert_stop_level",
     ]
 
     @staticmethod
@@ -305,7 +306,7 @@ proc vunit_load {{{{vsim_extra_args ""}}}} {{
 }}
 """.format(coverage_save_cmd=coverage_save_cmd,
            vsim_flags=" ".join(vsim_flags),
-           break_on_assert=1 if config.fail_on_warning else 2,
+           break_on_assert=self._get_local_vhdl_assert_stop_level(config, dict(warning=1, error=2, failure=3)),
            no_warnings=1 if config.disable_ieee_warnings else 0)
 
         return tcl

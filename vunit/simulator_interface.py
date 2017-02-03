@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2017, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Generic simulator interface
@@ -62,6 +62,20 @@ class SimulatorInterface(object):
                 # the file exists, we have a shot at spawn working
                 result.append(file_name)
         return result
+
+    @staticmethod
+    def _get_local_vhdl_assert_stop_level(config, mapping=dict(warning="warning", error="error", failure="failure")):
+        if "vhdl_assert_stop_level" in config.options:
+            if config.options.get("vhdl_assert_stop_level") not in mapping:
+                raise RuntimeError("Unknown vhdl_assert_stop_level: %s" % config.options.get("vhdl_assert_stop_level"))
+            else:
+                level = mapping[config.options.get("vhdl_assert_stop_level")]
+        elif config.fail_on_warning:
+            level = mapping["warning"]
+        else:
+            level = mapping["error"]
+
+        return level
 
     @classmethod
     def find_prefix(cls):

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2017, Lars Asplund lars.anders.asplund@gmail.com
 
 # pylint: disable=too-many-lines
 
@@ -140,6 +140,11 @@ The following simulation options are known.
 ``ghdl.sim_flags``
    Extra simulation flags passed to ``ghdl --elab-run``.
    Must be a list of strings.
+
+``vhdl_assert_stop_level``
+  Will stop a VHDL simulation for asserts on the provided severity level or higher.
+  Valid values are ``"warning"``, ``"error"``, and ``"failure"``. This option takes
+  precedence over the fail_on_warning pragma.
 
 .. |compile_option| replace::
    The name of the compile option (See :ref:`Compilation options <compile_options>`)

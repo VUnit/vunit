@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2017, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Acceptance test of VUnit end to end functionality
@@ -218,4 +218,14 @@ EXPECTED_REPORT = (
     ("passed", "lib.tb_no_generic_override.all"),
 
     ("passed", "lib.tb_ieee_warning.pass"),
-    ("failed", "lib.tb_ieee_warning.fail"))
+    ("failed", "lib.tb_ieee_warning.fail"),
+
+    ("failed", "lib.tb_assert_stop_level.error.Test with VHDL assert stop level = warning"),
+    ("failed", "lib.tb_assert_stop_level.failure.Test with VHDL assert stop level = warning"),
+    ("failed", "lib.tb_assert_stop_level.warning.Test with VHDL assert stop level = warning"),
+    ("failed", "lib.tb_assert_stop_level.error.Test with VHDL assert stop level = error"),
+    ("failed", "lib.tb_assert_stop_level.failure.Test with VHDL assert stop level = error"),
+    ("passed", "lib.tb_assert_stop_level.warning.Test with VHDL assert stop level = error"),
+    ("passed", "lib.tb_assert_stop_level.error.Test with VHDL assert stop level = failure"),
+    ("failed", "lib.tb_assert_stop_level.failure.Test with VHDL assert stop level = failure"),
+    ("passed", "lib.tb_assert_stop_level.warning.Test with VHDL assert stop level = failure"))

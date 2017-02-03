@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2017, Lars Asplund lars.anders.asplund@gmail.com
 
 from os.path import join, dirname
 from vunit import VUnit
@@ -64,9 +64,17 @@ def configure_tb_set_generic(ui):
     tb.set_generic("str_space_val", "1 2 3")
     tb.set_generic("str_quote_val", 'a"b')
 
+def configure_tb_assert_stop_level(ui):
+    tb = ui.library("lib").entity("tb_assert_stop_level")
+
+    for level in ["warning", "error", "failure"]:
+        tb.test("Test with VHDL assert stop level = %s" % level).set_sim_option("vhdl_assert_stop_level", level)
+        tb.add_config(level, generics=dict(level=level))
+
 configure_tb_with_generic_config(ui)
 configure_tb_same_sim_all_pass(ui)
 configure_tb_set_generic(ui)
+configure_tb_assert_stop_level(ui)
 lib.entity("tb_no_generic_override").set_generic("g_val", False)
 lib.entity("tb_ieee_warning").test("pass").disable_ieee_warnings()
 lib.entity("tb_other_file_tests").scan_tests_from_file(join(root, "other_file_tests.vhd"))

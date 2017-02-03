@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2017, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Create simulator instances
@@ -59,11 +59,10 @@ class SimulatorFactory(object):
         """
         Return all supported sim options
         """
-        result = []
+        result = set()
         for sim_class in cls.supported_simulators():
-            for opt in sim_class.sim_options:
-                assert opt.startswith(sim_class.name + ".")
-                result.append(opt)
+            result.update(sim_class.sim_options)
+
         return result
 
     @classmethod

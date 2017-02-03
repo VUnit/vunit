@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2017, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Interface for GHDL simulator
@@ -35,6 +35,7 @@ class GHDLInterface(SimulatorInterface):
     sim_options = [
         "ghdl.sim_flags",
         "ghdl.elab_flags",
+        "vhdl_assert_stop_level",
     ]
 
     @staticmethod
@@ -203,7 +204,7 @@ class GHDLInterface(SimulatorInterface):
             for name, value in config.generics.items():
                 cmd += ['-g%s=%s' % (name, value)]
 
-            cmd += ['--assert-level=%s' % ("warning" if config.fail_on_warning else "error")]
+            cmd += ['--assert-level=%s' % self._get_local_vhdl_assert_stop_level(config)]
 
             if config.disable_ieee_warnings:
                 cmd += ["--ieee-asserts=disable"]

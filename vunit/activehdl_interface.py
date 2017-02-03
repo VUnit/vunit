@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2017, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Interface towards Aldec Active HDL
@@ -39,6 +39,7 @@ class ActiveHDLInterface(SimulatorInterface):
         "activehdl.vsim_flags",
         "activehdl.vsim_flags.gui",
         "activehdl.init_file.gui",
+        "vhdl_assert_stop_level",
     ]
 
     @classmethod
@@ -232,7 +233,7 @@ proc vunit_load {{}} {{
 }}
 """.format(set_generic_str=set_generic_str,
            vsim_flags=" ".join(vsim_flags),
-           breaklevel=1 if config.fail_on_warning else 2)
+           breaklevel=self._get_local_vhdl_assert_stop_level(config, dict(warning=1, error=2, failure=3)))
 
         return tcl
 

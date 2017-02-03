@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2017, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Interface towards Aldec Riviera Pro
@@ -42,6 +42,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         "rivierapro.vsim_flags",
         "rivierapro.vsim_flags.gui",
         "rivierapro.init_file.gui",
+        "vhdl_assert_stop_level",
     ]
 
     @classmethod
@@ -235,7 +236,7 @@ proc vunit_load {{}} {{
     return 0
 }}
 """.format(vsim_flags=" ".join(vsim_flags),
-           break_level="warning" if config.fail_on_warning else "error")
+           break_level=self._get_local_vhdl_assert_stop_level(config))
 
         return tcl
 
