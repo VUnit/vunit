@@ -63,24 +63,6 @@ class SimulatorInterface(object):
                 result.append(file_name)
         return result
 
-    @staticmethod
-    def _get_local_vhdl_assert_stop_level(config, mapping=None):
-        """
-        Return the VHDL assert stop level to use with the simulator
-        """
-        mapping = mapping if mapping is not None else dict(warning="warning", error="error", failure="failure")
-        if "vhdl_assert_stop_level" in config.options:
-            if config.options.get("vhdl_assert_stop_level") not in mapping:
-                raise RuntimeError("Unknown vhdl_assert_stop_level: %s" % config.options.get("vhdl_assert_stop_level"))
-            else:
-                level = mapping[config.options.get("vhdl_assert_stop_level")]
-        elif config.fail_on_warning:
-            level = mapping["warning"]
-        else:
-            level = mapping["error"]
-
-        return level
-
     @classmethod
     def find_prefix(cls):
         """

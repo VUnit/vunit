@@ -265,6 +265,20 @@ class SimConfig(object):  # pylint: disable=too-many-instance-attributes
         self.fail_on_warning = fail_on_warning
         self.options = {} if options is None else options
 
+    @property
+    def vhdl_assert_stop_level(self):
+        """
+        Return the VHDL assert stop level to use with the simulator
+        """
+        if "vhdl_assert_stop_level" in self.options:
+            level = self.options.get("vhdl_assert_stop_level")
+        elif self.fail_on_warning:
+            level = "warning"
+        else:
+            level = "error"
+
+        return level
+
     def __eq__(self, other):
         return (self.library_name == other.library_name and
                 self.entity_name == other.entity_name and

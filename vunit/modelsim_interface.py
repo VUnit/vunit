@@ -268,6 +268,8 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         for library in self._libraries:
             vsim_flags += ["-L", library.name]
 
+        vhdl_assert_stop_level_mapping = dict(warning=1, error=2, failure=3)
+
         tcl = """
 proc vunit_load {{{{vsim_extra_args ""}}}} {{
     set vsim_failed [catch {{
@@ -306,7 +308,7 @@ proc vunit_load {{{{vsim_extra_args ""}}}} {{
 }}
 """.format(coverage_save_cmd=coverage_save_cmd,
            vsim_flags=" ".join(vsim_flags),
-           break_on_assert=self._get_local_vhdl_assert_stop_level(config, dict(warning=1, error=2, failure=3)),
+           break_on_assert=vhdl_assert_stop_level_mapping[config.vhdl_assert_stop_level],
            no_warnings=1 if config.disable_ieee_warnings else 0)
 
         return tcl

@@ -204,7 +204,7 @@ class GHDLInterface(SimulatorInterface):
             for name, value in config.generics.items():
                 cmd += ['-g%s=%s' % (name, value)]
 
-            cmd += ['--assert-level=%s' % self._get_local_vhdl_assert_stop_level(config)]
+            cmd += ['--assert-level=%s' % config.vhdl_assert_stop_level]
 
             if config.disable_ieee_warnings:
                 cmd += ["--ieee-asserts=disable"]

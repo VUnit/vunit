@@ -236,7 +236,7 @@ proc vunit_load {{}} {{
     return 0
 }}
 """.format(vsim_flags=" ".join(vsim_flags),
-           break_level=self._get_local_vhdl_assert_stop_level(config))
+           break_level=config.vhdl_assert_stop_level)
 
         return tcl
 

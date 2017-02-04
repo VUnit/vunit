@@ -208,6 +208,8 @@ class ActiveHDLInterface(SimulatorInterface):
         if config.disable_ieee_warnings:
             vsim_flags.append("-ieee_nowarn")
 
+        vhdl_assert_stop_level_mapping = dict(warning=1, error=2, failure=3)
+
         tcl = """
 proc vunit_load {{}} {{
     {set_generic_str}
@@ -233,7 +235,7 @@ proc vunit_load {{}} {{
 }}
 """.format(set_generic_str=set_generic_str,
            vsim_flags=" ".join(vsim_flags),
-           breaklevel=self._get_local_vhdl_assert_stop_level(config, dict(warning=1, error=2, failure=3)))
+           breaklevel=vhdl_assert_stop_level_mapping[config.vhdl_assert_stop_level])
 
         return tcl
 
