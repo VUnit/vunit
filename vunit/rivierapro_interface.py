@@ -42,7 +42,6 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         "rivierapro.vsim_flags",
         "rivierapro.vsim_flags.gui",
         "rivierapro.init_file.gui",
-        "vhdl_assert_stop_level",
     ]
 
     @classmethod

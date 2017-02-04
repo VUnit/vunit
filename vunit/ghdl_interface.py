@@ -35,7 +35,6 @@ class GHDLInterface(SimulatorInterface):
     sim_options = [
         "ghdl.sim_flags",
         "ghdl.elab_flags",
-        "vhdl_assert_stop_level",
     ]
 
     @staticmethod

@@ -53,7 +53,6 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         "modelsim.vsim_flags",
         "modelsim.vsim_flags.gui",
         "modelsim.init_file.gui",
-        "vhdl_assert_stop_level",
     ]
 
     @staticmethod

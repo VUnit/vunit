@@ -39,7 +39,6 @@ class ActiveHDLInterface(SimulatorInterface):
         "activehdl.vsim_flags",
         "activehdl.vsim_flags.gui",
         "activehdl.init_file.gui",
-        "vhdl_assert_stop_level",
     ]
 
     @classmethod
