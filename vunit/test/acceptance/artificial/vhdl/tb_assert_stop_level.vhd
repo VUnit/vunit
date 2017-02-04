@@ -8,27 +8,31 @@ library vunit_lib;
 context vunit_lib.vunit_context;
 
 entity tb_assert_stop_level is
-  generic (runner_cfg : string;
-           level : string);
+  generic (runner_cfg : string);
 end entity;
 
 architecture vunit_test_bench of tb_assert_stop_level is
 begin
   test_runner : process
-    procedure make_report(constant level : in string) is
-    begin
-      report level severity severity_level'value(level);
-    end procedure make_report;
   begin
     test_runner_setup(runner, runner_cfg);
 
     while test_suite loop
-      if run("Test with VHDL assert stop level = warning") then
-        make_report(level);
-      elsif run("Test with VHDL assert stop level = error") then
-        make_report(level);
-      elsif run("Test with VHDL assert stop level = failure") then
-        make_report(level);
+      if run("Report warning when VHDL assert stop level = warning") or
+        run("Report warning when VHDL assert stop level = error") or
+        run("Report warning when VHDL assert stop level = failure") then
+
+        report "Warning" severity warning;
+      elsif run("Report error when VHDL assert stop level = warning") or
+        run("Report error when VHDL assert stop level = error") or
+        run("Report error when VHDL assert stop level = failure") then
+
+        report "Error" severity error;
+      elsif run("Report failure when VHDL assert stop level = warning") or
+        run("Report failure when VHDL assert stop level = error") or
+        run("Report failure when VHDL assert stop level = failure") then
+
+        report "Failure" severity failure;
       end if;
     end loop;
 

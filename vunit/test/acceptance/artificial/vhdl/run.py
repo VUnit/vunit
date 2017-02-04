@@ -68,9 +68,10 @@ def configure_tb_set_generic(ui):
 def configure_tb_assert_stop_level(ui):
     tb = ui.library("lib").entity("tb_assert_stop_level")
 
-    for level in ["warning", "error", "failure"]:
-        tb.test("Test with VHDL assert stop level = %s" % level).set_sim_option("vhdl_assert_stop_level", level)
-        tb.add_config(level, generics=dict(level=level))
+    for vhdl_assert_stop_level in ["warning", "error", "failure"]:
+        for report_level in ["warning", "error", "failure"]:
+            test = tb.test("Report %s when VHDL assert stop level = %s" % (report_level, vhdl_assert_stop_level))
+            test.set_sim_option("vhdl_assert_stop_level", vhdl_assert_stop_level)
 
 configure_tb_with_generic_config(ui)
 configure_tb_same_sim_all_pass(ui)

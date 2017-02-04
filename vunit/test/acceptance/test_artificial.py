@@ -220,12 +220,12 @@ EXPECTED_REPORT = (
     ("passed", "lib.tb_ieee_warning.pass"),
     ("failed", "lib.tb_ieee_warning.fail"),
 
-    ("failed", "lib.tb_assert_stop_level.error.Test with VHDL assert stop level = warning"),
-    ("failed", "lib.tb_assert_stop_level.failure.Test with VHDL assert stop level = warning"),
-    ("failed", "lib.tb_assert_stop_level.warning.Test with VHDL assert stop level = warning"),
-    ("failed", "lib.tb_assert_stop_level.error.Test with VHDL assert stop level = error"),
-    ("failed", "lib.tb_assert_stop_level.failure.Test with VHDL assert stop level = error"),
-    ("passed", "lib.tb_assert_stop_level.warning.Test with VHDL assert stop level = error"),
-    ("passed", "lib.tb_assert_stop_level.error.Test with VHDL assert stop level = failure"),
-    ("failed", "lib.tb_assert_stop_level.failure.Test with VHDL assert stop level = failure"),
-    ("passed", "lib.tb_assert_stop_level.warning.Test with VHDL assert stop level = failure"))
+    ("failed", "lib.tb_assert_stop_level.Report warning when VHDL assert stop level = warning"),
+    ("failed", "lib.tb_assert_stop_level.Report error when VHDL assert stop level = warning"),
+    ("failed", "lib.tb_assert_stop_level.Report failure when VHDL assert stop level = warning"),
+    ("passed", "lib.tb_assert_stop_level.Report warning when VHDL assert stop level = error"),
+    ("failed", "lib.tb_assert_stop_level.Report error when VHDL assert stop level = error"),
+    ("failed", "lib.tb_assert_stop_level.Report failure when VHDL assert stop level = error"),
+    ("passed", "lib.tb_assert_stop_level.Report warning when VHDL assert stop level = failure"),
+    ("passed", "lib.tb_assert_stop_level.Report error when VHDL assert stop level = failure"),
+    ("failed", "lib.tb_assert_stop_level.Report failure when VHDL assert stop level = failure"))
