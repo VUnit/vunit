@@ -40,6 +40,7 @@ import argparse
 from os.path import join, abspath
 import os
 from vunit.simulator_factory import SimulatorFactory
+from vunit.about import version
 
 
 class VUnitCLI(object):
@@ -71,7 +72,8 @@ def _create_argument_parser(description=None, for_documentation=False):
     :param for_documentation: When used for user guide documentation
     :returns: The created :mod:`argparse` parser object
     """
-    description = 'VUnit command line tool.' if description is None else description
+    if description is None:
+        description = 'VUnit command line tool version %s' % version()
 
     if for_documentation:
         default_output_path = "./vunit_out"
@@ -145,6 +147,9 @@ def _create_argument_parser(description=None, for_documentation=False):
                         action="store_true",
                         default=False,
                         help="Do not re-use the same simulator process for running different test cases (slower)")
+
+    parser.add_argument('--version', action='version', version=version())
+
     SimulatorFactory.add_arguments(parser,
                                    for_all_simulators=for_documentation)
 
