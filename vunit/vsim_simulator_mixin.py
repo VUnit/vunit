@@ -30,12 +30,14 @@ class VsimSimulatorMixin(object):
         self._sim_cfg_file_name = sim_cfg_file_name
 
         prefix = self._prefix  # Avoid circular dependency inhibiting process destruction
+        env = self.get_env()
 
         def create_process(ident):
             return Process([join(prefix, "vsim"), "-c",
                             "-l", join(dirname(sim_cfg_file_name), "transcript%i" % ident),
                             "-do", abspath(join(dirname(__file__), "tcl_read_eval_loop.tcl"))],
-                           cwd=dirname(sim_cfg_file_name))
+                           cwd=dirname(sim_cfg_file_name),
+                           env=env)
 
         if persistent:
             self._persistent_shell = PersistentTclShell(create_process=create_process)

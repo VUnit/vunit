@@ -90,7 +90,7 @@ class Process(object):
     class NonZeroExitCode(Exception):
         pass
 
-    def __init__(self, args, cwd=None):
+    def __init__(self, args, cwd=None, env=None):
         self._args = args
 
         # Create process with new process group
@@ -101,6 +101,7 @@ class Process(object):
                 args,
                 bufsize=0,
                 cwd=cwd,
+                env=env,
                 stdout=subprocess.PIPE,
                 stdin=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -112,6 +113,7 @@ class Process(object):
                 args,
                 bufsize=0,
                 cwd=cwd,
+                env=env,
                 stdout=subprocess.PIPE,
                 stdin=subprocess.PIPE,
                 stderr=subprocess.STDOUT,

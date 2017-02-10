@@ -74,7 +74,8 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         Returns simulator name when OSVVM coverage API is supported, None otherwise.
         """
-        proc = Process([join(cls.find_prefix(), 'vcom'), '-version'])
+        proc = Process([join(cls.find_prefix(), 'vcom'), '-version'],
+                       env=cls.get_env())
         consumer = VersionConsumer()
         proc.consume_output(consumer)
         if consumer.year is not None:
@@ -149,13 +150,17 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
             os.makedirs(dirname(abspath(path)))
 
         if not file_exists(path):
-            proc = Process([join(self._prefix, 'vlib'), library_name, path], cwd=dirname(self._sim_cfg_file_name))
+            proc = Process([join(self._prefix, 'vlib'), library_name, path],
+                           cwd=dirname(self._sim_cfg_file_name),
+                           env=self.get_env())
             proc.consume_output(callback=None)
 
         if library_name in mapped_libraries and mapped_libraries[library_name] == path:
             return
 
-        proc = Process([join(self._prefix, 'vmap'), library_name, path], cwd=dirname(self._sim_cfg_file_name))
+        proc = Process([join(self._prefix, 'vmap'), library_name, path],
+                       cwd=dirname(self._sim_cfg_file_name),
+                       env=self.get_env())
         proc.consume_output(callback=None)
 
     def _create_library_cfg(self):

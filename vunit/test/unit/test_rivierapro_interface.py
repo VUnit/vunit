@@ -35,8 +35,10 @@ class TestRivieraProInterface(unittest.TestCase):
         write_file("file.vhd", "")
         project.add_source_file("file.vhd", "lib", file_type="vhdl")
         simif.compile_project(project)
-        process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"], cwd=self.output_path)
-        process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"], cwd=self.output_path)
+        process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"],
+                                cwd=self.output_path, env=simif.get_env())
+        process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"],
+                                   cwd=self.output_path, env=simif.get_env())
         run_command.assert_called_once_with(
             [join('prefix', 'vcom'),
              '-quiet',
@@ -45,7 +47,7 @@ class TestRivieraProInterface(unittest.TestCase):
              '-2008',
              '-work',
              'lib',
-             'file.vhd'])
+             'file.vhd'], env=simif.get_env())
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.rivierapro_interface.Process", autospec=True)
@@ -59,8 +61,10 @@ class TestRivieraProInterface(unittest.TestCase):
         source_file = project.add_source_file("file.vhd", "lib", file_type="vhdl")
         source_file.set_compile_option("rivierapro.vcom_flags", ["custom", "flags"])
         simif.compile_project(project)
-        process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"], cwd=self.output_path)
-        process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"], cwd=self.output_path)
+        process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"],
+                                cwd=self.output_path, env=simif.get_env())
+        process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"],
+                                   cwd=self.output_path, env=simif.get_env())
         run_command.assert_called_once_with([join('prefix', 'vcom'),
                                              '-quiet',
                                              '-j',
@@ -70,7 +74,7 @@ class TestRivieraProInterface(unittest.TestCase):
                                              '-2008',
                                              '-work',
                                              'lib',
-                                             'file.vhd'])
+                                             'file.vhd'], env=simif.get_env())
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.rivierapro_interface.Process", autospec=True)
@@ -83,8 +87,10 @@ class TestRivieraProInterface(unittest.TestCase):
         write_file("file.v", "")
         project.add_source_file("file.v", "lib", file_type="verilog")
         simif.compile_project(project)
-        process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"], cwd=self.output_path)
-        process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"], cwd=self.output_path)
+        process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"],
+                                cwd=self.output_path, env=simif.get_env())
+        process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"],
+                                   cwd=self.output_path, env=simif.get_env())
         run_command.assert_called_once_with([join('prefix', 'vlog'),
                                              '-quiet',
                                              '-sv2k12',
@@ -93,7 +99,8 @@ class TestRivieraProInterface(unittest.TestCase):
                                              '-work',
                                              'lib',
                                              'file.v',
-                                             '-l', 'lib'])
+                                             '-l', 'lib'],
+                                            env=simif.get_env())
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.rivierapro_interface.Process", autospec=True)
@@ -107,8 +114,10 @@ class TestRivieraProInterface(unittest.TestCase):
         source_file = project.add_source_file("file.v", "lib", file_type="verilog")
         source_file.set_compile_option("rivierapro.vlog_flags", ["custom", "flags"])
         simif.compile_project(project)
-        process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"], cwd=self.output_path)
-        process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"], cwd=self.output_path)
+        process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"],
+                                cwd=self.output_path, env=simif.get_env())
+        process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"],
+                                   cwd=self.output_path, env=simif.get_env())
         run_command.assert_called_once_with([join('prefix', 'vlog'),
                                              '-quiet',
                                              '-sv2k12',
@@ -119,7 +128,7 @@ class TestRivieraProInterface(unittest.TestCase):
                                              '-work',
                                              'lib',
                                              'file.v',
-                                             '-l', 'lib'])
+                                             '-l', 'lib'], env=simif.get_env())
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.rivierapro_interface.Process", autospec=True)
@@ -132,8 +141,10 @@ class TestRivieraProInterface(unittest.TestCase):
         write_file("file.v", "")
         project.add_source_file("file.v", "lib", file_type="verilog", include_dirs=["include"])
         simif.compile_project(project)
-        process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"], cwd=self.output_path)
-        process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"], cwd=self.output_path)
+        process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"],
+                                cwd=self.output_path, env=None)
+        process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"],
+                                   cwd=self.output_path, env=simif.get_env())
         run_command.assert_called_once_with([join('prefix', 'vlog'),
                                              '-quiet',
                                              '-sv2k12',
@@ -143,7 +154,7 @@ class TestRivieraProInterface(unittest.TestCase):
                                              'lib',
                                              'file.v',
                                              '-l', 'lib',
-                                             '+incdir+include'])
+                                             '+incdir+include'], env=simif.get_env())
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.rivierapro_interface.Process", autospec=True)
@@ -156,8 +167,10 @@ class TestRivieraProInterface(unittest.TestCase):
         write_file("file.v", "")
         project.add_source_file("file.v", "lib", file_type="verilog", defines={"defname": "defval"})
         simif.compile_project(project)
-        process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"], cwd=self.output_path)
-        process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"], cwd=self.output_path)
+        process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"],
+                                cwd=self.output_path, env=simif.get_env())
+        process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"],
+                                   cwd=self.output_path, env=simif.get_env())
         run_command.assert_called_once_with([join('prefix', 'vlog'),
                                              '-quiet',
                                              '-sv2k12',
@@ -167,7 +180,7 @@ class TestRivieraProInterface(unittest.TestCase):
                                              'lib',
                                              'file.v',
                                              '-l', 'lib',
-                                             '+define+defname=defval'])
+                                             '+define+defname=defval'], env=simif.get_env())
 
     def setUp(self):
         self.output_path = join(dirname(__file__), "test_rivierapro_out")

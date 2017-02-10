@@ -41,7 +41,8 @@ class TestIncisiveInterface(unittest.TestCase):
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_vhdl_file_lib.args")
         run_command.assert_called_once_with(
-            [join('prefix', 'irun'), '-f', args_file])
+            [join('prefix', 'irun'), '-f', args_file],
+            env=simif.get_env())
         self.assertEqual(read_file(args_file).splitlines(),
                          ['-compile',
                           '-nocopyright',
@@ -82,7 +83,8 @@ define work "%s/libraries/work"
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_vhdl_file_lib.args")
         run_command.assert_called_once_with(
-            [join('prefix', 'irun'), '-f', args_file])
+            [join('prefix', 'irun'), '-f', args_file],
+            env=simif.get_env())
         self.assertEqual(read_file(args_file).splitlines(),
                          ['-compile',
                           '-nocopyright',
@@ -113,7 +115,8 @@ define work "%s/libraries/work"
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_vhdl_file_lib.args")
         run_command.assert_called_once_with(
-            [join('prefix', 'irun'), '-f', args_file])
+            [join('prefix', 'irun'), '-f', args_file],
+            env=simif.get_env())
         self.assertEqual(read_file(args_file).splitlines(),
                          ['-compile',
                           '-nocopyright',
@@ -145,7 +148,8 @@ define work "%s/libraries/work"
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_vhdl_file_lib.args")
         run_command.assert_called_once_with(
-            [join('prefix', 'irun'), '-f', args_file])
+            [join('prefix', 'irun'), '-f', args_file],
+            env=simif.get_env())
         self.assertEqual(read_file(args_file).splitlines(),
                          ['-compile',
                           '-nocopyright',
@@ -177,7 +181,8 @@ define work "%s/libraries/work"
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_vhdl_file_lib.args")
         run_command.assert_called_once_with(
-            [join('prefix', 'irun'), '-f', args_file])
+            [join('prefix', 'irun'), '-f', args_file],
+            env=simif.get_env())
         self.assertEqual(read_file(args_file).splitlines(),
                          ['-compile',
                           '-nocopyright',
@@ -209,7 +214,8 @@ define work "%s/libraries/work"
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_verilog_file_lib.args")
         run_command.assert_called_once_with(
-            [join('prefix', 'irun'), '-f', args_file])
+            [join('prefix', 'irun'), '-f', args_file],
+            env=simif.get_env())
         self.assertEqual(read_file(args_file).splitlines(),
                          ['-compile',
                           '-nocopyright',
@@ -252,7 +258,8 @@ define work "%s/libraries/work"
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_verilog_file_lib.args")
         run_command.assert_called_once_with(
-            [join('prefix', 'irun'), '-f', args_file])
+            [join('prefix', 'irun'), '-f', args_file],
+            env=simif.get_env())
         self.assertEqual(read_file(args_file).splitlines(),
                          ['-compile',
                           '-nocopyright',
@@ -285,7 +292,8 @@ define work "%s/libraries/work"
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_verilog_file_lib.args")
         run_command.assert_called_once_with(
-            [join('prefix', 'irun'), '-f', args_file])
+            [join('prefix', 'irun'), '-f', args_file],
+            env=simif.get_env())
         self.assertEqual(read_file(args_file).splitlines(),
                          ['-compile',
                           '-nocopyright',
@@ -318,7 +326,8 @@ define work "%s/libraries/work"
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_verilog_file_lib.args")
         run_command.assert_called_once_with(
-            [join('prefix', 'irun'), '-f', args_file])
+            [join('prefix', 'irun'), '-f', args_file],
+            env=simif.get_env())
         self.assertEqual(read_file(args_file).splitlines(),
                          ['-compile',
                           '-nocopyright',
@@ -351,7 +360,8 @@ define work "%s/libraries/work"
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_verilog_file_lib.args")
         run_command.assert_called_once_with(
-            [join('prefix', 'irun'), '-f', args_file])
+            [join('prefix', 'irun'), '-f', args_file],
+            env=simif.get_env())
         self.assertEqual(read_file(args_file).splitlines(),
                          ['-compile',
                           '-nocopyright',
@@ -422,9 +432,11 @@ define work "%s/libraries/work"
         simulate_args_file = join('sim_output_path', 'irun_simulate.args')
         run_command.assert_has_calls([
             mock.call([join('prefix', 'irun'), '-f', basename(elaborate_args_file)],
-                      cwd=dirname(elaborate_args_file)),
+                      cwd=dirname(elaborate_args_file),
+                      env=simif.get_env()),
             mock.call([join('prefix', 'irun'), '-f', basename(simulate_args_file)],
-                      cwd=dirname(simulate_args_file)),
+                      cwd=dirname(simulate_args_file),
+                      env=simif.get_env()),
         ])
 
         self.assertEqual(
@@ -496,9 +508,11 @@ define work "%s/libraries/work"
         simulate_args_file = join('sim_output_path', 'irun_simulate.args')
         run_command.assert_has_calls([
             mock.call([join('prefix', 'irun'), '-f', basename(elaborate_args_file)],
-                      cwd=dirname(elaborate_args_file)),
+                      cwd=dirname(elaborate_args_file),
+                      env=simif.get_env()),
             mock.call([join('prefix', 'irun'), '-f', basename(simulate_args_file)],
-                      cwd=dirname(simulate_args_file)),
+                      cwd=dirname(simulate_args_file),
+                      env=simif.get_env()),
         ])
 
         self.assertEqual(
@@ -562,9 +576,11 @@ define work "%s/libraries/work"
         simulate_args_file = join('sim_output_path', 'irun_simulate.args')
         run_command.assert_has_calls([
             mock.call([join('prefix', 'irun'), '-f', basename(elaborate_args_file)],
-                      cwd=dirname(elaborate_args_file)),
+                      cwd=dirname(elaborate_args_file),
+                      env=simif.get_env()),
             mock.call([join('prefix', 'irun'), '-f', basename(simulate_args_file)],
-                      cwd=dirname(simulate_args_file)),
+                      cwd=dirname(simulate_args_file),
+                      env=simif.get_env()),
         ])
 
         args = read_file(elaborate_args_file).splitlines()
@@ -591,9 +607,11 @@ define work "%s/libraries/work"
         simulate_args_file = join('sim_output_path', 'irun_simulate.args')
         run_command.assert_has_calls([
             mock.call([join('prefix', 'irun'), '-f', basename(elaborate_args_file)],
-                      cwd=dirname(elaborate_args_file)),
+                      cwd=dirname(elaborate_args_file),
+                      env=simif.get_env()),
             mock.call([join('prefix', 'irun'), '-f', basename(simulate_args_file)],
-                      cwd=dirname(simulate_args_file)),
+                      cwd=dirname(simulate_args_file),
+                      env=simif.get_env()),
         ])
 
         for args_file in [elaborate_args_file, simulate_args_file]:
@@ -616,9 +634,11 @@ define work "%s/libraries/work"
         simulate_args_file = join('sim_output_path', 'irun_simulate.args')
         run_command.assert_has_calls([
             mock.call([join('prefix', 'irun'), '-f', basename(elaborate_args_file)],
-                      cwd=dirname(elaborate_args_file)),
+                      cwd=dirname(elaborate_args_file),
+                      env=simif.get_env()),
             mock.call([join('prefix', 'irun'), '-f', basename(simulate_args_file)],
-                      cwd=dirname(simulate_args_file)),
+                      cwd=dirname(simulate_args_file),
+                      env=simif.get_env()),
         ])
 
         for args_file in [elaborate_args_file, simulate_args_file]:
@@ -637,7 +657,8 @@ define work "%s/libraries/work"
         elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
         run_command.assert_has_calls([
             mock.call([join('prefix', 'irun'), '-f', basename(elaborate_args_file)],
-                      cwd=dirname(elaborate_args_file)),
+                      cwd=dirname(elaborate_args_file),
+                      env=simif.get_env()),
         ])
 
         self.assertEqual(
@@ -675,7 +696,8 @@ define work "%s/libraries/work"
         elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
         run_command.assert_has_calls([
             mock.call([join('prefix', 'irun'), '-f', basename(elaborate_args_file)],
-                      cwd=dirname(elaborate_args_file)),
+                      cwd=dirname(elaborate_args_file),
+                      env=simif.get_env()),
         ])
 
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
@@ -691,9 +713,11 @@ define work "%s/libraries/work"
         simulate_args_file = join('sim_output_path', 'irun_simulate.args')
         run_command.assert_has_calls([
             mock.call([join('prefix', 'irun'), '-f', basename(elaborate_args_file)],
-                      cwd=dirname(elaborate_args_file)),
+                      cwd=dirname(elaborate_args_file),
+                      env=simif.get_env()),
             mock.call([join('prefix', 'irun'), '-f', basename(simulate_args_file)],
-                      cwd=dirname(simulate_args_file)),
+                      cwd=dirname(simulate_args_file),
+                      env=simif.get_env()),
         ])
 
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
@@ -717,9 +741,11 @@ define work "%s/libraries/work"
         simulate_args_file = join('sim_output_path', 'irun_simulate.args')
         run_command.assert_has_calls([
             mock.call([join('prefix', 'irun'), '-f', basename(elaborate_args_file)],
-                      cwd=dirname(elaborate_args_file)),
+                      cwd=dirname(elaborate_args_file),
+                      env=simif.get_env()),
             mock.call([join('prefix', 'irun'), '-f', basename(simulate_args_file)],
-                      cwd=dirname(simulate_args_file)),
+                      cwd=dirname(simulate_args_file),
+                      env=simif.get_env()),
         ])
         self.assertEqual(
             read_file(elaborate_args_file).splitlines(),

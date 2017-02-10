@@ -199,7 +199,8 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
             os.makedirs(dirname(abspath(path)))
 
         if not file_exists(path):
-            proc = Process([join(self._prefix, 'vlib'), '-unix', path])
+            proc = Process([join(self._prefix, 'vlib'), '-unix', path],
+                           env=self.get_env())
             proc.consume_output(callback=None)
 
         if library_name in mapped_libraries and mapped_libraries[library_name] == path:
@@ -415,9 +416,22 @@ proc _vunit_sim_restart {} {
                 LOGGER.warning("Missing coverage ucdb file: %s", coverage_file)
 
         print("Merging coverage files into %s..." % merged_coverage_file)
-        vcover_merge_process = Process(vcover_cmd)
+        vcover_merge_process = Process(vcover_cmd,
+                                       env=self.get_env())
         vcover_merge_process.consume_output()
         print("Done merging coverage files")
+
+    @staticmethod
+    def get_env():
+        """
+        Remove MODELSIM environment variable
+        """
+        remove = ("MODELSIM",)
+        env = os.environ.copy()
+        for key in remove:
+            if key in env.keys():
+                del env[key]
+        return env
 
 
 def to_coverage_args(coverage):

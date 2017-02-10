@@ -334,7 +334,7 @@ define work "{2}/libraries/work"
                                                         config.architecture_name))]
             argsfile = "%s/irun_%s.args" % (output_path, step)
             write_file(argsfile, "\n".join(args))
-            if not run_command([cmd, '-f', relpath(argsfile, output_path)], cwd=output_path):
+            if not run_command([cmd, '-f', relpath(argsfile, output_path)], cwd=output_path, env=self.get_env()):
                 return False
         return True
 

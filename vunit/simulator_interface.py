@@ -163,7 +163,7 @@ class SimulatorInterface(object):
             try:
                 command = None
                 command = self.compile_source_file_command(source_file)
-                success = run_command(command)
+                success = run_command(command, env=self.get_env())
 
             except CompileError:
                 success = False
@@ -193,6 +193,13 @@ class SimulatorInterface(object):
     def compile_source_file_command(self, source_file):  # pylint: disable=unused-argument
         raise NotImplementedError
 
+    @staticmethod
+    def get_env():
+        """
+        Allows inheriting classes to overload this to modify environment variables
+        """
+        return None  # Default environment
+
 
 def isfile(file_name):
     """
@@ -204,12 +211,12 @@ def isfile(file_name):
     return os.path.basename(file_name) in os.listdir(os.path.dirname(file_name))
 
 
-def run_command(command, cwd=None):
+def run_command(command, cwd=None, env=None):
     """
     Run a command
     """
     try:
-        proc = Process(command, cwd=cwd)
+        proc = Process(command, cwd=cwd, env=env)
         proc.consume_output()
         return True
     except Process.NonZeroExitCode:

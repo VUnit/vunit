@@ -60,7 +60,7 @@ class ActiveHDLInterface(SimulatorInterface):
         """
         Returns True when this simulator supports VHDL package generics
         """
-        proc = Process([join(cls.find_prefix(), 'vcom'), '-version'])
+        proc = Process([join(cls.find_prefix(), 'vcom'), '-version'], env=cls.get_env())
         consumer = VersionConsumer()
         proc.consume_output(consumer)
         if consumer.major is not None:
@@ -130,13 +130,17 @@ class ActiveHDLInterface(SimulatorInterface):
             os.makedirs(dirname(abspath(path)))
 
         if not file_exists(path):
-            proc = Process([join(self._prefix, 'vlib'), library_name, path], cwd=dirname(self._library_cfg))
+            proc = Process([join(self._prefix, 'vlib'), library_name, path],
+                           cwd=dirname(self._library_cfg),
+                           env=self.get_env())
             proc.consume_output(callback=None)
 
         if library_name in mapped_libraries and mapped_libraries[library_name] == path:
             return
 
-        proc = Process([join(self._prefix, 'vmap'), library_name, path], cwd=dirname(self._library_cfg))
+        proc = Process([join(self._prefix, 'vmap'), library_name, path],
+                       cwd=dirname(self._library_cfg),
+                       env=self.get_env())
         proc.consume_output(callback=None)
 
     def _create_library_cfg(self):
@@ -330,7 +334,7 @@ proc vunit_run {} {
                     "-l", join(dirname(batch_file_name), "transcript"),
                     '-do', todo]
 
-            proc = Process(args, cwd=cwd)
+            proc = Process(args, cwd=cwd, env=self.get_env())
             proc.consume_output()
         except Process.NonZeroExitCode:
             return False

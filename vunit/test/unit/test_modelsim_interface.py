@@ -39,7 +39,7 @@ class TestModelSimInterface(unittest.TestCase):
         write_file("file.vhd", "")
         project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="2008")
         simif.compile_project(project)
-        process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"])
+        process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
         run_command.assert_called_once_with(
             [join('prefix', 'vcom'),
              '-quiet',
@@ -48,7 +48,7 @@ class TestModelSimInterface(unittest.TestCase):
              '-2008',
              '-work',
              'lib',
-             'file.vhd'])
+             'file.vhd'], env=simif.get_env())
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
@@ -65,7 +65,7 @@ class TestModelSimInterface(unittest.TestCase):
         write_file("file.vhd", "")
         project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="2002")
         simif.compile_project(project)
-        process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"])
+        process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
         run_command.assert_called_once_with(
             [join('prefix', 'vcom'),
              '-quiet',
@@ -74,7 +74,7 @@ class TestModelSimInterface(unittest.TestCase):
              '-2002',
              '-work',
              'lib',
-             'file.vhd'])
+             'file.vhd'], env=simif.get_env())
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
@@ -91,7 +91,7 @@ class TestModelSimInterface(unittest.TestCase):
         write_file("file.vhd", "")
         project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="93")
         simif.compile_project(project)
-        process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"])
+        process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
         run_command.assert_called_once_with(
             [join('prefix', 'vcom'),
              '-quiet',
@@ -100,7 +100,7 @@ class TestModelSimInterface(unittest.TestCase):
              '-93',
              '-work',
              'lib',
-             'file.vhd'])
+             'file.vhd'], env=simif.get_env())
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
@@ -118,7 +118,7 @@ class TestModelSimInterface(unittest.TestCase):
         source_file = project.add_source_file("file.vhd", "lib", file_type="vhdl")
         source_file.set_compile_option("modelsim.vcom_flags", ["custom", "flags"])
         simif.compile_project(project)
-        process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"])
+        process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
         run_command.assert_called_once_with([join('prefix', 'vcom'),
                                              '-quiet',
                                              '-modelsimini',
@@ -128,7 +128,7 @@ class TestModelSimInterface(unittest.TestCase):
                                              '-2008',
                                              '-work',
                                              'lib',
-                                             'file.vhd'])
+                                             'file.vhd'], env=simif.get_env())
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
@@ -146,7 +146,7 @@ class TestModelSimInterface(unittest.TestCase):
         write_file("file.vhd", "")
         project.add_source_file("file.vhd", "lib", file_type="vhdl")
         simif.compile_project(project)
-        process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"])
+        process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
         run_command.assert_called_once_with([join('prefix', 'vcom'),
                                              '-quiet',
                                              '-modelsimini',
@@ -155,7 +155,7 @@ class TestModelSimInterface(unittest.TestCase):
                                              '-2008',
                                              '-work',
                                              'lib',
-                                             'file.vhd'])
+                                             'file.vhd'], env=simif.get_env())
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
@@ -172,7 +172,7 @@ class TestModelSimInterface(unittest.TestCase):
         write_file("file.v", "")
         project.add_source_file("file.v", "lib", file_type="verilog")
         simif.compile_project(project)
-        process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"])
+        process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
         run_command.assert_called_once_with([join('prefix', 'vlog'),
                                              '-sv',
                                              '-quiet',
@@ -181,7 +181,7 @@ class TestModelSimInterface(unittest.TestCase):
                                              '-work',
                                              'lib',
                                              'file.v',
-                                             '-L', 'lib'])
+                                             '-L', 'lib'], env=simif.get_env())
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
@@ -199,7 +199,7 @@ class TestModelSimInterface(unittest.TestCase):
         source_file = project.add_source_file("file.v", "lib", file_type="verilog")
         source_file.set_compile_option("modelsim.vlog_flags", ["custom", "flags"])
         simif.compile_project(project)
-        process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"])
+        process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
         run_command.assert_called_once_with([join('prefix', 'vlog'),
                                              '-sv',
                                              '-quiet',
@@ -210,7 +210,7 @@ class TestModelSimInterface(unittest.TestCase):
                                              '-work',
                                              'lib',
                                              'file.v',
-                                             '-L', 'lib'])
+                                             '-L', 'lib'], env=simif.get_env())
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
@@ -228,7 +228,7 @@ class TestModelSimInterface(unittest.TestCase):
         write_file("file.v", "")
         project.add_source_file("file.v", "lib", file_type="verilog")
         simif.compile_project(project)
-        process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"])
+        process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
         run_command.assert_called_once_with([join('prefix', 'vlog'),
                                              '-sv',
                                              '-quiet',
@@ -238,7 +238,7 @@ class TestModelSimInterface(unittest.TestCase):
                                              '-work',
                                              'lib',
                                              'file.v',
-                                             '-L', 'lib'])
+                                             '-L', 'lib'], env=simif.get_env())
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
@@ -255,7 +255,7 @@ class TestModelSimInterface(unittest.TestCase):
         write_file("file.v", "")
         project.add_source_file("file.v", "lib", file_type="verilog", include_dirs=["include"])
         simif.compile_project(project)
-        process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"])
+        process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
         run_command.assert_called_once_with([join('prefix', 'vlog'),
                                              '-sv',
                                              '-quiet',
@@ -265,7 +265,7 @@ class TestModelSimInterface(unittest.TestCase):
                                              'lib',
                                              'file.v',
                                              '-L', 'lib',
-                                             '+incdir+include'])
+                                             '+incdir+include'], env=simif.get_env())
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
@@ -282,7 +282,7 @@ class TestModelSimInterface(unittest.TestCase):
         write_file("file.v", "")
         project.add_source_file("file.v", "lib", file_type="verilog", defines={"defname": "defval"})
         simif.compile_project(project)
-        process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"])
+        process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
         run_command.assert_called_once_with([join('prefix', 'vlog'),
                                              '-sv',
                                              '-quiet',
@@ -292,7 +292,7 @@ class TestModelSimInterface(unittest.TestCase):
                                              'lib',
                                              'file.v',
                                              '-L', 'lib',
-                                             '+define+defname=defval'])
+                                             '+define+defname=defval'], env=simif.get_env())
 
     def setUp(self):
         self.output_path = join(dirname(__file__), "test_modelsim_out")
