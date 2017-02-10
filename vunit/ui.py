@@ -935,6 +935,19 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         return SourceFileList([SourceFile(source_file, self._project, self)
                                for source_file in source_files])
 
+    def get_tests(self):
+        """
+        Return the tests in a list
+        """
+        tests = []
+        simulator_if = None
+        test_suites = self._create_tests(simulator_if)
+
+        for test_suite in test_suites:
+            for name in test_suite.test_cases:
+                tests.append(name)
+        return tests
+
 
 class Library(object):
     """
