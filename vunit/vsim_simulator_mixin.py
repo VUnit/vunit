@@ -56,7 +56,7 @@ class VsimSimulatorMixin(object):
         turn call the python command we actually wanted but in the
         correct working directory using subprocess.call
 
-        -u flag is needed for continous output
+        -u flag is needed for continuous output
         """
         recompile_command = [
             sys.executable,
@@ -65,6 +65,9 @@ class VsimSimulatorMixin(object):
             "--compile"] + sys.argv[1:]
         recompile_command_visual = " ".join(recompile_command)
 
+        # stderr is intentionally re-directed to stdout so that the tcl's catch
+        # relies on the return code from the python process rather than being
+        # tricked by output going to stderr.  See issue #228.
         recompile_command_eval = [
             "%s" % sys.executable,
             "-u",
@@ -76,7 +79,7 @@ class VsimSimulatorMixin(object):
              "bufsize=0, "
              "universal_newlines=True, "
              "stdout=sys.stdout, "
-             "stderr=sys.stderr))") % (recompile_command, abspath(os.getcwd()))]
+             "stderr=sys.stdout))") % (recompile_command, abspath(os.getcwd()))]
         recompile_command_eval_tcl = " ".join(["{%s}" % part for part in recompile_command_eval])
 
         tcl = """
