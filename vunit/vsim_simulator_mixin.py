@@ -76,7 +76,7 @@ class VsimSimulatorMixin(object):
              "bufsize=0, "
              "universal_newlines=True, "
              "stdout=sys.stdout, "
-             "stderr=sys.stderr))") % (recompile_command, abspath(os.getcwd()))]
+             "stderr=sys.stdout))") % (recompile_command, abspath(os.getcwd()))]
         recompile_command_eval_tcl = " ".join(["{%s}" % part for part in recompile_command_eval])
 
         tcl = """
