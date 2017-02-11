@@ -39,7 +39,7 @@ class TestGHDLInterface(unittest.TestCase):
 
         executables["gtkwave"] = []
         GHDLInterface(prefix="prefix")
-        self.assertRaises(RuntimeError, GHDLInterface, prefix="prefix", gtkwave="ghw")
+        self.assertRaises(RuntimeError, GHDLInterface, prefix="prefix", gui=True)
 
     @mock.patch('subprocess.check_output', autospec=True)
     def test_parses_llvm_backend(self, check_output):
