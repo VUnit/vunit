@@ -23,18 +23,18 @@ def configure_tb_with_generic_config(ui):
 
     bench.set_generic("set_generic", "set-for-entity")
 
-    tests[1].add_config("", generics=dict(config_generic="set-from-config"))
+    tests[1].add_config("cfg", generics=dict(config_generic="set-from-config"))
 
     tests[2].set_generic("set_generic", "set-for-test")
 
-    tests[3].add_config("", generics=dict(set_generic="set-for-test",
-                                          config_generic="set-from-config"))
+    tests[3].add_config("cfg", generics=dict(set_generic="set-for-test",
+                                             config_generic="set-from-config"))
 
     def post_check(output_path):
         with open(join(output_path, "post_check.txt"), "r") as fptr:
             return "Test 4 was here" in fptr.read()
 
-    tests[4].add_config("",
+    tests[4].add_config("cfg",
                         generics=dict(set_generic="set-from-config",
                                       config_generic="set-from-config"),
                         post_check=post_check)
@@ -45,7 +45,7 @@ def configure_tb_same_sim_all_pass(ui):
         with open(join(output_path, "post_check.txt"), "r") as fptr:
             return "Test 3 was here" in fptr.read()
     ent = ui.library("lib").entity("tb_same_sim_all_pass")
-    ent.add_config("", generics=dict(), post_check=post_check)
+    ent.add_config("cfg", generics=dict(), post_check=post_check)
 
 
 def configure_tb_set_generic(ui):
@@ -78,6 +78,6 @@ configure_tb_same_sim_all_pass(ui)
 configure_tb_set_generic(ui)
 configure_tb_assert_stop_level(ui)
 lib.entity("tb_no_generic_override").set_generic("g_val", False)
-lib.entity("tb_ieee_warning").test("pass").disable_ieee_warnings()
+lib.entity("tb_ieee_warning").test("pass").set_sim_option("disable_ieee_warnings", True)
 lib.entity("tb_other_file_tests").scan_tests_from_file(join(root, "other_file_tests.vhd"))
 ui.main()

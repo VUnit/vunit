@@ -22,6 +22,7 @@ from vunit.vhdl_parser import VHDLParser, VHDLReference
 from vunit.parsing.verilog.parser import VerilogParser
 from vunit.exceptions import CompileError
 from vunit.simulator_factory import SimulatorFactory
+from vunit.design_unit import DesignUnit, VHDLDesignUnit, Entity, Module
 import vunit.ostools as ostools
 LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +59,7 @@ class Project(object):
                          "http://www.sigasi.com/content/work-not-vhdl-library")
             raise RuntimeError("Illegal library name 'work'")
 
-    def add_library(self, logical_name, directory, allow_replacement=False, is_external=False):
+    def add_library(self, logical_name, directory, vhdl_standard='2008', allow_replacement=False, is_external=False):
         """
         Add library to project with logical_name located or to be located in directory
         allow_replacement -- Allow replacing an existing library
@@ -66,18 +67,18 @@ class Project(object):
         """
         self._validate_library_name(logical_name)
         if logical_name not in self._libraries:
-            library = Library(logical_name, directory, is_external=is_external)
+            library = Library(logical_name, directory, vhdl_standard, is_external=is_external)
             self._libraries[logical_name] = library
             LOGGER.debug('Adding library %s with path %s', logical_name, directory)
         else:
             assert allow_replacement
-            library = Library(logical_name, directory, is_external=is_external)
+            library = Library(logical_name, directory, vhdl_standard, is_external=is_external)
             self._libraries[logical_name] = library
             LOGGER.debug('Replacing library %s with path %s', logical_name, directory)
 
     def add_source_file(self,    # pylint: disable=too-many-arguments
                         file_name, library_name, file_type='vhdl', include_dirs=None, defines=None,
-                        vhdl_standard='2008',
+                        vhdl_standard=None,
                         no_parse=False):
         """
         Add a file_name as a source file in library_name with file_type
@@ -93,10 +94,12 @@ class Project(object):
 
         if file_type == "vhdl":
             assert include_dirs is None
-            source_file = VHDLSourceFile(file_name, library,
-                                         vhdl_parser=self._vhdl_parser,
-                                         vhdl_standard=vhdl_standard,
-                                         no_parse=no_parse)
+            source_file = VHDLSourceFile(
+                file_name,
+                library,
+                vhdl_parser=self._vhdl_parser,
+                vhdl_standard=library.vhdl_standard if vhdl_standard is None else vhdl_standard,
+                no_parse=no_parse)
             library.add_vhdl_design_units(source_file.design_units)
         elif file_type == "verilog":
             source_file = VerilogSourceFile(file_name, library, self._verilog_parser, include_dirs, defines, no_parse)
@@ -162,12 +165,10 @@ class Project(object):
                 yield primary_unit.source_file
 
             if ref.is_entity_reference():
-                architectures = library.get_architectures_of(primary_unit.name)
-
                 if ref.reference_all_names_within():
                     # Reference all architectures,
                     # We make configuration declarations implicitly reference all architectures
-                    names = architectures.keys()
+                    names = primary_unit.architecture_names.keys()
                 else:
                     names = [ref.name_within]
 
@@ -176,8 +177,8 @@ class Project(object):
                         # Was not a reference to a specific architecture
                         continue
 
-                    if name in architectures:
-                        file_name = architectures[name]
+                    if name in primary_unit.architecture_names:
+                        file_name = primary_unit.architecture_names[name]
                         yield library.get_source_file(file_name)
                     else:
                         LOGGER.warning("%s: failed to find architecture '%s' of entity '%s.%s'",
@@ -414,9 +415,12 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
     """
     Represents a VHDL library
     """
-    def __init__(self, name, directory, is_external=False):
+    def __init__(self, name, directory, vhdl_standard, is_external=False):
         self.name = name
         self.directory = directory
+
+        # Default VHDL standard for files added unless explicitly set per file
+        self.vhdl_standard = vhdl_standard
 
         self._source_files = {}
 
@@ -425,8 +429,9 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
         self._package_bodies = {}
 
         self.primary_design_units = {}
-        # Entity name to architecture names mapping
-        self._architecture_names = {}
+
+        # Entity name to architecture design unit mapping
+        self._architectures = {}
 
         # Verilog specific
         # Module objects
@@ -487,22 +492,27 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
                 self.primary_design_units[design_unit.name] = design_unit
 
                 if design_unit.unit_type == 'entity':
-                    if design_unit.name not in self._architecture_names:
-                        self._architecture_names[design_unit.name] = {}
+                    if design_unit.name not in self._architectures:
+                        self._architectures[design_unit.name] = {}
                     self._entities[design_unit.name] = design_unit
+
+                    for architecture in self._architectures[design_unit.name].values():
+                        design_unit.add_architecture(architecture)
 
             else:
                 if design_unit.unit_type == 'architecture':
-                    if design_unit.primary_design_unit not in self._architecture_names:
-                        self._architecture_names[design_unit.primary_design_unit] = {}
+                    if design_unit.primary_design_unit not in self._architectures:
+                        self._architectures[design_unit.primary_design_unit] = {}
 
-                    if design_unit.name in self._architecture_names[design_unit.primary_design_unit]:
+                    if design_unit.name in self._architectures[design_unit.primary_design_unit]:
                         self._warning_on_duplication(
                             design_unit,
-                            self._architecture_names[design_unit.primary_design_unit][design_unit.name])
+                            self._architectures[design_unit.primary_design_unit][design_unit.name].source_file.name)
 
-                    file_name = design_unit.source_file.name
-                    self._architecture_names[design_unit.primary_design_unit][design_unit.name] = file_name
+                    self._architectures[design_unit.primary_design_unit][design_unit.name] = design_unit
+
+                    if design_unit.primary_design_unit in self._entities:
+                        self._entities[design_unit.primary_design_unit].add_architecture(design_unit)
 
                 if design_unit.unit_type == 'package body':
                     if design_unit.primary_design_unit in self._package_bodies:
@@ -531,7 +541,6 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
         """
         entities = []
         for entity in self._entities.values():
-            entity.architecture_names = self._architecture_names[entity.name]
             entities.append(entity)
         return entities
 
@@ -540,9 +549,6 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
         Return a list of all modules in the design
         """
         return list(self.modules.values())
-
-    def get_architectures_of(self, entity_name):
-        return self._architecture_names[entity_name]
 
     def get_package_body(self, name):
         return self._package_bodies[name]
@@ -697,10 +703,10 @@ class VerilogSourceFile(SourceFile):
                 self._content_hash = hash_string(self._content_hash +
                                                  ostools.read_file(included_file_name, encoding=HDL_FILE_ENCODING))
             for module in design_file.modules:
-                self.design_units.append(ModuleDesignUnit(module.name, self, module.parameters))
+                self.design_units.append(Module(module.name, self, module.parameters))
 
             for package in design_file.packages:
-                self.design_units.append(VerilogDesignUnit(package.name, self, "package"))
+                self.design_units.append(DesignUnit(package.name, self, "package"))
 
             for package_name in design_file.imports:
                 self.package_dependencies.append(package_name)
@@ -825,77 +831,6 @@ class VHDLSourceFile(SourceFile):
         Compute hash of contents and compile options
         """
         return hash_string(self._content_hash + self._compile_options_hash() + hash_string(self._vhdl_standard))
-
-
-class DesignUnit(object):
-    """
-    Represents a generic design unit
-    """
-    def __init__(self, name, source_file, unit_type):
-        self.name = name
-        self.source_file = source_file
-        self.unit_type = unit_type
-
-    @property
-    def file_name(self):
-        return self.source_file.name
-
-    @property
-    def library_name(self):
-        return self.source_file.library.name
-
-    @property
-    def is_entity(self):
-        return False
-
-    @property
-    def is_module(self):
-        return False
-
-
-class VHDLDesignUnit(DesignUnit):
-    """
-    Represents a VHDL design unit
-    """
-    def __init__(self,  # pylint: disable=too-many-arguments
-                 name, source_file, unit_type, is_primary=True, primary_design_unit=None):
-        DesignUnit.__init__(self, name, source_file, unit_type)
-        self.is_primary = is_primary
-        self.primary_design_unit = primary_design_unit
-
-
-class Entity(VHDLDesignUnit):
-    """
-    Represents a VHDL Entity
-    """
-    def __init__(self, name, source_file, generic_names=None):
-        VHDLDesignUnit.__init__(self, name, source_file, 'entity', True)
-        self.generic_names = [] if generic_names is None else generic_names
-        self.architecture_names = {}
-
-    @property
-    def is_entity(self):
-        return True
-
-
-class VerilogDesignUnit(DesignUnit):
-    """
-    Represents a Verilog design unit
-    """
-    pass
-
-
-class ModuleDesignUnit(VerilogDesignUnit):
-    """
-    Represents a Verilog Module
-    """
-    def __init__(self, name, source_file, generic_names=None):
-        VerilogDesignUnit.__init__(self, name, source_file, 'module')
-        self.generic_names = [] if generic_names is None else generic_names
-
-    @property
-    def is_module(self):
-        return True
 
 
 def more_recent(file_name, than_file_name):

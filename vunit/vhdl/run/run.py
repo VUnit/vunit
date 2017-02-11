@@ -10,9 +10,6 @@ from vunit import VUnit
 root = dirname(__file__)
 ui = VUnit.from_argv()
 
-# Testing of the runner is special the test bench does not have a runner_cfg
-ui._tb_filter = lambda design_unit: design_unit.name.startswith("tb_")
-
 lib = ui.add_library("tb_run_lib")
 lib.add_source_files(join(root, 'test', '*.vhd'))
 ui.main()

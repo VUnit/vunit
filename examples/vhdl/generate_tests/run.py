@@ -60,18 +60,16 @@ lib.add_source_files(join(test_path, "*.vhd"))
 
 tb_generated = lib.entity("tb_generated")
 
-# Just set a generic for a given test bench
+# Just set a generic for all configurations within the test bench
 tb_generated.set_generic("message", "set-for-entity")
 
-# Run all tests with signed/unsigned and data width in range [1,5[
-generate_tests(tb_generated, [False, True], range(1, 5))
-
-# Test 2 should only be run with signed width of 16
-test_2 = tb_generated.test("Test 2")
-generate_tests(test_2, [True], [16])
-
-# Just set a generic for a given test
-test_2.set_generic("message", "set-for-test")
-
+for test in tb_generated.get_tests():
+    if test.name == "Test 2":
+        # Test 2 should only be run with signed width of 16
+        generate_tests(test, [True], [16])
+        test.set_generic("message", "set-for-test")
+    else:
+        # Run all other tests with signed/unsigned and data width in range [1,5[
+        generate_tests(test, [False, True], range(1, 5))
 
 ui.main()

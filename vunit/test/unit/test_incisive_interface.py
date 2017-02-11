@@ -19,7 +19,7 @@ from vunit.incisive_interface import IncisiveInterface
 from vunit.test.mock_2or3 import mock
 from vunit.project import Project
 from vunit.ostools import renew_path, write_file, read_file
-from vunit.test_configuration import SimConfig
+from vunit.test_bench import Configuration
 
 
 class TestIncisiveInterface(unittest.TestCase):
@@ -426,7 +426,7 @@ define work "%s/libraries/work"
         with mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True) as dummy:
             simif.compile_project(project)
 
-        config = SimConfig("lib", "ent", "arch")
+        config = make_config()
         self.assertTrue(simif.simulate("sim_output_path", "test_suite_name", config))
         elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
         simulate_args_file = join('sim_output_path', 'irun_simulate.args')
@@ -502,7 +502,7 @@ define work "%s/libraries/work"
         with mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True) as dummy:
             simif.compile_project(project)
 
-        config = SimConfig("lib", "modulename", None)
+        config = make_config(verilog=True)
         self.assertTrue(simif.simulate("sim_output_path", "test_suite_name", config))
         elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
         simulate_args_file = join('sim_output_path', 'irun_simulate.args')
@@ -569,8 +569,7 @@ define work "%s/libraries/work"
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
-        config = SimConfig("lib", "modulename", None,
-                           options={"incisive.irun_sim_flags": ["custom", "flags"]})
+        config = make_config(sim_options={"incisive.irun_sim_flags": ["custom", "flags"]})
         self.assertTrue(simif.simulate("sim_output_path", "test_suite_name", config))
         elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
         simulate_args_file = join('sim_output_path', 'irun_simulate.args')
@@ -598,10 +597,10 @@ define work "%s/libraries/work"
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
-        config = SimConfig("lib", "modulename", None,
-                           generics={"genstr": "genval",
-                                     "genint": 1,
-                                     "genbool": True})
+        config = make_config(verilog=True,
+                             generics={"genstr": "genval",
+                                       "genint": 1,
+                                       "genbool": True})
         self.assertTrue(simif.simulate("sim_output_path", "test_suite_name", config))
         elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
         simulate_args_file = join('sim_output_path', 'irun_simulate.args')
@@ -628,7 +627,7 @@ define work "%s/libraries/work"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path,
                                   hdlvar="custom_hdlvar")
-        config = SimConfig("lib", "modulename", None, )
+        config = make_config()
         self.assertTrue(simif.simulate("sim_output_path", "test_suite_name", config))
         elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
         simulate_args_file = join('sim_output_path', 'irun_simulate.args')
@@ -652,7 +651,7 @@ define work "%s/libraries/work"
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
-        config = SimConfig("lib", "modulename", None)
+        config = make_config(verilog=True)
         self.assertTrue(simif.simulate("sim_output_path", "test_suite_name", config, elaborate_only=True))
         elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
         run_command.assert_has_calls([
@@ -691,7 +690,7 @@ define work "%s/libraries/work"
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
-        config = SimConfig("lib", "modulename", None)
+        config = make_config()
         self.assertFalse(simif.simulate("sim_output_path", "test_suite_name", config))
         elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
         run_command.assert_has_calls([
@@ -707,7 +706,7 @@ define work "%s/libraries/work"
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
-        config = SimConfig("lib", "modulename", None)
+        config = make_config()
         self.assertFalse(simif.simulate("sim_output_path", "test_suite_name", config))
         elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
         simulate_args_file = join('sim_output_path', 'irun_simulate.args')
@@ -735,7 +734,7 @@ define work "%s/libraries/work"
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path, gui=True)
         with mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True) as dummy:
             simif.compile_project(project)
-        config = SimConfig("lib", "ent", "arch")
+        config = make_config()
         self.assertTrue(simif.simulate("sim_output_path", "test_suite_name", config))
         elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
         simulate_args_file = join('sim_output_path', 'irun_simulate.args')
@@ -801,3 +800,22 @@ define work "%s/libraries/work"
         os.chdir(self.cwd)
         if exists(self.output_path):
             rmtree(self.output_path)
+
+
+def make_config(sim_options=None, generics=None, verilog=False):
+    """
+    Utility to reduce boiler plate in tests
+    """
+    cfg = mock.Mock(spec=Configuration)
+    cfg.library_name = "lib"
+
+    if verilog:
+        cfg.entity_name = "modulename"
+        cfg.architecture_name = None
+    else:
+        cfg.entity_name = "ent"
+        cfg.architecture_name = "arch"
+
+    cfg.sim_options = {} if sim_options is None else sim_options
+    cfg.generics = {} if generics is None else generics
+    return cfg

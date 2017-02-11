@@ -59,7 +59,9 @@ class SimulatorFactory(object):
         """
         Return all supported sim options
         """
-        result = ["vhdl_assert_stop_level"]
+        result = ["vhdl_assert_stop_level",
+                  "disable_ieee_warnings",
+                  "pli"]
         for sim_class in cls.supported_simulators():
             for opt in sim_class.sim_options:
                 assert opt.startswith(sim_class.name + ".")

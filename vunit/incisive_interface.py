@@ -298,7 +298,7 @@ define work "{2}/libraries/work"
             args += ['-ncerror EVBNAT']  # promote to error: "bad natural literal in generic association"
             args += ['-work work']
             args += ['-nclibdirname "%s"' % (join(self._output_path, "libraries"))]  # @TODO: ugly
-            args += config.options.get('incisive.irun_sim_flags', [])
+            args += config.sim_options.get('incisive.irun_sim_flags', [])
             args += ['-cdslib "%s"' % self._cdslib]
             args += self._hdlvar_args()
             args += ['-log "%s/irun_%s.log"' % (output_path, step)]

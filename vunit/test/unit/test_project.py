@@ -42,6 +42,14 @@ class TestProject(unittest.TestCase):  # pylint: disable=too-many-public-methods
 
     def test_parses_entity_architecture(self):
         self.project.add_library("lib", "work_path")
+
+        # Add architecture before entity to test that they are paired later
+        self.add_source_file("lib", "file2.vhd", """\
+architecture arch3 of foo is
+begin
+end architecture;
+""")
+
         file1 = self.add_source_file("lib", "file1.vhd", """\
 entity foo is
 end entity;
@@ -55,17 +63,20 @@ begin
 end architecture;
 """)
 
-        self.add_source_file("lib", "file2.vhd", """\
-architecture arch3 of foo is
+        self.assert_has_entity(file1, "foo",
+                               architecture_names=["arch", "arch2", "arch3"])
+        self.add_source_file("lib", "file3.vhd", """\
+architecture arch4 of foo is
 begin
 end architecture;
 """)
 
         self.assert_has_entity(file1, "foo",
-                               architecture_names=["arch", "arch2", "arch3"])
+                               architecture_names=["arch", "arch2", "arch3", "arch4"])
         self.assert_has_architecture("file1.vhd", "arch", "foo")
         self.assert_has_architecture("file1.vhd", "arch2", "foo")
         self.assert_has_architecture("file2.vhd", "arch3", "foo")
+        self.assert_has_architecture("file3.vhd", "arch4", "foo")
 
     def test_parses_entity_architecture_with_generics(self):
         self.project.add_library("lib", "work_path")

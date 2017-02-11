@@ -136,14 +136,14 @@ class TestVunitArtificial(unittest.TestCase):
             ("failed", "lib.tb_fail_on_fatal_and_early_finish.finish1"),
 
             ("passed", "lib.tb_with_parameter_config.Test 0"),
-            ("passed", "lib.tb_with_parameter_config.Test 1"),
+            ("passed", "lib.tb_with_parameter_config.cfg.Test 1"),
             ("passed", "lib.tb_with_parameter_config.Test 2"),
-            ("passed", "lib.tb_with_parameter_config.Test 3"),
-            ("passed", "lib.tb_with_parameter_config.Test 4"),
+            ("passed", "lib.tb_with_parameter_config.cfg.Test 3"),
+            ("passed", "lib.tb_with_parameter_config.cfg.Test 4"),
 
-            ("passed", "lib.tb_same_sim_all_pass.Test 1"),
-            ("passed", "lib.tb_same_sim_all_pass.Test 2"),
-            ("passed", "lib.tb_same_sim_all_pass.Test 3"),
+            ("passed", "lib.tb_same_sim_all_pass.cfg.Test 1"),
+            ("passed", "lib.tb_same_sim_all_pass.cfg.Test 2"),
+            ("passed", "lib.tb_same_sim_all_pass.cfg.Test 3"),
 
             ("passed", "lib.tb_same_sim_some_fail.Test 1"),
             ("failed", "lib.tb_same_sim_some_fail.Test 2"),
@@ -185,8 +185,6 @@ EXPECTED_REPORT = (
     ("passed", "lib.tb_infinite_events.all"),
     ("failed", "lib.tb_fail_on_warning.all"),
     ("passed", "lib.tb_no_fail_on_warning.all"),
-    ("passed", "lib.tb_two_architectures.pass.all"),
-    ("failed", "lib.tb_two_architectures.fail.all"),
     ("passed", "lib.tb_with_vhdl_runner.pass"),
     ("passed", "lib.tb_with_vhdl_runner.Test with spaces"),
     ("failed", "lib.tb_with_vhdl_runner.fail"),
@@ -195,9 +193,9 @@ EXPECTED_REPORT = (
     ("passed", "lib.tb_no_fail_after_cleanup.all"),
     ("failed", "lib.tb_elab_fail.all"),
 
-    ("passed", "lib.tb_same_sim_all_pass.Test 1"),
-    ("passed", "lib.tb_same_sim_all_pass.Test 2"),
-    ("passed", "lib.tb_same_sim_all_pass.Test 3"),
+    ("passed", "lib.tb_same_sim_all_pass.cfg.Test 1"),
+    ("passed", "lib.tb_same_sim_all_pass.cfg.Test 2"),
+    ("passed", "lib.tb_same_sim_all_pass.cfg.Test 3"),
 
     ("passed", "lib.tb_same_sim_some_fail.Test 1"),
     ("failed", "lib.tb_same_sim_some_fail.Test 2"),
@@ -210,10 +208,10 @@ EXPECTED_REPORT = (
     ("passed", "lib.tb_set_generic.all"),
 
     ("passed", "lib.tb_with_generic_config.Test 0"),
-    ("passed", "lib.tb_with_generic_config.Test 1"),
+    ("passed", "lib.tb_with_generic_config.cfg.Test 1"),
     ("passed", "lib.tb_with_generic_config.Test 2"),
-    ("passed", "lib.tb_with_generic_config.Test 3"),
-    ("passed", "lib.tb_with_generic_config.Test 4"),
+    ("passed", "lib.tb_with_generic_config.cfg.Test 3"),
+    ("passed", "lib.tb_with_generic_config.cfg.Test 4"),
 
     ("passed", "lib.tb_no_generic_override.all"),
 

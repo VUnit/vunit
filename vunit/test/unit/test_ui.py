@@ -38,7 +38,6 @@ class TestUi(unittest.TestCase):
 
         self._output_path = join(self.tmp_path, 'output')
         self._preprocessed_path = join(self._output_path, "preprocessed")
-        self.mocksim = None
 
     def tearDown(self):
         os.chdir(self.cwd)
@@ -170,6 +169,58 @@ end architecture;
         lib = ui.add_library("lib")
         lib.add_source_files(join(dirname(__file__), 'missing.vhd'), allow_empty=True)
 
+    def test_get_test_benchs_and_test(self):
+        ui = self._create_ui()
+        lib = ui.add_library("lib")
+        self.create_file('tb_ent.vhd', '''
+entity tb_ent is
+  generic (runner_cfg : string);
+end entity;
+
+architecture a of tb_ent is
+begin
+  main : process
+  begin
+    if run("test1") then
+    elsif run("test2") then
+    end if;
+  end process;
+end architecture;
+        ''')
+
+        self.create_file('tb_ent2.vhd', '''
+entity tb_ent2 is
+  generic (runner_cfg : string);
+end entity;
+
+architecture a of tb_ent2 is
+begin
+end architecture;
+        ''')
+
+        ui = self._create_ui()
+        lib = ui.add_library("lib")
+        lib.add_source_file("tb_ent.vhd")
+        lib.add_source_file("tb_ent2.vhd")
+        self.assertEqual(lib.test_bench("tb_ent").name, "tb_ent")
+        self.assertEqual(lib.test_bench("tb_ent2").name, "tb_ent2")
+        self.assertEqual(lib.test_bench("tb_ent").library.name, "lib")
+
+        self.assertEqual([test_bench.name for test_bench in lib.get_test_benches()],
+                         ["tb_ent", "tb_ent2"])
+        self.assertEqual([test_bench.name for test_bench in lib.get_test_benches("*2")],
+                         ["tb_ent2"])
+
+        self.assertEqual(lib.test_bench("tb_ent").test("test1").name, "test1")
+        self.assertEqual(lib.test_bench("tb_ent").test("test2").name, "test2")
+
+        self.assertEqual([test.name for test in lib.test_bench("tb_ent").get_tests()],
+                         ["test1", "test2"])
+        self.assertEqual([test.name for test in lib.test_bench("tb_ent").get_tests("*1")],
+                         ["test1"])
+        self.assertEqual([test.name for test in lib.test_bench("tb_ent2").get_tests()],
+                         [])
+
     def test_add_source_files(self):
         files = ["file1.vhd",
                  "file2.vhd",
@@ -300,26 +351,20 @@ Listed 2 files""".splitlines()))
         self.assertRaisesRegex(ValueError, ".*Found no file named.*%s.* in library 'lib1'" % non_existant_name,
                                ui.get_source_file, non_existant_name, "lib1")
 
-    @mock.patch("vunit.project.Project.add_manual_dependency", autospec=True)
-    def test_add_single_file_manual_dependencies(self, add_manual_dependency):
-        # pylint: disable=protected-access
+    def test_add_single_file_manual_dependencies(self):
         ui = self._create_ui()
         lib = ui.add_library("lib")
         file_name1 = self.create_entity_file(1)
         file_name2 = self.create_entity_file(2)
         file1 = lib.add_source_file(file_name1)
         file2 = lib.add_source_file(file_name2)
-
-        add_manual_dependency.assert_has_calls([])
+        self.assertEqual(names(ui.get_compile_order([file1])), names([file1]))
+        self.assertEqual(names(ui.get_compile_order([file2])), names([file2]))
         file1.add_dependency_on(file2)
-        add_manual_dependency.assert_has_calls([
-            mock.call(ui._project,
-                      file1._source_file,
-                      depends_on=file2._source_file)])
+        self.assertEqual(names(ui.get_compile_order([file1])), names([file2, file1]))
+        self.assertEqual(names(ui.get_compile_order([file2])), names([file2]))
 
-    @mock.patch("vunit.project.Project.add_manual_dependency", autospec=True)
-    def test_add_multiple_file_manual_dependencies(self, add_manual_dependency):
-        # pylint: disable=protected-access
+    def test_add_multiple_file_manual_dependencies(self):
         ui = self._create_ui()
         lib = ui.add_library("lib")
         self.create_file("foo1.vhd")
@@ -329,17 +374,12 @@ Listed 2 files""".splitlines()))
         foo_files = lib.add_source_files("foo*.vhd")
         bar_file = lib.add_source_file("bar.vhd")
 
-        add_manual_dependency.assert_has_calls([])
+        self.assertEqual(names(ui.get_compile_order([bar_file])), names([bar_file]))
         bar_file.add_dependency_on(foo_files)
-        add_manual_dependency.assert_has_calls([
-            mock.call(ui._project,
-                      bar_file._source_file,
-                      depends_on=foo_file._source_file)
-            for foo_file in foo_files])
+        self.assertEqual(sorted(names(ui.get_compile_order([bar_file]))), sorted(names(foo_files + [bar_file])))
+        self.assertEqual(ui.get_compile_order([bar_file])[-1].name, bar_file.name)
 
-    @mock.patch("vunit.project.Project.add_manual_dependency", autospec=True)
-    def test_add_fileset_manual_dependencies(self, add_manual_dependency):
-        # pylint: disable=protected-access
+    def test_add_fileset_manual_dependencies(self):
         ui = self._create_ui()
         lib = ui.add_library("lib")
         self.create_file("foo1.vhd")
@@ -349,13 +389,13 @@ Listed 2 files""".splitlines()))
         foo_files = lib.add_source_files("foo*.vhd")
         bar_file = lib.add_source_file("bar.vhd")
 
-        add_manual_dependency.assert_has_calls([])
+        for foo_file in foo_files:
+            self.assertEqual(names(ui.get_compile_order([foo_file])), names([foo_file]))
+
         foo_files.add_dependency_on(bar_file)
-        add_manual_dependency.assert_has_calls([
-            mock.call(ui._project,
-                      foo_file._source_file,
-                      depends_on=bar_file._source_file)
-            for foo_file in foo_files])
+
+        for foo_file in foo_files:
+            self.assertEqual(names(ui.get_compile_order([foo_file])), names([bar_file, foo_file]))
 
     def test_add_source_files_has_include_dirs(self):
         file_name = "verilog.v"
@@ -376,7 +416,7 @@ Listed 2 files""".splitlines()))
                                                                 file_type="verilog",
                                                                 include_dirs=all_include_dirs,
                                                                 defines=None,
-                                                                vhdl_standard='2008',
+                                                                vhdl_standard=None,
                                                                 no_parse=False)
         check(lambda ui, _: ui.add_source_files(file_name, "lib", include_dirs=include_dirs))
         check(lambda ui, _: ui.add_source_file(file_name, "lib", include_dirs=include_dirs))
@@ -402,7 +442,7 @@ Listed 2 files""".splitlines()))
                                                                 file_type="verilog",
                                                                 include_dirs=all_include_dirs,
                                                                 defines=defines,
-                                                                vhdl_standard='2008',
+                                                                vhdl_standard=None,
                                                                 no_parse=False)
         check(lambda ui, _: ui.add_source_files(file_name, "lib", defines=defines))
         check(lambda ui, _: ui.add_source_file(file_name, "lib", defines=defines))
@@ -435,7 +475,7 @@ Listed 2 files""".splitlines()))
                                                                     file_type="verilog",
                                                                     include_dirs=all_include_dirs,
                                                                     defines=None,
-                                                                    vhdl_standard='2008',
+                                                                    vhdl_standard=None,
                                                                     no_parse=no_parse)
 
     def test_compile_options(self):
@@ -519,41 +559,7 @@ Listed 2 files""".splitlines()))
         source_file = lib.add_source_file(file_name)
         self.assertEqual(source_file.vhdl_standard, None)
 
-    def test_entity_has_pre_config(self):
-        # pylint: disable=protected-access
-        def pre_config():
-            return False
-        ui = self._create_ui("lib.test_ui_tb.test_one")
-        ui._configuration.add_config = mock.create_autospec(ui._configuration.add_config)
-        lib = ui.add_library("lib")
-        lib.add_source_files(join(dirname(__file__), 'test_ui_tb.vhd'))
-        ent = lib.entity("test_ui_tb")
-        ent.add_config(name="cfg", pre_config=pre_config)
-        ui._configuration.add_config.assert_called_once_with(
-            name="cfg",
-            scope=('lib', 'test_ui_tb'),
-            post_check=None,
-            pre_config=pre_config,
-            generics={})
-
-    def test_test_has_pre_config(self):
-        # pylint: disable=protected-access
-        def pre_config():
-            return False
-        ui = self._create_ui("lib.test_ui_tb.test_one")
-        ui._configuration.add_config = mock.create_autospec(ui._configuration.add_config)
-        lib = ui.add_library("lib")
-        lib.add_source_files(join(dirname(__file__), 'test_ui_tb.vhd'))
-        test = lib.entity("test_ui_tb").test("test_one")
-        test.add_config(name="cfg", pre_config=pre_config)
-        ui._configuration.add_config.assert_called_once_with(
-            name="cfg",
-            scope=('lib', 'test_ui_tb', 'test_one'),
-            post_check=None,
-            pre_config=pre_config,
-            generics={})
-
-    @mock.patch("vunit.ui.LOGGER", autospec=True)
+    @mock.patch("vunit.test_bench_list.LOGGER", autospec=True)
     def test_warning_on_no_tests(self, logger):
         ui = self._create_ui("--compile")
         self._run_main(ui)
@@ -563,13 +569,13 @@ Listed 2 files""".splitlines()))
         ui = self._create_ui("--list")
         self._run_main(ui)
         self.assertEqual(len(logger.warning.mock_calls), 1)
-        self.assertTrue("found no test benches" in str(logger.warning.mock_calls))
+        self.assertTrue("Found no test benches" in str(logger.warning.mock_calls))
         logger.reset_mock()
 
         ui = self._create_ui()
         self._run_main(ui)
         self.assertEqual(len(logger.warning.mock_calls), 1)
-        self.assertTrue("found no test benches" in str(logger.warning.mock_calls))
+        self.assertTrue("Found no test benches" in str(logger.warning.mock_calls))
         logger.reset_mock()
 
     def test_scan_tests_from_other_file(self):
@@ -578,7 +584,6 @@ Listed 2 files""".splitlines()))
                 ui = self._create_ui()
                 lib = ui.add_library("lib")
 
-                print(tb_type, tests_type)
                 if tb_type == "vhdl":
                     tb_file_name = "tb_top.vhd"
                     self.create_file(tb_file_name, """
@@ -632,9 +637,8 @@ endmodule
                 lib.add_source_file(tb_file_name)
                 lib.add_source_file(tests_file_name)
 
-                tests = ui._create_tests(None)  # pylint: disable=protected-access
                 # tb_top is a single test case in itself
-                self.assertEqual(tests.test_names(), ["lib.tb_top.all"])
+                self.assertEqual(ui.library("lib").test_bench("tb_top").get_tests(), [])
 
                 if tb_type == "vhdl":
                     test_bench = lib.entity("tb_top")
@@ -642,21 +646,26 @@ endmodule
                     test_bench = lib.module("tb_top")
                 test_bench.scan_tests_from_file(tests_file_name)
 
-                tests = ui._create_tests(None)  # pylint: disable=protected-access
-                # tb_top is a single test case in itself
-                self.assertEqual(tests.test_names(), ["lib.tb_top.test1",
-                                                      "lib.tb_top.test2"])
+                self.assertEqual([test.name
+                                  for test in ui.library("lib").test_bench("tb_top").get_tests()],
+                                 ["test1",
+                                  "test2"])
 
     def test_scan_tests_from_other_file_missing(self):
         ui = self._create_ui()
         lib = ui.add_library("lib")
         tb_file_name = "tb_top.sv"
         self.create_file(tb_file_name, """
-module tb_top
-endmodule;
+`include "vunit_defines.svh"
+module tb_top;
+   `TEST_SUITE begin
+      `TEST_CASE("test1") begin
+      end
+   end;
+endmodule
         """)
         lib.add_source_file(tb_file_name)
-        self.assertRaises(ValueError, lib.module("tb_top").scan_tests_from_file, "missing.sv")
+        self.assertRaises(ValueError, lib.test_bench("tb_top").scan_tests_from_file, "missing.sv")
 
     def test_can_list_tests_without_simulator(self):
         with set_env(PATH=""):
@@ -665,13 +674,11 @@ endmodule;
 
     def _create_ui(self, *args):
         """ Create an instance of the VUnit public interface class """
-        ui = VUnit.from_argv(argv=["--output-path=%s" % self._output_path,
-                                   "--clean"] + list(args),
-                             compile_builtins=False)
-
-        factory = MockSimulatorFactory(self._output_path)
-        self.mocksim = factory.mocksim
-        ui._simulator_factory = factory  # pylint: disable=protected-access
+        with mock.patch("vunit.ui.SimulatorFactory",
+                        new=MockSimulatorFactory):
+            ui = VUnit.from_argv(argv=["--output-path=%s" % self._output_path,
+                                       "--clean"] + list(args),
+                                 compile_builtins=False)
         return ui
 
     def _run_main(self, ui, code=0):
@@ -768,8 +775,8 @@ class MockSimulatorFactory(object):
     """
     simulator_name = "mocksim"
 
-    def __init__(self, output_path):
-        self._output_path = output_path
+    def __init__(self, args):
+        self._output_path = args.output_path
         self.mocksim = mock.Mock(spec=SimulatorInterface)
 
         def compile_side_effect(*args, **kwargs):
@@ -781,9 +788,20 @@ class MockSimulatorFactory(object):
         self.mocksim.compile_project.side_effect = compile_side_effect
         self.mocksim.simulate.side_effect = simulate_side_effect
 
+    @staticmethod
+    def package_users_depend_on_bodies():
+        return False
+
     @property
     def simulator_output_path(self):
         return join(self._output_path, self.simulator_name)
 
     def create(self):
         return self.mocksim
+
+
+def names(lst):
+    """
+    Return a list of the .name attribute of the objects in the list
+    """
+    return [obj.name for obj in lst]

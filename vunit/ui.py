@@ -83,6 +83,19 @@ Simulation options allow customization of simulation behavior. Since simulators 
 differing options available, generic options may be specified through this interface.
 The following simulation options are known.
 
+``vhdl_assert_stop_level``
+  Will stop a VHDL simulation for asserts on the provided severity level or higher.
+  Valid values are ``"warning"``, ``"error"``, and ``"failure"``. This option takes
+  precedence over the fail_on_warning pragma.
+
+``disable_ieee_warnings``
+  Disable ieee warnings
+  Boolean
+
+``pli``
+  A list of PLI files
+  A list of file names
+
 ``ghdl.flags``
    Extra arguments passed to ``ghdl --elab-run`` command *before* executable specific flags. Must be a list of strings.
    Must be a list of strings.
@@ -141,17 +154,38 @@ The following simulation options are known.
    Extra simulation flags passed to ``ghdl --elab-run``.
    Must be a list of strings.
 
-``vhdl_assert_stop_level``
-  Will stop a VHDL simulation for asserts on the provided severity level or higher.
-  Valid values are ``"warning"``, ``"error"``, and ``"failure"``. This option takes
-  precedence over the fail_on_warning pragma.
-
 .. |compile_option| replace::
    The name of the compile option (See :ref:`Compilation options <compile_options>`)
 
 .. |simulation_options| replace::
    The name of the simulation option (See :ref:`Simulation options <sim_options>`)
 
+.. _configurations:
+
+Configurations
+--------------
+In VUnit Python API the name ``configuration`` is used to denote the
+user controllable configuration of one test run such as
+generic/parameter settings, simulation options as well as the
+pre_config and post_check callback functions.
+
+Configurations can either be unique for each test case or must be
+common for the entire test bench depending on the situation.  For test
+benches without test such as `tb_example` in the User Guide the
+configuration is common for the entire test bench. For test benches
+containing tests such as `tb_example_many` the configuration is done
+for each test case. If the ``run_all_in_same_sim`` pragma has been used
+configuration is performed at the test bench level even if there are
+individual test within since they must run in the same simulation.
+
+In a VUnit all test benches and test cases are created with an unnamed default
+configuration which is modified by different methods such as ``set_generic`` etc.
+In addition to the unnamed default configuration multiple named configurations
+can be derived from it by using the ``add_config`` method. The default
+configuration is only run if there are no named configurations.
+
+.. |configurations| replace::
+    :ref:`configurations <configurations>`
 """
 
 
@@ -176,8 +210,7 @@ from vunit.project import (Project,
                            HDL_FILE_ENCODING)
 from vunit.test_runner import TestRunner
 from vunit.test_report import TestReport
-from vunit.test_scanner import TestScanner, TestScannerError, tb_filter
-from vunit.test_configuration import TestConfiguration, create_scope
+from vunit.test_bench_list import TestBenchList
 from vunit.exceptions import CompileError
 from vunit.location_preprocessor import LocationPreprocessor
 from vunit.check_preprocessor import CheckPreprocessor
@@ -297,8 +330,6 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._keep_compiling = keep_compiling
         self._vhdl_standard = vhdl_standard
 
-        self._tb_filter = tb_filter
-        self._configuration = TestConfiguration()
         self._external_preprocessors = []
         self._location_preprocessor = None
         self._check_preprocessor = None
@@ -311,7 +342,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._create_project()
         self._num_threads = num_threads
         self._exit_0 = exit_0
-        self._library_facades = {}
+
+        self._test_bench_list = TestBenchList()
 
         if compile_builtins:
             self.add_builtins(library_name="vunit_lib")
@@ -384,8 +416,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         if path is None:
             path = join(self._simulator_factory.simulator_output_path, "libraries", library_name)
 
-        self._project.add_library(library_name, abspath(path), is_external=True)
-        return self._create_library_facade(library_name, vhdl_standard)
+        self._project.add_library(library_name, abspath(path), vhdl_standard, is_external=True)
+        return self.library(library_name)
 
     def add_library(self, library_name, vhdl_standard=None):
         """
@@ -406,8 +438,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         if vhdl_standard is None:
             vhdl_standard = self._vhdl_standard
         path = join(self._simulator_factory.simulator_output_path, "libraries", library_name)
-        self._project.add_library(library_name, abspath(path))
-        return self._create_library_facade(library_name, vhdl_standard)
+        self._project.add_library(library_name, abspath(path), vhdl_standard)
+        return self.library(library_name)
 
     def library(self, library_name):
         """
@@ -418,23 +450,11 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         if not self._project.has_library(library_name):
             raise KeyError(library_name)
-        return self._create_library_facade(library_name)
-
-    def _create_library_facade(self, library_name, vhdl_standard=None):
-        """
-        Create a Library object to be exposed to users
-
-        Re-use Library facade instances internally since vhdl_standard is contained in them
-        """
-        if library_name in self._library_facades:
-            return self._library_facades[library_name]
-        facade = Library(library_name, self, self._project, self._configuration, vhdl_standard)
-        self._library_facades[library_name] = facade
-        return facade
+        return Library(library_name, self, self._project, self._test_bench_list)
 
     def set_generic(self, name, value):
         """
-        Globally set a value of generic
+        Set a value of generic in all |configurations|
 
         :param name: The name of the generic
         :param value: The value of the generic
@@ -445,12 +465,15 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
            prj.set_generic("data_width", 16)
 
+        .. note::
+           Only affects test benches added *before* the generic is set.
         """
-        self._configuration.set_generic(name.lower(), value, scope=create_scope())
+        for test_bench in self._test_bench_list.get_test_benches():
+            test_bench.set_generic(name.lower(), value)
 
     def set_parameter(self, name, value):
         """
-        Globally set value of parameter
+        Set value of parameter in all |configurations|
 
         :param name: The name of the parameter
         :param value: The value of the parameter
@@ -461,12 +484,15 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
            prj.set_parameter("data_width", 16)
 
+        .. note::
+           Only affects test benches added *before* the parameter is set.
         """
-        self._configuration.set_generic(name, value, scope=create_scope())
+        for test_bench in self._test_bench_list.get_test_benches():
+            test_bench.set_generic(name, value)
 
     def set_sim_option(self, name, value):
         """
-        Globally set simulation option
+        Set simulation option in all |configurations|
 
         :param name: |simulation_options|
         :param value: The value of the simulation option
@@ -477,12 +503,15 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
            prj.set_sim_option("ghdl.flags", ["--no-vital-checks"])
 
+        .. note::
+           Only affects test benches added *before* the option is set.
         """
-        self._configuration.set_sim_option(name, value, scope=create_scope())
+        for test_bench in self._test_bench_list.get_test_benches():
+            test_bench.set_sim_option(name, value)
 
     def set_compile_option(self, name, value):
         """
-        Globally set compile option
+        Set compile option of all files
 
         :param name: |compile_option|
         :param value: The value of the compile option
@@ -493,33 +522,25 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
            prj.set_compile_option("ghdl.flags", ["--no-vital-checks"])
 
+
+        .. note::
+           Only affects files added *before* the option is set.
         """
         for source_file in self._project.get_source_files_in_order():
             source_file.set_compile_option(name, value)
 
     def add_compile_option(self, name, value):
         """
-        Globally add compile option
+        Add compile option to all files
 
         :param name: |compile_option|
         :param value: The value of the compile option
+
+        .. note::
+           Only affects files added *before* the option is set.
         """
         for source_file in self._project.get_source_files_in_order():
             source_file.add_compile_option(name, value)
-
-    def set_pli(self, value):
-        """
-        Globally Set pli
-
-        :param value: A list of PLI object file names
-        """
-        self._configuration.set_pli(value, scope=create_scope())
-
-    def disable_ieee_warnings(self):
-        """
-        Globally disable ieee warnings
-        """
-        self._configuration.disable_ieee_warnings(scope=create_scope())
 
     def get_source_file(self, file_name, library_name=None):
         """
@@ -709,8 +730,6 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
             exit(1)
         except CompileError:
             exit(1)
-        except TestScannerError:
-            exit(1)
         except SystemExit:
             exit(1)
         except:  # pylint: disable=bare-except
@@ -722,34 +741,49 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
 
         exit(0)
 
+    def _create_tests(self, simulator_if):
+        """
+        Create the test cases
+        """
+        self._test_bench_list.warn_when_empty()
+        test_list = self._test_bench_list.create_tests(simulator_if, self._elaborate_only)
+        test_list.keep_matches(self._test_filter)
+        return test_list
+
     def _main(self):
         """
         Base vunit main function without performing exit
         """
+
         if self._list_only:
             return self._main_list_only()
 
-        if self._list_files_only:
+        elif self._list_files_only:
             return self._main_list_files_only()
 
-        if self._compile_only:
+        elif self._compile_only:
             return self._main_compile_only()
 
-        simulator_if = self._create_simulator_if()
-        test_cases = self._create_tests(simulator_if)
+        return self._main_run()
 
+    def _main_run(self):
+        """
+        Main with running tests
+        """
+        simulator_if = self._simulator_factory.create()
+        test_list = self._create_tests(simulator_if)
         self._compile(simulator_if)
 
         start_time = ostools.get_time()
         report = TestReport(printer=self._printer)
         try:
-            self._run_test(test_cases, report)
+            self._run_test(test_list, report)
             simulator_if.post_process(self._simulator_factory.simulator_output_path)
         except KeyboardInterrupt:
             print()
             LOGGER.debug("_main: Caught Ctrl-C shutting down")
         finally:
-            del test_cases
+            del test_list
             del simulator_if
 
         report.set_real_total_time(ostools.get_time() - start_time)
@@ -761,13 +795,11 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         Main function when only listing test cases
         """
-        simulator_if = None
-        test_suites = self._create_tests(simulator_if)
-
-        for test_suite in test_suites:
+        test_list = self._create_tests(simulator_if=None)
+        for test_suite in test_list:
             for name in test_suite.test_cases:
                 print(name)
-        print("Listed %i tests" % test_suites.num_tests())
+        print("Listed %i tests" % test_list.num_tests())
         return True
 
     def _main_list_files_only(self):
@@ -784,7 +816,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         Main function when only compiling
         """
-        simulator_if = self._create_simulator_if()
+        simulator_if = self._simulator_factory.create()
         self._compile(simulator_if)
         return True
 
@@ -798,12 +830,6 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
             os.makedirs(self._output_path)
 
         ostools.renew_path(self._preprocessed_path)
-
-    def _create_simulator_if(self):
-        """
-        Create a simulator interface instance
-        """
-        return self._simulator_factory.create()
 
     @property
     def vhdl_standard(self):
@@ -820,22 +846,6 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
     @property
     def use_debug_codecs(self):
         return self._use_debug_codecs
-
-    def _create_tests(self, simulator_if):
-        """
-        Create the test suites by scanning the project
-        """
-        scanner = TestScanner(simulator_if,
-                              self._configuration,
-                              elaborate_only=self._elaborate_only)
-        test_list = scanner.from_project(self._project, entity_filter=self._tb_filter)
-
-        if test_list.num_tests() == 0:
-            LOGGER.warning("Test scanner found no test benches using current filter rule:\n%s",
-                           self._tb_filter.__doc__)
-
-        test_list.keep_matches(self._test_filter)
-        return test_list
 
     def _compile(self, simulator_if):
         """
@@ -940,13 +950,11 @@ class Library(object):
     """
     User interface of a library
     """
-    def __init__(self, library_name, parent, project, configuration, vhdl_standard):
+    def __init__(self, library_name, parent, project, test_bench_list):
         self._library_name = library_name
         self._parent = parent
         self._project = project
-        self._configuration = configuration
-        self._vhdl_standard = vhdl_standard
-        self._scope = create_scope(self._library_name)
+        self._test_bench_list = test_bench_list
 
     @property
     def name(self):
@@ -957,7 +965,7 @@ class Library(object):
 
     def set_generic(self, name, value):
         """
-        Set a value of generic within all test benches of this library
+        Set a value of generic within all |configurations| of test benches and tests this library
 
         :param name: The name of the generic
         :param value: The value of the generic
@@ -968,12 +976,15 @@ class Library(object):
 
            lib.set_generic("data_width", 16)
 
+        .. note::
+           Only affects test benches added *before* the generic is set.
         """
-        self._configuration.set_generic(name.lower(), value, scope=self._scope)
+        for test_bench in self.get_test_benches():
+            test_bench.set_generic(name.lower(), value)
 
     def set_parameter(self, name, value):
         """
-        Set a value of parameter within all test benches of this library
+        Set a value of parameter within all |configurations| of test benches and tests this library
 
         :param name: The name of the parameter
         :param value: The value of the parameter
@@ -984,12 +995,15 @@ class Library(object):
 
            lib.set_parameter("data_width", 16)
 
+        .. note::
+           Only affects test benches added *before* the parameter is set.
         """
-        self._configuration.set_generic(name, value, scope=self._scope)
+        for test_bench in self.get_test_benches():
+            test_bench.set_generic(name, value)
 
     def set_sim_option(self, name, value):
         """
-        Set simulation option of all test benches within this library
+        Set simlation option within all |configurations| of test benches and tests this library
 
         :param name: |simulation_options|
         :param value: The value of the simulation option
@@ -1000,8 +1014,11 @@ class Library(object):
 
            lib.set_sim_option("ghdl.flags", ["--no-vital-checks"])
 
+        .. note::
+           Only affects test benches added *before* the option is set.
         """
-        self._configuration.set_sim_option(name, value, scope=self._scope)
+        for test_bench in self.get_test_benches():
+            test_bench.set_sim_option(name, value)
 
     def set_compile_option(self, name, value):
         """
@@ -1016,6 +1033,9 @@ class Library(object):
 
            lib.set_compile_option("ghdl.flags", ["--no-vital-checks"])
 
+
+        .. note::
+           Only affects files added *before* the option is set.
         """
         for source_file in self._project.get_source_files_in_order():
             if source_file.library.name == self._library_name:
@@ -1027,24 +1047,14 @@ class Library(object):
 
         :param name: |compile_option|
         :param value: The value of the compile option
+
+
+        .. note::
+           Only affects files added *before* the option is set.
         """
         for source_file in self._project.get_source_files_in_order():
             if source_file.library.name == self._library_name:
                 source_file.add_compile_option(name, value)
-
-    def set_pli(self, value):
-        """
-        Set pli within library
-
-        :param value: A list of PLI object file names
-        """
-        self._configuration.set_pli(value, scope=self._scope)
-
-    def disable_ieee_warnings(self):
-        """
-        Disable ieee warnings within library
-        """
-        self._configuration.disable_ieee_warnings(scope=self._scope)
 
     def get_source_file(self, file_name):
         return self._parent.get_source_files(file_name, self._library_name)
@@ -1116,18 +1126,19 @@ class Library(object):
             include_dirs = include_dirs if include_dirs is not None else []
             include_dirs = add_verilog_include_dir(include_dirs)
 
-        if vhdl_standard is None:
-            vhdl_standard = self._vhdl_standard
-
         file_name = self._parent._preprocess(  # pylint: disable=protected-access
             self._library_name, abspath(file_name), preprocessors)
-        return SourceFile(self._project.add_source_file(file_name,
-                                                        self._library_name,
-                                                        file_type=file_type,
-                                                        include_dirs=include_dirs,
-                                                        defines=defines,
-                                                        vhdl_standard=vhdl_standard,
-                                                        no_parse=no_parse),
+
+        source_file = self._project.add_source_file(file_name,
+                                                    self._library_name,
+                                                    file_type=file_type,
+                                                    include_dirs=include_dirs,
+                                                    defines=defines,
+                                                    vhdl_standard=vhdl_standard,
+                                                    no_parse=no_parse)
+        self._test_bench_list.add_from_source_file(source_file)
+
+        return SourceFile(source_file,
                           self._project,
                           self._parent)
 
@@ -1157,8 +1168,7 @@ class Library(object):
         if not library.has_entity(name):
             raise KeyError(name)
 
-        return TestBench(self._library_name, name,
-                         self._configuration)
+        return self.test_bench(name)
 
     def module(self, name):
         """
@@ -1172,8 +1182,33 @@ class Library(object):
         if name not in library.modules:
             raise KeyError(name)
 
-        return TestBench(self._library_name, name,
-                         self._configuration)
+        return self.test_bench(name)
+
+    def test_bench(self, name):
+        """
+        Get a test bench within this library
+
+        :param name: The name of the test bench
+        :returns: A :class:`.TestBench` object
+        :raises: KeyError
+        """
+
+        return TestBench(self._test_bench_list.get_test_bench(self._library_name, name), self)
+
+    def get_test_benches(self, pattern="*"):
+        """
+        Get a list of test benches
+
+        :param pattern: A wildcard pattern matching the test_bench name
+        :returns: A list of :class:`.TestBench` objects
+        """
+        results = []
+        for test_bench in self._test_bench_list.get_test_benches_in_library(self._library_name):
+            if not fnmatch(abspath(test_bench.name), pattern):
+                continue
+
+            results.append(TestBench(test_bench, self))
+        return results
 
 
 class TestBench(object):
@@ -1182,15 +1217,27 @@ class TestBench(object):
     A test bench consists of one or more :class:`.Test` cases. Setting options for a test
     bench will apply that option all test cases belonging to that test bench.
     """
-    def __init__(self, library_name, entity_name, config):
-        self._library_name = library_name
-        self._entity_name = entity_name
-        self._config = config
-        self._scope = create_scope(library_name, entity_name)
+    def __init__(self, test_bench, library):
+        self._test_bench = test_bench
+        self._library = library
+
+    @property
+    def name(self):
+        """
+        :returns: The entity or module name of the test bench
+        """
+        return self._test_bench.name
+
+    @property
+    def library(self):
+        """
+        :returns: The library that contains this test bench
+        """
+        return self._library
 
     def set_generic(self, name, value):
         """
-        Set a value of generic within this test bench
+        Set a value of generic within all |configurations| of this test bench or test cases within it
 
         :param name: The name of the generic
         :param value: The value of the generic
@@ -1202,11 +1249,11 @@ class TestBench(object):
            test_bench.set_generic("data_width", 16)
 
         """
-        self._config.set_generic(name.lower(), value, scope=self._scope)
+        self._test_bench.set_generic(name.lower(), value)
 
     def set_parameter(self, name, value):
         """
-        Set a value of parameter within this test bench
+        Set a value of parameter within all |configurations| of this test bench or test cases within it
 
         :param name: The name of the parameter
         :param value: The value of the parameter
@@ -1218,11 +1265,11 @@ class TestBench(object):
            test_bench.set_parameter("data_width", 16)
 
         """
-        self._config.set_generic(name, value, scope=self._scope)
+        self._test_bench.set_generic(name, value)
 
     def set_sim_option(self, name, value):
         """
-        Set simulation option of this test bench
+        Set simulation option within all |configurations| of this test bench or test cases within it
 
         :param name: |simulation_options|
         :param value: The value of the simulation option
@@ -1234,34 +1281,44 @@ class TestBench(object):
            test_bench.set_sim_option("ghdl.flags", ["--no-vital-checks"])
 
         """
-        self._config.set_sim_option(name, value, scope=self._scope)
+        self._test_bench.set_sim_option(name, value)
 
-    def set_pli(self, value):
+    def set_pre_config(self, value):
         """
-        Set pli for test bench
+        Set pre_config function of all |configurations| of this test bench or test cases within it
 
-        :param value: A list of PLI object file names
+        :param value: The pre_config function
         """
-        self._config.set_pli(value, scope=self._scope)
+        self._test_bench.set_pre_config(value)
+
+    def set_post_check(self, value):
+        """
+        Set post_check function of all |configurations| of this test bench or test cases within it
+
+        :param value: The post_check function
+        """
+        self._test_bench.set_post_check(value)
 
     def add_config(self,  # pylint: disable=too-many-arguments
-                   name="", generics=None, parameters=None, pre_config=None, post_check=None):
+                   name, generics=None, parameters=None, pre_config=None, post_check=None, sim_options=None):
         """
-        Add a configuration of this test bench.
+        Add a configuration of this test bench or to all test cases within it by copying the default configuration.
+
         Multiple configuration may be added one after another.
-        If no configurations are added the default configuration is used.
+        If no |configurations| are added the default configuration is used.
 
         :param name: The name of the configuration. Will be added as a suffix on the test name
-        :param generics: A `dict` containing the generics to be set
-        :param parameters: A `dict` containing the parameters to be set
-        :param pre_config: A function to be called before test execution.
+        :param generics: A `dict` containing the generics to be set in addition to the default configuration
+        :param parameters: A `dict` containing the parameters to be set in addition to the default configuration
+        :param pre_config: A function to be called before test execution, replaces the default if not None
            The function may accept a string which is the filesystem path to the
            directory where test outputs are stored.
            The function must return `True` or the test will fail
-        :param post_check: A function to be called after test execution.
+        :param post_check: A function to be called after test execution, replaces the default if not None
            The function must accept a string which is the filesystem path to the
            directory where test outputs are stored.
            The function must return `True` or the test will fail
+        :param sim_options: A `dict` containing the sim_options to be set in addition to the default configuration
 
         :example:
 
@@ -1291,17 +1348,11 @@ class TestBench(object):
         generics = lower_generics(generics)
         parameters = {} if parameters is None else parameters
         generics.update(parameters)
-        self._config.add_config(scope=self._scope,
-                                name=name,
-                                generics=generics,
-                                pre_config=pre_config,
-                                post_check=post_check)
-
-    def disable_ieee_warnings(self):
-        """
-        Disable ieee warnings within test bench
-        """
-        self._config.disable_ieee_warnings(scope=self._scope)
+        self._test_bench.add_config(name=name,
+                                    generics=generics,
+                                    pre_config=pre_config,
+                                    post_check=post_check,
+                                    sim_options=sim_options)
 
     def test(self, name):
         """
@@ -1310,11 +1361,22 @@ class TestBench(object):
         :param name: The name of the test
         :returns: A :class:`.Test` object
         """
-        # @TODO we cannot check that test exists at this point since tests are scanned in main
-        # @TODO assumes there is only one architecture for test benchs
-        # @TODO makes sense to have multiple architectures of a test bench?
+        return Test(self._test_bench.get_test_case(name))
 
-        return Test(self._library_name, self._entity_name, name, self._config)
+    def get_tests(self, pattern="*"):
+        """
+        Get a list of tests
+
+        :param pattern: A wildcard pattern matching the test name
+        :returns: A list of :class:`.Test` objects
+        """
+        results = []
+        for test_case in self._test_bench.test_cases:
+            if not fnmatch(abspath(test_case.name), pattern):
+                continue
+
+            results.append(Test(test_case))
+        return results
 
     def scan_tests_from_file(self, file_name):
         """
@@ -1337,9 +1399,7 @@ class TestBench(object):
            the ``NESTED_TEST_SUITE`` macro should be used instead of
            the ``TEST_SUITE`` macro.
         """
-        if not ostools.file_exists(file_name):
-            raise ValueError("File %r does not exist" % file_name)
-        self._config.scan_tests_from_file(self._scope, file_name)
+        self._test_bench.scan_tests_from_file(file_name)
 
 
 class PackageFacade(object):
@@ -1378,31 +1438,36 @@ class Test(object):
     User interface of a single test case
 
     """
-    def __init__(self, library_name, entity_name, test_name, config):
-        self._library_name = library_name
-        self._entity_name = entity_name
-        self._test_name = test_name
-        self._config = config
-        self._scope = create_scope(library_name, entity_name, test_name)
+    def __init__(self, test_case):
+        self._test_case = test_case
+
+    @property
+    def name(self):
+        """
+        :returns: the entity or module name of the test bench
+        """
+        return self._test_case.name
 
     def add_config(self,  # pylint: disable=too-many-arguments
-                   name="", generics=None, parameters=None, pre_config=None, post_check=None):
+                   name, generics=None, parameters=None, pre_config=None, post_check=None, sim_options=None):
         """
-        Add a configuration of this test.
+        Add a configuration to this test copying the default configuration.
+
         Multiple configuration may be added one after another.
-        If no configurations are added the default configuration is used.
+        If no |configurations| are added the default configuration is used.
 
         :param name: The name of the configuration. Will be added as a suffix on the test name
-        :param generics: A `dict` containing the generics to be set
-        :param parameters: A `dict` containing the parameters to be set
-        :param pre_config: A function to be called before test execution.
+        :param generics: A `dict` containing the generics to be set in addition to the default configuration.
+        :param parameters: A `dict` containing the parameters to be set in addition to the default configuration.
+        :param pre_config: A function to be called before test execution, replaces the default if not None.
            The function may accept a string which is the filesystem path to the
            directory where test outputs are stored.
            The function must return `True` or the test will fail
-        :param post_check: A function to be called after test execution.
+        :param post_check: A function to be called after test execution, replaces the default if not None.
            The function must accept a string which is the filesystem path to the
            directory where test outputs are stored.
            The function must return `True` or the test will fail
+        :param sim_options: A `dict` containing the sim_options to be set in addition to the default configuration.
 
         :example:
 
@@ -1418,28 +1483,28 @@ class Test(object):
 
         The following tests will be created:
 
-        * ``lib.test_bench.test.data_width=14,sign=False``
+        * ``lib.test_bench.data_width=14,sign=False.test``
 
-        * ``lib.test_bench.test.data_width=14,sign=True``
+        * ``lib.test_bench.data_width=14,sign=True.test``
 
-        * ``lib.test_bench.test.data_width=15,sign=False``
+        * ``lib.test_bench.data_width=15,sign=False.test``
 
-        * ``lib.test_bench.test.data_width=15,sign=True``
+        * ``lib.test_bench.data_width=15,sign=True.test``
 
         """
         generics = {} if generics is None else generics
         generics = lower_generics(generics)
         parameters = {} if parameters is None else parameters
         generics.update(parameters)
-        self._config.add_config(scope=self._scope,
-                                name=name,
-                                generics=generics,
-                                pre_config=pre_config,
-                                post_check=post_check)
+        self._test_case.add_config(name=name,
+                                   generics=generics,
+                                   pre_config=pre_config,
+                                   post_check=post_check,
+                                   sim_options=sim_options)
 
     def set_generic(self, name, value):
         """
-        Set a value of generic within this test
+        Set a value of generic within all |configurations| of this test
 
         :param name: The name of the generic
         :param value: The value of the generic
@@ -1451,11 +1516,11 @@ class Test(object):
            test.set_generic("data_width", 16)
 
         """
-        self._config.set_generic(name.lower(), value, scope=self._scope)
+        self._test_case.set_generic(name.lower(), value)
 
     def set_parameter(self, name, value):
         """
-        Set a value of parameter within this test
+        Set a value of parameter within all |configurations| of this test
 
         :param name: The name of the parameter
         :param value: The value of the parameter
@@ -1467,11 +1532,11 @@ class Test(object):
            test.set_parameter("data_width", 16)
 
         """
-        self._config.set_generic(name, value, scope=self._scope)
+        self._test_case.set_generic(name, value)
 
     def set_sim_option(self, name, value):
         """
-        Set simulation option of this test
+        Set simulation option within all |configurations| of this test
 
         :param name: |simulation_options|
         :param value: The value of the simulation option
@@ -1483,13 +1548,23 @@ class Test(object):
            test.set_sim_option("ghdl.flags", ["--no-vital-checks"])
 
         """
-        self._config.set_sim_option(name, value, scope=self._scope)
+        self._test_case.set_sim_option(name, value)
 
-    def disable_ieee_warnings(self):
+    def set_pre_config(self, value):
         """
-        Disable ieee warnings for test case
+        Set pre_config function of all |configurations| of this test
+
+        :param value: The pre_config function
         """
-        self._config.disable_ieee_warnings(scope=self._scope)
+        self._test_case.set_pre_config(value)
+
+    def set_post_check(self, value):
+        """
+        Set post_check function of all |configurations| of this test
+
+        :param value: The post_check function
+        """
+        self._test_case.set_post_check(value)
 
 
 class SourceFileList(list):

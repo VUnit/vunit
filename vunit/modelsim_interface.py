@@ -230,7 +230,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
                                                      name,
                                                      encode_generic_value(value))
                                     for name, value in config.generics.items()))
-        pli_str = " ".join("-pli {%s}" % fix_path(name) for name in config.pli)
+        pli_str = " ".join("-pli {%s}" % fix_path(name) for name in config.sim_options.get('pli', []))
 
         if config.architecture_name is None:
             architecture_suffix = ""
@@ -309,7 +309,7 @@ proc vunit_load {{{{vsim_extra_args ""}}}} {{
 """.format(coverage_save_cmd=coverage_save_cmd,
            vsim_flags=" ".join(vsim_flags),
            break_on_assert=vhdl_assert_stop_level_mapping[config.vhdl_assert_stop_level],
-           no_warnings=1 if config.disable_ieee_warnings else 0)
+           no_warnings=1 if config.sim_options.get("disable_ieee_warnings", False) else 0)
 
         return tcl
 
@@ -386,12 +386,12 @@ proc _vunit_sim_restart {} {
         Determine vsim_extra_args
         """
         vsim_extra_args = []
-        vsim_extra_args = config.options.get("modelsim.vsim_flags",
-                                             vsim_extra_args)
+        vsim_extra_args = config.sim_options.get("modelsim.vsim_flags",
+                                                 vsim_extra_args)
 
         if self._gui:
-            vsim_extra_args = config.options.get("modelsim.vsim_flags.gui",
-                                                 vsim_extra_args)
+            vsim_extra_args = config.sim_options.get("modelsim.vsim_flags.gui",
+                                                     vsim_extra_args)
 
         return " ".join(vsim_extra_args)
 

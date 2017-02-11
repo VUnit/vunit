@@ -19,18 +19,21 @@ class IndependentSimTestCase(object):
     """
     A test case to be run in an independent simulation
     """
-    def __init__(self,  # pylint: disable=too-many-arguments
-                 name, test_case, test_bench,
-                 has_runner_cfg=False,
-                 pre_config=None,
-                 post_check=None,
-                 elaborate_only=False):
-        self._name = name
+    def __init__(self, test_case, config, simulator_if, elaborate_only=False):
+        self._name = "%s.%s" % (config.library_name, config.design_unit_name)
+
+        if not config.is_default:
+            self._name += "." + config.name
+
+        if test_case is not None:
+            self._name += "." + test_case
+        elif config.is_default:
+            # JUnit XML test reports wants three dotted name hiearchies
+            self._name += ".all"
+
         self._test_case = test_case
-        self._test_bench = test_bench
-        self._has_runner_cfg = has_runner_cfg
-        self._pre_config = pre_config
-        self._post_check = post_check
+        self._config = config
+        self._simulator_if = simulator_if
         self._elaborate_only = elaborate_only
 
     @property
@@ -41,21 +44,15 @@ class IndependentSimTestCase(object):
         """
         Run the test case using the output_path
         """
-        generics = {}
-
-        if not call_pre_config(self._pre_config, output_path):
+        if not call_pre_config(self._config.pre_config, output_path):
             return False
 
-        if self._has_runner_cfg:
-            runner_cfg = {
-                "enabled_test_cases": encode_test_case(self._test_case),
-                "output path": output_path.replace("\\", "/") + "/",
-                "active python runner": True,
-            }
-
-            generics["runner_cfg"] = encode_dict(runner_cfg)
-
-        sim_ok = self._test_bench.run(output_path, self.name, generics, elaborate_only=self._elaborate_only)
+        enabled_test_cases = [self._test_case]
+        config = _add_runner_cfg(self._config, output_path, enabled_test_cases)
+        sim_ok = self._simulator_if.simulate(join(output_path, self._simulator_if.name),
+                                             self._name,
+                                             config,
+                                             elaborate_only=self._elaborate_only)
 
         if self._elaborate_only:
             return sim_ok
@@ -73,10 +70,10 @@ class IndependentSimTestCase(object):
         if not test_results == expected_results:
             return False
 
-        if self._post_check is None:
+        if self._config.post_check is None:
             return True
 
-        return self._post_check(output_path)
+        return self._config.post_check(output_path)
 
 
 class SameSimTestSuite(object):
@@ -84,18 +81,15 @@ class SameSimTestSuite(object):
     A test suite where multiple test cases are run within the same simulation
     """
 
-    def __init__(self,  # pylint: disable=too-many-arguments
-                 name,
-                 test_cases,
-                 test_bench,
-                 pre_config=None,
-                 post_check=None,
-                 elaborate_only=False):
-        self._name = name
+    def __init__(self, test_cases, config, simulator_if, elaborate_only=False):
+        self._name = "%s.%s" % (config.library_name, config.design_unit_name)
+
+        if not config.is_default:
+            self._name += "." + config.name
+
         self._test_cases = test_cases
-        self._test_bench = test_bench
-        self._pre_config = pre_config
-        self._post_check = post_check
+        self._config = config
+        self._simulator_if = simulator_if
         self._elaborate_only = elaborate_only
 
     @property
@@ -124,20 +118,16 @@ class SameSimTestSuite(object):
         """
         Run the test suite using output_path
         """
-        if not call_pre_config(self._pre_config, output_path):
+        if not call_pre_config(self._config.pre_config, output_path):
             return False
 
-        runner_cfg = {
-            "enabled_test_cases": ",".join([encode_test_case(test_case) for test_case in self._test_cases]),
-            "output path": output_path.replace("\\", "/") + "/",
-            "active python runner": True,
-        }
+        enabled_test_cases = [encode_test_case(test_case) for test_case in self._test_cases]
+        config = _add_runner_cfg(self._config, output_path, enabled_test_cases)
+        sim_ok = self._simulator_if.simulate(join(output_path, self._simulator_if.name),
+                                             self._name,
+                                             config,
+                                             elaborate_only=self._elaborate_only)
 
-        generics = {
-            "runner_cfg": encode_dict(runner_cfg),
-        }
-
-        sim_ok = self._test_bench.run(output_path, self._name, generics, elaborate_only=self._elaborate_only)
         if self._elaborate_only:
             retval = {}
             for name in self.test_cases:
@@ -146,7 +136,7 @@ class SameSimTestSuite(object):
 
         retval = self._read_test_results(output_path)
 
-        if self._post_check is None:
+        if self._config.post_check is None:
             return retval
 
         # Do not run post check unless all passed
@@ -154,7 +144,7 @@ class SameSimTestSuite(object):
             if status != PASSED:
                 return retval
 
-        if not self._post_check(output_path):
+        if not self._config.post_check(output_path):
             for name in self.test_cases:
                 retval[name] = FAILED
 
@@ -197,6 +187,28 @@ class SameSimTestSuite(object):
                 retval[test_name] = SKIPPED
 
         return retval
+
+
+def _add_runner_cfg(config, output_path, enabled_test_cases):
+    """
+    Return a new Configuration object with runner_cfg and output path information set
+    """
+    config = config.copy()
+
+    if "output_path" in config.generic_names and "output_path" not in config.generics:
+        config.generics["output_path"] = '%s/' % output_path.replace("\\", "/")
+
+    runner_cfg = {
+        "enabled_test_cases": ",".join(encode_test_case(test_case)
+                                       for test_case in enabled_test_cases
+                                       if test_case is not None),
+        "output path": output_path.replace("\\", "/") + "/",
+        "active python runner": True,
+    }
+
+    # @TODO Warn if runner cfg already set?
+    config.generics["runner_cfg"] = encode_dict(runner_cfg)
+    return config
 
 
 def encode_test_case(test_case):

@@ -187,16 +187,16 @@ class GHDLInterface(SimulatorInterface):
         if self._has_output_flag():
             cmd += ['-o', join(output_path, "%s-%s" % (config.entity_name,
                                                        config.architecture_name))]
-        cmd += config.options.get("ghdl.elab_flags", [])
+        cmd += config.sim_options.get("ghdl.elab_flags", [])
         cmd += [config.entity_name, config.architecture_name]
-        cmd += config.options.get("ghdl.sim_flags", [])
+        cmd += config.sim_options.get("ghdl.sim_flags", [])
 
         for name, value in config.generics.items():
             cmd += ['-g%s=%s' % (name, value)]
 
         cmd += ['--assert-level=%s' % config.vhdl_assert_stop_level]
 
-        if config.disable_ieee_warnings:
+        if config.sim_options.get("disable_ieee_warnings", False):
             cmd += ["--ieee-asserts=disable"]
         return cmd
 
@@ -207,8 +207,6 @@ class GHDLInterface(SimulatorInterface):
         """
         Simulate with entity as top level using generics
         """
-        assert config.pli == []
-
         if not exists(output_path):
             os.makedirs(output_path)
 

@@ -202,7 +202,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
                                                      name,
                                                      format_generic(value))
                                     for name, value in config.generics.items()))
-        pli_str = " ".join("-pli \"%s\"" % fix_path(name) for name in config.pli)
+        pli_str = " ".join("-pli \"%s\"" % fix_path(name) for name in config.sim_options.get('pli', []))
 
         vsim_flags = ["-dataset {%s}" % fix_path(join(output_path, "dataset.asdb")),
                       pli_str,
@@ -215,7 +215,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         if config.architecture_name is not None:
             vsim_flags.append(config.architecture_name)
 
-        if config.disable_ieee_warnings:
+        if config.sim_options.get("disable_ieee_warnings", False):
             vsim_flags.append("-ieee_nowarn")
 
         tcl = """
@@ -249,12 +249,12 @@ proc vunit_load {{}} {{
         Determine vsim_extra_args
         """
         vsim_extra_args = []
-        vsim_extra_args = config.options.get("rivierapro.vsim_flags",
-                                             vsim_extra_args)
+        vsim_extra_args = config.sim_options.get("rivierapro.vsim_flags",
+                                                 vsim_extra_args)
 
         if self._gui:
-            vsim_extra_args = config.options.get("rivierapro.vsim_flags.gui",
-                                                 vsim_extra_args)
+            vsim_extra_args = config.sim_options.get("rivierapro.vsim_flags.gui",
+                                                     vsim_extra_args)
 
         return " ".join(vsim_extra_args)
 

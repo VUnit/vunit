@@ -177,12 +177,12 @@ class ActiveHDLInterface(SimulatorInterface):
         Determine vsim_extra_args
         """
         vsim_extra_args = []
-        vsim_extra_args = config.options.get("activehdl.vsim_flags",
-                                             vsim_extra_args)
+        vsim_extra_args = config.sim_options.get("activehdl.vsim_flags",
+                                                 vsim_extra_args)
 
         if self._gui:
-            vsim_extra_args = config.options.get("activehdl.vsim_flags.gui",
-                                                 vsim_extra_args)
+            vsim_extra_args = config.sim_options.get("activehdl.vsim_flags.gui",
+                                                     vsim_extra_args)
 
         return " ".join(vsim_extra_args)
 
@@ -196,7 +196,7 @@ class ActiveHDLInterface(SimulatorInterface):
                                                                            name,
                                                                            name)
                                          for name in config.generics))
-        pli_str = " ".join("-pli \"%s\"" % fix_path(name) for name in config.pli)
+        pli_str = " ".join("-pli \"%s\"" % fix_path(name) for name in config.sim_options.get('pli', []))
 
         vsim_flags = [pli_str,
                       set_generic_name_str,
@@ -208,7 +208,7 @@ class ActiveHDLInterface(SimulatorInterface):
         if config.architecture_name is not None:
             vsim_flags.append(config.architecture_name)
 
-        if config.disable_ieee_warnings:
+        if config.sim_options.get("disable_ieee_warnings", False):
             vsim_flags.append("-ieee_nowarn")
 
         vhdl_assert_stop_level_mapping = dict(warning=1, error=2, failure=3)
@@ -312,7 +312,7 @@ proc vunit_run {} {
 
         tcl += 'vunit_load\n'
 
-        init_file = config.options.get(self.name + ".init_file.gui", None)
+        init_file = config.sim_options.get(self.name + ".init_file.gui", None)
         if init_file is not None:
             tcl += 'source "%s"\n' % fix_path(abspath(init_file))
 

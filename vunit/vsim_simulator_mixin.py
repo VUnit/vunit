@@ -164,7 +164,7 @@ proc vunit_help {} {
         Create the vunit_user_init function which sources the user defined TCL file in
         simulator_name.init_file.gui
         """
-        init_file = config.options.get(self.name + ".init_file.gui", None)
+        init_file = config.sim_options.get(self.name + ".init_file.gui", None)
         tcl = "proc vunit_user_init {} {\n"
         if init_file is not None:
             tcl += '  source "%s"\n' % fix_path(abspath(init_file))
