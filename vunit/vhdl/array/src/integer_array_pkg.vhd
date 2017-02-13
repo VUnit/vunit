@@ -33,6 +33,7 @@ package integer_array_pkg is
     data => null_ptr
     );
 
+  type integer_array_vec_t is array (natural range <>) of integer_array_t;
 
   impure function new_1d(length : integer := 0;
                          bit_width : natural := 32;
