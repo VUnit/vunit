@@ -28,7 +28,6 @@ end entity tb_dictionary;
 architecture test_fixture of tb_dictionary is
 begin
   test_runner : process
-    variable stop_level : log_level_t := failure;
     variable value : line;
     variable log_call_count : natural;
     variable args : log_call_args_t;

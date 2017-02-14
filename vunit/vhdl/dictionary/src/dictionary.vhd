@@ -34,7 +34,6 @@ package body dictionary is
   function len (
     constant d : frozen_dictionary_t)
     return natural is
-    variable key_value_pairs : lines_t;
   begin
     return count(replace(d, "::", "__escaped_colon__"), ":");
   end;
