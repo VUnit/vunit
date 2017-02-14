@@ -68,7 +68,7 @@ begin
     variable test_expr : std_logic_vector(7 downto 0);
     constant metadata : std_logic_vector(1 to 5) := "UXZW-";
     constant not_unknowns : string(1 to 4) := "01LH";
-    variable reversed_and_offset_expr : std_logic_vector(23 downto 16) := "10100101";
+    constant reversed_and_offset_expr : std_logic_vector(23 downto 16) := "10100101";
     constant pass_level : log_level_t := debug_low2;
 
     procedure test_concurrent_check (

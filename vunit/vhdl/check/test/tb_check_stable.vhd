@@ -28,8 +28,6 @@ end entity tb_check_stable;
 
 architecture test_fixture of tb_check_stable is
   signal clk  : std_logic := '0';
-  signal one  : std_logic := '1';
-  signal zero : std_logic := '0';
 
   signal check_stable_in_1, check_stable_in_2, check_stable_in_3,
     check_stable_in_8 : std_logic_vector(1 to 5) := "00000";
@@ -137,10 +135,8 @@ begin
                                 result("for my data"));
 
   check_stable_runner : process
-    variable pass       : boolean;
     variable stat       : checker_stat_t;
     constant pass_level : log_level_t := debug_low2;
-    variable call_count : natural;
 
     procedure test_concurrent_std_logic_vector_check (
       signal clk                        : in    std_logic;

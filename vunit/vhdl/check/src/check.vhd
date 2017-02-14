@@ -23,7 +23,7 @@ package body check_pkg is
     constant count : natural)
     return boolean_vector is
     variable ret_val : boolean_vector(0 to arg'length - 1) := (others => false);
-    variable temp    : boolean_vector(0 to arg'length - 1) := arg;
+    constant temp    : boolean_vector(0 to arg'length - 1) := arg;
   begin
     ret_val(count to ret_val'right) := temp(0 to ret_val'right - count);
 
@@ -1634,7 +1634,7 @@ package body check_pkg is
 
   begin
     -- pragma translate_off
-    loop
+    while true loop
       wait_on_edge(clock, en, active_clock_edge);
       clock_cycles_after_start_event := clock_cycles_after_start_event + 1;
 
@@ -1727,7 +1727,7 @@ package body check_pkg is
       variable tracks         : inout boolean_vector;
       constant event_sequence : in    std_logic_vector) is
 
-      variable seq                       : std_logic_vector(0 to event_sequence'length - 1) := event_sequence;
+      constant seq                       : std_logic_vector(0 to event_sequence'length - 1) := event_sequence;
       variable unknown_event_in_sequence : boolean                                          := false;
 
       function active_tracks (
@@ -1783,7 +1783,7 @@ package body check_pkg is
     procedure verify_expected_events (
       constant expected_events : in boolean_vector;
       constant event_sequence  : in std_logic_vector) is
-      variable seq : std_logic_vector(0 to event_sequence'length - 1) := event_sequence;
+      constant seq : std_logic_vector(0 to event_sequence'length - 1) := event_sequence;
       variable pass_msg_en : boolean;
     begin
       for i in 1 to seq'right loop
@@ -2139,7 +2139,7 @@ package body check_pkg is
   function to_char (
     constant bit : std_logic)
     return character is
-    variable chars : string(1 to 9) := "UX01ZWLH-";
+    constant chars : string(1 to 9) := "UX01ZWLH-";
   begin
     return chars(std_logic'pos(bit) + 1);
   end function to_char;
@@ -2224,9 +2224,7 @@ package body check_pkg is
     constant value      : integer;
     constant min_length : natural)
     return signed is
-    variable ret_val         : signed(255 downto 0);
     variable min_value       : integer := -1;
-    variable max_value       : natural := 0;
     variable required_length : natural := 1;
   begin
     if value < 0 then

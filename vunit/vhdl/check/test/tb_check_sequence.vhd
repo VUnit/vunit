@@ -29,8 +29,6 @@ end entity tb_check_sequence;
 
 architecture test_fixture of tb_check_sequence is
   signal clk : std_logic := '0';
-  signal one : std_logic := '1';
-  signal zero : std_logic := '0';
 
   type slv_vector is array (natural range <>) of std_logic_vector(1 to 5);
   constant n_checks : positive := 5;
@@ -87,7 +85,6 @@ begin
                                     trigger_event => first_no_pipe);
 
   check_sequence_runner : process
-    variable pass : boolean;
     variable stat : checker_stat_t;
     constant pass_level : log_level_t := debug_low2;
   begin

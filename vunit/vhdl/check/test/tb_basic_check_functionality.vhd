@@ -32,12 +32,8 @@ end entity tb_basic_check_functionality;
 architecture test_fixture of tb_basic_check_functionality is
 begin
   test_runner : process
---    alias default_checker_init_from_scratch is vunit_lib.check_pkg.checker_init[log_level_t, string, string, log_format_t, log_format_t, log_level_t, character, boolean];
---    alias custom_checker_init_from_scratch is vunit_lib.check_base_pkg.base_init[checker_t, log_level_t, string, string, log_format_t, log_format_t, log_level_t, character, boolean];
-    constant pass_level : log_level_t := debug_low2;
     constant punctuation_marks_not_preceeded_by_space_c : string := ".,:;?!";
 
-    variable pass : boolean;
     variable my_checker : checker_t;
     variable stat, stat1, stat2 : checker_stat_t;
     variable stat_before, stat_after : checker_stat_t;

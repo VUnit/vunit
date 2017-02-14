@@ -26,8 +26,6 @@ end entity tb_check_implication;
 
 architecture test_fixture of tb_check_implication is
   signal clk : std_logic := '0';
-  signal one : std_logic := '1';
-  signal zero : std_logic := '0';
 
   signal check_implication_in_1,
     check_implication_in_2,
@@ -68,7 +66,6 @@ begin
     constant test_consequents : boolean_vector(1 to 4) := (false, true, false, true);
     constant test_implication_expected_result : boolean_vector(1 to 4) := (true, true, false, true);
     variable stat : checker_stat_t;
-    constant metadata : std_logic_vector(1 to 7) := "UXZHLW-";
     constant pass_level : log_level_t := debug_low2;
 
     procedure test_concurrent_check (

@@ -26,8 +26,6 @@ end entity tb_check_one_hot;
 
 architecture test_fixture of tb_check_one_hot is
   signal clk : std_logic := '0';
-  signal one : std_logic := '1';
-  signal zero : std_logic := '0';
 
   signal check_one_hot_in_1, check_one_hot_in_2, check_one_hot_in_3 : std_logic_vector(3 downto 0) := "0001";
   signal check_one_hot_en_1, check_one_hot_en_2, check_one_hot_en_3 : std_logic := '1';
@@ -51,7 +49,7 @@ begin
   check_one_hot_runner : process
     variable pass : boolean;
     variable stat : checker_stat_t;
-    variable reversed_and_offset_expr : std_logic_vector(23 downto 20) := "1000";
+    constant reversed_and_offset_expr : std_logic_vector(23 downto 20) := "1000";
     constant pass_level : log_level_t := debug_low2;
 
     procedure test_concurrent_check (

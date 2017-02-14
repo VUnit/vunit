@@ -282,7 +282,6 @@ package body test_support is
     constant expected_file_name : in string := "") is
     variable call_count : natural;
     variable log_call_args : log_call_args_t;
-    variable times : lines_t;
     variable extracted_time : time;
     variable len : natural;
   begin
@@ -342,8 +341,6 @@ package body test_support is
   procedure verify_passed_checks (
     variable stat : inout checker_stat_t;
     constant expected_n_passed : in integer := -1) is
-    variable new_stat : checker_stat_t;
-    variable n_passed : natural;
   begin
     verify_passed_checks(default_checker, stat, expected_n_passed);
   end;
@@ -353,7 +350,6 @@ package body test_support is
     variable stat : inout checker_stat_t;
     constant expected_n_passed : in integer := -1) is
     variable new_stat : checker_stat_t;
-    variable n_passed : natural;
   begin
     get_checker_stat(checker, new_stat);
     if expected_n_passed = -1 then
@@ -366,8 +362,6 @@ package body test_support is
   procedure verify_failed_checks (
     variable stat : inout checker_stat_t;
     constant expected_n_failed : in integer := -1) is
-    variable new_stat : checker_stat_t;
-    variable n_failed : natural;
   begin
     verify_failed_checks(default_checker, stat, expected_n_failed);
   end;
@@ -377,7 +371,6 @@ package body test_support is
     variable stat : inout checker_stat_t;
     constant expected_n_failed : in integer := -1) is
     variable new_stat : checker_stat_t;
-    variable n_failed : natural;
   begin
     get_checker_stat(checker, new_stat);
     if expected_n_failed = -1 then
@@ -390,7 +383,6 @@ package body test_support is
   procedure verify_num_of_log_calls (
     constant expected_count  : in natural) is
     variable call_count : natural;
-    variable stat : checker_stat_t;
   begin
     call_count := get_log_call_count;
     counting_assert(call_count = expected_count, "Invalid report call count. Got " & natural'image(call_count) & " but was expecting " & natural'image(expected_count) & ".", error);
@@ -436,7 +428,6 @@ package body test_support is
     variable i : natural := seq'left;
     variable delimiters : natural := 0;
     variable j : integer := 0;
-    variable s : string(1 to 1);
   begin
     while i <= seq'right loop
       j := data'left;
@@ -471,7 +462,7 @@ package body test_support is
 
   procedure banner (
     constant s : in string) is
-    variable dashes : string(1 to 256) := (others => '-');
+    constant dashes : string(1 to 256) := (others => '-');
   begin  -- banner
     report LF & dashes(s'range) & LF & s & LF & dashes(s'range);
   end banner;

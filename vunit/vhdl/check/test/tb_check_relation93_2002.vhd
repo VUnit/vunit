@@ -70,7 +70,7 @@ begin
     variable pass : boolean;
     variable stat : checker_stat_t;
     variable check_relation_checker : checker_t;
-    variable cash : cash_t := (99,95);
+    constant cash : cash_t := (99,95);
     constant pass_level : log_level_t := debug_low2;
     variable data : natural;
   begin

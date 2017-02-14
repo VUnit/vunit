@@ -29,8 +29,6 @@ architecture test_fixture of tb_check is
   signal clk : std_logic := '0';
   signal check_in_1, check_in_2, check_in_3, check_in_4 : std_logic := '1';
   signal check_en_1, check_en_2, check_en_3, check_en_4 : std_logic := '1';
-  signal one : std_logic := '1';
-  signal zero : std_logic := '0';
 
   shared variable check_checker, check_checker2, check_checker3, check_checker4 : checker_t;
 

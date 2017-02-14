@@ -26,8 +26,6 @@ end entity tb_check_next;
 
 architecture test_fixture of tb_check_next is
   signal clk : std_logic := '0';
-  signal one : std_logic := '1';
-  signal zero : std_logic := '0';
 
   signal check_next_in_1, check_next_in_2, check_next_in_3, check_next_in_4,
     check_next_in_5, check_next_in_6 : std_logic_vector(1 to 3) := "001";
@@ -104,7 +102,6 @@ begin
                             num_cks => 1);
 
   check_next_runner : process
-    variable pass : boolean;
     variable stat : checker_stat_t;
     constant pass_level : log_level_t := debug_low2;
 
