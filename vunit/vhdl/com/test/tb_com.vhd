@@ -29,10 +29,9 @@ architecture test_fixture of tb_com is
 begin
   test_runner : process
     variable actor_to_be_found, actor_with_deferred_creation, actor_to_destroy,
-      actor_to_destroy_copy, actor_to_keep, actor, actor_duplicate,
+      actor_to_destroy_copy, actor_to_keep, actor,
       self, receiver, server, deferred_actor, publisher, subscriber,
-      limited_inbox, actor_with_max_inbox, actor_with_bounded_inbox,
-      deferred_actor_with_minimum_inbox : actor_t;
+      limited_inbox, actor_with_max_inbox, actor_with_bounded_inbox : actor_t;
     variable status            : com_status_t;
     variable receipt, receipt2 : receipt_t;
     variable n_actors          : natural;
@@ -485,7 +484,7 @@ begin
   end process limited_inbox_actor;
 
   limited_inbox_subscriber : process is
-    variable self, test_runner : actor_t;
+    variable self : actor_t;
     variable message           : message_ptr_t;
     variable status            : com_status_t;
   begin

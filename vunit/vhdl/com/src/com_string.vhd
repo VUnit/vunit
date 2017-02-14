@@ -86,7 +86,7 @@ package body com_string_pkg is
   function to_detailed_string (
     constant data : real)
     return string is
-    variable f64 : float64;
+    constant f64 : float64 := (others => '0');
   begin
     return to_string(to_float(data, f64));
   end;

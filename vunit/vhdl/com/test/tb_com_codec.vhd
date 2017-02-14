@@ -38,7 +38,6 @@ begin
     function "=" (
       constant l, r : ieee.numeric_bit.unsigned)
       return boolean is
-      variable ret_val : boolean;
     begin
       if l'length = 0 and r'length = 0 then
         return true;
@@ -50,7 +49,6 @@ begin
     function "=" (
       constant l, r : ieee.numeric_bit.signed)
       return boolean is
-      variable ret_val : boolean;
     begin
       if l'length = 0 and r'length = 0 then
         return true;
@@ -62,7 +60,6 @@ begin
     function "=" (
       constant l, r : ieee.numeric_std.unsigned)
       return boolean is
-      variable ret_val : boolean;
     begin
       if l'length = 0 and r'length = 0 then
         return true;
@@ -74,7 +71,6 @@ begin
     function "=" (
       constant l, r : ieee.numeric_std.signed)
       return boolean is
-      variable ret_val : boolean;
     begin
       if l'length = 0 and r'length = 0 then
         return true;
@@ -83,7 +79,7 @@ begin
       return ieee.numeric_std."="(l, r);
     end function "=";
 
-    variable f64    : float64;
+    constant f64    : float64 := (others => '0');
     variable r1, r2 : real;
     constant positive_zero : float64 := to_float(
       std_logic_vector'(B"0_00000000000_0000000000000000000000000000000000000000000000000000"), f64);
@@ -110,7 +106,7 @@ begin
     variable null_array5_3_t     : array5_t(1 to 0, 0 to 1);
     variable null_array6_t       : array6_t(apple downto banana);
 --    variable null_array7_t       : array7_t(1 to 2, apple downto banana);
-    variable t1, t2, t3, t4, t5  : time;
+    variable t1  : time;
     variable my_record4          : record4_t;
     variable my_record5          : record5_t;
     variable my_record6          : record6_t;
@@ -129,7 +125,6 @@ begin
     variable numeric_std_unsigned_5_downto_3 : ieee.numeric_std.unsigned(5 downto 3);
     variable numeric_std_signed_5_downto_3 : ieee.numeric_std.signed(5 downto 3);
 
-    variable int : integer;
     variable a1 : array1_t;
     variable a2 : array2_t;
     variable a3 : array3_t;
@@ -153,7 +148,6 @@ begin
     variable rec2 : record2_t;
     variable rec3 : record3_t;
     variable rec9 : record9_t;
-    variable p : positive := 1;
 
     -- Temp variables to make test case pass Riviera-PRO 2016.10
     variable range_left, range_right : integer;

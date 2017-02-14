@@ -164,7 +164,7 @@ package body com_std_codec_builder_pkg is
   function from_byte_array (
     constant byte_array : string)
     return bit_vector is
-    variable byte_array_int : string(1 to byte_array'length) := byte_array;
+    constant byte_array_int : string(1 to byte_array'length) := byte_array;
     variable ret_val        : bit_vector(byte_array'length*8-1 downto 0);
   begin
     for i in byte_array_int'range loop
@@ -187,7 +187,7 @@ package body com_std_codec_builder_pkg is
     constant code   :       string;
     variable index  : inout positive;
     variable result : out   real) is
-    variable f64 : float64;
+    constant f64 : float64 := (others => '0');
   begin
     result := to_real(to_float(to_slv(from_byte_array(code(index to index + 7))), f64));
     index  := index + 8;
@@ -198,7 +198,7 @@ package body com_std_codec_builder_pkg is
     variable index  : inout positive;
     variable result : out   time) is
     constant resolution  : time           := std.env.resolution_limit;
-    variable code_int    : string(1 to 8) := code(index to index + 7);
+    constant code_int    : string(1 to 8) := code(index to index + 7);
     variable r : time;
     variable b : integer;
   begin

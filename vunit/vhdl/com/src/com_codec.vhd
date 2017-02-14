@@ -34,7 +34,7 @@ package body com_codec_pkg is
   function encode (
     constant data : real)
     return string is
-    variable f64 : float64;
+    constant f64 : float64 := (others => '0');
   begin
     return to_byte_array(to_bv(to_slv(to_float(data, f64))));
   end;
@@ -279,7 +279,6 @@ package body com_codec_pkg is
   function encode (
     constant data : string)
     return string is
-    variable length : natural;
   begin
     -- Modelsim sets data'right to 0 which is out of the positive index range used by
     -- strings.

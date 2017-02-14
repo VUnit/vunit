@@ -138,7 +138,7 @@ package body com_pkg is
     constant name                     : string;
     constant enable_deferred_creation : boolean := true)
     return actor_t is
-    variable actor : actor_t := find_actor(name);
+    constant actor : actor_t := find_actor(name);
   begin
     if (actor = null_actor_c) and enable_deferred_creation then
       return create_actor(name, true, 1);
@@ -718,7 +718,7 @@ procedure request (
   constant keep_message    : in    boolean := false) is
   variable receipt : receipt_t;
   variable start   : time;
-  variable sender  : actor_t := request_message.sender;
+  constant sender  : actor_t := request_message.sender;
 begin
   start := now;
   send(net, receiver, request_message, receipt, timeout, keep_message);
@@ -753,7 +753,7 @@ procedure request (
   constant keep_message    : in    boolean := false) is
   variable receipt : receipt_t;
   variable start   : time;
-  variable sender  : actor_t := request_message.sender;
+  constant sender  : actor_t := request_message.sender;
 begin
   start := now;
   send(net, receiver, request_message, receipt, timeout, keep_message);
