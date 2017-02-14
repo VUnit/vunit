@@ -19,7 +19,6 @@ use osvvm.RandomPkg.all;
 entity tb_sobel_x is
   generic (
     runner_cfg : string;
-    output_path : string;
     tb_path : string);
 end entity;
 

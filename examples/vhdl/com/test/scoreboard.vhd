@@ -56,7 +56,7 @@ begin
     self := create("scoreboard");
     subscribe(self, find("test runner"), status);
     subscribe(self, find("monitor"), status);
-    loop
+    while true loop
       receive(net, self, message);
       case get_msg_type(message.payload.all) is
         when reset_shuffler =>
