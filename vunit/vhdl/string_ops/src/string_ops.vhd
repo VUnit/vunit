@@ -177,7 +177,6 @@ package body string_ops is
     constant offset : natural;
     constant length : natural)
     return string is
-    variable ret_val : string(1 to length);
   begin
     if s'ascending then
       return s(s'left + offset to s'left + offset + length - 1);
@@ -207,7 +206,7 @@ package body string_ops is
     type character_array is array (natural range <>) of character;
     variable ret_val : string(1 to (data'length + 3)/4 + 3);
     variable data_extended : std_logic_vector((((data'length + 3)/4)*4)-1 downto 0) := (others => '0');
-    variable i, j, k: integer;
+    variable j: integer;
     variable meta_value_detected : boolean;
     constant hex_characters : character_array(0 to 15) := ('0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f');
   begin
@@ -321,7 +320,7 @@ package body string_ops is
     variable ret_val : string(1 to string_length_after_replace(n_occurences));
     variable replaced_substrings : natural := 0;
     variable i,j : natural := 1;
-    variable s_int : string(1 to s'length) := s;
+    constant s_int : string(1 to s'length) := s;
   begin
     if n_occurences > 0 then
       while i <= s_int'right - old_segment'length + 1 loop
@@ -406,7 +405,6 @@ package body string_ops is
   function upper (
     constant s : string)
     return string is
-    variable last_char : character := NUL;
     variable result : string(s'range);
   begin
     for i in s'range loop
@@ -422,7 +420,6 @@ package body string_ops is
   function lower (
     constant s : string)
     return string is
-    variable last_char : character := NUL;
     variable result : string(s'range);
   begin
     for i in s'range loop
@@ -454,7 +451,7 @@ package body string_ops is
     constant stop : natural := 0)
     return natural is
     variable start_pos, stop_pos : natural;
-    variable n, o, length : natural := 0;
+    variable n, o : natural := 0;
   begin
     if substring = "" then
       n := s'length + 1;
@@ -559,7 +556,7 @@ package body string_ops is
     variable ret_val_index : natural := 0;
     variable previous_sep_index : natural := 0;
     variable i, n_splits : natural := 0;
-    variable s_int : string(1 to s'length) := s;
+    constant s_int : string(1 to s'length) := s;
   begin
     if (count(s_int, sep) <= max_split) or (max_split = -1) then
       ret_val := new line_vector(0 to count(s_int, sep));
@@ -647,9 +644,8 @@ package body string_ops is
   function to_integer_string (
     constant value : signed)
     return string is
-    variable value_internal: signed(value'length - 1 downto 0) := value;
+    constant value_internal: signed(value'length - 1 downto 0) := value;
     variable value_internal_extended: signed(value'length downto 0);
-    constant minus_one: signed(value'length downto 0) := (others => '1');
   begin
     if is_x(std_logic_vector(value)) then
       return "NaN";
@@ -675,7 +671,7 @@ package body string_ops is
   function to_nibble_string (
     constant value : unsigned)
     return string is
-    variable value_i : unsigned(value'length downto 1) := value;
+    constant value_i : unsigned(value'length downto 1) := value;
     variable ret_val : string(1 to (value'length + (value'length - 1)/4));
     variable index : natural := 1;
   begin
