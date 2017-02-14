@@ -135,25 +135,18 @@ begin
   end process test_component2;
 
   test_runner : process
-    variable l, l2, l3, uninitialized_logger, initialized_logger  : logger_t;
+    variable l, l2, uninitialized_logger, initialized_logger  : logger_t;
     variable entries : line_vector(1 to 30);
-    variable f1, f2, f3, f4 : log_filter_t;
-    variable lptr, lptr2 : lines_t;
+    variable f1, f2, f3 : log_filter_t;
     variable uninitialized_logger_cfg, initialized_logger_cfg : logger_cfg_t;
     variable uninitialized_logger_cfg_export, initialized_logger_cfg_export : logger_cfg_export_t;
     variable cnt : natural;
     variable report_call_args : report_call_args_t;
     variable n_asserts_value, n_errors_value : integer;
-    procedure print_line_vector (
-      variable l : lines_t) is
-    begin
-      for i in l'range loop
-        report l(i).all;
-      end loop;
-    end procedure print_line_vector;
+
     procedure banner (
       constant s : in string) is
-      variable dashes : string(1 to 256) := (others => '-');
+      constant dashes : string(1 to 256) := (others => '-');
     begin
       write(output, dashes(s'range) & LF & s & LF & dashes(s'range) & LF);
     end banner;
@@ -210,8 +203,8 @@ begin
     temp_sensor: logger_init(".tb_logging.temp_sensor", output_path & "temperature_sensor.csv", verbose, verbose_csv);
 
     info("High temp");
-    verify_write_call(15, time'image(0 ps) & ": INFO in .tb_logging.temp_sensor (tb_logging.vhd:212): High temp");
-    write(entries(1), string'("0," & time'image(0 ps) & ",info,tb_logging.vhd,212,.tb_logging.temp_sensor,High temp"));
+    verify_write_call(15, time'image(0 ps) & ": INFO in .tb_logging.temp_sensor (tb_logging.vhd:205): High temp");
+    write(entries(1), string'("0," & time'image(0 ps) & ",info,tb_logging.vhd,205,.tb_logging.temp_sensor,High temp"));
 
     -- Different loggers with different configurations
     banner("Verify custom loggers");
@@ -257,8 +250,8 @@ begin
     error(l,"Error should not pass");
     verify_num_of_write_calls(23);
     error("Error on default logger should pass");
-    verify_write_call(24, time'image(0 ps) & ": ERROR in .tb_logging.temp_sensor (tb_logging.vhd:259): Error on default logger should pass");
-    write(entries(2), string'("1," & time'image(0 ps) & ",error,tb_logging.vhd,259,.tb_logging.temp_sensor,Error on default logger should pass"));
+    verify_write_call(24, time'image(0 ps) & ": ERROR in .tb_logging.temp_sensor (tb_logging.vhd:252): Error on default logger should pass");
+    write(entries(2), string'("1," & time'image(0 ps) & ",error,tb_logging.vhd,252,.tb_logging.temp_sensor,Error on default logger should pass"));
     verify_log_file(output_path & "temperature_sensor.csv", entries(1 to 2));
 
     stop_level(l, warning, file_handler, f2);
@@ -311,10 +304,10 @@ begin
     rename_level(l2, error, "error");
     remove_filter(l2, f3);
 
-    write(entries(18), string'("2," & time'image(0 ps) & ",error,tb_logging.vhd,293,pressure_sensor,Error should pass"));
-    write(entries(19), string'("3," & time'image(0 ps) & ",error,tb_logging.vhd,297,pressure_sensor,Error should pass"));
-    write(entries(20), string'("4," & time'image(0 ps) & ",error,tb_logging.vhd,301,pressure_sensor,Error should not pass"));
-    write(entries(21), string'("5," & time'image(0 ps) & ",test_level,tb_logging.vhd,309,pressure_sensor,Error should pass"));
+    write(entries(18), string'("2," & time'image(0 ps) & ",error,tb_logging.vhd,286,pressure_sensor,Error should pass"));
+    write(entries(19), string'("3," & time'image(0 ps) & ",error,tb_logging.vhd,290,pressure_sensor,Error should pass"));
+    write(entries(20), string'("4," & time'image(0 ps) & ",error,tb_logging.vhd,294,pressure_sensor,Error should not pass"));
+    write(entries(21), string'("5," & time'image(0 ps) & ",test_level,tb_logging.vhd,302,pressure_sensor,Error should pass"));
     verify_log_file(output_path & "pressure_sensor.csv", entries(18 to 21));
 
     -- Source level filters
@@ -341,10 +334,10 @@ begin
     error(l2,"Error should pass");
     remove_filter(l2, f3);
 
-    write(entries(22), string'("6," & time'image(0 ps) & ",error,tb_logging.vhd,325,pressure_sensor,Error should pass"));
-    write(entries(23), string'("7," & time'image(0 ps) & ",error,tb_logging.vhd,329,pressure_sensor,Error should pass"));
-    write(entries(24), string'("8," & time'image(0 ps) & ",error,tb_logging.vhd,333,pressure_sensor,Error should not pass"));
-    write(entries(25), string'("9," & time'image(0 ps) & ",error,tb_logging.vhd,341,pressure_sensor,Error should pass"));
+    write(entries(22), string'("6," & time'image(0 ps) & ",error,tb_logging.vhd,318,pressure_sensor,Error should pass"));
+    write(entries(23), string'("7," & time'image(0 ps) & ",error,tb_logging.vhd,322,pressure_sensor,Error should pass"));
+    write(entries(24), string'("8," & time'image(0 ps) & ",error,tb_logging.vhd,326,pressure_sensor,Error should not pass"));
+    write(entries(25), string'("9," & time'image(0 ps) & ",error,tb_logging.vhd,334,pressure_sensor,Error should pass"));
     verify_log_file(output_path & "pressure_sensor.csv", entries(22 to 25));
 
     -- Hierarchical source filters

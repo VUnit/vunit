@@ -378,7 +378,7 @@ package body log_pkg is
     constant level : in log_level_t;
     constant handler       : in log_handler_t;
     variable filter       : out log_filter_t) is
-    variable levels : log_level_vector_t(1 to 1) := (1 => level);
+    constant levels : log_level_vector_t(1 to 1) := (1 => level);
   begin
     -- pragma translate_off
     base_add_filter(logger, filter, levels, source, false, (1 => handler));
@@ -403,7 +403,7 @@ package body log_pkg is
     constant level : in log_level_t;
     constant handler       : in log_handler_t;
     variable filter       : out log_filter_t) is
-    variable levels : log_level_vector_t(1 to 1) := (1 => level);
+    constant levels : log_level_vector_t(1 to 1) := (1 => level);
   begin
     -- pragma translate_off
     base_add_filter(logger, filter, levels, source, true, (1 => handler));
@@ -427,7 +427,7 @@ package body log_pkg is
     constant level : in log_level_t;
     constant handler       : in log_handler_t;
     variable filter       : out log_filter_t) is
-    variable levels : log_level_vector_t(1 to 1) := (1 => level);
+    constant levels : log_level_vector_t(1 to 1) := (1 => level);
   begin
     -- pragma translate_off
     base_add_filter(logger, filter, levels, "", false, (1 => handler));
@@ -450,7 +450,7 @@ package body log_pkg is
     constant level : in log_level_t;
     constant handler       : in log_handler_t;
     variable filter       : out log_filter_t) is
-    variable levels : log_level_vector_t(1 to 1) := (1 => level);
+    constant levels : log_level_vector_t(1 to 1) := (1 => level);
   begin
     -- pragma translate_off
     base_add_filter(logger, filter, levels, "", true, (1 => handler));
@@ -496,7 +496,7 @@ package body log_pkg is
     constant level : in log_level_t;
     constant handler       : in log_handler_vector_t;
     variable filter       : out log_filter_t) is
-    variable levels : log_level_vector_t(1 to 1) := (1 => level);
+    constant levels : log_level_vector_t(1 to 1) := (1 => level);
   begin
     -- pragma translate_off
     base_add_filter(logger, filter, levels, source, false, handler);
@@ -521,7 +521,7 @@ package body log_pkg is
     constant level : in log_level_t;
     constant handler       : in log_handler_vector_t;
     variable filter       : out log_filter_t) is
-    variable levels : log_level_vector_t(1 to 1) := (1 => level);
+    constant levels : log_level_vector_t(1 to 1) := (1 => level);
   begin
     -- pragma translate_off
     base_add_filter(logger, filter, levels, source, true, handler);
@@ -545,7 +545,7 @@ package body log_pkg is
     constant level : in log_level_t;
     constant handler       : in log_handler_vector_t;
     variable filter       : out log_filter_t) is
-    variable levels : log_level_vector_t(1 to 1) := (1 => level);
+    constant levels : log_level_vector_t(1 to 1) := (1 => level);
   begin
     -- pragma translate_off
     base_add_filter(logger, filter, levels, "", false, handler);
@@ -568,7 +568,7 @@ package body log_pkg is
     constant level : in log_level_t;
     constant handler       : in log_handler_vector_t;
     variable filter       : out log_filter_t) is
-    variable levels : log_level_vector_t(1 to 1) := (1 => level);
+    constant levels : log_level_vector_t(1 to 1) := (1 => level);
   begin
     -- pragma translate_off
     base_add_filter(logger, filter, levels, "", true, handler);
@@ -994,7 +994,7 @@ package body log_pkg is
     constant level : in log_level_t;
     constant handler       : in log_handler_t;
     variable filter       : out log_filter_t) is
-    variable levels : log_level_vector_t(1 to 1) := (1 => level);
+    constant levels : log_level_vector_t(1 to 1) := (1 => level);
   begin
     -- pragma translate_off
     base_add_filter(default_logger, filter, levels, source, false, (1 => handler));
@@ -1017,7 +1017,7 @@ package body log_pkg is
     constant level : in log_level_t;
     constant handler       : in log_handler_t;
     variable filter       : out log_filter_t) is
-    variable levels : log_level_vector_t(1 to 1) := (1 => level);
+    constant levels : log_level_vector_t(1 to 1) := (1 => level);
   begin
     -- pragma translate_off
     base_add_filter(default_logger, filter, levels, source, true, (1 => handler));
@@ -1039,7 +1039,7 @@ package body log_pkg is
     constant level : in log_level_t;
     constant handler       : in log_handler_t;
     variable filter       : out log_filter_t) is
-    variable levels : log_level_vector_t(1 to 1) := (1 => level);
+    constant levels : log_level_vector_t(1 to 1) := (1 => level);
   begin
     -- pragma translate_off
     base_add_filter(default_logger, filter, levels, "", false, (1 => handler));
@@ -1060,7 +1060,7 @@ package body log_pkg is
     constant level : in log_level_t;
     constant handler       : in log_handler_t;
     variable filter       : out log_filter_t) is
-    variable levels : log_level_vector_t(1 to 1) := (1 => level);
+    constant levels : log_level_vector_t(1 to 1) := (1 => level);
   begin
     -- pragma translate_off
     base_add_filter(default_logger, filter, levels, "", true, (1 => handler));
@@ -1102,7 +1102,7 @@ package body log_pkg is
     constant level : in log_level_t;
     constant handler       : in log_handler_vector_t;
     variable filter       : out log_filter_t) is
-    variable levels : log_level_vector_t(1 to 1) := (1 => level);
+    constant levels : log_level_vector_t(1 to 1) := (1 => level);
   begin
     -- pragma translate_off
     base_add_filter(default_logger, filter, levels, source, false, handler);
@@ -1125,7 +1125,7 @@ package body log_pkg is
     constant level : in log_level_t;
     constant handler       : in log_handler_vector_t;
     variable filter       : out log_filter_t) is
-    variable levels : log_level_vector_t(1 to 1) := (1 => level);
+    constant levels : log_level_vector_t(1 to 1) := (1 => level);
   begin
     -- pragma translate_off
     base_add_filter(default_logger, filter, levels, source, true, handler);
@@ -1147,7 +1147,7 @@ package body log_pkg is
     constant level : in log_level_t;
     constant handler       : in log_handler_vector_t;
     variable filter       : out log_filter_t) is
-    variable levels : log_level_vector_t(1 to 1) := (1 => level);
+    constant levels : log_level_vector_t(1 to 1) := (1 => level);
   begin
     -- pragma translate_off
     base_add_filter(default_logger, filter, levels, "", false, handler);
@@ -1168,7 +1168,7 @@ package body log_pkg is
     constant level : in log_level_t;
     constant handler       : in log_handler_vector_t;
     variable filter       : out log_filter_t) is
-    variable levels : log_level_vector_t(1 to 1) := (1 => level);
+    constant levels : log_level_vector_t(1 to 1) := (1 => level);
   begin
     -- pragma translate_off
     base_add_filter(default_logger, filter, levels, "", true, handler);
