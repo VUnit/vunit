@@ -63,4 +63,4 @@ def version():
 
 
 VERSION = (2, 0, 0)
-PRE_RELEASE = False  # Only set to True in release tags
+PRE_RELEASE = True  # Only set to True in release tags
