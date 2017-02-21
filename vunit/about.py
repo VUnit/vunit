@@ -62,5 +62,5 @@ def version():
         return '%i.%i.%i' % (VERSION[0], VERSION[1], VERSION[2])
 
 
-VERSION = (1, 4, 0)
-PRE_RELEASE = True  # Only set to True in release tags
+VERSION = (2, 0, 0)
+PRE_RELEASE = False  # Only set to True in release tags
