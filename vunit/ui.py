@@ -931,7 +931,16 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
     def get_compile_order(self, source_files=None):
         """
         Get the compile order of all or specific source files and
-        their dependencies
+        their dependencies.
+
+        A dependency of file **A** in terms of compile order is any
+        file **B** which **must** be successfully compiled before **A**
+        can be successfully compiled.
+
+        This is **not** the same as all files required to successfully elaborate **A**.
+        For example using component instantiation in VHDL there is no
+        compile order dependency but the component instance will not
+        elaborate if there is no binding component.
 
         :param source_files: A list of :class:`.SourceFile` objects or `None` meaing all
         :returns: A list of :class:`.SourceFile` objects in compile order.
@@ -942,6 +951,23 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         target_files = [source_file._source_file  # pylint: disable=protected-access
                         for source_file in source_files]
         source_files = self._project.get_dependencies_in_compile_order(target_files)
+        return SourceFileList([SourceFile(source_file, self._project, self)
+                               for source_file in source_files])
+
+    def get_implementation_subset(self, source_files):
+        """
+        Get the subset of files which are required to successfully
+        elaborate the list of input files without any missing
+        dependencies.
+
+        :param source_files: A list of :class:`.SourceFile` objects
+        :returns: A list of :class:`.SourceFile` objects which is the implementation subset.
+        """
+        target_files = [source_file._source_file  # pylint: disable=protected-access
+                        for source_file in source_files]
+        source_files = self._project.get_dependencies_in_compile_order(
+            target_files,
+            implementation_dependencies=True)
         return SourceFileList([SourceFile(source_file, self._project, self)
                                for source_file in source_files])
 

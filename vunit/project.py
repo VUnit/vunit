@@ -34,7 +34,6 @@ class Project(object):
     timestamps and depenencies derived from the design hierarchy.
     """
     def __init__(self,
-                 depend_on_components=False,
                  depend_on_package_body=False,
                  vhdl_parser=None,
                  verilog_parser=None):
@@ -46,7 +45,6 @@ class Project(object):
         self._libraries = OrderedDict()
         self._source_files_in_order = []
         self._manual_dependencies = []
-        self._depend_on_components = depend_on_components
         self._depend_on_package_body = depend_on_package_body
 
     @staticmethod
@@ -137,7 +135,8 @@ class Project(object):
             else:
                 yield primary_unit.source_file
 
-    def _find_other_design_unit_dependencies(self, source_file):  # pylint: disable=too-many-branches
+    def _find_other_design_unit_dependencies(self,  # pylint: disable=too-many-branches
+                                             source_file, depend_on_package_body):
         """
         Iterate over the dependencies on other design unit of the source_file
         """
@@ -184,7 +183,7 @@ class Project(object):
                         LOGGER.warning("%s: failed to find architecture '%s' of entity '%s.%s'",
                                        source_file.name, name, library.name, primary_unit.name)
 
-            elif ref.is_package_reference() and self._depend_on_package_body:
+            elif ref.is_package_reference() and depend_on_package_body:
                 try:
                     yield library.get_package_body(primary_unit.name).source_file
                 except KeyError:
@@ -235,7 +234,7 @@ class Project(object):
             if not found_component_entity:
                 LOGGER.debug("failed to find a matching entity for component '%s' ", unit_name)
 
-    def create_dependency_graph(self):
+    def create_dependency_graph(self, implementation_dependencies=False):
         """
         Create a DependencyGraph object of the HDL code project
         """
@@ -267,7 +266,11 @@ class Project(object):
         vhdl_files = [source_file
                       for source_file in self.get_source_files_in_order()
                       if source_file.file_type == 'vhdl']
-        add_dependencies(self._find_other_design_unit_dependencies, vhdl_files)
+
+        depend_on_package_bodies = self._depend_on_package_body or implementation_dependencies
+        add_dependencies(
+            lambda source_file: self._find_other_design_unit_dependencies(source_file, depend_on_package_bodies),
+            vhdl_files)
         add_dependencies(self._find_primary_secondary_design_unit_dependencies, vhdl_files)
 
         verilog_files = [source_file
@@ -277,7 +280,7 @@ class Project(object):
         add_dependencies(self._find_verilog_package_dependencies, verilog_files)
         add_dependencies(self._find_verilog_module_dependencies, verilog_files)
 
-        if self._depend_on_components:
+        if implementation_dependencies:
             add_dependencies(self._find_component_design_unit_dependencies, vhdl_files)
 
         for source_file, depends_on in self._manual_dependencies:
@@ -319,7 +322,7 @@ class Project(object):
 
         return sorted(affected_files, key=comparison_key)
 
-    def get_dependencies_in_compile_order(self, target_files=None):
+    def get_dependencies_in_compile_order(self, target_files=None, implementation_dependencies=False):
         """
         Get a list of dependencies of target files including the
         target files.
@@ -329,7 +332,7 @@ class Project(object):
         if target_files is None:
             target_files = self.get_source_files_in_order()
 
-        dependency_graph = self.create_dependency_graph()
+        dependency_graph = self.create_dependency_graph(implementation_dependencies)
 
         try:
             affected_files = dependency_graph.get_dependencies(set(target_files))

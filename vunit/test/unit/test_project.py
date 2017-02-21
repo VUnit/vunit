@@ -638,7 +638,6 @@ endpackage
         self.assert_should_recompile([file2, file3])
 
     def test_finds_component_instantiation_dependencies(self):
-        self.project = Project(depend_on_components=True)
         self.project.add_library("toplib", "work_path")
         top = self.add_source_file("toplib", "top.vhd", """\
 entity top is
@@ -682,9 +681,9 @@ end architecture;
 
         self.assert_has_component_instantiation("top.vhd", "foo")
         self.assert_has_component_instantiation("top.vhd", "foo2")
-
-        self.assert_compiles(comp1, before=top)
-        self.assert_compiles(comp2, before=top)
+        dependencies = self.project.get_dependencies_in_compile_order([top], implementation_dependencies=True)
+        self.assertIn(comp1, dependencies)
+        self.assertIn(comp2, dependencies)
 
     def test_get_dependencies_in_compile_order_without_target(self):
         self.create_dummy_three_file_project()
