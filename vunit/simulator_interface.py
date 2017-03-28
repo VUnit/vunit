@@ -26,6 +26,9 @@ class SimulatorInterface(object):
     compile_options = []
     sim_options = []
 
+    def __init__(self):
+        self.output_path = None
+
     @staticmethod
     def add_arguments(parser):
         """

@@ -74,6 +74,7 @@ class GHDLInterface(SimulatorInterface):
         return cls.find_toolchain(["ghdl"])
 
     def __init__(self, prefix, gui=False, gtkwave_fmt=None, gtkwave_args="", backend="llvm"):
+        SimulatorInterface.__init__(self)
         self._prefix = prefix
         self._project = None
 
