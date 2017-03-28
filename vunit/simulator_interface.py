@@ -193,6 +193,12 @@ class SimulatorInterface(object):
     def compile_source_file_command(self, source_file):  # pylint: disable=unused-argument
         raise NotImplementedError
 
+    def set_output_path(self, output_path):
+        self.output_path = output_path
+
+    def get_output_path(self):
+        return self.output_path
+
     @staticmethod
     def get_env():
         """

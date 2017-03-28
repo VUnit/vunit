@@ -179,5 +179,7 @@ class SimulatorFactory(object):
         if not exists(self.simulator_output_path):
             os.makedirs(self.simulator_output_path)
 
-        return self._simulator_class.from_args(self.simulator_output_path,
+        simulator_if = self._simulator_class.from_args(self.simulator_output_path,
                                                self._args)
+        simulator_if.set_output_path(self.simulator_output_path)
+        return simulator_if

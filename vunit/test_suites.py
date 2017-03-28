@@ -44,7 +44,8 @@ class IndependentSimTestCase(object):
         """
         Run the test case using the output_path
         """
-        if not call_pre_config(self._config.pre_config, output_path):
+        if not call_pre_config(self._config.pre_config, output_path,
+                               self._simulator_if.get_output_path()):
             return False
 
         enabled_test_cases = [self._test_case]
@@ -118,7 +119,8 @@ class SameSimTestSuite(object):
         """
         Run the test suite using output_path
         """
-        if not call_pre_config(self._config.pre_config, output_path):
+        if not call_pre_config(self._config.pre_config, output_path,
+                               self._simulator_if.get_output_path()):
             return False
 
         enabled_test_cases = [encode_test_case(test_case) for test_case in self._test_cases]
@@ -245,13 +247,16 @@ def encode_dict_value(value):
         return str(value)
 
 
-def call_pre_config(pre_config, output_path):
+def call_pre_config(pre_config, output_path, simulator_output_path):
     """
     Call pre_config if available. Setting optional output_path
     """
     if pre_config is not None:
         args = inspect.getargspec(pre_config).args  # pylint: disable=deprecated-method
-        if "output_path" in args:
+        if args == ["output_path", "simulator_output_path"]:
+            if not pre_config(output_path, simulator_output_path):
+                return False
+        elif "output_path" in args:
             if not pre_config(output_path):
                 return False
         else:
