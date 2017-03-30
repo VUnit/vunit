@@ -35,11 +35,11 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         self.generics = {} if generics is None else generics
         self.sim_options = {} if sim_options is None else sim_options
 
+        self.tb_path = dirname(design_unit.file_name)
+
         # Fill in tb_path generic with location of test bench
         if "tb_path" in design_unit.generic_names:
-            file_name = design_unit.file_name
-            new_value = '%s/' % dirname(file_name).replace("\\", "/")
-            self.generics["tb_path"] = new_value
+            self.generics["tb_path"] = '%s/' % self.tb_path.replace("\\", "/")
 
         self.pre_config = pre_config
         self.post_check = post_check

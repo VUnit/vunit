@@ -813,18 +813,22 @@ begin
     if runner_cfg /= null then
       deallocate(runner_cfg);
     end if;
-    write(runner_cfg, string'("active python runner : true, enabled_test_cases : foo,, bar, output path : some_dir/out"));
+    write(runner_cfg, string'("active python runner : true, enabled_test_cases : foo,, bar, output path : some_dir/out, tb path : some_other_dir/test"));
     check(c, active_python_runner(runner_cfg.all), "Expected active python runner to be true");
     passed := vunit_lib.run_pkg.output_path(runner_cfg.all) = "some_dir/out";
     check(c, passed, "Expected output path to be ""some_dir/out"" but got " & vunit_lib.run_pkg.output_path(runner_cfg.all));
     passed := enabled_test_cases(runner_cfg.all) = "foo, bar";
     check(c, passed, "Expected enabled_test_cases to be ""foo, bar"" but got " & enabled_test_cases(runner_cfg.all));
+    passed := vunit_lib.run_pkg.tb_path(runner_cfg.all) = "some_other_dir/test";
+    check(c, passed, "Expected tb path to be ""some_other_dir/test"" but got " & vunit_lib.run_pkg.tb_path(runner_cfg.all));
 
     check_false(c, active_python_runner(""), "Expected active python runner to be false");
     passed := vunit_lib.run_pkg.output_path("") = "";
     check(c, passed, "Expected output path to be """" but got " & vunit_lib.run_pkg.output_path(""));
     passed := enabled_test_cases("") = "__all__";
     check(c, passed, "Expected enabled_test_cases to be ""__all__"" but got " & enabled_test_cases(""));
+    passed := vunit_lib.run_pkg.tb_path("") = "";
+    check(c, passed, "Expected tb path to be """" but got " & vunit_lib.run_pkg.tb_path(""));
 
     ---------------------------------------------------------------------------
     banner("Should recognize runner_cfg_t for backward compatibility");

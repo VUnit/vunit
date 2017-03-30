@@ -193,7 +193,7 @@ class SameSimTestSuite(object):
 
 def _add_runner_cfg(config, output_path, enabled_test_cases):
     """
-    Return a new Configuration object with runner_cfg and output path information set
+    Return a new Configuration object with runner_cfg, output path and tb path information set
     """
     config = config.copy()
 
@@ -206,6 +206,7 @@ def _add_runner_cfg(config, output_path, enabled_test_cases):
                                        if test_case is not None),
         "output path": output_path.replace("\\", "/") + "/",
         "active python runner": True,
+        "tb path": config.tb_path.replace("\\", "/") + "/",
     }
 
     # @TODO Warn if runner cfg already set?

@@ -471,7 +471,18 @@ package body run_pkg is
     else
       return "__all__";
     end if;
-
   end;
+
+  impure function tb_path (
+    constant runner_cfg : string)
+    return string is
+  begin
+    if has_key(runner_cfg, "tb path") then
+      return get(runner_cfg, "tb path");
+    else
+      return "";
+    end if;
+  end;
+
 
 end package body run_pkg;
