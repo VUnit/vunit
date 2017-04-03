@@ -69,6 +69,7 @@ class ActiveHDLInterface(SimulatorInterface):
         return False
 
     def __init__(self, prefix, library_cfg="library.cfg", gui=False):
+        SimulatorInterface.__init__(self)
         self._library_cfg = abspath(library_cfg)
         self._prefix = prefix
         self._gui = gui

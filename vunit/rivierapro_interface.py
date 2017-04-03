@@ -92,6 +92,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         return True
 
     def __init__(self, prefix, library_cfg="library.cfg", persistent=False, gui=False):
+        SimulatorInterface.__init__(self)
         VsimSimulatorMixin.__init__(self, prefix, persistent, gui, library_cfg)
         self._create_library_cfg()
         self._libraries = []

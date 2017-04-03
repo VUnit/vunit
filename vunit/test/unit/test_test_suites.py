@@ -18,22 +18,22 @@ class TestTestSuites(TestCase):
     """
 
     def test_call_pre_config_none(self):
-        self.assertEqual(call_pre_config(None, "output_path"), True)
+        self.assertEqual(call_pre_config(None, "output_path", "simulator_output_path"), True)
 
     def test_call_pre_config_false(self):
         def pre_config():
             return False
-        self.assertEqual(call_pre_config(pre_config, "output_path"), False)
+        self.assertEqual(call_pre_config(pre_config, "output_path", "simulator_output_path"), False)
 
     def test_call_pre_config_true(self):
         def pre_config():
             return True
-        self.assertEqual(call_pre_config(pre_config, "output_path"), True)
+        self.assertEqual(call_pre_config(pre_config, "output_path", "simulator_output_path"), True)
 
     def test_call_pre_config_no_return(self):
         def pre_config():
             pass
-        self.assertEqual(call_pre_config(pre_config, "output_path"), False)
+        self.assertEqual(call_pre_config(pre_config, "output_path", "simulator_output_path"), False)
 
     def test_call_pre_config_with_output_path(self):
 
@@ -47,4 +47,19 @@ class TestTestSuites(TestCase):
             self.assertEqual(output_path, "output_path")
             raise WasHere
 
-        self.assertRaises(WasHere, call_pre_config, pre_config, "output_path")
+        self.assertRaises(WasHere, call_pre_config, pre_config, "output_path", "simulator_output_path")
+
+    def test_call_pre_config_with_simulator_output_path(self):
+
+        class WasHere(Exception):
+            pass
+
+        def pre_config(output_path, simulator_output_path):
+            """
+            Pre config with output path
+            """
+            self.assertEqual(output_path, "output_path")
+            self.assertEqual(simulator_output_path, "simulator_output_path")
+            raise WasHere
+
+        self.assertRaises(WasHere, call_pre_config, pre_config, "output_path", "simulator_output_path")

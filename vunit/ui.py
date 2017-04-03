@@ -1337,8 +1337,12 @@ class TestBench(object):
         :param generics: A `dict` containing the generics to be set in addition to the default configuration
         :param parameters: A `dict` containing the parameters to be set in addition to the default configuration
         :param pre_config: A function to be called before test execution, replaces the default if not None
-           The function may accept a string which is the filesystem path to the
-           directory where test outputs are stored.
+           The function accepts an optional first argument `output_path` which is the filesystem path to the
+           directory where test outputs are stored. An optional second argument
+           `simulator_output_path` is the filesystem path to the simulator working directory.
+           Please note that `simulator_output_path` is shared by all test runs. The user must take
+           care that test runs do not read or write the same files asynchronously. It is therefore
+           recommended to use `output_path` in favor of `simulator_output_path`.
            The function must return `True` or the test will fail
         :param post_check: A function to be called after test execution, replaces the default if not None
            The function must accept a string which is the filesystem path to the

@@ -105,6 +105,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         return True
 
     def __init__(self, prefix, modelsim_ini="modelsim.ini", persistent=False, gui=False, coverage=None):
+        SimulatorInterface.__init__(self)
         VsimSimulatorMixin.__init__(self, prefix, persistent, gui, modelsim_ini)
         self._libraries = []
         self._coverage = coverage
