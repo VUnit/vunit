@@ -231,8 +231,8 @@ class TestCase(ConfigurationVisitor):
                     elaborate_only=elaborate_only))
 
 
-_RE_VHDL_TEST_CASE = re.compile(r'\s+run\("(.*?)"\)', re.IGNORECASE)
-_RE_VERILOG_TEST_CASE = re.compile(r'`TEST_CASE\("(.*?)"\)')
+_RE_VHDL_TEST_CASE = re.compile(r'(\s|\()+run\s*\(\s*"(?P<name>.*?)"\s*\)', re.IGNORECASE)
+_RE_VERILOG_TEST_CASE = re.compile(r'`TEST_CASE\("(?P<name>.*?)"\)')
 
 
 def _find_test_cases(code, file_name):
@@ -246,7 +246,7 @@ def _find_test_cases(code, file_name):
         code = remove_comments(code)
         regexp = _RE_VHDL_TEST_CASE
 
-    test_cases = [match.group(1)
+    test_cases = [match.group("name")
                   for match in regexp.finditer(code)]
 
     unique = set()

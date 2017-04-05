@@ -84,16 +84,28 @@ class TestTestBench(unittest.TestCase):
 
     def test_creates_tests(self):
         design_unit = Entity('tb_entity', contents='''\
-if run("Test_1")
---if run("Test_2")
-if run("Test_3")
+if run("Test 1")
+--if run("Test 2")
+if run("Test 3")
+if run("Test 4")
+if run("Test 5") or run("Test 6")
+if run  ("Test 7")
+if run( "Test 8"  )
+if ((run("Test 9")))
+if my_protected_variable.run("Test 10")
 ''')
         design_unit.generic_names = ["runner_cfg"]
         test_bench = TestBench(design_unit)
         tests = self.create_tests(test_bench)
         self.assert_has_tests(tests,
-                              ["lib.tb_entity.Test_1",
-                               "lib.tb_entity.Test_3"])
+                              ["lib.tb_entity.Test 1",
+                               "lib.tb_entity.Test 3",
+                               "lib.tb_entity.Test 4",
+                               "lib.tb_entity.Test 5",
+                               "lib.tb_entity.Test 6",
+                               "lib.tb_entity.Test 7",
+                               "lib.tb_entity.Test 8",
+                               "lib.tb_entity.Test 9"])
 
     @mock.patch("vunit.test_bench.LOGGER")
     def test_duplicate_tests_cause_error(self, mock_logger):
