@@ -37,11 +37,11 @@ Main Features
 -  :ref:`Scriptable API <python_interface>` as well as :ref:`command line <cli>`
    support.
 -  Support for running same test suite with different generics.
--  VHDL test runner which enables test execution for not fully supported
+-  :doc:`VHDL test runner <./run/user_guide>` which enables test execution for not fully supported
    simulators.
--  Assertion checker library that extends VHDL built-in support
+-  :doc:`Assertion checker library <./check/user_guide>` that extends VHDL built-in support
    (assert).
--  Logging framework supporting display and file output, different log
+-  :doc:`Logging framework <./logging/user_guide>` supporting display and file output, different log
    levels, filtering on level and design hierarchy, output formatting
    and multiple loggers. Spreadsheet tool integration.
 -  Location preprocessor that traces log and check calls back to file
@@ -114,8 +114,9 @@ There are a number of ways to get started.
 -  The :ref:`VUnit User Guide <user_guide>` will guide users on how to use start using
    the basic features of VUnit but also provides information about more
    specific and advanced usage.
--  The :ref:`Check User Guide <check_library>` presents the check package.
--  The :ref:`Log User Guide <logging_library>` presents the log package.
+-  The :ref:`Run Library User Guide <run_library>` presents the run packages.
+-  The :ref:`Check Library User Guide <check_library>` presents the check packages.
+-  The :ref:`Logging Library User Guide <logging_library>` presents the log packages.
 -  There are also various presentations of VUnit on `YouTube`_. For
    example `an introduction to unit testing (6 min)`_ and a `short
    introduction to VUnit (12 min)`_.
@@ -148,12 +149,11 @@ VUnit except for OSVVM (see below) is released under the terms of
 OSVVM
 *****
 
-OSVVM 2015.03 is `redistributed`_ with VUnit for your convenience. Minor
-`modifications`_ have been made to enable GHDL support. Derivative work
-is also located under `examples/vhdl/osvvm\_integration/src`_. These
+OSVVM is `redistributed`_ with VUnit for your convenience. Derivative work
+is located under `examples/vhdl/osvvm\_integration/src`_. These
 files are licensed under the terms of `ARTISTIC License`_.
 
-|copy| 2010 - 2016 by SynthWorks Design Inc. All rights reserved.
+|copy| 2010 - 2017 by SynthWorks Design Inc. All rights reserved.
 
 .. _xUnit: http://en.wikipedia.org/wiki/XUnit
 .. _Jenkins: http://jenkins-ci.org/

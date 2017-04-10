@@ -82,7 +82,9 @@ generic, and wrap your existing code in your main controlling process with
 the calls to ``test_runner_setup`` and ``test_runner_cleanup``. Remember to
 remove your testbench termination code, for example calls to ``std.env.finish``,
 end of simulation asserts, or similar. A VUnit testbench must be terminated
-with the ``test_runner_cleanup`` call.
+with the ``test_runner_cleanup`` call. The procedures described here are part
+of the VUnit run library. More information on this library can be found in its
+:ref:`user guide <run_library>`.
 
 It is also possible to put multiple tests in a single test
 bench that are each run in individual, independent, simulations.
@@ -187,6 +189,9 @@ There are many examples demonstrating more specific usage of VUnit listed below:
 :vunit_example:`SystemVerilog UART Example <verilog/uart/>`
   A more realistic test bench of an UART to show VUnit SystemVerilog
   usage on a typical module.
+
+:vunit_example:`Run Example <vhdl/run/>`
+  Demonstrates the VUnit run library.
 
 :vunit_example:`Check Example <vhdl/check/>`
   Demonstrates the VUnit check library.
