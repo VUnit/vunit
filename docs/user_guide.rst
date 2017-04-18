@@ -143,6 +143,37 @@ A warning will be given if the name *does* match the above pattern but
 lacks a ``runner_cfg`` generic or parameter preventing it to be run
 by VUnit.
 
+.. _adopting_for_existing_vhdl_testbenches:
+
+Adopting for Existing VHDL Test Benches
+---------------------------------------
+Existing test code can be quickly adapted to utilize the VUnit Python runner
+framework. Follow these guidelines to enable using VUnit to run your existing
+automated / self-checking test bench code.
+
+#. Ensure the test bench includes self-checking functionality and a well defined
+   end-point (e.g. all stimulus stops or has a call to ``std.env.finish``)
+#. Ensure the test bench entity is named such that it will be :ref:`properly
+   detected by the test scanner.<test_bench_scanning>`
+#. Add the ``vunit_lib`` library and include context ``vunit_context``.
+#. Add a generic ``runner_cfg`` of type ``runner_cfg_t`` to the generics of the
+   test bench entity.
+#. At the beginning of the main stimulus process, insert a call to
+   ``test_runner_setup(runner, runner_cfg)``
+#. In the main stimulus process, *replace* any calls to ``std.env.finish`` with
+   ``test_runner_cleanup(runner)``. In any case, the main stimulus process
+   should end with a call to ``test_runner_cleanup(runner)``.
+
+In essence, this process is taking the basic test bench outline in
+:ref:`VHDL Test Benches<vhdl_test_benches>`, and replacing the ``report``
+statement with code to stimulate the Unit Under Test.
+
+If desired, test cases present in the test bench may be broken up into separate
+VUnit test cases, as shown in :ref:`VHDL Test Benches<vhdl_test_benches>`,
+though this is not necessary. Breaking up existing test cases, which are
+possibly only indicated by comments in the stimulus process, into test cases
+recognized by VUnit will give better traceability between test results and the
+code itself.
 
 Special generics/parameters
 ---------------------------
