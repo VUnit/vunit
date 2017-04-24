@@ -730,7 +730,7 @@ class VHDLArrayType(object):
         is
         \s+
         array
-        \s+\(
+        \s*\(
         (?P<ranges>.*?)
         \)\s+of\s+
         (?P<subtype_indication>.*?)\s*;""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
