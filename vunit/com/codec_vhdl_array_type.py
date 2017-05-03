@@ -10,7 +10,6 @@ Module containing the CodecVHDLArrayType class.
 from string import Template
 from vunit.vhdl_parser import VHDLArrayType
 from vunit.com.codec_datatype_template import DatatypeStdCodecTemplate, DatatypeDebugCodecTemplate
-from vunit.test.common import simulator_is
 
 
 class CodecVHDLArrayType(VHDLArrayType):
@@ -40,11 +39,7 @@ class CodecVHDLArrayType(VHDLArrayType):
                 definitions += template.constrained_2d_array_to_string_definition.substitute(type=self.identifier)
         else:
             if has_one_dimension:
-                # @TODO: Remove workaround when Aldec issue SPT73021 is solved
-                if simulator_is('rivierapro', 'activehdl'):
-                    init_value = " := (others => %s'left)" % self.subtype_indication
-                else:
-                    init_value = ''
+                init_value = ''
                 definitions += template.unconstrained_1d_array_definition.substitute(array_type=self.identifier,
                                                                                      init_value=init_value,
                                                                                      range_type=self.range1.range_type)
