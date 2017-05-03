@@ -138,11 +138,11 @@ class TestVerilogTokenizer(TestCase):
         optionally strip location information in comparison
         """
 
-        def preprocess(tokens):
+        def preprocess(tokens):  # pylint: disable=missing-docstring
             if strip_loc:
                 return [token.kind(token.value, None) for token in tokens]
-            else:
-                return tokens
+
+            return tokens
 
         self.assertEqual(preprocess(list(self.tokenizer.tokenize(code, "fn.v"))),
                          tokens)

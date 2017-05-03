@@ -115,7 +115,7 @@ class TestReport(object):
         passed, failures, skipped = self._split()
         all_tests = passed + skipped + failures
 
-        if len(all_tests) == 0:
+        if not all_tests:
             self._printer.write("No tests were run!", fg="rgi")
             self._printer.write("\n")
             return
@@ -253,8 +253,8 @@ class TestResult(object):
         is_readable = os.access(self._output_file_name, os.R_OK)
         if file_exists and is_readable:
             return read_file(self._output_file_name)
-        else:
-            return "Failed to read output file: %s" % self._output_file_name
+
+        return "Failed to read output file: %s" % self._output_file_name
 
     @property
     def passed(self):

@@ -73,11 +73,11 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         return self._design_unit.library_name
 
     @property
-    def architecture_name(self):
+    def architecture_name(self):  # pylint: disable=missing-docstring
         if self._design_unit.is_entity:
             return next(iter(self._design_unit.architecture_names))
-        else:
-            return None
+
+        return None
 
     def set_generic(self, name, value):
         """

@@ -64,7 +64,7 @@ class ActiveHDLInterface(SimulatorInterface):
         consumer = VersionConsumer()
         proc.consume_output(consumer)
         if consumer.major is not None:
-            return (consumer.major == 10 and consumer.minor >= 1) or (consumer.major > 10)
+            return consumer.minor >= 1 if consumer.major == 10 else consumer.major > 10
 
         return False
 
@@ -361,9 +361,9 @@ proc vunit_run {} {
             renew_path(gui_path)
             return self._run_batch_file(gui_file_name, gui=True,
                                         cwd=gui_path)
-        else:
-            return self._run_batch_file(batch_file_name, gui=False,
-                                        cwd=dirname(self._library_cfg))
+
+        return self._run_batch_file(batch_file_name, gui=False,
+                                    cwd=dirname(self._library_cfg))
 
 
 class VersionConsumer(object):

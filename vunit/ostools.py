@@ -44,7 +44,7 @@ class ProgramStatus(object):
 
     @property
     def is_shutting_down(self):
-        with self._lock:
+        with self._lock:  # pylint: disable=not-context-manager
             return self._shutting_down
 
     def check_for_shutdown(self):
@@ -52,7 +52,7 @@ class ProgramStatus(object):
             raise KeyboardInterrupt
 
     def shutdown(self):
-        with self._lock:
+        with self._lock:  # pylint: disable=not-context-manager
             self._shutting_down = True
 
 PROGRAM_STATUS = ProgramStatus()
@@ -348,5 +348,5 @@ def simplify_path(path):
     drive_path = splitdrive(path)[0]
     if drive_path == drive_cwd:
         return relpath(path, cwd)
-    else:
-        return path
+
+    return path

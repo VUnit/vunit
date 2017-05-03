@@ -58,8 +58,8 @@ def version():
     """
     if PRE_RELEASE:
         return '%i.%i.%i-pre' % (VERSION[0], VERSION[1], VERSION[2] + 1)
-    else:
-        return '%i.%i.%i' % (VERSION[0], VERSION[1], VERSION[2])
+
+    return '%i.%i.%i' % (VERSION[0], VERSION[1], VERSION[2])
 
 
 VERSION = (2, 0, 0)

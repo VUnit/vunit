@@ -44,7 +44,7 @@ class DataBase(object):
 
         # Map keys to nodes indexes
         self._keys_to_nodes = self._discover_nodes()
-        if len(self._keys_to_nodes) == 0:
+        if not self._keys_to_nodes:
             self._next_node = 0
         else:
             self._next_node = max(self._keys_to_nodes.values()) + 1

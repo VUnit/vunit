@@ -79,7 +79,7 @@ class SimulatorFactory(object):
 
         available_simulators = cls.available_simulators()
         name_mapping = {simulator_class.name: simulator_class for simulator_class in cls.supported_simulators()}
-        if len(available_simulators) == 0:
+        if not available_simulators:
             return None
 
         if environ_name in os.environ:
@@ -126,8 +126,8 @@ class SimulatorFactory(object):
         """
         if self._simulator_class is not None:
             return self._simulator_class.package_users_depend_on_bodies
-        else:
-            return False
+
+        return False
 
     def supports_vhdl_2008_contexts(self):
         """
@@ -135,8 +135,8 @@ class SimulatorFactory(object):
         """
         if self._simulator_class is not None:
             return self._simulator_class.supports_vhdl_2008_contexts()
-        else:
-            return True
+
+        return True
 
     def get_osvvm_coverage_api(self):
         """
@@ -144,8 +144,8 @@ class SimulatorFactory(object):
         """
         if self._simulator_class is not None:
             return self._simulator_class.get_osvvm_coverage_api()
-        else:
-            return None
+
+        return None
 
     def supports_vhdl_package_generics(self):
         """
@@ -153,15 +153,15 @@ class SimulatorFactory(object):
         """
         if self._simulator_class is not None:
             return self._simulator_class.supports_vhdl_package_generics()
-        else:
-            return False
+
+        return False
 
     @property
-    def simulator_name(self):
+    def simulator_name(self):  # pylint: disable=missing-docstring
         if self._simulator_class is None:
             return "none"
-        else:
-            return self._simulator_class.name
+
+        return self._simulator_class.name
 
     @property
     def simulator_output_path(self):

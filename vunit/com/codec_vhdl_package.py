@@ -143,7 +143,7 @@ class CodecVHDLPackage(VHDLPackage):
                         raise RuntimeError('Different msg_type enumerations may not have the same literals')
                     else:
                         msg_type_enumeration_literals.append(literal)
-        if len(msg_type_enumeration_literals) > 0:
+        if msg_type_enumeration_literals:
             all_msg_types_enumeration_type = CodecVHDLEnumerationType(self.identifier + '_msg_type_t',
                                                                       msg_type_enumeration_literals)
         else:

@@ -253,9 +253,8 @@ class VerilogModule(object):
 
         if tokens[idx + 2].kind == IDENTIFIER:
             return tokens[idx + 2].value
-        else:
-            return tokens[idx + 1].value
-        assert False
+
+        return tokens[idx + 1].value
 
     @classmethod
     def find(cls, tokens):

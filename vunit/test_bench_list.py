@@ -72,7 +72,7 @@ class TestBenchList(object):
         """
         Log a warning when there are no test benches
         """
-        if len(self.get_test_benches()) == 0:
+        if not self.get_test_benches():
             LOGGER.warning("Found no test benches using current filter rule:\n%s",
                            tb_filter.__doc__)
 

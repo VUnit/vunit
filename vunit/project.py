@@ -565,8 +565,8 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
     def __eq__(self, other):
         if isinstance(other, type(self)):
             return self.name == other.name
-        else:
-            return False
+
+        return False
 
     def __lt__(self, other):
         return self.name < other.name
@@ -591,8 +591,8 @@ class SourceFile(object):
     def __eq__(self, other):
         if isinstance(other, type(self)):
             return self.to_tuple() == other.to_tuple()
-        else:
-            return False
+
+        return False
 
     def to_tuple(self):
         return (self.name, self.library, self.file_type)
@@ -773,7 +773,7 @@ class VHDLSourceFile(SourceFile):
             else:
                 LOGGER.debug('Adding secondary design unit (%s) %s', design_unit.unit_type, design_unit.name)
 
-        if len(self.depending_components) != 0:
+        if self.depending_components:
             LOGGER.debug("The file '%s' has the following components:", self.name)
             for component in self.depending_components:
                 LOGGER.debug(component)

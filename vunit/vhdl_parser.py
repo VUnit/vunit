@@ -416,7 +416,7 @@ class VHDLEntity(object):
             else:
                 split.append(char)
 
-        if len(split) > 0:
+        if split:
             result.append("".join(split))
 
         return result

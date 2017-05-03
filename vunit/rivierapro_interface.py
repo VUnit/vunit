@@ -311,8 +311,8 @@ def format_generic(value):
     value_str = str(value)
     if " " in value_str:
         return '"%s"' % value_str
-    else:
-        return value_str
+
+    return value_str
 
 
 class VersionConsumer(object):

@@ -226,7 +226,8 @@ class VerilogPreprocessor(object):
                                                 include_paths,
                                                 included_files)
 
-            if len(expanded_tokens) == 0:
+            # pylint crashes when trying to fix the warning below
+            if len(expanded_tokens) == 0:  # pylint: disable=len-as-condition
                 raise LocationException.warning("Verilog `include has bad argument, empty define `%s" % macro.name,
                                                 tok.location)
 

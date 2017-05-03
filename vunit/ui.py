@@ -555,7 +555,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         if len(files) > 1:
             raise ValueError("Found file named '%s' in multiple-libraries, "
                              "add explicit library_name." % file_name)
-        elif len(files) == 0:
+        elif not files:
             if library_name is None:
                 raise ValueError("Found no file named '%s'" % file_name)
             else:
@@ -584,7 +584,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
             results.append(SourceFile(source_file, self._project, self))
 
-        if (not allow_empty) and len(results) == 0:
+        if (not allow_empty) and (not results):
             raise ValueError(("Pattern %r did not match any file. "
                               "Use allow_empty=True to avoid exception,") % pattern)
 
@@ -662,7 +662,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             preprocessors = [p for p in preprocessors if p is not None]
             preprocessors = self._external_preprocessors + preprocessors
 
-        if len(preprocessors) == 0:
+        if not preprocessors:
             return file_name
 
         code = ostools.read_file(file_name)
@@ -1109,16 +1109,18 @@ class Library(object):
            library.add_source_files("*.vhd")
 
         """
-        if _is_iterable_not_string(pattern):
-            pattern = [pattern]
+        if _is_string_not_iterable(pattern):
+            patterns = [pattern]
+        else:
+            patterns = pattern
 
         file_names = []
-        for pattern in pattern:
-            new_file_names = glob(pattern)
+        for pattern_instance in patterns:
+            new_file_names = glob(pattern_instance)
 
-            if (not allow_empty) and len(new_file_names) == 0:
+            if (not allow_empty) and (not new_file_names):
                 raise ValueError(("Pattern %r did not match any file. "
-                                  "Use allow_empty=True to avoid exception,") % pattern)
+                                  "Use allow_empty=True to avoid exception,") % pattern_instance)
             file_names += new_file_names
 
         return SourceFileList(source_files=[
@@ -1177,7 +1179,7 @@ class Library(object):
 
         if design_unit is None:
             raise KeyError(name)
-        if design_unit.unit_type is not 'package':
+        if design_unit.unit_type != 'package':
             raise KeyError(name)
 
         return PackageFacade(self._parent, self._library_name, name, design_unit)
@@ -1672,8 +1674,8 @@ class SourceFile(object):
         """
         if self._source_file.file_type == "vhdl":
             return self._source_file.get_vhdl_standard()
-        else:
-            return None
+
+        return None
 
     @property
     def library(self):
@@ -1755,11 +1757,11 @@ def lower_generics(generics):
     return dict((name.lower(), value) for name, value in generics.items())
 
 
-def _is_iterable_not_string(value):
+def _is_string_not_iterable(value):
     """
-    Returns True if value is an iterable that is not a string
+    Returns True if value is a string and not another iterable
     """
     if sys.version_info.major == 3:
         return isinstance(value, str)
-    else:
-        return isinstance(value, (str, unicode))  # pylint: disable=undefined-variable
+
+    return isinstance(value, (str, unicode))  # pylint: disable=undefined-variable

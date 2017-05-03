@@ -441,8 +441,8 @@ def to_coverage_args(coverage):
     """
     if coverage == "all":
         return "bcestf"
-    else:
-        return coverage
+
+    return coverage
 
 
 def argparse_coverage_type(value):
@@ -462,8 +462,8 @@ def encode_generic_value(value):
     s_value = str(value)
     if " " in s_value:
         return '{"%s"}' % s_value
-    else:
-        return s_value
+
+    return s_value
 
 
 def parse_modelsimini(file_name):

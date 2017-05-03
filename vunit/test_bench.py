@@ -38,7 +38,7 @@ class TestBench(ConfigurationVisitor):
 
         if design_unit.is_entity:
             design_unit.set_add_architecture_callback(self._add_architecture_callback)
-            if len(design_unit.architecture_names) > 0:
+            if design_unit.architecture_names:
                 self._add_architecture_callback()
         else:
             self.scan_tests_from_file(design_unit.file_name)
@@ -75,7 +75,7 @@ class TestBench(ConfigurationVisitor):
         has exactly one architecture. Raise RuntimeError otherwise.
         """
         if design_unit.is_entity:
-            if len(design_unit.architecture_names) == 0:
+            if not design_unit.architecture_names:
                 raise RuntimeError("Test bench '%s' has no architecture."
                                    % design_unit.name)
 
@@ -99,7 +99,7 @@ class TestBench(ConfigurationVisitor):
         if self._individual_tests:
             for test_case in self.test_cases:
                 test_case.create_tests(simulator_if, elaborate_only, test_list)
-        elif len(self.test_cases) == 0:
+        elif not self.test_cases:
             for config in self._get_configurations_to_run():
                 test_list.add_test(
                     IndependentSimTestCase(
@@ -141,8 +141,8 @@ class TestBench(ConfigurationVisitor):
             for test_case in self.test_cases:
                 configs += test_case.get_configuration_dicts()
             return configs
-        else:
-            return [self._configs]
+
+        return [self._configs]
 
     def _get_configurations_to_run(self):
         """
@@ -259,7 +259,7 @@ def _find_test_cases(code, file_name):
             not_unique.add(test_case)
         unique.add(test_case)
 
-    if len(not_unique) > 0:
+    if not_unique:
         raise RuntimeError('Duplicate test cases')
 
     return test_cases

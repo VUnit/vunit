@@ -361,8 +361,8 @@ define work "{2}/libraries/work"
         return args
 
 
-def _generic_needs_quoting(value):
+def _generic_needs_quoting(value):  # pylint: disable=missing-docstring
     if sys.version_info.major == 2:
         return isinstance(value, (str, bool, unicode))  # pylint: disable=undefined-variable
-    else:
-        return isinstance(value, (str, bool))
+
+    return isinstance(value, (str, bool))

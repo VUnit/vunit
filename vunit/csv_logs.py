@@ -31,7 +31,7 @@ class CsvLogs(object):
             with open(csv_file, "r") as fread:
                 sample = fread.readline()
                 fread.seek(0)
-                if len(sample) > 0:
+                if sample:
                     dialect = Sniffer().sniff(sample)
                     self._entries += DictReader(fread, fieldnames=self._field_names, dialect=dialect)
 

@@ -63,11 +63,11 @@ class TestSimulatorInterface(unittest.TestCase):
             elif source_file == file3:
                 return ["command3"]
 
-        def run_command_side_effect(command, **kwargs):
+        def run_command_side_effect(command, **kwargs):  # pylint: disable=missing-docstring
             if command == ["command1"]:
                 return False
-            else:
-                return True
+
+            return True
 
         simif.compile_source_file_command.side_effect = compile_source_file_command
 

@@ -32,7 +32,7 @@ class PersistentTclShell(object):
         """
         ident = threading.current_thread().ident
 
-        with self._lock:
+        with self._lock:  # pylint: disable=not-context-manager
             try:
                 process = self._processes[ident]
                 if process.is_alive():
@@ -77,7 +77,7 @@ class PersistentTclShell(object):
         """
         Teardown all active processes before shutdown
         """
-        with self._lock:
+        with self._lock:  # pylint: disable=not-context-manager
             for proc in self._processes.values():
                 if proc.is_alive():
                     proc.writeline("quit -force -code 0")

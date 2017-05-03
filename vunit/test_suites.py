@@ -101,11 +101,11 @@ class SameSimTestSuite(object):
     def name(self):
         return self._name
 
-    def _full_name(self, name):
+    def _full_name(self, name):  # pylint: disable=missing-docstring
         if name == "":
             return self._name
-        else:
-            return self._name + "." + name
+
+        return self._name + "." + name
 
     def keep_matches(self, test_filter):
         """
@@ -222,8 +222,8 @@ def encode_test_case(test_case):
     """
     if test_case is not None:
         return test_case.replace(',', ',,')
-    else:
-        return None
+
+    return None
 
 
 def encode_dict(dictionary):
@@ -241,11 +241,11 @@ def encode_dict(dictionary):
     return ",".join(encoded)
 
 
-def encode_dict_value(value):
+def encode_dict_value(value):  # pylint: disable=missing-docstring
     if isinstance(value, bool):
         return str(value).lower()
-    else:
-        return str(value)
+
+    return str(value)
 
 
 def call_pre_config(pre_config, output_path, simulator_output_path):

@@ -240,8 +240,8 @@ proc vunit_help {} {
             return self._run_batch_file(gui_file_name, gui=True)
         elif self._persistent_shell is not None:
             return self._run_persistent(common_file_name, load_only=elaborate_only)
-        else:
-            return self._run_batch_file(batch_file_name)
+
+        return self._run_batch_file(batch_file_name)
 
 
 def fix_path(path):

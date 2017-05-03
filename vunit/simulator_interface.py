@@ -97,7 +97,7 @@ class SimulatorInterface(object):
         """
         constraints = [] if constraints is None else constraints
 
-        if len(executables) == 0:
+        if not executables:
             return None
 
         all_paths = [[os.path.abspath(os.path.dirname(executables))

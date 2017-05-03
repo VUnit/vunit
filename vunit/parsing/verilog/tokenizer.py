@@ -38,11 +38,11 @@ class VerilogTokenizer(object):
         def add(kind, regex, func=None):
             self._tokenizer.add(kind, regex, func)
 
-        def replace_keywords(token):
+        def replace_keywords(token):  # pylint: disable=missing-docstring
             if token.value in KEYWORDS:
                 return Token(KEYWORDS[token.value], '', token.location)
-            else:
-                return token
+
+            return token
 
         add(PREPROCESSOR,
             r"`[a-zA-Z][a-zA-Z0-9_]*",

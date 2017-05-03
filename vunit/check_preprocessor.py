@@ -46,7 +46,7 @@ class CheckPreprocessor(object):
     def _extract_relation(self, code, check):
         # pylint: disable=missing-docstring
         def end_of_parameter(token):
-            return ((token.value == ',') and (token.level == 1)) or (token.level == 0)
+            return token.value == ',' if token.level == 1 else token.level == 0
         parameter_tokens = []
         index = 1
         relation = None

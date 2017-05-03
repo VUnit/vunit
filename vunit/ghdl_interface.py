@@ -78,7 +78,7 @@ class GHDLInterface(SimulatorInterface):
         self._prefix = prefix
         self._project = None
 
-        if gui and len(self.find_executable('gtkwave')) == 0:
+        if gui and (not self.find_executable('gtkwave')):
             raise RuntimeError(
                 "Cannot find the gtkwave executable in the PATH environment variable. GUI not possible")
 
@@ -128,9 +128,9 @@ class GHDLInterface(SimulatorInterface):
 
         vhdl_standards = set(source_file.get_vhdl_standard()
                              for source_file in project.get_source_files_in_order()
-                             if source_file.file_type is 'vhdl')
+                             if source_file.file_type == 'vhdl')
 
-        if len(vhdl_standards) == 0:
+        if not vhdl_standards:
             self._vhdl_standard = '2008'
         elif len(vhdl_standards) != 1:
             raise RuntimeError("GHDL cannot handle mixed VHDL standards, found %r" % list(vhdl_standards))

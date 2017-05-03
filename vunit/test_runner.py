@@ -108,7 +108,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             try:
                 test_suite = scheduler.next()
 
-                with self._lock:
+                with self._lock:  # pylint: disable=not-context-manager
                     for test_name in test_suite.test_cases:
                         print("Starting %s" % test_name)
 
@@ -144,7 +144,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             raise
         except:  # pylint: disable=bare-except
             results = self._fail_suite(test_suite)
-            with self._lock:
+            with self._lock:  # pylint: disable=not-context-manager
                 traceback.print_exc()
                 self._add_results(test_suite, results, start_time, num_tests, output_file_name)
             return
@@ -168,7 +168,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
         any_not_passed = any(value != PASSED for value in results.values())
 
-        with self._lock:
+        with self._lock:  # pylint: disable=not-context-manager
             if (not write_stdout) and (any_not_passed or self._verbose):
                 self._print_output(output_file_name)
             self._add_results(test_suite, results, start_time, num_tests, output_file_name)
@@ -297,7 +297,7 @@ class TestScheduler(object):
         Iterator in Python 2
         """
         ostools.PROGRAM_STATUS.check_for_shutdown()
-        with self._lock:
+        with self._lock:  # pylint: disable=not-context-manager
             if self._idx < len(self._tests):
                 idx = self._idx
                 self._idx += 1
@@ -309,11 +309,11 @@ class TestScheduler(object):
         """
         Signal that a test has been done
         """
-        with self._lock:
+        with self._lock:  # pylint: disable=not-context-manager
             self._num_done += 1
 
     def is_finished(self):
-        with self._lock:
+        with self._lock:  # pylint: disable=not-context-manager
             return self._num_done >= len(self._tests)
 
     def wait_for_finish(self):
