@@ -37,7 +37,7 @@ package body com_codec_pkg is
   function decode (
     constant code : string)
     return real is
-    variable f64 : float64;
+    constant f64 : float64 := (others => '0');
   begin
     return to_real(from_string(code, f64));
   end;
@@ -66,8 +66,8 @@ package body com_codec_pkg is
 
       return 0;
     end function find_space;
-    variable code_i            : string(1 to code'length) := code;
-    variable space_pos         : natural                  := find_space(code_i);
+    constant code_i            : string(1 to code'length) := code;
+    constant space_pos         : natural                  := find_space(code_i);
     variable resolution        : time;
     variable t, t_part         : time                     := 0 ns;
     variable l, r, sign_offset : integer;
@@ -221,8 +221,8 @@ package body com_codec_pkg is
     constant range_left         : natural := decode(get_element(code, 1));
     constant range_right        : natural := decode(get_element(code, 2));
     constant is_ascending       : boolean := decode(get_element(code, 3));
-    variable ret_val_ascending  : range_t(range_left to range_right);
-    variable ret_val_descending : range_t(range_left downto range_right);
+    constant ret_val_ascending  : range_t(range_left to range_right) := (others => '0');
+    constant ret_val_descending : range_t(range_left downto range_right) := (others => '0');
   begin
     if is_ascending then
       return ret_val_ascending;
@@ -481,7 +481,6 @@ package body com_codec_pkg is
     return ieee.numeric_bit.signed is
     variable ret_val : ieee.numeric_bit.signed(get_range(code)'range) := (others => '0');
     variable l       : line;
-    variable length  : natural;
     variable index   : natural := 1;
   begin
     write(l, get_first_element(code));
