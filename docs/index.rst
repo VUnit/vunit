@@ -35,4 +35,5 @@ Latest Posts
    about
    installing
    documentation
+   testimonials/testimonials
    contributing
