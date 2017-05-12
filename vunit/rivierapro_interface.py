@@ -20,6 +20,7 @@ from vunit.simulator_interface import SimulatorInterface
 from vunit.exceptions import CompileError
 from vunit.vsim_simulator_mixin import (VsimSimulatorMixin,
                                         fix_path)
+from argparse import ArgumentTypeError
 
 LOGGER = logging.getLogger(__name__)
 
@@ -44,6 +45,24 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         "rivierapro.init_file.gui",
     ]
 
+    @staticmethod #GE
+    def add_arguments(parser):
+        """
+        Add command line arguments
+        """
+        group = parser.add_argument_group("rivierapro",
+                                          description="Riviera-PRO specific flags")
+        group.add_argument("--coverage",
+                           default=None,
+                           nargs="?",
+                           const="all",
+                           type=argparse_coverage_type,
+                           help=('Enable code coverage. '
+                                 'Choose any combination of "bcestf". '
+                                 'When the flag is given with no argument, everything is enabled. '
+                                 'Remember to run --clean when changing this as re-compilation is not triggered. '
+                                 'Experimental feature not supported by VUnit main developers.'))
+
     @classmethod
     def from_args(cls, output_path, args):
         """
@@ -51,9 +70,13 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         persistent = not (args.unique_sim or args.gui)
 
+        #GE print("from_args ")
+        #GE print(cls)
+
         return cls(prefix=cls.find_prefix(),
                    library_cfg=join(output_path, "library.cfg"),
                    persistent=persistent,
+                   coverage=args.coverage, #GE
                    gui=args.gui)
 
     @classmethod
@@ -91,11 +114,13 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         return True
 
-    def __init__(self, prefix, library_cfg="library.cfg", persistent=False, gui=False):
+    def __init__(self, prefix, library_cfg="library.cfg", persistent=False, gui=False, coverage=None):
         SimulatorInterface.__init__(self)
         VsimSimulatorMixin.__init__(self, prefix, persistent, gui, library_cfg)
         self._create_library_cfg()
         self._libraries = []
+        self._coverage = coverage # GE
+        self._coverage_files = set() # GE
 
     def setup_library_mapping(self, project):
         """
@@ -122,8 +147,17 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         Returns the command to compile a VHDL file
         """
+        #GE print("compile_vhdl_file"); print(source_file)
+        coverage_args = []
+        if self._coverage is None: # GE
+            coverage_args = []
+        else:
+            #GE print("coverage is enabled")
+            # note: debug data collection (-dbg) must be enabled for coverage
+            coverage_args = ['-dbg', '-coverage', to_coverage_args(self._coverage)]
+            #GE print(coverage_args)
         return ([join(self._prefix, 'vcom'), '-quiet', '-j', dirname(self._sim_cfg_file_name)] +
-                source_file.compile_options.get("rivierapro.vcom_flags", []) +
+                source_file.compile_options.get("rivierapro.vcom_flags", []) + coverage_args +
                 ['-' + source_file.get_vhdl_standard(), '-work', source_file.library.name, source_file.name])
 
     def compile_verilog_file_command(self, source_file):
@@ -205,12 +239,25 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
                                     for name, value in config.generics.items()))
         pli_str = " ".join("-pli \"%s\"" % fix_path(name) for name in config.sim_options.get('pli', []))
 
+        if self._coverage is None:
+            coverage_args = ""
+            coverage_file = ""
+        else:
+            coverage_args = "-acdb_cov " + to_coverage_args(self._coverage)
+            coverage_file_path = join(output_path, "coverage.acdb")
+            print("coverage_file_path: " + str(coverage_file_path) + ", type: " + str(type(coverage_file_path)))  # TODO
+            self._coverage_files.add(coverage_file_path)
+            coverage_file = "-acdb_file {%s}" % coverage_file_path
+            print("coverage_file: " + str(coverage_file) + ", type: " + str(type(coverage_file))) #TODO
+
         vsim_flags = ["-dataset {%s}" % fix_path(join(output_path, "dataset.asdb")),
                       pli_str,
                       set_generic_str,
                       "-lib",
                       config.library_name,
                       config.entity_name,
+                      coverage_args,
+                      coverage_file,
                       self._vsim_extra_args(config)]
 
         if config.architecture_name is not None:
@@ -218,6 +265,10 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
 
         if config.sim_options.get("disable_ieee_warnings", False):
             vsim_flags.append("-ieee_nowarn")
+
+        print("vsim_flags:") # TODO
+        for idx, flag in enumerate(vsim_flags):
+            print("%d : %s" % (idx, flag)) # TODO
 
         tcl = """
 proc vunit_load {{}} {{
@@ -303,6 +354,47 @@ proc _vunit_sim_restart {} {
 }
 """
 
+    def post_process(self, output_path):
+        """
+        Merge coverage from all test cases,
+        top hierarchy level is removed since it has different name in each test case
+        """
+        print("post_process")
+
+        if self._coverage is None:
+            return
+
+        # Teardown to ensure acdb file was written.
+        del self._persistent_shell
+
+        merged_coverage_file = join(output_path, "merged_coverage.acdb")
+        merge_command = "acdb merge"
+
+        print(self._coverage_files)
+
+        for coverage_file in self._coverage_files:
+            if file_exists(coverage_file):
+                merge_command += " -i {%s}" % coverage_file.replace('\\', '/') #GE  TODO: ugly hack
+            else:
+                LOGGER.warning("Missing coverage ucdb file: %s", coverage_file)
+
+        merge_command += " -o {%s}" % merged_coverage_file.replace('\\', '/') #GE  TODO: ugly hack
+
+        #vcover_cmd = [join(self._prefix, 'vsim'), '-c', '-do ' + '"' + merge_command + '; quit;"']
+        vcover_cmd = [join(self._prefix, 'vsim'), '-c', '-do', '%s; quit;' % merge_command ]
+        print(vcover_cmd)
+
+#        for coverage_file in self._coverage_files:
+#            if file_exists(coverage_file):
+#                vcover_cmd.append(coverage_file)
+#            else:
+#                LOGGER.warning("Missing coverage ucdb file: %s", coverage_file)
+
+        print("Merging coverage files into %s..." % merged_coverage_file)
+        vcover_merge_process = Process(vcover_cmd,
+                                       env=self.get_env())
+        vcover_merge_process.consume_output()
+        print("Done merging coverage files")
 
 def format_generic(value):
     """
@@ -311,8 +403,8 @@ def format_generic(value):
     value_str = str(value)
     if " " in value_str:
         return '"%s"' % value_str
-
-    return value_str
+    else:
+        return value_str
 
 
 class VersionConsumer(object):
@@ -331,3 +423,21 @@ class VersionConsumer(object):
             self.year = int(match.group('year'))
             self.month = int(match.group('month'))
         return True
+
+def argparse_coverage_type(value):
+    """
+    Validate that coverage value is "all" or any combination of "bcestf"
+    """
+    if value != "all" and not set(value).issubset(set("bcestf")):
+        raise ArgumentTypeError("'%s' is not 'all' or any combination of 'bcestf'" % value)
+
+    return value
+
+def to_coverage_args(coverage):
+    """
+    Returns bcestf enabled by coverage string
+    """
+    if coverage == "all":
+        return "bcestf"
+    else:
+        return coverage
