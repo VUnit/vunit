@@ -148,6 +148,11 @@ def _create_argument_parser(description=None, for_documentation=False):
                         default=False,
                         help="Do not re-use the same simulator process for running different test cases (slower)")
 
+    parser.add_argument("--coverage",
+                        default=None,
+                        nargs="?",
+                        help="Enable code coverage. Works with ModelSim and RivieraPRO.")
+
     parser.add_argument('--version', action='version', version=version())
 
     SimulatorFactory.add_arguments(parser,

@@ -182,6 +182,65 @@ class TestRivieraProInterface(unittest.TestCase):
                                              '-l', 'lib',
                                              '+define+defname=defval'], env=simif.get_env())
 
+    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
+    @mock.patch("vunit.rivierapro_interface.Process", autospec=True)
+    def test_compile_project_coverage(self, process, run_command):
+        library_cfg = join(self.output_path, "library.cfg")
+
+        for file_type in ["vhdl", "verilog"]:
+            run_command.reset_mock()
+
+            simif = RivieraProInterface(prefix="prefix",
+                                        library_cfg=library_cfg,
+                                        coverage="bes")
+
+            project = Project()
+            project.add_library("lib", "lib_path")
+
+            if file_type == "vhdl":
+                file_name = "file.vhd"
+            else:
+                file_name = "file.v"
+
+            write_file(file_name, "")
+            project.add_source_file(file_name, "lib", file_type=file_type)
+            simif.compile_project(project)
+            process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"],
+                                    cwd=self.output_path, env=simif.get_env())
+            process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"],
+                                       cwd=self.output_path, env=simif.get_env())
+
+            if file_type == "vhdl":
+                run_command.assert_called_once_with(
+                    [join('prefix', 'vcom'),
+                     '-quiet',
+                     '-j',
+                     self.output_path,
+                     '-dbg',
+                     '-coverage',
+                     'bes',
+                     '-2008',
+                     '-work',
+                     'lib',
+                     'file.vhd'], env=simif.get_env())
+            elif file_type == "verilog":
+                run_command.assert_called_once_with(
+                    [join('prefix', 'vlog'),
+                     '-quiet',
+                     '-sv2k12',
+                     '-lc',
+                     library_cfg,
+                     '-dbg',
+                     '-coverage',
+                     'bes',
+                     '-work',
+                     'lib',
+                     'file.v',
+                     '-l', 'lib'],
+                    env=simif.get_env())
+            else:
+                assert False
+
     def setUp(self):
         self.output_path = join(dirname(__file__), "test_rivierapro_out")
         renew_path(self.output_path)

@@ -16,7 +16,6 @@ import sys
 import io
 import os
 from os.path import join, dirname, abspath
-from argparse import ArgumentTypeError
 try:
     # Python 3
     from configparser import RawConfigParser
@@ -54,24 +53,6 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         "modelsim.vsim_flags.gui",
         "modelsim.init_file.gui",
     ]
-
-    @staticmethod
-    def add_arguments(parser):
-        """
-        Add command line arguments
-        """
-        group = parser.add_argument_group("modelsim",
-                                          description="ModelSim specific flags")
-        group.add_argument("--coverage",
-                           default=None,
-                           nargs="?",
-                           const="all",
-                           type=argparse_coverage_type,
-                           help=('Enable code coverage. '
-                                 'Choose any combination of "bcestf". '
-                                 'When the flag is given with no argument, everything is enabled. '
-                                 'Remember to run --clean when changing this as re-compilation is not triggered. '
-                                 'Experimental feature not supported by VUnit main developers.'))
 
     @classmethod
     def from_args(cls, output_path, args):
@@ -128,6 +109,24 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
             with open(self._sim_cfg_file_name, 'wb') as fwrite:
                 fwrite.write(fread.read())
 
+    def add_simulator_specific(self, project):
+        """
+        Add libraries from modelsim.ini file and add coverage flags
+        """
+        mapped_libraries = self._get_mapped_libraries()
+        for library_name in mapped_libraries:
+            if not project.has_library(library_name):
+                library_dir = mapped_libraries[library_name]
+                project.add_library(library_name, library_dir, is_external=True)
+
+        if self._coverage is None:
+            return
+
+        # Add coverage options
+        for source_file in project.get_source_files_in_order():
+            source_file.add_compile_option("modelsim.vcom_flags", ["+cover=" + self._coverage])
+            source_file.add_compile_option("modelsim.vlog_flags", ["+cover=" + self._coverage])
+
     def setup_library_mapping(self, project):
         """
         Setup library mapping
@@ -137,11 +136,6 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         for library in project.get_libraries():
             self._libraries.append(library)
             self.create_library(library.name, library.directory, mapped_libraries)
-
-        for library_name in mapped_libraries:
-            if not project.has_library(library_name):
-                library_dir = mapped_libraries[library_name]
-                project.add_library(library_name, library_dir, is_external=True)
 
     def compile_source_file_command(self, source_file):
         """
@@ -159,26 +153,15 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         """
         Returns the command to compile a vhdl file
         """
-        if self._coverage is None:
-            coverage_args = []
-        else:
-            coverage_args = ["+cover=" + to_coverage_args(self._coverage)]
-
         return ([join(self._prefix, 'vcom'), '-quiet', '-modelsimini', self._sim_cfg_file_name] +
-                coverage_args + source_file.compile_options.get("modelsim.vcom_flags", []) +
+                source_file.compile_options.get("modelsim.vcom_flags", []) +
                 ['-' + source_file.get_vhdl_standard(), '-work', source_file.library.name, source_file.name])
 
     def compile_verilog_file_command(self, source_file):
         """
         Returns the command to compile a verilog file
         """
-        if self._coverage is None:
-            coverage_args = []
-        else:
-            coverage_args = ["+cover=" + to_coverage_args(self._coverage)]
-
         args = [join(self._prefix, 'vlog'), '-sv', '-quiet', '-modelsimini', self._sim_cfg_file_name]
-        args += coverage_args
         args += source_file.compile_options.get("modelsim.vlog_flags", [])
         args += ['-work', source_file.library.name, source_file.name]
 
@@ -248,7 +231,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
                 "coverage save -onexit -testname {%s} -assert -directive -cvg -codeAll {%s}"
                 % (test_suite_name, fix_path(coverage_file)))
 
-            coverage_args = "-coverage=" + to_coverage_args(self._coverage)
+            coverage_args = "-coverage=" + self._coverage
 
         vsim_flags = ["-wlf {%s}" % fix_path(join(output_path, "vsim.wlf")),
                       "-quiet",
@@ -414,7 +397,7 @@ proc _vunit_sim_restart {} {
             if file_exists(coverage_file):
                 vcover_cmd.append(coverage_file)
             else:
-                LOGGER.warning("Missing coverage ucdb file: %s", coverage_file)
+                LOGGER.warning("Missing coverage file: %s", coverage_file)
 
         print("Merging coverage files into %s..." % merged_coverage_file)
         vcover_merge_process = Process(vcover_cmd,
@@ -433,26 +416,6 @@ proc _vunit_sim_restart {} {
             if key in env.keys():
                 del env[key]
         return env
-
-
-def to_coverage_args(coverage):
-    """
-    Returns bcestf enabled by coverage string
-    """
-    if coverage == "all":
-        return "bcestf"
-
-    return coverage
-
-
-def argparse_coverage_type(value):
-    """
-    Validate that coverage value is "all" or any combination of "bcestf"
-    """
-    if value != "all" and not set(value).issubset(set("bcestf")):
-        raise ArgumentTypeError("'%s' is not 'all' or any combination of 'bcestf'" % value)
-
-    return value
 
 
 def encode_generic_value(value):
