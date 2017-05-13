@@ -174,7 +174,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         with open(self._sim_cfg_file_name, "w") as ofile:
             ofile.write('$INCLUDE = "%s"\n' % join(self._prefix, "..", "vlib", "library.cfg"))
 
-    _library_re = re.compile(r'([a-zA-Z_]+)\s=\s"(.*)"')
+    _library_re = re.compile(r'([a-zA-Z_0-9]+)\s=\s"(.*)"')
 
     def _get_mapped_libraries(self):
         """
