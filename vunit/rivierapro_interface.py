@@ -45,7 +45,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         "rivierapro.init_file.gui",
     ]
 
-    @staticmethod #GE
+    @staticmethod
     def add_arguments(parser):
         """
         Add command line arguments
@@ -70,13 +70,10 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         persistent = not (args.unique_sim or args.gui)
 
-        #GE print("from_args ")
-        #GE print(cls)
-
         return cls(prefix=cls.find_prefix(),
                    library_cfg=join(output_path, "library.cfg"),
                    persistent=persistent,
-                   coverage=args.coverage, #GE
+                   coverage=args.coverage,
                    gui=args.gui)
 
     @classmethod
@@ -147,15 +144,12 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         Returns the command to compile a VHDL file
         """
-        #GE print("compile_vhdl_file"); print(source_file)
         coverage_args = []
         if self._coverage is None: # GE
             coverage_args = []
         else:
-            #GE print("coverage is enabled")
             # note: debug data collection (-dbg) must be enabled for coverage
             coverage_args = ['-dbg', '-coverage', to_coverage_args(self._coverage)]
-            #GE print(coverage_args)
         return ([join(self._prefix, 'vcom'), '-quiet', '-j', dirname(self._sim_cfg_file_name)] +
                 source_file.compile_options.get("rivierapro.vcom_flags", []) + coverage_args +
                 ['-' + source_file.get_vhdl_standard(), '-work', source_file.library.name, source_file.name])
@@ -374,21 +368,14 @@ proc _vunit_sim_restart {} {
 
         for coverage_file in self._coverage_files:
             if file_exists(coverage_file):
-                merge_command += " -i {%s}" % coverage_file.replace('\\', '/') #GE  TODO: ugly hack
+                merge_command += " -i {%s}" % coverage_file.replace('\\', '/')
             else:
                 LOGGER.warning("Missing coverage ucdb file: %s", coverage_file)
 
-        merge_command += " -o {%s}" % merged_coverage_file.replace('\\', '/') #GE  TODO: ugly hack
+        merge_command += " -o {%s}" % merged_coverage_file.replace('\\', '/')
 
-        #vcover_cmd = [join(self._prefix, 'vsim'), '-c', '-do ' + '"' + merge_command + '; quit;"']
         vcover_cmd = [join(self._prefix, 'vsim'), '-c', '-do', '%s; quit;' % merge_command ]
         print(vcover_cmd)
-
-#        for coverage_file in self._coverage_files:
-#            if file_exists(coverage_file):
-#                vcover_cmd.append(coverage_file)
-#            else:
-#                LOGGER.warning("Missing coverage ucdb file: %s", coverage_file)
 
         print("Merging coverage files into %s..." % merged_coverage_file)
         vcover_merge_process = Process(vcover_cmd,
