@@ -129,10 +129,17 @@ class SimulatorInterface(object):
         """
         pass
 
+    def add_simulator_specific(self, project):
+        """
+        Hook for the simulator interface to add simulator specific things to the project
+        """
+        pass
+
     def compile_project(self, project, continue_on_error=False):
         """
         Compile the project
         """
+        self.add_simulator_specific(project)
         self.setup_library_mapping(project)
         self.compile_source_files(project, continue_on_error)
 
