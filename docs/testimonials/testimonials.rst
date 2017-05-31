@@ -40,6 +40,12 @@ Education
 
 :raw-html:`<p align="center"><i style="font-size:150%;">"VUnit makes it a lot easier to test the code"</i></br></br>&#x2015; Dmitri Nesteruk,</br>FPGA course instructor at Pluralsight</br></br></br></p>`
 
+.. figure:: ci_csn_khai_edu.png
+   :target: http://ci.csn.khai.edu/
+   :align: center
+
+:raw-html:`<p align="center"><i style="font-size:150%;">"VUnit is a great framework that makes possible CI principles in the field of VHDL/SystemVerilog projects design not only for industry, but for educational process as well."</i></br></br>&#x2015; Vitalii Kulanov,</br>Associate Professor at the Department of Computer Systems and Networks, KhAI</br></br></br></p>`
+
 Organizations
 -------------
 
