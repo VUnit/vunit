@@ -109,8 +109,8 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
 
         # Add coverage options
         for source_file in project.get_source_files_in_order():
-            source_file.add_compile_option("rivierapro.vcom_flags", ['-dbg', '-coverage', self._coverage])
-            source_file.add_compile_option("rivierapro.vlog_flags", ['-dbg', '-coverage', self._coverage])
+            source_file.add_compile_option("rivierapro.vcom_flags", ['-coverage', self._coverage])
+            source_file.add_compile_option("rivierapro.vlog_flags", ['-coverage', self._coverage])
 
     def setup_library_mapping(self, project):
         """
