@@ -43,12 +43,13 @@ class Project(object):
         self._vhdl_parser = VHDLParser() if vhdl_parser is None else vhdl_parser
         self._verilog_parser = VerilogParser() if verilog_parser is None else verilog_parser
         self._libraries = OrderedDict()
+        # Mapping between library lower case name and real library name
+        self._lower_libray_names_dict = {}
         self._source_files_in_order = []
         self._manual_dependencies = []
         self._depend_on_package_body = depend_on_package_body
 
-    @staticmethod
-    def _validate_library_name(library_name):
+    def _validate_library_name(self, library_name):
         """
         Check that the library_name is valid or raise RuntimeError
         """
@@ -56,6 +57,12 @@ class Project(object):
             LOGGER.error("Cannot add library named work. work is a reference to the current library. "
                          "http://www.sigasi.com/content/work-not-vhdl-library")
             raise RuntimeError("Illegal library name 'work'")
+
+        lower_name = library_name.lower()
+        if lower_name in self._lower_libray_names_dict:
+            raise RuntimeError(
+                "Library name %r not case-insensitive unique. Library name %r previously defined"
+                % (library_name, self._lower_libray_names_dict[lower_name]))
 
     def add_library(self, logical_name, directory, vhdl_standard='2008', allow_replacement=False, is_external=False):
         """
@@ -66,13 +73,14 @@ class Project(object):
         self._validate_library_name(logical_name)
         if logical_name not in self._libraries:
             library = Library(logical_name, directory, vhdl_standard, is_external=is_external)
-            self._libraries[logical_name] = library
             LOGGER.debug('Adding library %s with path %s', logical_name, directory)
         else:
             assert allow_replacement
             library = Library(logical_name, directory, vhdl_standard, is_external=is_external)
-            self._libraries[logical_name] = library
             LOGGER.debug('Replacing library %s with path %s', logical_name, directory)
+
+        self._libraries[logical_name] = library
+        self._lower_libray_names_dict[logical_name.lower()] = library.name
 
     def add_source_file(self,    # pylint: disable=too-many-arguments
                         file_name, library_name, file_type='vhdl', include_dirs=None, defines=None,
@@ -87,7 +95,6 @@ class Project(object):
             raise ValueError("File %r does not exist" % file_name)
 
         LOGGER.debug('Adding source file %s to library %s', file_name, library_name)
-        self._validate_library_name(library_name)
         library = self._libraries[library_name]
 
         if file_type == "vhdl":
@@ -135,14 +142,21 @@ class Project(object):
             else:
                 yield primary_unit.source_file
 
-    def _find_other_design_unit_dependencies(self,  # pylint: disable=too-many-branches
-                                             source_file, depend_on_package_body):
+    def _find_vhdl_library_reference(self, library_name):
+        """
+        Find a VHDL library reference that is case insensitive or raise KeyError
+        """
+        real_library_name = self._lower_libray_names_dict[library_name]
+        return self._libraries[real_library_name]
+
+    def _find_other_vhdl_design_unit_dependencies(self,  # pylint: disable=too-many-branches
+                                                  source_file, depend_on_package_body):
         """
         Iterate over the dependencies on other design unit of the source_file
         """
         for ref in source_file.dependencies:
             try:
-                library = self._libraries[ref.library]
+                library = self._find_vhdl_library_reference(ref.library)
             except KeyError:
                 if ref.library not in ("ieee", "std"):
                     LOGGER.warning("%s: failed to find library '%s'", source_file.name, ref.library)
@@ -269,7 +283,7 @@ class Project(object):
 
         depend_on_package_bodies = self._depend_on_package_body or implementation_dependencies
         add_dependencies(
-            lambda source_file: self._find_other_design_unit_dependencies(source_file, depend_on_package_bodies),
+            lambda source_file: self._find_other_vhdl_design_unit_dependencies(source_file, depend_on_package_bodies),
             vhdl_files)
         add_dependencies(self._find_primary_secondary_design_unit_dependencies, vhdl_files)
 

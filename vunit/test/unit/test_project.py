@@ -226,6 +226,38 @@ end architecture;
 """)
         return package, body, module
 
+    def test_finds_use_package_dependencies_case_insensitive(self):
+        for library_clause, use_clause in itertools.combinations(("lib", "Lib"), 2):
+            self.project = Project()
+            self.project.add_library("Lib", "lib_path")
+
+            package = self.add_source_file("Lib", "package.vhd", """
+package pkg is
+end package;
+
+package body PKG is
+begin
+end package body;
+""")
+
+            self.project.add_library("lib2", "lib2_path")
+            module = self.add_source_file("lib2", "module.vhd", """
+library {library_clause};
+use {use_clause}.PKG.all;
+            """.format(library_clause=library_clause, use_clause=use_clause))
+            self.assert_compiles(package, before=module)
+
+    def test_error_on_case_insensitive_library_name_conflict(self):
+        self.project.add_library("Lib", "lib_path1")
+        try:
+            self.project.add_library("lib", "lib_path1")
+        except RuntimeError as exception:
+            self.assertEqual(str(exception),
+                             "Library name 'lib' not case-insensitive unique. "
+                             "Library name 'Lib' previously defined")
+        else:
+            raise AssertionError("RuntimeError not raised")
+
     def test_finds_use_package_dependencies(self):
         package, body, module = self.create_module_package_and_body()
         self.assert_compiles(package, before=body)
@@ -780,6 +812,33 @@ endmodule
 """)
         self.assert_compiles(pkg, before=module)
 
+    def test_verilog_package_reference_is_case_sensitive(self):
+        self.project = Project()
+        self.project.add_library("lib", "lib_path")
+        pkg = self.add_source_file("lib", "pkg.sv", """\
+package Pkg;
+endpackage
+""")
+        module = self.add_source_file("lib", "module.sv", """\
+module name;
+  pkg::func();
+endmodule
+""")
+        self.assert_not_compiles(pkg, before=module)
+
+        self.project = Project()
+        self.project.add_library("lib", "lib_path")
+        pkg = self.add_source_file("lib", "pkg.sv", """\
+package pkg;
+endpackage
+""")
+        module = self.add_source_file("lib", "module.sv", """\
+module name;
+  Pkg::func();
+endmodule
+""")
+        self.assert_not_compiles(pkg, before=module)
+
     def test_finds_verilog_module_instantiation_dependencies(self):
         self.project.add_library("lib", "lib_path")
         module1 = self.add_source_file("lib", "module1.sv", """\
@@ -792,6 +851,33 @@ module module2;
 endmodule
 """)
         self.assert_compiles(module1, before=module2)
+
+    def test_verilog_module_instantiation_is_case_sensitive(self):
+        self.project = Project()
+        self.project.add_library("lib", "lib_path")
+        module1 = self.add_source_file("lib", "module1.sv", """\
+module Module1;
+endmodule
+""")
+        module2 = self.add_source_file("lib", "module2.sv", """\
+module module2;
+  module1 inst();
+endmodule
+""")
+        self.assert_not_compiles(module1, before=module2)
+
+        self.project = Project()
+        self.project.add_library("lib", "lib_path")
+        module1 = self.add_source_file("lib", "module1.sv", """\
+module module1;
+endmodule
+""")
+        module2 = self.add_source_file("lib", "module2.sv", """\
+module module2;
+  Module1 inst();
+endmodule
+""")
+        self.assert_not_compiles(module1, before=module2)
 
     def test_finds_verilog_module_instantiation_dependencies_in_vhdl(self):
         self.project.add_library("lib1", "lib_path")
