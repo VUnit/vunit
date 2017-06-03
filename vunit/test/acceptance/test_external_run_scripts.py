@@ -69,6 +69,12 @@ class TestExternalRunScripts(unittest.TestCase):
                       ("passed", "lib.tb_generated.data_width=4,sign=True.Test 1"),
                       ("passed", "lib.tb_generated.data_width=16,sign=True.Test 2")])
 
+    def test_vhdl_composite_generics_example_project(self):
+        self.check(join(ROOT, "examples", "vhdl", "composite_generics", "run.py"))
+        check_report(self.report_file,
+                     [("passed", "tb_lib.tb_composite_generics.VGA.Test 1"),
+                      ("passed", "tb_lib.tb_composite_generics.tiny.Test 1")])
+
     def test_vhdl_array_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "array", "run.py"))
 
