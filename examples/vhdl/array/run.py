@@ -11,7 +11,7 @@ root = dirname(__file__)
 
 ui = VUnit.from_argv()
 ui.add_osvvm()
-ui.add_array_util()
+ui.add_data_types()
 lib = ui.add_library("lib")
 lib.add_source_files(join(root, "src", "*.vhd"))
 lib.add_source_files(join(root, "src", "test", "*.vhd"))

@@ -59,6 +59,17 @@ begin
         check_equal(get(ptr, 0), a_random_value,
                     "Checking that resized ptr still contain old value");
         check_equal(get(ptr, 1), another_random_value);
+
+      elsif run("test_resize_with_default") then
+        ptr := allocate(0);
+        resize(ptr, 2, value => a_random_value);
+        check_equal(length(ptr), 2);
+        check_equal(get(ptr, 0), a_random_value);
+        check_equal(get(ptr, 1), a_random_value);
+
+      elsif run("test_from_and_to_integer") then
+        ptr := allocate(2);
+        assert to_integer_vector_ptr(to_integer(ptr)) = ptr;
       end if;
     end loop;
 

@@ -21,6 +21,7 @@ package integer_array_pkg is
     data : integer_vector_ptr_t;
   end record;
 
+  -- Ensure null_integer_array is the default VHDL value of the record
   constant null_integer_array : integer_array_t := (
     length => 0,
     width => 0,
@@ -28,8 +29,8 @@ package integer_array_pkg is
     depth => 0,
     bit_width => 0,
     is_signed => false,
-    lower_limit => 0,
-    upper_limit => 0,
+    lower_limit => integer'low,
+    upper_limit => integer'low,
     data => null_ptr
     );
 

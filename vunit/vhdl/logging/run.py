@@ -11,7 +11,7 @@ root = dirname(__file__)
 common_path = join(root, "..", "common", "test")
 ui = VUnit.from_argv(compile_builtins=False)
 
-ui.add_builtins('vunit_lib', mock_lang=True)
+ui.add_builtins(mock_lang=True)
 ui.enable_location_preprocessing()
 lib = ui.add_library('lib')
 lib.add_source_files(join(root, "test", "tb_logging.vhd"))
