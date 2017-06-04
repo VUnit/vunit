@@ -219,6 +219,8 @@ from vunit.parsing.verilog.parser import VerilogParser
 from vunit.builtins import (add_vhdl_builtins,
                             add_verilog_include_dir,
                             add_array_util,
+                            add_message,
+                            add_bfm,
                             add_osvvm,
                             add_com)
 from vunit.com import codec_generator
@@ -921,6 +923,20 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         library = self.library(library_name)
         add_array_util(library, self._vhdl_standard)
+
+    def add_message(self):
+        """
+        Add message utility package
+        """
+        library = self.library("vunit_lib")
+        add_message(library, self._vhdl_standard)
+
+    def add_bfm(self):
+        """
+        Add bus functional model utility package
+        """
+        library = self.library("vunit_lib")
+        add_bfm(library, self._vhdl_standard)
 
     def add_osvvm(self, library_name="osvvm"):
         """

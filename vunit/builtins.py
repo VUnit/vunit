@@ -171,6 +171,26 @@ def add_array_util(library, vhdl_standard):
     library.add_source_files(join(VHDL_PATH, "array", "src", "*.vhd"))
 
 
+def add_message(library, vhdl_standard):
+    """
+    Add message utility library
+    """
+    if vhdl_standard != '2008':
+        raise RuntimeError("Message library only supports vhdl 2008")
+
+    library.add_source_files(join(VHDL_PATH, "message", "src", "*.vhd"))
+
+
+def add_bfm(library, vhdl_standard):
+    """
+    Add bfm utility library
+    """
+    if vhdl_standard != '2008':
+        raise RuntimeError("BFM library only supports vhdl 2008")
+
+    library.add_source_files(join(VHDL_PATH, "bfm", "src", "*.vhd"))
+
+
 def osvvm_is_installed():
     """
     Checks if OSVVM is installed within the VUnit directory structure
