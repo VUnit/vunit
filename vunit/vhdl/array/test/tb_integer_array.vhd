@@ -246,6 +246,7 @@ begin
         end loop;
 
       elsif run("Has append") then
+        arr := new_1d;
         append(arr, 11);
         check_equal(arr.length, 1);
         check_equal(get(arr, 0), 11);
@@ -255,6 +256,7 @@ begin
         check_equal(get(arr, 1), 7);
 
       elsif run("Deallocate sets length to 0") then
+        arr := new_1d;
         append(arr, 10);
         check_equal(arr.length, 1);
         deallocate(arr);
@@ -271,6 +273,7 @@ begin
         check_equal(arr.depth, 0);
 
       elsif run("Can save and load csv") then
+        arr := new_1d;
         append(arr, integer'left);
         append(arr, 0);
         append(arr, integer'right);
@@ -282,6 +285,7 @@ begin
         end loop;
 
       elsif run("Can save and load csv 2d") then
+        arr := new_1d;
         append(arr, integer'left);
         append(arr, 0);
         append(arr, integer'right);
@@ -302,6 +306,7 @@ begin
         end loop;
 
       elsif run("Can save and load csv 3d") then
+        arr := new_1d;
         for i in 0 to 30 loop
           append(arr, i);
         end loop;
@@ -337,6 +342,15 @@ begin
         check_equal(other_arr.length, 2);
         check_equal(get(other_arr, 0), 2**16-1);
         check_equal(get(other_arr, 1), 2**16 - 2**13);
+
+      elsif run("is null") then
+        deallocate(arr);
+        check_true(is_null(arr));
+        arr := new_1d;
+        check_false(is_null(arr));
+        append(arr, 1);
+        deallocate(arr);
+        check_true(is_null(arr));
       end if;
 
     end loop;

@@ -60,6 +60,7 @@ package integer_array_pkg is
                            bit_width : natural := 32;
                            is_signed : boolean := true) return integer_array_t;
   procedure deallocate(variable arr : inout integer_array_t);
+  impure function is_null(arr : integer_array_t) return boolean;
 
   impure function get(arr : integer_array_t; idx : integer) return integer;
   impure function get(arr : integer_array_t; x,y : integer) return integer;
@@ -370,15 +371,16 @@ package body integer_array_pkg is
 
   procedure deallocate(variable arr : inout integer_array_t) is
   begin
-    arr.length := 0;
-    arr.width := 0;
-    arr.height := 0;
-    arr.depth := 0;
     if arr.data /= null_ptr then
       deallocate(arr.data);
-      arr.data := null_ptr;
     end if;
+    arr := null_integer_array;
   end procedure;
+
+  impure function is_null(arr : integer_array_t) return boolean is
+  begin
+    return arr = null_integer_array;
+  end function;
 
   procedure save_csv(arr : integer_array_t; file_name : string) is
     file fwrite : text;
