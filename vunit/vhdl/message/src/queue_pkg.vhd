@@ -73,13 +73,22 @@ package body queue_pkg is
 
   procedure push(queue : queue_t; value : integer) is
     variable tail : integer;
+    variable head : integer;
   begin
     assert queue /= null_queue report "Push to null queue";
     tail := get(queue.tail, 0);
+    head := get(queue.head, 0);
+
     if length(queue.data) < tail+1 then
-      -- Allocate more new data to avoid linear copy
-      resize(queue.data, length(queue.data)+tail+1);
+      -- Allocate more new data, double data to avoid
+      -- to much copying.
+      -- Also normalize the queue by dropping unnused data before head
+      resize(queue.data, 2*length(queue)+1, drop => head);
+      tail := tail - head;
+      head := 0;
+      set(queue.head, 0, head);
     end if;
+
     set(queue.data, tail, value);
     set(queue.tail, 0, tail+1);
   end;

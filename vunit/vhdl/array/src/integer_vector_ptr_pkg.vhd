@@ -25,7 +25,7 @@ package integer_vector_ptr_pkg is
   procedure set(ptr : integer_vector_ptr_t; index : integer; value : integer);
   impure function get(ptr : integer_vector_ptr_t; index : integer) return integer;
   procedure reallocate(ptr : integer_vector_ptr_t; length : natural);
-  procedure resize(ptr : integer_vector_ptr_t; length : natural);
+  procedure resize(ptr : integer_vector_ptr_t; length : natural; drop : natural := 0);
 end package;
 
 package body integer_vector_ptr_pkg is
@@ -40,7 +40,7 @@ package body integer_vector_ptr_pkg is
     procedure set(ptr : integer_vector_ptr_t; index : integer; value : integer);
     impure function get(ptr : integer_vector_ptr_t; index : integer) return integer;
     procedure reallocate(ptr : integer_vector_ptr_t; length : natural);
-    procedure resize(ptr : integer_vector_ptr_t; length : natural);
+    procedure resize(ptr : integer_vector_ptr_t; length : natural; drop : natural := 0);
   end protected;
 
   type integer_vector_ptr_storage_t is protected body
@@ -98,13 +98,13 @@ package body integer_vector_ptr_pkg is
       ptrs(ptr.index) := new integer_vector'(0 to length - 1 => 0);
     end procedure;
 
-    procedure resize(ptr : integer_vector_ptr_t; length : natural) is
+    procedure resize(ptr : integer_vector_ptr_t; length : natural; drop : natural := 0) is
       variable old_ptr, new_ptr : integer_vector_access_t;
     begin
       new_ptr := new integer_vector'(0 to length - 1 => 0);
       old_ptr := ptrs(ptr.index);
-      for i in old_ptr'range loop
-        new_ptr(i) := old_ptr(i);
+      for i in drop to old_ptr'length-1 loop
+        new_ptr(i-drop) := old_ptr(i);
       end loop;
       ptrs(ptr.index) := new_ptr;
       deallocate(old_ptr);
@@ -155,8 +155,8 @@ package body integer_vector_ptr_pkg is
     integer_vector_ptr_storage.reallocate(ptr, length);
   end procedure;
 
-  procedure resize(ptr : integer_vector_ptr_t; length : natural) is
+  procedure resize(ptr : integer_vector_ptr_t; length : natural; drop : natural := 0) is
   begin
-    integer_vector_ptr_storage.resize(ptr, length);
+    integer_vector_ptr_storage.resize(ptr, length, drop);
   end procedure;
 end package body;
