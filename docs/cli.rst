@@ -166,3 +166,11 @@ path can be explicitly configured by setting a
    :caption: Explicitly set path to GHDL executables
 
    VUNIT_GHDL_PATH=/opt/ghdl/bin
+
+Simulator Specific Environment Variables
+----------------------------------------
+
+- ``VUNIT_MODELSIM_INI`` By default VUnit copies the *modelsim.ini*
+  file from the tool install folder as a starting point. Setting this
+  environment variable selects another *modelsim.ini* file as the
+  starting point allowing the user to customize it.

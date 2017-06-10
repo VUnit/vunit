@@ -105,7 +105,9 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         if not file_exists(parent):
             os.makedirs(parent)
 
-        with open(join(self._prefix, "..", "modelsim.ini"), 'rb') as fread:
+        original_modelsim_ini = os.environ.get("VUNIT_MODELSIM_INI",
+                                               join(self._prefix, "..", "modelsim.ini"))
+        with open(original_modelsim_ini, 'rb') as fread:
             with open(self._sim_cfg_file_name, 'wb') as fwrite:
                 fwrite.write(fread.read())
 

@@ -15,6 +15,7 @@ import os
 from shutil import rmtree
 from vunit.modelsim_interface import ModelSimInterface
 from vunit.test.mock_2or3 import mock
+from vunit.test.common import set_env
 from vunit.project import Project
 from vunit.ostools import renew_path, write_file
 
@@ -293,6 +294,46 @@ class TestModelSimInterface(unittest.TestCase):
                                              'file.v',
                                              '-L', 'lib',
                                              '+define+defname=defval'], env=simif.get_env())
+
+    def test_copies_modelsim_ini_file_from_install(self):
+        installed_path = join(self.output_path, "prefix")
+        modelsim_ini = join(self.output_path, "modelsim", "modelsim.ini")
+        installed_modelsim_ini = join(self.output_path, "modelsim.ini")
+        user_modelsim_ini = join(self.output_path, "my_modelsim.ini")
+        renew_path(installed_path)
+
+        with open(installed_modelsim_ini, "w") as fptr:
+            fptr.write("installed")
+
+        with open(user_modelsim_ini, "w") as fptr:
+            fptr.write("user")
+
+        ModelSimInterface(prefix=join(self.output_path, "prefix"),
+                          modelsim_ini=modelsim_ini,
+                          persistent=False)
+        with open(modelsim_ini, "r") as fptr:
+            self.assertEqual(fptr.read(), "installed")
+
+    def test_copies_modelsim_ini_file_from_user(self):
+        installed_path = join(self.output_path, "prefix")
+        modelsim_ini = join(self.output_path, "modelsim", "modelsim.ini")
+        installed_modelsim_ini = join(self.output_path, "modelsim.ini")
+        user_modelsim_ini = join(self.output_path, "my_modelsim.ini")
+        renew_path(installed_path)
+
+        with open(installed_modelsim_ini, "w") as fptr:
+            fptr.write("installed")
+
+        with open(user_modelsim_ini, "w") as fptr:
+            fptr.write("user")
+
+        with set_env(VUNIT_MODELSIM_INI=user_modelsim_ini):
+            ModelSimInterface(prefix=join(self.output_path, "prefix"),
+                              modelsim_ini=modelsim_ini,
+                              persistent=False)
+
+        with open(modelsim_ini, "r") as fptr:
+            self.assertEqual(fptr.read(), "user")
 
     def setUp(self):
         self.output_path = join(dirname(__file__), "test_modelsim_out")
