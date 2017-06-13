@@ -727,19 +727,19 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         try:
             all_ok = self._main()
         except KeyboardInterrupt:
-            exit(1)
+            sys.exit(1)
         except CompileError:
-            exit(1)
+            sys.exit(1)
         except SystemExit:
-            exit(1)
+            sys.exit(1)
         except:  # pylint: disable=bare-except
             traceback.print_exc()
-            exit(1)
+            sys.exit(1)
 
         if (not all_ok) and (not self._exit_0):
-            exit(1)
+            sys.exit(1)
 
-        exit(0)
+        sys.exit(0)
 
     def _create_tests(self, simulator_if):
         """
