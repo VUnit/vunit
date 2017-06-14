@@ -311,8 +311,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                  compile_builtins=True,
                  num_threads=1,
                  exit_0=False,
-                 dont_catch_exceptions=False,
-                 ):
+                 dont_catch_exceptions=False):
 
         self._configure_logging(log_level)
         self._elaborate_only = elaborate_only
