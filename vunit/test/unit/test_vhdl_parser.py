@@ -14,6 +14,7 @@ from vunit.vhdl_parser import (VHDLDesignFile,
                                VHDLEntity,
                                VHDLSubtypeIndication,
                                VHDLEnumerationType,
+                               VHDLArrayType,
                                VHDLReference,
                                VHDLRecordType)
 
@@ -358,6 +359,22 @@ type animal_t is (cow);"""
         enums = {e.identifier: e.literals for e in VHDLEnumerationType.find(code)}
         expect = {'color_t': ['blue', 'red', 'green'], 'animal_t': ['cow']}
         self.assertEqual(enums, expect)
+
+    def test_that_array_type_declarations_are_found(self):
+        code = """\
+type constrained_integer_array_t is array(3 downto 0) of integer;
+type unconstrained_fish_array_t is array(integer range <>) of fish_t;
+type constrained_badgers_array_t is array ( -1 downto 0 ) of badger_t;
+type unconstrained_natural_array_t is array ( integer range <> ) of natural;
+"""
+        arrays = {e.identifier: e.subtype_indication.type_mark
+                  for e in VHDLArrayType.find(code)}
+        expect = {'constrained_integer_array_t': 'integer',
+                  'unconstrained_fish_array_t': 'fish_t',
+                  'constrained_badgers_array_t': 'badger_t',
+                  'unconstrained_natural_array_t': 'natural',
+                  }
+        self.assertEqual(arrays, expect)
 
     def test_that_record_type_declarations_are_found(self):
         code = """\
