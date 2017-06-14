@@ -369,11 +369,12 @@ type unconstrained_natural_array_t is array ( integer range <> ) of natural;
 """
         arrays = {e.identifier: e.subtype_indication.type_mark
                   for e in VHDLArrayType.find(code)}
-        expect = {'constrained_integer_array_t': 'integer',
-                  'unconstrained_fish_array_t': 'fish_t',
-                  'constrained_badgers_array_t': 'badger_t',
-                  'unconstrained_natural_array_t': 'natural',
-                  }
+        expect = {
+            'constrained_integer_array_t': 'integer',
+            'unconstrained_fish_array_t': 'fish_t',
+            'constrained_badgers_array_t': 'badger_t',
+            'unconstrained_natural_array_t': 'natural',
+        }
         self.assertEqual(arrays, expect)
 
     def test_that_record_type_declarations_are_found(self):
