@@ -124,6 +124,12 @@ def _create_argument_parser(description=None, for_documentation=False):
                         help=('Exit with code 0 even if a test failed. '
                               'Still exits with code 1 on fatal errors such as compilation failure'))
 
+    parser.add_argument('--dont-catch-exceptions',
+                        default=False,
+                        action="store_true",
+                        help=('Let exceptions bubble up all the way. '
+                              'Useful when running with "python -m pdb".'))
+
     parser.add_argument('-v', '--verbose', action="store_true",
                         default=False,
                         help='Print test output immediately and not only when failure')

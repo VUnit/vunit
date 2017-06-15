@@ -289,7 +289,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                    compile_builtins=compile_builtins,
                    simulator_factory=SimulatorFactory(args),
                    num_threads=args.num_threads,
-                   exit_0=args.exit_0)
+                   exit_0=args.exit_0,
+                   dont_catch_exceptions=args.dont_catch_exceptions)
 
     def __init__(self,  # pylint: disable=too-many-locals, too-many-arguments
                  output_path,
@@ -309,7 +310,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                  vhdl_standard='2008',
                  compile_builtins=True,
                  num_threads=1,
-                 exit_0=False):
+                 exit_0=False,
+                 dont_catch_exceptions=False):
 
         self._configure_logging(log_level)
         self._elaborate_only = elaborate_only
@@ -342,6 +344,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._create_project()
         self._num_threads = num_threads
         self._exit_0 = exit_0
+        self._dont_catch_exceptions = dont_catch_exceptions
 
         self._test_bench_list = TestBenchList()
 
@@ -733,6 +736,8 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         except SystemExit:
             sys.exit(1)
         except:  # pylint: disable=bare-except
+            if self._dont_catch_exceptions:
+                raise
             traceback.print_exc()
             sys.exit(1)
 
@@ -861,7 +866,8 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         runner = TestRunner(report,
                             join(self._output_path, "test_output"),
                             verbose=self._verbose,
-                            num_threads=self._num_threads)
+                            num_threads=self._num_threads,
+                            dont_catch_exceptions=self._dont_catch_exceptions)
         runner.run(test_cases)
 
     def _post_process(self, report):

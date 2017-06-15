@@ -28,7 +28,8 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
     """
     Administer the execution of a list of test suites
     """
-    def __init__(self, report, output_path, verbose=False, num_threads=1):
+    def __init__(self, report, output_path, verbose=False, num_threads=1,
+                 dont_catch_exceptions=False):
         self._lock = threading.Lock()
         self._local = threading.local()
         self._report = report
@@ -37,6 +38,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         self._num_threads = num_threads
         self._stdout = sys.stdout
         self._stderr = sys.stderr
+        self._dont_catch_exceptions = dont_catch_exceptions
 
     def run(self, test_suites):
         """
@@ -159,6 +161,8 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         except KeyboardInterrupt:
             raise
         except:  # pylint: disable=bare-except
+            if self._dont_catch_exceptions:
+                raise
             traceback.print_exc()
             results = self._fail_suite(test_suite)
         finally:
