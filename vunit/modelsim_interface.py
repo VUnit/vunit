@@ -118,8 +118,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         mapped_libraries = self._get_mapped_libraries()
         for library_name in mapped_libraries:
             if not project.has_library(library_name):
-                library_dir = mapped_libraries[library_name]
-                project.add_library(library_name, library_dir, is_external=True)
+                project.add_builtin_library(library_name)
 
         if self._coverage is None:
             return

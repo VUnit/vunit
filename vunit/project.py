@@ -27,7 +27,7 @@ import vunit.ostools as ostools
 LOGGER = logging.getLogger(__name__)
 
 
-class Project(object):
+class Project(object):  # pylint: disable=too-many-instance-attributes
     """
     The representation of a HDL code project.
     Compute lists of source files to recompile based on file contents,
@@ -44,10 +44,11 @@ class Project(object):
         self._verilog_parser = VerilogParser() if verilog_parser is None else verilog_parser
         self._libraries = OrderedDict()
         # Mapping between library lower case name and real library name
-        self._lower_libray_names_dict = {}
+        self._lower_library_names_dict = {}
         self._source_files_in_order = []
         self._manual_dependencies = []
         self._depend_on_package_body = depend_on_package_body
+        self._builtin_libraries = set(["ieee", "std"])
 
     def _validate_library_name(self, library_name):
         """
@@ -59,10 +60,16 @@ class Project(object):
             raise RuntimeError("Illegal library name 'work'")
 
         lower_name = library_name.lower()
-        if lower_name in self._lower_libray_names_dict:
+        if lower_name in self._lower_library_names_dict:
             raise RuntimeError(
                 "Library name %r not case-insensitive unique. Library name %r previously defined"
-                % (library_name, self._lower_libray_names_dict[lower_name]))
+                % (library_name, self._lower_library_names_dict[lower_name]))
+
+    def add_builtin_library(self, logical_name):
+        """
+        Add a builtin library name that does not give missing dependency warnings
+        """
+        self._builtin_libraries.add(logical_name)
 
     def add_library(self, logical_name, directory, vhdl_standard='2008', allow_replacement=False, is_external=False):
         """
@@ -80,7 +87,7 @@ class Project(object):
             LOGGER.debug('Replacing library %s with path %s', logical_name, directory)
 
         self._libraries[logical_name] = library
-        self._lower_libray_names_dict[logical_name.lower()] = library.name
+        self._lower_library_names_dict[logical_name.lower()] = library.name
 
     def add_source_file(self,    # pylint: disable=too-many-arguments
                         file_name, library_name, file_type='vhdl', include_dirs=None, defines=None,
@@ -146,7 +153,7 @@ class Project(object):
         """
         Find a VHDL library reference that is case insensitive or raise KeyError
         """
-        real_library_name = self._lower_libray_names_dict[library_name]
+        real_library_name = self._lower_library_names_dict[library_name]
         return self._libraries[real_library_name]
 
     def _find_other_vhdl_design_unit_dependencies(self,  # pylint: disable=too-many-branches
@@ -158,7 +165,7 @@ class Project(object):
             try:
                 library = self._find_vhdl_library_reference(ref.library)
             except KeyError:
-                if ref.library not in ("ieee", "std"):
+                if ref.library not in self._builtin_libraries:
                     LOGGER.warning("%s: failed to find library '%s'", source_file.name, ref.library)
                 continue
 

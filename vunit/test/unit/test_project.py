@@ -1159,6 +1159,21 @@ end architecture;
                                                   no_parse=no_parse)
             self.assertEqual(len(source_file.design_units), int(not no_parse))
 
+    @mock.patch("vunit.project.LOGGER")
+    def test_no_warning_builtin_library_reference(self, mock_logger):
+        self.project.add_library("lib", "lib_path")
+
+        self.add_source_file("lib", "ent.vhd", """
+use std.foo.all;
+use ieee.bar.all;
+use builtin_lib.all;
+""")
+
+        self.project.add_builtin_library("builtin_lib")
+        self.project.get_files_in_compile_order()
+        warning_calls = mock_logger.warning.call_args_list
+        self.assertEqual(len(warning_calls), 0)
+
     def add_source_file(self, library_name, file_name, contents, defines=None):
         """
         Convenient wrapper arround project.add_source_file
