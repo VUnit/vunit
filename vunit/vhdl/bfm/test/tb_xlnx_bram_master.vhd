@@ -36,7 +36,6 @@ architecture a of tb_xlnx_bram_master is
 begin
 
   main : process
-    variable msg : msg_t;
     variable reply : reply_t;
     variable reply_queue : queue_t := allocate;
     variable tmp : std_logic_vector(rdata'range);
@@ -49,7 +48,6 @@ begin
       write_bus(event, inbox, x"77", x"11223344");
 
     elsif run("Test single read") then
-      msg := allocate;
       read_bus(event, inbox, x"33", tmp);
       check_equal(tmp, std_logic_vector'(x"55667788"), "read data");
 

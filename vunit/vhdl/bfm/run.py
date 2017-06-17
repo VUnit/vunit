@@ -10,6 +10,7 @@ from vunit import VUnit
 root = dirname(__file__)
 
 ui = VUnit.from_argv()
+ui.add_osvvm()
 ui.add_array_util()
 ui.add_message()
 ui.add_bfm()

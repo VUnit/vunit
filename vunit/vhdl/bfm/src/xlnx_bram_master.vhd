@@ -37,7 +37,6 @@ begin
     variable msg : msg_t;
     variable reply : reply_t;
     variable bus_access_type : bus_access_type_t;
-    variable addr_v : integer;
   begin
     loop
       recv(event, inbox, msg, reply);
