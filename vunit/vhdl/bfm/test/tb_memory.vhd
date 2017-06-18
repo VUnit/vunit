@@ -32,10 +32,29 @@ begin
       memory := new_memory;
       assert memory /= null_memory report "Should not be null memory";
 
+    elsif run("Test clear memory") then
+      memory := new_memory;
+      for i in 0 to 2 loop
+        allocation := allocate(memory, 1024);
+        check_equal(base_address(allocation), 0, "base address");
+        check_equal(last_address(allocation), 1023, "last address");
+        clear(memory);
+      end loop;
+
     elsif run("Test allocate") then
       memory := new_memory;
 
       for i in 0 to 2 loop
+        allocation := allocate(memory, 1024);
+        check_equal(base_address(allocation), 1024*i, "base address");
+        check_equal(last_address(allocation), 1024*(i+1)-1, "last address");
+      end loop;
+
+    elsif run("Test allocate a lot") then
+      -- Test that allocation is efficient
+      memory := new_memory;
+
+      for i in 0 to 1023 loop
         allocation := allocate(memory, 1024);
         check_equal(base_address(allocation), 1024*i, "base address");
         check_equal(last_address(allocation), 1024*(i+1)-1, "last address");
@@ -76,10 +95,10 @@ begin
       allocation := allocate(memory, 1);
 
       write_byte(memory, 1, 255, error_msg);
-      check_equal(to_string(error_msg), "Writing to memory out of range 0 to 0");
+      check_equal(to_string(error_msg), "Writing to address 1 out of range 0 to 0");
 
       read_byte(memory, 1, byte, error_msg);
-      check_equal(to_string(error_msg), "Reading from memory out of range 0 to 0");
+      check_equal(to_string(error_msg), "Reading from address 1 out of range 0 to 0");
 
     elsif run("Test default permissions") then
       memory := new_memory;

@@ -11,6 +11,7 @@ package memory_pkg is
 
   type memory_t is record
     -- Private
+    p_meta : integer_vector_ptr_t;
     p_data : integer_vector_ptr_t;
     p_allocs : integer_vector_ptr_t;
   end record;
@@ -40,6 +41,8 @@ package memory_pkg is
   end record;
 
   impure function new_memory return memory_t;
+  procedure clear(memory : memory_t);
+  procedure deallocate(variable alloc : inout alloc_t);
   impure function allocate(memory : memory_t; num_bytes : natural; name : string := ""; alignment : positive := 1) return alloc_t;
 
   impure function decode(value : integer) return memory_data_t;
@@ -64,25 +67,58 @@ package memory_pkg is
 end package;
 
 package body memory_pkg is
+
+  constant num_bytes_idx : natural := 0;
+  constant num_allocations_idx : natural := 1;
+  constant num_meta : natural := num_allocations_idx + 1;
+
   impure function new_memory return memory_t is
   begin
-    return (p_data => allocate(0), p_allocs => allocate(0));
+    return (p_meta => allocate(num_meta), p_data => allocate(0), p_allocs => allocate(0));
+  end;
+
+  procedure clear(memory : memory_t) is
+  begin
+    assert memory /= null_memory;
+    set(memory.p_meta, num_bytes_idx, 0);
+    set(memory.p_meta, num_allocations_idx, 0);
+    reallocate(memory.p_data, 0);
+    reallocate(memory.p_allocs, 0);
+  end procedure;
+
+  procedure deallocate(variable alloc : inout alloc_t) is
+  begin
+    deallocate(alloc.p_name);
+    alloc := null_alloc;
   end;
 
   impure function allocate(memory : memory_t; num_bytes : natural; name : string := ""; alignment : positive := 1) return alloc_t is
     variable alloc : alloc_t;
+    variable num_allocs : natural;
   begin
     alloc.p_memory_ref := memory;
     alloc.p_name := allocate(name);
-    alloc.p_address := length(memory.p_data);
+    alloc.p_address := get(memory.p_meta, num_bytes_idx);
     alloc.p_address := alloc.p_address + ((-alloc.p_address) mod alignment);
     alloc.p_num_bytes := num_bytes;
-    resize(memory.p_data, last_address(alloc) + 1, value => encode((byte => 0, ref => 0, has_ref => false, perm => no_access)));
-    resize(memory.p_allocs, length(memory.p_allocs)+3);
+    set(memory.p_meta, num_bytes_idx, last_address(alloc)+1);
 
-    set(memory.p_allocs, length(memory.p_allocs)-3, to_integer(alloc.p_name));
-    set(memory.p_allocs, length(memory.p_allocs)-2, alloc.p_address);
-    set(memory.p_allocs, length(memory.p_allocs)-1, alloc.p_num_bytes);
+    if length(memory.p_data) < last_address(alloc) + 1 then
+      -- Allocate exponentially more memory to avoid to much copying
+      resize(memory.p_data, 2*last_address(alloc) + 1, value => encode((byte => 0, ref => 0, has_ref => false, perm => no_access)));
+    end if;
+
+    num_allocs := get(memory.p_meta, num_allocations_idx) + 1;
+
+    set(memory.p_meta, num_allocations_idx, num_allocs);
+    if length(memory.p_allocs) < num_allocs*3 then
+      -- Allocate exponentially more memory to avoid to much copying
+      resize(memory.p_allocs, 2*num_allocs*3);
+    end if;
+
+    set(memory.p_allocs, 3*num_allocs-3, to_integer(alloc.p_name));
+    set(memory.p_allocs, 3*num_allocs-2, alloc.p_address);
+    set(memory.p_allocs, 3*num_allocs-1, alloc.p_num_bytes);
 
     -- Set default access type
     for i in 0 to num_bytes-1 loop
@@ -105,7 +141,7 @@ package body memory_pkg is
     variable alloc : alloc_t;
   begin
     -- @TODO use bisection for speedup
-    for i in 0 to length(memory.p_allocs)/3-1 loop
+    for i in 0 to get(memory.p_meta, num_allocations_idx)-1 loop
       alloc.p_address := get(memory.p_allocs, 3*i+1);
 
       if address >= alloc.p_address then
@@ -152,7 +188,7 @@ package body memory_pkg is
     if length(memory.p_data) = 0 then
       error_msg := allocate(verb & " empty memory");
     elsif address >= length(memory.p_data) then
-      error_msg := allocate(verb & " memory out of range 0 to " & to_string(length(memory.p_data)-1));
+      error_msg := allocate(verb & " address " & to_string(address) & " out of range 0 to " & to_string(length(memory.p_data)-1));
     elsif not ignore_permissions and get_permissions(memory, address) = no_access then
       error_msg := allocate(verb & " " & describe_address(memory, address) & " without permission (no_access)");
     elsif not ignore_permissions and reading and get_permissions(memory, address) = write_only then
@@ -250,6 +286,7 @@ package body memory_pkg is
   procedure check_all_was_written(alloc : alloc_t) is
     variable error_msg : string_ptr_t := null_string_ptr;
   begin
+    check_all_was_written(alloc, error_msg);
     assert error_msg = null_string_ptr report to_string(error_msg);
   end procedure;
 
