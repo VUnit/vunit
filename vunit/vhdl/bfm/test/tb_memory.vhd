@@ -113,6 +113,14 @@ begin
       read_byte(memory, 5, byte, error_msg);
       check_equal(to_string(error_msg), "Reading from " & describe_address(memory, 5) & " without permission (no_access)");
 
+      -- Ignore permissions
+      write_byte(memory, 5, 255, error_msg, ignore_permissions => true);
+      assert error_msg = null_string_ptr;
+
+      read_byte(memory, 5, byte, error_msg, ignore_permissions => true);
+      assert error_msg = null_string_ptr;
+
+
     elsif run("Test access memory without permission (write_only)") then
       memory := new_memory;
       allocation := allocate(memory, 10);
@@ -124,6 +132,13 @@ begin
       read_byte(memory, 5, byte, error_msg);
       check_equal(to_string(error_msg), "Reading from " & describe_address(memory, 5) & " without permission (write_only)");
 
+      -- Ignore permissions
+      write_byte(memory, 5, 255, error_msg, ignore_permissions => true);
+      assert error_msg = null_string_ptr;
+
+      read_byte(memory, 5, byte, error_msg, ignore_permissions => true);
+      assert error_msg = null_string_ptr;
+
     elsif run("Test access memory without permission (read_only)") then
       memory := new_memory;
       allocation := allocate(memory, 10);
@@ -133,6 +148,13 @@ begin
       check_equal(to_string(error_msg), "Writing to " & describe_address(memory, 5) & " without permission (read_only)");
 
       read_byte(memory, 5, byte, error_msg);
+      assert error_msg = null_string_ptr;
+
+      -- Ignore permissions
+      write_byte(memory, 5, 255, error_msg, ignore_permissions => true);
+      assert error_msg = null_string_ptr;
+
+      read_byte(memory, 5, byte, error_msg, ignore_permissions => true);
       assert error_msg = null_string_ptr;
 
     elsif run("Test describe address") then

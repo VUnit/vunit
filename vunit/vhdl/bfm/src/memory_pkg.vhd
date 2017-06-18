@@ -31,10 +31,12 @@ package memory_pkg is
 
   impure function new_memory return memory_t;
   impure function allocate(memory : memory_t; num_bytes : natural; name : string := ""; alignment : positive := 1) return alloc_t;
-  procedure write_byte(memory : memory_t; address : natural; byte : byte_t);
-  procedure write_byte(memory : memory_t; address : natural; byte : byte_t; variable error_msg : inout string_ptr_t);
-  procedure read_byte(memory : memory_t; address : natural; variable byte : inout byte_t; variable error_msg : inout string_ptr_t);
-  impure function read_byte(memory : memory_t; address : natural) return byte_t;
+
+  procedure write_byte(memory : memory_t; address : natural; byte : byte_t; ignore_permissions : boolean := false);
+  procedure write_byte(memory : memory_t; address : natural; byte : byte_t; variable error_msg : inout string_ptr_t; ignore_permissions : boolean := false);
+  procedure read_byte(memory : memory_t; address : natural; variable byte : inout byte_t; variable error_msg : inout string_ptr_t; ignore_permissions : boolean := false);
+  impure function read_byte(memory : memory_t; address : natural; ignore_permissions : boolean := false) return byte_t;
+
   impure function get_permissions(memory : memory_t; address : natural) return permissions_t;
   procedure set_permissions(memory : memory_t; address : natural; permissions : permissions_t);
   impure function describe_address(memory : memory_t; address : natural) return string;
@@ -104,7 +106,8 @@ package body memory_pkg is
 
   procedure check_address(memory : memory_t; address : natural;
                           reading : boolean;
-                          variable error_msg : inout string_ptr_t) is
+                          variable error_msg : inout string_ptr_t;
+                          ignore_permissions : boolean := false) is
     impure function verb return string is
     begin
       if reading then
@@ -118,49 +121,50 @@ package body memory_pkg is
       error_msg := allocate(verb & " empty memory");
     elsif address >= length(memory.p_data) then
       error_msg := allocate(verb & " memory out of range 0 to " & to_string(length(memory.p_data)-1));
-    elsif get_permissions(memory, address) = no_access then
+    elsif not ignore_permissions and get_permissions(memory, address) = no_access then
       error_msg := allocate(verb & " " & describe_address(memory, address) & " without permission (no_access)");
-    elsif reading and get_permissions(memory, address) = write_only then
+    elsif not ignore_permissions and reading and get_permissions(memory, address) = write_only then
       error_msg := allocate(verb & " " & describe_address(memory, address) & " without permission (write_only)");
-    elsif not reading and get_permissions(memory, address) = read_only then
+    elsif not ignore_permissions and not reading and get_permissions(memory, address) = read_only then
       error_msg := allocate(verb & " " & describe_address(memory, address) & " without permission (read_only)");
     else
       error_msg := null_string_ptr;
     end if;
   end;
 
-  procedure write_byte(memory : memory_t; address : natural; byte : byte_t; variable error_msg : inout string_ptr_t) is
+  procedure write_byte(memory : memory_t; address : natural; byte : byte_t; variable error_msg : inout string_ptr_t; ignore_permissions : boolean := false) is
   begin
-    check_address(memory, address, false, error_msg);
+    check_address(memory, address, false, error_msg, ignore_permissions);
     if error_msg /= null_string_ptr then
       return;
     end if;
     set(memory.p_data, address, byte);
   end;
 
-  procedure write_byte(memory : memory_t; address : natural; byte : byte_t) is
+  procedure write_byte(memory : memory_t; address : natural; byte : byte_t; ignore_permissions : boolean := false) is
     variable error_msg : string_ptr_t := null_string_ptr;
   begin
-    write_byte(memory, address, byte, error_msg);
+    write_byte(memory, address, byte, error_msg, ignore_permissions);
     assert error_msg = null_string_ptr report to_string(error_msg);
   end;
 
   procedure read_byte(memory : memory_t; address : natural;
                       variable byte : inout byte_t;
-                      variable error_msg : inout string_ptr_t) is
+                      variable error_msg : inout string_ptr_t;
+                      ignore_permissions : boolean := false) is
   begin
-    check_address(memory, address, true, error_msg);
+    check_address(memory, address, true, error_msg, ignore_permissions);
     if error_msg /= null_string_ptr then
       return;
     end if;
     byte := get(memory.p_data, address);
   end;
 
-  impure function read_byte(memory : memory_t; address : natural) return byte_t is
+  impure function read_byte(memory : memory_t; address : natural; ignore_permissions : boolean := false) return byte_t is
     variable byte : byte_t;
     variable error_msg : string_ptr_t := null_string_ptr;
   begin
-    read_byte(memory, address, byte, error_msg);
+    read_byte(memory, address, byte, error_msg, ignore_permissions);
     assert error_msg = null_string_ptr report to_string(error_msg);
     return byte;
   end;
