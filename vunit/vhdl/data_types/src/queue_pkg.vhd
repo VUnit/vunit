@@ -8,7 +8,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 use work.integer_vector_ptr_pkg.all;
-use work.integer_vector_ptr_pool_pkg.all;
 
 package queue_pkg is
 
