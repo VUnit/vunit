@@ -11,7 +11,7 @@ root = dirname(__file__)
 
 ui = VUnit.from_argv()
 ui.add_osvvm()
-ui.add_array_util()
+ui.add_data_types()
 ui.add_message()
 ui.add_bfm()
 lib = ui.library("vunit_lib")

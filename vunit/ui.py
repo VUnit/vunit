@@ -218,7 +218,7 @@ from vunit.vhdl_parser import CachedVHDLParser
 from vunit.parsing.verilog.parser import VerilogParser
 from vunit.builtins import (add_vhdl_builtins,
                             add_verilog_include_dir,
-                            add_array_util,
+                            add_data_types,
                             add_message,
                             add_bfm,
                             add_osvvm,
@@ -917,12 +917,12 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
                 use_debug_codecs=self._use_debug_codecs,
                 supports_context=supports_context)
 
-    def add_array_util(self, library_name="vunit_lib"):
+    def add_data_types(self):
         """
         Add array utility package
         """
-        library = self.library(library_name)
-        add_array_util(library, self._vhdl_standard)
+        library = self.library("vunit_lib")
+        add_data_types(library, self._vhdl_standard)
 
     def add_message(self):
         """

@@ -10,7 +10,7 @@ from vunit import VUnit
 root = dirname(__file__)
 
 ui = VUnit.from_argv()
-ui.add_array_util()
+ui.add_data_types()
 ui.add_message()
 lib = ui.library("vunit_lib")
 lib.add_source_files(join(root, "test", "*.vhd"))

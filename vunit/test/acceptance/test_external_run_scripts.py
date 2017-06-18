@@ -108,8 +108,14 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_vhdl_com_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "com", "run.py"))
 
-    def test_array_vhdl_2008(self):
-        self.check(join(VHDL_PATH, "array", "run.py"))
+    def test_data_types_vhdl_2008(self):
+        self.check(join(VHDL_PATH, "data_types", "run.py"))
+
+    def test_bfm_vhdl_2008(self):
+        self.check(join(VHDL_PATH, "bfm", "run.py"))
+
+    def test_mesage_vhdl_2008(self):
+        self.check(join(VHDL_PATH, "message", "run.py"))
 
     def test_check_vhdl_2008(self):
         self.check(join(VHDL_PATH, "check", "run.py"))

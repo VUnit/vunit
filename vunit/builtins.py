@@ -161,14 +161,14 @@ def add_vhdl_builtins(library,
         library.add_source_files(join(VHDL_PATH, file_name))
 
 
-def add_array_util(library, vhdl_standard):
+def add_data_types(library, vhdl_standard):
     """
-    Add array_pkg utility library
+    Add data types packages
     """
     if vhdl_standard != '2008':
-        raise RuntimeError("Array utility only supports vhdl 2008")
+        raise RuntimeError("Data types only supports vhdl 2008")
 
-    library.add_source_files(join(VHDL_PATH, "array", "src", "*.vhd"))
+    library.add_source_files(join(VHDL_PATH, "data_types", "src", "*.vhd"))
 
 
 def add_message(library, vhdl_standard):
