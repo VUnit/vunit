@@ -9,6 +9,8 @@
 library vunit_lib;
 context vunit_lib.vunit_context;
 context vunit_lib.com_context;
+use vunit_lib.queue_pkg.all;
+use vunit_lib.integer_vector_ptr_pkg.all;
 
 library tb_com_lib;
 use tb_com_lib.custom_codec_pkg.all;
@@ -148,6 +150,11 @@ begin
     variable rec2 : record2_t;
     variable rec3 : record3_t;
     variable rec9 : record9_t;
+
+    variable queue, another_queue : queue_t;
+    variable ptr, ptr2 : integer_vector_ptr_t;
+    constant a_random_value : integer := 77;
+    constant another_random_value : integer := 999;
 
     -- Temp variables to make test case pass Riviera-PRO 2016.10
     variable range_left, range_right : integer;
@@ -493,6 +500,22 @@ begin
       elsif run("Test that records containing arrays can be encoded and decoded") then
         rec9 := decode(encode(record9_t'(foo, x"a5", "foo", ((1, 2, 3, 4, 5, 6), (4, 3, 2, 1, 0, -1)))));
         check_relation(rec9 = (foo, x"a5", "foo", ((1, 2, 3, 4, 5, 6), (4, 3, 2, 1, 0, -1))));
+      elsif run("Test queue codecs") then
+        queue := allocate;
+        check(decode(encode(queue)) = queue);
+
+        another_queue := allocate;
+        push_string(another_queue, "hello world");
+        push_real(another_queue, 1.0);
+        check(decode(encode(another_queue)) = another_queue);
+      elsif run("Test integer_vector_ptr codecs") then
+        ptr := allocate(0);
+        check(decode(encode(ptr)) = ptr);
+
+        ptr2 := allocate(2);
+        set(ptr2, 0, another_random_value);
+        set(ptr2, 1, a_random_value);
+        check(decode(encode(ptr2)) = ptr2);
       end if;
     end loop;
 

@@ -8,6 +8,9 @@
 
 library vunit_lib;
 context vunit_lib.vunit_context;
+use work.queue_pkg.all;
+use work.string_ptr_pkg.all;
+use work.integer_vector_ptr_pkg.all;
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -136,6 +139,15 @@ package com_std_codec_builder_pkg is
     constant code   :       string;
     variable index  : inout positive;
     variable result : out   float);
+  procedure decode (constant code : string; variable index : inout positive; variable result : out queue_t);
+  procedure decode (
+    constant code   : string;
+    variable index : inout positive;
+    variable result : out integer_vector_ptr_t);
+  procedure decode (
+    constant code   : string;
+    variable index : inout positive;
+    variable result : out string_ptr_t);
   function encode_array_header (
     constant range_left1   : string;
     constant range_right1  : string;
@@ -483,6 +495,28 @@ package body com_std_codec_builder_pkg is
   begin
     decode(code, index, result_sula);
     result := float(result_sula);
+  end;
+
+  procedure decode (constant code : string; variable index : inout positive; variable result : out queue_t) is
+  begin
+    decode(code, index, result.p_meta);
+    decode(code, index, result.data);
+  end;
+
+  procedure decode (
+    constant code : string;
+    variable index : inout positive;
+    variable result : out integer_vector_ptr_t) is
+  begin
+    decode(code, index, result.index);
+  end;
+
+  procedure decode (
+    constant code : string;
+    variable index : inout positive;
+    variable result : out string_ptr_t) is
+  begin
+    decode(code, index, result.index);
   end;
 
   function encode_array_header (

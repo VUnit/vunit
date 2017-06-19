@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2015-2017, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
 context vunit_lib.vunit_context;
@@ -46,16 +46,14 @@ architecture test_fixture of tb_card_shuffler is
   end function slv_to_card;
 begin
   test_runner : process
-    variable self    : actor_t;
+    constant self    : actor_t := create("test runner");
     variable reply   : message_ptr_t;
-    variable status  : com_status_t;
     variable receipt : receipt_t;
   begin
     checker_init(display_format => verbose,
                  file_name      => join(output_path(runner_cfg), "error.csv"),
                  file_format    => verbose_csv);
     test_runner_setup(runner, runner_cfg);
-    self := create("test runner");
     while test_suite loop
       if run("Test that the cards in the deck are shuffled") then
         for i in 1 to n_decks loop
@@ -63,11 +61,10 @@ begin
           -- used with Aldec's simulators to avoid that this function call
           -- without parameters is confused with the enumeration literal in
           -- reset_msg_type_t with the same name.
-          publish(net, self, reset_shuffler_msg, status);
-          wait for 1 ps;
+          publish(net, self, reset_shuffler_msg);
           for r in ace to king loop
             for s in spades to clubs loop
-              publish(net, self, load((r, s)), status);
+              publish(net, self, load((r, s)));
             end loop;
           end loop;
           request(net, self, find("scoreboard"), get_status(52), reply);
@@ -94,17 +91,17 @@ begin
       output_valid => output_valid);
 
   driver : process is
-    variable self     : actor_t;
+    constant self     : actor_t := create("driver");
     variable message  : message_ptr_t;
     variable card_msg : card_msg_t;
-    variable status   : com_status_t;
+    variable status : com_status_t;
   begin
-    self := create("driver");
-    subscribe(self, find("test runner"), status);
+    subscribe(self, find("test runner"));
     loop
       wait until rising_edge(clk);
-      receive(net, self, message, 0 ns);
-      if message.status = ok then
+      wait_for_message(net, self, status, 0 ns);
+      if status = ok then
+        message := get_message(self);
         case get_msg_type(message.payload.all) is
           when reset_shuffler =>
             rst         <= '1';
@@ -124,16 +121,12 @@ begin
   end process driver;
 
   monitor : process is
-    variable self   : actor_t;
-    variable status : com_status_t;
+    constant self : actor_t := create("monitor");
   begin
-    self := create("monitor");
-    loop
-      wait until rising_edge(clk);
-      if output_valid = '1' then
-        publish(net, self, received(slv_to_card(output_card)), status);
-      end if;
-    end loop;
+    wait until rising_edge(clk);
+    if output_valid = '1' then
+      publish(net, self, received(slv_to_card(output_card)));
+    end if;
   end process monitor;
 
   scoreboard : entity work.scoreboard;

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2017, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Common functions re-used between test cases
@@ -29,7 +29,7 @@ def simulator_is(*names):
     return SIMULATOR_FACTORY.simulator_name in names
 
 
-def check_report(report_file, tests):
+def check_report(report_file, tests=None):
     """
     Check an XML report_file for the exact occurrence of specific test results
     """
@@ -45,6 +45,12 @@ def check_report(report_file, tests):
         if test.find("failure") is not None:
             status = "failed"
         report[test.attrib["classname"] + "." + test.attrib["name"]] = status
+
+    if tests is None:
+        tests = []
+        for name in report:
+            expected_status = "failed" if "Expected to fail:" in name else "passed"
+            tests.append((expected_status, name))
 
     for status, name in tests:
         if report[name] != status:

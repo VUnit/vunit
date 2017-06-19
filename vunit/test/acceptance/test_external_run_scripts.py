@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2017, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Verify that all external run scripts work correctly
@@ -189,11 +189,13 @@ class TestExternalRunScripts(unittest.TestCase):
                    vhdl_standard='93')
 
     def test_com_vhdl_2008(self):
-        self.check(join(VHDL_PATH, "com", "run.py"))
+        self.check(join(VHDL_PATH, "com", "run.py"), exit_code=1)
+        check_report(self.report_file)
 
     def test_com_debug_vhdl_2008(self):
         self.check(join(VHDL_PATH, "com", "run.py"),
-                   args=["--use-debug-codecs"])
+                   args=["--use-debug-codecs"],
+                   exit_code=1)
 
     def setUp(self):
         self.output_path = join(dirname(__file__), "external_run_out")

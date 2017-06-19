@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2017, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Functions to add builtin VHDL code to a project for compilation
@@ -108,6 +108,11 @@ class Builtins(object):
         self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_string.vhd"))
         self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_debug_codec_builder.vhd"))
         self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_std_codec_builder.vhd"))
+        self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_support.vhd"))
+        self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_messenger.vhd"))
+        self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_deprecated.vhd"))
+        self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_common.vhd"))
+        self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_string_payload.vhd"))
 
         if use_debug_codecs:
             self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_codec_debug.vhd"))

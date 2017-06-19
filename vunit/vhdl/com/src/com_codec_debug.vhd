@@ -8,6 +8,8 @@
 
 use work.com_string_pkg.all;
 use work.com_debug_codec_builder_pkg.all;
+use work.queue_pkg.all;
+use work.integer_vector_ptr_pkg.all;
 
 package body com_codec_pkg is
   -----------------------------------------------------------------------------
@@ -618,6 +620,41 @@ package body com_codec_pkg is
     end loop;
 
     deallocate(l);
+
+    return ret_val;
+  end;
+
+  function encode(data : queue_t) return string is
+  begin
+    return to_string(data);
+  end;
+
+  function decode(code : string) return queue_t is
+    variable ret_val  : queue_t;
+    variable elements : lines_t;
+    variable length   : natural;
+  begin
+    split_group(code, elements, 2, length);
+    ret_val.p_meta := decode(elements(0).all);
+    ret_val.data := decode(elements(1).all);
+    deallocate_elements(elements);
+
+    return ret_val;
+  end;
+
+  function encode(data : integer_vector_ptr_t) return string is
+  begin
+    return to_string(data);
+  end;
+
+  function decode(code : string) return integer_vector_ptr_t is
+    variable ret_val  : integer_vector_ptr_t;
+    variable elements : lines_t;
+    variable length   : natural;
+  begin
+    split_group(code, elements, 1, length);
+    ret_val.index := decode(elements(0).all);
+    deallocate_elements(elements);
 
     return ret_val;
   end;

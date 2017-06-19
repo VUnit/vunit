@@ -610,4 +610,35 @@ package body com_codec_pkg is
     return ret_val;
   end;
 
+  -----------------------------------------------------------------------------
+  -- VUnit types
+  -----------------------------------------------------------------------------
+  function encode(data : queue_t) return string is
+  begin
+    return encode(data.p_meta) & encode(to_integer(data.data));
+  end;
+
+  function decode(code : string) return queue_t is
+    variable ret_val : queue_t;
+    variable index : positive := code'left;
+  begin
+    decode(code, index, ret_val);
+
+    return ret_val;
+  end;
+
+  function encode(data : integer_vector_ptr_t) return string is
+  begin
+    return encode(data.index);
+  end;
+
+  function decode(code : string) return integer_vector_ptr_t is
+    variable ret_val : integer_vector_ptr_t;
+    variable index : positive := code'left;
+  begin
+    decode(code, index, ret_val);
+
+    return ret_val;
+  end;
+
 end package body com_codec_pkg;
