@@ -55,9 +55,9 @@ begin
       memory := new_memory;
 
       for i in 0 to 1023 loop
-        allocation := allocate(memory, 1024);
-        check_equal(base_address(allocation), 1024*i, "base address");
-        check_equal(last_address(allocation), 1024*(i+1)-1, "last address");
+        allocation := allocate(memory, 1000);
+        check_equal(base_address(allocation), 1000*i, "base address");
+        check_equal(last_address(allocation), 1000*(i+1)-1, "last address");
       end loop;
 
     elsif run("Test allocate with alignment") then

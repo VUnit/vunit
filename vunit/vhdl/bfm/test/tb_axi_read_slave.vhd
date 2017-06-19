@@ -142,6 +142,7 @@ begin
       error_queue <= allocate;
       alloc := allocate(memory, 8);
       write_addr(x"2", base_address(alloc), 2, 0, axi_burst_wrap);
+      wait until length(error_queue) > 0 and rising_edge(clk);
       check_equal(pop_string(error_queue), "Wrapping burst type not supported");
       check_equal(length(error_queue), 0, "no more errors");
     end if;

@@ -175,6 +175,7 @@ begin
       wvalid <= '1';
       wait until (wvalid and wready) = '1' and rising_edge(clk);
       wvalid <= '0';
+      wait until length(error_queue) > 0 and rising_edge(clk);
       check_equal(pop_string(error_queue), "Expected wlast='1' on last beat of burst with length 1 starting at address 0");
       check_equal(length(error_queue), 0, "no more errors");
       read_response(x"2", axi_resp_ok);
@@ -188,12 +189,14 @@ begin
       wvalid <= '1';
       wait until (wvalid and wready) = '1' and rising_edge(clk);
       wvalid <= '0';
+      wait until wvalid = '0' and rising_edge(clk);
 
       check_equal(length(error_queue), 0, "no errors yet");
 
       wvalid <= '1';
       wait until (wvalid and wready) = '1' and rising_edge(clk);
       wvalid <= '0';
+      wait until length(error_queue) > 0 and rising_edge(clk);
 
       check_equal(pop_string(error_queue), "Expected wlast='1' on last beat of burst with length 2 starting at address 0");
       check_equal(length(error_queue), 0, "no more errors");
@@ -202,6 +205,7 @@ begin
       error_queue <= allocate;
       alloc := allocate(memory, 8);
       write_addr(x"2", base_address(alloc), 2, 0, axi_burst_wrap);
+      wait until length(error_queue) > 0 and rising_edge(clk);
       check_equal(pop_string(error_queue), "Wrapping burst type not supported");
       check_equal(length(error_queue), 0, "no more errors");
     end if;
