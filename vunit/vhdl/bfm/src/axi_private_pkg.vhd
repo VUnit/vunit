@@ -15,9 +15,10 @@ use work.queue_pkg.all;
 
 package axi_private_pkg is
 
-  type axi_slave_t is record
-    data_size : integer;
-  end record;
+  type axi_slave_t is protected
+    procedure init(data : std_logic_vector);
+    impure function data_size return integer;
+  end protected;
 
   type axi_burst_t is record
     id : integer;
@@ -38,6 +39,20 @@ end package;
 
 
 package body axi_private_pkg is
+  type axi_slave_t is protected body
+    variable p_data_size : integer;
+
+    procedure init(data : std_logic_vector) is
+    begin
+      p_data_size := data'length/8;
+    end;
+
+    impure function data_size return integer is
+    begin
+      return p_data_size;
+    end;
+  end protected body;
+
   function decode_burst(axid : std_logic_vector;
                         axaddr : std_logic_vector;
                         axlen : std_logic_vector;

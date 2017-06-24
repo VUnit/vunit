@@ -50,10 +50,14 @@ architecture a of axi_write_slave is
 begin
 
   main : process
+    variable self : axi_slave_t;
+
     variable burst : axi_burst_t;
     variable address : integer;
     variable idx : integer;
   begin
+    self.init(wdata);
+
     -- Static Error checking
     assert awid'length = bid'length report "arwid vs wid data width mismatch";
     assert (awlen'length = 4 or
@@ -70,7 +74,7 @@ begin
       wait until (awvalid and awready) = '1' and rising_edge(aclk);
       awready <= '0';
       burst := decode_burst(awid, awaddr, awlen, awsize, awburst);
-      check_4kb_boundary(burst, data_size, error_queue);
+      check_4kb_boundary(burst, self.data_size, error_queue);
 
       if burst.burst_type = axi_burst_type_wrap then
         fail("Wrapping burst type not supported", error_queue);
@@ -91,7 +95,7 @@ begin
         end if;
 
         for j in 0 to burst.size-1 loop
-          idx := (address + j) mod data_size; -- Align data bus
+          idx := (address + j) mod self.data_size; -- Align data bus
           if wstrb(idx) = '1' then
             write_byte(memory, address+j, to_integer(unsigned(wdata(8*idx+7 downto 8*idx))));
           end if;
