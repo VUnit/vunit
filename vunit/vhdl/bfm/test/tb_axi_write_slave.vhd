@@ -110,6 +110,7 @@ begin
     variable idx : integer;
     variable error_queue : queue_t;
     variable num_ops : integer;
+    variable start_time, diff_time : time;
   begin
     test_runner_setup(runner, runner_cfg);
     rnd.InitSeed(rnd'instance_name);
@@ -265,6 +266,22 @@ begin
       set_address_channel_fifo_depth(event, inbox, 1);
       check_equal(pop_string(error_queue), "New address channel fifo depth 1 is smaller than current content size 16");
       check_equal(length(error_queue), 0, "no more errors");
+
+    elsif run("Test address channel stall probability") then
+      set_address_channel_fifo_depth(event, inbox, 128);
+
+      start_time := now;
+      for i in 1 to 16 loop
+        write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr);
+      end loop;
+      diff_time := now - start_time;
+
+      set_address_channel_stall_probability(event, inbox, 0.9);
+      start_time := now;
+      for i in 1 to 16 loop
+        write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr);
+      end loop;
+      assert (now - start_time) > 5.0 * diff_time report "Should take about longer with stall probability";
     end if;
 
     test_runner_cleanup(runner);

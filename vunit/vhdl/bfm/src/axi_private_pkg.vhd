@@ -14,6 +14,9 @@ use work.axi_pkg.all;
 use work.queue_pkg.all;
 use work.message_pkg.all;
 
+library osvvm;
+use osvvm.RandomPkg.all;
+
 package axi_private_pkg is
 
   type axi_burst_t is record
@@ -30,6 +33,8 @@ package axi_private_pkg is
     impure function get_inbox return inbox_t;
 
     procedure set_address_channel_fifo_depth(depth : positive);
+    procedure set_address_channel_stall_probability(probability : real);
+    impure function should_stall_address_channel return boolean;
     impure function get_addr_inbox return inbox_t;
 
     impure function get_error_queue return queue_t;
@@ -65,8 +70,9 @@ package body axi_private_pkg is
     variable p_inbox : inbox_t;
     variable p_data_size : integer;
     variable p_error_queue : queue_t;
-
     variable p_addr_inbox : inbox_t;
+    variable p_addr_stall_rnd : RandomPType;
+    variable p_addr_stall_prob : real;
 
     procedure init(inbox : inbox_t; data : std_logic_vector) is
     begin
@@ -75,6 +81,7 @@ package body axi_private_pkg is
       p_data_size := data'length/8;
       p_addr_inbox := new_inbox(1);
       set_error_queue(null_queue);
+      set_address_channel_stall_probability(0.0);
     end;
 
     impure function is_initialized return boolean is
@@ -96,6 +103,17 @@ package body axi_private_pkg is
         set_max_length(p_addr_inbox, depth);
       end if;
     end procedure;
+
+    procedure set_address_channel_stall_probability(probability : real) is
+    begin
+      assert probability >= 0.0 and probability <= 1.0;
+      p_addr_stall_prob := probability;
+    end;
+
+    impure function should_stall_address_channel return boolean is
+    begin
+      return p_addr_stall_rnd.Uniform(0.0, 1.0) < p_addr_stall_prob;
+    end;
 
     impure function get_addr_inbox return inbox_t is
     begin
@@ -186,6 +204,10 @@ package body axi_private_pkg is
           self.set_address_channel_fifo_depth(pop(msg.data));
           send_reply(event, reply);
 
+        when msg_set_address_channel_stall_probability =>
+          self.set_address_channel_stall_probability(pop_real(msg.data));
+          send_reply(event, reply);
+
       end case;
 
       recycle(msg);
@@ -227,6 +249,10 @@ package body axi_private_pkg is
 
     loop
       wait_until_not_full(event, self.get_addr_inbox);
+
+      while self.should_stall_address_channel loop
+        wait until rising_edge(aclk);
+      end loop;
 
       axready <= '1';
       wait until (axvalid and axready) = '1' and rising_edge(aclk);

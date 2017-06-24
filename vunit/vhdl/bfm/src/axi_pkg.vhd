@@ -29,10 +29,14 @@ package axi_pkg is
   -- Set the number of maximing number address channel tokens that can be queued
   procedure set_address_channel_fifo_depth(signal event : inout event_t; inbox : inbox_t; depth : positive);
 
+  -- Set the address channel stall probability
+  procedure set_address_channel_stall_probability(signal event : inout event_t; inbox : inbox_t; probability : real);
+
   -- Private
   type axi_message_type_t is (
     msg_disable_fail_on_error,
-    msg_set_address_channel_fifo_depth);
+    msg_set_address_channel_fifo_depth,
+    msg_set_address_channel_stall_probability);
 end package;
 
 package body axi_pkg is
@@ -55,6 +59,18 @@ package body axi_pkg is
     msg := allocate;
     push(msg.data, axi_message_type_t'pos(msg_set_address_channel_fifo_depth));
     push(msg.data, depth);
+    send(event, inbox, msg, reply);
+    recv_reply(event, reply);
+    recycle(reply);
+  end;
+
+  procedure set_address_channel_stall_probability(signal event : inout event_t; inbox : inbox_t; probability : real) is
+    variable msg : msg_t;
+    variable reply : reply_t;
+  begin
+    msg := allocate;
+    push(msg.data, axi_message_type_t'pos(msg_set_address_channel_stall_probability));
+    push_real(msg.data, probability);
     send(event, inbox, msg, reply);
     recv_reply(event, reply);
     recycle(reply);

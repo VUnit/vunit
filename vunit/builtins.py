@@ -184,6 +184,8 @@ def add_message(library, vhdl_standard):
 def add_bfm(library, vhdl_standard):
     """
     Add bfm utility library
+
+    @TODO required osvvm
     """
     if vhdl_standard != '2008':
         raise RuntimeError("BFM library only supports vhdl 2008")
