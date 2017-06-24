@@ -12,6 +12,7 @@ use ieee.numeric_std.all;
 
 use work.axi_pkg.all;
 use work.queue_pkg.all;
+use work.message_pkg.all;
 
 package axi_private_pkg is
 
@@ -24,7 +25,7 @@ package axi_private_pkg is
   end record;
 
   type axi_slave_t is protected
-    procedure init(data : std_logic_vector);
+    procedure init(inbox : inbox_t; data : std_logic_vector);
     procedure set_error_queue(error_queue : queue_t);
     procedure fail(msg : string);
     procedure check_4kb_boundary(burst : axi_burst_t);
@@ -41,11 +42,13 @@ end package;
 
 package body axi_private_pkg is
   type axi_slave_t is protected body
+    variable p_inbox : inbox_t;
     variable p_data_size : integer;
     variable p_error_queue : queue_t;
 
-    procedure init(data : std_logic_vector) is
+    procedure init(inbox : inbox_t; data : std_logic_vector) is
     begin
+      p_inbox := inbox;
       p_data_size := data'length/8;
       set_error_queue(null_queue);
     end;

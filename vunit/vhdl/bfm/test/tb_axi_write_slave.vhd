@@ -15,6 +15,7 @@ use work.axi_pkg.all;
 use work.memory_pkg.all;
 use work.integer_vector_ptr_pkg.all;
 use work.queue_pkg.all;
+use work.message_pkg.all;
 
 library osvvm;
 use osvvm.RandomPkg.all;
@@ -49,6 +50,7 @@ architecture a of tb_axi_write_slave is
 
   signal error_queue : queue_t;
 
+  constant inbox : inbox_t := new_inbox;
   constant memory : memory_t := new_memory;
 
 begin
@@ -234,6 +236,7 @@ begin
 
   dut : entity work.axi_write_slave
     generic map (
+      inbox => inbox,
       memory => memory)
     port map (
       aclk    => clk,

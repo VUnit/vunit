@@ -12,9 +12,11 @@ use work.axi_pkg.all;
 use work.axi_private_pkg.all;
 use work.queue_pkg.all;
 use work.memory_pkg.all;
+use work.message_pkg.all;
 
 entity axi_write_slave is
   generic (
+    inbox : inbox_t;
     memory : memory_t);
   port (
     aclk : in std_logic;
@@ -55,7 +57,7 @@ begin
     variable address : integer;
     variable idx : integer;
   begin
-    self.init(wdata);
+    self.init(inbox, wdata);
 
     -- Static Error checking
     assert awid'length = bid'length report "arwid vs wid data width mismatch";
