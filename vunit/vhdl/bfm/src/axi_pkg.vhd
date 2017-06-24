@@ -22,17 +22,17 @@ package axi_pkg is
   subtype axi4_len_t is std_logic_vector(7 downto 0);
   subtype axi4_size_t is std_logic_vector(2 downto 0);
 
-
-  type axi_message_type_t is (
-    msg_disable_fail_on_error,
-    msg_set_address_queue_max_length);
-
   -- Disables failure on internal errors that are instead pushed to an error queue
   -- Used for testing the BFM error messages
   procedure disable_fail_on_error(signal event : inout event_t; inbox : inbox_t; variable error_queue : inout queue_t);
 
+  -- Set the number of maximing number address channel tokens that can be queued
   procedure set_addr_queue_max_length(signal event : inout event_t; inbox : inbox_t; max_length : positive);
 
+  -- Private
+  type axi_message_type_t is (
+    msg_disable_fail_on_error,
+    msg_set_address_queue_max_length);
 end package;
 
 package body axi_pkg is

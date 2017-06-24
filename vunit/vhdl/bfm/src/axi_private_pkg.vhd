@@ -45,16 +45,16 @@ package axi_private_pkg is
   procedure main_loop(variable self : inout axi_slave_t;
                       signal event : inout event_t);
 
-  procedure read_address_channel(variable self : inout axi_slave_t;
-                                 signal event : inout event_t;
-                                 signal aclk : in std_logic;
-                                 signal axvalid : in std_logic;
-                                 signal axready : inout std_logic; -- GHDL bug?
-                                 signal axid : in std_logic_vector;
-                                 signal axaddr : in std_logic_vector;
-                                 signal axlen : in std_logic_vector;
-                                 signal axsize : in std_logic_vector;
-                                 signal axburst : in axi_burst_type_t);
+  procedure address_channel(variable self : inout axi_slave_t;
+                            signal event : inout event_t;
+                            signal aclk : in std_logic;
+                            signal axvalid : in std_logic;
+                            signal axready : inout std_logic; -- GHDL bug?
+                            signal axid : in std_logic_vector;
+                            signal axaddr : in std_logic_vector;
+                            signal axlen : in std_logic_vector;
+                            signal axsize : in std_logic_vector;
+                            signal axburst : in axi_burst_type_t);
 
 end package;
 
@@ -207,16 +207,16 @@ package body axi_private_pkg is
     return burst;
   end function;
 
-  procedure read_address_channel(variable self : inout axi_slave_t;
-                                 signal event : inout event_t;
-                                 signal aclk : in std_logic;
-                                 signal axvalid : in std_logic;
-                                 signal axready : inout std_logic;
-                                 signal axid : in std_logic_vector;
-                                 signal axaddr : in std_logic_vector;
-                                 signal axlen : in std_logic_vector;
-                                 signal axsize : in std_logic_vector;
-                                 signal axburst : in axi_burst_type_t) is
+  procedure address_channel(variable self : inout axi_slave_t;
+                            signal event : inout event_t;
+                            signal aclk : in std_logic;
+                            signal axvalid : in std_logic;
+                            signal axready : inout std_logic;
+                            signal axid : in std_logic_vector;
+                            signal axaddr : in std_logic_vector;
+                            signal axlen : in std_logic_vector;
+                            signal axsize : in std_logic_vector;
+                            signal axburst : in axi_burst_type_t) is
     variable burst : axi_burst_t;
     variable msg : msg_t;
   begin

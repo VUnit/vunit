@@ -57,16 +57,16 @@ begin
     wait;
   end process;
 
-  read_address_channel(self,
-                       local_event,
-                       aclk,
-                       awvalid,
-                       awready,
-                       awid,
-                       awaddr,
-                       awlen,
-                       awsize,
-                       awburst);
+  address_channel(self,
+                  local_event,
+                  aclk,
+                  awvalid,
+                  awready,
+                  awid,
+                  awaddr,
+                  awlen,
+                  awsize,
+                  awburst);
 
   write_data : process
     variable burst : axi_burst_t;

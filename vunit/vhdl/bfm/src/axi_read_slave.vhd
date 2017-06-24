@@ -52,16 +52,17 @@ begin
     wait;
   end process;
 
-  read_address_channel(self,
-                       local_event,
-                       aclk,
-                       arvalid,
-                       arready,
-                       arid,
-                       araddr,
-                       arlen,
-                       arsize,
-                       arburst);
+  address_channel(self,
+                  local_event,
+                  aclk,
+                  arvalid,
+                  arready,
+                  arid,
+                  araddr,
+                  arlen,
+                  arsize,
+                  arburst);
+
   read_data : process
     variable burst : axi_burst_t;
     variable address : integer;
