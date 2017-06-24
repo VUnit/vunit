@@ -26,6 +26,8 @@ package axi_private_pkg is
 
   type axi_slave_t is protected
     procedure init(inbox : inbox_t; data : std_logic_vector);
+    impure function get_inbox return inbox_t;
+    impure function get_error_queue return queue_t;
     procedure set_error_queue(error_queue : queue_t);
     procedure fail(msg : string);
     procedure check_4kb_boundary(burst : axi_burst_t);
@@ -37,6 +39,9 @@ package axi_private_pkg is
                         axlen : std_logic_vector;
                         axsize : std_logic_vector;
                         axburst : axi_burst_type_t) return axi_burst_t;
+
+  procedure main_loop(variable self : inout axi_slave_t;
+                      signal event : inout event_t);
 end package;
 
 
@@ -51,6 +56,16 @@ package body axi_private_pkg is
       p_inbox := inbox;
       p_data_size := data'length/8;
       set_error_queue(null_queue);
+    end;
+
+    impure function get_inbox return inbox_t is
+    begin
+      return p_inbox;
+    end;
+
+    impure function get_error_queue return queue_t is
+    begin
+      return p_error_queue;
     end;
 
     procedure set_error_queue(error_queue : queue_t) is
@@ -100,4 +115,24 @@ package body axi_private_pkg is
     return burst;
   end function;
 
+  procedure main_loop(variable self : inout axi_slave_t;
+                      signal event : inout event_t) is
+    variable msg : msg_t;
+    variable reply : reply_t;
+    variable msg_type : axi_message_type_t;
+  begin
+    loop
+      recv(event, self.get_inbox, msg, reply);
+      msg_type := axi_message_type_t'val(integer'(pop(msg.data)));
+
+      case msg_type is
+        when msg_disable_fail_on_error =>
+          self.set_error_queue(allocate);
+          push_queue_ref(reply.data, self.get_error_queue);
+          send_reply(event, reply);
+      end case;
+
+      recycle(msg);
+    end loop;
+  end;
 end package body;

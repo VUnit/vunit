@@ -48,8 +48,6 @@ architecture a of tb_axi_write_slave is
   signal bid     : std_logic_vector(awid'range);
   signal bresp   : axi_resp_t;
 
-  signal error_queue : queue_t;
-
   constant inbox : inbox_t := new_inbox;
   constant memory : memory_t := new_memory;
 
@@ -110,7 +108,7 @@ begin
     variable len : natural;
     variable burst : axi_burst_type_t;
     variable idx : integer;
-
+    variable error_queue : queue_t;
     variable num_ops : integer;
   begin
     test_runner_setup(runner, runner_cfg);
@@ -179,20 +177,21 @@ begin
       assert num_ops > 5000;
 
     elsif run("Test error on missing tlast fixed") then
-      error_queue <= allocate;
+      disable_fail_on_error(event, inbox, error_queue);
 
       alloc := allocate(memory, 8);
       write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_fixed);
       wvalid <= '1';
       wait until (wvalid and wready) = '1' and rising_edge(clk);
       wvalid <= '0';
+
       wait until length(error_queue) > 0 and rising_edge(clk);
       check_equal(pop_string(error_queue), "Expected wlast='1' on last beat of burst with length 1 starting at address 0");
       check_equal(length(error_queue), 0, "no more errors");
       read_response(x"2", axi_resp_ok);
 
     elsif run("Test error on missing tlast incr") then
-      error_queue <= allocate;
+      disable_fail_on_error(event, inbox, error_queue);
 
       alloc := allocate(memory, 8);
       write_addr(x"2", base_address(alloc), 2, 0, axi_burst_type_incr);
@@ -214,7 +213,7 @@ begin
       read_response(x"2", axi_resp_ok);
 
     elsif run("Test error on unsupported wrap burst") then
-      error_queue <= allocate;
+      disable_fail_on_error(event, inbox, error_queue);
       alloc := allocate(memory, 8);
       write_addr(x"2", base_address(alloc), 2, 0, axi_burst_type_wrap);
       wait until length(error_queue) > 0 and rising_edge(clk);
@@ -223,7 +222,7 @@ begin
 
     elsif run("Test error 4KB boundary crossing") then
       alloc := allocate(memory, 4096+32, alignment => 4096);
-      error_queue <= allocate;
+      disable_fail_on_error(event, inbox, error_queue);
       write_addr(x"2", base_address(alloc)+4000, 256, 0, axi_burst_type_incr);
       wait until length(error_queue) > 0 and rising_edge(clk);
       check_equal(pop_string(error_queue), "Crossing 4KB boundary");
@@ -256,8 +255,7 @@ begin
       bvalid  => bvalid,
       bready  => bready,
       bid     => bid,
-      bresp   => bresp,
-      error_queue => error_queue);
+      bresp   => bresp);
 
   clk <= not clk after 5 ns;
 end architecture;

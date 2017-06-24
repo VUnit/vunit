@@ -34,11 +34,7 @@ entity axi_read_slave is
     rid : out std_logic_vector;
     rdata : out std_logic_vector;
     rresp : out axi_resp_t;
-    rlast : out std_logic;
-
-    -- Set to non null_queue to disable error asserts
-    -- Used for testing this entity only
-    error_queue : in queue_t := null_queue
+    rlast : out std_logic
     );
 end entity;
 
@@ -47,17 +43,22 @@ architecture a of axi_read_slave is
 begin
 
   main : process
-    variable burst : axi_burst_t;
-    variable address : integer;
-    variable idx : integer;
   begin
-    self.init(inbox, rdata);
-
     -- Static Error checking
     assert arid'length = rid'length report "arid vs rid data width mismatch";
     assert (arlen'length = 4 or
             arlen'length = 8) report "arlen must be either 4 (AXI3) or 8 (AXI4)";
 
+    self.init(inbox, rdata);
+    main_loop(self, event);
+    wait;
+  end process;
+
+  support : process
+    variable burst : axi_burst_t;
+    variable address : integer;
+    variable idx : integer;
+  begin
     -- Initialization
     rvalid <= '0';
     rid <= (rid'range => '0');
@@ -105,10 +106,5 @@ begin
       end loop;
 
     end loop;
-  end process;
-
-  error_queue_set : process (error_queue)
-  begin
-    self.set_error_queue(error_queue);
   end process;
 end architecture;

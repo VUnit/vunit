@@ -44,8 +44,6 @@ architecture a of tb_axi_read_slave is
   signal rresp : axi_resp_t;
   signal rlast : std_logic;
 
-  signal error_queue : queue_t;
-
   constant inbox : inbox_t := new_inbox;
   constant memory : memory_t := new_memory;
 
@@ -109,6 +107,7 @@ begin
     variable id : std_logic_vector(arid'range);
     variable len : natural;
     variable burst : axi_burst_type_t;
+    variable error_queue : queue_t;
   begin
     test_runner_setup(runner, runner_cfg);
     rnd.InitSeed(rnd'instance_name);
@@ -145,7 +144,8 @@ begin
       end loop;
 
     elsif run("Test error on unsupported wrap burst") then
-      error_queue <= allocate;
+      disable_fail_on_error(event, inbox, error_queue);
+
       alloc := allocate(memory, 8);
       write_addr(x"2", base_address(alloc), 2, 0, axi_burst_type_wrap);
       wait until length(error_queue) > 0 and rising_edge(clk);
@@ -154,7 +154,7 @@ begin
 
     elsif run("Test error 4KB boundary crossing") then
       alloc := allocate(memory, 4096+32, alignment => 4096);
-      error_queue <= allocate;
+      disable_fail_on_error(event, inbox, error_queue);
       write_addr(x"2", base_address(alloc)+4000, 256, 0, axi_burst_type_incr);
       wait until length(error_queue) > 0 and rising_edge(clk);
       check_equal(pop_string(error_queue), "Crossing 4KB boundary");
@@ -185,9 +185,7 @@ begin
       rid     => rid,
       rdata   => rdata,
       rresp   => rresp,
-      rlast   => rlast,
-
-      error_queue => error_queue);
+      rlast   => rlast);
 
   clk <= not clk after 5 ns;
 end architecture;

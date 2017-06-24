@@ -39,11 +39,7 @@ entity axi_write_slave is
     bvalid : out std_logic;
     bready : in std_logic;
     bid : out std_logic_vector;
-    bresp : out axi_resp_t;
-
-    -- Set to non null_queue to disable error asserts
-    -- Used for testing this entity only
-    error_queue : in queue_t := null_queue
+    bresp : out axi_resp_t
     );
 end entity;
 
@@ -52,18 +48,23 @@ architecture a of axi_write_slave is
 begin
 
   main : process
-
-    variable burst : axi_burst_t;
-    variable address : integer;
-    variable idx : integer;
   begin
-    self.init(inbox, wdata);
-
     -- Static Error checking
     assert awid'length = bid'length report "arwid vs wid data width mismatch";
     assert (awlen'length = 4 or
             awlen'length = 8) report "awlen must be either 4 (AXI3) or 8 (AXI4)";
 
+    self.init(inbox, wdata);
+    main_loop(self, event);
+    wait;
+  end process;
+
+  support : process
+
+    variable burst : axi_burst_t;
+    variable address : integer;
+    variable idx : integer;
+  begin
     -- Initialization
     wready <= '0';
     bvalid <= '0';
@@ -112,8 +113,4 @@ begin
     end loop;
   end process;
 
-  error_queue_set : process (error_queue)
-  begin
-    self.set_error_queue(error_queue);
-  end process;
 end architecture;
