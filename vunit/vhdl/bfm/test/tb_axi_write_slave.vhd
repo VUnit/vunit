@@ -228,7 +228,7 @@ begin
       check_equal(pop_string(error_queue), "Crossing 4KB boundary");
       check_equal(length(error_queue), 0, "no more errors");
 
-    elsif run("Test default address queue size is 1") then
+    elsif run("Test default address channel depth is 1") then
       write_addr(x"2", 0, 1, 0, axi_burst_type_incr); -- Taken data process
       write_addr(x"2", 0, 1, 0, axi_burst_type_incr); -- In the queue
       for i in 0 to 127 loop
@@ -236,8 +236,8 @@ begin
         assert awready = '0' report "Can only have one address in the queue";
       end loop;
 
-    elsif run("Test set address queue max length") then
-      set_addr_queue_max_length(event, inbox, 16);
+    elsif run("Test set address channel fifo depth") then
+      set_address_channel_fifo_depth(event, inbox, 16);
 
       write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr); -- Taken data process
       for i in 1 to 16 loop
@@ -249,21 +249,21 @@ begin
         assert awready = '0' report "Address queue should be full";
       end loop;
 
-    elsif run("Test changing address queue length to smaller than content gives error") then
-      set_addr_queue_max_length(event, inbox, 16);
+    elsif run("Test changing address channel depth to smaller than content gives error") then
+      set_address_channel_fifo_depth(event, inbox, 16);
 
       write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr); -- Taken data process
       for i in 1 to 16 loop
         write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr); -- In the queue
       end loop;
 
-      set_addr_queue_max_length(event, inbox, 17);
-      set_addr_queue_max_length(event, inbox, 16);
+      set_address_channel_fifo_depth(event, inbox, 17);
+      set_address_channel_fifo_depth(event, inbox, 16);
 
       disable_fail_on_error(event, inbox, error_queue);
 
-      set_addr_queue_max_length(event, inbox, 1);
-      check_equal(pop_string(error_queue), "New address queue max length 1 is smaller than current queue content length 16");
+      set_address_channel_fifo_depth(event, inbox, 1);
+      check_equal(pop_string(error_queue), "New address channel fifo depth 1 is smaller than current content size 16");
       check_equal(length(error_queue), 0, "no more errors");
     end if;
 

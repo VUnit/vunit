@@ -27,12 +27,12 @@ package axi_pkg is
   procedure disable_fail_on_error(signal event : inout event_t; inbox : inbox_t; variable error_queue : inout queue_t);
 
   -- Set the number of maximing number address channel tokens that can be queued
-  procedure set_addr_queue_max_length(signal event : inout event_t; inbox : inbox_t; max_length : positive);
+  procedure set_address_channel_fifo_depth(signal event : inout event_t; inbox : inbox_t; depth : positive);
 
   -- Private
   type axi_message_type_t is (
     msg_disable_fail_on_error,
-    msg_set_address_queue_max_length);
+    msg_set_address_channel_fifo_depth);
 end package;
 
 package body axi_pkg is
@@ -48,13 +48,13 @@ package body axi_pkg is
     recycle(reply);
   end;
 
-  procedure set_addr_queue_max_length(signal event : inout event_t; inbox : inbox_t; max_length : positive) is
+  procedure set_address_channel_fifo_depth(signal event : inout event_t; inbox : inbox_t; depth : positive) is
     variable msg : msg_t;
     variable reply : reply_t;
   begin
     msg := allocate;
-    push(msg.data, axi_message_type_t'pos(msg_set_address_queue_max_length));
-    push(msg.data, max_length);
+    push(msg.data, axi_message_type_t'pos(msg_set_address_channel_fifo_depth));
+    push(msg.data, depth);
     send(event, inbox, msg, reply);
     recv_reply(event, reply);
     recycle(reply);

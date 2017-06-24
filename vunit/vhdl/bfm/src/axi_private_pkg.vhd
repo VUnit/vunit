@@ -29,7 +29,7 @@ package axi_private_pkg is
     impure function is_initialized return boolean;
     impure function get_inbox return inbox_t;
 
-    procedure set_addr_queue_max_length(max_length : positive);
+    procedure set_address_channel_fifo_depth(depth : positive);
     impure function get_addr_inbox return inbox_t;
 
     impure function get_error_queue return queue_t;
@@ -87,13 +87,13 @@ package body axi_private_pkg is
       return p_inbox;
     end;
 
-    procedure set_addr_queue_max_length(max_length : positive) is
+    procedure set_address_channel_fifo_depth(depth : positive) is
     begin
-      if get_length(p_addr_inbox) > max_length then
-        fail("New address queue max length " & to_string(max_length) &
-             " is smaller than current queue content length " & to_string(get_length(p_addr_inbox)));
+      if get_length(p_addr_inbox) > depth then
+        fail("New address channel fifo depth " & to_string(depth) &
+             " is smaller than current content size " & to_string(get_length(p_addr_inbox)));
       else
-        set_max_length(p_addr_inbox, max_length);
+        set_max_length(p_addr_inbox, depth);
       end if;
     end procedure;
 
@@ -182,8 +182,8 @@ package body axi_private_pkg is
           push_queue_ref(reply.data, self.get_error_queue);
           send_reply(event, reply);
 
-        when msg_set_address_queue_max_length =>
-          self.set_addr_queue_max_length(pop(msg.data));
+        when msg_set_address_channel_fifo_depth =>
+          self.set_address_channel_fifo_depth(pop(msg.data));
           send_reply(event, reply);
 
       end case;
