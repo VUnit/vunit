@@ -1,10 +1,2 @@
-
-examples/vhdl/run/vunit_out/
-
-examples/vhdl/check/vunit_out/
-
-examples/vhdl/uart/vunit_out/
-
-examples/vhdl/user_guide/vunit_out/
-
-vunit/vhdl/check/vunit_out/
+**/vunit_out
+*.pyc
