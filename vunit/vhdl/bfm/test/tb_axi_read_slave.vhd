@@ -130,7 +130,7 @@ begin
         size := 2**log_size;
         random_integer_vector(rnd, size * len, 0, 255, data);
 
-        alloc := allocate(memory, 8 * len);
+        alloc := allocate(memory, 8 * len, alignment => 4096);
         for i in 0 to length(data)-1 loop
           write_byte(memory, base_address(alloc)+i, get(data, i));
         end loop;
@@ -148,6 +148,14 @@ begin
       write_addr(x"2", base_address(alloc), 2, 0, axi_burst_wrap);
       wait until length(error_queue) > 0 and rising_edge(clk);
       check_equal(pop_string(error_queue), "Wrapping burst type not supported");
+      check_equal(length(error_queue), 0, "no more errors");
+
+    elsif run("Test error 4KB boundary crossing") then
+      alloc := allocate(memory, 4096+32, alignment => 4096);
+      error_queue <= allocate;
+      write_addr(x"2", base_address(alloc)+4000, 256, 0, axi_burst_incr);
+      wait until length(error_queue) > 0 and rising_edge(clk);
+      check_equal(pop_string(error_queue), "Crossing 4KB boundary");
       check_equal(length(error_queue), 0, "no more errors");
     end if;
 

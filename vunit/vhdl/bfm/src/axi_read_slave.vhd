@@ -40,6 +40,8 @@ entity axi_read_slave is
 end entity;
 
 architecture a of axi_read_slave is
+  constant data_size : integer := rdata'length / 8;
+
   procedure fail(msg : string) is
   begin
     if error_queue /= null_queue then
@@ -48,10 +50,20 @@ architecture a of axi_read_slave is
       report msg severity failure;
     end if;
   end procedure;
+
+  procedure check_4kb_boundary(address, length, size : integer) is
+    variable first_address, last_address : integer;
+  begin
+    first_address := address - (address mod data_size); -- Aligned
+    last_address := address + size*length - 1;
+
+    if first_address / 4096 /= last_address / 4096 then
+      fail("Crossing 4KB boundary");
+    end if;
+  end procedure;
 begin
 
   main : process
-    constant data_size : integer := rdata'length / 8;
 
     variable address : integer;
     variable idx : integer;
@@ -81,6 +93,8 @@ begin
       burst_size := 2**to_integer(unsigned(arsize));
       burst_type := arburst;
       rid <= arid;
+
+      check_4kb_boundary(address, burst_length, burst_size);
 
       if burst_type = axi_burst_wrap then
         fail("Wrapping burst type not supported");
