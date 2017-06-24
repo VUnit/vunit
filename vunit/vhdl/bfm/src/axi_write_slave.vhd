@@ -9,6 +9,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.axi_pkg.all;
+use work.axi_private_pkg.all;
 use work.queue_pkg.all;
 use work.memory_pkg.all;
 
@@ -24,7 +25,7 @@ entity axi_write_slave is
     awaddr : in std_logic_vector;
     awlen : in std_logic_vector;
     awsize : in std_logic_vector;
-    awburst : in axi_burst_t;
+    awburst : in axi_burst_type_t;
 
     wvalid : in std_logic;
     wready : out std_logic;
@@ -46,36 +47,12 @@ end entity;
 
 architecture a of axi_write_slave is
   constant data_size : integer := wdata'length / 8;
-
-  procedure fail(msg : string) is
-  begin
-    if error_queue /= null_queue then
-      push_string(error_queue, msg);
-    else
-      report msg severity failure;
-    end if;
-  end procedure;
-
-  procedure check_4kb_boundary(address, length, size : integer) is
-    variable first_address, last_address : integer;
-  begin
-    first_address := address - (address mod data_size); -- Aligned
-    last_address := address + size*length - 1;
-
-    if first_address / 4096 /= last_address / 4096 then
-      fail("Crossing 4KB boundary");
-    end if;
-  end procedure;
 begin
 
   main : process
-
-    variable start_address, address : integer;
+    variable burst : axi_burst_t;
+    variable address : integer;
     variable idx : integer;
-    variable burst_length : integer;
-    variable burst_size : integer;
-    variable burst_type : axi_burst_t;
-
   begin
     -- Static Error checking
     assert awid'length = bid'length report "arwid vs wid data width mismatch";
@@ -92,41 +69,36 @@ begin
       awready <= '1';
       wait until (awvalid and awready) = '1' and rising_edge(aclk);
       awready <= '0';
-      start_address := to_integer(unsigned(awaddr));
+      burst := decode_burst(awid, awaddr, awlen, awsize, awburst);
+      check_4kb_boundary(burst, data_size, error_queue);
 
-      address := start_address;
-      burst_length := to_integer(unsigned(awlen)) + 1;
-      burst_size := 2**to_integer(unsigned(awsize));
-      burst_type := awburst;
-
-      check_4kb_boundary(address, burst_length, burst_size);
-
-      if burst_type = axi_burst_wrap then
-        fail("Wrapping burst type not supported");
+      if burst.burst_type = axi_burst_type_wrap then
+        fail("Wrapping burst type not supported", error_queue);
       end if;
 
-      bid <= awid;
+      bid <= std_logic_vector(to_unsigned(burst.id, bid'length));
       bresp <= axi_resp_ok;
 
-      for i in 0 to burst_length-1 loop
+      address := burst.address;
+      for i in 0 to burst.length-1 loop
         wready <= '1';
         wait until (wvalid and wready) = '1' and rising_edge(aclk);
         wready <= '0';
 
-        for j in 0 to burst_size-1 loop
+        if (wlast = '1') /= (i = burst.length-1) then
+          fail("Expected wlast='1' on last beat of burst with length " & to_string(burst.length) &
+               " starting at address " & to_string(burst.address), error_queue);
+        end if;
+
+        for j in 0 to burst.size-1 loop
           idx := (address + j) mod data_size; -- Align data bus
           if wstrb(idx) = '1' then
             write_byte(memory, address+j, to_integer(unsigned(wdata(8*idx+7 downto 8*idx))));
           end if;
         end loop;
 
-        if burst_type = axi_burst_incr then
-          address := address + burst_size;
-        end if;
-
-        if (wlast = '1') /= (i = burst_length-1) then
-          fail("Expected wlast='1' on last beat of burst with length " & to_string(burst_length) &
-               " starting at address " & to_string(start_address));
+        if burst.burst_type = axi_burst_type_incr then
+          address := address + burst.size;
         end if;
       end loop;
 

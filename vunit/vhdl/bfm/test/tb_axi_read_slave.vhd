@@ -34,7 +34,7 @@ architecture a of tb_axi_read_slave is
   signal araddr  : std_logic_vector(31 downto 0);
   signal arlen   : axi4_len_t;
   signal arsize  : axi4_size_t;
-  signal arburst : axi_burst_t;
+  signal arburst : axi_burst_type_t;
 
   signal rvalid : std_logic;
   signal rready : std_logic := '0';
@@ -74,7 +74,7 @@ begin
                          addr : natural;
                          len : natural;
                          log_size : natural;
-                         burst : axi_burst_t) is
+                         burst : axi_burst_type_t) is
     begin
         arvalid <= '1';
         arid <= id;
@@ -106,7 +106,7 @@ begin
     variable size, log_size : natural;
     variable id : std_logic_vector(arid'range);
     variable len : natural;
-    variable burst : axi_burst_t;
+    variable burst : axi_burst_type_t;
   begin
     test_runner_setup(runner, runner_cfg);
     rnd.InitSeed(rnd'instance_name);
@@ -117,10 +117,10 @@ begin
         id := rnd.RandSlv(arid'length);
         case rnd.RandInt(1) is
           when 0 =>
-            burst := axi_burst_fixed;
+            burst := axi_burst_type_fixed;
             len := 1;
           when 1 =>
-            burst := axi_burst_incr;
+            burst := axi_burst_type_incr;
             len := rnd.RandInt(1, 2**arlen'length);
           when others =>
             assert false;
@@ -145,7 +145,7 @@ begin
     elsif run("Test error on unsupported wrap burst") then
       error_queue <= allocate;
       alloc := allocate(memory, 8);
-      write_addr(x"2", base_address(alloc), 2, 0, axi_burst_wrap);
+      write_addr(x"2", base_address(alloc), 2, 0, axi_burst_type_wrap);
       wait until length(error_queue) > 0 and rising_edge(clk);
       check_equal(pop_string(error_queue), "Wrapping burst type not supported");
       check_equal(length(error_queue), 0, "no more errors");
@@ -153,7 +153,7 @@ begin
     elsif run("Test error 4KB boundary crossing") then
       alloc := allocate(memory, 4096+32, alignment => 4096);
       error_queue <= allocate;
-      write_addr(x"2", base_address(alloc)+4000, 256, 0, axi_burst_incr);
+      write_addr(x"2", base_address(alloc)+4000, 256, 0, axi_burst_type_incr);
       wait until length(error_queue) > 0 and rising_edge(clk);
       check_equal(pop_string(error_queue), "Crossing 4KB boundary");
       check_equal(length(error_queue), 0, "no more errors");

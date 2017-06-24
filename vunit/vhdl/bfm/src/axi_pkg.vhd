@@ -11,10 +11,10 @@ package axi_pkg is
   subtype axi_resp_t is std_logic_vector(1 downto 0);
   constant axi_resp_ok : axi_resp_t := "00";
 
-  subtype axi_burst_t is std_logic_vector(1 downto 0);
-  constant axi_burst_fixed : axi_burst_t := "00";
-  constant axi_burst_incr : axi_burst_t := "01";
-  constant axi_burst_wrap : axi_burst_t := "10";
+  subtype axi_burst_type_t is std_logic_vector(1 downto 0);
+  constant axi_burst_type_fixed : axi_burst_type_t := "00";
+  constant axi_burst_type_incr : axi_burst_type_t := "01";
+  constant axi_burst_type_wrap : axi_burst_type_t := "10";
 
   subtype axi4_len_t is std_logic_vector(7 downto 0);
   subtype axi4_size_t is std_logic_vector(2 downto 0);

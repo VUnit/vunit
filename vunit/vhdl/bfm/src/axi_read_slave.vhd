@@ -9,6 +9,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.axi_pkg.all;
+use work.axi_private_pkg.all;
 use work.queue_pkg.all;
 use work.memory_pkg.all;
 
@@ -24,7 +25,7 @@ entity axi_read_slave is
     araddr : in std_logic_vector;
     arlen : in std_logic_vector;
     arsize : in std_logic_vector;
-    arburst : in axi_burst_t;
+    arburst : in axi_burst_type_t;
 
     rvalid : out std_logic;
     rready : in std_logic;
@@ -41,35 +42,12 @@ end entity;
 
 architecture a of axi_read_slave is
   constant data_size : integer := rdata'length / 8;
-
-  procedure fail(msg : string) is
-  begin
-    if error_queue /= null_queue then
-      push_string(error_queue, msg);
-    else
-      report msg severity failure;
-    end if;
-  end procedure;
-
-  procedure check_4kb_boundary(address, length, size : integer) is
-    variable first_address, last_address : integer;
-  begin
-    first_address := address - (address mod data_size); -- Aligned
-    last_address := address + size*length - 1;
-
-    if first_address / 4096 /= last_address / 4096 then
-      fail("Crossing 4KB boundary");
-    end if;
-  end procedure;
 begin
 
   main : process
-
+    variable burst : axi_burst_t;
     variable address : integer;
     variable idx : integer;
-    variable burst_length : integer;
-    variable burst_size : integer;
-    variable burst_type : axi_burst_t;
   begin
     -- Static Error checking
     assert arid'length = rid'length report "arid vs rid data width mismatch";
@@ -88,40 +66,36 @@ begin
       arready <= '1';
       wait until (arvalid and arready) = '1' and rising_edge(aclk);
       arready <= '0';
-      address := to_integer(unsigned(araddr));
-      burst_length := to_integer(unsigned(arlen)) + 1;
-      burst_size := 2**to_integer(unsigned(arsize));
-      burst_type := arburst;
-      rid <= arid;
+      burst := decode_burst(arid, araddr, arlen, arsize, arburst);
+      check_4kb_boundary(burst, data_size, error_queue);
 
-      check_4kb_boundary(address, burst_length, burst_size);
-
-      if burst_type = axi_burst_wrap then
-        fail("Wrapping burst type not supported");
+      if burst.burst_type = axi_burst_type_wrap then
+        fail("Wrapping burst type not supported", error_queue);
       end if;
 
+      rid <= std_logic_vector(to_unsigned(burst.id, rid'length));
       rdata <= (rdata'range => '0');
       rresp <= axi_resp_ok;
 
-      for i in 0 to burst_length-1 loop
+      address := burst.address;
 
-        for j in 0 to burst_size-1 loop
+      for i in 0 to burst.length-1 loop
+        for j in 0 to burst.size-1 loop
           idx := (address + j) mod data_size;
           rdata(8*idx+7 downto 8*idx) <= std_logic_vector(to_unsigned(read_byte(memory, address+j), 8));
         end loop;
 
-        if burst_type = axi_burst_incr then
-          address := address + burst_size;
+        if burst.burst_type = axi_burst_type_incr then
+          address := address + burst.size;
         end if;
 
-        rvalid <= '1';
-
-        if i = burst_length - 1 then
+        if i = burst.length - 1 then
           rlast <= '1';
         else
           rlast <= '0';
         end if;
 
+        rvalid <= '1';
         wait until (rvalid and rready) = '1' and rising_edge(aclk);
         rvalid <= '0';
       end loop;
