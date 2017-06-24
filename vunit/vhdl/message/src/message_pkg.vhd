@@ -61,6 +61,10 @@ package message_pkg is
 
   constant max_timeout : time := 1 hr;
 
+  procedure wait_until_not_full(signal event : inout event_t;
+                                constant inbox : inbox_t;
+                                constant timeout : time := max_timeout);
+
   -- Send message to inbox without expecting reply
   procedure send(signal event : inout event_t; constant inbox : inbox_t;
                  variable msg : inout msg_t;
@@ -272,15 +276,22 @@ package body message_pkg is
     return msg;
   end;
 
-  procedure send_helper(signal event : inout event_t; constant inbox : inbox_t;
-                        variable msg : inout msg_t;
-                        variable reply : inout reply_t;
-                        constant timeout : time := max_timeout) is
+  procedure wait_until_not_full(signal event : inout event_t;
+                                constant inbox : inbox_t;
+                                constant timeout : time := max_timeout) is
   begin
     if is_full(inbox) then
       wait on event until not is_full(inbox) for timeout;
     end if;
     assert not is_full(inbox) report "Send timeout after " & to_string(timeout) & " due to full inbox";
+  end;
+
+  procedure send_helper(signal event : inout event_t; constant inbox : inbox_t;
+                        variable msg : inout msg_t;
+                        variable reply : inout reply_t;
+                        constant timeout : time := max_timeout) is
+  begin
+    wait_until_not_full(event, inbox, timeout);
 
     push(inbox.msg_queue, msg);
     -- Ownership of data is transfered to other side

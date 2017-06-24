@@ -57,6 +57,7 @@ begin
   end process;
 
   read_address_channel(self,
+                       event,
                        aclk,
                        awvalid,
                        awready,
@@ -70,6 +71,7 @@ begin
     variable burst : axi_burst_t;
     variable address : integer;
     variable idx : integer;
+    variable msg : msg_t;
   begin
     -- Initialization
     wready <= '0';
@@ -80,11 +82,9 @@ begin
     wait until self.is_initialized and rising_edge(aclk);
 
     loop
-      while not self.has_burst loop
-        wait until rising_edge(aclk);
-      end loop;
-
-      burst := self.pop_burst;
+      recv(event, self.get_addr_inbox, msg);
+      burst := pop_axi_burst(msg.data);
+      recycle(msg);
 
       address := burst.address;
       for i in 0 to burst.length-1 loop

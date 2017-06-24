@@ -29,12 +29,8 @@ package axi_private_pkg is
     impure function is_initialized return boolean;
     impure function get_inbox return inbox_t;
 
-    procedure push_burst(burst : axi_burst_t);
-    impure function pop_burst return axi_burst_t;
-    impure function has_burst return boolean;
-    impure function can_push_burst return boolean;
-
     procedure set_addr_queue_size(size : positive);
+    impure function get_addr_inbox return inbox_t;
 
     impure function get_error_queue return queue_t;
     procedure set_error_queue(error_queue : queue_t);
@@ -43,16 +39,14 @@ package axi_private_pkg is
     impure function data_size return integer;
   end protected;
 
-  function decode_burst(axid : std_logic_vector;
-                        axaddr : std_logic_vector;
-                        axlen : std_logic_vector;
-                        axsize : std_logic_vector;
-                        axburst : axi_burst_type_t) return axi_burst_t;
+  procedure push_axi_burst(queue : queue_t; burst : axi_burst_t);
+  impure function pop_axi_burst(queue : queue_t) return axi_burst_t;
 
   procedure main_loop(variable self : inout axi_slave_t;
                       signal event : inout event_t);
 
   procedure read_address_channel(variable self : inout axi_slave_t;
+                                 signal event : inout event_t;
                                  signal aclk : in std_logic;
                                  signal axvalid : in std_logic;
                                  signal axready : inout std_logic; -- GHDL bug?
@@ -72,16 +66,14 @@ package body axi_private_pkg is
     variable p_data_size : integer;
     variable p_error_queue : queue_t;
 
-    variable p_addr_queue : queue_t;
-    variable p_addr_queue_size : integer;
+    variable p_addr_inbox : inbox_t;
 
     procedure init(inbox : inbox_t; data : std_logic_vector) is
     begin
       p_is_initialized := true;
       p_inbox := inbox;
       p_data_size := data'length/8;
-      p_addr_queue := allocate;
-      set_addr_queue_size(1);
+      p_addr_inbox := new_inbox(1);
       set_error_queue(null_queue);
     end;
 
@@ -97,8 +89,13 @@ package body axi_private_pkg is
 
     procedure set_addr_queue_size(size : positive) is
     begin
-      p_addr_queue_size := size;
+      set_size(p_addr_inbox,size);
     end procedure;
+
+    impure function get_addr_inbox return inbox_t is
+    begin
+    return p_addr_inbox;
+    end;
 
     impure function get_error_queue return queue_t is
     begin
@@ -131,62 +128,38 @@ package body axi_private_pkg is
       end if;
     end procedure;
 
-    procedure push_burst(burst : axi_burst_t) is
-    begin
-      push(p_addr_queue, burst.id);
-      push(p_addr_queue, burst.address);
-      push(p_addr_queue, burst.length);
-      push(p_addr_queue, burst.size);
-      push_boolean(p_addr_queue, burst.burst_type = axi_burst_type_fixed);
-    end;
-
-    impure function pop_burst return axi_burst_t is
-      variable burst : axi_burst_t;
-    begin
-      burst.id := pop(p_addr_queue);
-      burst.address := pop(p_addr_queue);
-      burst.length := pop(p_addr_queue);
-      burst.size := pop(p_addr_queue);
-
-      if pop_boolean(p_addr_queue) then
-        burst.burst_type := axi_burst_type_fixed;
-      else
-        burst.burst_type := axi_burst_type_incr;
-      end if;
-
-      return burst;
-    end;
-
-    impure function has_burst return boolean is
-    begin
-      return length(p_addr_queue) > 0;
-    end;
-
-    impure function can_push_burst return boolean is
-    begin
-      return length(p_addr_queue) < p_addr_queue_size*5;
-    end;
-
-    impure function data_size return integer is
+  impure function data_size return integer is
     begin
       return p_data_size;
     end;
   end protected body;
 
-  function decode_burst(axid : std_logic_vector;
-                        axaddr : std_logic_vector;
-                        axlen : std_logic_vector;
-                        axsize : std_logic_vector;
-                        axburst : axi_burst_type_t) return axi_burst_t is
+
+  procedure push_axi_burst(queue : queue_t; burst : axi_burst_t) is
+  begin
+    push(queue, burst.id);
+    push(queue, burst.address);
+    push(queue, burst.length);
+    push(queue, burst.size);
+    push_boolean(queue, burst.burst_type = axi_burst_type_fixed);
+  end;
+
+  impure function pop_axi_burst(queue : queue_t) return axi_burst_t is
     variable burst : axi_burst_t;
   begin
-    burst.id := to_integer(unsigned(axid));
-    burst.address := to_integer(unsigned(axaddr));
-    burst.length := to_integer(unsigned(axlen)) + 1;
-    burst.size := 2**to_integer(unsigned(axsize));
-    burst.burst_type := axburst;
+    burst.id := pop(queue);
+    burst.address := pop(queue);
+    burst.length := pop(queue);
+    burst.size := pop(queue);
+
+    if pop_boolean(queue) then
+      burst.burst_type := axi_burst_type_fixed;
+    else
+      burst.burst_type := axi_burst_type_incr;
+    end if;
+
     return burst;
-  end function;
+  end;
 
   procedure main_loop(variable self : inout axi_slave_t;
                       signal event : inout event_t) is
@@ -213,7 +186,23 @@ package body axi_private_pkg is
     end loop;
   end;
 
+  function decode_burst(axid : std_logic_vector;
+                        axaddr : std_logic_vector;
+                        axlen : std_logic_vector;
+                        axsize : std_logic_vector;
+                        axburst : axi_burst_type_t) return axi_burst_t is
+    variable burst : axi_burst_t;
+  begin
+    burst.id := to_integer(unsigned(axid));
+    burst.address := to_integer(unsigned(axaddr));
+    burst.length := to_integer(unsigned(axlen)) + 1;
+    burst.size := 2**to_integer(unsigned(axsize));
+    burst.burst_type := axburst;
+    return burst;
+  end function;
+
   procedure read_address_channel(variable self : inout axi_slave_t;
+                                 signal event : inout event_t;
                                  signal aclk : in std_logic;
                                  signal axvalid : in std_logic;
                                  signal axready : inout std_logic;
@@ -223,6 +212,7 @@ package body axi_private_pkg is
                                  signal axsize : in std_logic_vector;
                                  signal axburst : in axi_burst_type_t) is
     variable burst : axi_burst_t;
+    variable msg : msg_t;
   begin
     assert (axlen'length = 4 or
             axlen'length = 8) report "a{r,w}len must be either 4 (AXI3) or 8 (AXI4)";
@@ -230,9 +220,7 @@ package body axi_private_pkg is
     wait until self.is_initialized and rising_edge(aclk);
 
     loop
-      while not self.can_push_burst loop
-        wait until rising_edge(aclk);
-      end loop;
+      wait_until_not_full(event, self.get_addr_inbox);
 
       axready <= '1';
       wait until (axvalid and axready) = '1' and rising_edge(aclk);
@@ -245,7 +233,9 @@ package body axi_private_pkg is
         self.fail("Wrapping burst type not supported");
       end if;
 
-      self.push_burst(burst);
+      msg := allocate;
+      push_axi_burst(msg.data, burst);
+      send(event, self.get_addr_inbox, msg);
     end loop;
   end;
 end package body;
