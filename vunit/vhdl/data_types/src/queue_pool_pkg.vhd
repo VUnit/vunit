@@ -30,8 +30,7 @@ package body queue_pool_pkg is
   impure function allocate(pool : queue_pool_t) return queue_t is
     variable queue : queue_t;
   begin
-    queue := (head => allocate(pool.index_pool, 1),
-              tail => allocate(pool.index_pool, 1),
+    queue := (p_meta => allocate(pool.index_pool, 2),
               data => allocate(pool.data_pool, 0));
     flush(queue);
     return queue;
@@ -39,8 +38,7 @@ package body queue_pool_pkg is
 
   procedure recycle(pool : queue_pool_t; variable queue : inout queue_t) is
   begin
-    recycle(pool.index_pool, queue.head);
-    recycle(pool.index_pool, queue.tail);
+    recycle(pool.index_pool, queue.p_meta);
     recycle(pool.data_pool, queue.data);
   end;
 

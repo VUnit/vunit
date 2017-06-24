@@ -67,6 +67,10 @@ package message_pkg is
                                 constant inbox : inbox_t;
                                 constant timeout : time := max_timeout);
 
+  procedure wait_until_not_empty(signal event : inout event_t;
+                                 constant inbox : inbox_t;
+                                 constant timeout : time := max_timeout);
+
   -- Send message to inbox without expecting reply
   procedure send(signal event : inout event_t; constant inbox : inbox_t;
                  variable msg : inout msg_t;
@@ -293,6 +297,16 @@ package body message_pkg is
     assert not is_full(inbox) report "Send timeout after " & to_string(timeout) & " due to full inbox";
   end;
 
+  procedure wait_until_not_empty(signal event : inout event_t;
+                                 constant inbox : inbox_t;
+                                 constant timeout : time := max_timeout) is
+  begin
+    if is_empty(inbox) then
+      wait on event until not is_empty(inbox) for timeout;
+    end if;
+    assert not is_empty(inbox) report "Recv timeout after " & to_string(timeout) & " due to empty inbox";
+  end;
+
   procedure send_helper(signal event : inout event_t; constant inbox : inbox_t;
                         variable msg : inout msg_t;
                         variable reply : inout reply_t;
@@ -333,11 +347,7 @@ package body message_pkg is
                  variable reply : inout reply_t;
                  constant timeout : time := max_timeout) is
   begin
-    if is_empty(inbox) then
-      wait on event until not is_empty(inbox) for timeout;
-    end if;
-    assert not is_empty(inbox) report "Recv timeout after " & to_string(timeout) & " due to empty inbox";
-
+    wait_until_not_empty(event, inbox, timeout);
     msg := pop(inbox.msg_queue);
     reply := pop(inbox.msg_queue);
     notify(event);

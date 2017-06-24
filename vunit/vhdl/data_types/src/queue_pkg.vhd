@@ -13,13 +13,12 @@ use work.integer_vector_ptr_pkg.all;
 package queue_pkg is
 
   type queue_t is record
-    head : integer_vector_ptr_t;
-    tail : integer_vector_ptr_t;
+    p_meta : integer_vector_ptr_t;
     data : integer_vector_ptr_t;
   end record;
-  constant num_words_per_queue : natural := 3;
+  constant num_words_per_queue : natural := 2;
 
-  constant null_queue : queue_t := (head => null_ptr, tail => null_ptr, data => null_ptr);
+  constant null_queue : queue_t := (p_meta => null_ptr, data => null_ptr);
 
   impure function allocate return queue_t;
   impure function length(queue : queue_t) return integer;
@@ -53,16 +52,19 @@ end package;
 
 package body queue_pkg is
 
+  constant tail_idx : natural := 0;
+  constant head_idx : natural := 1;
+  constant num_meta : natural := head_idx + 1;
+
   impure function allocate return queue_t is
   begin
-    return (head => allocate(1),
-            tail => allocate(1),
+    return (p_meta => allocate(num_meta),
             data => allocate);
   end;
 
   impure function length(queue : queue_t) return integer is
-    variable head : integer := get(queue.head, 0);
-    variable tail : integer := get(queue.tail, 0);
+    variable head : integer := get(queue.p_meta, head_idx);
+    variable tail : integer := get(queue.p_meta, tail_idx);
   begin
     return tail - head;
   end;
@@ -70,8 +72,8 @@ package body queue_pkg is
   procedure flush(queue : queue_t) is
   begin
     assert queue /= null_queue report "Flush null queue";
-    set(queue.head, 0, 0);
-    set(queue.tail, 0, 0);
+    set(queue.p_meta, head_idx, 0);
+    set(queue.p_meta, tail_idx, 0);
   end;
 
   procedure push(queue : queue_t; value : integer) is
@@ -79,8 +81,8 @@ package body queue_pkg is
     variable head : integer;
   begin
     assert queue /= null_queue report "Push to null queue";
-    tail := get(queue.tail, 0);
-    head := get(queue.head, 0);
+    tail := get(queue.p_meta, tail_idx);
+    head := get(queue.p_meta, head_idx);
 
     if length(queue.data) < tail+1 then
       -- Allocate more new data, double data to avoid
@@ -89,11 +91,11 @@ package body queue_pkg is
       resize(queue.data, 2*length(queue)+1, drop => head);
       tail := tail - head;
       head := 0;
-      set(queue.head, 0, head);
+      set(queue.p_meta, head_idx, head);
     end if;
 
     set(queue.data, tail, value);
-    set(queue.tail, 0, tail+1);
+    set(queue.p_meta, tail_idx, tail+1);
   end;
 
   impure function pop(queue : queue_t) return integer is
@@ -102,9 +104,9 @@ package body queue_pkg is
   begin
     assert queue /= null_queue report "Pop from null queue";
     assert length(queue) > 0 report "Pop from empty queue";
-    head := get(queue.head, 0);
+    head := get(queue.p_meta, head_idx);
     data := get(queue.data, head);
-    set(queue.head, 0, head+1);
+    set(queue.p_meta, head_idx, head+1);
     return data;
   end;
 
@@ -246,8 +248,7 @@ package body queue_pkg is
 
   procedure push_queue_ref(queue : queue_t; value : queue_t) is
   begin
-    push_integer_vector_ptr_ref(queue, value.head);
-    push_integer_vector_ptr_ref(queue, value.tail);
+    push_integer_vector_ptr_ref(queue, value.p_meta);
     push_integer_vector_ptr_ref(queue, value.data);
   end;
 
@@ -255,8 +256,7 @@ package body queue_pkg is
   impure function pop_queue_ref(queue : queue_t) return queue_t is
     variable result : queue_t;
   begin
-    result.head := pop_integer_vector_ptr_ref(queue);
-    result.tail := pop_integer_vector_ptr_ref(queue);
+    result.p_meta := pop_integer_vector_ptr_ref(queue);
     result.data := pop_integer_vector_ptr_ref(queue);
     return result;
   end;
