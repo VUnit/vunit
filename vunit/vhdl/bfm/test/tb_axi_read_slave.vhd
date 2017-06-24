@@ -160,7 +160,7 @@ begin
       check_equal(pop_string(error_queue), "Crossing 4KB boundary");
       check_equal(length(error_queue), 0, "no more errors");
 
-    elsif run("Test default address queue size is 1") then
+    elsif run("Test default address queue max length is 1") then
       alloc := allocate(memory, 1024);
       write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr); -- Taken data process
       write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr); -- In the queue
@@ -169,9 +169,9 @@ begin
         assert arready = '0' report "Can only have one address in the queue";
       end loop;
 
-    elsif run("Test set address queue size") then
+    elsif run("Test set address queue max length") then
       alloc := allocate(memory, 1024);
-      set_addr_queue_size(event, inbox, 16);
+      set_addr_queue_max_length(event, inbox, 16);
 
       write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr); -- Taken data process
       for i in 1 to 16 loop

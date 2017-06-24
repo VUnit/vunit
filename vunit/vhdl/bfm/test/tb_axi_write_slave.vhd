@@ -236,8 +236,8 @@ begin
         assert awready = '0' report "Can only have one address in the queue";
       end loop;
 
-    elsif run("Test set address queue size") then
-      set_addr_queue_size(event, inbox, 16);
+    elsif run("Test set address queue max length") then
+      set_addr_queue_max_length(event, inbox, 16);
 
       write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr); -- Taken data process
       for i in 1 to 16 loop

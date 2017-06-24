@@ -52,12 +52,13 @@ package message_pkg is
   procedure recycle(variable reply : inout reply_t);
 
   constant num_words_per_message : integer := 3*num_words_per_queue + 1;
-  constant infinite_inbox_size : positive := integer'high/num_words_per_message;
+  constant infinite_inbox_length : positive := integer'high/num_words_per_message;
 
-  impure function new_inbox(size : positive := 1) return inbox_t;
+  impure function new_inbox(max_length : positive := 1) return inbox_t;
 
-  procedure set_size(constant inbox : inbox_t; constant size : positive);
-  impure function get_size(inbox : inbox_t) return positive;
+  procedure set_max_length(constant inbox : inbox_t; constant max_length : positive);
+  impure function get_max_length(inbox : inbox_t) return positive;
+  impure function get_length(inbox : inbox_t) return natural;
 
   constant max_timeout : time := 1 hr;
 
@@ -109,38 +110,43 @@ package message_pkg is
 end package;
 
 package body message_pkg is
-  constant size_idx : natural := 0;
+  constant max_length_idx : natural := 0;
   constant no_selected_count_idx : natural := 1;
   constant meta_data_len : natural := 2;
 
-  impure function new_inbox(size : positive := 1) return inbox_t is
+  impure function new_inbox(max_length : positive := 1) return inbox_t is
     variable inbox : inbox_t;
   begin
     inbox := (meta_data => allocate(meta_data_len),
              msg_queue => allocate(queue_pool));
-    set_size(inbox, size);
+    set_max_length(inbox, max_length);
     set(inbox.meta_data, no_selected_count_idx, 0);
     return inbox;
   end;
 
-  procedure set_size(constant inbox : inbox_t; constant size : positive) is
+  procedure set_max_length(constant inbox : inbox_t; constant max_length : positive) is
   begin
-    set(inbox.meta_data, size_idx, size);
+    set(inbox.meta_data, max_length_idx, max_length);
   end;
 
-  impure function get_size(inbox : inbox_t) return positive is
+  impure function get_max_length(inbox : inbox_t) return positive is
   begin
-    return get(inbox.meta_data, size_idx);
+    return get(inbox.meta_data, max_length_idx);
+  end;
+
+  impure function get_length(inbox : inbox_t) return natural is
+  begin
+    return length(inbox.msg_queue) / num_words_per_message;
   end;
 
   impure function is_empty(inbox : inbox_t) return boolean is
   begin
-    return length(inbox.msg_queue) < num_words_per_message;
+    return get_length(inbox) = 0;
   end;
 
   impure function is_full(inbox : inbox_t) return boolean is
   begin
-    return length(inbox.msg_queue) = num_words_per_message * get_size(inbox);
+    return get_length(inbox) = get_max_length(inbox);
   end;
 
   impure function all_empty(inboxes : inbox_vec_t) return boolean is

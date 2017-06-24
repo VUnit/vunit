@@ -24,7 +24,7 @@ architecture a of tb_message is
   constant inbox : inbox_t := new_inbox;
   constant inboxes : inbox_vec_t := (new_inbox, new_inbox);
 
-  constant large_inbox_size : natural := 512;
+  constant large_inbox_max_length : natural := 512;
 begin
 
   main : process
@@ -93,10 +93,10 @@ begin
       push(msg.data, 73);
       send(event, inbox, msg);
 
-    elsif run("Has inbox size") then
-      set_size(inbox, large_inbox_size);
-      check_equal(get_size(inbox), large_inbox_size);
-      for i in 1 to large_inbox_size loop
+    elsif run("Has inbox max length") then
+      set_max_length(inbox, large_inbox_max_length);
+      check_equal(get_max_length(inbox), large_inbox_max_length);
+      for i in 1 to large_inbox_max_length loop
         msg := allocate;
         push(msg.data, i);
         send(event, inbox, msg);
@@ -179,8 +179,8 @@ begin
       recycle(msg);
 
       support_done <= true;
-    elsif enabled("Has inbox size") then
-      for i in 1 to large_inbox_size loop
+    elsif enabled("Has inbox max length") then
+      for i in 1 to large_inbox_max_length loop
         recv(event, inbox, msg);
         check_equal(pop(msg.data), i, "data: " & to_string(i));
         recycle(msg);

@@ -29,7 +29,7 @@ package axi_private_pkg is
     impure function is_initialized return boolean;
     impure function get_inbox return inbox_t;
 
-    procedure set_addr_queue_size(size : positive);
+    procedure set_addr_queue_max_length(max_length : positive);
     impure function get_addr_inbox return inbox_t;
 
     impure function get_error_queue return queue_t;
@@ -87,9 +87,9 @@ package body axi_private_pkg is
       return p_inbox;
     end;
 
-    procedure set_addr_queue_size(size : positive) is
+    procedure set_addr_queue_max_length(max_length : positive) is
     begin
-      set_size(p_addr_inbox,size);
+      set_max_length(p_addr_inbox, max_length);
     end procedure;
 
     impure function get_addr_inbox return inbox_t is
@@ -177,8 +177,8 @@ package body axi_private_pkg is
           push_queue_ref(reply.data, self.get_error_queue);
           send_reply(event, reply);
 
-        when msg_set_address_queue_size =>
-          self.set_addr_queue_size(pop(msg.data));
+        when msg_set_address_queue_max_length =>
+          self.set_addr_queue_max_length(pop(msg.data));
 
       end case;
 
