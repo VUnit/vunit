@@ -55,7 +55,7 @@ package axi_private_pkg is
   procedure read_address_channel(variable self : inout axi_slave_t;
                                  signal aclk : in std_logic;
                                  signal axvalid : in std_logic;
-                                 signal axready : out std_logic;
+                                 signal axready : inout std_logic; -- GHDL bug?
                                  signal axid : in std_logic_vector;
                                  signal axaddr : in std_logic_vector;
                                  signal axlen : in std_logic_vector;
@@ -216,7 +216,7 @@ package body axi_private_pkg is
   procedure read_address_channel(variable self : inout axi_slave_t;
                                  signal aclk : in std_logic;
                                  signal axvalid : in std_logic;
-                                 signal axready : out std_logic;
+                                 signal axready : inout std_logic;
                                  signal axid : in std_logic_vector;
                                  signal axaddr : in std_logic_vector;
                                  signal axlen : in std_logic_vector;
