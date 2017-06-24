@@ -46,11 +46,10 @@ entity axi_write_slave is
 end entity;
 
 architecture a of axi_write_slave is
-  constant data_size : integer := wdata'length / 8;
+  shared variable self : axi_slave_t;
 begin
 
   main : process
-    variable self : axi_slave_t;
 
     variable burst : axi_burst_t;
     variable address : integer;
@@ -74,10 +73,10 @@ begin
       wait until (awvalid and awready) = '1' and rising_edge(aclk);
       awready <= '0';
       burst := decode_burst(awid, awaddr, awlen, awsize, awburst);
-      check_4kb_boundary(burst, self.data_size, error_queue);
+      self.check_4kb_boundary(burst);
 
       if burst.burst_type = axi_burst_type_wrap then
-        fail("Wrapping burst type not supported", error_queue);
+        self.fail("Wrapping burst type not supported");
       end if;
 
       bid <= std_logic_vector(to_unsigned(burst.id, bid'length));
@@ -90,8 +89,8 @@ begin
         wready <= '0';
 
         if (wlast = '1') /= (i = burst.length-1) then
-          fail("Expected wlast='1' on last beat of burst with length " & to_string(burst.length) &
-               " starting at address " & to_string(burst.address), error_queue);
+          self.fail("Expected wlast='1' on last beat of burst with length " & to_string(burst.length) &
+                    " starting at address " & to_string(burst.address));
         end if;
 
         for j in 0 to burst.size-1 loop
@@ -110,5 +109,10 @@ begin
       wait until (bvalid and bready) = '1' and rising_edge(aclk);
       bvalid <= '0';
     end loop;
+  end process;
+
+  error_queue_set : process (error_queue)
+  begin
+    self.set_error_queue(error_queue);
   end process;
 end architecture;

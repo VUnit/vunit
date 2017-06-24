@@ -41,7 +41,7 @@ entity axi_read_slave is
 end entity;
 
 architecture a of axi_read_slave is
-  constant data_size : integer := rdata'length / 8;
+  shared variable self : axi_slave_t;
 begin
 
   main : process
@@ -49,6 +49,8 @@ begin
     variable address : integer;
     variable idx : integer;
   begin
+    self.init(rdata);
+
     -- Static Error checking
     assert arid'length = rid'length report "arid vs rid data width mismatch";
     assert (arlen'length = 4 or
@@ -67,10 +69,10 @@ begin
       wait until (arvalid and arready) = '1' and rising_edge(aclk);
       arready <= '0';
       burst := decode_burst(arid, araddr, arlen, arsize, arburst);
-      check_4kb_boundary(burst, data_size, error_queue);
+      self.check_4kb_boundary(burst);
 
       if burst.burst_type = axi_burst_type_wrap then
-        fail("Wrapping burst type not supported", error_queue);
+        self.fail("Wrapping burst type not supported");
       end if;
 
       rid <= std_logic_vector(to_unsigned(burst.id, rid'length));
@@ -81,7 +83,7 @@ begin
 
       for i in 0 to burst.length-1 loop
         for j in 0 to burst.size-1 loop
-          idx := (address + j) mod data_size;
+          idx := (address + j) mod self.data_size;
           rdata(8*idx+7 downto 8*idx) <= std_logic_vector(to_unsigned(read_byte(memory, address+j), 8));
         end loop;
 
@@ -103,4 +105,8 @@ begin
     end loop;
   end process;
 
+  error_queue_set : process (error_queue)
+  begin
+    self.set_error_queue(error_queue);
+  end process;
 end architecture;
