@@ -24,11 +24,14 @@ package axi_pkg is
 
 
   type axi_message_type_t is (
-    msg_disable_fail_on_error);
+    msg_disable_fail_on_error,
+    msg_set_address_queue_size);
 
   -- Disables failure on internal errors that are instead pushed to an error queue
   -- Used for testing the BFM error messages
   procedure disable_fail_on_error(signal event : inout event_t; inbox : inbox_t; variable error_queue : inout queue_t);
+
+  procedure set_addr_queue_size(signal event : inout event_t; inbox : inbox_t; size : positive);
 
 end package;
 
@@ -43,5 +46,15 @@ package body axi_pkg is
     recv_reply(event, reply);
     error_queue := pop_queue_ref(reply.data);
     recycle(reply);
+  end;
+
+  procedure set_addr_queue_size(signal event : inout event_t; inbox : inbox_t; size : positive) is
+    variable msg : msg_t;
+    variable reply : reply_t;
+  begin
+    msg := allocate;
+    push(msg.data, axi_message_type_t'pos(msg_set_address_queue_size));
+    push(msg.data, size);
+    send(event, inbox, msg);
   end;
 end package body;

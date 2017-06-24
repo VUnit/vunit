@@ -227,6 +227,27 @@ begin
       wait until length(error_queue) > 0 and rising_edge(clk);
       check_equal(pop_string(error_queue), "Crossing 4KB boundary");
       check_equal(length(error_queue), 0, "no more errors");
+
+    elsif run("Test default address queue size is 1") then
+      write_addr(x"2", 0, 1, 0, axi_burst_type_incr); -- Taken data process
+      write_addr(x"2", 0, 1, 0, axi_burst_type_incr); -- In the queue
+      for i in 0 to 127 loop
+        wait until rising_edge(clk);
+        assert awready = '0' report "Can only have one address in the queue";
+      end loop;
+
+    elsif run("Test set address queue size") then
+      set_addr_queue_size(event, inbox, 16);
+
+      write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr); -- Taken data process
+      for i in 1 to 16 loop
+        write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr); -- In the queue
+      end loop;
+
+      for i in 0 to 127 loop
+        wait until rising_edge(clk);
+        assert awready = '0' report "Address queue should be full";
+      end loop;
     end if;
 
     test_runner_cleanup(runner);

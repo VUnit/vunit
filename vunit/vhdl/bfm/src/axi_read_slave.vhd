@@ -46,15 +46,21 @@ begin
   begin
     -- Static Error checking
     assert arid'length = rid'length report "arid vs rid data width mismatch";
-    assert (arlen'length = 4 or
-            arlen'length = 8) report "arlen must be either 4 (AXI3) or 8 (AXI4)";
-
     self.init(inbox, rdata);
     main_loop(self, event);
     wait;
   end process;
 
-  support : process
+  read_address_channel(self,
+                       aclk,
+                       arvalid,
+                       arready,
+                       arid,
+                       araddr,
+                       arlen,
+                       arsize,
+                       arburst);
+  read_data : process
     variable burst : axi_burst_t;
     variable address : integer;
     variable idx : integer;
@@ -66,17 +72,14 @@ begin
     rresp <= (rresp'range => '0');
     rlast <= '0';
 
-    loop
-      -- Read AR channel
-      arready <= '1';
-      wait until (arvalid and arready) = '1' and rising_edge(aclk);
-      arready <= '0';
-      burst := decode_burst(arid, araddr, arlen, arsize, arburst);
-      self.check_4kb_boundary(burst);
+    wait until self.is_initialized and rising_edge(aclk);
 
-      if burst.burst_type = axi_burst_type_wrap then
-        self.fail("Wrapping burst type not supported");
-      end if;
+    loop
+      while not self.has_burst loop
+        wait until rising_edge(aclk);
+      end loop;
+
+      burst := self.pop_burst;
 
       rid <= std_logic_vector(to_unsigned(burst.id, rid'length));
       rdata <= (rdata'range => '0');

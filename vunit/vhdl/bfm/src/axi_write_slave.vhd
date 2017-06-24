@@ -51,16 +51,22 @@ begin
   begin
     -- Static Error checking
     assert awid'length = bid'length report "arwid vs wid data width mismatch";
-    assert (awlen'length = 4 or
-            awlen'length = 8) report "awlen must be either 4 (AXI3) or 8 (AXI4)";
-
     self.init(inbox, wdata);
     main_loop(self, event);
     wait;
   end process;
 
-  support : process
+  read_address_channel(self,
+                       aclk,
+                       awvalid,
+                       awready,
+                       awid,
+                       awaddr,
+                       awlen,
+                       awsize,
+                       awburst);
 
+  write_data : process
     variable burst : axi_burst_t;
     variable address : integer;
     variable idx : integer;
@@ -71,16 +77,14 @@ begin
     bid <= (bid'range => '0');
     bresp <= (bresp'range => '0');
 
-    loop
-      awready <= '1';
-      wait until (awvalid and awready) = '1' and rising_edge(aclk);
-      awready <= '0';
-      burst := decode_burst(awid, awaddr, awlen, awsize, awburst);
-      self.check_4kb_boundary(burst);
+    wait until self.is_initialized and rising_edge(aclk);
 
-      if burst.burst_type = axi_burst_type_wrap then
-        self.fail("Wrapping burst type not supported");
-      end if;
+    loop
+      while not self.has_burst loop
+        wait until rising_edge(aclk);
+      end loop;
+
+      burst := self.pop_burst;
 
       address := burst.address;
       for i in 0 to burst.length-1 loop
