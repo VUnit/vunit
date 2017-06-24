@@ -190,10 +190,10 @@ begin
       check_equal(describe_address(memory, 5),
                   "address 5 at offset 3 within allocation 'alloc_name' at range (2 to 11)");
 
-    elsif run("Test set reference") then
+    elsif run("Test set expected") then
       memory := new_memory;
       allocation := allocate(memory, 2);
-      set_reference(memory, 0, 77);
+      set_expected(memory, 0, 77);
 
       write_byte(memory, 0, 255, error_msg);
       check_equal(to_string(error_msg), "Writing to " & describe_address(memory, 0) & ". Got 255 expected 77");
@@ -201,8 +201,8 @@ begin
     elsif run("Test check all was written") then
       memory := new_memory;
       allocation := allocate(memory, 3);
-      set_reference(memory, 0, 77);
-      set_reference(memory, 2, 66);
+      set_expected(memory, 0, 77);
+      set_expected(memory, 2, 66);
 
       check_all_was_written(allocation, error_msg);
       check_equal(to_string(error_msg), "The " & describe_address(memory, 0) & " was never written with expected byte 77");

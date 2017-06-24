@@ -35,8 +35,8 @@ package memory_pkg is
 
   type memory_data_t is record
     byte : byte_t;
-    ref : byte_t;
-    has_ref : boolean;
+    exp : byte_t;
+    has_exp : boolean;
     perm : permissions_t;
   end record;
 
@@ -58,7 +58,7 @@ package memory_pkg is
 
   impure function get_permissions(memory : memory_t; address : natural) return permissions_t;
   procedure set_permissions(memory : memory_t; address : natural; permissions : permissions_t);
-  procedure set_reference(memory : memory_t; address : natural; reference : byte_t);
+  procedure set_expected(memory : memory_t; address : natural; expected : byte_t);
   impure function describe_address(memory : memory_t; address : natural) return string;
 
   impure function base_address(alloc : alloc_t) return natural;
@@ -105,7 +105,7 @@ package body memory_pkg is
 
     if length(memory.p_data) < last_address(alloc) + 1 then
       -- Allocate exponentially more memory to avoid to much copying
-      resize(memory.p_data, 2*last_address(alloc) + 1, value => encode((byte => 0, ref => 0, has_ref => false, perm => no_access)));
+      resize(memory.p_data, 2*last_address(alloc) + 1, value => encode((byte => 0, exp => 0, has_exp => false, perm => no_access)));
     end if;
 
     num_allocs := get(memory.p_meta, num_allocations_idx) + 1;
@@ -122,7 +122,7 @@ package body memory_pkg is
 
     -- Set default access type
     for i in 0 to num_bytes-1 loop
-      set(memory.p_data, alloc.p_address + i, encode((byte => 0, ref => 0, has_ref => false, perm => read_and_write)));
+      set(memory.p_data, alloc.p_address + i, encode((byte => 0, exp => 0, has_exp => false, perm => read_and_write)));
     end loop;
     return alloc;
   end function;
@@ -163,9 +163,9 @@ package body memory_pkg is
                              variable error_msg : inout string_ptr_t) is
     variable memory_data : memory_data_t := decode(get(memory.p_data, address));
   begin
-    if memory_data.has_ref and byte /= memory_data.ref then
+    if memory_data.has_exp and byte /= memory_data.exp then
       error_msg := allocate("Writing to " & describe_address(memory, address) &
-                            ". Got " & to_string(byte) & " expected " & to_string(memory_data.ref));
+                            ". Got " & to_string(byte) & " expected " & to_string(memory_data.exp));
     else
       error_msg := null_string_ptr;
     end if;
@@ -203,8 +203,8 @@ package body memory_pkg is
   impure function decode(value : integer) return memory_data_t is
   begin
     return (byte => value mod 256,
-            ref => (value/256) mod 256,
-            has_ref => (value/256**2) mod 2 = 1,
+            exp => (value/256) mod 256,
+            has_exp => (value/256**2) mod 2 = 1,
             perm => permissions_t'val((value/(2*256**2)) mod 256));
   end;
 
@@ -212,9 +212,9 @@ package body memory_pkg is
     variable result : integer;
   begin
     result := (memory_data.byte +
-               memory_data.ref*256 +
+               memory_data.exp*256 +
                permissions_t'pos(memory_data.perm)*(2*256**2));
-    if memory_data.has_ref then
+    if memory_data.has_exp then
       result := result + 256**2;
     end if;
     return result;
@@ -236,7 +236,7 @@ package body memory_pkg is
     end if;
 
     old := decode(get(memory.p_data, address));
-    set(memory.p_data, address, encode((byte => byte, ref => old.ref, has_ref => old.has_ref, perm => old.perm)));
+    set(memory.p_data, address, encode((byte => byte, exp => old.exp, has_exp => old.has_exp, perm => old.perm)));
   end;
 
   procedure write_byte(memory : memory_t; address : natural; byte : byte_t; ignore_permissions : boolean := false) is
@@ -273,9 +273,9 @@ package body memory_pkg is
   begin
     for address in base_address(alloc) to last_address(alloc) loop
       memory_data := decode(get(alloc.p_memory_ref.p_data, address));
-      if memory_data.has_ref and memory_data.byte /= memory_data.ref then
+      if memory_data.has_exp and memory_data.byte /= memory_data.exp then
         error_msg := allocate("The " & describe_address(alloc.p_memory_ref, address) &
-                              " was never written with expected byte " & to_string(memory_data.ref));
+                              " was never written with expected byte " & to_string(memory_data.exp));
         return;
       end if;
     end loop;
@@ -298,13 +298,13 @@ package body memory_pkg is
   procedure set_permissions(memory : memory_t; address : natural; permissions : permissions_t) is
     variable old : memory_data_t := decode(get(memory.p_data, address));
   begin
-    set(memory.p_data, address, encode((byte => old.byte, ref => old.ref, has_ref => old.has_ref, perm => permissions)));
+    set(memory.p_data, address, encode((byte => old.byte, exp => old.exp, has_exp => old.has_exp, perm => permissions)));
   end procedure;
 
-  procedure set_reference(memory : memory_t; address : natural; reference : byte_t) is
+  procedure set_expected(memory : memory_t; address : natural; expected : byte_t) is
     variable old : memory_data_t := decode(get(memory.p_data, address));
   begin
-    set(memory.p_data, address, encode((byte => old.byte, ref => reference, has_ref => true, perm => old.perm)));
+    set(memory.p_data, address, encode((byte => old.byte, exp => expected, has_exp => true, perm => old.perm)));
   end procedure;
 
   impure function describe_address(memory : memory_t; address : natural) return string is
