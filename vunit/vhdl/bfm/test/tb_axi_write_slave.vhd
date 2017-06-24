@@ -111,7 +111,7 @@ begin
     rnd.InitSeed(rnd'instance_name);
 
     if run("Test random writes") then
-      for test_idx in 0 to 256-1 loop
+      for test_idx in 0 to 32-1 loop
 
         id := rnd.RandSlv(awid'length);
         case rnd.RandInt(1) is
@@ -126,7 +126,7 @@ begin
         end case;
 
         log_size := rnd.RandInt(0, 3);
-        size := size;
+        size := 2**log_size;
         random_integer_vector(rnd, size * len, 0, 255, data);
         random_integer_vector(rnd, length(data), 0, 1, strb);
 
