@@ -108,11 +108,14 @@ begin
     variable len : natural;
     variable burst : axi_burst_t;
     variable idx : integer;
+
+    variable num_ops : integer;
   begin
     test_runner_setup(runner, runner_cfg);
     rnd.InitSeed(rnd'instance_name);
 
     if run("Test random writes") then
+      num_ops := 0;
       for test_idx in 0 to 32-1 loop
 
         id := rnd.RandSlv(awid'length);
@@ -136,6 +139,7 @@ begin
         for i in 0 to length(data)-1 loop
           if get(strb, i) = 1 then
             set_reference(memory, base_address(alloc)+i, get(data, i));
+            num_ops := num_ops + 1;
           else
             set_permissions(memory, base_address(alloc)+i, no_access);
           end if;
@@ -169,6 +173,8 @@ begin
 
         check_all_was_written(alloc);
       end loop;
+
+      assert num_ops > 5000;
 
     elsif run("Test error on missing tlast fixed") then
       error_queue <= allocate;
