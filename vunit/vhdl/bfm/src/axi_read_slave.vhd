@@ -40,6 +40,7 @@ end entity;
 
 architecture a of axi_read_slave is
   shared variable self : axi_slave_t;
+  signal local_event : event_t := no_event;
 begin
 
   main : process
@@ -52,7 +53,7 @@ begin
   end process;
 
   read_address_channel(self,
-                       event,
+                       local_event,
                        aclk,
                        arvalid,
                        arready,
@@ -77,7 +78,7 @@ begin
     wait until self.is_initialized and rising_edge(aclk);
 
     loop
-      recv(event, self.get_addr_inbox, msg);
+      recv(local_event, self.get_addr_inbox, msg);
       burst := pop_axi_burst(msg.data);
       recycle(msg);
 

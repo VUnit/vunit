@@ -15,7 +15,8 @@ use work.queue_pool_pkg.all;
 
 package message_pkg is
   subtype event_t is std_logic;
-  signal event : event_t := 'Z';
+  constant no_event : event_t := 'Z';
+  signal event : event_t := no_event;
 
   constant int_pool : integer_vector_ptr_pool_t := allocate;
   constant queue_pool : queue_pool_t := allocate;
