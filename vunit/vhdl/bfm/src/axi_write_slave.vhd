@@ -79,9 +79,6 @@ begin
         self.fail("Wrapping burst type not supported");
       end if;
 
-      bid <= std_logic_vector(to_unsigned(burst.id, bid'length));
-      bresp <= axi_resp_ok;
-
       address := burst.address;
       for i in 0 to burst.length-1 loop
         wready <= '1';
@@ -106,6 +103,8 @@ begin
       end loop;
 
       bvalid <= '1';
+      bid <= std_logic_vector(to_unsigned(burst.id, bid'length));
+      bresp <= axi_resp_ok;
       wait until (bvalid and bready) = '1' and rising_edge(aclk);
       bvalid <= '0';
     end loop;
