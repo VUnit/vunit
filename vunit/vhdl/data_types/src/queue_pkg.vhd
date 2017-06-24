@@ -6,6 +6,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.float_pkg.all;
 
 use work.integer_vector_ptr_pkg.all;
 
@@ -29,6 +30,9 @@ package queue_pkg is
 
   procedure push_boolean(queue : queue_t; value : boolean);
   impure function pop_boolean(queue : queue_t) return boolean;
+
+  procedure push_real(queue : queue_t; value : real);
+  impure function pop_real(queue : queue_t) return real;
 
   procedure push_std_ulogic(queue : queue_t; value : std_ulogic);
   impure function pop_std_ulogic(queue : queue_t) return std_ulogic;
@@ -116,6 +120,20 @@ package body queue_pkg is
   impure function pop_boolean(queue : queue_t) return boolean is
   begin
     return pop(queue) = 1;
+  end;
+
+  procedure push_real(queue : queue_t; value : real) is
+    variable f64 : float64;
+  begin
+    f64 := to_float(value, f64);
+    push_std_ulogic_vector(queue, to_slv(f64));
+  end;
+
+  impure function pop_real(queue : queue_t) return real is
+    variable f64 : float64;
+  begin
+    f64 := to_float(pop_std_ulogic_vector(queue), f64);
+    return to_real(f64);
   end;
 
   procedure push_std_ulogic(queue : queue_t; value : std_ulogic) is

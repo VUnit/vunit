@@ -115,6 +115,28 @@ begin
       push_std_ulogic_vector(queue, std_ulogic_vector(to_signed(-1, 8)));
       assert unsigned(pop_std_ulogic_vector(queue)) = to_unsigned(11, 16);
       assert signed(pop_std_ulogic_vector(queue)) = to_signed(-1, 8);
+
+    elsif run("Test push and pop real") then
+      queue := allocate;
+      push_real(queue, 1.0);
+      push_real(queue, -1.0);
+      push_real(queue, 2.0);
+      push_real(queue, 0.5);
+      push_real(queue, -0.5);
+      assert pop_real(queue) = 1.0;
+      assert pop_real(queue) = -1.0;
+      assert pop_real(queue) = 2.0;
+      assert pop_real(queue) = 0.5;
+      assert pop_real(queue) = -0.5;
+
+      push_real(queue, 1.0 + 0.5**23); -- Single
+      push_real(queue, -(1.0 + 0.5**23)); -- Single
+      push_real(queue, 1.0 + 0.5**53); -- Double
+      push_real(queue, -(1.0 + 0.5**53)); -- Double
+      assert pop_real(queue) = 1.0 + 0.5**23;
+      assert pop_real(queue) = -(1.0 + 0.5**23);
+      assert pop_real(queue) = 1.0 + 0.5**53;
+      assert pop_real(queue) = -(1.0 + 0.5**53);
     end if;
 
     test_runner_cleanup(runner);
