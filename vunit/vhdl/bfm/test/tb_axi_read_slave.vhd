@@ -26,6 +26,8 @@ end entity;
 architecture a of tb_axi_read_slave is
   signal clk    : std_logic := '0';
 
+  constant data_size : integer := 16;
+
   signal arvalid : std_logic := '0';
   signal arready : std_logic;
   signal arid    : std_logic_vector(3 downto 0);
@@ -37,7 +39,7 @@ architecture a of tb_axi_read_slave is
   signal rvalid : std_logic;
   signal rready : std_logic := '0';
   signal rid : std_logic_vector(arid'range);
-  signal rdata : std_logic_vector(127 downto 0);
+  signal rdata : std_logic_vector(8*data_size-1 downto 0);
   signal rresp : axi_resp_t;
   signal rlast : std_logic;
 
@@ -86,12 +88,14 @@ begin
     end procedure;
 
     procedure read_data(id : std_logic_vector; address : natural; size : natural; resp : axi_resp_t; last : boolean) is
+      variable idx : integer;
     begin
       rready <= '1';
       wait until (rvalid and rready) = '1' and rising_edge(clk);
       rready <= '0';
       for i in 0 to size-1 loop
-        check_equal(rdata(8*i+7 downto 8*i), read_byte(memory, address+i));
+        idx := (address + i) mod data_size; -- Align data bus
+        check_equal(rdata(8*idx+7 downto 8*idx), read_byte(memory, address+i));
       end loop;
       check_equal(rid, id, "rid");
       check_equal(rresp, resp, "rresp");

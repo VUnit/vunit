@@ -56,7 +56,10 @@ architecture a of axi_write_slave is
 begin
 
   main : process
+    constant data_size : integer := wdata'length / 8;
+
     variable start_address, address : integer;
+    variable idx : integer;
     variable burst_length : integer;
     variable burst_size : integer;
     variable burst_type : axi_burst_t;
@@ -78,6 +81,7 @@ begin
       wait until (awvalid and awready) = '1' and rising_edge(aclk);
       awready <= '0';
       start_address := to_integer(unsigned(awaddr));
+
       address := start_address;
       burst_length := to_integer(unsigned(awlen)) + 1;
       burst_size := 2**to_integer(unsigned(awsize));
@@ -96,8 +100,9 @@ begin
         wready <= '0';
 
         for j in 0 to burst_size-1 loop
-          if wstrb(j) = '1' then
-            write_byte(memory, address+j, to_integer(unsigned(wdata(8*j+7 downto 8*j))));
+          idx := (address + j) mod data_size; -- Align data bus
+          if wstrb(idx) = '1' then
+            write_byte(memory, address+j, to_integer(unsigned(wdata(8*idx+7 downto 8*idx))));
           end if;
         end loop;
 

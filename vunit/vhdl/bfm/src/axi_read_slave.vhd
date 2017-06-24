@@ -51,7 +51,10 @@ architecture a of axi_read_slave is
 begin
 
   main : process
+    constant data_size : integer := rdata'length / 8;
+
     variable address : integer;
+    variable idx : integer;
     variable burst_length : integer;
     variable burst_size : integer;
     variable burst_type : axi_burst_t;
@@ -87,8 +90,10 @@ begin
       rresp <= axi_resp_ok;
 
       for i in 0 to burst_length-1 loop
+
         for j in 0 to burst_size-1 loop
-          rdata(8*j+7 downto 8*j) <= std_logic_vector(to_unsigned(read_byte(memory, address+j), 8));
+          idx := (address + j) mod data_size;
+          rdata(8*idx+7 downto 8*idx) <= std_logic_vector(to_unsigned(read_byte(memory, address+j), 8));
         end loop;
 
         if burst_type = axi_burst_incr then

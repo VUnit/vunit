@@ -25,6 +25,7 @@ end entity;
 
 architecture a of tb_axi_write_slave is
   signal clk    : std_logic := '0';
+  constant data_size : integer := 16;
 
   signal awvalid : std_logic := '0';
   signal awready : std_logic;
@@ -37,8 +38,8 @@ architecture a of tb_axi_write_slave is
   signal wvalid  : std_logic;
   signal wready  : std_logic := '0';
   signal wid     : std_logic_vector(awid'range);
-  signal wdata   : std_logic_vector(127 downto 0);
-  signal wstrb   : std_logic_vector(15 downto 0);
+  signal wdata   : std_logic_vector(8*data_size-1 downto 0);
+  signal wstrb   : std_logic_vector(data_size downto 0);
   signal wlast   : std_logic;
 
   signal bvalid  : std_logic := '0';
@@ -106,6 +107,7 @@ begin
     variable id : std_logic_vector(awid'range);
     variable len : natural;
     variable burst : axi_burst_t;
+    variable idx : integer;
   begin
     test_runner_setup(runner, runner_cfg);
     rnd.InitSeed(rnd'instance_name);
@@ -145,8 +147,9 @@ begin
 
         for j in 0 to len-1 loop
           for i in 0 to size-1 loop
-            wdata(8*i+7 downto 8*i) <= std_logic_vector(to_unsigned(get(data, j*size + i), 8));
-            wstrb(i downto i) <= std_logic_vector(to_unsigned(get(strb, j*size + i), 1));
+            idx := (base_address(alloc) + j*size + i) mod data_size;
+            wdata(8*idx+7 downto 8*idx) <= std_logic_vector(to_unsigned(get(data, j*size + i), 8));
+            wstrb(idx downto idx) <= std_logic_vector(to_unsigned(get(strb, j*size + i), 1));
           end loop;
 
           if j = len-1 then
