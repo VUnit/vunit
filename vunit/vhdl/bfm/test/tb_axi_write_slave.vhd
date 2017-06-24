@@ -248,6 +248,23 @@ begin
         wait until rising_edge(clk);
         assert awready = '0' report "Address queue should be full";
       end loop;
+
+    elsif run("Test changing address queue length to smaller than content gives error") then
+      set_addr_queue_max_length(event, inbox, 16);
+
+      write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr); -- Taken data process
+      for i in 1 to 16 loop
+        write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr); -- In the queue
+      end loop;
+
+      set_addr_queue_max_length(event, inbox, 17);
+      set_addr_queue_max_length(event, inbox, 16);
+
+      disable_fail_on_error(event, inbox, error_queue);
+
+      set_addr_queue_max_length(event, inbox, 1);
+      check_equal(pop_string(error_queue), "New address queue max length 1 is smaller than current queue content length 16");
+      check_equal(length(error_queue), 0, "no more errors");
     end if;
 
     test_runner_cleanup(runner);

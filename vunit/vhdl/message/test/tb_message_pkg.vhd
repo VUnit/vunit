@@ -103,6 +103,17 @@ begin
       end loop;
 
       start <= true;
+
+    elsif run("Has inbox length") then
+      start <= true;
+      set_max_length(inbox, 16);
+      for i in 0 to 15 loop
+        check_equal(get_length(inbox), i);
+        msg := allocate;
+        push(msg.data, i);
+        send(event, inbox, msg);
+        check_equal(get_length(inbox), i+1);
+      end loop;
     end if;
 
     while not support_done loop
@@ -179,12 +190,16 @@ begin
       recycle(msg);
 
       support_done <= true;
+
     elsif enabled("Has inbox max length") then
       for i in 1 to large_inbox_max_length loop
         recv(event, inbox, msg);
         check_equal(pop(msg.data), i, "data: " & to_string(i));
         recycle(msg);
       end loop;
+      support_done <= true;
+
+    elsif enabled("Has inbox length") then
       support_done <= true;
     end if;
 

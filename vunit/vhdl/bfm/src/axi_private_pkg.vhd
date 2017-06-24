@@ -89,7 +89,12 @@ package body axi_private_pkg is
 
     procedure set_addr_queue_max_length(max_length : positive) is
     begin
-      set_max_length(p_addr_inbox, max_length);
+      if get_length(p_addr_inbox) > max_length then
+        fail("New address queue max length " & to_string(max_length) &
+             " is smaller than current queue content length " & to_string(get_length(p_addr_inbox)));
+      else
+        set_max_length(p_addr_inbox, max_length);
+      end if;
     end procedure;
 
     impure function get_addr_inbox return inbox_t is
@@ -179,6 +184,7 @@ package body axi_private_pkg is
 
         when msg_set_address_queue_max_length =>
           self.set_addr_queue_max_length(pop(msg.data));
+          send_reply(event, reply);
 
       end case;
 

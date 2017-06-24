@@ -55,6 +55,8 @@ package body axi_pkg is
     msg := allocate;
     push(msg.data, axi_message_type_t'pos(msg_set_address_queue_max_length));
     push(msg.data, max_length);
-    send(event, inbox, msg);
+    send(event, inbox, msg, reply);
+    recv_reply(event, reply);
+    recycle(reply);
   end;
 end package body;
