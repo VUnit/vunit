@@ -216,13 +216,8 @@ from vunit.location_preprocessor import LocationPreprocessor
 from vunit.check_preprocessor import CheckPreprocessor
 from vunit.vhdl_parser import CachedVHDLParser
 from vunit.parsing.verilog.parser import VerilogParser
-from vunit.builtins import (add_vhdl_builtins,
-                            add_verilog_include_dir,
-                            add_data_types,
-                            add_message,
-                            add_bfm,
-                            add_osvvm,
-                            add_com)
+from vunit.builtins import (Builtins,
+                            add_verilog_include_dir)
 from vunit.com import codec_generator
 
 LOGGER = logging.getLogger(__name__)
@@ -350,8 +345,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         self._test_bench_list = TestBenchList()
 
+        self._builtins = Builtins(self, self._vhdl_standard, self._simulator_factory)
         if compile_builtins:
-            self.add_builtins(library_name="vunit_lib")
+            self.add_builtins()
 
     def _create_project(self):
         """
@@ -882,14 +878,11 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
             xml = report.to_junit_xml_str()
             ostools.write_file(self._xunit_xml, xml)
 
-    def add_builtins(self, library_name="vunit_lib", mock_lang=False, mock_log=False):
+    def add_builtins(self, mock_lang=False, mock_log=False):
         """
         Add vunit VHDL builtin libraries
         """
-        library = self.add_library(library_name)
-        supports_context = self._simulator_factory.supports_vhdl_2008_contexts()
-        add_vhdl_builtins(library, self._vhdl_standard, mock_lang, mock_log,
-                          supports_context=supports_context)
+        self._builtins.add_vhdl_builtins(mock_lang, mock_log)
 
     def add_com(self, use_debug_codecs=None):
         """
@@ -903,49 +896,34 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
 
            `True`: Always use debug codecs
         """
-        library = self.library("vunit_lib")
-
         if use_debug_codecs is not None:
             self._use_debug_codecs = use_debug_codecs
 
-        supports_context = self._simulator_factory.supports_vhdl_2008_contexts()
-
-        add_com(library, self._vhdl_standard,
-                use_debug_codecs=self._use_debug_codecs,
-                supports_context=supports_context)
+        self._builtins.add_com(use_debug_codecs=self._use_debug_codecs)
 
     def add_data_types(self):
         """
         Add data types
         """
-        library = self.library("vunit_lib")
-        add_data_types(library, self._vhdl_standard)
+        self._builtins.add_data_types()
 
     def add_message(self):
         """
         Add message utility
         """
-        library = self.library("vunit_lib")
-        add_message(library, self._vhdl_standard)
+        self._builtins.add_message()
 
     def add_bfm(self):
         """
         Add bus functional models
         """
-        library = self.library("vunit_lib")
-        add_bfm(library, self._vhdl_standard)
+        self._builtins.add_bfm()
 
     def add_osvvm(self, library_name="osvvm"):
         """
         Add osvvm library
         """
-        if not self._project.has_library(library_name):
-            library = self.add_library(library_name)
-        else:
-            library = self.library(library_name)
-        simulator_coverage_api = self._simulator_factory.get_osvvm_coverage_api()
-        supports_vhdl_package_generics = self._simulator_factory.supports_vhdl_package_generics()
-        add_osvvm(library, simulator_coverage_api, supports_vhdl_package_generics)
+        self._builtins.add_osvvm(library_name)
 
     def get_compile_order(self, source_files=None):
         """

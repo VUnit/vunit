@@ -9,7 +9,6 @@ The main public Python interface of VUnit-Verilog.
 """
 
 from vunit.ui import VUnit as VUnitVHDL
-from vunit.builtins import add_verilog_builtins
 
 
 class VUnit(VUnitVHDL):
@@ -17,9 +16,8 @@ class VUnit(VUnitVHDL):
     VUnit Verilog interface
     """
 
-    def add_builtins(self, library_name="vunit_lib"):  # pylint: disable=arguments-differ
+    def add_builtins(self):  # pylint: disable=arguments-differ
         """
-        Add vunit VHDL builtin libraries
+        Add vunit Verilog builtin libraries
         """
-        library = self.add_library(library_name)
-        add_verilog_builtins(library)
+        self._builtins.add_verilog_builtins()
