@@ -891,7 +891,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         add_vhdl_builtins(library, self._vhdl_standard, mock_lang, mock_log,
                           supports_context=supports_context)
 
-    def add_com(self, library_name="vunit_lib", use_debug_codecs=None):
+    def add_com(self, use_debug_codecs=None):
         """
         Add communication package
 
@@ -903,10 +903,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
 
            `True`: Always use debug codecs
         """
-        if not self._project.has_library(library_name):
-            library = self.add_library(library_name)
-        else:
-            library = self.library(library_name)
+        library = self.library("vunit_lib")
 
         if use_debug_codecs is not None:
             self._use_debug_codecs = use_debug_codecs
@@ -919,21 +916,21 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
 
     def add_data_types(self):
         """
-        Add array utility package
+        Add data types
         """
         library = self.library("vunit_lib")
         add_data_types(library, self._vhdl_standard)
 
     def add_message(self):
         """
-        Add message utility package
+        Add message utility
         """
         library = self.library("vunit_lib")
         add_message(library, self._vhdl_standard)
 
     def add_bfm(self):
         """
-        Add bus functional model utility package
+        Add bus functional models
         """
         library = self.library("vunit_lib")
         add_bfm(library, self._vhdl_standard)
