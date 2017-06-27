@@ -899,31 +899,31 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         if use_debug_codecs is not None:
             self._use_debug_codecs = use_debug_codecs
 
-        self._builtins.add_com(use_debug_codecs=self._use_debug_codecs)
+        self._builtins.add("com", dict(use_debug_codecs=self._use_debug_codecs))
 
     def add_data_types(self):
         """
         Add data types
         """
-        self._builtins.add_data_types()
+        self._builtins.add("data_types")
 
     def add_message(self):
         """
         Add message utility
         """
-        self._builtins.add_message()
+        self._builtins.add("message")
 
     def add_bfm(self):
         """
         Add bus functional models
         """
-        self._builtins.add_bfm()
+        self._builtins.add("bfm")
 
-    def add_osvvm(self, library_name="osvvm"):
+    def add_osvvm(self):
         """
         Add osvvm library
         """
-        self._builtins.add_osvvm(library_name)
+        self._builtins.add("osvvm")
 
     def get_compile_order(self, source_files=None):
         """

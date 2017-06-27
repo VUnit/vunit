@@ -25,8 +25,21 @@ class Builtins(object):
         self._vunit_lib = vunit_obj.add_library("vunit_lib")
         self._vhdl_standard = vhdl_standard
         self._simulator_factory = simulator_factory
+        self._builtins_adder = BuiltinsAdder()
 
-    def add_data_types(self):
+        def add(name, deps=tuple()):
+            self._builtins_adder.add_type(name, getattr(self, "_add_%s" % name), deps)
+
+        add("data_types")
+        add("message", ["data_types"])
+        add("bfm", ["data_types", "message", "osvvm"])
+        add("com")
+        add("osvvm")
+
+    def add(self, name, args=None):
+        self._builtins_adder.add(name, args)
+
+    def _add_data_types(self):
         """
         Add data types packages
         """
@@ -35,7 +48,7 @@ class Builtins(object):
 
         self._vunit_lib.add_source_files(join(VHDL_PATH, "data_types", "src", "*.vhd"))
 
-    def add_message(self):
+    def _add_message(self):
         """
         Add message utility library
         """
@@ -44,7 +57,7 @@ class Builtins(object):
 
         self._vunit_lib.add_source_files(join(VHDL_PATH, "message", "src", "*.vhd"))
 
-    def add_bfm(self):
+    def _add_bfm(self):
         """
         Add bfm utility library
 
@@ -55,7 +68,7 @@ class Builtins(object):
 
         self._vunit_lib.add_source_files(join(VHDL_PATH, "bfm", "src", "*.vhd"))
 
-    def add_com(self, use_debug_codecs=False):
+    def _add_com(self, use_debug_codecs=False):
         """
         Add com library
         """
@@ -78,6 +91,45 @@ class Builtins(object):
             self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_codec_debug.vhd"))
         else:
             self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_codec.vhd"))
+
+    def _add_osvvm(self):
+        """
+        Add osvvm library
+        """
+        library_name = "osvvm"
+
+        try:
+            library = self._vunit_obj.library(library_name)
+        except KeyError:
+            library = self._vunit_obj.add_library(library_name)
+
+        simulator_coverage_api = self._simulator_factory.get_osvvm_coverage_api()
+        supports_vhdl_package_generics = self._simulator_factory.supports_vhdl_package_generics()
+
+        if not _osvvm_is_installed():
+            raise RuntimeError("""
+Found no OSVVM VHDL files. Did you forget to run
+
+git submodule update --init --recursive
+
+in your VUnit Git repository? You have to do this first if installing using setup.py.""")
+
+        for file_name in glob(join(VHDL_PATH, "osvvm", "*.vhd")):
+            if basename(file_name) == "AlertLogPkg_body_BVUL.vhd":
+                continue
+
+            if (simulator_coverage_api != "rivierapro") and (basename(file_name) == "VendorCovApiPkg_Aldec.vhd"):
+                continue
+
+            if (simulator_coverage_api == "rivierapro") and (basename(file_name) == "VendorCovApiPkg.vhd"):
+                continue
+
+            if not supports_vhdl_package_generics and (basename(file_name) in ["ScoreboardGenericPkg.vhd",
+                                                                               "ScoreboardPkg_int.vhd",
+                                                                               "ScoreboardPkg_slv.vhd"]):
+                continue
+
+            library.add_source_files(file_name, preprocessors=[])
 
     def add_verilog_builtins(self):
         """
@@ -213,43 +265,6 @@ class Builtins(object):
         for file_name in files:
             self._vunit_lib.add_source_files(join(VHDL_PATH, file_name))
 
-    def add_osvvm(self, library_name):
-        """
-        Add osvvm library
-        """
-        try:
-            library = self._vunit_obj.library(library_name)
-        except KeyError:
-            library = self._vunit_obj.add_library(library_name)
-
-        simulator_coverage_api = self._simulator_factory.get_osvvm_coverage_api()
-        supports_vhdl_package_generics = self._simulator_factory.supports_vhdl_package_generics()
-
-        if not _osvvm_is_installed():
-            raise RuntimeError("""
-    Found no OSVVM VHDL files. Did you forget to run
-
-    git submodule update --init --recursive
-
-    in your VUnit Git repository? You have to do this first if installing using setup.py.""")
-
-        for file_name in glob(join(VHDL_PATH, "osvvm", "*.vhd")):
-            if basename(file_name) == "AlertLogPkg_body_BVUL.vhd":
-                continue
-
-            if (simulator_coverage_api != "rivierapro") and (basename(file_name) == "VendorCovApiPkg_Aldec.vhd"):
-                continue
-
-            if (simulator_coverage_api == "rivierapro") and (basename(file_name) == "VendorCovApiPkg.vhd"):
-                continue
-
-            if not supports_vhdl_package_generics and (basename(file_name) in ["ScoreboardGenericPkg.vhd",
-                                                                               "ScoreboardPkg_int.vhd",
-                                                                               "ScoreboardPkg_slv.vhd"]):
-                continue
-
-            library.add_source_files(file_name, preprocessors=[])
-
 
 def _osvvm_is_installed():
     """
@@ -263,3 +278,46 @@ def add_verilog_include_dir(include_dirs):
     Add VUnit Verilog include directory
     """
     return [join(VERILOG_PATH, "include")] + include_dirs
+
+
+class BuiltinsAdder(object):
+    """
+    Class to manage adding of builtins with dependencies
+    """
+
+    def __init__(self):
+        self._already_added = {}
+        self._types = {}
+
+    def add_type(self, name, function, dependencies=tuple()):
+        self._types[name] = (function, dependencies)
+
+    def add(self, name, args=None):
+        """
+        Add builtin with arguments
+        """
+        args = {} if args is None else args
+
+        if not self._add_check(name, args):
+            function, dependencies = self._types[name]
+            for dep_name in dependencies:
+                self.add(dep_name)
+            function(**args)
+
+    def _add_check(self, name, args=None):
+        """
+        Check if this package has already been added,
+        if it has already been added it must use the same parameters
+
+        @returns False if not yet added
+        """
+        if name not in self._already_added:
+            self._already_added[name] = args
+            return False
+
+        old_args = self._already_added[name]
+        if args != old_args:
+            raise RuntimeError(
+                "Optional builtin %r added with arguments %r has already been added with arguments %r"
+                % (name, args, old_args))
+        return True
