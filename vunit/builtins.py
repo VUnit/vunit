@@ -106,7 +106,7 @@ class Builtins(object):
         simulator_coverage_api = self._simulator_factory.get_osvvm_coverage_api()
         supports_vhdl_package_generics = self._simulator_factory.supports_vhdl_package_generics()
 
-        if not _osvvm_is_installed():
+        if not osvvm_is_installed():
             raise RuntimeError("""
 Found no OSVVM VHDL files. Did you forget to run
 
@@ -266,7 +266,7 @@ in your VUnit Git repository? You have to do this first if installing using setu
             self._vunit_lib.add_source_files(join(VHDL_PATH, file_name))
 
 
-def _osvvm_is_installed():
+def osvvm_is_installed():
     """
     Checks if OSVVM is installed within the VUnit directory structure
     """
