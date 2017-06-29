@@ -9,6 +9,8 @@ context vunit_lib.vunit_context;
 
 use work.memory_pkg.all;
 use work.string_ptr_pkg.all;
+use work.integer_vector_ptr_pkg.all;
+use work.random_pkg.all;
 
 entity tb_memory is
   generic (runner_cfg : string);
@@ -20,8 +22,25 @@ begin
   main : process
     variable memory : memory_t;
     variable allocation : alloc_t;
+    variable integer_vector_ptr : integer_vector_ptr_t;
     variable error_msg : string_ptr_t;
     variable byte : byte_t;
+
+    procedure test_write_word(word : integer; bytes : integer_vector(0 to 3)) is
+    begin
+      write_word(memory, 0, word);
+      check_equal(read_byte(memory, 0), bytes(0));
+      check_equal(read_byte(memory, 1), bytes(1));
+      check_equal(read_byte(memory, 2), bytes(2));
+      check_equal(read_byte(memory, 3), bytes(3));
+
+      write_word(memory, 0, word, big_endian => true);
+      check_equal(read_byte(memory, 0), bytes(3));
+      check_equal(read_byte(memory, 1), bytes(2));
+      check_equal(read_byte(memory, 2), bytes(1));
+      check_equal(read_byte(memory, 3), bytes(0));
+    end procedure;
+
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -214,6 +233,86 @@ begin
       write_byte(memory, 2, 66);
       check_all_was_written(allocation, error_msg);
       assert error_msg = null_string_ptr;
+
+    elsif run("Test write_word") then
+      memory := new_memory;
+      allocation := allocate(memory, 4);
+
+      test_write_word(1, (1, 0, 0, 0));
+      test_write_word(-1, (255, 255, 255, 255));
+
+      test_write_word(256, (0, 1, 0, 0));
+      test_write_word(-256, (0, 255, 255, 255));
+
+      test_write_word(integer'high, (255, 255, 255, 127));
+      test_write_word(integer'low, (0, 0, 0, 128));
+
+    elsif run("Test write integer_vector_ptr") then
+      memory := new_memory;
+      integer_vector_ptr := random_integer_vector_ptr(10, 0, 255);
+
+      allocation := write_integer_vector_ptr(memory, integer_vector_ptr);
+      check_equal(base_address(allocation), 0);
+      check_equal(last_address(allocation), 4*10-1);
+
+      for addr in base_address(allocation) to last_address(allocation) loop
+        assert get_permissions(memory, addr) = read_only;
+      end loop;
+
+      for i in 0 to length(integer_vector_ptr)-1 loop
+        check_equal(read_byte(memory, base_address(allocation) + 4*i), get(integer_vector_ptr, i));
+        check_equal(read_byte(memory, base_address(allocation) + 4*i+1), 0);
+        check_equal(read_byte(memory, base_address(allocation) + 4*i+2), 0);
+        check_equal(read_byte(memory, base_address(allocation) + 4*i+3), 0);
+      end loop;
+
+      allocation := write_integer_vector_ptr(memory, integer_vector_ptr, alignment => 16);
+      check_equal(base_address(allocation), 48);
+      check_equal(last_address(allocation), 48 + 4*10-1);
+
+      allocation := write_integer_vector_ptr(memory, integer_vector_ptr, bytes_per_word => 1,
+                                             permissions => read_and_write);
+      check_equal(base_address(allocation), 48 + 4*10);
+      check_equal(last_address(allocation), 48 + 4*10 + 10 - 1);
+
+      for addr in base_address(allocation) to last_address(allocation) loop
+        assert get_permissions(memory, addr) = read_and_write;
+        check_equal(read_byte(memory, addr), get(integer_vector_ptr, addr - base_address(allocation)));
+      end loop;
+
+    elsif run("Test set expected integer_vector_ptr") then
+      memory := new_memory;
+      integer_vector_ptr := random_integer_vector_ptr(10, 0, 255);
+
+      allocation := set_expected_integer_vector_ptr(memory, integer_vector_ptr);
+      check_equal(base_address(allocation), 0);
+      check_equal(last_address(allocation), 4*10-1);
+
+      for addr in base_address(allocation) to last_address(allocation) loop
+        assert get_permissions(memory, addr) = write_only;
+      end loop;
+
+      for i in 0 to length(integer_vector_ptr)-1 loop
+        check_equal(get_expected(memory, base_address(allocation) + 4*i), get(integer_vector_ptr, i));
+        check_equal(get_expected(memory, base_address(allocation) + 4*i+1), 0);
+        check_equal(get_expected(memory, base_address(allocation) + 4*i+2), 0);
+        check_equal(get_expected(memory, base_address(allocation) + 4*i+3), 0);
+      end loop;
+
+      allocation := set_expected_integer_vector_ptr(memory, integer_vector_ptr, alignment => 16);
+      check_equal(base_address(allocation), 48);
+      check_equal(last_address(allocation), 48 + 4*10-1);
+
+      allocation := set_expected_integer_vector_ptr(memory, integer_vector_ptr,
+                                                    bytes_per_word => 1, permissions => read_and_write);
+      check_equal(base_address(allocation), 48 + 4*10);
+      check_equal(last_address(allocation), 48 + 4*10 + 10 - 1);
+
+      for addr in base_address(allocation) to last_address(allocation) loop
+        assert get_permissions(memory, addr) = read_and_write;
+        check_equal(get_expected(memory, addr), get(integer_vector_ptr, addr - base_address(allocation)));
+      end loop;
+
     end if;
 
     test_runner_cleanup(runner);

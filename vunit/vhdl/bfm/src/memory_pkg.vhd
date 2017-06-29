@@ -43,7 +43,11 @@ package memory_pkg is
   impure function new_memory return memory_t;
   procedure clear(memory : memory_t);
   procedure deallocate(variable alloc : inout alloc_t);
-  impure function allocate(memory : memory_t; num_bytes : natural; name : string := ""; alignment : positive := 1) return alloc_t;
+  impure function allocate(memory : memory_t;
+                           num_bytes : natural;
+                           name : string := "";
+                           alignment : positive := 1;
+                           permissions : permissions_t := read_and_write) return alloc_t;
 
   impure function decode(value : integer) return memory_data_t;
   impure function encode(memory_data : memory_data_t) return integer;
@@ -59,10 +63,39 @@ package memory_pkg is
   impure function get_permissions(memory : memory_t; address : natural) return permissions_t;
   procedure set_permissions(memory : memory_t; address : natural; permissions : permissions_t);
   procedure set_expected(memory : memory_t; address : natural; expected : byte_t);
+  impure function get_expected(memory : memory_t; address : natural) return byte_t;
   impure function describe_address(memory : memory_t; address : natural) return string;
 
   impure function base_address(alloc : alloc_t) return natural;
   impure function last_address(alloc : alloc_t) return natural;
+
+  procedure write_word(memory : memory_t;
+                       address : natural;
+                       word : integer;
+                       bytes_per_word : natural range 1 to 4 := 4;
+                       big_endian : boolean := false;
+                       ignore_permissions : boolean := false);
+
+
+  -- Allocate memory for the integer_vector_ptr, write it there
+  -- and by default set read_only permission
+  impure function write_integer_vector_ptr(memory : memory_t;
+                                           integer_vector_ptr : integer_vector_ptr_t;
+                                           name : string := "";
+                                           alignment : positive := 1;
+                                           bytes_per_word : natural range 1 to 4 := 4;
+                                           big_endian : boolean := false;
+                                           permissions : permissions_t := read_only) return alloc_t;
+
+  -- Allocate memory for the integer_vector_ptr, set it as expected data
+  -- and by default set write_only permission
+  impure function set_expected_integer_vector_ptr(memory : memory_t;
+                                                  integer_vector_ptr : integer_vector_ptr_t;
+                                                  name : string := "";
+                                                  alignment : positive := 1;
+                                                  bytes_per_word : natural range 1 to 4 := 4;
+                                                  big_endian : boolean := false;
+                                                  permissions : permissions_t := write_only) return alloc_t;
 
 end package;
 
@@ -92,7 +125,11 @@ package body memory_pkg is
     alloc := null_alloc;
   end;
 
-  impure function allocate(memory : memory_t; num_bytes : natural; name : string := ""; alignment : positive := 1) return alloc_t is
+  impure function allocate(memory : memory_t;
+                           num_bytes : natural;
+                           name : string := "";
+                           alignment : positive := 1;
+                           permissions : permissions_t := read_and_write) return alloc_t is
     variable alloc : alloc_t;
     variable num_allocs : natural;
   begin
@@ -122,7 +159,7 @@ package body memory_pkg is
 
     -- Set default access type
     for i in 0 to num_bytes-1 loop
-      set(memory.p_data, alloc.p_address + i, encode((byte => 0, exp => 0, has_exp => false, perm => read_and_write)));
+      set(memory.p_data, alloc.p_address + i, encode((byte => 0, exp => 0, has_exp => false, perm => permissions)));
     end loop;
     return alloc;
   end function;
@@ -307,6 +344,11 @@ package body memory_pkg is
     set(memory.p_data, address, encode((byte => old.byte, exp => expected, has_exp => true, perm => old.perm)));
   end procedure;
 
+  impure function get_expected(memory : memory_t; address : natural) return byte_t is
+  begin
+    return decode(get(memory.p_data, address)).exp;
+  end;
+
   impure function describe_address(memory : memory_t; address : natural) return string is
     variable alloc : alloc_t := address_to_allocation(memory, address);
 
@@ -327,5 +369,95 @@ package body memory_pkg is
             " within " & describe_allocation & " at range " &
             "(" & to_string(base_address(alloc)) & " to " & to_string(last_address(alloc)) & ")");
   end;
+
+  impure function serialize(word : integer;
+                            bytes_per_word : natural range 1 to 4;
+                            big_endian : boolean) return integer_vector is
+
+    variable result : integer_vector(0 to bytes_per_word-1);
+    variable byte : byte_t;
+    variable word_i : integer := word;
+
+  begin
+    if big_endian then
+      for byte_idx in 0 to bytes_per_word-1 loop
+        byte := word_i mod 256;
+        word_i := (word_i - byte)/256;
+        result(bytes_per_word-1-byte_idx) := byte;
+      end loop;
+    else
+      for byte_idx in 0 to bytes_per_word-1 loop
+        byte := word_i mod 256;
+        word_i := (word_i - byte)/256;
+        result(byte_idx) := byte;
+      end loop;
+    end if;
+    return result;
+  end function;
+
+  procedure write_word(memory : memory_t;
+                       address : natural;
+                       word : integer;
+                       bytes_per_word : natural range 1 to 4 := 4;
+                       big_endian : boolean := false;
+                       ignore_permissions : boolean := false) is
+
+    constant bytes : integer_vector := serialize(word, bytes_per_word, big_endian);
+  begin
+    for byte_idx in 0 to bytes_per_word-1 loop
+      write_byte(memory, address + byte_idx,
+                 bytes(byte_idx),
+                 ignore_permissions => true);
+    end loop;
+  end procedure;
+
+  -- Allocate memory for the integer_vector_ptr and set read_only permission
+  impure function write_integer_vector_ptr(memory : memory_t;
+                                           integer_vector_ptr : integer_vector_ptr_t;
+                                           name : string := "";
+                                           alignment : positive := 1;
+                                           bytes_per_word : natural range 1 to 4 := 4;
+                                           big_endian : boolean := false;
+                                           permissions : permissions_t := read_only) return alloc_t is
+
+    variable alloc : alloc_t;
+    variable base_addr : integer;
+  begin
+    alloc := allocate(memory, length(integer_vector_ptr) * bytes_per_word, name => name,
+                      alignment => alignment, permissions => permissions);
+
+    base_addr := base_address(alloc);
+    for i in 0 to length(integer_vector_ptr)-1 loop
+      write_word(memory, base_addr + bytes_per_word*i, get(integer_vector_ptr, i),
+                 bytes_per_word => bytes_per_word,
+                 big_endian => big_endian,
+                 ignore_permissions => true);
+    end loop;
+    return alloc;
+  end;
+
+  impure function set_expected_integer_vector_ptr(memory : memory_t;
+                                                  integer_vector_ptr : integer_vector_ptr_t;
+                                                  name : string := "";
+                                                  alignment : positive := 1;
+                                                  bytes_per_word : natural range 1 to 4 := 4;
+                                                  big_endian : boolean := false;
+                                                  permissions : permissions_t := write_only) return alloc_t is
+    variable alloc : alloc_t;
+    variable base_addr : integer;
+    variable bytes : integer_vector(0 to bytes_per_word-1);
+  begin
+    alloc := allocate(memory, length(integer_vector_ptr) * bytes_per_word, name => name,
+                      alignment => alignment, permissions => permissions);
+
+    base_addr := base_address(alloc);
+    for i in 0 to length(integer_vector_ptr)-1 loop
+      bytes := serialize(get(integer_vector_ptr, i), bytes_per_word, big_endian);
+      for byte_idx in 0 to bytes_per_word-1 loop
+        set_expected(memory, base_addr + bytes_per_word*i + byte_idx, bytes(byte_idx));
+      end loop;
+    end loop;
+    return alloc;
+  end function;
 
 end package body;
