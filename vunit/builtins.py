@@ -35,6 +35,7 @@ class Builtins(object):
         add("bfm", ["data_types", "message", "osvvm"])
         add("com")
         add("osvvm")
+        add("random", ["data_types", "osvvm"])
 
     def add(self, name, args=None):
         self._builtins_adder.add(name, args)
@@ -47,6 +48,15 @@ class Builtins(object):
             raise RuntimeError("Data types only supports vhdl 2008")
 
         self._vunit_lib.add_source_files(join(VHDL_PATH, "data_types", "src", "*.vhd"))
+
+    def _add_random(self):
+        """
+        Add random pkg
+        """
+        if self._vhdl_standard != '2008':
+            raise RuntimeError("Random only supports vhdl 2008")
+
+        self._vunit_lib.add_source_files(join(VHDL_PATH, "random", "src", "*.vhd"))
 
     def _add_message(self):
         """

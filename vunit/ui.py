@@ -907,6 +907,12 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         self._builtins.add("data_types")
 
+    def add_random(self):
+        """
+        Add random
+        """
+        self._builtins.add("random")
+
     def add_message(self):
         """
         Add message utility

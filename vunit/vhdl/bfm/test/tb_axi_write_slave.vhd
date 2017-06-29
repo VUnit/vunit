@@ -16,6 +16,7 @@ use work.memory_pkg.all;
 use work.integer_vector_ptr_pkg.all;
 use work.queue_pkg.all;
 use work.message_pkg.all;
+use work.random_pkg.all;
 
 library osvvm;
 use osvvm.RandomPkg.all;
@@ -55,24 +56,6 @@ begin
   main : process
     variable alloc : alloc_t;
     variable rnd : RandomPType;
-
-    -- @TODO move to common utility library
-    procedure random_integer_vector(variable rnd : inout RandomPType;
-                                    length : integer;
-                                    min_value : integer;
-                                    max_value : integer;
-                                    variable ptr : inout integer_vector_ptr_t) is
-    begin
-      if ptr = null_ptr then
-        ptr := allocate(length);
-      else
-        reallocate(ptr, length);
-      end if;
-
-      for i in 0 to length-1 loop
-        set(ptr, i, rnd.RandInt(min_value, max_value));
-      end loop;
-    end procedure;
 
     procedure read_response(id : std_logic_vector;
                             resp : axi_resp_t := axi_resp_ok) is
@@ -133,8 +116,8 @@ begin
 
         log_size := rnd.RandInt(0, 3);
         size := 2**log_size;
-        random_integer_vector(rnd, size * len, 0, 255, data);
-        random_integer_vector(rnd, length(data), 0, 1, strb);
+        random_integer_vector_ptr(rnd, data, size * len, 0, 255);
+        random_integer_vector_ptr(rnd, strb, length(data), 0, 1);
 
         alloc := allocate(memory, 8 * len, alignment => 4096);
         for i in 0 to length(data)-1 loop
