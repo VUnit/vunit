@@ -79,23 +79,23 @@ package memory_pkg is
 
   -- Allocate memory for the integer_vector_ptr, write it there
   -- and by default set read_only permission
-  impure function write_integer_vector_ptr(memory : memory_t;
-                                           integer_vector_ptr : integer_vector_ptr_t;
-                                           name : string := "";
-                                           alignment : positive := 1;
-                                           bytes_per_word : natural range 1 to 4 := 4;
-                                           big_endian : boolean := false;
-                                           permissions : permissions_t := read_only) return alloc_t;
+  impure function allocate_integer_vector_ptr(memory : memory_t;
+                                              integer_vector_ptr : integer_vector_ptr_t;
+                                              name : string := "";
+                                              alignment : positive := 1;
+                                              bytes_per_word : natural range 1 to 4 := 4;
+                                              big_endian : boolean := false;
+                                              permissions : permissions_t := read_only) return alloc_t;
 
   -- Allocate memory for the integer_vector_ptr, set it as expected data
   -- and by default set write_only permission
-  impure function set_expected_integer_vector_ptr(memory : memory_t;
-                                                  integer_vector_ptr : integer_vector_ptr_t;
-                                                  name : string := "";
-                                                  alignment : positive := 1;
-                                                  bytes_per_word : natural range 1 to 4 := 4;
-                                                  big_endian : boolean := false;
-                                                  permissions : permissions_t := write_only) return alloc_t;
+  impure function allocate_expected_integer_vector_ptr(memory : memory_t;
+                                                       integer_vector_ptr : integer_vector_ptr_t;
+                                                       name : string := "";
+                                                       alignment : positive := 1;
+                                                       bytes_per_word : natural range 1 to 4 := 4;
+                                                       big_endian : boolean := false;
+                                                       permissions : permissions_t := write_only) return alloc_t;
 
 end package;
 
@@ -412,13 +412,13 @@ package body memory_pkg is
   end procedure;
 
   -- Allocate memory for the integer_vector_ptr and set read_only permission
-  impure function write_integer_vector_ptr(memory : memory_t;
-                                           integer_vector_ptr : integer_vector_ptr_t;
-                                           name : string := "";
-                                           alignment : positive := 1;
-                                           bytes_per_word : natural range 1 to 4 := 4;
-                                           big_endian : boolean := false;
-                                           permissions : permissions_t := read_only) return alloc_t is
+  impure function allocate_integer_vector_ptr(memory : memory_t;
+                                              integer_vector_ptr : integer_vector_ptr_t;
+                                              name : string := "";
+                                              alignment : positive := 1;
+                                              bytes_per_word : natural range 1 to 4 := 4;
+                                              big_endian : boolean := false;
+                                              permissions : permissions_t := read_only) return alloc_t is
 
     variable alloc : alloc_t;
     variable base_addr : integer;
@@ -436,13 +436,13 @@ package body memory_pkg is
     return alloc;
   end;
 
-  impure function set_expected_integer_vector_ptr(memory : memory_t;
-                                                  integer_vector_ptr : integer_vector_ptr_t;
-                                                  name : string := "";
-                                                  alignment : positive := 1;
-                                                  bytes_per_word : natural range 1 to 4 := 4;
-                                                  big_endian : boolean := false;
-                                                  permissions : permissions_t := write_only) return alloc_t is
+  impure function allocate_expected_integer_vector_ptr(memory : memory_t;
+                                                       integer_vector_ptr : integer_vector_ptr_t;
+                                                       name : string := "";
+                                                       alignment : positive := 1;
+                                                       bytes_per_word : natural range 1 to 4 := 4;
+                                                       big_endian : boolean := false;
+                                                       permissions : permissions_t := write_only) return alloc_t is
     variable alloc : alloc_t;
     variable base_addr : integer;
     variable bytes : integer_vector(0 to bytes_per_word-1);

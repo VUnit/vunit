@@ -247,11 +247,11 @@ begin
       test_write_word(integer'high, (255, 255, 255, 127));
       test_write_word(integer'low, (0, 0, 0, 128));
 
-    elsif run("Test write integer_vector_ptr") then
+    elsif run("Test allocate integer_vector_ptr") then
       memory := new_memory;
       integer_vector_ptr := random_integer_vector_ptr(10, 0, 255);
 
-      allocation := write_integer_vector_ptr(memory, integer_vector_ptr);
+      allocation := allocate_integer_vector_ptr(memory, integer_vector_ptr);
       check_equal(base_address(allocation), 0);
       check_equal(last_address(allocation), 4*10-1);
 
@@ -266,11 +266,11 @@ begin
         check_equal(read_byte(memory, base_address(allocation) + 4*i+3), 0);
       end loop;
 
-      allocation := write_integer_vector_ptr(memory, integer_vector_ptr, alignment => 16);
+      allocation := allocate_integer_vector_ptr(memory, integer_vector_ptr, alignment => 16);
       check_equal(base_address(allocation), 48);
       check_equal(last_address(allocation), 48 + 4*10-1);
 
-      allocation := write_integer_vector_ptr(memory, integer_vector_ptr, bytes_per_word => 1,
+      allocation := allocate_integer_vector_ptr(memory, integer_vector_ptr, bytes_per_word => 1,
                                              permissions => read_and_write);
       check_equal(base_address(allocation), 48 + 4*10);
       check_equal(last_address(allocation), 48 + 4*10 + 10 - 1);
@@ -280,11 +280,11 @@ begin
         check_equal(read_byte(memory, addr), get(integer_vector_ptr, addr - base_address(allocation)));
       end loop;
 
-    elsif run("Test set expected integer_vector_ptr") then
+    elsif run("Test allocate expected integer_vector_ptr") then
       memory := new_memory;
       integer_vector_ptr := random_integer_vector_ptr(10, 0, 255);
 
-      allocation := set_expected_integer_vector_ptr(memory, integer_vector_ptr);
+      allocation := allocate_expected_integer_vector_ptr(memory, integer_vector_ptr);
       check_equal(base_address(allocation), 0);
       check_equal(last_address(allocation), 4*10-1);
 
@@ -299,11 +299,11 @@ begin
         check_equal(get_expected(memory, base_address(allocation) + 4*i+3), 0);
       end loop;
 
-      allocation := set_expected_integer_vector_ptr(memory, integer_vector_ptr, alignment => 16);
+      allocation := allocate_expected_integer_vector_ptr(memory, integer_vector_ptr, alignment => 16);
       check_equal(base_address(allocation), 48);
       check_equal(last_address(allocation), 48 + 4*10-1);
 
-      allocation := set_expected_integer_vector_ptr(memory, integer_vector_ptr,
+      allocation := allocate_expected_integer_vector_ptr(memory, integer_vector_ptr,
                                                     bytes_per_word => 1, permissions => read_and_write);
       check_equal(base_address(allocation), 48 + 4*10);
       check_equal(last_address(allocation), 48 + 4*10 + 10 - 1);
