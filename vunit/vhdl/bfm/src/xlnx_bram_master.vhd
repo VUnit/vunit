@@ -15,7 +15,7 @@ use work.bus_pkg.all;
 
 entity xlnx_bram_master is
   generic (
-    inbox : inbox_t;
+    bus_handle : bus_t;
     latency : positive
     );
   port (
@@ -39,7 +39,7 @@ begin
     variable bus_access_type : bus_access_type_t;
   begin
     loop
-      recv(event, inbox, msg, reply);
+      recv(event, bus_handle.inbox, msg, reply);
 
       bus_access_type := bus_access_type_t'val(integer'(pop(msg.data)));
       addr <= pop_std_ulogic_vector(msg.data);

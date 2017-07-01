@@ -15,7 +15,7 @@ use work.bus_pkg.all;
 
 entity axi_lite_master is
   generic (
-    inbox : inbox_t
+    bus_handle : bus_t
     );
   port (
     aclk : in std_logic;
@@ -52,7 +52,7 @@ begin
     variable w_done, aw_done : boolean;
   begin
     loop
-      recv(event, inbox, msg, reply);
+      recv(event, bus_handle.inbox, msg, reply);
       bus_access_type := bus_access_type_t'val(integer'(pop(msg.data)));
 
       case bus_access_type is

@@ -24,7 +24,7 @@ entity tb_axi_lite_master is
 end entity;
 
 architecture a of tb_axi_lite_master is
-  constant inbox : inbox_t := new_inbox;
+  constant bus_handle : bus_t := new_bus;
 
   constant num_random_tests : integer := 128;
 
@@ -67,18 +67,18 @@ begin
     wait for 0 ns;
 
     if run("Test single write") then
-      write_bus(event, inbox, x"01234567", x"1122");
+      write_bus(event, bus_handle, x"01234567", x"1122");
 
     elsif run("Test single read") then
-      read_bus(event, inbox, x"01234567", tmp);
+      read_bus(event, bus_handle, x"01234567", tmp);
       check_equal(tmp, std_logic_vector'(x"5566"), "read data");
     elsif run("Test random") then
       for i in 0 to num_random_tests-1 loop
         if rnd.RandInt(0, 1) = 0 then
-          read_bus(event, inbox, rnd.RandSlv(araddr'length), tmp);
+          read_bus(event, bus_handle, rnd.RandSlv(araddr'length), tmp);
           check_equal(tmp, rnd.RandSlv(rdata'length), "read data");
         else
-          write_bus(event, inbox, rnd.RandSlv(awaddr'length), rnd.RandSlv(wdata'length));
+          write_bus(event, bus_handle, rnd.RandSlv(awaddr'length), rnd.RandSlv(wdata'length));
         end if;
       end loop;
     end if;
@@ -170,7 +170,7 @@ begin
 
   dut : entity work.axi_lite_master
     generic map (
-      inbox => inbox)
+      bus_handle => bus_handle)
     port map (
       aclk    => clk,
       arready => arready,

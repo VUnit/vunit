@@ -20,7 +20,7 @@ entity tb_xlnx_bram_master is
 end entity;
 
 architecture a of tb_xlnx_bram_master is
-  constant inbox : inbox_t := new_inbox;
+  constant bus_handle : bus_t := new_bus;
 
   constant latency : integer := 2;
   constant num_back_to_back_reads : integer := 64;
@@ -45,15 +45,15 @@ begin
     wait for 0 ns;
 
     if run("Test single write") then
-      write_bus(event, inbox, x"77", x"11223344");
+      write_bus(event, bus_handle, x"77", x"11223344");
 
     elsif run("Test single read") then
-      read_bus(event, inbox, x"33", tmp);
+      read_bus(event, bus_handle, x"33", tmp);
       check_equal(tmp, std_logic_vector'(x"55667788"), "read data");
 
     elsif run("Test read back to back") then
       for i in 1 to num_back_to_back_reads loop
-        read_bus(event, inbox, std_logic_vector(to_unsigned(i, addr'length)), reply);
+        read_bus(event, bus_handle, std_logic_vector(to_unsigned(i, addr'length)), reply);
         push(reply_queue, reply);
       end loop;
 
@@ -127,7 +127,7 @@ begin
 
   dut : entity work.xlnx_bram_master
     generic map (
-      inbox => inbox,
+      bus_handle => bus_handle,
       latency => latency)
     port map (
       clk   => clk,
