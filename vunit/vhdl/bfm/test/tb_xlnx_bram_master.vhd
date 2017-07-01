@@ -20,8 +20,6 @@ entity tb_xlnx_bram_master is
 end entity;
 
 architecture a of tb_xlnx_bram_master is
-  constant bus_handle : bus_t := new_bus;
-
   constant latency : integer := 2;
   constant num_back_to_back_reads : integer := 64;
 
@@ -31,6 +29,8 @@ architecture a of tb_xlnx_bram_master is
   signal addr  : std_logic_vector(7 downto 0);
   signal wdata : std_logic_vector(31 downto 0);
   signal rdata : std_logic_vector(31 downto 0) := (others => '0');
+
+  constant bus_handle : bus_t := new_bus(data_length => wdata'length, address_length => addr'length);
 
   signal start, done : boolean := false;
 begin

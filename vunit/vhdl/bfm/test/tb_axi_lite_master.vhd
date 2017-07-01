@@ -24,8 +24,6 @@ entity tb_axi_lite_master is
 end entity;
 
 architecture a of tb_axi_lite_master is
-  constant bus_handle : bus_t := new_bus;
-
   constant num_random_tests : integer := 128;
 
   signal clk    : std_logic := '0';
@@ -50,6 +48,8 @@ architecture a of tb_axi_lite_master is
   signal bvalid  : std_logic := '0';
   signal bready  : std_logic;
   signal bresp   : std_logic_vector(1 downto 0);
+
+  constant bus_handle : bus_t := new_bus(data_length => wdata'length, address_length => awaddr'length);
 
   signal start, done : boolean := false;
 begin
