@@ -141,7 +141,7 @@ package body bus_pkg is
       -- timeout is set to zero.
       waited := now - start_time;
       read_bus(event, bus_handle, addr, data);
-      if (data and mask) = (value and mask) then
+      if (data(value'length-1 downto 0) and mask) = (value and mask) then
         return;
       end if;
     end loop;
