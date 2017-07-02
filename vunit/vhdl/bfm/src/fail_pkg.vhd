@@ -14,6 +14,7 @@ package fail_pkg is
     p_disable_failures : integer_vector_ptr_t;
     p_fail_queue : queue_t;
   end record;
+  constant null_fail_log : fail_log_t := (p_disable_failures => null_ptr, p_fail_queue => null_queue);
 
   impure function new_fail_log return fail_log_t;
   procedure fail(fail_log : fail_log_t; msg : string);
@@ -45,6 +46,7 @@ package body fail_pkg is
 
   procedure enable_failure(fail_log : fail_log_t) is
   begin
+    check_no_failures(fail_log);
     set(fail_log.p_disable_failures, 0, 0);
   end;
 

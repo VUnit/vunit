@@ -14,6 +14,7 @@ use work.memory_pkg.all;
 use work.string_ptr_pkg.all;
 use work.integer_vector_ptr_pkg.all;
 use work.random_pkg.all;
+use work.fail_pkg.all;
 
 entity tb_memory is
   generic (runner_cfg : string);
@@ -52,7 +53,6 @@ begin
 
     variable allocation : alloc_t;
     variable integer_vector_ptr : integer_vector_ptr_t;
-    variable error_msg : string_ptr_t;
     variable byte : byte_t;
 
   begin
@@ -116,22 +116,25 @@ begin
 
     elsif run("Test access empty memory") then
       memory := new_memory;
-      write_byte(memory, 0, 255, error_msg);
-      check_equal(to_string(error_msg), "Writing to empty memory");
+      disable_failure(memory.p_fail_log);
+      write_byte(memory, 0, 255);
+      check_equal(pop_failure(memory.p_fail_log), "Writing to empty memory");
+      check_no_failures(memory.p_fail_log);
 
-      read_byte(memory, 0, byte, error_msg);
-      check_equal(to_string(error_msg), "Reading from empty memory");
+      byte := read_byte(memory, 0);
+      check_equal(pop_failure(memory.p_fail_log), "Reading from empty memory");
+      check_no_failures(memory.p_fail_log);
 
     elsif run("Test access memory out of range") then
       memory := new_memory;
-
       allocation := allocate(memory, 1);
 
-      write_byte(memory, 1, 255, error_msg);
-      check_equal(to_string(error_msg), "Writing to address 1 out of range 0 to 0");
+      disable_failure(memory.p_fail_log);
+      write_byte(memory, 1, 255);
+      check_equal(pop_failure(memory.p_fail_log), "Writing to address 1 out of range 0 to 0");
 
-      read_byte(memory, 1, byte, error_msg);
-      check_equal(to_string(error_msg), "Reading from address 1 out of range 0 to 0");
+      byte := read_byte(memory, 1);
+      check_equal(pop_failure(memory.p_fail_log), "Reading from address 1 out of range 0 to 0");
 
     elsif run("Test default permissions") then
       memory := new_memory;
@@ -159,55 +162,51 @@ begin
       allocation := allocate(memory, 10);
       set_permissions(memory, 5, no_access);
 
-      write_byte(memory, 5, 255, error_msg);
-      check_equal(to_string(error_msg), "Writing to " & describe_address(memory, 5) & " without permission (no_access)");
+      disable_failure(memory.p_fail_log);
+      write_byte(memory, 5, 255);
+      check_equal(pop_failure(memory.p_fail_log), "Writing to " & describe_address(memory, 5) & " without permission (no_access)");
 
-      read_byte(memory, 5, byte, error_msg);
-      check_equal(to_string(error_msg), "Reading from " & describe_address(memory, 5) & " without permission (no_access)");
+      byte := read_byte(memory, 5);
+      check_equal(pop_failure(memory.p_fail_log), "Reading from " & describe_address(memory, 5) & " without permission (no_access)");
+      enable_failure(memory.p_fail_log);
 
       -- Ignore permissions
-      write_byte(memory, 5, 255, error_msg, ignore_permissions => true);
-      assert error_msg = null_string_ptr;
-
-      read_byte(memory, 5, byte, error_msg, ignore_permissions => true);
-      assert error_msg = null_string_ptr;
-
+      write_byte(memory, 5, 255, ignore_permissions => true);
+      byte := read_byte(memory, 5, ignore_permissions => true);
 
     elsif run("Test access memory without permission (write_only)") then
       memory := new_memory;
       allocation := allocate(memory, 10);
       set_permissions(memory, 5, write_only);
 
-      write_byte(memory, 5, 255, error_msg);
-      assert error_msg = null_string_ptr;
+      write_byte(memory, 5, 255);
 
-      read_byte(memory, 5, byte, error_msg);
-      check_equal(to_string(error_msg), "Reading from " & describe_address(memory, 5) & " without permission (write_only)");
+      disable_failure(memory.p_fail_log);
+      byte := read_byte(memory, 5);
+      check_equal(pop_failure(memory.p_fail_log), "Reading from " & describe_address(memory, 5) & " without permission (write_only)");
+      enable_failure(memory.p_fail_log);
 
       -- Ignore permissions
-      write_byte(memory, 5, 255, error_msg, ignore_permissions => true);
-      assert error_msg = null_string_ptr;
+      write_byte(memory, 5, 255, ignore_permissions => true);
 
-      read_byte(memory, 5, byte, error_msg, ignore_permissions => true);
-      assert error_msg = null_string_ptr;
+      byte := read_byte(memory, 5, ignore_permissions => true);
 
     elsif run("Test access memory without permission (read_only)") then
       memory := new_memory;
       allocation := allocate(memory, 10);
       set_permissions(memory, 5, read_only);
 
-      write_byte(memory, 5, 255, error_msg);
-      check_equal(to_string(error_msg), "Writing to " & describe_address(memory, 5) & " without permission (read_only)");
+      disable_failure(memory.p_fail_log);
+      write_byte(memory, 5, 255);
+      check_equal(pop_failure(memory.p_fail_log), "Writing to " & describe_address(memory, 5) & " without permission (read_only)");
+      enable_failure(memory.p_fail_log);
 
-      read_byte(memory, 5, byte, error_msg);
-      assert error_msg = null_string_ptr;
+      byte := read_byte(memory, 5);
 
       -- Ignore permissions
-      write_byte(memory, 5, 255, error_msg, ignore_permissions => true);
-      assert error_msg = null_string_ptr;
+      write_byte(memory, 5, 255, ignore_permissions => true);
 
-      read_byte(memory, 5, byte, error_msg, ignore_permissions => true);
-      assert error_msg = null_string_ptr;
+      byte := read_byte(memory, 5, ignore_permissions => true);
 
     elsif run("Test describe address") then
       memory := new_memory;
@@ -228,17 +227,22 @@ begin
       allocation := allocate(memory, 2);
       set_expected_byte(memory, 0, 77);
 
-      write_byte(memory, 0, 255, error_msg);
-      check_equal(to_string(error_msg), "Writing to " & describe_address(memory, 0) & ". Got 255 expected 77");
+      disable_failure(memory.p_fail_log);
+      write_byte(memory, 0, 255);
+      check_equal(pop_failure(memory.p_fail_log), "Writing to " & describe_address(memory, 0) & ". Got 255 expected 77");
+      enable_failure(memory.p_fail_log);
 
     elsif run("Test set expected word") then
       memory := new_memory;
       allocation := allocate(memory, 2);
       set_expected_word(memory, 0, x"3322");
-      write_byte(memory, 0, 16#33#, error_msg);
-      check_equal(to_string(error_msg), "Writing to " & describe_address(memory, 0) & ". Got 51 expected 34");
-      write_byte(memory, 1, 16#22#, error_msg);
-      check_equal(to_string(error_msg), "Writing to " & describe_address(memory, 1) & ". Got 34 expected 51");
+
+      disable_failure(memory.p_fail_log);
+      write_byte(memory, 0, 16#33#);
+      check_equal(pop_failure(memory.p_fail_log), "Writing to " & describe_address(memory, 0) & ". Got 51 expected 34");
+      write_byte(memory, 1, 16#22#);
+      check_equal(pop_failure(memory.p_fail_log), "Writing to " & describe_address(memory, 1) & ". Got 34 expected 51");
+      enable_failure(memory.p_fail_log);
 
     elsif run("Test check all was written") then
       memory := new_memory;
@@ -246,16 +250,18 @@ begin
       set_expected_byte(memory, 0, 77);
       set_expected_byte(memory, 2, 66);
 
-      check_all_was_written(allocation, error_msg);
-      check_equal(to_string(error_msg), "The " & describe_address(memory, 0) & " was never written with expected byte 77");
+      disable_failure(memory.p_fail_log);
+      check_all_was_written(allocation);
+      check_equal(pop_failure(memory.p_fail_log), "The " & describe_address(memory, 0) & " was never written with expected byte 77");
+      check_equal(pop_failure(memory.p_fail_log), "The " & describe_address(memory, 2) & " was never written with expected byte 66");
 
       write_byte(memory, 0, 77);
-      check_all_was_written(allocation, error_msg);
-      check_equal(to_string(error_msg), "The " & describe_address(memory, 2) & " was never written with expected byte 66");
+      check_all_was_written(allocation);
+      check_equal(pop_failure(memory.p_fail_log), "The " & describe_address(memory, 2) & " was never written with expected byte 66");
+      enable_failure(memory.p_fail_log);
 
       write_byte(memory, 2, 66);
-      check_all_was_written(allocation, error_msg);
-      assert error_msg = null_string_ptr;
+      check_all_was_written(allocation);
 
     elsif run("Test write_integer") then
       memory := new_memory;
