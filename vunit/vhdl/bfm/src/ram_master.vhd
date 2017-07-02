@@ -13,7 +13,7 @@ use work.message_pkg.all;
 use work.queue_pkg.all;
 use work.bus_pkg.all;
 
-entity xlnx_bram_master is
+entity ram_master is
   generic (
     bus_handle : bus_t;
     latency : positive
@@ -28,7 +28,7 @@ entity xlnx_bram_master is
     );
 end entity;
 
-architecture a of xlnx_bram_master is
+architecture a of ram_master is
   signal rd_pipe : std_logic_vector(0 to latency-1);
   constant reply_queue : queue_t := allocate;
 begin

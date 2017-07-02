@@ -15,11 +15,11 @@ use work.message_pkg.all;
 use work.queue_pkg.all;
 use work.bus_pkg.all;
 
-entity tb_xlnx_bram_master is
+entity tb_ram_master is
   generic (runner_cfg : string);
 end entity;
 
-architecture a of tb_xlnx_bram_master is
+architecture a of tb_ram_master is
   constant latency : integer := 2;
   constant num_back_to_back_reads : integer := 64;
 
@@ -125,7 +125,7 @@ begin
     end if;
   end process;
 
-  dut : entity work.xlnx_bram_master
+  dut : entity work.ram_master
     generic map (
       bus_handle => bus_handle,
       latency => latency)
