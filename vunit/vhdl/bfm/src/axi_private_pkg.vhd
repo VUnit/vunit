@@ -13,6 +13,7 @@ use ieee.numeric_std.all;
 use work.axi_pkg.all;
 use work.queue_pkg.all;
 use work.message_pkg.all;
+use work.fail_pkg.all;
 
 library osvvm;
 use osvvm.RandomPkg.all;
@@ -69,7 +70,7 @@ package body axi_private_pkg is
     variable p_is_initialized : boolean := false;
     variable p_inbox : inbox_t;
     variable p_data_size : integer;
-    variable p_error_queue : queue_t;
+    variable p_fail_log : fail_log_t;
     variable p_addr_inbox : inbox_t;
     variable p_addr_stall_rnd : RandomPType;
     variable p_addr_stall_prob : real;
@@ -80,7 +81,7 @@ package body axi_private_pkg is
       p_inbox := inbox;
       p_data_size := data'length/8;
       p_addr_inbox := new_inbox(1);
-      set_error_queue(null_queue);
+      p_fail_log := new_fail_log;
       set_address_channel_stall_probability(0.0);
     end;
 
@@ -122,22 +123,21 @@ package body axi_private_pkg is
 
     impure function get_error_queue return queue_t is
     begin
-      return p_error_queue;
+      return p_fail_log.p_fail_queue;
     end;
 
     procedure set_error_queue(error_queue : queue_t) is
     begin
-      p_error_queue := error_queue;
+      if error_queue = null_queue then
+        enable_failure(p_fail_log);
+      else
+        disable_failure(p_fail_log);
+      end if;
     end;
 
     procedure fail(msg : string) is
     begin
-      if p_error_queue /= null_queue then
-        report msg;
-        push_string(p_error_queue, msg);
-      else
-        report msg severity failure;
-      end if;
+      fail(p_fail_log, msg);
     end;
 
     procedure check_4kb_boundary(burst : axi_burst_t) is
