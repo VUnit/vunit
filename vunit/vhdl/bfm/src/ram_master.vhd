@@ -48,6 +48,7 @@ begin
         when read_access =>
           assert reply /= null_reply;
           push(reply_queue, reply);
+          reply := null_reply;
           rd <= '1';
           wait until rd = '1' and rising_edge(clk);
           rd <= '0';

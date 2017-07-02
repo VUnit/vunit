@@ -4,6 +4,10 @@
 --
 -- Copyright (c) 2017, Lars Asplund lars.anders.asplund@gmail.com
 
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
 use work.integer_vector_ptr_pkg.all;
 use work.string_ptr_pkg.all;
 
@@ -57,25 +61,37 @@ package memory_pkg is
   procedure read_byte(memory : memory_t; address : natural; variable byte : inout byte_t; variable error_msg : inout string_ptr_t; ignore_permissions : boolean := false);
   impure function read_byte(memory : memory_t; address : natural; ignore_permissions : boolean := false) return byte_t;
 
+  procedure write_word(memory : memory_t;
+                       address : natural;
+                       word : std_logic_vector;
+                       big_endian : boolean := false;
+                       ignore_permissions : boolean := false);
+
+  impure function read_word(memory : memory_t;
+                            address : natural;
+                            bytes_per_word : positive;
+                            big_endian : boolean := false;
+                            ignore_permissions : boolean := false) return std_logic_vector;
+
+  procedure write_integer(memory : memory_t;
+                          address : natural;
+                          word : integer;
+                          bytes_per_word : natural range 1 to 4 := 4;
+                          big_endian : boolean := false;
+                          ignore_permissions : boolean := false);
+
   procedure check_all_was_written(alloc : alloc_t; variable error_msg : inout string_ptr_t);
   procedure check_all_was_written(alloc : alloc_t);
 
   impure function get_permissions(memory : memory_t; address : natural) return permissions_t;
   procedure set_permissions(memory : memory_t; address : natural; permissions : permissions_t);
-  procedure set_expected(memory : memory_t; address : natural; expected : byte_t);
-  impure function get_expected(memory : memory_t; address : natural) return byte_t;
+  procedure set_expected_byte(memory : memory_t; address : natural; expected : byte_t);
+  procedure set_expected_word(memory : memory_t; address : natural; expected : std_logic_vector; big_endian : boolean := false);
+  impure function get_expected_byte(memory : memory_t; address : natural) return byte_t;
   impure function describe_address(memory : memory_t; address : natural) return string;
 
   impure function base_address(alloc : alloc_t) return natural;
   impure function last_address(alloc : alloc_t) return natural;
-
-  procedure write_word(memory : memory_t;
-                       address : natural;
-                       word : integer;
-                       bytes_per_word : natural range 1 to 4 := 4;
-                       big_endian : boolean := false;
-                       ignore_permissions : boolean := false);
-
 
   -- Allocate memory for the integer_vector_ptr, write it there
   -- and by default set read_only permission
@@ -338,15 +354,33 @@ package body memory_pkg is
     set(memory.p_data, address, encode((byte => old.byte, exp => old.exp, has_exp => old.has_exp, perm => permissions)));
   end procedure;
 
-  procedure set_expected(memory : memory_t; address : natural; expected : byte_t) is
+  procedure set_expected_byte(memory : memory_t; address : natural; expected : byte_t) is
     variable old : memory_data_t := decode(get(memory.p_data, address));
   begin
     set(memory.p_data, address, encode((byte => old.byte, exp => expected, has_exp => true, perm => old.perm)));
   end procedure;
 
-  impure function get_expected(memory : memory_t; address : natural) return byte_t is
+  impure function get_expected_byte(memory : memory_t; address : natural) return byte_t is
   begin
     return decode(get(memory.p_data, address)).exp;
+  end;
+
+  procedure set_expected_word(memory : memory_t; address : natural; expected : std_logic_vector; big_endian : boolean := false) is
+    -- Normalize to downto range to enable std_logic_vector literals which are
+    -- 1 to N
+    constant word_i : std_logic_vector(expected'length-1 downto 0) := expected;
+  begin
+    if big_endian then
+      for idx in 0 to word_i'length/8-1 loop
+        set_expected_byte(memory, address + word_i'length/8 - 1 - idx,
+                          to_integer(unsigned(word_i(8*idx+7 downto 8*idx))));
+      end loop;
+    else
+      for idx in 0 to word_i'length/8-1 loop
+        set_expected_byte(memory, address + idx,
+                          to_integer(unsigned(word_i(8*idx+7 downto 8*idx))));
+      end loop;
+    end if;
   end;
 
   impure function describe_address(memory : memory_t; address : natural) return string is
@@ -397,10 +431,59 @@ package body memory_pkg is
 
   procedure write_word(memory : memory_t;
                        address : natural;
-                       word : integer;
-                       bytes_per_word : natural range 1 to 4 := 4;
+                       word : std_logic_vector;
                        big_endian : boolean := false;
                        ignore_permissions : boolean := false) is
+
+    -- Normalize to downto range to enable std_logic_vector literals which are
+    -- 1 to N
+    constant word_i : std_logic_vector(word'length-1 downto 0) := word;
+  begin
+    if big_endian then
+      for idx in 0 to word_i'length/8-1 loop
+        write_byte(memory, address + word_i'length/8 - 1 - idx,
+                   to_integer(unsigned(word_i(8*idx+7 downto 8*idx))),
+                   ignore_permissions => ignore_permissions);
+      end loop;
+    else
+      for idx in 0 to word_i'length/8-1 loop
+        write_byte(memory, address + idx,
+                   to_integer(unsigned(word_i(8*idx+7 downto 8*idx))),
+                   ignore_permissions => ignore_permissions);
+      end loop;
+    end if;
+  end procedure;
+
+
+  impure function read_word(memory : memory_t;
+                            address : natural;
+                            bytes_per_word : positive;
+                            big_endian : boolean := false;
+                            ignore_permissions : boolean := false) return std_logic_vector is
+    variable result : std_logic_vector(8*bytes_per_word-1 downto 0);
+    variable bidx : natural;
+  begin
+    for idx in 0 to bytes_per_word-1 loop
+      if big_endian then
+        bidx := bytes_per_word - 1 - idx;
+      else
+        bidx := idx;
+      end if;
+
+      result(8*bidx+7 downto 8*bidx) := std_logic_vector(
+        to_unsigned(read_byte(memory, address + idx,
+                              ignore_permissions => ignore_permissions), 8));
+
+    end loop;
+    return result;
+  end;
+
+  procedure write_integer(memory : memory_t;
+                          address : natural;
+                          word : integer;
+                          bytes_per_word : natural range 1 to 4 := 4;
+                          big_endian : boolean := false;
+                          ignore_permissions : boolean := false) is
 
     constant bytes : integer_vector := serialize(word, bytes_per_word, big_endian);
   begin
@@ -428,10 +511,10 @@ package body memory_pkg is
 
     base_addr := base_address(alloc);
     for i in 0 to length(integer_vector_ptr)-1 loop
-      write_word(memory, base_addr + bytes_per_word*i, get(integer_vector_ptr, i),
-                 bytes_per_word => bytes_per_word,
-                 big_endian => big_endian,
-                 ignore_permissions => true);
+      write_integer(memory, base_addr + bytes_per_word*i, get(integer_vector_ptr, i),
+                    bytes_per_word => bytes_per_word,
+                    big_endian => big_endian,
+                    ignore_permissions => true);
     end loop;
     return alloc;
   end;
@@ -454,7 +537,7 @@ package body memory_pkg is
     for i in 0 to length(integer_vector_ptr)-1 loop
       bytes := serialize(get(integer_vector_ptr, i), bytes_per_word, big_endian);
       for byte_idx in 0 to bytes_per_word-1 loop
-        set_expected(memory, base_addr + bytes_per_word*i + byte_idx, bytes(byte_idx));
+        set_expected_byte(memory, base_addr + bytes_per_word*i + byte_idx, bytes(byte_idx));
       end loop;
     end loop;
     return alloc;

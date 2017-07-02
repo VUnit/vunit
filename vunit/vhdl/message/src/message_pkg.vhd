@@ -348,7 +348,13 @@ package body message_pkg is
                  constant timeout : time := max_timeout) is
   begin
     wait_until_not_empty(event, inbox, timeout);
+    if msg /= null_msg then
+      recycle(msg);
+    end if;
     msg := pop(inbox.msg_queue);
+    if reply /= null_reply then
+      recycle(reply);
+    end if;
     reply := pop(inbox.msg_queue);
     notify(event);
   end procedure;
@@ -374,7 +380,13 @@ package body message_pkg is
     assert not all_empty(inboxes) report "Recv timeout after " & to_string(timeout) & " due to empty inboxes";
 
     inbox := select_inbox(inboxes);
+    if msg /= null_msg then
+      recycle(msg);
+    end if;
     msg := pop(inbox.msg_queue);
+    if reply /= null_reply then
+      recycle(reply);
+    end if;
     reply := pop(inbox.msg_queue);
     notify(event);
   end procedure;

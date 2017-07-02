@@ -4,6 +4,9 @@
 --
 -- Copyright (c) 2017, Lars Asplund lars.anders.asplund@gmail.com
 
+library ieee;
+use ieee.std_logic_1164.all;
+
 library vunit_lib;
 context vunit_lib.vunit_context;
 
@@ -21,25 +24,36 @@ begin
 
   main : process
     variable memory : memory_t;
+
+    procedure test_write_integer(word : integer; bytes : integer_vector) is
+    begin
+      write_integer(memory, 0, word, bytes_per_word => bytes'length);
+      for i in 0 to bytes'length-1 loop
+        check_equal(read_byte(memory, i), bytes(i));
+      end loop;
+      write_integer(memory, 0, word, bytes_per_word => bytes'length, big_endian => true);
+      for i in 0 to bytes'length-1 loop
+        check_equal(read_byte(memory, i), bytes(bytes'length - 1 - i));
+      end loop;
+    end procedure;
+
+    procedure test_write_word(word : std_logic_vector; bytes : integer_vector) is
+    begin
+      write_word(memory, 0, word);
+      for i in 0 to word'length/8-1 loop
+        check_equal(read_byte(memory, i), bytes(i));
+      end loop;
+
+      write_word(memory, 0, word, big_endian => true);
+      for i in 0 to word'length/8-1 loop
+        check_equal(read_byte(memory, i), bytes(word'length/8 - 1 - i));
+      end loop;
+    end procedure;
+
     variable allocation : alloc_t;
     variable integer_vector_ptr : integer_vector_ptr_t;
     variable error_msg : string_ptr_t;
     variable byte : byte_t;
-
-    procedure test_write_word(word : integer; bytes : integer_vector(0 to 3)) is
-    begin
-      write_word(memory, 0, word);
-      check_equal(read_byte(memory, 0), bytes(0));
-      check_equal(read_byte(memory, 1), bytes(1));
-      check_equal(read_byte(memory, 2), bytes(2));
-      check_equal(read_byte(memory, 3), bytes(3));
-
-      write_word(memory, 0, word, big_endian => true);
-      check_equal(read_byte(memory, 0), bytes(3));
-      check_equal(read_byte(memory, 1), bytes(2));
-      check_equal(read_byte(memory, 2), bytes(1));
-      check_equal(read_byte(memory, 3), bytes(0));
-    end procedure;
 
   begin
     test_runner_setup(runner, runner_cfg);
@@ -209,19 +223,28 @@ begin
       check_equal(describe_address(memory, 5),
                   "address 5 at offset 3 within allocation 'alloc_name' at range (2 to 11)");
 
-    elsif run("Test set expected") then
+    elsif run("Test set expected byte") then
       memory := new_memory;
       allocation := allocate(memory, 2);
-      set_expected(memory, 0, 77);
+      set_expected_byte(memory, 0, 77);
 
       write_byte(memory, 0, 255, error_msg);
       check_equal(to_string(error_msg), "Writing to " & describe_address(memory, 0) & ". Got 255 expected 77");
 
+    elsif run("Test set expected word") then
+      memory := new_memory;
+      allocation := allocate(memory, 2);
+      set_expected_word(memory, 0, x"3322");
+      write_byte(memory, 0, 16#33#, error_msg);
+      check_equal(to_string(error_msg), "Writing to " & describe_address(memory, 0) & ". Got 51 expected 34");
+      write_byte(memory, 1, 16#22#, error_msg);
+      check_equal(to_string(error_msg), "Writing to " & describe_address(memory, 1) & ". Got 34 expected 51");
+
     elsif run("Test check all was written") then
       memory := new_memory;
       allocation := allocate(memory, 3);
-      set_expected(memory, 0, 77);
-      set_expected(memory, 2, 66);
+      set_expected_byte(memory, 0, 77);
+      set_expected_byte(memory, 2, 66);
 
       check_all_was_written(allocation, error_msg);
       check_equal(to_string(error_msg), "The " & describe_address(memory, 0) & " was never written with expected byte 77");
@@ -234,18 +257,36 @@ begin
       check_all_was_written(allocation, error_msg);
       assert error_msg = null_string_ptr;
 
-    elsif run("Test write_word") then
+    elsif run("Test write_integer") then
       memory := new_memory;
       allocation := allocate(memory, 4);
 
-      test_write_word(1, (1, 0, 0, 0));
-      test_write_word(-1, (255, 255, 255, 255));
+      test_write_integer(1, (0 => 1));
+      test_write_integer(-1, (0 => 255));
 
-      test_write_word(256, (0, 1, 0, 0));
-      test_write_word(-256, (0, 255, 255, 255));
+      test_write_integer(1, (1, 0, 0, 0));
+      test_write_integer(-1, (255, 255, 255, 255));
 
-      test_write_word(integer'high, (255, 255, 255, 127));
-      test_write_word(integer'low, (0, 0, 0, 128));
+      test_write_integer(256, (0, 1, 0, 0));
+      test_write_integer(-256, (0, 255, 255, 255));
+
+      test_write_integer(integer'high, (255, 255, 255, 127));
+      test_write_integer(integer'low, (0, 0, 0, 128));
+
+    elsif run("Test write word") then
+      memory := new_memory;
+      allocation := allocate(memory, 7);
+      test_write_word(x"11223344556677", (16#77#, 16#66#, 16#55#, 16#44#, 16#33#, 16#22#, 16#11#));
+
+    elsif run("Test read word") then
+      memory := new_memory;
+      allocation := allocate(memory, 7+5);
+
+      write_word(memory, 0, x"11223344556677");
+      check_equal(read_word(memory, 0, 7), std_logic_vector'(x"11223344556677"));
+
+      write_word(memory, 7, x"aaffbbccdd", big_endian => True);
+      check_equal(read_word(memory, 7, 5, big_endian => True), std_logic_vector'(x"aaffbbccdd"));
 
     elsif run("Test allocate integer_vector_ptr") then
       memory := new_memory;
@@ -293,10 +334,10 @@ begin
       end loop;
 
       for i in 0 to length(integer_vector_ptr)-1 loop
-        check_equal(get_expected(memory, base_address(allocation) + 4*i), get(integer_vector_ptr, i));
-        check_equal(get_expected(memory, base_address(allocation) + 4*i+1), 0);
-        check_equal(get_expected(memory, base_address(allocation) + 4*i+2), 0);
-        check_equal(get_expected(memory, base_address(allocation) + 4*i+3), 0);
+        check_equal(get_expected_byte(memory, base_address(allocation) + 4*i), get(integer_vector_ptr, i));
+        check_equal(get_expected_byte(memory, base_address(allocation) + 4*i+1), 0);
+        check_equal(get_expected_byte(memory, base_address(allocation) + 4*i+2), 0);
+        check_equal(get_expected_byte(memory, base_address(allocation) + 4*i+3), 0);
       end loop;
 
       allocation := allocate_expected_integer_vector_ptr(memory, integer_vector_ptr, alignment => 16);
@@ -310,7 +351,7 @@ begin
 
       for addr in base_address(allocation) to last_address(allocation) loop
         assert get_permissions(memory, addr) = read_and_write;
-        check_equal(get_expected(memory, addr), get(integer_vector_ptr, addr - base_address(allocation)));
+        check_equal(get_expected_byte(memory, addr), get(integer_vector_ptr, addr - base_address(allocation)));
       end loop;
 
     end if;

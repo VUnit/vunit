@@ -122,7 +122,7 @@ begin
         alloc := allocate(memory, 8 * len, alignment => 4096);
         for i in 0 to length(data)-1 loop
           if get(strb, i) = 1 then
-            set_expected(memory, base_address(alloc)+i, get(data, i));
+            set_expected_byte(memory, base_address(alloc)+i, get(data, i));
             num_ops := num_ops + 1;
           else
             set_permissions(memory, base_address(alloc)+i, no_access);
