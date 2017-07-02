@@ -15,6 +15,7 @@ use work.message_pkg.all;
 use work.queue_pkg.all;
 use work.bus_pkg.all;
 use work.memory_pkg.all;
+use work.fail_pkg.all;
 
 entity tb_bus_pkg is
   generic (runner_cfg : string);
@@ -39,6 +40,25 @@ begin
       write_word(memory, base_address(alloc), x"00112233", ignore_permissions => True);
       read_bus(event, bus_handle, x"00000000", read_data);
       check_equal(read_data, std_logic_vector'(x"00112233"));
+
+    elsif run("test check_bus") then
+      alloc := allocate(memory, 4, permissions => read_only);
+      write_word(memory, base_address(alloc), x"00112233", ignore_permissions => True);
+      check_bus(event, bus_handle, x"00000000", std_logic_vector'(x"00112233"));
+      check_bus(event, bus_handle, x"00000000", std_logic_vector'(x"00112244"), mask => std_logic_vector'(x"ffffff00"));
+
+      disable_failure(bus_handle.fail_log);
+      check_bus(event, bus_handle, x"00000000", std_logic_vector'(x"00112244"));
+      check_equal(pop_failure(bus_handle.fail_log), "check_bus(x""00000000"") - Got x""00112233"" expected x""00112244""");
+      check_no_failures(bus_handle.fail_log);
+
+      check_bus(event, bus_handle, x"00000000", std_logic_vector'(x"00112244"), msg => "msg");
+      check_equal(pop_failure(bus_handle.fail_log), "msg - Got x""00112233"" expected x""00112244""");
+      check_no_failures(bus_handle.fail_log);
+
+      check_bus(event, bus_handle, x"00000000", std_logic_vector'(x"00112244"), mask => std_logic_vector'(x"00ffffff"));
+      check_equal(pop_failure(bus_handle.fail_log), "check_bus(x""00000000"") - Got x""00112233"" expected x""00112244"" using mask x""00FFFFFF""");
+      check_no_failures(bus_handle.fail_log);
     end if;
     test_runner_cleanup(runner);
   end process;

@@ -9,12 +9,14 @@ use ieee.std_logic_1164.all;
 
 use work.message_pkg.all;
 use work.queue_pkg.all;
+use work.fail_pkg.all;
 
 package bus_pkg is
   type bus_t is record
     inbox : inbox_t;
     data_length : natural;
     address_length : natural;
+    fail_log : fail_log_t;
   end record;
 
   impure function new_bus(data_length, address_length : natural) return bus_t;
@@ -36,6 +38,14 @@ package bus_pkg is
   procedure await_read_bus_reply(signal event : inout event_t;
                                  variable reply : inout reply_t;
                                  variable data : inout std_logic_vector);
+
+  -- Blocking read and check result
+  procedure check_bus(signal event : inout event_t;
+                      constant bus_handle : bus_t;
+                      constant address : std_logic_vector;
+                      constant expected : std_logic_vector;
+                      constant mask : std_logic_vector := "";
+                      constant msg : string := "");
 
   -- Blocking read with immediate reply
   procedure read_bus(signal event : inout event_t;
@@ -71,7 +81,10 @@ package body bus_pkg is
 
   impure function new_bus(data_length, address_length : natural) return bus_t is
   begin
-    return (inbox => new_inbox, data_length => data_length, address_length => address_length);
+    return (inbox => new_inbox,
+            data_length => data_length,
+            address_length => address_length,
+            fail_log => new_fail_log);
   end;
 
   procedure write_bus(signal event : inout event_t;
@@ -87,6 +100,47 @@ package body bus_pkg is
     full_data(data'length-1 downto 0) := data;
     push_std_ulogic_vector(msg.data, full_data);
     send(event, bus_handle.inbox, msg);
+  end procedure;
+
+  procedure check_bus(signal event : inout event_t;
+                      constant bus_handle : bus_t;
+                      constant address : std_logic_vector;
+                      constant expected : std_logic_vector;
+                      constant mask : std_logic_vector := "";
+                      constant msg : string := "") is
+    variable data : std_logic_vector(bus_handle.data_length-1 downto 0);
+    variable edata : std_logic_vector(data'range) := expected;
+    variable full_mask : std_logic_vector(data'range) := (others => '0');
+
+    impure function error_prefix return string is
+    begin
+      if msg = "" then
+        return "check_bus(x""" & to_hstring(address) & """)";
+      else
+        return msg;
+      end if;
+    end;
+
+    impure function base_error return string is
+    begin
+      return error_prefix & " - Got x""" & to_hstring(data) & """ expected x""" & to_hstring(edata) & """";
+    end;
+  begin
+
+    if mask = "" then
+      full_mask := (others => '1');
+    else
+      full_mask(mask'length-1 downto 0) := mask;
+    end if;
+
+    read_bus(event, bus_handle, address, data);
+    if (data and full_mask) /= (edata and full_mask) then
+      if mask = "" then
+        fail(bus_handle.fail_log, base_error);
+      else
+        fail(bus_handle.fail_log, base_error & " using mask x""" & to_hstring(full_mask) & """");
+      end if;
+    end if;
   end procedure;
 
   -- Non blocking read with delayed reply
@@ -147,9 +201,9 @@ package body bus_pkg is
     end loop;
 
     if error_msg = "" then
-      report "Timeout" severity failure;
+      fail(bus_handle.fail_log, "Timeout");
     else
-      report error_msg severity failure;
+      fail(bus_handle.fail_log, error_msg);
     end if;
   end;
 
@@ -161,7 +215,7 @@ package body bus_pkg is
     value        : std_logic;
     timeout      : delay_length := delay_length'high;
     error_msg    : string       := ""
-  ) is
+    ) is
     variable data, mask : std_logic_vector(bus_handle.data_length-1 downto 0);
   begin
     data      := (others => '0');
