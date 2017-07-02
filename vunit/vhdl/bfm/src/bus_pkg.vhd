@@ -109,7 +109,7 @@ package body bus_pkg is
                       constant mask : std_logic_vector := "";
                       constant msg : string := "") is
     variable data : std_logic_vector(bus_handle.data_length-1 downto 0);
-    variable edata : std_logic_vector(data'range) := expected;
+    variable edata : std_logic_vector(data'range) := (others => '0');
     variable full_mask : std_logic_vector(data'range) := (others => '0');
 
     impure function error_prefix return string is
@@ -127,6 +127,7 @@ package body bus_pkg is
     end;
   begin
 
+    edata(expected'length-1 downto 0) := expected;
     if mask = "" then
       full_mask := (others => '1');
     else

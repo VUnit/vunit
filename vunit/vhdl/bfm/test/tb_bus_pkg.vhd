@@ -59,6 +59,17 @@ begin
       check_bus(event, bus_handle, x"00000000", std_logic_vector'(x"00112244"), mask => std_logic_vector'(x"00ffffff"));
       check_equal(pop_failure(bus_handle.fail_log), "check_bus(x""00000000"") - Got x""00112233"" expected x""00112244"" using mask x""00FFFFFF""");
       check_no_failures(bus_handle.fail_log);
+
+    elsif run("test check_bus support reduced data length") then
+      alloc := allocate(memory, 4, permissions => read_only);
+      write_word(memory, base_address(alloc), x"00112233", ignore_permissions => True);
+      check_bus(event, bus_handle, x"00000000", std_logic_vector'(x"112233"));
+
+      write_word(memory, base_address(alloc), x"77112233", ignore_permissions => True);
+      disable_failure(bus_handle.fail_log);
+      check_bus(event, bus_handle, x"00000000", std_logic_vector'(x"112233"));
+      check_equal(pop_failure(bus_handle.fail_log), "check_bus(x""00000000"") - Got x""77112233"" expected x""00112233""");
+      check_no_failures(bus_handle.fail_log);
     end if;
     test_runner_cleanup(runner);
   end process;
