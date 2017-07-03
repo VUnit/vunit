@@ -28,8 +28,8 @@ package axi_private_pkg is
     burst_type : axi_burst_type_t;
   end record;
 
-  type axi_slave_t is protected
-    procedure init(inbox : inbox_t; data : std_logic_vector);
+  type axi_slave_private_t is protected
+    procedure init(axi_slave : axi_slave_t; data : std_logic_vector);
     impure function is_initialized return boolean;
     impure function get_inbox return inbox_t;
 
@@ -48,10 +48,10 @@ package axi_private_pkg is
   procedure push_axi_burst(queue : queue_t; burst : axi_burst_t);
   impure function pop_axi_burst(queue : queue_t) return axi_burst_t;
 
-  procedure main_loop(variable self : inout axi_slave_t;
+  procedure main_loop(variable self : inout axi_slave_private_t;
                       signal event : inout event_t);
 
-  procedure address_channel(variable self : inout axi_slave_t;
+  procedure address_channel(variable self : inout axi_slave_private_t;
                             signal event : inout event_t;
                             signal aclk : in std_logic;
                             signal axvalid : in std_logic;
@@ -66,19 +66,19 @@ end package;
 
 
 package body axi_private_pkg is
-  type axi_slave_t is protected body
+  type axi_slave_private_t is protected body
     variable p_is_initialized : boolean := false;
-    variable p_inbox : inbox_t;
+    variable p_axi_slave : axi_slave_t;
     variable p_data_size : integer;
     variable p_fail_log : fail_log_t;
     variable p_addr_inbox : inbox_t;
     variable p_addr_stall_rnd : RandomPType;
     variable p_addr_stall_prob : real;
 
-    procedure init(inbox : inbox_t; data : std_logic_vector) is
+    procedure init(axi_slave : axi_slave_t; data : std_logic_vector) is
     begin
       p_is_initialized := true;
-      p_inbox := inbox;
+      p_axi_slave := axi_slave;
       p_data_size := data'length/8;
       p_addr_inbox := new_inbox(1);
       p_fail_log := new_fail_log;
@@ -92,7 +92,7 @@ package body axi_private_pkg is
 
     impure function get_inbox return inbox_t is
     begin
-      return p_inbox;
+      return p_axi_slave.p_inbox;
     end;
 
     procedure set_address_channel_fifo_depth(depth : positive) is
@@ -184,7 +184,7 @@ package body axi_private_pkg is
     return burst;
   end;
 
-  procedure main_loop(variable self : inout axi_slave_t;
+  procedure main_loop(variable self : inout axi_slave_private_t;
                       signal event : inout event_t) is
     variable msg : msg_t;
     variable reply : reply_t;
@@ -229,7 +229,7 @@ package body axi_private_pkg is
     return burst;
   end function;
 
-  procedure address_channel(variable self : inout axi_slave_t;
+  procedure address_channel(variable self : inout axi_slave_private_t;
                             signal event : inout event_t;
                             signal aclk : in std_logic;
                             signal axvalid : in std_logic;

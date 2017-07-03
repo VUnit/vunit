@@ -49,7 +49,7 @@ architecture a of tb_axi_write_slave is
   signal bid     : std_logic_vector(awid'range);
   signal bresp   : axi_resp_t;
 
-  constant inbox : inbox_t := new_inbox;
+  constant axi_slave : axi_slave_t := new_axi_slave;
   constant memory : memory_t := new_memory;
 
 begin
@@ -73,15 +73,15 @@ begin
                          log_size : natural;
                          burst : axi_burst_type_t) is
     begin
-        awvalid <= '1';
-        awid <= id;
-        awaddr <= std_logic_vector(to_unsigned(addr, awaddr'length));
-        awlen <= std_logic_vector(to_unsigned(len-1, awlen'length));
-        awsize <= std_logic_vector(to_unsigned(log_size, awsize'length));
-        awburst <= burst;
+      awvalid <= '1';
+      awid <= id;
+      awaddr <= std_logic_vector(to_unsigned(addr, awaddr'length));
+      awlen <= std_logic_vector(to_unsigned(len-1, awlen'length));
+      awsize <= std_logic_vector(to_unsigned(log_size, awsize'length));
+      awburst <= burst;
 
-        wait until (awvalid and awready) = '1' and rising_edge(clk);
-        awvalid <= '0';
+      wait until (awvalid and awready) = '1' and rising_edge(clk);
+      awvalid <= '0';
     end procedure;
 
     variable data : integer_vector_ptr_t;
@@ -161,7 +161,7 @@ begin
       assert num_ops > 5000;
 
     elsif run("Test error on missing tlast fixed") then
-      disable_fail_on_error(event, inbox, error_queue);
+      disable_fail_on_error(event, axi_slave, error_queue);
 
       alloc := allocate(memory, 8);
       write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_fixed);
@@ -175,7 +175,7 @@ begin
       read_response(x"2", axi_resp_ok);
 
     elsif run("Test error on missing tlast incr") then
-      disable_fail_on_error(event, inbox, error_queue);
+      disable_fail_on_error(event, axi_slave, error_queue);
 
       alloc := allocate(memory, 8);
       write_addr(x"2", base_address(alloc), 2, 0, axi_burst_type_incr);
@@ -197,7 +197,7 @@ begin
       read_response(x"2", axi_resp_ok);
 
     elsif run("Test error on unsupported wrap burst") then
-      disable_fail_on_error(event, inbox, error_queue);
+      disable_fail_on_error(event, axi_slave, error_queue);
       alloc := allocate(memory, 8);
       write_addr(x"2", base_address(alloc), 2, 0, axi_burst_type_wrap);
       wait until length(error_queue) > 0 and rising_edge(clk);
@@ -206,7 +206,7 @@ begin
 
     elsif run("Test error 4KB boundary crossing") then
       alloc := allocate(memory, 4096+32, alignment => 4096);
-      disable_fail_on_error(event, inbox, error_queue);
+      disable_fail_on_error(event, axi_slave, error_queue);
       write_addr(x"2", base_address(alloc)+4000, 256, 0, axi_burst_type_incr);
       wait until length(error_queue) > 0 and rising_edge(clk);
       check_equal(pop_string(error_queue), "Crossing 4KB boundary");
@@ -221,7 +221,7 @@ begin
       end loop;
 
     elsif run("Test set address channel fifo depth") then
-      set_address_channel_fifo_depth(event, inbox, 16);
+      set_address_channel_fifo_depth(event, axi_slave, 16);
 
       write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr); -- Taken data process
       for i in 1 to 16 loop
@@ -234,24 +234,24 @@ begin
       end loop;
 
     elsif run("Test changing address channel depth to smaller than content gives error") then
-      set_address_channel_fifo_depth(event, inbox, 16);
+      set_address_channel_fifo_depth(event, axi_slave, 16);
 
       write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr); -- Taken data process
       for i in 1 to 16 loop
         write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr); -- In the queue
       end loop;
 
-      set_address_channel_fifo_depth(event, inbox, 17);
-      set_address_channel_fifo_depth(event, inbox, 16);
+      set_address_channel_fifo_depth(event, axi_slave, 17);
+      set_address_channel_fifo_depth(event, axi_slave, 16);
 
-      disable_fail_on_error(event, inbox, error_queue);
+      disable_fail_on_error(event, axi_slave, error_queue);
 
-      set_address_channel_fifo_depth(event, inbox, 1);
+      set_address_channel_fifo_depth(event, axi_slave, 1);
       check_equal(pop_string(error_queue), "New address channel fifo depth 1 is smaller than current content size 16");
       check_equal(length(error_queue), 0, "no more errors");
 
     elsif run("Test address channel stall probability") then
-      set_address_channel_fifo_depth(event, inbox, 128);
+      set_address_channel_fifo_depth(event, axi_slave, 128);
 
       start_time := now;
       for i in 1 to 16 loop
@@ -259,7 +259,7 @@ begin
       end loop;
       diff_time := now - start_time;
 
-      set_address_channel_stall_probability(event, inbox, 0.9);
+      set_address_channel_stall_probability(event, axi_slave, 0.9);
       start_time := now;
       for i in 1 to 16 loop
         write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr);
@@ -273,7 +273,7 @@ begin
 
   dut : entity work.axi_write_slave
     generic map (
-      inbox => inbox,
+      axi_slave => axi_slave,
       memory => memory)
     port map (
       aclk    => clk,

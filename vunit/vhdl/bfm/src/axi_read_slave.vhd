@@ -16,7 +16,7 @@ use work.message_pkg.all;
 
 entity axi_read_slave is
   generic (
-    inbox : inbox_t;
+    axi_slave : axi_slave_t;
     memory : memory_t);
   port (
     aclk : in std_logic;
@@ -39,7 +39,7 @@ entity axi_read_slave is
 end entity;
 
 architecture a of axi_read_slave is
-  shared variable self : axi_slave_t;
+  shared variable self : axi_slave_private_t;
   signal local_event : event_t := no_event;
 begin
 
@@ -47,7 +47,7 @@ begin
   begin
     -- Static Error checking
     assert arid'length = rid'length report "arid vs rid data width mismatch";
-    self.init(inbox, rdata);
+    self.init(axi_slave, rdata);
     main_loop(self, event);
     wait;
   end process;
