@@ -247,7 +247,8 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
 
         tcl = """
 proc vunit_load {{}} {{
-    # Make the variable 'aldec' visible; otherwise, the Matlab interface is broken because vsim does not find the library aldec_matlab_cosim.
+    # Make the variable 'aldec' visible; otherwise, the Matlab interface
+    # is broken because vsim does not find the library aldec_matlab_cosim.
     global aldec
     set vsim_failed [catch {{
         eval vsim {{{vsim_flags}}}
