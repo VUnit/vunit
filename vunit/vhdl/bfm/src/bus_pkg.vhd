@@ -13,13 +13,16 @@ use work.fail_pkg.all;
 
 package bus_pkg is
   type bus_t is record
-    inbox : inbox_t;
-    data_length : natural;
-    address_length : natural;
-    fail_log : fail_log_t;
+    -- Private
+    p_inbox : inbox_t;
+    p_data_length : natural;
+    p_address_length : natural;
+    p_fail_log : fail_log_t;
   end record;
 
   impure function new_bus(data_length, address_length : natural) return bus_t;
+  impure function data_length(bus_handle : bus_t) return natural;
+  impure function address_length(bus_handle : bus_t) return natural;
 
   type bus_access_type_t is (read_access, write_access);
 
@@ -81,10 +84,20 @@ package body bus_pkg is
 
   impure function new_bus(data_length, address_length : natural) return bus_t is
   begin
-    return (inbox => new_inbox,
-            data_length => data_length,
-            address_length => address_length,
-            fail_log => new_fail_log);
+    return (p_inbox => new_inbox,
+            p_data_length => data_length,
+            p_address_length => address_length,
+            p_fail_log => new_fail_log);
+  end;
+
+  impure function data_length(bus_handle : bus_t) return natural is
+  begin
+    return bus_handle.p_data_length;
+  end;
+
+  impure function address_length(bus_handle : bus_t) return natural is
+  begin
+    return bus_handle.p_address_length;
   end;
 
   procedure write_bus(signal event : inout event_t;
@@ -92,14 +105,14 @@ package body bus_pkg is
                       constant address : std_logic_vector;
                       constant data : std_logic_vector) is
     variable msg : msg_t;
-    variable full_data : std_logic_vector(bus_handle.data_length-1 downto 0) := (others => '0');
+    variable full_data : std_logic_vector(bus_handle.p_data_length-1 downto 0) := (others => '0');
   begin
     msg := allocate;
     push(msg.data, bus_access_type_t'pos(write_access));
     push_std_ulogic_vector(msg.data, address);
     full_data(data'length-1 downto 0) := data;
     push_std_ulogic_vector(msg.data, full_data);
-    send(event, bus_handle.inbox, msg);
+    send(event, bus_handle.p_inbox, msg);
   end procedure;
 
   procedure check_bus(signal event : inout event_t;
@@ -108,7 +121,7 @@ package body bus_pkg is
                       constant expected : std_logic_vector;
                       constant mask : std_logic_vector := "";
                       constant msg : string := "") is
-    variable data : std_logic_vector(bus_handle.data_length-1 downto 0);
+    variable data : std_logic_vector(bus_handle.p_data_length-1 downto 0);
     variable edata : std_logic_vector(data'range) := (others => '0');
     variable full_mask : std_logic_vector(data'range) := (others => '0');
 
@@ -137,9 +150,9 @@ package body bus_pkg is
     read_bus(event, bus_handle, address, data);
     if (data and full_mask) /= (edata and full_mask) then
       if mask = "" then
-        fail(bus_handle.fail_log, base_error);
+        fail(bus_handle.p_fail_log, base_error);
       else
-        fail(bus_handle.fail_log, base_error & " using mask x""" & to_hstring(full_mask) & """");
+        fail(bus_handle.p_fail_log, base_error & " using mask x""" & to_hstring(full_mask) & """");
       end if;
     end if;
   end procedure;
@@ -154,7 +167,7 @@ package body bus_pkg is
     msg := allocate;
     push(msg.data, bus_access_type_t'pos(read_access));
     push_std_ulogic_vector(msg.data, address);
-    send(event, bus_handle.inbox, msg, reply);
+    send(event, bus_handle.p_inbox, msg, reply);
   end procedure;
 
   -- Await read bus reply
@@ -189,7 +202,7 @@ package body bus_pkg is
     msg    : string       := "") is
     constant start_time : time         := now;
     variable waited     : delay_length := delay_length'low;
-    variable data       : std_logic_vector(bus_handle.data_length-1 downto 0);
+    variable data       : std_logic_vector(bus_handle.p_data_length-1 downto 0);
   begin
     while waited <= timeout loop
       -- Do the waited calculation here so that a read delay is allowed when
@@ -202,9 +215,9 @@ package body bus_pkg is
     end loop;
 
     if msg = "" then
-      fail(bus_handle.fail_log, "Timeout");
+      fail(bus_handle.p_fail_log, "Timeout");
     else
-      fail(bus_handle.fail_log, msg);
+      fail(bus_handle.p_fail_log, msg);
     end if;
   end;
 
@@ -216,7 +229,7 @@ package body bus_pkg is
     value        : std_logic;
     timeout      : delay_length := delay_length'high;
     msg    : string       := "") is
-    variable data, mask : std_logic_vector(bus_handle.data_length-1 downto 0);
+    variable data, mask : std_logic_vector(bus_handle.p_data_length-1 downto 0);
   begin
     data      := (others => '0');
     mask      := (others => '0');

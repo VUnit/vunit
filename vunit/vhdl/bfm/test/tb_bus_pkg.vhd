@@ -27,9 +27,10 @@ architecture a of tb_bus_pkg is
 begin
   main : process
     variable alloc : alloc_t;
-    variable read_data : std_logic_vector(bus_handle.data_length-1 downto 0);
+    variable read_data : std_logic_vector(data_length(bus_handle)-1 downto 0);
   begin
     test_runner_setup(runner, runner_cfg);
+
     if run("test write_bus") then
       alloc := allocate(memory, 4, permissions => write_only);
       set_expected_word(memory, base_address(alloc), x"00112233");
@@ -47,18 +48,18 @@ begin
       check_bus(event, bus_handle, x"00000000", std_logic_vector'(x"00112233"));
       check_bus(event, bus_handle, x"00000000", std_logic_vector'(x"00112244"), mask => std_logic_vector'(x"ffffff00"));
 
-      disable_failure(bus_handle.fail_log);
+      disable_failure(bus_handle.p_fail_log);
       check_bus(event, bus_handle, x"00000000", std_logic_vector'(x"00112244"));
-      check_equal(pop_failure(bus_handle.fail_log), "check_bus(x""00000000"") - Got x""00112233"" expected x""00112244""");
-      check_no_failures(bus_handle.fail_log);
+      check_equal(pop_failure(bus_handle.p_fail_log), "check_bus(x""00000000"") - Got x""00112233"" expected x""00112244""");
+      check_no_failures(bus_handle.p_fail_log);
 
       check_bus(event, bus_handle, x"00000000", std_logic_vector'(x"00112244"), msg => "msg");
-      check_equal(pop_failure(bus_handle.fail_log), "msg - Got x""00112233"" expected x""00112244""");
-      check_no_failures(bus_handle.fail_log);
+      check_equal(pop_failure(bus_handle.p_fail_log), "msg - Got x""00112233"" expected x""00112244""");
+      check_no_failures(bus_handle.p_fail_log);
 
       check_bus(event, bus_handle, x"00000000", std_logic_vector'(x"00112244"), mask => std_logic_vector'(x"00ffffff"));
-      check_equal(pop_failure(bus_handle.fail_log), "check_bus(x""00000000"") - Got x""00112233"" expected x""00112244"" using mask x""00FFFFFF""");
-      check_no_failures(bus_handle.fail_log);
+      check_equal(pop_failure(bus_handle.p_fail_log), "check_bus(x""00000000"") - Got x""00112233"" expected x""00112244"" using mask x""00FFFFFF""");
+      check_no_failures(bus_handle.p_fail_log);
 
     elsif run("test check_bus support reduced data length") then
       alloc := allocate(memory, 4, permissions => read_only);
@@ -66,10 +67,10 @@ begin
       check_bus(event, bus_handle, x"00000000", std_logic_vector'(x"112233"));
 
       write_word(memory, base_address(alloc), x"77112233", ignore_permissions => True);
-      disable_failure(bus_handle.fail_log);
+      disable_failure(bus_handle.p_fail_log);
       check_bus(event, bus_handle, x"00000000", std_logic_vector'(x"112233"));
-      check_equal(pop_failure(bus_handle.fail_log), "check_bus(x""00000000"") - Got x""77112233"" expected x""00112233""");
-      check_no_failures(bus_handle.fail_log);
+      check_equal(pop_failure(bus_handle.p_fail_log), "check_bus(x""00000000"") - Got x""77112233"" expected x""00112233""");
+      check_no_failures(bus_handle.p_fail_log);
     end if;
     test_runner_cleanup(runner);
   end process;
@@ -79,11 +80,11 @@ begin
     variable reply : reply_t;
     variable bus_access_type : bus_access_type_t;
 
-    variable addr  : std_logic_vector(bus_handle.address_length-1 downto 0);
-    variable data  : std_logic_vector(bus_handle.data_length-1 downto 0);
+    variable addr  : std_logic_vector(address_length(bus_handle)-1 downto 0);
+    variable data  : std_logic_vector(data_length(bus_handle)-1 downto 0);
   begin
     loop
-      recv(event, bus_handle.inbox, msg, reply);
+      recv(event, bus_handle.p_inbox, msg, reply);
 
       bus_access_type := bus_access_type_t'val(integer'(pop(msg.data)));
       addr := pop_std_ulogic_vector(msg.data);

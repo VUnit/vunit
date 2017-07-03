@@ -39,7 +39,7 @@ begin
     variable bus_access_type : bus_access_type_t;
   begin
     loop
-      recv(event, bus_handle.inbox, msg, reply);
+      recv(event, bus_handle.p_inbox, msg, reply);
 
       bus_access_type := bus_access_type_t'val(integer'(pop(msg.data)));
       addr <= pop_std_ulogic_vector(msg.data);
