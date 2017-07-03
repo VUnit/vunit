@@ -247,6 +247,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
 
         tcl = """
 proc vunit_load {{}} {{
+    global aldec
     set vsim_failed [catch {{
         eval vsim {{{vsim_flags}}}
     }}]
