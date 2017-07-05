@@ -118,4 +118,35 @@ begin
     end loop;
   end process;
 
+  well_behaved_check : process
+    variable size, len : natural;
+    variable num_beats : integer := 0;
+  begin
+    wait until self.is_initialized and rising_edge(aclk);
+    loop
+
+      -- Always keep track of num_beats such that the well behaved check can be enabled at any time
+      if (awvalid and awready) = '1' then
+        size      := 2**to_integer(unsigned(awsize));
+        len       := to_integer(unsigned(awlen));
+        num_beats := num_beats + len + 1;
+
+        if self.should_check_well_behaved and size /= self.data_size and len /= 0 then
+          self.fail("Burst not well behaved, axi size = " & to_string(size) & " but bus data width allows " & to_string(self.data_size));
+        end if;
+      end if;
+
+      if self.should_check_well_behaved and num_beats > 0 and wvalid /= '1' then
+        self.fail("Burst not well behaved, vwalid was not high during active burst");
+      end if;
+
+      if (wvalid and wready) = '1' then
+        num_beats := -1;
+      end if;
+
+      wait until rising_edge(aclk);
+    end loop;
+    wait;
+  end process;
+
 end architecture;

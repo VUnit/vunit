@@ -27,7 +27,9 @@ end entity;
 
 architecture a of tb_axi_write_slave is
   signal clk    : std_logic := '0';
-  constant data_size : integer := 16;
+
+  constant log_data_size : integer := 4;
+  constant data_size     : integer := 2**log_data_size;
 
   signal awvalid : std_logic := '0';
   signal awready : std_logic;
@@ -265,6 +267,64 @@ begin
         write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr);
       end loop;
       assert (now - start_time) > 5.0 * diff_time report "Should take about longer with stall probability";
+
+    elsif run("Test well behaved check of awsize") then
+      alloc := allocate(memory, 8);
+      enable_well_behaved_check(event, axi_slave);
+      set_address_channel_fifo_depth(event, axi_slave, 3);
+
+      wait until rising_edge(clk);
+      wvalid <= '1';
+      wlast  <= '1';
+      -- Only allow non max size for single beat bursts
+      write_addr(x"0", base_address(alloc), len => 1, log_size => log_data_size, burst => axi_burst_type_incr);
+      wait until rising_edge(clk);
+      wvalid <= '1';
+      wlast  <= '0';
+      write_addr(x"0", base_address(alloc), len => 2, log_size => log_data_size, burst => axi_burst_type_incr);
+      wvalid <= '1';
+      wlast  <= '1';
+      write_addr(x"0", base_address(alloc), len => 1, log_size => 0, burst => axi_burst_type_incr);
+      wait until rising_edge(clk);
+      wvalid <= '1';
+      wlast  <= '1';
+
+      disable_fail_on_error(event, axi_slave, error_queue);
+      write_addr(x"0", base_address(alloc), len => 2, log_size => 0, burst => axi_burst_type_incr);
+      check_equal(pop_string(error_queue), "Burst not well behaved, axi size = 1 but bus data width allows " & to_string(data_size));
+      check_equal(length(error_queue), 0, "no more errors");
+
+    elsif run("Test well behaved check of wvalid does not trigger after burst finished") then
+      alloc := allocate(memory, 8);
+      enable_well_behaved_check(event, axi_slave);
+
+      wait until rising_edge(clk);
+      wvalid <= '1';
+      wlast  <= '0';
+      -- Only allow non max size for single beat bursts
+      write_addr(x"0", base_address(alloc), len => 3, log_size => log_data_size, burst => axi_burst_type_incr);
+      wait until rising_edge(clk);
+      wvalid <= '1';
+      wlast  <= '0';
+      wait until rising_edge(clk);
+      wvalid <= '1';
+      wlast  <= '1';
+      wait until rising_edge(clk);
+      wvalid <= '0';
+      wlast  <= '0';
+      wait until rising_edge(clk);
+      wvalid <= '0';
+      wlast  <= '0';
+
+    elsif run("Test well behaved check of wvalid") then
+      alloc := allocate(memory, 8);
+      enable_well_behaved_check(event, axi_slave);
+
+      disable_fail_on_error(event, axi_slave, error_queue);
+      wait until rising_edge(clk);
+      write_addr(x"0", base_address(alloc), len => 2, log_size => log_data_size, burst => axi_burst_type_incr);
+      check_equal(pop_string(error_queue), "Burst not well behaved, vwalid was not high during active burst");
+      check_equal(length(error_queue), 0, "no more errors");
     end if;
 
     test_runner_cleanup(runner);

@@ -35,6 +35,8 @@ package axi_private_pkg is
 
     procedure set_address_channel_fifo_depth(depth : positive);
     procedure set_address_channel_stall_probability(probability : real);
+    procedure enable_well_behaved_check;
+    impure function should_check_well_behaved return boolean;
     impure function should_stall_address_channel return boolean;
     impure function get_addr_inbox return inbox_t;
 
@@ -61,7 +63,6 @@ package axi_private_pkg is
                             signal axlen : in std_logic_vector;
                             signal axsize : in std_logic_vector;
                             signal axburst : in axi_burst_type_t);
-
 end package;
 
 
@@ -74,6 +75,7 @@ package body axi_private_pkg is
     variable p_addr_inbox : inbox_t;
     variable p_addr_stall_rnd : RandomPType;
     variable p_addr_stall_prob : real;
+    variable p_check_well_behaved : boolean;
 
     procedure init(axi_slave : axi_slave_t; data : std_logic_vector) is
     begin
@@ -82,6 +84,7 @@ package body axi_private_pkg is
       p_data_size := data'length/8;
       p_addr_inbox := new_inbox(1);
       p_fail_log := new_fail_log;
+      p_check_well_behaved := false;
       set_address_channel_stall_probability(0.0);
     end;
 
@@ -109,6 +112,16 @@ package body axi_private_pkg is
     begin
       assert probability >= 0.0 and probability <= 1.0;
       p_addr_stall_prob := probability;
+    end;
+
+    procedure enable_well_behaved_check is
+    begin
+      p_check_well_behaved := true;
+    end;
+
+    impure function should_check_well_behaved return boolean is
+    begin
+      return p_check_well_behaved;
     end;
 
     impure function should_stall_address_channel return boolean is
@@ -206,6 +219,10 @@ package body axi_private_pkg is
 
         when msg_set_address_channel_stall_probability =>
           self.set_address_channel_stall_probability(pop_real(msg.data));
+          send_reply(event, reply);
+
+        when msg_enable_well_behaved_check =>
+          self.enable_well_behaved_check;
           send_reply(event, reply);
 
       end case;

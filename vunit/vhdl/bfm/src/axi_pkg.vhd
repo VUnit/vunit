@@ -38,11 +38,26 @@ package axi_pkg is
   -- Set the address channel stall probability
   procedure set_address_channel_stall_probability(signal event : inout event_t; axi_slave : axi_slave_t; probability : real);
 
+  -- Check that bursts are well behaved, that is that data channel traffic is
+  -- as compact as possible
+
+  -- For write:
+  -- 1. awvalid never high without wvalid
+  -- 2. wvalid never goes low during active burst
+  -- 3. uses max awsize supported by data width
+  -- 4. bready never low during active burst
+
+  -- For read:
+  -- 1. rready never low during active burst
+  -- 2. uses max arsize supported by data width
+  procedure enable_well_behaved_check(signal event : inout event_t; axi_slave : axi_slave_t);
+
   -- Private
   type axi_message_type_t is (
     msg_disable_fail_on_error,
     msg_set_address_channel_fifo_depth,
-    msg_set_address_channel_stall_probability);
+    msg_set_address_channel_stall_probability,
+    msg_enable_well_behaved_check);
 end package;
 
 package body axi_pkg is
@@ -82,6 +97,17 @@ package body axi_pkg is
     msg := allocate;
     push(msg.data, axi_message_type_t'pos(msg_set_address_channel_stall_probability));
     push_real(msg.data, probability);
+    send(event, axi_slave.p_inbox, msg, reply);
+    recv_reply(event, reply);
+    recycle(reply);
+  end;
+
+  procedure enable_well_behaved_check(signal event : inout event_t; axi_slave : axi_slave_t) is
+    variable msg : msg_t;
+    variable reply : reply_t;
+  begin
+    msg := allocate;
+    push(msg.data, axi_message_type_t'pos(msg_enable_well_behaved_check));
     send(event, axi_slave.p_inbox, msg, reply);
     recv_reply(event, reply);
     recycle(reply);
