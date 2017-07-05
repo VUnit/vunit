@@ -290,6 +290,9 @@ begin
       wlast  <= '1';
 
       disable_fail_on_error(event, axi_slave, error_queue);
+      wait until rising_edge(clk);
+      wvalid <= '1';
+      wlast  <= '0';
       write_addr(x"0", base_address(alloc), len => 2, log_size => 0, burst => axi_burst_type_incr);
       check_equal(pop_string(error_queue), "Burst not well behaved, axi size = 1 but bus data width allows " & to_string(data_size));
       check_equal(length(error_queue), 0, "no more errors");
