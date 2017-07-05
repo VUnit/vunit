@@ -164,6 +164,10 @@ begin
         self.fail("Burst not well behaved, vwalid was not high during active burst");
       end if;
 
+      if self.should_check_well_behaved and num_beats_now > 0 and bready /= '1' then
+        self.fail("Burst not well behaved, bready was not high during active burst");
+      end if;
+
       if (wvalid and wready) = '1' then
         num_beats := -1;
       end if;

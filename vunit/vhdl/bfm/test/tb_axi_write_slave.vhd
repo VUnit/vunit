@@ -269,7 +269,7 @@ begin
       end loop;
       assert (now - start_time) > 5.0 * diff_time report "Should take about longer with stall probability";
 
-    elsif run("Test well behaved check of awsize does not trigger for well behaved bursts") then
+    elsif run("Test well behaved check does not fail for well behaved bursts") then
       alloc := allocate(memory, 8);
       enable_well_behaved_check(event, axi_slave);
       set_address_channel_fifo_depth(event, axi_slave, 3);
@@ -313,21 +313,10 @@ begin
       wait until rising_edge(clk);
       assert wready = '0';
 
-    elsif run("Test well behaved check of awsize triggers for ill behaved burst") then
+    elsif run("Test well behaved check does not fail after well behaved burst finished") then
       alloc := allocate(memory, 8);
       enable_well_behaved_check(event, axi_slave);
-      disable_fail_on_error(event, axi_slave, error_queue);
-
-      wait until rising_edge(clk);
-      wvalid <= '1';
-      wlast  <= '0';
-      write_addr(x"0", base_address(alloc), len => 2, log_size => 0, burst => axi_burst_type_incr);
-      check_equal(pop_string(error_queue), "Burst not well behaved, axi size = 1 but bus data width allows " & to_string(data_size));
-      check_equal(length(error_queue), 0, "no more errors");
-
-    elsif run("Test well behaved check of wvalid does not trigger after burst finished") then
-      alloc := allocate(memory, 8);
-      enable_well_behaved_check(event, axi_slave);
+      bready <= '1';
 
       wait until rising_edge(clk);
       wvalid <= '1';
@@ -362,21 +351,45 @@ begin
       wlast  <= '0';
       assert wready = '0';
 
-    elsif run("Test well behaved check of wvalid triggers for ill behaved burst") then
+    elsif run("Test well behaved check fails for ill behaved awsize") then
       alloc := allocate(memory, 8);
       enable_well_behaved_check(event, axi_slave);
-
       disable_fail_on_error(event, axi_slave, error_queue);
+      bready <= '1';
+
+      wait until rising_edge(clk);
+      wvalid <= '1';
+      wlast  <= '0';
+      write_addr(x"0", base_address(alloc), len => 2, log_size => 0, burst => axi_burst_type_incr);
+      check_equal(pop_string(error_queue), "Burst not well behaved, axi size = 1 but bus data width allows " & to_string(data_size));
+      check_equal(length(error_queue), 0, "no more errors");
+
+    elsif run("Test well behaved check fails when wvalid not high during active burst") then
+      alloc := allocate(memory, 8);
+      enable_well_behaved_check(event, axi_slave);
+      disable_fail_on_error(event, axi_slave, error_queue);
+      bready <= '1';
       wait until rising_edge(clk);
       write_addr(x"0", base_address(alloc), len => 2, log_size => log_data_size, burst => axi_burst_type_incr);
       check_equal(pop_string(error_queue), "Burst not well behaved, vwalid was not high during active burst");
       check_equal(length(error_queue), 0, "no more errors");
 
-    elsif run("Test well behaved check of wvalid triggers for ill behaved burst when awready is low") then
+    elsif run("Test well behaved check fails when bready not high during active burst") then
+      alloc := allocate(memory, 8);
+      enable_well_behaved_check(event, axi_slave);
+      disable_fail_on_error(event, axi_slave, error_queue);
+      wvalid <= '1';
+      wait until rising_edge(clk);
+      write_addr(x"0", base_address(alloc), len => 2, log_size => log_data_size, burst => axi_burst_type_incr);
+      check_equal(pop_string(error_queue), "Burst not well behaved, bready was not high during active burst");
+      check_equal(length(error_queue), 0, "no more errors");
+
+    elsif run("Test well behaved check fails when wvalid not high during active burst and awready is low") then
       alloc := allocate(memory, 8);
       enable_well_behaved_check(event, axi_slave);
       disable_fail_on_error(event, axi_slave, error_queue);
       set_address_channel_stall_probability(event, axi_slave, 1.0);
+      bready <= '1';
 
       wait until rising_edge(clk);
       assert awready = '0';
