@@ -89,6 +89,7 @@ package memory_pkg is
   procedure set_expected_byte(memory : memory_t; address : natural; expected : byte_t);
   procedure set_expected_word(memory : memory_t; address : natural; expected : std_logic_vector; big_endian : boolean := false);
   impure function get_expected_byte(memory : memory_t; address : natural) return byte_t;
+
   impure function describe_address(memory : memory_t; address : natural) return string;
 
   impure function base_address(alloc : alloc_t) return natural;
@@ -257,6 +258,14 @@ package body memory_pkg is
     return true;
   end;
 
+  impure function get(memory : memory_t; address : natural; reading : boolean; ignore_permissions : boolean) return memory_data_t is
+  begin
+    if not check_address(memory, address, reading, ignore_permissions) then
+      return decode(0);
+    end if;
+    return decode(get(memory.p_data, address));
+  end;
+
   impure function decode(value : integer) return memory_data_t is
   begin
     return (byte => value mod 256,
@@ -293,12 +302,8 @@ package body memory_pkg is
   end;
 
   impure function read_byte(memory : memory_t; address : natural; ignore_permissions : boolean := false) return byte_t is
-    variable byte : byte_t;
   begin
-    if not check_address(memory, address, true, ignore_permissions) then
-      return 0;
-    end if;
-    return decode(get(memory.p_data, address)).byte;
+    return get(memory, address, true, ignore_permissions).byte;
   end;
 
   procedure check_all_was_written(alloc : alloc_t) is
@@ -316,36 +321,47 @@ package body memory_pkg is
 
   impure function get_permissions(memory : memory_t; address : natural) return permissions_t is
   begin
-    return decode(get(memory.p_data, address)).perm;
+    return get(memory, address, true, ignore_permissions => true).perm;
   end;
 
   procedure set_permissions(memory : memory_t; address : natural; permissions : permissions_t) is
-    variable old : memory_data_t := decode(get(memory.p_data, address));
+    variable old : memory_data_t;
   begin
+    if not check_address(memory, address, false, ignore_permissions => true) then
+      return;
+    end if;
+    old := decode(get(memory.p_data, address));
     set(memory.p_data, address, encode((byte => old.byte, exp => old.exp, has_exp => old.has_exp, perm => permissions)));
   end procedure;
 
   impure function has_expected_byte(memory : memory_t; address : natural) return boolean is
-    variable old : memory_data_t := decode(get(memory.p_data, address));
   begin
-    return old.has_exp;
+    return get(memory, address, true, ignore_permissions => true).has_exp;
   end;
 
   procedure clear_expected_byte(memory : memory_t; address : natural) is
-    variable old : memory_data_t := decode(get(memory.p_data, address));
+    variable old : memory_data_t;
   begin
+    if not check_address(memory, address, false, ignore_permissions => true) then
+      return;
+    end if;
+    old := decode(get(memory.p_data, address));
     set(memory.p_data, address, encode((byte => old.byte, exp => 0, has_exp => false, perm => old.perm)));
   end procedure;
 
   procedure set_expected_byte(memory : memory_t; address : natural; expected : byte_t) is
-    variable old : memory_data_t := decode(get(memory.p_data, address));
+    variable old : memory_data_t;
   begin
+    if not check_address(memory, address, false, ignore_permissions => true) then
+      return;
+    end if;
+    old := decode(get(memory.p_data, address));
     set(memory.p_data, address, encode((byte => old.byte, exp => expected, has_exp => true, perm => old.perm)));
   end procedure;
 
   impure function get_expected_byte(memory : memory_t; address : natural) return byte_t is
   begin
-    return decode(get(memory.p_data, address)).exp;
+    return get(memory, address, true, ignore_permissions => true).exp;
   end;
 
   procedure set_expected_word(memory : memory_t; address : natural; expected : std_logic_vector; big_endian : boolean := false) is

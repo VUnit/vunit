@@ -54,6 +54,8 @@ begin
     variable allocation : alloc_t;
     variable integer_vector_ptr : integer_vector_ptr_t;
     variable byte : byte_t;
+    variable dummy_permissions : permissions_t;
+    variable dummy_boolean : boolean;
 
   begin
     test_runner_setup(runner, runner_cfg);
@@ -254,6 +256,51 @@ begin
       check_equal(has_expected_byte(memory, 1), false, "address 1 has no expected byte");
       clear_expected_byte(memory, 0);
       check_equal(has_expected_byte(memory, 0), false, "address 0 cleared expected byte");
+
+    elsif run("Test permissions and expected access functions ignore permissions") then
+      memory := new_memory;
+      allocation := allocate(memory, 1, permissions => no_access);
+
+      dummy_permissions := get_permissions(memory, 0);
+      set_permissions(memory, 0, no_access);
+
+      dummy_boolean := has_expected_byte(memory, 0);
+      clear_expected_byte(memory, 0);
+      set_expected_byte(memory, 0, 0);
+      byte := get_expected_byte(memory, 0);
+
+    elsif run("Test permissions and expected access functions have address check") then
+      memory := new_memory;
+
+      disable_failure(memory.p_fail_log);
+      dummy_permissions := get_permissions(memory, 0);
+      check_equal(pop_failure(memory.p_fail_log), "Reading from empty memory");
+      check_no_failures(memory.p_fail_log);
+
+      disable_failure(memory.p_fail_log);
+      set_permissions(memory, 0, no_access);
+      check_equal(pop_failure(memory.p_fail_log), "Writing to empty memory");
+      check_no_failures(memory.p_fail_log);
+
+      disable_failure(memory.p_fail_log);
+      dummy_boolean := has_expected_byte(memory, 0);
+      check_equal(pop_failure(memory.p_fail_log), "Reading from empty memory");
+      check_no_failures(memory.p_fail_log);
+
+      disable_failure(memory.p_fail_log);
+      clear_expected_byte(memory, 0);
+      check_equal(pop_failure(memory.p_fail_log), "Writing to empty memory");
+      check_no_failures(memory.p_fail_log);
+
+      disable_failure(memory.p_fail_log);
+      set_expected_byte(memory, 0, 0);
+      check_equal(pop_failure(memory.p_fail_log), "Writing to empty memory");
+      check_no_failures(memory.p_fail_log);
+
+      disable_failure(memory.p_fail_log);
+      byte := get_expected_byte(memory, 0);
+      check_equal(pop_failure(memory.p_fail_log), "Reading from empty memory");
+      check_no_failures(memory.p_fail_log);
 
     elsif run("Test check all was written") then
       memory := new_memory;
