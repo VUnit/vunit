@@ -14,11 +14,12 @@ Verilog parsing functionality
 import logging
 from os.path import dirname, exists, abspath
 from vunit.ostools import read_file
+from vunit.parsing.encodings import HDL_FILE_ENCODING
 from vunit.parsing.tokenizer import TokenStream, EOFException, LocationException
 from vunit.parsing.verilog.tokenizer import VerilogTokenizer
 from vunit.parsing.verilog.preprocess import VerilogPreprocessor, find_included_file, Macro
 from vunit.parsing.verilog.tokens import *
-from vunit.hashing import hash_string
+from vunit.cached import file_content_hash
 
 LOGGER = logging.getLogger(__name__)
 
@@ -34,13 +35,14 @@ class VerilogParser(object):
         self._database = database
         self._content_cache = {}
 
-    def parse(self, code, file_name, include_paths=None, defines=None):
+    def parse(self, file_name, include_paths=None, defines=None):
         """
         Parse verilog code
         """
 
         defines = {} if defines is None else defines
         include_paths = [] if include_paths is None else include_paths
+        include_paths = [dirname(file_name)] + include_paths
 
         cached = self._lookup_parse_cache(file_name, include_paths, defines)
         if cached is not None:
@@ -48,10 +50,11 @@ class VerilogParser(object):
 
         initial_defines = dict((key, Macro(key, self._tokenizer.tokenize(value)))
                                for key, value in defines.items())
+        code = read_file(file_name, encoding=HDL_FILE_ENCODING)
         tokens = self._tokenizer.tokenize(code, file_name=file_name)
         included_files = []
         pp_tokens = self._preprocessor.preprocess(tokens,
-                                                  include_paths=[dirname(file_name)] + include_paths,
+                                                  include_paths=include_paths,
                                                   defines=initial_defines,
                                                   included_files=included_files)
 
@@ -88,7 +91,9 @@ class VerilogParser(object):
         if file_name is None or not exists(file_name):
             return None
         if file_name not in self._content_cache:
-            self._content_cache[file_name] = "sha1:" + hash_string(read_file(file_name))
+            self._content_cache[file_name] = file_content_hash(file_name,
+                                                               encoding=HDL_FILE_ENCODING,
+                                                               database=self._database)
         return self._content_cache[file_name]
 
     def _lookup_parse_cache(self, file_name, include_paths, defines):

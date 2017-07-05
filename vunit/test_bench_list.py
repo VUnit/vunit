@@ -22,8 +22,9 @@ class TestBenchList(object):
     A list of test benchs
     """
 
-    def __init__(self):
+    def __init__(self, database=None):
         self._libraries = OrderedDict()
+        self._database = database
 
     def add_from_source_file(self, source_file):
         """
@@ -33,7 +34,7 @@ class TestBenchList(object):
             if design_unit.is_entity or design_unit.is_module:
                 if tb_filter is None or tb_filter(design_unit):
                     if design_unit.is_module or design_unit.is_entity:
-                        self._add_test_bench(TestBench(design_unit))
+                        self._add_test_bench(TestBench(design_unit, self._database))
 
     def _add_test_bench(self, test_bench):
         """

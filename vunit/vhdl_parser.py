@@ -11,55 +11,30 @@ VHDL parsing functionality
 import re
 from os.path import abspath
 import logging
-from vunit.hashing import hash_string
+from vunit.cached import cached
+from vunit.parsing.encodings import HDL_FILE_ENCODING
 LOGGER = logging.getLogger(__name__)
 
 
 class VHDLParser(object):
     """
-    Parses a single VHDL file
+    Parse a single VHDL file, caching the result to a database if available
     """
 
-    def __init__(self):
-        pass
-
-    @staticmethod
-    def parse(code, file_name, content_hash=None):  # pylint: disable=unused-argument
-        """
-        Parse the VHDL code and return a VHDLDesignFile parse result
-        """
-        return VHDLDesignFile.parse(code)
-
-
-class CachedVHDLParser(object):
-    """
-    Parse a single VHDL file, caching the result to a database
-    """
-
-    def __init__(self, database):
+    def __init__(self, database=None):
         self._database = database
 
-    def parse(self, code, file_name, content_hash=None):
+    def parse(self, file_name):
         """
         Parse the VHDL code and return a VHDLDesignFile parse result
         parse result is re-used if content hash found in database
         """
         file_name = abspath(file_name)
-
-        if content_hash is None:
-            content_hash = "sha1:" + hash_string(code)
-        key = ("CachedVHDLParser.parse(%s)" % file_name).encode()
-
-        if key in self._database:
-            design_file, old_content_hash = self._database[key]
-            if content_hash == old_content_hash:
-                LOGGER.debug("Re-using cached VHDL parse results for %s with content_hash=%s",
-                             file_name, content_hash)
-                return design_file
-
-        design_file = VHDLDesignFile.parse(code)
-        self._database[key] = design_file, content_hash
-        return design_file
+        return cached("CachedVHDLParser.parse",
+                      VHDLDesignFile.parse,
+                      file_name,
+                      encoding=HDL_FILE_ENCODING,
+                      database=self._database)
 
 
 class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes

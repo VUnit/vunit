@@ -12,10 +12,12 @@ import logging
 from os.path import basename
 import re
 from collections import OrderedDict
-import vunit.ostools as ostools
+from vunit.ostools import file_exists
+from vunit.cached import cached
 from vunit.test_list import TestList
 from vunit.vhdl_parser import remove_comments
 from vunit.test_suites import IndependentSimTestCase, SameSimTestSuite
+from vunit.parsing.encodings import HDL_FILE_ENCODING
 from vunit.project import file_type_of
 from vunit.configuration import Configuration, ConfigurationVisitor, DEFAULT_NAME
 
@@ -28,9 +30,10 @@ class TestBench(ConfigurationVisitor):
     A VUnit test bench top level
     """
 
-    def __init__(self, design_unit):
+    def __init__(self, design_unit, database=None):
         ConfigurationVisitor.__init__(self)
         self.design_unit = design_unit
+        self._database = database
 
         self._individual_tests = False
         self._configs = {}
@@ -158,11 +161,22 @@ class TestBench(ConfigurationVisitor):
         """
         Scan file for test cases and pragmas
         """
-        if not ostools.file_exists(file_name):
+        if not file_exists(file_name):
             raise ValueError("File %r does not exist" % file_name)
 
-        code = ostools.read_file(file_name)
-        pragmas = _find_pragmas(code, file_name)
+        def parse(content):
+            """
+            Parse pragmas and test case names
+            """
+            pragmas = _find_pragmas(content, file_name)
+            test_case_names = _find_test_cases(content, file_name)
+            return pragmas, test_case_names
+
+        pragmas, test_case_names = cached("test_bench.parse",
+                                          parse,
+                                          file_name,
+                                          encoding=HDL_FILE_ENCODING,
+                                          database=self._database)
 
         default_config = Configuration(DEFAULT_NAME, self.design_unit)
 
@@ -171,7 +185,6 @@ class TestBench(ConfigurationVisitor):
 
         self._configs = OrderedDict({default_config.name: default_config})
 
-        test_case_names = _find_test_cases(code, file_name)
         self._individual_tests = "run_all_in_same_sim" not in pragmas and len(test_case_names) > 0
         self.test_cases = [TestCase(name,
                                     self.design_unit,

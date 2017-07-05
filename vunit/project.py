@@ -19,7 +19,9 @@ from vunit.hashing import hash_string
 from vunit.dependency_graph import (DependencyGraph,
                                     CircularDependencyException)
 from vunit.vhdl_parser import VHDLParser, VHDLReference
+from vunit.cached import file_content_hash
 from vunit.parsing.verilog.parser import VerilogParser
+from vunit.parsing.encodings import HDL_FILE_ENCODING
 from vunit.exceptions import CompileError
 from vunit.simulator_factory import SimulatorFactory
 from vunit.design_unit import DesignUnit, VHDLDesignUnit, Entity, Module
@@ -35,13 +37,13 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
     """
     def __init__(self,
                  depend_on_package_body=False,
-                 vhdl_parser=None,
-                 verilog_parser=None):
+                 database=None):
         """
         depend_on_package_body - Package users depend also on package body
         """
-        self._vhdl_parser = VHDLParser() if vhdl_parser is None else vhdl_parser
-        self._verilog_parser = VerilogParser() if verilog_parser is None else verilog_parser
+        self._database = database
+        self._vhdl_parser = VHDLParser(database=self._database)
+        self._verilog_parser = VerilogParser(database=self._database)
         self._libraries = OrderedDict()
         # Mapping between library lower case name and real library name
         self._lower_library_names_dict = {}
@@ -110,11 +112,18 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 file_name,
                 library,
                 vhdl_parser=self._vhdl_parser,
+                database=self._database,
                 vhdl_standard=library.vhdl_standard if vhdl_standard is None else vhdl_standard,
                 no_parse=no_parse)
             library.add_vhdl_design_units(source_file.design_units)
         elif file_type == "verilog":
-            source_file = VerilogSourceFile(file_name, library, self._verilog_parser, include_dirs, defines, no_parse)
+            source_file = VerilogSourceFile(file_name,
+                                            library,
+                                            verilog_parser=self._verilog_parser,
+                                            database=self._database,
+                                            include_dirs=include_dirs,
+                                            defines=defines,
+                                            no_parse=no_parse)
             library.add_verilog_design_units(source_file.design_units)
         else:
             raise ValueError(file_type)
@@ -317,6 +326,21 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         LOGGER.error("Found circular dependency:\n%s",
                      " ->\n".join(source_file.name for source_file in exception.path))
 
+    def _get_compile_timestamps(self, files):
+        """
+        Return a dictionary of mapping file to the timestamp when it
+        was compiled or None if it was not compiled
+        """
+        # Cache timestamps to avoid duplicate file operations
+        timestamps = {}
+        for source_file in files:
+            hash_file_name = self._hash_file_name_of(source_file)
+            if not ostools.file_exists(hash_file_name):
+                timestamps[source_file] = None
+            else:
+                timestamps[source_file] = ostools.get_modification_time(hash_file_name)
+        return timestamps
+
     def get_files_in_compile_order(self, incremental=True, dependency_graph=None):
         """
         Get a list of all files in compile order
@@ -325,9 +349,11 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         if dependency_graph is None:
             dependency_graph = self.create_dependency_graph()
 
+        all_files = self.get_source_files_in_order()
+        timestamps = self._get_compile_timestamps(all_files)
         files = []
-        for source_file in self.get_source_files_in_order():
-            if (not incremental) or self._needs_recompile(dependency_graph, source_file):
+        for source_file in all_files:
+            if (not incremental) or self._needs_recompile(dependency_graph, source_file, timestamps):
                 files.append(source_file)
 
         # Get files that are affected by recompiling the modified files
@@ -341,7 +367,8 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         def comparison_key(source_file):
             return compile_order.index(source_file)
 
-        return sorted(affected_files, key=comparison_key)
+        retval = sorted(affected_files, key=comparison_key)
+        return retval
 
     def get_dependencies_in_compile_order(self, target_files=None, implementation_dependencies=False):
         """
@@ -383,31 +410,33 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
     def has_library(self, library_name):
         return library_name in self._libraries
 
-    def _needs_recompile(self, dependency_graph, source_file):
+    def _needs_recompile(self, dependency_graph, source_file, timestamps):
         """
         Returns True if the source_file needs to be recompiled
         given the dependency_graph, the file contents and the last modification time
         """
-        content_hash = source_file.content_hash
+        timestamp = timestamps[source_file]
+
         content_hash_file_name = self._hash_file_name_of(source_file)
-        if not ostools.file_exists(content_hash_file_name):
+        if timestamp is None:
             LOGGER.debug("%s has no vunit_hash file at %s and must be recompiled",
                          source_file.name, content_hash_file_name)
             return True
 
         old_content_hash = ostools.read_file(content_hash_file_name)
-        if old_content_hash != content_hash:
+        if old_content_hash != source_file.content_hash:
             LOGGER.debug("%s has different hash than last time and must be recompiled",
                          source_file.name)
             return True
 
         for other_file in dependency_graph.get_direct_dependencies(source_file):
-            other_content_hash_file_name = self._hash_file_name_of(other_file)
+            other_timestamp = timestamps[other_file]
 
-            if not ostools.file_exists(other_content_hash_file_name):
+            if other_timestamp is None:
+                # Other file has not been compiled and will trigger recompile of this file
                 continue
 
-            if more_recent(other_content_hash_file_name, content_hash_file_name):
+            if other_timestamp > timestamp:
                 LOGGER.debug("%s has dependency compiled earlier and must be recompiled",
                              source_file.name)
                 return True
@@ -698,14 +727,14 @@ class VerilogSourceFile(SourceFile):
     Represents a Verilog source file
     """
     def __init__(self,  # pylint: disable=too-many-arguments
-                 name, library, verilog_parser, include_dirs=None, defines=None, no_parse=False):
+                 name, library, verilog_parser, database, include_dirs=None, defines=None, no_parse=False):
         SourceFile.__init__(self, name, library, 'verilog')
         self.package_dependencies = []
         self.module_dependencies = []
         self.include_dirs = include_dirs if include_dirs is not None else []
         self.defines = defines.copy() if defines is not None else {}
-        code = ostools.read_file(self.name, encoding=HDL_FILE_ENCODING)
-        self._content_hash = hash_string(code)
+        self._content_hash = file_content_hash(self.name, encoding=HDL_FILE_ENCODING,
+                                               database=database)
 
         for path in self.include_dirs:
             self._content_hash = hash_string(self._content_hash + hash_string(path))
@@ -715,17 +744,19 @@ class VerilogSourceFile(SourceFile):
             self._content_hash = hash_string(self._content_hash + hash_string(value))
 
         if not no_parse:
-            self.parse(code, verilog_parser, include_dirs)
+            self.parse(verilog_parser, database, include_dirs)
 
-    def parse(self, code, parser, include_dirs):
+    def parse(self, parser, database, include_dirs):
         """
         Parse Verilog code and adding dependencies and design units
         """
         try:
-            design_file = parser.parse(code, self.name, include_dirs, self.defines)
+            design_file = parser.parse(self.name, include_dirs, self.defines)
             for included_file_name in design_file.included_files:
                 self._content_hash = hash_string(self._content_hash +
-                                                 ostools.read_file(included_file_name, encoding=HDL_FILE_ENCODING))
+                                                 file_content_hash(included_file_name,
+                                                                   encoding=HDL_FILE_ENCODING,
+                                                                   database=database))
             for module in design_file.modules:
                 self.design_units.append(Module(module.name, self, module.parameters))
 
@@ -752,17 +783,21 @@ class VHDLSourceFile(SourceFile):
     """
     Represents a VHDL source file
     """
-    def __init__(self, name, library, vhdl_parser, vhdl_standard, no_parse=False):
+    def __init__(self,  # pylint: disable=too-many-arguments
+                 name, library, vhdl_parser, database, vhdl_standard, no_parse=False):
         SourceFile.__init__(self, name, library, 'vhdl')
         self.dependencies = []
         self.depending_components = []
         self._vhdl_standard = vhdl_standard
         check_vhdl_standard(vhdl_standard)
-        code = ostools.read_file(self.name, encoding=HDL_FILE_ENCODING)
-        self._content_hash = hash_string(code)
 
         if not no_parse:
-            self.parse(code, vhdl_parser)
+            design_file = vhdl_parser.parse(self.name)
+            self._add_design_file(design_file)
+
+        self._content_hash = file_content_hash(self.name,
+                                               encoding=HDL_FILE_ENCODING,
+                                               database=database)
 
     def get_vhdl_standard(self):
         """
@@ -770,12 +805,11 @@ class VHDLSourceFile(SourceFile):
         """
         return self._vhdl_standard
 
-    def parse(self, code, parser):
+    def _add_design_file(self, design_file):
         """
         Parse VHDL code and adding dependencies and design units
         """
         try:
-            design_file = parser.parse(code, self.name, self._content_hash)
             self.design_units = self._find_design_units(design_file)
             self.dependencies = self._find_dependencies(design_file)
             self.depending_components = design_file.component_instantiations
@@ -857,16 +891,6 @@ class VHDLSourceFile(SourceFile):
         return hash_string(self._content_hash + self._compile_options_hash() + hash_string(self._vhdl_standard))
 
 
-def more_recent(file_name, than_file_name):
-    """
-    Returns True if the modification time of file_name is more recent
-    than_file_name
-    """
-    mtime = ostools.get_modification_time(file_name)
-    than_mtime = ostools.get_modification_time(than_file_name)
-    return mtime > than_mtime
-
-
 # lower case representation of supported extensions
 VHDL_EXTENSIONS = (".vhd", ".vhdl", ".vho")
 VERILOG_EXTENSIONS = (".v", ".vp", ".sv", ".vams", ".vo")
@@ -897,7 +921,3 @@ def check_vhdl_standard(vhdl_standard, from_str=None):
     valid_standards = ('93', '2002', '2008')
     if vhdl_standard not in valid_standards:
         raise ValueError("Unknown VHDL standard '%s' %snot one of %r" % (vhdl_standard, from_str, valid_standards))
-
-
-# Both VHDL and Verilog standardize on ISO-8859-1 which is latin-1
-HDL_FILE_ENCODING = "latin-1"

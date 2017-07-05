@@ -9,8 +9,9 @@ Test of the Verilog parser
 """
 
 from unittest import TestCase
-from os.path import join, dirname, exists
 import os
+from os.path import join, dirname, exists
+import time
 import shutil
 from vunit.ostools import renew_path
 from vunit.parsing.verilog.parser import VerilogParser
@@ -226,6 +227,8 @@ endmodule
         self.assertEqual(len(result.modules), 1)
         self.assertEqual(result.modules[0].name, "mod1")
 
+        tick()
+
         code = """\
 module mod2;
 endmodule
@@ -246,6 +249,8 @@ endmodule;
         result = self.parse(code, cache=cache, include_paths=[self.output_path])
         self.assertEqual(len(result.modules), 1)
         self.assertEqual(result.modules[0].name, "mod")
+
+        tick()
 
         self.write_file("include.svh", """
 module mod1;
@@ -324,5 +329,12 @@ endmodule;
         cache = cache if cache is not None else {}
         parser = VerilogParser(database=cache)
         include_paths = include_paths if include_paths is not None else []
-        design_file = parser.parse(code, "file_name.sv", include_paths, defines)
+        design_file = parser.parse("file_name.sv", include_paths, defines)
         return design_file
+
+
+def tick():
+    """
+    To get a different file modification time
+    """
+    time.sleep(0.01)

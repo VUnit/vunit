@@ -206,21 +206,19 @@ from vunit.color_printer import (COLOR_PRINTER,
                                  NO_COLOR_PRINTER)
 from vunit.project import (Project,
                            file_type_of,
-                           check_vhdl_standard,
-                           HDL_FILE_ENCODING)
+                           check_vhdl_standard)
 from vunit.test_runner import TestRunner
 from vunit.test_report import TestReport
 from vunit.test_bench_list import TestBenchList
 from vunit.exceptions import CompileError
 from vunit.location_preprocessor import LocationPreprocessor
 from vunit.check_preprocessor import CheckPreprocessor
-from vunit.vhdl_parser import CachedVHDLParser
-from vunit.parsing.verilog.parser import VerilogParser
 from vunit.builtins import (add_vhdl_builtins,
                             add_verilog_include_dir,
                             add_array_util,
                             add_osvvm,
                             add_com)
+from vunit.parsing.encodings import HDL_FILE_ENCODING
 from vunit.com import codec_generator
 
 LOGGER = logging.getLogger(__name__)
@@ -340,26 +338,19 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._simulator_factory = simulator_factory
         self._create_output_path(clean)
 
-        self._project = None
-        self._create_project()
+        database = self._create_database()
+        self._project = Project(
+            database=database,
+            depend_on_package_body=self._simulator_factory.package_users_depend_on_bodies())
+
         self._num_threads = num_threads
         self._exit_0 = exit_0
         self._dont_catch_exceptions = dont_catch_exceptions
 
-        self._test_bench_list = TestBenchList()
+        self._test_bench_list = TestBenchList(database=database)
 
         if compile_builtins:
             self.add_builtins(library_name="vunit_lib")
-
-    def _create_project(self):
-        """
-        Create Project instance
-        """
-        database = self._create_database()
-        self._project = Project(
-            vhdl_parser=CachedVHDLParser(database=database),
-            verilog_parser=VerilogParser(database=database),
-            depend_on_package_body=self._simulator_factory.package_users_depend_on_bodies())
 
     def _create_database(self):
         """
