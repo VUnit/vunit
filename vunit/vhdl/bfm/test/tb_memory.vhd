@@ -246,6 +246,15 @@ begin
       check_equal(pop_failure(memory.p_fail_log), "Writing to " & describe_address(memory, 1) & ". Got 34 expected 51");
       enable_failure(memory.p_fail_log);
 
+    elsif run("Test clear expected byte") then
+      memory := new_memory;
+      allocation := allocate(memory, 2);
+      set_expected_byte(memory, 0, 77);
+      check_equal(has_expected_byte(memory, 0), true, "address 0 has expected byte");
+      check_equal(has_expected_byte(memory, 1), false, "address 1 has no expected byte");
+      clear_expected_byte(memory, 0);
+      check_equal(has_expected_byte(memory, 0), false, "address 0 cleared expected byte");
+
     elsif run("Test check all was written") then
       memory := new_memory;
       allocation := allocate(memory, 3);

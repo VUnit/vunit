@@ -85,6 +85,7 @@ package memory_pkg is
   impure function get_permissions(memory : memory_t; address : natural) return permissions_t;
   procedure set_permissions(memory : memory_t; address : natural; permissions : permissions_t);
   impure function has_expected_byte(memory : memory_t; address : natural) return boolean;
+  procedure clear_expected_byte(memory : memory_t; address : natural);
   procedure set_expected_byte(memory : memory_t; address : natural; expected : byte_t);
   procedure set_expected_word(memory : memory_t; address : natural; expected : std_logic_vector; big_endian : boolean := false);
   impure function get_expected_byte(memory : memory_t; address : natural) return byte_t;
@@ -329,6 +330,12 @@ package body memory_pkg is
   begin
     return old.has_exp;
   end;
+
+  procedure clear_expected_byte(memory : memory_t; address : natural) is
+    variable old : memory_data_t := decode(get(memory.p_data, address));
+  begin
+    set(memory.p_data, address, encode((byte => old.byte, exp => 0, has_exp => false, perm => old.perm)));
+  end procedure;
 
   procedure set_expected_byte(memory : memory_t; address : natural; expected : byte_t) is
     variable old : memory_data_t := decode(get(memory.p_data, address));
