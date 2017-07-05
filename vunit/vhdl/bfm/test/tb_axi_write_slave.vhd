@@ -392,6 +392,7 @@ begin
       bready <= '1';
 
       wait until rising_edge(clk);
+      wait until rising_edge(clk);
       assert awready = '0';
 
       awvalid <= '1';

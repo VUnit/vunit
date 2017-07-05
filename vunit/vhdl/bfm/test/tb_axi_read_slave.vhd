@@ -293,6 +293,7 @@ begin
       set_address_channel_stall_probability(event, axi_slave, 1.0);
 
       wait until rising_edge(clk);
+      wait until rising_edge(clk);
       assert arready = '0';
 
       arvalid <= '1';

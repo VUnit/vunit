@@ -40,13 +40,13 @@ end entity;
 
 architecture a of axi_read_slave is
   shared variable self : axi_slave_private_t;
+  signal initialized : boolean := false;
 begin
 
   control_process : process
   begin
-    -- Static Error checking
-    assert arid'length = rid'length report "arid vs rid data width mismatch";
     self.init(axi_slave, rdata);
+    initialized <= true;
     main_loop(self, event);
     wait;
   end process;
@@ -57,13 +57,14 @@ begin
     variable idx : integer;
     variable beats : natural := 0;
   begin
+    assert arid'length = rid'length report "arid vs rid data width mismatch";
     -- Initialization
     rid <= (rid'range => '0');
     rdata <= (rdata'range => '0');
     rresp <= (rresp'range => '0');
     rlast <= '0';
 
-    wait until self.is_initialized and rising_edge(aclk);
+    wait on initialized until initialized;
 
     loop
       if (rready and rvalid) = '1' then
@@ -116,7 +117,7 @@ begin
     variable num_beats : integer := 0;
     variable num_beats_now : integer;
   begin
-    wait until self.is_initialized and rising_edge(aclk);
+    wait on initialized until initialized;
     loop
 
       num_beats_now := num_beats;

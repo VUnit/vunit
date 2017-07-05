@@ -30,7 +30,6 @@ package axi_private_pkg is
 
   type axi_slave_private_t is protected
     procedure init(axi_slave : axi_slave_t; data : std_logic_vector);
-    impure function is_initialized return boolean;
     impure function get_inbox return inbox_t;
 
     procedure set_address_channel_fifo_depth(depth : positive);
@@ -74,7 +73,6 @@ end package;
 
 package body axi_private_pkg is
   type axi_slave_private_t is protected body
-    variable p_is_initialized : boolean := false;
     variable p_axi_slave : axi_slave_t;
     variable p_data_size : integer;
     variable p_fail_log : fail_log_t;
@@ -88,7 +86,6 @@ package body axi_private_pkg is
 
     procedure init(axi_slave : axi_slave_t; data : std_logic_vector) is
     begin
-      p_is_initialized := true;
       p_axi_slave := axi_slave;
       p_data_size := data'length/8;
       p_burst_queue_max_length := 1;
@@ -98,11 +95,6 @@ package body axi_private_pkg is
       p_fail_log := new_fail_log;
       p_check_well_behaved := false;
       set_address_channel_stall_probability(0.0);
-    end;
-
-    impure function is_initialized return boolean is
-    begin
-      return p_is_initialized;
     end;
 
     impure function get_inbox return inbox_t is
