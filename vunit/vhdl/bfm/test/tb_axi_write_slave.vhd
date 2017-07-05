@@ -69,6 +69,7 @@ begin
       bready <= '0';
     end procedure;
 
+
     procedure write_addr(id : std_logic_vector;
                          addr : natural;
                          len : natural;
@@ -268,28 +269,55 @@ begin
       end loop;
       assert (now - start_time) > 5.0 * diff_time report "Should take about longer with stall probability";
 
-    elsif run("Test well behaved check of awsize") then
+    elsif run("Test well behaved check of awsize does not trigger for well behaved bursts") then
       alloc := allocate(memory, 8);
       enable_well_behaved_check(event, axi_slave);
       set_address_channel_fifo_depth(event, axi_slave, 3);
+      set_write_response_fifo_depth(event, axi_slave, 3);
+
+      bready <= '1';
 
       wait until rising_edge(clk);
       wvalid <= '1';
       wlast  <= '1';
+      assert wready = '0';
       -- Only allow non max size for single beat bursts
       write_addr(x"0", base_address(alloc), len => 1, log_size => log_data_size, burst => axi_burst_type_incr);
-      wait until rising_edge(clk);
       wvalid <= '1';
-      wlast  <= '0';
+      wlast  <= '1';
+      assert wready = '0';
       write_addr(x"0", base_address(alloc), len => 2, log_size => log_data_size, burst => axi_burst_type_incr);
       wvalid <= '1';
-      wlast  <= '1';
+      wlast  <= '0';
+      assert wready = '1';
       write_addr(x"0", base_address(alloc), len => 1, log_size => 0, burst => axi_burst_type_incr);
+      wvalid <= '1';
+      wlast  <= '1';
+      assert wready = '1';
       wait until rising_edge(clk);
       wvalid <= '1';
       wlast  <= '1';
+      assert wready = '1';
+      wait until rising_edge(clk);
+      wvalid <= '0';
+      wlast  <= '0';
+      assert wready = '1';
+      wait until rising_edge(clk);
+      wvalid <= '0';
+      wlast  <= '0';
+      assert wready = '0';
+      wait until rising_edge(clk);
+      assert wready = '0';
+      wait until rising_edge(clk);
+      assert wready = '0';
+      wait until rising_edge(clk);
+      assert wready = '0';
 
+    elsif run("Test well behaved check of awsize triggers for ill behaved burst") then
+      alloc := allocate(memory, 8);
+      enable_well_behaved_check(event, axi_slave);
       disable_fail_on_error(event, axi_slave, error_queue);
+
       wait until rising_edge(clk);
       wvalid <= '1';
       wlast  <= '0';
@@ -304,22 +332,37 @@ begin
       wait until rising_edge(clk);
       wvalid <= '1';
       wlast  <= '0';
+      assert wready = '0';
       -- Only allow non max size for single beat bursts
       write_addr(x"0", base_address(alloc), len => 3, log_size => log_data_size, burst => axi_burst_type_incr);
+      wvalid <= '1';
+      wlast  <= '0';
+      assert wready = '0';
       wait until rising_edge(clk);
       wvalid <= '1';
       wlast  <= '0';
+      assert wready = '1';
       wait until rising_edge(clk);
       wvalid <= '1';
       wlast  <= '1';
+      assert wready = '1';
+      wait until rising_edge(clk);
+      wvalid <= '0';
+      wlast  <= '0';
+      assert wready = '1';
+      wait until rising_edge(clk);
+      wvalid <= '0';
+      wlast  <= '0';
+      assert wready = '0';
       wait until rising_edge(clk);
       wvalid <= '0';
       wlast  <= '0';
       wait until rising_edge(clk);
       wvalid <= '0';
       wlast  <= '0';
+      assert wready = '0';
 
-    elsif run("Test well behaved check of wvalid") then
+    elsif run("Test well behaved check of wvalid triggers for ill behaved burst") then
       alloc := allocate(memory, 8);
       enable_well_behaved_check(event, axi_slave);
 

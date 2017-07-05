@@ -40,10 +40,9 @@ end entity;
 
 architecture a of axi_read_slave is
   shared variable self : axi_slave_private_t;
-  signal local_event : event_t := no_event;
 begin
 
-  main : process
+  control_process : process
   begin
     -- Static Error checking
     assert arid'length = rid'length report "arid vs rid data width mismatch";
@@ -52,22 +51,11 @@ begin
     wait;
   end process;
 
-  address_channel(self,
-                  local_event,
-                  aclk,
-                  arvalid,
-                  arready,
-                  arid,
-                  araddr,
-                  arlen,
-                  arsize,
-                  arburst);
-
-  read_data : process
+  axi_process : process
     variable burst : axi_burst_t;
     variable address : integer;
     variable idx : integer;
-    variable msg : msg_t;
+    variable beats : natural := 0;
   begin
     -- Initialization
     rvalid <= '0';
@@ -79,17 +67,25 @@ begin
     wait until self.is_initialized and rising_edge(aclk);
 
     loop
-      recv(local_event, self.get_addr_inbox, msg);
-      burst := pop_axi_burst(msg.data);
-      recycle(msg);
+      if (rready and rvalid) = '1' then
+        rvalid <= '0';
+        beats := beats - 1;
+      end if;
 
-      rid <= std_logic_vector(to_unsigned(burst.id, rid'length));
-      rdata <= (rdata'range => '0');
-      rresp <= axi_resp_ok;
+      if (arvalid and arready) = '1' then
+        self.push_burst(arid, araddr, arlen, arsize, arburst);
+      end if;
 
-      address := burst.address;
+      if not self.burst_queue_empty and beats = 0 then
+        burst := self.pop_burst;
+        beats := burst.length;
+        rid <= std_logic_vector(to_unsigned(burst.id, rid'length));
+        rresp <= axi_resp_ok;
+        address := burst.address;
+      end if;
 
-      for i in 0 to burst.length-1 loop
+      if beats > 0 and (rvalid = '0' or rready = '1') then
+        rvalid <= '1';
         for j in 0 to burst.size-1 loop
           idx := (address + j) mod self.data_size;
           rdata(8*idx+7 downto 8*idx) <= std_logic_vector(to_unsigned(read_byte(memory, address+j), 8));
@@ -99,17 +95,20 @@ begin
           address := address + burst.size;
         end if;
 
-        if i = burst.length - 1 then
+        if beats = 1 then
           rlast <= '1';
         else
           rlast <= '0';
         end if;
+      end if;
 
-        rvalid <= '1';
-        wait until (rvalid and rready) = '1' and rising_edge(aclk);
-        rvalid <= '0';
-      end loop;
+      if self.should_stall_address_channel or self.burst_queue_full then
+        arready <= '0';
+      else
+        arready <= '1';
+      end if;
 
+      wait until rising_edge(aclk);
     end loop;
   end process;
 end architecture;

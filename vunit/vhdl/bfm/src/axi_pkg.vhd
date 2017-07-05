@@ -32,8 +32,11 @@ package axi_pkg is
   -- Used for testing the BFM error messages
   procedure disable_fail_on_error(signal event : inout event_t; axi_slave : axi_slave_t; variable error_queue : inout queue_t);
 
-  -- Set the number of maximing number address channel tokens that can be queued
+  -- Set the maximum number address channel tokens that can be queued
   procedure set_address_channel_fifo_depth(signal event : inout event_t; axi_slave : axi_slave_t; depth : positive);
+
+  -- Set the maximum number write responses that can be queued
+  procedure set_write_response_fifo_depth(signal event : inout event_t; axi_slave : axi_slave_t; depth : positive);
 
   -- Set the address channel stall probability
   procedure set_address_channel_stall_probability(signal event : inout event_t; axi_slave : axi_slave_t; probability : real);
@@ -56,6 +59,7 @@ package axi_pkg is
   type axi_message_type_t is (
     msg_disable_fail_on_error,
     msg_set_address_channel_fifo_depth,
+    msg_set_write_response_fifo_depth,
     msg_set_address_channel_stall_probability,
     msg_enable_well_behaved_check);
 end package;
@@ -84,6 +88,18 @@ package body axi_pkg is
   begin
     msg := allocate;
     push(msg.data, axi_message_type_t'pos(msg_set_address_channel_fifo_depth));
+    push(msg.data, depth);
+    send(event, axi_slave.p_inbox, msg, reply);
+    recv_reply(event, reply);
+    recycle(reply);
+  end;
+
+  procedure set_write_response_fifo_depth(signal event : inout event_t; axi_slave : axi_slave_t; depth : positive) is
+    variable msg : msg_t;
+    variable reply : reply_t;
+  begin
+    msg := allocate;
+    push(msg.data, axi_message_type_t'pos(msg_set_write_response_fifo_depth));
     push(msg.data, depth);
     send(event, axi_slave.p_inbox, msg, reply);
     recv_reply(event, reply);

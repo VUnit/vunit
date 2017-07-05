@@ -45,10 +45,9 @@ end entity;
 
 architecture a of axi_write_slave is
   shared variable self : axi_slave_private_t;
-  signal local_event : event_t := no_event;
 begin
 
-  main : process
+  control_process : process
   begin
     -- Static Error checking
     assert awid'length = bid'length report "arwid vs wid data width mismatch";
@@ -57,43 +56,35 @@ begin
     wait;
   end process;
 
-  address_channel(self,
-                  local_event,
-                  aclk,
-                  awvalid,
-                  awready,
-                  awid,
-                  awaddr,
-                  awlen,
-                  awsize,
-                  awburst);
-
-  write_data : process
-    variable burst : axi_burst_t;
+  axi_process : process
+    variable resp_burst, burst : axi_burst_t;
     variable address : integer;
     variable idx : integer;
-    variable msg : msg_t;
+    variable beats : natural := 0;
   begin
     -- Initialization
     wready <= '0';
+    awready <= '0';
     bvalid <= '0';
     bid <= (bid'range => '0');
     bresp <= (bresp'range => '0');
 
+    assert (awlen'length = 4 or
+            awlen'length = 8) report "awlen must be either 4 (AXI3) or 8 (AXI4)";
+
     wait until self.is_initialized and rising_edge(aclk);
 
     loop
-      recv(local_event, self.get_addr_inbox, msg);
-      burst := pop_axi_burst(msg.data);
-      recycle(msg);
+      if bready = '1' then
+        bvalid <= '0';
+      end if;
 
-      address := burst.address;
-      for i in 0 to burst.length-1 loop
-        wready <= '1';
-        wait until (wvalid and wready) = '1' and rising_edge(aclk);
-        wready <= '0';
+      if (awvalid and awready) = '1' then
+        self.push_burst(awid, awaddr, awlen, awsize, awburst);
+      end if;
 
-        if (wlast = '1') /= (i = burst.length-1) then
+      if (wvalid and wready) = '1' then
+        if (wlast = '1') /= (beats = 1) then
           self.fail("Expected wlast='1' on last beat of burst with length " & to_string(burst.length) &
                     " starting at address " & to_string(burst.address));
         end if;
@@ -108,13 +99,39 @@ begin
         if burst.burst_type = axi_burst_type_incr then
           address := address + burst.size;
         end if;
-      end loop;
 
-      bvalid <= '1';
-      bid <= std_logic_vector(to_unsigned(burst.id, bid'length));
-      bresp <= axi_resp_ok;
-      wait until (bvalid and bready) = '1' and rising_edge(aclk);
-      bvalid <= '0';
+        beats := beats - 1;
+        if beats = 0 then
+          self.push_resp(burst);
+        end if;
+      end if;
+
+      if not (self.burst_queue_empty or beats > 0) then
+        burst := self.pop_burst;
+        address := burst.address;
+        beats := burst.length;
+      end if;
+
+      if not self.resp_queue_empty then
+        resp_burst := self.pop_resp;
+        bvalid <= '1';
+        bid <= std_logic_vector(to_unsigned(resp_burst.id, bid'length));
+        bresp <= axi_resp_ok;
+      end if;
+
+      if beats > 0 and not (beats = 1 and self.resp_queue_full) then
+        wready <= '1';
+      else
+        wready <= '0';
+      end if;
+
+      if self.should_stall_address_channel or self.burst_queue_full then
+        awready <= '0';
+      else
+        awready <= '1';
+      end if;
+
+      wait until rising_edge(aclk);
     end loop;
   end process;
 
