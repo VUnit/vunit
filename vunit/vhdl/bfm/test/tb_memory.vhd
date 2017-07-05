@@ -226,6 +226,8 @@ begin
       memory := new_memory;
       allocation := allocate(memory, 2);
       set_expected_byte(memory, 0, 77);
+      check_equal(has_expected_byte(memory, 0), true, "address 0 has expected byte");
+      check_equal(has_expected_byte(memory, 1), false, "address 1 has no expected byte");
 
       disable_failure(memory.p_fail_log);
       write_byte(memory, 0, 255);
