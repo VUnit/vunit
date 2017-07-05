@@ -22,14 +22,14 @@ entity axi_read_slave is
     aclk : in std_logic;
 
     arvalid : in std_logic;
-    arready : out std_logic;
+    arready : out std_logic := '0';
     arid : in std_logic_vector;
     araddr : in std_logic_vector;
     arlen : in std_logic_vector;
     arsize : in std_logic_vector;
     arburst : in axi_burst_type_t;
 
-    rvalid : out std_logic;
+    rvalid : out std_logic := '0';
     rready : in std_logic;
     rid : out std_logic_vector;
     rdata : out std_logic_vector;
@@ -58,7 +58,6 @@ begin
     variable beats : natural := 0;
   begin
     -- Initialization
-    rvalid <= '0';
     rid <= (rid'range => '0');
     rdata <= (rdata'range => '0');
     rresp <= (rresp'range => '0');
@@ -111,4 +110,43 @@ begin
       wait until rising_edge(aclk);
     end loop;
   end process;
+
+  well_behaved_check : process
+    variable size, len : natural;
+    variable num_beats : integer := 0;
+    variable num_beats_now : integer;
+  begin
+    wait until self.is_initialized and rising_edge(aclk);
+    loop
+
+      num_beats_now := num_beats;
+
+      if arvalid = '1' then
+        len       := to_integer(unsigned(arlen));
+        num_beats_now := num_beats + len + 1;
+      end if;
+
+      -- Always keep track of num_beats such that the well behaved check can be enabled at any time
+      if (arvalid and arready) = '1' then
+        size      := 2**to_integer(unsigned(arsize));
+        num_beats := num_beats_now;
+
+        if self.should_check_well_behaved and size /= self.data_size and len /= 0 then
+          self.fail("Burst not well behaved, axi size = " & to_string(size) & " but bus data width allows " & to_string(self.data_size));
+        end if;
+      end if;
+
+      if self.should_check_well_behaved and num_beats_now > 0 and rready /= '1' then
+        self.fail("Burst not well behaved, rready was not high during active burst");
+      end if;
+
+      if (rready and rvalid) = '1' then
+        num_beats := -1;
+      end if;
+
+      wait until rising_edge(aclk);
+    end loop;
+    wait;
+  end process;
+
 end architecture;

@@ -28,7 +28,8 @@ end entity;
 architecture a of tb_axi_read_slave is
   signal clk    : std_logic := '0';
 
-  constant data_size : integer := 16;
+  constant log_data_size : integer := 4;
+  constant data_size : integer := 2**log_data_size;
 
   signal arvalid : std_logic := '0';
   signal arready : std_logic;
@@ -201,6 +202,113 @@ begin
         write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr);
       end loop;
       assert (now - start_time) > 5.0 * diff_time report "Should take about longer with stall probability";
+
+    elsif run("Test well behaved check does not fail for well behaved bursts") then
+      alloc := allocate(memory, 128);
+      enable_well_behaved_check(event, axi_slave);
+      set_address_channel_fifo_depth(event, axi_slave, 3);
+      set_write_response_fifo_depth(event, axi_slave, 3);
+
+      wait until rising_edge(clk);
+      rready <= '1';
+      assert rvalid = '0';
+      -- Only allow non max size for single beat bursts
+      write_addr(x"0", base_address(alloc), len => 1, log_size => log_data_size, burst => axi_burst_type_incr);
+      rready <= '1';
+      assert rvalid = '0';
+      write_addr(x"0", base_address(alloc), len => 2, log_size => log_data_size, burst => axi_burst_type_incr);
+      rready <= '1';
+      assert rvalid = '1';
+      write_addr(x"0", base_address(alloc), len => 1, log_size => 0, burst => axi_burst_type_incr);
+      rready <= '1';
+      assert rvalid = '1';
+      wait until rising_edge(clk);
+      rready <= '1';
+      assert rvalid = '1';
+      wait until rising_edge(clk);
+      rready <= '0';
+      assert rvalid = '1';
+      wait until rising_edge(clk);
+      rready <= '0';
+      assert rvalid = '0';
+      wait until rising_edge(clk);
+      assert rvalid = '0';
+      wait until rising_edge(clk);
+      assert rvalid = '0';
+      wait until rising_edge(clk);
+      assert rvalid = '0';
+
+    elsif run("Test well behaved check does not fail after well behaved burst finished") then
+      alloc := allocate(memory, 128);
+      enable_well_behaved_check(event, axi_slave);
+
+      wait until rising_edge(clk);
+      rready <= '1';
+      assert rvalid = '0';
+      -- Only allow non max size for single beat bursts
+      write_addr(x"0", base_address(alloc), len => 3, log_size => log_data_size, burst => axi_burst_type_incr);
+      rready <= '1';
+      assert rvalid = '0';
+      wait until rising_edge(clk);
+      rready <= '1';
+      assert rvalid = '1';
+      wait until rising_edge(clk);
+      rready <= '1';
+      assert rvalid = '1';
+      wait until rising_edge(clk);
+      rready <= '0';
+      assert rvalid = '1';
+      wait until rising_edge(clk);
+      rready <= '0';
+      assert rvalid = '0';
+      wait until rising_edge(clk);
+      rready <= '0';
+      wait until rising_edge(clk);
+      rready <= '0';
+      assert rvalid = '0';
+
+    elsif run("Test well behaved check fails for ill behaved awsize") then
+      alloc := allocate(memory, 8);
+      enable_well_behaved_check(event, axi_slave);
+      disable_fail_on_error(event, axi_slave, error_queue);
+      rready <= '1';
+      wait until rising_edge(clk);
+      write_addr(x"0", base_address(alloc), len => 2, log_size => 0, burst => axi_burst_type_incr);
+      check_equal(pop_string(error_queue), "Burst not well behaved, axi size = 1 but bus data width allows " & to_string(data_size));
+      check_equal(length(error_queue), 0, "no more errors");
+
+    elsif run("Test well behaved check fails when rready not high during active burst") then
+      alloc := allocate(memory, 128);
+      enable_well_behaved_check(event, axi_slave);
+      disable_fail_on_error(event, axi_slave, error_queue);
+      wait until rising_edge(clk);
+      write_addr(x"0", base_address(alloc), len => 2, log_size => log_data_size, burst => axi_burst_type_incr);
+      check_equal(pop_string(error_queue), "Burst not well behaved, rready was not high during active burst");
+      check_equal(length(error_queue), 0, "no more errors");
+
+    elsif run("Test well behaved check fails when wvalid not high during active burst and arready is low") then
+      alloc := allocate(memory, 8);
+      enable_well_behaved_check(event, axi_slave);
+      disable_fail_on_error(event, axi_slave, error_queue);
+      set_address_channel_stall_probability(event, axi_slave, 1.0);
+
+      wait until rising_edge(clk);
+      assert arready = '0';
+
+      arvalid <= '1';
+      arid <= x"0";
+      araddr <= std_logic_vector(to_unsigned(base_address(alloc), araddr'length));
+      arlen <= std_logic_vector(to_unsigned(0, arlen'length));
+      arsize <= std_logic_vector(to_unsigned(log_size, arsize'length));
+      arburst <= axi_burst_type_incr;
+
+      wait until rising_edge(clk);
+      assert arready = '0';
+      wait until length(error_queue) > 0 for 0 ns;
+
+      check_equal(pop_string(error_queue), "Burst not well behaved, rready was not high during active burst");
+      check_equal(length(error_queue), 0, "no more errors");
+
 
     end if;
 

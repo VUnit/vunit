@@ -403,6 +403,7 @@ begin
 
       wait until rising_edge(clk);
       assert awready = '0';
+      wait until length(error_queue) > 0 for 0 ns;
 
       check_equal(pop_string(error_queue), "Burst not well behaved, vwalid was not high during active burst");
       check_equal(length(error_queue), 0, "no more errors");

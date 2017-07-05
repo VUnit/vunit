@@ -22,7 +22,7 @@ entity axi_write_slave is
     aclk : in std_logic;
 
     awvalid : in std_logic;
-    awready : out std_logic;
+    awready : out std_logic := '0';
     awid : in std_logic_vector;
     awaddr : in std_logic_vector;
     awlen : in std_logic_vector;
@@ -30,13 +30,13 @@ entity axi_write_slave is
     awburst : in axi_burst_type_t;
 
     wvalid : in std_logic;
-    wready : out std_logic;
+    wready : out std_logic := '0';
     wid : in std_logic_vector;
     wdata : in std_logic_vector;
     wstrb : in std_logic_vector;
     wlast : in std_logic;
 
-    bvalid : out std_logic;
+    bvalid : out std_logic := '0';
     bready : in std_logic;
     bid : out std_logic_vector;
     bresp : out axi_resp_t
@@ -63,9 +63,6 @@ begin
     variable beats : natural := 0;
   begin
     -- Initialization
-    wready <= '0';
-    awready <= '0';
-    bvalid <= '0';
     bid <= (bid'range => '0');
     bresp <= (bresp'range => '0');
 
