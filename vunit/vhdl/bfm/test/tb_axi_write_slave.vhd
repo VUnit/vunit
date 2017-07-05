@@ -371,6 +371,29 @@ begin
       write_addr(x"0", base_address(alloc), len => 2, log_size => log_data_size, burst => axi_burst_type_incr);
       check_equal(pop_string(error_queue), "Burst not well behaved, vwalid was not high during active burst");
       check_equal(length(error_queue), 0, "no more errors");
+
+    elsif run("Test well behaved check of wvalid triggers for ill behaved burst when awready is low") then
+      alloc := allocate(memory, 8);
+      enable_well_behaved_check(event, axi_slave);
+      disable_fail_on_error(event, axi_slave, error_queue);
+      set_address_channel_stall_probability(event, axi_slave, 1.0);
+
+      wait until rising_edge(clk);
+      assert awready = '0';
+
+      awvalid <= '1';
+      awid <= x"0";
+      awaddr <= std_logic_vector(to_unsigned(base_address(alloc), awaddr'length));
+      awlen <= std_logic_vector(to_unsigned(0, awlen'length));
+      awsize <= std_logic_vector(to_unsigned(log_size, awsize'length));
+      awburst <= axi_burst_type_incr;
+
+      wait until rising_edge(clk);
+      assert awready = '0';
+
+      check_equal(pop_string(error_queue), "Burst not well behaved, vwalid was not high during active burst");
+      check_equal(length(error_queue), 0, "no more errors");
+
     end if;
 
     test_runner_cleanup(runner);
