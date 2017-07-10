@@ -28,8 +28,18 @@ environment:
     - BUILD_NAME: py35-docs
       PYTHON: "C:\\Python35"
 
+    - BUILD_NAME: py27-acceptance-ghdl
+      PYTHON: "C:\\Python27"
+
+    - BUILD_NAME: py35-acceptance-ghdl
+      PYTHON: "C:\\Python35"
+
 install:
+  - "git submodule update --init --recursive"
   - "%PYTHON%\\python.exe -m pip install tox"
+  - "curl -fsSL -o ghdl.zip https://github.com/tgingold/ghdl/releases/download/2017-03-01/ghdl-0.34-dev-mcode-2017-03-01-win32.zip"
+  - "7z x ghdl.zip -oghdl -y"
+  - "set PATH=%PATH%;ghdl/bin"
 
 build: off
 
