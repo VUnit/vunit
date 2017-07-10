@@ -9,16 +9,18 @@ matrix:
     python: '3.4'
   - env: BUILD_NAME=py35-unit
     python: '3.5'
+  - env: BUILD_NAME=py36-unit
+    python: '3.6'
 
   - env: BUILD_NAME=py27-lint
     python: '2.7'
-  - env: BUILD_NAME=py35-lint
-    python: '3.5'
+  - env: BUILD_NAME=py36-lint
+    python: '3.6'
 
   - env: BUILD_NAME=py27-docs
     python: '2.7'
-  - env: BUILD_NAME=py35-docs
-    python: '3.5'
+  - env: BUILD_NAME=py36-docs
+    python: '3.6'
 
   # Python 2.7 with ghdl mcode
   - env: BUILD_NAME=py27-acceptance-ghdl
@@ -40,9 +42,9 @@ matrix:
     - cd ../../
     - export PATH=$PATH:install-ghdl-mcode/bin/
 
-  # Python 3.5 with ghdl llvm
-  - env: BUILD_NAME=py35-acceptance-ghdl
-    python: '3.5'
+  # Python 3.6 with ghdl llvm
+  - env: BUILD_NAME=py36-acceptance-ghdl
+    python: '3.6'
     os: linux
     sudo: required
     dist: trusty

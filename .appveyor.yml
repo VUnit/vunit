@@ -17,22 +17,24 @@ environment:
       PYTHON: "C:\\Python34"
     - BUILD_NAME: py35-unit
       PYTHON: "C:\\Python35"
+    - BUILD_NAME: py36-unit
+      PYTHON: "C:\\Python36"
 
     - BUILD_NAME: py27-lint
       PYTHON: "C:\\Python27"
-    - BUILD_NAME: py35-lint
-      PYTHON: "C:\\Python35"
+    - BUILD_NAME: py36-lint
+      PYTHON: "C:\\Python36"
 
     - BUILD_NAME: py27-docs
       PYTHON: "C:\\Python27"
-    - BUILD_NAME: py35-docs
-      PYTHON: "C:\\Python35"
+    - BUILD_NAME: py36-docs
+      PYTHON: "C:\\Python36"
 
     - BUILD_NAME: py27-acceptance-ghdl
       PYTHON: "C:\\Python27"
 
-    - BUILD_NAME: py35-acceptance-ghdl
-      PYTHON: "C:\\Python35"
+    - BUILD_NAME: py36-acceptance-ghdl
+      PYTHON: "C:\\Python36"
 
 install:
   - "git submodule update --init --recursive"
