@@ -1,4 +1,11 @@
 language: python
+
+install:
+- pip install tox
+
+script:
+- tox -e $BUILD_NAME
+
 matrix:
   include:
   - env: BUILD_NAME=py27-unit
@@ -63,8 +70,19 @@ matrix:
     - cd ../../
     - export PATH=$PATH:install-ghdl-llvm/bin/
 
-install:
-- pip install tox
-
-script:
-- tox -e $BUILD_NAME
+  # Deploy to GitHub pages
+  - stage: deploy
+    python: '3.6'
+    script:
+      - tox -e py36-docs
+      - touch .tox/py36-docs/tmp/docsbuild/.nojekyll
+    deploy:
+      provider: pages
+      repo: VUnit/VUnit.github.io
+      target_branch: master
+      local_dir: .tox/py36-docs/tmp/docsbuild/
+      # This environment variable is set to an OAuth token in travis vunit settings
+      github_token: $GITHUB_PAGES_TOKEN
+      skip_cleanup: true
+      on:
+        branch: master
