@@ -20,8 +20,6 @@ def find_all_files(directory, endings=None):
             ending = os.path.splitext(filename)[-1]
             if endings is None or ending in endings:
                 result.append(os.path.join(root, filename))
-            else:
-                print("Ignoring %s" % filename)
     return result
 
 data_files = []

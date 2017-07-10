@@ -57,10 +57,12 @@ def version():
     Returns VUnit version
     """
     if PRE_RELEASE:
-        return '%i.%i.%i-pre' % (VERSION[0], VERSION[1], VERSION[2] + 1)
+        return '%i.%i.%irc0' % (VERSION[0], VERSION[1], VERSION[2] + 1)
 
     return '%i.%i.%i' % (VERSION[0], VERSION[1], VERSION[2])
 
 
 VERSION = (2, 0, 0)
-PRE_RELEASE = True  # Only set to True in release tags
+
+# DO NOT TOUCH: Only set to False by PyPI deployment script
+PRE_RELEASE = True

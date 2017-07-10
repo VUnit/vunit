@@ -86,3 +86,19 @@ matrix:
       skip_cleanup: true
       on:
         branch: master
+
+  # Deploy to PyPI whenever the package version has changed
+  # When a package version has not changed a new upload will not be triggered
+  - stage: deploy
+    python: '3.6'
+    script:
+      - sed -i "s/PRE_RELEASE = True/PRE_RELEASE = False/" vunit/about.py
+    deploy:
+      provider: pypi
+      distributions: sdist
+      skip_cleanup: true
+      skip_upload_docs: true
+      user: $PYPI_USER
+      password: $PYPI_PASSWORD
+      on:
+        branch: master
