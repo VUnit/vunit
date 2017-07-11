@@ -215,7 +215,7 @@ language = None
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = []
+exclude_patterns = ["release_notes/*.*"]
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -355,5 +355,6 @@ html_favicon = join(html_static_path[0], 'vunit.ico')
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'vunitdoc'
 
-extlinks = {'vunit_example': ('https://github.com/VUnit/vunit/tree/master/examples/%s/',
-                              '')}
+extlinks = {'vunit_example' : ('https://github.com/VUnit/vunit/tree/master/examples/%s/', ''),
+            'vunit_commit' : ('https://github.com/vunit/vunit/tree/%s/', '@'),
+            'vunit_issue' : ('https://github.com/VUnit/vunit/issues/%s/', '#')}

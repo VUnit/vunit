@@ -1,0 +1,6 @@
+- Adds ActiveHDL custom simulation flags support
+- Made library simulator flag argument deterministic and same as the order added to VUnit
+- Added check_equal between std_logic_vector and natural for unsigned comparison
+- Can now set vhdl_standard on an external library
+- Added no_parse argument to add_source_files(s) to inhibit any dependency or test scanning
+- Renamed public method depends_on to add_dependency_on

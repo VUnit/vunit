@@ -1,0 +1,2 @@
+- Early runtime error when gtkwave is missing. Closes :vunit_issue:`137`
+- Added add_compile_option. Closes :vunit_issue:`118`

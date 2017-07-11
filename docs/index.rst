@@ -37,3 +37,4 @@ Latest Posts
    documentation
    testimonials/testimonials
    contributing
+   release_notes

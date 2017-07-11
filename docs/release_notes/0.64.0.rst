@@ -1,0 +1,2 @@
+- Added python version check. Closes :vunit_issue:`141`.
+- Not adding .all suffix when there are named configurations

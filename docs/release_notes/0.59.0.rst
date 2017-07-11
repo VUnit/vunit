@@ -1,0 +1,3 @@
+- Covered a miss in circular dependency detection.
+- Added detection of circular includes and macro expansions in verilog preprocessing.
+- Added caching of verilog parse results for significant speed when running run.py more than once.

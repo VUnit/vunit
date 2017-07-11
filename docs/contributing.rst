@@ -90,3 +90,19 @@ Developers should ensure that new code is well covered. As of writing
 this paragraph the total coverage was 92%. Missing coverage can be
 analyzed by opening the generated *htmlcov/index.html* produced by the
 above commands.
+
+
+Making releases
+---------------
+
+Releases are automatically made by Travic CI on any ``master`` commit
+that has a new version set in ``vunit/about.py`` together with a
+corresponding release note in ``docs/release_notes/X.Y.Z.rst``.  The
+release note files in ``docs/release_notes/`` are used to
+automatically generate the :ref:`release notes <release_notes>`.
+
+Travic CI makes a release by uploading a new package to PyPI and
+setting a release tag named ``vX.Y.Z`` in Git.
+
+A new release will not be made if the the ``X.Y.Z`` release is already
+on PyPI or the repo tag is already set.

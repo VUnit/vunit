@@ -1,7 +1,8 @@
 language: python
 
 install:
-- pip install tox
+  - git fetch --unshallow --tags
+  - pip install tox
 
 script:
 - tox -e $BUILD_NAME
@@ -93,6 +94,10 @@ matrix:
     python: '3.6'
     script:
       - sed -i "s/PRE_RELEASE = True/PRE_RELEASE = False/" vunit/about.py
+      - python tools/is_new_release.py release_name is_new_release
+      - export IS_NEW_RELEASE=`cat is_new_release`
+      - export RELEASE_NAME=`cat release_name`
+
     deploy:
       provider: pypi
       distributions: sdist
@@ -102,3 +107,11 @@ matrix:
       password: $PYPI_PASSWORD
       on:
         branch: master
+        condition: $IS_NEW_RELEASE = True
+
+    # Create release tag after successful deployment
+    after_deploy:
+      - git config --global user.email "builds@travis-ci.com"
+      - git config --global user.name "Travis CI"
+      - git tag "v${RELEASE_NAME}" -a -m "Generated tag from TravisCI for release ${RELEASE_NAME}"
+      - git push -q https://$GITHUB_PAGES_TOKEN@github.com/VUnit/vunit/ --tags >/dev/null 2>&1

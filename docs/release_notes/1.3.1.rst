@@ -1,0 +1,1 @@
+- Fixed compile errors with GHDL 0.33
