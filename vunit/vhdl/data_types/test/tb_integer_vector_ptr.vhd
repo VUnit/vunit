@@ -5,7 +5,10 @@
 -- Copyright (c) 2016, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
-context vunit_lib.vunit_context;
+--context vunit_lib.vunit_context;
+use vunit_lib.check_pkg.all;
+use vunit_lib.run_pkg.all;
+use vunit_lib.run_base_pkg.all;
 
 use work.integer_vector_ptr_pkg.all;
 
@@ -29,9 +32,19 @@ begin
 
         ptr := allocate(1);
         check_equal(length(ptr), 1);
+        check_equal(get(ptr, 0), 0, "init value");
 
-        ptr := allocate(2);
+        ptr := allocate(2, value => 3);
         check_equal(length(ptr), 2);
+        check_equal(get(ptr, 0), 3, "init value");
+        check_equal(get(ptr, 1), 3, "init value");
+
+        reallocate(ptr, 5, value => 11);
+        check_equal(length(ptr), 5);
+
+        for i in 0 to length(ptr)-1 loop
+          check_equal(get(ptr, i), 11, "init value");
+        end loop;
 
       elsif run("test_element_access") then
         ptr := allocate(1);
@@ -57,8 +70,35 @@ begin
         check_equal(length(ptr), 2);
         set(ptr, 1, another_random_value);
         check_equal(get(ptr, 0), a_random_value,
-                    "Checking that resized ptr still contain old value");
+                    "Checking that grown ptr still contain old value");
         check_equal(get(ptr, 1), another_random_value);
+
+        resize(ptr, 1);
+        check_equal(length(ptr), 1);
+        check_equal(get(ptr, 0), a_random_value,
+                    "Checking that shrunk ptr still contain old value");
+
+      elsif run("test_resize_with_drop") then
+        ptr := allocate(8);
+        for i in 0 to 7 loop
+          set(ptr, i, i);
+        end loop;
+        resize(ptr, 4, drop => 4);
+
+        for i in 0 to 3 loop
+          check_equal(get(ptr, i), 4+i);
+        end loop;
+
+      elsif run("test_resize_with_default") then
+        ptr := allocate(0);
+        resize(ptr, 2, value => a_random_value);
+        check_equal(length(ptr), 2);
+        check_equal(get(ptr, 0), a_random_value);
+        check_equal(get(ptr, 1), a_random_value);
+
+      elsif run("test_from_and_to_integer") then
+        ptr := allocate(2);
+        assert to_integer_vector_ptr(to_integer(ptr)) = ptr;
       end if;
     end loop;
 

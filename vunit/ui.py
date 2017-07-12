@@ -232,12 +232,9 @@ from vunit.test_bench_list import TestBenchList
 from vunit.exceptions import CompileError
 from vunit.location_preprocessor import LocationPreprocessor
 from vunit.check_preprocessor import CheckPreprocessor
-from vunit.builtins import (add_vhdl_builtins,
-                            add_verilog_include_dir,
-                            add_array_util,
-                            add_osvvm,
-                            add_com)
 from vunit.parsing.encodings import HDL_FILE_ENCODING
+from vunit.builtins import (Builtins,
+                            add_verilog_include_dir)
 from vunit.com import codec_generator
 
 LOGGER = logging.getLogger(__name__)
@@ -321,8 +318,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         self._test_bench_list = TestBenchList(database=database)
 
+        self._builtins = Builtins(self, self._vhdl_standard, self._simulator_factory)
         if compile_builtins:
-            self.add_builtins(library_name="vunit_lib")
+            self.add_builtins()
 
     def _create_database(self):
         """
@@ -869,16 +867,13 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
             xml = report.to_junit_xml_str()
             ostools.write_file(self._args.xunit_xml, xml)
 
-    def add_builtins(self, library_name="vunit_lib", mock_lang=False, mock_log=False):
+    def add_builtins(self, mock_lang=False, mock_log=False):
         """
         Add vunit VHDL builtin libraries
         """
-        library = self.add_library(library_name)
-        supports_context = self._simulator_factory.supports_vhdl_2008_contexts()
-        add_vhdl_builtins(library, self._vhdl_standard, mock_lang, mock_log,
-                          supports_context=supports_context)
+        self._builtins.add_vhdl_builtins(mock_lang, mock_log)
 
-    def add_com(self, library_name="vunit_lib", use_debug_codecs=None):
+    def add_com(self, use_debug_codecs=None):
         """
         Add communication package
 
@@ -890,38 +885,28 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
 
            `True`: Always use debug codecs
         """
-        if not self._project.has_library(library_name):
-            library = self.add_library(library_name)
-        else:
-            library = self.library(library_name)
-
         if use_debug_codecs is not None:
             self._use_debug_codecs = use_debug_codecs
 
-        supports_context = self._simulator_factory.supports_vhdl_2008_contexts()
+        self._builtins.add("com", dict(use_debug_codecs=self._use_debug_codecs))
 
-        add_com(library, self._vhdl_standard,
-                use_debug_codecs=self._use_debug_codecs,
-                supports_context=supports_context)
-
-    def add_array_util(self, library_name="vunit_lib"):
+    def add_array_util(self):
         """
-        Add array utility package
+        Add array util
         """
-        library = self.library(library_name)
-        add_array_util(library, self._vhdl_standard)
+        self._builtins.add("array_util")
 
-    def add_osvvm(self, library_name="osvvm"):
+    def add_random(self):
+        """
+        Add random
+        """
+        self._builtins.add("random")
+
+    def add_osvvm(self):
         """
         Add osvvm library
         """
-        if not self._project.has_library(library_name):
-            library = self.add_library(library_name)
-        else:
-            library = self.library(library_name)
-        simulator_coverage_api = self._simulator_factory.get_osvvm_coverage_api()
-        supports_vhdl_package_generics = self._simulator_factory.supports_vhdl_package_generics()
-        add_osvvm(library, simulator_coverage_api, supports_vhdl_package_generics)
+        self._builtins.add("osvvm")
 
     def get_compile_order(self, source_files=None):
         """

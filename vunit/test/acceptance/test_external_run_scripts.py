@@ -108,6 +108,20 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_array_vhdl_2008(self):
         self.check(join(VHDL_PATH, "array", "run.py"))
 
+    def test_data_types_vhdl_2008(self):
+        self.check(join(VHDL_PATH, "data_types", "run.py"))
+
+    def test_data_types_vhdl_2002(self):
+        self.check(join(VHDL_PATH, "data_types", "run.py"),
+                   vhdl_standard="2002")
+
+    def test_data_types_vhdl_93(self):
+        self.check(join(VHDL_PATH, "data_types", "run.py"),
+                   vhdl_standard="93")
+
+    def test_random_vhdl_2008(self):
+        self.check(join(VHDL_PATH, "random", "run.py"))
+
     def test_check_vhdl_2008(self):
         self.check(join(VHDL_PATH, "check", "run.py"))
 

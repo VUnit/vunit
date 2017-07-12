@@ -4,6 +4,9 @@
 --
 -- Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
 
-package vunit_stop_pkg is
-  procedure vunit_stop(status : integer);
-end package;
+package body stop_pkg is
+  procedure stop(status : integer) is
+  begin
+    report "Stopping simulation with status " & integer'image(status) severity failure;
+  end procedure;
+end package body;

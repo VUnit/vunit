@@ -11,7 +11,10 @@ from glob import glob
 root = dirname(__file__)
 
 ui = VUnit.from_argv()
-ui.add_array_util()
 lib = ui.library("vunit_lib")
-lib.add_source_files(join(root, "test", "*.vhd"))
+for file_name in glob(join(root, "test", "*")):
+    if basename(file_name).endswith("2008.vhd") and ui.vhdl_standard != "2008":
+        continue
+    lib.add_source_file(file_name)
+
 ui.main()

@@ -14,8 +14,7 @@ use work.check_pkg.all;
 use work.string_ops.all;
 use work.dictionary.all;
 use work.path.all;
-use work.vunit_stop_pkg.vunit_stop;
-use work.vunit_core_pkg;
+use work.core_pkg;
 use std.textio.all;
 
 package body run_pkg is
@@ -34,7 +33,7 @@ package body run_pkg is
                                          not has_key(runner_cfg, "fake active python runner")));
 
     if has_active_python_runner then
-      vunit_core_pkg.setup(output_path(runner_cfg) & "vunit_results");
+      core_pkg.setup(output_path(runner_cfg) & "vunit_results");
     end if;
 
     get_logger_cfg(runner_trace_logger, logger_cfg);
@@ -135,16 +134,16 @@ package body run_pkg is
 
     if runner.exit_without_errors then
       if has_active_python_runner then
-        vunit_core_pkg.test_suite_done;
+        core_pkg.test_suite_done;
       end if;
     end if;
 
     if not disable_simulation_exit then
       runner.exit_simulation <= true;
       if runner.exit_without_errors then
-        vunit_stop(0);
+        core_pkg.stop(0);
       else
-        vunit_stop(1);
+        core_pkg.stop(1);
       end if;
       report "Test runner exit." severity failure;
     end if;
@@ -266,7 +265,7 @@ package body run_pkg is
         register_run(name);
         info(runner_trace_logger, "Test case: " & name);
         if has_active_python_runner then
-          vunit_core_pkg.test_start(name);
+          core_pkg.test_start(name);
         end if;
         set_running_test_case(name);
         return true;
@@ -274,7 +273,7 @@ package body run_pkg is
     elsif get_test_case_name(get_active_test_case_index) = name then
       info(runner_trace_logger, "Test case: " & name);
       if has_active_python_runner then
-        vunit_core_pkg.test_start(name);
+        core_pkg.test_start(name);
       end if;
       set_running_test_case(name);
       return true;

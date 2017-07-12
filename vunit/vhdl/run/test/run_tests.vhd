@@ -20,8 +20,7 @@ use vunit_lib.run_types_pkg.all;
 use vunit_lib.run_special_types_pkg.all;
 use vunit_lib.run_base_pkg.all;
 use vunit_lib.run_pkg.all;
-use vunit_lib.vunit_core_pkg;
-use vunit_lib.vunit_stop_pkg;
+use vunit_lib.core_pkg;
 
 entity run_tests is
   generic (output_path : string);
@@ -841,9 +840,9 @@ begin
     info("Number of passing checks: " & natural'image(checker_stat.n_passed));
     info("Number of failing checks: " & natural'image(checker_stat.n_failed));
 
-    vunit_core_pkg.setup(output_path & "vunit_results");
-    vunit_core_pkg.test_suite_done;
-    vunit_stop_pkg.vunit_stop(0);
+    core_pkg.setup(output_path & "vunit_results");
+    core_pkg.test_suite_done;
+    core_pkg.stop(0);
     wait;
   end process;
 end test_fixture;

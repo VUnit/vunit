@@ -8,8 +8,11 @@
 use std.textio.all;
 
 library vunit_lib;
-context vunit_lib.vunit_context;
+--context vunit_lib.vunit_context;
 use work.integer_array_pkg.all;
+use vunit_lib.check_pkg.all;
+use vunit_lib.run_pkg.all;
+use vunit_lib.run_base_pkg.all;
 
 entity tb_integer_array is
   generic (
@@ -47,9 +50,9 @@ begin
       impure function file_name return string is
       begin
         if is_signed then
-          return output_path & "s" & to_string(bit_width) & ".raw";
+          return output_path & "s" & integer'image(bit_width) & ".raw";
         else
-          return output_path & "u" & to_string(bit_width) & ".raw";
+          return output_path & "u" & integer'image(bit_width) & ".raw";
         end if;
       end function;
 
