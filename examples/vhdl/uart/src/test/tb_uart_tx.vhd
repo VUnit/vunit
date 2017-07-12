@@ -10,14 +10,12 @@ use ieee.numeric_std.all;
 
 library vunit_lib;
 context vunit_lib.vunit_context;
+context vunit_lib.bfm_context;
 
 library osvvm;
 use osvvm.RandomPkg.all;
 
 library uart_lib;
-
-library tb_uart_lib;
-use tb_uart_lib.uart_model_pkg.all;
 
 entity tb_uart_tx is
   generic (
@@ -32,42 +30,21 @@ architecture tb of tb_uart_tx is
   signal clk : std_logic := '0';
   signal tx : std_logic;
   signal tready : std_logic;
-  signal tvalid : std_Logic := '0';
-  signal tdata : std_logic_vector(7 downto 0) := (others => '0');
+  signal tvalid : std_Logic;
+  signal tdata : std_logic_vector(7 downto 0);
 
-  signal num_sent, num_recv : integer := 0;
   shared variable rnd_stimuli, rnd_expected : RandomPType;
+  constant uart_bfm : uart_slave_t := new_uart_slave(initial_baud_rate => baud_rate,
+                                                     data_length => tdata'length);
+  constant uart_stream : stream_slave_t := as_stream(uart_bfm);
+
+  constant axi_stream_bfm : axi_stream_master_t := new_axi_stream_master(data_length => tdata'length);
+  constant axi_stream : stream_master_t := as_stream(axi_stream_bfm);
+
 begin
 
   main : process
-    variable index : integer := 0;
-
-    procedure send is
-    begin
-      tvalid <= '1';
-      tdata <= std_logic_vector(to_unsigned(rnd_stimuli.RandInt(0, 2**tdata'length-1), tdata'length));
-      wait until tvalid = '1' and tready = '1' and rising_edge(clk);
-      num_sent <= num_sent + 1;
-      tvalid <= '0';
-      tdata <= (others => '0');
-    end procedure;
-
-    procedure check_all_was_received is
-    begin
-      wait until num_recv = num_sent for 1 ms;
-      check_equal(num_recv, num_sent);
-    end procedure;
-
-    variable stat : checker_stat_t;
-    variable filter : log_filter_t;
   begin
-    checker_init(display_format => verbose,
-                 file_name => join(output_path(runner_cfg), "error.csv"),
-                 file_format => verbose_csv);
-    logger_init(display_format => verbose,
-                 file_name => join(output_path(runner_cfg), "log.csv"),
-                file_format => verbose_csv);
-    stop_level((debug, verbose), display_handler, filter);
     test_runner_setup(runner, runner_cfg);
 
     -- Initialize to same seed to get same sequence
@@ -76,39 +53,27 @@ begin
 
     while test_suite loop
       if run("test_send_one_byte") then
-        send;
-        check_all_was_received;
+        write_stream(event, axi_stream, rnd_stimuli.RandSlv(tdata'length));
+        check_stream(event, uart_stream, rnd_expected.RandSlv(tdata'length));
       elsif run("test_send_two_bytes") then
-        send;
-        check_all_was_received;
-        send;
-        check_all_was_received;
+        write_stream(event, axi_stream, rnd_stimuli.RandSlv(tdata'length));
+        check_stream(event, uart_stream, rnd_expected.RandSlv(tdata'length));
+        write_stream(event, axi_stream, rnd_stimuli.RandSlv(tdata'length));
+        check_stream(event, uart_stream, rnd_expected.RandSlv(tdata'length));
       elsif run("test_send_many_bytes") then
         for i in 0 to 7 loop
-          send;
+          write_stream(event, axi_stream, rnd_stimuli.RandSlv(tdata'length));
         end loop;
-        check_all_was_received;
+        for i in 0 to 7 loop
+          check_stream(event, uart_stream, rnd_expected.RandSlv(tdata'length));
+        end loop;
       end if;
     end loop;
-
-    if not active_python_runner(runner_cfg) then
-      get_checker_stat(stat);
-      info(LF & "Result:" & LF & to_string(stat));
-    end if;
 
     test_runner_cleanup(runner);
     wait;
   end process;
   test_runner_watchdog(runner, 10 ms);
-
-  uart_rx_behav : process
-    variable data : integer;
-  begin
-    uart_recv(data, tx, baud_rate);
-    num_recv <= num_recv + 1;
-    report "Received " & to_string(data);
-    check_equal(data, rnd_expected.RandInt(0, 2**tdata'length-1));
-  end process;
 
   clk <= not clk after (clk_period/2) * 1 ns;
 
@@ -122,4 +87,18 @@ begin
       tvalid => tvalid,
       tdata => tdata);
 
+  uart_slave_bfm : entity vunit_lib.uart_slave
+    generic map (
+      uart => uart_bfm)
+    port map (
+      rx => tx);
+
+  axi_stream_master_bfm: entity vunit_lib.axi_stream_master
+    generic map (
+      master => axi_stream_bfm)
+    port map (
+      aclk   => clk,
+      tvalid => tvalid,
+      tready => tready,
+      tdata  => tdata);
 end architecture;

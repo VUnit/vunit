@@ -32,6 +32,7 @@ class Builtins(object):
 
         add("array_util")
         add("com")
+        add("bfm", ["com", "osvvm"])
         add("osvvm")
         add("random", ["osvvm"])
 
@@ -98,6 +99,14 @@ class Builtins(object):
             raise RuntimeError("Communication package only supports vhdl 2008")
 
         self._add_files(join(VHDL_PATH, "com", "src", "*.vhd"))
+
+    def _add_bfm(self):
+        """
+        Add bfm utility library
+        """
+        if self._vhdl_standard != '2008':
+            raise RuntimeError("BFM library only supports vhdl 2008")
+        self._add_files(join(VHDL_PATH, "bfm", "src", "*.vhd"))
 
     def _add_osvvm(self):
         """

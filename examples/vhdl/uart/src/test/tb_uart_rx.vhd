@@ -10,11 +10,9 @@ use ieee.numeric_std.all;
 
 library vunit_lib;
 context vunit_lib.vunit_context;
+context vunit_lib.bfm_context;
 
 library uart_lib;
-
-library tb_uart_lib;
-use tb_uart_lib.uart_model_pkg.all;
 
 entity tb_uart_rx is
   generic (
@@ -29,23 +27,21 @@ architecture tb of tb_uart_rx is
   signal clk : std_logic := '0';
   signal rx : std_logic := '1';
   signal overflow : std_logic;
-  signal tready : std_logic := '0';
+  signal tready : std_logic;
   signal tvalid : std_Logic;
   signal tdata : std_logic_vector(7 downto 0);
 
   signal num_overflows : integer := 0;
+
+  constant uart_bfm : uart_master_t := new_uart_master(initial_baud_rate => baud_rate);
+  constant uart_stream : stream_master_t := as_stream(uart_bfm);
+
+  constant axi_stream_bfm : axi_stream_slave_t := new_axi_stream_slave(data_length => tdata'length);
+  constant axi_stream : stream_slave_t := as_stream(axi_stream_bfm);
 begin
 
   main : process
-    variable filter : log_filter_t;
   begin
-    checker_init(display_format => verbose,
-                 file_name => join(output_path(runner_cfg), "error.csv"),
-                 file_format => verbose_csv);
-    logger_init(display_format => verbose,
-                 file_name => join(output_path(runner_cfg), "log.csv"),
-                file_format => verbose_csv);
-    stop_level((debug, verbose), display_handler, filter);
     test_runner_setup(runner, runner_cfg);
 
     while test_suite loop
@@ -53,20 +49,20 @@ begin
       if run("test_tvalid_low_at_start") then
         wait until tvalid = '1' for 1 ms;
         check_equal(tvalid, '0');
+
       elsif run("test_receives_one_byte") then
-        uart_send(77, rx, baud_rate);
-        tready <= '1';
-        wait until tready = '1' and tvalid = '1' and rising_edge(clk);
-        check_equal(unsigned(tdata), 77);
-        tready <= '0';
-        check_false(clk, check_enabled, tvalid);
+        write_stream(event, uart_stream, x"77");
+        check_stream(event, axi_stream, x"77");
+        wait until rising_edge(clk);
+        check_equal(tvalid, '0');
         check_equal(num_overflows, 0);
+
       elsif run("test_two_bytes_casues_overflow") then
-        uart_send(77, rx, baud_rate);
+        write_stream(event, uart_stream, x"77");
         wait until tvalid = '1' and rising_edge(clk);
         check_equal(num_overflows, 0);
         wait for 1 ms;
-        uart_send(77, rx, baud_rate);
+        write_stream(event, uart_stream, x"77");
         wait for 1 ms;
         wait until num_overflows = 1 and rising_edge(clk);
       end if;
@@ -99,5 +95,20 @@ begin
       tready => tready,
       tvalid => tvalid,
       tdata => tdata);
+
+  uart_master_bfm : entity vunit_lib.uart_master
+    generic map (
+      uart => uart_bfm)
+    port map (
+      tx => rx);
+
+  axi_stream_slave_bfm: entity vunit_lib.axi_stream_slave
+    generic map (
+      slave => axi_stream_bfm)
+    port map (
+      aclk   => clk,
+      tvalid => tvalid,
+      tready => tready,
+      tdata  => tdata);
 
 end architecture;

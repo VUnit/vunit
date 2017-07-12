@@ -887,6 +887,12 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         self._builtins.add("random")
 
+    def add_bfm(self):
+        """
+        Add bus functional models
+        """
+        self._builtins.add("bfm")
+
     def add_osvvm(self):
         """
         Add osvvm library

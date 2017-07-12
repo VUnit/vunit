@@ -7,16 +7,11 @@
 from os.path import join, dirname
 from vunit import VUnit
 
+root = dirname(__file__)
+
 ui = VUnit.from_argv()
-ui.add_osvvm()
+ui.add_random()
 ui.add_bfm()
-
-src_path = join(dirname(__file__), "src")
-
-uart_lib = ui.add_library("uart_lib")
-uart_lib.add_source_files(join(src_path, "*.vhd"))
-
-tb_uart_lib = ui.add_library("tb_uart_lib")
-tb_uart_lib.add_source_files(join(src_path, "test", "*.vhd"))
-
+lib = ui.library("vunit_lib")
+lib.add_source_files(join(root, "test", "*.vhd"))
 ui.main()
