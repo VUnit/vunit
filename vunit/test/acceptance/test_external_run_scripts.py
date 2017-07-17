@@ -36,9 +36,6 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_vhdl_uart_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "uart", "run.py"))
 
-    def test_vhdl_preprocessed_uart_example_project(self):
-        self.check(join(ROOT, "examples", "vhdl", "uart", "run_with_preprocessing.py"))
-
     @unittest.skipUnless(simulator_supports_verilog(), "Verilog")
     def test_verilog_uart_example_project(self):
         self.check(join(ROOT, "examples", "verilog", "uart", "run.py"))

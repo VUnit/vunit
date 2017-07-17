@@ -182,9 +182,7 @@ There are many examples demonstrating more specific usage of VUnit listed below:
 
 :vunit_example:`VHDL UART Example <vhdl/uart/>`
   A more realistic test bench of an UART to show VUnit VHDL usage on a
-  typical module.  In addition to the normal ``run.py`` it also
-  contains a ``run_with_preprocessing.py`` to demonstrate the benefit
-  of location and check preprocessing.
+  typical module.
 
 :vunit_example:`SystemVerilog UART Example <verilog/uart/>`
   A more realistic test bench of an UART to show VUnit SystemVerilog
