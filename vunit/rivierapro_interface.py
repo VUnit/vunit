@@ -16,7 +16,9 @@ import os
 import re
 import logging
 from vunit.ostools import Process, file_exists
-from vunit.simulator_interface import SimulatorInterface
+from vunit.simulator_interface import (SimulatorInterface,
+                                       ListOfStringOption,
+                                       StringOption)
 from vunit.exceptions import CompileError
 from vunit.vsim_simulator_mixin import (VsimSimulatorMixin,
                                         fix_path)
@@ -34,15 +36,15 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
     package_users_depend_on_bodies = True
 
     compile_options = [
-        "rivierapro.vcom_flags",
-        "rivierapro.vlog_flags",
+        ListOfStringOption("rivierapro.vcom_flags"),
+        ListOfStringOption("rivierapro.vlog_flags"),
     ]
 
     sim_options = [
-        "rivierapro.vsim_flags",
-        "rivierapro.vsim_flags.gui",
-        "rivierapro.init_files.after_load",
-        "rivierapro.init_file.gui",
+        ListOfStringOption("rivierapro.vsim_flags"),
+        ListOfStringOption("rivierapro.vsim_flags.gui"),
+        ListOfStringOption("rivierapro.init_files.after_load"),
+        StringOption("rivierapro.init_file.gui"),
     ]
 
     @classmethod

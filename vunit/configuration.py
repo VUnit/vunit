@@ -97,12 +97,7 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         """
         Set sim option
         """
-        known_options = SimulatorFactory.sim_options()
-        if name not in known_options:
-            LOGGER.error("Unknown sim_option %r, expected one of %r",
-                         name, known_options)
-            raise ValueError(name)
-
+        SimulatorFactory.check_sim_option(name, value)
         self.sim_options[name] = value
 
     @property

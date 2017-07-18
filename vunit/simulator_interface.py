@@ -238,3 +238,87 @@ def run_command(command, cwd=None, env=None):
     except Process.NonZeroExitCode:
         pass
     return False
+
+
+class Option(object):
+    """
+    A compile or sim option
+    """
+
+    def __init__(self, name):
+        self._name = name
+
+    @property
+    def name(self):
+        return self._name
+
+    def validate(self, value):
+        pass
+
+
+class BooleanOption(Option):
+    """
+    Must be a boolean
+    """
+
+    def validate(self, value):
+        if value not in (True, False):
+            raise ValueError("Option %r must be a boolean. Got %r"
+                             % (self.name, value))
+
+
+class StringOption(Option):
+    """
+    Must be a string
+    """
+
+    def validate(self, value):
+        if not is_string_not_iterable(value):
+            raise ValueError("Option %r must be a string. Got %r"
+                             % (self.name, value))
+
+
+class ListOfStringOption(Option):
+    """
+    Must be a list of strings
+    """
+    def validate(self, value):
+        def fail():
+            raise ValueError("Option %r must be a list of strings. Got %r"
+                             % (self.name, value))
+
+        if is_string_not_iterable(value):
+            fail()
+
+        try:
+            for elem in value:
+                if not is_string_not_iterable(elem):
+                    fail()
+        except TypeError:
+            fail()
+
+
+class VHDLAssertLevelOption(Option):
+    """
+    VHDL assert level
+    """
+
+    _legal_values = ("warning", "error", "failure")
+
+    def __init__(self):
+        Option.__init__(self, "vhdl_assert_stop_level")
+
+    def validate(self, value):
+        if value not in self._legal_values:
+            raise ValueError("Option %r must be one of %s. Got %r"
+                             % (self.name, self._legal_values, value))
+
+
+def is_string_not_iterable(value):
+    """
+    Returns True if value is a string and not another iterable
+    """
+    if sys.version_info.major == 3:
+        return isinstance(value, str)
+
+    return isinstance(value, (str, unicode))  # pylint: disable=undefined-variable

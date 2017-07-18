@@ -24,7 +24,9 @@ except ImportError:
     from ConfigParser import RawConfigParser  # pylint: disable=import-error
 
 from vunit.ostools import Process, file_exists
-from vunit.simulator_interface import SimulatorInterface
+from vunit.simulator_interface import (SimulatorInterface,
+                                       ListOfStringOption,
+                                       StringOption)
 from vunit.exceptions import CompileError
 from vunit.vsim_simulator_mixin import (VsimSimulatorMixin,
                                         fix_path)
@@ -44,15 +46,15 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
     package_users_depend_on_bodies = False
 
     compile_options = [
-        "modelsim.vcom_flags",
-        "modelsim.vlog_flags",
+        ListOfStringOption("modelsim.vcom_flags"),
+        ListOfStringOption("modelsim.vlog_flags"),
     ]
 
     sim_options = [
-        "modelsim.vsim_flags",
-        "modelsim.vsim_flags.gui",
-        "modelsim.init_files.after_load",
-        "modelsim.init_file.gui",
+        ListOfStringOption("modelsim.vsim_flags"),
+        ListOfStringOption("modelsim.vsim_flags.gui"),
+        ListOfStringOption("modelsim.init_files.after_load"),
+        StringOption("modelsim.init_file.gui"),
     ]
 
     @classmethod

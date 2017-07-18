@@ -16,7 +16,8 @@ import subprocess
 import shlex
 from sys import stdout  # To avoid output catched in non-verbose mode
 from vunit.ostools import Process
-from vunit.simulator_interface import SimulatorInterface
+from vunit.simulator_interface import (SimulatorInterface,
+                                       ListOfStringOption)
 from vunit.exceptions import CompileError
 LOGGER = logging.getLogger(__name__)
 
@@ -30,12 +31,12 @@ class GHDLInterface(SimulatorInterface):
     supports_gui_flag = True
 
     compile_options = [
-        "ghdl.flags",
+        ListOfStringOption("ghdl.flags"),
     ]
 
     sim_options = [
-        "ghdl.sim_flags",
-        "ghdl.elab_flags",
+        ListOfStringOption("ghdl.sim_flags"),
+        ListOfStringOption("ghdl.elab_flags"),
     ]
 
     @staticmethod

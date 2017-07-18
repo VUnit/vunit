@@ -218,6 +218,7 @@ from vunit.database import PickledDataBase, DataBase
 import vunit.ostools as ostools
 from vunit.vunit_cli import VUnitCLI
 from vunit.simulator_factory import SimulatorFactory
+from vunit.simulator_interface import is_string_not_iterable
 from vunit.color_printer import (COLOR_PRINTER,
                                  NO_COLOR_PRINTER)
 from vunit.project import (Project,
@@ -1122,7 +1123,7 @@ class Library(object):
            library.add_source_files("*.vhd")
 
         """
-        if _is_string_not_iterable(pattern):
+        if is_string_not_iterable(pattern):
             patterns = [pattern]
         else:
             patterns = pattern
@@ -1768,13 +1769,3 @@ def lower_generics(generics):
     @TODO Maybe warn in case of conflict. VHDL forbids this though so the user will notice anyway.
     """
     return dict((name.lower(), value) for name, value in generics.items())
-
-
-def _is_string_not_iterable(value):
-    """
-    Returns True if value is a string and not another iterable
-    """
-    if sys.version_info.major == 3:
-        return isinstance(value, str)
-
-    return isinstance(value, (str, unicode))  # pylint: disable=undefined-variable

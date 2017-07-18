@@ -13,7 +13,11 @@ from os.path import join, dirname, exists
 import os
 from shutil import rmtree
 from vunit.project import Project
-from vunit.simulator_interface import SimulatorInterface
+from vunit.simulator_interface import (SimulatorInterface,
+                                       BooleanOption,
+                                       ListOfStringOption,
+                                       StringOption,
+                                       VHDLAssertLevelOption)
 from vunit.test.mock_2or3 import mock
 from vunit.exceptions import CompileError
 from vunit.ostools import renew_path, write_file
@@ -152,6 +156,64 @@ class TestSimulatorInterface(unittest.TestCase):
         os.chdir(self.cwd)
         if exists(self.output_path):
             rmtree(self.output_path)
+
+
+class TestOptions(unittest.TestCase):
+    """
+    The the compile and simulation options validators
+    """
+
+    def test_boolean_option(self):
+        option = BooleanOption("optname")
+        self._test_ok(option, True)
+        self._test_ok(option, False)
+        self._test_not_ok(option, None,
+                          "Option 'optname' must be a boolean. Got None")
+
+    def test_string_option(self):
+        option = StringOption("optname")
+        self._test_ok(option, "hello")
+        self._test_ok(option, u"hello")
+        self._test_not_ok(option, False,
+                          "Option 'optname' must be a string. Got False")
+        self._test_not_ok(option, ["foo"],
+                          "Option 'optname' must be a string. Got ['foo']")
+
+    def test_list_of_string_option(self):
+        option = ListOfStringOption("optname")
+        self._test_ok(option, ["hello", "foo"])
+        self._test_ok(option, [u"hello"])
+        self._test_not_ok(option, [True],
+                          "Option 'optname' must be a list of strings. "
+                          "Got [True]")
+        self._test_not_ok(option, [["foo"]],
+                          "Option 'optname' must be a list of strings. "
+                          "Got [['foo']]")
+        self._test_not_ok(option, "foo",
+                          "Option 'optname' must be a list of strings. "
+                          "Got 'foo'")
+
+    def test_vhdl_assert_level(self):
+        option = VHDLAssertLevelOption()
+        self._test_ok(option, "warning")
+        self._test_ok(option, "error")
+        self._test_ok(option, "failure")
+
+        self._test_not_ok(option, "foo",
+                          "Option 'vhdl_assert_stop_level' must be one of "
+                          "('warning', 'error', 'failure'). Got 'foo'")
+
+    @staticmethod
+    def _test_ok(option, value):
+        option.validate(value)
+
+    def _test_not_ok(self, option, value, message):
+        try:
+            option.validate(value)
+        except ValueError as err:
+            self.assertEqual(str(err), message)
+        else:
+            assert False
 
 
 def create_simulator_interface():

@@ -632,13 +632,22 @@ endpackage
         self.assert_should_recompile([source_file])
 
     def test_add_compile_option(self):
-        file1, _, _ = self.create_dummy_three_file_project()
+        self.project.add_library("lib", "lib_path")
+        file1 = self.add_source_file("lib", "file.vhd", "")
         file1.add_compile_option("ghdl.flags", ["--foo"])
         self.assertEqual(file1.get_compile_option("ghdl.flags"), ["--foo"])
         file1.add_compile_option("ghdl.flags", ["--bar"])
         self.assertEqual(file1.get_compile_option("ghdl.flags"), ["--foo", "--bar"])
         file1.set_compile_option("ghdl.flags", ["--xyz"])
         self.assertEqual(file1.get_compile_option("ghdl.flags"), ["--xyz"])
+
+    def test_compile_option_validation(self):
+        self.project.add_library("lib", "lib_path")
+        source_file = self.add_source_file("lib", "file.vhd", "")
+        self.assertRaises(ValueError, source_file.set_compile_option, "foo", None)
+        self.assertRaises(ValueError, source_file.set_compile_option, "ghdl.flags", None)
+        self.assertRaises(ValueError, source_file.add_compile_option, "ghdl.flags", None)
+        self.assertRaises(ValueError, source_file.get_compile_option, "foo")
 
     def test_should_recompile_files_affected_by_change_with_later_timestamp(self):
         file1, file2, file3 = self.create_dummy_three_file_project()

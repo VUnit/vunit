@@ -16,7 +16,9 @@ import os
 import re
 import logging
 from vunit.ostools import Process, write_file, file_exists, renew_path
-from vunit.simulator_interface import SimulatorInterface
+from vunit.simulator_interface import (SimulatorInterface,
+                                       ListOfStringOption,
+                                       StringOption)
 from vunit.exceptions import CompileError
 
 LOGGER = logging.getLogger(__name__)
@@ -31,14 +33,14 @@ class ActiveHDLInterface(SimulatorInterface):
     supports_gui_flag = True
     package_users_depend_on_bodies = True
     compile_options = [
-        "activehdl.vcom_flags",
-        "activehdl.vlog_flags",
+        ListOfStringOption("activehdl.vcom_flags"),
+        ListOfStringOption("activehdl.vlog_flags"),
     ]
 
     sim_options = [
-        "activehdl.vsim_flags",
-        "activehdl.vsim_flags.gui",
-        "activehdl.init_file.gui",
+        ListOfStringOption("activehdl.vsim_flags"),
+        ListOfStringOption("activehdl.vsim_flags.gui"),
+        StringOption("activehdl.init_file.gui"),
     ]
 
     @classmethod

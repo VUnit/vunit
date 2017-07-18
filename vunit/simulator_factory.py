@@ -15,6 +15,9 @@ from vunit.activehdl_interface import ActiveHDLInterface
 from vunit.rivierapro_interface import RivieraProInterface
 from vunit.ghdl_interface import GHDLInterface
 from vunit.incisive_interface import IncisiveInterface
+from vunit.simulator_interface import (BooleanOption,
+                                       ListOfStringOption,
+                                       VHDLAssertLevelOption)
 
 
 class SimulatorFactory(object):
@@ -43,31 +46,71 @@ class SimulatorFactory(object):
                 if simulator_class.is_available()]
 
     @classmethod
-    def compile_options(cls):
+    def _compile_options(cls):
         """
         Return all supported compile options
         """
-        result = []
+        result = {}
         for sim_class in cls.supported_simulators():
             for opt in sim_class.compile_options:
-                assert opt.startswith(sim_class.name + ".")
-                result.append(opt)
+                assert hasattr(opt, "name")
+                assert hasattr(opt, "validate")
+                assert opt.name.startswith(sim_class.name + ".")
+                assert opt.name not in result
+                result[opt.name] = opt
         return result
 
     @classmethod
-    def sim_options(cls):
+    def _sim_options(cls):
         """
         Return all supported sim options
         """
-        result = ["vhdl_assert_stop_level",
-                  "disable_ieee_warnings",
-                  "pli"]
+        result = dict((opt.name, opt) for opt in
+                      [VHDLAssertLevelOption(),
+                       BooleanOption("disable_ieee_warnings"),
+                       ListOfStringOption("pli")])
+
         for sim_class in cls.supported_simulators():
             for opt in sim_class.sim_options:
-                assert opt.startswith(sim_class.name + ".")
-                result.append(opt)
+                assert hasattr(opt, "name")
+                assert hasattr(opt, "validate")
+                assert opt.name.startswith(sim_class.name + ".")
+                assert opt.name not in result
+                result[opt.name] = opt
 
         return result
+
+    @classmethod
+    def check_sim_option(cls, name, value):
+        """
+        Check that sim_option has legal name and value
+        """
+        options = cls._sim_options()
+        known_options = sorted(list(options.keys()))
+
+        if name not in options:
+            raise ValueError("Unknown sim_option %r, expected one of %r" %
+                             (name, known_options))
+
+        options[name].validate(value)
+
+    @classmethod
+    def check_compile_option_name(cls, name):
+        """
+        Check that the compile option is valid
+        """
+        known_options = sorted(list(cls._compile_options().keys()))
+        if name not in known_options:
+            raise ValueError("Unknown compile_option %r, expected one of %r" %
+                             (name, known_options))
+
+    @classmethod
+    def check_compile_option(cls, name, value):
+        """
+        Check that the compile option is valid
+        """
+        cls.check_compile_option_name(name)
+        cls._compile_options()[name].validate(value)
 
     @classmethod
     def select_simulator(cls):

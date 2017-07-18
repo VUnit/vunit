@@ -38,17 +38,19 @@ class TestConfiguration(unittest.TestCase):
         self.assertIn("name123", call_args)
         self.assertIn("value123", call_args)
 
-    @mock.patch("vunit.configuration.LOGGER")
-    def test_error_on_setting_unknown_sim_option(self, mock_logger):
+    def test_error_on_setting_unknown_sim_option(self):
         design_unit = Entity('tb_entity')
         design_unit.generic_names = ["runner_cfg"]
         config = Configuration('name', design_unit)
 
         self.assertRaises(ValueError, config.set_sim_option, "name123", "value123")
-        error_calls = mock_logger.error.call_args_list
-        self.assertEqual(len(error_calls), 1)
-        call_args = error_calls[0][0]
-        self.assertIn("name123", call_args)
+
+    def test_error_on_setting_illegal_value_sim_option(self):
+        design_unit = Entity('tb_entity')
+        design_unit.generic_names = ["runner_cfg"]
+        config = Configuration('name', design_unit)
+
+        self.assertRaises(ValueError, config.set_sim_option, "vhdl_assert_stop_level", "illegal")
 
     def test_adds_tb_path_generic(self):
         design_unit = Entity('tb_entity_with_tb_path')

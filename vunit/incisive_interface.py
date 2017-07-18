@@ -15,7 +15,9 @@ import subprocess
 import sys
 import logging
 from vunit.ostools import write_file, file_exists
-from vunit.simulator_interface import SimulatorInterface, run_command
+from vunit.simulator_interface import (SimulatorInterface,
+                                       run_command,
+                                       ListOfStringOption)
 from vunit.exceptions import CompileError
 from vunit.cds_file import CDSFile
 LOGGER = logging.getLogger(__name__)
@@ -31,12 +33,12 @@ class IncisiveInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
     package_users_depend_on_bodies = False
 
     compile_options = [
-        "incisive.irun_vhdl_flags",
-        "incisive.irun_verilog_flags",
+        ListOfStringOption("incisive.irun_vhdl_flags"),
+        ListOfStringOption("incisive.irun_verilog_flags"),
     ]
 
     sim_options = [
-        "incisive.irun_sim_flags"
+        ListOfStringOption("incisive.irun_sim_flags")
     ]
 
     @staticmethod
