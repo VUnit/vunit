@@ -10,7 +10,7 @@ Contains Configuration class which contains configuration of a test run
 
 import logging
 from os.path import dirname
-from vunit.simulator_factory import SimulatorFactory
+from vunit.simulator_factory import SIMULATOR_FACTORY
 
 
 LOGGER = logging.getLogger(__name__)
@@ -97,7 +97,7 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         """
         Set sim option
         """
-        SimulatorFactory.check_sim_option(name, value)
+        SIMULATOR_FACTORY.check_sim_option(name, value)
         self.sim_options[name] = value
 
     @property

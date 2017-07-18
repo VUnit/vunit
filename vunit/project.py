@@ -24,7 +24,7 @@ from vunit.cached import file_content_hash
 from vunit.parsing.verilog.parser import VerilogParser
 from vunit.parsing.encodings import HDL_FILE_ENCODING
 from vunit.exceptions import CompileError
-from vunit.simulator_factory import SimulatorFactory
+from vunit.simulator_factory import SIMULATOR_FACTORY
 from vunit.design_unit import DesignUnit, VHDLDesignUnit, Entity, Module
 import vunit.ostools as ostools
 LOGGER = logging.getLogger(__name__)
@@ -661,14 +661,14 @@ class SourceFile(object):
         """
         Set compile option
         """
-        SimulatorFactory.check_compile_option(name, value)
+        SIMULATOR_FACTORY.check_compile_option(name, value)
         self._compile_options[name] = value
 
     def add_compile_option(self, name, value):
         """
         Add compile option
         """
-        SimulatorFactory.check_compile_option(name, value)
+        SIMULATOR_FACTORY.check_compile_option(name, value)
 
         if name not in self._compile_options:
             self._compile_options[name] = value
@@ -683,7 +683,7 @@ class SourceFile(object):
         """
         Return a copy of the compile option list
         """
-        SimulatorFactory.check_compile_option_name(name)
+        SIMULATOR_FACTORY.check_compile_option_name(name)
 
         if name not in self._compile_options:
             self._compile_options[name] = []

@@ -674,8 +674,8 @@ endmodule
 
     def _create_ui(self, *args):
         """ Create an instance of the VUnit public interface class """
-        with mock.patch("vunit.ui.SimulatorFactory",
-                        new=MockSimulatorFactory):
+        with mock.patch("vunit.ui.SIMULATOR_FACTORY",
+                        new=MockSimulatorFactory()):
             ui = VUnit.from_argv(argv=["--output-path=%s" % self._output_path,
                                        "--clean"] + list(args),
                                  compile_builtins=False)
@@ -775,8 +775,7 @@ class MockSimulatorFactory(object):
     """
     simulator_name = "mocksim"
 
-    def __init__(self, args):
-        self._output_path = args.output_path
+    def __init__(self):
         self.mocksim = mock.Mock(spec=SimulatorInterface)
 
         def compile_side_effect(*args, **kwargs):
@@ -792,11 +791,7 @@ class MockSimulatorFactory(object):
     def package_users_depend_on_bodies():
         return False
 
-    @property
-    def simulator_output_path(self):
-        return join(self._output_path, self.simulator_name)
-
-    def create(self):
+    def create(self, args, simulator_output_path):  # pylint: disable=unused-argument
         return self.mocksim
 
 

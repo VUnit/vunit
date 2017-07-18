@@ -39,7 +39,7 @@ A :class:`.VUnitCLI` object has a ``parser`` field which is an
 import argparse
 from os.path import join, abspath
 import os
-from vunit.simulator_factory import SimulatorFactory
+from vunit.simulator_factory import SIMULATOR_FACTORY
 from vunit.about import version
 
 
@@ -161,8 +161,8 @@ def _create_argument_parser(description=None, for_documentation=False):
 
     parser.add_argument('--version', action='version', version=version())
 
-    SimulatorFactory.add_arguments(parser,
-                                   for_all_simulators=for_documentation)
+    SIMULATOR_FACTORY.add_arguments(parser,
+                                    for_all_simulators=for_documentation)
 
     com = parser.add_argument_group("com", description="Flags specific to the com message passing package")
     com.add_argument('--use-debug-codecs', action='store_true',

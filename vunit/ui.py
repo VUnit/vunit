@@ -217,7 +217,7 @@ from fnmatch import fnmatch
 from vunit.database import PickledDataBase, DataBase
 import vunit.ostools as ostools
 from vunit.vunit_cli import VUnitCLI
-from vunit.simulator_factory import SimulatorFactory
+from vunit.simulator_factory import SIMULATOR_FACTORY
 from vunit.simulator_interface import is_string_not_iterable
 from vunit.color_printer import (COLOR_PRINTER,
                                  NO_COLOR_PRINTER)
@@ -284,85 +284,38 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         :param compile_builtins: Do not compile builtins. Used for VUnit internal testing.
         :returns: A :class:`.VUnit` object instance
         """
-        def test_filter(name):
-            return any(fnmatch(name, pattern) for pattern in args.test_patterns)
 
-        return cls(output_path=args.output_path,
-                   clean=args.clean,
-                   vhdl_standard=select_vhdl_standard(),
-                   use_debug_codecs=args.use_debug_codecs,
-                   no_color=args.no_color,
-                   verbose=args.verbose,
-                   xunit_xml=args.xunit_xml,
-                   log_level=args.log_level,
-                   test_filter=test_filter,
-                   list_only=args.list,
-                   list_files_only=args.files,
-                   compile_only=args.compile,
-                   keep_compiling=args.keep_compiling,
-                   elaborate_only=args.elaborate,
-                   compile_builtins=compile_builtins,
-                   simulator_factory=SimulatorFactory(args),
-                   num_threads=args.num_threads,
-                   exit_0=args.exit_0,
-                   dont_catch_exceptions=args.dont_catch_exceptions)
+        return cls(args, compile_builtins=compile_builtins)
 
-    def __init__(self,  # pylint: disable=too-many-locals, too-many-arguments
-                 output_path,
-                 simulator_factory,
-                 clean=False,
-                 use_debug_codecs=False,
-                 no_color=False,
-                 verbose=False,
-                 xunit_xml=None,
-                 log_level="warning",
-                 test_filter=None,
-                 list_only=False,
-                 list_files_only=False,
-                 compile_only=False,
-                 keep_compiling=False,
-                 elaborate_only=False,
-                 vhdl_standard='2008',
-                 compile_builtins=True,
-                 num_threads=1,
-                 exit_0=False,
-                 dont_catch_exceptions=False):
+    def __init__(self, args, compile_builtins=True):
+        self._args = args
+        self._configure_logging(args.log_level)
+        self._output_path = abspath(args.output_path)
 
-        self._configure_logging(log_level)
-        self._elaborate_only = elaborate_only
-        self._output_path = abspath(output_path)
-
-        if no_color:
+        if args.no_color:
             self._printer = NO_COLOR_PRINTER
         else:
             self._printer = COLOR_PRINTER
 
-        self._verbose = verbose
-        self._xunit_xml = xunit_xml
+        def test_filter(name):
+            return any(fnmatch(name, pattern) for pattern in args.test_patterns)
 
-        self._test_filter = test_filter if test_filter is not None else lambda name: True
-        self._list_only = list_only
-        self._list_files_only = list_files_only
-        self._compile_only = compile_only
-        self._keep_compiling = keep_compiling
-        self._vhdl_standard = vhdl_standard
+        self._test_filter = test_filter
+        self._vhdl_standard = select_vhdl_standard()
 
         self._external_preprocessors = []
         self._location_preprocessor = None
         self._check_preprocessor = None
-        self._use_debug_codecs = use_debug_codecs
+        self._use_debug_codecs = args.use_debug_codecs
 
-        self._simulator_factory = simulator_factory
-        self._create_output_path(clean)
+        self._simulator_factory = SIMULATOR_FACTORY
+        self._simulator_output_path = join(self._output_path, SIMULATOR_FACTORY.simulator_name)
+        self._create_output_path(args.clean)
 
         database = self._create_database()
         self._project = Project(
             database=database,
             depend_on_package_body=self._simulator_factory.package_users_depend_on_bodies())
-
-        self._num_threads = num_threads
-        self._exit_0 = exit_0
-        self._dont_catch_exceptions = dont_catch_exceptions
 
         self._test_bench_list = TestBenchList(database=database)
 
@@ -425,7 +378,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             vhdl_standard = self._vhdl_standard
 
         if path is None:
-            path = join(self._simulator_factory.simulator_output_path, "libraries", library_name)
+            path = join(self._simulator_output_path, "libraries", library_name)
 
         self._project.add_library(library_name, abspath(path), vhdl_standard, is_external=True)
         return self.library(library_name)
@@ -448,7 +401,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         if vhdl_standard is None:
             vhdl_standard = self._vhdl_standard
-        path = join(self._simulator_factory.simulator_output_path, "libraries", library_name)
+        path = join(self._simulator_output_path, "libraries", library_name)
         self._project.add_library(library_name, abspath(path), vhdl_standard)
         return self.library(library_name)
 
@@ -744,12 +697,12 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         except SystemExit:
             sys.exit(1)
         except:  # pylint: disable=bare-except
-            if self._dont_catch_exceptions:
+            if self._args.dont_catch_exceptions:
                 raise
             traceback.print_exc()
             sys.exit(1)
 
-        if (not all_ok) and (not self._exit_0):
+        if (not all_ok) and (not self._args.exit_0):
             sys.exit(1)
 
         sys.exit(0)
@@ -759,7 +712,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         Create the test cases
         """
         self._test_bench_list.warn_when_empty()
-        test_list = self._test_bench_list.create_tests(simulator_if, self._elaborate_only)
+        test_list = self._test_bench_list.create_tests(simulator_if, self._args.elaborate)
         test_list.keep_matches(self._test_filter)
         return test_list
 
@@ -768,22 +721,25 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         Base vunit main function without performing exit
         """
 
-        if self._list_only:
+        if self._args.list:
             return self._main_list_only()
 
-        elif self._list_files_only:
+        elif self._args.files:
             return self._main_list_files_only()
 
-        elif self._compile_only:
+        elif self._args.compile:
             return self._main_compile_only()
 
         return self._main_run()
+
+    def _create_simulator_if(self):
+        return self._simulator_factory.create(self._args, self._simulator_output_path)
 
     def _main_run(self):
         """
         Main with running tests
         """
-        simulator_if = self._simulator_factory.create()
+        simulator_if = self._create_simulator_if()
         test_list = self._create_tests(simulator_if)
         self._compile(simulator_if)
 
@@ -791,7 +747,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         report = TestReport(printer=self._printer)
         try:
             self._run_test(test_list, report)
-            simulator_if.post_process(self._simulator_factory.simulator_output_path)
+            simulator_if.post_process(self._simulator_output_path)
         except KeyboardInterrupt:
             print()
             LOGGER.debug("_main: Caught Ctrl-C shutting down")
@@ -829,7 +785,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         Main function when only compiling
         """
-        simulator_if = self._simulator_factory.create()
+        simulator_if = self._create_simulator_if()
         self._compile(simulator_if)
         return True
 
@@ -865,7 +821,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         Compile entire project
         """
         simulator_if.compile_project(self._project,
-                                     continue_on_error=self._keep_compiling)
+                                     continue_on_error=self._args.keep_compiling)
 
     def _run_test(self, test_cases, report):
         """
@@ -873,9 +829,9 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         runner = TestRunner(report,
                             join(self._output_path, "test_output"),
-                            verbose=self._verbose,
-                            num_threads=self._num_threads,
-                            dont_catch_exceptions=self._dont_catch_exceptions)
+                            verbose=self._args.verbose,
+                            num_threads=self._args.num_threads,
+                            dont_catch_exceptions=self._args.dont_catch_exceptions)
         runner.run(test_cases)
 
     def _post_process(self, report):
@@ -884,9 +840,9 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         report.print_str()
 
-        if self._xunit_xml is not None:
+        if self._args.xunit_xml is not None:
             xml = report.to_junit_xml_str()
-            ostools.write_file(self._xunit_xml, xml)
+            ostools.write_file(self._args.xunit_xml, xml)
 
     def add_builtins(self, library_name="vunit_lib", mock_lang=False, mock_log=False):
         """

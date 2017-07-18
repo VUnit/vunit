@@ -8,7 +8,7 @@
 Create simulator instances
 """
 
-from os.path import join, exists
+from os.path import exists
 import os
 from vunit.modelsim_interface import ModelSimInterface
 from vunit.activehdl_interface import ActiveHDLInterface
@@ -36,22 +36,12 @@ class SimulatorFactory(object):
                 GHDLInterface,
                 IncisiveInterface]
 
-    @classmethod
-    def available_simulators(cls):
-        """
-        Return a list of available simulators
-        """
-        return [simulator_class
-                for simulator_class in cls.supported_simulators()
-                if simulator_class.is_available()]
-
-    @classmethod
-    def _compile_options(cls):
+    def _extract_compile_options(self):
         """
         Return all supported compile options
         """
         result = {}
-        for sim_class in cls.supported_simulators():
+        for sim_class in self.supported_simulators():
             for opt in sim_class.compile_options:
                 assert hasattr(opt, "name")
                 assert hasattr(opt, "validate")
@@ -60,8 +50,7 @@ class SimulatorFactory(object):
                 result[opt.name] = opt
         return result
 
-    @classmethod
-    def _sim_options(cls):
+    def _extract_sim_options(self):
         """
         Return all supported sim options
         """
@@ -70,7 +59,7 @@ class SimulatorFactory(object):
                        BooleanOption("disable_ieee_warnings"),
                        ListOfStringOption("pli")])
 
-        for sim_class in cls.supported_simulators():
+        for sim_class in self.supported_simulators():
             for opt in sim_class.sim_options:
                 assert hasattr(opt, "name")
                 assert hasattr(opt, "validate")
@@ -80,48 +69,43 @@ class SimulatorFactory(object):
 
         return result
 
-    @classmethod
-    def check_sim_option(cls, name, value):
+    def check_sim_option(self, name, value):
         """
         Check that sim_option has legal name and value
         """
-        options = cls._sim_options()
-        known_options = sorted(list(options.keys()))
+        known_options = sorted(list(self._sim_options.keys()))
 
-        if name not in options:
+        if name not in self._sim_options:
             raise ValueError("Unknown sim_option %r, expected one of %r" %
                              (name, known_options))
 
-        options[name].validate(value)
+        self._sim_options[name].validate(value)
 
-    @classmethod
-    def check_compile_option_name(cls, name):
+    def check_compile_option_name(self, name):
         """
         Check that the compile option is valid
         """
-        known_options = sorted(list(cls._compile_options().keys()))
+        known_options = sorted(list(self._compile_options.keys()))
         if name not in known_options:
             raise ValueError("Unknown compile_option %r, expected one of %r" %
                              (name, known_options))
 
-    @classmethod
-    def check_compile_option(cls, name, value):
+    def check_compile_option(self, name, value):
         """
         Check that the compile option is valid
         """
-        cls.check_compile_option_name(name)
-        cls._compile_options()[name].validate(value)
+        self.check_compile_option_name(name)
+        self._compile_options[name].validate(value)
 
-    @classmethod
-    def select_simulator(cls):
+    def _select_simulator(self):
         """
         Select simulator class, either from VUNIT_SIMULATOR environment variable
         or the first available
         """
         environ_name = "VUNIT_SIMULATOR"
 
-        available_simulators = cls.available_simulators()
-        name_mapping = {simulator_class.name: simulator_class for simulator_class in cls.supported_simulators()}
+        available_simulators = self.available_simulators()
+        name_mapping = {simulator_class.name: simulator_class for simulator_class in self.supported_simulators()}
         if not available_simulators:
             return None
 
@@ -138,30 +122,36 @@ class SimulatorFactory(object):
 
         return simulator_class
 
-    @classmethod
-    def add_arguments(cls, parser, for_all_simulators=False):
+    def add_arguments(self, parser, for_all_simulators=False):
         """
         Add command line arguments to parser
         """
 
-        simulator = cls.select_simulator()
-
-        if for_all_simulators or (simulator is not None and simulator.supports_gui_flag):
+        if for_all_simulators or (self.has_simulator and self._simulator_class.supports_gui_flag):
             parser.add_argument('-g', '--gui',
                                 action="store_true",
                                 default=False,
                                 help=("Open test case(s) in simulator gui with top level pre loaded"))
 
         if for_all_simulators:
-            for sim in cls.supported_simulators():
+            for sim in self.supported_simulators():
                 sim.add_arguments(parser)
-        elif simulator is not None:
-            simulator.add_arguments(parser)
+        elif self._simulator_class is not None:
+            self._simulator_class.add_arguments(parser)
 
-    def __init__(self, args):
-        self._args = args
-        self._output_path = args.output_path
-        self._simulator_class = self.select_simulator()
+    def __init__(self):
+        self._available_simulators = [simulator_class
+                                      for simulator_class in self.supported_simulators()
+                                      if simulator_class.is_available()]
+        self._simulator_class = self._select_simulator()
+        self._compile_options = self._extract_compile_options()
+        self._sim_options = self._extract_sim_options()
+
+    def available_simulators(self):
+        """
+        Return a list of available simulators
+        """
+        return self._available_simulators
 
     def package_users_depend_on_bodies(self):
         """
@@ -200,29 +190,34 @@ class SimulatorFactory(object):
         return False
 
     @property
-    def simulator_name(self):  # pylint: disable=missing-docstring
+    def has_simulator(self):
+        return self._simulator_class is not None
+
+    @property
+    def simulator_name(self):
+        """
+        Return the name of the selected simulator or none
+        """
         if self._simulator_class is None:
             return "none"
 
         return self._simulator_class.name
 
-    @property
-    def simulator_output_path(self):
-        return join(self._output_path, self.simulator_name)
-
-    def create(self):
+    def create(self, args, simulator_output_path):
         """
         Create new simulator instance
         """
 
-        if self._simulator_class is None or not self._simulator_class.is_available():
+        if not self.has_simulator:
             raise RuntimeError("No available simulator detected. "
                                "Simulator executables must be available in PATH environment variable.")
 
-        if not exists(self.simulator_output_path):
-            os.makedirs(self.simulator_output_path)
+        if not exists(simulator_output_path):
+            os.makedirs(simulator_output_path)
 
-        simulator_if = self._simulator_class.from_args(self.simulator_output_path,
-                                                       self._args)
-        simulator_if.set_output_path(self.simulator_output_path)
+        simulator_if = self._simulator_class.from_args(simulator_output_path, args)
+        simulator_if.set_output_path(simulator_output_path)
         return simulator_if
+
+
+SIMULATOR_FACTORY = SimulatorFactory()
