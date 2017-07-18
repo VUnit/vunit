@@ -113,9 +113,17 @@ The following simulation options are known.
    mode where it takes precedence over ``modelsim.vsim_flags``.
    Must be a list of strings.
 
+``modelsim.init_files.after_load``
+   A list of user defined DO/TCL-files that is sourced after the design has been loaded.
+   During script evaluation the ``vunit_tb_path`` variable is defined
+   as the path of the folder containing the test bench.
+   Must be a list of strings.
+
 ``modelsim.init_file.gui``
    A user defined TCL-file that is sourced after the design has been loaded in the GUI.
    For example this can be used to configure the waveform viewer.
+   During script evaluation the ``vunit_tb_path`` variable is defined
+   as the path of the folder containing the test bench.
    Must be a string.
 
 ``rivierapro.vsim_flags``
@@ -127,9 +135,17 @@ The following simulation options are known.
    mode where it takes precedence over ``rivierapro.vsim_flags``.
    Must be a list of strings.
 
+``rivierapro.init_files.after_load``
+   A list of user defined DO/TCL-files that is sourced after the design has been loaded.
+   During script evaluation the ``vunit_tb_path`` variable is defined
+   as the path of the folder containing the test bench.
+   Must be a list of strings.
+
 ``rivierapro.init_file.gui``
    A user defined TCL-file that is sourced after the design has been loaded in the GUI.
    For example this can be used to configure the waveform viewer.
+   During script evaluation the ``vunit_tb_path`` variable is defined
+   as the path of the folder containing the test bench.
    Must be a string.
 
 ``activehdl.vsim_flags``

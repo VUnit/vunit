@@ -41,6 +41,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
     sim_options = [
         "rivierapro.vsim_flags",
         "rivierapro.vsim_flags.gui",
+        "rivierapro.init_files.after_load",
         "rivierapro.init_file.gui",
     ]
 
@@ -250,10 +251,16 @@ proc vunit_load {{}} {{
     # Make the variable 'aldec' visible; otherwise, the Matlab interface
     # is broken because vsim does not find the library aldec_matlab_cosim.
     global aldec
+
     set vsim_failed [catch {{
         eval vsim {{{vsim_flags}}}
     }}]
+
     if {{${{vsim_failed}}}} {{
+        return 1
+    }}
+
+    if {{[_vunit_source_init_files_after_load]}} {{
         return 1
     }}
 

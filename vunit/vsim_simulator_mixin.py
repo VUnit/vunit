@@ -138,6 +138,7 @@ proc vunit_help {} {
     puts {  - and re-runs the simulation if the compile was successful}
 }
 """
+        tcl += self._create_init_files_after_load(config)
         tcl += self._create_load_function(test_suite_name, config, output_path)
         tcl += self._create_run_function()
         tcl += self._create_restart_function()
@@ -159,16 +160,53 @@ proc vunit_help {} {
         batch_do += "quit -code 0\n"
         return batch_do
 
+    def _create_init_files_after_load(self, config):
+        """
+        Create the _vunit_source_init_files_after_load function which sources the user defined TCL file in
+        simulator_name.init_files.after_load
+        """
+        opt_name = self.name + ".init_files.after_load"
+        init_files = config.sim_options.get(opt_name, [])
+        tcl = "proc _vunit_source_init_files_after_load {} {\n"
+        for init_file in init_files:
+            tcl += self._source_tcl_file(init_file, config, opt_name)
+        tcl += "}\n"
+        return tcl
+
     def _create_user_init_function(self, config):
         """
         Create the vunit_user_init function which sources the user defined TCL file in
         simulator_name.init_file.gui
         """
-        init_file = config.sim_options.get(self.name + ".init_file.gui", None)
+        opt_name = self.name + ".init_file.gui"
+        init_file = config.sim_options.get(opt_name, None)
         tcl = "proc vunit_user_init {} {\n"
         if init_file is not None:
-            tcl += '  source "%s"\n' % fix_path(abspath(init_file))
+            tcl += self._source_tcl_file(init_file, config, opt_name)
         tcl += "}\n"
+        return tcl
+
+    @staticmethod
+    def _source_tcl_file(file_name, config, message):
+        """
+        Create TCL to source a file and catch errors
+        Also defines the vunit_tb_path variable as the config.tb_path
+        """
+        template = """
+    set vunit_tb_path "%s"
+    set file_name "%s"
+    puts "Sourcing file ${file_name} from %s"
+    if {[catch {source ${file_name}} error_msg]} {
+        puts "Sourcing ${file_name} failed"
+        puts ${error_msg}
+        return 1
+    } else {
+        return 0
+    }
+"""
+        tcl = template % (fix_path(abspath(config.tb_path)),
+                          fix_path(abspath(file_name)),
+                          message)
         return tcl
 
     def _create_gui_script(self, common_file_name, config):

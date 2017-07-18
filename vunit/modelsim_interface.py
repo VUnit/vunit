@@ -51,6 +51,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
     sim_options = [
         "modelsim.vsim_flags",
         "modelsim.vsim_flags.gui",
+        "modelsim.init_files.after_load",
         "modelsim.init_file.gui",
     ]
 
@@ -265,6 +266,10 @@ proc vunit_load {{{{vsim_extra_args ""}}}} {{
        echo Command 'vsim ${{vsim_extra_args}} {vsim_flags}' failed
        echo Bad flag from vsim_extra_args?
        return 1
+    }}
+
+    if {{[_vunit_source_init_files_after_load]}} {{
+        return 1
     }}
 
     set no_finished_signal [catch {{examine -internal {{/vunit_finished}}}}]
