@@ -1,0 +1,4 @@
+- Fix ``init_file(s)`` broken in 2.1.0
+- Fix test bench regex that could match \*_tb\*. :vunit_issue:`263`
+- Add external library sanity check. :vunit_issue:`230`
+- Add non-empty operation check. :vunit_issue:`250`
