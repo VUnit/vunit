@@ -85,6 +85,6 @@ class Release:
 
 
 def _get_date(commit):
-    date_str = check_output(["git", "show", "-s", "--format=%ci", commit]).decode().strip()
+    date_str = check_output(["git", "log", "-1", "--format=%ci", commit]).decode().strip()
     date_str = " ".join(date_str.split(" ")[0:2])
     return datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
