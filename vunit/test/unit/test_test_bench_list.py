@@ -15,7 +15,7 @@ import unittest
 from os.path import join, dirname, exists
 from shutil import rmtree
 
-from vunit.test_bench_list import tb_filter
+from vunit.test_bench_list import TestBenchList, tb_filter
 from vunit.test.unit.test_test_bench import Entity, Module
 from vunit.ostools import renew_path
 from vunit.test.mock_2or3 import mock
@@ -34,6 +34,10 @@ class TestTestBenchList(unittest.TestCase):
     def tearDown(self):
         if exists(self.output_path):
             rmtree(self.output_path)
+
+    def test_get_test_benches_in_empty_library(self):
+        tb_list = TestBenchList()
+        self.assertEqual(tb_list.get_test_benches_in_library("lib"), [])
 
     def test_tb_filter_requires_runner_cfg(self):
         design_unit = Entity('tb_entity')

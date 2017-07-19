@@ -672,6 +672,14 @@ endmodule
             ui = self._create_ui("--list")
             self._run_main(ui, 0)
 
+    def test_set_sim_option_before_adding_file(self):
+        """
+        From GitHub issue #250
+        """
+        ui = self._create_ui()
+        lib = ui.add_library("lib")
+        lib.set_sim_option("disable_ieee_warnings", True)
+
     def _create_ui(self, *args):
         """ Create an instance of the VUnit public interface class """
         with mock.patch("vunit.ui.SIMULATOR_FACTORY",
