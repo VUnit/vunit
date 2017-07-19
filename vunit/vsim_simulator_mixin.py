@@ -170,6 +170,7 @@ proc vunit_help {} {
         tcl = "proc _vunit_source_init_files_after_load {} {\n"
         for init_file in init_files:
             tcl += self._source_tcl_file(init_file, config, opt_name)
+        tcl += "    return 0\n"
         tcl += "}\n"
         return tcl
 
@@ -183,6 +184,7 @@ proc vunit_help {} {
         tcl = "proc vunit_user_init {} {\n"
         if init_file is not None:
             tcl += self._source_tcl_file(init_file, config, opt_name)
+        tcl += "    return 0\n"
         tcl += "}\n"
         return tcl
 
@@ -200,8 +202,6 @@ proc vunit_help {} {
         puts "Sourcing ${file_name} failed"
         puts ${error_msg}
         return 1
-    } else {
-        return 0
     }
 """
         tcl = template % (fix_path(abspath(config.tb_path)),
