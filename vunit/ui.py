@@ -416,12 +416,13 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             raise KeyError(library_name)
         return Library(library_name, self, self._project, self._test_bench_list)
 
-    def set_generic(self, name, value):
+    def set_generic(self, name, value, allow_empty=False):
         """
         Set a value of generic in all |configurations|
 
         :param name: The name of the generic
         :param value: The value of the generic
+        :param allow_empty: To disable an error when no test benches were found
 
         :example:
 
@@ -432,15 +433,17 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         .. note::
            Only affects test benches added *before* the generic is set.
         """
-        for test_bench in self._test_bench_list.get_test_benches():
+        test_benches = self._test_bench_list.get_test_benches()
+        for test_bench in check_not_empty(test_benches, allow_empty, "No test benches found"):
             test_bench.set_generic(name.lower(), value)
 
-    def set_parameter(self, name, value):
+    def set_parameter(self, name, value, allow_empty=False):
         """
         Set value of parameter in all |configurations|
 
         :param name: The name of the parameter
         :param value: The value of the parameter
+        :param allow_empty: To disable an error when no test benches were found
 
         :example:
 
@@ -451,15 +454,17 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         .. note::
            Only affects test benches added *before* the parameter is set.
         """
-        for test_bench in self._test_bench_list.get_test_benches():
+        test_benches = self._test_bench_list.get_test_benches()
+        for test_bench in check_not_empty(test_benches, allow_empty, "No test benches found"):
             test_bench.set_generic(name, value)
 
-    def set_sim_option(self, name, value):
+    def set_sim_option(self, name, value, allow_empty=False):
         """
         Set simulation option in all |configurations|
 
         :param name: |simulation_options|
         :param value: The value of the simulation option
+        :param allow_empty: To disable an error when no test benches were found
 
         :example:
 
@@ -470,15 +475,17 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         .. note::
            Only affects test benches added *before* the option is set.
         """
-        for test_bench in self._test_bench_list.get_test_benches():
+        test_benches = self._test_bench_list.get_test_benches()
+        for test_bench in check_not_empty(test_benches, allow_empty, "No test benches found"):
             test_bench.set_sim_option(name, value)
 
-    def set_compile_option(self, name, value):
+    def set_compile_option(self, name, value, allow_empty=False):
         """
         Set compile option of all files
 
         :param name: |compile_option|
         :param value: The value of the compile option
+        :param allow_empty: To disable an error when no source files were found
 
         :example:
 
@@ -490,20 +497,23 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         .. note::
            Only affects files added *before* the option is set.
         """
-        for source_file in self._project.get_source_files_in_order():
+        source_files = self._project.get_source_files_in_order()
+        for source_file in check_not_empty(source_files, allow_empty, "No source files found"):
             source_file.set_compile_option(name, value)
 
-    def add_compile_option(self, name, value):
+    def add_compile_option(self, name, value, allow_empty=False):
         """
         Add compile option to all files
 
         :param name: |compile_option|
         :param value: The value of the compile option
+        :param allow_empty: To disable an error when no source files were found
 
         .. note::
            Only affects files added *before* the option is set.
         """
-        for source_file in self._project.get_source_files_in_order():
+        source_files = self._project.get_source_files_in_order()
+        for source_file in check_not_empty(source_files, allow_empty, "No source files found"):
             source_file.add_compile_option(name, value)
 
     def get_source_file(self, file_name, library_name=None):
@@ -548,9 +558,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
             results.append(SourceFile(source_file, self._project, self))
 
-        if (not allow_empty) and (not results):
-            raise ValueError(("Pattern %r did not match any file. "
-                              "Use allow_empty=True to avoid exception,") % pattern)
+        check_not_empty(results, allow_empty,
+                        ("Pattern %r did not match any file" % pattern) +
+                        (("within library %s" % library_name) if library_name is not None else ""))
 
         return SourceFileList(results)
 
@@ -959,12 +969,13 @@ class Library(object):
         """
         return self._library_name
 
-    def set_generic(self, name, value):
+    def set_generic(self, name, value, allow_empty=False):
         """
         Set a value of generic within all |configurations| of test benches and tests this library
 
         :param name: The name of the generic
         :param value: The value of the generic
+        :param allow_empty: To disable an error when no test benches were found
 
         :example:
 
@@ -975,15 +986,16 @@ class Library(object):
         .. note::
            Only affects test benches added *before* the generic is set.
         """
-        for test_bench in self.get_test_benches():
+        for test_bench in self.get_test_benches(allow_empty=allow_empty):
             test_bench.set_generic(name.lower(), value)
 
-    def set_parameter(self, name, value):
+    def set_parameter(self, name, value, allow_empty=False):
         """
         Set a value of parameter within all |configurations| of test benches and tests this library
 
         :param name: The name of the parameter
         :param value: The value of the parameter
+        :param allow_empty: To disable an error when no test benches were found
 
         :example:
 
@@ -994,15 +1006,16 @@ class Library(object):
         .. note::
            Only affects test benches added *before* the parameter is set.
         """
-        for test_bench in self.get_test_benches():
+        for test_bench in self.get_test_benches(allow_empty=allow_empty):
             test_bench.set_generic(name, value)
 
-    def set_sim_option(self, name, value):
+    def set_sim_option(self, name, value, allow_empty=False):
         """
         Set simlation option within all |configurations| of test benches and tests this library
 
         :param name: |simulation_options|
         :param value: The value of the simulation option
+        :param allow_empty: To disable an error when no test benches were found
 
         :example:
 
@@ -1013,15 +1026,16 @@ class Library(object):
         .. note::
            Only affects test benches added *before* the option is set.
         """
-        for test_bench in self.get_test_benches():
+        for test_bench in self.get_test_benches(allow_empty=allow_empty):
             test_bench.set_sim_option(name, value)
 
-    def set_compile_option(self, name, value):
+    def set_compile_option(self, name, value, allow_empty=False):
         """
         Set compile option for all files within the library
 
         :param name: |compile_option|
         :param value: The value of the compile option
+        :param allow_empty: To disable an error when no source files were found
 
         :example:
 
@@ -1033,29 +1047,41 @@ class Library(object):
         .. note::
            Only affects files added *before* the option is set.
         """
-        for source_file in self._project.get_source_files_in_order():
-            if source_file.library.name == self._library_name:
-                source_file.set_compile_option(name, value)
+        for source_file in self.get_source_files(allow_empty=allow_empty):
+            source_file.set_compile_option(name, value)
 
-    def add_compile_option(self, name, value):
+    def add_compile_option(self, name, value, allow_empty=False):
         """
         Add compile option to all files within the library
 
         :param name: |compile_option|
         :param value: The value of the compile option
-
+        :param allow_empty: To disable an error when no source files were found
 
         .. note::
            Only affects files added *before* the option is set.
         """
-        for source_file in self._project.get_source_files_in_order():
-            if source_file.library.name == self._library_name:
-                source_file.add_compile_option(name, value)
+        for source_file in self.get_source_files(allow_empty=allow_empty):
+            source_file.add_compile_option(name, value)
 
     def get_source_file(self, file_name):
-        return self._parent.get_source_files(file_name, self._library_name)
+        """
+        Get a source file within this library
+
+        :param file_name: The name of the file as a relative or absolute path
+
+        :returns: A :class:`.SourceFile` object
+        """
+        return self._parent.get_source_file(file_name, self._library_name)
 
     def get_source_files(self, pattern="*", allow_empty=False):
+        """
+        Get a list of source files within this libary
+
+        :param pattern: A wildcard pattern matching either an absolute or relative path
+        :param allow_empty: To disable an error if no files matched the pattern
+        :returns: A :class:`.SourceFileList` object
+        """
         return self._parent.get_source_files(pattern, self._library_name, allow_empty)
 
     def add_source_files(self,   # pylint: disable=too-many-arguments
@@ -1087,10 +1113,7 @@ class Library(object):
         file_names = []
         for pattern_instance in patterns:
             new_file_names = glob(pattern_instance)
-
-            if (not allow_empty) and (not new_file_names):
-                raise ValueError(("Pattern %r did not match any file. "
-                                  "Use allow_empty=True to avoid exception,") % pattern_instance)
+            check_not_empty(new_file_names, allow_empty, "Pattern %r did not match any file" % pattern_instance)
             file_names += new_file_names
 
         return SourceFileList(source_files=[
@@ -1193,11 +1216,12 @@ class Library(object):
 
         return TestBench(self._test_bench_list.get_test_bench(self._library_name, name), self)
 
-    def get_test_benches(self, pattern="*"):
+    def get_test_benches(self, pattern="*", allow_empty=False):
         """
         Get a list of test benches
 
         :param pattern: A wildcard pattern matching the test_bench name
+        :param allow_empty: To disable an error when no test benches were found
         :returns: A list of :class:`.TestBench` objects
         """
         results = []
@@ -1206,7 +1230,9 @@ class Library(object):
                 continue
 
             results.append(TestBench(test_bench, self))
-        return results
+
+        return check_not_empty(results, allow_empty,
+                               "No test benches found within library %s" % self._library_name)
 
 
 class TestBench(object):
@@ -1725,3 +1751,14 @@ def lower_generics(generics):
     @TODO Maybe warn in case of conflict. VHDL forbids this though so the user will notice anyway.
     """
     return dict((name.lower(), value) for name, value in generics.items())
+
+
+def check_not_empty(lst, allow_empty, error_msg):
+    """
+    Raise ValueError if the list is empty unless allow_empty is True
+    Returns the list
+    """
+    if (not allow_empty) and (not lst):
+        raise ValueError(error_msg +
+                         ". Use allow_empty=True to avoid exception.")
+    return lst
