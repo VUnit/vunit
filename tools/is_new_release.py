@@ -27,10 +27,6 @@ def get_git_tags():
     return set(check_output(["git", "tag", "--list"]).decode().splitlines())
 
 
-def get_commit(tag):
-    return check_output(["git", "rev-parse", tag]).decode().strip()
-
-
 def is_new_release(version):
     """
     Return True when a new release shall be made
@@ -46,14 +42,6 @@ def is_new_release(version):
     if expected_tag in tags:
         print("Not releasing version %s since %s tag already exists"
               % (version, expected_tag))
-        return False
-
-    tag_commit = get_commit(expected_tag)
-    current_commit = get_commit("HEAD")
-
-    if tag_commit != current_commit:
-        print("Not releasing version %s since we are not on the release commit %s"
-              % (version, tag_commit))
         return False
 
     if version.endswith("rc0"):

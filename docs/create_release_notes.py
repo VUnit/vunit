@@ -1,15 +1,15 @@
 from os.path import join, dirname, basename, splitext, relpath
 from glob import glob
-from subprocess import check_output
+from subprocess import check_output, CalledProcessError
 import datetime
 
 
 def get_releases(source_path):
     release_notes = join(source_path, "release_notes")
     releases = []
-    for file_name in glob(join(release_notes, "*.rst")):
-        releases.append(Release(file_name))
-    return sorted(releases, key=lambda rel: rel.date, reverse=True)
+    for idx, file_name in enumerate(sorted(glob(join(release_notes, "*.rst")), reverse=True)):
+        releases.append(Release(file_name, is_latest=idx == 0))
+    return releases
 
 
 def create_release_notes():
@@ -37,14 +37,13 @@ For installation instructions read :ref:`this <installing>`.
         banner(fptr)
 
         for idx, release in enumerate(releases):
-            is_latest = idx == 0
             is_last = idx == len(releases) - 1
 
-            if is_latest:
+            if release.is_latest:
                 fptr.write(".. _latest_release:\n\n")
 
             title = ":vunit_commit:`%s <%s>` - %s" % (release.name, release.tag, release.date.strftime("%Y-%m-%d"))
-            if is_latest:
+            if release.is_latest:
                 title += " (latest)"
             fptr.write(title + "\n")
             fptr.write("-"*len(title) + "\n\n")
@@ -64,11 +63,23 @@ class Release:
     """
     A release object
     """
-    def __init__(self, file_name):
+    def __init__(self, file_name, is_latest):
         self.file_name = file_name
         self.name = splitext(basename(file_name))[0]
         self.tag = "v"+self.name
-        self.date = _get_date(self.tag)
+        self.is_latest = is_latest
+
+        try:
+            self.date = _get_date(self.tag)
+
+        except CalledProcessError:
+            if self.is_latest:
+                # Release tag for latest release not yet created, assume HEAD will become release
+                print("Release tag %s not created yet, use HEAD for date" % self.tag)
+                self.date = _get_date("HEAD")
+            else:
+                raise
+
         with open(file_name, "r") as fptr:
             self.notes = fptr.read()
 
