@@ -260,15 +260,14 @@ proc vunit_help {} {
         """
         Run a test bench
         """
-        sim_output_path = abspath(join(output_path, self.name))
-        common_file_name = join(sim_output_path, "common.do")
-        gui_file_name = join(sim_output_path, "gui.do")
-        batch_file_name = join(sim_output_path, "batch.do")
+        common_file_name = join(output_path, "common.do")
+        gui_file_name = join(output_path, "gui.do")
+        batch_file_name = join(output_path, "batch.do")
 
         write_file(common_file_name,
                    self._create_common_script(test_suite_name,
                                               config,
-                                              sim_output_path))
+                                              output_path))
         write_file(gui_file_name,
                    self._create_gui_script(common_file_name, config))
         write_file(batch_file_name,
