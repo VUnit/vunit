@@ -52,6 +52,15 @@ class TestTestBenchList(unittest.TestCase):
         design_unit.generic_names = []
         self.assertFalse(tb_filter(design_unit))
 
+    def test_tb_filter_match_prefix_and_suffix_only(self):
+        """
+        Issue #263
+        """
+        with mock.patch("vunit.test_bench_list.LOGGER", autospec=True) as logger:
+            design_unit = Entity("mul_tbl_scale")
+            self.assertFalse(tb_filter(design_unit))
+            self.assertFalse(logger.warning.called)
+
     def test_tb_filter_warning_on_missing_runner_cfg_when_matching_tb_pattern(self):
         design_unit = Module('tb_module_not_ok')
         design_unit.generic_names = []
@@ -64,7 +73,7 @@ class TestTestBenchList(unittest.TestCase):
                           'in file %s',
                           'Module',
                           'tb_module_not_ok',
-                          '(tb_.*)|(.*_tb)',
+                          '^(tb_.*)|(.*_tb)$',
                           'parameter',
                           design_unit.file_name)])
 
@@ -81,7 +90,7 @@ class TestTestBenchList(unittest.TestCase):
                           'entity_ok_but_warning',
                           'generic',
                           'entity',
-                          '(tb_.*)|(.*_tb)',
+                          '^(tb_.*)|(.*_tb)$',
                           design_unit.file_name)])
 
 

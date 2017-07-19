@@ -78,7 +78,7 @@ class TestBenchList(object):
                            tb_filter.__doc__)
 
 
-TB_PATTERN = "(tb_.*)|(.*_tb)"
+TB_PATTERN = "^(tb_.*)|(.*_tb)$"
 TB_RE = re.compile(TB_PATTERN,
                    re.IGNORECASE)
 
