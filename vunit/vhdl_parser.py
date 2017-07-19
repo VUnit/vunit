@@ -4,6 +4,8 @@
 #
 # Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
+# pylint: disable=too-many-lines
+
 """
 VHDL parsing functionality
 """
@@ -185,12 +187,15 @@ class VHDLPackage(object):
     """
     Representation of a VHDL package
     """
-    def __init__(self, identifier,
-                 enumeration_types, record_types, array_types):
+    def __init__(self,  # pylint: disable=too-many-arguments
+                 identifier, enumeration_types, record_types, array_types,
+                 subtypes, constants):
         self.identifier = identifier
         self.enumeration_types = enumeration_types
         self.record_types = record_types
         self.array_types = array_types
+        self.subtypes = subtypes
+        self.constants = constants
 
     _package_start_re = re.compile(r"""
         \b                    # Word boundary
@@ -232,7 +237,7 @@ class VHDLPackage(object):
         """
         references = []
         for match in cls._package_instance_re.finditer(code):
-            references.append(cls(match.group("new_name"), [], [], []))
+            references.append(cls(match.group("new_name"), [], [], [], [], []))
         return references
 
     @classmethod
@@ -254,8 +259,10 @@ class VHDLPackage(object):
         enumeration_types = [e for e in VHDLEnumerationType.find(code)]
         record_types = [r for r in VHDLRecordType.find(code)]
         array_types = [a for a in VHDLArrayType.find(code)]
-
-        return cls(identifier, enumeration_types, record_types, array_types)
+        subtypes = [s for s in VHDLSubtype.find(code)]
+        constants = [c for c in VHDLConstant.find(code)]
+        return cls(identifier, enumeration_types, record_types, array_types,
+                   subtypes, constants)
 
 
 class VHDLEntity(object):
@@ -676,28 +683,24 @@ class VHDLRecordType(object):
 
 class VHDLRange(object):
     """Represents a VHDL Range"""
-    def __init__(self, range_type=None, left=None, right=None, attribute=None):
+    def __init__(self, range_type=None, left=None, right=None, attribute=None, direction=None):
         self.range_type = range_type
         self.left = left
         self.right = right
         self.attribute = attribute
+        self.direction = direction
 
 
-class VHDLArrayType(object):
-    """Represents a VHDL array type"""
-    def __init__(self, identifier, subtype_indication, range1, range2):
-        self.identifier = identifier
-        self.subtype_indication = subtype_indication
-        self.range1 = range1
-        self.range2 = range2
+class RangeParser(object):
+    """Methods for parsing ranges."""
 
     _constrained_ranges_re = re.compile(r"""
         \s*(?P<range_left1>.+?)
-        \s+(to|downto)\s+
+        \s+(?P<direction>to|downto)\s+
         (?P<range_right1>.+?)\s*
         (,
         \s*(?P<range_left2>.+?)
-        \s+(to|downto)\s+
+        \s+(?P<direction2>to|downto)\s+
         (?P<range_right2>.+?)\s*)?""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
 
     _range_attribute_ranges_re = re.compile(r"""
@@ -712,7 +715,7 @@ class VHDLArrayType(object):
 
     _constrained_range_re = re.compile(r"""
         \s*(?P<range_left>.+?)
-        \s+(to|downto)\s+
+        \s+(?P<direction>to|downto)\s+
         (?P<range_right>.+?)\s*""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
 
     _range_attribute_range_re = re.compile(r"""
@@ -721,6 +724,57 @@ class VHDLArrayType(object):
     _unconstrained_range_re = re.compile(r"""
         \s*(?P<range_type>[a-zA-Z][\w]*)
         \s+range\s+<>\s*""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
+
+    @staticmethod
+    def split_ranges(ranges):
+        """Splits 2D ranges in two. 1D ranges will return None as the second range"""
+        level = 0
+        index = 0
+        if ',' in ranges:
+            for char in ranges:
+                if char == ',' and level == 0:
+                    return ranges[:index], ranges[index + 1:]
+                elif char == '(':
+                    level += 1
+                elif char == ')':
+                    level -= 1
+                index += 1
+
+        return ranges, None
+
+    @classmethod
+    def parse_range(cls, the_range):
+        """Extracts range type, left and right boundary as well as the range when the 'range attribute
+        is used"""
+        if the_range is None:
+            return VHDLRange()
+
+        unconstrained_range = cls._unconstrained_range_re.match(the_range)
+        if unconstrained_range is not None:
+            range_type = unconstrained_range.group('range_type')
+            return VHDLRange(range_type)
+        else:
+            constrained_range = cls._constrained_range_re.match(the_range)
+            range_attribute = cls._range_attribute_range_re.match(the_range)
+            if constrained_range is not None:
+                range_left = constrained_range.group('range_left')
+                range_right = constrained_range.group('range_right')
+                direction = constrained_range.group('direction')
+                return VHDLRange(None, range_left, range_right, direction=direction)
+            elif range_attribute is not None:
+                range_attribute = range_attribute.group('range_attribute')
+                return VHDLRange(attribute=range_attribute)
+
+        return VHDLRange()
+
+
+class VHDLArrayType(object):
+    """Represents a VHDL array type"""
+    def __init__(self, identifier, subtype_indication, range1, range2):
+        self.identifier = identifier
+        self.subtype_indication = subtype_indication
+        self.range1 = range1
+        self.range2 = range2
 
     _array_declaration_re = re.compile(r"""
         \b                    # Word boundary
@@ -743,52 +797,80 @@ class VHDLArrayType(object):
             identifier = array_type.group('id')
             subtype_indication = VHDLSubtypeIndication.parse(array_type.group('subtype_indication'))
             ranges = array_type.group('ranges')
-            range1_str, range2_str = cls._split_ranges(ranges)
-            range1 = cls._parse_range(range1_str)
-            range2 = cls._parse_range(range2_str)
+            range1_str, range2_str = RangeParser.split_ranges(ranges)
+            range1 = RangeParser.parse_range(range1_str)
+            range2 = RangeParser.parse_range(range2_str)
 
             yield cls(identifier, subtype_indication, range1, range2)
 
-    @staticmethod
-    def _split_ranges(ranges):
-        """Splits 2D ranges in two. 1D ranges will return None as the second range"""
-        level = 0
-        index = 0
-        if ',' in ranges:
-            for char in ranges:
-                if char == ',' and level == 0:
-                    return ranges[:index], ranges[index + 1:]
-                elif char == '(':
-                    level += 1
-                elif char == ')':
-                    level -= 1
-                index += 1
 
-        return ranges, None
+class VHDLSubtype(object):
+    """Represents a VHDL subtype"""
+    def __init__(self, identifier, subtype_indication, range1, range2):
+        self.identifier = identifier
+        self.subtype_indication = subtype_indication
+        self.range1 = range1
+        self.range2 = range2
+
+    _subtype_declaration_re = re.compile(r"""
+        \b                    # Word boundary
+        subtype
+        \s+
+        (?P<id>[a-zA-Z][\w]*)
+        \s+
+        is
+        \s+
+        (?P<subtype_indication>.*?)
+        \s*
+        (\((?P<ranges>.*?) \))?
+        \s*;
+    """, re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
 
     @classmethod
-    def _parse_range(cls, the_range):
-        """Extracts range type, left and right boundary as well as the range when the 'range attribute
-        is used"""
-        if the_range is None:
-            return VHDLRange()
+    def find(cls, code):
+        """Iterate over new instances of VHDLSubtype for all array types within the code"""
+        for subtype in cls._subtype_declaration_re.finditer(code):
+            identifier = subtype.group('id')
+            subtype_indication = VHDLSubtypeIndication.parse(
+                subtype.group('subtype_indication'))
+            ranges = subtype.group('ranges')
+            if ranges:
+                range1_str, range2_str = RangeParser.split_ranges(ranges)
+                range1 = RangeParser.parse_range(range1_str)
+                range2 = RangeParser.parse_range(range2_str)
+            else:
+                range1 = VHDLRange()
+                range2 = VHDLRange()
 
-        unconstrained_range = cls._unconstrained_range_re.match(the_range)
-        if unconstrained_range is not None:
-            range_type = unconstrained_range.group('range_type')
-            return VHDLRange(range_type)
-        else:
-            constrained_range = cls._constrained_range_re.match(the_range)
-            range_attribute = cls._range_attribute_range_re.match(the_range)
-            if constrained_range is not None:
-                range_left = constrained_range.group('range_left')
-                range_right = constrained_range.group('range_right')
-                return VHDLRange(None, range_left, range_right)
-            elif range_attribute is not None:
-                range_attribute = range_attribute.group('range_attribute')
-                return VHDLRange(attribute=range_attribute)
+            yield cls(identifier, subtype_indication, range1, range2)
 
-        return VHDLRange()
+
+class VHDLConstant(object):
+    """Represents a VHDL constant"""
+    def __init__(self, identifier, type_indication, text):
+        self.identifier = identifier
+        self.type_indication = type_indication
+        self.text = text
+
+    _constant_declaration_re = re.compile(r"""
+        \b                    # Word boundary
+        constant
+        \s+
+        (?P<id>[a-zA-Z][\w]*)
+        \s*:\s*
+        (?P<type_indication>.*?)\s*
+        :=\s*
+        (?P<text>.*?)\s*;""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
+
+    @classmethod
+    def find(cls, code):
+        """Iterate over new instances of VHDLConstant for all constants within the code"""
+        for constant_type in cls._constant_declaration_re.finditer(code):
+            identifier = constant_type.group('id')
+            type_indication = VHDLSubtypeIndication.parse(
+                constant_type.group('type_indication'))
+            text = constant_type.group('text')
+            yield cls(identifier, type_indication, text)
 
 
 def find_closing_delimiter(start, end, code):
