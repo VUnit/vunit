@@ -128,6 +128,27 @@ without closing the GUI by running ``vunit_compile``. It is also
 possible to perform ``run.py`` with the ``--compile`` flag in a
 separate terminal.
 
+Test Output Paths
+-----------------
+VUnit creates a separate output directory for each test to provide
+isolation. The test output paths are located under
+``OUTPUT_PATH/test_output/``. The test names have been washed of any
+unsuitable characters and a hash has been added as a suffix to ensure
+uniqueness.
+
+On Windows the paths can be shortened to avoid path length
+limitations. This behavior can be controlled by setting the relevant
+:ref:`environment variables <test_output_envs>`.
+
+To get the exact test name to test output path mapping the file
+``OUTPUT_PATH/test_output/test_name_to_path_mapping.txt`` can be used.
+Each line contains a test output path followed by a space seperator
+and then a test name.
+
+.. note::
+   When using the ``run_all_in_same_sim`` pragma all tests within the
+   test bench share the same output folder named after the test bench.
+
 .. _continuous_integration:
 
 Continuous Integration Environment
@@ -174,3 +195,21 @@ Simulator Specific Environment Variables
   file from the tool install folder as a starting point. Setting this
   environment variable selects another *modelsim.ini* file as the
   starting point allowing the user to customize it.
+
+
+.. _test_output_envs:
+
+Test Output Path Length Environment Variables
+---------------------------------------------
+- ``VUNIT_SHORT_TEST_OUTPUT_PATHS`` Unfortunately file system paths
+  are still practically limited to 260 characters on Windows. VUnit
+  tries to limit the length of the test output paths on Windows to
+  avoid this limitation but still includes as much of the test name
+  name as possible leaving a margin of 100 characters. VUnit however
+  cannot forsee user specifc test output file lengths and this
+  environment variable can be set to minimize output path lengths on
+  Windows. On other operating systems this limitation is not relevant.
+
+- ``VUNIT_TEST_OUTPUT_PATH_MARGIN`` Can be used to change the test
+  output path margin on Windows. By default the test output path is
+  shortened to allow a 100 character margin.

@@ -12,8 +12,9 @@ Test the test runner
 from __future__ import print_function
 
 import unittest
-from os.path import join, dirname
+from os.path import join, dirname, abspath
 
+from vunit.hashing import hash_string
 from vunit.test_runner import TestRunner, create_output_path
 from vunit.test_report import TestReport
 from vunit.test_list import TestList
@@ -72,6 +73,45 @@ class TestTestRunner(unittest.TestCase):
         self.runner.run(test_list)
         self.assertTrue(self.report.result_of("test").passed)
         self.assertEqual(self.report.result_of("test").output, output)
+
+    def test_create_output_path_on_linux(self):
+        with mock.patch("sys.platform", new="linux"):
+            with mock.patch("os.environ", new={}):
+                output_path = "output_path"
+                test_name = "_" * 400
+                test_output = create_output_path(output_path, test_name)
+                self.assertEqual(test_output, join(abspath(output_path), test_name + "_" + hash_string(test_name)))
+
+                output_path = "output_path"
+                test_name = "123._-+"
+                test_output = create_output_path(output_path, test_name)
+                self.assertEqual(test_output, join(abspath(output_path), test_name + "_" + hash_string(test_name)))
+
+                output_path = "output_path"
+                test_name = "#<>:"
+                safe_name = "____"
+                test_output = create_output_path(output_path, test_name)
+                self.assertEqual(test_output, join(abspath(output_path), safe_name + "_" + hash_string(test_name)))
+
+    def test_create_output_path_on_windows(self):
+        with mock.patch("sys.platform", new="win32"):
+            with mock.patch("os.environ", new={}):
+                output_path = "output_path"
+                test_name = "_" * 400
+                test_output = create_output_path(output_path, test_name)
+                self.assertEqual(len(test_output), 260 - 100 + 1)
+
+            with mock.patch("os.environ", new={"VUNIT_TEST_OUTPUT_PATH_MARGIN": "-1000"}):
+                output_path = "output_path"
+                test_name = "_" * 400
+                test_output = create_output_path(output_path, test_name)
+                self.assertEqual(test_output, join(abspath(output_path), test_name + "_" + hash_string(test_name)))
+
+            with mock.patch("os.environ", new={"VUNIT_SHORT_TEST_OUTPUT_PATHS": ""}):
+                output_path = "output_path"
+                test_name = "_" * 400
+                test_output = create_output_path(output_path, test_name)
+                self.assertEqual(test_output, join(abspath(output_path), hash_string(test_name)))
 
     def create_test(self, name, passed):
         """

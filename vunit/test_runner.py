@@ -12,12 +12,13 @@ Provided functionality to run a suite of test in a robust way
 from __future__ import print_function
 
 import os
-from os.path import join, exists
+from os.path import join, exists, abspath, basename
 import traceback
 import threading
 import sys
 import time
 import logging
+import string
 import vunit.ostools as ostools
 from vunit.test_report import PASSED, FAILED
 from vunit.hashing import hash_string
@@ -193,8 +194,8 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             mapping = set()
 
         for test_suite in test_suites:
-            name_hash = hash_string(test_suite.name)
-            mapping.add("%s %s" % (name_hash, test_suite.name))
+            test_output = create_output_path(self._output_path, test_suite.name)
+            mapping.add("%s %s" % (basename(test_output), test_suite.name))
 
         # Sort by everything except hash
         mapping = sorted(mapping, key=lambda value: value[value.index(" "):])
@@ -327,11 +328,34 @@ class TestScheduler(object):
         while not self.is_finished():
             time.sleep(0.05)
 
+LEGAL_CHARS = string.printable
+ILLEGAL_CHARS = ' <>"|:*%?\\/#&;()'
 
-def create_output_path(output_file, test_suite_name):
+
+def _is_legal(char):
+    """
+    Return true if the character is legal to have in a file name
+    """
+    return (char in LEGAL_CHARS) and (char not in ILLEGAL_CHARS)
+
+
+def create_output_path(output_path, test_suite_name):
     """
     Create the full output path of a test case.
     Ensure no bad characters and no long path names.
     """
+    output_path = abspath(output_path)
+    safe_name = "".join(char if _is_legal(char) else '_' for char in test_suite_name) + "_"
     hash_name = hash_string(test_suite_name)
-    return join(output_file, hash_name)
+
+    if "VUNIT_SHORT_TEST_OUTPUT_PATHS" in os.environ:
+        full_name = hash_name
+    elif sys.platform == "win32":
+        max_path = 260
+        margin = int(os.environ.get("VUNIT_TEST_OUTPUT_PATH_MARGIN", "100"))
+        prefix_len = len(output_path)
+        full_name = safe_name[:min(max_path - margin - prefix_len - len(hash_name), len(safe_name))] + hash_name
+    else:
+        full_name = safe_name + hash_name
+
+    return join(output_path, full_name)
