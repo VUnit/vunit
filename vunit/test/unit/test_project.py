@@ -1082,7 +1082,7 @@ end architecture;
     def test_file_type_of(self):
         self.assertEqual(file_type_of("file.vhd"), "vhdl")
         self.assertEqual(file_type_of("file.vhdl"), "vhdl")
-        self.assertEqual(file_type_of("file.sv"), "verilog")
+        self.assertEqual(file_type_of("file.sv"), "systemverilog")
         self.assertEqual(file_type_of("file.v"), "verilog")
         self.assertEqual(file_type_of("file.vams"), "verilog")
         self.assertRaises(RuntimeError, file_type_of, "file.foo")

@@ -111,6 +111,33 @@ class TestActiveHDLInterface(unittest.TestCase):
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
     @mock.patch("vunit.activehdl_interface.Process", autospec=True)
+    def test_compile_project_system_verilog(self, process, run_command):
+        library_cfg = join(self.output_path, "library.cfg")
+        simif = ActiveHDLInterface(prefix="prefix",
+                                   library_cfg=library_cfg)
+        project = Project()
+        project.add_library("lib", "lib_path")
+        write_file("file.sv", "")
+        project.add_source_file("file.sv", "lib", file_type="systemverilog")
+        simif.compile_project(project)
+        process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"],
+                                cwd=self.output_path,
+                                env=simif.get_env())
+        process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"],
+                                   cwd=self.output_path,
+                                   env=simif.get_env())
+        run_command.assert_called_once_with([join('prefix', 'vlog'),
+                                             '-quiet',
+                                             '-lc',
+                                             library_cfg,
+                                             '-work',
+                                             'lib',
+                                             'file.sv',
+                                             '-l', 'lib'],
+                                            env=simif.get_env())
+
+    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
+    @mock.patch("vunit.activehdl_interface.Process", autospec=True)
     def test_compile_project_verilog_extra_flags(self, process, run_command):
         library_cfg = join(self.output_path, "library.cfg")
         simif = ActiveHDLInterface(prefix="prefix",

@@ -125,8 +125,9 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 vhdl_standard=library.vhdl_standard if vhdl_standard is None else vhdl_standard,
                 no_parse=no_parse)
             library.add_vhdl_design_units(source_file.design_units)
-        elif file_type == "verilog":
-            source_file = VerilogSourceFile(file_name,
+        elif file_type in VERILOG_FILE_TYPES:
+            source_file = VerilogSourceFile(file_type,
+                                            file_name,
                                             library,
                                             verilog_parser=self._verilog_parser,
                                             database=self._database,
@@ -314,7 +315,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
 
         verilog_files = [source_file
                          for source_file in self.get_source_files_in_order()
-                         if source_file.file_type == 'verilog']
+                         if source_file.file_type in VERILOG_FILE_TYPES]
 
         add_dependencies(self._find_verilog_package_dependencies, verilog_files)
         add_dependencies(self._find_verilog_module_dependencies, verilog_files)
@@ -647,6 +648,18 @@ class SourceFile(object):
         self._content_hash = None
         self._compile_options = {}
 
+    @property
+    def is_vhdl(self):
+        return self.file_type == "vhdl"
+
+    @property
+    def is_system_verilog(self):
+        return self.file_type == "systemverilog"
+
+    @property
+    def is_any_verilog(self):
+        return self.file_type in VERILOG_FILE_TYPES
+
     def __eq__(self, other):
         if isinstance(other, type(self)):
             return self.to_tuple() == other.to_tuple()
@@ -719,8 +732,8 @@ class VerilogSourceFile(SourceFile):
     Represents a Verilog source file
     """
     def __init__(self,  # pylint: disable=too-many-arguments
-                 name, library, verilog_parser, database, include_dirs=None, defines=None, no_parse=False):
-        SourceFile.__init__(self, name, library, 'verilog')
+                 file_type, name, library, verilog_parser, database, include_dirs=None, defines=None, no_parse=False):
+        SourceFile.__init__(self, name, library, file_type)
         self.package_dependencies = []
         self.module_dependencies = []
         self.include_dirs = include_dirs if include_dirs is not None else []
@@ -885,7 +898,10 @@ class VHDLSourceFile(SourceFile):
 
 # lower case representation of supported extensions
 VHDL_EXTENSIONS = (".vhd", ".vhdl", ".vho")
-VERILOG_EXTENSIONS = (".v", ".vp", ".sv", ".vams", ".vo")
+VERILOG_EXTENSIONS = (".v", ".vp", ".vams", ".vo")
+SYSTEM_VERILOG_EXTENSIONS = (".sv",)
+VERILOG_FILE_TYPES = ("verilog", "systemverilog")
+FILE_TYPES = ("vhdl", ) + VERILOG_FILE_TYPES
 
 
 def file_type_of(file_name):
@@ -897,6 +913,8 @@ def file_type_of(file_name):
         return "vhdl"
     elif ext.lower() in VERILOG_EXTENSIONS:
         return "verilog"
+    elif ext.lower() in SYSTEM_VERILOG_EXTENSIONS:
+        return "systemverilog"
     else:
         raise RuntimeError("Unknown file ending '%s' of %s" % (ext, file_name))
 

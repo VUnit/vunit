@@ -175,13 +175,38 @@ class TestModelSimInterface(unittest.TestCase):
         simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
         run_command.assert_called_once_with([join('prefix', 'vlog'),
-                                             '-sv',
                                              '-quiet',
                                              '-modelsimini',
                                              modelsim_ini,
                                              '-work',
                                              'lib',
                                              'file.v',
+                                             '-L', 'lib'], env=simif.get_env())
+
+    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
+    @mock.patch("vunit.modelsim_interface.Process", autospec=True)
+    def test_compile_project_system_verilog(self, process, run_command):
+        write_file("modelsim.ini", """
+[Library]
+                   """)
+        modelsim_ini = join(self.output_path, "modelsim.ini")
+        simif = ModelSimInterface(prefix="prefix",
+                                  modelsim_ini=modelsim_ini,
+                                  persistent=False)
+        project = Project()
+        project.add_library("lib", "lib_path")
+        write_file("file.sv", "")
+        project.add_source_file("file.sv", "lib", file_type="systemverilog")
+        simif.compile_project(project)
+        process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
+        run_command.assert_called_once_with([join('prefix', 'vlog'),
+                                             '-quiet',
+                                             '-modelsimini',
+                                             modelsim_ini,
+                                             '-sv',
+                                             '-work',
+                                             'lib',
+                                             'file.sv',
                                              '-L', 'lib'], env=simif.get_env())
 
     @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
@@ -202,7 +227,6 @@ class TestModelSimInterface(unittest.TestCase):
         simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
         run_command.assert_called_once_with([join('prefix', 'vlog'),
-                                             '-sv',
                                              '-quiet',
                                              '-modelsimini',
                                              modelsim_ini,
@@ -231,7 +255,6 @@ class TestModelSimInterface(unittest.TestCase):
         simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
         run_command.assert_called_once_with([join('prefix', 'vlog'),
-                                             '-sv',
                                              '-quiet',
                                              '-modelsimini',
                                              modelsim_ini,
@@ -258,7 +281,6 @@ class TestModelSimInterface(unittest.TestCase):
         simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
         run_command.assert_called_once_with([join('prefix', 'vlog'),
-                                             '-sv',
                                              '-quiet',
                                              '-modelsimini',
                                              modelsim_ini,
@@ -285,7 +307,6 @@ class TestModelSimInterface(unittest.TestCase):
         simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
         run_command.assert_called_once_with([join('prefix', 'vlog'),
-                                             '-sv',
                                              '-quiet',
                                              '-modelsimini',
                                              modelsim_ini,

@@ -152,9 +152,9 @@ define work "{2}/libraries/work"
         """
         Returns the command to compile a single source file
         """
-        if source_file.file_type == 'vhdl':
+        if source_file.is_vhdl:
             return self.compile_vhdl_file_command(source_file)
-        elif source_file.file_type == 'verilog':
+        elif source_file.is_any_verilog:
             return self.compile_verilog_file_command(source_file)
 
         raise CompileError

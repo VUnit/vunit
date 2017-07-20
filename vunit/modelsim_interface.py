@@ -145,9 +145,9 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         """
         Returns the command to compile a single source file
         """
-        if source_file.file_type == 'vhdl':
+        if source_file.is_vhdl:
             return self.compile_vhdl_file_command(source_file)
-        elif source_file.file_type == 'verilog':
+        elif source_file.is_any_verilog:
             return self.compile_verilog_file_command(source_file)
 
         LOGGER.error("Unknown file type: %s", source_file.file_type)
@@ -165,7 +165,9 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         """
         Returns the command to compile a verilog file
         """
-        args = [join(self._prefix, 'vlog'), '-sv', '-quiet', '-modelsimini', self._sim_cfg_file_name]
+        args = [join(self._prefix, 'vlog'), '-quiet', '-modelsimini', self._sim_cfg_file_name]
+        if source_file.is_system_verilog:
+            args += ["-sv"]
         args += source_file.compile_options.get("modelsim.vlog_flags", [])
         args += ['-work', source_file.library.name, source_file.name]
 

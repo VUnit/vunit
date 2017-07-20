@@ -93,12 +93,37 @@ class TestRivieraProInterface(unittest.TestCase):
                                    cwd=self.output_path, env=simif.get_env())
         run_command.assert_called_once_with([join('prefix', 'vlog'),
                                              '-quiet',
-                                             '-sv2k12',
                                              '-lc',
                                              library_cfg,
                                              '-work',
                                              'lib',
                                              'file.v',
+                                             '-l', 'lib'],
+                                            env=simif.get_env())
+
+    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
+    @mock.patch("vunit.rivierapro_interface.Process", autospec=True)
+    def test_compile_project_system_verilog(self, process, run_command):
+        library_cfg = join(self.output_path, "library.cfg")
+        simif = RivieraProInterface(prefix="prefix",
+                                    library_cfg=library_cfg)
+        project = Project()
+        project.add_library("lib", "lib_path")
+        write_file("file.sv", "")
+        project.add_source_file("file.sv", "lib", file_type="systemverilog")
+        simif.compile_project(project)
+        process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"],
+                                cwd=self.output_path, env=simif.get_env())
+        process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"],
+                                   cwd=self.output_path, env=simif.get_env())
+        run_command.assert_called_once_with([join('prefix', 'vlog'),
+                                             '-quiet',
+                                             '-lc',
+                                             library_cfg,
+                                             '-sv2k12',
+                                             '-work',
+                                             'lib',
+                                             'file.sv',
                                              '-l', 'lib'],
                                             env=simif.get_env())
 
@@ -120,7 +145,6 @@ class TestRivieraProInterface(unittest.TestCase):
                                    cwd=self.output_path, env=simif.get_env())
         run_command.assert_called_once_with([join('prefix', 'vlog'),
                                              '-quiet',
-                                             '-sv2k12',
                                              '-lc',
                                              library_cfg,
                                              'custom',
@@ -147,7 +171,6 @@ class TestRivieraProInterface(unittest.TestCase):
                                    cwd=self.output_path, env=simif.get_env())
         run_command.assert_called_once_with([join('prefix', 'vlog'),
                                              '-quiet',
-                                             '-sv2k12',
                                              '-lc',
                                              library_cfg,
                                              '-work',
@@ -173,7 +196,6 @@ class TestRivieraProInterface(unittest.TestCase):
                                    cwd=self.output_path, env=simif.get_env())
         run_command.assert_called_once_with([join('prefix', 'vlog'),
                                              '-quiet',
-                                             '-sv2k12',
                                              '-lc',
                                              library_cfg,
                                              '-work',
@@ -226,7 +248,6 @@ class TestRivieraProInterface(unittest.TestCase):
                 run_command.assert_called_once_with(
                     [join('prefix', 'vlog'),
                      '-quiet',
-                     '-sv2k12',
                      '-lc',
                      library_cfg,
                      '-coverage',

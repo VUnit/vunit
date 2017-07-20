@@ -18,7 +18,7 @@ from vunit.test_list import TestList
 from vunit.vhdl_parser import remove_comments
 from vunit.test_suites import IndependentSimTestCase, SameSimTestSuite
 from vunit.parsing.encodings import HDL_FILE_ENCODING
-from vunit.project import file_type_of
+from vunit.project import file_type_of, VERILOG_FILE_TYPES
 from vunit.configuration import Configuration, ConfigurationVisitor, DEFAULT_NAME
 
 
@@ -252,7 +252,7 @@ def _find_test_cases(code, file_name):
     """
     Finds all if run("something") strings in file
     """
-    is_verilog = file_type_of(file_name) == 'verilog'
+    is_verilog = file_type_of(file_name) in VERILOG_FILE_TYPES
     if is_verilog:
         regexp = _RE_VERILOG_TEST_CASE
     else:

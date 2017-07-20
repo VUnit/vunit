@@ -129,7 +129,7 @@ class GHDLInterface(SimulatorInterface):
 
         vhdl_standards = set(source_file.get_vhdl_standard()
                              for source_file in project.get_source_files_in_order()
-                             if source_file.file_type == 'vhdl')
+                             if source_file.is_vhdl)
 
         if not vhdl_standards:
             self._vhdl_standard = '2008'
@@ -142,7 +142,7 @@ class GHDLInterface(SimulatorInterface):
         """
         Returns the command to compile a single source_file
         """
-        if source_file.file_type == 'vhdl':
+        if source_file.is_vhdl:
             return self.compile_vhdl_file_command(source_file)
 
         LOGGER.error("Unknown file type: %s", source_file.file_type)

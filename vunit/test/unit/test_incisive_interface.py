@@ -233,6 +233,39 @@ define work "%s/libraries/work"
                           '"file.v"',
                           '-endlib'])
 
+    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
+    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
+    def test_compile_project_system_verilog(self, run_command, find_cds_root_irun, find_cds_root_virtuoso):
+        find_cds_root_irun.return_value = "cds_root_irun"
+        find_cds_root_virtuoso.return_value = None
+        simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
+        project = Project()
+        project.add_library("lib", "lib_path")
+        write_file("file.sv", "")
+        project.add_source_file("file.sv", "lib", file_type="systemverilog")
+        simif.compile_project(project)
+        args_file = join(self.output_path, "irun_compile_verilog_file_lib.args")
+        run_command.assert_called_once_with(
+            [join('prefix', 'irun'), '-f', args_file],
+            env=simif.get_env())
+        self.assertEqual(read_file(args_file).splitlines(),
+                         ['-compile',
+                          '-nocopyright',
+                          '-licqueue',
+                          '-nowarn UEXPSC',
+                          '-nowarn DLCPTH',
+                          '-nowarn DLCVAR',
+                          '-work work',
+                          '-cdslib "%s"' % join(self.output_path, "cds.lib"),
+                          '-log "%s"' % join(self.output_path, "irun_compile_verilog_file_lib.log"),
+                          '-quiet',
+                          '-incdir "cds_root_irun/tools/spectre/etc/ahdl/"',
+                          '-nclibdirname ""',
+                          '-makelib lib',
+                          '"file.sv"',
+                          '-endlib'])
+
         self.assertEqual(read_file(join(self.output_path, "cds.lib")), """\
 ## cds.lib: Defines the locations of compiled libraries.
 softinclude cds_root_irun/tools/inca/files/cds.lib
