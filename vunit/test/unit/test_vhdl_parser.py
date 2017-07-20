@@ -285,6 +285,33 @@ end package;
 """)
         self.assertEqual(package.identifier, "pkg")
 
+    def test_parsing_generic_package_instance(self):
+        package = self.parse_single_package("""\
+package instance_pkg is new work.generic_pkg;
+""")
+        self.assertEqual(package.identifier, "instance_pkg")
+
+        package = self.parse_single_package("""\
+
+
+package instance_pkg is
+new work.generic_pkg;
+""")
+        self.assertEqual(package.identifier, "instance_pkg")
+
+        package = self.parse_single_package("""\
+package instance_pkg is new work.generic_pkg
+        generic map (foo : boolean);
+""")
+        self.assertEqual(package.identifier, "instance_pkg")
+
+        # Skip nested packages using the heuristic that the package is
+        # indented from the first column.
+        design_file = VHDLDesignFile.parse("""\
+ package instance_pkg is new work.generic_pkg
+""")
+        self.assertEqual(len(design_file.packages), 0)
+
     def test_parsing_context(self):
         context = self.parse_single_context("""\
 context foo is

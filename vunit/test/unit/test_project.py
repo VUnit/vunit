@@ -276,7 +276,7 @@ use {use_clause}.PKG.all;
         package, _, module = self.create_module_package_and_body(add_body=False)
         self.assert_compiles(package, before=module)
 
-    def test_package_instantiation_dependencies(self):
+    def test_package_instantiation_dependencies_on_generic_package(self):
         self.project.add_library("pkg_lib", "pkg_lib_path")
         pkg = self.add_source_file("pkg_lib", "pkg.vhd", """
 package pkg is
@@ -297,6 +297,23 @@ end architecture;
 """)
 
         self.assert_compiles(pkg, before=ent)
+
+    def test_package_instantiation_dependencies_on_instantiated_package(self):
+        self.project.add_library("lib", "lib_path")
+        generic_pkg = self.add_source_file("lib", "generic_pkg.vhd", """
+package generic_pkg is
+  generic (foo : boolean);
+end package;
+""")
+        instance_pkg = self.add_source_file("lib", "instance_pkg.vhd", """
+package instance_pkg is new work.generic_pkg
+  generic map (foo => false);
+""")
+        user = self.add_source_file("lib", "user.vhd", """
+use work.instance_pkg;
+""")
+        self.assert_compiles(generic_pkg, before=instance_pkg)
+        self.assert_compiles(instance_pkg, before=user)
 
     def test_finds_context_dependencies(self):
         self.project.add_library("lib", "lib_path")

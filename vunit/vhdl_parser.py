@@ -177,6 +177,9 @@ class VHDLArchitecture(object):
             entity_id = arch.group('entity_id')
             yield VHDLArchitecture(identifier, entity_id)
 
+PACKAGE_INSTANCE_PATTERN = (
+    r'\bpackage\s+(?P<new_name>[a-zA-Z]\w*)\s+is\s+new\s+(?P<lib>[a-zA-Z]\w*)\.(?P<name>[a-zA-Z]\w*)')
+
 
 class VHDLPackage(object):
     """
@@ -199,7 +202,7 @@ class VHDLPackage(object):
         """, re.MULTILINE | re.IGNORECASE | re.VERBOSE)
 
     @classmethod
-    def find(cls, code):
+    def _find_normal_packages(cls, code):
         """
         Iterate over new instances of VHDLPackage for all packages within the code
         """
@@ -217,6 +220,29 @@ class VHDLPackage(object):
             match = package_end.search(sub_code)
             if match:
                 yield cls.parse(sub_code[:match.end()])
+
+    _package_instance_re = re.compile("^" + PACKAGE_INSTANCE_PATTERN,
+                                      re.MULTILINE | re.IGNORECASE)
+
+    @classmethod
+    def _find_package_instances(cls, code):
+        """
+        Find global package instances.
+        Use indentation heuristic to filter out nested package instances.
+        """
+        references = []
+        for match in cls._package_instance_re.finditer(code):
+            references.append(cls(match.group("new_name"), [], [], []))
+        return references
+
+    @classmethod
+    def find(cls, code):
+        """
+        Find normal and global generic package instances
+        """
+        result = list(cls._find_normal_packages(code))
+        result += list(cls._find_package_instances(code))
+        return result
 
     @classmethod
     def parse(cls, code):
@@ -875,9 +901,8 @@ class VHDLReference(object):
             references.append(cls('configuration', match.group("lib"), match.group("cfg")))
         return references
 
-    _package_instance_re = re.compile(
-        r'\bpackage\s+(?P<new_name>[a-zA-Z]\w*)\s+is\s+new\s+(?P<lib>[a-zA-Z]\w*)\.(?P<name>[a-zA-Z]\w*)',
-        re.MULTILINE | re.IGNORECASE)
+    _package_instance_re = re.compile(PACKAGE_INSTANCE_PATTERN,
+                                      re.MULTILINE | re.IGNORECASE)
 
     @classmethod
     def _find_package_instance_references(cls, code):
