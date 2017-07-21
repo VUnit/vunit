@@ -16,7 +16,9 @@ from vunit.vhdl_parser import (VHDLDesignFile,
                                VHDLEnumerationType,
                                VHDLArrayType,
                                VHDLReference,
-                               VHDLRecordType)
+                               VHDLRecordType,
+                               VHDLSubtype,
+                               VHDLConstant)
 
 
 class TestVHDLParser(TestCase):  # pylint: disable=too-many-public-methods
@@ -404,6 +406,19 @@ type unconstrained_natural_array_t is array ( integer range <> ) of natural;
         }
         self.assertEqual(arrays, expect)
 
+    def test_that_constants_are_found(self):
+        code = """\
+constant FISH: natural := 6;
+constant TWO_FISH: natural := 2 * FISH;
+"""
+        fish, two_fish = list(VHDLConstant.find(code))
+        self.assertEqual(fish.identifier, 'FISH')
+        self.assertEqual(fish.type_indication.type_mark, 'natural')
+        self.assertEqual(fish.text, '6')
+        self.assertEqual(two_fish.identifier, 'TWO_FISH')
+        self.assertEqual(two_fish.type_indication.type_mark, 'natural')
+        self.assertEqual(two_fish.text, '2 * FISH')
+
     def test_that_record_type_declarations_are_found(self):
         code = """\
 type space_time_t is record
@@ -438,6 +453,26 @@ record
         self.assertEqual(records['foo'][0].subtype_indication.type_mark, 'std_logic_vector')
         self.assertEqual(records['foo'][0].subtype_indication.constraint, '(7 downto 0)')
         self.assertTrue(records['foo'][0].subtype_indication.array_type)
+
+    def test_that_array_subtype_declarations_are_found(self):
+        code = """\
+subtype cfa_t is unconstrained_fish_array_t(7 downto 0);
+subtype data_t is std_logic_vector ( DATA_WIDTH - 1 downto 0);
+type constrained_badgers_array_t is array ( -1 downto 0 ) of badger_t;
+"""
+        cfa_t, data_t = list(VHDLSubtype.find(code))
+
+        self.assertEqual(cfa_t.identifier, 'cfa_t')
+        self.assertEqual(cfa_t.subtype_indication.type_mark, 'unconstrained_fish_array_t')
+        self.assertEqual(cfa_t.range1.left, '7')
+        self.assertEqual(cfa_t.range1.direction, 'downto')
+        self.assertEqual(cfa_t.range1.right, '0')
+
+        self.assertEqual(data_t.identifier, 'data_t')
+        self.assertEqual(data_t.subtype_indication.type_mark, 'std_logic_vector')
+        self.assertEqual(data_t.range1.left, 'DATA_WIDTH - 1')
+        self.assertEqual(data_t.range1.direction, 'downto')
+        self.assertEqual(data_t.range1.right, '0')
 
     def parse_single_entity(self, code):
         """
