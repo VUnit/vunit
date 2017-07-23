@@ -187,6 +187,14 @@ begin
       assert pop_time(queue) = -1 fs;
       assert pop_time(queue) = -1 hr;
       assert pop_time(queue) = -1 hr - 1 fs;
+    elsif run("Test codecs") then
+      queue := allocate;
+      check(decode(encode(queue)) = queue);
+
+      another_queue := allocate;
+      push_string(another_queue, "hello world");
+      push_real(another_queue, 1.0);
+      check(decode(encode(another_queue)) = another_queue);
     end if;
 
     test_runner_cleanup(runner);

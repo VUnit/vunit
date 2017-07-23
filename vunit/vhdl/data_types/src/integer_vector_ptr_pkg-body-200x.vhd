@@ -4,6 +4,9 @@
 --
 -- Copyright (c) 2016, Lars Asplund lars.anders.asplund@gmail.com
 
+use work.codec_pkg.all;
+use work.codec_builder_pkg.all;
+
 package body integer_vector_ptr_pkg is
   type integer_vector is array (natural range <>) of integer;
   type integer_vector_access_t is access integer_vector;
@@ -142,5 +145,27 @@ package body integer_vector_ptr_pkg is
   begin
     integer_vector_ptr_storage.resize(ptr, length, drop, value);
   end procedure;
+
+  function encode(data : integer_vector_ptr_t) return string is
+  begin
+    return encode(data.index);
+  end;
+
+  function decode(code : string) return integer_vector_ptr_t is
+    variable ret_val : integer_vector_ptr_t;
+    variable index : positive := code'left;
+  begin
+    decode(code, index, ret_val);
+
+    return ret_val;
+  end;
+
+  procedure decode (
+    constant code : string;
+    variable index : inout positive;
+    variable result : out integer_vector_ptr_t) is
+  begin
+    decode(code, index, result.index);
+  end;
 
 end package body;

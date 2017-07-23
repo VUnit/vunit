@@ -9,6 +9,8 @@ use ieee.std_logic_1164.all;
 use ieee.math_real.all;
 use work.integer_vector_ptr_pkg.all;
 use work.string_ptr_pkg.all;
+use work.codec_pkg.all;
+use work.codec_builder_pkg.all;
 
 package queue_pkg is
 
@@ -83,6 +85,11 @@ package queue_pkg is
   alias push_queue_ref is push[queue_t, queue_t];
   alias pop_queue_ref is pop[queue_t return queue_t];
 
+  function encode(data : queue_t) return string;
+  function decode(code : string) return queue_t;
+  procedure decode (constant code : string; variable index : inout positive; variable result : out queue_t);
+  alias encode_queue_t is encode[queue_t return string];
+  alias decode_queue_t is decode[string return queue_t];
 end package;
 
 package body queue_pkg is
@@ -413,6 +420,26 @@ package body queue_pkg is
     result.p_meta := pop_integer_vector_ptr_ref(queue);
     result.data := pop_string_ptr_ref(queue);
     return result;
+  end;
+
+  function encode(data : queue_t) return string is
+  begin
+    return encode(data.p_meta) & encode(to_integer(data.data));
+  end;
+
+  function decode(code : string) return queue_t is
+    variable ret_val : queue_t;
+    variable index : positive := code'left;
+  begin
+    decode(code, index, ret_val);
+
+    return ret_val;
+  end;
+
+  procedure decode (constant code : string; variable index : inout positive; variable result : out queue_t) is
+  begin
+    decode(code, index, result.p_meta);
+    decode(code, index, result.data);
   end;
 
 end package body;

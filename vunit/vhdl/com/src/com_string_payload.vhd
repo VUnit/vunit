@@ -6,7 +6,7 @@
 
 use work.com_types_pkg.all;
 use work.com_pkg.all;
-use work.com_codec_pkg.all;
+use work.codec_pkg.all;
 
 package com_string_payload_pkg is
   procedure send (

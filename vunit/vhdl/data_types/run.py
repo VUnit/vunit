@@ -15,6 +15,8 @@ lib = ui.library("vunit_lib")
 for file_name in glob(join(root, "test", "*")):
     if basename(file_name).endswith("2008.vhd") and ui.vhdl_standard != "2008":
         continue
+    if basename(file_name) == "tb_codec-2008.vhd" and ui.vhdl_standard != "2008":
+        continue
     lib.add_source_file(file_name)
 
 ui.main()

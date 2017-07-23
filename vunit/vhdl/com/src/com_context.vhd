@@ -8,10 +8,12 @@ context com_context is
   library vunit_lib;
   use vunit_lib.com_pkg.all;
   use vunit_lib.com_types_pkg.all;
-  use vunit_lib.com_codec_pkg.all;
+  use vunit_lib.codec_pkg.all;
+  use vunit_lib.codec_2008_pkg.all;
   use vunit_lib.com_string_pkg.all;
+  use vunit_lib.codec_builder_pkg.all;
+  use vunit_lib.codec_builder_2008_pkg.all;
   use vunit_lib.com_debug_codec_builder_pkg.all;
-  use vunit_lib.com_std_codec_builder_pkg.all;
   use vunit_lib.com_string_payload_pkg.all;
   use vunit_lib.com_deprecated_pkg.all;
 end context;

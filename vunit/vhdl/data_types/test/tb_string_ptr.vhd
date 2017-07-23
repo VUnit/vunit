@@ -107,6 +107,14 @@ begin
         resize(ptr, 4);
         set(ptr, 4, '1');
         assert to_string(ptr) = "abc1";
+      elsif run("Test codecs") then
+        ptr := allocate(0);
+        check(decode(encode(ptr)) = ptr);
+
+        ptr2 := allocate(2);
+        set(ptr2, 1, another_random_value);
+        set(ptr2, 2, a_random_value);
+        check(decode(encode(ptr2)) = ptr2);
       end if;
     end loop;
 

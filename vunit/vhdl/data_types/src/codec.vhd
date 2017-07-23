@@ -1,15 +1,203 @@
--- Com codec package provides codec functions for basic types
+-- This file provides functionality to encode/decode standard types to/from string.
 --
 -- This Source Code Form is subject to the terms of the Mozilla Public
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2015-2017, Lars Asplund lars.anders.asplund@gmail.com
 
-use work.com_std_codec_builder_pkg.all;
-use work.com_debug_codec_builder_pkg.all;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.math_complex.all;
+use ieee.numeric_bit.all;
+use ieee.numeric_std.all;
+use ieee.math_real.all;
 
-package body com_codec_pkg is
+use std.textio.all;
+
+use work.codec_builder_pkg.all;
+
+package codec_pkg is
+  -----------------------------------------------------------------------------
+  -- Predefined scalar types
+  -----------------------------------------------------------------------------
+  function encode (
+    constant data : integer)
+    return string;
+  function decode (
+    constant code : string)
+    return integer;
+  function encode (
+    constant data : real)
+    return string;
+  function decode (
+    constant code : string)
+    return real;
+  function encode (
+    constant data : time)
+    return string;
+  function decode (
+    constant code : string)
+    return time;
+  function encode (
+    constant data : boolean)
+    return string;
+  function decode (
+    constant code : string)
+    return boolean;
+  function encode (
+    constant data : bit)
+    return string;
+  function decode (
+    constant code : string)
+    return bit;
+  function encode (
+    constant data : std_ulogic)
+    return string;
+  function decode (
+    constant code : string)
+    return std_ulogic;
+  function encode (
+    constant data : severity_level)
+    return string;
+  function decode (
+    constant code : string)
+    return severity_level;
+  function encode (
+    constant data : file_open_status)
+    return string;
+  function decode (
+    constant code : string)
+    return file_open_status;
+  function encode (
+    constant data : file_open_kind)
+    return string;
+  function decode (
+    constant code : string)
+    return file_open_kind;
+  function encode (
+    constant data : character)
+    return string;
+  function decode (
+    constant code : string)
+    return character;
+
+  -----------------------------------------------------------------------------
+  -- Predefined composite types
+  -----------------------------------------------------------------------------
+  function encode (
+    constant data : string)
+    return string;
+  function decode (
+    constant code : string)
+    return string;
+  function encode (
+    constant data : bit_vector)
+    return string;
+  function decode (
+    constant code : string)
+    return bit_vector;
+  function encode (
+    constant data : std_ulogic_vector)
+    return string;
+  function decode (
+    constant code : string)
+    return std_ulogic_vector;
+  function encode (
+    constant data : complex)
+    return string;
+  function decode (
+    constant code : string)
+    return complex;
+  function encode (
+    constant data : complex_polar)
+    return string;
+  function decode (
+    constant code : string)
+    return complex_polar;
+  function encode (
+    constant data : ieee.numeric_bit.unsigned)
+    return string;
+  function decode (
+    constant code : string)
+    return ieee.numeric_bit.unsigned;
+  function encode (
+    constant data : ieee.numeric_bit.signed)
+    return string;
+  function decode (
+    constant code : string)
+    return ieee.numeric_bit.signed;
+  function encode (
+    constant data : ieee.numeric_std.unsigned)
+    return string;
+  function decode (
+    constant code : string)
+    return ieee.numeric_std.unsigned;
+  function encode (
+    constant data : ieee.numeric_std.signed)
+    return string;
+  function decode (
+    constant code : string)
+    return ieee.numeric_std.signed;
+
+  -----------------------------------------------------------------------------
+  -- Aliases
+  -----------------------------------------------------------------------------
+  alias encode_integer is encode[integer return string];
+  alias decode_integer is decode[string return integer];
+  alias encode_real is encode[real return string];
+  alias decode_real is decode[string return real];
+  alias encode_time is encode[time return string];
+  alias decode_time is decode[string return time];
+  alias encode_boolean is encode[boolean return string];
+  alias decode_boolean is decode[string return boolean];
+  alias encode_bit is encode[bit return string];
+  alias decode_bit is decode[string return bit];
+  alias encode_std_ulogic is encode[std_ulogic return string];
+  alias decode_std_ulogic is decode[string return std_ulogic];
+  alias encode_severity_level is encode[severity_level return string];
+  alias decode_severity_level is decode[string return severity_level];
+  alias encode_file_open_status is encode[file_open_status return string];
+  alias decode_file_open_status is decode[string return file_open_status];
+  alias encode_file_open_kind is encode[file_open_kind return string];
+  alias decode_file_open_kind is decode[string return file_open_kind];
+  alias encode_character is encode[character return string];
+  alias decode_character is decode[string return character];
+
+  alias encode_string is encode[string return string];
+  alias decode_string is decode[string return string];
+  alias encode_bit_vector is encode[bit_vector return string];
+  alias decode_bit_vector is decode[string return bit_vector];
+  alias encode_std_ulogic_vector is encode[std_ulogic_vector return string];
+  alias decode_std_ulogic_vector is decode[string return std_ulogic_vector];
+  alias encode_complex is encode[complex return string];
+  alias decode_complex is decode[string return complex];
+  alias encode_complex_polar is encode[complex_polar return string];
+  alias decode_complex_polar is decode[string return complex_polar];
+  alias encode_numeric_bit_unsigned is encode[ieee.numeric_bit.unsigned return string];
+  alias decode_numeric_bit_unsigned is decode[string return ieee.numeric_bit.unsigned];
+  alias encode_numeric_bit_signed is encode[ieee.numeric_bit.signed return string];
+  alias decode_numeric_bit_signed is decode[string return ieee.numeric_bit.signed];
+  alias encode_numeric_std_unsigned is encode[ieee.numeric_std.unsigned return string];
+  alias decode_numeric_std_unsigned is decode[string return ieee.numeric_std.unsigned];
+  alias encode_numeric_std_signed is encode[ieee.numeric_std.signed return string];
+  alias decode_numeric_std_signed is decode[string return ieee.numeric_std.signed];
+
+  -----------------------------------------------------------------------------
+  -- Support
+  -----------------------------------------------------------------------------
+  type range_t is array (integer range <>) of bit;
+
+  function get_range (
+    constant code : string)
+    return range_t;
+  function encode (
+    constant data : std_ulogic_array)
+    return string;
+
+end package;
+
+package body codec_pkg is
   -----------------------------------------------------------------------------
   -- Predefined scalar types
   -----------------------------------------------------------------------------
@@ -34,9 +222,46 @@ package body com_codec_pkg is
   function encode (
     constant data : real)
     return string is
-    constant f64 : float64 := (others => '0');
+    constant is_signed : boolean := data < 0.0;
+    variable val : real := data;
+    variable exp : integer;
+    variable low : integer;
+    variable high : integer;
+
+    function log2 (a : real) return integer is
+      variable y : real;
+      variable n : integer := 0;
+    begin
+      if (a = 1.0 or a = 0.0) then
+        return 0;
+      end if;
+      y := a;
+      if(a > 1.0) then
+        while y >= 2.0 loop
+          y := y / 2.0;
+          n := n + 1;
+        end loop;
+        return n;
+      end if;
+      -- o < y < 1
+      while y < 1.0 loop
+        y := y * 2.0;
+        n := n - 1;
+      end loop;
+      return n;
+    end function;
   begin
-    return to_byte_array(to_bv(to_slv(to_float(data, f64))));
+    if is_signed then
+      val := -val;
+    end if;
+
+    exp := log2(val);
+    -- Assume 53 mantissa bits
+    val := val * 2.0 ** (-exp + 53);
+    high := integer(floor(val * 2.0 ** (-31)));
+    low := integer(val - real(high) * 2.0 ** 31);
+
+    return encode(is_signed) & encode(exp) & encode(low) & encode(high);
   end;
 
   function decode (
@@ -50,15 +275,15 @@ package body com_codec_pkg is
     return ret_val;
   end;
 
+  constant simulator_resolution : time := get_simulator_resolution;
+
   function encode (
     constant data : time)
     return string is
 
-    constant resolution  : time := std.env.resolution_limit;
-
     function modulo(t : time; m : natural) return integer is
     begin
-      return (integer((t - (t/m)*m)/resolution) mod m);
+      return (integer((t - (t/m)*m)/simulator_resolution) mod m);
     end function;
 
     variable ret_val     : string(1 to 8);
@@ -70,7 +295,7 @@ package body com_codec_pkg is
     for i in 8 downto 1 loop
       ascii := modulo(t, 256);
       ret_val(i) := character'val(ascii);
-      t          := (t - (ascii * resolution))/256;
+      t          := (t - (ascii * simulator_resolution))/256;
     end loop;
     return ret_val;
   end;
@@ -301,33 +526,6 @@ package body com_codec_pkg is
   end;
 
   function encode (
-    constant data : boolean_vector)
-    return string is
-    variable data_bv : bit_vector(data'range);
-  begin
-    for i in data'range loop
-      if data(i) then
-        data_bv(i) := '1';
-      else
-        data_bv(i) := '0';
-      end if;
-    end loop;
-
-    return encode(data_bv);
-  end;
-
-  function decode (
-    constant code : string)
-    return boolean_vector is
-    variable ret_val : boolean_vector(get_range(code)'range) := (others => false);
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
-    return ret_val;
-  end;
-
-  function encode (
     constant data : bit_vector)
     return string is
     variable ret_val : string(1 to 9 + (data'length + 7) / 8);
@@ -345,84 +543,6 @@ package body com_codec_pkg is
     constant code : string)
     return bit_vector is
     variable ret_val : bit_vector(get_range(code)'range) := (others => '0');
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
-    return ret_val;
-  end;
-
-  function encode (
-    constant data : integer_vector)
-    return string is
-    variable ret_val : string(1 to 9 + data'length*4);
-    variable index   : positive := 10;
-  begin
-    ret_val(1 to 9) := encode_array_header(encode(data'left), encode(data'right), encode(data'ascending));
-    for i in data'range loop
-      ret_val(index to index + 3) := encode(data(i));
-      index                       := index + 4;
-    end loop;
-
-    return ret_val;
-  end;
-
-  function decode (
-    constant code : string)
-    return integer_vector is
-    variable ret_val : integer_vector(get_range(code)'range) := (others => integer'left);
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
-    return ret_val;
-  end;
-
-  function encode (
-    constant data : real_vector)
-    return string is
-    variable ret_val : string(1 to 9 + 8*data'length);
-    variable index   : positive := 10;
-  begin
-    ret_val(1 to 9) := encode_array_header(encode(data'left), encode(data'right), encode(data'ascending));
-    for i in data'range loop
-      ret_val(index to index + 7) := encode(data(i));
-      index                       := index + 8;
-    end loop;
-
-    return ret_val;
-  end;
-
-  function decode (
-    constant code : string)
-    return real_vector is
-    variable ret_val : real_vector(get_range(code)'range) := (others => real'left);
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
-    return ret_val;
-  end;
-
-  function encode (
-    constant data : time_vector)
-    return string is
-    variable ret_val : string(1 to 9 + 8*data'length);
-    variable index   : positive := 10;
-  begin
-    ret_val(1 to 9) := encode_array_header(encode(data'left), encode(data'right), encode(data'ascending));
-    for i in data'range loop
-      ret_val(index to index + 7) := encode(data(i));
-      index                       := index + 8;
-    end loop;
-
-    return ret_val;
-  end;
-
-  function decode (
-    constant code : string)
-    return time_vector is
-    variable ret_val : time_vector(get_range(code)'range) := (others => time'left);
     variable index   : positive := code'left;
   begin
     decode(code, index, ret_val);
@@ -555,90 +675,4 @@ package body com_codec_pkg is
 
     return ret_val;
   end;
-
-  function encode (
-    constant data : ufixed)
-    return string is
-  begin
-    return encode(std_ulogic_array(data));
-  end;
-
-  function decode (
-    constant code : string)
-    return ufixed is
-    variable ret_val : ufixed(get_range(code)'range);
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
-    return ret_val;
-  end;
-
-  function encode (
-    constant data : sfixed)
-    return string is
-  begin
-    return encode(std_ulogic_array(data));
-  end;
-
-  function decode (
-    constant code : string)
-    return sfixed is
-    variable ret_val : sfixed(get_range(code)'range);
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
-    return ret_val;
-  end;
-
-  function encode (
-    constant data : float)
-    return string is
-  begin
-    return encode(std_ulogic_array(data));
-  end;
-
-  function decode (
-    constant code : string)
-    return float is
-    variable ret_val : float(get_range(code)'range);
-    variable index   : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
-    return ret_val;
-  end;
-
-  -----------------------------------------------------------------------------
-  -- VUnit types
-  -----------------------------------------------------------------------------
-  function encode(data : queue_t) return string is
-  begin
-    return encode(data.p_meta) & encode(to_integer(data.data));
-  end;
-
-  function decode(code : string) return queue_t is
-    variable ret_val : queue_t;
-    variable index : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
-    return ret_val;
-  end;
-
-  function encode(data : integer_vector_ptr_t) return string is
-  begin
-    return encode(data.index);
-  end;
-
-  function decode(code : string) return integer_vector_ptr_t is
-    variable ret_val : integer_vector_ptr_t;
-    variable index : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
-    return ret_val;
-  end;
-
-end package body com_codec_pkg;
+end package body codec_pkg;

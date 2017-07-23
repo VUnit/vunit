@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2017, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Module for generating VHDL com codecs.
@@ -14,12 +14,12 @@ from vunit.com.codec_vhdl_package import CodecVHDLPackage
 
 
 def generate_codecs(input_package_design_unit, codec_package_name,  # pylint: disable=too-many-arguments
-                    used_packages, output_file, debug):
+                    used_packages, output_file):
     """This function generates codecs for the types in the input package and compile the result into
     codec_package_name. used_packages is a list specifying what to include into the result package
     other than the input package. A used package on the format 'lib.pkg' will result in a library and
     a use statement. A used package on the format 'pkg' is assumed to be located in work. output_file
-    is where the resulting codec package is written. The debug codecs are generated when debug is set True."""
+    is where the resulting codec package is written."""
 
     # The design unit doesn't contain the package so it must be found first in the source file. This file
     # may contain other packages
@@ -29,7 +29,7 @@ def generate_codecs(input_package_design_unit, codec_package_name,  # pylint: di
         raise KeyError(input_package_design_unit.name)
 
     # Get all function declarations and definitions derived from the package type definitions
-    declarations, definitions = package.generate_codecs_and_support_functions(debug)
+    declarations, definitions = package.generate_codecs_and_support_functions()
 
     # Create extra use clauses
     use_clauses = ''

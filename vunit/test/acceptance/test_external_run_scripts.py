@@ -192,11 +192,6 @@ class TestExternalRunScripts(unittest.TestCase):
         self.check(join(VHDL_PATH, "com", "run.py"), exit_code=1)
         check_report(self.report_file)
 
-    def test_com_debug_vhdl_2008(self):
-        self.check(join(VHDL_PATH, "com", "run.py"),
-                   args=["--use-debug-codecs"],
-                   exit_code=1)
-
     def setUp(self):
         self.output_path = join(dirname(__file__), "external_run_out")
         self.report_file = join(self.output_path, "xunit.xml")

@@ -168,11 +168,6 @@ def _create_argument_parser(description=None, for_documentation=False):
     SIMULATOR_FACTORY.add_arguments(parser,
                                     for_all_simulators=for_documentation)
 
-    com = parser.add_argument_group("com", description="Flags specific to the com message passing package")
-    com.add_argument('--use-debug-codecs', action='store_true',
-                     default=False,
-                     help='Run with debug features enabled')
-
     return parser
 
 

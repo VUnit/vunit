@@ -27,5 +27,13 @@ package integer_vector_ptr_pkg is
   impure function get(ptr : integer_vector_ptr_t; index : integer) return integer;
   procedure reallocate(ptr : integer_vector_ptr_t; length : natural; value : integer := 0);
   procedure resize(ptr : integer_vector_ptr_t; length : natural; drop : natural := 0; value : integer := 0);
+  function encode(data : integer_vector_ptr_t) return string;
+  function decode(code : string) return integer_vector_ptr_t;
+  procedure decode(
+    constant code   : string;
+    variable index : inout positive;
+    variable result : out integer_vector_ptr_t);
+  alias encode_integer_vector_ptr_t is encode[integer_vector_ptr_t return string];
+  alias decode_integer_vector_ptr_t is decode[string return integer_vector_ptr_t];
 
 end package;

@@ -4,6 +4,9 @@
 --
 -- Copyright (c) 2017, Lars Asplund lars.anders.asplund@gmail.com
 
+use work.codec_pkg.all;
+use work.codec_builder_pkg.all;
+
 package body string_ptr_pkg is
   type string_access_t is access string;
   type string_access_vector_t is array (natural range <>) of string_access_t;
@@ -113,5 +116,24 @@ package body string_ptr_pkg is
     end loop;
     return result;
   end function;
+
+  function encode(data : string_ptr_t) return string is
+  begin
+    return encode(data.index);
+  end;
+
+  function decode(code : string) return string_ptr_t is
+    variable ret_val : string_ptr_t;
+    variable index : positive := code'left;
+  begin
+    decode(code, index, ret_val);
+
+    return ret_val;
+  end;
+
+  procedure decode (constant code : string; variable index : inout positive; variable result : out string_ptr_t) is
+  begin
+    decode(code, index, result.index);
+  end;
 
 end package body;

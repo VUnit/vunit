@@ -29,4 +29,10 @@ package string_ptr_pkg is
   procedure reallocate(ptr : string_ptr_t; value : string);
   procedure resize(ptr : string_ptr_t; length : natural; drop : natural := 0);
   impure function to_string(ptr : string_ptr_t) return string;
+  function encode(data : string_ptr_t) return string;
+  function decode(code : string) return string_ptr_t;
+  procedure decode (constant code : string; variable index : inout positive; variable result : out string_ptr_t);
+  alias encode_string_ptr_t is encode[string_ptr_t return string];
+  alias decode_string_ptr_t is decode[string return string_ptr_t];
+
 end package;

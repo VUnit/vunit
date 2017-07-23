@@ -11,7 +11,7 @@ use work.com_types_pkg.all;
 use work.com_support_pkg.all;
 use work.queue_pkg.all;
 use work.queue_pool_pkg.all;
-use work.com_codec_pkg.all;
+use work.codec_pkg.all;
 
 use std.textio.all;
 

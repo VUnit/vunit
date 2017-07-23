@@ -90,7 +90,7 @@ class Builtins(object):
 
         self._vunit_lib.add_source_files(join(VHDL_PATH, "random", "src", "*.vhd"))
 
-    def _add_com(self, use_debug_codecs=False):
+    def _add_com(self):
         """
         Add com library
         """
@@ -102,22 +102,15 @@ class Builtins(object):
         self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com.vhd"))
         self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_api.vhd"))
         self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_types.vhd"))
-        self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_codec_api.vhd"))
         if supports_context:
             self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_context.vhd"))
         self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_string.vhd"))
         self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_debug_codec_builder.vhd"))
-        self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_std_codec_builder.vhd"))
         self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_support.vhd"))
         self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_messenger.vhd"))
         self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_deprecated.vhd"))
         self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_common.vhd"))
         self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_string_payload.vhd"))
-
-        if use_debug_codecs:
-            self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_codec_debug.vhd"))
-        else:
-            self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_codec.vhd"))
 
     def _add_osvvm(self):
         """

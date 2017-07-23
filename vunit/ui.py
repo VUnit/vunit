@@ -305,7 +305,6 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._external_preprocessors = []
         self._location_preprocessor = None
         self._check_preprocessor = None
-        self._use_debug_codecs = args.use_debug_codecs
 
         self._simulator_factory = SIMULATOR_FACTORY
         self._simulator_output_path = join(self._output_path, SIMULATOR_FACTORY.simulator_name)
@@ -826,10 +825,6 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
     def codecs_path(self):
         return join(self._output_path, "codecs")
 
-    @property
-    def use_debug_codecs(self):
-        return self._use_debug_codecs
-
     def _compile(self, simulator_if):
         """
         Compile entire project
@@ -873,22 +868,11 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         self._builtins.add_vhdl_builtins(mock_lang, mock_log)
 
-    def add_com(self, use_debug_codecs=None):
+    def add_com(self):
         """
         Add communication package
-
-        :param use_debug_codecs: Use human readable debug codecs
-
-           `None`: Use command line argument setting
-
-           `False`: Never use debug codecs
-
-           `True`: Always use debug codecs
         """
-        if use_debug_codecs is not None:
-            self._use_debug_codecs = use_debug_codecs
-
-        self._builtins.add("com", dict(use_debug_codecs=self._use_debug_codecs))
+        self._builtins.add("com")
 
     def add_array_util(self):
         """
@@ -1455,8 +1439,7 @@ class PackageFacade(object):
         codec_generator.generate_codecs(self._design_unit,
                                         codec_package_name,
                                         used_packages,
-                                        output_file_name,
-                                        self._parent.use_debug_codecs)
+                                        output_file_name)
 
         return self._parent.add_source_files(output_file_name, self._library_name)
 

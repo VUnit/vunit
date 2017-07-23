@@ -4,27 +4,20 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
-
-library vunit_lib;
-context vunit_lib.vunit_context;
-use work.queue_pkg.all;
-use work.string_ptr_pkg.all;
-use work.integer_vector_ptr_pkg.all;
+-- Copyright (c) 2015-2017, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.math_complex.all;
 use ieee.numeric_bit.all;
 use ieee.numeric_std.all;
-use ieee.fixed_pkg.all;
-use ieee.float_pkg.all;
 
 use std.textio.all;
 
-package com_std_codec_builder_pkg is
+package codec_builder_pkg is
   type std_ulogic_array is array (integer range <>) of std_ulogic;
 
+  function get_simulator_resolution return time;
   function to_byte_array (
     constant value : bit_vector)
     return string;
@@ -82,23 +75,7 @@ package com_std_codec_builder_pkg is
   procedure decode (
     constant code   :       string;
     variable index  : inout positive;
-    variable result : out   boolean_vector);
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
     variable result : out   bit_vector);
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   integer_vector);
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   real_vector);
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   time_vector);
   procedure decode (
     constant code   :       string;
     variable index  : inout positive;
@@ -127,27 +104,6 @@ package com_std_codec_builder_pkg is
     constant code   :       string;
     variable index  : inout positive;
     variable result : out   ieee.numeric_std.signed);
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   ufixed);
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   sfixed);
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   float);
-  procedure decode (constant code : string; variable index : inout positive; variable result : out queue_t);
-  procedure decode (
-    constant code   : string;
-    variable index : inout positive;
-    variable result : out integer_vector_ptr_t);
-  procedure decode (
-    constant code   : string;
-    variable index : inout positive;
-    variable result : out string_ptr_t);
   function encode_array_header (
     constant range_left1   : string;
     constant range_right1  : string;
@@ -156,9 +112,25 @@ package com_std_codec_builder_pkg is
     constant range_right2  : string := "";
     constant is_ascending2 : string := "T")
     return string;
-end package com_std_codec_builder_pkg;
+end package codec_builder_pkg;
 
-package body com_std_codec_builder_pkg is
+package body codec_builder_pkg is
+  function get_simulator_resolution return time is
+    type time_array_t is array (integer range <>) of time;
+    variable resolution : time;
+    constant resolutions : time_array_t(1 to 8) := (
+      1.0e-15 sec, 1.0e-12 sec , 1.0e-9 sec, 1.0e-6 sec, 1.0e-3 sec, 1 sec, 1 min, 1 hr);
+  begin
+    for r in resolutions'range loop
+      resolution := resolutions(r);
+      exit when resolution > 0 sec;
+    end loop;
+
+    return resolution;
+  end;
+
+  constant simulator_resolution : time := get_simulator_resolution;
+
   function to_byte_array (
     constant value : bit_vector)
     return string is
@@ -199,23 +171,32 @@ package body com_std_codec_builder_pkg is
     constant code   :       string;
     variable index  : inout positive;
     variable result : out   real) is
-    constant f64 : float64 := (others => '0');
+    variable is_signed : boolean;
+    variable exp, low, high : integer;
+    variable result_i : real;
   begin
-    result := to_real(to_float(to_slv(from_byte_array(code(index to index + 7))), f64));
-    index  := index + 8;
+    decode(code, index, is_signed);
+    decode(code, index, exp);
+    decode(code, index, low);
+    decode(code, index, high);
+
+    result_i := (real(low) + real(high) * 2.0**31) * 2.0 ** (exp - 53);
+    if is_signed then
+      result_i := -result_i;
+    end if;
+    result := result_i;
   end procedure decode;
 
   procedure decode (
     constant code   :       string;
     variable index  : inout positive;
     variable result : out   time) is
-    constant resolution  : time           := std.env.resolution_limit;
     constant code_int    : string(1 to 8) := code(index to index + 7);
     variable r : time;
     variable b : integer;
   begin
     -- @TODO assumes time is 8 bytes
-    r := resolution * 0;
+    r := simulator_resolution * 0;
 
     for i in code_int'range loop
       b := character'pos(code_int(i));
@@ -223,7 +204,7 @@ package body com_std_codec_builder_pkg is
       if i = 1 and b >= 128 then
         b := b - 256;
       end if;
-      r := r + b * resolution;
+      r := r + b * simulator_resolution;
     end loop;
 
     index := index + 8;
@@ -344,18 +325,6 @@ package body com_std_codec_builder_pkg is
   procedure decode (
     constant code   :       string;
     variable index  : inout positive;
-    variable result : out   boolean_vector) is
-    variable result_bv : bit_vector(result'range);
-  begin
-    decode(code, index, result_bv);
-    for i in result'range loop
-      result(i) := result_bv(i) = '1';
-    end loop;
-  end;
-
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
     variable result : out   bit_vector) is
     constant n_bytes     : natural := (result'length + 7) / 8;
     variable result_temp : bit_vector(n_bytes * 8 - 1 downto 0);
@@ -365,39 +334,6 @@ package body com_std_codec_builder_pkg is
 
     index := index + 9 + n_bytes;
   end procedure decode;
-
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   integer_vector) is
-  begin
-    index := index + 9;
-    for i in result'range loop
-      decode(code, index, result(i));
-    end loop;
-  end;
-
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   real_vector) is
-  begin
-    index := index + 9;
-    for i in result'range loop
-      decode(code, index, result(i));
-    end loop;
-  end;
-
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   time_vector) is
-  begin
-    index := index + 9;
-    for i in result'range loop
-      decode(code, index, result(i));
-    end loop;
-  end;
 
   procedure decode (
     constant code   :       string;
@@ -467,58 +403,6 @@ package body com_std_codec_builder_pkg is
     result := ieee.numeric_std.signed(result_slv);
   end;
 
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   ufixed) is
-    variable result_sula : std_ulogic_array(result'range);
-  begin
-    decode(code, index, result_sula);
-    result := ufixed(result_sula);
-  end;
-
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   sfixed) is
-    variable result_sula : std_ulogic_array(result'range);
-  begin
-    decode(code, index, result_sula);
-    result := sfixed(result_sula);
-  end;
-
-  procedure decode (
-    constant code   :       string;
-    variable index  : inout positive;
-    variable result : out   float) is
-    variable result_sula : std_ulogic_array(result'range);
-  begin
-    decode(code, index, result_sula);
-    result := float(result_sula);
-  end;
-
-  procedure decode (constant code : string; variable index : inout positive; variable result : out queue_t) is
-  begin
-    decode(code, index, result.p_meta);
-    decode(code, index, result.data);
-  end;
-
-  procedure decode (
-    constant code : string;
-    variable index : inout positive;
-    variable result : out integer_vector_ptr_t) is
-  begin
-    decode(code, index, result.index);
-  end;
-
-  procedure decode (
-    constant code : string;
-    variable index : inout positive;
-    variable result : out string_ptr_t) is
-  begin
-    decode(code, index, result.index);
-  end;
-
   function encode_array_header (
     constant range_left1   : string;
     constant range_right1  : string;
@@ -534,4 +418,4 @@ package body com_std_codec_builder_pkg is
       return range_left1 & range_right1 & is_ascending1 & range_left2 & range_right2 & is_ascending2;
     end if;
   end function encode_array_header;
-end package body com_std_codec_builder_pkg;
+end package body codec_builder_pkg;

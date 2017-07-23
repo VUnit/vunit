@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2017, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Module containing the CodecVHDLPackage class.
@@ -25,7 +25,6 @@ class CodecVHDLPackage(VHDLPackage):
                                                enumeration_types,
                                                record_types,
                                                array_types)
-        self._debug = False
         self._template = None
 
     @classmethod
@@ -52,14 +51,10 @@ class CodecVHDLPackage(VHDLPackage):
 
         return None
 
-    def generate_codecs_and_support_functions(self, debug=False):
+    def generate_codecs_and_support_functions(self):
         """Generate codecs and communication support functions for the data types defined in self."""
 
-        self._debug = debug
-        if not debug:
-            self._template = PackageStdCodecTemplate()
-        else:
-            self._template = PackageDebugCodecTemplate()
+        self._template = PackageCodecTemplate()
 
         declarations = ''
         definitions = ''
@@ -109,7 +104,7 @@ class CodecVHDLPackage(VHDLPackage):
         declarations = ''
         definitions = ''
         for record in self.record_types:
-            new_declarations, new_definitions = record.generate_codecs_and_support_functions(self._debug)
+            new_declarations, new_definitions = record.generate_codecs_and_support_functions()
             declarations += new_declarations
             definitions += new_definitions
         return declarations, definitions
@@ -120,7 +115,7 @@ class CodecVHDLPackage(VHDLPackage):
         declarations = ''
         definitions = ''
         for array in self.array_types:
-            new_declarations, new_definitions = array.generate_codecs_and_support_functions(self._debug)
+            new_declarations, new_definitions = array.generate_codecs_and_support_functions()
             declarations += new_declarations
             definitions += new_definitions
 
@@ -168,7 +163,7 @@ class CodecVHDLPackage(VHDLPackage):
             else:
                 offset = 0
 
-            new_declarations, new_definitions = enum.generate_codecs_and_support_functions(offset, self._debug)
+            new_declarations, new_definitions = enum.generate_codecs_and_support_functions(offset)
             declarations += new_declarations
             definitions += new_definitions
 
@@ -217,10 +212,7 @@ class CodecVHDLPackage(VHDLPackage):
                     parameter_part = ' (\n' + ';\n'.join(parameter_list) + ')'
                     alias_signature = value + '[' + ', '.join(parameter_type_list) + ' return string];'
 
-                if self._debug:
-                    encodings = ', '.join(encoding_list)
-                else:
-                    encodings = ' & '.join(encoding_list)
+                encodings = ' & '.join(encoding_list)
 
                 declarations += \
                     self._template.msg_type_record_codec_declaration.substitute(name=value,
@@ -264,7 +256,7 @@ class CodecVHDLPackage(VHDLPackage):
 
 
 class PackageCodecTemplate(object):
-    """This class contains package templates common to both standard and debug codecs."""
+    """This class contains package codec templates."""
 
     msg_type_record_codec_declaration = Template("""\
   function $name$parameter_part
@@ -291,10 +283,6 @@ class PackageCodecTemplate(object):
 
 """)
 
-
-class PackageStdCodecTemplate(PackageCodecTemplate):
-    """This class contains standard package codec templates."""
-
     msg_type_record_codec_definition = Template("""\
   function $name$parameter_part
     return string is
@@ -320,38 +308,6 @@ class PackageStdCodecTemplate(PackageCodecTemplate):
     return $type is
   begin
     return decode(code);
-  end;
-
-""")
-
-
-class PackageDebugCodecTemplate(PackageCodecTemplate):
-    """This class contains debug package codec templates."""
-
-    msg_type_record_codec_definition = Template("""\
-  function $name$parameter_part
-    return string is
-  begin
-    return create_group($num_of_encodings, $encodings);
-  end function $name;
-
-""")
-
-    get_specific_msg_type_definition = Template("""\
-  function get_$type (
-    constant code : string)
-    return $type is
-  begin
-    return decode(get_first_element(code));
-  end;
-
-""")
-    get_msg_type_definition = Template("""\
-  function get_msg_type (
-    constant code : string)
-    return $type is
-  begin
-    return decode(get_first_element(code));
   end;
 
 """)
