@@ -4,9 +4,6 @@
 --
 -- Copyright (c) 2017, Lars Asplund lars.anders.asplund@gmail.com
 
-use work.codec_pkg.all;
-use work.codec_builder_pkg.all;
-
 package body string_ptr_pkg is
   type string_access_t is access string;
   type string_access_vector_t is array (natural range <>) of string_access_t;

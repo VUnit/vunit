@@ -10,6 +10,9 @@
 -- into a singleton datastructure of string access types.
 --
 
+use work.codec_pkg.all;
+use work.codec_builder_pkg.all;
+
 package string_ptr_pkg is
   subtype index_t is integer range -1 to integer'high;
   type string_ptr_t is record
@@ -29,6 +32,7 @@ package string_ptr_pkg is
   procedure reallocate(ptr : string_ptr_t; value : string);
   procedure resize(ptr : string_ptr_t; length : natural; drop : natural := 0);
   impure function to_string(ptr : string_ptr_t) return string;
+  constant string_ptr_t_code_length : positive := integer_code_length;
   function encode(data : string_ptr_t) return string;
   function decode(code : string) return string_ptr_t;
   procedure decode (constant code : string; variable index : inout positive; variable result : out string_ptr_t);

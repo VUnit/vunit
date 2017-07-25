@@ -85,6 +85,7 @@ package queue_pkg is
   alias push_queue_ref is push[queue_t, queue_t];
   alias pop_queue_ref is pop[queue_t return queue_t];
 
+  constant queue_t_code_length : positive := integer_vector_ptr_t_code_length + string_ptr_t_code_length;
   function encode(data : queue_t) return string;
   function decode(code : string) return queue_t;
   procedure decode (constant code : string; variable index : inout positive; variable result : out queue_t);
@@ -128,6 +129,26 @@ package body queue_pkg is
     return result;
   end;
 
+  function encode(data : queue_t) return string is
+  begin
+    return encode(data.p_meta) & encode(to_integer(data.data));
+  end;
+
+  function decode(code : string) return queue_t is
+    variable ret_val : queue_t;
+    variable index : positive := code'left;
+  begin
+    decode(code, index, ret_val);
+
+    return ret_val;
+  end;
+
+  procedure decode (constant code : string; variable index : inout positive; variable result : out queue_t) is
+  begin
+    decode(code, index, result.p_meta);
+    decode(code, index, result.data);
+  end;
+
   procedure push(queue : queue_t; value : character) is
     variable tail : integer;
     variable head : integer;
@@ -162,36 +183,31 @@ package body queue_pkg is
     return data;
   end;
 
-  procedure push(queue : queue_t; value : integer) is
-    variable val, byte : integer;
+  procedure push_fix_string(queue : queue_t; value : string) is
   begin
-    val := value;
-    for i in 0 to 3 loop
-      byte := val mod 256;
-      val := (val - byte)/256;
-      push_byte(queue, byte);
+    for i in value'range loop
+      push_character(queue, value(i));
     end loop;
+  end procedure;
+
+  impure function pop_fix_string(queue : queue_t; length : natural) return string is
+    variable result : string(1 to length);
+  begin
+    for i in result'range loop
+      result(i) := pop_character(queue);
+    end loop;
+
+    return result;
+  end;
+
+  procedure push(queue : queue_t; value : integer) is
+  begin
+    push_fix_string(queue, encode(value));
   end;
 
   impure function pop(queue : queue_t) return integer is
-    variable value, byte : integer;
   begin
-    value := pop_byte(queue);
-
-    byte := pop_byte(queue);
-    value := value + byte*256;
-
-    byte := pop_byte(queue);
-    value := value + byte*(256**2);
-
-    byte := pop_byte(queue);
-    if byte < 128 then
-      value := value + byte * 256**3;
-    else
-      value := value + (byte - 256) * 256**3;
-    end if;
-
-    return value;
+    return decode(pop_fix_string(queue, integer_code_length));
   end;
 
   procedure push_byte(queue : queue_t; value : natural range 0 to 255) is
@@ -204,242 +220,105 @@ package body queue_pkg is
     return character'pos(pop_character(queue));
   end;
 
+  procedure push_variable_string(queue : queue_t; value : string) is
+  begin
+    push_integer(queue, value'length);
+    push_fix_string(queue, value);
+  end procedure;
+
+  impure function pop_variable_string(queue : queue_t) return string is
+    constant length : integer := pop_integer(queue);
+  begin
+    return pop_fix_string(queue, length);
+  end;
+
   procedure push(queue : queue_t; value : boolean) is
   begin
-    if value then
-      push_character(queue, '1');
-    else
-      push_character(queue, '0');
-    end if;
+    push_fix_string(queue, encode(value));
   end;
 
   impure function pop(queue : queue_t) return boolean is
   begin
-    return pop_character(queue) = '1';
+    return decode(pop_fix_string(queue, boolean_code_length));
   end;
 
-  function log2 (a : real) return integer is
-    variable y : real;
-    variable n : integer := 0;
-  begin
-    if (a = 1.0 or a = 0.0) then
-      return 0;
-    end if;
-    y := a;
-    if(a > 1.0) then
-      while y >= 2.0 loop
-        y := y / 2.0;
-        n := n + 1;
-      end loop;
-      return n;
-    end if;
-    -- o < y < 1
-    while y < 1.0 loop
-      y := y * 2.0;
-      n := n - 1;
-    end loop;
-    return n;
-  end function;
-
   procedure push(queue : queue_t; value : real) is
-    constant is_signed : boolean := value < 0.0;
-    variable val : real := value;
-    variable exp : integer;
-    variable low : integer;
-    variable high : integer;
   begin
-    if is_signed then
-      val := -val;
-    end if;
-
-    exp := log2(val);
-    -- Assume 53 mantissa bits
-    val := val * 2.0 ** (-exp + 53);
-    high := integer(floor(val * 2.0 ** (-31)));
-    low := integer(val - real(high) * 2.0 ** 31);
-    push_boolean(queue, is_signed);
-    push_integer(queue, exp);
-    push_integer(queue, low);
-    push_integer(queue, high);
+    push_fix_string(queue, encode(value));
   end;
 
   impure function pop(queue : queue_t) return real is
-    constant is_signed : boolean := pop_boolean(queue);
-    variable exp : integer := pop_integer(queue);
-    variable low : integer := pop_integer(queue);
-    variable high : integer := pop_integer(queue);
-    variable val : real := (real(low) + real(high) * 2.0**31) * 2.0 ** (exp - 53);
   begin
-    if is_signed then
-      val := -val;
-    end if;
-    return val;
+    return decode(pop_fix_string(queue, real_code_length));
   end;
 
   procedure push(queue : queue_t; value : std_ulogic) is
   begin
-    push_byte(queue, std_ulogic'pos(value));
+    push_fix_string(queue, encode(value));
   end;
 
   impure function pop(queue : queue_t) return std_ulogic is
   begin
-    return std_ulogic'val(pop_byte(queue));
+    return decode(pop_fix_string(queue, std_ulogic_code_length));
   end;
 
   procedure push(queue : queue_t; value : std_ulogic_vector) is
   begin
-    push_boolean(queue, value'ascending);
-    push_integer(queue, value'left);
-    push_integer(queue, value'right);
-    for i in value'range loop
-      push_std_ulogic(queue, value(i));
-    end loop;
+    push_variable_string(queue, encode(value));
   end;
 
   impure function pop(queue : queue_t) return std_ulogic_vector is
-    variable is_ascending : boolean;
-    variable left_idx, right_idx : integer;
-
-    impure function ascending_std_ulogic_vector return std_ulogic_vector is
-      variable result : std_ulogic_vector(left_idx to right_idx);
-    begin
-      for i in left_idx to right_idx loop
-        result(i) := pop_std_ulogic(queue);
-      end loop;
-      return result;
-    end;
-
-    impure function descending_std_ulogic_vector return std_ulogic_vector is
-      variable result : std_ulogic_vector(left_idx downto right_idx);
-    begin
-      for i in left_idx downto right_idx loop
-        result(i) := pop_std_ulogic(queue);
-      end loop;
-      return result;
-    end;
-
   begin
-    is_ascending := pop_boolean(queue);
-    left_idx := pop_integer(queue);
-    right_idx := pop_integer(queue);
-
-    if is_ascending then
-      return ascending_std_ulogic_vector;
-    else
-      return descending_std_ulogic_vector;
-    end if;
+    return decode(pop_variable_string(queue));
   end;
 
   procedure push(queue : queue_t; value : string) is
   begin
-    push_boolean(queue, value'ascending);
-    push_integer(queue, value'left);
-    push_integer(queue, value'right);
-
-    for i in value'range loop
-      push_character(queue, value(i));
-    end loop;
+    push_variable_string(queue, encode(value));
   end procedure;
 
   impure function pop(queue : queue_t) return string is
-    variable is_ascending : boolean;
-    variable left_idx, right_idx : integer;
-
-    impure function ascending_string return string is
-      variable result : string(left_idx to right_idx);
-    begin
-      for i in left_idx to right_idx loop
-        result(i) := pop_character(queue);
-      end loop;
-      return result;
-    end;
-
-    impure function descending_string return string is
-      variable result : string(left_idx downto right_idx);
-    begin
-      for i in left_idx downto right_idx loop
-        result(i) := pop_character(queue);
-      end loop;
-      return result;
-    end;
-
   begin
-    is_ascending := pop_boolean(queue);
-    left_idx := pop_integer(queue);
-    right_idx := pop_integer(queue);
-
-    if is_ascending then
-      return ascending_string;
-    else
-      return descending_string;
-    end if;
+    return decode(pop_variable_string(queue));
   end;
 
   procedure push(queue : queue_t; value : time) is
-    constant time_str : string := time'image(value);
   begin
-    push_string(queue, time_str);
+    push_fix_string(queue, encode(value));
   end;
 
   impure function pop(queue : queue_t) return time is
-    constant time_str : string := pop_string(queue);
   begin
-    return time'value(time_str);
+    return decode(pop_fix_string(queue, time_code_length));
   end;
 
   procedure push(queue : queue_t; value : integer_vector_ptr_t) is
   begin
-    push_integer(queue, to_integer(value));
+    push_fix_string(queue, encode(value));
   end;
 
   impure function pop(queue : queue_t) return integer_vector_ptr_t is
   begin
-    return to_integer_vector_ptr(pop_integer(queue));
+    return decode(pop_fix_string(queue, integer_vector_ptr_t_code_length));
   end;
 
   procedure push(queue : queue_t; value : string_ptr_t) is
   begin
-    push_integer(queue, to_integer(value));
+    push_fix_string(queue, encode(value));
   end;
 
   impure function pop(queue : queue_t) return string_ptr_t is
   begin
-    return to_string_ptr(pop_integer(queue));
+    return decode(pop_fix_string(queue, string_ptr_t_code_length));
   end;
 
   procedure push(queue : queue_t; value : queue_t) is
   begin
-    push_integer_vector_ptr_ref(queue, value.p_meta);
-    push_string_ptr_ref(queue, value.data);
+    push_fix_string(queue, encode(value));
   end;
 
-  -- Pop a queue reference from the queue
   impure function pop(queue : queue_t) return queue_t is
-    variable result : queue_t;
   begin
-    result.p_meta := pop_integer_vector_ptr_ref(queue);
-    result.data := pop_string_ptr_ref(queue);
-    return result;
+    return decode(pop_fix_string(queue, queue_t_code_length));
   end;
-
-  function encode(data : queue_t) return string is
-  begin
-    return encode(data.p_meta) & encode(to_integer(data.data));
-  end;
-
-  function decode(code : string) return queue_t is
-    variable ret_val : queue_t;
-    variable index : positive := code'left;
-  begin
-    decode(code, index, ret_val);
-
-    return ret_val;
-  end;
-
-  procedure decode (constant code : string; variable index : inout positive; variable result : out queue_t) is
-  begin
-    decode(code, index, result.p_meta);
-    decode(code, index, result.data);
-  end;
-
 end package body;

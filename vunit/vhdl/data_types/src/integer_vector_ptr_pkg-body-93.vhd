@@ -4,9 +4,6 @@
 --
 -- Copyright (c) 2016, Lars Asplund lars.anders.asplund@gmail.com
 
-use work.codec_pkg.all;
-use work.codec_builder_pkg.all;
-
 package body integer_vector_ptr_pkg is
   type integer_vector is array (natural range <>) of integer;
   type integer_vector_access_t is access integer_vector;

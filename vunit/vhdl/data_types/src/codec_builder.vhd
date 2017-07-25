@@ -24,6 +24,13 @@ package codec_builder_pkg is
   function from_byte_array (
     constant byte_array : string)
     return bit_vector;
+
+  constant integer_code_length : positive := 4;
+  constant boolean_code_length : positive := 1;
+  constant real_code_length : positive := boolean_code_length + 3*integer_code_length;
+  constant std_ulogic_code_length : positive := 1;
+  constant time_code_length : positive := 8;
+
   procedure decode (
     constant code   :       string;
     variable index  : inout positive;
@@ -163,8 +170,8 @@ package body codec_builder_pkg is
     variable index  : inout positive;
     variable result : out   integer) is
   begin
-    result := to_integer(ieee.numeric_bit.signed(from_byte_array(code(index to index + 3))));
-    index  := index + 4;
+    result := to_integer(ieee.numeric_bit.signed(from_byte_array(code(index to index + integer_code_length - 1))));
+    index  := index + integer_code_length;
   end procedure decode;
 
   procedure decode (
@@ -191,11 +198,11 @@ package body codec_builder_pkg is
     constant code   :       string;
     variable index  : inout positive;
     variable result : out   time) is
-    constant code_int    : string(1 to 8) := code(index to index + 7);
+    constant code_int    : string(1 to time_code_length) := code(index to index + time_code_length - 1);
     variable r : time;
     variable b : integer;
   begin
-    -- @TODO assumes time is 8 bytes
+    -- @TODO assumes time is time_code_length bytes
     r := simulator_resolution * 0;
 
     for i in code_int'range loop
@@ -207,7 +214,7 @@ package body codec_builder_pkg is
       r := r + b * simulator_resolution;
     end loop;
 
-    index := index + 8;
+    index := index + time_code_length;
     result := r;
   end procedure decode;
 
@@ -217,7 +224,7 @@ package body codec_builder_pkg is
     variable result : out   boolean) is
   begin
     result := code(index) = 'T';
-    index  := index + 1;
+    index  := index + boolean_code_length;
   end procedure decode;
 
   procedure decode (
@@ -239,7 +246,7 @@ package body codec_builder_pkg is
     variable result : out   std_ulogic) is
   begin
     result := std_ulogic'value("'" & code(index) & "'");
-    index  := index + 1;
+    index  := index + std_ulogic_code_length;
   end procedure decode;
 
   procedure decode (

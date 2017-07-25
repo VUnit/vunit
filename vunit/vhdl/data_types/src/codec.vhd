@@ -286,13 +286,13 @@ package body codec_pkg is
       return (integer((t - (t/m)*m)/simulator_resolution) mod m);
     end function;
 
-    variable ret_val     : string(1 to 8);
+    variable ret_val     : string(1 to time_code_length);
     variable t           : time;
     variable ascii       : natural;
   begin
-    -- @TODO assumes time is 8 bytes
+    -- @TODO assumes time is time_code_length bytes
     t           := data;
-    for i in 8 downto 1 loop
+    for i in time_code_length downto 1 loop
       ascii := modulo(t, 256);
       ret_val(i) := character'val(ascii);
       t          := (t - (ascii * simulator_resolution))/256;
