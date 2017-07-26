@@ -7,9 +7,10 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use ieee.numeric_bit.all;
+use ieee.math_complex.all;
 
 library vunit_lib;
---context vunit_lib.vunit_context;
 use vunit_lib.check_pkg.all;
 use vunit_lib.run_pkg.all;
 
@@ -96,6 +97,13 @@ begin
       assert pop_string(queue) = test_string1;
       assert pop_string(queue) = test_string2;
 
+    elsif run("Test push and pop bit") then
+      queue := allocate;
+      push_bit(queue, '0');
+      push_bit(queue, '1');
+      check(pop_bit(queue) = '0');
+      check(pop_bit(queue) = '1');
+
     elsif run("Test push and pop std_ulogic") then
       queue := allocate;
       push_std_ulogic(queue, 'U');
@@ -117,12 +125,82 @@ begin
       assert pop_std_ulogic(queue) = 'H';
       assert pop_std_ulogic(queue) = '-';
 
+    elsif run("Test push and pop severity_level") then
+      queue := allocate;
+      push_severity_level(queue, note);
+      push_severity_level(queue, error);
+      check(pop_severity_level(queue) = note);
+      check(pop_severity_level(queue) = error);
+
+    elsif run("Test push and pop file_open_status") then
+      queue := allocate;
+      push_file_open_status(queue, open_ok);
+      push_file_open_status(queue, mode_error);
+      check(pop_file_open_status(queue) = open_ok);
+      check(pop_file_open_status(queue) = mode_error);
+
+    elsif run("Test push and pop file_open_kind") then
+      queue := allocate;
+      push_file_open_kind(queue, read_mode);
+      push_file_open_kind(queue, append_mode);
+      check(pop_file_open_kind(queue) = read_mode);
+      check(pop_file_open_kind(queue) = append_mode);
+
+    elsif run("Test push and pop bit_vector") then
+      queue := allocate;
+      push_bit_vector(queue, "1");
+      push_bit_vector(queue, "010101");
+      check(pop_bit_vector(queue) = "1");
+      check(pop_bit_vector(queue) = "010101");
+
     elsif run("Test push and pop std_ulogic_vector") then
       queue := allocate;
       push_std_ulogic_vector(queue, descending_sulv);
       push_std_ulogic_vector(queue, ascending_sulv);
       assert pop_std_ulogic_vector(queue) = descending_sulv;
       assert pop_std_ulogic_vector(queue) = ascending_sulv;
+
+    elsif run("Test push and pop complex") then
+      queue := allocate;
+      push_complex(queue, (1.0, 2.2));
+      push_complex(queue, (-1.0, -2.2));
+      check(pop_complex(queue) = (1.0, 2.2));
+      check(pop_complex(queue) = (-1.0, -2.2));
+
+    elsif run("Test push and pop complex_polar") then
+      queue := allocate;
+      push_complex_polar(queue, (1.0, 0.707));
+      push_complex_polar(queue, (3.14, -0.707));
+      check(pop_complex_polar(queue) = (1.0, 0.707));
+      check(pop_complex_polar(queue) = (3.14, -0.707));
+
+    elsif run("Test push and pop ieee.numeric_bit.unsigned") then
+      queue := allocate;
+      push_numeric_bit_unsigned(queue, "1");
+      push_numeric_bit_unsigned(queue, "010101");
+      check(pop_numeric_bit_unsigned(queue) = "1");
+      check(pop_numeric_bit_unsigned(queue) = "010101");
+
+    elsif run("Test push and pop ieee.numeric_bit.signed") then
+      queue := allocate;
+      push_numeric_bit_signed(queue, "1");
+      push_numeric_bit_signed(queue, "010101");
+      check(pop_numeric_bit_signed(queue) = "1");
+      check(pop_numeric_bit_signed(queue) = "010101");
+
+    elsif run("Test push and pop ieee.numeric_std.unsigned") then
+      queue := allocate;
+      push_numeric_std_unsigned(queue, "1");
+      push_numeric_std_unsigned(queue, "010101");
+      check(pop_numeric_std_unsigned(queue) = "1");
+      check(pop_numeric_std_unsigned(queue) = "010101");
+
+    elsif run("Test push and pop ieee.numeric_std.signed") then
+      queue := allocate;
+      push_numeric_std_signed(queue, "1");
+      push_numeric_std_signed(queue, "010101");
+      check(pop_numeric_std_signed(queue) = "1");
+      check(pop_numeric_std_signed(queue) = "010101");
 
     elsif run("Test push and pop std_logic_vector") then
       queue := allocate;
@@ -133,10 +211,10 @@ begin
 
     elsif run("Test push and pop signed and unsigned") then
       queue := allocate;
-      push_std_ulogic_vector(queue, std_ulogic_vector(to_unsigned(11, 16)));
-      push_std_ulogic_vector(queue, std_ulogic_vector(to_signed(-1, 8)));
-      assert unsigned(pop_std_ulogic_vector(queue)) = to_unsigned(11, 16);
-      assert signed(pop_std_ulogic_vector(queue)) = to_signed(-1, 8);
+      push_std_ulogic_vector(queue, std_ulogic_vector(ieee.numeric_std.to_unsigned(11, 16)));
+      push_std_ulogic_vector(queue, std_ulogic_vector(ieee.numeric_std.to_signed(-1, 8)));
+      assert ieee.numeric_std.unsigned(pop_std_ulogic_vector(queue)) = ieee.numeric_std.to_unsigned(11, 16);
+      assert ieee.numeric_std.signed(pop_std_ulogic_vector(queue)) = ieee.numeric_std.to_signed(-1, 8);
 
     elsif run("Test push and pop real") then
       queue := allocate;

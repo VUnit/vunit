@@ -7,6 +7,9 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.math_real.all;
+use ieee.math_complex.all;
+use ieee.numeric_bit.all;
+use ieee.numeric_std.all;
 use work.integer_vector_ptr_pkg.all;
 use work.string_ptr_pkg.all;
 use work.codec_pkg.all;
@@ -26,6 +29,13 @@ package queue_pkg is
   impure function length(queue : queue_t) return integer;
   procedure flush(queue : queue_t);
   impure function copy(queue : queue_t) return queue_t;
+
+  constant queue_t_code_length : positive := integer_vector_ptr_t_code_length + string_ptr_t_code_length;
+  function encode(data : queue_t) return string;
+  function decode(code : string) return queue_t;
+  procedure decode (constant code : string; variable index : inout positive; variable result : out queue_t);
+  alias encode_queue_t is encode[queue_t return string];
+  alias decode_queue_t is decode[string return queue_t];
 
   procedure push(queue : queue_t; value : integer);
   impure function pop(queue : queue_t) return integer;
@@ -50,15 +60,70 @@ package queue_pkg is
   alias push_real is push[queue_t, real];
   alias pop_real is pop[queue_t return real];
 
+  procedure push(queue : queue_t; value : bit);
+  impure function pop(queue : queue_t) return bit;
+  alias push_bit is push[queue_t, bit];
+  alias pop_bit is pop[queue_t return bit];
+
   procedure push(queue : queue_t; value : std_ulogic);
   impure function pop(queue : queue_t) return std_ulogic;
   alias push_std_ulogic is push[queue_t, std_ulogic];
   alias pop_std_ulogic is pop[queue_t return std_ulogic];
 
+  procedure push(queue : queue_t; value : severity_level);
+  impure function pop(queue : queue_t) return severity_level;
+  alias push_severity_level is push[queue_t, severity_level];
+  alias pop_severity_level is pop[queue_t return severity_level];
+
+  procedure push(queue : queue_t; value : file_open_status);
+  impure function pop(queue : queue_t) return file_open_status;
+  alias push_file_open_status is push[queue_t, file_open_status];
+  alias pop_file_open_status is pop[queue_t return file_open_status];
+
+  procedure push(queue : queue_t; value : file_open_kind);
+  impure function pop(queue : queue_t) return file_open_kind;
+  alias push_file_open_kind is push[queue_t, file_open_kind];
+  alias pop_file_open_kind is pop[queue_t return file_open_kind];
+
+  procedure push(queue : queue_t; value : bit_vector);
+  impure function pop(queue : queue_t) return bit_vector;
+  alias push_bit_vector is push[queue_t, bit_vector];
+  alias pop_bit_vector is pop[queue_t return bit_vector];
+
   procedure push(queue : queue_t; value : std_ulogic_vector);
   impure function pop(queue : queue_t) return std_ulogic_vector;
   alias push_std_ulogic_vector is push[queue_t, std_ulogic_vector];
   alias pop_std_ulogic_vector is pop[queue_t return std_ulogic_vector];
+
+  procedure push(queue : queue_t; value : complex);
+  impure function pop(queue : queue_t) return complex;
+  alias push_complex is push[queue_t, complex];
+  alias pop_complex is pop[queue_t return complex];
+
+  procedure push(queue : queue_t; value : complex_polar);
+  impure function pop(queue : queue_t) return complex_polar;
+  alias push_complex_polar is push[queue_t, complex_polar];
+  alias pop_complex_polar is pop[queue_t return complex_polar];
+
+  procedure push(queue : queue_t; value : ieee.numeric_bit.unsigned);
+  impure function pop(queue : queue_t) return ieee.numeric_bit.unsigned;
+  alias push_numeric_bit_unsigned is push[queue_t, ieee.numeric_bit.unsigned];
+  alias pop_numeric_bit_unsigned is pop[queue_t return ieee.numeric_bit.unsigned];
+
+  procedure push(queue : queue_t; value : ieee.numeric_bit.signed);
+  impure function pop(queue : queue_t) return ieee.numeric_bit.signed;
+  alias push_numeric_bit_signed is push[queue_t, ieee.numeric_bit.signed];
+  alias pop_numeric_bit_signed is pop[queue_t return ieee.numeric_bit.signed];
+
+  procedure push(queue : queue_t; value : ieee.numeric_std.unsigned);
+  impure function pop(queue : queue_t) return ieee.numeric_std.unsigned;
+  alias push_numeric_std_unsigned is push[queue_t, ieee.numeric_std.unsigned];
+  alias pop_numeric_std_unsigned is pop[queue_t return ieee.numeric_std.unsigned];
+
+  procedure push(queue : queue_t; value : ieee.numeric_std.signed);
+  impure function pop(queue : queue_t) return ieee.numeric_std.signed;
+  alias push_numeric_std_signed is push[queue_t, ieee.numeric_std.signed];
+  alias pop_numeric_std_signed is pop[queue_t return ieee.numeric_std.signed];
 
   procedure push(queue : queue_t; value : string);
   impure function pop(queue : queue_t) return string;
@@ -85,12 +150,6 @@ package queue_pkg is
   alias push_queue_ref is push[queue_t, queue_t];
   alias pop_queue_ref is pop[queue_t return queue_t];
 
-  constant queue_t_code_length : positive := integer_vector_ptr_t_code_length + string_ptr_t_code_length;
-  function encode(data : queue_t) return string;
-  function decode(code : string) return queue_t;
-  procedure decode (constant code : string; variable index : inout positive; variable result : out queue_t);
-  alias encode_queue_t is encode[queue_t return string];
-  alias decode_queue_t is decode[string return queue_t];
 end package;
 
 package body queue_pkg is
@@ -252,6 +311,16 @@ package body queue_pkg is
     return decode(pop_fix_string(queue, real_code_length));
   end;
 
+  procedure push(queue : queue_t; value : bit) is
+  begin
+    push_fix_string(queue, encode(value));
+  end;
+
+  impure function pop(queue : queue_t) return bit is
+  begin
+    return decode(pop_fix_string(queue, bit_code_length));
+  end;
+
   procedure push(queue : queue_t; value : std_ulogic) is
   begin
     push_fix_string(queue, encode(value));
@@ -262,12 +331,112 @@ package body queue_pkg is
     return decode(pop_fix_string(queue, std_ulogic_code_length));
   end;
 
+  procedure push(queue : queue_t; value : severity_level) is
+  begin
+    push_fix_string(queue, encode(value));
+  end;
+
+  impure function pop(queue : queue_t) return severity_level is
+  begin
+    return decode(pop_fix_string(queue, severity_level_code_length));
+  end;
+
+  procedure push(queue : queue_t; value : file_open_status) is
+  begin
+    push_fix_string(queue, encode(value));
+  end;
+
+  impure function pop(queue : queue_t) return file_open_status is
+  begin
+    return decode(pop_fix_string(queue, file_open_status_code_length));
+  end;
+
+  procedure push(queue : queue_t; value : file_open_kind) is
+  begin
+    push_fix_string(queue, encode(value));
+  end;
+
+  impure function pop(queue : queue_t) return file_open_kind is
+  begin
+    return decode(pop_fix_string(queue, file_open_kind_code_length));
+  end;
+
+  procedure push(queue : queue_t; value : bit_vector) is
+  begin
+    push_variable_string(queue, encode(value));
+  end;
+
+  impure function pop(queue : queue_t) return bit_vector is
+  begin
+    return decode(pop_variable_string(queue));
+  end;
+
   procedure push(queue : queue_t; value : std_ulogic_vector) is
   begin
     push_variable_string(queue, encode(value));
   end;
 
   impure function pop(queue : queue_t) return std_ulogic_vector is
+  begin
+    return decode(pop_variable_string(queue));
+  end;
+
+  procedure push(queue : queue_t; value : complex) is
+  begin
+    push_fix_string(queue, encode(value));
+  end;
+
+  impure function pop(queue : queue_t) return complex is
+  begin
+    return decode(pop_fix_string(queue, complex_code_length));
+  end;
+
+  procedure push(queue : queue_t; value : complex_polar) is
+  begin
+    push_fix_string(queue, encode(value));
+  end;
+
+  impure function pop(queue : queue_t) return complex_polar is
+  begin
+    return decode(pop_fix_string(queue, complex_polar_code_length));
+  end;
+
+  procedure push(queue : queue_t; value : ieee.numeric_bit.unsigned) is
+  begin
+    push_variable_string(queue, encode(value));
+  end;
+
+  impure function pop(queue : queue_t) return ieee.numeric_bit.unsigned is
+  begin
+    return decode(pop_variable_string(queue));
+  end;
+
+  procedure push(queue : queue_t; value : ieee.numeric_bit.signed) is
+  begin
+    push_variable_string(queue, encode(value));
+  end;
+
+  impure function pop(queue : queue_t) return ieee.numeric_bit.signed is
+  begin
+    return decode(pop_variable_string(queue));
+  end;
+
+  procedure push(queue : queue_t; value : ieee.numeric_std.unsigned) is
+  begin
+    push_variable_string(queue, encode(value));
+  end;
+
+  impure function pop(queue : queue_t) return ieee.numeric_std.unsigned is
+  begin
+    return decode(pop_variable_string(queue));
+  end;
+
+  procedure push(queue : queue_t; value : ieee.numeric_std.signed) is
+  begin
+    push_variable_string(queue, encode(value));
+  end;
+
+  impure function pop(queue : queue_t) return ieee.numeric_std.signed is
   begin
     return decode(pop_variable_string(queue));
   end;

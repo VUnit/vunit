@@ -27,9 +27,15 @@ package codec_builder_pkg is
 
   constant integer_code_length : positive := 4;
   constant boolean_code_length : positive := 1;
-  constant real_code_length : positive := boolean_code_length + 3*integer_code_length;
+  constant real_code_length : positive := boolean_code_length + 3 * integer_code_length;
   constant std_ulogic_code_length : positive := 1;
+  constant bit_code_length : positive := 1;
   constant time_code_length : positive := 8;
+  constant severity_level_code_length : positive := 1;
+  constant file_open_status_code_length : positive := 1;
+  constant file_open_kind_code_length : positive := 1;
+  constant complex_code_length : positive := 2 * real_code_length;
+  constant complex_polar_code_length : positive := 2 * real_code_length;
 
   procedure decode (
     constant code   :       string;
@@ -237,7 +243,7 @@ package body codec_builder_pkg is
     else
       result := '0';
     end if;
-    index := index + 1;
+    index := index + bit_code_length;
   end procedure decode;
 
   procedure decode (
@@ -255,7 +261,7 @@ package body codec_builder_pkg is
     variable result : out   severity_level) is
   begin
     result := severity_level'val(character'pos(code(index)));
-    index  := index + 1;
+    index  := index + severity_level_code_length;
   end;
 
   procedure decode (
@@ -264,7 +270,7 @@ package body codec_builder_pkg is
     variable result : out   file_open_status) is
   begin
     result := file_open_status'val(character'pos(code(index)));
-    index  := index + 1;
+    index  := index + file_open_status_code_length;
   end;
 
   procedure decode (
@@ -273,7 +279,7 @@ package body codec_builder_pkg is
     variable result : out   file_open_kind) is
   begin
     result := file_open_kind'val(character'pos(code(index)));
-    index  := index + 1;
+    index  := index + file_open_kind_code_length;
   end;
 
   procedure decode (
