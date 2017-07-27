@@ -37,6 +37,12 @@ package queue_pkg is
   alias encode_queue_t is encode[queue_t return string];
   alias decode_queue_t is decode[string return queue_t];
 
+  procedure push_variable_string(queue : queue_t; value : string);
+  impure function pop_variable_string(queue : queue_t) return string;
+
+  procedure push_fix_string(queue : queue_t; value : string);
+  impure function pop_fix_string(queue : queue_t; length : natural) return string;
+
   procedure push(queue : queue_t; value : integer);
   impure function pop(queue : queue_t) return integer;
   alias push_integer is push[queue_t, integer];
