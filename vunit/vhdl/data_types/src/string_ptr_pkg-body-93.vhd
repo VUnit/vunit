@@ -65,9 +65,10 @@ package body string_ptr_pkg is
 
   procedure reallocate(ptr : string_ptr_t; value : string) is
     variable old_ptr, new_ptr : string_access_t;
+    variable n_value : string(1 to value'length) := value;
   begin
     deallocate(ptrs(ptr.index));
-    ptrs(ptr.index) := new string'(value);
+    ptrs(ptr.index) := new string'(n_value);
   end procedure;
 
   procedure resize(ptr : string_ptr_t; length : natural; drop : natural := 0) is
@@ -107,9 +108,10 @@ package body string_ptr_pkg is
 
   impure function allocate(value : string) return string_ptr_t is
     variable result : string_ptr_t := allocate(value'length);
+    variable n_value : string(1 to value'length) := value;
   begin
-    for i in 1 to value'length loop
-      set(result, i, value(i));
+    for i in 1 to n_value'length loop
+      set(result, i, n_value(i));
     end loop;
     return result;
   end function;

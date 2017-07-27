@@ -22,6 +22,7 @@ begin
     variable ptr, ptr2 : string_ptr_t;
     constant a_random_value : character := '7';
     constant another_random_value : character := '9';
+    constant denormal_string : string(8 to 9) := "ab";
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -107,6 +108,7 @@ begin
         resize(ptr, 4);
         set(ptr, 4, '1');
         assert to_string(ptr) = "abc1";
+
       elsif run("Test codecs") then
         ptr := allocate(0);
         check(decode(encode(ptr)) = ptr);
@@ -115,6 +117,13 @@ begin
         set(ptr2, 1, another_random_value);
         set(ptr2, 2, a_random_value);
         check(decode(encode(ptr2)) = ptr2);
+
+      elsif run("Test denormal string") then
+        ptr := allocate(denormal_string);
+        check_equal(to_string(ptr), "ab");
+
+        reallocate(ptr, denormal_string);
+        check_equal(to_string(ptr), "ab");
       end if;
     end loop;
 
