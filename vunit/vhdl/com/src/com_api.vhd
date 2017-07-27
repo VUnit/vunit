@@ -7,8 +7,18 @@
 --
 -- Copyright (c) 2015-2017, Lars Asplund lars.anders.asplund@gmail.com
 
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.math_complex.all;
+use ieee.numeric_bit.all;
+use ieee.numeric_std.all;
+use ieee.fixed_pkg.all;
+use ieee.float_pkg.all;
+
 use work.com_types_pkg.all;
 use work.queue_pkg.all;
+use work.integer_vector_ptr_pkg.all;
+use work.string_ptr_pkg.all;
 
 package com_pkg is
   signal net : network_t := idle_network;
@@ -45,6 +55,151 @@ package com_pkg is
 
   impure function create (sender :       actor_t := null_actor_c) return msg_t;
   procedure delete (msg          : inout msg_t);
+
+  procedure push(msg : msg_t; value : integer);
+  impure function pop(msg : msg_t) return integer;
+  alias push_integer is push[msg_t, integer];
+  alias pop_integer is pop[msg_t return integer];
+
+  procedure push(msg : msg_t; value : character);
+  impure function pop(msg : msg_t) return character;
+  alias push_character is push[msg_t, character];
+  alias pop_character is pop[msg_t return character];
+
+  procedure push(msg : msg_t; value : boolean);
+  impure function pop(msg : msg_t) return boolean;
+  alias push_boolean is push[msg_t, boolean];
+  alias pop_boolean is pop[msg_t return boolean];
+
+  procedure push(msg : msg_t; value : real);
+  impure function pop(msg : msg_t) return real;
+  alias push_real is push[msg_t, real];
+  alias pop_real is pop[msg_t return real];
+
+  procedure push(msg : msg_t; value : bit);
+  impure function pop(msg : msg_t) return bit;
+  alias push_bit is push[msg_t, bit];
+  alias pop_bit is pop[msg_t return bit];
+
+  procedure push(msg : msg_t; value : std_ulogic);
+  impure function pop(msg : msg_t) return std_ulogic;
+  alias push_std_ulogic is push[msg_t, std_ulogic];
+  alias pop_std_ulogic is pop[msg_t return std_ulogic];
+
+  procedure push(msg : msg_t; value : severity_level);
+  impure function pop(msg : msg_t) return severity_level;
+  alias push_severity_level is push[msg_t, severity_level];
+  alias pop_severity_level is pop[msg_t return severity_level];
+
+  procedure push(msg : msg_t; value : file_open_status);
+  impure function pop(msg : msg_t) return file_open_status;
+  alias push_file_open_status is push[msg_t, file_open_status];
+  alias pop_file_open_status is pop[msg_t return file_open_status];
+
+  procedure push(msg : msg_t; value : file_open_kind);
+  impure function pop(msg : msg_t) return file_open_kind;
+  alias push_file_open_kind is push[msg_t, file_open_kind];
+  alias pop_file_open_kind is pop[msg_t return file_open_kind];
+
+  procedure push(msg : msg_t; value : bit_vector);
+  impure function pop(msg : msg_t) return bit_vector;
+  alias push_bit_vector is push[msg_t, bit_vector];
+  alias pop_bit_vector is pop[msg_t return bit_vector];
+
+  procedure push(msg : msg_t; value : std_ulogic_vector);
+  impure function pop(msg : msg_t) return std_ulogic_vector;
+  alias push_std_ulogic_vector is push[msg_t, std_ulogic_vector];
+  alias pop_std_ulogic_vector is pop[msg_t return std_ulogic_vector];
+
+  procedure push(msg : msg_t; value : complex);
+  impure function pop(msg : msg_t) return complex;
+  alias push_complex is push[msg_t, complex];
+  alias pop_complex is pop[msg_t return complex];
+
+  procedure push(msg : msg_t; value : complex_polar);
+  impure function pop(msg : msg_t) return complex_polar;
+  alias push_complex_polar is push[msg_t, complex_polar];
+  alias pop_complex_polar is pop[msg_t return complex_polar];
+
+  procedure push(msg : msg_t; value : ieee.numeric_bit.unsigned);
+  impure function pop(msg : msg_t) return ieee.numeric_bit.unsigned;
+  alias push_numeric_bit_unsigned is push[msg_t, ieee.numeric_bit.unsigned];
+  alias pop_numeric_bit_unsigned is pop[msg_t return ieee.numeric_bit.unsigned];
+
+  procedure push(msg : msg_t; value : ieee.numeric_bit.signed);
+  impure function pop(msg : msg_t) return ieee.numeric_bit.signed;
+  alias push_numeric_bit_signed is push[msg_t, ieee.numeric_bit.signed];
+  alias pop_numeric_bit_signed is pop[msg_t return ieee.numeric_bit.signed];
+
+  procedure push(msg : msg_t; value : ieee.numeric_std.unsigned);
+  impure function pop(msg : msg_t) return ieee.numeric_std.unsigned;
+  alias push_numeric_std_unsigned is push[msg_t, ieee.numeric_std.unsigned];
+  alias pop_numeric_std_unsigned is pop[msg_t return ieee.numeric_std.unsigned];
+
+  procedure push(msg : msg_t; value : ieee.numeric_std.signed);
+  impure function pop(msg : msg_t) return ieee.numeric_std.signed;
+  alias push_numeric_std_signed is push[msg_t, ieee.numeric_std.signed];
+  alias pop_numeric_std_signed is pop[msg_t return ieee.numeric_std.signed];
+
+  procedure push(msg : msg_t; value : string);
+  impure function pop(msg : msg_t) return string;
+  alias push_string is push[msg_t, string];
+  alias pop_string is pop[msg_t return string];
+
+  procedure push(msg : msg_t; value : time);
+  impure function pop(msg : msg_t) return time;
+  alias push_time is push[msg_t, time];
+  alias pop_time is pop[msg_t return time];
+
+  procedure push(msg : msg_t; value : integer_vector_ptr_t);
+  impure function pop(msg : msg_t) return integer_vector_ptr_t;
+  alias push_integer_vector_ptr_ref is push[msg_t, integer_vector_ptr_t];
+  alias pop_integer_vector_ptr_ref is pop[msg_t return integer_vector_ptr_t];
+
+  procedure push(msg : msg_t; value : string_ptr_t);
+  impure function pop(msg : msg_t) return string_ptr_t;
+  alias push_string_ptr_ref is push[msg_t, string_ptr_t];
+  alias pop_string_ptr_ref is pop[msg_t return string_ptr_t];
+
+  procedure push(msg : msg_t; value : queue_t);
+  impure function pop(msg : msg_t) return queue_t;
+  alias push_queue_ref is push[msg_t, queue_t];
+  alias pop_queue_ref is pop[msg_t return queue_t];
+
+  procedure push(msg : msg_t; value : boolean_vector);
+  impure function pop(msg : msg_t) return boolean_vector;
+  alias push_boolean_vector is push[msg_t, boolean_vector];
+  alias pop_boolean_vector is pop[msg_t return boolean_vector];
+
+  procedure push(msg : msg_t; value : integer_vector);
+  impure function pop(msg : msg_t) return integer_vector;
+  alias push_integer_vector is push[msg_t, integer_vector];
+  alias pop_integer_vector is pop[msg_t return integer_vector];
+
+  procedure push(msg : msg_t; value : real_vector);
+  impure function pop(msg : msg_t) return real_vector;
+  alias push_real_vector is push[msg_t, real_vector];
+  alias pop_real_vector is pop[msg_t return real_vector];
+
+  procedure push(msg : msg_t; value : time_vector);
+  impure function pop(msg : msg_t) return time_vector;
+  alias push_time_vector is push[msg_t, time_vector];
+  alias pop_time_vector is pop[msg_t return time_vector];
+
+  procedure push(msg : msg_t; value : ufixed);
+  impure function pop(msg : msg_t) return ufixed;
+  alias push_ufixed is push[msg_t, ufixed];
+  alias pop_ufixed is pop[msg_t return ufixed];
+
+  procedure push(msg : msg_t; value : sfixed);
+  impure function pop(msg : msg_t) return sfixed;
+  alias push_sfixed is push[msg_t, sfixed];
+  alias pop_sfixed is pop[msg_t return sfixed];
+
+  procedure push(msg : msg_t; value : float);
+  impure function pop(msg : msg_t) return float;
+  alias push_float is push[msg_t, float];
+  alias pop_float is pop[msg_t return float];
 
   -----------------------------------------------------------------------------
   -- Primary send and receive related subprograms

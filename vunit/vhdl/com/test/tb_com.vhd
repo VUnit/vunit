@@ -120,47 +120,10 @@ begin
         reset_messenger;
         check(num_of_actors = 0, "Failed to destroy all actors");
 
-      -- Messages
-      elsif run("Test that a message can be created") then
-        msg := create;
-        check_equal(msg.id, no_message_id_c);
-        check(msg.status = ok);
-        check(msg.sender = null_actor_c);
-        check(msg.receiver = null_actor_c);
-        check_equal(msg.request_id, no_message_id_c);
-        check_equal(length(msg.data), 0);
-
-        actor  := create("sender");
-        msg2 := create(actor);
-        check_equal(msg2.id, no_message_id_c);
-        check(msg2.status = ok);
-        check(msg2.sender = actor);
-        check(msg2.receiver = null_actor_c);
-        check_equal(msg2.request_id, no_message_id_c);
-        check_equal(length(msg2.data), 0);
-      elsif run("Test that a message can be deleted") then
-        actor  := create("sender");
-
-        msg := create(actor);
-        msg.id := 1;
-        msg.status := null_message_error;
-        msg.receiver := actor;
-        msg.request_id := 1;
-        push(msg.data, 1);
-
-        delete(msg);
-
-        check_equal(msg.id, no_message_id_c);
-        check(msg.status = ok);
-        check(msg.sender = null_actor_c);
-        check(msg.receiver = null_actor_c);
-        check_equal(msg.request_id, no_message_id_c);
-        check(msg.data = null_queue);
-
       -- Send and receive
       elsif run("Test that data ownership is lost at send") then
         msg := create;
-        push_string(msg.data, "hello");
+        push_string(msg, "hello");
         send(net, self, msg);
         check(msg.data = null_queue);
       elsif run("Test that an actor can send a message to another actor") then
@@ -168,7 +131,7 @@ begin
         wait for 1 ns;
         receiver       := find("receiver");
         msg := create(self);
-        push_string(msg.data, "hello world");
+        push_string(msg, "hello world");
         send(net, receiver, msg);
         check(msg.sender = self);
         check(msg.receiver = receiver);
@@ -179,50 +142,50 @@ begin
         wait for 1 ns;
         server       := find("server");
         request_msg := create(self);
-        push_string(request_msg.data, "request");
+        push_string(request_msg, "request");
         send(net, server, request_msg);
         receive(net, self, reply_msg);
         check(reply_msg.status = ok, "Expected no receive problems");
-        check_equal(pop_string(reply_msg.data), "request acknowledge");
+        check_equal(pop_string(reply_msg), "request acknowledge");
       elsif run("Test that an actor can send a message to itself") then
         msg := create;
-        push_string(msg.data, "hello");
+        push_string(msg, "hello");
         send(net, self, msg);
         receive(net, self, msg2);
         check(msg2.status = ok, "Expected no receive problems");
-        check_equal(pop_string(msg2.data), "hello");
+        check_equal(pop_string(msg2), "hello");
       elsif run("Test that no-name actors can communicate") then
         actor    := create;
         msg := create;
-        push_string(msg.data, "hello");
+        push_string(msg, "hello");
         send(net, actor, msg);
         receive(net, actor, msg2);
-        check_equal(pop_string(msg2.data), "hello");
+        check_equal(pop_string(msg2), "hello");
       elsif run("Test that an actor can poll for incoming messages") then
         wait_for_message(net, self, status, 0 ns);
         check(status = timeout, "Expected timeout");
         msg := create(self);
-        push_string(msg.data, "hello again");
+        push_string(msg, "hello again");
         send(net, self, msg);
         wait_for_message(net, self, status, 0 ns);
         check(status = ok, "Expected ok status");
         msg2 := get_message(self);
         check(msg2.status = ok, "Expected no problems with receive");
-        check_equal(pop_string(msg2.data), "hello again");
+        check_equal(pop_string(msg2), "hello again");
         check(msg2.sender = self, "Expected message from myself");
       elsif run("Expected to fail: Test that sending to a non-existing actor results in an error") then
         msg := create;
-        push_string(msg.data, "hello");
+        push_string(msg, "hello");
         send(net, null_actor_c, msg);
       elsif run("Test that an actor can send to an actor with deferred creation") then
         actor := find("deferred actor");
         msg := create;
-        push_string(msg.data, "hello actor to be created");
+        push_string(msg, "hello actor to be created");
         send(net, actor, msg);
         actor := create("deferred actor");
         receive(net, actor, msg2);
         check(msg2.status = ok, "Expected no problems with receive");
-        check_equal(pop_string(msg2.data), "hello actor to be created");
+        check_equal(pop_string(msg2), "hello actor to be created");
       elsif run("Expected to fail: Test that receiving from an actor with deferred creation results in an error") then
         actor := find("deferred actor");
         receive(net, actor, msg);
@@ -248,19 +211,19 @@ begin
         actor               := find("limited inbox");
         t_start             := now;
         msg := create;
-        push_string(msg.data , "First message");
+        push_string(msg , "First message");
         send(net, actor, msg);
         t_stop              := now;
         check_equal(t_stop - t_start, 0 ns, "Expected no blocking on first message");
         t_start             := now;
         msg := create;
-        push_string(msg.data , "Second message");
+        push_string(msg , "Second message");
         send(net, actor, msg, 0 ns);
         t_stop              := now;
         check_equal(t_stop - t_start, 0 ns, "Expected no blocking on second message");
         t_start             := now;
         msg := create;
-        push_string(msg.data , "Third message");
+        push_string(msg , "Third message");
         send(net, actor, msg, 11 ns);
         t_stop              := now;
         check_equal(t_stop - t_start, 10 ns, "Expected a 10 ns blocking period on third message");
@@ -270,13 +233,13 @@ begin
         start_limited_inbox <= true;
         actor               := find("limited inbox");
         msg := create;
-        push_string(msg.data , "First message");
+        push_string(msg , "First message");
         send(net, actor, msg);
         msg := create;
-        push_string(msg.data , "Second message");
+        push_string(msg , "Second message");
         send(net, actor, msg, 0 ns);
         msg := create;
-        push_string(msg.data , "Third message");
+        push_string(msg , "Third message");
         send(net, actor, msg, 9 ns);
 
       -- Publish, subscribe, and unsubscribe
@@ -285,7 +248,7 @@ begin
         start_subscribers <= true;
         wait for 1 ns;
         msg := create;
-        push_string(msg.data, "hello subscriber");
+        push_string(msg, "hello subscriber");
         publish(net, publisher, msg);
         check(msg.sender = publisher);
         check(msg.receiver = null_actor_c);
@@ -296,7 +259,7 @@ begin
         start_subscribers <= true;
         wait for 1 ns;
         msg := create(publisher);
-        push_string(msg.data, "hello subscriber");
+        push_string(msg, "hello subscriber");
         send(net, self, msg);
         wait until hello_subscriber_received = "11" for 1 ns;
         check(hello_subscriber_received = "11", "Expected ""hello subscribers"" to be received at the subscribers");
@@ -305,7 +268,7 @@ begin
         subscribe(self, publisher);
 
         msg := create(publisher);
-        push_string(msg.data, "hello");
+        push_string(msg, "hello");
         send(net, self, msg);
 
         receive(net, self, msg2, 0 ns);
@@ -317,7 +280,7 @@ begin
         subscribe(self, publisher);
 
         msg := create(publisher);
-        push_string(msg.data, "hello");
+        push_string(msg, "hello");
         send(net, publisher, msg);
 
         wait_for_message(net, self, status, 0 ns);
@@ -326,19 +289,19 @@ begin
         receiver := create;
         subscribe(self, receiver, inbound);
         msg := create;
-        push_string(msg.data, "hello");
+        push_string(msg, "hello");
         send(net, receiver, msg);
         receive(net, receiver, msg2, 0 ns);
         receive(net, self, msg2, 0 ns);
-        check_equal(pop_string(msg2.data), "hello");
+        check_equal(pop_string(msg2), "hello");
         msg := create;
-        push_string(msg.data, "publication");
+        push_string(msg, "publication");
         publish(net, receiver, msg);
         wait_for_message(net, self, status, 0 ns);
         check(status = timeout, "Expected no message");
         actor := create("actor");
         msg := create(receiver);
-        push_string(msg.data, "hello");
+        push_string(msg, "hello");
         send(net, actor, msg);
         wait_for_message(net, self, status, 0 ns);
         check(status = timeout, "Expected no message");
@@ -347,25 +310,25 @@ begin
         subscribe(self, self, inbound);
         unsubscribe(self, self, inbound);
         msg := create;
-        push_string(msg.data, "hello subscriber");
+        push_string(msg, "hello subscriber");
         publish(net, self, msg);
         receive(net, self, msg, 0 ns);
-        check_equal(pop_string(msg.data), "hello subscriber");
+        check_equal(pop_string(msg), "hello subscriber");
         unsubscribe(self, self, published);
         publish(net, self, "hello subscriber");
-        push_string(msg.data, "hello subscriber");
+        push_string(msg, "hello subscriber");
         wait_for_message(net, self, status, 0 ns);
         check(status = timeout, "Expected no message");
       elsif run("Test that a destroyed subscriber is not addressed by the publisher") then
         subscriber := create("subscriber");
         subscribe(subscriber, self);
         msg := create;
-        push_string(msg.data, "hello subscriber");
+        push_string(msg, "hello subscriber");
         publish(net, self, msg);
         receive(net, subscriber, msg, 0 ns);
-        check_equal(pop_string(msg.data), "hello subscriber");
+        check_equal(pop_string(msg), "hello subscriber");
         destroy(subscriber);
-        push_string(msg.data, "hello subscriber");
+        push_string(msg, "hello subscriber");
         publish(net, self, msg);
       elsif run("Expected to fail: Test that an actor can only subscribe once to the same publisher") then
         subscribe(self, self);
@@ -374,19 +337,19 @@ begin
         start_limited_inbox_subscriber <= true;
         wait for 1 ns;
         msg := create;
-        push_string(msg.data, "hello subscriber");
+        push_string(msg, "hello subscriber");
         publish(net, self, msg);
         msg := create;
-        push_string(msg.data, "hello subscriber");
+        push_string(msg, "hello subscriber");
         publish(net, self, msg, 8 ns);
       elsif run("Test that publishing to subscribers with full inboxes results passes if waiting") then
         start_limited_inbox_subscriber <= true;
         wait for 1 ns;
         msg := create;
-        push_string(msg.data, "hello subscriber");
+        push_string(msg, "hello subscriber");
         publish(net, self, msg);
         msg := create;
-        push_string(msg.data, "hello subscriber");
+        push_string(msg, "hello subscriber");
         publish(net, self, msg, 11 ns);
 
       -- Request, (receive_)reply and acknowledge
@@ -395,19 +358,19 @@ begin
         server        := find("server2");
 
         request_msg := create(self);
-        push_string(request_msg.data, "request1");
+        push_string(request_msg, "request1");
         send(net, server, request_msg);
         request_msg2 := create(self);
-        push_string(request_msg2.data, "request2");
+        push_string(request_msg2, "request2");
         send(net, server, request_msg2);
         request_msg3 := create(self);
-        push_string(request_msg3.data, "request3");
+        push_string(request_msg3, "request3");
         send(net, server, request_msg3);
 
         receive_reply(net, request_msg2, reply_msg);
         check(reply_msg.sender = server);
         check(reply_msg.receiver = self);
-        check_equal(pop_string(reply_msg.data), "reply2");
+        check_equal(pop_string(reply_msg), "reply2");
         check_equal(reply_msg.request_id, request_msg2.id);
 
         receive_reply(net, request_msg, ack);
@@ -420,17 +383,17 @@ begin
         server        := find("server3");
 
         request_msg := create(self);
-        push_string(request_msg.data, "request1");
+        push_string(request_msg, "request1");
         request(net, server, request_msg, reply_msg);
-        check_equal(pop_string(reply_msg.data), "reply1");
+        check_equal(pop_string(reply_msg), "reply1");
 
         request_msg := create(self);
-        push_string(request_msg.data, "request2");
+        push_string(request_msg, "request2");
         request(net, server, request_msg, ack);
         check(ack, "Expected positive acknowledgement");
 
         request_msg := create(self);
-        push_string(request_msg.data, "request3");
+        push_string(request_msg, "request3");
         request(net, server, request_msg, ack);
         check_false(ack, "Expected negative acknowledgement");
       elsif run("Test that waiting and getting a reply with timeout works") then
@@ -439,7 +402,7 @@ begin
 
         t_start := now;
         request_msg := create(self);
-        push_string(request_msg.data, "request1");
+        push_string(request_msg, "request1");
         send(net, server, request_msg);
         wait_for_reply(net, request_msg, status, 2 ns);
         check(status = timeout, "Expected timeout");
@@ -447,48 +410,48 @@ begin
 
         t_start         := now;
         request_msg := create;
-        push_string(request_msg.data, "request2");
+        push_string(request_msg, "request2");
         send(net, server, request_msg);
         wait_for_reply(net, request_msg, status, 2 ns);
         check(status = timeout, "Expected timeout");
         check_equal(now - t_start, 2 ns);
 
         request_msg := create(self);
-        push_string(request_msg.data, "request3");
+        push_string(request_msg, "request3");
         send(net, server, request_msg);
         wait_for_reply(net, request_msg, status);
         get_reply(request_msg, reply_msg);
-        check_equal(pop_string(reply_msg.data), "reply3");
+        check_equal(pop_string(reply_msg), "reply3");
 
         t_start         := now;
         request_msg := create;
-        push_string(request_msg.data, "request4");
+        push_string(request_msg, "request4");
         send(net, server, request_msg);
         wait_for_reply(net, request_msg, status);
         get_reply(request_msg, reply_msg);
-        check_equal(pop_string(reply_msg.data), "reply4");
+        check_equal(pop_string(reply_msg), "reply4");
       elsif run("Test that an anonymous request can be made") then
         start_server5 <= true;
         server := find("server5");
 
         request_msg := create;
-        push_string(request_msg.data, "request");
+        push_string(request_msg, "request");
         send(net, server, request_msg);
         wait for 10 ns;
         receive_reply(net, request_msg, reply_msg);
-        check_equal(pop_string(reply_msg.data), "reply");
+        check_equal(pop_string(reply_msg), "reply");
 
         request_msg := create;
-        push_string(request_msg.data, "request2");
+        push_string(request_msg, "request2");
         send(net, server, request_msg);
         receive_reply(net, request_msg, reply_msg);
-        check_equal(pop_string(reply_msg.data), "reply2");
+        check_equal(pop_string(reply_msg), "reply2");
 
         request_msg := create;
-        push_string(request_msg.data, "request3");
+        push_string(request_msg, "request3");
         send(net, server, request_msg);
         receive_reply(net, request_msg, reply_msg);
-        check_equal(pop_string(reply_msg.data), "reply3");
+        check_equal(pop_string(reply_msg), "reply3");
 
       -- Timeout
       elsif run("Expected to fail: Test that timeout on receive leads to an error") then
@@ -516,7 +479,7 @@ begin
     receive(net, self, msg);
     check(msg.sender = find("test runner"));
     check(msg.receiver = self);
-    hello_world_received <= check_equal(pop_string(msg.data), "hello world");
+    hello_world_received <= check_equal(pop_string(msg), "hello world");
     wait;
   end process receiver;
 
@@ -527,9 +490,9 @@ begin
     wait until start_server;
     self := create("server");
     receive(net, self, request_msg);
-    if check_equal(pop_string(request_msg.data), "request") then
+    if check_equal(pop_string(request_msg), "request") then
       reply_msg := create;
-      push_string(reply_msg.data, "request acknowledge");
+      push_string(reply_msg, "request acknowledge");
       send(net, request_msg.sender, reply_msg);
     end if;
     wait;
@@ -545,7 +508,7 @@ begin
       publisher := find("publisher");
       subscribe(self, publisher, outbound);
       receive(net, self, msg);
-      if check_equal(pop_string(msg.data), "hello subscriber") then
+      if check_equal(pop_string(msg), "hello subscriber") then
         hello_subscriber_received(i)     <= '1';
         hello_subscriber_received(3 - i) <= 'Z';
       end if;
@@ -561,14 +524,14 @@ begin
     wait until start_server2;
     self := create("server2");
     receive(net, self, request_msg1);
-    check_equal(pop_string(request_msg1.data), "request1");
+    check_equal(pop_string(request_msg1), "request1");
     receive(net, self, request_msg2);
-    check_equal(pop_string(request_msg2.data), "request2");
+    check_equal(pop_string(request_msg2), "request2");
     receive(net, self, request_msg3);
-    check_equal(pop_string(request_msg3.data), "request3");
+    check_equal(pop_string(request_msg3), "request3");
 
     reply_msg := create;
-    push_string(reply_msg.data, "reply2");
+    push_string(reply_msg, "reply2");
     reply(net, request_msg2, reply_msg);
     check(reply_msg.sender = self);
     check(reply_msg.receiver = find("test runner"));
@@ -585,17 +548,17 @@ begin
     self := create("server3");
 
     receive(net, self, request_msg);
-    check_equal(pop_string(request_msg.data), "request1");
+    check_equal(pop_string(request_msg), "request1");
     reply_msg := create;
-    push_string(reply_msg.data, "reply1");
+    push_string(reply_msg, "reply1");
     reply(net, request_msg, reply_msg);
 
     receive(net, self, request_msg);
-    check_equal(pop_string(request_msg.data), "request2");
+    check_equal(pop_string(request_msg), "request2");
     acknowledge(net, request_msg, true);
 
     receive(net, self, request_msg);
-    check_equal(pop_string(request_msg.data), "request3");
+    check_equal(pop_string(request_msg), "request3");
     acknowledge(net, request_msg, false);
 
     wait;
@@ -612,11 +575,11 @@ begin
     receive(net, self, request_msg);
     receive(net, self, request_msg);
     reply_msg := create;
-    push_string(reply_msg.data, "reply3");
+    push_string(reply_msg, "reply3");
     reply(net, request_msg, reply_msg);
     receive(net, self, request_msg);
     reply_msg := create;
-    push_string(reply_msg.data, "reply4");
+    push_string(reply_msg, "reply4");
     reply(net, request_msg, reply_msg);
     wait;
   end process server4;
@@ -629,22 +592,22 @@ begin
     self := create("server5");
 
     receive(net, self, request_msg);
-    check_equal(pop_string(request_msg.data), "request");
+    check_equal(pop_string(request_msg), "request");
     reply_msg := create;
-    push_string(reply_msg.data, "reply");
+    push_string(reply_msg, "reply");
     reply(net, request_msg, reply_msg);
 
     receive(net, self, request_msg);
-    check_equal(pop_string(request_msg.data), "request2");
+    check_equal(pop_string(request_msg), "request2");
     reply_msg := create;
-    push_string(reply_msg.data, "reply2");
+    push_string(reply_msg, "reply2");
     wait for 10 ns;
     reply(net, request_msg, reply_msg);
 
     receive(net, self, request_msg);
-    check_equal(pop_string(request_msg.data), "request3");
+    check_equal(pop_string(request_msg), "request3");
     reply_msg := create;
-    push_string(reply_msg.data, "reply3");
+    push_string(reply_msg, "reply3");
     reply(net, request_msg, reply_msg);
 
     wait;
