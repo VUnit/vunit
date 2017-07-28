@@ -485,7 +485,11 @@ package body com_pkg is
   begin
     delete(message);
     wait_for_message(net, receiver, status, timeout);
-    check(no_error_status(status, true), status);
+
+    if not check(no_error_status(status, true), status) then
+      return;
+    end if;
+
     if status = ok then
       started_with_full_inbox := messenger.is_full(receiver, inbox);
       message                 := get_message(receiver);
@@ -587,8 +591,13 @@ package body com_pkg is
     constant timeout      : in    time := max_timeout_c) is
     variable t_start : time;
   begin
-    check(msg.data /= null_queue, null_message_error);
-    check(not messenger.unknown_actor(receiver), unknown_receiver_error);
+    if not check(msg.data /= null_queue, null_message_error) then
+      return;
+    end if;
+
+    if not check(not messenger.unknown_actor(receiver), unknown_receiver_error) then
+      return;
+    end if;
 
     t_start := now;
     if messenger.is_full(receiver, mailbox_name) then
@@ -628,7 +637,9 @@ package body com_pkg is
   begin
     delete(msg);
     wait_for_message(net, receiver, status, timeout);
-    check(no_error_status(status), status);
+    if not check(no_error_status(status), status) then
+      return;
+    end if;
     started_with_full_inbox := messenger.is_full(receiver, inbox);
     msg                     := get_message(receiver);
 
@@ -830,7 +841,10 @@ package body com_pkg is
     variable status   : out com_status_t;
     constant timeout  : in  time := max_timeout_c) is
   begin
-    check(not messenger.deferred(receiver), deferred_receiver_error);
+    if not check(not messenger.deferred(receiver), deferred_receiver_error) then
+      status := deferred_receiver_error;
+      return;
+    end if;
 
     status := ok;
     if not messenger.has_messages(receiver) then

@@ -197,8 +197,7 @@ class TestExternalRunScripts(unittest.TestCase):
                    vhdl_standard='93')
 
     def test_com_vhdl_2008(self):
-        self.check(join(VHDL_PATH, "com", "run.py"), exit_code=1)
-        check_report(self.report_file)
+        self.check(join(VHDL_PATH, "com", "run.py"))
 
     def setUp(self):
         self.output_path = join(dirname(__file__), "external_run_out")

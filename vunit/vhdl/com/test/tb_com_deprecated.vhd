@@ -27,6 +27,8 @@ architecture test_fixture of tb_com_deprecated is
   signal start_limited_inbox, start_limited_inbox_subscriber,
     limited_inbox_actor_done : boolean                  := false;
   signal hello_subscriber_received                     : std_logic_vector(1 to 2) := "ZZ";
+
+  constant com_logger : logger_t := get_logger("vunit_lib.com");
 begin
   test_runner : process
     variable actor_to_be_found, actor_with_deferred_creation, actor_to_destroy,
@@ -60,9 +62,12 @@ begin
         check(find("actor to destroy", false) = null_actor_c, "A destroyed actor should not be found");
         check(find("actor to keep", false) /= null_actor_c,
               "Actors other than the one destroyed must not be affected");
-      elsif run("Expected to fail: Test that a non-existing actor cannot be destroyed") then
+      elsif run("Test that a non-existing actor cannot be destroyed") then
         actor := null_actor_c;
+        mock(com_logger);
         destroy(actor, status);
+        check_only_log(com_logger, "UNKNOWN ACTOR ERROR.", failure);
+        unmock(com_logger);
       elsif run("Test that a message can be deleted") then
         message := compose("hello");
         delete(message);
@@ -147,12 +152,16 @@ begin
         send(net, actor, "Third message", receipt, 11 ns);
         t_stop              := now;
         check_equal(t_stop - t_start, 10 ns, "Expected a 10 ns blocking period on third message");
-      elsif run("Expected to fail: Test that sending to a limited-inbox receiver times out as expected") then
+      elsif run("Test that sending to a limited-inbox receiver times out as expected") then
         start_limited_inbox <= true;
         actor               := find("limited inbox");
         send(net, actor, "First message", receipt);
         send(net, actor, "Second message", receipt, 0 ns);
+        mock(com_logger);
         send(net, actor, "Third message", receipt, 9 ns);
+        check_log(com_logger, "FULL INBOX ERROR.", failure);
+        check_only_log(com_logger, "FULL INBOX ERROR.", failure);
+        unmock(com_logger);
 
       elsif run("Test that an actor can publish messages to multiple subscribers") then
         publisher         := create("publisher");
@@ -218,15 +227,22 @@ begin
         check_equal(message.payload.all, "hello subscriber");
         destroy(subscriber);
         publish(net, self, "hello subscriber");
-      elsif run("Expected to fail: Test that an actor can only subscribe once to the same publisher") then
+      elsif run("Test that an actor can only subscribe once to the same publisher") then
         subscribe(self, self, status);
         check(status = ok, "Expected subscription to be ok");
+        mock(com_logger);
         subscribe(self, self, status);
-      elsif run("Expected to fail: Test that publishing to subscribers with full inboxes results is an error") then
+        check_only_log(com_logger, "ALREADY A SUBSCRIBER ERROR.", failure);
+        unmock(com_logger);
+      elsif run("Test that publishing to subscribers with full inboxes results is an error") then
         start_limited_inbox_subscriber <= true;
         wait for 1 ns;
         publish(net, self, "hello subscribers");
+        mock(com_logger);
         publish(net, self, "hello subscribers", 8 ns);
+        check_log(com_logger, "FULL INBOX ERROR.", failure);
+        check_only_log(com_logger, "FULL INBOX ERROR.", failure);
+        unmock(com_logger);
       elsif run("Test that publishing to subscribers with full inboxes results passes if waiting") then
         start_limited_inbox_subscriber <= true;
         wait for 1 ns;

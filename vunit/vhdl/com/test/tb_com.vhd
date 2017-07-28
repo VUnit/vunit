@@ -27,6 +27,8 @@ architecture test_fixture of tb_com is
   signal hello_subscriber_received                     : std_logic_vector(1 to 2) := "ZZ";
   signal start_limited_inbox, limited_inbox_actor_done : boolean                  := false;
   signal start_limited_inbox_subscriber                : boolean                  := false;
+
+  constant com_logger : logger_t := get_logger("vunit_lib.com");
 begin
   test_runner : process
     variable self, actor, actor2, receiver, server, publisher, subscriber : actor_t;
@@ -56,9 +58,12 @@ begin
         actor := create;
         check(actor /= null_actor_c, "Failed to create no name actor");
         check_equal(name(actor), "");
-      elsif run("Expected to fail: Test that two actors of the same name cannot be created") then
+      elsif run("Test that two actors of the same name cannot be created") then
         actor := create("actor2");
+        mock(com_logger);
         actor := create("actor2");
+        check_only_log(com_logger, "DUPLICATE ACTOR NAME ERROR.", failure);
+        unmock(com_logger);
       elsif run("Test that multiple no-name actors can be created") then
         n_actors := num_of_actors;
         actor := create;
@@ -109,9 +114,12 @@ begin
         check(find("actor to destroy", false) = null_actor_c, "A destroyed actor should not be found");
         check(find("actor to keep", false) /= null_actor_c,
               "Actors other than the one destroyed must not be affected");
-      elsif run("Expected to fail: Test that a non-existing actor cannot be destroyed") then
+      elsif run("Test that a non-existing actor cannot be destroyed") then
         actor := null_actor_c;
+        mock(com_logger);
         destroy(actor);
+        check_only_log(com_logger, "UNKNOWN ACTOR ERROR.", failure);
+        unmock(com_logger);
       elsif run("Test that all actors can be destroyed") then
         reset_messenger;
         actor  := create("actor to destroy");
@@ -173,10 +181,13 @@ begin
         check(msg2.status = ok, "Expected no problems with receive");
         check_equal(pop_string(msg2), "hello again");
         check(msg2.sender = self, "Expected message from myself");
-      elsif run("Expected to fail: Test that sending to a non-existing actor results in an error") then
+      elsif run("Test that sending to a non-existing actor results in an error") then
         msg := create;
         push_string(msg, "hello");
+        mock(com_logger);
         send(net, null_actor_c, msg);
+        check_only_log(com_logger, "UNKNOWN RECEIVER ERROR.", failure);
+        unmock(com_logger);
       elsif run("Test that an actor can send to an actor with deferred creation") then
         actor := find("deferred actor");
         msg := create;
@@ -186,9 +197,13 @@ begin
         receive(net, actor, msg2);
         check(msg2.status = ok, "Expected no problems with receive");
         check_equal(pop_string(msg2), "hello actor to be created");
-      elsif run("Expected to fail: Test that receiving from an actor with deferred creation results in an error") then
+      elsif run("Test that receiving from an actor with deferred creation results in an error") then
         actor := find("deferred actor");
+        mock(com_logger);
         receive(net, actor, msg);
+        check_log(com_logger, "DEFERRED RECEIVER ERROR.", failure);
+        check_only_log(com_logger, "DEFERRED RECEIVER ERROR.", failure);
+        unmock(com_logger);
       elsif run("Test that empty messages can be sent") then
         msg := create;
         send(net, self, msg);
@@ -229,7 +244,7 @@ begin
         check_equal(t_stop - t_start, 10 ns, "Expected a 10 ns blocking period on third message");
 
         wait until limited_inbox_actor_done;
-      elsif run("Expected to fail: Test that sending to a limited-inbox receiver times out as expected") then
+      elsif run("Test that sending to a limited-inbox receiver times out as expected") then
         start_limited_inbox <= true;
         actor               := find("limited inbox");
         msg := create;
@@ -240,7 +255,10 @@ begin
         send(net, actor, msg, 0 ns);
         msg := create;
         push_string(msg , "Third message");
+        mock(com_logger);
         send(net, actor, msg, 9 ns);
+        check_only_log(com_logger, "FULL INBOX ERROR.", failure);
+        unmock(com_logger);
 
       -- Publish, subscribe, and unsubscribe
       elsif run("Test that an actor can publish messages to multiple subscribers") then
@@ -330,10 +348,13 @@ begin
         destroy(subscriber);
         push_string(msg, "hello subscriber");
         publish(net, self, msg);
-      elsif run("Expected to fail: Test that an actor can only subscribe once to the same publisher") then
+      elsif run("Test that an actor can only subscribe once to the same publisher") then
         subscribe(self, self);
+        mock(com_logger);
         subscribe(self, self);
-      elsif run("Expected to fail: Test that publishing to subscribers with full inboxes results is an error") then
+        check_only_log(com_logger, "ALREADY A SUBSCRIBER ERROR.", failure);
+        unmock(com_logger);
+      elsif run("Test that publishing to subscribers with full inboxes results is an error") then
         start_limited_inbox_subscriber <= true;
         wait for 1 ns;
         msg := create;
@@ -341,7 +362,10 @@ begin
         publish(net, self, msg);
         msg := create;
         push_string(msg, "hello subscriber");
+        mock(com_logger);
         publish(net, self, msg, 8 ns);
+        check_only_log(com_logger, "FULL INBOX ERROR.", failure);
+        unmock(com_logger);
       elsif run("Test that publishing to subscribers with full inboxes results passes if waiting") then
         start_limited_inbox_subscriber <= true;
         wait for 1 ns;
@@ -454,12 +478,19 @@ begin
         check_equal(pop_string(reply_msg), "reply3");
 
       -- Timeout
-      elsif run("Expected to fail: Test that timeout on receive leads to an error") then
+      elsif run("Test that timeout on receive leads to an error") then
+        mock(com_logger);
         receive(net, self, msg, 1 ns);
+        check_only_log(com_logger, "TIMEOUT.", failure);
+        unmock(com_logger);
 
       -- Deprecated APIs
-      elsif run("Expected to fail: Test that use of deprecated API leads to an error") then
+      elsif run("Test that use of deprecated API leads to an error") then
+        mock(com_logger);
         publish(net, self, "hello world", status);
+        check_log(com_logger, "DEPRECATED INTERFACE ERROR. publish() with status output", failure);
+        check_only_log(com_logger, "DEPRECATED INTERFACE ERROR. publish() with status output", failure);
+        unmock(com_logger);
       end if;
     end loop;
 

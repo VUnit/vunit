@@ -19,9 +19,18 @@ package com_support_pkg is
     msg       : string  := "";
     line_num  : natural := 0;
     file_name : string  := "");
+  impure function check (
+    expr      : boolean;
+    err       : com_status_t;
+    msg       : string  := "";
+    line_num  : natural := 0;
+    file_name : string  := "") return boolean;
 end package com_support_pkg;
 
 package body com_support_pkg is
+
+  constant logger : logger_t := get_logger("vunit_lib.com");
+
   procedure check_failed (
     err       : com_error_t;
     msg       : string  := "";
@@ -32,9 +41,9 @@ package body com_support_pkg is
     constant err_msg_capitalized : string := upper(err_msg_aligned) & ".";
   begin
     if msg /= "" then
-      check_failed(err_msg_capitalized & " " & msg, level => failure, line_num => line_num, file_name => file_name);
+      failure(logger, err_msg_capitalized & " " & msg, line_num => line_num, file_name => file_name);
     else
-      check_failed(err_msg_capitalized, level => failure, line_num => line_num, file_name => file_name);
+      failure(logger, err_msg_capitalized, line_num => line_num, file_name => file_name);
     end if;
   end;
 
@@ -46,8 +55,18 @@ package body com_support_pkg is
     file_name : string  := "") is
   begin
     if not expr then
-      check_failed(err, msg);
+      check_failed(err, msg, line_num => line_num, file_name => file_name);
     end if;
   end;
 
+  impure function check (
+    expr      : boolean;
+    err       : com_status_t;
+    msg       : string  := "";
+    line_num  : natural := 0;
+    file_name : string  := "") return boolean is
+  begin
+    check(expr, err, msg, line_num => line_num, file_name => file_name);
+    return expr;
+  end;
 end package body com_support_pkg;
