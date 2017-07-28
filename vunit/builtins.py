@@ -94,23 +94,10 @@ class Builtins(object):
         """
         Add com library
         """
-        supports_context = self._simulator_factory.supports_vhdl_2008_contexts()
-
         if self._vhdl_standard != '2008':
             raise RuntimeError("Communication package only supports vhdl 2008")
 
-        self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com.vhd"))
-        self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_api.vhd"))
-        self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_types.vhd"))
-        if supports_context:
-            self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_context.vhd"))
-        self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_string.vhd"))
-        self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_debug_codec_builder.vhd"))
-        self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_support.vhd"))
-        self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_messenger.vhd"))
-        self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_deprecated.vhd"))
-        self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_common.vhd"))
-        self._vunit_lib.add_source_files(join(VHDL_PATH, "com", "src", "com_string_payload.vhd"))
+        self._add_files(join(VHDL_PATH, "com", "src", "*.vhd"))
 
     def _add_osvvm(self):
         """
