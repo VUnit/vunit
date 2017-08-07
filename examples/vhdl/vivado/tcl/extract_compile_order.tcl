@@ -1,5 +1,9 @@
 set project [lindex $argv 0]
 set output_file [lindex $argv 1]
+
+puts "project=${project}"
+puts "output_file=${output_file}"
+
 open_project ${project}
 
 set fp [open ${output_file} w]

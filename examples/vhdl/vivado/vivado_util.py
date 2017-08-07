@@ -5,106 +5,13 @@
 # Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
 
 from subprocess import check_call
-from os.path import join, exists, abspath
+import os
+from os.path import join, exists, abspath, dirname, basename
 from os import makedirs
+from vunit.simulator_factory import SIMULATOR_FACTORY
 
 
-def run_vivado(tcl_file_name, *args):
-    """
-    Run tcl script in vivado in batch mode.
-
-    Note: the shell=True is important in windows where Vivado is just a bat file.
-    """
-    cmd = "vivado -mode batch -nojournal -nolog -source %s -tclargs %s" % (tcl_file_name, " ".join(args))
-    print(cmd)
-    check_call(cmd, shell=True)
-
-
-def create_library(library_name, library_path, cwd):
-    """
-    Create library, modelsim specific
-    """
-    print("Creating library %s in %s" % (library_name, library_path))
-    check_call(['vlib', '-unix', library_path])
-    check_call(['vmap', library_name, abspath(library_path)], cwd=cwd)
-
-
-def compile_file(file_name, library_name, cwd):
-    """
-    Create file, modelsim specific
-    """
-    print("Compiling %s" % file_name)
-    check_call(['vcom', '-quiet', '-work', library_name, abspath(file_name)], cwd=cwd)
-
-
-def compile_unisim(library_path):
-    """
-    Compile unisim library
-    """
-    unisim_src_path = "/opt/Xilinx/Vivado/2014.3/data/vhdl/src/unisims/"
-
-    create_library("unisim", library_path, library_path)
-    compile_file(join(unisim_src_path, "unisim_VPKG.vhd"), "unisim", library_path)
-    compile_file(join(unisim_src_path, "unisim_VCOMP.vhd"), "unisim", library_path)
-
-    with open(join(unisim_src_path, "primitive", "vhdl_analyze_order"), "r") as unisim_order_file:
-        analyze_order = [line.strip() for line in unisim_order_file.readlines()]
-        for file_base_name in analyze_order:
-            file_name = join(unisim_src_path, "primitive", file_base_name)
-            if not exists(file_name):
-                continue
-            compile_file(file_name, "unisim", library_path)
-
-
-def compile_vivado_ip(root, project_file, unisim_library_path):
-    """
-    Compile xci ip within vivado project file
-    returns a list of library logical names and paths
-    """
-    compiled_ip_path = join(root, "compiled_ip")
-    compiled_libraries_file = join(compiled_ip_path, "libraries.txt")
-    compile_order_file = join(compiled_ip_path, "compile_order.txt")
-
-    def get_compile_order():
-        print("Extracting compile order ...")
-        run_vivado(join(root, "tcl", "extract_compile_order.tcl"), project_file, compile_order_file)
-        with open(compile_order_file, "r") as ifile:
-            return [line.strip().split(",") for line in ifile.readlines()]
-
-    if not exists(compiled_libraries_file):
-        print("Compiling vivado project ip into %s ..." % abspath(compiled_ip_path))
-        if not exists(compiled_ip_path):
-            makedirs(compiled_ip_path)
-
-        compile_order = get_compile_order()
-        libraries = set(library_name for library_name, _ in compile_order)
-
-        # Map already compiled unisim library
-        create_library("unisim", unisim_library_path, compiled_ip_path)
-
-        # Map vivado project ip libraries
-        for library_name in libraries:
-            library_path = join(compiled_ip_path, library_name)
-            create_library(library_name, library_path, compiled_ip_path)
-
-        # Compile vivado project ip files
-        for library_name, file_name in compile_order:
-            compile_file(file_name, library_name, compiled_ip_path)
-
-        # Write libraries to file to cache the result
-        with open(compiled_libraries_file, "w") as ofile:
-            for library_name in libraries:
-                library_path = join(compiled_ip_path, library_name)
-                ofile.write("%s,%s\n" % (library_name, library_path))
-    else:
-        print("Vivado project ip already compiled in %s, skipping" % abspath(compiled_ip_path))
-
-    with open(compiled_libraries_file, "r") as ifile:
-        lines = ifile.read().splitlines()
-        return [line.split(",") for line in lines]
-
-
-def add_vivado_ip(vu, root, project_file):
+def add_vivado_ip(vunit_obj, output_path, project_file):
     """
     Add vivado (and compile if necessary) vivado ip to vunit project.
     """
@@ -113,18 +20,132 @@ def add_vivado_ip(vu, root, project_file):
         print("Could not find vivado project %s" % project_file)
         exit(1)
 
-    unisim_library_path = join(root, "unisim")
+    standard_library_path = join(output_path, "standard")
+    compile_standard_libraries(vunit_obj, standard_library_path)
 
-    # For this example we compile unisim our selves
-    # In a real use case it is probably better to use the simulation library wizard
-    # NOTE: To compile some IP:s more libraries than unsim might be required...
-    if not exists(unisim_library_path):
-        print("Compiling unisim library into %s ..." % abspath(unisim_library_path))
-        compile_unisim(unisim_library_path)
+    project_ip_path = join(output_path, "project_ip")
+    compile_project_ip(vunit_obj, project_file, project_ip_path)
+
+
+def compile_project_ip(vunit_obj, project_file, output_path):
+    """
+    Compile xci ip within vivado project file
+    returns a list of library logical names and paths
+    """
+    compile_order_file = join(output_path, "compile_order.txt")
+
+    if not exists(compile_order_file):
+        print("Generating Vivado project compile order into %s ..." % abspath(compile_order_file))
+
+        if not exists(output_path):
+            makedirs(output_path)
+
+        print("Extracting compile order ...")
+        run_vivado(join(dirname(__file__), "tcl", "extract_compile_order.tcl"), project_file, compile_order_file)
+
+    compile_order, libraries, include_dirs = read_compile_order(compile_order_file)
+
+    # Create libraries
+    for library_name in libraries:
+        vunit_obj.add_library(library_name, vhdl_standard="93")
+
+    # Add all source files to VUnit
+    previous_source = None
+    for library_name, file_name in compile_order:
+        is_verilog = file_name.endswith(".v") or file_name.endswith(".vp")
+
+        source_file = vunit_obj.library(library_name).add_source_file(
+            file_name,
+
+            # Top level IP files are put in xil_defaultlib and can be scanned for dependencies by VUnit
+            # Files in other libraries are typically encrypted and are not parsed
+            no_parse=library_name != "xil_defaultlib",
+            include_dirs=include_dirs if is_verilog else None)
+
+        source_file.add_compile_option("rivierapro.vcom_flags", ["-dbg"])
+        source_file.add_compile_option("rivierapro.vlog_flags", ["-dbg"])
+
+        # Create linear dependency on Vivado IP files to match extracted compile order
+        if previous_source is not None:
+            source_file.add_dependency_on(previous_source)
+
+        previous_source = source_file
+
+
+def is_verilog_header(file_name):
+    """
+    Vivado uses *_support.v for headers instead of .vh in some places
+    """
+    return file_name.endswith(".vh") or file_name.endswith("_support.v") or file_name.endswith("_defines.v")
+
+
+def read_compile_order(file_name):
+    """
+    Read the compile order file and filter out duplicate files
+    """
+    compile_order = []
+    unique = set()
+    include_dirs = set()
+    libraries = set()
+
+    with open(file_name, "r") as ifile:
+
+        for line in ifile.readlines():
+            library_name, file_name = line.strip().split(",")
+            libraries.add(library_name)
+
+            # Vivado generates duplicate files for different IP:s
+            # using the same underlying libraries. We remove duplicates here
+            key = (library_name, basename(file_name))
+            if key in unique:
+                continue
+            unique.add(key)
+
+            if is_verilog_header(file_name):
+                include_dirs.add(dirname(file_info.file_name))
+            else:
+                compile_order.append((library_name, file_name))
+
+    return compile_order, libraries, list(include_dirs)
+
+
+def compile_standard_libraries(vunit_obj, output_path):
+    """
+    Compile Xilinx standard libraries using Vivado TCL command
+    """
+    done_token = join(output_path, "all_done.txt")
+
+    if not exists(done_token):
+        print("Compiling standard libraries into %s ..." % abspath(output_path))
+        simname = SIMULATOR_FACTORY.simulator_name
+
+        # Vivado calls rivierapro for riviera
+        if simname == "rivierapro":
+            simname = "riviera"
+
+        run_vivado(join(dirname(__file__), "tcl", "compile_standard_libs.tcl"),
+                   simname,
+                   SIMULATOR_FACTORY._simulator_class.find_prefix().replace("\\", "/"),
+                   output_path)
+
     else:
-        print("unisim library already exists in %s, skipping" % abspath(unisim_library_path))
+        print("Standard libraries already exists in %s, skipping" % abspath(output_path))
 
-    libraries = compile_vivado_ip(root, project_file, unisim_library_path)
-    for library_name, library_path in libraries:
-        vu.add_external_library(library_name, library_path)
-    vu.add_external_library("unisim", unisim_library_path)
+    for library_name in ["unisim", "unimacro", "unifast", "secureip", "xpm"]:
+        path = join(output_path, library_name)
+        if exists(path):
+            vunit_obj.add_external_library(library_name, path)
+
+    with open(done_token, "w") as fptr:
+        fptr.write("done")
+
+
+def run_vivado(tcl_file_name, *args):
+    """
+    Run tcl script in vivado in batch mode.
+
+    Note: the shell=True is important in windows where Vivado is just a bat file.
+    """
+    cmd = "vivado -mode batch -notrace -nojournal -nolog -source %s -tclargs %s" % (tcl_file_name, " ".join(args))
+    print(cmd)
+    check_call(cmd, shell=True)

@@ -18,13 +18,9 @@ set_property "source_mgmt_mode" "DisplayOnly" $obj
 set_property "target_language" "VHDL" $obj
 
 # Create ip directory
-set ip_dir ${root}/ip
+set ip_dir ${root}/${project_name}_ip
 file mkdir ${ip_dir}
 
 # Create one fifo as an example of an IP
-create_ip -name fifo_generator -vendor xilinx.com -library ip -version 12.0 -module_name fifo_8b_32w -dir ${ip_dir}
+create_ip -name fifo_generator -vendor xilinx.com -library ip -module_name fifo_8b_32w -dir ${ip_dir}
 set_property -dict [list CONFIG.INTERFACE_TYPE {AXI_STREAM} CONFIG.TDATA_NUM_BYTES {1} CONFIG.TUSER_WIDTH {0} CONFIG.FIFO_Implementation_axis {Common_Clock_Distributed_RAM} CONFIG.Input_Depth_axis {32} CONFIG.TSTRB_WIDTH {1} CONFIG.TKEEP_WIDTH {1} CONFIG.FIFO_Implementation_wach {Common_Clock_Distributed_RAM} CONFIG.Full_Threshold_Assert_Value_wach {15} CONFIG.Empty_Threshold_Assert_Value_wach {14} CONFIG.FIFO_Implementation_wrch {Common_Clock_Distributed_RAM} CONFIG.Full_Threshold_Assert_Value_wrch {15} CONFIG.Empty_Threshold_Assert_Value_wrch {14} CONFIG.FIFO_Implementation_rach {Common_Clock_Distributed_RAM} CONFIG.Full_Threshold_Assert_Value_rach {15} CONFIG.Empty_Threshold_Assert_Value_rach {14} CONFIG.Full_Threshold_Assert_Value_axis {31} CONFIG.Empty_Threshold_Assert_Value_axis {30}] [get_ips fifo_8b_32w]
-generate_target {instantiation_template} [get_files /home/kraigher/repo/vunit/examples/vivado/myproject/myproject.srcs/sources_1/ip/fifo_8b_32w/fifo_8b_32w.xci]
-
-# Add project VHDL files
-read_vhdl -library mylib [glob -nocomplain ${root}/src/*.vhd]

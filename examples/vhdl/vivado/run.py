@@ -19,6 +19,8 @@ lib.add_source_files(join(src_path, "*.vhd"))
 tb_lib = ui.add_library("tb_lib")
 tb_lib.add_source_files(join(src_path, "test", "*.vhd"))
 
-add_vivado_ip(ui, root, project_file=join(root, "myproject", "myproject.xpr"))
+add_vivado_ip(ui,
+              output_path=join(root, "vivado_libs"),
+              project_file=join(root, "myproject", "myproject.xpr"))
 
 ui.main()

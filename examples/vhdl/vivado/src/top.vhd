@@ -13,9 +13,12 @@ library xil_defaultlib;
 entity top is
   port (
     clk : in std_logic;
+    rstn : in std_logic;
     in_valid : in std_logic;
+    in_ready : out std_logic;
     in_data : in std_logic_vector(7 downto 0);
     out_valid : out std_logic;
+    out_ready : in std_logic;
     out_data : out std_logic_vector(7 downto 0));
 end entity;
 
@@ -32,18 +35,17 @@ architecture arch of top is
       m_axis_tready : IN  STD_LOGIC;
       m_axis_tdata  : OUT STD_LOGIC_VECTOR(7 DOWNTO 0));
   end component fifo_8b_32w;
-
 begin
   -- Just pass through data to prove that component is not a black box
   -- and that compiled ip simulation model is used
-  fifo_8b_32w_inst : entity xil_defaultlib.fifo_8b_32w
+  fifo_8b_32w_inst : component fifo_8b_32w
     port map (
       s_aclk        => clk,
-      s_aresetn     => '1',
+      s_aresetn     => rstn,
       s_axis_tvalid => in_valid,
-      s_axis_tready => open,
+      s_axis_tready => in_ready,
       s_axis_tdata  => in_data,
       m_axis_tvalid => out_valid,
-      m_axis_tready => '1',
+      m_axis_tready => out_ready,
       m_axis_tdata  => out_data);
 end architecture;
