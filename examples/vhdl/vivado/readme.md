@@ -38,6 +38,6 @@ python run.py
 ```
 
 ## Requirements
-- Vivado should be available in the PATH environment variable.
+- Vivado should be available in the [PATH](https://en.wikipedia.org/wiki/PATH_(variable)) environment variable.
 - VUnit
 - A simulator supported by Vivado
