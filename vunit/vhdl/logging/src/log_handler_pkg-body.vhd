@@ -12,6 +12,7 @@ use vunit_lib.integer_vector_ptr_pkg.all;
 
 use work.ansi_pkg.all;
 use work.logger_pkg.all;
+use work.string_ops.upper;
 
 package body log_handler_pkg is
 
@@ -24,7 +25,6 @@ package body log_handler_pkg is
   constant log_handler_length : natural := max_logger_name_idx + 1;
 
   constant max_time_length : natural := time'image(1 sec)'length;
-  constant max_level_length : natural := log_level_t'image(failure)'length;
 
   impure function new_log_handler(id : natural;
                                   file_name : string;
@@ -63,15 +63,6 @@ package body log_handler_pkg is
     end if;
   end;
 
-  impure function upper(str : string) return string is
-    variable result : string(str'range);
-  begin
-    for i in str'range loop
-      result(i) := character'val(character'pos(str(i)) + character'pos('A') - character'pos('a'));
-    end loop;
-    return result;
-  end;
-
   procedure set_max_logger_name_length(log_handler : log_handler_t; value : natural) is
   begin
     set(log_handler.p_data, max_logger_name_idx, value);
@@ -83,17 +74,17 @@ package body log_handler_pkg is
     return get(log_handler.p_data, max_logger_name_idx);
   end;
 
-  impure function get_log_level(log_handler : log_handler_t; logger : logger_t) return log_level_config_t is
+  impure function get_log_level(log_handler : log_handler_t; logger : logger_t) return log_level_t is
     constant log_levels : integer_vector_ptr_t := to_integer_vector_ptr(get(log_handler.p_data, log_level_idx));
     constant logger_id : natural := get_id(logger);
   begin
     assert logger_id < length(log_levels); -- Should never happen
-    return log_level_config_t'val(get(log_levels, logger_id));
+    return log_level_t'val(get(log_levels, logger_id));
   end;
 
   procedure set_log_level(log_handler : log_handler_t;
                           logger : logger_t;
-                          level : log_level_config_t) is
+                          level : log_level_t) is
     constant log_levels : integer_vector_ptr_t := to_integer_vector_ptr(get(log_handler.p_data, log_level_idx));
     constant logger_id : natural := get_id(logger);
   begin
@@ -101,7 +92,7 @@ package body log_handler_pkg is
       resize(log_levels, logger_id+1);
     end if;
 
-    set(log_levels, logger_id, log_level_config_t'pos(level));
+    set(log_levels, logger_id, log_level_t'pos(level));
 
     for i in 0 to num_children(logger)-1 loop
       set_log_level(log_handler, get_child(logger, i), level);
@@ -119,14 +110,14 @@ package body log_handler_pkg is
                         logger : logger_t) is
 
   begin
-    set_log_level(log_handler, logger, all_levels);
+    set_log_level(log_handler, logger, above_all_log_levels);
   end;
 
   procedure enable_all(log_handler : log_handler_t;
                        logger : logger_t) is
 
   begin
-    set_log_level(log_handler, logger, no_level);
+    set_log_level(log_handler, logger, below_all_log_levels);
   end;
 
   procedure log_to_handler(log_handler : log_handler_t;
@@ -166,10 +157,11 @@ package body log_handler_pkg is
             when warning => write(l, color_start(fg => yellow));
             when error => write(l, color_start(fg => red, style => bright));
             when failure => write(l, color_start(fg => white, bg => red, style => bright));
+            when others => write(l, color_start(fg => magenta, style => bright));
           end case;
         end if;
 
-        write(l, upper(log_level_t'image(log_level)), justified => justified, field => field);
+        write(l, upper(get_name(log_level)), justified => justified, field => field);
 
         if use_color then
           write(l, color_end);

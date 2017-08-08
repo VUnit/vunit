@@ -5,10 +5,7 @@
 -- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
-use vunit_lib.log_pkg.all;
-use vunit_lib.log_handler_pkg.all;
-use vunit_lib.logger_pkg.all;
-use vunit_lib.run_pkg.all;
+context vunit_lib.vunit_context;
 
 entity tb_logging_example is
   generic (runner_cfg : string);

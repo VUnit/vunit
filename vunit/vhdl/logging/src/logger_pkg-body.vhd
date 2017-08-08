@@ -40,7 +40,7 @@ package body logger_pkg is
     set(logger.p_data, children_idx, to_integer(integer_vector_ptr_t'(allocate)));
     set(logger.p_data, log_count_idx, to_integer(allocate(log_level_t'pos(log_level_t'high)+1, value => 0)));
     set(logger.p_data, mock_log_count_idx, to_integer(allocate(log_level_t'pos(log_level_t'high)+1, value => 0)));
-    set(logger.p_data, stop_level_idx, log_level_config_t'pos(failure));
+    set(logger.p_data, stop_level_idx, log_level_t'pos(failure));
     set(logger.p_data, is_mocked_idx, 0);
     set(logger.p_data, mocked_log_queue_meta_idx, to_integer(mocked_log_queue.p_meta));
     set(logger.p_data, mocked_log_queue_data_idx, to_integer(mocked_log_queue.data));
@@ -115,20 +115,25 @@ package body logger_pkg is
     return (p_data => to_integer_vector_ptr(get(children, idx)));
   end;
 
-  -- Stop simulation for all levels >= level
-  procedure set_stop_level(logger : logger_t; log_level : log_level_config_t) is
+  -- Stop simulation for levels with weigths >= this
+  procedure set_stop_level(logger : logger_t; weight : integer) is
   begin
-    set(logger.p_data, stop_level_idx, log_level_config_t'pos(log_level));
+    set(logger.p_data, stop_level_idx, weight);
     for i in 0 to num_children(logger)-1 loop
-      set_stop_level(get_child(logger, i), log_level);
+      set_stop_level(get_child(logger, i), weight);
     end loop;
   end;
 
+  -- Stop simulation for all levels >= level
+  procedure set_stop_level(logger : logger_t; log_level : log_level_t) is
+  begin
+    set_stop_level(logger, log_level_t'pos(log_level));
+  end;
+
   -- Disable stopping simulation
-  -- Equivalent with set_stop_level(all_levels)
   procedure disable_stop(logger : logger_t) is
   begin
-    set_stop_level(logger, all_levels);
+    set_stop_level(logger, -1);
   end;
 
   procedure clear_log_count(logger : logger_t; idx : natural) is
@@ -141,11 +146,11 @@ package body logger_pkg is
 
   impure function get_log_count(logger : logger_t;
                                 idx : natural;
-                                log_level : log_level_or_default_t := no_level) return natural is
+                                log_level : log_level_t := null_log_level) return natural is
     constant log_counts : integer_vector_ptr_t := to_integer_vector_ptr(get(logger.p_data, idx));
     variable result : natural;
   begin
-    if log_level = no_level then
+    if log_level = null_log_level then
       result := 0;
       for lvl in log_level_t'low to log_level_t'high loop
         result := result + get(log_counts, log_level_t'pos(lvl));
@@ -159,10 +164,10 @@ package body logger_pkg is
 
   procedure reset_log_count(
     logger : logger_t;
-    log_level : log_level_or_default_t := no_level) is
+    log_level : log_level_t := null_log_level) is
     constant log_counts : integer_vector_ptr_t := to_integer_vector_ptr(get(logger.p_data, log_count_idx));
   begin
-    if log_level = no_level then
+    if log_level = null_log_level then
       for lvl in log_level_t'low to log_level_t'high loop
         set(log_counts, log_level_t'pos(lvl), 0);
       end loop;
@@ -171,7 +176,7 @@ package body logger_pkg is
     end if;
   end;
 
-  impure function get_log_count(logger : logger_t; log_level : log_level_or_default_t := no_level) return natural is
+  impure function get_log_count(logger : logger_t; log_level : log_level_t := null_log_level) return natural is
   begin
     return get_log_count(logger, log_count_idx, log_level);
   end;
@@ -183,12 +188,11 @@ package body logger_pkg is
   end;
 
   procedure count_log(logger : logger_t; log_level : log_level_t) is
-    constant stop_level : log_level_config_t := log_level_config_t'val(get(logger.p_data, stop_level_idx));
+    constant stop_level : integer := get(logger.p_data, stop_level_idx);
   begin
     count_log(logger, log_count_idx, log_level);
-    if log_level >= stop_level then
-      core_failure("Log level " & log_level_config_t'image(log_level) &
-                   " >= stop level " & log_level_config_t'image(stop_level));
+    if log_level_t'pos(log_level) >= stop_level then
+      core_failure("Stop simulation on log level " & get_name(log_level));
     end if;
   end;
 
@@ -209,7 +213,7 @@ package body logger_pkg is
                               line_num : natural;
                               file_name : string;
                               check_time : boolean) return string is
-    constant without_time : string := ("   log_level = " & log_level_t'image(log_level) & LF &
+    constant without_time : string := ("   log_level = " & get_name(log_level) & LF &
                                        "   msg = " & msg & LF &
                                        "   file_name:line_num = " & file_name & ":" & integer'image(line_num));
   begin
@@ -231,7 +235,7 @@ package body logger_pkg is
     return make_string(got_msg, got_level, got_log_time, got_line_num, got_file_name, check_time);
   end;
 
-  impure function get_mock_log_count(logger : logger_t; log_level : log_level_or_default_t := no_level) return natural is
+  impure function get_mock_log_count(logger : logger_t; log_level : log_level_t := null_log_level) return natural is
   begin
     return get_log_count(logger, mock_log_count_idx, log_level);
   end;

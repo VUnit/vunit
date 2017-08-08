@@ -17,7 +17,7 @@ package body log_pkg is
 
   -- Disable logging for all levels < level to this handler
   procedure set_log_level(log_handler : log_handler_t;
-                          level : log_level_config_t) is
+                          level : log_level_t) is
   begin
     set_log_level(log_system, log_handler, level);
   end;
@@ -25,23 +25,23 @@ package body log_pkg is
   -- Disable logging to this handler
   procedure disable_all(log_handler : log_handler_t) is
   begin
-    set_log_level(log_system, log_handler, all_levels);
+    set_log_level(log_system, log_handler, above_all_log_levels);
   end;
 
   -- Enable logging to this handler
   procedure enable_all(log_handler : log_handler_t) is
   begin
-    set_log_level(log_system, log_handler, no_level);
+    set_log_level(log_system, log_handler, below_all_log_levels);
   end;
 
-  procedure set_stop_level(level : log_level_config_t) is
+  procedure set_stop_level(level : log_level_t) is
   begin
     set_stop_level(log_system.p_root_logger, level);
   end;
 
   procedure disable_stop is
   begin
-    set_stop_level(log_system.p_root_logger, all_levels);
+    set_stop_level(log_system.p_root_logger, above_all_log_levels);
   end;
 
   procedure log(logger : logger_t;

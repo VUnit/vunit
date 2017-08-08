@@ -4,24 +4,10 @@
 --
 -- Copyright (c) 2017, Lars Asplund lars.anders.asplund@gmail.com
 
+use work.log_levels_pkg.all;
 use work.integer_vector_ptr_pkg.all;
 
 package logger_pkg is
-  type log_level_config_t is (no_level,
-                              verbose,
-                              debug,
-                              info,
-                              warning,
-                              error,
-                              failure,
-                              all_levels);
-
-  -- Log calls can use verbose to failure level
-  subtype log_level_t is log_level_config_t range verbose to failure;
-
-  -- Used in API:s where no_level signals to use a log level specified elsewhere
-  -- such as a default log level
-  subtype log_level_or_default_t is log_level_config_t range no_level to failure;
 
   -- Logger record, all fields are private
   type logger_t is record
@@ -45,21 +31,20 @@ package logger_pkg is
   impure function get_child(logger : logger_t; idx : natural) return logger_t;
 
   -- Stop simulation for all levels >= level
-  procedure set_stop_level(logger : logger_t; log_level : log_level_config_t);
+  procedure set_stop_level(logger : logger_t; log_level : log_level_t);
 
   -- Disable stopping simulation
-  -- Equivalent with set_stop_level(all_levels)
   procedure disable_stop(logger : logger_t);
 
-  -- Get number of logs to a specific level or all levels when level = no_level
+  -- Get number of logs to a specific level or all levels when level = null_log_level
   impure function get_log_count(
     logger : logger_t;
-    log_level : log_level_or_default_t := no_level) return natural;
+    log_level : log_level_t := null_log_level) return natural;
 
-  -- Reset the log count of a specific level or all levels when level = no_level
+  -- Reset the log count of a specific level or all levels when level = null_log_level
   procedure reset_log_count(
     logger : logger_t;
-    log_level : log_level_or_default_t := no_level);
+    log_level : log_level_t := null_log_level);
 
   ---------------------------------------------------------------------
   -- Mock procedures to enable unit testing of code performing logging
@@ -78,7 +63,7 @@ package logger_pkg is
   -- Get the log count of specific or all log levels occured during mocked state
   impure function get_mock_log_count(
     logger : logger_t;
-    log_level : log_level_or_default_t := no_level) return natural;
+    log_level : log_level_t := null_log_level) return natural;
 
   -- Constant to ignore time value when checking log call
   constant no_time_check : time := -1 ns;

@@ -5,6 +5,7 @@
 -- Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
+use vunit_lib.log_levels_pkg.all;
 use vunit_lib.logger_pkg.all;
 use vunit_lib.checker_pkg.all;
 use vunit_lib.check_pkg.all;

@@ -10,10 +10,12 @@ library vunit_lib;
 use vunit_lib.run_pkg.all;
 use vunit_lib.dict_pkg.all;
 
+use work.log_levels_pkg.all;
 use work.logger_pkg.all;
 use work.log_handler_pkg.all;
 use work.log_pkg.all;
 use work.core_pkg.all;
+use work.assert_pkg.all;
 
 entity tb_log is
   generic (
@@ -31,36 +33,6 @@ begin
       file_open(status, fptr, file_name, read_mode);
       assert status = name_error report "Expected no such file " & file_name severity failure;
       file_close(fptr);
-    end;
-
-    impure function msg_suffix(msg : string) return string is
-    begin
-      if msg = "" then
-        return "";
-      else
-        return " - " & msg;
-      end if;
-    end;
-
-    -- @TODO move to assert_pkg as a bootstraping test package when not using check
-    procedure assert_true(value : boolean; msg : string := "") is
-    begin
-      assert value report "assert_true failed" & msg_suffix(msg) severity failure;
-    end;
-
-    procedure assert_false(value : boolean; msg : string := "") is
-    begin
-      assert not value report "assert_false failed" & msg_suffix(msg) severity failure;
-    end;
-
-    procedure assert_equal(got, expected, msg : string := "") is
-    begin
-      assert got = expected report "Got " & got & " expected " & expected & msg_suffix(msg) severity failure;
-    end;
-
-    procedure assert_equal(got, expected : integer; msg : string := "") is
-    begin
-      assert_equal(integer'image(got), integer'image(expected), msg);
     end;
 
     procedure check_log_file (
@@ -257,7 +229,7 @@ begin
       disable_stop;
 
       disable_all(file_handler);
-      for log_level in log_level_t'low to log_level_t'high loop
+      for log_level in verbose to failure loop
         assert_false(is_enabled(file_handler, default_logger, log_level));
         assert_false(is_enabled(file_handler, logger, log_level));
         assert_false(is_enabled(file_handler, nested_logger, log_level));
@@ -267,7 +239,7 @@ begin
       check_no_log_file(log_file_name);
 
       enable_all(file_handler);
-      for log_level in log_level_t'low to log_level_t'high loop
+      for log_level in verbose to failure loop
         assert_true(is_enabled(file_handler, default_logger, log_level));
         assert_true(is_enabled(file_handler, logger, log_level));
         assert_true(is_enabled(file_handler, nested_logger, log_level));
@@ -310,7 +282,7 @@ begin
       init_log_handler(file_handler, file_name => log_file_name, format => csv);
       disable_all(file_handler, logger);
 
-      for log_level in log_level_t'low to log_level_t'high loop
+      for log_level in verbose to failure loop
         assert_true(is_enabled(file_handler, default_logger, log_level));
         assert_false(is_enabled(file_handler, logger, log_level));
         assert_false(is_enabled(file_handler, nested_logger, log_level));
@@ -324,7 +296,7 @@ begin
 
       init_log_handler(file_handler, file_name => log_file_name, format => csv);
       enable_all(file_handler, logger);
-      for log_level in log_level_t'low to log_level_t'high loop
+      for log_level in verbose to failure loop
         assert_true(is_enabled(file_handler, default_logger, log_level));
         assert_true(is_enabled(file_handler, logger, log_level));
         assert_true(is_enabled(file_handler, nested_logger, log_level));
@@ -450,60 +422,75 @@ begin
       disable_stop;
       tmp := 0;
 
-      for lvl in log_level_t'low to log_level_t'high loop
-        log(logger, "msg", lvl);
-        assert_equal(get_log_count(logger, lvl), 1);
+      for lvl in verbose to failure loop
+        if is_valid(lvl) then
+          log(logger, "msg", lvl);
+          assert_equal(get_log_count(logger, lvl), 1);
+        end if;
       end loop;
+
       reset_log_count(logger);
-      for lvl in log_level_t'low to log_level_t'high loop
-        assert_equal(get_log_count(logger, lvl), 0);
+
+      for lvl in verbose to failure loop
+        if is_valid(lvl) then
+          assert_equal(get_log_count(logger, lvl), 0);
+        end if;
       end loop;
 
-      for lvl in log_level_t'low to log_level_t'high loop
-        assert_equal(get_log_count(logger, lvl), 0);
-        log(logger, "msg", lvl);
-        tmp := tmp + 1;
+      for lvl in verbose to failure loop
+        if is_valid(lvl) then
+          assert_equal(get_log_count(logger, lvl), 0);
+          log(logger, "msg", lvl);
+          tmp := tmp + 1;
 
-        for lvl2 in log_level_t'low to log_level_t'high loop
-          assert_equal(get_mock_log_count(logger, lvl2), 0, "no mock log count");
+          for lvl2 in verbose to failure loop
+            if is_valid(lvl2) then
+              assert_equal(get_mock_log_count(logger, lvl2), 0, "no mock log count");
 
-          if lvl2 <= lvl then
-            assert_equal(get_log_count(logger, lvl2), 1);
-          else
-            assert_equal(get_log_count(logger, lvl2), 0);
-          end if;
-        end loop;
+              if lvl2 <= lvl then
+                assert_equal(get_log_count(logger, lvl2), 1);
+              else
+                assert_equal(get_log_count(logger, lvl2), 0);
+              end if;
+            end if;
+          end loop;
 
-        assert_equal(get_log_count(logger), tmp, "total");
+          assert_equal(get_log_count(logger), tmp, "total");
+        end if;
       end loop;
 
-      for lvl in log_level_t'low to log_level_t'high loop
-        reset_log_count(logger, lvl);
-        assert_equal(get_log_count(logger, lvl), 0, "log count is reset");
-        tmp := tmp - 1;
-        assert_equal(get_log_count(logger), tmp, "total");
+      for lvl in verbose to failure loop
+        if is_valid(lvl) then
+          reset_log_count(logger, lvl);
+          assert_equal(get_log_count(logger, lvl), 0, "log count is reset");
+          tmp := tmp - 1;
+          assert_equal(get_log_count(logger), tmp, "total");
 
-        for lvl2 in log_level_t'low to log_level_t'high loop
-          if lvl2 > lvl then
-            assert_equal(get_log_count(logger, lvl2), 1);
-          else
-            assert_equal(get_log_count(logger, lvl2), 0);
-          end if;
-        end loop;
+          for lvl2 in verbose to failure loop
+            if is_valid(lvl2) then
+              if lvl2 > lvl then
+                assert_equal(get_log_count(logger, lvl2), 1);
+              else
+                assert_equal(get_log_count(logger, lvl2), 0);
+              end if;
+            end if;
+          end loop;
+        end if;
       end loop;
 
     elsif run("Does not log counts when mocked") then
       mock(logger);
 
       tmp := 0;
-      for lvl in log_level_t'low to log_level_t'high loop
-        assert_equal(get_mock_log_count(logger, lvl), 0);
-        log(logger, "message", lvl);
-        assert_equal(get_mock_log_count(logger, lvl), 1);
-        assert_equal(get_log_count(logger, lvl), 0);
-        check_only_log(logger, "message", lvl);
-
-        tmp := tmp + 1;
+      for lvl in verbose to failure loop
+        if is_valid(lvl) then
+          assert_equal(get_mock_log_count(logger, lvl), 0);
+          log(logger, "message", lvl);
+          assert_equal(get_mock_log_count(logger, lvl), 1);
+          assert_equal(get_log_count(logger, lvl), 0);
+          check_only_log(logger, "message", lvl);
+          tmp := tmp + 1;
+        end if;
       end loop;
 
       assert_equal(get_mock_log_count(logger), tmp);
@@ -514,10 +501,12 @@ begin
       assert_equal(get_mock_log_count(logger), 0);
       assert_equal(get_log_count(logger), 0);
 
-      for lvl in log_level_t'low to log_level_t'high loop
-        assert_equal(get_log_count(logger, lvl), 0);
-        assert_equal(get_mock_log_count(logger, lvl), 0,
-                     "reset mock log count after unmock");
+      for lvl in verbose to failure loop
+        if is_valid(lvl) then
+          assert_equal(get_log_count(logger, lvl), 0);
+          assert_equal(get_mock_log_count(logger, lvl), 0,
+                       "reset mock log count after unmock");
+        end if;
       end loop;
 
     elsif run("Test logger name validation") then

@@ -9,6 +9,7 @@ context vunit_context is
   use vunit_lib.string_ops.all;
   use vunit_lib.dictionary.all;
   use vunit_lib.path.all;
+  use vunit_lib.log_levels_pkg.all;
   use vunit_lib.logger_pkg.all;
   use vunit_lib.log_handler_pkg.all;
   use vunit_lib.log_pkg.all;

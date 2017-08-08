@@ -12,7 +12,7 @@ api_template = """  procedure check_match(
     constant got             : in $got_type;
     constant expected        : in $expected_type;
     constant msg             : in string := check_result_tag_c;
-    constant level           : in log_level_or_default_t := no_level;
+    constant level           : in log_level_t := null_log_level;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "");
 
@@ -21,7 +21,7 @@ api_template = """  procedure check_match(
     constant got             : in $got_type;
     constant expected        : in $expected_type;
     constant msg             : in string := check_result_tag_c;
-    constant level           : in log_level_or_default_t := no_level;
+    constant level           : in log_level_t := null_log_level;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "");
 
@@ -31,7 +31,7 @@ api_template = """  procedure check_match(
     constant got             : in $got_type;
     constant expected        : in $expected_type;
     constant msg             : in string := check_result_tag_c;
-    constant level           : in log_level_or_default_t := no_level;
+    constant level           : in log_level_t := null_log_level;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "");
 
@@ -40,7 +40,7 @@ api_template = """  procedure check_match(
     constant got             : in $got_type;
     constant expected        : in $expected_type;
     constant msg             : in string := check_result_tag_c;
-    constant level           : in log_level_or_default_t := no_level;
+    constant level           : in log_level_t := null_log_level;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "");
 
@@ -48,7 +48,7 @@ api_template = """  procedure check_match(
     constant got             : in $got_type;
     constant expected        : in $expected_type;
     constant msg             : in string := check_result_tag_c;
-    constant level           : in log_level_or_default_t := no_level;
+    constant level           : in log_level_t := null_log_level;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
     return boolean;
@@ -59,7 +59,7 @@ impl_template = """  procedure check_match(
     constant got             : in $got_type;
     constant expected        : in $expected_type;
     constant msg             : in string := check_result_tag_c;
-    constant level           : in log_level_or_default_t := no_level;
+    constant level           : in log_level_t := null_log_level;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
     variable pass : boolean;
@@ -74,7 +74,7 @@ impl_template = """  procedure check_match(
     constant got             : in $got_type;
     constant expected        : in $expected_type;
     constant msg             : in string := check_result_tag_c;
-    constant level           : in log_level_or_default_t := no_level;
+    constant level           : in log_level_t := null_log_level;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
   begin
@@ -89,7 +89,7 @@ impl_template = """  procedure check_match(
     constant got             : in $got_type;
     constant expected        : in $expected_type;
     constant msg             : in string := check_result_tag_c;
-    constant level           : in log_level_or_default_t := no_level;
+    constant level           : in log_level_t := null_log_level;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
   begin
@@ -126,7 +126,7 @@ impl_template = """  procedure check_match(
     constant got             : in $got_type;
     constant expected        : in $expected_type;
     constant msg             : in string := check_result_tag_c;
-    constant level           : in log_level_or_default_t := no_level;
+    constant level           : in log_level_t := null_log_level;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "") is
     variable pass : boolean;
@@ -140,7 +140,7 @@ impl_template = """  procedure check_match(
     constant got             : in $got_type;
     constant expected        : in $expected_type;
     constant msg             : in string := check_result_tag_c;
-    constant level           : in log_level_or_default_t := no_level;
+    constant level           : in log_level_t := null_log_level;
     constant line_num        : in natural     := 0;
     constant file_name       : in string      := "")
     return boolean is
@@ -298,6 +298,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 library vunit_lib;
+use vunit_lib.log_levels_pkg.all;
 use vunit_lib.logger_pkg.all;
 use vunit_lib.checker_pkg.all;
 use vunit_lib.check_pkg.all;

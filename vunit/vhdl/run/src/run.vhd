@@ -7,6 +7,7 @@
 -- Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.logger_pkg.all;
+use work.log_levels_pkg.all;
 use work.log_handler_pkg.all;
 use work.log_pkg.all;
 use work.ansi_pkg.enable_colors;

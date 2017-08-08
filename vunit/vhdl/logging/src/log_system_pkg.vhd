@@ -9,6 +9,7 @@ use std.textio.all;
 library vunit_lib;
 use vunit_lib.integer_vector_ptr_pkg.all;
 
+use work.log_levels_pkg.all;
 use work.logger_pkg.all;
 use work.log_handler_pkg.all;
 use work.core_pkg.core_failure;
@@ -26,7 +27,7 @@ package log_system_pkg is
   impure function new_log_handler(log_system : log_system_t;
                                   file_name : string;
                                   format : log_format_t;
-                                  log_level : log_level_config_t;
+                                  log_level : log_level_t;
                                   use_color : boolean) return log_handler_t;
 
   impure function get_logger(log_system : log_system_t;
@@ -42,7 +43,7 @@ package log_system_pkg is
   -- Disable logging for all levels < level to this handler
   procedure set_log_level(log_system : log_system_t;
                           log_handler : log_handler_t;
-                          level : log_level_config_t);
+                          level : log_level_t);
 
   procedure log(log_system : log_system_t;
                 logger : logger_t;
@@ -218,7 +219,7 @@ package body log_system_pkg is
   impure function new_log_handler(log_system : log_system_t;
                                   file_name : string;
                                   format : log_format_t;
-                                  log_level : log_level_config_t;
+                                  log_level : log_level_t;
                                   use_color : boolean) return log_handler_t is
     constant id : natural := length(log_system.p_log_handlers);
     constant log_handler : log_handler_t := new_log_handler(id, file_name, format, use_color);
@@ -250,7 +251,7 @@ package body log_system_pkg is
   -- Disable logging for all levels < level to this handler
   procedure set_log_level(log_system : log_system_t;
                           log_handler : log_handler_t;
-                          level : log_level_config_t) is
+                          level : log_level_t) is
   begin
     set_log_level(log_handler, log_system.p_root_logger, level);
   end;

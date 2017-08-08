@@ -10,6 +10,7 @@ use std.textio.all;
 
 library ieee;
 use ieee.std_logic_1164.all;
+use work.log_levels_pkg.all;
 use work.logger_pkg.all;
 use work.log_pkg.all;
 use work.integer_vector_ptr_pkg.all;
@@ -76,7 +77,7 @@ package checker_pkg is
   procedure failing_check(
     checker   : checker_t;
     msg       : string;
-    level     : log_level_or_default_t := no_level;
+    level     : log_level_t := null_log_level;
     line_num  : natural                := 0;
     file_name : string                 := "");
 
@@ -206,7 +207,7 @@ package body checker_pkg is
   procedure failing_check(
     checker   : checker_t;
     msg       : string;
-    level     : log_level_or_default_t := no_level;
+    level     : log_level_t := null_log_level;
     line_num  : natural                := 0;
     file_name : string                 := "") is
   begin
@@ -214,7 +215,7 @@ package body checker_pkg is
     set(checker.p_data, stat_checks_idx, get(checker.p_data, stat_checks_idx) + 1);
     set(checker.p_data, stat_failed_idx, get(checker.p_data, stat_failed_idx) + 1);
 
-    if level = no_level then
+    if level = null_log_level then
       log(get_logger(checker), msg, get_default_log_level(checker), line_num, file_name);
     else
       log(get_logger(checker), msg, level, line_num, file_name);

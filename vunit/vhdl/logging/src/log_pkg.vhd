@@ -5,6 +5,7 @@
 -- Copyright (c) 2017, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.logger_pkg.all;
+use work.log_levels_pkg.all;
 use work.log_handler_pkg.all;
 use work.log_system_pkg.all;
 
@@ -78,10 +79,10 @@ package log_pkg is
                 file_name : string := "");
 
   -- Stop simulation for all levels >= level
-  procedure set_stop_level(level : log_level_config_t);
+  procedure set_stop_level(level : log_level_t);
 
   -- Disable stopping simulation
-  -- Equivalent with set_stop_level(all_levels)
+  -- Equivalent with set_stop_level(above_all_log_levels)
   procedure disable_stop;
 
   -- Return true if logging to this logger at this level is enabled in any handler
@@ -92,14 +93,14 @@ package log_pkg is
 
   -- Disable logging for all levels < level to the log handler
   procedure set_log_level(log_handler : log_handler_t;
-                          level : log_level_config_t);
+                          level : log_level_t);
 
   -- Disable all log levels to the log handler
-  -- equivalent with setting log level to all_levels
+  -- equivalent with setting log level to above_all_log_levels
   procedure disable_all(log_handler : log_handler_t);
 
   -- Enable all log levels to the log handler
-  -- equivalent with setting log level to no_level
+  -- equivalent with setting log level to below_all_log_levels
   procedure enable_all(log_handler : log_handler_t);
 
   -- The default log system
