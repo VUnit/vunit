@@ -1200,27 +1200,6 @@ use builtin_lib.all;
         warning_calls = mock_logger.warning.call_args_list
         self.assertEqual(len(warning_calls), 0)
 
-    def test_add_external_library(self):
-        os.makedirs("lib_path")
-        self.project.add_library("lib", "lib_path", is_external=True)
-
-    def test_add_external_library_must_exist(self):
-        try:
-            self.project.add_library("lib2", "lib_path2", is_external=True)
-        except ValueError as err:
-            self.assertEqual(str(err), "External library 'lib_path2' does not exist")
-        else:
-            assert False, "ValueError not raised"
-
-    def test_add_external_library_must_be_a_directory(self):
-        write_file("lib_path3", "")
-        try:
-            self.project.add_library("lib3", "lib_path3", is_external=True)
-        except ValueError as err:
-            self.assertEqual(str(err), "External library must be a directory. Got 'lib_path3'")
-        else:
-            assert False, "ValueError not raised"
-
     def add_source_file(self, library_name, file_name, contents, defines=None):
         """
         Convenient wrapper arround project.add_source_file

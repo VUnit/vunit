@@ -11,7 +11,7 @@ Functionality to represent and operate on a HDL code project
 """
 
 
-from os.path import join, basename, dirname, splitext, isdir, exists
+from os.path import join, basename, dirname, splitext
 from copy import copy
 import traceback
 import logging
@@ -81,14 +81,6 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         is_external -- Library is assumed to a black-box
         """
         self._validate_library_name(logical_name)
-
-        if is_external:
-            if not exists(directory):
-                raise ValueError("External library %r does not exist" % directory)
-
-            if not isdir(directory):
-                raise ValueError("External library must be a directory. Got %r" % directory)
-
         if logical_name not in self._libraries:
             library = Library(logical_name, directory, vhdl_standard, is_external=is_external)
             LOGGER.debug('Adding library %s with path %s', logical_name, directory)

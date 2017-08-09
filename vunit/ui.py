@@ -357,12 +357,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         level = getattr(logging, log_level.upper())
         logging.basicConfig(filename=None, format='%(levelname)7s - %(message)s', level=level)
 
-    def add_external_library(self, library_name, path, vhdl_standard=None):
+    def add_external_library(self, library_name, path=None, vhdl_standard=None):
         """
         Add an externally compiled library as a black-box
 
         :param library_name: The name of the external library
-        :param path: The path to the external library directory
+        :param path: The path to the external library
         :param vhdl_standard: The VHDL standard used to compile files into this library,
                               if None the VUNIT_VHDL_STANDARD environment variable is used
         :returns: The created :class:`.Library` object
@@ -376,6 +376,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         if vhdl_standard is None:
             vhdl_standard = self._vhdl_standard
+
+        if path is None:
+            path = join(self._simulator_output_path, "libraries", library_name)
 
         self._project.add_library(library_name, abspath(path), vhdl_standard, is_external=True)
         return self.library(library_name)
