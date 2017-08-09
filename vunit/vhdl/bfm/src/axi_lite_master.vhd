@@ -41,7 +41,7 @@ entity axi_lite_master is
     wstrb : out std_logic_vector(byte_enable_length(bus_handle)-1 downto 0) := (others => '0');
 
     bvalid : in std_logic;
-    bready : out std_logic;
+    bready : out std_logic := '0';
     bresp : in axi_resp_t := axi_resp_okay);
 end entity;
 
