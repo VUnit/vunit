@@ -131,6 +131,8 @@ package log_levels_pkg is
   type log_level_vec_t is array (natural range <>) of log_level_t;
   subtype numeric_log_level_t is integer range 1 to 100;
 
+  impure function "+" (reference_level : log_level_t; offset : numeric_log_level_t) return numeric_log_level_t;
+  impure function "-" (reference_level : log_level_t; offset : numeric_log_level_t) return numeric_log_level_t;
   impure function new_log_level(name : string;
                                 log_level : numeric_log_level_t) return log_level_t;
   impure function is_valid(log_level : log_level_t) return boolean;

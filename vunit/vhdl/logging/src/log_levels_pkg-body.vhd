@@ -46,6 +46,16 @@ package body log_levels_pkg is
 
   constant levels : levels_t := create_levels;
 
+  impure function "+" (reference_level : log_level_t; offset : numeric_log_level_t) return numeric_log_level_t is
+  begin
+    return log_level_t'pos(reference_level) + offset;
+  end;
+
+  impure function "-" (reference_level : log_level_t; offset : numeric_log_level_t) return numeric_log_level_t is
+  begin
+    return log_level_t'pos(reference_level) - offset;
+  end;
+
   impure function new_log_level(name : string;
                                 log_level : numeric_log_level_t) return log_level_t is
     variable name_ptr : string_ptr_t := to_string_ptr(get(levels.names, log_level));

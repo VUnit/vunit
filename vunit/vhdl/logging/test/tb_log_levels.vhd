@@ -53,6 +53,17 @@ begin
       assert_equal(get_name(level), "my_level");
       assert_true(level = custom_level23);
 
+    elsif run("Can create level relative to other level") then
+      level := new_log_level("my level", info + 3);
+      assert_true(level = custom_level48);
+      level := new_log_level("my level 2", level + 3);
+      assert_true(level = custom_level51);
+
+      level := new_log_level("my level 3", info - 3);
+      assert_true(level = custom_level42);
+      level := new_log_level("my level 4", level - 3);
+      assert_true(level = custom_level39);
+
     elsif run("Can create max num custom levels") then
       count := 0;
       for lvl in numeric_log_level_t'low to numeric_log_level_t'high loop
