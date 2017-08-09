@@ -21,25 +21,25 @@ entity axi_lite_master is
     aclk : in std_logic;
 
     arready : in std_logic;
-    arvalid : out std_logic;
+    arvalid : out std_logic := '0';
     araddr : out std_logic_vector;
 
-    rready : out std_logic;
+    rready : out std_logic := '0';
     rvalid : in std_logic;
     rdata : in std_logic_vector;
     rresp : in std_logic_vector(1 downto 0);
 
     awready : in std_logic;
-    awvalid : out std_logic;
+    awvalid : out std_logic := '0';
     awaddr : out std_logic_vector;
 
     wready : in std_logic;
-    wvalid : out std_logic;
+    wvalid : out std_logic := '0';
     wdata : out std_logic_vector;
     wstb : out std_logic_vector;
 
     bvalid : in std_logic;
-    bready : out std_logic;
+    bready : out std_logic := '0';
     bresp : in std_logic_vector(1 downto 0));
 end entity;
 
