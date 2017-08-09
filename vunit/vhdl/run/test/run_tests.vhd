@@ -10,7 +10,6 @@ library vunit_lib;
 use vunit_lib.string_ops.all;
 use vunit_lib.log_levels_pkg.all;
 use vunit_lib.logger_pkg.all;
-use vunit_lib.log_pkg.all;
 use vunit_lib.checker_pkg.all;
 use vunit_lib.check_pkg.all;
 use std.textio.all;

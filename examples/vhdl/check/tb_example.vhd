@@ -62,7 +62,7 @@ begin
     -- Logging Passing Checks
     -- You can also have the check message logged on a passing check to create a debug trace. If you use
     -- the result function the message becomes nice in both the passing and failing case.
-    set_log_level(display_handler, get_logger(default_checker), verbose);
+    set_log_level(get_logger(default_checker), display_handler, verbose);
     check(some_false_condition, result("for error status flag"));
     check(some_true_condition, result("for error status flag"));
 
@@ -73,7 +73,7 @@ begin
     -- No need to bloat the output with such information.
     check_equal(my_data - 1, reference_value, result("for my_data"));
     check_equal(my_data, reference_value, result("for my_data"));
-    set_log_level(display_handler, get_logger(default_checker), info);
+    set_log_level(get_logger(default_checker), display_handler, info);
 
     -- Check Location
     -- Check calls are also detected by the location preprocessor such that ""anonymous"" checks can be
@@ -143,7 +143,7 @@ begin
     -- Point Checks
     -- check is a point check checking a condition at a specific point in time. Here are some other
     -- point checks which have the same type of subprograms as check. Only one type of each is shown here.
-    set_log_level(display_handler, get_logger(default_checker), verbose);
+    set_log_level(get_logger(default_checker), display_handler, verbose);
 
     ---- True Check
     ---- check_true does the same thing as check but has a more verbose name and result message.

@@ -11,7 +11,6 @@ use ieee.numeric_std.all;
 use work.integer_vector_ptr_pkg.all;
 use work.integer_array_pkg.all;
 use work.string_ptr_pkg.all;
-use work.log_pkg.all;
 use work.logger_pkg.all;
 
 package memory_pkg is

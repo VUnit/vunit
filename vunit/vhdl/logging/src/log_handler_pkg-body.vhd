@@ -11,16 +11,19 @@ use vunit_lib.string_ptr_pkg.all;
 use vunit_lib.integer_vector_ptr_pkg.all;
 
 use work.ansi_pkg.all;
-use work.logger_pkg.all;
 use work.string_ops.upper;
 
 package body log_handler_pkg is
 
-  constant file_name_idx : natural := 0;
-  constant format_idx : natural := 1;
-  constant use_color_idx : natural := 2;
-  constant file_is_initialized_idx : natural := 3;
-  constant log_level_idx : natural := 4;
+  constant display_handler_id : natural := 0;
+  constant file_handler_id : natural := 1;
+  constant next_log_handler_id : integer_vector_ptr_t := allocate(1, value => file_handler_id+1);
+
+  constant id_idx : natural := 0;
+  constant file_name_idx : natural := 1;
+  constant format_idx : natural := 2;
+  constant use_color_idx : natural := 3;
+  constant file_is_initialized_idx : natural := 4;
   constant max_logger_name_idx : natural := 5;
   constant log_handler_length : natural := max_logger_name_idx + 1;
 
@@ -30,14 +33,44 @@ package body log_handler_pkg is
                                   file_name : string;
                                   format : log_format_t;
                                   use_color : boolean) return log_handler_t is
-    constant log_handler : log_handler_t := (p_id => id, p_data => allocate(log_handler_length));
+    constant log_handler : log_handler_t := (p_data => allocate(log_handler_length));
   begin
+    set(log_handler.p_data, id_idx, id);
     set(log_handler.p_data, file_name_idx, to_integer(allocate(file_name)));
     set(log_handler.p_data, file_is_initialized_idx, 0);
-    set(log_handler.p_data, log_level_idx, to_integer(integer_vector_ptr_t'(allocate)));
     set(log_handler.p_data, max_logger_name_idx, 0);
     set_format(log_handler, format, use_color);
     return log_handler;
+  end;
+
+  impure function new_log_handler(file_name : string;
+                                  format : log_format_t;
+                                  use_color : boolean) return log_handler_t is
+    constant id : natural := get(next_log_handler_id, 0);
+  begin
+    set(next_log_handler_id, 0, id + 1);
+    return new_log_handler(id, file_name, format, use_color);
+  end;
+
+  constant stdout_file_name : string := ">1";
+  constant null_file_name : string := "";
+
+  -- Display handler; Write to stdout
+  constant display_handler : log_handler_t := new_log_handler(display_handler_id,
+                                                              stdout_file_name,
+                                                              format => verbose,
+                                                              use_color => true);
+
+  -- File handler; Write to file
+  -- Is configured to output_path/log.csv by test_runner_setup
+  constant file_handler : log_handler_t := new_log_handler(file_handler_id,
+                                                           null_file_name,
+                                                           format => verbose,
+                                                           use_color => false);
+
+  impure function get_id(log_handler : log_handler_t) return natural is
+  begin
+    return get(log_handler.p_data, id_idx);
   end;
 
   procedure init_log_handler(log_handler : log_handler_t;
@@ -74,54 +107,15 @@ package body log_handler_pkg is
     return get(log_handler.p_data, max_logger_name_idx);
   end;
 
-  impure function get_log_level(log_handler : log_handler_t; logger : logger_t) return log_level_t is
-    constant log_levels : integer_vector_ptr_t := to_integer_vector_ptr(get(log_handler.p_data, log_level_idx));
-    constant logger_id : natural := get_id(logger);
+  procedure update_max_logger_name_length(log_handler : log_handler_t; value : natural) is
   begin
-    assert logger_id < length(log_levels); -- Should never happen
-    return log_level_t'val(get(log_levels, logger_id));
-  end;
-
-  procedure set_log_level(log_handler : log_handler_t;
-                          logger : logger_t;
-                          level : log_level_t) is
-    constant log_levels : integer_vector_ptr_t := to_integer_vector_ptr(get(log_handler.p_data, log_level_idx));
-    constant logger_id : natural := get_id(logger);
-  begin
-    if logger_id >= length(log_levels) then
-      resize(log_levels, logger_id+1);
+    if get_max_logger_name_length(log_handler) < value then
+      set_max_logger_name_length(log_handler, value);
     end if;
-
-    set(log_levels, logger_id, log_level_t'pos(level));
-
-    for i in 0 to num_children(logger)-1 loop
-      set_log_level(log_handler, get_child(logger, i), level);
-    end loop;
-  end;
-
-  impure function is_enabled(log_handler : log_handler_t;
-                             logger : logger_t;
-                             level : log_level_t) return boolean is
-  begin
-    return level >= get_log_level(log_handler, logger);
-  end;
-
-  procedure disable_all(log_handler : log_handler_t;
-                        logger : logger_t) is
-
-  begin
-    set_log_level(log_handler, logger, above_all_log_levels);
-  end;
-
-  procedure enable_all(log_handler : log_handler_t;
-                       logger : logger_t) is
-
-  begin
-    set_log_level(log_handler, logger, below_all_log_levels);
   end;
 
   procedure log_to_handler(log_handler : log_handler_t;
-                           logger : logger_t;
+                           logger_name : string;
                            msg : string;
                            log_level : log_level_t;
                            log_time : time;
@@ -174,7 +168,7 @@ package body log_handler_pkg is
           write(l, color_start(fg => white, style => bright));
         end if;
 
-        write(l, get_full_name(logger), justified => justified, field => field);
+        write(l, logger_name, justified => justified, field => field);
 
         if use_color then
           write(l, color_end);

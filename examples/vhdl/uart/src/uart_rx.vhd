@@ -10,7 +10,7 @@ use ieee.numeric_std.all;
 -- pragma translate_off
 library vunit_lib;
 use vunit_lib.check_pkg.all;
-use vunit_lib.log_pkg.all;
+use vunit_lib.logger_pkg.all;
 -- pragma translate_on
 
 entity uart_rx is

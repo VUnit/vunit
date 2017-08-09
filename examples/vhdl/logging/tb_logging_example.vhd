@@ -37,7 +37,7 @@ begin
     assert get_child(get_logger("logging_example"), 0) = my_logger;
 
     -- Setting the log level of the parent automatically sets it for all children
-    set_log_level(display_handler, get_logger("logging_example"), warning);
+    set_log_level(get_logger("logging_example"), display_handler, warning);
     info(my_logger, "This will not be shown on stdout");
 
     -- The log format can be changed

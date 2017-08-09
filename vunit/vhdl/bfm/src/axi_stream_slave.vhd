@@ -11,7 +11,6 @@ context work.vunit_context;
 context work.com_context;
 use work.stream_pkg.all;
 use work.axi_stream_pkg.all;
-use work.log_pkg.all;
 use work.msg_types_pkg.all;
 use work.sync_pkg.all;
 

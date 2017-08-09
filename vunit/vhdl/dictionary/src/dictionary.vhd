@@ -8,7 +8,6 @@
 
 use work.string_ops.all;
 use work.logger_pkg.all;
-use work.log_pkg.all;
 use std.textio.all;
 
 package dictionary is

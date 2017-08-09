@@ -8,7 +8,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 use work.queue_pkg.all;
-use work.log_pkg.all;
 use work.logger_pkg.all;
 use work.msg_types_pkg.all;
 context work.com_context;

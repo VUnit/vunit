@@ -148,10 +148,10 @@ group of loggers.
     disable_all(display_handler);
 
     -- Set info log level for all loggers within system0
-    set_log_level(display_handler, get_logger("system0"), info)
+    set_log_level(get_logger("system0"), display_handler, info)
 
     -- Enable all logging from the uart module in system0
-    enable_all(display_handler, get_logger("system0.uart"))
+    enable_all(get_logger("system0.uart"), display_handler)
 
 
 Custom Loggers
@@ -268,15 +268,6 @@ and then let the location preprocessor know about the added procedure
 
 Public API
 ----------
-
-log_pkg
-^^^^^^^
-Contains global log procedures.
-
-.. literalinclude:: ../../vunit/vhdl/logging/src/log_pkg.vhd
-   :language: vhdl
-   :lines: 7-
-
 
 logger_pkg
 ^^^^^^^^^^

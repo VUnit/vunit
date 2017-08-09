@@ -45,7 +45,6 @@ use vunit_lib.dictionary.all;
 use vunit_lib.path.all;
 use vunit_lib.log_types_pkg.all;
 use vunit_lib.log_special_types_pkg.all;
-use vunit_lib.log_pkg.all;
 use vunit_lib.check_types_pkg.all;
 use vunit_lib.check_special_types_pkg.all;
 use vunit_lib.check_pkg.all;

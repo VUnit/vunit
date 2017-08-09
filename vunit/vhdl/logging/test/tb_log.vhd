@@ -13,7 +13,6 @@ use vunit_lib.dict_pkg.all;
 use work.log_levels_pkg.all;
 use work.logger_pkg.all;
 use work.log_handler_pkg.all;
-use work.log_pkg.all;
 use work.core_pkg.all;
 use work.assert_pkg.all;
 
@@ -89,6 +88,15 @@ begin
       return (1 to (max_time_length - time_str'length) => ' ') & time_str;
     end function;
   begin
+
+    -- Check defaults before test runner setup
+    assert_equal(num_log_handlers(logger), 2);
+    assert_true(get_log_handler(logger, 0) = display_handler);
+    assert_true(get_log_handler(logger, 1) = file_handler);
+    assert_true(get_log_handlers(logger) = (display_handler, file_handler));
+
+    assert_true(get_log_level(logger, display_handler) = info);
+    assert_true(get_log_level(logger, file_handler) = debug);
 
     test_runner_setup(runner, runner_cfg);
     set_log_level(file_handler, verbose);
@@ -230,9 +238,9 @@ begin
 
       disable_all(file_handler);
       for log_level in verbose to failure loop
-        assert_false(is_enabled(file_handler, default_logger, log_level));
-        assert_false(is_enabled(file_handler, logger, log_level));
-        assert_false(is_enabled(file_handler, nested_logger, log_level));
+        assert_false(is_enabled(default_logger, file_handler, log_level));
+        assert_false(is_enabled(logger, file_handler, log_level));
+        assert_false(is_enabled(nested_logger, file_handler, log_level));
       end loop;
 
       perform_logging(logger);
@@ -240,9 +248,9 @@ begin
 
       enable_all(file_handler);
       for log_level in verbose to failure loop
-        assert_true(is_enabled(file_handler, default_logger, log_level));
-        assert_true(is_enabled(file_handler, logger, log_level));
-        assert_true(is_enabled(file_handler, nested_logger, log_level));
+        assert_true(is_enabled(default_logger, file_handler, log_level));
+        assert_true(is_enabled(logger, file_handler, log_level));
+        assert_true(is_enabled(nested_logger, file_handler, log_level));
       end loop;
 
       perform_logging(logger);
@@ -270,7 +278,7 @@ begin
 
     elsif run("log level also set for nested loggers") then
       init_log_handler(file_handler, file_name => log_file_name, format => csv);
-      set_log_level(file_handler, logger, failure);
+      set_log_level(logger, file_handler, failure);
       disable_stop;
       info(logger, "message 1");
       info(nested_logger, "message 2");
@@ -280,12 +288,12 @@ begin
 
     elsif run("can enable and disable source") then
       init_log_handler(file_handler, file_name => log_file_name, format => csv);
-      disable_all(file_handler, logger);
+      disable_all(logger, file_handler);
 
       for log_level in verbose to failure loop
-        assert_true(is_enabled(file_handler, default_logger, log_level));
-        assert_false(is_enabled(file_handler, logger, log_level));
-        assert_false(is_enabled(file_handler, nested_logger, log_level));
+        assert_true(is_enabled(default_logger, file_handler, log_level));
+        assert_false(is_enabled(logger, file_handler, log_level));
+        assert_false(is_enabled(nested_logger, file_handler, log_level));
       end loop;
 
       info(logger, "message");
@@ -295,11 +303,11 @@ begin
       check_log_file(log_file_name, entries);
 
       init_log_handler(file_handler, file_name => log_file_name, format => csv);
-      enable_all(file_handler, logger);
+      enable_all(logger, file_handler);
       for log_level in verbose to failure loop
-        assert_true(is_enabled(file_handler, default_logger, log_level));
-        assert_true(is_enabled(file_handler, logger, log_level));
-        assert_true(is_enabled(file_handler, nested_logger, log_level));
+        assert_true(is_enabled(default_logger, file_handler, log_level));
+        assert_true(is_enabled(logger, file_handler, log_level));
+        assert_true(is_enabled(nested_logger, file_handler, log_level));
       end loop;
 
       info(logger, "message");
@@ -329,8 +337,8 @@ begin
     elsif run("mocked logger is always enabled") then
       assert_true(is_enabled(logger, failure));
 
-      disable_all(display_handler, logger);
-      disable_all(file_handler, logger);
+      disable_all(logger, display_handler);
+      disable_all(logger, file_handler);
       assert_false(is_enabled(logger, failure));
 
       mock(logger);

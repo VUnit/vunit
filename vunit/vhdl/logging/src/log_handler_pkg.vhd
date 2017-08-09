@@ -6,7 +6,6 @@
 
 use work.integer_vector_ptr_pkg.all;
 use work.log_levels_pkg.all;
-use work.logger_pkg.all;
 
 package log_handler_pkg is
 
@@ -25,59 +24,39 @@ package log_handler_pkg is
 
   -- Log handler record, all fields are private
   type log_handler_t is record
-    p_id : natural;
     p_data : integer_vector_ptr_t;
   end record;
-  constant null_handler : log_handler_t := (p_id => natural'low, p_data => null_ptr);
+  constant null_handler : log_handler_t := (p_data => null_ptr);
+  type log_handler_vec_t is array (natural range <>) of log_handler_t;
+
+  -- Display handler; Write to stdout
+  constant display_handler : log_handler_t;
+
+  -- File handler; Write to file
+  -- Is configured to output_path/log.csv by test_runner_setup
+  constant file_handler : log_handler_t;
 
   -- Set the format to be used by the log handler
   procedure set_format(log_handler : log_handler_t;
                        format : log_format_t;
                        use_color : boolean := false);
 
-  -- Disable logging for all levels < level to this handler from specific logger
-  procedure set_log_level(log_handler : log_handler_t;
-                          logger : logger_t;
-                          level : log_level_t);
-
-  -- Returns true if a logger at this level is enabled to this handler
-  impure function is_enabled(log_handler : log_handler_t;
-                             logger : logger_t;
-                             level : log_level_t) return boolean;
-
-  -- Get the current log level setting for a specific logger to this log handler
-  impure function get_log_level(log_handler : log_handler_t;
-                                logger : logger_t) return log_level_t;
-
-  -- Disable all log levels for this handler from specific logger
-  -- equivalent with setting log level to above_all_log_levels
-  procedure disable_all(log_handler : log_handler_t;
-                        logger : logger_t);
-
-  -- Enable all log levels for this handler from specific logger
-  -- equivalent with setting log level to below_all_log_levels
-  procedure enable_all(log_handler : log_handler_t;
-                       logger : logger_t);
-
   ---------------------------------------------
   -- Private parts not intended for public use
   ---------------------------------------------
-  constant stdout_file_name : string := ">1";
-  constant null_file_name : string := "";
-
-  procedure set_max_logger_name_length(log_handler : log_handler_t; value : natural);
+  impure function get_id(log_handler : log_handler_t) return natural;
+  procedure update_max_logger_name_length(log_handler : log_handler_t; value : natural);
   impure function get_max_logger_name_length(log_handler : log_handler_t) return natural;
 
   procedure log_to_handler(log_handler : log_handler_t;
-                           logger : logger_t;
+                           logger_name : string;
                            msg : string;
                            log_level : log_level_t;
                            log_time : time;
                            line_num : natural := 0;
                            file_name : string := "");
 
-  impure function new_log_handler(id : natural;
-                                  file_name : string;
+  impure function new_log_handler(file_name : string;
                                   format : log_format_t;
                                   use_color : boolean) return log_handler_t;
 

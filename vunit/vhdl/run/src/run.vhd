@@ -9,7 +9,6 @@
 use work.logger_pkg.all;
 use work.log_levels_pkg.all;
 use work.log_handler_pkg.all;
-use work.log_pkg.all;
 use work.ansi_pkg.enable_colors;
 use work.string_ops.all;
 use work.dictionary.all;
@@ -151,7 +150,7 @@ package body run_pkg is
     wait for 0 ns;
     verbose(runner_trace_logger, "Entering test runner exit phase.");
 
-    if not check_logger_status(log_system.p_root_logger) then
+    if not check_logger_status(root_logger) then
       return;
     end if;
 

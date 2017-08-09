@@ -7,7 +7,6 @@
 --
 -- Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
-use work.log_pkg.all;
 use work.logger_pkg.all;
 use work.runner_pkg.all;
 use work.run_types_pkg.all;

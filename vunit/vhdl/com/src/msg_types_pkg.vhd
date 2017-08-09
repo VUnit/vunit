@@ -8,7 +8,6 @@ use work.integer_vector_ptr_pkg.all;
 use work.string_ptr_pkg.all;
 use work.com_pkg.all;
 use work.com_types_pkg.all;
-use work.log_pkg.all;
 use work.logger_pkg.all;
 
 package msg_types_pkg is
