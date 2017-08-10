@@ -49,13 +49,18 @@ begin
 
     -- We disable the simulation stop to show error and failure
     disable_stop;
+    enable_all(display_handler);
     set_format(display_handler, level, use_color => true);
+    verbose("Level format");
+    debug("Level format");
     info("Level format");
     warning("Level format");
     error("Level format");
     failure("Level format");
 
     set_format(display_handler, verbose, use_color => true);
+    verbose("Verbose format");
+    debug("Verbose format");
     info("Verbose format");
     warning("Verbose format");
     error("Verbose format");

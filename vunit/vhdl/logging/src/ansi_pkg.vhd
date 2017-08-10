@@ -202,20 +202,21 @@ package body ansi_pkg is
   procedure ansi_color_demo is
     variable l : line;
   begin
-    for fg in ansi_color_t'low to ansi_color_t'high loop
-      for bg in ansi_color_t'low to ansi_color_t'high loop
-        for style in ansi_style_t'low to ansi_style_t'high loop
-          write(l, colorize(
-            "<" &
-            "fg=" & ansi_color_t'image(fg) & ", " &
-            "bg=" & ansi_color_t'image(bg) & ", " &
-            "style=" & ansi_style_t'image(style) &
-            ">",
-            fg, bg, style));
-        end loop;
+    for bg in ansi_color_t'low to ansi_color_t'high loop
+      write(l, colorize("bg=" & ansi_color_t'image(bg), bg => bg));
+      writeline(output, l);
+    end loop;
+
+    for style in ansi_style_t'low to ansi_style_t'high loop
+      for fg in ansi_color_t'low to ansi_color_t'high loop
+        write(l, colorize(
+          "fg=" & ansi_color_t'image(fg) & ", " &
+          "style=" & ansi_style_t'image(style),
+          fg => fg, style => style));
         writeline(output, l);
       end loop;
     end loop;
+
   end procedure;
 
   procedure disable_colors is

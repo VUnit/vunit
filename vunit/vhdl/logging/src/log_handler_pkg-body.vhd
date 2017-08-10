@@ -128,51 +128,83 @@ package body log_handler_pkg is
     procedure log_to_line is
       variable use_color : boolean := get(log_handler.p_data, use_color_idx) = 1;
 
-      procedure write_time(justified : side := right; field : natural := 0) is
+      procedure pad(len : integer) is
       begin
+        if len > 0 then
+          write(l, string'((1 to len => ' ')));
+        end if;
+      end;
+
+      procedure write_time(justify : boolean := false) is
+        constant time_string : string := time'image(log_time);
+      begin
+        if justify then
+          pad(max_time_length - time_string'length);
+        end if;
+
         if use_color then
           write(l, color_start(fg => lightcyan));
         end if;
 
-        write(l, time'image(log_time), justified => justified, field => field);
+        write(l, time_string);
 
         if use_color then
           write(l, color_end);
         end if;
       end procedure;
 
-      procedure write_level(justified : side := right; field : natural := 0) is
+      procedure write_level(justify : boolean := false) is
+        constant level_name : string := get_name(log_level);
       begin
+        if justify then
+          pad(max_level_length - level_name'length);
+        end if;
+
         if use_color then
           case log_level is
-            when verbose => write(l, color_start(fg => lightblack, style => dim));
-            when debug => write(l, color_start(style => normal));
-            when info => write(l, color_start(style => bright));
-            when warning => write(l, color_start(fg => yellow));
+            when verbose => write(l, color_start(fg => magenta, style => bright));
+            when debug => write(l, color_start(fg => cyan, style => bright));
+            when info => write(l, color_start(fg => white, style => bright));
+            when warning => write(l, color_start(fg => yellow, style => bright));
             when error => write(l, color_start(fg => red, style => bright));
             when failure => write(l, color_start(fg => white, bg => red, style => bright));
             when others => write(l, color_start(fg => magenta, style => bright));
           end case;
         end if;
 
-        write(l, upper(get_name(log_level)), justified => justified, field => field);
+        write(l, upper(level_name));
 
         if use_color then
           write(l, color_end);
         end if;
       end;
 
-      procedure write_source(justified : side := right; field : natural := 0) is
+      procedure write_source(justify : boolean := false) is
       begin
         if use_color then
           write(l, color_start(fg => white, style => bright));
-        end if;
 
-        write(l, logger_name, justified => justified, field => field);
+          for i in logger_name 'range loop
+            if logger_name(i) = ':' then
+              write(l, color_start(fg => lightcyan, style => bright));
+              write(l, logger_name(i));
+              write(l, color_start(fg => white, style => bright));
+            else
+              write(l, logger_name(i));
+            end if;
+          end loop;
+        else
+          write(l, logger_name);
+        end if;
 
         if use_color then
           write(l, color_end);
         end if;
+
+        if justify then
+          pad(get_max_logger_name_length(log_handler) - logger_name'length);
+        end if;
+
       end;
 
       procedure write_location is
@@ -227,16 +259,16 @@ package body log_handler_pkg is
           write_message;
 
         when level =>
-          write_level(field => max_level_length);
+          write_level(justify => true);
           write(l, string'(" - "));
           write_message(multi_line_align => true);
 
         when verbose =>
-          write_time(field => max_time_length);
+          write_time(justify => true);
           write(l, string'(" - "));
-          write_source(justified => left, field => get_max_logger_name_length(log_handler));
+          write_source(justify => true);
           write(l, string'(" - "));
-          write_level(field => max_level_length);
+          write_level(justify => true);
           write(l, string'(" - "));
           write_message(multi_line_align => true);
       end case;
