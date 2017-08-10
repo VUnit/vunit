@@ -32,7 +32,7 @@ package axi_pkg is
     p_logger : logger_t;
   end record;
 
-  constant axi_slave_logger : logger_t := get_logger("vunit_lib.axi_slave_pkg");
+  constant axi_slave_logger : logger_t := get_logger("vunit_lib:axi_slave_pkg");
   impure function new_axi_slave(logger : logger_t := axi_slave_logger) return axi_slave_t;
 
   -- Set the maximum number address channel tokens that can be queued

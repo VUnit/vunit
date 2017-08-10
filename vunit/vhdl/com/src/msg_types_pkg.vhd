@@ -22,7 +22,7 @@ package msg_types_pkg is
     p_code : integer;
   end record;
 
-  constant msg_types_logger : logger_t := get_logger("vunit_lib.msg_types_pkg");
+  constant msg_types_logger : logger_t := get_logger("vunit_lib:msg_types_pkg");
 
   impure function new_msg_type(name : string) return msg_type_t;
   procedure unexpected_msg_type(msg_type : msg_type_t;

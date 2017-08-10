@@ -80,7 +80,7 @@ the stop level configuration.
     set_stop_level(error);
 
     -- Set stop level for specific logger and all children
-    set_stop_level(get_logger("my_library.my_component"), warning)
+    set_stop_level(get_logger("my_library:my_component"), warning)
 
 
 Formatting
@@ -151,7 +151,7 @@ group of loggers.
     set_log_level(get_logger("system0"), display_handler, info)
 
     -- Enable all logging from the uart module in system0
-    enable_all(get_logger("system0.uart"), display_handler)
+    enable_all(get_logger("system0:uart"), display_handler)
 
 
 Custom Loggers
@@ -163,7 +163,7 @@ declaring a constant of type ``logger_t``.
 
 .. code-block:: vhdl
 
-    constant my_logger : logger_t := get_logger("system0.uart0");
+    constant my_logger : logger_t := get_logger("system0:uart0");
 
 and then you use that variable as the first parameter in the procedure
 calls presented in the previous chapters, for example.

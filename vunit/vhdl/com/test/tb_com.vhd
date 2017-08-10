@@ -28,7 +28,7 @@ architecture test_fixture of tb_com is
   signal start_limited_inbox, limited_inbox_actor_done : boolean                  := false;
   signal start_limited_inbox_subscriber                : boolean                  := false;
 
-  constant com_logger : logger_t := get_logger("vunit_lib.com");
+  constant com_logger : logger_t := get_logger("vunit_lib:com");
 begin
   test_runner : process
     variable self, actor, actor2, receiver, server, publisher, subscriber : actor_t;

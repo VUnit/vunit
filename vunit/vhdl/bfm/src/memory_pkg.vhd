@@ -47,7 +47,7 @@ package memory_pkg is
     perm : permissions_t;
   end record;
 
-  constant memory_logger : logger_t := get_logger("vunit_lib.memory_pkg");
+  constant memory_logger : logger_t := get_logger("vunit_lib:memory_pkg");
   impure function new_memory(logger : logger_t := memory_logger) return memory_t;
   procedure clear(memory : memory_t);
   procedure deallocate(variable alloc : inout alloc_t);

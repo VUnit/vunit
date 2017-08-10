@@ -27,7 +27,7 @@ package axi_stream_pkg is
     p_logger : logger_t;
   end record;
 
-  constant axi_stream_logger : logger_t := get_logger("vunit_lib.axi_stream_pkg");
+  constant axi_stream_logger : logger_t := get_logger("vunit_lib:axi_stream_pkg");
   impure function new_axi_stream_master(data_length : natural;
                                         logger : logger_t := axi_stream_logger) return axi_stream_master_t;
   impure function new_axi_stream_slave(data_length : natural;

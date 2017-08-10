@@ -15,7 +15,7 @@ architecture test of tb_logging_example is
 begin
 
   example_process: process is
-    variable my_logger : logger_t := get_logger("logging_example.my_logger");
+    variable my_logger : logger_t := get_logger("logging_example:my_logger");
   begin
     test_runner_setup(runner, runner_cfg);
 

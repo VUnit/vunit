@@ -29,7 +29,7 @@ end package com_support_pkg;
 
 package body com_support_pkg is
 
-  constant logger : logger_t := get_logger("vunit_lib.com");
+  constant logger : logger_t := get_logger("vunit_lib:com");
 
   procedure check_failed (
     err       : com_error_t;

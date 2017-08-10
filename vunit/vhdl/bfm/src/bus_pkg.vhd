@@ -28,7 +28,7 @@ package bus_pkg is
   constant bus_write_msg : msg_type_t := new_msg_type("write bus");
   constant bus_read_msg : msg_type_t := new_msg_type("read bus");
 
-  constant bus_logger : logger_t := get_logger("vunit_lib.bus_pkg");
+  constant bus_logger : logger_t := get_logger("vunit_lib:bus_pkg");
   impure function new_bus(data_length : natural;
                           address_length : natural;
                           byte_length : natural := 8;

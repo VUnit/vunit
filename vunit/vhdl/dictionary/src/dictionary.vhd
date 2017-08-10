@@ -34,7 +34,7 @@ package dictionary is
     default_value : string)
     return string;
 
-  constant dictionary_logger : logger_t := get_logger("vunit_lib.dictionary");
+  constant dictionary_logger : logger_t := get_logger("vunit_lib:dictionary");
 
 end package dictionary;
 

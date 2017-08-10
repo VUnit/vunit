@@ -88,10 +88,10 @@ package logger_pkg is
                 line_num : natural := 0;
                 file_name : string := "");
 
-  -- Get the name of this logger get_name(get_logger("parent.child")) = "child"
+  -- Get the name of this logger get_name(get_logger("parent:child")) = "child"
   impure function get_name(logger : logger_t) return string;
 
-  -- Get the full name of this logger get_name(get_logger("parent.child")) = "parent.child"
+  -- Get the full name of this logger get_name(get_logger("parent:child")) = "parent:child"
   impure function get_full_name(logger : logger_t) return string;
 
   -- Get the parent of this logger

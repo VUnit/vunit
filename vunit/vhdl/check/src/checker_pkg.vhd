@@ -116,7 +116,7 @@ package body checker_pkg is
       -- Default checker
       logger := get_logger("check");
     else
-      logger := get_logger("check." & name);
+      logger := get_logger(name, parent => get_logger("check"));
     end if;
 
     for i in 0 to num_checkers-1 loop

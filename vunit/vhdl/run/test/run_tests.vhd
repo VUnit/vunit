@@ -264,40 +264,40 @@ begin
     ---------------------------------------------------------------------------
     banner("Mocked logger should cause failure on test_runner_cleanup");
     test_case_setup;
-    mock(get_logger("parent.unmocked_logger"));
+    mock(get_logger("parent:unmocked_logger"));
 
     core_pkg.mock_core_failure;
     test_runner_cleanup(runner);
-    core_pkg.check_core_failure("Logger ""parent.unmocked_logger"" is still mocked.");
+    core_pkg.check_core_failure("Logger ""parent:unmocked_logger"" is still mocked.");
     core_pkg.unmock_core_failure;
 
-    unmock(get_logger("parent.unmocked_logger"));
+    unmock(get_logger("parent:unmocked_logger"));
     test_case_cleanup;
 
     ---------------------------------------------------------------------------
     banner("Error log cause failure on test_runner_cleanup");
     test_case_setup;
-    error(get_logger("parent.my_logger"), "error message");
+    error(get_logger("parent:my_logger"), "error message");
     core_pkg.mock_core_failure;
     test_runner_cleanup(runner);
-    core_pkg.check_core_failure("Logger ""parent.my_logger"" has 1 error.");
+    core_pkg.check_core_failure("Logger ""parent:my_logger"" has 1 error.");
     core_pkg.unmock_core_failure;
     test_case_cleanup;
-    reset_log_count(get_logger("parent.my_logger"), error);
+    reset_log_count(get_logger("parent:my_logger"), error);
 
     ---------------------------------------------------------------------------
     banner("Error log cause failure on test_runner_cleanup");
     test_case_setup;
     disable_stop;
-    failure(get_logger("parent.my_logger"), "failure message 1");
-    failure(get_logger("parent.my_logger"), "failure message 2");
+    failure(get_logger("parent:my_logger"), "failure message 1");
+    failure(get_logger("parent:my_logger"), "failure message 2");
     set_stop_level(failure);
     core_pkg.mock_core_failure;
     test_runner_cleanup(runner);
-    core_pkg.check_core_failure("Logger ""parent.my_logger"" has 2 failures.");
+    core_pkg.check_core_failure("Logger ""parent:my_logger"" has 2 failures.");
     core_pkg.unmock_core_failure;
     test_case_cleanup;
-    reset_log_count(get_logger("parent.my_logger"), failure);
+    reset_log_count(get_logger("parent:my_logger"), failure);
 
     ---------------------------------------------------------------------------
     banner("Should loop over enabled_test_case once and in order unless re-initialized.");

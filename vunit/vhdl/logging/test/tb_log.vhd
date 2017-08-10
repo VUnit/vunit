@@ -117,6 +117,16 @@ begin
       reset_log_count(logger, error);
       reset_log_count(logger, failure);
 
+    elsif run("Can use 'instance_name") then
+      tmp_logger := get_logger(tmp_logger'instance_name);
+      assert_equal(get_name(tmp_logger), "tmp_logger");
+      assert_equal(get_name(get_parent(tmp_logger)), "main");
+      assert_equal(get_name(get_parent(get_parent(tmp_logger))), "tb_log(a)");
+      assert_equal(get_full_name(tmp_logger), "tb_log(a):main:tmp_logger");
+
+      assert_equal(get_full_name(get_parent(get_parent(tmp_logger))), "tb_log(a)");
+      assert_true(get_logger("tb_log(a):main:tmp_logger") = tmp_logger);
+
     elsif run("level format") then
       set_format(display_handler, format => level);
       init_log_handler(file_handler, file_name => log_file_name, format => level);
@@ -196,12 +206,12 @@ begin
       init_log_handler(file_handler, file_name => log_file_name, format => verbose);
       disable_stop;
       perform_logging(nested_logger);
-      set(entries, "0", format_time(0 ns) & " - logger.nested        - VERBOSE - message 1");
-      set(entries, "1", format_time(1 ns) & " - logger.nested        -   DEBUG - message 2");
-      set(entries, "2", format_time(2 ns) & " - logger.nested        -    INFO - message 3");
-      set(entries, "3", format_time(3 ns) & " - logger.nested        - WARNING - message 4");
-      set(entries, "4", format_time(4 ns) & " - logger.nested        -   ERROR - message 5");
-      set(entries, "5", format_time(5 ns) & " - logger.nested        - FAILURE - message 6");
+      set(entries, "0", format_time(0 ns) & " - logger:nested        - VERBOSE - message 1");
+      set(entries, "1", format_time(1 ns) & " - logger:nested        -   DEBUG - message 2");
+      set(entries, "2", format_time(2 ns) & " - logger:nested        -    INFO - message 3");
+      set(entries, "3", format_time(3 ns) & " - logger:nested        - WARNING - message 4");
+      set(entries, "4", format_time(4 ns) & " - logger:nested        -   ERROR - message 5");
+      set(entries, "5", format_time(5 ns) & " - logger:nested        - FAILURE - message 6");
       check_log_file(log_file_name, entries);
       reset_log_count(nested_logger, error);
       reset_log_count(nested_logger, failure);
@@ -314,7 +324,7 @@ begin
       info(nested_logger, "message");
       info("message");
       set(entries, "0", time'image(0 ns) & ",logger,INFO,message");
-      set(entries, "1", time'image(0 ns) & ",logger.nested,INFO,message");
+      set(entries, "1", time'image(0 ns) & ",logger:nested,INFO,message");
       set(entries, "2", time'image(0 ns) & ",default,INFO,message");
       check_log_file(log_file_name, entries);
 
@@ -407,21 +417,25 @@ begin
       check_and_unmock_core_failure;
 
     elsif run("Get logger") then
-      tmp_logger := get_logger("logger.child");
+      tmp_logger := get_logger("logger:child");
       assert_equal(get_name(tmp_logger), "child");
-      assert_equal(get_full_name(tmp_logger), "logger.child");
+      assert_equal(get_full_name(tmp_logger), "logger:child");
+
+      tmp_logger := get_logger("logger:child:grandchild");
+      assert_equal(get_name(tmp_logger), "grandchild");
+      assert_equal(get_full_name(tmp_logger), "logger:child:grandchild");
 
       tmp_logger := get_logger("default");
       assert_true(tmp_logger = default_logger);
 
-      tmp_logger := get_logger("logger.nested");
+      tmp_logger := get_logger("logger:nested");
       assert_true(tmp_logger = nested_logger);
 
       tmp_logger := get_logger("nested", parent => logger);
       assert_true(tmp_logger = nested_logger);
 
     elsif run("Create hierarchical logger") then
-      tmp_logger := get_logger("logger.child");
+      tmp_logger := get_logger("logger:child");
       assert_false(tmp_logger = null_logger, "logger not null");
       assert_equal(get_name(tmp_logger), "child", "nested logger name");
       assert_true(get_parent(tmp_logger) = logger, "parent logger");
@@ -518,21 +532,21 @@ begin
       end loop;
 
     elsif run("Test logger name validation") then
-      tmp_logger := get_logger("foo.bar");
+      tmp_logger := get_logger("foo:bar");
       assert_equal(get_name(get_logger("foo")), "foo");
 
       mock_core_failure;
       tmp_logger := get_logger("foo,bar");
       check_core_failure("Invalid logger name ""foo,bar""");
 
-      tmp_logger := get_logger("parent.foo,bar");
-      check_core_failure("Invalid logger name ""parent.foo,bar""");
+      tmp_logger := get_logger("parent:foo,bar");
+      check_core_failure("Invalid logger name ""parent:foo,bar""");
 
       tmp_logger := get_logger("");
       check_core_failure("Invalid logger name """"");
 
-      tmp_logger := get_logger("parent.");
-      check_core_failure("Invalid logger name ""parent.""");
+      tmp_logger := get_logger("parent:");
+      check_core_failure("Invalid logger name ""parent:""");
 
       unmock_core_failure;
 

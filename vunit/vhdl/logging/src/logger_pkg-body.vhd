@@ -134,7 +134,7 @@ package body logger_pkg is
     if dot_idx = -1 then
       return name;
     else
-      return name(1 to dot_idx-1);
+      return name(name'left to dot_idx-1);
     end if;
   end;
 
@@ -143,22 +143,22 @@ package body logger_pkg is
     if dot_idx = -1 then
       return "";
     else
-      return name(dot_idx+1 to name'length);
+      return name(dot_idx+1 to name'right);
     end if;
   end;
 
   impure function validate_logger_name(name : string;
                                        parent : logger_t) return boolean is
-    function dotjoin(s1, s2 : string) return string is
+    function join(s1, s2 : string) return string is
     begin
       if s1 = "" then
         return s2;
       else
-        return s1 & "." & s2;
+        return s1 & ":" & s2;
       end if;
     end;
 
-    constant full_name : string := dotjoin(get_name(parent), name);
+    constant full_name : string := join(get_name(parent), name);
   begin
     if name = "" then
       core_failure("Invalid logger name """ & full_name & """");
@@ -178,10 +178,16 @@ package body logger_pkg is
                              parent : logger_t := null_logger) return logger_t is
     constant real_parent : logger_t := get_real_parent(parent);
     variable child, logger : logger_t;
-    constant dot_idx : integer := find(name, '.');
+    constant dot_idx : integer := find(name, ':');
     constant head_name : string := head(name, dot_idx);
     constant tail_name : string := tail(name, dot_idx);
   begin
+
+    -- Ignore leading ':'
+    if name'length > 0 and name(name'left) = ':' then
+      return get_logger(name(name'left+1 to name'right), parent);
+    end if;
+
     if not validate_logger_name(head_name, real_parent) then
       return null_logger;
     end if;
@@ -214,7 +220,7 @@ package body logger_pkg is
     if parent = null_logger or get_id(parent) = root_logger_id then
       return get_name(logger);
     else
-      return get_full_name(parent) & "." & get_name(logger);
+      return get_full_name(parent) & ":" & get_name(logger);
     end if;
   end;
 

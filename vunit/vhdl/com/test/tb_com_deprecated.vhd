@@ -28,7 +28,7 @@ architecture test_fixture of tb_com_deprecated is
     limited_inbox_actor_done : boolean                  := false;
   signal hello_subscriber_received                     : std_logic_vector(1 to 2) := "ZZ";
 
-  constant com_logger : logger_t := get_logger("vunit_lib.com");
+  constant com_logger : logger_t := get_logger("vunit_lib:com");
 begin
   test_runner : process
     variable actor_to_be_found, actor_with_deferred_creation, actor_to_destroy,
