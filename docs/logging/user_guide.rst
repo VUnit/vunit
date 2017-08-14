@@ -116,6 +116,26 @@ separated list for convenient parsing. By the default the VUnit test
 runner configures the file handler to create a ``csv`` formatted
 ``log.csv`` file in the test case output path.
 
+Print Procedure
+---------------
+
+``print`` is a procedure that unconditionally outputs its message to stdout or file without any formatting.
+
+.. code-block:: vhdl
+
+    print("Message to stdout");
+    print("Append this message to an existing file or create a new file if it doesn't exist", "path/to/file");
+    print("Create new file with this message", "path/to/file", write_mode);
+
+It's also possible to print to an open file object.
+
+.. code-block:: vhdl
+
+    print("Message to file object", my_file_object);
+
+This procedure can be used to optimize performance by printing many messages before flushing or closing the file.
+
+
 Logging hierarchy
 -----------------
 

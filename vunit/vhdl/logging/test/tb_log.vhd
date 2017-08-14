@@ -15,6 +15,7 @@ use work.logger_pkg.all;
 use work.log_handler_pkg.all;
 use work.core_pkg.all;
 use work.assert_pkg.all;
+use work.print_pkg.all;
 
 entity tb_log is
   generic (
@@ -25,12 +26,13 @@ architecture a of tb_log is
 begin
   main : process
 
-    procedure check_no_log_file(constant file_name : in string) is
+    procedure check_empty_log_file(constant file_name : in string) is
       file fptr : text;
       variable status : file_open_status;
     begin
       file_open(status, fptr, file_name, read_mode);
-      assert status = name_error report "Expected no such file " & file_name severity failure;
+      assert status = open_ok report "Expected a file " & file_name severity failure;
+      assert endfile(fptr) report "Expected " & file_name & " to be empty" severity FAILURE;
       file_close(fptr);
     end;
 
@@ -62,7 +64,10 @@ begin
     variable other_logger : logger_t := get_logger("other");
     variable tmp_logger : logger_t;
     variable entries : dict_t := new_dict;
+    variable entries2 : dict_t := new_dict;
     variable tmp : integer;
+    file fptr : text;
+    variable status : file_open_status;
 
     procedure perform_logging(logger : logger_t) is
     begin
@@ -116,6 +121,36 @@ begin
       check_log_file(log_file_name, entries);
       reset_log_count(logger, error);
       reset_log_count(logger, failure);
+
+    elsif run("Can get file name") then
+      init_log_handler(file_handler, file_name => log_file_name, format => raw);
+      assert_equal(get_file_name(file_handler), log_file_name);
+      assert_equal(get_file_name(display_handler), stdout_file_name);
+
+    elsif run("Can print independent of logging") then
+      init_log_handler(file_handler, file_name => log_file_name, format => level);
+
+      print("message 1", log_file_name);
+      verbose(logger, "message 2");
+      print("message 3", log_file_name);
+      verbose(logger, "message 4");
+
+      file_open(status, fptr, log_file_name, append_mode);
+      assert status = open_ok
+        report "Failed to open file " & log_file_name & " - " & file_open_status'image(status) severity failure;
+      print("message 5", fptr);
+      file_close(fptr);
+
+      set(entries, "0", "message 1");
+      set(entries, "1", "VERBOSE - message 2");
+      set(entries, "2", "message 3");
+      set(entries, "3", "VERBOSE - message 4");
+      set(entries, "4", "message 5");
+      check_log_file(log_file_name, entries);
+
+      print("message 6", log_file_name, write_mode);
+      set(entries2, "0", "message 6");
+      check_log_file(log_file_name, entries2);
 
     elsif run("Can use 'instance_name") then
       tmp_logger := get_logger(tmp_logger'instance_name);
@@ -254,7 +289,7 @@ begin
       end loop;
 
       perform_logging(logger);
-      check_no_log_file(log_file_name);
+      check_empty_log_file(log_file_name);
 
       enable_all(file_handler);
       for log_level in verbose to failure loop

@@ -5,7 +5,13 @@
 -- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
-context vunit_lib.vunit_context;
+use vunit_lib.print_pkg.all;
+use vunit_lib.log_levels_pkg.all;
+use vunit_lib.logger_pkg.all;
+use vunit_lib.log_handler_pkg.all;
+use vunit_lib.run_pkg.all;
+
+use std.textio.all;
 
 entity tb_logging_example is
   generic (runner_cfg : string);
@@ -16,6 +22,9 @@ begin
 
   example_process: process is
     variable my_logger : logger_t := get_logger("logging_example:my_logger");
+
+    file fptr : text;
+    variable status : file_open_status;
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -46,6 +55,14 @@ begin
 
     set_format(display_handler, csv);
     info("CSV format");
+
+    -- The print procedure is independent of logging
+    print("Print on stdout");
+    print("Print on file using file name", get_file_name(file_handler));
+    file_open(status, fptr, get_file_name(file_handler), append_mode);
+    assert status = open_ok report "Failed to open file " & get_file_name(file_handler) severity failure;
+    print("Print on file using file object", fptr);
+    file_close(fptr);
 
     -- We disable the simulation stop to show error and failure
     disable_stop;

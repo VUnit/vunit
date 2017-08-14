@@ -36,6 +36,14 @@ package log_handler_pkg is
   -- Is configured to output_path/log.csv by test_runner_setup
   constant file_handler : log_handler_t;
 
+  -- Get the name of the file used by the handler
+  impure function get_file_name (log_handler : log_handler_t) return string;
+
+  -- File name used by the display handler
+  constant stdout_file_name : string := ">1";
+
+  constant null_file_name : string := "";
+
   -- Set the format to be used by the log handler
   procedure set_format(log_handler : log_handler_t;
                        format : log_format_t;

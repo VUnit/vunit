@@ -29,6 +29,26 @@ package body log_handler_pkg is
 
   constant max_time_length : natural := time'image(1 sec)'length;
 
+  procedure assert_status(status : file_open_status; file_name : string) is
+  begin
+    assert status = open_ok
+      report "Failed to open file " & file_name & " - " & file_open_status'image(status) severity failure;
+  end procedure;
+
+  procedure init_log_file(log_handler : log_handler_t; file_name : string) is
+    file fptr : text;
+    variable status : file_open_status;
+  begin
+    if (file_name /= null_file_name) and (file_name /= stdout_file_name) then
+      file_open(status, fptr, file_name, write_mode);
+      assert_status(status, file_name);
+      file_close(fptr);
+      set(log_handler.p_data, file_is_initialized_idx, 1);
+    else
+      set(log_handler.p_data, file_is_initialized_idx, 0);
+    end if;
+  end procedure;
+
   impure function new_log_handler(id : natural;
                                   file_name : string;
                                   format : log_format_t;
@@ -37,7 +57,7 @@ package body log_handler_pkg is
   begin
     set(log_handler.p_data, id_idx, id);
     set(log_handler.p_data, file_name_idx, to_integer(allocate(file_name)));
-    set(log_handler.p_data, file_is_initialized_idx, 0);
+    init_log_file(log_handler, file_name);
     set(log_handler.p_data, max_logger_name_idx, 0);
     set_format(log_handler, format, use_color);
     return log_handler;
@@ -51,9 +71,6 @@ package body log_handler_pkg is
     set(next_log_handler_id, 0, id + 1);
     return new_log_handler(id, file_name, format, use_color);
   end;
-
-  constant stdout_file_name : string := ">1";
-  constant null_file_name : string := "";
 
   -- Display handler; Write to stdout
   constant display_handler : log_handler_t := new_log_handler(display_handler_id,
@@ -73,6 +90,11 @@ package body log_handler_pkg is
     return get(log_handler.p_data, id_idx);
   end;
 
+  impure function get_file_name (log_handler : log_handler_t) return string is
+  begin
+    return to_string(to_string_ptr(get(log_handler.p_data, file_name_idx)));
+  end;
+
   procedure init_log_handler(log_handler : log_handler_t;
                              format : log_format_t;
                              file_name : string;
@@ -80,7 +102,7 @@ package body log_handler_pkg is
     variable file_name_ptr : string_ptr_t := to_string_ptr(get(log_handler.p_data, file_name_idx));
   begin
     reallocate(file_name_ptr, file_name);
-    set(log_handler.p_data, file_is_initialized_idx, 0);
+    init_log_file(log_handler, file_name);
     set_format(log_handler, format, use_color);
   end;
 
@@ -122,7 +144,7 @@ package body log_handler_pkg is
                            line_num : natural := 0;
                            file_name : string := "") is
 
-    constant log_file_name : string := to_string(to_string_ptr(get(log_handler.p_data, file_name_idx)));
+    constant log_file_name : string := get_file_name(log_handler);
     variable l : line;
 
     procedure log_to_line is
@@ -275,23 +297,12 @@ package body log_handler_pkg is
     end;
 
     procedure log_to_file is
-      variable file_is_initialized : boolean := get(log_handler.p_data, file_is_initialized_idx) = 1;
       file fptr : text;
       variable status : file_open_status;
     begin
-      if not file_is_initialized then
-        file_open(status, fptr, log_file_name, write_mode);
-        set(log_handler.p_data, file_is_initialized_idx, 1);
-      else
-        file_open(status, fptr, log_file_name, append_mode);
-      end if;
-
-      if status /= open_ok then
-        report "Failed to open file " & log_file_name & " - " & file_open_status'image(status) severity failure;
-      end if;
-
+      file_open(status, fptr, log_file_name, append_mode);
+      assert_status(status, log_file_name);
       writeline(fptr, l);
-
       file_close(fptr);
     end;
 
