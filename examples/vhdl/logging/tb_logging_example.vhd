@@ -45,9 +45,13 @@ begin
     assert get_parent(my_logger) = get_logger("logging_example");
     assert get_child(get_logger("logging_example"), 0) = my_logger;
 
-    -- Setting the log level of the parent automatically sets it for all children
-    set_log_level(get_logger("logging_example"), display_handler, warning);
-    info(my_logger, "This will not be shown on stdout");
+    -- Log filter settings are inherited by all children
+    set_log_level(get_parent(my_logger), display_handler, debug);
+    verbose(my_logger, "This will not be shown on stdout");
+    warning(my_logger, "This will be shown on stdout");
+    set_block_filter(my_logger, display_handler, (warning, debug));
+    warning(my_logger, "This is no longer shown on stdout");
+    warning(get_parent(my_logger), "This is still shown on stdout");
 
     -- The log format can be changed
     set_format(display_handler, raw);

@@ -25,7 +25,13 @@ package body logger_pkg is
   constant mock_log_count_idx : natural := 9;
   constant mocked_log_queue_meta_idx : natural := 10;
   constant mocked_log_queue_data_idx : natural := 11;
-  constant logger_length : natural := 12;
+  constant block_filters_idx : natural := 12;
+  constant logger_length : natural := 13;
+
+  constant log_level_disabled : integer := 0;
+  constant log_level_enabled : integer := 1;
+
+  constant n_user_log_levels : natural := user_log_level_t'pos(user_log_level_t'high) + 1;
 
   impure function to_integer(logger : logger_t) return integer is
   begin
@@ -59,6 +65,7 @@ package body logger_pkg is
     set(logger.p_data, is_mocked_idx, 0);
     set(logger.p_data, mocked_log_queue_meta_idx, to_integer(mocked_log_queue.p_meta));
     set(logger.p_data, mocked_log_queue_data_idx, to_integer(mocked_log_queue.data));
+    set(logger.p_data, block_filters_idx, to_integer(integer_vector_ptr_t'(allocate)));
 
     if parent /= null_logger then
       add_child(parent, logger);
@@ -69,6 +76,7 @@ package body logger_pkg is
       for i in 0 to num_log_handlers(parent)-1 loop
         log_handler := get_log_handler(parent, i);
         set_log_level(logger, log_handler, get_log_level(parent, log_handler));
+        set_block_filter(logger, log_handler, get_block_filter(parent, log_handler));
       end loop;
 
     end if;
@@ -312,6 +320,39 @@ package body logger_pkg is
     return log_level_t'val(get(log_levels, handler_id));
   end;
 
+  impure function get_block_filter(logger : logger_t;
+                                       log_handler : log_handler_t) return integer_vector_ptr_t is
+    constant block_filters : integer_vector_ptr_t :=
+      to_integer_vector_ptr(get(logger.p_data, block_filters_idx));
+    constant handler_id : natural := get_id(log_handler);
+  begin
+    if handler_id >= length(block_filters) then
+      resize(block_filters, handler_id + 1, value => to_integer(null_ptr));
+    end if;
+
+    return to_integer_vector_ptr(get(block_filters, handler_id));
+  end;
+
+  impure function get_block_filter(logger : logger_t;
+                                       log_handler : log_handler_t) return user_log_level_vec_t is
+    variable ret : user_log_level_vec_t(0 to n_user_log_levels - 1);
+    variable idx : natural := 0;
+    constant block_filter : integer_vector_ptr_t := get_block_filter(logger, log_handler);
+  begin
+    if block_filter = null_ptr then
+      return null_vec;
+    end if;
+
+    for i in 0 to length(block_filter) - 1 loop
+      if get(block_filter, i) = log_level_disabled then
+        ret(idx) := log_level_t'val(i);
+        idx := idx + 1;
+      end if;
+    end loop;
+
+    return ret(0 to idx - 1);
+  end;
+
   -- Disable logging for all levels < level to this handler
   procedure set_log_level(log_handler : log_handler_t;
                           level : log_level_t) is
@@ -336,12 +377,50 @@ package body logger_pkg is
     end loop;
   end;
 
+  -- Disable logging for the specified levels to this handler
+  procedure set_block_filter(log_handler : log_handler_t;
+                             levels : user_log_level_vec_t) is
+  begin
+    set_block_filter(root_logger, log_handler, levels);
+  end;
+
+  procedure set_block_filter(logger : logger_t;
+                             log_handler : log_handler_t;
+                             levels : user_log_level_vec_t) is
+    constant block_filters : integer_vector_ptr_t :=
+      to_integer_vector_ptr(get(logger.p_data, block_filters_idx));
+    constant handler_id : natural := get_id(log_handler);
+    variable block_filter : integer_vector_ptr_t;
+
+  begin
+    if handler_id >= length(block_filters) then
+      resize(block_filters, handler_id + 1, value => to_integer(null_ptr));
+    end if;
+
+    block_filter := to_integer_vector_ptr(get(block_filters, handler_id));
+
+    if block_filter = null_ptr then
+      block_filter := integer_vector_ptr_t'(allocate(length => n_user_log_levels, value => log_level_enabled));
+    else
+      reallocate(block_filter, length => n_user_log_levels, value => log_level_enabled);
+    end if;
+    set(block_filters, handler_id, to_integer(block_filter));
+
+    for i in levels'range loop
+      set(block_filter, user_log_level_t'pos(levels(i)), log_level_disabled);
+    end loop;
+
+    for i in 0 to num_children(logger)-1 loop
+      set_block_filter(get_child(logger, i), log_handler, levels);
+    end loop;
+  end;
 
   procedure disable_all(logger : logger_t;
                         log_handler : log_handler_t) is
 
   begin
     set_log_level(logger, log_handler, above_all_log_levels);
+    set_block_filter(logger, log_handler, null_vec);
   end;
 
   procedure enable_all(logger : logger_t;
@@ -349,18 +428,21 @@ package body logger_pkg is
 
   begin
     set_log_level(logger, log_handler, below_all_log_levels);
+    set_block_filter(logger, log_handler, null_vec);
   end;
 
   procedure disable_all(log_handler : log_handler_t) is
 
   begin
     set_log_level(root_logger, log_handler, above_all_log_levels);
+    set_block_filter(root_logger, log_handler, null_vec);
   end;
 
   procedure enable_all(log_handler : log_handler_t) is
 
   begin
     set_log_level(root_logger, log_handler, below_all_log_levels);
+    set_block_filter(root_logger, log_handler, null_vec);
   end;
 
 
@@ -383,8 +465,10 @@ package body logger_pkg is
   impure function is_enabled(logger : logger_t;
                              log_handler : log_handler_t;
                              level : log_level_t) return boolean is
+    constant block_filter : integer_vector_ptr_t := get_block_filter(logger, log_handler);
   begin
-    return level >= get_log_level(logger, log_handler);
+    return (level >= get_log_level(logger, log_handler)) and
+      (get(block_filter, user_log_level_t'pos(level)) = log_level_enabled);
   end;
 
   impure function num_log_handlers(logger : logger_t) return natural is

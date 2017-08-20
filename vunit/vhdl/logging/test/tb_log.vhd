@@ -103,6 +103,9 @@ begin
     assert_true(get_log_level(logger, display_handler) = info);
     assert_true(get_log_level(logger, file_handler) = debug);
 
+    assert_true(get_block_filter(logger, display_handler) = null_vec);
+    assert_true(get_block_filter(logger, file_handler) = null_vec);
+
     test_runner_setup(runner, runner_cfg);
     set_log_level(file_handler, verbose);
     set_log_level(display_handler, verbose);
@@ -291,6 +294,8 @@ begin
       perform_logging(logger);
       check_empty_log_file(log_file_name);
 
+      set_log_level(file_handler, info);
+      set_block_filter(file_handler, (0 => warning));
       enable_all(file_handler);
       for log_level in verbose to failure loop
         assert_true(is_enabled(default_logger, file_handler, log_level));
@@ -315,6 +320,31 @@ begin
       disable_stop;
       perform_logging(logger);
       set(entries, "0", time'image(3 ns) & ",logger,WARNING,message 4");
+      set(entries, "1", time'image(4 ns) & ",logger,ERROR,message 5");
+      set(entries, "2", time'image(5 ns) & ",logger,FAILURE,message 6");
+      check_log_file(log_file_name, entries);
+      reset_log_count(logger, error);
+      reset_log_count(logger, failure);
+
+    elsif run("can set block filter") then
+      init_log_handler(file_handler, file_name => log_file_name, format => csv);
+      set_block_filter(file_handler, (info, debug, verbose));
+      disable_stop;
+      perform_logging(logger);
+      set(entries, "0", time'image(3 ns) & ",logger,WARNING,message 4");
+      set(entries, "1", time'image(4 ns) & ",logger,ERROR,message 5");
+      set(entries, "2", time'image(5 ns) & ",logger,FAILURE,message 6");
+      check_log_file(log_file_name, entries);
+      reset_log_count(logger, error);
+      reset_log_count(logger, failure);
+
+    elsif run("Test that log level and block filter add up") then
+      init_log_handler(file_handler, file_name => log_file_name, format => csv);
+      set_log_level(file_handler, info);
+      set_block_filter(file_handler, (0 => warning));
+      disable_stop;
+      perform_logging(logger);
+      set(entries, "0", time'image(2 ns) & ",logger,INFO,message 3");
       set(entries, "1", time'image(4 ns) & ",logger,ERROR,message 5");
       set(entries, "2", time'image(5 ns) & ",logger,FAILURE,message 6");
       check_log_file(log_file_name, entries);
@@ -348,6 +378,8 @@ begin
       check_log_file(log_file_name, entries);
 
       init_log_handler(file_handler, file_name => log_file_name, format => csv);
+      set_log_level(logger, file_handler, info);
+      set_block_filter(logger, file_handler, (0 => warning));
       enable_all(logger, file_handler);
       for log_level in verbose to failure loop
         assert_true(is_enabled(default_logger, file_handler, log_level));

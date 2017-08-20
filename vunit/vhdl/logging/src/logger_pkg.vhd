@@ -117,15 +117,30 @@ package logger_pkg is
   -- Equivalent with set_stop_level(above_all_log_levels)
   procedure disable_stop;
 
-  -- Disable logging for all levels < level to this handler
+  -- Disable logging for all levels < level to this handler. Additional log
+  -- levels may have been disabled with the block filter setting
   procedure set_log_level(log_handler : log_handler_t;
                           level : log_level_t);
 
   -- Disable logging for all levels < level to this handler from specific
-  -- logger and all children
+  -- logger and all children. Additional log levels may have been disabled with the
+  -- block filter setting
   procedure set_log_level(logger : logger_t;
                           log_handler : log_handler_t;
                           level : log_level_t);
+
+  -- Disable logging for the specified levels to this handler. Additional log
+  -- levels may have been disabled by the log level setting
+  procedure set_block_filter(log_handler : log_handler_t;
+                             levels : user_log_level_vec_t);
+
+  -- Disable logging for the specified levels to this handler from specific
+  -- logger and all children. Additional log levels may have been disabled by
+  -- the log level setting
+  procedure set_block_filter(logger : logger_t;
+                             log_handler : log_handler_t;
+                             levels : user_log_level_vec_t);
+
 
   -- Enable all log levels to the log handler
   -- equivalent with setting log level to below_all_log_levels
@@ -160,6 +175,10 @@ package logger_pkg is
   -- Get the current log level setting for a specific logger to this log handler
   impure function get_log_level(logger : logger_t;
                                 log_handler : log_handler_t) return log_level_t;
+
+  -- Get the current block filter setting for a specific logger to this log handler
+  impure function get_block_filter(logger : logger_t;
+                                   log_handler : log_handler_t) return user_log_level_vec_t;
 
   -- Get the number of log handlers attached to this logger
   impure function num_log_handlers(logger : logger_t) return natural;

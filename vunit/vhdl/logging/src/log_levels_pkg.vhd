@@ -129,6 +129,11 @@ package log_levels_pkg is
     null_log_level
     );
   type log_level_vec_t is array (natural range <>) of log_level_t;
+
+  subtype user_log_level_t is log_level_t range custom_level1 to custom_level100;
+  type user_log_level_vec_t is array (natural range <>) of user_log_level_t;
+  constant null_vec : user_log_level_vec_t(1 to 0) := (others => info);
+
   subtype numeric_log_level_t is integer range 1 to 100;
 
   impure function "+" (reference_level : log_level_t; offset : numeric_log_level_t) return numeric_log_level_t;

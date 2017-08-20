@@ -156,22 +156,27 @@ results in something like this with the ``verbose`` formatter.
 Log filtering
 -------------
 
-Log filtering is performed individually by the display and file
-handlers to control what logs that are passed to the output. The
-filterings is configured by setting the log level for a single or
-group of loggers.
+Log filtering is controlled by applying filters to a logger or to a group of
+loggers. A log must pass all filters to be propagated to the handler output.
+Display and file handlers are configured individually.
 
+You can set the log level to create a filter that will block all logs below that log level
+or you can create a filter that will block an arbitrary set of log levels or you can combine
+the two filters.
 
 .. code-block:: vhdl
 
-    -- Disable all logging to the display
+    -- Disable all logging to the display.
     disable_all(display_handler);
 
-    -- Set info log level for all loggers within system0
-    set_log_level(get_logger("system0"), display_handler, info)
+    -- Set the log level to block display handler logs below debug from all loggers within system0
+    set_log_level(get_logger("system0"), display_handler, debug);
+
+    -- Also block display handler warnings and debug messages from all loggers within system0
+    set_block_filter(get_logger("system0"), display_handler, (warning, debug));
 
     -- Enable all logging from the uart module in system0
-    enable_all(get_logger("system0:uart"), display_handler)
+    enable_all(get_logger("system0:uart"), display_handler);
 
 
 Custom Loggers

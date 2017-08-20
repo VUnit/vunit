@@ -7,7 +7,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
---context work.vunit_context;
 use work.integer_vector_ptr_pkg.all;
 use work.queue_pkg.all;
 
