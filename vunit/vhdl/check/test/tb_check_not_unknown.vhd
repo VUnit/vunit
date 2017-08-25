@@ -95,6 +95,7 @@ begin
       end loop;
       wait for 1 ns;
       verify_passed_checks(checker, stat, 4);
+      verify_failed_checks(checker, stat, 0);
 
       -- Values other than strong/weak zeros/ones should fail when en is high,
       -- pass otherwise
@@ -119,6 +120,9 @@ begin
                     level);
         end loop;
         unmock(get_logger(checker));
+        verify_passed_checks(checker, stat, 0);
+        verify_failed_checks(checker, stat, 2);
+        reset_checker_stat(checker);
       end loop;
 
       test_expr := (others => '0');
@@ -181,6 +185,7 @@ begin
 
       elsif run("Test should fail on all std logic values except zero and one") then
         for i in metadata'range loop
+          get_checker_stat(stat);
           test_expr := (others => metadata(i));
           mock(check_logger);
           check_not_unknown(metadata(i));
@@ -205,7 +210,11 @@ begin
           assert_true(not pass, "Should return pass = false on failing check");
           check_only_log(check_logger, "Not unknown check failed - Got " & to_nibble_string(test_expr) & ".", default_level);
           unmock(check_logger);
+          verify_passed_checks(stat, 0);
+          verify_failed_checks(stat, 6);
+          reset_checker_stat;
 
+          get_checker_stat(my_checker3, stat);
           mock(get_logger(my_checker3));
           check_not_unknown(my_checker3, metadata(i));
           check_only_log(get_logger(my_checker3), "Not unknown check failed - Got " & std_logic'image(metadata(i))(2) & ".",
@@ -222,6 +231,9 @@ begin
           check_only_log(get_logger(my_checker3), "Not unknown check failed - Got " & to_nibble_string(test_expr) & ".",
                          info);
           unmock(get_logger(my_checker3));
+          verify_passed_checks(my_checker3, stat, 0);
+          verify_failed_checks(my_checker3, stat, 4);
+          reset_checker_stat(my_checker3);
         end loop;
 
       elsif run("Test should be possible to use concurrently") then

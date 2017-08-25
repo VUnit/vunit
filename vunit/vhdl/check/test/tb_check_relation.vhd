@@ -106,6 +106,7 @@ begin
         unmock(check_logger);
 
       elsif run("Test that all pre VHDL 2008 relational operators are supported") then
+        get_checker_stat(stat);
         data := 5;
         mock(check_logger);
         check_relation(data = 3);
@@ -126,8 +127,12 @@ begin
         check_relation(data >= 6);
         check_only_log(check_logger, "Relation check failed - Expected data >= 6. Left is 5. Right is 6.", default_level);
         unmock(check_logger);
+        verify_passed_checks(stat, 0);
+        verify_failed_checks(stat, 6);
+        reset_checker_stat;
 
       elsif run("Test that a generated message can contain string containing operands") then
+        get_checker_stat(stat);
         mock(check_logger);
         check_relation(len("foo") = 4);
         check_only_log(check_logger, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.", default_level);
@@ -140,7 +145,11 @@ begin
         assert_true(not pass, "Should return pass = false on failing check");
         check_only_log(check_logger, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.", default_level);
         unmock(check_logger);
+        verify_passed_checks(stat, 0);
+        verify_failed_checks(stat, 3);
+        reset_checker_stat;
 
+        get_checker_stat(my_checker, stat);
         mock(my_logger);
         check_relation(my_checker, len("foo") = 4);
         check_only_log(my_logger, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.", default_level);
@@ -149,8 +158,12 @@ begin
         assert_true(not pass, "Should return pass = false on failing check");
         check_only_log(my_logger, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.", default_level);
         unmock(my_logger);
+        verify_passed_checks(my_checker, stat, 0);
+        verify_failed_checks(my_checker, stat, 2);
+        reset_checker_stat(my_checker);
 
       elsif run("Test that custom types can be used") then
+        get_checker_stat(stat);
         mock(check_logger);
         check_relation(cash > cash_t'((100,0)));
         check_only_log(check_logger, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.", default_level);
@@ -163,7 +176,11 @@ begin
         assert_true(not pass, "Should return pass = false on failing check");
         check_only_log(check_logger, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.", default_level);
         unmock(check_logger);
+        verify_passed_checks(stat, 0);
+        verify_failed_checks(stat, 3);
+        reset_checker_stat;
 
+        get_checker_stat(my_checker, stat);
         mock(my_logger);
         check_relation(my_checker, cash > cash_t'((100,0)));
         check_only_log(my_logger, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.", default_level);
@@ -172,6 +189,9 @@ begin
         assert_true(not pass, "Should return pass = false on failing check");
         check_only_log(my_logger, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.", default_level);
         unmock(my_logger);
+        verify_passed_checks(my_checker, stat, 0);
+        verify_failed_checks(my_checker, stat, 2);
+        reset_checker_stat(my_checker);
       end if;
     end loop;
 

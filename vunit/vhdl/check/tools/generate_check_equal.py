@@ -186,6 +186,7 @@ test_template = """\
         unmock(check_logger);
 
       elsif run("Test should fail on $left_type not equal $right_type") then
+        get_checker_stat(stat);
         mock(check_logger);
         check_equal($left_pass, $right_fail);
         check_only_log(check_logger, "Equality check failed - Got $left_pass_str. Expected $fail_str.",
@@ -209,7 +210,11 @@ test_template = """\
         assert_true(not pass, "Should return pass = false on failing check");
         check_only_log(check_logger, "Equality check failed - Got $left_pass_str. Expected $fail_str.", default_level);
         unmock(check_logger);
+        verify_passed_checks(stat, 0);
+        verify_failed_checks(stat, 6);
+        reset_checker_stat;
 
+        get_checker_stat(my_checker, stat);
         mock(my_logger);
         check_equal(my_checker, $left_pass, $right_fail);
         check_only_log(my_logger, "Equality check failed - Got $left_pass_str. Expected $fail_str.", default_level);
@@ -218,6 +223,9 @@ test_template = """\
         assert_true(not pass, "Should return pass = false on failing check");
         check_only_log(my_logger, "Equality check failed - Got $left_pass_str. Expected $fail_str.", default_level);
         unmock(my_logger);
+        verify_passed_checks(my_checker, stat, 0);
+        verify_failed_checks(my_checker, stat, 2);
+        reset_checker_stat(my_checker);
 """
 
 combinations = [
@@ -440,6 +448,7 @@ begin
         check_equal(unsigned'(X"A5A5A5A5A"), std_logic_vector'(X"A5A5A5A5A"));
         check_equal(std_logic_vector'(X"A5A5A5A5A"), std_logic_vector'(X"A5A5A5A5A"));
         verify_passed_checks(stat, 4);
+        verify_failed_checks(stat, 0);
 
         mock(check_logger);
         check_equal(unsigned'(X"A5A5A5A5A"), unsigned'(X"B5A5A5A5A"));
@@ -462,8 +471,12 @@ Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).", default_l
 Equality check failed - Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). \
 Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).", default_level);
         unmock(check_logger);
+        verify_passed_checks(stat, 4);
+        verify_failed_checks(stat, 4);
+        reset_checker_stat;
 
       elsif run("Test print full integer vector when fail on comparison with to short vector") then
+        get_checker_stat(stat);
         mock(check_logger);
         check_equal(unsigned'(X"A5"), natural'(256));
         check_only_log(check_logger, "Equality check failed - Got 1010_0101 (165). Expected 256 (1_0000_0000).",
@@ -493,6 +506,9 @@ Expected 2147483647 (111_1111_1111_1111_1111_1111_1111_1111).", default_level);
         check_only_log(check_logger, "Equality check failed - Got 1010_0101 (-91). \
 Expected -2147483648 (1000_0000_0000_0000_0000_0000_0000_0000).", default_level);
         unmock(check_logger);
+        verify_passed_checks(stat, 0);
+        verify_failed_checks(stat, 7);
+        reset_checker_stat;
 """
 
     natural_equal_natural = [('natural', 'natural',

@@ -185,6 +185,7 @@ begin
         verify_passed_checks(checker, stat, 1);
 
       elsif running_test_case = "Test concurrent checker should handle weak start and end events" then
+        get_checker_stat(checker, stat);
         mock(logger);
         apply_sequence("00.101;HL.101;LL.111;LH.111", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
@@ -197,8 +198,12 @@ begin
                        "Stability check failed - Got 111 (7) at 3rd active and enabled clock edge. Expected 101 (5).",
                        level);
         unmock(logger);
+        verify_passed_checks(checker, stat, 0);
+        verify_failed_checks(checker, stat, 2);
+        reset_checker_stat(checker);
 
       elsif running_test_case = "Test concurrent checker should fail unstable window" then
+        get_checker_stat(checker, stat);
         mock(logger);
         apply_sequence("00.101;10.101;00.111;00.111", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
@@ -211,8 +216,12 @@ begin
                        "Stability check failed - Got 111 (7) at 3rd active and enabled clock edge. Expected 101 (5).",
                        level);
         unmock(logger);
+        verify_passed_checks(checker, stat, 0);
+        verify_failed_checks(checker, stat, 2);
+        reset_checker_stat(checker);
 
       elsif running_test_case = "Test concurrent checker should fail window with weak changes to opposite level" then
+        get_checker_stat(checker, stat);
         mock(logger);
         apply_sequence("00.101;10.101;00.101;00.L01;01.1H1", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
@@ -225,24 +234,36 @@ begin
                        "Stability check failed - Got 1H1 (7) at 4th active and enabled clock edge. Expected 101 (5).",
                        level);
         unmock(logger);
+        verify_passed_checks(checker, stat, 0);
+        verify_failed_checks(checker, stat, 2);
+        reset_checker_stat(checker);
 
       elsif running_test_case = "Test concurrent checker should fail on unknown start event" then
+        get_checker_stat(checker, stat);
         mock(logger);
         apply_sequence("00.101;X0.101;00.101;01.101;00.101", clk, check_input, active_rising_clock_edge);
         check_only_log(logger,
                        "Stability check failed - Start event is X.",
                        level);
         unmock(logger);
+        verify_passed_checks(checker, stat, 0);
+        verify_failed_checks(checker, stat, 1);
+        reset_checker_stat(checker);
 
       elsif running_test_case = "Test concurrent checker should fail on unknown end event in active window" then
+        get_checker_stat(checker, stat);
         mock(logger);
         apply_sequence("00.101;0X.101;10.101;0X.101;00.101", clk, check_input, active_rising_clock_edge);
         check_only_log(logger,
                        "Stability check failed - End event is X.",
                        level);
         unmock(logger);
+        verify_passed_checks(checker, stat, 0);
+        verify_failed_checks(checker, stat, 1);
+        reset_checker_stat(checker);
 
       elsif running_test_case = "Test concurrent checker should fail on stable unknown window" then
+        get_checker_stat(checker, stat);
         mock(logger);
         apply_sequence("00.101;10.10X;00.10X;01.10X;00.101", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
@@ -267,6 +288,7 @@ begin
         reset_checker_stat(checker);
 
       elsif running_test_case = "Test concurrent checker should handle back to back windows" then
+        get_checker_stat(checker, stat);
         mock(logger);
         apply_sequence("00.101;10.101;01.111;10.010", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
@@ -278,8 +300,12 @@ begin
                        "Stability check failed - Got 101 (5) at 2nd active and enabled clock edge. Expected 010 (2).",
                        level);
         unmock(logger);
+        verify_passed_checks(checker, stat, 0);
+        verify_failed_checks(checker, stat, 2);
+        reset_checker_stat(checker);
 
       elsif running_test_case = "Test concurrent checker should ignore second of two overlapping windows" then
+        get_checker_stat(checker, stat);
         mock(logger);
         apply_sequence("00.101;10.101;10.111;01.111", clk, check_input,
                        active_rising_clock_edge);
@@ -293,6 +319,9 @@ begin
                        "Stability check failed - Got 111 (7) at 3rd active and enabled clock edge. Expected 101 (5).",
                        level);
         unmock(logger);
+        verify_passed_checks(checker, stat, 0);
+        verify_failed_checks(checker, stat, 2);
+        reset_checker_stat(checker);
 
       elsif running_test_case = "Test concurrent checker should handle one cycle windows" then
         get_checker_stat(checker, stat);
@@ -323,6 +352,7 @@ begin
         verify_passed_checks(checker, stat, 1);
 
       elsif running_test_case = "Test concurrent checker should handle weak start and end events" then
+        get_checker_stat(checker, stat);
         mock(logger);
         apply_sequence("00.0;HL.0;LL.1;LH.1", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
@@ -335,8 +365,12 @@ begin
                        "Stability check failed - Got 1 at 3rd active and enabled clock edge. Expected 0.",
                        level);
         unmock(logger);
+        verify_passed_checks(checker, stat, 0);
+        verify_failed_checks(checker, stat, 2);
+        reset_checker_stat(checker);
 
       elsif running_test_case = "Test concurrent checker should fail unstable window" then
+        get_checker_stat(checker, stat);
         mock(logger);
         apply_sequence("00.0;10.0;00.1;01.1", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
@@ -349,8 +383,12 @@ begin
                        "Stability check failed - Got 1 at 3rd active and enabled clock edge. Expected 0.",
                        level);
         unmock(logger);
+        verify_passed_checks(checker, stat, 0);
+        verify_failed_checks(checker, stat, 2);
+        reset_checker_stat(checker);
 
       elsif running_test_case = "Test concurrent checker should fail window with weak changes to opposite level" then
+        get_checker_stat(checker, stat);
         mock(logger);
         apply_sequence("00.1;10.1;00.1;00.1;00.L;01.1;00.1", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
@@ -358,24 +396,36 @@ begin
                        "Stability check failed - Got L at 4th active and enabled clock edge. Expected 1.",
                        level);
         unmock(logger);
+        verify_passed_checks(checker, stat, 0);
+        verify_failed_checks(checker, stat, 1);
+        reset_checker_stat(checker);
 
       elsif running_test_case = "Test concurrent checker should fail on unknown start event" then
+        get_checker_stat(checker, stat);
         mock(logger);
         apply_sequence("00.0;X0.0;00.0;01.0;00.0", clk, check_input, active_rising_clock_edge);
         check_only_log(logger,
                        "Stability check failed - Start event is X.",
                        level);
         unmock(logger);
+        verify_passed_checks(checker, stat, 0);
+        verify_failed_checks(checker, stat, 1);
+        reset_checker_stat(checker);
 
       elsif running_test_case = "Test concurrent checker should fail on unknown end event in active window" then
+        get_checker_stat(checker, stat);
         mock(logger);
         apply_sequence("00.1;0X.1;10.1;0X.1;00.1", clk, check_input, active_rising_clock_edge);
         check_only_log(logger,
                        "Stability check failed - End event is X.",
                        level);
         unmock(logger);
+        verify_passed_checks(checker, stat, 0);
+        verify_failed_checks(checker, stat, 1);
+        reset_checker_stat(checker);
 
       elsif running_test_case = "Test concurrent checker should fail on stable unknown window" then
+        get_checker_stat(checker, stat);
         mock(logger);
         apply_sequence("00.1;10.X;00.X;01.X;00.1", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
@@ -399,6 +449,7 @@ begin
         reset_checker_stat(checker);
 
       elsif running_test_case = "Test concurrent checker should handle back to back windows" then
+        get_checker_stat(checker, stat);
         mock(logger);
         apply_sequence("00.0;10.0;01.1;10.1", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
@@ -410,8 +461,12 @@ begin
                        "Stability check failed - Got 0 at 2nd active and enabled clock edge. Expected 1.",
                        level);
         unmock(logger);
+        verify_passed_checks(checker, stat, 0);
+        verify_failed_checks(checker, stat, 2);
+        reset_checker_stat(checker);
 
       elsif running_test_case = "Test concurrent checker should ignore second of two overlapping windows" then
+        get_checker_stat(checker, stat);
         mock(logger);
         apply_sequence("00.0;10.0;10.1;01.1", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
@@ -423,6 +478,9 @@ begin
                        "Stability check failed - Got 1 at 3rd active and enabled clock edge. Expected 0.",
                        level);
         unmock(logger);
+        verify_passed_checks(checker, stat, 0);
+        verify_failed_checks(checker, stat, 2);
+        reset_checker_stat(checker);
 
       elsif running_test_case = "Test concurrent checker should handle one cycle windows" then
         get_checker_stat(checker, stat);
@@ -538,6 +596,7 @@ begin
                         pass_level);
         unmock(check_logger);        verify_passed_checks(stat, 2);
         verify_failed_checks(stat, 1);
+        reset_checker_stat;
       elsif run("Test pass message and that internal checks don't count for std_logic") then
         get_checker_stat(stat);
         mock(check_logger);
@@ -585,6 +644,7 @@ begin
         check_stable(clk, en, start_event, end_event, expr);
         verify_passed_checks(stat, 1);
         verify_failed_checks(stat, 0);
+        reset_checker_stat;
       end if;
     end loop;
 

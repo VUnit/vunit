@@ -64,6 +64,7 @@ begin
 
         verify_passed_checks(my_checker, stat, 0);
         verify_failed_checks(my_checker, stat, 1);
+        reset_checker_stat(my_checker);
       end if;
     end loop;
 

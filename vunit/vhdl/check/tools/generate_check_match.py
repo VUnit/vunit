@@ -190,6 +190,7 @@ test_template = """
         unmock(check_logger);
 
       elsif run("Test should fail on $left_type not matching $right_type") then
+        get_checker_stat(stat);
         mock(check_logger);
         check_match($left_pass, $right_fail_dc);
         check_only_log(check_logger, "Match check failed - Got $pass_str. Expected $fail_dc_str.", default_level);
@@ -206,7 +207,11 @@ test_template = """
         check_only_log(check_logger, "Match check failed for my data - Got $pass_str. Expected $fail_str.",
                        default_level);
         unmock(check_logger);
+        verify_passed_checks(stat, 0);
+        verify_failed_checks(stat, 4);
+        reset_checker_stat;
 
+        get_checker_stat(my_checker, stat);
         mock(my_logger);
         check_match(my_checker, $left_pass, $right_fail);
         check_only_log(my_logger, "Match check failed - Got $pass_str. Expected $fail_str.", default_level);
@@ -215,6 +220,9 @@ test_template = """
         assert_true(not pass, "Should return pass = false on failing check");
         check_only_log(my_logger, "Match check failed - Got $pass_str. Expected $fail_str.", default_level);
         unmock(my_logger);
+        verify_passed_checks(my_checker, stat, 0);
+        verify_failed_checks(my_checker, stat, 2);
+        reset_checker_stat(my_checker);
 """
 
 combinations = [

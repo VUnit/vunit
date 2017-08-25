@@ -84,15 +84,20 @@ begin
       apply_sequence("000110", clk, check_input, active_rising_clock_edge);
       wait for 1 ns;
       verify_passed_checks(checker, stat, 2);
+      verify_failed_checks(checker, stat, 0);
       mock(get_logger(checker));
       wait until clock_edge(clk, active_rising_clock_edge);
       wait for 1 ns;
       check_only_log(get_logger(checker), "Implication check failed.", level);
       unmock(get_logger(checker));
+      verify_passed_checks(checker, stat, 2);
+      verify_failed_checks(checker, stat, 1);
       apply_sequence("11", clk, check_input, active_rising_clock_edge);
       wait until clock_edge(clk, active_rising_clock_edge);
       wait for 1 ns;
       verify_passed_checks(checker, stat, 3);
+      verify_failed_checks(checker, stat, 1);
+      reset_checker_stat(checker);
     end procedure test_concurrent_check;
 
     procedure verify_result (
@@ -102,13 +107,17 @@ begin
     begin
       if test_implication_expected_result(iteration) then
         verify_passed_checks(checker, stat, 1);
+        verify_failed_checks(checker, stat, 0);
         check_only_log(get_logger(checker),
                        "Implication check passed. - Got " &
                        boolean'image(test_antecedents(iteration)) &" -> " & boolean'image(test_consequents(iteration)) &
                        ".", pass_level);
       else
+        verify_passed_checks(checker, stat, 0);
+        verify_failed_checks(checker, stat, 1);
         check_only_log(get_logger(checker), "Implication check failed.", default_level);
       end if;
+      reset_checker_stat(checker);
 
     end verify_result;
 
@@ -165,6 +174,7 @@ begin
         apply_sequence("000XLXH1HH00", clk, check_implication_in_4);
         wait for 1 ns;
         verify_passed_checks(my_checker4, stat, 5);
+        verify_failed_checks(my_checker4, stat, 0);
         mock(get_logger(my_checker4));
         apply_sequence("00HL00", clk, check_implication_in_4);
         wait until rising_edge(clk);
@@ -173,6 +183,8 @@ begin
         check_log(get_logger(my_checker4), "Implication check failed between x and y.", default_level);
         check_log(get_logger(my_checker4), "Implication check passed between x and y. - Got false -> false.", pass_level);
         check_no_log(get_logger(my_checker4));
+        verify_passed_checks(my_checker4, stat, 7);
+        verify_failed_checks(my_checker4, stat, 1);
         apply_sequence("00H000", clk, check_implication_in_4);
         wait until rising_edge(clk);
         wait for 1 ns;
@@ -180,6 +192,8 @@ begin
         check_log(get_logger(my_checker4), "Implication check failed between x and y.", default_level);
         check_log(get_logger(my_checker4), "Implication check passed between x and y. - Got false -> false.", pass_level);
         check_no_log(get_logger(my_checker4));
+        verify_passed_checks(my_checker4, stat, 9);
+        verify_failed_checks(my_checker4, stat, 2);
         apply_sequence("00HX00", clk, check_implication_in_4);
         wait until rising_edge(clk);
         wait for 1 ns;
@@ -187,6 +201,9 @@ begin
         check_log(get_logger(my_checker4), "Implication check failed between x and y.", default_level);
         check_log(get_logger(my_checker4), "Implication check passed between x and y. - Got false -> false.", pass_level);
         unmock(get_logger(my_checker4));
+        verify_passed_checks(my_checker4, stat, 11);
+        verify_failed_checks(my_checker4, stat, 3);
+        reset_checker_stat(my_checker4);
 
       elsif run("Test should pass on true implies false when not enabled") then
         wait until rising_edge(clk);

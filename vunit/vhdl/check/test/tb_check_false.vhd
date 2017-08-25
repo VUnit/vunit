@@ -69,16 +69,20 @@ begin
       wait until clock_edge(clk, not active_rising_clock_edge);
       wait for 1 ns;
       verify_passed_checks(checker, stat, 0);
+      verify_failed_checks(checker, stat, 0);
       mock(get_logger(checker));
       wait until clock_edge(clk, active_rising_clock_edge);
       wait for 1 ns;
       check_only_log(get_logger(checker), "False check failed.", level);
       unmock(get_logger(checker));
-      get_checker_stat(checker, stat);
+      verify_passed_checks(checker, stat, 0);
+      verify_failed_checks(checker, stat, 1);
       apply_sequence("0", clk, check_input, active_rising_clock_edge);
       wait until clock_edge(clk, active_rising_clock_edge);
       wait for 1 ns;
       verify_passed_checks(checker, stat, 1);
+      verify_failed_checks(checker, stat, 1);
+      reset_checker_stat(checker);
     end procedure test_concurrent_check;
 
   begin
@@ -86,6 +90,7 @@ begin
 
     while test_suite loop
       if run("Test should fail on true and logic 1 inputs to sequential checks") then
+        get_checker_stat(stat);
         mock(check_logger);
         check_false(true);
         check_only_log(check_logger, "False check failed.", default_level);
@@ -101,7 +106,11 @@ begin
         assert_true(not pass, "Should return pass = false on failing check");
         check_only_log(check_logger, "False check failed for my data.", default_level);
         unmock(check_logger);
+        verify_passed_checks(stat, 0);
+        verify_failed_checks(stat, 4);
+        reset_checker_stat;
 
+        get_checker_stat(check_false_checker, stat);
         mock(get_logger(check_false_checker));
         check_false(check_false_checker, true);
         check_only_log(get_logger(check_false_checker), "False check failed.", default_level);
@@ -110,6 +119,9 @@ begin
         assert_true(not pass, "Should return pass = false on failing check");
         check_only_log(get_logger(check_false_checker), "False check failed for my data.", default_level);
         unmock(get_logger(check_false_checker));
+        verify_passed_checks(check_false_checker,stat, 0);
+        verify_failed_checks(check_false_checker,stat, 2);
+        reset_checker_stat(check_false_checker);
 
       elsif run("Test should pass on false and logic 0 inputs to sequential checks") then
         get_checker_stat(stat);
@@ -156,6 +168,7 @@ begin
         wait for 1 ns;
         mock(get_logger(check_false_checker4));
         verify_passed_checks(check_false_checker4, stat, 3);
+        verify_failed_checks(check_false_checker4, stat, 0);
         apply_sequence("0UXZWH-0", clk, check_false_in_4);
         wait until rising_edge(clk);
         wait for 1 ns;
@@ -168,6 +181,9 @@ begin
         check_log(get_logger(check_false_checker4), "False check failed.", default_level);
         check_log(get_logger(check_false_checker4), "False check passed.", pass_level);
         unmock(get_logger(check_false_checker4));
+        verify_passed_checks(check_false_checker4, stat, 5);
+        verify_failed_checks(check_false_checker4, stat, 6);
+        reset_checker_stat(check_false_checker4);
 
       elsif run("Test should pass on logic high inputs when not enabled") then
         wait until rising_edge(clk);

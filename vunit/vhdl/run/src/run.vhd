@@ -9,6 +9,8 @@
 use work.logger_pkg.all;
 use work.log_levels_pkg.all;
 use work.log_handler_pkg.all;
+use work.check_pkg.all;
+use work.checker_pkg.all;
 use work.ansi_pkg.enable_colors;
 use work.string_ops.all;
 use work.dictionary.all;
@@ -96,12 +98,12 @@ package body run_pkg is
 
     impure function check_logger_status(logger : logger_t) return boolean is
 
-      impure function add_suffix(str : string; num : natural) return string is
+      impure function entry_spelling(is_plural : boolean) return string is
       begin
-        if num = 1 then
-          return str;
+        if is_plural then
+          return "entries";
         end if;
-        return str & "s";
+        return "entry";
       end;
 
       variable child : logger_t;
@@ -115,24 +117,52 @@ package body run_pkg is
           return false;
         end if;
 
-        count := get_log_count(child, failure);
-        if count > 0 then
-          core_pkg.core_failure("Logger """ & get_full_name(child) &
-                                """ has " & integer'image(count) & " " & add_suffix("failure", count) & ".");
-          return false;
-        end if;
-
-        count := get_log_count(child, error);
-        if count > 0 then
-          core_pkg.core_failure("Logger """ & get_full_name(child) &
-                                """ has " & integer'image(count) & " " & add_suffix("error", count) & ".");
-          return false;
-        end if;
+        for i in log_level_t'pos(error) to above_all_log_levels - 1 loop
+          count := get_log_count(child, log_level_t'val(i));
+          if count > 0 then
+            core_pkg.core_failure("Logger """ & get_full_name(child) &
+                                  """ has " & integer'image(count) & " " & get_name(log_level_t'val(i)) &
+                                  " " & entry_spelling(count > 1) & ".");
+            return false;
+          end if;
+        end loop;
 
         if not check_logger_status(child) then
           return false;
         end if;
 
+      end loop;
+
+      return true;
+    end;
+
+    impure function check_checker_status  return boolean is
+
+      impure function check_spelling(is_plural : boolean) return string is
+      begin
+        if is_plural then
+          return "checks";
+        end if;
+        return "check";
+      end;
+
+      variable stat : checker_stat_t;
+      variable checker : checker_t;
+    begin
+      for i in 0 to num_checkers - 1 loop
+        checker := get_checker(i);
+        stat := get_stat(checker);
+        if stat.n_failed > 0 then
+          if get_name(checker) = "" then
+            core_pkg.core_failure("Default checker has " & integer'image(stat.n_failed) &
+                                  " failed " & check_spelling(stat.n_failed > 1) & ".");
+          else
+            core_pkg.core_failure("Checker """ & get_name(checker) & """ has " & integer'image(stat.n_failed) &
+                                  " failed " & check_spelling(stat.n_failed > 1) & ".");
+          end if;
+
+          return false;
+        end if;
       end loop;
 
       return true;
@@ -149,6 +179,10 @@ package body run_pkg is
     runner.phase <= test_runner_exit;
     wait for 0 ns;
     verbose(runner_trace_logger, "Entering test runner exit phase.");
+
+    if not check_checker_status then
+      return;
+    end if;
 
     if not check_logger_status(root_logger) then
       return;

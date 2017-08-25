@@ -147,6 +147,9 @@ begin
         wait for 1 ns;
         check_only_log(check_logger, "Next check failed - Got 0 at the 4th active and enabled clock edge.", level);
         unmock(check_logger);
+        verify_passed_checks(checker, stat, 0);
+        verify_failed_checks(checker, stat, 1);
+        reset_checker_stat;
 
       elsif enabled("Test should handle a mix of passing and failing overlapping checks when allowed") then
         get_checker_stat(checker, stat);
@@ -161,6 +164,9 @@ begin
         apply_sequence("001;001", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
         check_only_log(check_logger, "Next check failed - Got 0 at the 4th active and enabled clock edge.", level);
+        verify_passed_checks(checker, stat, 2);
+        verify_failed_checks(checker, stat, 1);
+        reset_checker_stat(checker);
 
       elsif enabled("Test should pass a true expr without start_event if missing start is allowed") then
         get_checker_stat(checker, stat);
@@ -212,15 +218,16 @@ begin
         wait until rising_edge(clk);
         wait for 1 ns;
         verify_passed_checks(my_checker4, stat, 1);
+        verify_failed_checks(my_checker4, stat, 1);
         check_log(get_logger(my_checker4), "Next check failed for my data - Got overlapping start event at the 2nd active and enabled clock edge.", default_level);
         check_log(get_logger(my_checker4), "Next check passed for my data", pass_level);
         unmock(get_logger(my_checker4));
-        get_checker_stat(my_checker4, stat);
         apply_sequence("001;101;001;001;001;111;001;001;001;011;001", clk, check_next_in_4);
         wait until rising_edge(clk);
         wait for 1 ns;
-        verify_passed_checks(my_checker4, stat, 2);
-        verify_failed_checks(my_checker4, stat, 0);
+        verify_passed_checks(my_checker4, stat, 3);
+        verify_failed_checks(my_checker4, stat, 1);
+        reset_checker_stat(my_checker4);
       elsif run("Test should fail a true expr without start event if missing start is not allowed") then
         get_checker_stat(my_checker5, stat);
         mock(get_logger(my_checker5));
@@ -228,6 +235,8 @@ begin
         wait until rising_edge(clk);
         wait for 1 ns;
         verify_passed_checks(my_checker5, stat, 0);
+        verify_failed_checks(my_checker5, stat, 1);
+        reset_checker_stat(my_checker5);
         check_only_log(get_logger(my_checker5), "Checking my data - Missing start event for true expression.", default_level);
         unmock(get_logger(my_checker5));
       elsif run("Test should fail a true expr without start event if missing start is not allowed and num_cks=0") then
@@ -264,6 +273,7 @@ begin
         wait for 1 ns;
         verify_passed_checks(my_checker5, stat, 1);
         verify_failed_checks(my_checker5, stat, 1);
+        reset_checker_stat(my_checker5);
         check_log(get_logger(my_checker5), "Checking my data - Start event is X.", default_level);
         check_log(get_logger(my_checker5), "Checking my data", pass_level);
         unmock(get_logger(my_checker5));
@@ -273,14 +283,16 @@ begin
         mock(check_logger);
         apply_sequence("001;101;0U1;011", clk, check_next_in_6);
         wait for 1 ns;
+        verify_passed_checks(stat, 0);
+        verify_failed_checks(stat, 1);
         check_only_log(check_logger, "Next check failed for my data - Got U at the 1st active and enabled clock edge.", default_level);
         apply_sequence("011;101;011;001", clk, check_next_in_6);
         wait for 1 ns;
         check_only_log(check_logger, "Next check passed for my data", pass_level);
         unmock(check_logger);
-
-        verify_passed_checks(default_checker, stat, 1);
-        verify_failed_checks(default_checker, stat, 1);
+        verify_passed_checks(stat, 1);
+        verify_failed_checks(stat, 1);
+        reset_checker_stat;
       end if;
     end loop;
 

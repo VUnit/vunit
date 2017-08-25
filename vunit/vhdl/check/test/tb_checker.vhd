@@ -60,6 +60,7 @@ begin
 
         stat_after := get_checker_stat;
         assert_true(stat_after = stat_before + (5, 3, 2), "Expected 5 checks, 3 fail, and 2 pass but got " & to_string(stat_after - stat_before));
+        reset_checker_stat;
 
       elsif run("Test custom checker") then
         stat_before := get_stat(my_checker);
@@ -81,6 +82,7 @@ begin
 
         stat_after := get_stat(my_checker);
         assert_true(stat_after = stat_before + (4, 3, 1), "Expected 4 checks, 3 fail, and 1 pass but got " & to_string(stat_after - stat_before));
+        reset_checker_stat(my_checker);
 
       elsif run("Verify checker_stat_t functions and operators") then
         assert_true(stat1 = (0, 0, 0), "Expected initial stat value = (0, 0, 0)");

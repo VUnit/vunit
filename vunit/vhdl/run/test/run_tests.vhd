@@ -141,6 +141,11 @@ begin
       info(dashes(s'range) & LF & s & LF & dashes(s'range) & LF);
     end banner;
 
+    function to_string(value : integer) return string is
+    begin
+      return integer'image(value);
+    end;
+
     procedure test_case_setup is
     begin
       runner_init(runner_state);
@@ -169,6 +174,8 @@ begin
     constant test_checker : checker_t := new_checker("test_checker");
     variable runner_cfg : line;
     variable passed : boolean;
+    variable level : log_level_t;
+    variable my_checker : checker_t;
 
   begin
     banner("Should extract single enabled test case from input string");
@@ -275,12 +282,29 @@ begin
     test_case_cleanup;
 
     ---------------------------------------------------------------------------
+    banner("Test that log entries with custom levels above error cause failure on test_runner_cleanup");
+    for i in error + 1 to above_all_log_levels - 1 loop
+      next when log_level_t'val(i) = failure;
+      test_case_setup;
+      level := new_log_level("my_level" & to_string(i), i);
+      disable_stop;
+      log(get_logger("parent:my_logger"), "error message" & to_string(i), level);
+      set_stop_level(failure);
+      core_pkg.mock_core_failure;
+      test_runner_cleanup(runner);
+      core_pkg.check_core_failure("Logger ""parent:my_logger"" has 1 my_level" & to_string(i) & " entry.");
+      core_pkg.unmock_core_failure;
+      test_case_cleanup;
+      reset_log_count(get_logger("parent:my_logger"), level);
+    end loop;
+
+    ---------------------------------------------------------------------------
     banner("Error log cause failure on test_runner_cleanup");
     test_case_setup;
     error(get_logger("parent:my_logger"), "error message");
     core_pkg.mock_core_failure;
     test_runner_cleanup(runner);
-    core_pkg.check_core_failure("Logger ""parent:my_logger"" has 1 error.");
+    core_pkg.check_core_failure("Logger ""parent:my_logger"" has 1 error entry.");
     core_pkg.unmock_core_failure;
     test_case_cleanup;
     reset_log_count(get_logger("parent:my_logger"), error);
@@ -294,10 +318,46 @@ begin
     set_stop_level(failure);
     core_pkg.mock_core_failure;
     test_runner_cleanup(runner);
-    core_pkg.check_core_failure("Logger ""parent:my_logger"" has 2 failures.");
+    core_pkg.check_core_failure("Logger ""parent:my_logger"" has 2 failure entries.");
     core_pkg.unmock_core_failure;
     test_case_cleanup;
     reset_log_count(get_logger("parent:my_logger"), failure);
+
+    ---------------------------------------------------------------------------
+    banner("Test that failing checks on any level cause failure on test_runner_cleanup");
+    for i in below_all_log_levels + 1 to above_all_log_levels - 1 loop
+      test_case_setup;
+      if not is_valid(log_level_t'val(i)) then
+        level := new_log_level("my_level" & to_string(i), i);
+      else
+        level := log_level_t'val(i);
+      end if;
+      disable_stop;
+      check_failed("Message", level => level);
+      set_stop_level(failure);
+      core_pkg.mock_core_failure;
+      test_runner_cleanup(runner);
+      core_pkg.check_core_failure("Default checker has 1 failed check.");
+      core_pkg.unmock_core_failure;
+      test_case_cleanup;
+      reset_log_count(check_logger, level);
+      reset_stat(default_checker);
+    end loop;
+
+    ---------------------------------------------------------------------------
+    banner("Test that failing checks on custom checkers cause failure on test_runner_cleanup");
+    test_case_setup;
+    my_checker := new_checker("my checker");
+    disable_stop;
+    check_failed(my_checker, "Message");
+    set_stop_level(failure);
+    core_pkg.mock_core_failure;
+    test_runner_cleanup(runner);
+    core_pkg.check_core_failure("Checker ""my checker"" has 1 failed check.");
+    core_pkg.unmock_core_failure;
+    test_case_cleanup;
+    reset_log_count(get_logger("check:my checker"), error);
+    reset_stat(my_checker);
 
     ---------------------------------------------------------------------------
     banner("Should loop over enabled_test_case once and in order unless re-initialized.");

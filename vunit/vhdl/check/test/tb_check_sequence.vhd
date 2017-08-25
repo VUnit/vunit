@@ -92,7 +92,7 @@ begin
 
     while test_suite loop
       if run("Test should fail on sequences shorter than two events") then
-
+        get_checker_stat(my_checker_4, stat);
         mock(get_logger(my_checker_4));
         start_check_sequence_4 <= true;
         wait for 1 ns;
@@ -100,6 +100,9 @@ begin
                        "Sequence check failed for my data - Event sequence length must be at least 2. Got 1.",
                        default_level);
         unmock(get_logger(my_checker_4));
+        verify_passed_checks(my_checker_4, stat, 0);
+        verify_failed_checks(my_checker_4, stat, 1);
+        reset_checker_stat(my_checker_4);
 
       elsif run("Test should pass a penultimate triggered pipelined and sequentially asserted event sequence") then
         wait until rising_edge(clk);
@@ -119,6 +122,7 @@ begin
         verify_failed_checks(my_checker_2,stat, 0);
 
       elsif run("Test should fail a penultimate triggered but interrupted event sequence") then
+        get_checker_stat(my_checker_2, stat);
         wait until rising_edge(clk);
         wait for 1 ns;
         get_checker_stat(my_checker_2, stat);
@@ -135,6 +139,7 @@ begin
                        "Sequence check failed - Missing required event at 3rd active and enabled clock edge.",
                        default_level);
         unmock(get_logger(my_checker_2));
+        reset_checker_stat(my_checker_2);
 
       elsif run("Test should pass a first triggered pipelined and sequentially asserted event sequence when pipelining is supported") then
         wait until rising_edge(clk);
@@ -166,6 +171,7 @@ begin
                        "Sequence check failed - Missing required event at 2nd active and enabled clock edge.",
                        default_level);
         unmock(check_logger);
+        reset_checker_stat;
 
       elsif run("Test should ignore a first triggered and simulataneously initiated event sequence when pipelining is not supported") then
         wait until rising_edge(clk);
@@ -194,6 +200,8 @@ begin
         apply_sequence("0010.1;0001.1;0000.0", clk, inp(2));
         wait for 1 ns;
         verify_passed_checks(my_checker_2, stat, 1);
+        verify_failed_checks(my_checker_2, stat, 1);
+        reset_checker_stat(my_checker_2);
         get_checker_stat(stat);
         mock(check_logger);
         apply_sequence("0000.1;10X0.1;0100.1", clk, inp(1));
@@ -220,6 +228,7 @@ begin
         check_log(check_logger, "Sequence check failed - Got 0X10.", default_level);
         check_only_log(check_logger, "Sequence check passed", pass_level);
         unmock(check_logger);
+        reset_checker_stat;
 
       elsif run("Test should support weak high and low meta values") then
         wait until rising_edge(clk);

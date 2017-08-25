@@ -66,6 +66,7 @@ begin
       wait until clock_edge(clk, active_rising_clock_edge);
       wait for 1 ns;
       verify_passed_checks(checker, stat, 4);
+      verify_failed_checks(checker, stat, 0);
       mock(get_logger(checker));
       apply_sequence("1001;100H;000X", clk, check_input, active_rising_clock_edge);
       wait until clock_edge(clk, active_rising_clock_edge);
@@ -74,6 +75,9 @@ begin
       check_log(get_logger(checker), "Zero one-hot check failed - Got 100H.", level);
       check_log(get_logger(checker), "Zero one-hot check failed - Got 000X.", level);
       unmock(get_logger(checker));
+      verify_passed_checks(checker, stat, 4);
+      verify_failed_checks(checker, stat, 3);
+      reset_checker_stat(checker);
       apply_sequence("0000", clk, check_input, active_rising_clock_edge);
     end procedure test_concurrent_check;
 
@@ -145,6 +149,7 @@ begin
         unmock(check_logger);
 
       elsif run("Test should fail on more than one high bit") then
+        get_checker_stat(stat);
         mock(check_logger);
         check_zero_one_hot("01001");
         check_only_log(check_logger, "Zero one-hot check failed - Got 0_1001.", default_level);
@@ -168,7 +173,11 @@ begin
         assert_true(not pass, "Should return pass = false on failing check");
         check_only_log(check_logger, "Zero one-hot check failed - Got 0_100H.", default_level);
         unmock(check_logger);
+        verify_passed_checks(stat, 0);
+        verify_failed_checks(stat, 6);
+        reset_checker_stat;
 
+        get_checker_stat(my_checker3, stat);
         mock(get_logger(my_checker3));
         check_zero_one_hot(my_checker3, "01001");
         check_only_log(get_logger(my_checker3), "Zero one-hot check failed - Got 0_1001.", info);
@@ -184,8 +193,12 @@ begin
         assert_true(not pass, "Should return pass = false on failing check");
         check_only_log(get_logger(my_checker3), "Zero one-hot check failed - Got 0_100H.", info);
         unmock(get_logger(my_checker3));
+        verify_passed_checks(my_checker3, stat, 0);
+        verify_failed_checks(my_checker3, stat, 4);
+        reset_checker_stat(my_checker3);
 
       elsif run("Test should fail on unknowns") then
+        get_checker_stat(stat);
         mock(check_logger);
         check_zero_one_hot("0000X");
         check_only_log(check_logger, "Zero one-hot check failed - Got 0_000X.", default_level);
@@ -198,7 +211,11 @@ begin
         assert_true(not pass, "Should return pass = false on failing check");
         check_only_log(check_logger, "Zero one-hot check failed - Got 0_000X.", default_level);
         unmock(check_logger);
+        verify_passed_checks(stat, 0);
+        verify_failed_checks(stat, 3);
+        reset_checker_stat;
 
+        get_checker_stat(my_checker3, stat);
         mock(get_logger(my_checker3));
         check_zero_one_hot(my_checker3, "0000X");
         check_only_log(get_logger(my_checker3), "Zero one-hot check failed - Got 0_000X.", info);
@@ -207,6 +224,9 @@ begin
         assert_true(not pass, "Should return pass = false on failing check");
         check_only_log(get_logger(my_checker3), "Zero one-hot check failed - Got 0_000X.", info);
         unmock(get_logger(my_checker3));
+        verify_passed_checks(my_checker3, stat, 0);
+        verify_failed_checks(my_checker3, stat, 2);
+        reset_checker_stat(my_checker3);
 
       elsif run("Test should be possible to use concurrently") then
         test_concurrent_check(clk, check_zero_one_hot_in_1, default_checker);
