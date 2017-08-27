@@ -176,6 +176,7 @@ begin
     variable passed : boolean;
     variable level : log_level_t;
     variable my_checker : checker_t;
+    variable error_counter : natural := 0;
 
   begin
     banner("Should extract single enabled test case from input string");
@@ -847,6 +848,17 @@ begin
     test_runner_cleanup(runner);
     check(c, runner.exit_without_errors, "Expected exit flag to be true after runner cleanup");
     test_case_cleanup;
+
+    ---------------------------------------------------------------------------
+    banner("Should be possible import error status of third party frameworks");
+    test_case_setup;
+    test_runner_setup(runner, "enabled_test_cases : test a,, test b,, test c,, test d");
+    error_counter := 1;
+    core_pkg.mock_core_failure;
+    test_runner_cleanup(runner, error_counter > 0);
+    core_pkg.check_core_failure("External failure.");
+    core_pkg.unmock_core_failure;
+    check_false(c, runner.exit_without_errors, "Expected exit flag to be false after runner cleanup");
 
     ---------------------------------------------------------------------------
     banner("Should be possible to read running test case when running all");
