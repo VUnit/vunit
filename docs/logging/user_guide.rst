@@ -290,6 +290,11 @@ and then let the location preprocessor know about the added procedure
     ui = VUnit.from_argv()
     ui.enable_location_preprocessing(additional_subprograms=['my_convenience_procedure'])
 
+Deprecated Interfaces
+---------------------
+
+To better support testbenches developed before VUnit 3.0 it's still possible to configure a logger using the
+``logger_init`` procedure. The procedure uses best effort to map old behavior to contemporary functionality.
 
 Public API
 ----------
@@ -309,6 +314,14 @@ Contains ``log_handler_t`` datatype and log handler local configuration
 procedures.
 
 .. literalinclude:: ../../vunit/vhdl/logging/src/log_handler_pkg.vhd
+   :language: vhdl
+   :lines: 7-
+
+log_deprecated_pkg
+^^^^^^^^^^^^^^^
+Contains deprecated interfaces
+
+.. literalinclude:: ../../vunit/vhdl/logging/src/log_deprecated_pkg.vhd
    :language: vhdl
    :lines: 7-
 

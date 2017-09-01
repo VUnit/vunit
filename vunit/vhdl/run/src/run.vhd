@@ -39,6 +39,16 @@ package body run_pkg is
     init_log_handler(file_handler,
                      file_name => join(output_path(runner_cfg), "log.csv"),
                      format => csv);
+    set_log_handlers(runner_trace_logger,
+                     (new_log_handler(file_name => stdout_file_name, format => verbose, use_color => true),
+                      new_log_handler(file_name => join(output_path(runner_cfg), "runner.csv"),
+                                      format => csv, use_color => false)));
+    if has_active_python_runner(runner_state) then
+      disable_all(runner_trace_logger, get_log_handler(runner_trace_logger, 0));
+    else
+      set_log_level(runner_trace_logger, get_log_handler(runner_trace_logger, 0), info);
+    end if;
+    enable_all(runner_trace_logger, get_log_handler(runner_trace_logger, 1));
 
     if has_key(runner_cfg, "use_color") and boolean'value(get(runner_cfg, "use_color")) then
       enable_colors;
@@ -314,7 +324,7 @@ package body run_pkg is
     elsif get_run_all(runner_state) then
       if not has_run(name) then
         register_run(name);
-        debug(runner_trace_logger, "Test case: " & name);
+        info(runner_trace_logger, "Test case: " & name);
         if has_active_python_runner(runner_state) then
           core_pkg.test_start(name);
         end if;
@@ -322,7 +332,7 @@ package body run_pkg is
         return true;
       end if;
     elsif get_test_case_name(runner_state, get_active_test_case_index(runner_state)) = name then
-      debug(runner_trace_logger, "Test case: " & name);
+      info(runner_trace_logger, "Test case: " & name);
       if has_active_python_runner(runner_state) then
         core_pkg.test_start(name);
       end if;

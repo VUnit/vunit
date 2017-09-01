@@ -84,7 +84,12 @@ package logger_pkg is
   -- Log procedure with level as argument
   procedure log(logger : logger_t;
                 msg : string;
-                log_level : log_level_t;
+                log_level : log_level_t := info;
+                line_num : natural := 0;
+                file_name : string := "");
+
+  procedure log(msg : string;
+                log_level : log_level_t := info;
                 line_num : natural := 0;
                 file_name : string := "");
 
@@ -175,6 +180,10 @@ package logger_pkg is
   -- Get the current log level setting for a specific logger to this log handler
   impure function get_log_level(logger : logger_t;
                                 log_handler : log_handler_t) return log_level_t;
+
+  -- Get the number of levels disabled by the block filter setting for a specific logger to this log handler
+  impure function num_block_filter_levels(logger : logger_t;
+                                          log_handler : log_handler_t) return natural;
 
   -- Get the current block filter setting for a specific logger to this log handler
   impure function get_block_filter(logger : logger_t;

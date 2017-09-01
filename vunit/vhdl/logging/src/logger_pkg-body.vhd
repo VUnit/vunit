@@ -353,6 +353,17 @@ package body logger_pkg is
     return ret(0 to idx - 1);
   end;
 
+  impure function num_block_filter_levels(logger : logger_t;
+                                          log_handler : log_handler_t) return natural is
+    constant block_filter : integer_vector_ptr_t := get_block_filter(logger, log_handler);
+  begin
+    if block_filter = null_ptr then
+      return 0;
+    end if;
+
+    return length(block_filter);
+  end;
+
   -- Disable logging for all levels < level to this handler
   procedure set_log_level(log_handler : log_handler_t;
                           level : log_level_t) is
@@ -466,9 +477,13 @@ package body logger_pkg is
                              log_handler : log_handler_t;
                              level : log_level_t) return boolean is
     constant block_filter : integer_vector_ptr_t := get_block_filter(logger, log_handler);
+    variable blocked : boolean := false;
   begin
-    return (level >= get_log_level(logger, log_handler)) and
-      (get(block_filter, user_log_level_t'pos(level)) = log_level_enabled);
+    if block_filter /= null_ptr then
+      blocked := get(block_filter, user_log_level_t'pos(level)) = log_level_disabled;
+    end if;
+
+    return (level >= get_log_level(logger, log_handler)) and not blocked;
   end;
 
   impure function num_log_handlers(logger : logger_t) return natural is
@@ -687,15 +702,16 @@ package body logger_pkg is
 
   procedure log(logger : logger_t;
                 msg : string;
-                log_level : log_level_t;
+                log_level : log_level_t := info;
                 line_num : natural := 0;
                 file_name : string := "") is
 
     variable log_handler : log_handler_t;
     constant t_now : time := now;
   begin
-
-    if is_mocked(logger) then
+    if logger = null_logger then
+      core_failure("Attempt to log to uninitialized logger");
+    elsif is_mocked(logger) then
       mock_log(logger, msg, log_level, t_now, line_num, file_name);
     else
       for i in 0 to num_log_handlers(logger) - 1 loop
@@ -759,6 +775,14 @@ package body logger_pkg is
   end procedure;
 
   constant default_logger : logger_t := get_logger("default");
+
+  procedure log(msg : string;
+                log_level : log_level_t := info;
+                line_num : natural := 0;
+                file_name : string := "") is
+  begin
+    log(default_logger, msg, log_level, line_num, file_name);
+  end;
 
   procedure debug(msg : string;
                   line_num : natural := 0;

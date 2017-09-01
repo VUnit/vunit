@@ -118,6 +118,14 @@ package body log_handler_pkg is
     end if;
   end;
 
+  procedure get_format(constant log_handler : in log_handler_t;
+                       variable format : out log_format_t;
+                       variable use_color : out boolean) is
+  begin
+    format := log_format_t'val(get(log_handler.p_data, format_idx));
+    use_color := get(log_handler.p_data, use_color_idx) =  1;
+  end;
+
   procedure set_max_logger_name_length(log_handler : log_handler_t; value : natural) is
   begin
     set(log_handler.p_data, max_logger_name_idx, value);

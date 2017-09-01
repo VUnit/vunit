@@ -704,7 +704,7 @@ begin
         if run("test a") then
           wait for 1 ns;
         end if;
-        check_only_log(runner_trace_logger, "Test case: test a", debug);
+        check_only_log(runner_trace_logger, "Test case: test a", info);
 
         test_case_exit_gate(runner);
         check_log(runner_trace_logger, "Halting on test case phase exit gate.", verbose);

@@ -8,8 +8,7 @@ use work.integer_vector_ptr_pkg.all;
 use work.log_levels_pkg.all;
 
 package log_handler_pkg is
-
-  type log_format_t is (
+  type deprecated_log_format_t is (
     -- The raw log format contains just the message without any other information
     raw,
 
@@ -20,7 +19,13 @@ package log_handler_pkg is
     verbose,
 
     -- The csv format contains all information in machine readable format
-    csv);
+    csv,
+
+    -- Deprecated value not supported by new interfaces but kept for backward
+    -- compatibility reasons. NOT for new designs
+    off);
+
+  subtype log_format_t is deprecated_log_format_t range raw to csv;
 
   -- Log handler record, all fields are private
   type log_handler_t is record
@@ -48,6 +53,11 @@ package log_handler_pkg is
   procedure set_format(log_handler : log_handler_t;
                        format : log_format_t;
                        use_color : boolean := false);
+
+  -- Get the format used by the log handler
+  procedure get_format(constant log_handler : in log_handler_t;
+                       variable format : out log_format_t;
+                       variable use_color : out boolean);
 
   ---------------------------------------------
   -- Private parts not intended for public use
