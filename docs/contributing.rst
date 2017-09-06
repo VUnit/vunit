@@ -19,7 +19,7 @@ The test suite is divided into three parts:
 **vunit/test/lint/**
    Style checks such as PEP8 and license header verification.
 
-The test suites must with both Python 2.7 and Python 3.x as well
+The test suites must pass with both Python 2.7 and Python 3.x as well
 as with all supported simulators.
 
 Testing with Tox
