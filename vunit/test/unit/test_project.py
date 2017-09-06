@@ -477,6 +477,12 @@ end architecture;
         self.assertIn("a2", log_msg)
         self.assertIn("lib.ent", log_msg)
 
+    def test_error_on_duplicate_file(self):
+        self.project.add_library("lib", "lib_path")
+        file1 = self.add_source_file("lib", "file.vhd", "")
+        self.assertRaises(RuntimeError, self.add_source_file, "lib", "file.vhd", "")
+        self.assertEqual(self.project.get_source_files_in_order(), [file1])
+
     def _test_warning_on_duplicate(self, code, message, verilog=False):
         """
         Utility function to test adding the same duplicate code under

@@ -507,10 +507,10 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
         """
         Add source file to library unless it exists
         """
-        if source_file.name not in self._source_files:
-            self._source_files[source_file.name] = source_file
-        else:
-            LOGGER.warning("%s already added to library %s", source_file.name, self.name)
+        if source_file.name in self._source_files:
+            raise RuntimeError("%s already added to library %s" % (
+                source_file.name, self.name))
+        self._source_files[source_file.name] = source_file
 
     def get_source_file(self, file_name):
         """
