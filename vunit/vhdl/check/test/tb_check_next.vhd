@@ -28,7 +28,7 @@ architecture test_fixture of tb_check_next is
   signal clk : std_logic := '0';
 
   signal check_next_in_1, check_next_in_2, check_next_in_3, check_next_in_4,
-    check_next_in_5, check_next_in_6 : std_logic_vector(1 to 3) := "001";
+    check_next_in_5, check_next_in_6, check_next_in_7, check_next_in_8 : std_logic_vector(1 to 3) := "001";
   alias check_next_start_event_1 : std_logic is check_next_in_1(1);
   alias check_next_expr_1 : std_logic is check_next_in_1(2);
   alias check_next_en_1 : std_logic is check_next_in_1(3);
@@ -47,6 +47,12 @@ architecture test_fixture of tb_check_next is
   alias check_next_start_event_6 : std_logic is check_next_in_6(1);
   alias check_next_expr_6 : std_logic is check_next_in_6(2);
   alias check_next_en_6 : std_logic is check_next_in_6(3);
+  alias check_next_start_event_7 : std_logic is check_next_in_7(1);
+  alias check_next_expr_7 : std_logic is check_next_in_7(2);
+  alias check_next_en_7 : std_logic is check_next_in_7(3);
+  alias check_next_start_event_8 : std_logic is check_next_in_8(1);
+  alias check_next_expr_8 : std_logic is check_next_in_8(2);
+  alias check_next_en_8 : std_logic is check_next_in_8(3);
 
   shared variable check_next_checker2, check_next_checker3, check_next_checker4, check_next_checker5 : checker_t;
 begin
@@ -100,6 +106,20 @@ begin
                             check_next_expr_6,
                             result("for my data"),
                             num_cks => 1);
+
+  check_next_7 : check_next(clk,
+                            check_next_en_7,
+                            check_next_start_event_7,
+                            check_next_expr_7,
+                            num_cks => 0);
+
+  check_next_8 : check_next(clk,
+                            check_next_en_8,
+                            check_next_start_event_8,
+                            check_next_expr_8,
+                            result("for my data"),
+                            num_cks => 0,
+                            allow_missing_start => false);
 
   check_next_runner : process
     variable stat : checker_stat_t;
@@ -158,6 +178,25 @@ begin
         test_concurrent_check(clk, check_next_in_1, default_checker);
         test_concurrent_check(clk, check_next_in_2, check_next_checker2, error, false);
         test_concurrent_check(clk, check_next_in_3, check_next_checker3, level => info);
+      elsif run("Test should pass when expr is true num_cks=0 enabled cycles after start_event") then
+        get_checker_stat(stat);
+        apply_sequence("001;111;001;001;100;001;111;111;001", clk, check_next_in_7);
+        wait for 1 ns;
+        verify_passed_checks(stat, 3);
+        verify_failed_checks(stat, 0);
+      elsif run("Test should fail when expr is false num_cks=0 enabled cycles after start_event") then
+        get_checker_stat(stat);
+        apply_sequence("001;101;001", clk, check_next_in_7);
+        wait for 1 ns;
+        verify_passed_checks(stat, 0);
+        verify_failed_checks(stat, 1);
+        verify_log_call(inc_count, "Next check failed - Got 0 at the 0th active and enabled clock edge.");
+      elsif run("Test should pass a true expr without start_event if missing start is allowed and num_cks=0") then
+        get_checker_stat(stat);
+        apply_sequence("001;011;001", clk, check_next_in_7);
+        wait for 1 ns;
+        verify_passed_checks(stat, 0);
+        verify_failed_checks(stat, 0);
       elsif run("Test should fail when an overlapping check is initiated when not allowed") then
         get_checker_stat(check_next_checker4, stat);
         apply_sequence("001;101;001;101;001;011;001;011;001", clk, check_next_in_4);
@@ -175,6 +214,12 @@ begin
         wait for 1 ns;
         verify_passed_checks(check_next_checker5, stat, 0);
         verify_log_call(inc_count, "Checking my data - Missing start event for true expression.");
+      elsif run("Test should fail a true expr without start event if missing start is not allowed and num_cks=0") then
+        get_checker_stat(stat);
+        apply_sequence("001;011;001", clk, check_next_in_8);
+        wait for 1 ns;
+        verify_passed_checks(stat, 0);
+        verify_log_call(inc_count, "Next check failed for my data - Missing start event for true expression.");
       elsif run("Test should handle meta values") then
         get_checker_stat(check_next_checker5, stat);
         apply_sequence("00H;10H;00H;00H;00L;00H;01H;00H;00H", clk, check_next_in_5);

@@ -928,7 +928,7 @@ the initial custom checker parameter.
       signal start_event           : in    std_logic;
       signal expr                  : in    std_logic;
       constant msg                 : in    string      := result;
-      constant num_cks             : in    positive    := 1;
+      constant num_cks             : in    natural     := 1;
       constant allow_overlapping   : in    boolean     := true;
       constant allow_missing_start : in    boolean     := true;
       constant level               : in    log_level_t := dflt;

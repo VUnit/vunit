@@ -1586,7 +1586,7 @@ package body check_pkg is
     signal start_event           : in    std_logic;
     signal expr                  : in    std_logic;
     constant msg                 : in    string      := check_result_tag_c;
-    constant num_cks             : in    positive    := 1;
+    constant num_cks             : in    natural     := 1;
     constant allow_overlapping   : in    boolean     := true;
     constant allow_missing_start : in    boolean     := true;
     constant level               : in    log_level_t := dflt;
@@ -1625,41 +1625,33 @@ package body check_pkg is
       return boolean is
       constant no_pending_checks : boolean_vector(1 to schedule'right) := (others => false);
     begin
-      if schedule(1 to schedule'right) = no_pending_checks then
-        return false;
-      else
-        return true;
-      end if;
+      return schedule(1 to schedule'right) /= no_pending_checks;
     end function pending_check;
+
+    procedure check_expr is
+    begin
+      if to_x01(expr) = '1' then
+        base_pass_msg_enabled(checker, pass_msg_en);
+        if pass_msg_en then
+          base_check_true(checker, std_msg("Next check passed", msg, ""), line_num, file_name);
+        else
+          base_check_true(checker);
+        end if;
+      else
+        base_check_false(checker,
+                         std_msg("Next check failed", msg,
+                                 "Got " & std_logic'image(expr)(2) &
+                                 " at the " & to_ordinal_number(num_cks) &
+                                 " active and enabled clock edge."),
+                         level, line_num, file_name);
+      end if;
+    end procedure check_expr;
 
   begin
     -- pragma translate_off
     while true loop
       wait_on_edge(clock, en, active_clock_edge);
       clock_cycles_after_start_event := clock_cycles_after_start_event + 1;
-
-      if check_is_scheduled(schedule) then
-        if to_x01(expr) = '1' then
-          base_pass_msg_enabled(checker, pass_msg_en);
-          if pass_msg_en then
-            base_check_true(checker, std_msg("Next check passed", msg, ""), line_num, file_name);
-          else
-            base_check_true(checker);
-          end if;
-        else
-          base_check_false(checker,
-                           std_msg("Next check failed", msg,
-                                   "Got " & std_logic'image(expr)(2) &
-                                   " at the " & to_ordinal_number(num_cks) &
-                                   " active and enabled clock edge."),
-                           level, line_num, file_name);
-        end if;
-      elsif (to_x01(expr) = '1') and not allow_missing_start then
-        base_check_false(checker,
-                         std_msg("Next check failed", msg,
-                                 "Missing start event for true expression."),
-                         level, line_num, file_name);
-      end if;
 
       if to_x01(start_event) = '1' then
         if pending_check(schedule) and not allow_overlapping then
@@ -1680,6 +1672,16 @@ package body check_pkg is
                          level, line_num, file_name);
       end if;
 
+      if check_is_scheduled(schedule) then
+        check_expr;
+      elsif (to_x01(expr) = '1') and not allow_missing_start then
+        base_check_false(checker,
+                         std_msg("Next check failed", msg,
+                                 "Missing start event for true expression."),
+                         level, line_num, file_name);
+      end if;
+
+
       update_remaining_times_to_scheduled_checks(schedule, num_cks);
     end loop;
   -- pragma translate_on
@@ -1691,7 +1693,7 @@ package body check_pkg is
     signal start_event           : in std_logic;
     signal expr                  : in std_logic;
     constant msg                 : in string      := check_result_tag_c;
-    constant num_cks             : in positive    := 1;
+    constant num_cks             : in natural     := 1;
     constant allow_overlapping   : in boolean     := true;
     constant allow_missing_start : in boolean     := true;
     constant level               : in log_level_t := dflt;
