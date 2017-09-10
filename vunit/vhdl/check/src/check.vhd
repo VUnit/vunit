@@ -861,24 +861,139 @@ package body check_pkg is
   -----------------------------------------------------------------------------
   -- check_stable
   -----------------------------------------------------------------------------
-  procedure check_start_end_event (
-    variable checker   : inout checker_t;
-    signal event       : in    std_logic;
-    constant start_end : in    string;
-    constant msg       : in    string;
-    constant level     : in    log_level_t;
-    constant line_num  : in    natural;
-    constant file_name : in    string;
-    variable pass      : inout boolean) is
+  type check_stable_fsm_state_t is (idle, active_window);
+
+  procedure run_stability_check (
+    variable checker           : inout checker_t;
+    constant start_event          : in    std_logic;
+    constant end_event            : in    std_logic;
+    constant expr                 : in    std_logic_vector;
+    constant msg               : in    string;
+    constant level             : in    log_level_t;
+    constant active_clock_edge : in    edge_t;
+    constant allow_restart     : in    boolean;
+    constant line_num          : in    natural;
+    constant file_name         : in    string;
+
+    variable state                : inout check_stable_fsm_state_t;
+    variable ref                  : inout std_logic_vector;
+    variable clock_edge_counter   : inout natural;
+    variable is_stable            : inout boolean;
+    variable exit_stability_check : out   boolean) is
+
+    function format (expr : std_logic) return character is
+    begin
+      return std_logic'image(expr)(2);
+    end;
+
+    function format (expr : std_logic_vector) return string is
+    begin
+      if expr'length = 1 then
+        return (1 => format(expr(expr'left)));
+      else
+        return to_nibble_string(expr) & " (" & to_integer_string(expr) & ")";
+      end if;
+
+    end;
+
+    procedure open_window (variable open_ok : out boolean) is
+    begin
+      clock_edge_counter := 1;
+      ref := to_x01(expr);
+      open_ok := true;
+      if is_x(start_event) then
+        open_ok := false;
+        base_check_false(checker,
+                         std_msg("Stability check failed", msg,
+                                 "Start event is " & format(start_event) & "."),
+                         level, line_num, file_name);
+      elsif is_x(expr) then
+        open_ok := false;
+        base_check_false(checker,
+                         std_msg("Stability check failed", msg,
+                                 "Got " & format(expr) &
+                                 " at 1st active and enabled clock edge."),
+                         level, line_num, file_name);
+      end if;
+    end procedure;
+
+    procedure close_window(cycle : natural; is_ok : boolean) is
+      variable close_ok : boolean := is_ok;
+      variable pass_msg_en : boolean;
+    begin
+      if is_x(end_event) then
+        close_ok := false;
+        base_check_false(checker,
+                         std_msg("Stability check failed", msg,
+                                 "End event is " & format(end_event) & "."),
+                         level, line_num, file_name);
+      end if;
+
+      if close_ok then
+        base_pass_msg_enabled(checker, pass_msg_en);
+        if pass_msg_en then
+          base_check_true(checker,
+                          std_msg("Stability check passed", msg,
+                                  "Got " & format(ref) &
+                                  " for " & positive'image(cycle) &
+                                  " active and enabled clock edges."),
+                          line_num, file_name);
+        else
+          base_check_true(checker);
+        end if;
+      end if;
+    end procedure close_window;
+
+    variable open_ok : boolean;
   begin
-    if is_x(event) then
-      pass := false;
-      base_check_false(checker,
-                       std_msg("Stability check failed", msg,
-                               start_end & " event is " & std_logic'image(event)(2) & "."),
-                       level, line_num, file_name);
-    end if;
-  end procedure check_start_end_event;
+    exit_stability_check := false;
+    case state is
+
+      when idle =>
+        if to_x01(start_event) /= '0' then
+          open_window(open_ok);
+          if not open_ok then
+            exit_stability_check := true;
+            return;
+          elsif to_x01(end_event) /= '0' then
+            close_window(clock_edge_counter, is_ok => true);
+            exit_stability_check := true;
+            return;
+          else
+            state := active_window;
+          end if;
+        end if;
+
+      when active_window =>
+        clock_edge_counter := clock_edge_counter + 1;
+
+        if to_x01(start_event) /= '0' and allow_restart then
+          close_window(cycle => clock_edge_counter - 1, is_ok => true);
+          open_window(open_ok);
+          if not open_ok then
+            exit_stability_check := true;
+            return;
+          end if;
+
+        elsif ref /= to_x01(expr) then
+          is_stable := false;
+          base_check_false(checker,
+                           std_msg("Stability check failed", msg,
+                                   "Got " & format(expr) &
+                                   " at " & to_ordinal_number(clock_edge_counter) &
+                                   " active and enabled clock edge. Expected " &
+                                   format(ref) & "."), level, line_num, file_name);
+        end if;
+
+        if to_x01(end_event) /= '0' then
+          close_window(clock_edge_counter, is_ok => is_stable);
+          exit_stability_check := true;
+          return;
+        end if;
+
+    end case;
+
+  end procedure run_stability_check;
 
   procedure check_stable(
     variable checker           : inout checker_t;
@@ -890,67 +1005,25 @@ package body check_pkg is
     constant msg               : in    string      := check_result_tag_c;
     constant level             : in    log_level_t := dflt;
     constant active_clock_edge : in    edge_t      := rising_edge;
+    constant allow_restart     : in    boolean     := false;
     constant line_num          : in    natural     := 0;
     constant file_name         : in    string      := "") is
-    variable ref  : std_logic_vector(expr'range);
-    variable pass : boolean := true;
-    variable clock_edge_counter : positive;
-    variable pass_msg_en : boolean;
-    procedure check_unknown_expr is
-    begin
-      if is_x(expr) then
-        pass := false;
-        base_check_false(checker,
-                         std_msg("Stability check failed", msg,
-                                 "Got " & to_nibble_string(expr) &
-                                 " at " & to_ordinal_number(clock_edge_counter) &
-                                 " active and enabled clock edge."),
-                         level, line_num, file_name);
-      end if;
-    end procedure check_unknown_expr;
 
+    variable state                : check_stable_fsm_state_t := idle;
+    variable ref                  : std_logic_vector(expr'range);
+    variable clock_edge_counter   : natural;
+    variable is_stable            : boolean := true;
+    variable exit_stability_check : boolean;
   begin
     -- pragma translate_off
-    wait on clock until start_condition(clock, active_clock_edge, start_event, en);
-    clock_edge_counter := 1;
-    check_start_end_event(checker, start_event, "Start", msg, level, line_num, file_name, pass);
+    stability_check: loop
+      wait_on_edge(clock, en, active_clock_edge);
 
-    if pass then
-      ref := to_x01(expr);
-      check_unknown_expr;
-
-      while (to_x01(end_event) = '0') or (to_x01(en) /= '1') loop
-        wait_on_edge(clock, en, active_clock_edge);
-        clock_edge_counter := clock_edge_counter + 1;
-        check_unknown_expr;
-
-        if ref /= to_x01(expr) then
-          pass := false;
-          base_check_false(checker,
-                           std_msg("Stability check failed", msg,
-                                   "Got " & to_nibble_string(expr) & " (" & to_integer_string(expr) &
-                                   ") at " & to_ordinal_number(clock_edge_counter) &
-                                   " active and enabled clock edge. Expected " &
-                                   to_nibble_string(ref) & " (" & to_integer_string(ref) & ")."),
-                           level, line_num, file_name);
-        end if;
-      end loop;
-      check_start_end_event(checker, end_event, "End", msg, level, line_num, file_name, pass);
-
-      if pass then
-        base_pass_msg_enabled(checker, pass_msg_en);
-        if pass_msg_en then
-          base_check_true(checker,
-                          std_msg("Stability check passed", msg,
-                                  "Got " & to_nibble_string(expr) & " (" & to_integer_string(expr) &
-                                  ") for " & positive'image(clock_edge_counter) &
-                                  " active and enabled clock edges."),
-                          line_num, file_name);
-        else
-          base_check_true(checker);
-        end if;
-      end if;
-    end if;
+      run_stability_check(checker, start_event, end_event, expr, msg, level, active_clock_edge,
+                          allow_restart, line_num, file_name, state, ref, clock_edge_counter,
+                          is_stable, exit_stability_check);
+      exit when exit_stability_check;
+    end loop;
     -- pragma translate_on
   end;
 
@@ -963,12 +1036,13 @@ package body check_pkg is
     constant msg               : in string      := check_result_tag_c;
     constant level             : in log_level_t := dflt;
     constant active_clock_edge : in edge_t      := rising_edge;
+    constant allow_restart : in boolean := false;
     constant line_num          : in natural     := 0;
     constant file_name         : in string      := "") is
   begin
     -- pragma translate_off
     check_stable(default_checker, clock, en, start_event, end_event, expr, msg, level, active_clock_edge,
-                 line_num, file_name);
+                 allow_restart, line_num, file_name);
   -- pragma translate_on
   end;
 
@@ -982,67 +1056,25 @@ package body check_pkg is
     constant msg               : in    string      := check_result_tag_c;
     constant level             : in    log_level_t := dflt;
     constant active_clock_edge : in    edge_t      := rising_edge;
+    constant allow_restart : in boolean := false;
     constant line_num          : in    natural     := 0;
     constant file_name         : in    string      := "") is
-    variable ref  : std_logic;
-    variable pass : boolean := true;
-    variable clock_edge_counter : positive;
-    variable pass_msg_en : boolean;
-    procedure check_unknown_expr is
-    begin
-      if is_x(expr) then
-        pass := false;
-        base_check_false(checker,
-                         std_msg("Stability check failed", msg,
-                                 "Got " & std_logic'image(expr)(2) &
-                                 " at " & to_ordinal_number(clock_edge_counter) &
-                                 " active and enabled clock edge."),
-                         level, line_num, file_name);
-      end if;
-    end procedure check_unknown_expr;
+
+    variable state                : check_stable_fsm_state_t := idle;
+    variable ref                  : std_logic_vector(0 to 0);
+    variable clock_edge_counter   : natural;
+    variable is_stable            : boolean := true;
+    variable exit_stability_check : boolean;
   begin
     -- pragma translate_off
-    wait on clock until start_condition(clock, active_clock_edge, start_event, en);
-    clock_edge_counter := 1;
-    check_start_end_event(checker, start_event, "Start", msg, level, line_num, file_name, pass);
+    stability_check: loop
+      wait_on_edge(clock, en, active_clock_edge);
 
-    if pass then
-      ref := to_x01(expr);
-      check_unknown_expr;
-
-      while (to_x01(end_event) = '0') or (to_x01(en) /= '1') loop
-        wait_on_edge(clock, en, active_clock_edge);
-        clock_edge_counter := clock_edge_counter + 1;
-        check_unknown_expr;
-
-        if ref /= to_x01(expr) then
-          pass := false;
-          base_check_false(checker,
-                           std_msg("Stability check failed", msg,
-                                   "Got " & std_logic'image(expr)(2) &
-                                   " at " & to_ordinal_number(clock_edge_counter) &
-                                   " active and enabled clock edge. Expected " &
-                                   std_logic'image(ref)(2) & "."),
-                           level, line_num, file_name);
-        end if;
-      end loop;
-      check_start_end_event(checker, end_event, "End", msg, level, line_num, file_name, pass);
-
-      if pass then
-        base_pass_msg_enabled(checker, pass_msg_en);
-        if pass_msg_en then
-          base_check_true(checker,
-                          std_msg("Stability check passed", msg,
-                                  "Got " & std_logic'image(expr)(2) &
-                                  " for " & positive'image(clock_edge_counter) &
-                                  " active and enabled clock edges."),
-                          line_num, file_name);
-        else
-          base_check_true(checker);
-        end if;
-      end if;
-    end if;
-
+      run_stability_check(checker, start_event, end_event, (0 => expr), msg, level, active_clock_edge,
+                          allow_restart, line_num, file_name, state, ref, clock_edge_counter,
+                          is_stable, exit_stability_check);
+      exit when exit_stability_check;
+    end loop;
     -- pragma translate_on
   end;
 
@@ -1055,12 +1087,13 @@ package body check_pkg is
     constant msg               : in string      := check_result_tag_c;
     constant level             : in log_level_t := dflt;
     constant active_clock_edge : in edge_t      := rising_edge;
+    constant allow_restart : in boolean := false;
     constant line_num          : in natural     := 0;
     constant file_name         : in string      := "") is
   begin
     -- pragma translate_off
     check_stable(default_checker, clock, en, start_event, end_event, expr, msg, level, active_clock_edge,
-                 line_num, file_name);
+                 allow_restart, line_num, file_name);
   -- pragma translate_on
   end;
 

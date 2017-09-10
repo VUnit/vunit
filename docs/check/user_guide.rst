@@ -909,9 +909,12 @@ value.
    :alt:
 
 ``check_stable`` can handle one clock cycle windows and back-to-back
-windows. If a second window is started before the previous is completed
-the second start event will be ignored and the window will be completed
-by the next end event.
+windows.
+
+When ``allow_restart`` is ``false`` ``check_stable`` will ignore additional start events in the window.
+When ``allow_restart`` is ``true`` a new window is started if a new start event appears before the end event.
+The previous window is implicitly closed in the clock cycle before the new start event. An end event will
+still close the window if it appears before a second start event.
 
 Next Check (check\_next)
 ^^^^^^^^^^^^^^^^^^^^^^^^
