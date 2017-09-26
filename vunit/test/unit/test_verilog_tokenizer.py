@@ -36,16 +36,24 @@ class TestVerilogTokenizer(TestCase):
                     STRING(value='lo')])
 
         self.check(r'"h\"ello"',
-                   [STRING(value=r'h\"ello')])
+                   [STRING(value='h"ello')])
 
         self.check(r'"h\"ello"',
-                   [STRING(value=r'h\"ello')])
+                   [STRING(value='h"ello')])
 
         self.check(r'"\"ello"',
-                   [STRING(value=r'\"ello')])
+                   [STRING(value='"ello')])
 
         self.check(r'"\"\""',
-                   [STRING(value=r'\"\"')])
+                   [STRING(value='""')])
+
+        self.check(r'''"hi
+there"''',
+                   [STRING(value='hi\nthere')])
+
+        self.check(r'''"hi\
+there"''',
+                   [STRING(value='hithere')])
 
     def test_tokenizes_single_line_comment(self):
         self.check("// asd",

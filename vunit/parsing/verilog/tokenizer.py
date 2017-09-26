@@ -29,6 +29,11 @@ class VerilogTokenizer(object):
         def slice_value(token, start=None, end=None):
             return Token(token.kind, token.value[start:end], token.location)
 
+        def str_value(token):
+            return Token(token.kind,
+                         token.value[1:-1].replace("\\\n", "").replace("\\\"", "\""),
+                         token.location)
+
         def remove_value(token):
             return Token(token.kind, '', token.location)
 
@@ -49,8 +54,8 @@ class VerilogTokenizer(object):
             lambda token: slice_value(token, start=1))
 
         add(STRING,
-            r'(?<!\\)"(.*?)(?<!\\)"',
-            lambda token: slice_value(token, start=1, end=-1))
+            r'(?<!\\)"((.|\n)*?)(?<!\\)"',
+            str_value)
 
         add(COMMENT,
             r'//.*$',
