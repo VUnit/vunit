@@ -49,7 +49,7 @@ class ActiveHDLInterface(SimulatorInterface):
         Create new instance from command line arguments object
         """
         return cls(prefix=cls.find_prefix(),
-                   library_cfg=join(output_path, "library.cfg"),
+                   output_path=output_path,
                    gui=args.gui)
 
     @classmethod
@@ -70,11 +70,10 @@ class ActiveHDLInterface(SimulatorInterface):
 
         return False
 
-    def __init__(self, prefix, library_cfg="library.cfg", gui=False):
-        SimulatorInterface.__init__(self)
-        self._library_cfg = abspath(library_cfg)
+    def __init__(self, prefix, output_path, gui=False):
+        SimulatorInterface.__init__(self, output_path, gui)
+        self._library_cfg = join(output_path, "library.cfg")
         self._prefix = prefix
-        self._gui = gui
         self._create_library_cfg()
         self._libraries = []
 
@@ -233,7 +232,7 @@ proc vunit_load {{}} {{
     global builtinbreakassertlevel
     set builtinbreakassertlevel $breakassertlevel
 
-    set no_vhdl_test_runner_exit [catch {{examine /run_base_pkg/runner.exit_simulation}}]
+    set no_vhdl_test_runner_exit [catch {{examine /run_pkg/runner.exit_without_errors}}]
     if {{${{no_vhdl_test_runner_exit}}}}  {{
         echo {{Error: No vunit test runner package used}}
         return 1
@@ -253,10 +252,10 @@ proc vunit_load {{}} {{
         """
         return """
 proc vunit_run {} {
-    set has_vhdl_runner [expr ![catch {examine /run_base_pkg/runner}]]
+    set has_vhdl_runner [expr ![catch {examine /run_pkg/runner}]]
 
     if {${has_vhdl_runner}} {
-        set status_boolean "/run_base_pkg/runner.exit_without_errors"
+        set status_boolean "/run_pkg/runner.exit_without_errors"
         set true_value true
     } else {
         echo "No finish mechanism detected"

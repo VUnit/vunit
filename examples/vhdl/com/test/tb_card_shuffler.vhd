@@ -50,9 +50,6 @@ begin
     variable reply   : message_ptr_t;
     variable receipt : receipt_t;
   begin
-    checker_init(display_format => verbose,
-                 file_name      => join(output_path(runner_cfg), "error.csv"),
-                 file_format    => verbose_csv);
     test_runner_setup(runner, runner_cfg);
     while test_suite loop
       if run("Test that the cards in the deck are shuffled") then

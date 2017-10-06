@@ -10,14 +10,11 @@ library ieee;
 use ieee.std_logic_1164.all;
 library vunit_lib;
 use vunit_lib.run_types_pkg.all;
-use vunit_lib.run_base_pkg.all;
 use vunit_lib.run_pkg.all;
-use vunit_lib.log_types_pkg.all;
-use vunit_lib.check_types_pkg.all;
-use vunit_lib.check_special_types_pkg.all;
+use vunit_lib.logger_pkg.all;
+use vunit_lib.checker_pkg.all;
 use vunit_lib.check_pkg.all;
 use work.test_support.all;
-use work.test_count.all;
 
 entity tb_check_implication is
   generic (
@@ -41,7 +38,10 @@ architecture test_fixture of tb_check_implication is
   alias consequent_4 : std_logic is check_implication_in_4(2);
   signal check_implication_en_1, check_implication_en_2, check_implication_en_3, check_implication_en_4 : std_logic := '1';
 
-  shared variable check_implication_checker, check_implication_checker2, check_implication_checker3, check_implication_checker4 : checker_t;
+  constant my_checker : checker_t := new_checker("my_checker1");
+  constant my_checker2 : checker_t := new_checker("my_checker2");
+  constant my_checker3 : checker_t := new_checker("my_checker3", default_log_level => info);
+  constant my_checker4 : checker_t := new_checker("my_checker4");
 
 begin
   clock: process is
@@ -54,9 +54,9 @@ begin
   end process clock;
 
   check_implication_1 : check_implication(clk, check_implication_en_1, antecedent_1, consequent_1);
-  check_implication_2 : check_implication(check_implication_checker2, clk, check_implication_en_2, antecedent_2, consequent_2, active_clock_edge => falling_edge);
-  check_implication_3 : check_implication(check_implication_checker3, clk, check_implication_en_3, antecedent_3, consequent_3);
-  check_implication_4 : check_implication(check_implication_checker4, clk, check_implication_en_4,
+  check_implication_2 : check_implication(my_checker2, clk, check_implication_en_2, antecedent_2, consequent_2, active_clock_edge => falling_edge);
+  check_implication_3 : check_implication(my_checker3, clk, check_implication_en_3, antecedent_3, consequent_3);
+  check_implication_4 : check_implication(my_checker4, clk, check_implication_en_4,
                                           antecedent_4, consequent_4, result("between x and y."));
 
   check_implication_runner : process
@@ -66,12 +66,13 @@ begin
     constant test_consequents : boolean_vector(1 to 4) := (false, true, false, true);
     constant test_implication_expected_result : boolean_vector(1 to 4) := (true, true, false, true);
     variable stat : checker_stat_t;
-    constant pass_level : log_level_t := debug_low2;
+    constant pass_level : log_level_t := verbose;
+    constant default_level : log_level_t := error;
 
     procedure test_concurrent_check (
       signal clk                        : in  std_logic;
       signal check_input                : out std_logic_vector;
-      variable checker : inout checker_t ;
+      checker                           : checker_t;
       constant level                    : in  log_level_t := error;
       constant active_rising_clock_edge : in  boolean := true) is
     begin
@@ -82,9 +83,11 @@ begin
       apply_sequence("000110", clk, check_input, active_rising_clock_edge);
       wait for 1 ns;
       verify_passed_checks(checker, stat, 2);
+      mock(get_logger(checker));
       wait until clock_edge(clk, active_rising_clock_edge);
       wait for 1 ns;
-      verify_log_call(inc_count, "Implication check failed.", expected_level => level);
+      check_only_log(get_logger(checker), "Implication check failed.", level);
+      unmock(get_logger(checker));
       apply_sequence("11", clk, check_input, active_rising_clock_edge);
       wait until clock_edge(clk, active_rising_clock_edge);
       wait for 1 ns;
@@ -93,78 +96,97 @@ begin
 
     procedure verify_result (
       constant iteration : in    natural;
-      variable checker   : inout checker_t;
+      checker            : checker_t;
       variable stat      : inout    checker_stat_t) is
     begin
       if test_implication_expected_result(iteration) then
         verify_passed_checks(checker, stat, 1);
+        check_only_log(get_logger(checker),
+                       "Implication check passed. - Got " &
+                       boolean'image(test_antecedents(iteration)) &" -> " & boolean'image(test_consequents(iteration)) &
+                       ".", pass_level);
       else
-        verify_log_call(inc_count, "Implication check failed.");
+        check_only_log(get_logger(checker), "Implication check failed.", default_level);
       end if;
 
     end verify_result;
 
   begin
-    custom_checker_init_from_scratch(check_implication_checker3, default_level => info);
     test_runner_setup(runner, runner_cfg);
 
     while test_suite loop
       if run("Test sequential checkers should fail on true implies false but pass on other inputs") then
         for i in test_antecedents'range loop
+          mock(check_logger);
           get_checker_stat(stat);
           check_implication(test_antecedents(i), test_consequents(i));
           verify_result(i, default_checker, stat);
+          unmock(check_logger);
 
-          get_checker_stat(check_implication_checker, stat);
-          check_implication(check_implication_checker, test_antecedents(i), test_consequents(i));
-          verify_result(i, check_implication_checker, stat);
+          mock(get_logger(my_checker));
+          get_checker_stat(my_checker, stat);
+          check_implication(my_checker, test_antecedents(i), test_consequents(i));
+          verify_result(i, my_checker, stat);
+          unmock(get_logger(my_checker));
 
+          mock(check_logger);
           get_checker_stat(stat);
           check_implication(pass, test_antecedents(i), test_consequents(i));
           verify_result(i, default_checker, stat);
+          unmock(check_logger);
 
+          mock(check_logger);
           get_checker_stat(stat);
           pass := check_implication(test_antecedents(i), test_consequents(i));
           verify_result(i, default_checker, stat);
+          unmock(check_logger);
 
-          get_checker_stat(check_implication_checker, stat);
-          check_implication(check_implication_checker, pass, test_antecedents(i), test_consequents(i));
-          verify_result(i, check_implication_checker, stat);
-
+          mock(get_logger(my_checker));
+          get_checker_stat(my_checker, stat);
+          check_implication(my_checker, pass, test_antecedents(i), test_consequents(i));
+          verify_result(i, my_checker, stat);
+          unmock(get_logger(my_checker));
         end loop;
-      elsif run("Test pass message") then
-        enable_pass_msg;
-        check_implication(true, true);
-        verify_log_call(inc_count, "Implication check passed. - Got true -> true.", pass_level);
-        check_implication(true, true, "");
-        verify_log_call(inc_count, "Got true -> true.", pass_level);
-        check_implication(true, true, "Checking my data");
-        verify_log_call(inc_count, "Checking my data - Got true -> true.", pass_level);
-        check_implication(true, true, result("for my data"));
-        verify_log_call(inc_count, "Implication check passed for my data - Got true -> true.", pass_level);
-        disable_pass_msg;
+
       elsif run("Test should be possible to use concurrently") then
         test_concurrent_check(clk, check_implication_in_1, default_checker);
+
       elsif run("Test should be possible to use concurrently with negative active clock edge") then
-        test_concurrent_check(clk, check_implication_in_2, check_implication_checker2, error, false);
+        test_concurrent_check(clk, check_implication_in_2, my_checker2, error, false);
+
       elsif run("Test should be possible to use concurrently with custom checker") then
-        test_concurrent_check(clk, check_implication_in_3, check_implication_checker3, info);
+        test_concurrent_check(clk, check_implication_in_3, my_checker3, info);
+
       elsif run("Test should handle weak known meta values as known values and others as unknowns") then
         wait until rising_edge(clk);
         wait for 1 ns;
-        get_checker_stat(check_implication_checker4, stat);
+        get_checker_stat(my_checker4, stat);
         apply_sequence("000XLXH1HH00", clk, check_implication_in_4);
         wait for 1 ns;
-        verify_passed_checks(check_implication_checker4, stat, 5);
+        verify_passed_checks(my_checker4, stat, 5);
+        mock(get_logger(my_checker4));
         apply_sequence("00HL00", clk, check_implication_in_4);
+        wait until rising_edge(clk);
         wait for 1 ns;
-        verify_log_call(inc_count, "Implication check failed between x and y.");
+        check_log(get_logger(my_checker4), "Implication check passed between x and y. - Got false -> false.", pass_level);
+        check_log(get_logger(my_checker4), "Implication check failed between x and y.", default_level);
+        check_log(get_logger(my_checker4), "Implication check passed between x and y. - Got false -> false.", pass_level);
+        check_no_log(get_logger(my_checker4));
         apply_sequence("00H000", clk, check_implication_in_4);
+        wait until rising_edge(clk);
         wait for 1 ns;
-        verify_log_call(inc_count, "Implication check failed between x and y.");
+        check_log(get_logger(my_checker4), "Implication check passed between x and y. - Got false -> false.", pass_level);
+        check_log(get_logger(my_checker4), "Implication check failed between x and y.", default_level);
+        check_log(get_logger(my_checker4), "Implication check passed between x and y. - Got false -> false.", pass_level);
+        check_no_log(get_logger(my_checker4));
         apply_sequence("00HX00", clk, check_implication_in_4);
+        wait until rising_edge(clk);
         wait for 1 ns;
-        verify_log_call(inc_count, "Implication check failed between x and y.");
+        check_log(get_logger(my_checker4), "Implication check passed between x and y. - Got false -> false.", pass_level);
+        check_log(get_logger(my_checker4), "Implication check failed between x and y.", default_level);
+        check_log(get_logger(my_checker4), "Implication check passed between x and y. - Got false -> false.", pass_level);
+        unmock(get_logger(my_checker4));
+
       elsif run("Test should pass on true implies false when not enabled") then
         wait until rising_edge(clk);
         wait for 1 ns;
@@ -187,8 +209,7 @@ begin
       end if;
     end loop;
 
-    get_and_print_test_result(stat);
-    test_runner_cleanup(runner, stat);
+    test_runner_cleanup(runner);
     wait;
   end process;
 

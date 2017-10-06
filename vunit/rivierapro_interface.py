@@ -55,7 +55,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         persistent = not (args.unique_sim or args.gui)
 
         return cls(prefix=cls.find_prefix(),
-                   library_cfg=join(output_path, "library.cfg"),
+                   output_path=output_path,
                    persistent=persistent,
                    coverage=args.coverage,
                    gui=args.gui)
@@ -95,9 +95,10 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         return True
 
-    def __init__(self, prefix, library_cfg="library.cfg", persistent=False, gui=False, coverage=None):
-        SimulatorInterface.__init__(self)
-        VsimSimulatorMixin.__init__(self, prefix, persistent, gui, library_cfg)
+    def __init__(self, prefix, output_path, persistent=False, gui=False, coverage=None):
+        SimulatorInterface.__init__(self, output_path, gui)
+        VsimSimulatorMixin.__init__(self, prefix, persistent,
+                                    sim_cfg_file_name=join(output_path, "library.cfg"))
         self._create_library_cfg()
         self._libraries = []
         self._coverage = coverage
@@ -269,7 +270,7 @@ proc vunit_load {{}} {{
         return 1
     }}
 
-    set no_vhdl_test_runner_exit [catch {{examine /vunit_lib.run_base_pkg/runner.exit_simulation}}]
+    set no_vhdl_test_runner_exit [catch {{examine /vunit_lib.run_pkg/runner.exit_without_errors}}]
     set no_verilog_test_runner_exit [catch {{examine /\\\\package vunit_lib.vunit_pkg\\\\/__runner__}}]
     if {{${{no_vhdl_test_runner_exit}} && ${{no_verilog_test_runner_exit}}}}  {{
         echo {{Error: No vunit test runner package used}}
@@ -312,11 +313,11 @@ proc vunit_run {} {
     }
     onbreak {on_break}
 
-    set has_vhdl_runner [expr ![catch {examine /vunit_lib.run_base_pkg/runner}]]
+    set has_vhdl_runner [expr ![catch {examine /vunit_lib.run_pkg/runner}]]
     set has_verilog_runner [expr ![catch {examine /\\\\package vunit_lib.vunit_pkg\\\\/__runner__}]]
 
     if {${has_vhdl_runner}} {
-        set status_boolean "/vunit_lib.run_base_pkg/runner.exit_without_errors"
+        set status_boolean "/vunit_lib.run_pkg/runner.exit_without_errors"
         set true_value true
     } elseif {${has_verilog_runner}} {
         set status_boolean "/\\\\package vunit_lib.vunit_pkg\\\\/__runner__.exit_without_errors"

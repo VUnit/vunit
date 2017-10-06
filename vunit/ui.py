@@ -849,7 +849,8 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
                             join(self._output_path, "test_output"),
                             verbosity=verbosity,
                             num_threads=self._args.num_threads,
-                            dont_catch_exceptions=self._args.dont_catch_exceptions)
+                            dont_catch_exceptions=self._args.dont_catch_exceptions,
+                            no_color=self._args.no_color)
         runner.run(test_cases)
 
     def _post_process(self, report):
@@ -862,11 +863,11 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
             xml = report.to_junit_xml_str()
             ostools.write_file(self._args.xunit_xml, xml)
 
-    def add_builtins(self, mock_lang=False, mock_log=False):
+    def add_builtins(self):
         """
         Add vunit VHDL builtin libraries
         """
-        self._builtins.add_vhdl_builtins(mock_lang, mock_log)
+        self._builtins.add_vhdl_builtins()
 
     def add_com(self):
         """

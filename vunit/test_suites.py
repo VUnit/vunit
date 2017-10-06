@@ -45,11 +45,11 @@ class IndependentSimTestCase(object):
         Run the test case using the output_path
         """
         if not call_pre_config(self._config.pre_config, output_path,
-                               self._simulator_if.get_output_path()):
+                               self._simulator_if.output_path):
             return False
 
         enabled_test_cases = [self._test_case]
-        config = _add_runner_cfg(self._config, output_path, enabled_test_cases)
+        config = _add_runner_cfg(self._simulator_if, self._config, output_path, enabled_test_cases)
         sim_ok = self._simulator_if.simulate(join(output_path, self._simulator_if.name),
                                              self._name,
                                              config,
@@ -120,11 +120,11 @@ class SameSimTestSuite(object):
         Run the test suite using output_path
         """
         if not call_pre_config(self._config.pre_config, output_path,
-                               self._simulator_if.get_output_path()):
+                               self._simulator_if.output_path):
             return False
 
         enabled_test_cases = [test_case for test_case in self._test_cases]
-        config = _add_runner_cfg(self._config, output_path, enabled_test_cases)
+        config = _add_runner_cfg(self._simulator_if, self._config, output_path, enabled_test_cases)
         sim_ok = self._simulator_if.simulate(join(output_path, self._simulator_if.name),
                                              self._name,
                                              config,
@@ -191,7 +191,7 @@ class SameSimTestSuite(object):
         return retval
 
 
-def _add_runner_cfg(config, output_path, enabled_test_cases):
+def _add_runner_cfg(simulator_if, config, output_path, enabled_test_cases):
     """
     Return a new Configuration object with runner_cfg, output path and tb path information set
     """
@@ -204,6 +204,7 @@ def _add_runner_cfg(config, output_path, enabled_test_cases):
         "enabled_test_cases": ",".join(encode_test_case(test_case)
                                        for test_case in enabled_test_cases
                                        if test_case is not None),
+        "use_color": simulator_if.use_color,
         "output path": output_path.replace("\\", "/") + "/",
         "active python runner": True,
         "tb path": config.tb_path.replace("\\", "/") + "/",

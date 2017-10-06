@@ -9,8 +9,7 @@ from vunit import VUnit
 
 root = dirname(__file__)
 
-ui = VUnit.from_argv(compile_builtins=False)
-ui.add_builtins(mock_log=True)
+ui = VUnit.from_argv()
 lib = ui.add_library("lib")
 lib.add_source_files(join(root, "test", "*.vhd"))
 ui.main()

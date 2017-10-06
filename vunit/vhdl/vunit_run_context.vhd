@@ -8,9 +8,7 @@ context vunit_run_context is
   library vunit_lib;
   use vunit_lib.dictionary.all;
   use vunit_lib.path.all;
-  use vunit_lib.check_types_pkg.checker_stat_t;
+  use vunit_lib.checker_pkg.checker_stat_t;
   use vunit_lib.run_types_pkg.all;
-  use vunit_lib.run_special_types_pkg.all;
-  use vunit_lib.run_base_pkg.all;
   use vunit_lib.run_pkg.all;
 end context;

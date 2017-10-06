@@ -9,26 +9,19 @@
 library ieee;
 use ieee.std_logic_1164.all;
 library vunit_lib;
-use vunit_lib.log_types_pkg.all;
-use vunit_lib.check_types_pkg.all;
-use vunit_lib.check_special_types_pkg.all;
+use vunit_lib.logger_pkg.all;
+use vunit_lib.checker_pkg.all;
 use vunit_lib.check_pkg.all;
 use vunit_lib.run_types_pkg.all;
-use vunit_lib.run_base_pkg.all;
 use vunit_lib.run_pkg.all;
 use work.test_support.all;
-use work.test_count.all;
 
 entity tb_check_relation is
   generic (
     runner_cfg : string);
-end entity tb_check_relation;
+end entity;
 
 architecture test_fixture of tb_check_relation is
-  signal sl_0 : std_logic := '0';
-  signal sl_1 : std_logic := '1';
-  signal bit_0 : bit := '0';
-  signal bit_1 : bit := '1';
 begin
 
   test_runner : process
@@ -69,9 +62,11 @@ begin
 
     variable pass : boolean;
     variable stat : checker_stat_t;
-    variable check_relation_checker : checker_t;
+    variable my_checker : checker_t := new_checker("my_checker");
+    variable my_logger : logger_t := get_logger(my_checker);
     constant cash : cash_t := (99,95);
-    constant pass_level : log_level_t := debug_low2;
+    constant pass_level : log_level_t := verbose;
+    constant default_level : log_level_t := error;
     variable data : natural;
   begin
     test_runner_setup(runner, runner_cfg);
@@ -82,93 +77,104 @@ begin
         get_checker_stat(stat);
         check_relation(data > 3);
         check_relation(pass, data > 3);
-        counting_assert(pass, "Should return pass = true on passing check");
+        assert_true(pass, "Should return pass = true on passing check");
         pass := check_relation(data > 3);
-        counting_assert(pass, "Should return pass = true on passing check");
+        assert_true(pass, "Should return pass = true on passing check");
         verify_passed_checks(stat, 3);
 
-        get_checker_stat(check_relation_checker, stat);
-        check_relation(check_relation_checker, data > 3);
-        check_relation(check_relation_checker, pass, data > 3);
-        counting_assert(pass, "Should return pass = true on passing check");
-        verify_passed_checks(check_relation_checker, stat, 2);
-        verify_num_of_log_calls(get_count);
+        get_checker_stat(my_checker, stat);
+        check_relation(my_checker, data > 3);
+        check_relation(my_checker, pass, data > 3);
+        assert_true(pass, "Should return pass = true on passing check");
+        verify_passed_checks(my_checker, stat, 2);
+
       elsif run("Test pass message") then
-        enable_pass_msg;
         data := 5;
+        mock(check_logger);
         check_relation(data > 3);
-        verify_log_call(inc_count, "Relation check passed - Expected data > 3. Left is 5. Right is 3.", pass_level);
+        check_only_log(check_logger, "Relation check passed - Expected data > 3. Left is 5. Right is 3.", pass_level);
+
         check_relation(data > 3, "");
-        verify_log_call(inc_count, "Expected data > 3. Left is 5. Right is 3.", pass_level);
+        check_only_log(check_logger, "Expected data > 3. Left is 5. Right is 3.", pass_level);
+
         check_relation(data > 3, "Checking my data");
-        verify_log_call(inc_count, "Checking my data - Expected data > 3. Left is 5. Right is 3.", pass_level);
+        check_only_log(check_logger, "Checking my data - Expected data > 3. Left is 5. Right is 3.", pass_level);
+
         check_relation(data > 3, result("for my data"));
-        verify_log_call(inc_count, "Relation check passed for my data - Expected data > 3. Left is 5. Right is 3.", pass_level);
-        disable_pass_msg;
+        check_only_log(check_logger, "Relation check passed for my data - Expected data > 3. Left is 5. Right is 3.", pass_level);
+        unmock(check_logger);
+
       elsif run("Test that all pre VHDL 2008 relational operators are supported") then
         data := 5;
+        mock(check_logger);
         check_relation(data = 3);
-        verify_log_call(inc_count, "Relation check failed - Expected data = 3. Left is 5. Right is 3.");
+        check_only_log(check_logger, "Relation check failed - Expected data = 3. Left is 5. Right is 3.", default_level);
+
         check_relation(data /= 5);
-        verify_log_call(inc_count, "Relation check failed - Expected data /= 5. Left is 5. Right is 5.");
+        check_only_log(check_logger, "Relation check failed - Expected data /= 5. Left is 5. Right is 5.", default_level);
+
         check_relation(data < 5);
-        verify_log_call(inc_count, "Relation check failed - Expected data < 5. Left is 5. Right is 5.");
+        check_only_log(check_logger, "Relation check failed - Expected data < 5. Left is 5. Right is 5.", default_level);
+
         check_relation(data <= 4);
-        verify_log_call(inc_count, "Relation check failed - Expected data <= 4. Left is 5. Right is 4.");
+        check_only_log(check_logger, "Relation check failed - Expected data <= 4. Left is 5. Right is 4.", default_level);
+
         check_relation(data > 5);
-        verify_log_call(inc_count, "Relation check failed - Expected data > 5. Left is 5. Right is 5.");
+        check_only_log(check_logger, "Relation check failed - Expected data > 5. Left is 5. Right is 5.", default_level);
+
         check_relation(data >= 6);
-        verify_log_call(inc_count, "Relation check failed - Expected data >= 6. Left is 5. Right is 6.");
-      elsif run("Test that all matching relational operators are supported") then
-        check_relation(sl_1 ?= sl_0);
-        verify_log_call(inc_count, "Relation check failed - Expected sl_1 ?= sl_0. Left is 1. Right is 0.");
-        check_relation(bit_1 ?= bit_0);
-        verify_log_call(inc_count, "Relation check failed - Expected bit_1 ?= bit_0. Left is 1. Right is 0.");
-        check_relation(sl_1 ?/= sl_1);
-        verify_log_call(inc_count, "Relation check failed - Expected sl_1 ?/= sl_1. Left is 1. Right is 1.");
-        check_relation(sl_1 ?< sl_0);
-        verify_log_call(inc_count, "Relation check failed - Expected sl_1 ?< sl_0. Left is 1. Right is 0.");
-        check_relation(sl_1 ?<= sl_0);
-        verify_log_call(inc_count, "Relation check failed - Expected sl_1 ?<= sl_0. Left is 1. Right is 0.");
-        check_relation(sl_0 ?> sl_1);
-        verify_log_call(inc_count, "Relation check failed - Expected sl_0 ?> sl_1. Left is 0. Right is 1.");
-        check_relation(sl_0 ?>= sl_1);
-        verify_log_call(inc_count, "Relation check failed - Expected sl_0 ?>= sl_1. Left is 0. Right is 1.");
+        check_only_log(check_logger, "Relation check failed - Expected data >= 6. Left is 5. Right is 6.", default_level);
+        unmock(check_logger);
+
       elsif run("Test that a generated message can contain string containing operands") then
+        mock(check_logger);
         check_relation(len("foo") = 4);
-        verify_log_call(inc_count, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.");
+        check_only_log(check_logger, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.", default_level);
+
         check_relation(pass, len("foo") = 4);
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.");
+        assert_true(not pass, "Should return pass = false on failing check");
+        check_only_log(check_logger, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.", default_level);
+
         pass := check_relation(len("foo") = 4);
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.");
+        assert_true(not pass, "Should return pass = false on failing check");
+        check_only_log(check_logger, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.", default_level);
+        unmock(check_logger);
 
-        check_relation(check_relation_checker, len("foo") = 4);
-        verify_log_call(inc_count, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.");
-        check_relation(check_relation_checker, pass, len("foo") = 4);
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.");
+        mock(my_logger);
+        check_relation(my_checker, len("foo") = 4);
+        check_only_log(my_logger, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.", default_level);
+
+        check_relation(my_checker, pass, len("foo") = 4);
+        assert_true(not pass, "Should return pass = false on failing check");
+        check_only_log(my_logger, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.", default_level);
+        unmock(my_logger);
+
       elsif run("Test that custom types can be used") then
+        mock(check_logger);
         check_relation(cash > cash_t'((100,0)));
-        verify_log_call(inc_count, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.");
-        check_relation(pass, cash > cash_t'((100,0)));
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.");
-        pass := check_relation(cash > cash_t'((100,0)));
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.");
+        check_only_log(check_logger, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.", default_level);
 
-        check_relation(check_relation_checker, cash > cash_t'((100,0)));
-        verify_log_call(inc_count, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.");
-        check_relation(check_relation_checker, pass, cash > cash_t'((100,0)));
-        counting_assert(not pass, "Should return pass = false on failing check");
-        verify_log_call(inc_count, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.");
+        check_relation(pass, cash > cash_t'((100,0)));
+        assert_true(not pass, "Should return pass = false on failing check");
+        check_only_log(check_logger, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.", default_level);
+
+        pass := check_relation(cash > cash_t'((100,0)));
+        assert_true(not pass, "Should return pass = false on failing check");
+        check_only_log(check_logger, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.", default_level);
+        unmock(check_logger);
+
+        mock(my_logger);
+        check_relation(my_checker, cash > cash_t'((100,0)));
+        check_only_log(my_logger, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.", default_level);
+
+        check_relation(my_checker, pass, cash > cash_t'((100,0)));
+        assert_true(not pass, "Should return pass = false on failing check");
+        check_only_log(my_logger, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.", default_level);
+        unmock(my_logger);
       end if;
     end loop;
 
-    get_and_print_test_result(stat);
-    test_runner_cleanup(runner, stat);
+    test_runner_cleanup(runner);
     wait;
   end process;
 

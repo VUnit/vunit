@@ -48,7 +48,27 @@ class TestExternalRunScripts(unittest.TestCase):
                       ("failed", "lib.tb_dut.Test that fail")])
 
     def test_vhdl_logging_example_project(self):
-        self.check(join(ROOT, "examples", "vhdl", "logging", "compile.py"), args=["--compile"])
+        self.check(join(ROOT, "examples", "vhdl", "logging", "run.py"))
+
+    def test_vhdl_run_example_project(self):
+        self.check(join(ROOT, "examples", "vhdl", "run", "run.py"), exit_code=1)
+        check_report(self.report_file,
+                     [("passed", "lib.tb_with_watchdog.Test to_string for boolean"),
+                      ("passed", "lib.tb_standalone.Test to_string for boolean"),
+                      ("passed", "lib.tb_with_test_cases.Test to_string for integer"),
+                      ("passed", "lib.tb_with_test_cases.Test to_string for boolean"),
+                      ("passed", "lib.tb_with_lower_level_control.all"),
+                      ("passed", "lib.tb_running_test_case.Test scenario A"),
+                      ("passed", "lib.tb_running_test_case.Test scenario B"),
+                      ("passed", "lib.tb_running_test_case.Test something else"),
+                      ("passed", "lib.tb_minimal.all"),
+                      ("passed", "lib.tb_magic_paths.all"),
+                      ("failed", "lib.tb_with_watchdog.Test that stalls"),
+                      ("failed", "lib.tb_standalone.Test that fails on VUnit check procedure"),
+                      ("failed", "lib.tb_many_ways_to_fail.Test that fails on an assert"),
+                      ("failed", "lib.tb_many_ways_to_fail.Test that crashes on boundary problems"),
+                      ("failed", "lib.tb_many_ways_to_fail.Test that fails on VUnit check procedure"),
+                      ("failed", "lib.tb_external_errors.Test that fails on external error")])
 
     def test_vhdl_check_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "check", "run.py"))
@@ -89,18 +109,6 @@ class TestExternalRunScripts(unittest.TestCase):
                      [("passed", "lib.tb_example.Test that a successful test case passes"),
                       ("failed", "lib.tb_example.Test that a failing test case actually fails"),
                       ("failed", "lib.tb_example.Test that a test case that takes too long time fails with a timeout")])
-
-    def test_vhdl_osvvm_integration_example_project(self):
-        self.check(join(ROOT, "examples", "vhdl", "osvvm_integration", "run.py"), exit_code=1)
-        check_report(self.report_file,
-                     [("passed", "lib.tb_alertlog_demo_global_with_comments.Test passing alerts"),
-                      ("passed", "lib.tb_alertlog_demo_hierarchy_with_comments.Test passing alerts"),
-                      ("passed", "lib.tb_alertlog_demo_global.Test passing alerts"),
-                      ("passed", "lib.tb_alertlog_demo_hierarchy.Test passing alerts"),
-                      ("failed", "lib.tb_alertlog_demo_global_with_comments.Test failing alerts"),
-                      ("failed", "lib.tb_alertlog_demo_hierarchy_with_comments.Test failing alerts"),
-                      ("failed", "lib.tb_alertlog_demo_global.Test failing alerts"),
-                      ("failed", "lib.tb_alertlog_demo_hierarchy.Test failing alerts")])
 
     def test_vhdl_com_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "com", "run.py"))

@@ -12,7 +12,6 @@ library vunit_lib;
 use work.integer_array_pkg.all;
 use vunit_lib.check_pkg.all;
 use vunit_lib.run_pkg.all;
-use vunit_lib.run_base_pkg.all;
 
 entity tb_integer_array is
   generic (

@@ -263,6 +263,7 @@ html_theme_options = {
     'logo': 'VUnit_logo_420x420.png',
     'logo_name': True,
     'travis_button':True,
+    'page_width':'75%',
 }
 
 # Add any paths that contain custom themes here, relative to this directory.

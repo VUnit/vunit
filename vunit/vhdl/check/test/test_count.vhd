@@ -1,4 +1,4 @@
--- This package provides a counter object for VHDL 200x.
+-- This package provides a counter object for VHDL 93.
 --
 -- This Source Code Form is subject to the terms of the Mozilla Public
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -8,7 +8,10 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-use work.test_types.all;
+
+library vunit_lib;
+use vunit_lib.integer_vector_ptr_pkg.all;
+
 
 package test_count is
   impure function get_count
@@ -46,42 +49,44 @@ package test_count is
 end package test_count;
 
 package body test_count is
-  shared variable count : count_t;
+  constant count : integer_vector_ptr_t := allocate(10);
 
   impure function get_count
     return natural is
   begin
-    return count.get(1);
+    return get(count, 1);
   end;
 
   impure function set_count (
     constant value : natural)
     return natural is
   begin
-    return count.set(1, value);
+    set(count, 1, value);
+    return get(count, 1);
   end;
 
   impure function inc_count
     return natural is
   begin
-    return count.inc(1);
+    set(count, 1, get(count, 1) + 1);
+    return get(count, 1);
   end;
 
   procedure inc_count is
   begin
-    count.inc(1);
+    set(count, 1, get(count, 1) + 1);
   end;
 
   procedure reset_count is
   begin
-    count.reset(1);
+    set(count, 1, 0);
   end;
 
   impure function get_count(
     constant index : in natural)
     return natural is
   begin
-    return count.get(index);
+    return get(count, index);
   end;
 
   impure function set_count(
@@ -89,26 +94,28 @@ package body test_count is
     constant value : in natural)
     return natural is
   begin
-    return count.set(index, value);
+    set(count, index, value);
+    return get(count, index);
   end;
 
   impure function inc_count(
     constant index : in natural)
     return natural is
   begin
-    return count.inc(index);
+    set(count, index, get(count, index) + 1);
+    return get(count, index);
   end;
 
   procedure inc_count(
     constant index : in natural) is
   begin
-    count.inc(index);
+    set(count, index, get(count, index) + 1);
   end;
 
   procedure reset_count(
     constant index : in natural) is
   begin
-    count.reset(index);
+    set(count, index, 0);
   end;
 
 end package body test_count;

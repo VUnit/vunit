@@ -6,100 +6,66 @@ Logging Library
 Introduction
 ------------
 
-The VUnit log package (``log``) is used internally by VUnit for various
+The VUnit logging library is used internally by VUnit for various
 logging purposes but it can also be used standalone for general purpose
 logging. It provides many of the features that you find in SW logging
 frameworks. For example
 
--  Logging of simple text messages
--  Standard and user defined log levels to filter messages
--  Custom hierarchical grouping to filter messages
+-  Logging of simple text messages with different pre-defined log levels
+-  Can create hierarchical loggers which can be individually configured
+-  Can be mocked to be able to unit-test failures from verification libraries
 -  Configurable formatting of message output
 -  Automatic file and line number tagging of output messages
 -  File and stdout output channels with independent formatting and
    filtering settings
--  Support for multiple logs with their own output files and their own
-   settings
--  Logging of non-string objects
 
 Architecture
 ------------
 
-To understand ``log`` it's important to understand its architecture.
-Whenever you do a log entry that entry is handled by a logger. There is
-a default logger that is used when none is specified but you can also
-create multiple custom loggers. For example
+A log entry is made to a logger. You can think of a logger as a named
+channel. There is a default logger that is used when none is specified
+but you can also create multiple custom loggers. For example
 
 .. code-block:: vhdl
 
-    log("Hello world");
+    info("Hello world");
 
 will use the default logger while
 
 .. code-block:: vhdl
 
-    log(my_logger, "Hello world");
+    info(my_logger, "Hello world");
 
 will use the custom ``my_logger``.
 
-Each logger has two output handlers, one for handling display (stdout)
-output and one for handling file output. Every log entry you do is
-passed to both these handlers. For each handler there is one formatter
-and zero or more filters. The formatter is used to control the format of
-the output while the filters control if a log entry is passed to the
-output or not.
-
-Basic Log
----------
-
-The most basic log you can do is a simple text message using the default
-logger.
-
-.. code-block:: vhdl
-
-    log("Hello world");
-
-The default settings of the default logger is such that this will be
-output on stdout (no file output) just as you wrote it (raw formatter).
+Log messages are then handled by a log handler. By default there are
+two output handlers, one for handling display (stdout) output and one
+for handling output to a file. Every log entry you do is passed to
+both these handlers. Each handler may have a different output format
+and log level setting. The format is used to control they layout and
+amount of information being displayed. The log level is used to filter
+log messages. Individual loggers can also be filered.
 
 Log Level
 ---------
 
-Every log entry you make has a log level which is ``info`` for the log
-call procedure unless you specify anything using the ``log_level``
-parameter. There are also dedicated procedure calls for each log level.
-The standard log levels and their associated procedure calls are
+Every log entry you make has a log level which is defined by dedicated
+procedure calls for each log level. The standard log levels and their
+associated procedure calls are:
 
 .. code-block:: vhdl
 
-    failure("Highest level of *error* message (most severe).");
-    error("Normal severity error message.");
-    warning("Error message with lowest severity.");
-    info("Highest level of *debug* message (least details) is an info message.");
-    debug("Debug messages are on the middle level.");
-    verbose("Verbose debug messages contain the most details (lowest level).");
+    -- Visible to display by default
+    failure("Most severe error that by default causes simulation error");
+    error("Error message that by default casues simulation error.");
+    warning("A warning.");
 
-The six standard levels are also interleaved with a number of other
-levels. The names of these has the following format to indicate their
-relative severity/detail (x is one of the standard levels)
+    -- Visible to file by default
+    info("Informative message for very useful public information");
+    debug("Debug message for seldom useful or internal information");
 
--  x\_high2 (e.g. debug\_high2)
--  x\_high1
--  x
--  x\_low1
--  x\_low2
-
-These extra levels can be used to create additional custom levels. For
-example, if a status level is needed in between info and debug you can
-rename the info\_low2 level to *status* and then create a status alias
-for the info\_low2 procedure call.
-
-.. code-block:: vhdl
-
-    alias status is info_low2[string, string, natural, string];
-    ...
-    rename_level(info_low2, "status");
-    status("Here is the new status message.");
+    -- Not visible by default
+    verbose("Verbose messages only used for tracing program flow");
 
 Stop Level
 ----------
@@ -110,19 +76,22 @@ the stop level configuration.
 
 .. code-block:: vhdl
 
-    logger_init(stop_level => error);
+    -- Set stop level for all loggers
+    set_stop_level(error);
 
-Formatters
+    -- Set stop level for specific logger and all children
+    set_stop_level(get_logger("my_library.my_component"), warning)
+
+
+Formatting
 ----------
-
-With the default raw formatter you won't see the log level in the output
-message produced. To do that you have to change the formatter to
-something else. Here I'm changing the formatter for the default logger
-display handler
+The default display format is ``verbose`` and the default file format
+is ``csv`` to enable simple log file parsing. The format can be
+changed to any of ``raw``, ``level``, ``verbose`` and ``csv``.
 
 .. code-block:: vhdl
 
-    logger_init(display_format => level);
+    set_format(display_handler, level);
     info("Hello world");
 
 which will result in the following output.
@@ -131,71 +100,132 @@ which will result in the following output.
 
     INFO: Hello world
 
-There is also a ``verbose`` formatter which adds more details to the
-output.
+There default ``verbose`` format which adds more details to the
+output looks like this:
 
 .. code-block:: console
 
-    1000 ps: INFO: Hello World
+         1000 ps - default -    INFO - Hello world
 
 The verbose output will always contain the simulator time, the log
-level, and the message. More information about log is shown if
-available, see the grouping and location chapters.
+level, the logger, and the message.
 
-There is also a ``verbose_csv`` formatter, typically used for file
-output, that provides the same information comma-separated. The default
-separator is a comma but you can change that with the ``separator``
-parameter of ``logger_init``. The CSV format enables you to use the
-power of your spreadsheet tool to handle (large) log files.
+The ``raw`` formatter just emits the log message and nothing else. The
+``csv`` formatter emits all information in the log entry as a comma
+separated list for convenient parsing. By the default the VUnit test
+runner configures the file handler to create a ``csv`` formatted
+``log.csv`` file in the test case output path.
 
-Finally, there's a formatter called ``off`` and it's used to prevent all
-output from a handler.
+Logging hierarchy
+-----------------
 
-File Name
----------
-
-The path to the file targeted with the file handler is also controlled
-with ``logger_init``. Typically you would have something like this.
+Custom hierarchical loggers can be created to provide more information and control of what is being logged.
 
 .. code-block:: vhdl
 
-    logger_init(display_format => verbose, file_format => verbose_csv, file_name => "path/to/my/logs/my_log.csv");
-
-The default file name is ``log.csv`` in the current directory and the
-default file format is ``off``. By default an existing file will be
-replaced when calling ``logger_init`` but you can change that by setting
-the input parameter ``append`` true.
-
-Grouping
---------
-
-Log calls can be given a source ID such that it can be associated to a
-group of logs like logs coming from the same module or logs of a
-specific type.
-
-.. code-block:: vhdl
-
-    warning("Over-temperature (73 degrees C)!", "Temperature sensor");
+    constant temp_logger : logger_t := get_logger("temperature_sensor");
+    warning(temp_logger, "Over-temperature (73 degrees C)!");
 
 results in something like this with the ``verbose`` formatter.
 
 .. code-block:: console
 
-    1000 ps: WARNING in Temperature sensor: Over-temperature (73 degrees C)!
+    1000 ps - temperature_sensor -    INFO - Over-temperature (73 degrees C)!
 
-It's also possible to give a logger a default source ID with the
-``logger_init`` call.
+
+Log filtering
+-------------
+
+Log filtering is performed individually by the display and file
+handlers to control what logs that are passed to the output. The
+filterings is configured by setting the log level for a single or
+group of loggers.
+
 
 .. code-block:: vhdl
 
-    logger_init(default_src => "Test runner");
+    -- Disable all logging to the display
+    disable_all(display_handler);
 
-Log Location
-------------
+    -- Set info log level for all loggers within system0
+    set_log_level(display_handler, get_logger("system0"), info)
 
-You can have the file name and the line number of a log entry if the
-testbench is compiled with the location preprocessor provided with
-VUnit. It's enabled like this in your VUnit run script
+    -- Enable all logging from the uart module in system0
+    enable_all(display_handler, get_logger("system0.uart"))
+
+
+Custom Loggers
+--------------
+
+Previous chapters have used the built-in default logger for the
+examples but you can also create your own loggers. You do that by
+declaring a constant of type ``logger_t``.
+
+.. code-block:: vhdl
+
+    constant my_logger : logger_t := get_logger("system0.uart0");
+
+and then you use that variable as the first parameter in the procedure
+calls presented in the previous chapters, for example.
+
+.. code-block:: vhdl
+
+    info(my_logger, "Hello world");
+
+Logger names are hierarchical which means setting the log level of
+``system0`` will also set it for ``uart0``.
+
+
+Mocking
+-------
+When writing libraries and verification components it is very
+important to verify that they produce failures as intended. Using the
+VUnit logging system it is very easy to test that the expected
+failures are produced by mocking a logger object and checking the
+expected calls to it.
+
+.. code-block:: vhdl
+
+    logger := get_logger("my_library");
+    mock(logger);
+    my_library.verify_something(args);
+    check_only_log(logger, "Failed to verify something", failure);
+    unmock(logger);
+
+
+The ``check_only_log`` procedure checks that one and only one log
+message was produced.  There is also the ``check_log`` procedure which
+checks and consumes one log message from the list of recorded log calls to
+check a sequence of log messages.
+
+The ``mock`` procedures ensures that all future calls to the logger
+are recorded and not sent to a any log handler or cause simulation
+abort. The ``unmock`` procedure restores the logger to its normal
+state.  The ``unmock`` call also checks that all recorded log messages
+have been checked by a corresponding ``check_log`` or
+``check_only_log`` procedure.
+
+There is also the ``get_mock_log_count`` function which returs the
+number of recorded log items that occurred for one or all log
+levels. This can be used in a test bench to wait for a log to occur
+before issuing the ``check_log`` procedure.
+
+
+.. code-block:: vhdl
+
+    mock(logger);
+    trigger_error(clk);
+    wait until get_mock_logger(logger, failure) > 0 and rising_edge(clk);
+    check_only_log(logger, "Error was triggered", failure);
+    unmock(logger);
+
+
+Log Location Preprocessing
+--------------------------
+
+The optional VUnit location preprocessor can be used to add file name
+and line number location information to all log calls. This
+functionality is enabled from the ``run.py`` file like this:
 
 .. code-block:: python
 
@@ -206,7 +236,8 @@ and will change the output to something like this.
 
 .. code-block:: console
 
-    1000 ps: WARNING in Temperature sensor (logging_example.vhd:79): Over-temperature (73 degrees C)!
+    1000 ps - temperature_sensor -    INFO - Over-temperature (73 degrees C)! (logging_example.vhd:79)
+
 
 If you've placed your log call(s) in a convenience procedure you most
 likely want the location of the calls to that procedure to be in the
@@ -234,101 +265,38 @@ and then let the location preprocessor know about the added procedure
     ui = VUnit.from_argv()
     ui.enable_location_preprocessing(additional_subprograms=['my_convenience_procedure'])
 
-Filters
+
+Public API
+----------
+
+log_pkg
+^^^^^^^
+Contains global log procedures.
+
+.. literalinclude:: ../../vunit/vhdl/logging/src/log_pkg.vhd
+   :language: vhdl
+   :lines: 7-
+
+
+logger_pkg
+^^^^^^^^^^
+Contains ``logger_t`` datatype and logger local procedures.
+
+.. literalinclude:: ../../vunit/vhdl/logging/src/logger_pkg.vhd
+   :language: vhdl
+   :lines: 7-
+
+
+log_handler_pkg
+^^^^^^^^^^^^^^^
+Contains ``log_handler_t`` datatype and log handler local configuration
+procedures.
+
+.. literalinclude:: ../../vunit/vhdl/logging/src/log_handler_pkg.vhd
+   :language: vhdl
+   :lines: 7-
+
+
+Example
 -------
-
-One or more filters can be attached to the display and file handlers to
-control what logs that are passed to the output. Filters are either pass
-filters that pass logs of the specified type or stop filters which pass
-anything but the specified type. The type to pass or stop is based on
-either the log level or the log source ID
-
-Log Level Filters
-~~~~~~~~~~~~~~~~~
-
-The two procedures below show how you can create pass and stop filters
-on one or more log levels.
-
-.. code-block:: vhdl
-
-    stop_level((debug, verbose), display_handler, my_display_filter);
-    pass_level(error, file_handler, my_file_filter);
-
-The last procedure parameter is of type ``log_filter_t`` and returns the
-created filter which is used as reference if you want to remove the
-filter.
-
-.. code-block:: vhdl
-
-    remove_filter(my_display_filter);
-
-You can also apply the same filter to both handlers.
-
-.. code-block:: vhdl
-
-    stop_level((debug, verbose), (display_handler, file_handler), my_filter);
-
-Log Source Filters
-~~~~~~~~~~~~~~~~~~
-
-Pass and stop filters that act on the log source can also be created.
-For example
-
-.. code-block:: vhdl
-
-    stop_source("UART receiver", display_handler, uart_rx_stop_filter);
-    pass_source("status message", file_handler, status_msg_pass_filter);
-
-It's also possible to filter hierarchies of sources. If the sources of a
-number of logs have the same prefix and the prefix starts with a point
-or a colon then you can create a filter that apply to all of them. The
-typical use case is something like this.
-
-.. code-block:: vhdl
-
-    info("Some message", my_module'path_name & "monitor1");
-    info("Another message", my_module'path_name & "monitor2");
-
-The following filter will stop both of them.
-
-.. code-block:: vhdl
-
-    stop_source(my_module'path_name, display_handler, my_module_stop_filter);
-
-Combined Log Level and Log Source Filters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Log level(s) and log source can be combined in a single filter. For
-example, this filter will stop debug logs from the UART source.
-
-.. code-block:: vhdl
-
-    stop_source_level("UART", debug, display_handler, stop_uart_debug_msg_filter);
-
-Logging Non-String Objects
---------------------------
-
-Any type of data object can be logged as long as you can express it as a
-string. For example, you can log an integer by using the associated
-``to_string`` function. The VUnit ``com`` package also has functionality
-for generating ``to_string`` functions for your custom data types which
-makes them easy to log as well. For more information see the ``com``
-:doc:`user guide <../com/user_guide>`.
-
-Custom Loggers
---------------
-
-Previous chapters have used the built-in default logger for the examples
-but you can also create your own loggers. You do that by declaring a
-(shared) variable of type ``logger_t``.
-
-.. code-block:: vhdl
-
-    shared variable my_logger : logger_t;
-
-and then you use that variable as the first parameter in the procedure
-calls presented in the previous chapters, for example.
-
-.. code-block:: vhdl
-
-    log(my_logger, "Hello world");
+A runnable example using logging can be found in :vunit_example:`Logging Example <vhdl/logging/>`.

@@ -34,10 +34,12 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
     VERBOSITY_NORMAL = 1
     VERBOSITY_VERBOSE = 2
 
-    def __init__(self, report, output_path,
+    def __init__(self,  # pylint: disable=too-many-arguments
+                 report, output_path,
                  verbosity=VERBOSITY_NORMAL,
                  num_threads=1,
-                 dont_catch_exceptions=False):
+                 dont_catch_exceptions=False,
+                 no_color=False):
         self._lock = threading.Lock()
         self._local = threading.local()
         self._report = report
@@ -48,8 +50,10 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         self._verbosity = verbosity
         self._num_threads = num_threads
         self._stdout = sys.stdout
+        self._stdout_ansi = wrap(self._stdout, use_color=not no_color)
         self._stderr = sys.stderr
         self._dont_catch_exceptions = dont_catch_exceptions
+        self._no_color = no_color
 
     @property
     def _is_verbose(self):
@@ -166,26 +170,23 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         """
         Run the actual test suite
         """
+        color_output_file_name = join(output_path, "output_with_color.txt")
+
+        output_file = None
+        color_output_file = None
+
         start_time = ostools.get_time()
+        results = self._fail_suite(test_suite)
 
         try:
-            # If we could not clean output path, fail all tests
             ostools.renew_path(output_path)
-            output_file = open(output_file_name, "w")
-        except KeyboardInterrupt:
-            raise
-        except:  # pylint: disable=bare-except
-            results = self._fail_suite(test_suite)
-            with self._lock:  # pylint: disable=not-context-manager
-                traceback.print_exc()
-                self._add_results(test_suite, results, start_time, num_tests, output_file_name)
-            return
+            output_file = wrap(open(output_file_name, "w"), use_color=False)
 
-        try:
             if write_stdout:
-                self._local.output = TeeToFile([self._stdout, output_file])
+                self._local.output = Tee([self._stdout_ansi, output_file])
             else:
-                self._local.output = TeeToFile([output_file])
+                color_output_file = open(color_output_file_name, "w")
+                self._local.output = Tee([color_output_file, output_file])
 
             results = test_suite.run(output_path)
         except KeyboardInterrupt:
@@ -193,18 +194,25 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         except:  # pylint: disable=bare-except
             if self._dont_catch_exceptions:
                 raise
-            traceback.print_exc()
-            results = self._fail_suite(test_suite)
+
+            with self._lock:
+                traceback.print_exc()
         finally:
             self._local.output = self._stdout
-            output_file.flush()
-            output_file.close()
+
+            for fptr in [output_file, color_output_file]:
+                if fptr is None:
+                    continue
+
+                fptr.flush()
+                fptr.close()
 
         any_not_passed = any(value != PASSED for value in results.values())
 
         with self._lock:  # pylint: disable=not-context-manager
-            if (not write_stdout) and (any_not_passed or self._is_verbose) and not self._is_quiet:
-                self._print_output(output_file_name)
+            if (color_output_file is not None) and (any_not_passed or self._is_verbose) and not self._is_quiet:
+                self._print_output(color_output_file_name)
+
             self._add_results(test_suite, results, start_time, num_tests, output_file_name)
 
     def _create_test_mapping_file(self, test_suites):
@@ -233,14 +241,13 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             for value in mapping:
                 fptr.write(value + "\n")
 
-    @staticmethod
-    def _print_output(output_file_name):
+    def _print_output(self, output_file_name):
         """
         Print contents of output file if it exists
         """
         with open(output_file_name, "r") as fread:
-            for line in fread:
-                print(line, end="")
+            for line in fread.readlines():
+                self._stdout_ansi.write(line)
 
     def _add_results(self, test_suite, results, start_time, num_tests, output_file_name):
         """
@@ -267,7 +274,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         return results
 
 
-class TeeToFile(object):
+class Tee(object):
     """
     Provide a write method which writes to multiple files
     like the unix 'tee' command.
@@ -394,3 +401,18 @@ def create_output_path(output_path, test_suite_name):
         full_name = safe_name + hash_name
 
     return join(output_path, full_name)
+
+
+def wrap(file_obj, use_color=True):
+    """
+    Wrap file_obj in another stream which handles ANSI color codes using colorama
+
+    NOTE:
+    imports colorama here to avoid dependency from setup.py importing VUnit before colorama is installed
+    """
+    from colorama import AnsiToWin32
+
+    if use_color:
+        return AnsiToWin32(file_obj).stream
+
+    return AnsiToWin32(file_obj, strip=True, convert=False).stream

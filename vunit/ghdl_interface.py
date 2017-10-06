@@ -29,6 +29,7 @@ class GHDLInterface(SimulatorInterface):
 
     name = "ghdl"
     supports_gui_flag = True
+    supports_colors_in_gui = True
 
     compile_options = [
         ListOfStringOption("ghdl.flags"),
@@ -61,7 +62,8 @@ class GHDLInterface(SimulatorInterface):
         Create instance from args namespace
         """
         prefix = cls.find_prefix()
-        return cls(prefix=prefix,
+        return cls(output_path=output_path,
+                   prefix=prefix,
                    gui=args.gui,
                    gtkwave_fmt=args.gtkwave_fmt,
                    gtkwave_args=args.gtkwave_args,
@@ -74,8 +76,9 @@ class GHDLInterface(SimulatorInterface):
         """
         return cls.find_toolchain(["ghdl"])
 
-    def __init__(self, prefix, gui=False, gtkwave_fmt=None, gtkwave_args="", backend="llvm"):
-        SimulatorInterface.__init__(self)
+    def __init__(self,  # pylint: disable=too-many-arguments
+                 output_path, prefix, gui=False, gtkwave_fmt=None, gtkwave_args="", backend="llvm"):
+        SimulatorInterface.__init__(self, output_path, gui)
         self._prefix = prefix
         self._project = None
 

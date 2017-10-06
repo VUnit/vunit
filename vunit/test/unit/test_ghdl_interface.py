@@ -35,11 +35,11 @@ class TestGHDLInterface(unittest.TestCase):
         find_executable.side_effect = find_executable_side_effect
 
         executables["gtkwave"] = ["path"]
-        GHDLInterface(prefix="prefix")
+        GHDLInterface(prefix="prefix", output_path="")
 
         executables["gtkwave"] = []
-        GHDLInterface(prefix="prefix")
-        self.assertRaises(RuntimeError, GHDLInterface, prefix="prefix", gui=True)
+        GHDLInterface(prefix="prefix", output_path="")
+        self.assertRaises(RuntimeError, GHDLInterface, prefix="prefix", output_path="", gui=True)
 
     @mock.patch('subprocess.check_output', autospec=True)
     def test_parses_llvm_backend(self, check_output):
@@ -103,7 +103,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
 
     @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
     def test_compile_project_2008(self, check_output):  # pylint: disable=no-self-use
-        simif = GHDLInterface(prefix="prefix")
+        simif = GHDLInterface(prefix="prefix", output_path="")
         write_file("file.vhd", "")
 
         project = Project()
@@ -116,7 +116,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
 
     @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
     def test_compile_project_2002(self, check_output):  # pylint: disable=no-self-use
-        simif = GHDLInterface(prefix="prefix")
+        simif = GHDLInterface(prefix="prefix", output_path="")
         write_file("file.vhd", "")
 
         project = Project()
@@ -129,7 +129,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
 
     @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
     def test_compile_project_93(self, check_output):  # pylint: disable=no-self-use
-        simif = GHDLInterface(prefix="prefix")
+        simif = GHDLInterface(prefix="prefix", output_path="")
         write_file("file.vhd", "")
 
         project = Project()
@@ -142,7 +142,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
 
     @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
     def test_compile_project_extra_flags(self, check_output):  # pylint: disable=no-self-use
-        simif = GHDLInterface(prefix="prefix")
+        simif = GHDLInterface(prefix="prefix", output_path="")
         write_file("file.vhd", "")
 
         project = Project()
@@ -155,7 +155,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
              '-Plib_path', 'custom', 'flags', 'file.vhd'], env=simif.get_env())
 
     def test_compile_project_verilog_error(self):
-        simif = GHDLInterface(prefix="prefix")
+        simif = GHDLInterface(prefix="prefix", output_path="")
         write_file("file.v", "")
 
         project = Project()

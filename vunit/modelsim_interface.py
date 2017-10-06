@@ -65,7 +65,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         persistent = not (args.unique_sim or args.gui)
 
         return cls(prefix=cls.find_prefix(),
-                   modelsim_ini=join(output_path, "modelsim.ini"),
+                   output_path=output_path,
                    persistent=persistent,
                    coverage=args.coverage,
                    gui=args.gui)
@@ -88,9 +88,10 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         """
         return True
 
-    def __init__(self, prefix, modelsim_ini="modelsim.ini", persistent=False, gui=False, coverage=None):
-        SimulatorInterface.__init__(self)
-        VsimSimulatorMixin.__init__(self, prefix, persistent, gui, modelsim_ini)
+    def __init__(self, prefix, output_path, persistent=False, gui=False, coverage=None):
+        SimulatorInterface.__init__(self, output_path, gui)
+        VsimSimulatorMixin.__init__(self, prefix, persistent,
+                                    sim_cfg_file_name=join(output_path, "modelsim.ini"))
         self._libraries = []
         self._coverage = coverage
         self._coverage_files = set()
@@ -276,14 +277,11 @@ proc vunit_load {{{{vsim_extra_args ""}}}} {{
         return 1
     }}
 
-    set no_finished_signal [catch {{examine -internal {{/vunit_finished}}}}]
-    set no_vhdl_test_runner_exit [catch {{examine -internal {{/run_base_pkg/runner.exit_simulation}}}}]
+    set no_vhdl_test_runner_exit [catch {{examine -internal {{/run_pkg/runner.exit_without_errors}}}}]
     set no_verilog_test_runner_exit [catch {{examine -internal {{/vunit_pkg/__runner__}}}}]
 
-    if {{${{no_finished_signal}} && ${{no_vhdl_test_runner_exit}} && ${{no_verilog_test_runner_exit}}}}  {{
-        echo {{Error: Found none of either simulation shutdown mechanisms}}
-        echo {{Error: 1) No vunit_finished signal on test bench top level}}
-        echo {{Error: 2) No vunit test runner package used}}
+    if {{${{no_vhdl_test_runner_exit}} && ${{no_verilog_test_runner_exit}}}}  {{
+        echo {{No vunit test runner package used}}
         return 1
     }}
 
@@ -319,31 +317,18 @@ proc _vunit_run {} {
     }
     onbreak {on_break}
 
-    set has_vunit_finished_signal [expr ![catch {examine -internal {/vunit_finished}}]]
-    set has_vhdl_runner [expr ![catch {examine -internal {/run_base_pkg/runner.exit_simulation}}]]
+    set has_vhdl_runner [expr ![catch {examine -internal {/run_pkg/runner.exit_without_errors}}]]
     set has_verilog_runner [expr ![catch {examine -internal {/vunit_pkg/__runner__}}]]
 
-    if {${has_vunit_finished_signal}} {
-        set exit_boolean {/vunit_finished}
-        set status_boolean {/vunit_finished}
-        set true_value TRUE
-    } elseif {${has_vhdl_runner}} {
-        set exit_boolean {/run_base_pkg/runner.exit_simulation}
-        set status_boolean {/run_base_pkg/runner.exit_without_errors}
+    if {${has_vhdl_runner}} {
+        set status_boolean {/run_pkg/runner.exit_without_errors}
         set true_value TRUE
     } elseif {${has_verilog_runner}} {
-        set exit_boolean {/vunit_pkg/__runner__.exit_simulation}
         set status_boolean {/vunit_pkg/__runner__.exit_without_errors}
         set true_value 1
     } else {
         echo "No finish mechanism detected"
         return 1;
-    }
-
-    when -fast "${exit_boolean} = ${true_value}" {
-        echo "Finished"
-        stop
-        resume
     }
 
     run -all

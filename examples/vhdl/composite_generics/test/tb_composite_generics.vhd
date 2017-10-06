@@ -39,7 +39,6 @@ begin
   test_runner : process
   begin
     test_runner_setup(runner, runner_cfg);
-    logger_init(display_format => level);
 
     while test_suite loop
       if run("Test 1") then

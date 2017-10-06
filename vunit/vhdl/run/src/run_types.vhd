@@ -15,7 +15,6 @@ use ieee.std_logic_1164.all;
 package run_types_pkg is
   constant max_locked_time_c : time := 1 ms;
   constant max_n_test_cases_c : natural := 1024;
-  constant unknown_num_of_test_cases_c : integer := integer'left;
 
   subtype runner_cfg_t is string; -- Subtype deprecated, use string instead
   constant runner_cfg_default : string := "enabled_test_cases : __all__, output path : , active python runner : false";
@@ -49,30 +48,7 @@ package run_types_pkg is
     phase : runner_phase_t;
     locks : phase_locks_array_t(test_runner_setup to test_runner_cleanup);
     exit_without_errors : runner_flag_t;
-    exit_simulation : runner_flag_t;
   end record runner_sync_t;
-
-  type test_case_names_t is array (positive range <>) of line;
-
-  type runner_state_t is record
-    active_python_runner : boolean;
-    runner_phase : runner_phase_t;
-    test_case_names : test_case_names_t(1 to max_n_test_cases_c);
-    n_test_cases : integer;
-    active_test_case_index : positive;
-    test_suite_completed : boolean;
-    test_suite_iteration : natural;
-    run_test_cases : test_case_names_t(1 to max_n_test_cases_c);
-    running_test_case_v : line;
-    n_run_test_cases : natural;
-    has_run_since_last_loop_check : boolean;
-    run_all : boolean;
-    test_case_iteration : natural;
-    test_case_exit_after_error : boolean;
-    test_suite_exit_after_error : boolean;
-    runner_cfg : line;
-  end record runner_state_t;
-
 end package;
 
 package body run_types_pkg is

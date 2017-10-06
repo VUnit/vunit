@@ -33,7 +33,7 @@ class TestModelSimInterface(unittest.TestCase):
                    """)
         modelsim_ini = join(self.output_path, "modelsim.ini")
         simif = ModelSimInterface(prefix="prefix",
-                                  modelsim_ini=modelsim_ini,
+                                  output_path=self.output_path,
                                   persistent=False)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -59,7 +59,7 @@ class TestModelSimInterface(unittest.TestCase):
                    """)
         modelsim_ini = join(self.output_path, "modelsim.ini")
         simif = ModelSimInterface(prefix="prefix",
-                                  modelsim_ini=modelsim_ini,
+                                  output_path=self.output_path,
                                   persistent=False)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -85,7 +85,7 @@ class TestModelSimInterface(unittest.TestCase):
                    """)
         modelsim_ini = join(self.output_path, "modelsim.ini")
         simif = ModelSimInterface(prefix="prefix",
-                                  modelsim_ini=modelsim_ini,
+                                  output_path=self.output_path,
                                   persistent=False)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -111,7 +111,7 @@ class TestModelSimInterface(unittest.TestCase):
                    """)
         modelsim_ini = join(self.output_path, "modelsim.ini")
         simif = ModelSimInterface(prefix="prefix",
-                                  modelsim_ini=modelsim_ini,
+                                  output_path=self.output_path,
                                   persistent=False)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -139,7 +139,7 @@ class TestModelSimInterface(unittest.TestCase):
                    """)
         modelsim_ini = join(self.output_path, "modelsim.ini")
         simif = ModelSimInterface(prefix="prefix",
-                                  modelsim_ini=modelsim_ini,
+                                  output_path=self.output_path,
                                   coverage="best",
                                   persistent=False)
         project = Project()
@@ -166,7 +166,7 @@ class TestModelSimInterface(unittest.TestCase):
                    """)
         modelsim_ini = join(self.output_path, "modelsim.ini")
         simif = ModelSimInterface(prefix="prefix",
-                                  modelsim_ini=modelsim_ini,
+                                  output_path=self.output_path,
                                   persistent=False)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -191,7 +191,7 @@ class TestModelSimInterface(unittest.TestCase):
                    """)
         modelsim_ini = join(self.output_path, "modelsim.ini")
         simif = ModelSimInterface(prefix="prefix",
-                                  modelsim_ini=modelsim_ini,
+                                  output_path=self.output_path,
                                   persistent=False)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -217,7 +217,7 @@ class TestModelSimInterface(unittest.TestCase):
                    """)
         modelsim_ini = join(self.output_path, "modelsim.ini")
         simif = ModelSimInterface(prefix="prefix",
-                                  modelsim_ini=modelsim_ini,
+                                  output_path=self.output_path,
                                   persistent=False)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -245,7 +245,7 @@ class TestModelSimInterface(unittest.TestCase):
                    """)
         modelsim_ini = join(self.output_path, "modelsim.ini")
         simif = ModelSimInterface(prefix="prefix",
-                                  modelsim_ini=modelsim_ini,
+                                  output_path=self.output_path,
                                   coverage="best",
                                   persistent=False)
         project = Project()
@@ -272,7 +272,7 @@ class TestModelSimInterface(unittest.TestCase):
                    """)
         modelsim_ini = join(self.output_path, "modelsim.ini")
         simif = ModelSimInterface(prefix="prefix",
-                                  modelsim_ini=modelsim_ini,
+                                  output_path=self.output_path,
                                   persistent=False)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -298,7 +298,7 @@ class TestModelSimInterface(unittest.TestCase):
                    """)
         modelsim_ini = join(self.output_path, "modelsim.ini")
         simif = ModelSimInterface(prefix="prefix",
-                                  modelsim_ini=modelsim_ini,
+                                  output_path=self.output_path,
                                   persistent=False)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -330,7 +330,7 @@ class TestModelSimInterface(unittest.TestCase):
             fptr.write("user")
 
         ModelSimInterface(prefix=join(self.output_path, "prefix"),
-                          modelsim_ini=modelsim_ini,
+                          output_path=join(self.output_path, "modelsim"),
                           persistent=False)
         with open(modelsim_ini, "r") as fptr:
             self.assertEqual(fptr.read(), "installed")
@@ -350,7 +350,7 @@ class TestModelSimInterface(unittest.TestCase):
 
         with set_env(VUNIT_MODELSIM_INI=user_modelsim_ini):
             ModelSimInterface(prefix=join(self.output_path, "prefix"),
-                              modelsim_ini=modelsim_ini,
+                              output_path=join(self.output_path, "modelsim"),
                               persistent=False)
 
         with open(modelsim_ini, "r") as fptr:

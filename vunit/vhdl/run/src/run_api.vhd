@@ -7,14 +7,28 @@
 --
 -- Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
-use work.check_types_pkg.checker_stat_t;
-use work.run_base_pkg.all;
+use work.log_pkg.all;
+use work.logger_pkg.all;
+use work.runner_pkg.all;
 use work.run_types_pkg.all;
 
 library ieee;
 use ieee.std_logic_1164.all;
 
 package run_pkg is
+  signal runner : runner_sync_t := (phase => test_runner_entry,
+                                    locks => ((false, false),
+                                              (false, false),
+                                              (false, false),
+                                              (false, false),
+                                              (false, false),
+                                              (false, false),
+                                              (false, false)),
+                                    exit_without_errors => false);
+
+  constant runner_trace_logger : logger_t := get_logger("runner");
+  constant runner_state : runner_t := new_runner;
+
   procedure test_runner_setup (
     signal runner : inout runner_sync_t;
     constant runner_cfg : in string := runner_cfg_default);
@@ -40,14 +54,7 @@ package run_pkg is
     return string;
 
   procedure test_runner_cleanup (
-    signal runner: inout runner_sync_t;
-    constant checker_stat : in checker_stat_t := (0, 0, 0);
-    constant disable_simulation_exit : in    boolean := false);
-
-  procedure test_runner_cleanup (
-    signal runner: inout runner_sync_t;
-    constant external_failure : in boolean;
-    constant disable_simulation_exit : in boolean := false);
+    signal runner: inout runner_sync_t);
 
   impure function test_suite_error (
     constant err : boolean)
@@ -73,8 +80,7 @@ package run_pkg is
 
   procedure test_runner_watchdog (
     signal runner                    : inout runner_sync_t;
-    constant timeout                 : in    time;
-    constant disable_simulation_exit : in    boolean := false);
+    constant timeout                 : in    time);
 
   procedure lock_entry (
     signal runner : out runner_sync_t;

@@ -37,9 +37,6 @@ begin
     variable ack                                                          : boolean;
     variable msg, msg2, request_msg, request_msg2, request_msg3, reply_msg : msg_t;
   begin
-    checker_init(display_format => verbose,
-                 file_name      => join(output_path(runner_cfg), "error.csv"),
-                 file_format    => verbose_csv);
     test_runner_setup(runner, runner_cfg);
 
     while test_suite loop

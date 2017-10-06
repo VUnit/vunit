@@ -157,135 +157,14 @@ in your VUnit Git repository? You have to do this first if installing using setu
         """
         self._vunit_lib.add_source_files(join(VERILOG_PATH, "vunit_pkg.sv"))
 
-    def add_vhdl_builtins(self, mock_lang=False, mock_log=False):
+    def add_vhdl_builtins(self):
         """
         Add vunit VHDL builtin libraries
         """
-        supports_context = self._simulator_factory.supports_vhdl_2008_contexts()
-
-        def get_builtins_vhdl_all(mock_lang):
-            """Return built-in VHDL files present under all VHDL versions"""
-            files = []
-
-            if mock_lang:
-                files += [join("vhdl", "src", "lang", "lang_mock.vhd")]
-                files += [join("vhdl", "src", "lang", "lang_mock_types.vhd")]
-                files += [join("common", "test", "test_type_methods_api.vhd")]
-            else:
-                files += [join("vhdl", "src", "lang", "lang.vhd")]
-
-            files += [join("string_ops", "src", "string_ops.vhd"),
-                      join("check", "src", "check.vhd"),
-                      join("check", "src", "check_api.vhd"),
-                      join("check", "src", "check_base_api.vhd"),
-                      join("check", "src", "check_types.vhd"),
-                      join("core", "src", "stop_pkg.vhd"),
-                      join("run", "src", "run.vhd"),
-                      join("run", "src", "run_api.vhd"),
-                      join("run", "src", "run_types.vhd"),
-                      join("run", "src", "run_base_api.vhd")]
-
-            files += [join("core", "src", "core_pkg.vhd")]
-
-            files += [join("logging", "src", "log_api.vhd"),
-                      join("logging", "src", "log_formatting.vhd"),
-                      join("logging", "src", "log.vhd"),
-                      join("logging", "src", "log_types.vhd")]
-
-            files += [join("dictionary", "src", "dictionary.vhd")]
-
-            files += [join("path", "src", "path.vhd")]
-
-            return files
-
-        def get_builtins_vhdl_93(mock_lang, mock_log):
-            """Return built-in VHDL files unique fro VHDL 93"""
-            files = []
-
-            if mock_lang:
-                files += [join("common", "test", "test_type_methods93.vhd")]
-                files += [join("common", "test", "test_types93.vhd")]
-                files += [join("vhdl", "src", "lang", "lang_mock_special_types93.vhd")]
-
-            if mock_log:
-                files += [join("logging", "src", "log_base93_mock.vhd"),
-                          join("logging", "src", "log_special_types93.vhd"),
-                          join("logging", "src", "log_base_api_mock.vhd")]
-            else:
-                files += [join("logging", "src", "log_base93.vhd"),
-                          join("logging", "src", "log_special_types93.vhd"),
-                          join("logging", "src", "log_base_api.vhd")]
-
-            files += [join("check", "src", "check_base93.vhd"),
-                      join("check", "src", "check_special_types93.vhd"),
-                      join("run", "src", "run_base93.vhd"),
-                      join("run", "src", "run_special_types93.vhd")]
-
-            return files
-
-        def get_builtins_vhdl_not_93(mock_lang, mock_log):
-            """Return built-in VHDL files present both in VHDL 2002 and 2008"""
-            files = []
-
-            if mock_lang:
-                files += [join("common", "test", "test_type_methods200x.vhd")]
-                files += [join("common", "test", "test_types200x.vhd")]
-                files += [join("vhdl", "src", "lang", "lang_mock_special_types200x.vhd")]
-
-            if mock_log:
-                files += [join("common", "test", "test_type_methods_api.vhd")]
-                files += [join("common", "test", "test_type_methods200x.vhd")]
-                files += [join("common", "test", "test_types200x.vhd")]
-                files += [join("logging", "src", "log_base.vhd"),
-                          join("logging", "src", "log_special_types200x_mock.vhd"),
-                          join("logging", "src", "log_base_api.vhd")]
-            else:
-                files += [join("logging", "src", "log_base.vhd"),
-                          join("logging", "src", "log_special_types200x.vhd"),
-                          join("logging", "src", "log_base_api.vhd")]
-
-            files += [join("check", "src", "check_base.vhd"),
-                      join("check", "src", "check_special_types200x.vhd"),
-                      join("run", "src", "run_base.vhd"),
-                      join("run", "src", "run_special_types200x.vhd")]
-
-            return files
-
-        def get_builtins_vhdl_2008():
-            """Return built-in VHDL files present only in 2008"""
-            files = []
-
-            if supports_context:
-                files += ["vunit_context.vhd"]
-                files += ["vunit_run_context.vhd"]
-            files += [join("core", "src", "stop_body_2008.vhd")]
-
-            return files
-
-        def get_builtins_vhdl_not_2008():
-            """Return built-in VHDL files present both in VHDL 93 and 2002"""
-            files = []
-
-            files += [join("core", "src", "stop_body_93.vhd")]
-
-            return files
-
-        files = get_builtins_vhdl_all(mock_lang)
-
-        if self._vhdl_standard == '93':
-            files += get_builtins_vhdl_93(mock_lang, mock_log)
-            files += get_builtins_vhdl_not_2008()
-        elif self._vhdl_standard == '2002':
-            files += get_builtins_vhdl_not_93(mock_lang, mock_log)
-            files += get_builtins_vhdl_not_2008()
-        elif self._vhdl_standard == '2008':
-            files += get_builtins_vhdl_not_93(mock_lang, mock_log)
-            files += get_builtins_vhdl_2008()
-
-        for file_name in files:
-            self._vunit_lib.add_source_files(join(VHDL_PATH, file_name))
-
         self._add_data_types()
+        self._add_files(join(VHDL_PATH, "*.vhd"))
+        for path in ("core", "logging", "string_ops", "check", "dictionary", "run", "path"):
+            self._add_files(join(VHDL_PATH, path, "src", "*.vhd"))
 
 
 def osvvm_is_installed():

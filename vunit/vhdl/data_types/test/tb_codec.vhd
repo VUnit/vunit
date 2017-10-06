@@ -7,17 +7,8 @@
 -- Copyright (c) 2015-2017, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
-use vunit_lib.lang.all;
 use vunit_lib.string_ops.all;
-use vunit_lib.log_types_pkg.all;
-use vunit_lib.log_special_types_pkg.all;
-use vunit_lib.log_pkg.all;
-use vunit_lib.check_types_pkg.all;
-use vunit_lib.check_special_types_pkg.all;
 use vunit_lib.check_pkg.all;
-use vunit_lib.run_types_pkg.all;
-use vunit_lib.run_special_types_pkg.all;
-use vunit_lib.run_base_pkg.all;
 use vunit_lib.run_pkg.all;
 use vunit_lib.path.all;
 use vunit_lib.queue_pkg.all;
@@ -112,9 +103,6 @@ begin
     variable range_left, range_right : integer;
 
   begin
-    checker_init(display_format => verbose,
-                 file_name      => join(output_path(runner_cfg), "error.csv"),
-                 file_format    => verbose_csv);
     test_runner_setup(runner, runner_cfg);
 
     while test_suite loop

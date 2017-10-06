@@ -8,11 +8,9 @@ end entity;
 architecture tb of tb_standalone is
 begin
   test_runner : process
-    variable filter : log_filter_t;
   begin
     test_runner_setup(runner, runner_cfg);
-    logger_init(runner_trace_logger);
-    pass_level(runner_trace_logger, info, display_handler, filter);
+    set_log_level(display_handler, info);
 
     while test_suite loop
       if run("Test that fails on VUnit check procedure") then

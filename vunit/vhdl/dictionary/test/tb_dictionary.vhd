@@ -5,16 +5,10 @@
 -- Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
-use vunit_lib.log_special_types_pkg.all;
-use vunit_lib.log_types_pkg.all;
-use vunit_lib.log_base_pkg.all;
-use vunit_lib.log_pkg.all;
-use vunit_lib.check_types_pkg.all;
-use vunit_lib.check_special_types_pkg.all;
+use vunit_lib.logger_pkg.all;
+use vunit_lib.checker_pkg.all;
 use vunit_lib.check_pkg.all;
 use vunit_lib.run_types_pkg.all;
-use vunit_lib.run_special_types_pkg.all;
-use vunit_lib.run_base_pkg.all;
 use vunit_lib.run_pkg.all;
 use vunit_lib.dictionary.all;
 use std.textio.all;
@@ -27,63 +21,63 @@ end entity tb_dictionary;
 
 architecture test_fixture of tb_dictionary is
 begin
+
   test_runner : process
     variable value : line;
-    variable log_call_count : natural;
-    variable args : log_call_args_t;
-    variable c : checker_t;
     variable stat : checker_stat_t;
     variable passed : boolean;
     constant empty_dict : frozen_dictionary_t := empty_c;
     constant test_dict : frozen_dictionary_t := "output path : c::\foo\bar, input path : c::\ying\yang, active python runner : true";
     constant corrupt_dict : frozen_dictionary_t := "output path : c::\foo\bar, input path, active python runner : true";
   begin
-    checker_init(c, default_src => "Test Runner", display_format => verbose, file_name => output_path & "error.csv");
-    if has_key(runner_cfg, "active python runner") then
-      if get(runner_cfg, "active python runner") = "true" then
-        checker_init(c, default_src => "Test Runner", display_format => verbose, stop_level => error, file_name => output_path & "error.csv");
-      end if;
-    end if;
+
     test_runner_setup(runner, runner_cfg);
     while test_suite loop
       if run("Test that an empty frozen dictionary has zero length") then
-        check(c, len(empty_dict) = 0, "An empty frozen directory should be of zero length (got " & natural'image(len(empty_dict)) & ").");
+        check(len(empty_dict) = 0, "An empty frozen directory should be of zero length (got " & natural'image(len(empty_dict)) & ").");
+
       elsif run("Test that a non-empty frozen dictionary has correct length") then
-        check(c, len(test_dict) = 3, "Expected length of test dictionary to be 3 (got " & natural'image(len(test_dict)) & ").");
+        check(len(test_dict) = 3, "Expected length of test dictionary to be 3 (got " & natural'image(len(test_dict)) & ").");
+
       elsif run("Test that the existence of a key can be queried") then
-        check(c, has_key(test_dict, "input path"), "Should find ""input path"" in dictionary");
-        check(c, has_key(test_dict, "  active python runner  "), "Should strip key before searching for it in the dictionary");
-        check_false(c, has_key(test_dict, "input_path"), "Shouldn't find ""input_path"" in dictionary");
+        check(has_key(test_dict, "input path"), "Should find ""input path"" in dictionary");
+        check(has_key(test_dict, "  active python runner  "), "Should strip key before searching for it in the dictionary");
+        check_false(has_key(test_dict, "input_path"), "Shouldn't find ""input_path"" in dictionary");
+
       elsif run("Test that getting a non-existing key from a frozen dictionary results in an assertion") then
-        log_call_count := get_log_call_count;
+        mock(dictionary_logger);
         write(value, get(empty_dict, "some_key"));
-        check(c, get_log_call_count = log_call_count + 1, "Expected error log call at this point.");
-        get_log_call_args(args);
-        check(c, args.level = failure, "Expected the error call to be on failure level.");
+        check_only_log(dictionary_logger, "Key error! ""some_key"" wasn't found in """".", failure);
+        unmock(dictionary_logger);
+
       elsif run("Test getting an existing key from a frozen dictionary") then
         passed := get(test_dict, "input path") = "c:\ying\yang";
-        check(c, passed, "Expected ""c:\ying\yang"" when getting input path key from test dictionary (got """ & get(test_dict, "input path") & """).");
+        check(passed, "Expected ""c:\ying\yang"" when getting input path key from test dictionary (got """ & get(test_dict, "input path") & """).");
         passed := get(test_dict, "output path") = "c:\foo\bar";
-        check(c, passed, "Expected ""c:\foo\bar"" when getting ""output path"" key from test dictionary (got """ & get(test_dict, "input path") & """).");
+        check(passed, "Expected ""c:\foo\bar"" when getting ""output path"" key from test dictionary (got """ & get(test_dict, "input path") & """).");
         passed := get(test_dict, " output path ") = "c:\foo\bar";
-        check(c, passed, "Expected ""c:\foo\bar"" when getting "" output path "" key from test dictionary (got """ & get(test_dict, "input path") & """).");
+        check(passed, "Expected ""c:\foo\bar"" when getting "" output path "" key from test dictionary (got """ & get(test_dict, "input path") & """).");
+
       elsif run("Test that a corrupted directory results in an assertion") then
-        log_call_count := get_log_call_count;
+        mock(dictionary_logger);
         write(value, get(corrupt_dict, "input path"));
-        check(c, get_log_call_count = log_call_count + 1, "Expected error log call at this point.");
-        get_log_call_args(args);
-        check(c, args.level = failure, "Expected the error call to be on failure level.");
+        check_only_log(dictionary_logger,
+                       "Corrupt frozen dictionary item "" input path"" in ""output path : c::\foo\bar, input path, active python runner : true"".",
+                       failure);
+        unmock(dictionary_logger);
+
       elsif run("Test that get with default value returns value for existing key") then
         passed := get(test_dict, "input path", "banana") = "c:\ying\yang";
-        check(c, passed, "Expected ""c:\ying\yang"" when getting input path key from test dictionary (got """ & get(test_dict, "input path", "banana") & """).");  
+        check(passed, "Expected ""c:\ying\yang"" when getting input path key from test dictionary (got """ & get(test_dict, "input path", "banana") & """).");
+
       elsif run("Test that get with default value returns default value for non-existing key") then
         passed := get(test_dict, "meatballs", "falafel") = "falafel";
-        check(c, passed, "Expected ""falafel"" when getting meatballs key from test dictionary (got """ & get(test_dict, "meatballs", "falafel") & """).");
+        check(passed, "Expected ""falafel"" when getting meatballs key from test dictionary (got """ & get(test_dict, "meatballs", "falafel") & """).");
       end if;
     end loop;
+
     reset_checker_stat;
-    get_checker_stat(c, stat);
-    test_runner_cleanup(runner, stat);
+    test_runner_cleanup(runner);
     wait;
   end process;
 

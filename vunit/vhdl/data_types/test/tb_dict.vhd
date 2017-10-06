@@ -7,7 +7,6 @@
 library vunit_lib;
 use vunit_lib.check_pkg.all;
 use vunit_lib.run_pkg.all;
-use vunit_lib.run_base_pkg.all;
 
 use work.dict_pkg.all;
 

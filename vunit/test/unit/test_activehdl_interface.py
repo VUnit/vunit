@@ -27,9 +27,8 @@ class TestActiveHDLInterface(unittest.TestCase):
     @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
     @mock.patch("vunit.activehdl_interface.Process", autospec=True)
     def test_compile_project_vhdl(self, process, check_output):
-        library_cfg = join(self.output_path, "library.cfg")
         simif = ActiveHDLInterface(prefix="prefix",
-                                   library_cfg=library_cfg)
+                                   output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.vhd", "")
@@ -55,9 +54,8 @@ class TestActiveHDLInterface(unittest.TestCase):
     @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
     @mock.patch("vunit.activehdl_interface.Process", autospec=True)
     def test_compile_project_vhdl_extra_flags(self, process, check_output):
-        library_cfg = join(self.output_path, "library.cfg")
         simif = ActiveHDLInterface(prefix="prefix",
-                                   library_cfg=library_cfg)
+                                   output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.vhd", "")
@@ -87,7 +85,7 @@ class TestActiveHDLInterface(unittest.TestCase):
     def test_compile_project_verilog(self, process, check_output):
         library_cfg = join(self.output_path, "library.cfg")
         simif = ActiveHDLInterface(prefix="prefix",
-                                   library_cfg=library_cfg)
+                                   output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.v", "")
@@ -114,7 +112,7 @@ class TestActiveHDLInterface(unittest.TestCase):
     def test_compile_project_system_verilog(self, process, check_output):
         library_cfg = join(self.output_path, "library.cfg")
         simif = ActiveHDLInterface(prefix="prefix",
-                                   library_cfg=library_cfg)
+                                   output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.sv", "")
@@ -141,7 +139,7 @@ class TestActiveHDLInterface(unittest.TestCase):
     def test_compile_project_verilog_extra_flags(self, process, check_output):
         library_cfg = join(self.output_path, "library.cfg")
         simif = ActiveHDLInterface(prefix="prefix",
-                                   library_cfg=library_cfg)
+                                   output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.v", "")
@@ -171,7 +169,7 @@ class TestActiveHDLInterface(unittest.TestCase):
     def test_compile_project_verilog_include(self, process, check_output):
         library_cfg = join(self.output_path, "library.cfg")
         simif = ActiveHDLInterface(prefix="prefix",
-                                   library_cfg=library_cfg)
+                                   output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.v", "")
@@ -199,7 +197,7 @@ class TestActiveHDLInterface(unittest.TestCase):
     def test_compile_project_verilog_define(self, process, check_output):
         library_cfg = join(self.output_path, "library.cfg")
         simif = ActiveHDLInterface(prefix="prefix",
-                                   library_cfg=library_cfg)
+                                   output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.v", "")

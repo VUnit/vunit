@@ -22,7 +22,6 @@ class test_runner;
    string       output_path;
    int          test_idx = 0;
    int          exit_without_errors = 0;
-   int          exit_simulation = 0;
    int          trace_fd;
 
    function automatic string search_replace(string original, string old, string replacement);
@@ -128,7 +127,6 @@ class test_runner;
       phase = idle;
       test_idx = 0;
       exit_without_errors = 0;
-      exit_simulation = 0;
 
       trace_fd = $fopen({output_path, "vunit_results"}, "w");
       return 1;
@@ -136,7 +134,6 @@ class test_runner;
 
    function void cleanup();
       exit_without_errors = 1;
-      exit_simulation = 1;
       $stop(0);
    endfunction
 

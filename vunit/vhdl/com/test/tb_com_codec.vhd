@@ -74,9 +74,6 @@ begin
     variable range_left, range_right : integer;
 
   begin
-    checker_init(display_format => verbose,
-                 file_name      => join(output_path(runner_cfg), "error.csv"),
-                 file_format    => verbose_csv);
     test_runner_setup(runner, runner_cfg);
 
     while test_suite loop

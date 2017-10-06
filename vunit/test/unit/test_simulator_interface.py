@@ -166,7 +166,7 @@ Compile failed
             def find_prefix_from_path(cls):
                 return cls.prefix_from_path
 
-        simif = MySimulatorInterface()
+        simif = MySimulatorInterface(output_path="output_path", gui=False)
         simif.name = "simname"
         environ.get.return_value = None
         self.assertEqual(simif.find_prefix(), None)
@@ -261,7 +261,7 @@ def create_simulator_interface():
     """
     Create a simulator interface with fake method
     """
-    simif = SimulatorInterface()
+    simif = SimulatorInterface(output_path="output_path", gui=False)
     simif.compile_source_file_command = mock.create_autospec(simif.compile_source_file_command)
     return simif
 

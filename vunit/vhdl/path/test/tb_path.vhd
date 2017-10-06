@@ -6,10 +6,8 @@
 
 library vunit_lib;
 use vunit_lib.run_pkg.all;
-use vunit_lib.run_base_pkg.all;
 use vunit_lib.run_types_pkg.all;
 use vunit_lib.check_pkg.all;
-use vunit_lib.log_types_pkg.all;
 use vunit_lib.path.all;
 
 entity tb_path is

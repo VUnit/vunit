@@ -7,9 +7,8 @@
 -- Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.string_ops.all;
-use work.lang.all;
-use work.log_types_pkg.all;
-use work.check_pkg.all;
+use work.logger_pkg.all;
+use work.log_pkg.all;
 use std.textio.all;
 
 package dictionary is
@@ -19,19 +18,25 @@ package dictionary is
   function len (
     constant d : frozen_dictionary_t)
     return natural;
+
   impure function get (
     constant d   : frozen_dictionary_t;
     constant key : string)
     return string;
+
   impure function has_key (
     constant d   : frozen_dictionary_t;
     constant key : string)
     return boolean;
+
   impure function get (
-    d             : frozen_dictionary_t; 
-    key           : string; 
-    default_value : string) 
+    d             : frozen_dictionary_t;
+    key           : string;
+    default_value : string)
     return string;
+
+  constant dictionary_logger : logger_t := get_logger("vunit_lib.dictionary");
+
 end package dictionary;
 
 package body dictionary is
@@ -70,7 +75,7 @@ package body dictionary is
           return;
         end if;
       else
-        check(false, "Corrupt frozen dictionary item """ & key_value_pairs(i).all & """ in """ & d & """.", level => failure);
+        failure(dictionary_logger, "Corrupt frozen dictionary item """ & key_value_pairs(i).all & """ in """ & d & """.");
         write(value, string'("will return when log is mocked out during unit test."));
         return;
       end if;
@@ -92,7 +97,7 @@ package body dictionary is
     if status = valid_value then
       return value.all;
     else
-      check(false, "Key error! """ & key & """ wasn't found in """ & d & """.", level => failure);
+      failure(dictionary_logger, "Key error! """ & key & """ wasn't found in """ & d & """.");
       return "will return when log is mocked out during unit test.";
     end if;
 
@@ -110,17 +115,17 @@ package body dictionary is
   end;
 
   impure function get (
-    d             : frozen_dictionary_t; 
-    key           : string; 
-    default_value : string) 
+    d             : frozen_dictionary_t;
+    key           : string;
+    default_value : string)
     return string is
   begin
     if (has_key(d, key) = True) then
       return get(d, key);
     else
       return default_value;
-    end if; 
-  end function get; 
-  
-  
+    end if;
+  end function get;
+
+
 end package body dictionary;

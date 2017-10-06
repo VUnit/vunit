@@ -151,10 +151,6 @@ def find_licensed_files():
             osvvm_directory = abspath(join(VHDL_PATH, 'osvvm'))
             if is_prefix_of(osvvm_directory, abspath(join(root, file_name))):
                 continue
-            osvvm_integration_example_directory = abspath(
-                join(ROOT, 'examples', 'vhdl', 'osvvm_integration', 'src'))
-            if is_prefix_of(osvvm_integration_example_directory, abspath(join(root, file_name))):
-                continue
             if splitext(file_name)[1] in ('.vhd', '.vhdl', '.py', '.v', '.sv'):
                 licensed_files.append(join(root, file_name))
     return licensed_files

@@ -23,10 +23,9 @@ class VsimSimulatorMixin(object):
     simulators such as modelsim and rivierapro
     """
 
-    def __init__(self, prefix, persistent, gui, sim_cfg_file_name):
+    def __init__(self, prefix, persistent, sim_cfg_file_name):
         self._prefix = prefix
         sim_cfg_file_name = abspath(sim_cfg_file_name)
-        self._gui = gui
         self._sim_cfg_file_name = sim_cfg_file_name
 
         prefix = self._prefix  # Avoid circular dependency inhibiting process destruction

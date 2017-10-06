@@ -6,18 +6,14 @@
 
 context vunit_context is
   library vunit_lib;
-  use vunit_lib.lang.all;
   use vunit_lib.string_ops.all;
   use vunit_lib.dictionary.all;
   use vunit_lib.path.all;
-  use vunit_lib.log_types_pkg.all;
-  use vunit_lib.log_special_types_pkg.all;
+  use vunit_lib.logger_pkg.all;
+  use vunit_lib.log_handler_pkg.all;
   use vunit_lib.log_pkg.all;
-  use vunit_lib.check_types_pkg.all;
-  use vunit_lib.check_special_types_pkg.all;
+  use vunit_lib.checker_pkg.all;
   use vunit_lib.check_pkg.all;
   use vunit_lib.run_types_pkg.all;
-  use vunit_lib.run_special_types_pkg.all;
-  use vunit_lib.run_base_pkg.all;
   use vunit_lib.run_pkg.all;
 end context;

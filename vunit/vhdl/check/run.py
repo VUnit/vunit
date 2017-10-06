@@ -9,27 +9,30 @@ from vunit import VUnit
 from vunit.check_preprocessor import CheckPreprocessor
 from glob import glob
 
+import sys
+sys.path.append(join(dirname(__file__), "tools"))
+
+import generate_check_equal
+import generate_check_match
+
+generate_check_equal.main()
+generate_check_match.main()
+
+
 vhdl_path = join(dirname(__file__), "test")
-ui = VUnit.from_argv(compile_builtins=False)
-ui.add_builtins(mock_log=True)
+ui = VUnit.from_argv()
+
 lib = ui.add_library('lib')
 lib.add_source_files(join(vhdl_path, "test_support.vhd"))
 
-if ui.vhdl_standard in ('2002', '2008'):
-    lib.add_source_files(join(vhdl_path, "test_count.vhd"))
-    lib.add_source_files(join(vhdl_path, "test_types.vhd"))
-elif ui.vhdl_standard == '93':
-    lib.add_source_files(join(vhdl_path, "test_count93.vhd"))
-
-if ui.vhdl_standard == '2008':
-    lib.add_source_files(join(vhdl_path, "tb_check_relation.vhd"), [CheckPreprocessor()])
-else:
-    lib.add_source_files(join(vhdl_path, "tb_check_relation93_2002.vhd"), [CheckPreprocessor()])
-
 for file_name in glob(join(vhdl_path, "tb_*.vhd")):
-    if basename(file_name).startswith("tb_check_relation"):
+    if ui.vhdl_standard != '2008' and file_name.endswith("2008.vhd"):
         continue
-    lib.add_source_files(file_name)
+
+    if basename(file_name).startswith("tb_check_relation"):
+        lib.add_source_files(file_name, preprocessors=[CheckPreprocessor()])
+    else:
+        lib.add_source_files(file_name)
 
 tb_check = lib.entity("tb_check")
 tb_check.add_config(generics=dict(use_check_not_check_true=True), name="using check")

@@ -498,11 +498,11 @@ All these test cases will fail
     ==========================================================================================
     Some failed!
 
-Counting Errors with VUnit Check Library
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Counting Errors with VUnit Logging/Check Libraries
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you use the VUnit check library you can set the :doc:`stop_level <../check/user_guide>` such that the
-simulation continues on a check error. Such failing checks will be remembered and the test will fail despite
+If you use the VUnit check/logging library you can set the :doc:`stop_level <../logging/user_guide>` such that the
+simulation continues on an error. Such errors will be remembered and the test will fail despite
 reaching the ``test_runner_cleanup`` call.
 
 .. code-block:: vhdl
@@ -510,7 +510,7 @@ reaching the ``test_runner_cleanup`` call.
     test_runner : process
     begin
       test_runner_setup(runner, runner_cfg);
-      checker_init(stop_level => failure);
+      set_stop_level(failure);
 
       while test_suite loop
         if run("Test that fails multiple times but doesn't stop") then
@@ -546,8 +546,8 @@ reaching the ``test_runner_cleanup`` call.
 Foreign Error Mechanisms
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you have some other error handling mechanism that doesn't stop on error you can still make a test fail as
-long as you can provide the error state to the ``test_runner_cleanup`` procedure as a boolean value.
+If you have some other error handling mechanism that doesn't stop on
+error you can still make a test fail using a simple check.
 
 .. code-block:: vhdl
 
@@ -562,18 +562,19 @@ long as you can provide the error state to the ``test_runner_cleanup`` procedure
         end if;
       end loop;
 
-      test_runner_cleanup(runner, error_counter > 0);
+      check(error_counter = 0, "External error");
+      test_runner_cleanup(runner);
     end process;
 
 .. code-block:: console
 
-    > python run.py *mech*
-    Starting lib.tb_other_error_mechanism.Test that fails on other mechanism
-    simulation stopped @0ms with status 1
-    fail (P=0 S=0 F=1 T=1) lib.tb_other_error_mechanism.Test that fails on other mechanism (1.1 seconds)
+    > python run.py *external_errors*
+    Starting lib.tb_external_errors.Test that fails on external error
+    ERROR: External error
+    fail (P=0 S=0 F=1 T=1) lib.tb_external_errors.Test that fails on external error (1.1 seconds)
 
     ==== Summary ===========================================================================
-    fail lib.tb_other_error_mechanism.Test that fails on other mechanism (1.1 seconds)
+    fail lib.tb_external_errors.Test that fails on external error (1.1 seconds)
     ========================================================================================
     pass 0 of 1
     fail 1 of 1
@@ -603,11 +604,8 @@ value ``runner_cfg_default`` which will cause all test cases to be run.
     architecture tb of tb_standalone is
     begin
       test_runner : process
-        variable filter : log_filter_t;
       begin
         test_runner_setup(runner, runner_cfg);
-        logger_init(runner_trace_logger);
-        pass_level(runner_trace_logger, info, display_handler, filter);
 
         while test_suite loop
           if run("Test that fails on VUnit check procedure") then
