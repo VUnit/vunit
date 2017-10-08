@@ -118,9 +118,13 @@ begin
         check_false(check_false_checker, pass, true, result("for my data."));
         assert_true(not pass, "Should return pass = false on failing check");
         check_only_log(get_logger(check_false_checker), "False check failed for my data.", default_level);
+
+        pass := check_false(check_false_checker, true, result("for my data."), default_level);
+        assert_true(not pass, "Should return pass = false on failing check");
+        check_only_log(get_logger(check_false_checker), "False check failed for my data.", default_level);
         unmock(get_logger(check_false_checker));
         verify_passed_checks(check_false_checker,stat, 0);
-        verify_failed_checks(check_false_checker,stat, 2);
+        verify_failed_checks(check_false_checker,stat, 3);
         reset_checker_stat(check_false_checker);
 
       elsif run("Test should pass on false and logic 0 inputs to sequential checks") then
@@ -136,7 +140,10 @@ begin
         check_false(check_false_checker,false);
         check_false(check_false_checker,pass, false);
         assert_true(pass, "Should return pass = true on passing check");
-        verify_passed_checks(check_false_checker, stat, 2);
+        pass := check_false(check_false_checker, false);
+        assert_true(pass, "Should return pass = true on passing check");
+        verify_passed_checks(stat, 3);
+        verify_passed_checks(check_false_checker, stat, 3);
 
       elsif run("Test pass message") then
         mock(check_logger);

@@ -164,6 +164,16 @@ begin
       end if;
     end;
 
+    impure function internal_check(checker : checker_t; expr : boolean; msg : string := result("."))
+      return boolean is
+    begin
+      if use_check_not_check_true then
+        return check(checker, expr, msg);
+      else
+        return check_true(checker, expr, msg);
+      end if;
+    end;
+
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -181,7 +191,9 @@ begin
         internal_check(check_checker, true);
         internal_check(check_checker, pass, true);
         assert_true(pass, "Should return pass = true on passing check");
-        verify_passed_checks(check_checker, stat, 2);
+        pass := internal_check(check_checker, true);
+        assert_true(pass, "Should return pass = true on passing check");
+        verify_passed_checks(check_checker, stat, 3);
 
       elsif run("Test pass message") then
         mock(check_logger);
@@ -226,8 +238,12 @@ begin
         internal_check(check_checker, pass, false, result("for my data."));
         assert_true(not pass, "Should return pass = false on failing check");
         check_only_log(get_logger(check_checker), prefix & "failed for my data.", default_level);
+
+        pass := internal_check(check_checker, false, result("for my data."));
+        assert_true(not pass, "Should return pass = false on failing check");
+        check_only_log(get_logger(check_checker), prefix & "failed for my data.", default_level);
         unmock(get_logger(check_checker));
-        verify_failed_checks(check_checker, stat, 2);
+        verify_failed_checks(check_checker, stat, 3);
         reset_checker_stat(check_checker);
 
       elsif run("Test should be possible to use concurrently") then

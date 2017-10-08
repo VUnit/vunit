@@ -156,6 +156,12 @@ begin
           check_implication(my_checker, pass, test_antecedents(i), test_consequents(i));
           verify_result(i, my_checker, stat);
           unmock(get_logger(my_checker));
+
+          mock(get_logger(my_checker));
+          get_checker_stat(my_checker, stat);
+          pass := check_implication(my_checker, test_antecedents(i), test_consequents(i));
+          verify_result(i, my_checker, stat);
+          unmock(get_logger(my_checker));
         end loop;
 
       elsif run("Test should be possible to use concurrently") then

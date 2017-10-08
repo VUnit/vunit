@@ -87,7 +87,9 @@ begin
         check_relation(my_checker, data > 3);
         check_relation(my_checker, pass, data > 3);
         assert_true(pass, "Should return pass = true on passing check");
-        verify_passed_checks(my_checker, stat, 2);
+        pass := check_relation(my_checker, data > 3);
+        assert_true(pass, "Should return pass = true on passing check");
+        verify_passed_checks(my_checker, stat, 3);
 
       elsif run("Test pass message") then
         data := 5;
@@ -157,9 +159,13 @@ begin
         check_relation(my_checker, pass, len("foo") = 4);
         assert_true(not pass, "Should return pass = false on failing check");
         check_only_log(my_logger, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.", default_level);
+
+        pass := check_relation(my_checker, len("foo") = 4);
+        assert_true(not pass, "Should return pass = false on failing check");
+        check_only_log(my_logger, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.", default_level);
         unmock(my_logger);
         verify_passed_checks(my_checker, stat, 0);
-        verify_failed_checks(my_checker, stat, 2);
+        verify_failed_checks(my_checker, stat, 3);
         reset_checker_stat(my_checker);
 
       elsif run("Test that custom types can be used") then
@@ -188,9 +194,13 @@ begin
         check_relation(my_checker, pass, cash > cash_t'((100,0)));
         assert_true(not pass, "Should return pass = false on failing check");
         check_only_log(my_logger, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.", default_level);
+
+        pass := check_relation(my_checker, cash > cash_t'((100,0)));
+        assert_true(not pass, "Should return pass = false on failing check");
+        check_only_log(my_logger, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.", default_level);
         unmock(my_logger);
         verify_passed_checks(my_checker, stat, 0);
-        verify_failed_checks(my_checker, stat, 2);
+        verify_failed_checks(my_checker, stat, 3);
         reset_checker_stat(my_checker);
       end if;
     end loop;

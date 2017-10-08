@@ -57,13 +57,6 @@ parameter using brackets. For example
 The full verbose API description can always be found in
 `check\_api.vhd <src/check_api.vhd>`__.
 
-There are also a number of functions in the check library. These are
-only available for the default checker and the reason is that
-``checker_t`` is defined as a protected type in the VHDL 2002 and 2008
-implementations. Protected types cannot be input to a function so in
-these cases the check package will provide a procedure which will return
-the same result in an output parameter.
-
 Checker Creation
 ----------------
 
@@ -280,6 +273,7 @@ or you can use this function which returns the same information
 .. code-block:: vhdl
 
     impure function check(
+     [constant checker   : in  checker_t;]
       constant expr      : in  boolean;
       constant msg       : in  string      := result(".");
       constant level     : in  log_level_t := dflt;
@@ -310,7 +304,8 @@ or you can use any of the following subprograms to get more details.
 
 .. code-block:: vhdl
 
-    impure function get_checker_stat
+    impure function get_checker_stat[(
+      constant checker : in  checker_t);]
       return checker_stat_t;
 
 ``checker_stat_t`` is a record containing pass/fail information.
@@ -378,8 +373,8 @@ Point Checks
 Common to all point checks is that the condition for failure is
 evaluated at a single point in time, either when the subprogram is
 called as part of sequential code or synchronous to a clock in a clocked
-and usually concurrent procedure call. There are five unclocked versions
-of each point check and they correspond to the function and four
+and usually concurrent procedure call. There are six unclocked versions
+of each point check and they correspond to the two function and four
 procedures previously described for ``check``. The only difference to the
 parameter lists is that the boolean ``expr`` parameter is replaced by
 one or more parameters specific to the point check.
@@ -399,11 +394,12 @@ parameters.
       constant line_num  : in natural     := 0;
       constant file_name : in string      := "");
 
-The function has the following format.
+The functions have the following format.
 
 .. code-block:: vhdl
 
     impure function check<_name>(
+      [constant checker   : in  checker_t;]
       <specific parameters>
       constant msg       : in  string      := result<(".")>;
       constant level     : in  log_level_t := dflt;
@@ -553,7 +549,7 @@ Relation Checks
 
 Relation checks are used to check whether or not a relation holds
 between two expressions, for example if ``(a + b) = c``. They support
-the following five unclocked formats.
+the following six unclocked formats.
 
 .. code-block:: vhdl
 
@@ -568,6 +564,7 @@ the following five unclocked formats.
 .. code-block:: vhdl
 
     impure function check_<name>(
+     [constant checker         : in  checker_t;]
       <specific parameters>
       constant msg             : in string := result;
       constant level           : in log_level_t := dflt;

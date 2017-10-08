@@ -9,59 +9,69 @@ from string import Template
 from generate_check_equal import replace_region
 
 api_template = """  procedure check_match(
-    constant got             : in $got_type;
-    constant expected        : in $expected_type;
-    constant msg             : in string := check_result_tag_c;
-    constant level           : in log_level_t := null_log_level;
-    constant line_num        : in natural     := 0;
-    constant file_name       : in string      := "");
+    constant got       : in $got_type;
+    constant expected  : in $expected_type;
+    constant msg       : in string      := check_result_tag_c;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "");
 
   procedure check_match(
-    variable pass            : out boolean;
-    constant got             : in $got_type;
-    constant expected        : in $expected_type;
-    constant msg             : in string := check_result_tag_c;
-    constant level           : in log_level_t := null_log_level;
-    constant line_num        : in natural     := 0;
-    constant file_name       : in string      := "");
+    variable pass      : out boolean;
+    constant got       : in $got_type;
+    constant expected  : in $expected_type;
+    constant msg       : in string      := check_result_tag_c;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "");
 
   procedure check_match(
-    constant checker         : in checker_t;
-    variable pass            : out boolean;
-    constant got             : in $got_type;
-    constant expected        : in $expected_type;
-    constant msg             : in string := check_result_tag_c;
-    constant level           : in log_level_t := null_log_level;
-    constant line_num        : in natural     := 0;
-    constant file_name       : in string      := "");
+    constant checker   : in checker_t;
+    variable pass      : out boolean;
+    constant got       : in $got_type;
+    constant expected  : in $expected_type;
+    constant msg       : in string      := check_result_tag_c;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "");
 
   procedure check_match(
-    constant checker         : in checker_t;
-    constant got             : in $got_type;
-    constant expected        : in $expected_type;
-    constant msg             : in string := check_result_tag_c;
-    constant level           : in log_level_t := null_log_level;
-    constant line_num        : in natural     := 0;
-    constant file_name       : in string      := "");
+    constant checker   : in checker_t;
+    constant got       : in $got_type;
+    constant expected  : in $expected_type;
+    constant msg       : in string      := check_result_tag_c;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "");
 
   impure function check_match(
-    constant got             : in $got_type;
-    constant expected        : in $expected_type;
-    constant msg             : in string := check_result_tag_c;
-    constant level           : in log_level_t := null_log_level;
-    constant line_num        : in natural     := 0;
-    constant file_name       : in string      := "")
+    constant got       : in $got_type;
+    constant expected  : in $expected_type;
+    constant msg       : in string      := check_result_tag_c;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "")
+    return boolean;
+
+  impure function check_match(
+    constant checker   : in checker_t;
+    constant got       : in $got_type;
+    constant expected  : in $expected_type;
+    constant msg       : in string      := check_result_tag_c;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "")
     return boolean;
 
 """
 
 impl_template = """  procedure check_match(
-    constant got             : in $got_type;
-    constant expected        : in $expected_type;
-    constant msg             : in string := check_result_tag_c;
-    constant level           : in log_level_t := null_log_level;
-    constant line_num        : in natural     := 0;
-    constant file_name       : in string      := "") is
+    constant got       : in $got_type;
+    constant expected  : in $expected_type;
+    constant msg       : in string      := check_result_tag_c;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "") is
     variable pass : boolean;
   begin
     -- pragma translate_off
@@ -70,13 +80,13 @@ impl_template = """  procedure check_match(
   end;
 
   procedure check_match(
-    variable pass            : out boolean;
-    constant got             : in $got_type;
-    constant expected        : in $expected_type;
-    constant msg             : in string := check_result_tag_c;
-    constant level           : in log_level_t := null_log_level;
-    constant line_num        : in natural     := 0;
-    constant file_name       : in string      := "") is
+    variable pass      : out boolean;
+    constant got       : in $got_type;
+    constant expected  : in $expected_type;
+    constant msg       : in string      := check_result_tag_c;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "") is
   begin
     -- pragma translate_off
     check_match(default_checker, pass, got, expected, msg, level, line_num, file_name);
@@ -84,14 +94,14 @@ impl_template = """  procedure check_match(
   end;
 
   procedure check_match(
-    constant checker         : in checker_t;
-    variable pass            : out boolean;
-    constant got             : in $got_type;
-    constant expected        : in $expected_type;
-    constant msg             : in string := check_result_tag_c;
-    constant level           : in log_level_t := null_log_level;
-    constant line_num        : in natural     := 0;
-    constant file_name       : in string      := "") is
+    constant checker   : in checker_t;
+    variable pass      : out boolean;
+    constant got       : in $got_type;
+    constant expected  : in $expected_type;
+    constant msg       : in string      := check_result_tag_c;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "") is
   begin
     -- pragma translate_off
     if std_match(got, expected) then
@@ -122,13 +132,13 @@ impl_template = """  procedure check_match(
   end;
 
   procedure check_match(
-    constant checker         : in checker_t;
-    constant got             : in $got_type;
-    constant expected        : in $expected_type;
-    constant msg             : in string := check_result_tag_c;
-    constant level           : in log_level_t := null_log_level;
-    constant line_num        : in natural     := 0;
-    constant file_name       : in string      := "") is
+    constant checker   : in checker_t;
+    constant got       : in $got_type;
+    constant expected  : in $expected_type;
+    constant msg       : in string      := check_result_tag_c;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "") is
     variable pass : boolean;
   begin
     -- pragma translate_off
@@ -137,17 +147,34 @@ impl_template = """  procedure check_match(
   end;
 
   impure function check_match(
-    constant got             : in $got_type;
-    constant expected        : in $expected_type;
-    constant msg             : in string := check_result_tag_c;
-    constant level           : in log_level_t := null_log_level;
-    constant line_num        : in natural     := 0;
-    constant file_name       : in string      := "")
+    constant got       : in $got_type;
+    constant expected  : in $expected_type;
+    constant msg       : in string      := check_result_tag_c;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "")
     return boolean is
     variable pass : boolean;
   begin
     -- pragma translate_off
     check_match(default_checker, pass, got, expected, msg, level, line_num, file_name);
+    -- pragma translate_on
+    return pass;
+  end;
+
+  impure function check_match(
+    constant checker   : in checker_t;
+    constant got       : in $got_type;
+    constant expected  : in $expected_type;
+    constant msg       : in string      := check_result_tag_c;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "")
+    return boolean is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_match(checker, pass, got, expected, msg, level, line_num, file_name);
     -- pragma translate_on
     return pass;
   end;
@@ -171,7 +198,9 @@ test_template = """
         check_match(my_checker, $left_pass, $right_pass);
         check_match(my_checker, pass, $left_pass, $right_pass);
         assert_true(pass, "Should return pass = true on passing check");
-        verify_passed_checks(my_checker,stat, 2);
+        pass := check_match(my_checker, $left_pass, $right_pass);
+        assert_true(pass, "Should return pass = true on passing check");
+        verify_passed_checks(my_checker,stat, 3);
 
       elsif run("Test pass message for $left_type matching $right_type") then
         mock(check_logger);
@@ -219,9 +248,14 @@ test_template = """
         check_match(my_checker, pass, $left_pass, $right_fail);
         assert_true(not pass, "Should return pass = false on failing check");
         check_only_log(my_logger, "Match check failed - Got $pass_str. Expected $fail_str.", default_level);
+
+        pass := check_match(my_checker, $left_pass, $right_fail, result("for my data"));
+        assert_true(not pass, "Should return pass = false on failing check");
+        check_only_log(my_logger, "Match check failed for my data - Got $pass_str. Expected $fail_str.",
+                       default_level);
         unmock(my_logger);
         verify_passed_checks(my_checker, stat, 0);
-        verify_failed_checks(my_checker, stat, 2);
+        verify_failed_checks(my_checker, stat, 3);
         reset_checker_stat(my_checker);
 """
 

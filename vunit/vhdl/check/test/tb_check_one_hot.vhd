@@ -119,6 +119,13 @@ begin
         assert_true(pass, "Should return pass = true on passing check");
         verify_passed_checks(my_checker3, stat, 2);
 
+        get_checker_stat(my_checker3, stat);
+        pass := check_one_hot(my_checker3, "1000");
+        assert_true(pass, "Should return pass = true on passing check");
+        pass := check_one_hot(my_checker3, "HL00");
+        assert_true(pass, "Should return pass = true on passing check");
+        verify_passed_checks(my_checker3, stat, 2);
+
       elsif run("Test pass message") then
         mock(check_logger);
         check_one_hot("10000");
@@ -207,6 +214,14 @@ begin
         assert_true(not pass, "Should return pass = false on failing check");
         check_only_log(get_logger(my_checker3), "One-hot check failed - Got 0_100H.", info);
 
+        pass := check_one_hot(my_checker3, "01001");
+        assert_true(not pass, "Should return pass = false on failing check");
+        check_only_log(get_logger(my_checker3), "One-hot check failed - Got 0_1001.", info);
+
+        pass := check_one_hot(my_checker3, "0100H");
+        assert_true(not pass, "Should return pass = false on failing check");
+        check_only_log(get_logger(my_checker3), "One-hot check failed - Got 0_100H.", info);
+
         check_one_hot(my_checker3, pass, "00000");
         assert_true(not pass, "Should return pass = false on failing check");
         check_only_log(get_logger(my_checker3), "One-hot check failed - Got 0_0000.", info);
@@ -214,10 +229,17 @@ begin
         check_one_hot(my_checker3, pass, "0L00L");
         assert_true(not pass, "Should return pass = false on failing check");
         check_only_log(get_logger(my_checker3), "One-hot check failed - Got 0_L00L.", info);
-        mock(get_logger(my_checker3));
 
+        pass := check_one_hot(my_checker3, "00000");
+        assert_true(not pass, "Should return pass = false on failing check");
+        check_only_log(get_logger(my_checker3), "One-hot check failed - Got 0_0000.", info);
+
+        pass := check_one_hot(my_checker3, "0L00L");
+        assert_true(not pass, "Should return pass = false on failing check");
+        check_only_log(get_logger(my_checker3), "One-hot check failed - Got 0_L00L.", info);
+        unmock(get_logger(my_checker3));
         verify_passed_checks(my_checker3, stat, 0);
-        verify_failed_checks(my_checker3, stat, 8);
+        verify_failed_checks(my_checker3, stat, 12);
         reset_checker_stat(my_checker3);
 
       elsif run("Test should fail on unknowns") then
@@ -246,10 +268,13 @@ begin
         check_one_hot(my_checker3, pass, "0000X");
         assert_true(not pass, "Should return pass = false on failing check");
         check_only_log(get_logger(my_checker3), "One-hot check failed - Got 0_000X.", info);
-        unmock(get_logger(my_checker3));
 
+        pass := check_one_hot(my_checker3, "0000X");
+        assert_true(not pass, "Should return pass = false on failing check");
+        check_only_log(get_logger(my_checker3), "One-hot check failed - Got 0_000X.", info);
+        unmock(get_logger(my_checker3));
         verify_passed_checks(my_checker3, stat, 0);
-        verify_failed_checks(my_checker3, stat, 2);
+        verify_failed_checks(my_checker3, stat, 3);
         reset_checker_stat(my_checker3);
 
       elsif run("Test should be possible to use concurrently") then
