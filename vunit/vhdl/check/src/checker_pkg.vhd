@@ -45,10 +45,14 @@ package checker_pkg is
   impure function get_checker(id : natural) return checker_t;
 
   impure function new_checker(name              : string;
+                              logger            : logger_t;
+                              default_log_level : log_level_t := error) return checker_t;
+  impure function new_checker(name              : string;
                               default_log_level : log_level_t := error) return checker_t;
 
   impure function get_logger(checker            : checker_t) return logger_t;
   impure function get_default_log_level(checker : checker_t) return log_level_t;
+  procedure set_default_log_level(checker : checker_t; default_log_level : log_level_t);
 
   impure function get_stat(checker : checker_t) return checker_stat_t;
   impure function get_name(checker : checker_t) return string;
@@ -107,8 +111,6 @@ package body checker_pkg is
 
   impure function new_checker(name              : string;
                               default_log_level : log_level_t := error) return checker_t is
-    variable checker : checker_t;
-    variable id : natural;
     variable logger : logger_t;
   begin
 
@@ -119,6 +121,15 @@ package body checker_pkg is
       logger := get_logger(name, parent => get_logger("check"));
     end if;
 
+    return new_checker(name, logger, default_log_level);
+  end;
+
+  impure function new_checker(name              : string;
+                              logger            : logger_t;
+                              default_log_level : log_level_t := error) return checker_t is
+    variable checker : checker_t;
+    variable id      : natural;
+  begin
     for i in 0 to num_checkers-1 loop
       if get_name(get_checker(i)) = name then
         failure("Checker with name """ & name & """ already exists.");
@@ -127,7 +138,7 @@ package body checker_pkg is
     end loop;
 
     checker := (p_data => allocate(checker_length));
-    id := length(checkers);
+    id      := length(checkers);
     resize(checkers, length(checkers)+1);
     set(checkers, id, to_integer(checker.p_data));
 
@@ -147,6 +158,11 @@ package body checker_pkg is
   impure function get_default_log_level(checker : checker_t) return log_level_t is
   begin
     return log_level_t'val(get(checker.p_data, default_log_level_idx));
+  end;
+
+  procedure set_default_log_level(checker : checker_t; default_log_level : log_level_t) is
+  begin
+    set(checker.p_data, default_log_level_idx, log_level_t'pos(default_log_level));
   end;
 
   procedure reset_stat(checker : checker_t) is

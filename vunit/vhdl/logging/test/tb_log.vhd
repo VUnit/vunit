@@ -14,7 +14,7 @@ use work.log_levels_pkg.all;
 use work.logger_pkg.all;
 use work.log_handler_pkg.all;
 use work.core_pkg.all;
-use work.assert_pkg.all;
+use work.test_support_pkg.all;
 use work.print_pkg.all;
 
 entity tb_log is

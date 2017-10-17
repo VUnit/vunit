@@ -5,7 +5,7 @@
 # Copyright (c) 2015-2017, Lars Asplund lars.anders.asplund@gmail.com
 
 from os.path import join, dirname, basename
-from vunit import VUnit
+from vunit import VUnit, ROOT
 from vunit.check_preprocessor import CheckPreprocessor
 from glob import glob
 
@@ -18,14 +18,14 @@ import generate_check_match
 generate_check_equal.main()
 generate_check_match.main()
 
-
-vhdl_path = join(dirname(__file__), "test")
 ui = VUnit.from_argv()
 
 lib = ui.add_library('lib')
-lib.add_source_files(join(vhdl_path, "test_support.vhd"))
+lib.add_source_files(join(ROOT, "vunit", "vhdl", "check", "test", "test_support.vhd"))
+logging_tb_lib = ui.add_library('logging_tb_lib')
+logging_tb_lib.add_source_files(join(ROOT, "vunit", "vhdl", "logging", "test", "test_support_pkg.vhd"))
 
-for file_name in glob(join(vhdl_path, "tb_*.vhd")):
+for file_name in glob(join(ROOT, "vunit", "vhdl", "check", "test", "tb_*.vhd")):
     if ui.vhdl_standard != '2008' and file_name.endswith("2008.vhd"):
         continue
 

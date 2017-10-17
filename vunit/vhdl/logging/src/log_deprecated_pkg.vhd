@@ -63,10 +63,12 @@ package body log_deprecated_pkg is
     append          :       boolean                 := false) is
 
     variable logger_display_handler, logger_file_handler : log_handler_t;
+    variable new_logger : boolean := false;
 
     procedure create_logger is
       variable name : line;
     begin
+      new_logger := true;
       if default_src = "" then
         write(name, "anonymous" & integer'image(get(anonymous_counter, 0)));
         warning("Empty string logger names not supported. Using """ & name.all & """");
@@ -111,18 +113,20 @@ package body log_deprecated_pkg is
       end function;
     begin
       logger_display_handler := get_logger_display_handler;
-      if logger_display_handler = null_handler then
+      if new_logger or (logger_display_handler = null_handler) then
         logger_display_handler := new_log_handler(stdout_file_name, real_format(display_format), true);
       else
         init_log_handler(logger_display_handler, real_format(display_format), stdout_file_name, true);
       end if;
 
       logger_file_handler := get_logger_file_handler;
-      if logger_display_handler = null_handler then
+      if new_logger or (logger_display_handler = null_handler) then
         logger_file_handler := new_log_handler(file_name, real_format(file_format), false);
       else
         init_log_handler(logger_file_handler, real_format(file_format), file_name, false);
       end if;
+
+      set_log_handlers(logger, (logger_display_handler, logger_file_handler));
     end procedure;
 
     procedure filter_output (

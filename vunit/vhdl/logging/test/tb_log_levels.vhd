@@ -9,7 +9,7 @@ use vunit_lib.run_pkg.all;
 
 use work.log_levels_pkg.all;
 use work.core_pkg.all;
-use work.assert_pkg.all;
+use work.test_support_pkg.all;
 
 entity tb_log_levels is
   generic (
