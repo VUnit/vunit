@@ -159,7 +159,7 @@ with ``logger_init``. Typically you would have something like this.
 
 .. code-block:: vhdl
 
-    logger_init(display_format => verbose, file_format => verbose_csv, file_name = "path/to/my/logs/my_log.csv");
+    logger_init(display_format => verbose, file_format => verbose_csv, file_name => "path/to/my/logs/my_log.csv");
 
 The default file name is ``log.csv`` in the current directory and the
 default file format is ``off``. By default an existing file will be
