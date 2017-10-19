@@ -1725,6 +1725,51 @@ package check_pkg is
     constant file_name       : in string      := "")
     return boolean;
 
+  procedure check_equal(
+    constant got             : in real;
+    constant expected        : in real;
+    constant msg             : in string := check_result_tag_c;
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  procedure check_equal(
+    variable pass            : out boolean;
+    constant got             : in real;
+    constant expected        : in real;
+    constant msg             : in string := check_result_tag_c;
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  procedure check_equal(
+    variable checker         : inout checker_t;
+    variable pass            : out boolean;
+    constant got             : in real;
+    constant expected        : in real;
+    constant msg             : in string := check_result_tag_c;
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  procedure check_equal(
+    variable checker         : inout checker_t;
+    constant got             : in real;
+    constant expected        : in real;
+    constant msg             : in string := check_result_tag_c;
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "");
+
+  impure function check_equal(
+    constant got             : in real;
+    constant expected        : in real;
+    constant msg             : in string := check_result_tag_c;
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "")
+    return boolean;
+
   -----------------------------------------------------------------------------
   -- check_match
   -----------------------------------------------------------------------------
