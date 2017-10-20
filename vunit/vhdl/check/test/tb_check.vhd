@@ -60,7 +60,7 @@ begin
   check_runner : process
     variable pass : boolean;
     variable stat : checker_stat_t;
-    constant pass_level : log_level_t := verbose;
+    constant pass_level : log_level_t := vunit_lib.checker_pkg.pass;
     constant default_level : log_level_t := error;
 
     function prefix return string is

@@ -32,7 +32,7 @@ architecture test_fixture of tb_check_false is
   constant check_false_checker3 : checker_t := new_checker("checker3", default_log_level => info);
   constant check_false_checker4 : checker_t := new_checker("checker4");
 
-  constant pass_level : log_level_t := verbose;
+  constant pass_level : log_level_t := pass;
   constant default_level : log_level_t := error;
 begin
   clock: process is

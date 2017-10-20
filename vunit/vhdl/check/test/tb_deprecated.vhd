@@ -18,7 +18,7 @@ use vunit_lib.checker_pkg.all;
 use vunit_lib.check_deprecated_pkg.all;
 use vunit_lib.log_deprecated_pkg.all;
 use vunit_lib.core_pkg.all;
-
+use vunit_lib.ansi_pkg.all;
 library logging_tb_lib;
 use logging_tb_lib.test_support_pkg.all;
 
@@ -110,6 +110,82 @@ begin
         check_core_failure("Changing checker name is not supported");
 
         unmock_core_failure;
+      elsif run("Test enabling and disabling of pass messages for custom checker") then
+        my_checker := new_checker("my_checker");
+        my_checker_logger := get_logger(my_checker);
+
+        check(get_log_level(my_checker_logger, display_handler) = info);
+        check(get_log_level(my_checker_logger, file_handler) = debug);
+        enable_pass_msg(my_checker, display_handler);
+        check(get_log_level(my_checker_logger, display_handler) = pass);
+        check(get_log_level(my_checker_logger, file_handler) = debug);
+        disable_pass_msg(my_checker, display_handler);
+        check(get_log_level(my_checker_logger, display_handler) = debug);
+        check(get_log_level(my_checker_logger, file_handler) = debug);
+
+        set_log_level(my_checker_logger, display_handler, log_level_t'leftof(pass));
+        enable_pass_msg(my_checker, display_handler);
+        check(get_log_level(my_checker_logger, display_handler) = log_level_t'leftof(pass));
+        check(get_log_level(my_checker_logger, file_handler) = debug);
+        set_log_level(my_checker_logger, display_handler, log_level_t'rightof(pass));
+        disable_pass_msg(my_checker, display_handler);
+        check(get_log_level(my_checker_logger, display_handler) = log_level_t'rightof(pass));
+        check(get_log_level(my_checker_logger, file_handler) = debug);
+
+        enable_pass_msg(my_checker);
+        check(get_log_level(my_checker_logger, display_handler) = pass);
+        check(get_log_level(my_checker_logger, file_handler) = pass);
+        disable_pass_msg(my_checker);
+        check(get_log_level(my_checker_logger, display_handler) = debug);
+        check(get_log_level(my_checker_logger, file_handler) = debug);
+
+        set_log_level(my_checker_logger, display_handler, log_level_t'leftof(pass));
+        set_log_level(my_checker_logger, file_handler, log_level_t'leftof(pass));
+        enable_pass_msg(my_checker);
+        check(get_log_level(my_checker_logger, display_handler) = log_level_t'leftof(pass));
+        check(get_log_level(my_checker_logger, file_handler) = log_level_t'leftof(pass));
+        set_log_level(my_checker_logger, display_handler, log_level_t'rightof(pass));
+        set_log_level(my_checker_logger, file_handler, log_level_t'rightof(pass));
+        disable_pass_msg(my_checker);
+        check(get_log_level(my_checker_logger, display_handler) = log_level_t'rightof(pass));
+        check(get_log_level(my_checker_logger, file_handler) = log_level_t'rightof(pass));
+
+      elsif run("Test enabling and disabling of pass messages for default checker") then
+        check(get_log_level(check_logger, display_handler) = info);
+        check(get_log_level(check_logger, file_handler) = debug);
+        enable_pass_msg(display_handler);
+        check(get_log_level(check_logger, display_handler) = pass);
+        check(get_log_level(check_logger, file_handler) = debug);
+        disable_pass_msg(display_handler);
+        check(get_log_level(check_logger, display_handler) = debug);
+        check(get_log_level(check_logger, file_handler) = debug);
+
+        set_log_level(check_logger, display_handler, log_level_t'leftof(pass));
+        enable_pass_msg(display_handler);
+        check(get_log_level(check_logger, display_handler) = log_level_t'leftof(pass));
+        check(get_log_level(check_logger, file_handler) = debug);
+        set_log_level(check_logger, display_handler, log_level_t'rightof(pass));
+        disable_pass_msg(display_handler);
+        check(get_log_level(check_logger, display_handler) = log_level_t'rightof(pass));
+        check(get_log_level(check_logger, file_handler) = debug);
+
+        enable_pass_msg;
+        check(get_log_level(check_logger, display_handler) = pass);
+        check(get_log_level(check_logger, file_handler) = pass);
+        disable_pass_msg;
+        check(get_log_level(check_logger, display_handler) = debug);
+        check(get_log_level(check_logger, file_handler) = debug);
+
+        set_log_level(check_logger, display_handler, log_level_t'leftof(pass));
+        set_log_level(check_logger, file_handler, log_level_t'leftof(pass));
+        enable_pass_msg;
+        check(get_log_level(check_logger, display_handler) = log_level_t'leftof(pass));
+        check(get_log_level(check_logger, file_handler) = log_level_t'leftof(pass));
+        set_log_level(check_logger, display_handler, log_level_t'rightof(pass));
+        set_log_level(check_logger, file_handler, log_level_t'rightof(pass));
+        disable_pass_msg;
+        check(get_log_level(check_logger, display_handler) = log_level_t'rightof(pass));
+        check(get_log_level(check_logger, file_handler) = log_level_t'rightof(pass));
       end if;
 
       unmock(default_logger);

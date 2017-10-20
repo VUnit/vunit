@@ -5,6 +5,7 @@
 -- Copyright (c) 2017, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.string_ptr_pkg.all;
+use work.ansi_pkg.all;
 
 package log_levels_pkg is
 
@@ -139,8 +140,12 @@ package log_levels_pkg is
   impure function "+" (reference_level : log_level_t; offset : numeric_log_level_t) return numeric_log_level_t;
   impure function "-" (reference_level : log_level_t; offset : numeric_log_level_t) return numeric_log_level_t;
   impure function new_log_level(name : string;
-                                log_level : numeric_log_level_t) return log_level_t;
+                                log_level : numeric_log_level_t;
+                                fg : ansi_color_t := no_color;
+                                bg : ansi_color_t := no_color;
+                                style : ansi_style_t := normal) return log_level_t;
   impure function is_valid(log_level : log_level_t) return boolean;
   impure function get_name(log_level : log_level_t) return string;
+  impure function get_color(log_level : log_level_t) return ansi_colors_t;
   impure function max_level_length return natural;
 end package;

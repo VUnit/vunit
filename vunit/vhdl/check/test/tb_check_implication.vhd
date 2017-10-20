@@ -67,7 +67,7 @@ begin
     constant test_consequents : boolean_vector(1 to 4) := (false, true, false, true);
     constant test_implication_expected_result : boolean_vector(1 to 4) := (true, true, false, true);
     variable stat : checker_stat_t;
-    constant pass_level : log_level_t := verbose;
+    constant pass_level : log_level_t := vunit_lib.checker_pkg.pass;
     constant default_level : log_level_t := error;
 
     procedure test_concurrent_check (

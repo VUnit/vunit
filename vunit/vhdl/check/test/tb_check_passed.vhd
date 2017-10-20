@@ -26,7 +26,7 @@ end entity tb_check_passed;
 architecture test_fixture of tb_check_passed is
 begin
   test_runner : process
-    constant pass_level : log_level_t := verbose;
+    constant pass_level : log_level_t := pass;
     variable my_checker : checker_t := new_checker("my_checker");
     variable stat : checker_stat_t;
   begin

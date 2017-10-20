@@ -14,6 +14,7 @@ use work.log_levels_pkg.all;
 use work.logger_pkg.all;
 use work.integer_vector_ptr_pkg.all;
 use work.string_ptr_pkg.all;
+use work.ansi_pkg.all;
 
 package checker_pkg is
   type edge_t is (rising_edge, falling_edge, both_edges);
@@ -66,6 +67,9 @@ package checker_pkg is
   alias reset_checker_stat is reset_stat[checker_t];
 
   constant null_checker : checker_t := (p_data => null_ptr);
+
+  constant pass : log_level_t :=
+    new_log_level("pass", (log_level_t'pos(debug) + log_level_t'pos(verbose)) / 2, fg => green, style => bright);
 
   impure function is_passing_check_msg_enabled(checker : checker_t) return boolean;
 
@@ -193,7 +197,7 @@ package body checker_pkg is
 
   impure function is_passing_check_msg_enabled(checker : checker_t) return boolean is
   begin
-    return is_enabled(get_logger(checker), verbose);
+    return is_enabled(get_logger(checker), pass);
   end;
 
   procedure passing_check(checker : checker_t) is
@@ -212,8 +216,8 @@ package body checker_pkg is
     -- pragma translate_off
     passing_check(checker);
 
-    if is_enabled(logger, verbose) then
-      log(logger, msg, verbose, line_num, file_name);
+    if is_enabled(logger, pass) then
+      log(logger, msg, pass, line_num, file_name);
     end if;
 
   -- pragma translate_on

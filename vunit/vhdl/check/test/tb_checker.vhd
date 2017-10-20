@@ -14,6 +14,7 @@ use vunit_lib.checker_pkg.all;
 use vunit_lib.check_pkg.all;
 use vunit_lib.run_types_pkg.all;
 use vunit_lib.run_pkg.all;
+use vunit_lib.ansi_pkg.all;
 use work.test_support.all;
 use std.textio.all;
 
@@ -42,7 +43,7 @@ begin
         mock(check_logger);
 
         passing_check(default_checker, "Check true");
-        check_only_log(check_logger, "Check true", verbose);
+        check_only_log(check_logger, "Check true", pass);
 
         passing_check(default_checker);
         check_no_log(check_logger);
@@ -67,7 +68,7 @@ begin
 
         mock(my_logger);
         passing_check(my_checker, "Check true");
-        check_only_log(my_logger, "Check true", verbose);
+        check_only_log(my_logger, "Check true", pass);
 
         failing_check(my_checker, "Custom error message");
         check_only_log(my_logger, "Custom error message", error);
@@ -115,6 +116,10 @@ begin
         checker2 := new_checker("foo");
         check_only_log(default_logger, "Checker with name ""foo"" already exists.", failure);
         unmock(default_logger);
+      elsif run("Test that a green pass level exists") then
+        assert get_name(pass) = "pass";
+        assert get_color(pass) = (fg => green, bg => no_color, style => bright);
+        assert pass = log_level_t'val((log_level_t'pos(debug) + log_level_t'pos(verbose)) / 2);
       end if;
     end loop;
 

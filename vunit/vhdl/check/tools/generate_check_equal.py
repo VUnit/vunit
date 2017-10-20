@@ -468,7 +468,7 @@ begin
     variable my_checker : checker_t := new_checker("my_checker");
     variable my_logger : logger_t := get_logger(my_checker);
     variable pass : boolean;
-    constant pass_level : log_level_t := verbose;
+    constant pass_level : log_level_t := vunit_lib.checker_pkg.pass;
     constant default_level : log_level_t := error;
 
   begin

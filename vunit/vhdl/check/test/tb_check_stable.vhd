@@ -161,7 +161,7 @@ begin
 
   check_stable_runner : process
     variable stat       : checker_stat_t;
-    constant pass_level : log_level_t := verbose;
+    constant pass_level : log_level_t := pass;
     constant default_level : log_level_t := error;
 
     procedure test_concurrent_std_logic_vector_check (

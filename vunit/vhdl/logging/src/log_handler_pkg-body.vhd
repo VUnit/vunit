@@ -185,21 +185,15 @@ package body log_handler_pkg is
 
       procedure write_level(justify : boolean := false) is
         constant level_name : string := get_name(log_level);
+        variable color : ansi_colors_t;
       begin
         if justify then
           pad(max_level_length - level_name'length);
         end if;
 
         if use_color then
-          case log_level is
-            when verbose => write(l, color_start(fg => magenta, style => bright));
-            when debug => write(l, color_start(fg => cyan, style => bright));
-            when info => write(l, color_start(fg => white, style => bright));
-            when warning => write(l, color_start(fg => yellow, style => bright));
-            when error => write(l, color_start(fg => red, style => bright));
-            when failure => write(l, color_start(fg => white, bg => red, style => bright));
-            when others => write(l, color_start(fg => magenta, style => bright));
-          end case;
+          color := get_color(log_level);
+          write(l, color_start(fg => color.fg, bg => color.bg, style => color.style));
         end if;
 
         write(l, upper(level_name));

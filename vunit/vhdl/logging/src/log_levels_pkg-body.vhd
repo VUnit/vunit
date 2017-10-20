@@ -12,34 +12,55 @@ package body log_levels_pkg is
 
   type levels_t is record
     names : integer_vector_ptr_t;
+    colors : integer_vector_ptr_t;
     max_level_length : integer_vector_ptr_t;
   end record;
+
+  procedure add_level(
+    levels : levels_t;
+    name : string;
+    log_level : numeric_log_level_t;
+    fg, bg : ansi_color_t := no_color;
+    style : ansi_style_t := normal) is
+  begin
+    if get(levels.max_level_length, 0) < name'length then
+      set(levels.max_level_length, 0, name'length);
+    end if;
+
+    set(levels.names, log_level, to_integer(allocate(name)));
+
+    set(levels.colors, log_level,
+        to_integer(integer_vector_ptr_t'(allocate(3))));
+    set(to_integer_vector_ptr(get(levels.colors, log_level)), 0,
+        ansi_color_t'pos(fg));
+    set(to_integer_vector_ptr(get(levels.colors, log_level)), 1,
+        ansi_color_t'pos(bg));
+    set(to_integer_vector_ptr(get(levels.colors, log_level)), 2,
+        ansi_style_t'pos(style));
+
+  end;
 
   impure function create_levels return levels_t is
     variable result : levels_t;
     variable name_ptr : string_ptr_t;
 
-    procedure add_level(log_level : log_level_t) is
-      constant name : string := log_level_t'image(log_level);
+    procedure add_level(log_level : log_level_t; fg, bg : ansi_color_t := no_color; style : ansi_style_t := normal) is
     begin
-      if get(result.max_level_length, 0) < name'length then
-        set(result.max_level_length, 0, name'length);
-      end if;
-
-      set(result.names, log_level_t'pos(log_level),
-          to_integer(allocate(log_level_t'image(log_level))));
+      add_level(result, log_level_t'image(log_level), log_level_t'pos(log_level), fg, bg, style);
     end;
   begin
     result := (names => allocate(log_level_t'pos(log_level_t'high)+1,
                                  value => to_integer(null_string_ptr)),
+               colors => allocate(log_level_t'pos(log_level_t'high)+1,
+                                 value => to_integer(null_ptr)),
                max_level_length => allocate(1, value => 0));
 
-    add_level(verbose);
-    add_level(debug);
-    add_level(info);
-    add_level(warning);
-    add_level(error);
-    add_level(failure);
+    add_level(verbose, fg => magenta, style => bright);
+    add_level(debug, fg => cyan, style => bright);
+    add_level(info, fg => white, style => bright);
+    add_level(warning, fg => yellow, style => bright);
+    add_level(error, fg => red, style => bright);
+    add_level(failure, fg => white, bg => red, style => bright);
 
     return result;
   end;
@@ -57,7 +78,10 @@ package body log_levels_pkg is
   end;
 
   impure function new_log_level(name : string;
-                                log_level : numeric_log_level_t) return log_level_t is
+                                log_level : numeric_log_level_t;
+                                fg : ansi_color_t := no_color;
+                                bg : ansi_color_t := no_color;
+                                style : ansi_style_t := normal) return log_level_t is
     variable name_ptr : string_ptr_t := to_string_ptr(get(levels.names, log_level));
   begin
 
@@ -68,11 +92,7 @@ package body log_levels_pkg is
       return null_log_level;
     end if;
 
-    set(levels.names, log_level, to_integer(allocate(name)));
-
-    if name'length > get(levels.max_level_length, 0) then
-      set(levels.max_level_length, 0, name'length);
-    end if;
+    add_level(levels, name, log_level, fg, bg, style);
 
     return log_level_t'val(log_level);
   end;
@@ -81,6 +101,17 @@ package body log_levels_pkg is
     variable name_ptr : string_ptr_t := to_string_ptr(get(levels.names, log_level_t'pos(log_level)));
   begin
     return name_ptr /= null_string_ptr;
+  end;
+
+  impure function get_color(log_level : log_level_t) return ansi_colors_t is
+    variable color_ptr : integer_vector_ptr_t := to_integer_vector_ptr(get(levels.colors, log_level_t'pos(log_level)));
+  begin
+    if color_ptr = null_ptr then
+      return no_colors;
+    end if;
+    return (fg => ansi_color_t'val(get(color_ptr, 0)),
+            bg => ansi_color_t'val(get(color_ptr, 1)),
+            style => ansi_style_t'val(get(color_ptr, 2)));
   end;
 
   impure function get_name(log_level : log_level_t) return string is

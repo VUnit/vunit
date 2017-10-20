@@ -299,13 +299,13 @@ package body logger_pkg is
 
   procedure disable_stop is
   begin
-    set_stop_level(root_logger, above_all_log_levels);
+    disable_stop(root_logger);
   end;
 
   -- Disable stopping simulation
   procedure disable_stop(logger : logger_t) is
   begin
-    set_stop_level(logger, -1);
+    set_stop_level(logger, above_all_log_levels);
   end;
 
   impure function get_log_level(logger : logger_t;

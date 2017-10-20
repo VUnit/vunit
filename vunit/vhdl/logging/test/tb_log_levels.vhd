@@ -10,6 +10,8 @@ use vunit_lib.run_pkg.all;
 use work.log_levels_pkg.all;
 use work.core_pkg.all;
 use work.test_support_pkg.all;
+use work.checker_pkg.all;
+use work.ansi_pkg.all;
 
 entity tb_log_levels is
   generic (
@@ -51,7 +53,11 @@ begin
     elsif run("Can create level") then
       level := new_log_level("my_level", 23);
       assert_equal(get_name(level), "my_level");
+      assert(get_color(level) = (fg => no_color, bg => no_color, style => normal));
       assert_true(level = custom_level23);
+
+      level := new_log_level("my_level2", 24, fg => red, bg => yellow, style => bright);
+      assert(get_color(level) = (fg => red, bg => yellow, style => bright));
 
     elsif run("Can create level relative to other level") then
       level := new_log_level("my level", info + 3);
@@ -73,14 +79,18 @@ begin
           when verbose|debug|info|warning|error|failure =>
             assert_true(is_valid(level));
           when others =>
-            assert_false(is_valid(level));
-            level := new_log_level("my_level" & integer'image(lvl), lvl);
-            assert_true(is_valid(level));
-            assert_equal(get_name(level), "my_level" & integer'image(lvl));
-            count := count + 1;
+            if level /= pass then
+              assert_false(is_valid(level));
+              level := new_log_level("my_level" & integer'image(lvl), lvl);
+              assert_true(is_valid(level));
+              assert_equal(get_name(level), "my_level" & integer'image(lvl));
+              count := count + 1;
+            else
+              assert_true(is_valid(level));
+            end if;
         end case;
       end loop;
-      assert_equal(count, numeric_log_level_t'high - numeric_log_level_t'low - 6 + 1);
+      assert_equal(count, numeric_log_level_t'high - numeric_log_level_t'low - 7 + 1);
 
     elsif run("Error on level that already exists") then
 

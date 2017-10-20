@@ -16,8 +16,9 @@ use work.core_pkg.core_failure;
 use std.textio.all;
 
 package check_deprecated_pkg is
-  -- Deprecated interface to better support legacy testbenches. Calls to this
-  -- procedure will be mapped to contemporary functionality using best effort:
+  -- Deprecated interfaces to better support legacy testbenches.
+
+  -- Calls to checker_init will be mapped to contemporary functionality using best effort:
   --
   -- * default_src sets the name of an uninitialized checker. Empty string names are not supported
   --   and will be replaced with "anonymous<a unique number>".
@@ -51,6 +52,20 @@ package check_deprecated_pkg is
     constant stop_level : in log_level_t := failure;
     constant separator      : in character    := ',';
     constant append         : in boolean      := false);
+
+  -- Enabling pass messages is done by setting the log level to pass unless
+  -- the current log level already allows pass messages. Disabling pass messages
+  -- will set log level to debug unless the current log level already suppresses
+  -- pass messages.
+  procedure enable_pass_msg(checker : checker_t; handler : log_handler_t);
+  procedure disable_pass_msg(checker : checker_t; handler : log_handler_t);
+  procedure enable_pass_msg(checker : checker_t);
+  procedure disable_pass_msg(checker : checker_t);
+
+  procedure enable_pass_msg(handler : log_handler_t);
+  procedure disable_pass_msg(handler : log_handler_t);
+  procedure enable_pass_msg;
+  procedure disable_pass_msg;
 
 end package check_deprecated_pkg;
 
@@ -105,6 +120,60 @@ package body check_deprecated_pkg is
   begin
     checker_init(checker, default_level, default_src, file_name, display_format,
                 file_format, stop_level, separator, append);
+  end;
+
+  procedure enable_pass_msg(checker : checker_t; handler : log_handler_t) is
+  begin
+    if log_level_t'pos(get_log_level(get_logger(checker), handler)) <= log_level_t'pos(pass) then
+      return;
+    end if;
+
+    set_log_level(get_logger(checker), handler, pass);
+  end;
+
+  procedure disable_pass_msg(checker : checker_t; handler : log_handler_t) is
+  begin
+    if log_level_t'pos(get_log_level(get_logger(checker), handler)) > log_level_t'pos(pass) then
+      return;
+    end if;
+
+    set_log_level(get_logger(checker), handler, debug);
+  end;
+
+  procedure enable_pass_msg(checker : checker_t) is
+    constant handlers : log_handler_vec_t := get_log_handlers(get_logger(checker));
+  begin
+    for h in handlers'range loop
+      enable_pass_msg(checker, handlers(h));
+    end loop;
+  end;
+
+  procedure disable_pass_msg(checker : checker_t) is
+    constant handlers : log_handler_vec_t := get_log_handlers(get_logger(checker));
+  begin
+    for h in handlers'range loop
+      disable_pass_msg(checker, handlers(h));
+    end loop;
+  end;
+
+  procedure enable_pass_msg(handler : log_handler_t) is
+  begin
+    enable_pass_msg(default_checker, handler);
+  end;
+
+  procedure disable_pass_msg(handler : log_handler_t) is
+  begin
+    disable_pass_msg(default_checker, handler);
+  end;
+
+  procedure enable_pass_msg is
+  begin
+    enable_pass_msg(default_checker);
+  end;
+
+  procedure disable_pass_msg is
+  begin
+    disable_pass_msg(default_checker);
   end;
 
 end package body check_deprecated_pkg;

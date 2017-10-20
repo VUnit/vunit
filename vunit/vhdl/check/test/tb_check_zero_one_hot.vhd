@@ -49,7 +49,7 @@ begin
     variable pass : boolean;
     variable stat : checker_stat_t;
     constant reversed_and_offset_expr : std_logic_vector(23 downto 20) := "1000";
-    constant pass_level : log_level_t := verbose;
+    constant pass_level : log_level_t := vunit_lib.checker_pkg.pass;
     constant default_level : log_level_t := error;
 
     procedure test_concurrent_check (

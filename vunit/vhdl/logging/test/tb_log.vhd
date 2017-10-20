@@ -476,12 +476,26 @@ begin
     elsif run("log below stop level") then
       set_stop_level(warning);
       info(logger, "message");
+      set_stop_level(logger, warning);
+      info(logger, "message");
 
     elsif run("log above stop level fails") then
       set_stop_level(warning);
       mock_core_failure;
       warning(logger, "message");
       check_and_unmock_core_failure;
+
+      set_stop_level(logger, warning);
+      mock_core_failure;
+      warning(logger, "message");
+      check_and_unmock_core_failure;
+
+    elsif run("disable_stop pass all levels") then
+      disable_stop;
+      failure("failure");
+      failure(logger, "failure");
+      reset_log_count(default_logger);
+      reset_log_count(logger);
 
     elsif run("Get logger") then
       tmp_logger := get_logger("logger:child");

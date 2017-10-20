@@ -67,6 +67,32 @@ associated procedure calls are:
     -- Not visible by default
     verbose("Verbose messages only used for tracing program flow");
 
+Every log level is associated with a numeric value. failure = 90, error = 75,
+warning = 60, info = 45, debug = 30, and verbose = 15. Other values between
+0 and 99 are free for custom defined levels. For example
+
+.. code-block:: vhdl
+
+    license_info := new_log_level("license", 50, fg => red, bg => yellow, style => bright);
+
+The numeric value can also be defined relative to other levels
+
+.. code-block:: vhdl
+
+    license_info := new_log_level("license", info + 5, fg => red, bg => yellow, style => bright);
+
+
+The last optional parameters define the foreground, background and style of the output color.
+Valid values are defined in ansi_pkg.
+
+To make a log entry with the custom level use any of the `log` procedures:
+
+.. code-block:: vhdl
+
+    log("Mozilla Public License, v. 2.0.", license_info);
+    log(my_logger, "Mozilla Public License, v. 2.0.", license_info);
+
+
 Stop Level
 ----------
 
