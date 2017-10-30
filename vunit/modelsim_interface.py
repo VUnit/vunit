@@ -435,7 +435,8 @@ def encode_generic_value(value):
     s_value = str(value)
     if " " in s_value:
         return '{"%s"}' % s_value
-
+    if "," in s_value:
+        return '"%s"' % s_value
     return s_value
 
 
