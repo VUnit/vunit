@@ -25,6 +25,7 @@ end entity;
 architecture a of tb_log is
 begin
   main : process
+    constant main_path : string := main'instance_name;
 
     procedure check_empty_log_file(constant file_name : in string) is
       file fptr : text;
@@ -164,6 +165,15 @@ begin
 
       assert_equal(get_full_name(get_parent(get_parent(tmp_logger))), "tb_log(a)");
       assert_true(get_logger("tb_log(a):main:tmp_logger") = tmp_logger);
+
+      tmp_logger := get_logger(main_path);
+      assert_true(main_path(main_path'right) = ':');
+      assert_equal(get_name(tmp_logger), "main");
+      assert_equal(get_name(get_parent(tmp_logger)), "tb_log(a)");
+      assert_equal(get_full_name(tmp_logger), "tb_log(a):main");
+
+      assert_equal(get_full_name(get_parent(tmp_logger)), "tb_log(a)");
+      assert_true(get_logger("tb_log(a):main") = tmp_logger);
 
     elsif run("level format") then
       set_format(display_handler, format => level);
@@ -626,8 +636,8 @@ begin
       tmp_logger := get_logger("");
       check_core_failure("Invalid logger name """"");
 
-      tmp_logger := get_logger("parent:");
-      check_core_failure("Invalid logger name ""parent:""");
+      tmp_logger := get_logger(":");
+      check_core_failure("Invalid logger name """"");
 
       unmock_core_failure;
 

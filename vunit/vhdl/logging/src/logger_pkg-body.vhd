@@ -8,6 +8,7 @@ use work.string_ptr_pkg.all;
 use work.integer_vector_ptr_pkg.all;
 use work.queue_pkg.all;
 use work.core_pkg.core_failure;
+use work.string_ops.all;
 
 package body logger_pkg is
   constant root_logger_id : natural := 0;
@@ -127,28 +128,18 @@ package body logger_pkg is
     return parent;
   end;
 
-  impure function find(str : string; c : character) return integer is
+  impure function head(name : string; dot_idx : natural) return string is
   begin
-    for i in str'range loop
-      if str(i) = c then
-        return i;
-      end if;
-    end loop;
-    return -1;
-  end;
-
-  impure function head(name : string; dot_idx : integer) return string is
-  begin
-    if dot_idx = -1 then
+    if dot_idx = 0 then
       return name;
     else
       return name(name'left to dot_idx-1);
     end if;
   end;
 
-  impure function tail(name : string; dot_idx : integer) return string is
+  impure function tail(name : string; dot_idx : natural) return string is
   begin
-    if dot_idx = -1 then
+    if dot_idx = 0 then
       return "";
     else
       return name(dot_idx+1 to name'right);
@@ -186,16 +177,11 @@ package body logger_pkg is
                              parent : logger_t := null_logger) return logger_t is
     constant real_parent : logger_t := get_real_parent(parent);
     variable child, logger : logger_t;
-    constant dot_idx : integer := find(name, ':');
-    constant head_name : string := head(name, dot_idx);
-    constant tail_name : string := tail(name, dot_idx);
+    constant stripped_name : string := strip(name, ":");
+    constant dot_idx : integer := find(stripped_name, ':');
+    constant head_name : string := head(stripped_name, dot_idx);
+    constant tail_name : string := tail(stripped_name, dot_idx);
   begin
-
-    -- Ignore leading ':'
-    if name'length > 0 and name(name'left) = ':' then
-      return get_logger(name(name'left+1 to name'right), parent);
-    end if;
-
     if not validate_logger_name(head_name, real_parent) then
       return null_logger;
     end if;
@@ -215,7 +201,7 @@ package body logger_pkg is
       set_log_handlers(logger, get_log_handlers(real_parent));
     end if;
 
-    if dot_idx /= -1 then
+    if dot_idx /= 0 then
       return get_logger(tail_name, logger);
     end if;
 
