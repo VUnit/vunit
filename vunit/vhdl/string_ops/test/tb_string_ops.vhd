@@ -133,6 +133,7 @@ begin
       elsif run("Test find") then
         counting_assert(find("", "") = 1, "Empty string should be found at the start");
         counting_assert(find("foo bar", "") = 1, "Empty string should be found at the start");
+        counting_assert(find("", "foo") = 0, "Nothing should be found in an empty string");
         counting_assert(find("foo bar", "foo") = 1, "Should find string at the start");
         counting_assert(find("foo bar", "bar") = 5, "Should find string at the end");
         counting_assert(find("foo bar", "o b") = 3, "Should find string in the middle");

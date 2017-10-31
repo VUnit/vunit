@@ -534,6 +534,10 @@ package body string_ops is
       return start_pos;
     end if;
 
+    if s = "" then
+      return 0;
+    end if;
+
     o := offset(s, start_pos);
     while o <= offset(s, stop_pos) - substring'length + 1 loop
       if slice(s, o, substring'length) = substring then
