@@ -30,26 +30,26 @@ will use the default checker while
 
     check(my_checker, re = '1', "Expected active read enable at this point");
 
-will use the custom ``my_checker``. A checker is just a (shared)
-variable or constant
+will use the custom ``my_checker``. A custom checker is just a variable or constant
+initialized with the `new_checker` function.
 
 .. code-block:: vhdl
 
     constant my_checker : checker_t := new_checker("my_checker");
 
-All procedures presented in this user guide are available for both the
+All subprograms presented in this user guide are available for both the
 default checker and custom checkers. The difference is the first
-``checker`` parameter which only exists for custom checker procedures.
+``checker`` parameter which only exists for custom checker subprograms.
 To make the user guide more compact we present this as an optional
 parameter using brackets. For example
 
 .. code-block:: vhdl
 
-    procedure check_false(
+    impure function check_false(
      [constant checker   : in checker_t;]
       constant expr      : in boolean;
-      constant msg       : in string      := result<(".")>;
-      constant level     : in log_level_t := dflt;
+      constant msg       : in string      := result(".");
+      constant level     : in log_level_t := null_log_level;
       constant line_num  : in natural     := 0;
       constant file_name : in string      := "")
       return boolean;
@@ -65,9 +65,9 @@ logging library described in the :doc:`logging user guide
 <../logging/user_guide>` under the hood.
 
 A ``checker_t`` is created with a name used for naming the logger used
-internally. The logger will be named ``check.<checker_name>``. The
+internally. The logger will be named ``check:<checker_name>``. The
 name of the default checker logger is ``check``.  Additionally there
-is a ``default_log_level`` argument to specify the log level of a
+is a ``default_log_level`` parameter to specify the log level of a
 failing check.
 
 .. code-block:: vhdl
@@ -91,14 +91,14 @@ to the VHDL ``assert`` statement
 The first parameter is the boolean expression to check and the second parameter
 is the error message issued if the expression is false. Assuming this
 check fails and you haven't changed the default settings for the default checker
-the error message will be
+the error message will be something like
 
 .. code-block:: console
 
-    ERROR: Expected active read enable at this point
+    10000 ps - check -  ERROR - Expected active read enable at this point
 
 If you wish to have another log level than the default one set by
-``checker_init`` you can override this for each check call. For example
+``new_checker`` you can override this for each check call. For example
 
 .. code-block:: vhdl
 
@@ -106,30 +106,37 @@ If you wish to have another log level than the default one set by
 
 A failing check is always counted as a failing check regardless of the
 level but the level affects whether or not the simulation stops as
-controlled by the ``stop_level`` parameter to ``checker_init``.
+controlled by the stop level for the internal logger. The stop level can be change
+by retrieving the logger and then use the ``set_stop_level`` procedure as described
+in :doc:`logging user guide <../logging/user_guide>`. For example
+
+.. code-block:: vhdl
+
+    set_stop_level(get_logger(my_checker), warning);
+
 
 Note that when using the VUnit Python test runner the default checker
-``stop_level`` is set to ``error`` when calling ``test_runner_setup``.
+stop level is set to ``error`` when calling ``test_runner_setup``.
 The reason is that the Python test runner has the ability to restart the
 simulation with the next test case so that all test cases are run
 despite of an error while **guaranteeing** that the error state of the
 failing test case doesn't propagate into the next. If you're not using
-the Python test runner and have ``stop_level`` at ``failure`` as a way
-to continue on ``error`` you don't have this guarantee.
+the Python test runner the stop level is set to ``failure`` as a way
+to continue on ``error`` but without this guarantee.
 
 Logging Passing Checks
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The provided message in a check call is also be logged when the check
+The provided message in a check call is also logged when the check
 passes. The typical use case is to create a debug trace to investigate
-what happened before a bug occured. This feature uses the lowest log
-level ``verbose`` that is not visible by default but can be enabled
-for all log handlers or just for one log handler.
+what happened before a bug occured. This feature uses the log
+level ``pass`` that is not visible by default but can be enabled
+for any log handler.
 
 .. code-block:: vhdl
 
-    set_log_level(file_handler, get_logger(default_checker), verbose);
-    set_log_level(display_handler, get_logger(default_checker), verbose);
+    set_log_level(get_logger(default_checker), display_handler, pass);
+    set_log_level(get_logger(default_checker), file_handler, pass);
 
 The difference between a passing check log message and a failing check log message is
 the log level used. A passing check like this
@@ -142,7 +149,10 @@ will result in a log entry like this
 
 .. code-block:: console
 
-    VERBOSE: Checking that read enable is active
+    1000 ps - check - PASS - Checking that read enable is active
+
+Note that a message that reads well for both the pass and the fail cases was used. Note
+also that ``pass`` isn't a standard log level but a custom log level created by the check library.
 
 A number of check subprograms perform several checks for every call, each of which can fail
 and generate an error message. However, there will only be one pass message for such a call
@@ -154,20 +164,21 @@ Message Format
 ~~~~~~~~~~~~~~
 
 In the previous examples the outputs from passing and failing checks were the messages provided by
-the user with the addition of a log level. If we change the log format to ``raw`` there would be no
-additions at all, just the user message. However, the check subprograms may also add information to the user
-message before the log format additions are applied. For example, checking a pixel value after an image
-processing operation can be done like this:
+the user with the addition of a timestamp, the checker name and the log level.
+If we change the log format to ``raw`` there would be no additions at all, just the user message.
+However, the check subprograms may also add information to the user message before the log format
+additions are applied. For example, checking a pixel value after an image processing operation can
+be done like this:
 
 .. code-block:: vhdl
 
-    check_equal(output_pixel, reference_model(y)(x), "Comparing output pixel with reference model");
+    check_equal(output_pixel, reference_model(x, y), "Comparing output pixel with reference model");
 
 Resulting in an error message like this:
 
 .. code-block:: console
 
-    ERROR: Comparing output pixel with reference model - Got 1111_1010 (250). Expected 1111_1001 (249).
+    1000 ps - check - ERROR - Comparing output pixel with reference model - Got 1111_1010 (250). Expected 249 (1111_1001).
 
 The last part of the message provides an error context to help debugging. Such a context is only given
 if that provides extra information. In the case of a failing ``check`` we know that the input boolean is
@@ -176,7 +187,7 @@ error messages. For example, a pass message from ``check_equal`` looks like this
 
 .. code-block:: console
 
-    PASS: Comparing output pixel with reference model - Got 1111_1010 (250).
+    1000 ps - check - PASS - Comparing output pixel with reference model - Got 1111_1010 (250).
 
 Redundancy is avoided by excluding the expected value which is the same as the value received.
 
@@ -185,19 +196,19 @@ also provides another way of doing this using the ``result`` function. The call
 
 .. code-block:: vhdl
 
-    check_equal(output_pixel, reference_model(y)(x), result("for output pixel"));
+    check_equal(output_pixel, reference_model(x, y), result("for output pixel"));
 
 gives the following messages:
 
 .. code-block:: console
 
-    ERROR: Equality check failed for output pixel - Got 1111_1010 (250). Expected 1111_1001 (249).
+    1000 ps - check - ERROR - Equality check failed for output pixel - Got 1111_1010 (250). Expected 249 (1111_1001).
 
 and
 
 .. code-block:: console
 
-    PASS: Equality check passed for output pixel - Got 1111_1010 (250).
+    1000 ps - check - ERROR - Equality check passed for output pixel - Got 1111_1010 (250).
 
 The ``result`` function prepends the provided string with the check type (equality check in this case)
 and passed/failed depending on the result. The ``result`` function is also used as the default value for
@@ -205,19 +216,19 @@ check calls so
 
 .. code-block:: vhdl
 
-    check_equal(output_pixel, reference_model(y)(x));
+    check_equal(output_pixel, reference_model(x, y));
 
 gives the following messages:
 
 .. code-block:: console
 
-    ERROR: Equality check failed - Got 1111_1010 (250). Expected 1111_1001 (249).
+    1000 ps - check - ERROR - Equality check failed - Got 1111_1010 (250). Expected 249 (1111_1001).
 
 and
 
 .. code-block:: console
 
-    PASS: Equality check passed - Got 1111_1010 (250).
+    1000 ps - check - PASS - Equality check passed - Got 1111_1010 (250).
 
 If you look at the default value for the user message in the check subprogram APIs you will see that the
 ``result`` function isn't used. This is a workaround for one of the supported simulators which exposes the
@@ -228,7 +239,7 @@ I'm also keeping the ``result`` function in the APIs presented in this user guid
 Check Location
 ~~~~~~~~~~~~~~
 
-The ``check`` procedures described in the previous sections have two
+The ``check`` subprograms described in the previous sections have two
 additional parameters, ``line_num`` and ``file_name``. These are
 normally not set by the user but by the location preprocessor such that
 the location of a failing check is included in the error message. The
@@ -244,18 +255,32 @@ isn't used.
      [constant checker   : in checker_t;]
       constant expr      : in boolean;
       constant msg       : in string      := result(".");
-      constant level     : in log_level_t := dflt;
+      constant level     : in log_level_t := null_log_level;
       constant line_num  : in natural     := 0;
       constant file_name : in string      := "");
 
 Acting on Failing Checks
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``check`` procedure described so far doesn't reveal whether the
+The ``check`` subprogram described so far doesn't reveal whether the
 check passed or not. If you want that information to control the flow of
 your test and your testbench is setup to continue on a failing check you
-have a number of options. You can use this procedure where the ``pass``
-output is ``false`` on a failing check
+have a number of options. You can use the check functions which return
+``true`` on a passing check and ``false`` when they fail.
+
+.. code-block:: vhdl
+
+    impure function check(
+     [constant checker   : in  checker_t;]
+      constant expr      : in  boolean;
+      constant msg       : in  string      := result(".");
+      constant level     : in  log_level_t := null_log_level;
+      constant line_num  : in  natural     := 0;
+      constant file_name : in  string      := "")
+      return boolean;
+
+or you can use check procedures with a boolean ``pass``
+output returning the same information.
 
 .. code-block:: vhdl
 
@@ -264,49 +289,23 @@ output is ``false`` on a failing check
       variable pass      : out boolean;
       constant expr      : in  boolean;
       constant msg       : in  string      := result(".");
-      constant level     : in  log_level_t := dflt;
+      constant level     : in  log_level_t := null_log_level;
       constant line_num  : in  natural     := 0;
       constant file_name : in  string      := "");
-
-or you can use this function which returns the same information
-
-.. code-block:: vhdl
-
-    impure function check(
-     [constant checker   : in  checker_t;]
-      constant expr      : in  boolean;
-      constant msg       : in  string      := result(".");
-      constant level     : in  log_level_t := dflt;
-      constant line_num  : in  natural     := 0;
-      constant file_name : in  string      := "")
-      return boolean;
-
-or you can see if there has been any errors so far
-
-.. code-block:: vhdl
-
-    procedure checker_found_errors (
-     [constant checker : in  checker_t;]
-      variable result  : out boolean);
-
-.. code-block:: vhdl
-
-    impure function checker_found_errors
-      return boolean;
 
 or you can use any of the following subprograms to get more details.
 
 .. code-block:: vhdl
 
-    procedure get_checker_stat (
-     [constant checker : in  checker_t;]
-      variable stat    : out checker_stat_t);
+    impure function get_stat[(
+      constant checker : in  checker_t);]
+      return checker_stat_t;
 
 .. code-block:: vhdl
 
-    impure function get_checker_stat[(
-      constant checker : in  checker_t);]
-      return checker_stat_t;
+    procedure get_stat (
+     [constant checker : in  checker_t;]
+      variable stat    : out checker_stat_t);
 
 ``checker_stat_t`` is a record containing pass/fail information.
 
@@ -332,12 +331,12 @@ Managing Checker Statistics
 A checker will continuously update its statistics counters as new check
 subprograms are called. If you want to collect the statistics for parts
 of your test you can make intermediate readouts using the
-``get_checker_stat`` subprograms and then reset the counters to zero
+``get_stat`` subprograms and then reset the counters to zero
 using
 
 .. code-block:: vhdl
 
-    procedure reset_checker_stat [(
+    procedure reset_stat [(
       constant checker : in checker_t)];
 
 Another way of collecting statistics for different parts is to use
@@ -350,7 +349,7 @@ statistics, for example
 
 .. code-block:: vhdl
 
-    info(to_string(get_checker_stat));
+    info(to_string(get_stat));
 
 Check Types
 -----------
@@ -390,7 +389,7 @@ parameters.
       [variable pass      : out boolean;]
       <specific parameters>
       constant msg       : in string      := result<(".")>;
-      constant level     : in log_level_t := dflt;
+      constant level     : in log_level_t := null_log_level;
       constant line_num  : in natural     := 0;
       constant file_name : in string      := "");
 
@@ -402,7 +401,7 @@ The functions have the following format.
       [constant checker   : in  checker_t;]
       <specific parameters>
       constant msg       : in  string      := result<(".")>;
-      constant level     : in  log_level_t := dflt;
+      constant level     : in  log_level_t := null_log_level;
       constant line_num  : in  natural     := 0;
       constant file_name : in  string      := "")
       return boolean;
@@ -418,7 +417,7 @@ the optional parameter. These procedures are also available for ``check``.
       signal en                  : in std_logic;
       <specific parameters>
       constant msg               : in string      := result<(".")>;
-      constant level             : in log_level_t := dflt;
+      constant level             : in log_level_t := null_log_level;
       constant active_clock_edge : in edge_t      := rising_edge;
       constant line_num          : in natural     := 0;
       constant file_name         : in string      := "");
@@ -463,7 +462,7 @@ will result in
 
 .. code-block:: console
 
-    ERROR: Check failed for my data.
+    1000 ps - check - ERROR - Check failed for my data.
 
 while
 
@@ -475,7 +474,7 @@ will result in
 
 .. code-block:: console
 
-    ERROR: True check failed for my data.
+    1000 ps - check - ERROR - True check failed for my data.
 
 False Check (check\_false)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -558,7 +557,7 @@ the following six unclocked formats.
      [variable pass            : out boolean;]
       <specific parameters>
       constant msg             : in string := result;
-      constant level           : in log_level_t := dflt;
+      constant level           : in log_level_t := null_log_level;
       <preprocessor parameters>);
 
 .. code-block:: vhdl
@@ -567,7 +566,7 @@ the following six unclocked formats.
      [constant checker         : in  checker_t;]
       <specific parameters>
       constant msg             : in string := result;
-      constant level           : in log_level_t := dflt;
+      constant level           : in log_level_t := null_log_level;
       <preprocessor parameters>)
       return boolean;
 
@@ -696,13 +695,13 @@ For example, the check
 
 .. code-block:: vhdl
 
-    check_relation(real_time_clock <= timeout, "Response too late.");
+    check_relation(real_time_clock <= timeout, "Response too late");
 
 will generate the following error message if it fails.
 
 .. code-block:: console
 
-    ERROR: Response too late - Expected real_time_clock <= timeout. Left is 23:15:06. Right is 23:15:04.
+    1000 ps - check - ERROR - Response too late - Expected real_time_clock <= timeout. Left is 23:15:06. Right is 23:15:04.
 
 This works for **any** type of relation between **any** types as long as
 the operator and the ``to_string`` function are defined for the types
@@ -853,8 +852,9 @@ be made with or without the initial custom checker parameter.
       signal end_event           : in std_logic;
       signal expr                : in std_logic or std_logic_vector;
       constant msg               : in string      := result;
-      constant level             : in log_level_t := dflt;
+      constant level             : in log_level_t := null_log_level;
       constant active_clock_edge : in edge_t      := rising_edge;
+      constant allow_restart     : in boolean     := false;
       constant line_num          : in natural     := 0;
       constant file_name         : in string      := "");
 
@@ -908,7 +908,7 @@ the initial custom checker parameter.
       constant num_cks             : in    natural     := 1;
       constant allow_overlapping   : in    boolean     := true;
       constant allow_missing_start : in    boolean     := true;
-      constant level               : in    log_level_t := dflt;
+      constant level               : in    log_level_t := null_log_level;
       constant active_clock_edge   : in    edge_t      := rising_edge;
       constant line_num            : in    natural     := 0;
 
@@ -960,7 +960,7 @@ without the initial custom checker parameter.
       signal event_sequence        : in std_logic_vector;
       constant msg                 : in string          := result;
       constant trigger_event       : in trigger_event_t := penultimate;
-      constant level               : in log_level_t     := dflt;
+      constant level               : in log_level_t     := null_log_level;
       constant active_clock_edge   : in edge_t          := rising_edge;
       constant line_num            : in natural         := 0;
       constant file_name           : in string          := "");
@@ -1058,6 +1058,6 @@ checkers.
     procedure check_failed(
      [constant checker   : in checker_t;]
       constant msg       : in string      := result(".");
-      constant level     : in log_level_t := dflt;
+      constant level     : in log_level_t := null_log_level;
       constant line_num  : in natural     := 0;
       constant file_name : in string      := "");
