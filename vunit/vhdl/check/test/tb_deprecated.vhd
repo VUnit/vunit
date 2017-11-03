@@ -33,6 +33,7 @@ begin
     variable my_checker : checker_t;
     variable my_checker_logger : logger_t;
     variable almost_failure : log_level_t := new_log_level("almost_failure", failure - 1);
+    variable found_errors : boolean;
 
     constant deprecated_logger_init_msg : string :=
       "Using deprecated procedure logger_init. Using best effort mapping to contemporary functionality";
@@ -186,6 +187,40 @@ begin
         disable_pass_msg;
         check(get_log_level(check_logger, display_handler) = log_level_t'rightof(pass));
         check(get_log_level(check_logger, file_handler) = log_level_t'rightof(pass));
+      elsif run("Test found errors subprograms") then
+        my_checker := new_checker("my_checker");
+
+        reset_checker_stat(my_checker);
+        reset_checker_stat;
+
+        assert_false(checker_found_errors);
+        check_only_log(default_logger, "Using deprecated checker_found_errors. Use get_stat instead.", warning);
+
+        checker_found_errors(found_errors);
+        assert_false(found_errors);
+        check_only_log(default_logger, "Using deprecated checker_found_errors. Use get_stat instead.", warning);
+
+        checker_found_errors(my_checker, found_errors);
+        assert_false(found_errors);
+        check_only_log(default_logger, "Using deprecated checker_found_errors. Use get_stat instead.", warning);
+
+        check_failed(level => warning);
+        assert_true(checker_found_errors);
+        check_only_log(default_logger, "Using deprecated checker_found_errors. Use get_stat instead.", warning);
+
+        checker_found_errors(found_errors);
+        assert_true(found_errors);
+        check_only_log(default_logger, "Using deprecated checker_found_errors. Use get_stat instead.", warning);
+
+        reset_checker_stat;
+
+        check_failed(my_checker, level => warning);
+        checker_found_errors(my_checker, found_errors);
+        assert_true(found_errors);
+        check_only_log(default_logger, "Using deprecated checker_found_errors. Use get_stat instead.", warning);
+
+        reset_checker_stat(my_checker);
+
       end if;
 
       unmock(default_logger);

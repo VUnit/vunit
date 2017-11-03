@@ -67,6 +67,15 @@ package check_deprecated_pkg is
   procedure enable_pass_msg;
   procedure disable_pass_msg;
 
+  -- These subprograms can be replaced by calls to get_stat and check for n_failed > 0
+  procedure checker_found_errors (
+    variable result : out boolean);
+  procedure checker_found_errors (
+    constant checker : in checker_t;
+    variable result : out   boolean);
+  impure function checker_found_errors
+    return boolean;
+
 end package check_deprecated_pkg;
 
 package body check_deprecated_pkg is
@@ -174,6 +183,27 @@ package body check_deprecated_pkg is
   procedure disable_pass_msg is
   begin
     disable_pass_msg(default_checker);
+  end;
+
+  procedure checker_found_errors (
+    variable result : out boolean) is
+  begin
+    checker_found_errors(default_checker, result);
+  end;
+
+  procedure checker_found_errors (
+    constant checker :in  checker_t;
+    variable result : out   boolean) is
+  begin
+    warning("Using deprecated checker_found_errors. Use get_stat instead.");
+    result := get_stat(checker).n_failed > 0;
+  end;
+
+  impure function checker_found_errors return boolean is
+    variable result : boolean;
+  begin
+    checker_found_errors(default_checker, result);
+    return result;
   end;
 
 end package body check_deprecated_pkg;
