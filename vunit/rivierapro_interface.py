@@ -239,13 +239,14 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
                       set_generic_str,
                       "-lib",
                       config.library_name,
-                      config.entity_name,
-                      coverage_args,
-                      coverage_file,
-                      self._vsim_extra_args(config)]
+                      config.entity_name]
 
         if config.architecture_name is not None:
             vsim_flags.append(config.architecture_name)
+
+        vsim_flags += [coverage_args,
+                       coverage_file,
+                       self._vsim_extra_args(config)]
 
         if config.sim_options.get("disable_ieee_warnings", False):
             vsim_flags.append("-ieee_nowarn")
