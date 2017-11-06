@@ -644,7 +644,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         if not preprocessors:
             return file_name
 
-        code = ostools.read_file(file_name)
+        code = ostools.read_file(file_name, encoding=HDL_FILE_ENCODING)
         for preprocessor in preprocessors:
             code = preprocessor.run(code, basename(file_name))
 
