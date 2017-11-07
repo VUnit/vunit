@@ -11,6 +11,7 @@ Test the SimulatorInterface class
 import unittest
 from os.path import join, dirname, exists
 import os
+import subprocess
 from shutil import rmtree
 from vunit.project import Project
 from vunit.simulator_interface import (SimulatorInterface,
@@ -39,11 +40,17 @@ class TestSimulatorInterface(unittest.TestCase):
         file2 = project.add_source_file("file2.vhd", "lib", file_type="vhdl")
         project.add_manual_dependency(file2, depends_on=file1)
 
-        with mock.patch("vunit.simulator_interface.run_command", autospec=True) as run_command:
-            run_command.side_effect = iter([True, True])
-            simif.compile_source_files(project)
-            run_command.assert_has_calls([mock.call(["command1"], env=simif.get_env()),
-                                          mock.call(["command2"], env=simif.get_env())])
+        with mock.patch("vunit.simulator_interface.check_output", autospec=True) as check_output:
+            check_output.side_effect = iter(["", ""])
+            printer = MockPrinter()
+            simif.compile_source_files(project, printer=printer)
+            check_output.assert_has_calls([mock.call(["command1"], env=simif.get_env()),
+                                           mock.call(["command2"], env=simif.get_env())])
+            self.assertEqual(printer.output, """\
+Compiling into lib: file1.vhd passed
+Compiling into lib: file2.vhd passed
+Compile passed
+""")
         self.assertEqual(project.get_files_in_compile_order(incremental=True), [])
 
     def test_compile_source_files_continue_on_error(self):
@@ -67,23 +74,36 @@ class TestSimulatorInterface(unittest.TestCase):
             elif source_file == file3:
                 return ["command3"]
 
-        def run_command_side_effect(command, **kwargs):  # pylint: disable=missing-docstring
+        def check_output_side_effect(command, **kwargs):  # pylint: disable=missing-docstring
             if command == ["command1"]:
-                return False
+                raise subprocess.CalledProcessError(returncode=-1, cmd=command, output="bad stuff")
 
-            return True
+            return ""
 
         simif.compile_source_file_command.side_effect = compile_source_file_command
 
-        with mock.patch("vunit.simulator_interface.run_command", autospec=True) as run_command:
-            run_command.side_effect = run_command_side_effect
-            self.assertRaises(CompileError, simif.compile_source_files, project, continue_on_error=True)
-            self.assertEqual(len(run_command.mock_calls), 2)
-            run_command.assert_has_calls([mock.call(["command1"], env=simif.get_env()),
-                                          mock.call(["command3"], env=simif.get_env())], any_order=True)
+        with mock.patch("vunit.simulator_interface.check_output", autospec=True) as check_output:
+            check_output.side_effect = check_output_side_effect
+            printer = MockPrinter()
+            self.assertRaises(CompileError, simif.compile_source_files,
+                              project, printer=printer, continue_on_error=True)
+            self.assertEqual(printer.output, """\
+Compiling into lib: file3.vhd passed
+Compiling into lib: file1.vhd failed
+=== Command used: ===
+command1
+
+=== Command output: ===
+bad stuff
+Compiling into lib: file2.vhd skipped
+Compile failed
+""")
+            self.assertEqual(len(check_output.mock_calls), 2)
+            check_output.assert_has_calls([mock.call(["command1"], env=simif.get_env()),
+                                           mock.call(["command3"], env=simif.get_env())], any_order=True)
         self.assertEqual(project.get_files_in_compile_order(incremental=True), [file1, file2])
 
-    def test_compile_source_files_run_command_error(self):
+    def test_compile_source_files_check_output_error(self):
         simif = create_simulator_interface()
         simif.compile_source_file_command.return_value = ["command"]
         project = Project()
@@ -91,10 +111,24 @@ class TestSimulatorInterface(unittest.TestCase):
         write_file("file.vhd", "")
         source_file = project.add_source_file("file.vhd", "lib", file_type="vhdl")
 
-        with mock.patch("vunit.simulator_interface.run_command", autospec=True) as run_command:
-            run_command.return_value = False
-            self.assertRaises(CompileError, simif.compile_source_files, project)
-            run_command.assert_called_once_with(["command"], env=simif.get_env())
+        with mock.patch("vunit.simulator_interface.check_output", autospec=True) as check_output:
+
+            def check_output_side_effect(command, **kwargs):  # pylint: disable=missing-docstring
+                raise subprocess.CalledProcessError(returncode=-1, cmd=command, output="bad stuff")
+
+            check_output.side_effect = check_output_side_effect
+            printer = MockPrinter()
+            self.assertRaises(CompileError, simif.compile_source_files, project, printer=printer)
+            self.assertEqual(printer.output, """\
+Compiling into lib: file.vhd failed
+=== Command used: ===
+command
+
+=== Command output: ===
+bad stuff
+Compile failed
+""")
+            check_output.assert_called_once_with(["command"], env=simif.get_env())
         self.assertEqual(project.get_files_in_compile_order(incremental=True), [source_file])
 
     def test_compile_source_files_create_command_error(self):
@@ -104,8 +138,8 @@ class TestSimulatorInterface(unittest.TestCase):
         write_file("file.vhd", "")
         source_file = project.add_source_file("file.vhd", "lib", file_type="vhdl")
 
-        with mock.patch("vunit.simulator_interface.run_command", autospec=True) as run_command:
-            run_command.return_value = True
+        with mock.patch("vunit.simulator_interface.check_output", autospec=True) as check_output:
+            check_output.return_value = ""
 
             def raise_compile_error(*args, **kwargs):
                 raise CompileError
@@ -223,3 +257,14 @@ def create_simulator_interface():
     simif = SimulatorInterface()
     simif.compile_source_file_command = mock.create_autospec(simif.compile_source_file_command)
     return simif
+
+
+class MockPrinter(object):
+    """
+    Mock printer that accumulates the calls as a string
+    """
+    def __init__(self):
+        self.output = ""
+
+    def write(self, text, **kwargs):
+        self.output += text

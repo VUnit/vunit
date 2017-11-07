@@ -11,8 +11,10 @@ Generic simulator interface
 from __future__ import print_function
 import sys
 import os
+import subprocess
 from vunit.ostools import Process, simplify_path
 from vunit.exceptions import CompileError
+from vunit.color_printer import NO_COLOR_PRINTER
 
 
 class SimulatorInterface(object):
@@ -135,13 +137,13 @@ class SimulatorInterface(object):
         """
         pass
 
-    def compile_project(self, project, continue_on_error=False):
+    def compile_project(self, project, printer=NO_COLOR_PRINTER, continue_on_error=False):
         """
         Compile the project
         """
         self.add_simulator_specific(project)
         self.setup_library_mapping(project)
-        self.compile_source_files(project, continue_on_error)
+        self.compile_source_files(project, printer, continue_on_error)
 
     def simulate(self, output_path, test_suite_name, config, elaborate_only):
         """
@@ -155,50 +157,83 @@ class SimulatorInterface(object):
         """
         pass
 
-    def compile_source_files(self, project, continue_on_error=False):
+    def __compile_source_file(self, source_file, printer):
+        """
+        Compiles a single source file and prints status information
+        """
+        try:
+            command = self.compile_source_file_command(source_file)
+        except CompileError:
+            command = None
+            printer.write("failed", fg="ri")
+            printer.write("\n")
+            printer.write("File type not supported by %s simulator\n" % (self.name))
+
+            return False
+
+        try:
+            output = check_output(command,
+                                  env=self.get_env())
+            printer.write("passed", fg="gi")
+            printer.write("\n")
+            printer.write(output)
+
+        except subprocess.CalledProcessError as err:
+            printer.write("failed", fg="ri")
+            printer.write("\n")
+            printer.write("=== Command used: ===\n%s\n"
+                          % (subprocess.list2cmdline(command)))
+            printer.write("\n")
+            printer.write("=== Command output: ===\n%s\n" % err.output)
+
+            return False
+
+        return True
+
+    def compile_source_files(self, project, printer=NO_COLOR_PRINTER, continue_on_error=False):
         """
         Use compile_source_file_command to compile all source_files
         """
         dependency_graph = project.create_dependency_graph()
-        all_ok = True
         failures = []
         source_files = project.get_files_in_compile_order(dependency_graph=dependency_graph)
         source_files_to_skip = set()
+
+        max_library_name = 0
+        max_source_file_name = 0
+        if source_files:
+            max_library_name = max(len(source_file.library.name) for source_file in source_files)
+            max_source_file_name = max(len(simplify_path(source_file.name)) for source_file in source_files)
+
         for source_file in source_files:
+            printer.write(
+                'Compiling into %s %s ' % (
+                    (source_file.library.name + ":").ljust(max_library_name + 1),
+                    simplify_path(source_file.name).ljust(max_source_file_name)))
+            sys.stdout.flush()
+
             if source_file in source_files_to_skip:
-                print("Skipping %s due to failed dependencies" % simplify_path(source_file.name))
+                printer.write("skipped", fg="rgi")
+                printer.write("\n")
                 continue
 
-            print('Compiling %s into %s ...' % (simplify_path(source_file.name), source_file.library.name))
-            try:
-                command = None
-                command = self.compile_source_file_command(source_file)
-                success = run_command(command, env=self.get_env())
-
-            except CompileError:
-                success = False
-
-            if success:
+            if self.__compile_source_file(source_file, printer):
                 project.update(source_file)
             else:
                 source_files_to_skip.update(dependency_graph.get_dependent([source_file]))
                 failures.append(source_file)
 
-                if command is None:
-                    print("Failed to compile %s. File type not supported by %s simulator"
-                          % (simplify_path(source_file.name), self.name))
-                else:
-                    print("Failed to compile %s with command:\n%s"
-                          % (simplify_path(source_file.name), " ".join(command)))
-
-                all_ok = False
                 if not continue_on_error:
                     break
 
-        if not all_ok:
-            if continue_on_error:
-                print("Failed to compile some files")
+        if failures:
+            printer.write("Compile failed\n", fg='ri')
             raise CompileError
+
+        if source_files:
+            printer.write("Compile passed\n", fg='gi')
+        else:
+            printer.write("Re-compile not needed\n")
 
     def compile_source_file_command(self, source_file):  # pylint: disable=unused-argument
         raise NotImplementedError
@@ -238,6 +273,20 @@ def run_command(command, cwd=None, env=None):
     except Process.NonZeroExitCode:
         pass
     return False
+
+
+def check_output(command, env=None):
+    """
+    Wrapper arround subprocess.check_output
+    """
+    try:
+        output = subprocess.check_output(command,
+                                         env=env,
+                                         stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as err:
+        err.output = err.output.decode("utf-8")
+        raise err
+    return output.decode("utf-8")
 
 
 class Option(object):

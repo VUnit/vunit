@@ -25,9 +25,9 @@ class TestModelSimInterface(unittest.TestCase):
     Test the ModelSim interface
     """
 
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
-    def test_compile_project_vhdl_2008(self, process, run_command):
+    def test_compile_project_vhdl_2008(self, process, check_output):
         write_file("modelsim.ini", """
 [Library]
                    """)
@@ -41,7 +41,7 @@ class TestModelSimInterface(unittest.TestCase):
         project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="2008")
         simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
-        run_command.assert_called_once_with(
+        check_output.assert_called_once_with(
             [join('prefix', 'vcom'),
              '-quiet',
              '-modelsimini',
@@ -51,9 +51,9 @@ class TestModelSimInterface(unittest.TestCase):
              'lib',
              'file.vhd'], env=simif.get_env())
 
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
-    def test_compile_project_vhdl_2002(self, process, run_command):
+    def test_compile_project_vhdl_2002(self, process, check_output):
         write_file("modelsim.ini", """
 [Library]
                    """)
@@ -67,7 +67,7 @@ class TestModelSimInterface(unittest.TestCase):
         project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="2002")
         simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
-        run_command.assert_called_once_with(
+        check_output.assert_called_once_with(
             [join('prefix', 'vcom'),
              '-quiet',
              '-modelsimini',
@@ -77,9 +77,9 @@ class TestModelSimInterface(unittest.TestCase):
              'lib',
              'file.vhd'], env=simif.get_env())
 
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
-    def test_compile_project_vhdl_93(self, process, run_command):
+    def test_compile_project_vhdl_93(self, process, check_output):
         write_file("modelsim.ini", """
 [Library]
                    """)
@@ -93,7 +93,7 @@ class TestModelSimInterface(unittest.TestCase):
         project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="93")
         simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
-        run_command.assert_called_once_with(
+        check_output.assert_called_once_with(
             [join('prefix', 'vcom'),
              '-quiet',
              '-modelsimini',
@@ -103,9 +103,9 @@ class TestModelSimInterface(unittest.TestCase):
              'lib',
              'file.vhd'], env=simif.get_env())
 
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
-    def test_compile_project_vhdl_extra_flags(self, process, run_command):
+    def test_compile_project_vhdl_extra_flags(self, process, check_output):
         write_file("modelsim.ini", """
 [Library]
                    """)
@@ -120,20 +120,20 @@ class TestModelSimInterface(unittest.TestCase):
         source_file.set_compile_option("modelsim.vcom_flags", ["custom", "flags"])
         simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
-        run_command.assert_called_once_with([join('prefix', 'vcom'),
-                                             '-quiet',
-                                             '-modelsimini',
-                                             modelsim_ini,
-                                             'custom',
-                                             'flags',
-                                             '-2008',
-                                             '-work',
-                                             'lib',
-                                             'file.vhd'], env=simif.get_env())
+        check_output.assert_called_once_with([join('prefix', 'vcom'),
+                                              '-quiet',
+                                              '-modelsimini',
+                                              modelsim_ini,
+                                              'custom',
+                                              'flags',
+                                              '-2008',
+                                              '-work',
+                                              'lib',
+                                              'file.vhd'], env=simif.get_env())
 
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
-    def test_compile_project_vhdl_coverage(self, process, run_command):
+    def test_compile_project_vhdl_coverage(self, process, check_output):
         write_file("modelsim.ini", """
 [Library]
                    """)
@@ -148,19 +148,19 @@ class TestModelSimInterface(unittest.TestCase):
         project.add_source_file("file.vhd", "lib", file_type="vhdl")
         simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
-        run_command.assert_called_once_with([join('prefix', 'vcom'),
-                                             '-quiet',
-                                             '-modelsimini',
-                                             modelsim_ini,
-                                             '+cover=best',
-                                             '-2008',
-                                             '-work',
-                                             'lib',
-                                             'file.vhd'], env=simif.get_env())
+        check_output.assert_called_once_with([join('prefix', 'vcom'),
+                                              '-quiet',
+                                              '-modelsimini',
+                                              modelsim_ini,
+                                              '+cover=best',
+                                              '-2008',
+                                              '-work',
+                                              'lib',
+                                              'file.vhd'], env=simif.get_env())
 
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
-    def test_compile_project_verilog(self, process, run_command):
+    def test_compile_project_verilog(self, process, check_output):
         write_file("modelsim.ini", """
 [Library]
                    """)
@@ -174,18 +174,18 @@ class TestModelSimInterface(unittest.TestCase):
         project.add_source_file("file.v", "lib", file_type="verilog")
         simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
-        run_command.assert_called_once_with([join('prefix', 'vlog'),
-                                             '-quiet',
-                                             '-modelsimini',
-                                             modelsim_ini,
-                                             '-work',
-                                             'lib',
-                                             'file.v',
-                                             '-L', 'lib'], env=simif.get_env())
+        check_output.assert_called_once_with([join('prefix', 'vlog'),
+                                              '-quiet',
+                                              '-modelsimini',
+                                              modelsim_ini,
+                                              '-work',
+                                              'lib',
+                                              'file.v',
+                                              '-L', 'lib'], env=simif.get_env())
 
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
-    def test_compile_project_system_verilog(self, process, run_command):
+    def test_compile_project_system_verilog(self, process, check_output):
         write_file("modelsim.ini", """
 [Library]
                    """)
@@ -199,19 +199,19 @@ class TestModelSimInterface(unittest.TestCase):
         project.add_source_file("file.sv", "lib", file_type="systemverilog")
         simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
-        run_command.assert_called_once_with([join('prefix', 'vlog'),
-                                             '-quiet',
-                                             '-modelsimini',
-                                             modelsim_ini,
-                                             '-sv',
-                                             '-work',
-                                             'lib',
-                                             'file.sv',
-                                             '-L', 'lib'], env=simif.get_env())
+        check_output.assert_called_once_with([join('prefix', 'vlog'),
+                                              '-quiet',
+                                              '-modelsimini',
+                                              modelsim_ini,
+                                              '-sv',
+                                              '-work',
+                                              'lib',
+                                              'file.sv',
+                                              '-L', 'lib'], env=simif.get_env())
 
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
-    def test_compile_project_verilog_extra_flags(self, process, run_command):
+    def test_compile_project_verilog_extra_flags(self, process, check_output):
         write_file("modelsim.ini", """
 [Library]
                    """)
@@ -226,20 +226,20 @@ class TestModelSimInterface(unittest.TestCase):
         source_file.set_compile_option("modelsim.vlog_flags", ["custom", "flags"])
         simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
-        run_command.assert_called_once_with([join('prefix', 'vlog'),
-                                             '-quiet',
-                                             '-modelsimini',
-                                             modelsim_ini,
-                                             'custom',
-                                             'flags',
-                                             '-work',
-                                             'lib',
-                                             'file.v',
-                                             '-L', 'lib'], env=simif.get_env())
+        check_output.assert_called_once_with([join('prefix', 'vlog'),
+                                              '-quiet',
+                                              '-modelsimini',
+                                              modelsim_ini,
+                                              'custom',
+                                              'flags',
+                                              '-work',
+                                              'lib',
+                                              'file.v',
+                                              '-L', 'lib'], env=simif.get_env())
 
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
-    def test_compile_project_verilog_coverage(self, process, run_command):
+    def test_compile_project_verilog_coverage(self, process, check_output):
         write_file("modelsim.ini", """
 [Library]
                    """)
@@ -254,19 +254,19 @@ class TestModelSimInterface(unittest.TestCase):
         project.add_source_file("file.v", "lib", file_type="verilog")
         simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
-        run_command.assert_called_once_with([join('prefix', 'vlog'),
-                                             '-quiet',
-                                             '-modelsimini',
-                                             modelsim_ini,
-                                             '+cover=best',
-                                             '-work',
-                                             'lib',
-                                             'file.v',
-                                             '-L', 'lib'], env=simif.get_env())
+        check_output.assert_called_once_with([join('prefix', 'vlog'),
+                                              '-quiet',
+                                              '-modelsimini',
+                                              modelsim_ini,
+                                              '+cover=best',
+                                              '-work',
+                                              'lib',
+                                              'file.v',
+                                              '-L', 'lib'], env=simif.get_env())
 
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
-    def test_compile_project_verilog_include(self, process, run_command):
+    def test_compile_project_verilog_include(self, process, check_output):
         write_file("modelsim.ini", """
 [Library]
                    """)
@@ -280,19 +280,19 @@ class TestModelSimInterface(unittest.TestCase):
         project.add_source_file("file.v", "lib", file_type="verilog", include_dirs=["include"])
         simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
-        run_command.assert_called_once_with([join('prefix', 'vlog'),
-                                             '-quiet',
-                                             '-modelsimini',
-                                             modelsim_ini,
-                                             '-work',
-                                             'lib',
-                                             'file.v',
-                                             '-L', 'lib',
-                                             '+incdir+include'], env=simif.get_env())
+        check_output.assert_called_once_with([join('prefix', 'vlog'),
+                                              '-quiet',
+                                              '-modelsimini',
+                                              modelsim_ini,
+                                              '-work',
+                                              'lib',
+                                              'file.v',
+                                              '-L', 'lib',
+                                              '+incdir+include'], env=simif.get_env())
 
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
-    def test_compile_project_verilog_define(self, process, run_command):
+    def test_compile_project_verilog_define(self, process, check_output):
         write_file("modelsim.ini", """
 [Library]
                    """)
@@ -306,15 +306,15 @@ class TestModelSimInterface(unittest.TestCase):
         project.add_source_file("file.v", "lib", file_type="verilog", defines={"defname": "defval"})
         simif.compile_project(project)
         process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
-        run_command.assert_called_once_with([join('prefix', 'vlog'),
-                                             '-quiet',
-                                             '-modelsimini',
-                                             modelsim_ini,
-                                             '-work',
-                                             'lib',
-                                             'file.v',
-                                             '-L', 'lib',
-                                             '+define+defname=defval'], env=simif.get_env())
+        check_output.assert_called_once_with([join('prefix', 'vlog'),
+                                              '-quiet',
+                                              '-modelsimini',
+                                              modelsim_ini,
+                                              '-work',
+                                              'lib',
+                                              'file.v',
+                                              '-L', 'lib',
+                                              '+define+defname=defval'], env=simif.get_env())
 
     def test_copies_modelsim_ini_file_from_install(self):
         installed_path = join(self.output_path, "prefix")

@@ -29,8 +29,8 @@ class TestIncisiveInterface(unittest.TestCase):
 
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
-    def test_compile_project_vhdl_2008(self, run_command, find_cds_root_irun, find_cds_root_virtuoso):
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
+    def test_compile_project_vhdl_2008(self, check_output, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
@@ -40,7 +40,7 @@ class TestIncisiveInterface(unittest.TestCase):
         project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="2008")
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_vhdl_file_lib.args")
-        run_command.assert_called_once_with(
+        check_output.assert_called_once_with(
             [join('prefix', 'irun'), '-f', args_file],
             env=simif.get_env())
         self.assertEqual(read_file(args_file).splitlines(),
@@ -71,8 +71,8 @@ define work "%s/libraries/work"
 
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
-    def test_compile_project_vhdl_2002(self, run_command, find_cds_root_irun, find_cds_root_virtuoso):
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
+    def test_compile_project_vhdl_2002(self, check_output, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
@@ -82,7 +82,7 @@ define work "%s/libraries/work"
         project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="2002")
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_vhdl_file_lib.args")
-        run_command.assert_called_once_with(
+        check_output.assert_called_once_with(
             [join('prefix', 'irun'), '-f', args_file],
             env=simif.get_env())
         self.assertEqual(read_file(args_file).splitlines(),
@@ -103,8 +103,8 @@ define work "%s/libraries/work"
 
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
-    def test_compile_project_vhdl_93(self, run_command, find_cds_root_irun, find_cds_root_virtuoso):
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
+    def test_compile_project_vhdl_93(self, check_output, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
@@ -114,7 +114,7 @@ define work "%s/libraries/work"
         project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="93")
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_vhdl_file_lib.args")
-        run_command.assert_called_once_with(
+        check_output.assert_called_once_with(
             [join('prefix', 'irun'), '-f', args_file],
             env=simif.get_env())
         self.assertEqual(read_file(args_file).splitlines(),
@@ -135,8 +135,8 @@ define work "%s/libraries/work"
 
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
-    def test_compile_project_vhdl_extra_flags(self, run_command, find_cds_root_irun, find_cds_root_virtuoso):
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
+    def test_compile_project_vhdl_extra_flags(self, check_output, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
@@ -147,7 +147,7 @@ define work "%s/libraries/work"
         source_file.set_compile_option("incisive.irun_vhdl_flags", ["custom", "flags"])
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_vhdl_file_lib.args")
-        run_command.assert_called_once_with(
+        check_output.assert_called_once_with(
             [join('prefix', 'irun'), '-f', args_file],
             env=simif.get_env())
         self.assertEqual(read_file(args_file).splitlines(),
@@ -169,8 +169,8 @@ define work "%s/libraries/work"
 
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
-    def test_compile_project_vhdl_hdlvar(self, run_command, find_cds_root_irun, find_cds_root_virtuoso):
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
+    def test_compile_project_vhdl_hdlvar(self, check_output, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path, hdlvar="custom_hdlvar")
@@ -180,7 +180,7 @@ define work "%s/libraries/work"
         project.add_source_file("file.vhd", "lib", file_type="vhdl")
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_vhdl_file_lib.args")
-        run_command.assert_called_once_with(
+        check_output.assert_called_once_with(
             [join('prefix', 'irun'), '-f', args_file],
             env=simif.get_env())
         self.assertEqual(read_file(args_file).splitlines(),
@@ -202,8 +202,8 @@ define work "%s/libraries/work"
 
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
-    def test_compile_project_verilog(self, run_command, find_cds_root_irun, find_cds_root_virtuoso):
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
+    def test_compile_project_verilog(self, check_output, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
@@ -213,7 +213,7 @@ define work "%s/libraries/work"
         project.add_source_file("file.v", "lib", file_type="verilog")
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_verilog_file_lib.args")
-        run_command.assert_called_once_with(
+        check_output.assert_called_once_with(
             [join('prefix', 'irun'), '-f', args_file],
             env=simif.get_env())
         self.assertEqual(read_file(args_file).splitlines(),
@@ -235,8 +235,8 @@ define work "%s/libraries/work"
 
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
-    def test_compile_project_system_verilog(self, run_command, find_cds_root_irun, find_cds_root_virtuoso):
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
+    def test_compile_project_system_verilog(self, check_output, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
@@ -246,7 +246,7 @@ define work "%s/libraries/work"
         project.add_source_file("file.sv", "lib", file_type="systemverilog")
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_verilog_file_lib.args")
-        run_command.assert_called_once_with(
+        check_output.assert_called_once_with(
             [join('prefix', 'irun'), '-f', args_file],
             env=simif.get_env())
         self.assertEqual(read_file(args_file).splitlines(),
@@ -278,8 +278,8 @@ define work "%s/libraries/work"
 
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
-    def test_compile_project_verilog_extra_flags(self, run_command, find_cds_root_irun, find_cds_root_virtuoso):
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
+    def test_compile_project_verilog_extra_flags(self, check_output, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
@@ -290,7 +290,7 @@ define work "%s/libraries/work"
         source_file.set_compile_option("incisive.irun_verilog_flags", ["custom", "flags"])
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_verilog_file_lib.args")
-        run_command.assert_called_once_with(
+        check_output.assert_called_once_with(
             [join('prefix', 'irun'), '-f', args_file],
             env=simif.get_env())
         self.assertEqual(read_file(args_file).splitlines(),
@@ -313,8 +313,8 @@ define work "%s/libraries/work"
 
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
-    def test_compile_project_verilog_include(self, run_command, find_cds_root_irun, find_cds_root_virtuoso):
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
+    def test_compile_project_verilog_include(self, check_output, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
@@ -324,7 +324,7 @@ define work "%s/libraries/work"
         project.add_source_file("file.v", "lib", file_type="verilog", include_dirs=["include"])
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_verilog_file_lib.args")
-        run_command.assert_called_once_with(
+        check_output.assert_called_once_with(
             [join('prefix', 'irun'), '-f', args_file],
             env=simif.get_env())
         self.assertEqual(read_file(args_file).splitlines(),
@@ -347,8 +347,8 @@ define work "%s/libraries/work"
 
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
-    def test_compile_project_verilog_define(self, run_command, find_cds_root_irun, find_cds_root_virtuoso):
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
+    def test_compile_project_verilog_define(self, check_output, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
@@ -358,7 +358,7 @@ define work "%s/libraries/work"
         project.add_source_file("file.v", "lib", file_type="verilog", defines=dict(defname="defval"))
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_verilog_file_lib.args")
-        run_command.assert_called_once_with(
+        check_output.assert_called_once_with(
             [join('prefix', 'irun'), '-f', args_file],
             env=simif.get_env())
         self.assertEqual(read_file(args_file).splitlines(),
@@ -381,8 +381,8 @@ define work "%s/libraries/work"
 
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
-    def test_compile_project_verilog_hdlvar(self, run_command, find_cds_root_irun, find_cds_root_virtuoso):
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
+    def test_compile_project_verilog_hdlvar(self, check_output, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path, hdlvar="custom_hdlvar")
@@ -392,7 +392,7 @@ define work "%s/libraries/work"
         project.add_source_file("file.v", "lib", file_type="verilog", defines=dict(defname="defval"))
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_verilog_file_lib.args")
-        run_command.assert_called_once_with(
+        check_output.assert_called_once_with(
             [join('prefix', 'irun'), '-f', args_file],
             env=simif.get_env())
         self.assertEqual(read_file(args_file).splitlines(),
@@ -456,7 +456,7 @@ define work "%s/libraries/work"
         write_file("file.vhd", "")
         project.add_source_file("file.vhd", "lib", file_type="vhdl")
 
-        with mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True) as dummy:
+        with mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="") as dummy:
             simif.compile_project(project)
 
         config = make_config()
@@ -532,7 +532,7 @@ define work "%s/libraries/work"
         write_file("file.vhd", "")
         project.add_source_file("file.vhd", "lib", file_type="vhdl")
 
-        with mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True) as dummy:
+        with mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="") as dummy:
             simif.compile_project(project)
 
         config = make_config(verilog=True)
@@ -765,7 +765,7 @@ define work "%s/libraries/work"
         project.add_source_file("file.vhd", "lib", file_type="vhdl")
 
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path, gui=True)
-        with mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True) as dummy:
+        with mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="") as dummy:
             simif.compile_project(project)
         config = make_config()
         self.assertTrue(simif.simulate("sim_output_path", "test_suite_name", config))

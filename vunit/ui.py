@@ -757,6 +757,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         simulator_if = self._create_simulator_if()
         test_list = self._create_tests(simulator_if)
         self._compile(simulator_if)
+        print()
 
         start_time = ostools.get_time()
         report = TestReport(printer=self._printer)
@@ -836,7 +837,8 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         Compile entire project
         """
         simulator_if.compile_project(self._project,
-                                     continue_on_error=self._args.keep_compiling)
+                                     continue_on_error=self._args.keep_compiling,
+                                     printer=self._printer)
 
     def _run_test(self, test_cases, report):
         """

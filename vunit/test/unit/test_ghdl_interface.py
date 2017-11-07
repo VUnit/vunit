@@ -101,8 +101,8 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         check_output.return_value = version
         self.assertRaises(AssertionError, GHDLInterface.determine_backend, "prefix")
 
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
-    def test_compile_project_2008(self, run_command):  # pylint: disable=no-self-use
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
+    def test_compile_project_2008(self, check_output):  # pylint: disable=no-self-use
         simif = GHDLInterface(prefix="prefix")
         write_file("file.vhd", "")
 
@@ -110,12 +110,12 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         project.add_library("lib", "lib_path")
         project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="2008")
         simif.compile_project(project)
-        run_command.assert_called_once_with(
+        check_output.assert_called_once_with(
             [join("prefix", 'ghdl'), '-a', '--workdir=lib_path', '--work=lib',
              '--std=08', '-Plib_path', 'file.vhd'], env=simif.get_env())
 
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
-    def test_compile_project_2002(self, run_command):  # pylint: disable=no-self-use
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
+    def test_compile_project_2002(self, check_output):  # pylint: disable=no-self-use
         simif = GHDLInterface(prefix="prefix")
         write_file("file.vhd", "")
 
@@ -123,12 +123,12 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         project.add_library("lib", "lib_path")
         project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="2002")
         simif.compile_project(project)
-        run_command.assert_called_once_with(
+        check_output.assert_called_once_with(
             [join("prefix", 'ghdl'), '-a', '--workdir=lib_path', '--work=lib',
              '--std=02', '-Plib_path', 'file.vhd'], env=simif.get_env())
 
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
-    def test_compile_project_93(self, run_command):  # pylint: disable=no-self-use
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
+    def test_compile_project_93(self, check_output):  # pylint: disable=no-self-use
         simif = GHDLInterface(prefix="prefix")
         write_file("file.vhd", "")
 
@@ -136,12 +136,12 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         project.add_library("lib", "lib_path")
         project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="93")
         simif.compile_project(project)
-        run_command.assert_called_once_with(
+        check_output.assert_called_once_with(
             [join("prefix", 'ghdl'), '-a', '--workdir=lib_path', '--work=lib',
              '--std=93', '-Plib_path', 'file.vhd'], env=simif.get_env())
 
-    @mock.patch("vunit.simulator_interface.run_command", autospec=True, return_value=True)
-    def test_compile_project_extra_flags(self, run_command):  # pylint: disable=no-self-use
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
+    def test_compile_project_extra_flags(self, check_output):  # pylint: disable=no-self-use
         simif = GHDLInterface(prefix="prefix")
         write_file("file.vhd", "")
 
@@ -150,7 +150,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         source_file = project.add_source_file("file.vhd", "lib", file_type="vhdl")
         source_file.set_compile_option("ghdl.flags", ["custom", "flags"])
         simif.compile_project(project)
-        run_command.assert_called_once_with(
+        check_output.assert_called_once_with(
             [join("prefix", 'ghdl'), '-a', '--workdir=lib_path', '--work=lib', '--std=08',
              '-Plib_path', 'custom', 'flags', 'file.vhd'], env=simif.get_env())
 
