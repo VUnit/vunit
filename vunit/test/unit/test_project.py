@@ -1093,6 +1093,124 @@ end architecture;
         self.assertEqual(file_type_of("file.vams"), "verilog")
         self.assertRaises(RuntimeError, file_type_of, "file.foo")
 
+    def test_circular_dependencies_through_libraries(self):
+        """
+        Create a projected containing two identical files in two separated
+        library and instantiate an entity from the first library.
+        """
+        self.project = Project()
+        self.project.add_library("lib_1", "work_path")
+        self.project.add_library("lib_2", "work_path")
+        self.project.add_library("lib", "work_path")
+        text_file_1_2 = """\
+        library ieee;use ieee.std_logic_1164.all;
+        entity buffer1 is port (Q : out std_logic);end entity;
+        architecture arch of buffer1 is begin Q <= '1';end architecture;
+        library ieee;use ieee.std_logic_1164.all;
+        entity buffer2 is port (Q : out std_logic);end entity;
+        architecture arch of buffer2 is
+        component buffer1 port (Q : out std_logic);end component buffer1;
+        begin my_buffer_i : buffer1 port map (Q => Q); end architecture;
+        """
+        self.add_source_file("lib_1", "file1.vhd", text_file_1_2)
+        self.add_source_file("lib_2", "file2.vhd", text_file_1_2)
+        file3 = self.add_source_file("lib", "file3.vhd", """\
+        library lib_1;
+        entity your_buffer is end entity;
+        architecture arch of your_buffer is begin
+        my_buffer_i : entity lib_1.buffer1;
+        end architecture;
+        """)
+        self.project.get_dependencies_in_compile_order([file3], implementation_dependencies=True)
+
+    def test_dependencies_on_multiple_libraries(self):
+        """
+        Create a projected containing two identical files in two separated
+        library and instantiate an entity from the first library.
+        """
+        self.project = Project()
+        self.project.add_library("lib_1", "work_path")
+        self.project.add_library("lib_2", "work_path")
+        self.project.add_library("lib", "work_path")
+        text_file_1_2 = """\
+library ieee;use ieee.std_logic_1164.all;
+entity buffer1 is  port (D : in std_logic;Q : out std_logic);end entity;
+architecture arch of buffer1 is begin Q <= D; end architecture;
+library ieee;use ieee.std_logic_1164.all;
+entity buffer2 is port (D : in std_logic; Q : out std_logic);end entity;
+architecture arch of buffer2 is
+component buffer1 port (D : in  std_logic;Q : out std_logic);end component buffer1;
+begin my_buffer_i : buffer1 port map (D => D,Q => Q);end architecture;
+        """
+        self.add_source_file("lib_1", "file1.vhd", text_file_1_2)
+        self.add_source_file("lib_2", "file1.vhd", text_file_1_2)
+        file3 = self.add_source_file("lib", "file3.vhd", """\
+library ieee;use ieee.std_logic_1164.all;
+library lib_1;entity your_buffer is port (D : in std_logic; Q : out std_logic);end entity;
+architecture arch of your_buffer is
+component buffer1 port (D : in  std_logic;Q : out std_logic);end component buffer1;
+begin  my_buffer_i : buffer1 port map (D => D,Q => Q);end architecture;
+        """)
+        dep_files = self.project.get_dependencies_in_compile_order([file3], implementation_dependencies=True)
+        for file in dep_files:
+            if file.library.name == "lib_2" and file.name == "file1.vhd":
+                assert False, "Error: file3.vhd does not dependes from file1.vhd into lib_2"
+
+    def test_dependencies_on_separated_architecture(self):
+        """
+        Create a projected containing an entity file separated from architecture file.
+        Dependency should involve also architecture.
+        """
+        self.project = Project()
+        self.project.add_library("lib", "work_path")
+        self.add_source_file("lib", "file1.vhd", """\
+library ieee;use ieee.std_logic_1164.all;
+entity buffer1 is  port (D : in std_logic;Q : out std_logic);end entity;
+        """)
+        self.add_source_file("lib", "file1_arch.vhd", """\
+library ieee;use ieee.std_logic_1164.all;
+architecture arch of buffer1 is begin Q <= D; end architecture;
+        """)
+        file3 = self.add_source_file("lib", "file3.vhd", """\
+library ieee;use ieee.std_logic_1164.all;
+entity your_buffer is port (D : in std_logic;Q : out std_logic);end entity;
+architecture arch of your_buffer is begin my_buffer_i : entity work.buffer1 port map (D => D,Q => Q);end architecture;
+        """)
+        dep_files = self.project.get_dependencies_in_compile_order([file3], implementation_dependencies=True)
+        file1_arc_found = False;
+        for file in dep_files:
+            if file.library.name == "lib" and file.name == "file1_arch.vhd":
+                file1_arc_found = True;
+        if not file1_arc_found:
+            assert False, "Error: file1_arch.vhd should be a dependency"
+
+    def test_dependencies_on_verilog_component(self):
+        """
+      Create a projected containing an verilog file separated.
+      Dependency should involve it.
+        """
+        self.project = Project()
+        self.project.add_library("lib", "work_path")
+        self.add_source_file("lib", "file1.v", """\
+module buffer1 (input   D,output   Q);
+assign Q = D;
+endmodule
+        """)
+        file3 = self.add_source_file("lib", "file3.vhd", """\
+library ieee;use ieee.std_logic_1164.all;
+entity your_buffer is port (D : in std_logic;Q : out std_logic);end entity;
+architecture arch of your_buffer is
+component buffer1 port (D : in  std_logic;Q : out std_logic);end component buffer1;
+begin my_buffer_i : buffer1 port map (D => D,Q => Q);end architecture;
+        """)
+        dep_files = self.project.get_dependencies_in_compile_order([file3], implementation_dependencies=True)
+        file1_found = False;
+        for file in dep_files:
+            if file.library.name == "lib" and file.name == "file1.v":
+                file1_found = True;
+        if not file1_found:
+            assert False, "Error: file1.v should be a dependency"
+
     def create_dummy_three_file_project(self, update_file1=False):
         """
         Create a projected containing three dummy files
