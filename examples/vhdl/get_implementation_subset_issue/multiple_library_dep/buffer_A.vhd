@@ -1,14 +1,30 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-entity your_buffer is
+entity buffer1 is
   port (
     D : in std_logic;
     Q : out std_logic
   );
 end entity;
 
-architecture arch of your_buffer is
+architecture arch of buffer1 is
+
+begin
+    Q <= D;
+end architecture;
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity buffer2 is
+  port (
+    D : in std_logic;
+    Q : out std_logic
+  );
+end entity;
+
+architecture arch of buffer2 is
 
   component buffer1
   port (
@@ -23,5 +39,4 @@ begin
     D => D,
     Q => Q
   );
-
 end architecture;
