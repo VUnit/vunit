@@ -29,17 +29,35 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
     """
     Administer the execution of a list of test suites
     """
-    def __init__(self, report, output_path, verbose=False, num_threads=1,
+
+    VERBOSITY_QUIET = 0
+    VERBOSITY_NORMAL = 1
+    VERBOSITY_VERBOSE = 2
+
+    def __init__(self, report, output_path,
+                 verbosity=VERBOSITY_NORMAL,
+                 num_threads=1,
                  dont_catch_exceptions=False):
         self._lock = threading.Lock()
         self._local = threading.local()
         self._report = report
         self._output_path = output_path
-        self._verbose = verbose
+        assert verbosity in (self.VERBOSITY_QUIET,
+                             self.VERBOSITY_NORMAL,
+                             self.VERBOSITY_VERBOSE)
+        self._verbosity = verbosity
         self._num_threads = num_threads
         self._stdout = sys.stdout
         self._stderr = sys.stderr
         self._dont_catch_exceptions = dont_catch_exceptions
+
+    @property
+    def _is_verbose(self):
+        return self._verbosity == self.VERBOSITY_VERBOSE
+
+    @property
+    def _is_quiet(self):
+        return self._verbosity == self.VERBOSITY_QUIET
 
     def run(self, test_suites):
         """
@@ -55,10 +73,10 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         for test_suite in test_suites:
             for test_name in test_suite.test_cases:
                 num_tests += 1
-                if self._verbose:
+                if self._is_verbose:
                     print("Running test: " + test_name)
 
-        if self._verbose:
+        if self._is_verbose:
             print("Running %i tests" % num_tests)
             print()
 
@@ -69,7 +87,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         threads = []
 
         # Disable continuous output in parallel mode
-        write_stdout = self._verbose and self._num_threads == 1
+        write_stdout = self._is_verbose and self._num_threads == 1
 
         try:
             sys.stdout = ThreadLocalOutput(self._local, self._stdout)
@@ -111,11 +129,19 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             try:
                 test_suite = scheduler.next()
 
+                output_path = create_output_path(self._output_path, test_suite.name)
+                output_file_name = join(output_path, "output.txt")
+
                 with self._lock:  # pylint: disable=not-context-manager
                     for test_name in test_suite.test_cases:
                         print("Starting %s" % test_name)
+                        print("Output file: %s" % output_file_name)
 
-                self._run_test_suite(test_suite, write_stdout, num_tests)
+                self._run_test_suite(test_suite,
+                                     write_stdout,
+                                     num_tests,
+                                     output_path,
+                                     output_file_name)
 
             except StopIteration:
                 return
@@ -131,12 +157,15 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                 if test_suite is not None:
                     scheduler.test_done()
 
-    def _run_test_suite(self, test_suite, write_stdout, num_tests):
+    def _run_test_suite(self,
+                        test_suite,
+                        write_stdout,
+                        num_tests,
+                        output_path,
+                        output_file_name):
         """
         Run the actual test suite
         """
-        output_path = create_output_path(self._output_path, test_suite.name)
-        output_file_name = join(output_path, "output.txt")
         start_time = ostools.get_time()
 
         try:
@@ -174,7 +203,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         any_not_passed = any(value != PASSED for value in results.values())
 
         with self._lock:  # pylint: disable=not-context-manager
-            if (not write_stdout) and (any_not_passed or self._verbose):
+            if (not write_stdout) and (any_not_passed or self._is_verbose) and not self._is_quiet:
                 self._print_output(output_file_name)
             self._add_results(test_suite, results, start_time, num_tests, output_file_name)
 

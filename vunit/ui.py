@@ -844,9 +844,17 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         Run the test suites and return the report
         """
+
+        if self._args.verbose:
+            verbosity = TestRunner.VERBOSITY_VERBOSE
+        elif self._args.quiet:
+            verbosity = TestRunner.VERBOSITY_QUIET
+        else:
+            verbosity = TestRunner.VERBOSITY_NORMAL
+
         runner = TestRunner(report,
                             join(self._output_path, "test_output"),
-                            verbose=self._args.verbose,
+                            verbosity=verbosity,
                             num_threads=self._args.num_threads,
                             dont_catch_exceptions=self._args.dont_catch_exceptions)
         runner.run(test_cases)
