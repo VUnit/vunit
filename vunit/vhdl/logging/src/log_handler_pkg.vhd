@@ -35,11 +35,11 @@ package log_handler_pkg is
   type log_handler_vec_t is array (natural range <>) of log_handler_t;
 
   -- Display handler; Write to stdout
-  constant display_handler : log_handler_t;
+  impure function display_handler return log_handler_t;
 
   -- File handler; Write to file
   -- Is configured to output_path/log.csv by test_runner_setup
-  constant file_handler : log_handler_t;
+  impure function file_handler return log_handler_t;
 
   -- Get the name of the file used by the handler
   impure function get_file_name (log_handler : log_handler_t) return string;

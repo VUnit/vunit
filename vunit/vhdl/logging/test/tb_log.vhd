@@ -86,12 +86,12 @@ begin
       wait for 1 ns;
     end procedure;
 
-    constant max_time_length : natural := time'image(1 sec)'length;
-    constant time_padding  : string := (1 to max_time_length => ' ');
+    constant max_time_str : string := time'image(1 sec);
+    constant time_padding  : string(max_time_str'range) := (others => ' ');
     impure function format_time(t : time) return string is
       constant time_str : string := time'image(t);
     begin
-      return (1 to (max_time_length - time_str'length) => ' ') & time_str;
+      return (1 to (max_time_str'length - time_str'length) => ' ') & time_str;
     end function;
   begin
 

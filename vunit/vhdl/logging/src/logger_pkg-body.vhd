@@ -106,7 +106,11 @@ package body logger_pkg is
     return logger;
   end;
 
-  constant root_logger : logger_t := new_root_logger;
+  constant p_root_logger : logger_t := new_root_logger;
+  impure function root_logger return logger_t is
+  begin
+    return p_root_logger;
+  end;
 
   impure function new_logger(name : string; parent : logger_t) return logger_t is
     constant id : natural := get(next_logger_id, 0);
@@ -760,7 +764,11 @@ package body logger_pkg is
     log(logger, msg, failure, line_num, file_name);
   end procedure;
 
-  constant default_logger : logger_t := get_logger("default");
+  constant p_default_logger : logger_t := get_logger("default");
+  impure function default_logger return logger_t is
+  begin
+    return p_default_logger;
+  end;
 
   procedure log(msg : string;
                 log_level : log_level_t := info;

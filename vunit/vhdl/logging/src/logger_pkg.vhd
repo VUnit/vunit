@@ -15,7 +15,7 @@ package logger_pkg is
     p_data : integer_vector_ptr_t;
   end record;
   constant null_logger : logger_t := (p_data => null_ptr);
-  constant root_logger : logger_t;
+  impure function root_logger return logger_t;
 
   -- Get a logger with name.
   -- Can also optionally be relative to a parent logger
@@ -55,7 +55,7 @@ package logger_pkg is
   ------------------------------------------------
 
   -- The default logger, all log calls without logger argument go to this logger.
-  constant default_logger : logger_t;
+  impure function default_logger return logger_t;
 
   procedure debug(msg : string;
                   line_num : natural := 0;

@@ -27,7 +27,8 @@ package body log_handler_pkg is
   constant max_logger_name_idx : natural := 5;
   constant log_handler_length : natural := max_logger_name_idx + 1;
 
-  constant max_time_length : natural := time'image(1 sec)'length;
+  constant max_time_str : string := time'image(1 sec);
+  constant max_time_length : natural := max_time_str'length;
 
   procedure assert_status(status : file_open_status; file_name : string) is
   begin
@@ -73,17 +74,27 @@ package body log_handler_pkg is
   end;
 
   -- Display handler; Write to stdout
-  constant display_handler : log_handler_t := new_log_handler(display_handler_id,
-                                                              stdout_file_name,
-                                                              format => verbose,
-                                                              use_color => true);
+  constant p_display_handler : log_handler_t := new_log_handler(display_handler_id,
+                                                                stdout_file_name,
+                                                                format => verbose,
+                                                                use_color => true);
 
   -- File handler; Write to file
   -- Is configured to output_path/log.csv by test_runner_setup
-  constant file_handler : log_handler_t := new_log_handler(file_handler_id,
-                                                           null_file_name,
-                                                           format => verbose,
-                                                           use_color => false);
+  constant p_file_handler : log_handler_t := new_log_handler(file_handler_id,
+                                                             null_file_name,
+                                                             format => verbose,
+                                                             use_color => false);
+
+  impure function display_handler return log_handler_t is
+  begin
+    return p_display_handler;
+  end function;
+
+  impure function file_handler return log_handler_t is
+  begin
+    return p_file_handler;
+  end function;
 
   impure function get_id(log_handler : log_handler_t) return natural is
   begin
@@ -152,8 +163,8 @@ package body log_handler_pkg is
                            line_num : natural := 0;
                            file_name : string := "") is
 
-    constant log_file_name : string := get_file_name(log_handler);
     variable l : line;
+    constant log_file_name : string := get_file_name(log_handler);
 
     procedure log_to_line is
       variable use_color : boolean := get(log_handler.p_data, use_color_idx) = 1;

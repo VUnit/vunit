@@ -194,9 +194,11 @@ package body check_deprecated_pkg is
   procedure checker_found_errors (
     constant checker :in  checker_t;
     variable result : out   boolean) is
+    variable stat : checker_stat_t;
   begin
     warning("Using deprecated checker_found_errors. Use get_stat instead.");
-    result := get_stat(checker).n_failed > 0;
+    stat := get_stat(checker);
+    result := stat.n_failed > 0;
   end;
 
   impure function checker_found_errors return boolean is

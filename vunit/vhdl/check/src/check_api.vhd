@@ -26,7 +26,7 @@ package check_pkg is
   impure function get_checker_stat return checker_stat_t;
   procedure reset_checker_stat;
 
-  alias get_stat is get_checker_stat[checker_stat_t];
+--  alias get_stat is get_checker_stat[checker_stat_t];
   alias get_stat is get_checker_stat[return checker_stat_t];
   alias reset_stat is reset_checker_stat[];
 
