@@ -135,7 +135,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                 with self._lock:  # pylint: disable=not-context-manager
                     for test_name in test_suite.test_cases:
                         print("Starting %s" % test_name)
-                        print("Output file: %s" % output_file_name)
+                    print("Output file: %s" % output_file_name)
 
                 self._run_test_suite(test_suite,
                                      write_stdout,
