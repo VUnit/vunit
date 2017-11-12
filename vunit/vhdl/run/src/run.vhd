@@ -162,7 +162,7 @@ package body run_pkg is
     begin
       for i in 0 to num_checkers - 1 loop
         checker := get_checker(i);
-        stat := get_stat(checker);
+        stat := get_checker_stat(checker);
         if stat.n_failed > 0 then
           if get_name(checker) = "" then
             core_pkg.core_failure("Default checker has " & integer'image(stat.n_failed) &

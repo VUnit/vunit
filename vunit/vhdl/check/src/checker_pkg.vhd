@@ -55,16 +55,11 @@ package checker_pkg is
   impure function get_default_log_level(checker : checker_t) return log_level_t;
   procedure set_default_log_level(checker : checker_t; default_log_level : log_level_t);
 
-  impure function get_stat(checker : checker_t) return checker_stat_t;
+  impure function get_checker_stat(checker : checker_t) return checker_stat_t;
   impure function get_name(checker : checker_t) return string;
-  procedure reset_stat(checker     : checker_t);
-  procedure get_stat(checker       :     checker_t;
-                     variable stat : out checker_stat_t);
-
-  -- Legacy aliases
-  alias get_checker_stat is get_stat[checker_t return checker_stat_t];
-  alias get_checker_stat is get_stat[checker_t, checker_stat_t];
-  alias reset_checker_stat is reset_stat[checker_t];
+  procedure reset_checker_stat(checker     : checker_t);
+  procedure get_checker_stat(checker       :     checker_t;
+                             variable stat : out checker_stat_t);
 
   constant null_checker : checker_t := (p_data => null_ptr);
 
@@ -150,7 +145,7 @@ package body checker_pkg is
     set(checker.p_data, name_idx, to_integer(allocate(name)));
     set(checker.p_data, logger_idx, to_integer(logger.p_data));
     set(checker.p_data, default_log_level_idx, log_level_t'pos(default_log_level));
-    reset_stat(checker);
+    reset_checker_stat(checker);
     return checker;
   end;
 
@@ -169,14 +164,14 @@ package body checker_pkg is
     set(checker.p_data, default_log_level_idx, log_level_t'pos(default_log_level));
   end;
 
-  procedure reset_stat(checker : checker_t) is
+  procedure reset_checker_stat(checker : checker_t) is
   begin
     set(checker.p_data, stat_checks_idx, 0);
     set(checker.p_data, stat_failed_idx, 0);
     set(checker.p_data, stat_passed_idx, 0);
   end;
 
-  impure function get_stat(checker : checker_t) return checker_stat_t is
+  impure function get_checker_stat(checker : checker_t) return checker_stat_t is
   begin
     return (n_checks => get(checker.p_data, stat_checks_idx),
             n_failed => get(checker.p_data, stat_failed_idx),
@@ -184,10 +179,10 @@ package body checker_pkg is
 
   end;
 
-  procedure get_stat(checker       :     checker_t;
-                     variable stat : out checker_stat_t) is
+  procedure get_checker_stat(checker       :     checker_t;
+                             variable stat : out checker_stat_t) is
   begin
-    stat := get_stat(checker);
+    stat := get_checker_stat(checker);
   end;
 
   impure function get_name(checker : checker_t) return string is

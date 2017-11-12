@@ -110,13 +110,14 @@ begin
     end if;
 
     -- You can also ask if a checker has detected any errors.
-    if get_stat(default_checker).n_failed > 0 then
+    stat := get_checker_stat(default_checker);
+    if stat.n_failed > 0 then
       info("Expected to be here.");
     else
       info("This was not expected.");
     end if;
 
-    if get_stat(my_checker).n_failed > 0 then
+    if stat.n_failed > 0 then
       info("Expected to be here.");
     else
       info("This was not expected.");

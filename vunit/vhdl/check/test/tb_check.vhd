@@ -280,7 +280,7 @@ begin
         unmock(get_logger(check_checker4));
         verify_passed_checks(check_checker4, stat, 2);
         verify_failed_checks(check_checker4, stat, 6);
-        reset_stat(check_checker4);
+        reset_checker_stat(check_checker4);
 
       elsif run("Test should pass on logic low inputs when not enabled") then
         wait until rising_edge(clk);

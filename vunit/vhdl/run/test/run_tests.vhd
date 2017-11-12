@@ -158,8 +158,8 @@ begin
     procedure test_case_cleanup is
       variable stat : checker_stat_t;
     begin
-      get_stat(c, stat);
-      reset_stat(c);
+      get_checker_stat(c, stat);
+      reset_checker_stat(c);
 
       info("Number of checks: " & natural'image(stat.n_checks));
       info("Number of passing checks: " & natural'image(stat.n_passed));
@@ -342,7 +342,7 @@ begin
       core_pkg.unmock_core_failure;
       test_case_cleanup;
       reset_log_count(check_logger, level);
-      reset_stat(default_checker);
+      reset_checker_stat(default_checker);
     end loop;
 
     ---------------------------------------------------------------------------
@@ -358,7 +358,7 @@ begin
     core_pkg.unmock_core_failure;
     test_case_cleanup;
     reset_log_count(get_logger("check:my checker"), error);
-    reset_stat(my_checker);
+    reset_checker_stat(my_checker);
 
     ---------------------------------------------------------------------------
     banner("Should loop over enabled_test_case once and in order unless re-initialized.");

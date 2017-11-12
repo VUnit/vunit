@@ -194,30 +194,30 @@ begin
         reset_checker_stat;
 
         assert_false(checker_found_errors);
-        check_only_log(default_logger, "Using deprecated checker_found_errors. Use get_stat instead.", warning);
+        check_only_log(default_logger, "Using deprecated checker_found_errors. Use get_checker_stat instead.", warning);
 
         checker_found_errors(found_errors);
         assert_false(found_errors);
-        check_only_log(default_logger, "Using deprecated checker_found_errors. Use get_stat instead.", warning);
+        check_only_log(default_logger, "Using deprecated checker_found_errors. Use get_checker_stat instead.", warning);
 
         checker_found_errors(my_checker, found_errors);
         assert_false(found_errors);
-        check_only_log(default_logger, "Using deprecated checker_found_errors. Use get_stat instead.", warning);
+        check_only_log(default_logger, "Using deprecated checker_found_errors. Use get_checker_stat instead.", warning);
 
         check_failed(level => warning);
         assert_true(checker_found_errors);
-        check_only_log(default_logger, "Using deprecated checker_found_errors. Use get_stat instead.", warning);
+        check_only_log(default_logger, "Using deprecated checker_found_errors. Use get_checker_stat instead.", warning);
 
         checker_found_errors(found_errors);
         assert_true(found_errors);
-        check_only_log(default_logger, "Using deprecated checker_found_errors. Use get_stat instead.", warning);
+        check_only_log(default_logger, "Using deprecated checker_found_errors. Use get_checker_stat instead.", warning);
 
         reset_checker_stat;
 
         check_failed(my_checker, level => warning);
         checker_found_errors(my_checker, found_errors);
         assert_true(found_errors);
-        check_only_log(default_logger, "Using deprecated checker_found_errors. Use get_stat instead.", warning);
+        check_only_log(default_logger, "Using deprecated checker_found_errors. Use get_checker_stat instead.", warning);
 
         reset_checker_stat(my_checker);
 

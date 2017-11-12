@@ -64,7 +64,7 @@ begin
         reset_checker_stat;
 
       elsif run("Test custom checker") then
-        stat_before := get_stat(my_checker);
+        stat_before := get_checker_stat(my_checker);
 
         mock(my_logger);
         passing_check(my_checker, "Check true");
@@ -81,7 +81,7 @@ begin
                        line_num => 377, file_name => "some_file.vhd");
         unmock(my_logger);
 
-        stat_after := get_stat(my_checker);
+        stat_after := get_checker_stat(my_checker);
         assert_true(stat_after = stat_before + (4, 3, 1), "Expected 4 checks, 3 fail, and 1 pass but got " & to_string(stat_after - stat_before));
         reset_checker_stat(my_checker);
 

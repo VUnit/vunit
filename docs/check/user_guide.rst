@@ -297,13 +297,13 @@ or you can use any of the following subprograms to get more details.
 
 .. code-block:: vhdl
 
-    impure function get_stat[(
+    impure function get_checker_stat[(
       constant checker : in  checker_t);]
       return checker_stat_t;
 
 .. code-block:: vhdl
 
-    procedure get_stat (
+    procedure get_checker_stat (
      [constant checker : in  checker_t;]
       variable stat    : out checker_stat_t);
 
@@ -331,12 +331,12 @@ Managing Checker Statistics
 A checker will continuously update its statistics counters as new check
 subprograms are called. If you want to collect the statistics for parts
 of your test you can make intermediate readouts using the
-``get_stat`` subprograms and then reset the counters to zero
+``get_checker_stat`` subprograms and then reset the counters to zero
 using
 
 .. code-block:: vhdl
 
-    procedure reset_stat [(
+    procedure reset_checker_stat [(
       constant checker : in checker_t)];
 
 Another way of collecting statistics for different parts is to use
@@ -349,7 +349,7 @@ statistics, for example
 
 .. code-block:: vhdl
 
-    info(to_string(get_stat));
+    info(to_string(get_checker_stat));
 
 Check Types
 -----------
