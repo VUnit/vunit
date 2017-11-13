@@ -4021,6 +4021,103 @@ package body check_pkg is
     return pass;
   end;
 
+  procedure check_equal(
+    constant got             : in real;
+    constant expected        : in real;
+    constant msg             : in string := check_result_tag_c;
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "") is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_equal(default_checker, pass, got, expected, msg, level, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  procedure check_equal(
+    variable pass            : out boolean;
+    constant got             : in real;
+    constant expected        : in real;
+    constant msg             : in string := check_result_tag_c;
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "") is
+  begin
+    -- pragma translate_off
+    check_equal(default_checker, pass, got, expected, msg, level, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  procedure check_equal(
+    variable checker         : inout checker_t;
+    variable pass            : out boolean;
+    constant got             : in real;
+    constant expected        : in real;
+    constant msg             : in string := check_result_tag_c;
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "") is
+    variable en : boolean;
+  begin
+    -- pragma translate_off
+    if got = expected then
+      pass := true;
+      base_pass_msg_enabled(checker, en);
+      if en then
+        base_check_true(
+          checker,
+          std_msg(
+            "Equality check passed", msg,
+            "Got " & to_string(got) & "."),
+          line_num, file_name);
+      else
+        base_check_true(checker);
+      end if;
+    else
+      pass := false;
+      base_check_false(
+        checker,
+        std_msg(
+          "Equality check failed", msg,
+          "Got " & to_string(got) & ". " &
+          "Expected " & to_string(expected) & "."),
+        level, line_num, file_name);
+    end if;
+    -- pragma translate_on
+  end;
+
+  procedure check_equal(
+    variable checker         : inout checker_t;
+    constant got             : in real;
+    constant expected        : in real;
+    constant msg             : in string := check_result_tag_c;
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "") is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_equal(checker, pass, got, expected, msg, level, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  impure function check_equal(
+    constant got             : in real;
+    constant expected        : in real;
+    constant msg             : in string := check_result_tag_c;
+    constant level           : in log_level_t := dflt;
+    constant line_num        : in natural     := 0;
+    constant file_name       : in string      := "")
+    return boolean is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_equal(default_checker, pass, got, expected, msg, level, line_num, file_name);
+    -- pragma translate_on
+    return pass;
+  end;
+
   -----------------------------------------------------------------------------
   -- check_match
   -----------------------------------------------------------------------------

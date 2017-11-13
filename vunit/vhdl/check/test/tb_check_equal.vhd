@@ -1018,6 +1018,55 @@ begin
         check_equal(check_equal_checker, pass, time'(-91 ns), time'(90 ns));
         counting_assert(not pass, "Should return pass = false on failing check");
         verify_log_call(inc_count, "Equality check failed - Got ", -91 ns, ". Expected ", 90 ns);
+      elsif run("Test should pass on real equal real") then
+        get_checker_stat(stat);
+        check_equal(real'(3.8), real'(3.8));
+        check_equal(pass, real'(3.8), real'(3.8));
+        counting_assert(pass, "Should return pass = true on passing check");
+        pass := check_equal(real'(3.8), real'(3.8));
+        counting_assert(pass, "Should return pass = true on passing check");
+        check_equal(real'left, real'left);
+        check_equal(real'right, real'right);
+        verify_passed_checks(stat, 5);
+
+        get_checker_stat(check_equal_checker, stat);
+        check_equal(check_equal_checker, real'(3.8), real'(3.8));
+        check_equal(check_equal_checker, pass, real'(3.8), real'(3.8));
+        counting_assert(pass, "Should return pass = true on passing check");
+        verify_passed_checks(check_equal_checker,stat, 2);
+        verify_num_of_log_calls(get_count);
+      elsif run("Test pass message on real equal real") then
+        enable_pass_msg;
+        check_equal(real'(3.8), real'(3.8));
+        verify_log_call(inc_count, "Equality check passed - Got ", real'image(3.8), pass_level);
+        check_equal(real'(3.8), real'(3.8), "");
+        verify_log_call(inc_count, "Got ", real'image(3.8), pass_level);
+        check_equal(real'(3.8), real'(3.8), "Checking my data");
+        verify_log_call(inc_count, "Checking my data - Got ", real'image(3.8), pass_level);
+        check_equal(real'(3.8), real'(3.8), result("for my data"));
+        verify_log_call(inc_count, "Equality check passed for my data - Got ", real'image(3.8), pass_level);
+        disable_pass_msg;
+      elsif run("Test should fail on real not equal real") then
+        check_equal(real'(3.8), real'(-3.1));
+        verify_log_call(inc_count, "Equality check failed - Got ", real'image(3.8), ". Expected ", real'image(-3.1));
+        check_equal(real'(3.8), real'(-3.1), "");
+        verify_log_call(inc_count, "Got ", real'image(3.8), ". Expected ", real'image(-3.1));
+        check_equal(real'(3.8), real'(-3.1), "Checking my data");
+        verify_log_call(inc_count, "Checking my data - Got ", real'image(3.8), ". Expected ", real'image(-3.1));
+        check_equal(real'(3.8), real'(-3.1), result("for my data"));
+        verify_log_call(inc_count, "Equality check failed for my data - Got ", real'image(3.8), ". Expected ", real'image(-3.1));
+        check_equal(pass, real'(3.8), real'(-3.1));
+        counting_assert(not pass, "Should return pass = false on failing check");
+        verify_log_call(inc_count, "Equality check failed - Got ", real'image(3.8), ". Expected ", real'image(-3.1));
+        pass := check_equal(real'(3.8), real'(-3.1));
+        counting_assert(not pass, "Should return pass = false on failing check");
+        verify_log_call(inc_count, "Equality check failed - Got ", real'image(3.8), ". Expected ", real'image(-3.1));
+
+        check_equal(check_equal_checker, real'(3.8), real'(-3.1));
+        verify_log_call(inc_count, "Equality check failed - Got ", real'image(3.8), ". Expected ", real'image(-3.1));
+        check_equal(check_equal_checker, pass, real'(3.8), real'(-3.1));
+        counting_assert(not pass, "Should return pass = false on failing check");
+        verify_log_call(inc_count, "Equality check failed - Got ", real'image(3.8), ". Expected ", real'image(-3.1));
       elsif run("Test should pass on natural equal natural") then
         get_checker_stat(stat);
         check_equal(natural'(165), natural'(165));
