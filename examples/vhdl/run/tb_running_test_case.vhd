@@ -14,7 +14,6 @@ begin
 
     while test_suite loop
       if run("Test scenario A") or run("Test scenario B") then
-        info("Start");
         start_stimuli <= true;
         wait until stimuli_done;
       elsif run("Test something else") then

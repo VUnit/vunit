@@ -43,8 +43,10 @@ package body run_pkg is
                      (new_log_handler(file_name => stdout_file_name, format => verbose, use_color => true),
                       new_log_handler(file_name => join(output_path(runner_cfg), "runner.csv"),
                                       format => csv, use_color => false)));
+    update_max_logger_name_length(get_log_handler(runner_trace_logger, 0), get_max_logger_name_length(display_handler));
+    
     if has_active_python_runner(runner_state) then
-      disable_all(runner_trace_logger, get_log_handler(runner_trace_logger, 0));
+      set_log_level(runner_trace_logger, get_log_handler(runner_trace_logger, 0), warning);
     else
       set_log_level(runner_trace_logger, get_log_handler(runner_trace_logger, 0), info);
     end if;
