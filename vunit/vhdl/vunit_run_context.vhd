@@ -11,4 +11,5 @@ context vunit_run_context is
   use vunit_lib.checker_pkg.checker_stat_t;
   use vunit_lib.run_types_pkg.all;
   use vunit_lib.run_pkg.all;
+  use vunit_lib.run_deprecated_pkg.all;
 end context;

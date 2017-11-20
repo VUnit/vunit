@@ -1,0 +1,29 @@
+-- This Source Code Form is subject to the terms of the Mozilla Public
+-- License, v. 2.0. If a copy of the MPL was not distributed with this file,
+-- You can obtain one at http://mozilla.org/MPL/2.0/.
+--
+-- Copyright (c) 2017, Lars Asplund lars.anders.asplund@gmail.com
+
+use work.logger_pkg.all;
+use work.checker_pkg.all;
+use work.runner_pkg.all;
+use work.run_types_pkg.all;
+
+package run_deprecated_pkg is
+  -- Deprecated interface to better support legacy testbenches.
+  procedure test_runner_cleanup (
+    signal runner: inout runner_sync_t;
+    constant checker_stat : in checker_stat_t);
+
+end package run_deprecated_pkg;
+
+package body run_deprecated_pkg is
+  procedure test_runner_cleanup (
+    signal runner: inout runner_sync_t;
+    constant checker_stat : in checker_stat_t) is
+  begin
+    warning("Using deprecated procedure test_runner_cleanup with checker_stat input." & LF &
+            "Non-default checkers with failed checks will be recognized without feeding its" & LF &
+            "statistics to test_runner_cleanup");
+  end;
+end package body run_deprecated_pkg;
