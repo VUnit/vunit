@@ -87,7 +87,7 @@ begin
         enum1 := decode(encode(blue));
         check_relation(enum1 = blue);
       elsif run("Test that custom enumeration type can be pushed and popped") then
-        msg := create;
+        msg := new_msg;
         push_enum1_t(msg, red);
         check_relation(pop_enum1_t(msg) = red, result("for pop_enum1"));
       elsif run("Test that custom record type can be encoded and decoded") then
@@ -106,7 +106,7 @@ begin
         rec3 := decode(encode_record3_t((char => rp)));
         check_relation(rec3 = (char => rp));
       elsif run("Test that custom record type can be pushed and popped") then
-        msg := create;
+        msg := new_msg;
         rec1 := (character'pos(lp), -1, -2, -3);
         push_record1_t(msg, rec1);
         check_relation(pop_record1_t(msg) = rec1, result("for pop_record1_t"));
@@ -175,7 +175,7 @@ begin
         check_relation(a10'left(2) = -1);
         check_relation(a10'right(2) = 1);
       elsif run("Test that custom array can be pushed and popped") then
-        msg := create;
+        msg := new_msg;
         a1 := (0, 1, 2, 3, 4);
         push_array1_t(msg, a1);
         check_relation(pop_array1_t(msg) = a1, result("for pop_array1_t"));
