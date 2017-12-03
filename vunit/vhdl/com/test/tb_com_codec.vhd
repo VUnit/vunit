@@ -73,6 +73,8 @@ begin
     -- Temp variables to make test case pass Riviera-PRO 2016.10
     variable range_left, range_right : integer;
 
+    variable msg, msg2 : msg_t;
+
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -84,28 +86,30 @@ begin
         check_relation(enum1 = green);
         enum1 := decode(encode(blue));
         check_relation(enum1 = blue);
+      elsif run("Test that custom enumeration type can be pushed and popped") then
+        msg := create;
+        push_enum1_t(msg, red);
+        check_relation(pop_enum1_t(msg) = red, result("for pop_enum1"));
       elsif run("Test that custom record type can be encoded and decoded") then
         rec1 := decode(encode_record1_t((character'pos(lp), -1, -2, -3)));
         check_relation(rec1 = (character'pos(lp), -1, -2, -3));
 
-        debug("1");
-
         rec2 := decode(encode_record2_t((command, 1, -1, -2, -3, '1')));
         check_relation(rec2 = (command, 1, -1, -2, -3, '1'));
-        debug("2");
         rec2 := decode(command(1, -1, -2, -3, '1'));
         check_relation(rec2 = (command, 1, -1, -2, -3, '1'));
-        debug("3");
 
         rec3 := decode(encode_record3_t((char => comma)));
         check_relation(rec3 = (char => comma));
-        debug("4");
         rec3 := decode(encode_record3_t((char => lp)));
         check_relation(rec3 = (char => lp));
-        debug("5");
         rec3 := decode(encode_record3_t((char => rp)));
         check_relation(rec3 = (char => rp));
-        debug("6");
+      elsif run("Test that custom record type can be pushed and popped") then
+        msg := create;
+        rec1 := (character'pos(lp), -1, -2, -3);
+        push_record1_t(msg, rec1);
+        check_relation(pop_record1_t(msg) = rec1, result("for pop_record1_t"));
       elsif run("Test that custom array can be encoded and decoded") then
         a1 := decode(encode_array1_t((0, 1, 2, 3, 4)));
         check_relation(a1 = (0, 1, 2, 3, 4));
@@ -170,6 +174,24 @@ begin
         check_relation(a10'right(1) = 2);
         check_relation(a10'left(2) = -1);
         check_relation(a10'right(2) = 1);
+      elsif run("Test that custom array can be pushed and popped") then
+        msg := create;
+        a1 := (0, 1, 2, 3, 4);
+        push_array1_t(msg, a1);
+        check_relation(pop_array1_t(msg) = a1, result("for pop_array1_t"));
+
+        a3 := ((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14));
+        push_array3_t(msg, a3);
+        check_relation(pop_array3_t(msg) = a3, result("for pop_array3_t"));
+
+        a4 := (0, 1, 2, 3, 4);
+        push_array4_t(msg, a4);
+        check_relation(pop_array4_t(msg) = a4, result("for pop_array4_t"));
+
+        a5 := ((0, 1, 2), (3, 4, 5), (6, 7, 8), (9, 10, 11), (12, 13, 14));
+        push_array5_t(msg, a5);
+        check_relation(pop_array5_t(msg) = a5, result("for pop_array5_t"));
+
       elsif run("Test that all provided codecs can be used within a composite") then
         my_record4 := (17, 42.21, -365 ns, true, '0', 'U', error, open_ok, read_mode, 21);
         check_relation(my_record4 = decode(encode(my_record4)));

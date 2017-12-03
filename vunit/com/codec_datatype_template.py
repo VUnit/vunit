@@ -35,5 +35,13 @@ class DatatypeCodecTemplate(object):
     variable index : inout positive;
     variable result : out $type);
   alias decode_$type is decode[string, positive, $type];
+  procedure push(queue : queue_t; value : $type);
+  impure function pop(queue : queue_t) return $type;
+  alias push_$type is push[queue_t, $type];
+  alias pop_$type is pop[queue_t return $type];
+  procedure push(msg : msg_t; value : $type);
+  impure function pop(msg : msg_t) return $type;
+  alias push_$type is push[msg_t, $type];
+  alias pop_$type is pop[msg_t return $type];
 
 """)

@@ -13,6 +13,7 @@ context vunit_lib.com_context;
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use ieee.numeric_std_unsigned.all;
 
 use std.textio.all;
 
@@ -27,61 +28,68 @@ end entity scoreboard;
 architecture behavioral of scoreboard is
 begin
   main : process is
-    constant self                                 : actor_t                 := create("scoreboard");
-    variable message                     : message_ptr_t;
-    variable request                     : message_ptr_t;
+    constant self                                 : actor_t                 := new_actor("scoreboard");
+    variable msg, reply_msg, request_msg          : msg_t;
+    variable msg_type                             : msg_type_t;
     variable checkpoint                           : integer                 := -1;
     variable n_received                           : natural;
-    variable card_msg                             : card_msg_t;
+    variable card                                 : card_t;
     variable received_checksum, loaded_checksum   : card_bus_t              := (others => '0');
     variable received_checksum2, loaded_checksum2 : card_bus_t              := (others => '0');
     variable received_cards, loaded_cards         : integer_vector(0 to 51) := (others => 0);
-    procedure update_checksum (
+    
+    procedure update_checksum(
       variable checksum : inout card_bus_t;
-      constant card     : in    card_bus_t) is
+      constant card     : in card_bus_t) is
     begin
-      checksum := std_logic_vector(to_unsigned((to_integer(unsigned(checksum)) + to_integer(unsigned(card))) mod 64, 6));
+      checksum := checksum + card;
     end procedure update_checksum;
-    procedure update_card_log (
+    
+    procedure update_card_log(
       variable card_log : inout integer_vector;
-      constant card     : in    card_t) is
+      constant card     : in card_t) is
       variable index : natural;
     begin
       index           := rank_t'pos(card.rank) * 4 + suit_t'pos(card.suit);
       card_log(index) := card_log(index) + 1;
     end procedure update_card_log;
+  
   begin
     subscribe(self, find("test runner"));
     subscribe(self, find("monitor"));
     while true loop
-      receive(net, self, message);
-      case get_msg_type(message.payload.all) is
-        when reset_shuffler =>
-          n_received         := 0;
-          received_checksum  := (others => '0'); loaded_checksum := (others => '0');
-          received_checksum2 := (others => '0'); loaded_checksum2 := (others => '0');
-          received_cards     := (others => 0); loaded_cards := (others => 0);
-        when load =>
-          card_msg := decode(message.payload.all);
-          update_checksum(loaded_checksum, card_to_slv(card_msg.card));
-          update_checksum(loaded_checksum2, loaded_checksum);
-          update_card_log(loaded_cards, card_msg.card);
-        when received =>
-          card_msg   := decode(message.payload.all);
-          update_checksum(received_checksum, card_to_slv(card_msg.card));
-          update_checksum(received_checksum2, received_checksum);
-          update_card_log(received_cards, card_msg.card);
-          n_received := n_received + 1;
-        when get_status =>
-          checkpoint       := decode(message.payload.all).checkpoint;
-          copy(message, request);
-        when others => null;
-      end case;
+      receive(net, self, msg);
+      msg_type := pop_msg_type(msg);
+      
+      if msg_type = reset_shuffler then
+        n_received         := 0;
+        received_checksum  := (others => '0');
+        loaded_checksum    := (others => '0');
+        received_checksum2 := (others => '0');
+        loaded_checksum2   := (others => '0');
+        received_cards     := (others => 0);
+        loaded_cards       := (others => 0);
+      elsif msg_type = load_card then
+        card := pop(msg);
+        update_checksum(loaded_checksum, card_to_slv(card));
+        update_checksum(loaded_checksum2, loaded_checksum);
+        update_card_log(loaded_cards, card);
+      elsif msg_type = received_card then
+        card       := pop(msg);
+        update_checksum(received_checksum, card_to_slv(card));
+        update_checksum(received_checksum2, received_checksum);
+        update_card_log(received_cards, card);
+        n_received := n_received + 1;
+      elsif msg_type = get_scoreboard_status then
+        checkpoint  := pop(msg);
+        request_msg := msg;
+      end if;
 
       if n_received = checkpoint then
-        reply(net, request,
-              get_status_reply((loaded_checksum = received_checksum) and (loaded_checksum2 = received_checksum2),
-                               loaded_cards = received_cards));
+        reply_msg := new_msg;
+        push_msg_type(reply_msg, scoreboard_status);
+        push_scoreboard_status_t(reply_msg, ((loaded_checksum = received_checksum) and (loaded_checksum2 = received_checksum2), loaded_cards = received_cards));
+        reply(net, request_msg, reply_msg);
       end if;
     end loop;
     wait;

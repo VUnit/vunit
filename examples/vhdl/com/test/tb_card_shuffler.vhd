@@ -24,7 +24,7 @@ use work.msg_codecs_pkg.all;
 use work.tb_common_pkg.all;
 
 entity tb_card_shuffler is
-  generic (
+  generic(
     runner_cfg : string);
 end entity tb_card_shuffler;
 
@@ -35,38 +35,46 @@ architecture test_fixture of tb_card_shuffler is
   signal input_valid  : std_logic := '0';
   signal output_card  : card_bus_t;
   signal output_valid : std_logic;
-  constant n_decks    : natural   := 1;
+  constant n_decks    : natural   := 2;
 
-  function slv_to_card (
-    constant slv : card_bus_t)
-    return card_t is
+  function slv_to_card(
+    constant slv : card_bus_t) return card_t is
   begin
     return (rank_t'val(to_integer(unsigned(slv(5 downto 2)))),
             suit_t'val(to_integer(unsigned(slv(1 downto 0)))));
   end function slv_to_card;
 begin
   test_runner : process
-    constant self    : actor_t := create("test runner");
-    variable reply   : message_ptr_t;
-    variable receipt : receipt_t;
+    constant self                        : actor_t := new_actor("test runner");
+    variable msg, request_msg, reply_msg : msg_t;
+    variable msg_type                    : msg_type_t;
+    variable scoreboard_status           : scoreboard_status_t;
   begin
     test_runner_setup(runner, runner_cfg);
     while test_suite loop
       if run("Test that the cards in the deck are shuffled") then
         for i in 1 to n_decks loop
-          -- reset_shuffler_msg is an alias for reset_shuffler which must be
-          -- used with Aldec's simulators to avoid that this function call
-          -- without parameters is confused with the enumeration literal in
-          -- reset_msg_type_t with the same name.
-          publish(net, self, reset_shuffler_msg);
-          for r in ace to king loop
-            for s in spades to clubs loop
-              publish(net, self, load((r, s)));
+          msg := new_msg;
+          push_msg_type(msg, reset_shuffler);
+          publish(net, self, msg);
+
+          for rank in ace to king loop
+            for suit in spades to clubs loop
+              msg := new_msg;
+              push_msg_type(msg, load_card);
+              push_card_t(msg, (rank, suit));
+              publish(net, self, msg);
             end loop;
           end loop;
-          request(net, self, find("scoreboard"), get_status(52), reply);
-          check_true(decode(reply.payload.all).matching_cards, "Cards loaded and received differ");
-          check_false(decode(reply.payload.all).checksum_match, "Identical deck after shuffling");
+
+          request_msg       := new_msg;
+          push_msg_type(request_msg, get_scoreboard_status);
+          push_integer(request_msg, 52);
+          request(net, find("scoreboard"), request_msg, reply_msg);
+          msg_type          := pop_msg_type(reply_msg);
+          scoreboard_status := pop(reply_msg);
+          check_true(scoreboard_status.matching_cards, "Cards loaded and received differ");
+          check_false(scoreboard_status.checksum_match, "Identical deck after shuffling");
         end loop;
       end if;
     end loop;
@@ -79,7 +87,7 @@ begin
   clk <= not clk after 5 ns;
 
   card_shuffler : entity shuffler_lib.card_shuffler
-    port map (
+    port map(
       clk          => clk,
       rst          => rst,
       input_card   => input_card,
@@ -88,44 +96,45 @@ begin
       output_valid => output_valid);
 
   driver : process is
-    constant self     : actor_t := create("driver");
-    variable message  : message_ptr_t;
-    variable card_msg : card_msg_t;
-    variable status : com_status_t;
+    constant self     : actor_t := new_actor("driver");
+    variable card     : card_t;
+    variable msg      : msg_t;
+    variable msg_type : msg_type_t;
   begin
     subscribe(self, find("test runner"));
     loop
       wait until rising_edge(clk);
-      wait_for_message(net, self, status, 0 ns);
-      if status = ok then
-        message := get_message(self);
-        case get_msg_type(message.payload.all) is
-          when reset_shuffler =>
-            rst         <= '1';
-            input_valid <= '0';
-            wait until rising_edge(clk);
-            rst         <= '0';
-          when load =>
-            card_msg    := decode(message.payload.all);
-            input_valid <= '1';
-            input_card  <= card_to_slv(card_msg.card);
-          when others => null;
-        end case;
-      else
-        input_valid <= '0';
+      input_valid <= '0';
+      
+      receive(net, self, msg);
+      msg_type := pop_msg_type(msg);
+      
+      if msg_type = reset_shuffler then
+        rst         <= '1';
+        wait until rising_edge(clk);
+        rst         <= '0';
+      elsif msg_type = load_card then
+        card        := pop(msg);
+        input_valid <= '1';
+        input_card  <= card_to_slv(card);
       end if;
     end loop;
   end process driver;
 
   monitor : process is
     constant self : actor_t := create("monitor");
+    variable msg  : msg_t;
   begin
     wait until rising_edge(clk);
     if output_valid = '1' then
-      publish(net, self, received(slv_to_card(output_card)));
+      msg := new_msg;
+      push_msg_type(msg, received_card);
+      push(msg, slv_to_card(output_card));
+      publish(net, self, msg);
     end if;
   end process monitor;
 
-  scoreboard : entity work.scoreboard;
+  scoreboard : entity work.scoreboard
+    ;
 
 end test_fixture;

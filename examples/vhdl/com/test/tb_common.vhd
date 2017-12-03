@@ -10,6 +10,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+library vunit_lib;
+context vunit_lib.vunit_context;
+context vunit_lib.com_context;
+
 use work.msg_types_pkg.all;
 
 package tb_common_pkg is
@@ -18,6 +22,12 @@ package tb_common_pkg is
   function card_to_slv (
     constant card : card_t)
     return std_logic_vector;
+  
+  constant load_card : msg_type_t := new_msg_type("load card");
+  constant received_card : msg_type_t := new_msg_type("received card");
+  constant reset_shuffler : msg_type_t := new_msg_type("reset shuffler");
+  constant get_scoreboard_status : msg_type_t := new_msg_type("get scoreboard status");
+  constant scoreboard_status : msg_type_t := new_msg_type("scoreboard status");
 end package tb_common_pkg;
 
 package body tb_common_pkg is

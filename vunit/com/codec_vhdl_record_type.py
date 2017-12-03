@@ -87,4 +87,24 @@ class RecordCodecTemplate(DatatypeCodecTemplate):
     return ret_val;
   end function decode;
 
+  procedure push(queue : queue_t; value : $type) is
+  begin
+    push_variable_string(queue, encode(value));
+  end;
+
+  impure function pop(queue : queue_t) return $type is
+  begin
+    return decode(pop_variable_string(queue));
+  end;
+
+  procedure push(msg : msg_t; value : $type) is
+  begin
+    push(msg.data, value);
+  end;
+
+  impure function pop(msg : msg_t) return $type is
+  begin
+    return pop(msg.data);
+  end;
+
 """)

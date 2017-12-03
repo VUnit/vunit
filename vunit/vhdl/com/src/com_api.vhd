@@ -27,7 +27,8 @@ package com_pkg is
   -----------------------------------------------------------------------------
   -- Handling of actors
   -----------------------------------------------------------------------------
-  impure function create (name : string := ""; inbox_size : positive := positive'high) return actor_t;  --
+  impure function new_actor (name : string := ""; inbox_size : positive := positive'high) return actor_t;  --
+  alias create is new_actor [string, positive return actor_t];
   impure function find (name  : string; enable_deferred_creation : boolean := true) return actor_t;
   impure function name (actor : actor_t) return string;
 
@@ -53,7 +54,8 @@ package com_pkg is
   procedure copy (src       : inout message_ptr_t; dst : inout message_ptr_t);
   procedure delete (message : inout message_ptr_t);
 
-  impure function create (sender :       actor_t := null_actor_c) return msg_t;
+  impure function new_msg (sender :       actor_t := null_actor_c) return msg_t;
+  alias create is new_msg [actor_t return msg_t];
   procedure delete (msg          : inout msg_t);
 
   procedure push(msg : msg_t; value : integer);

@@ -30,7 +30,7 @@ package body com_pkg is
   -----------------------------------------------------------------------------
   -- Handling of actors
   -----------------------------------------------------------------------------
-  impure function create (name : string := ""; inbox_size : positive := positive'high) return actor_t is
+  impure function new_actor (name : string := ""; inbox_size : positive := positive'high) return actor_t is
   begin
     return messenger.create(name, inbox_size);
   end;
@@ -126,7 +126,7 @@ package body com_pkg is
     end if;
   end procedure delete;
 
-  impure function create (sender : actor_t := null_actor_c) return msg_t is
+  impure function new_msg (sender : actor_t := null_actor_c) return msg_t is
     variable msg : msg_t;
   begin
     msg.sender := sender;
