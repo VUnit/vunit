@@ -166,21 +166,21 @@ package body log_handler_pkg is
     variable l : line;
     constant log_file_name : string := get_file_name(log_handler);
 
-    procedure log_to_line is
+    procedure log_to_line(variable l : inout line) is
       variable use_color : boolean := get(log_handler.p_data, use_color_idx) = 1;
 
-      procedure pad(len : integer) is
+      procedure pad(variable l : inout line; len : integer) is
       begin
         if len > 0 then
           write(l, string'((1 to len => ' ')));
         end if;
       end;
 
-      procedure write_time(justify : boolean := false) is
+      procedure write_time(variable l : inout line; justify : boolean := false) is
         constant time_string : string := time'image(log_time);
       begin
         if justify then
-          pad(max_time_length - time_string'length);
+          pad(l, max_time_length - time_string'length);
         end if;
 
         if use_color then
@@ -194,12 +194,12 @@ package body log_handler_pkg is
         end if;
       end procedure;
 
-      procedure write_level(justify : boolean := false) is
+      procedure write_level(variable l : inout line; justify : boolean := false) is
         constant level_name : string := get_name(log_level);
         variable color : ansi_colors_t;
       begin
         if justify then
-          pad(max_level_length - level_name'length);
+          pad(l, max_level_length - level_name'length);
         end if;
 
         if use_color then
@@ -214,7 +214,7 @@ package body log_handler_pkg is
         end if;
       end;
 
-      procedure write_source(justify : boolean := false) is
+      procedure write_source(variable l : inout line; justify : boolean := false) is
       begin
         if use_color then
           write(l, color_start(fg => white, style => bright));
@@ -237,19 +237,19 @@ package body log_handler_pkg is
         end if;
 
         if justify then
-          pad(get_max_logger_name_length(log_handler) - logger_name'length);
+          pad(l, get_max_logger_name_length(log_handler) - logger_name'length);
         end if;
 
       end;
 
-      procedure write_location is
+      procedure write_location(variable l : inout line) is
       begin
         if file_name /= "" then
           write(l, " (" & file_name & ":" & integer'image(line_num) & ")");
         end if;
       end;
 
-      procedure write_message(multi_line_align : boolean := false) is
+      procedure write_message(variable l : inout line; multi_line_align : boolean := false) is
         variable prefix_len : natural;
         variable location_written : boolean := false;
       begin
@@ -261,7 +261,7 @@ package body log_handler_pkg is
 
             if msg(i) = LF and not location_written then
               location_written := true;
-              write_location;
+              write_location(l);
             end if;
 
             write(l, msg(i));
@@ -273,7 +273,7 @@ package body log_handler_pkg is
         end if;
 
         if not location_written then
-          write_location;
+          write_location(l);
         end if;
 
       end procedure;
@@ -282,34 +282,34 @@ package body log_handler_pkg is
     begin
       case format is
         when raw =>
-          write_message;
+          write_message(l);
 
         when csv =>
-          write_time;
+          write_time(l);
           write(l, ',');
-          write_source;
+          write_source(l);
           write(l, ',');
-          write_level;
+          write_level(l);
           write(l, ',');
-          write_message;
+          write_message(l);
 
         when level =>
-          write_level(justify => true);
+          write_level(l, justify => true);
           write(l, string'(" - "));
-          write_message(multi_line_align => true);
+          write_message(l, multi_line_align => true);
 
         when verbose =>
-          write_time(justify => true);
+          write_time(l, justify => true);
           write(l, string'(" - "));
-          write_source(justify => true);
+          write_source(l, justify => true);
           write(l, string'(" - "));
-          write_level(justify => true);
+          write_level(l, justify => true);
           write(l, string'(" - "));
-          write_message(multi_line_align => true);
+          write_message(l, multi_line_align => true);
       end case;
     end;
 
-    procedure log_to_file is
+    procedure log_to_file(variable l : inout line) is
       file fptr : text;
       variable status : file_open_status;
     begin
@@ -323,11 +323,11 @@ package body log_handler_pkg is
     if log_file_name = null_file_name then
       null;
     elsif log_file_name = stdout_file_name then
-      log_to_line;
+      log_to_line(l);
       writeline(OUTPUT, l);
     else
-      log_to_line;
-      log_to_file;
+      log_to_line(l);
+      log_to_file(l);
     end if;
   end;
 
