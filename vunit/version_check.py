@@ -14,11 +14,11 @@ import sys
 
 def version_is_ok():
     """
-    Returns true if version is 2.7 or higher or equal to 3.3
+    Returns true if version is 2.7 or higher or equal to 3.4
     """
     version = (sys.version_info[0],
                sys.version_info[1])
-    return version == (2, 7) or version >= (3, 3)
+    return version == (2, 7) or version >= (3, 4)
 
 
 if not version_is_ok():
@@ -27,5 +27,5 @@ if not version_is_ok():
                                           sys.version_info[1]))
     print("VUnit supports versions:")
     print(" - Python 2.7")
-    print(" - Python 3.3 or higher")
+    print(" - Python 3.4 or higher")
     exit(1)

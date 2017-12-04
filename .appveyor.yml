@@ -11,8 +11,6 @@ environment:
 
     - BUILD_NAME: py27-unit
       PYTHON: "C:\\Python27"
-    - BUILD_NAME: py33-unit
-      PYTHON: "C:\\Python33"
     - BUILD_NAME: py34-unit
       PYTHON: "C:\\Python34"
     - BUILD_NAME: py35-unit
