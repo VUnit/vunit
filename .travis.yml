@@ -11,8 +11,6 @@ matrix:
   include:
   - env: BUILD_NAME=py27-unit
     python: '2.7'
-  - env: BUILD_NAME=py33-unit
-    python: '3.3'
   - env: BUILD_NAME=py34-unit
     python: '3.4'
   - env: BUILD_NAME=py35-unit

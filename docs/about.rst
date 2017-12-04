@@ -79,7 +79,7 @@ Python
 ******
 
 -  Python 2.7
--  Python 3.3 or higher
+-  Python 3.4 or higher
 
 Simulators
 **********
