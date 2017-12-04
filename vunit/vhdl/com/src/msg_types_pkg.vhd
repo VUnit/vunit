@@ -31,10 +31,12 @@ package msg_types_pkg is
   procedure push_msg_type(msg : msg_t;
                               msg_type : msg_type_t;
                               logger : logger_t := msg_types_logger);
+  alias push is push_msg_type [msg_t, msg_type_t, logger_t];
 
   impure function pop_msg_type(msg : msg_t;
                                    logger : logger_t := msg_types_logger) return msg_type_t;
-
+  alias pop is pop_msg_type [msg_t, logger_t return msg_type_t];
+  
   procedure handle_message(variable msg_type : inout msg_type_t);
   impure function is_already_handled(msg_type : msg_type_t) return boolean;
 
