@@ -237,7 +237,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
                 "coverage save -onexit -testname {%s} -assert -directive -cvg -codeAll {%s}"
                 % (test_suite_name, fix_path(coverage_file)))
 
-            coverage_args = "-coverage=" + self._coverage
+            coverage_args = "-coverage"
 
         vsim_flags = ["-wlf {%s}" % fix_path(join(output_path, "vsim.wlf")),
                       "-quiet",
