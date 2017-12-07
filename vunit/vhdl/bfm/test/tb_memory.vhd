@@ -67,6 +67,7 @@ begin
     elsif run("Test new memory") then
       memory := new_memory;
       assert memory /= null_memory report "Should not be null memory";
+      assert num_bytes(memory) = 0 report "Empty memory should have zero bytes";
 
     elsif run("Test clear memory") then
       memory := new_memory;
@@ -84,6 +85,10 @@ begin
         allocation := allocate(memory, 1024);
         check_equal(base_address(allocation), 1024*i, "base address");
         check_equal(last_address(allocation), 1024*(i+1)-1, "last address");
+
+        assert num_bytes(allocation) = 1024;
+        assert num_bytes(memory) = (i+1)*1024;
+
       end loop;
 
     elsif run("Test allocate a lot") then
@@ -293,24 +298,24 @@ begin
       check_only_log(memory_logger, "Reading from empty memory", failure);
       unmock(memory_logger);
 
-    elsif run("Test check all was written") then
+    elsif run("Test check expected was written") then
       memory := new_memory;
       allocation := allocate(memory, 3);
       set_expected_byte(memory, 0, 77);
       set_expected_byte(memory, 2, 66);
 
       mock(memory_logger);
-      check_all_was_written(allocation);
+      check_expected_was_written(allocation);
       check_log(memory_logger, "The " & describe_address(memory, 0) & " was never written with expected byte 77", failure);
       check_only_log(memory_logger, "The " & describe_address(memory, 2) & " was never written with expected byte 66", failure);
 
       write_byte(memory, 0, 77);
-      check_all_was_written(allocation);
+      check_expected_was_written(allocation);
       check_only_log(memory_logger, "The " & describe_address(memory, 2) & " was never written with expected byte 66", failure);
       unmock(memory_logger);
 
       write_byte(memory, 2, 66);
-      check_all_was_written(allocation);
+      check_expected_was_written(allocation);
       unmock(memory_logger);
 
     elsif run("Test write_integer") then

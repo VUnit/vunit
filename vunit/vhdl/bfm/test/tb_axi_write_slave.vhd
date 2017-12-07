@@ -156,7 +156,7 @@ begin
 
         read_response(id, axi_resp_okay);
 
-        check_all_was_written(alloc);
+        check_expected_was_written(alloc);
       end loop;
 
       assert num_ops > 5000;

@@ -60,6 +60,9 @@ package memory_pkg is
   impure function decode(value : integer) return memory_data_t;
   impure function encode(memory_data : memory_data_t) return integer;
 
+  -- Return the number of allocated bytes in the memory
+  impure function num_bytes(memory : memory_t) return natural;
+
   procedure write_byte(memory : memory_t; address : natural; byte : byte_t; ignore_permissions : boolean := false);
   impure function read_byte(memory : memory_t; address : natural; ignore_permissions : boolean := false) return byte_t;
 
@@ -82,7 +85,14 @@ package memory_pkg is
                           big_endian : boolean := false;
                           ignore_permissions : boolean := false);
 
-  procedure check_all_was_written(alloc : alloc_t);
+  -- Check that all expected bytes was written to addresses within alloc
+  procedure check_expected_was_written(alloc : alloc_t);
+
+  -- Check that all expected bytes within address range was written
+  procedure check_expected_was_written(memory : memory_t; address : natural; num_bytes : natural);
+
+  -- Check that all expected bytes with the entire memory was written
+  procedure check_expected_was_written(memory : memory_t);
 
   impure function get_permissions(memory : memory_t; address : natural) return permissions_t;
   procedure set_permissions(memory : memory_t; address : natural; permissions : permissions_t);
@@ -96,6 +106,7 @@ package memory_pkg is
 
   impure function base_address(alloc : alloc_t) return natural;
   impure function last_address(alloc : alloc_t) return natural;
+  impure function num_bytes(alloc : alloc_t) return natural;
 
   -- Allocate memory for the integer_vector_ptr, write it there
   -- and by default set read_only permission
@@ -180,7 +191,7 @@ package body memory_pkg is
   begin
     alloc.p_memory_ref := memory;
     alloc.p_name := allocate(name);
-    alloc.p_address := get(memory.p_meta, num_bytes_idx);
+    alloc.p_address := work.memory_pkg.num_bytes(memory);
     alloc.p_address := alloc.p_address + ((-alloc.p_address) mod alignment);
     alloc.p_num_bytes := num_bytes;
     set(memory.p_meta, num_bytes_idx, last_address(alloc)+1);
@@ -216,7 +227,12 @@ package body memory_pkg is
 
   impure function last_address(alloc : alloc_t) return natural is
   begin
-    return alloc.p_address + alloc.p_num_bytes - 1;
+    return alloc.p_address + num_bytes(alloc) - 1;
+  end function;
+
+  impure function num_bytes(alloc : alloc_t) return natural is
+  begin
+    return alloc.p_num_bytes;
   end function;
 
   impure function address_to_allocation(memory : memory_t; address : natural) return alloc_t is
@@ -310,6 +326,11 @@ package body memory_pkg is
     return result;
   end;
 
+  impure function num_bytes(memory : memory_t) return natural is
+  begin
+    return get(memory.p_meta, num_bytes_idx);
+  end;
+
   procedure write_byte(memory : memory_t; address : natural; byte : byte_t; ignore_permissions : boolean := false) is
     variable old : memory_data_t;
   begin
@@ -330,17 +351,27 @@ package body memory_pkg is
     return get(memory, address, true, ignore_permissions).byte;
   end;
 
-  procedure check_all_was_written(alloc : alloc_t) is
+  procedure check_expected_was_written(memory : memory_t; address : natural; num_bytes : natural) is
     variable byte : byte_t;
     variable memory_data : memory_data_t;
   begin
-    for address in base_address(alloc) to last_address(alloc) loop
-      memory_data := decode(get(alloc.p_memory_ref.p_data, address));
+    for addr in address to address + num_bytes - 1 loop
+      memory_data := decode(get(memory.p_data, addr));
       if memory_data.has_exp and memory_data.byte /= memory_data.exp then
-        failure(alloc.p_memory_ref.p_logger, "The " & describe_address(alloc.p_memory_ref, address) &
+        failure(memory.p_logger, "The " & describe_address(memory, addr) &
                 " was never written with expected byte " & to_string(memory_data.exp));
       end if;
     end loop;
+  end procedure;
+
+  procedure check_expected_was_written(alloc : alloc_t) is
+  begin
+    check_expected_was_written(alloc.p_memory_ref, base_address(alloc), num_bytes(alloc));
+  end procedure;
+
+  procedure check_expected_was_written(memory : memory_t) is
+  begin
+    check_expected_was_written(memory, 0, num_bytes(memory));
   end procedure;
 
   impure function get_permissions(memory : memory_t; address : natural) return permissions_t is
