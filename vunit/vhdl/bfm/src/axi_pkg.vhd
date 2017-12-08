@@ -28,12 +28,14 @@ package axi_pkg is
   subtype axi4_size_t is std_logic_vector(2 downto 0);
 
   type axi_slave_t is record
+    p_initial_address_channel_fifo_depth : positive;
     p_actor : actor_t;
     p_logger : logger_t;
   end record;
 
   constant axi_slave_logger : logger_t := get_logger("vunit_lib:axi_slave_pkg");
-  impure function new_axi_slave(logger : logger_t := axi_slave_logger) return axi_slave_t;
+  impure function new_axi_slave(address_channel_fifo_depth : positive := 1;
+                                logger : logger_t := axi_slave_logger) return axi_slave_t;
 
   -- Set the maximum number address channel tokens that can be queued
   procedure set_address_channel_fifo_depth(signal event : inout event_t; axi_slave : axi_slave_t; depth : positive);
@@ -66,9 +68,11 @@ package axi_pkg is
 end package;
 
 package body axi_pkg is
-  impure function new_axi_slave(logger : logger_t := axi_slave_logger) return axi_slave_t is
+  impure function new_axi_slave(address_channel_fifo_depth : positive := 1;
+                                logger : logger_t := axi_slave_logger) return axi_slave_t is
   begin
     return (p_actor => create,
+            p_initial_address_channel_fifo_depth => address_channel_fifo_depth,
             p_logger => logger);
   end;
 

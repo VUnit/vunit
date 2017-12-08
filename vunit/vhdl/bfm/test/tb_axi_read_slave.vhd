@@ -46,7 +46,7 @@ architecture a of tb_axi_read_slave is
   signal rresp : axi_resp_t;
   signal rlast : std_logic;
 
-  constant axi_slave : axi_slave_t := new_axi_slave;
+  constant axi_slave : axi_slave_t := new_axi_slave(address_channel_fifo_depth => 1);
   constant memory : memory_t := new_memory;
 
 begin
