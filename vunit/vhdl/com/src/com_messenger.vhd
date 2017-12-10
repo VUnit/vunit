@@ -71,6 +71,7 @@ package com_messenger_pkg is
     -- Receive related subprograms
     -----------------------------------------------------------------------------
     impure function has_messages (actor                 : actor_t) return boolean;
+    impure function has_messages (actor_vec             : actor_vec_t) return boolean;
     impure function get_first_message_payload (actor    : actor_t) return string;
     impure function get_first_message_sender (actor     : actor_t) return actor_t;
     impure function get_first_message_id (actor         : actor_t) return message_id_t;
@@ -595,6 +596,16 @@ package body com_messenger_pkg is
   impure function has_messages (actor : actor_t) return boolean is
   begin
     return actors(actor.id).inbox.first_envelope /= null;
+  end function has_messages;
+
+  impure function has_messages (actor_vec : actor_vec_t) return boolean is
+  begin
+    for i in actor_vec'range loop
+      if has_messages(actor_vec(i)) then
+        return true;
+      end if;
+    end loop;
+    return false;
   end function has_messages;
 
   impure function get_first_message_payload (actor : actor_t) return string is

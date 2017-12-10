@@ -23,7 +23,8 @@ end entity tb_com;
 
 architecture test_fixture of tb_com is
   signal hello_world_received, start_receiver, start_server,
-    start_server2, start_server3, start_server4, start_server5, start_subscribers : boolean := false;
+    start_server2, start_server3, start_server4, start_server5,
+    start_subscribers, start_publishers : boolean := false;
   signal hello_subscriber_received                     : std_logic_vector(1 to 2) := "ZZ";
   signal start_limited_inbox, limited_inbox_actor_done : boolean                  := false;
   signal start_limited_inbox_subscriber                : boolean                  := false;
@@ -31,12 +32,12 @@ architecture test_fixture of tb_com is
   constant com_logger : logger_t := get_logger("vunit_lib:com");
 begin
   test_runner : process
-    variable self, actor, actor2, receiver, server, publisher, subscriber : actor_t;
-    variable status                                                       : com_status_t;
-    variable receipt, receipt2, receipt3                                  : receipt_t;
-    variable n_actors                                                     : natural;
-    variable t_start, t_stop                                              : time;
-    variable ack                                                          : boolean;
+    variable self, actor, actor2, receiver, server, publisher, subscriber  : actor_t;
+    variable status                                                        : com_status_t;
+    variable receipt, receipt2, receipt3                                   : receipt_t;
+    variable n_actors                                                      : natural;
+    variable t_start, t_stop                                               : time;
+    variable ack                                                           : boolean;
     variable msg, msg2, request_msg, request_msg2, request_msg3, reply_msg : msg_t;
   begin
     test_runner_setup(runner, runner_cfg);
@@ -48,7 +49,7 @@ begin
       -- Create
       if run("Test that named actors can be created") then
         n_actors := num_of_actors;
-        actor := new_actor("actor");
+        actor    := new_actor("actor");
         check(actor /= null_actor_c, "Failed to create named actor");
         check_equal(name(actor), "actor");
         check_equal(num_of_actors, n_actors + 1, "Expected one extra actor");
@@ -66,8 +67,8 @@ begin
         unmock(com_logger);
       elsif run("Test that multiple no-name actors can be created") then
         n_actors := num_of_actors;
-        actor := new_actor;
-        actor2 := new_actor;
+        actor    := new_actor;
+        actor2   := new_actor;
         check(actor.id /= actor2.id, "The two actors must have different identities");
         check_equal(num_of_actors, n_actors + 2);
         check_equal(num_of_deferred_creations, 0);
@@ -98,7 +99,7 @@ begin
         check(inbox_size(create("actor to be created", 42)) = 42,
               "Expected inbox size on actor with deferred creation to change to given value when created");
       elsif run("Test that no-name actors can't be found") then
-        actor := new_actor;
+        actor  := new_actor;
         actor2 := new_actor;
         check(find("") = null_actor_c, "Must not find a no-name actor");
         check_equal(num_of_deferred_creations, 0);
@@ -138,7 +139,7 @@ begin
         start_receiver <= true;
         wait for 1 ns;
         receiver       := find("receiver");
-        msg := new_msg(self);
+        msg            := new_msg(self);
         push_string(msg, "hello world");
         send(net, receiver, msg);
         check(msg.sender = self);
@@ -149,7 +150,7 @@ begin
         start_server <= true;
         wait for 1 ns;
         server       := find("server");
-        request_msg := new_msg(self);
+        request_msg  := new_msg(self);
         push_string(request_msg, "request");
         send(net, server, request_msg);
         receive(net, self, reply_msg);
@@ -163,8 +164,8 @@ begin
         check(msg2.status = ok, "Expected no receive problems");
         check_equal(pop_string(msg2), "hello");
       elsif run("Test that no-name actors can communicate") then
-        actor    := new_actor;
-        msg := new_msg;
+        actor := new_actor;
+        msg   := new_msg;
         push_string(msg, "hello");
         send(net, actor, msg);
         receive(net, actor, msg2);
@@ -172,7 +173,7 @@ begin
       elsif run("Test that an actor can poll for incoming messages") then
         wait_for_message(net, self, status, 0 ns);
         check(status = timeout, "Expected timeout");
-        msg := new_msg(self);
+        msg  := new_msg(self);
         push_string(msg, "hello again");
         send(net, self, msg);
         wait_for_message(net, self, status, 0 ns);
@@ -190,7 +191,7 @@ begin
         unmock(com_logger);
       elsif run("Test that an actor can send to an actor with deferred creation") then
         actor := find("deferred actor");
-        msg := new_msg;
+        msg   := new_msg;
         push_string(msg, "hello actor to be created");
         send(net, actor, msg);
         actor := new_actor("deferred actor");
@@ -225,20 +226,20 @@ begin
         start_limited_inbox <= true;
         actor               := find("limited inbox");
         t_start             := now;
-        msg := new_msg;
-        push_string(msg , "First message");
+        msg                 := new_msg;
+        push_string(msg, "First message");
         send(net, actor, msg);
         t_stop              := now;
         check_equal(t_stop - t_start, 0 ns, "Expected no blocking on first message");
         t_start             := now;
-        msg := new_msg;
-        push_string(msg , "Second message");
+        msg                 := new_msg;
+        push_string(msg, "Second message");
         send(net, actor, msg, 0 ns);
         t_stop              := now;
         check_equal(t_stop - t_start, 0 ns, "Expected no blocking on second message");
         t_start             := now;
-        msg := new_msg;
-        push_string(msg , "Third message");
+        msg                 := new_msg;
+        push_string(msg, "Third message");
         send(net, actor, msg, 11 ns);
         t_stop              := now;
         check_equal(t_stop - t_start, 10 ns, "Expected a 10 ns blocking period on third message");
@@ -247,25 +248,54 @@ begin
       elsif run("Test that sending to a limited-inbox receiver times out as expected") then
         start_limited_inbox <= true;
         actor               := find("limited inbox");
-        msg := new_msg;
-        push_string(msg , "First message");
+        msg                 := new_msg;
+        push_string(msg, "First message");
         send(net, actor, msg);
-        msg := new_msg;
-        push_string(msg , "Second message");
+        msg                 := new_msg;
+        push_string(msg, "Second message");
         send(net, actor, msg, 0 ns);
-        msg := new_msg;
-        push_string(msg , "Third message");
+        msg                 := new_msg;
+        push_string(msg, "Third message");
         mock(com_logger);
         send(net, actor, msg, 9 ns);
         check_only_log(com_logger, "FULL INBOX ERROR.", failure);
         unmock(com_logger);
+      elsif run("Test that messages can be awaited from several actors") then
+        actor  := new_actor;
+        actor2 := new_actor;
+        msg    := new_msg;
+        push_string(msg, "To actor");
+        send(net, actor, msg);
+        wait_for_message(net, actor_vec_t'(actor, actor2), status);
+        check(status = ok, "Expected ok status");
+        check_true(has_message(actor));
+        check_false(has_message(actor2));
+        check_equal(pop_string(get_message(actor)), "To actor");
+        msg    := new_msg;
+        push_string(msg, "To actor2");
+        send(net, actor2, msg);
+        wait_for_message(net, actor_vec_t'(actor, actor2), status);
+        check(status = ok, "Expected ok status");
+        check_true(has_message(actor2));
+        check_false(has_message(actor));
+        check_equal(pop_string(get_message(actor2)), "To actor2");
+      elsif run("Test receiving from several actors") then
+        actor            := new_actor;
+        actor2           := new_actor;
+        subscribe(actor, find("publisher 1"));
+        subscribe(actor2, find("publisher 2"));
+        start_publishers <= true;
+        for i in 1 to 2 loop
+          receive(net, actor_vec_t'(actor, actor2), msg);
+          check_equal(name(msg.sender), pop_string(msg));
+        end loop;
 
       -- Publish, subscribe, and unsubscribe
       elsif run("Test that an actor can publish messages to multiple subscribers") then
         publisher         := new_actor("publisher");
         start_subscribers <= true;
         wait for 1 ns;
-        msg := new_msg;
+        msg               := new_msg;
         push_string(msg, "hello subscriber");
         publish(net, publisher, msg);
         check(msg.sender = publisher);
@@ -276,13 +306,13 @@ begin
         publisher         := new_actor("publisher");
         start_subscribers <= true;
         wait for 1 ns;
-        msg := new_msg(publisher);
+        msg               := new_msg(publisher);
         push_string(msg, "hello subscriber");
         send(net, self, msg);
         wait until hello_subscriber_received = "11" for 1 ns;
         check(hello_subscriber_received = "11", "Expected ""hello subscribers"" to be received at the subscribers");
       elsif run("Test that subscribers don't receive duplicate message") then
-        publisher         := new_actor("publisher");
+        publisher := new_actor("publisher");
         subscribe(self, publisher);
 
         msg := new_msg(publisher);
@@ -294,7 +324,7 @@ begin
         wait_for_message(net, self, status, 0 ns);
         check(status = timeout, "Expected only one message");
       elsif run("Test that actors don't get send messages on a publish subscription") then
-        publisher         := new_actor("publisher");
+        publisher := new_actor("publisher");
         subscribe(self, publisher);
 
         msg := new_msg(publisher);
@@ -306,19 +336,19 @@ begin
       elsif run("Test that actors can subscribe to inbound traffic") then
         receiver := new_actor;
         subscribe(self, receiver, inbound);
-        msg := new_msg;
+        msg      := new_msg;
         push_string(msg, "hello");
         send(net, receiver, msg);
         receive(net, receiver, msg2, 0 ns);
         receive(net, self, msg2, 0 ns);
         check_equal(pop_string(msg2), "hello");
-        msg := new_msg;
+        msg      := new_msg;
         push_string(msg, "publication");
         publish(net, receiver, msg);
         wait_for_message(net, self, status, 0 ns);
         check(status = timeout, "Expected no message");
-        actor := new_actor("actor");
-        msg := new_msg(receiver);
+        actor    := new_actor("actor");
+        msg      := new_msg(receiver);
         push_string(msg, "hello");
         send(net, actor, msg);
         wait_for_message(net, self, status, 0 ns);
@@ -340,7 +370,7 @@ begin
       elsif run("Test that a destroyed subscriber is not addressed by the publisher") then
         subscriber := new_actor("subscriber");
         subscribe(subscriber, self);
-        msg := new_msg;
+        msg        := new_msg;
         push_string(msg, "hello subscriber");
         publish(net, self, msg);
         receive(net, subscriber, msg, 0 ns);
@@ -357,10 +387,10 @@ begin
       elsif run("Test that publishing to subscribers with full inboxes results is an error") then
         start_limited_inbox_subscriber <= true;
         wait for 1 ns;
-        msg := new_msg;
+        msg                            := new_msg;
         push_string(msg, "hello subscriber");
         publish(net, self, msg);
-        msg := new_msg;
+        msg                            := new_msg;
         push_string(msg, "hello subscriber");
         mock(com_logger);
         publish(net, self, msg, 8 ns);
@@ -369,10 +399,10 @@ begin
       elsif run("Test that publishing to subscribers with full inboxes results passes if waiting") then
         start_limited_inbox_subscriber <= true;
         wait for 1 ns;
-        msg := new_msg;
+        msg                            := new_msg;
         push_string(msg, "hello subscriber");
         publish(net, self, msg);
-        msg := new_msg;
+        msg                            := new_msg;
         push_string(msg, "hello subscriber");
         publish(net, self, msg, 11 ns);
 
@@ -381,7 +411,7 @@ begin
         start_server2 <= true;
         server        := find("server2");
 
-        request_msg := new_msg(self);
+        request_msg  := new_msg(self);
         push_string(request_msg, "request1");
         send(net, server, request_msg);
         request_msg2 := new_msg(self);
@@ -424,7 +454,7 @@ begin
         start_server4 <= true;
         server        := find("server4");
 
-        t_start := now;
+        t_start     := now;
         request_msg := new_msg(self);
         push_string(request_msg, "request1");
         send(net, server, request_msg);
@@ -432,7 +462,7 @@ begin
         check(status = timeout, "Expected timeout");
         check_equal(now - t_start, 2 ns);
 
-        t_start         := now;
+        t_start     := now;
         request_msg := new_msg;
         push_string(request_msg, "request2");
         send(net, server, request_msg);
@@ -447,7 +477,7 @@ begin
         get_reply(request_msg, reply_msg);
         check_equal(pop_string(reply_msg), "reply3");
 
-        t_start         := now;
+        t_start     := now;
         request_msg := new_msg;
         push_string(request_msg, "request4");
         send(net, server, request_msg);
@@ -456,7 +486,7 @@ begin
         check_equal(pop_string(reply_msg), "reply4");
       elsif run("Test that an anonymous request can be made") then
         start_server5 <= true;
-        server := find("server5");
+        server        := find("server5");
 
         request_msg := new_msg;
         push_string(request_msg, "request");
@@ -501,9 +531,9 @@ begin
   test_runner_watchdog(runner, 100 ms);
 
   receiver : process is
-    variable self    : actor_t;
-    variable msg : msg_t;
-    variable status  : com_status_t;
+    variable self   : actor_t;
+    variable msg    : msg_t;
+    variable status : com_status_t;
   begin
     wait until start_receiver;
     self                 := new_actor("receiver");
@@ -515,7 +545,7 @@ begin
   end process receiver;
 
   server : process is
-    variable self    : actor_t;
+    variable self                   : actor_t;
     variable request_msg, reply_msg : msg_t;
   begin
     wait until start_server;
@@ -532,7 +562,7 @@ begin
   subscribers : for i in 1 to 2 generate
     process is
       variable self, publisher : actor_t;
-      variable msg         : msg_t;
+      variable msg             : msg_t;
     begin
       wait until start_subscribers;
       self      := new_actor("subscriber " & integer'image(i));
@@ -548,9 +578,9 @@ begin
   end generate subscribers;
 
   server2 : process is
-    variable self                                    : actor_t;
+    variable self                                     : actor_t;
     variable request_msg1, request_msg2, request_msg3 : msg_t;
-    variable reply_msg                                        : msg_t;
+    variable reply_msg                                : msg_t;
   begin
     wait until start_server2;
     self := new_actor("server2");
@@ -572,7 +602,7 @@ begin
   end process server2;
 
   server3 : process is
-    variable self            : actor_t;
+    variable self                   : actor_t;
     variable request_msg, reply_msg : msg_t;
   begin
     wait until start_server3;
@@ -596,7 +626,7 @@ begin
   end process server3;
 
   server4 : process is
-    variable self            : actor_t;
+    variable self                   : actor_t;
     variable request_msg, reply_msg : msg_t;
   begin
     wait until start_server4;
@@ -616,7 +646,7 @@ begin
   end process server4;
 
   server5 : process is
-    variable self            : actor_t;
+    variable self                   : actor_t;
     variable request_msg, reply_msg : msg_t;
   begin
     wait until start_server5;
@@ -646,7 +676,7 @@ begin
 
   limited_inbox_actor : process is
     variable self, test_runner : actor_t;
-    variable msg           : msg_t;
+    variable msg               : msg_t;
     variable status            : com_status_t;
   begin
     wait until start_limited_inbox;
@@ -661,8 +691,8 @@ begin
   end process limited_inbox_actor;
 
   limited_inbox_subscriber : process is
-    variable self    : actor_t;
-    variable msg : msg_t;
+    variable self : actor_t;
+    variable msg  : msg_t;
   begin
     wait until start_limited_inbox_subscriber;
     self := new_actor("limited inbox subscriber", 1);
@@ -671,5 +701,19 @@ begin
     receive(net, self, msg);
     wait;
   end process limited_inbox_subscriber;
+
+  publishers : for i in 1 to 2 generate
+    process is
+      variable self : actor_t;
+      variable msg  : msg_t;
+    begin
+      wait until start_publishers;
+      self := new_actor("publisher " & integer'image(i));
+      msg  := new_msg;
+      push_string(msg, name(self));
+      publish(net, self, msg);
+      wait;
+    end process;
+  end generate publishers;
 
 end test_fixture;

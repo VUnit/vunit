@@ -36,6 +36,7 @@ package com_types_pkg is
   type actor_t is record
     id : natural;
   end record actor_t;
+  type actor_vec_t is array(integer range <>) of actor_t;
   constant null_actor_c : actor_t := (id => 0);
 
   subtype message_id_t is natural;

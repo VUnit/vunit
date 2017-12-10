@@ -245,6 +245,11 @@ package com_pkg is
     constant receiver : in    actor_t;
     variable msg      : inout msg_t;
     constant timeout  : in    time := max_timeout_c);
+  procedure receive (
+    signal net         : inout network_t;
+    constant receivers : in    actor_vec_t;
+    variable msg       : inout msg_t;
+    constant timeout   : in    time := max_timeout_c);
   procedure reply (
     signal net           : inout network_t;
     variable request_msg : inout msg_t;
@@ -294,7 +299,6 @@ package com_pkg is
     variable positive_ack : out   boolean;
     constant timeout      : in    time := max_timeout_c);
 
-
   procedure request (
     signal net               : inout network_t;
     constant receiver        : in    actor_t;
@@ -326,6 +330,11 @@ package com_pkg is
     constant receiver : in  actor_t;
     variable status   : out com_status_t;
     constant timeout  : in  time := max_timeout_c);
+  procedure wait_for_message (
+    signal net         : in  network_t;
+    constant receivers : in  actor_vec_t;
+    variable status    : out com_status_t;
+    constant timeout   : in  time := max_timeout_c);
   procedure wait_for_reply (
     signal net       : inout network_t;
     variable request : inout message_ptr_t;

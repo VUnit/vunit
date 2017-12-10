@@ -635,13 +635,32 @@ package body com_pkg is
     variable status                  : com_status_t;
     variable started_with_full_inbox : boolean;
   begin
+    receive(net, actor_vec_t'(0 => receiver), msg, timeout);
+  end;
+
+  procedure receive (
+    signal net         : inout network_t;
+    constant receivers : in    actor_vec_t;
+    variable msg       : inout msg_t;
+    constant timeout   : in    time := max_timeout_c) is
+    variable status                  : com_status_t;
+    variable started_with_full_inbox : boolean;
+    variable receiver : actor_t;
+  begin
     delete(msg);
-    wait_for_message(net, receiver, status, timeout);
+    wait_for_message(net, receivers, status, timeout);
     if not check(no_error_status(status), status) then
       return;
     end if;
-    started_with_full_inbox := messenger.is_full(receiver, inbox);
-    msg                     := get_message(receiver);
+
+    for i in receivers'range loop
+      receiver := receivers(i);
+      if has_message(receiver) then
+        started_with_full_inbox := messenger.is_full(receiver, inbox);
+        msg                     := get_message(receiver);
+        exit;
+      end if;
+    end loop;
 
     if messenger.has_subscribers(receiver, inbound) then
       wait_on_subscribers(receiver, (0 => inbound), timeout);
@@ -841,15 +860,26 @@ package body com_pkg is
     variable status   : out com_status_t;
     constant timeout  : in  time := max_timeout_c) is
   begin
-    if not check(not messenger.deferred(receiver), deferred_receiver_error) then
-      status := deferred_receiver_error;
-      return;
-    end if;
+    wait_for_message(net, actor_vec_t'(0 => receiver), status, timeout);
+  end procedure wait_for_message;
+
+  procedure wait_for_message (
+    signal net         : in  network_t;
+    constant receivers : in  actor_vec_t;
+    variable status    : out com_status_t;
+    constant timeout   : in  time := max_timeout_c) is
+  begin
+    for i in receivers'range loop
+      if not check(not messenger.deferred(receivers(i)), deferred_receiver_error) then
+        status := deferred_receiver_error;
+        return;
+      end if;
+    end loop;
 
     status := ok;
-    if not messenger.has_messages(receiver) then
-      wait on net until messenger.has_messages(receiver) for timeout;
-      if not messenger.has_messages(receiver) then
+    if not messenger.has_messages(receivers) then
+      wait on net until messenger.has_messages(receivers) for timeout;
+      if not messenger.has_messages(receivers) then
         status := work.com_types_pkg.timeout;
       end if;
     end if;
