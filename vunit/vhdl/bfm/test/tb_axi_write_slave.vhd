@@ -86,6 +86,45 @@ begin
       awvalid <= '0';
     end procedure;
 
+    procedure transfer_data(id : std_logic_vector;
+                            alloc : alloc_t;
+                            log_size : natural;
+                            data : integer_vector_ptr_t) is
+      variable size, len, address, idx : natural;
+    begin
+      size := 2**log_size;
+      len := (length(data) + (base_address(alloc) mod size)) / data_size;
+      write_addr(id, base_address(alloc), len, log_size, axi_burst_type_incr);
+
+      address := base_address(alloc);
+      for j in 0 to len-1 loop
+        wstrb <= (others => '0');
+        for i in 0 to size-1-(address mod data_size) loop
+          idx := address mod data_size;
+          wstrb(idx) <= '1';
+          wdata(8*idx+7 downto 8*idx) <=  std_logic_vector(to_unsigned(get(data, address - base_address(alloc)), 8));
+          set_permissions(memory, address, write_only);
+          set_expected_byte(memory, address, get(data, address - base_address(alloc)));
+          address := address + 1;
+        end loop;
+
+        if j = len-1 then
+          wlast <= '1';
+        else
+          wlast <= '0';
+        end if;
+
+        wvalid <= '1';
+        wait until (wvalid and wready) = '1' and rising_edge(clk);
+        wvalid <= '0';
+        wstrb <= (others => '0');
+        wdata <= (others => '0');
+      end loop;
+
+      read_response(id, axi_resp_okay);
+      check_expected_was_written(alloc);
+    end procedure;
+
     variable data : integer_vector_ptr_t;
     variable strb : integer_vector_ptr_t;
     variable size, log_size : natural;
@@ -160,6 +199,34 @@ begin
       end loop;
 
       assert num_ops > 5000;
+
+    elsif run("Test narrow write") then
+      -- Half bus width starting at aligned address
+      len := 2;
+      log_size := log_data_size - 1;
+      size := 2**log_size;
+      random_integer_vector_ptr(rnd, data, size * 2, 0, 255);
+      alloc := allocate(memory, length(data), permissions => no_access);
+      transfer_data(x"2", alloc, log_size, data);
+
+    elsif run("Test unaligned narrow write") then
+      -- Half bus width starting at unaligned address
+      log_size := log_data_size - 1;
+      size := 2**log_size;
+      alloc := allocate(memory, 1); -- Unaligned address
+      random_integer_vector_ptr(rnd, data, size * 2, 0, 255);
+      alloc := allocate(memory, length(data), permissions => no_access);
+      transfer_data(x"2", alloc, log_size, data);
+
+    elsif run("Test unaligned write") then
+      -- Full bus width starting at unaligned address
+      len := 2;
+      log_size := log_data_size;
+      size := 2**log_size;
+      alloc := allocate(memory, 1); -- Unaligned address
+      random_integer_vector_ptr(rnd, data, size * 2, 0, 255);
+      alloc := allocate(memory, length(data), permissions => no_access);
+      transfer_data(x"2", alloc, log_size, data);
 
     elsif run("Test error on missing tlast fixed") then
       mock(axi_slave_logger);

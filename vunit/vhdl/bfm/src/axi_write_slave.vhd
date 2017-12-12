@@ -58,7 +58,7 @@ begin
 
   axi_process : process
     variable resp_burst, burst : axi_burst_t;
-    variable address : integer;
+    variable address, aligned_address : integer;
     variable idx : integer;
     variable beats : natural := 0;
   begin
@@ -87,10 +87,10 @@ begin
                     " starting at address " & to_string(burst.address));
         end if;
 
-        for j in 0 to burst.size-1 loop
-          idx := (address + j) mod self.data_size; -- Align data bus
-          if wstrb(idx) = '1' then
-            write_byte(memory, address+j, to_integer(unsigned(wdata(8*idx+7 downto 8*idx))));
+        aligned_address := address - (address mod self.data_size);
+        for j in 0 to self.data_size-1 loop
+          if wstrb(j) = '1' then
+            write_byte(memory, aligned_address+j, to_integer(unsigned(wdata(8*j+7 downto 8*j))));
           end if;
         end loop;
 
