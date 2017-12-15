@@ -24,7 +24,7 @@ package sync_pkg is
                           delay : delay_length);
 
   -- Message type definitions used by VC implementing the synchronization VCI
-  constant wait_for_idle_msg : msg_type_t := new_msg_type("wait for idle");
+  constant wait_until_idle_msg : msg_type_t := new_msg_type("wait until idle");
   constant wait_for_time_msg : msg_type_t := new_msg_type("wait for time");
 
   -- Standard implementation of synchronization VCI which may be used by VC

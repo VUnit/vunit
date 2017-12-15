@@ -8,15 +8,10 @@ from os.path import join, dirname
 from vunit import VUnit
 
 ui = VUnit.from_argv()
-ui.add_osvvm()
-ui.enable_location_preprocessing()
-ui.enable_check_preprocessing()
 ui.add_com()
-shuffler_lib = ui.add_library('shuffler_lib')
-shuffler_lib.add_source_files(join(dirname(__file__), 'src', '*.vhd'))
+ui.add_verification_components()
 
-tb_shuffler_lib = ui.add_library('tb_shuffler_lib')
-tb_shuffler_lib.add_source_files(join(dirname(__file__), 'test', '*.vhd'))
-pkg = tb_shuffler_lib.package('msg_types_pkg')
-pkg.generate_codecs(codec_package_name='msg_codecs_pkg')
+tb_lib = ui.add_library('tb_lib')
+tb_lib.add_source_files(join(dirname(__file__), 'test', '*.vhd'))
+
 ui.main()

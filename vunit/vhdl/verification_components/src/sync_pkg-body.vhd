@@ -14,9 +14,8 @@ package body sync_pkg is
     variable msg, reply_msg : msg_t;
   begin
     msg := create;
-    push_msg_type(msg, wait_for_idle_msg);
-    send(net, handle, msg);
-    receive_reply(net, msg, reply_msg);
+    push_msg_type(msg, wait_until_idle_msg);
+    request(net, handle, msg, reply_msg);
     delete(reply_msg);
   end;
 
@@ -37,7 +36,7 @@ package body sync_pkg is
     variable reply_msg : msg_t;
     variable delay : delay_length;
   begin
-    if msg_type = wait_for_idle_msg then
+    if msg_type = wait_until_idle_msg then
       handle_message(msg_type);
       reply_msg := create;
       reply(net, msg, reply_msg);

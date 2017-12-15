@@ -144,6 +144,11 @@ package body com_pkg is
     recycle(queue_pool, msg.data);
   end procedure delete;
 
+  function sender(msg : msg_t) return actor_t is
+  begin
+    return msg.sender;
+  end;
+
   procedure push(msg : msg_t; value : integer) is
   begin
     push(msg.data, value);

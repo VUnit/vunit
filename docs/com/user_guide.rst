@@ -1,12 +1,14 @@
 .. _com_user_guide:
 
+#####################
 Communication Library
-=====================
+#####################
 
+************
 Introduction
-------------
+************
 
-Communication (``com``) provides a high-level communication mechanism
+The VUnit communication library (``com``) provides a high-level communication mechanism
 based on the `actor model <http://en.wikipedia.org/wiki/Actor_model>`__.
 The actor model is a mathematical model of computation in which
 concurrent *actors* perform all computation. The only way actors can
@@ -19,20 +21,12 @@ is based on two important principles:
 -  Communication is asynchronous. The sender doesn't know when the
    receiver will read the message.
 
-Based on these principles and a few more it's possible to construct more
-advanced communication patterns. However, the actor model alone has
-focus on the essentials of communication, the actors exchanging
-information and the information being exchanged. Everything else is
-superfluous.
+By extending the basic communication provided by the actor model ``com`` can also provide
+synchronous communication and some more advanced communication patterns.
 
-This purity along with the concurrency of the actors makes the model a
-very suitable base for a high-level communication mechanism in VHDL.
-Concurrent statements like processes and components are the actors in a
-VHDL simulation and the messages are variables of a type suitable for
-the information being exchanged.
-
+*****
 Setup
------
+*****
 
 Message passing is not a core functionality of unit testing so ``com``
 is provided as an optional add-on to VUnit. It is compiled to the
@@ -40,8 +34,8 @@ is provided as an optional add-on to VUnit. It is compiled to the
 
 .. code-block:: python
 
-    ui = VUnit.from_argv()
-    ui.add_com()
+    prj = VUnit.from_argv()
+    prj.add_com()
 
 The VHDL functionality is provided to your testbench with the
 ``com_context``.
@@ -52,410 +46,412 @@ The VHDL functionality is provided to your testbench with the
     context vunit_lib.vunit_context;
     context vunit_lib.com_context;
 
+*********************
 Basic Message Passing
+*********************
+
+Sending and Receiving
 ---------------------
 
-To send a message we must first create an actor for the sender and then
-find the actor of the receiver. These actors are then used when sending
-a message as shown in the example below.
+To send a message we must first create an actor for the receiver. The actor
+below has a name passed to the ``new_actor`` function but ``com`` also allows
+unnamed actors
 
 .. code-block:: vhdl
 
-      proc_1: process is
-        variable self : actor_t := create("proc_1");  -- Create an actor for myself
-        variable proc_2 : actor_t := find("proc_2");  -- Find the receiver
-        variable receipt : receipt_t;       -- Send receipt
-      begin
-        send(net, proc_2, "Hello proc_2!", receipt);
-        check_relation(receipt.status = ok);
-        wait;
-      end process proc_1;
+  constant receiver : actor_t := new_actor("my receiver");
 
-The returned receipt contains, among other things, status for the send
-and the expected value is ``ok``. ``net`` is the abstract network over
-which messages are sent. Ideally this shouldn't be part of the procedure
-call but since ``net`` is a signal and the procedure is defined within a
-package it has to be among the parameters if the procedure is to drive
-the signal. Note that the self variable isn't used and could have been
-excluded. It will be used in later examples where the sender can't be
-anonymous.
-
-Below is a basic receiver for the message above.
+To send a message to the receiver the sender must have access to the value of the ``receiver`` constant.
+If the receiver made ``receiver`` publically available, for example with a package, it can be accessed
+directly. If not, it can be found with the ``find`` function providing it has a name.
 
 .. code-block:: vhdl
 
-      proc_2: process is
-        variable self : actor_t := create("proc_2");
-        variable message  : message_ptr_t;
-      begin
-        receive(net, self, message);
-        check_relation(message.status = ok);
-        report "Received " & message.payload.all;
-        wait;
-      end process proc_2;
+  constant found_receiver : actor_t := find("my receiver");
 
-Note that communication is asynchronous. The ``send`` procedure takes no
-physical simulation time, only delta cycles, and you can also send as
-many messages you like (limited by the host memory) before the receiver
-starts receiving messages. However, the receiver will always get the
-messages in the order they were sent.
-
-Note also that no information about the location of the actors or
-details on the message transport is exposed. This simplifies refactoring
-of the code. For example, if ``proc_1`` and ``proc_2`` are in the same
-file and you decide to package one of them as an entity and move it into
-another file you don't have to change anything about the communication.
-
-The default behaviour of the ``receive`` procedure above is to block
-until a message arrives but it can also be setup with a timeout. If you
-want the receiver to poll for messages you set the timeout to zero.
+The next step is to create a message to send and we start by creating an empty message
 
 .. code-block:: vhdl
 
-      proc_2: process is
-        variable self : actor_t := create("proc_2");
-        variable message  : message_ptr_t;
-      begin
-        receive(net, self, message, 1 ns);
-        case message.status is
-          when ok =>
-            report "Received " & message.payload.all;
-          when timeout =>
-            report "Timed out waiting for a message";
-          when others =>
-            check_failed("Reception error - " & to_string(message.status));
-        end case;
-        wait;
-      end process proc_2;
+  msg := new_msg;
 
-Creating and finding actors is often done at the beginning of a process
-at time zero. This means that there is a potential race condition, i.e.
-the ``find`` of one process is called before the the actor searched for
-has been created. The default behaviour is that ``com`` does a
-*deferred* creation of an actor in these situations. The deferred state
-is then removed when the actor is created. It is possible to perform
-actions on a deferred actor when it is the "other" actor, for example
-sending **to** an actor. However, it is not possible to perform actions
-from a deferred actor, for example sending **from** it. The risk with
-this approach is if you do a ``find`` with a misspelled actor. Messages
-sent to the resulting deferred actor will never be read by anyone.
-
-The default behaviour with deferred creation can be overridden by
-calling ``find("actor_name", enable_deferred_creation => false);``. Such
-a call will return ``null_actor_c`` if the searched actor hasn't been
-created. It's also possible to call ``num_of_deferred_creations`` and
-verify that it returns zero when you expect all involved actors to be
-created.
-
-In the examples so far the message has been a string and string is the
-only message type that ``com`` can handle. Rather than having the user
-define overloaded versions for every subprogram and message type needed
-``com`` provides functionality for encoding other types to string before
-the message is sent and then, on the receiving side, decode back to the
-original type again. For example, sending an integer can be done like
-this.
+where ``msg`` is a variable of type ``msg_t``. Information is added to the message by pushing objects of
+different types into it.
 
 .. code-block:: vhdl
 
-        send(net, receiver, encode(my_integer), receipt);
+  push_string(msg, "10101010");
+  push(msg, my_integer);
 
-which can be received like this.
+`com` supports pushing of all native and standardized IEEE types. In case there is no ambiguity you can just
+do `push` otherwise you have to use the more specific alias `push_<type>` as examplified above.
 
-.. code-block:: vhdl
-
-        my_integer := decode(message.payload.all);
-        report "Received " & to_string(my_integer);
-
-``com`` has support for around 25 native VHDL and IEEE types. These can
-be used as primitives when building codecs for custom composite types.
-For example, an encoder for a custom record type can be built as a
-simple concatenation of the encoded record elements. However, ``com``
-can also generate codecs for your custom enumeration, array, and record
-types. For example, the `card shuffler
-example <../../../examples/vhdl/com/test/tb_card_shuffler.vhd>`__ uses the
-following package.
+To send the created message to the receiver you call the ``send`` procedure
 
 .. code-block:: vhdl
 
-    package msg_types_pkg is
-      type rank_t is (ace, two, three, four, five, six, seven, eight, nine, ten, jack, queen, king);
-      type suit_t is (spades, hearts, diamonds, clubs);
-      type card_t is record
-        rank : rank_t;
-        suit : suit_t;
-      end record card_t;
+  send(net, receiver, msg);
 
-      type card_msg_type_t is (load, received);
-      type card_msg_t is record
-        msg_type : card_msg_type_t;
-        card     : card_t;
-      end record card_msg_t;
+`send` is asynchronous and takes no simulation time, only delta cycles. Messages will be stored in the receiver inbox until
+the receiver is ready to receive. 
 
-      type reset_msg_type_t is (reset_shuffler);
-      type reset_msg_t is record
-        msg_type : reset_msg_type_t;
-      end record reset_msg_t;
+``net`` is a network connecting actors and it is used to signal that an event has occured, for example that a message has been sent. The event notifies all connected actors that something has happened which they may be interested in. For example, the event created when sending a message will wake up all receivers such that they can see if they are the receiver for the message.
 
-      type request_msg_type_t is (get_status);
-      type request_msg_t is record
-        msg_type   : request_msg_type_t;
-        checkpoint : natural;
-      end record request_msg_t;
-
-      type reply_msg_type_t is (get_status_reply);
-      type reply_msg_t is record
-        msg_type       : reply_msg_type_t;
-        checksum_match : boolean;
-        matching_cards : boolean;
-      end record reply_msg_t;
-
-    end package msg_types_pkg;
-
-Encoders for these types are generated if you add the following to the
-Python script
-
-.. code-block:: python
-
-    tb_shuffler_lib = ui.add_library('tb_shuffler_lib')
-    tb_shuffler_lib.add_source_files(join(dirname(__file__), 'test', '*.vhd'))
-    pkg = tb_shuffler_lib.package('msg_types_pkg')
-    pkg.generate_codecs(codec_package_name='msg_codecs_pkg')
-
-The last two lines will take the types in ``msg_types_pkg``, generate
-codecs and place them in ``msg_codecs_pkg``. Moreover, records with an
-initial element named ``msg_type`` that is of an enumerated type get
-special treatment. For each value of the enumerated type there will be
-an encoder function named after that value with the rest of the elements
-as parameters. So instead of writing
+An actor waiting for a message uses the receive procedure
 
 .. code-block:: vhdl
 
-    my_card_msg := (load, (ace, spades));
-    send(net, receiver, encode(my_card_msg), receipt);
+  receive(net, receiver, msg);
 
-you can write
-
-.. code-block:: vhdl
-
-    send(net, receiver, load((ace, spades)), receipt);
-
-which makes the intention of the message more clear.
-
-**Note1:** The encoder function also has an alias with a ``_msg`` suffix
-(``load_msg`` in the previous example). This must currently be used with
-Aldec's simulators if the function has no input parameters. The reason
-is that the normal name (``load``) is confused with the enumeration
-literal with the same name.
-
-**Note2:** Codec generation for unconstrained arrays with composite
-element types is not supported for Aldec's simulators. This limitation
-will be removed as soon as some issues with these tools have been fixed.
-
-You also get a ``get_msg_type`` function which will return the type of a
-message considering all message types defined in the package. This
-provides a convenient way to select the correct decoder on the receiving
-side. Here's an example.
+This procedure returns immediately if there are pending message(s) in the receiver's inbox or blocks until the first message arrives. The returned message contains the oldest incoming message and its information can be retrived using a ``pop`` function.
+The code below will verify that the message has the expected content using the VUnit ``check_equal`` procedure.
 
 .. code-block:: vhdl
 
-          receive(net, self, message);
-          case get_msg_type(message.payload.all) is
-            when load =>
-              card_msg := decode(message.payload.all);
-              -- Do something with the card
-            when received =>
-              -- Decode this message type and take action
-            when get_status =>
-              -- Decode this message type and take action
-            when reset_shuffler =>
-              -- Decode this message type and take action
-            when others =>
-              check_failed("Message type not supported");
-            end case;
+  check_equal(pop_string(msg), "10101010");
+  my_integer := pop(msg);
+  check_equal(my_integer, 17);
 
-Sometimes the encode/decode functions used in the code are ambiguous to
-the compiler. To handle this, all built-in and generated encode/decode
-functions have an alias with a prefix of ``encode_/decode_``, for example
-``encode_card_t``.
+Just like ``push`` there are both ``pop`` functions and more verbose aliases on the form ``pop_<type>``.
 
-Publisher/Subscriber Pattern
-----------------------------
+Message Types
+-------------
 
-Sometimes a message needs to be sent to many receivers and this can of
-course be achieved with multiple calls to the ``send`` procedure.
-However, in many of these cases the sender isn't interested in who the
-receivers are, it just want to broadcast information to anyone
-interested. If this is the case it's inconvenient to add a new ``send``
-call to the sender for every new receiver. This is called the
-publisher/subscriber pattern and ``com`` has dedicated functionality to
-support it.
+In the example above the sender and the receiver exchanged one type of message (a string followed by an integer) but the normal use case is that a receiver can handle several types of messages. For example, if the receiver is a bus functional model (BFM) connected to a memory bus it would be able to handle both read and write messages.
 
-An example of this pattern can be found in the `card shuffler
-example <../../../examples/vhdl/com/test/tb_card_shuffler.vhd>`__. There the
-test runner publishes commands to load cards into the card shuffler.
-These commands are received by a driver which translates the commands to
-the pin wiggling understood by the card shuffler. The commands are also
-received by the scoreboard such that it can compare what is being sent
-into the card shuffler with what is sent out and from that determine if
-a correct shuffling has taken place.
-
-A ``publish`` is the same as a ``send`` with the difference that no
-receiver is specified, it can't be anonymous, and that a status is
-returned instead of a receipt. The difference between a receipt and a
-status is that the receipt contains status as we've seen before but also
-a message ID which is used for the client/server pattern described later
-on. The ID is unique to a message but a publish may result in zero or
-many messages. Moreover, it does not make sense to combine publishing
-with the client/server pattern so the message ID has been excluded from
-the ``publish`` procedure. A publish must be made with the publisher
-actor as a parameter so that ``com`` can find the subscribers.
+Rather than using a regular type as the message type, for example the string ``"write"`` for a write message, ``com`` provides a special message type.
 
 .. code-block:: vhdl
 
-    publish(net, self, load((rank, suit)), status);
+  constant write_msg : msg_type_t := new_msg_type("write");
 
-An actor interested in what's published call the ``subscribe``
-procedure. Both the driver and the scoreboard have this piece of code.
-
-.. code-block:: vhdl
-
-    subscribe(self, find("test runner"), status);
-
-Published messages are then received with the normal ``receive``
-procedure. It's also possible for an actor to unsubscribe from what's
-being published.
+Even if we have two independently created BFMs, both providing the constant above in their own packages, they would be given different values by the ``new_msg_type`` function. This means that we can safely create the different types of write messages without any risk of mistaking one for the other.
 
 .. code-block:: vhdl
 
-    unsubscribe(self, find("test runner"), status);
+   msg := new_msg;
+   push(msg, bfm1_pkg.write_msg);
+   push(msg, my_unsigned_address);
+   push(msg, my_std_logic_vector_data);
+   send(net, bfm1_pkg.actor, msg);
 
-Client/Server Pattern
----------------------
+The receiver starts by popping the message type and then handles the message types it recognizes.
 
-Messages sent are often requests for some information owned by the
-receiver. This is called the client/server pattern and is supported in a
-number of ways.
+.. code-block:: vhdl
 
--  The server needs a way to reply to a request from a client which it
-   has no prior knowledge of. This is achieved by using
-   ``message.sender`` on an incoming message. This also means that the
-   ``send`` call making the request can't be anonymous.
--  The server also needs a way to specify which request it's replying to
-   since replies may be done out of order. To do this the server
-   extracts a unique message ID from the client request message and use
-   that as a reference when sending the reply.
+  message_handler: process is
+    variable request_msg : msg_t;
+    variable msg_type : msg_type_t;
+    variable address : unsigned(7 downto 0);
+    variable data : std_logic_vector(7 downto 0);
+    variable memory : integer_vector(0 to 255) := (others => 0);
+  begin
+    receive(net, actor, request_msg);
+    msg_type := pop(request_msg);
 
-   .. code-block:: vhdl
+    if msg_type = write_msg then
+      address := pop(request_msg);
+      data := pop(request_msg);
+      memory(to_integer(address)) := to_integer(data);
+    end if;
+  end process;
 
-       requesting_actor := message.sender;
-       request_id       := message.id;
-       -- Prepare reply_message based on request in message.payload
-       reply(net, self, requesting_actor, request_id, reply_message, receipt);
+Normally a BFM would never be exposed to a write message aimed for another BFM but under certain cases it can happen. For example when using the publisher/subscriber pattern described later. A typical BFM would also provide a write transaction procedure which hides the message passing details (creating message, pushing data, and sending). That gives an extra level of type safety (and readability).
 
-   So a ``reply`` procedure is just like a ``send`` procedure with the
-   addition of the request ID.
+.. code-block:: vhdl
 
--  The client making the request can also wait for the reply to that
-   request ignoring any other message that may arrive before the reply.
+  bfm1_pkg.write(net, my_unsigned_address, my_std_logic_vector_data);
 
-   .. code-block:: vhdl
+If you do not expect the receiver to receive massages of a type it can't handle you can add this else statement
 
-       send(net, self, find("scoreboard"), request_message, receipt);
-       receive_reply(net, self, receipt.id, reply_message);
+.. code-block:: vhdl
 
-   The difference between ``receive_reply`` and a normal ``receive`` is
-   the ID for the request message which reply we are waiting for. Any
-   message ignored by ``receive_reply`` will still be available by
-   calling the normal ``receive`` procedure later on. When the ``send``
-   and the ``receive_reply`` calls are made back-to-back they can be
-   replaced by a single ``request`` call.
+  else
+    unexpected_msg_type(msg_type);
+  end if;
 
-   .. code-block:: vhdl
+which will cause an unrecognize message to fail the testbench.
 
-       request(net, self, find("scoreboard"), request_message, reply_message);
 
-Synchronous Communication
--------------------------
-
-The actor model as well as ``com`` are based on asynchronous
-communication but can still be used for synchronous communication. There
-are basically two ways:
-
-1. You can use the client/server pattern and have the receiver send an
-   acknowledge message back to the sender which blocks waiting for that
-   acknowledge using ``receive_reply`` or ``request``. For the case when
-   the acknowledge message contains no more information than if the
-   request was handled with positive or negative result there is a
-   special ``reply`` procedure called ``acknowledge`` that takes a
-   ``positive_ack`` boolean input instead of a string message. There are
-   also matching ``request`` and ``receive_reply`` procedures working
-   with this boolean information.
-2. It is also possible to limit the number of unread messages that an
-   receiver can have. This mechanism can be used to limit the amount of
-   memory used in the simulation but can also be used for
-   synchronization. If the limit is reached a new send to that receiver
-   will block with an optional timeout. Setting the limit to one means
-   that the receiver must read the first message before the sender can
-   get another one through. To set a limit on the receiver you add a
-   second parameter to the create call.
-
-   .. code-block:: vhdl
-
-       variable self : actor_t := create("proc_1", 1);
-
-When using ``publish`` any subscriber which reached its limit will
-miss that message. The reason for skipping these subscribers is that
-we do not want the publisher to block since that would create
-dependencies between the publisher and its subscribers as well as
-between the subscribers. The latter is because subscribers "after" the
-one causing the blocking will have the message delayed. This is not
-desirable since the pattern is used when the publisher doesn't
-have/want any knowledge of the subscribers and the subscribers may
-also be unaware of each other. A subscriber can use the
-``num_of_missed_messages`` function to get the total number of
-messages missed.
-
-Message Debugging
+Message Ownership
 -----------------
 
-When debugging a simulation containing messages it helps if those
-messages can be easily read and ``com`` can help out in two different
-ways. One is to add trace messages wherever necessary using the VUnit
-logging functionality together with the ``to_string`` function for the
-message/data type being sent. The automatic codec generation provided
-for custom message types also provide ``to_string`` functions for these
-types.
+The sender of a message is the owner of that message while it's being created. As soon as the ``send`` procedure is called that ownership is handed over to the receiver and the message passed to the ``send`` call can no longer be used to retrieve the information you pushed into it. Since memory is allocated whenever you push to a message its important that the receiver side deallocates that memory to avoid memory leaks. This can be done explicitly by deleting the message.
 
--  ``to_string`` on enumerated types will return the string for the
-   values in the type just as you defined them.
--  ``to_string`` on a record will return a comma-separated string of
-   each element's ``to_string`` result enclosed in parenthis. For
-   example, ``to_string`` for the ``card_t`` type used in previous
-   examples will return something like ``(ace, spades)``
--  ``to_string`` on an array will return a comma-separated string just
-   like records but the three first elements are special. The first
-   element is the left attribute of the array, the second is the right
-   attribute, and the third is the ascending attribute (true or false).
+.. code-block:: vhdl
 
-The second debug support provided by ``com`` is that you can use debug
-codecs instead of those being used by default. The default codecs
-basically take a binary representation of each scalar type, split that
-into bytes, and encode each byte with the corresponding character in the
-ASCII table. Composites are encoded by concatenating its scalar
-primitives. This approach to encoding results in short strings and gives
-better message passing run-time performance. The debug codecs takes
-another approach by simply encode messages using the ``to_string``
-function. Message payloads now becomes readable in the simulation but at
-the expense of longer strings which lowers the performance. You can
-permanently enable the debug codecs in your Python script like this.
+  delete(msg);
 
-.. code-block:: python
+However, the typical receiver is a looping process that calls the ``receive`` procedure as soon as the previous message has been handled. To simplify the design of the such a receiver the ``delete`` procedure is called first in the ``receive`` procedure to delete the message from the previous loop iteration.
 
-    ui = VUnit.from_argv()
-    ui.add_com(use_debug_codecs=True)
 
-You can also enable the debug codecs when calling your script.
+Replying to a Message
+---------------------
 
-.. code-block:: console
+Replying to a message is done with the ``reply`` procedure. Below is the previous message handler process which has been updated to also handle read request messages. Every such message results in a reply message targeting the requesting actor.
 
-    python run.py --use-debug-codecs
+.. code-block:: vhdl
+
+  message_handler: process is
+    variable request_msg, reply_msg : msg_t;
+    variable msg_type : msg_type_t;
+    variable address : unsigned(7 downto 0);
+    variable data : std_logic_vector(7 downto 0);
+    variable memory : integer_vector(0 to 255) := (others => 0);
+  begin
+    receive(net, actor, request_msg);
+    msg_type := pop(request_msg);
+
+    if msg_type = write_msg then
+      address := pop(request_msg);
+      data := pop(request_msg);
+      memory(to_integer(address)) := to_integer(data);
+
+    elsif msg_type = read_msg then
+      address := pop(request_msg);
+      data := to_std_logic_vector(memory(to_integer(address)), 8);
+      reply_msg := new_msg;
+      push(reply_msg, data);
+      reply(net, request_msg, reply_msg);
+
+    else
+      unexpected_msg_type(msg_type);
+    end if;
+  end process;
+
+Just like the ``send`` procedure ``reply`` will hand message ownership to the receiver.
+
+Receiving a Reply
+-----------------
+
+If you want to await a specific message like the reply to a request message you can use the ``receive_reply`` procedure. Below is a read procedure for our example BFM.
+
+.. code-block:: vhdl
+
+  procedure read(
+    signal net : inout event_t;
+    constant address : in unsigned(7 downto 0);
+    variable data : out std_logic_vector(7 downto 0)) is
+    variable request_msg : msg_t := new_msg;
+    variable reply_msg : msg_t;
+  begin
+    push(request_msg, read_msg);
+    push(request_msg, address);
+    send(net, actor, request_msg);
+    receive_reply(net, request_msg, reply_msg);
+    data := pop(reply_msg);
+  end;
+
+``receive_reply`` will block until the specified message is received. All other incoming messages will be ignored but can be retrieved later.
+
+Sending a request and directly receiving the reply is a common sequence of calls so it has been given a dedicated ``request`` procedure. The two lines above can be replaced by
+
+.. code-block:: vhdl
+
+  request(net, actor, request_msg, reply_msg);   
+
+Another approach to the read procedure is to think of it as two steps. The first step sends the the non-blocking read request and the second waits to get the requested data. The link between the two is the request message. This message is sometimes called a future since it represents the requested data that will be available in the future. Splitting blocking procedures like this allow you to initiate several concurrent transactions on different DUT interfaces or perform other tasks while waiting for the replies.
+
+.. code-block:: vhdl
+
+  bfm1_pkg.non_blocking_read(net, address => x"80", future => future1);
+  some_other_bfm_pkg.non_blocking_transaction(net, some_input_parameters, future2);
+
+  <Do other things>
+
+  bfm1_pkg.get(net, future1, data);
+  some_other_bfm_pkg.get(net, future2, requested_information);
+
+Signing Messages
+----------------
+
+So far all request messages have been anonymous, I've only created an actor for the receiving part. In these situations the receiver ``reply`` call can't send a reply back to the sender so the reply message is placed in the receiver outbox. The ``receive_reply`` procedure called by the sender knows that the request message was anonymous and waits for the reply to appear in the receiver outbox instead of its own inbox.
+
+Some communication patterns, for example the publisher/subscriber pattern described later, requires that all messages are signed. To sign a message you can provide the sending actor when the message is created.
+
+.. code-block:: vhdl
+
+  msg := new_msg(sending_actor);
+
+Receiving on Multiple Actors
+----------------------------
+
+The ``message_handler`` process presented above had a single actor. However, the actor model is not limited to have one actor for each concurrently running process. A process may have several actors, each representing some other object like a channel. A typical receiver in such a design needs to act on messages from several actors and to support that you can call ``receive`` with an array of actors rather than a single actor.
+
+.. code-block::vhdl
+
+  receive(net, actor_vec_t'(channel_1, channel_2), msg);
+
+*************************
+Synchronous Communication
+*************************
+
+Message passing based on the actor model is inherently asynchronous in nature. Sending a message takes no time which means that the sender can send any number of messages before the receiver starts processing the first one. Transactions requesting a reply, like the read transaction presented before, will naturally break this flow of unprocessed messages by blocking while waiting for a reply. Sometimes it's also useful to synchronize the sender and receiver on transactions which initiate an action without expecting a reply, a write transaction for example. To do that we can create a reply message with a positive or negative acknowledge   to signal the completion of the transaction or the failure to complete the request. Rather than doing that explicitly you can use one of the convenience procedures that ``com`` provides.
+
+Instead of using the ``reply`` procedure with a reply message the receiver can use ``acknowledge`` with a positive/negative response in the form of true/false boolean as the third parameter
+
+.. code-block:: vhdl
+
+  acknowledge(net, request_msg, positive_ack);
+
+On the sender side there is a matching ``receive_reply`` procedure that will return that boolean.
+
+.. code-block:: vhdl
+
+  receive_reply(net, msg, positive_ack);
+
+There is also a ``request`` procedure to be used in conjunction with ``acknowledge``.
+
+.. code-block:: vhdl
+
+  request(net, actor, msg, positive_ack);
+
+Another approach to synchronization is to limit the number of unprocessed messages that a
+receiver can have in its inbox. If the limit is reached, a new send to that receiver will block.
+The default inbox size is integer'high but it can be set to some other value when the actor is created.
+
+.. code-block:: vhdl
+
+  constant my_actor : actor_t := new_actor("my actor", inbox_size => 1);
+
+It's also possible to resize the inbox of an already created actor.
+
+.. code-block:: vhdl
+
+  resize(my_actor, new_size => 2);
+
+Reducing the size below the number of messages in the inbox will cause a run-time failure.
+
+A third way to synchronize actors is to have a dedicated message for that purpose but without any information exchange. The message exchange will just be an indication that the receiver is idling waiting for new messages.
+
+.. code-block:: vhdl
+
+  request_msg := new_msg;
+  push(request_msg, wait_until_idle_msg);
+  request(net, actor_to_synchronize, request_msg, reply_msg);
+
+The sender will block on the ``request`` call until the actor to synchronize has replied and the two actors becomes synchronized. Since there is no information exchange there is no need to pop the reply message.
+
+The actor to synchronize will have to add an if statement branch to handle the new message type. Below I've extended the message handling of the previous BFM example.
+
+.. code-block:: vhdl
+
+  receive(net, actor, request_msg);
+  msg_type := pop(request_msg);
+
+  if msg_type = wait_until_idle_msg then
+    reply_msg := new_msg;
+    reply(net, request_msg, reply_msg);
+  elsif msg_type = write_msg then
+
+    ... 
+
+  else
+    unexpected_msg_type(msg_type);
+  end if;
+
+Note that no information is pushed to the reply message.
+
+******************************************************
+Message Handlers and Verification Component Interfaces
+******************************************************
+
+The synchronization based on ``wait_until_idle_msg`` is something that can be used by many actors. We've seen before how we can create transaction procedures like ``read`` and ``write`` and we can also create such a procedure for this message. To synchronize with the BFM 1 actor we would just do
+
+.. code-block:: vhdl
+
+  wait_until_idle(net, bfm1_pkg.actor);
+
+We can also create a reusable procedure for the message handling.
+
+.. code-block:: vhdl
+
+  procedure handle_wait_until_idle_message(
+    signal net : inout event_t;
+    variable msg_type : inout msg_type_t;
+    variable request_msg : inout msg_t) is
+    variable reply_msg : msg_t;
+  begin
+    if msg_type = wait_until_idle_msg then
+      handle_message(msg_type);
+      reply_msg := new_msg;
+      reply(net, request_msg, reply_msg);
+    end if;
+  end;
+
+This is the same code I showed before to handle the wait until idle message with one addition - the call to the ``handle_message`` procedure. ``handle_message`` is in itself a message handler, the simplest message handler possible. The only thing it does is to set ``msg_type`` to a special value ``message_handled``. To understand why we can look at the updated BFM.
+
+.. code-block:: vhdl
+
+  receive(net, actor, request_msg);
+  msg_type := pop(request_msg);
+
+  handle_wait_until_idle_message(net, msg_type, request_msg);
+
+  if msg_type = write_msg then
+
+    ...
+
+  else
+    unexpected_msg_type(msg_type);
+  end if;
+
+After ``handle_wait_until_idle_message`` returns ``msg_type`` has the value ``message_handled`` and no more message handling takes place in the following if statement. The ``unexpected_msg_type`` procedure of the else branch will be called but that procedure takes no action when the message type is ``message_handled``.
+
+By putting the ``wait_until_idle_msg`` message type and the ``wait_until_idle`` and ``handle_wait_until_idle_message`` procedures in a package we can create a reusable interface that can be added to actors. An actor can call several message handlers, that is add several interfaces, and you can create message handlers that call other message handlers to bundle interfaces. The interface I just presented is actually already a part of the VUnit's :ref:`synchronization VCI <sync_vci>`.
+
+:ref:`Verification Components <verification_components>`
+
+Timeout
+-------
+
+Receive and send procedures which may block on empty or full inboxes have an optional timeout parameter. For example
+
+.. code-block:: vhdl
+
+  receive(net, actor, msg, timeout => 10 ns);
+
+Reaching the timeout limit is an error that will fail the testbench. If you need to timeout a receive call without failing you can use the ``wait_for_message``, ``has_message``, and ``get_message`` subprograms. The ``status`` returned by the ``wait_for_message`` procedure below will be ``ok`` if a message is received before the timeout and ``timeout`` if the timeout limit is reached.
+
+.. code-block:: vhdl
+
+  wait_for_message(net, my_actor, status, timeout => 10 ns);
+
+You can also see if an actor has at least one message in its inbox.
+
+.. code-block:: vhdl
+
+  has_message(my_actor);
+
+When there are messages in the inbox you can get the oldest with
+
+.. code-block:: vhdl
+
+  get_message(my_actor);
+
+It's also possible to wait for a reply with a timeout.
+
+.. code-block:: vhdl
+
+  wait_for_reply(net, request_msg, status, timeout => 10 ns);
+  if status = ok then
+    get_reply(request_msg, reply_msg);
+  end if;
+
+
+Deferred Actor Creation
+-----------------------
+
+When finding an actor using the ``find`` function there is a potential race condition. What if the actor hasn't been created yet? The default VUnit solution is that the ``find`` function creates a temporary actor with limited functionality and defer proper actor creation until the ``new_actor`` function is called. The process calling ``find`` can send messages to this actor and can't tell the difference. However, it's not possible to call receive type of procedures on such an actor. Full actor capabilities are acquired when the receiver process has created the actor with ``new_actor``.
+
+The danger with this approach is if the actor "found" by the sender is never created, maybe as a result of a misspelled name. In that case the sender will send messages that are never received but it will block on the second send since the temporary actor has an inbox of size one. The safest way to avoid this is to not use ``find`` but rather make the actor constant available to the sender. It's also possible to to disable the deferred creation by adding an extra parameter to the ``find`` call
+
+.. code-block:: vhdl
+
+  find("actor name", enable_deferred_creation => false);
+
+If the actor isn't found the function returns ``null_actor_c`` so to make this work you must make sure that the ``find`` function is called after ``new_actor``, for example by adding an initial delay before making the call.
+
+Another approach is to make sure that there are no deferred creations pending a short delay into the simulation, before the actual testing starts. You can find out by calling the ``num_of_deferred_creations`` function.
+
+

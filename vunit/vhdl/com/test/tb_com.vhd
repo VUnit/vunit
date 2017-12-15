@@ -289,6 +289,19 @@ begin
           receive(net, actor_vec_t'(actor, actor2), msg);
           check_equal(name(msg.sender), pop_string(msg));
         end loop;
+      elsif run("Test that the sender of a message can be retrieved") then
+        actor  := new_actor;
+        actor2 := new_actor;
+        msg    := new_msg(actor2);
+        push_string(msg, "To actor");
+        send(net, actor, msg);
+        receive(net, actor, msg);
+        check(sender(msg) = actor2);
+        msg    := new_msg;
+        push_string(msg, "To actor");
+        send(net, actor, msg);
+        receive(net, actor, msg);
+        check(sender(msg) = null_actor_c);
 
       -- Publish, subscribe, and unsubscribe
       elsif run("Test that an actor can publish messages to multiple subscribers") then
