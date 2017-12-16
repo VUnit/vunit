@@ -287,11 +287,21 @@ package body log_handler_pkg is
         when csv =>
           write_time(l);
           write(l, ',');
-          write_source(l);
-          write(l, ',');
           write_level(l);
           write(l, ',');
-          write_message(l);
+
+          if line_num = 0 then
+            write(l, string'(",,"));
+          else
+            write(l, file_name);
+            write(l, ',');
+            write(l, integer'image(line_num));
+            write(l, ',');
+          end if;
+
+          write_source(l);
+          write(l, ',');
+          write(l, msg);
 
         when level =>
           write_level(l, justify => true);

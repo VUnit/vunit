@@ -203,13 +203,11 @@ begin
       set_format(display_handler, format => csv);
       init_log_handler(file_handler, file_name => log_file_name, format => csv);
       disable_stop;
-      perform_logging(logger);
-      set(entries, "0", time'image(0 ns) & ",logger,VERBOSE,message 1");
-      set(entries, "1", time'image(1 ns) & ",logger,DEBUG,message 2");
-      set(entries, "2", time'image(2 ns) & ",logger,INFO,message 3");
-      set(entries, "3", time'image(3 ns) & ",logger,WARNING,message 4");
-      set(entries, "4", time'image(4 ns) & ",logger,ERROR,message 5");
-      set(entries, "5", time'image(5 ns) & ",logger,FAILURE,message 6");
+      wait for 3 ns;
+      warning(logger, "msg1");
+      info(logger, "msg2", file_name => "file_name.vhd", line_num => 11);
+      set(entries, "0", time'image(3 ns) & ",WARNING,,,logger,msg1");
+      set(entries, "1", time'image(3 ns) & ",INFO,file_name.vhd,11,logger,msg2");
       check_log_file(log_file_name, entries);
       reset_log_count(logger, error);
       reset_log_count(logger, failure);
@@ -280,12 +278,12 @@ begin
       wait for 1 ns;
       failure("message 6");
 
-      set(entries, "0", time'image(0 ns) & ",default,DEBUG,message 1");
-      set(entries, "1", time'image(1 ns) & ",default,VERBOSE,message 2");
-      set(entries, "2", time'image(2 ns) & ",default,INFO,message 3");
-      set(entries, "3", time'image(3 ns) & ",default,WARNING,message 4");
-      set(entries, "4", time'image(4 ns) & ",default,ERROR,message 5");
-      set(entries, "5", time'image(5 ns) & ",default,FAILURE,message 6");
+      set(entries, "0", time'image(0 ns) & ",DEBUG,,,default,message 1");
+      set(entries, "1", time'image(1 ns) & ",VERBOSE,,,default,message 2");
+      set(entries, "2", time'image(2 ns) & ",INFO,,,default,message 3");
+      set(entries, "3", time'image(3 ns) & ",WARNING,,,default,message 4");
+      set(entries, "4", time'image(4 ns) & ",ERROR,,,default,message 5");
+      set(entries, "5", time'image(5 ns) & ",FAILURE,,,default,message 6");
       check_log_file(log_file_name, entries);
       reset_log_count(default_logger, error);
       reset_log_count(default_logger, failure);
@@ -314,12 +312,12 @@ begin
       end loop;
 
       perform_logging(logger);
-      set(entries, "0", time'image(6 ns) & ",logger,VERBOSE,message 1");
-      set(entries, "1", time'image(7 ns) & ",logger,DEBUG,message 2");
-      set(entries, "2", time'image(8 ns) & ",logger,INFO,message 3");
-      set(entries, "3", time'image(9 ns) & ",logger,WARNING,message 4");
-      set(entries, "4", time'image(10 ns) & ",logger,ERROR,message 5");
-      set(entries, "5", time'image(11 ns) & ",logger,FAILURE,message 6");
+      set(entries, "0", time'image(6 ns) & ",VERBOSE,,,logger,message 1");
+      set(entries, "1", time'image(7 ns) & ",DEBUG,,,logger,message 2");
+      set(entries, "2", time'image(8 ns) & ",INFO,,,logger,message 3");
+      set(entries, "3", time'image(9 ns) & ",WARNING,,,logger,message 4");
+      set(entries, "4", time'image(10 ns) & ",ERROR,,,logger,message 5");
+      set(entries, "5", time'image(11 ns) & ",FAILURE,,,logger,message 6");
       check_log_file(log_file_name, entries);
       reset_log_count(logger, error);
       reset_log_count(logger, failure);
@@ -329,9 +327,9 @@ begin
       set_log_level(file_handler, warning);
       disable_stop;
       perform_logging(logger);
-      set(entries, "0", time'image(3 ns) & ",logger,WARNING,message 4");
-      set(entries, "1", time'image(4 ns) & ",logger,ERROR,message 5");
-      set(entries, "2", time'image(5 ns) & ",logger,FAILURE,message 6");
+      set(entries, "0", time'image(3 ns) & ",WARNING,,,logger,message 4");
+      set(entries, "1", time'image(4 ns) & ",ERROR,,,logger,message 5");
+      set(entries, "2", time'image(5 ns) & ",FAILURE,,,logger,message 6");
       check_log_file(log_file_name, entries);
       reset_log_count(logger, error);
       reset_log_count(logger, failure);
@@ -341,9 +339,9 @@ begin
       set_block_filter(file_handler, (info, debug, verbose));
       disable_stop;
       perform_logging(logger);
-      set(entries, "0", time'image(3 ns) & ",logger,WARNING,message 4");
-      set(entries, "1", time'image(4 ns) & ",logger,ERROR,message 5");
-      set(entries, "2", time'image(5 ns) & ",logger,FAILURE,message 6");
+      set(entries, "0", time'image(3 ns) & ",WARNING,,,logger,message 4");
+      set(entries, "1", time'image(4 ns) & ",ERROR,,,logger,message 5");
+      set(entries, "2", time'image(5 ns) & ",FAILURE,,,logger,message 6");
       check_log_file(log_file_name, entries);
       reset_log_count(logger, error);
       reset_log_count(logger, failure);
@@ -354,9 +352,9 @@ begin
       set_block_filter(file_handler, (0 => warning));
       disable_stop;
       perform_logging(logger);
-      set(entries, "0", time'image(2 ns) & ",logger,INFO,message 3");
-      set(entries, "1", time'image(4 ns) & ",logger,ERROR,message 5");
-      set(entries, "2", time'image(5 ns) & ",logger,FAILURE,message 6");
+      set(entries, "0", time'image(2 ns) & ",INFO,,,logger,message 3");
+      set(entries, "1", time'image(4 ns) & ",ERROR,,,logger,message 5");
+      set(entries, "2", time'image(5 ns) & ",FAILURE,,,logger,message 6");
       check_log_file(log_file_name, entries);
       reset_log_count(logger, error);
       reset_log_count(logger, failure);
@@ -368,7 +366,7 @@ begin
       info(logger, "message 1");
       info(nested_logger, "message 2");
       info("message 3");
-      set(entries, "0", time'image(0 ns) & ",default,INFO,message 3");
+      set(entries, "0", time'image(0 ns) & ",INFO,,,default,message 3");
       check_log_file(log_file_name, entries);
 
     elsif run("can enable and disable source") then
@@ -384,7 +382,7 @@ begin
       info(logger, "message");
       info(nested_logger, "message");
       info("message");
-      set(entries, "0", time'image(0 ns) & ",default,INFO,message");
+      set(entries, "0", time'image(0 ns) & ",INFO,,,default,message");
       check_log_file(log_file_name, entries);
 
       init_log_handler(file_handler, file_name => log_file_name, format => csv);
@@ -400,9 +398,9 @@ begin
       info(logger, "message");
       info(nested_logger, "message");
       info("message");
-      set(entries, "0", time'image(0 ns) & ",logger,INFO,message");
-      set(entries, "1", time'image(0 ns) & ",logger:nested,INFO,message");
-      set(entries, "2", time'image(0 ns) & ",default,INFO,message");
+      set(entries, "0", time'image(0 ns) & ",INFO,,,logger,message");
+      set(entries, "1", time'image(0 ns) & ",INFO,,,logger:nested,message");
+      set(entries, "2", time'image(0 ns) & ",INFO,,,default,message");
       check_log_file(log_file_name, entries);
 
     elsif run("mock and unmock") then
