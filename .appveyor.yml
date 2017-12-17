@@ -37,9 +37,9 @@ environment:
 install:
   - "git submodule update --init --recursive"
   - "%PYTHON%\\python.exe -m pip install tox"
-  - "curl -fsSL -o ghdl.zip https://github.com/tgingold/ghdl/releases/download/2017-03-01/ghdl-0.34-dev-mcode-2017-03-01-win32.zip"
+  - "curl -fsSL -o ghdl.zip https://github.com/tgingold/ghdl/releases/download/v0.35/ghdl-0.35-mingw32-mcode.zip"
   - "7z x ghdl.zip -oghdl -y"
-  - "set PATH=%PATH%;ghdl/bin"
+  - "set PATH=%PATH%;ghdl/GHDL/v0.35-mingw32-mcode/bin"
 
 build: off
 
