@@ -294,12 +294,18 @@ class ThreadLocalOutput(object):
         self._stdout = stdout
 
     def write(self, txt):
+        """
+        Write to file object
+        """
         if hasattr(self._local, "output"):
             self._local.output.write(txt)
         else:
             self._stdout.write(txt)
 
     def flush(self):
+        """
+        Flush file object
+        """
         if hasattr(self._local, "output"):
             self._local.output.flush()
         else:

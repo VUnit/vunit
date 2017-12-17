@@ -77,11 +77,17 @@ define foo "bar"
 
     @staticmethod
     def _create_cds_file(contents):
+        """
+        Create a CDSFile object with 'contents'
+        """
         with mock.patch("vunit.cds_file.read_file", autospec=True) as read_file:
             read_file.return_value = contents
             return CDSFile.parse("file_name")
 
     def _check_written_as(self, cds, contents):
+        """
+        Check that the CDSFile object writes the 'contents to the file
+        """
         with mock.patch("vunit.cds_file.write_file", autospec=True) as write_file:
             cds.write("filename")
             self.assertEqual(len(write_file.mock_calls), 1)

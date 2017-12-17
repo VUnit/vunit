@@ -67,12 +67,16 @@ Compile passed
         project.add_manual_dependency(file2, depends_on=file1)
 
         def compile_source_file_command(source_file):
+            """
+            Dummy compile command
+            """
             if source_file == file1:
                 return ["command1"]
             elif source_file == file2:
                 return ["command2"]
             elif source_file == file3:
                 return ["command3"]
+            raise AssertionError
 
         def check_output_side_effect(command, **kwargs):  # pylint: disable=missing-docstring
             if command == ["command1"]:
@@ -242,6 +246,9 @@ class TestOptions(unittest.TestCase):
         option.validate(value)
 
     def _test_not_ok(self, option, value, message):
+        """
+        Test taht setting option to value is not OK with message
+        """
         try:
             option.validate(value)
         except ValueError as err:

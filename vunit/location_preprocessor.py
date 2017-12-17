@@ -66,6 +66,7 @@ class LocationPreprocessor(object):
             balance += 1 if match.group() == '(' else -1
             if balance == 0:
                 return match.start()
+        return None
 
     _already_fixed_file_name_pattern = re.compile(r'file_name\s*=>', re.MULTILINE)
     _already_fixed_line_num_pattern = re.compile(r'line_num\s*=>', re.MULTILINE)

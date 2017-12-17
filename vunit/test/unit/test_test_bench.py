@@ -337,6 +337,9 @@ def get_config_of(tests, test_name):
 
 
 class Module(object):
+    """
+    Mock Module
+    """
     def __init__(self, name, contents=''):
         self.name = name
         self.library_name = "lib"

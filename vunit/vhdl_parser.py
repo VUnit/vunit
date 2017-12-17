@@ -629,6 +629,9 @@ class VHDLEnumerationType(object):
 
     @classmethod
     def find(cls, code):
+        """
+        Find enumeration types in the code
+        """
         for enum_type in cls._enum_declaration_re.finditer(code):
             identifier = enum_type.group('id')
             literals = [e.strip() for e in enum_type.group('literals').split(',')]
@@ -661,6 +664,9 @@ class VHDLRecordType(object):
 
     @classmethod
     def find(cls, code):
+        """
+        Find all record types in the code
+        """
         for record_type in cls._record_declaration_re.finditer(code):
             identifier = record_type.group('id')
             elements = record_type.group('elements').split(';')

@@ -88,6 +88,9 @@ class DataBase(object):
 
     @staticmethod
     def _write_node(file_name, key, value):
+        """
+        Write node to file
+        """
         with io.open(file_name, "wb") as fptr:
             fptr.write(struct.pack("I", len(key)))
             fptr.write(key)

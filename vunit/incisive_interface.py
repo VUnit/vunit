@@ -170,8 +170,7 @@ define work "{2}/libraries/work"
             return "-v200x -extv200x"
         elif vhdl_standard == "93":
             return "-v93"
-        else:
-            assert False
+        raise ValueError("Invalid VHDL standard %s" % vhdl_standard)
 
     def compile_vhdl_file_command(self, source_file):
         """

@@ -67,6 +67,9 @@ class InterruptableQueue(object):
         self._queue = Queue()
 
     def get(self):
+        """
+        Get a value from the queue
+        """
         while True:
             PROGRAM_STATUS.check_for_shutdown()
             try:

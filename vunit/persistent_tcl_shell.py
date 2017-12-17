@@ -99,6 +99,7 @@ def output_consumer(line):
         return True
 
     print(line)
+    return None
 
 
 class SilentOutputConsumer(object):
@@ -111,8 +112,9 @@ class SilentOutputConsumer(object):
     def __call__(self, line):
         if line.endswith("#VUNIT_RETURN"):
             return True
-        else:
-            self.output += line + "\n"
+
+        self.output += line + "\n"
+        return None
 
 
 class ReadVarOutputConsumer(object):

@@ -156,8 +156,7 @@ class VerilogPreprocessor(object):
                 return arg.value in defines
             elif if_token.value == "ifndef":
                 return arg.value not in defines
-            else:
-                assert False
+            raise ValueError("Invalid if token %r" % if_token.value)
 
         result = []
         stream.skip_while(WHITESPACE)

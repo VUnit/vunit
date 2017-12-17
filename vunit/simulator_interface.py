@@ -110,6 +110,7 @@ class SimulatorInterface(object):
             if all([path0 in paths for paths in all_paths] +
                    [constraint(path0) for constraint in constraints]):
                 return path0
+        return None
 
     @classmethod
     def get_osvvm_coverage_api(cls):

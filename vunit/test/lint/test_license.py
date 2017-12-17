@@ -87,7 +87,7 @@ class TestLicense(unittest.TestCase):
             for _ in range(len(line) - len(sline)):
                 print("~", end="")
             print()
-            raise AssertionError("Line %i of %s contains trailing whitespace", idx + 1, file_name)
+            raise AssertionError("Line %i of %s contains trailing whitespace" % (idx + 1, file_name))
 
 
 def find_expected_license_years_of(file_name):
