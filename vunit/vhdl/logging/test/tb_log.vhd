@@ -205,10 +205,11 @@ begin
       init_log_handler(file_handler, file_name => log_file_name, format => csv);
       disable_stop;
       wait for 3 ns;
-      warning(logger, "msg1");
+      tmp := get_log_count;
+      warning(nested_logger, "msg1");
       info(logger, "msg2", file_name => "file_name.vhd", line_num => 11);
-      set(entries, "0", time'image(3 ns) & ",WARNING,,,logger,msg1");
-      set(entries, "1", time'image(3 ns) & ",INFO,file_name.vhd,11,logger,msg2");
+      set(entries, "0", integer'image(tmp+0) & "," & time'image(3 ns) & ",WARNING,,,logger:nested,msg1");
+      set(entries, "1", integer'image(tmp+1) & "," & time'image(3 ns) & ",INFO,file_name.vhd,11,logger,msg2");
       check_log_file(log_file_name, entries);
       reset_log_count(logger, error);
       reset_log_count(logger, failure);
@@ -264,7 +265,7 @@ begin
       reset_log_count(nested_logger, failure);
 
     elsif run("can log to default logger") then
-      init_log_handler(file_handler, file_name => log_file_name, format => csv);
+      init_log_handler(file_handler, file_name => log_file_name, format => level);
 
       disable_stop;
       debug("message 1");
@@ -279,18 +280,18 @@ begin
       wait for 1 ns;
       failure("message 6");
 
-      set(entries, "0", time'image(0 ns) & ",DEBUG,,,default,message 1");
-      set(entries, "1", time'image(1 ns) & ",VERBOSE,,,default,message 2");
-      set(entries, "2", time'image(2 ns) & ",INFO,,,default,message 3");
-      set(entries, "3", time'image(3 ns) & ",WARNING,,,default,message 4");
-      set(entries, "4", time'image(4 ns) & ",ERROR,,,default,message 5");
-      set(entries, "5", time'image(5 ns) & ",FAILURE,,,default,message 6");
+      set(entries, "0", "  DEBUG - message 1");
+      set(entries, "1", "VERBOSE - message 2");
+      set(entries, "2", "   INFO - message 3");
+      set(entries, "3", "WARNING - message 4");
+      set(entries, "4", "  ERROR - message 5");
+      set(entries, "5", "FAILURE - message 6");
       check_log_file(log_file_name, entries);
       reset_log_count(default_logger, error);
       reset_log_count(default_logger, failure);
 
     elsif run("can enable and disable handler") then
-      init_log_handler(file_handler, file_name => log_file_name, format => csv);
+      init_log_handler(file_handler, file_name => log_file_name, format => level);
       disable_stop;
 
       disable_all(file_handler);
@@ -313,65 +314,65 @@ begin
       end loop;
 
       perform_logging(logger);
-      set(entries, "0", time'image(6 ns) & ",VERBOSE,,,logger,message 1");
-      set(entries, "1", time'image(7 ns) & ",DEBUG,,,logger,message 2");
-      set(entries, "2", time'image(8 ns) & ",INFO,,,logger,message 3");
-      set(entries, "3", time'image(9 ns) & ",WARNING,,,logger,message 4");
-      set(entries, "4", time'image(10 ns) & ",ERROR,,,logger,message 5");
-      set(entries, "5", time'image(11 ns) & ",FAILURE,,,logger,message 6");
+      set(entries, "0", "VERBOSE - message 1");
+      set(entries, "1", "  DEBUG - message 2");
+      set(entries, "2", "   INFO - message 3");
+      set(entries, "3", "WARNING - message 4");
+      set(entries, "4", "  ERROR - message 5");
+      set(entries, "5", "FAILURE - message 6");
       check_log_file(log_file_name, entries);
       reset_log_count(logger, error);
       reset_log_count(logger, failure);
 
     elsif run("can set log level") then
-      init_log_handler(file_handler, file_name => log_file_name, format => csv);
+      init_log_handler(file_handler, file_name => log_file_name, format => level);
       set_log_level(file_handler, warning);
       disable_stop;
       perform_logging(logger);
-      set(entries, "0", time'image(3 ns) & ",WARNING,,,logger,message 4");
-      set(entries, "1", time'image(4 ns) & ",ERROR,,,logger,message 5");
-      set(entries, "2", time'image(5 ns) & ",FAILURE,,,logger,message 6");
+      set(entries, "0", "WARNING - message 4");
+      set(entries, "1", "  ERROR - message 5");
+      set(entries, "2", "FAILURE - message 6");
       check_log_file(log_file_name, entries);
       reset_log_count(logger, error);
       reset_log_count(logger, failure);
 
     elsif run("can set block filter") then
-      init_log_handler(file_handler, file_name => log_file_name, format => csv);
+      init_log_handler(file_handler, file_name => log_file_name, format => level);
       set_block_filter(file_handler, (info, debug, verbose));
       disable_stop;
       perform_logging(logger);
-      set(entries, "0", time'image(3 ns) & ",WARNING,,,logger,message 4");
-      set(entries, "1", time'image(4 ns) & ",ERROR,,,logger,message 5");
-      set(entries, "2", time'image(5 ns) & ",FAILURE,,,logger,message 6");
+      set(entries, "0", "WARNING - message 4");
+      set(entries, "1", "  ERROR - message 5");
+      set(entries, "2", "FAILURE - message 6");
       check_log_file(log_file_name, entries);
       reset_log_count(logger, error);
       reset_log_count(logger, failure);
 
     elsif run("Test that log level and block filter add up") then
-      init_log_handler(file_handler, file_name => log_file_name, format => csv);
+      init_log_handler(file_handler, file_name => log_file_name, format => level);
       set_log_level(file_handler, info);
       set_block_filter(file_handler, (0 => warning));
       disable_stop;
       perform_logging(logger);
-      set(entries, "0", time'image(2 ns) & ",INFO,,,logger,message 3");
-      set(entries, "1", time'image(4 ns) & ",ERROR,,,logger,message 5");
-      set(entries, "2", time'image(5 ns) & ",FAILURE,,,logger,message 6");
+      set(entries, "0", "   INFO - message 3");
+      set(entries, "1", "  ERROR - message 5");
+      set(entries, "2", "FAILURE - message 6");
       check_log_file(log_file_name, entries);
       reset_log_count(logger, error);
       reset_log_count(logger, failure);
 
     elsif run("log level also set for nested loggers") then
-      init_log_handler(file_handler, file_name => log_file_name, format => csv);
+      init_log_handler(file_handler, file_name => log_file_name, format => level);
       set_log_level(logger, file_handler, failure);
       disable_stop;
       info(logger, "message 1");
       info(nested_logger, "message 2");
       info("message 3");
-      set(entries, "0", time'image(0 ns) & ",INFO,,,default,message 3");
+      set(entries, "0", "   INFO - message 3");
       check_log_file(log_file_name, entries);
 
     elsif run("can enable and disable source") then
-      init_log_handler(file_handler, file_name => log_file_name, format => csv);
+      init_log_handler(file_handler, file_name => log_file_name, format => level);
       disable_all(logger, file_handler);
 
       for log_level in verbose to failure loop
@@ -383,10 +384,10 @@ begin
       info(logger, "message");
       info(nested_logger, "message");
       info("message");
-      set(entries, "0", time'image(0 ns) & ",INFO,,,default,message");
+      set(entries, "0", "   INFO - message");
       check_log_file(log_file_name, entries);
 
-      init_log_handler(file_handler, file_name => log_file_name, format => csv);
+      init_log_handler(file_handler, file_name => log_file_name, format => level);
       set_log_level(logger, file_handler, info);
       set_block_filter(logger, file_handler, (0 => warning));
       enable_all(logger, file_handler);
@@ -396,12 +397,12 @@ begin
         assert_true(is_enabled(nested_logger, file_handler, log_level));
       end loop;
 
-      info(logger, "message");
-      info(nested_logger, "message");
-      info("message");
-      set(entries, "0", time'image(0 ns) & ",INFO,,,logger,message");
-      set(entries, "1", time'image(0 ns) & ",INFO,,,logger:nested,message");
-      set(entries, "2", time'image(0 ns) & ",INFO,,,default,message");
+      info(logger, "message 1");
+      info(nested_logger, "message 2");
+      info("message 3");
+      set(entries, "0", "   INFO - message 1");
+      set(entries, "1", "   INFO - message 2");
+      set(entries, "2", "   INFO - message 3");
       check_log_file(log_file_name, entries);
 
     elsif run("mock and unmock") then
@@ -592,7 +593,6 @@ begin
 
     elsif run("Test global log count") then
       tmp := get_log_count;
-
       info(logger, "msg");
       assert_equal(get_log_count - tmp, 1);
 

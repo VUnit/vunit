@@ -160,6 +160,7 @@ package body log_handler_pkg is
                            msg : string;
                            log_level : log_level_t;
                            log_time : time;
+                           sequence_number : natural;
                            line_num : natural := 0;
                            file_name : string := "") is
 
@@ -285,6 +286,7 @@ package body log_handler_pkg is
           write_message(l);
 
         when csv =>
+          write(l, string'(integer'image(sequence_number) & ','));
           write_time(l);
           write(l, ',');
           write_level(l);

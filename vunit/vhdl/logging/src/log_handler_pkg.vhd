@@ -71,6 +71,7 @@ package log_handler_pkg is
                            msg : string;
                            log_level : log_level_t;
                            log_time : time;
+                           sequence_number : natural;
                            line_num : natural := 0;
                            file_name : string := "");
 

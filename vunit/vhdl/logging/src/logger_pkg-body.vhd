@@ -705,6 +705,7 @@ package body logger_pkg is
 
     variable log_handler : log_handler_t;
     constant t_now : time := now;
+    constant sequence_number : natural := get_log_count;
   begin
     if logger = null_logger then
       core_failure("Attempt to log to uninitialized logger");
@@ -714,7 +715,9 @@ package body logger_pkg is
       for i in 0 to num_log_handlers(logger) - 1 loop
         log_handler := get_log_handler(logger, i);
         if is_enabled(logger, log_handler, log_level) then
-          log_to_handler(log_handler, get_full_name(logger), msg, log_level, t_now, line_num, file_name);
+          log_to_handler(log_handler, get_full_name(logger), msg, log_level,
+                         t_now, sequence_number,
+                         line_num, file_name);
         end if;
       end loop;
 
