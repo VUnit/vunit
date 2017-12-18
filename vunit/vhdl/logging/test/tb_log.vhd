@@ -96,6 +96,7 @@ begin
   begin
 
     -- Check defaults before test runner setup
+    assert_equal(get_log_count, 0);
     assert_equal(num_log_handlers(logger), 2);
     assert_true(get_log_handler(logger, 0) = display_handler);
     assert_true(get_log_handler(logger, 1) = file_handler);
@@ -588,6 +589,17 @@ begin
           end loop;
         end if;
       end loop;
+
+    elsif run("Test global log count") then
+      tmp := get_log_count;
+
+      info(logger, "msg");
+      assert_equal(get_log_count - tmp, 1);
+
+      set_log_level(file_handler, failure);
+      set_log_level(display_handler, failure);
+      verbose(logger, "msg");
+      assert_equal(get_log_count - tmp, 2);
 
     elsif run("Does not log counts when mocked") then
       mock(logger);

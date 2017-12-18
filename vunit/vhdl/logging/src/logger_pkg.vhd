@@ -202,12 +202,15 @@ package logger_pkg is
   procedure set_log_handlers(logger : logger_t;
                              log_handlers : log_handler_vec_t);
 
-  -- Get number of logs to a specific level or all levels when level = null_log_level
+  -- Get the total number of log calls to all loggers
+  impure function get_log_count return natural;
+
+  -- Get number of log calls to a specific level or all levels when level = null_log_level
   impure function get_log_count(
     logger : logger_t;
     log_level : log_level_t := null_log_level) return natural;
 
-  -- Reset the log count of a specific level or all levels when level = null_log_level
+  -- Reset the log call count of a specific level or all levels when level = null_log_level
   procedure reset_log_count(
     logger : logger_t;
     log_level : log_level_t := null_log_level);

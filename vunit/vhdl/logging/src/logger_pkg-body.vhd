@@ -13,6 +13,7 @@ use work.string_ops.all;
 package body logger_pkg is
   constant root_logger_id : natural := 0;
   constant next_logger_id : integer_vector_ptr_t := allocate(1, value => root_logger_id + 1);
+  constant global_log_count : integer_vector_ptr_t := allocate(1, value => 0);
 
   constant id_idx : natural := 0;
   constant name_idx : natural := 1;
@@ -548,6 +549,11 @@ package body logger_pkg is
     end if;
   end;
 
+  impure function get_log_count return natural is
+  begin
+    return get(global_log_count, 0);
+  end;
+
   impure function get_log_count(logger : logger_t; log_level : log_level_t := null_log_level) return natural is
   begin
     return get_log_count(logger, log_count_idx, log_level);
@@ -562,6 +568,7 @@ package body logger_pkg is
   procedure count_log(logger : logger_t; log_level : log_level_t) is
     constant stop_level : integer := get(logger.p_data, stop_level_idx);
   begin
+    set(global_log_count, 0, get(global_log_count, 0) + 1);
     count_log(logger, log_count_idx, log_level);
     if log_level_t'pos(log_level) >= stop_level then
       core_failure("Stop simulation on log level " & get_name(log_level));
