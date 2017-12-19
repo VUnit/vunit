@@ -3,7 +3,7 @@
 Bus Master VCI
 ==============
 
-.. literalinclude:: ../../../vunit/vhdl/bfm/src/bus_pkg.vhd
+.. literalinclude:: ../../../vunit/vhdl/bfm/src/bus_master_pkg.vhd
    :caption: Bus master verification component interface
    :language: vhdl
    :lines: 7-

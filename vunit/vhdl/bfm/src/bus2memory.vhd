@@ -10,13 +10,13 @@ use ieee.numeric_std.all;
 
 context work.com_context;
 use work.queue_pkg.all;
-use work.bus_pkg.all;
+use work.bus_master_pkg.all;
 use work.memory_pkg.all;
 use work.msg_types_pkg.all;
 
 entity bus2memory is
   generic (
-    bus_handle : bus_t;
+    bus_handle : bus_master_t;
     memory : memory_t);
 end entity;
 

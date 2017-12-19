@@ -15,7 +15,7 @@ use std.textio.all;
 use work.axi_pkg.all;
 use work.logger_pkg.all;
 use work.queue_pkg.all;
-use work.bus_pkg.all;
+use work.bus_master_pkg.all;
 use work.msg_types_pkg.all;
 context work.com_context;
 
@@ -67,7 +67,7 @@ package axi_private_pkg is
   procedure main_loop(variable self : inout axi_slave_private_t;
                       signal event : inout event_t);
 
-  procedure check_axi_resp(bus_handle : bus_t; got, expected : axi_resp_t; msg : string);
+  procedure check_axi_resp(bus_handle : bus_master_t; got, expected : axi_resp_t; msg : string);
 end package;
 
 
@@ -314,7 +314,7 @@ package body axi_private_pkg is
     end case;
   end;
 
-  procedure check_axi_resp(bus_handle : bus_t; got, expected : axi_resp_t; msg : string) is
+  procedure check_axi_resp(bus_handle : bus_master_t; got, expected : axi_resp_t; msg : string) is
     function describe(resp : axi_resp_t) return string is
     begin
       return resp_to_string(resp) & "(" & to_string(resp) & ")";

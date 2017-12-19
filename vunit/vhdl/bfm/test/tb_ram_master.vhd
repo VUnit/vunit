@@ -13,7 +13,7 @@ context vunit_lib.vunit_context;
 context work.com_context;
 
 use work.queue_pkg.all;
-use work.bus_pkg.all;
+use work.bus_master_pkg.all;
 
 entity tb_ram_master is
   generic (runner_cfg : string);
@@ -30,7 +30,7 @@ architecture a of tb_ram_master is
   signal wdata : std_logic_vector(31 downto 0);
   signal rdata : std_logic_vector(31 downto 0) := (others => '0');
 
-  constant bus_handle : bus_t := new_bus(data_length => wdata'length, address_length => addr'length);
+  constant bus_handle : bus_master_t := new_bus(data_length => wdata'length, address_length => addr'length);
 
   signal start, done : boolean := false;
 begin

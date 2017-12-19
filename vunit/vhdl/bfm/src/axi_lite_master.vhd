@@ -10,14 +10,14 @@ use ieee.std_logic_1164.all;
 
 use work.axi_pkg.all;
 use work.queue_pkg.all;
-use work.bus_pkg.all;
+use work.bus_master_pkg.all;
 use work.axi_private_pkg.all;
 use work.msg_types_pkg.all;
 context work.com_context;
 
 entity axi_lite_master is
   generic (
-    bus_handle : bus_t
+    bus_handle : bus_master_t
     );
   port (
     aclk : in std_logic;

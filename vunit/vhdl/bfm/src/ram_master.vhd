@@ -10,13 +10,13 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.queue_pkg.all;
-use work.bus_pkg.all;
+use work.bus_master_pkg.all;
 use work.msg_types_pkg.all;
 context work.com_context;
 
 entity ram_master is
   generic (
-    bus_handle : bus_t;
+    bus_handle : bus_master_t;
     latency : positive
     );
   port (

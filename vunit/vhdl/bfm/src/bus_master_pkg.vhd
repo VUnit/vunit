@@ -12,10 +12,10 @@ use ieee.std_logic_1164.all;
 use work.logger_pkg.all;
 context work.com_context;
 
-package bus_pkg is
+package bus_master_pkg is
 
   -- Handle to VC instance with bus master VCI
-  type bus_t is record
+  type bus_master_t is record
     -- These fields are private, do not use directly
     p_actor : actor_t;
     p_data_length : natural;
@@ -28,39 +28,39 @@ package bus_pkg is
   alias bus_reference_t is msg_t;
 
   -- Default logger object for bus master instances
-  constant bus_logger : logger_t := get_logger("vunit_lib:bus_pkg");
+  constant bus_logger : logger_t := get_logger("vunit_lib:bus_master_pkg");
 
   -- Create new handle for bus master VC
   impure function new_bus(data_length : natural;
                           address_length : natural;
                           byte_length : natural := 8;
-                          logger : logger_t := bus_logger) return bus_t;
+                          logger : logger_t := bus_logger) return bus_master_t;
 
   -- Return the length of the data on this bus
-  impure function data_length(bus_handle : bus_t) return natural;
+  impure function data_length(bus_handle : bus_master_t) return natural;
 
   -- Return the length of the address on this bus
-  impure function address_length(bus_handle : bus_t) return natural;
+  impure function address_length(bus_handle : bus_master_t) return natural;
 
   -- Return the length of a byte on this bus
-  impure function byte_length(bus_handle : bus_t) return natural;
+  impure function byte_length(bus_handle : bus_master_t) return natural;
 
   -- Return the length of the byte enable signal on this bus
-  impure function byte_enable_length(bus_handle : bus_t) return natural;
+  impure function byte_enable_length(bus_handle : bus_master_t) return natural;
 
   -- Convert natural address to std_logic_vector using the correct number of bits
   impure function to_address(constant bus_handle :
-                             bus_t; address : natural) return std_logic_vector;
+                             bus_master_t; address : natural) return std_logic_vector;
 
   -- Blocking: Write the bus
   procedure write_bus(signal event : inout event_t;
-                      constant bus_handle : bus_t;
+                      constant bus_handle : bus_master_t;
                       constant address : std_logic_vector;
                       constant data : std_logic_vector;
                       -- default byte enable is all bytes
                       constant byte_enable : std_logic_vector := "");
   procedure write_bus(signal event : inout event_t;
-                      constant bus_handle : bus_t;
+                      constant bus_handle : bus_master_t;
                       constant address : natural;
                       constant data : std_logic_vector;
                       -- default byte enable is all bytes
@@ -68,11 +68,11 @@ package bus_pkg is
 
   -- Non blocking: Read the bus returning a reference to the future reply
   procedure read_bus(signal event : inout event_t;
-                     constant bus_handle : bus_t;
+                     constant bus_handle : bus_master_t;
                      constant address : std_logic_vector;
                      variable reference : inout bus_reference_t);
   procedure read_bus(signal event : inout event_t;
-                     constant bus_handle : bus_t;
+                     constant bus_handle : bus_master_t;
                      constant address : natural;
                      variable reference : inout bus_reference_t);
 
@@ -83,23 +83,23 @@ package bus_pkg is
 
   -- Blocking: Read bus and check result against expected data
   procedure check_bus(signal event : inout event_t;
-                      constant bus_handle : bus_t;
+                      constant bus_handle : bus_master_t;
                       constant address : std_logic_vector;
                       constant expected : std_logic_vector;
                       constant msg : string := "");
   procedure check_bus(signal event : inout event_t;
-                      constant bus_handle : bus_t;
+                      constant bus_handle : bus_master_t;
                       constant address : natural;
                       constant expected : std_logic_vector;
                       constant msg : string := "");
 
   -- Blocking: read bus with immediate reply
   procedure read_bus(signal event : inout event_t;
-                     constant bus_handle : bus_t;
+                     constant bus_handle : bus_master_t;
                      constant address : std_logic_vector;
                      variable data : inout std_logic_vector);
   procedure read_bus(signal event : inout event_t;
-                     constant bus_handle : bus_t;
+                     constant bus_handle : bus_master_t;
                      constant address : natural;
                      variable data : inout std_logic_vector);
 
@@ -107,7 +107,7 @@ package bus_pkg is
   -- std_match If timeout is reached error with msg
   procedure wait_until_read_equals(
     signal event : inout event_t;
-    bus_handle   : bus_t;
+    bus_handle   : bus_master_t;
     addr         : std_logic_vector;
     value        : std_logic_vector;
     timeout      : delay_length := delay_length'high;
@@ -117,7 +117,7 @@ package bus_pkg is
   -- index set to value If timeout is reached error with msg
   procedure wait_until_read_bit_equals(
     signal event : inout event_t;
-    bus_handle   : bus_t;
+    bus_handle   : bus_master_t;
     addr         : std_logic_vector;
     idx          : natural;
     value        : std_logic;

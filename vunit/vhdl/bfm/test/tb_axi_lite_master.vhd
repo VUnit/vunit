@@ -13,7 +13,7 @@ context vunit_lib.vunit_context;
 context work.com_context;
 
 use work.axi_pkg.all;
-use work.bus_pkg.all;
+use work.bus_master_pkg.all;
 
 library osvvm;
 use osvvm.RandomPkg.all;
@@ -48,7 +48,7 @@ architecture a of tb_axi_lite_master is
   signal bready  : std_logic;
   signal bresp   : std_logic_vector(1 downto 0);
 
-  constant bus_handle : bus_t := new_bus(data_length => wdata'length, address_length => awaddr'length);
+  constant bus_handle : bus_master_t := new_bus(data_length => wdata'length, address_length => awaddr'length);
 
   signal start, done : boolean := false;
 begin

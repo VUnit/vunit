@@ -13,18 +13,18 @@ context vunit_lib.vunit_context;
 context work.com_context;
 
 use work.queue_pkg.all;
-use work.bus_pkg.all;
+use work.bus_master_pkg.all;
 use work.memory_pkg.all;
 use work.logger_pkg.all;
 use work.msg_types_pkg.all;
 
-entity tb_bus_pkg is
+entity tb_bus_master_pkg is
   generic (runner_cfg : string);
 end entity;
 
-architecture a of tb_bus_pkg is
+architecture a of tb_bus_master_pkg is
   constant memory : memory_t := new_memory;
-  constant bus_handle : bus_t := new_bus(data_length => 32, address_length => 32);
+  constant bus_handle : bus_master_t := new_bus(data_length => 32, address_length => 32);
 begin
   main : process
     variable alloc : alloc_t;

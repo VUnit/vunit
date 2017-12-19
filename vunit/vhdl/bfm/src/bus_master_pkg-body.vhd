@@ -10,12 +10,12 @@ use ieee.numeric_std.all;
 
 use work.queue_pkg.all;
 
-package body bus_pkg is
+package body bus_master_pkg is
 
   impure function new_bus(data_length : natural;
                           address_length : natural;
                           byte_length : natural := 8;
-                          logger : logger_t := bus_logger) return bus_t is
+                          logger : logger_t := bus_logger) return bus_master_t is
   begin
     return (p_actor => create,
             p_data_length => data_length,
@@ -24,33 +24,33 @@ package body bus_pkg is
             p_logger => logger);
   end;
 
-  impure function data_length(bus_handle : bus_t) return natural is
+  impure function data_length(bus_handle : bus_master_t) return natural is
   begin
     return bus_handle.p_data_length;
   end;
 
-  impure function address_length(bus_handle : bus_t) return natural is
+  impure function address_length(bus_handle : bus_master_t) return natural is
   begin
     return bus_handle.p_address_length;
   end;
 
-  impure function byte_length(bus_handle : bus_t) return natural is
+  impure function byte_length(bus_handle : bus_master_t) return natural is
   begin
     return bus_handle.p_byte_length;
   end;
 
-  impure function byte_enable_length(bus_handle : bus_t) return natural is
+  impure function byte_enable_length(bus_handle : bus_master_t) return natural is
   begin
     return (bus_handle.p_data_length + bus_handle.p_byte_length - 1) / bus_handle.p_byte_length;
   end;
 
-  impure function to_address(constant bus_handle : bus_t; address : natural) return std_logic_vector is
+  impure function to_address(constant bus_handle : bus_master_t; address : natural) return std_logic_vector is
   begin
     return std_logic_vector(to_unsigned(address, address_length(bus_handle)));
   end;
 
   procedure write_bus(signal event : inout event_t;
-                      constant bus_handle : bus_t;
+                      constant bus_handle : bus_master_t;
                       constant address : std_logic_vector;
                       constant data : std_logic_vector;
                       -- default byte enable is all bytes
@@ -79,7 +79,7 @@ package body bus_pkg is
   end procedure;
 
   procedure write_bus(signal event : inout event_t;
-                      constant bus_handle : bus_t;
+                      constant bus_handle : bus_master_t;
                       constant address : natural;
                       constant data : std_logic_vector;
                       -- default byte enable is all bytes
@@ -89,7 +89,7 @@ package body bus_pkg is
   end;
 
   procedure check_bus(signal event : inout event_t;
-                      constant bus_handle : bus_t;
+                      constant bus_handle : bus_master_t;
                       constant address : std_logic_vector;
                       constant expected : std_logic_vector;
                       constant msg : string := "") is
@@ -120,7 +120,7 @@ package body bus_pkg is
   end procedure;
 
   procedure check_bus(signal event : inout event_t;
-                      constant bus_handle : bus_t;
+                      constant bus_handle : bus_master_t;
                       constant address : natural;
                       constant expected : std_logic_vector;
                       constant msg : string := "") is
@@ -130,7 +130,7 @@ package body bus_pkg is
 
   -- Non blocking read with delayed reply
   procedure read_bus(signal event : inout event_t;
-                     constant bus_handle : bus_t;
+                     constant bus_handle : bus_master_t;
                      constant address : std_logic_vector;
                      variable reference : inout bus_reference_t) is
     variable full_address : std_logic_vector(bus_handle.p_address_length-1 downto 0) := (others => '0');
@@ -144,7 +144,7 @@ package body bus_pkg is
   end procedure;
 
   procedure read_bus(signal event : inout event_t;
-                     constant bus_handle : bus_t;
+                     constant bus_handle : bus_master_t;
                      constant address : natural;
                      variable reference : inout bus_reference_t) is
   begin
@@ -166,7 +166,7 @@ package body bus_pkg is
 
   -- Blocking read with immediate reply
   procedure read_bus(signal event : inout event_t;
-                     constant bus_handle : bus_t;
+                     constant bus_handle : bus_master_t;
                      constant address : std_logic_vector;
                      variable data : inout std_logic_vector) is
     variable reference : bus_reference_t;
@@ -177,7 +177,7 @@ package body bus_pkg is
 
 
   procedure read_bus(signal event : inout event_t;
-                     constant bus_handle : bus_t;
+                     constant bus_handle : bus_master_t;
                      constant address : natural;
                      variable data : inout std_logic_vector) is
   begin
@@ -186,7 +186,7 @@ package body bus_pkg is
 
   procedure wait_until_read_equals(
     signal event : inout event_t;
-    bus_handle   : bus_t;
+    bus_handle   : bus_master_t;
     addr         : std_logic_vector;
     value        : std_logic_vector;
     timeout      : delay_length := delay_length'high;
@@ -214,7 +214,7 @@ package body bus_pkg is
 
   procedure wait_until_read_bit_equals(
     signal event : inout event_t;
-    bus_handle   : bus_t;
+    bus_handle   : bus_master_t;
     addr         : std_logic_vector;
     idx          : natural;
     value        : std_logic;
