@@ -19,7 +19,6 @@ Included verification components (VCs):
 - AXI write slave
 - AXI stream master
 - AXI stream slave
-- Memory model
 - RAM master
 - UART master
 - UART slave
@@ -51,6 +50,11 @@ Included verification component interfaces (VCIs):
 :ref:`Synchronization <sync_vci>`
   Wait for time and events.
 
+Neither a VC or a VCI there is the :ref:`memory model <memory_model>`
+which is a model of a memory space such as the DRAM address space in a
+computer system. The AXI slave VCs make transactions against the
+memory model which provides access permissions, expected data settings
+as well as the actual buffer for reading and writing data.
 
 .. _verification_components:
 
@@ -83,6 +87,7 @@ and the VC-developers.
    :maxdepth: 1
    :hidden:
 
+   memory_model
    vci/bus_master
    vci/stream
    vci/sync
