@@ -31,7 +31,7 @@ begin
     variable reply_msg, msg : msg_t;
     variable msg_type : msg_type_t;
   begin
-    receive(event, uart.p_stream.p_actor, msg);
+    receive(event, uart.p_actor, msg);
     msg_type := pop_msg_type(msg);
 
     if msg_type = uart_set_baud_rate_msg then

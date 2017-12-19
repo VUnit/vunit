@@ -4,6 +4,8 @@
 --
 -- Copyright (c) 2017, Lars Asplund lars.anders.asplund@gmail.com
 
+-- Stream master verification component interface
+
 library ieee;
 use ieee.std_logic_1164.all;
 
@@ -11,15 +13,16 @@ context work.vunit_context;
 context work.com_context;
 
 package stream_master_pkg is
+  -- Stream master handle
   type stream_master_t is record
     p_actor : actor_t;
   end record;
 
-  impure function new_stream_master return stream_master_t;
-
+  -- Push a data value to the stream
   procedure push_stream(signal event : inout event_t;
                         stream : stream_master_t;
                         data : std_logic_vector);
 
+  -- Message type definitions used by VC implementing stream master VCI
   constant stream_push_msg : msg_type_t := new_msg_type("stream push");
 end package;

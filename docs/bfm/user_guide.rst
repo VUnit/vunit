@@ -45,7 +45,7 @@ Generic VCIs included:
 :ref:`Bus master <bus_master_vci>`
   Generic read and write of bus with address and byte enable.
 
-Stream
+:ref:`Stream <stream_vci>`
   Push and pop of data stream without address.
 
 :ref:`Synchronization <sync_vci>`
@@ -66,7 +66,7 @@ making it easy to have parallel activity on several bus interfaces.
 A VC typically has an associated package defining procedures for
 sending to and receiving messages from the VC. Each VC instance is
 associated with a handle that is created in the test bench and set as
-a generic on the VC instantiation. The handle is given as and arguemnt
+a generic on the VC instantiation. The handle is given as and argument
 to the procedure calls to direct messages to the specfic VC instance.
 
 
@@ -74,4 +74,5 @@ to the procedure calls to direct messages to the specfic VC instance.
    :maxdepth: 1
 
    vci/bus_master
+   vci/stream
    vci/sync

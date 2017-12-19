@@ -16,13 +16,13 @@ use work.queue_pkg.all;
 
 package uart_pkg is
   type uart_master_t is record
-    p_stream : stream_master_t;
+    p_actor : actor_t;
     p_baud_rate : natural;
     p_idle_state : std_logic;
   end record;
 
   type uart_slave_t is record
-    p_stream : stream_slave_t;
+    p_actor : actor_t;
     p_baud_rate : natural;
     p_idle_state : std_logic;
     p_data_length : positive;
@@ -59,7 +59,7 @@ package body uart_pkg is
   impure function new_uart_master(initial_baud_rate : natural := default_baud_rate;
                                   idle_state : std_logic := default_idle_state) return uart_master_t is
   begin
-    return (p_stream => new_stream_master,
+    return (p_actor => new_actor,
             p_baud_rate => initial_baud_rate,
             p_idle_state => idle_state);
   end;
@@ -68,7 +68,7 @@ package body uart_pkg is
                                  idle_state : std_logic := default_idle_state;
                                  data_length : positive := default_data_length) return uart_slave_t is
   begin
-    return (p_stream => new_stream_slave,
+    return (p_actor => new_actor,
             p_baud_rate => initial_baud_rate,
             p_idle_state => idle_state,
             p_data_length => data_length);
@@ -76,22 +76,22 @@ package body uart_pkg is
 
   impure function as_stream(uart_master : uart_master_t) return stream_master_t is
   begin
-    return uart_master.p_stream;
+    return stream_master_t'(p_actor => uart_master.p_actor);
   end;
 
   impure function as_stream(uart_slave : uart_slave_t) return stream_slave_t is
   begin
-    return uart_slave.p_stream;
+    return stream_slave_t'(p_actor => uart_slave.p_actor);
   end;
 
   impure function as_sync(uart_master : uart_master_t) return sync_handle_t is
   begin
-    return uart_master.p_stream.p_actor;
+    return uart_master.p_actor;
   end;
 
   impure function as_sync(uart_slave : uart_slave_t) return sync_handle_t is
   begin
-    return uart_slave.p_stream.p_actor;
+    return uart_slave.p_actor;
   end;
 
   procedure set_baud_rate(signal event : inout event_t;
@@ -108,13 +108,13 @@ package body uart_pkg is
                           uart_master : uart_master_t;
                           baud_rate : natural) is
   begin
-    set_baud_rate(event, uart_master.p_stream.p_actor, baud_rate);
+    set_baud_rate(event, uart_master.p_actor, baud_rate);
   end;
 
   procedure set_baud_rate(signal event : inout event_t;
                           uart_slave : uart_slave_t;
                           baud_rate : natural) is
   begin
-    set_baud_rate(event, uart_slave.p_stream.p_actor, baud_rate);
+    set_baud_rate(event, uart_slave.p_actor, baud_rate);
   end;
 end package body;
