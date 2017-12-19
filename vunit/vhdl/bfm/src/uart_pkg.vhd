@@ -8,10 +8,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 context work.com_context;
-use work.stream_pkg.all;
+use work.stream_master_pkg.all;
+use work.stream_slave_pkg.all;
 use work.integer_vector_ptr_pkg.all;
 use work.queue_pkg.all;
-use work.msg_types_pkg.all;
 
 package uart_pkg is
   type uart_master_t is record

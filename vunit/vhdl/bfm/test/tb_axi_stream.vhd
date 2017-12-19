@@ -12,8 +12,8 @@ context work.vunit_context;
 context work.com_context;
 context work.data_types_context;
 use work.axi_stream_pkg.all;
-use work.stream_pkg.all;
-use work.logger_pkg.all;
+use work.stream_master_pkg.all;
+use work.stream_slave_pkg.all;
 
 entity tb_axi_stream is
   generic (runner_cfg : string);

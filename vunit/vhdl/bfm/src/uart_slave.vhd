@@ -10,10 +10,9 @@ use ieee.std_logic_1164.all;
 library vunit_lib;
 context vunit_lib.vunit_context;
 context vunit_lib.com_context;
-use vunit_lib.stream_pkg.all;
+use vunit_lib.stream_slave_pkg.all;
 use vunit_lib.uart_pkg.all;
 use vunit_lib.queue_pkg.all;
-use vunit_lib.msg_types_pkg.all;
 
 entity uart_slave is
   generic (
