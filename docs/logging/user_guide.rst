@@ -344,7 +344,7 @@ procedures.
    :lines: 7-
 
 log_deprecated_pkg
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
 Contains deprecated interfaces
 
 .. literalinclude:: ../../vunit/vhdl/logging/src/log_deprecated_pkg.vhd
