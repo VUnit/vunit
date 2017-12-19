@@ -37,10 +37,10 @@ begin
 
     handle_sync_message(event, msg_type, msg);
 
-    if msg_type = stream_write_msg or msg_type = write_axi_stream_msg then
+    if msg_type = stream_push_msg or msg_type = push_axi_stream_msg then
       tvalid <= '1';
       tdata <= pop_std_ulogic_vector(msg);
-      if msg_type = write_axi_stream_msg then
+      if msg_type = push_axi_stream_msg then
         tlast <= pop_std_ulogic(msg);
       else
         tlast <= '1';

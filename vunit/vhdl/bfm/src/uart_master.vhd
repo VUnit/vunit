@@ -56,7 +56,7 @@ begin
 
     handle_sync_message(event, msg_type, msg);
 
-    if msg_type = stream_write_msg then
+    if msg_type = stream_push_msg then
       uart_send(pop_std_ulogic_vector(msg), tx, baud_rate);
     elsif msg_type = uart_set_baud_rate_msg then
       baud_rate := pop(msg);

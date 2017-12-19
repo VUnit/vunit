@@ -27,32 +27,32 @@ package stream_pkg is
 
   alias stream_reference_t is msg_t;
 
-  procedure write_stream(signal event : inout event_t;
-                         stream : stream_master_t;
-                         data : std_logic_vector);
+  procedure push_stream(signal event : inout event_t;
+                        stream : stream_master_t;
+                        data : std_logic_vector);
 
   procedure await_completion(signal event : inout event_t;
                              stream : stream_master_t);
 
-  procedure read_stream(signal event : inout event_t;
-                        stream : stream_slave_t;
-                        variable data : out std_logic_vector);
+  procedure pop_stream(signal event : inout event_t;
+                       stream : stream_slave_t;
+                       variable data : out std_logic_vector);
 
-  procedure read_stream(signal event : inout event_t;
-                        stream : stream_slave_t;
-                        variable reference : inout stream_reference_t);
+  procedure pop_stream(signal event : inout event_t;
+                       stream : stream_slave_t;
+                       variable reference : inout stream_reference_t);
 
-  procedure await_read_stream_reply(signal event : inout event_t;
-                                    variable reference : inout stream_reference_t;
-                                    variable data : out std_logic_vector);
+  procedure await_pop_stream_reply(signal event : inout event_t;
+                                   variable reference : inout stream_reference_t;
+                                   variable data : out std_logic_vector);
 
   procedure check_stream(signal event : inout event_t;
                          stream : stream_slave_t;
                          expected : std_logic_vector;
                          msg : string := "");
 
-  constant stream_write_msg : msg_type_t := new_msg_type("stream write");
-  constant stream_read_msg : msg_type_t := new_msg_type("stream read");
+  constant stream_push_msg : msg_type_t := new_msg_type("stream push");
+  constant stream_pop_msg : msg_type_t := new_msg_type("stream pop");
 
 end package;
 
@@ -67,13 +67,13 @@ package body stream_pkg is
     return (p_actor => create);
   end;
 
-  procedure write_stream(signal event : inout event_t;
-                         stream : stream_master_t;
-                         data : std_logic_vector) is
+  procedure push_stream(signal event : inout event_t;
+                        stream : stream_master_t;
+                        data : std_logic_vector) is
     variable msg : msg_t := create;
     constant normalized_data : std_logic_vector(data'length-1 downto 0) := data;
   begin
-    push_msg_type(msg, stream_write_msg);
+    push_msg_type(msg, stream_push_msg);
     push_std_ulogic_vector(msg, normalized_data);
     send(event, stream.p_actor, msg);
   end;
@@ -84,18 +84,18 @@ package body stream_pkg is
     await_completion(event, stream.p_actor);
   end;
 
-  procedure read_stream(signal event : inout event_t;
-                        stream : stream_slave_t;
-                        variable reference : inout stream_reference_t) is
+  procedure pop_stream(signal event : inout event_t;
+                       stream : stream_slave_t;
+                       variable reference : inout stream_reference_t) is
   begin
     reference := create;
-    push_msg_type(reference, stream_read_msg);
+    push_msg_type(reference, stream_pop_msg);
     send(event, stream.p_actor, reference);
   end;
 
-  procedure await_read_stream_reply(signal event : inout event_t;
-                                    variable reference : inout stream_reference_t;
-                                    variable data : out std_logic_vector) is
+  procedure await_pop_stream_reply(signal event : inout event_t;
+                                   variable reference : inout stream_reference_t;
+                                   variable data : out std_logic_vector) is
     variable reply_msg : msg_t;
   begin
     receive_reply(event, reference, reply_msg);
@@ -104,13 +104,13 @@ package body stream_pkg is
     delete(reply_msg);
   end;
 
-  procedure read_stream(signal event : inout event_t;
-                        stream : stream_slave_t;
-                        variable data : out std_logic_vector) is
+  procedure pop_stream(signal event : inout event_t;
+                       stream : stream_slave_t;
+                       variable data : out std_logic_vector) is
     variable reference : stream_reference_t;
   begin
-    read_stream(event, stream, reference);
-    await_read_stream_reply(event, reference, data);
+    pop_stream(event, stream, reference);
+    await_pop_stream_reply(event, reference, data);
   end;
 
   procedure check_stream(signal event : inout event_t;
@@ -119,7 +119,7 @@ package body stream_pkg is
                          msg : string := "") is
     variable got : std_logic_vector(expected'range);
   begin
-    read_stream(event, stream, got);
+    pop_stream(event, stream, got);
     check_equal(got, expected, msg);
   end procedure;
 end package body;

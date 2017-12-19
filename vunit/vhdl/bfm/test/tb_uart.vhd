@@ -41,7 +41,7 @@ begin
       set_baud_rate(event, slave_uart, baud_rate);
 
       start := now;
-      write_stream(event, master_stream, x"77");
+      push_stream(event, master_stream, x"77");
       check_stream(event, slave_stream, x"77");
 
       await_completion(event, master_stream);
@@ -55,25 +55,25 @@ begin
   begin
     test_runner_setup(runner, runner_cfg);
 
-    if run("test single write and read") then
-      write_stream(event, master_stream, x"77");
-      read_stream(event, slave_stream, data);
-      check_equal(data, std_logic_vector'(x"77"), "read stream data");
+    if run("test single push and pop") then
+      push_stream(event, master_stream, x"77");
+      pop_stream(event, slave_stream, data);
+      check_equal(data, std_logic_vector'(x"77"), "pop stream data");
 
-    elsif run("test read before write") then
+    elsif run("test pop before push") then
       for i in 0 to 7 loop
-        read_stream(event, slave_stream, reference);
+        pop_stream(event, slave_stream, reference);
         push(reference_queue, reference);
       end loop;
 
       for i in 0 to 7 loop
-        write_stream(event, master_stream,
-                     std_logic_vector(to_unsigned(i+1, data'length)));
+        push_stream(event, master_stream,
+                    std_logic_vector(to_unsigned(i+1, data'length)));
       end loop;
 
       for i in 0 to 7 loop
         reference := pop(reference_queue);
-        await_read_stream_reply(event, reference, data);
+        await_pop_stream_reply(event, reference, data);
         check_equal(data, to_unsigned(i+1, data'length));
       end loop;
 

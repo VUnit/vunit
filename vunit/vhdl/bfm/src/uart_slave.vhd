@@ -38,8 +38,7 @@ begin
     if msg_type = uart_set_baud_rate_msg then
       baud_rate <= pop(msg);
 
-    elsif msg_type = stream_read_msg then
-      -- Read request
+    elsif msg_type = stream_pop_msg then
       reply_msg := create;
       if not (length(data_queue) > 0) then
         wait on local_event until length(data_queue) > 0;

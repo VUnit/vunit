@@ -51,18 +51,18 @@ begin
         check_equal(tvalid, '0');
 
       elsif run("test_receives_one_byte") then
-        write_stream(event, uart_stream, x"77");
+        push_stream(event, uart_stream, x"77");
         check_stream(event, axi_stream, x"77");
         wait until rising_edge(clk);
         check_equal(tvalid, '0');
         check_equal(num_overflows, 0);
 
       elsif run("test_two_bytes_casues_overflow") then
-        write_stream(event, uart_stream, x"77");
+        push_stream(event, uart_stream, x"77");
         wait until tvalid = '1' and rising_edge(clk);
         check_equal(num_overflows, 0);
         wait for 1 ms;
-        write_stream(event, uart_stream, x"77");
+        push_stream(event, uart_stream, x"77");
         wait for 1 ms;
         wait until num_overflows = 1 and rising_edge(clk);
       end if;

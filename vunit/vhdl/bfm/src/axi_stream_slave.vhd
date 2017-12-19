@@ -34,13 +34,13 @@ begin
     receive(event, slave.p_actor, msg);
     msg_type := pop_msg_type(msg);
 
-    if msg_type = stream_read_msg then
+    if msg_type = stream_pop_msg then
       tready <= '1';
       wait until (tvalid and tready) = '1' and rising_edge(aclk);
       tready <= '0';
 
       if tlast /= '1' then
-        failure(slave.p_logger, "Expected tlast = '1' in single transaction write got " & to_string(tlast));
+        failure(slave.p_logger, "Expected tlast = '1' got '" & to_string(tlast) & "'");
       end if;
 
       reply_msg := create;

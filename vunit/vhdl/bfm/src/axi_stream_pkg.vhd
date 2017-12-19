@@ -31,18 +31,18 @@ package axi_stream_pkg is
   impure function new_axi_stream_master(data_length : natural;
                                         logger : logger_t := axi_stream_logger) return axi_stream_master_t;
   impure function new_axi_stream_slave(data_length : natural;
-                                        logger : logger_t := axi_stream_logger) return axi_stream_slave_t;
+                                       logger : logger_t := axi_stream_logger) return axi_stream_slave_t;
   impure function data_length(master : axi_stream_master_t) return natural;
   impure function data_length(master : axi_stream_slave_t) return natural;
   impure function as_stream(master : axi_stream_master_t) return stream_master_t;
   impure function as_stream(slave : axi_stream_slave_t) return stream_slave_t;
 
-  constant write_axi_stream_msg : msg_type_t := new_msg_type("write axi stream");
+  constant push_axi_stream_msg : msg_type_t := new_msg_type("push axi stream");
 
-  procedure write_axi_stream(signal event : inout event_t;
-                             axi_stream : axi_stream_master_t;
-                             tdata : std_logic_vector;
-                             tlast : std_logic := '1');
+  procedure push_axi_stream(signal event : inout event_t;
+                            axi_stream : axi_stream_master_t;
+                            tdata : std_logic_vector;
+                            tlast : std_logic := '1');
 
 end package;
 
@@ -84,14 +84,14 @@ package body axi_stream_pkg is
     return (p_actor => slave.p_actor);
   end;
 
-  procedure write_axi_stream(signal event : inout event_t;
-                             axi_stream : axi_stream_master_t;
-                             tdata : std_logic_vector;
-                             tlast : std_logic := '1') is
+  procedure push_axi_stream(signal event : inout event_t;
+                            axi_stream : axi_stream_master_t;
+                            tdata : std_logic_vector;
+                            tlast : std_logic := '1') is
     variable msg : msg_t := create;
     constant normalized_data : std_logic_vector(tdata'length-1 downto 0) := tdata;
   begin
-    push_msg_type(msg, write_axi_stream_msg);
+    push_msg_type(msg, push_axi_stream_msg);
     push_std_ulogic_vector(msg, normalized_data);
     push_std_ulogic(msg, tlast);
     send(event, axi_stream.p_actor, msg);
