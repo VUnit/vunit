@@ -8,3 +8,4 @@ VHDL Libraries
    check/user_guide
    run/user_guide
    com/user_guide
+   bfm/user_guide
