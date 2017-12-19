@@ -11,13 +11,16 @@ context work.com_context;
 
 package sync_pkg is
 
+  -- Handle to talk to a VC implementing the sync VCI
+  alias sync_handle_t is actor_t;
+
   -- Blocking: Wait until all operations requested from the VC have been finished
   procedure await_completion(signal event : inout event_t;
-                             actor : actor_t);
+                             handle : sync_handle_t);
 
   -- Non-blocking: Make VC wait for a delay before starting the next operation
   procedure wait_for_time(signal event : inout event_t;
-                          actor : actor_t;
+                          handle : sync_handle_t;
                           delay : delay_length);
 
   -- Message type definitions used by VC implementing the synchronization VCI

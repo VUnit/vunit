@@ -10,25 +10,25 @@ context work.com_context;
 
 package body sync_pkg is
   procedure await_completion(signal event : inout event_t;
-                             actor : actor_t) is
+                             handle : sync_handle_t) is
     variable msg, reply_msg : msg_t;
   begin
     msg := create;
     push_msg_type(msg, await_completion_msg);
-    send(event, actor, msg);
+    send(event, handle, msg);
     receive_reply(event, msg, reply_msg);
     delete(reply_msg);
   end;
 
   procedure wait_for_time(signal event : inout event_t;
-                          actor : actor_t;
+                          handle : sync_handle_t;
                           delay : delay_length) is
     variable msg : msg_t;
   begin
     msg := create;
     push_msg_type(msg, wait_for_time_msg);
     push_time(msg, delay);
-    send(event, actor, msg);
+    send(event, handle, msg);
   end;
 
   procedure handle_sync_message(signal event : inout event_t;
