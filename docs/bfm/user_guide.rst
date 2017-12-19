@@ -4,7 +4,7 @@ Bus Functional Model Library
 ============================
 
 The VUnit Bus Functional Model Library (BFM) contains a number of
-:ref:`verification components <verification_components>` (VC) as well
+:ref:`Verification Components <verification_components>` (VC) as well
 as a set of utilities for writing your own verification
 component. Verification components allow a better overview in the test
 bench by raising the abstraction level of bus transactions. Even if
@@ -12,7 +12,7 @@ you do not need the advanced features that VCs offer you may still
 benefit from using per-verified models of an AXI-bus instead of
 re-implementing it yourself.
 
-Included verification components:
+Included verification components (VCs):
 
 - AXI-Lite master
 - AXI read slave
@@ -24,11 +24,11 @@ Included verification components:
 - UART master
 - UART slave
 
-In addition to VCs VUnit also has the concept of verification
-component interfaces (VCI). A single VC typically implements several
-VCIs. For example an AXI-lite VC or RAM master VC can support the same
-generic bus master and synchronization VCI while also supporting their
-own bus specific VCIs.
+In addition to VCs VUnit also has the concept of :ref:`Verification
+Component Interfaces <verification_component_interfaces>` (VCI). A
+single VC typically implements several VCIs. For example an AXI-lite
+VC or RAM master VC can support the same generic bus master and
+synchronization VCI while also supporting their own bus specific VCIs.
 
 The main benefit of generic VCIs is to reduce redundancy between VCs
 and allow the user to write generic code that will work regardless of
@@ -40,7 +40,7 @@ top level test bench regardless of the fact that two different VCs
 have been used. Without generic VCIs copy pasting the code and
 changing the type of read/write procedure call would be required.
 
-Generic VCIs included:
+Included verification component interfaces (VCIs):
 
 :ref:`Bus master <bus_master_vci>`
   Generic read and write of bus with address and byte enable.
@@ -69,9 +69,19 @@ associated with a handle that is created in the test bench and set as
 a generic on the VC instantiation. The handle is given as and argument
 to the procedure calls to direct messages to the specfic VC instance.
 
+.. _verification_component_interfaces:
+
+Verification Component Interfaces
+---------------------------------
+A verification component interface (VCI) is a procedural interface to
+a VC. A VCI is defined as procedures in a package file. Several VC can
+support the same generic VCI to enable code re-use both for the users
+and the VC-developers.
+
 
 .. toctree::
    :maxdepth: 1
+   :hidden:
 
    vci/bus_master
    vci/stream
