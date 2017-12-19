@@ -9,8 +9,6 @@ use ieee.std_logic_1164.all;
 
 context work.vunit_context;
 context work.com_context;
-use work.queue_pkg.all;
-use work.sync_pkg.all;
 
 package body stream_master_pkg is
   impure function new_stream_master return stream_master_t is
@@ -27,12 +25,6 @@ package body stream_master_pkg is
     push_msg_type(msg, stream_push_msg);
     push_std_ulogic_vector(msg, normalized_data);
     send(event, stream.p_actor, msg);
-  end;
-
-  procedure await_completion(signal event : inout event_t;
-                             stream : stream_master_t) is
-  begin
-    await_completion(event, stream.p_actor);
   end;
 
 end package body;

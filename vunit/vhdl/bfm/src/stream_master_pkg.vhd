@@ -21,9 +21,5 @@ package stream_master_pkg is
                         stream : stream_master_t;
                         data : std_logic_vector);
 
-  procedure await_completion(signal event : inout event_t;
-                             stream : stream_master_t);
-
-
   constant stream_push_msg : msg_type_t := new_msg_type("stream push");
 end package;

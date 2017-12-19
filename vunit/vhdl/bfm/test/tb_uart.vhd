@@ -12,6 +12,7 @@ context work.vunit_context;
 context work.com_context;
 context work.data_types_context;
 use work.uart_pkg.all;
+use work.sync_pkg.all;
 use work.stream_master_pkg.all;
 use work.stream_slave_pkg.all;
 
@@ -45,7 +46,7 @@ begin
       push_stream(event, master_stream, x"77");
       check_stream(event, slave_stream, x"77");
 
-      await_completion(event, master_stream);
+      await_completion(event, as_sync(master_uart));
 
       got := now - start;
       expected := (10 * (1 sec)) / (baud_rate);
