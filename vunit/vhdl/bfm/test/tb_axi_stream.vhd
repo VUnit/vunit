@@ -41,19 +41,19 @@ begin
     test_runner_setup(runner, runner_cfg);
 
     if run("test single push and pop") then
-      push_stream(event, master_stream, x"77");
-      pop_stream(event, slave_stream, data);
+      push_stream(net, master_stream, x"77");
+      pop_stream(net, slave_stream, data);
       check_equal(data, std_logic_vector'(x"77"), "pop stream data");
 
     elsif run("test single axi push and pop") then
-      push_axi_stream(event, master_axi_stream, x"88", tlast => '1');
-      pop_stream(event, slave_stream, data);
+      push_axi_stream(net, master_axi_stream, x"88", tlast => '1');
+      pop_stream(net, slave_stream, data);
       check_equal(data, std_logic_vector'(x"88"), "pop stream data");
 
     elsif run("test stream pop expects tlast") then
       mock(axi_stream_logger);
-      push_axi_stream(event, master_axi_stream, x"99", tlast => '0');
-      pop_stream(event, slave_stream, data);
+      push_axi_stream(net, master_axi_stream, x"99", tlast => '0');
+      pop_stream(net, slave_stream, data);
       check_only_log(axi_stream_logger,
                      "Expected tlast = '1' got '0'",
                      failure);
@@ -61,18 +61,18 @@ begin
 
     elsif run("test pop before push") then
       for i in 0 to 7 loop
-        pop_stream(event, slave_stream, reference);
+        pop_stream(net, slave_stream, reference);
         push(reference_queue, reference);
       end loop;
 
       for i in 0 to 7 loop
-        push_stream(event, master_stream,
+        push_stream(net, master_stream,
                     std_logic_vector(to_unsigned(i+1, data'length)));
       end loop;
 
       for i in 0 to 7 loop
         reference := pop(reference_queue);
-        await_pop_stream_reply(event, reference, data);
+        await_pop_stream_reply(net, reference, data);
         check_equal(data, to_unsigned(i+1, data'length));
       end loop;
     end if;

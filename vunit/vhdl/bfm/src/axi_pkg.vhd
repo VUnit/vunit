@@ -38,13 +38,13 @@ package axi_pkg is
                                 logger : logger_t := axi_slave_logger) return axi_slave_t;
 
   -- Set the maximum number address channel tokens that can be queued
-  procedure set_address_channel_fifo_depth(signal event : inout event_t; axi_slave : axi_slave_t; depth : positive);
+  procedure set_address_channel_fifo_depth(signal net : inout network_t; axi_slave : axi_slave_t; depth : positive);
 
   -- Set the maximum number write responses that can be queued
-  procedure set_write_response_fifo_depth(signal event : inout event_t; axi_slave : axi_slave_t; depth : positive);
+  procedure set_write_response_fifo_depth(signal net : inout network_t; axi_slave : axi_slave_t; depth : positive);
 
   -- Set the address channel stall probability
-  procedure set_address_channel_stall_probability(signal event : inout event_t; axi_slave : axi_slave_t; probability : real);
+  procedure set_address_channel_stall_probability(signal net : inout network_t; axi_slave : axi_slave_t; probability : real);
 
   -- Check that bursts are well behaved, that is that data channel traffic is
   -- as compact as possible
@@ -58,7 +58,7 @@ package axi_pkg is
   -- For read:
   -- 1. rready never low during active burst
   -- 2. uses max arsize supported by data width
-  procedure enable_well_behaved_check(signal event : inout event_t; axi_slave : axi_slave_t);
+  procedure enable_well_behaved_check(signal net : inout network_t; axi_slave : axi_slave_t);
 
   constant axi_slave_set_address_channel_fifo_depth_msg : msg_type_t := new_msg_type("axi slave set address channel fifo depth");
   constant axi_slave_set_write_response_fifo_depth_msg : msg_type_t := new_msg_type("set write response fifo depth");
@@ -76,46 +76,46 @@ package body axi_pkg is
             p_logger => logger);
   end;
 
-  procedure set_address_channel_fifo_depth(signal event : inout event_t; axi_slave : axi_slave_t; depth : positive) is
+  procedure set_address_channel_fifo_depth(signal net : inout network_t; axi_slave : axi_slave_t; depth : positive) is
     variable request_msg : msg_t;
     variable ack : boolean;
   begin
     request_msg := create;
     push_msg_type(request_msg, axi_slave_set_address_channel_fifo_depth_msg);
     push(request_msg, depth);
-    request(event, axi_slave.p_actor, request_msg, ack);
+    request(net, axi_slave.p_actor, request_msg, ack);
     assert ack report "Failed on set_address_channel_fifo_depth command";
   end;
 
-  procedure set_write_response_fifo_depth(signal event : inout event_t; axi_slave : axi_slave_t; depth : positive) is
+  procedure set_write_response_fifo_depth(signal net : inout network_t; axi_slave : axi_slave_t; depth : positive) is
     variable request_msg : msg_t;
     variable ack : boolean;
   begin
     request_msg := create;
     push_msg_type(request_msg, axi_slave_set_write_response_fifo_depth_msg);
     push(request_msg, depth);
-    request(event, axi_slave.p_actor, request_msg, ack);
+    request(net, axi_slave.p_actor, request_msg, ack);
     assert ack report "Failed on set_write_response_fifo_depth command";
   end;
 
-  procedure set_address_channel_stall_probability(signal event : inout event_t; axi_slave : axi_slave_t; probability : real) is
+  procedure set_address_channel_stall_probability(signal net : inout network_t; axi_slave : axi_slave_t; probability : real) is
     variable request_msg : msg_t;
     variable ack : boolean;
   begin
     request_msg := create;
     push_msg_type(request_msg, axi_slave_set_address_channel_stall_probability_msg);
     push_real(request_msg, probability);
-    request(event, axi_slave.p_actor, request_msg, ack);
+    request(net, axi_slave.p_actor, request_msg, ack);
     assert ack report "Failed on set_address_channel_stall_probability command";
   end;
 
-  procedure enable_well_behaved_check(signal event : inout event_t; axi_slave : axi_slave_t) is
+  procedure enable_well_behaved_check(signal net : inout network_t; axi_slave : axi_slave_t) is
     variable request_msg : msg_t;
     variable ack : boolean;
   begin
     request_msg := create;
     push_msg_type(request_msg, axi_slave_enable_well_behaved_check_msg);
-    request(event, axi_slave.p_actor, request_msg, ack);
+    request(net, axi_slave.p_actor, request_msg, ack);
     assert ack report "Failed on msg_enable_well_behaved_check command";
   end;
 end package body;

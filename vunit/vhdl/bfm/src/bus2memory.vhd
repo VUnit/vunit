@@ -31,7 +31,7 @@ begin
     constant blen : natural := byte_length(bus_handle);
   begin
     loop
-      receive(event, bus_handle.p_actor, request_msg);
+      receive(net, bus_handle.p_actor, request_msg);
       msg_type := pop_msg_type(request_msg);
 
       if msg_type = bus_read_msg then
@@ -39,7 +39,7 @@ begin
         data := read_word(memory, to_integer(unsigned(address)), bytes_per_word => data'length/8);
         reply_msg := create;
         push_std_ulogic_vector(reply_msg, data);
-        reply(event, request_msg, reply_msg);
+        reply(net, request_msg, reply_msg);
 
       elsif msg_type = bus_write_msg then
         address := pop_std_ulogic_vector(request_msg);

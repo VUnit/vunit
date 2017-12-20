@@ -19,7 +19,7 @@ package stream_master_pkg is
   end record;
 
   -- Push a data value to the stream
-  procedure push_stream(signal event : inout event_t;
+  procedure push_stream(signal net : inout network_t;
                         stream : stream_master_t;
                         data : std_logic_vector);
 

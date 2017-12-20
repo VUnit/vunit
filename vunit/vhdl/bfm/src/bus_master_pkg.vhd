@@ -53,13 +53,13 @@ package bus_master_pkg is
                              bus_master_t; address : natural) return std_logic_vector;
 
   -- Blocking: Write the bus
-  procedure write_bus(signal event : inout event_t;
+  procedure write_bus(signal net : inout network_t;
                       constant bus_handle : bus_master_t;
                       constant address : std_logic_vector;
                       constant data : std_logic_vector;
                       -- default byte enable is all bytes
                       constant byte_enable : std_logic_vector := "");
-  procedure write_bus(signal event : inout event_t;
+  procedure write_bus(signal net : inout network_t;
                       constant bus_handle : bus_master_t;
                       constant address : natural;
                       constant data : std_logic_vector;
@@ -67,38 +67,38 @@ package bus_master_pkg is
                       constant byte_enable : std_logic_vector := "");
 
   -- Non blocking: Read the bus returning a reference to the future reply
-  procedure read_bus(signal event : inout event_t;
+  procedure read_bus(signal net : inout network_t;
                      constant bus_handle : bus_master_t;
                      constant address : std_logic_vector;
                      variable reference : inout bus_reference_t);
-  procedure read_bus(signal event : inout event_t;
+  procedure read_bus(signal net : inout network_t;
                      constant bus_handle : bus_master_t;
                      constant address : natural;
                      variable reference : inout bus_reference_t);
 
   -- Blocking: Await read bus reply data
-  procedure await_read_bus_reply(signal event : inout event_t;
+  procedure await_read_bus_reply(signal net : inout network_t;
                                  variable reference : inout bus_reference_t;
                                  variable data : inout std_logic_vector);
 
   -- Blocking: Read bus and check result against expected data
-  procedure check_bus(signal event : inout event_t;
+  procedure check_bus(signal net : inout network_t;
                       constant bus_handle : bus_master_t;
                       constant address : std_logic_vector;
                       constant expected : std_logic_vector;
                       constant msg : string := "");
-  procedure check_bus(signal event : inout event_t;
+  procedure check_bus(signal net : inout network_t;
                       constant bus_handle : bus_master_t;
                       constant address : natural;
                       constant expected : std_logic_vector;
                       constant msg : string := "");
 
   -- Blocking: read bus with immediate reply
-  procedure read_bus(signal event : inout event_t;
+  procedure read_bus(signal net : inout network_t;
                      constant bus_handle : bus_master_t;
                      constant address : std_logic_vector;
                      variable data : inout std_logic_vector);
-  procedure read_bus(signal event : inout event_t;
+  procedure read_bus(signal net : inout network_t;
                      constant bus_handle : bus_master_t;
                      constant address : natural;
                      variable data : inout std_logic_vector);
@@ -106,7 +106,7 @@ package bus_master_pkg is
   -- Blocking: Wait until a read from address equals the value using
   -- std_match If timeout is reached error with msg
   procedure wait_until_read_equals(
-    signal event : inout event_t;
+    signal net : inout network_t;
     bus_handle   : bus_master_t;
     addr         : std_logic_vector;
     value        : std_logic_vector;
@@ -116,7 +116,7 @@ package bus_master_pkg is
   -- Blocking: Wait until a read from address has the bit with this
   -- index set to value If timeout is reached error with msg
   procedure wait_until_read_bit_equals(
-    signal event : inout event_t;
+    signal net : inout network_t;
     bus_handle   : bus_master_t;
     addr         : std_logic_vector;
     idx          : natural;

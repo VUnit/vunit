@@ -63,28 +63,28 @@ begin
     wait for 0 ns;
 
     if run("Test single write") then
-      write_bus(event, bus_handle, x"01234567", x"1122");
+      write_bus(net, bus_handle, x"01234567", x"1122");
 
     elsif run("Test single write with byte enable") then
-      write_bus(event, bus_handle, x"01234567", x"1122", byte_enable => "10");
+      write_bus(net, bus_handle, x"01234567", x"1122", byte_enable => "10");
 
     elsif run("Test write not okay") then
-      write_bus(event, bus_handle, x"01234567", x"1122");
+      write_bus(net, bus_handle, x"01234567", x"1122");
 
     elsif run("Test single read") then
-      read_bus(event, bus_handle, x"01234567", tmp);
+      read_bus(net, bus_handle, x"01234567", tmp);
       check_equal(tmp, std_logic_vector'(x"5566"), "read data");
 
     elsif run("Test read not okay") then
-      read_bus(event, bus_handle, x"01234567", tmp);
+      read_bus(net, bus_handle, x"01234567", tmp);
 
     elsif run("Test random") then
       for i in 0 to num_random_tests-1 loop
         if rnd.RandInt(0, 1) = 0 then
-          read_bus(event, bus_handle, rnd.RandSlv(araddr'length), tmp);
+          read_bus(net, bus_handle, rnd.RandSlv(araddr'length), tmp);
           check_equal(tmp, rnd.RandSlv(rdata'length), "read data");
         else
-          write_bus(event, bus_handle, rnd.RandSlv(awaddr'length), rnd.RandSlv(wdata'length));
+          write_bus(net, bus_handle, rnd.RandSlv(awaddr'length), rnd.RandSlv(wdata'length));
         end if;
       end loop;
     end if;

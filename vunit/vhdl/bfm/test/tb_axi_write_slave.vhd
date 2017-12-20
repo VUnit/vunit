@@ -287,7 +287,7 @@ begin
       end loop;
 
     elsif run("Test set address channel fifo depth") then
-      set_address_channel_fifo_depth(event, axi_slave, 16);
+      set_address_channel_fifo_depth(net, axi_slave, 16);
 
       write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr); -- Taken data process
       for i in 1 to 16 loop
@@ -300,24 +300,24 @@ begin
       end loop;
 
     elsif run("Test changing address channel depth to smaller than content gives error") then
-      set_address_channel_fifo_depth(event, axi_slave, 16);
+      set_address_channel_fifo_depth(net, axi_slave, 16);
 
       write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr); -- Taken data process
       for i in 1 to 16 loop
         write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr); -- In the queue
       end loop;
 
-      set_address_channel_fifo_depth(event, axi_slave, 17);
-      set_address_channel_fifo_depth(event, axi_slave, 16);
+      set_address_channel_fifo_depth(net, axi_slave, 17);
+      set_address_channel_fifo_depth(net, axi_slave, 16);
 
       mock(axi_slave_logger);
 
-      set_address_channel_fifo_depth(event, axi_slave, 1);
+      set_address_channel_fifo_depth(net, axi_slave, 1);
       check_only_log(axi_slave_logger, "New address channel fifo depth 1 is smaller than current content size 16", failure);
       unmock(axi_slave_logger);
 
     elsif run("Test address channel stall probability") then
-      set_address_channel_fifo_depth(event, axi_slave, 128);
+      set_address_channel_fifo_depth(net, axi_slave, 128);
 
       start_time := now;
       for i in 1 to 16 loop
@@ -325,7 +325,7 @@ begin
       end loop;
       diff_time := now - start_time;
 
-      set_address_channel_stall_probability(event, axi_slave, 0.9);
+      set_address_channel_stall_probability(net, axi_slave, 0.9);
       start_time := now;
       for i in 1 to 16 loop
         write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr);
@@ -334,9 +334,9 @@ begin
 
     elsif run("Test well behaved check does not fail for well behaved bursts") then
       alloc := allocate(memory, 8);
-      enable_well_behaved_check(event, axi_slave);
-      set_address_channel_fifo_depth(event, axi_slave, 3);
-      set_write_response_fifo_depth(event, axi_slave, 3);
+      enable_well_behaved_check(net, axi_slave);
+      set_address_channel_fifo_depth(net, axi_slave, 3);
+      set_write_response_fifo_depth(net, axi_slave, 3);
 
       bready <= '1';
 
@@ -378,7 +378,7 @@ begin
 
     elsif run("Test well behaved check does not fail after well behaved burst finished") then
       alloc := allocate(memory, 8);
-      enable_well_behaved_check(event, axi_slave);
+      enable_well_behaved_check(net, axi_slave);
       bready <= '1';
 
       wait until rising_edge(clk);
@@ -416,7 +416,7 @@ begin
 
     elsif run("Test well behaved check fails for ill behaved awsize") then
       alloc := allocate(memory, 8);
-      enable_well_behaved_check(event, axi_slave);
+      enable_well_behaved_check(net, axi_slave);
       mock(axi_slave_logger);
       bready <= '1';
 
@@ -429,7 +429,7 @@ begin
 
     elsif run("Test well behaved check fails when wvalid not high during active burst") then
       alloc := allocate(memory, 8);
-      enable_well_behaved_check(event, axi_slave);
+      enable_well_behaved_check(net, axi_slave);
       mock(axi_slave_logger);
       bready <= '1';
       wait until rising_edge(clk);
@@ -439,7 +439,7 @@ begin
 
     elsif run("Test well behaved check fails when bready not high during active burst") then
       alloc := allocate(memory, 8);
-      enable_well_behaved_check(event, axi_slave);
+      enable_well_behaved_check(net, axi_slave);
       mock(axi_slave_logger);
       wvalid <= '1';
       wait until rising_edge(clk);
@@ -449,9 +449,9 @@ begin
 
     elsif run("Test well behaved check fails when wvalid not high during active burst and awready is low") then
       alloc := allocate(memory, 8);
-      enable_well_behaved_check(event, axi_slave);
+      enable_well_behaved_check(net, axi_slave);
       mock(axi_slave_logger);
-      set_address_channel_stall_probability(event, axi_slave, 1.0);
+      set_address_channel_stall_probability(net, axi_slave, 1.0);
       bready <= '1';
 
       wait until rising_edge(clk);

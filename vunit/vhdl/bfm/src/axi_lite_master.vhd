@@ -53,7 +53,7 @@ begin
     variable w_done, aw_done : boolean;
   begin
     loop
-      receive(event, bus_handle.p_actor, request_msg);
+      receive(net, bus_handle.p_actor, request_msg);
       msg_type := pop_msg_type(request_msg);
 
       if msg_type = bus_read_msg then
@@ -69,7 +69,7 @@ begin
 
         reply_msg := create;
         push_std_ulogic_vector(reply_msg, rdata);
-        reply(event, request_msg, reply_msg);
+        reply(net, request_msg, reply_msg);
         delete(request_msg);
 
       elsif msg_type = bus_write_msg then

@@ -38,7 +38,7 @@ begin
     variable request_msg : msg_t;
     variable msg_type : msg_type_t;
   begin
-    receive(event, bus_handle.p_actor, request_msg);
+    receive(net, bus_handle.p_actor, request_msg);
     msg_type := pop_msg_type(request_msg);
 
     if msg_type = bus_read_msg then
@@ -77,7 +77,7 @@ begin
       request_msg := pop(request_queue);
       reply_msg := create;
       push_std_ulogic_vector(reply_msg, rdata);
-      reply(event, request_msg, reply_msg);
+      reply(net, request_msg, reply_msg);
       delete(request_msg);
     end if;
   end process;

@@ -31,7 +31,7 @@ begin
     variable reply_msg, msg : msg_t;
     variable msg_type : msg_type_t;
   begin
-    receive(event, uart.p_actor, msg);
+    receive(net, uart.p_actor, msg);
     msg_type := pop_msg_type(msg);
 
     if msg_type = uart_set_baud_rate_msg then
@@ -43,7 +43,7 @@ begin
         wait on local_event until length(data_queue) > 0;
       end if;
       push_std_ulogic_vector(reply_msg, pop_std_ulogic_vector(data_queue));
-      reply(event, msg, reply_msg);
+      reply(net, msg, reply_msg);
 
     else
       unexpected_msg_type(msg_type);

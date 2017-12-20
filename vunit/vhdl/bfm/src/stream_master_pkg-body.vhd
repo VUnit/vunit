@@ -16,7 +16,7 @@ package body stream_master_pkg is
     return (p_actor => create);
   end;
 
-  procedure push_stream(signal event : inout event_t;
+  procedure push_stream(signal net : inout network_t;
                         stream : stream_master_t;
                         data : std_logic_vector) is
     variable msg : msg_t := create;
@@ -24,7 +24,7 @@ package body stream_master_pkg is
   begin
     push_msg_type(msg, stream_push_msg);
     push_std_ulogic_vector(msg, normalized_data);
-    send(event, stream.p_actor, msg);
+    send(net, stream.p_actor, msg);
   end;
 
 end package body;

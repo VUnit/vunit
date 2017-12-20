@@ -15,11 +15,11 @@ package sync_pkg is
   alias sync_handle_t is actor_t;
 
   -- Blocking: Wait until all operations requested from the VC have been finished
-  procedure wait_for_idle(signal event : inout event_t;
+  procedure wait_for_idle(signal net : inout network_t;
                           handle : sync_handle_t);
 
   -- Non-blocking: Make VC wait for a delay before starting the next operation
-  procedure wait_for_time(signal event : inout event_t;
+  procedure wait_for_time(signal net : inout network_t;
                           handle : sync_handle_t;
                           delay : delay_length);
 
@@ -28,7 +28,7 @@ package sync_pkg is
   constant wait_for_time_msg : msg_type_t := new_msg_type("wait for time");
 
   -- Standard implementation of synchronization VCI which may be used by VC
-  procedure handle_sync_message(signal event : inout event_t;
+  procedure handle_sync_message(signal net : inout network_t;
                                 variable msg_type : inout msg_type_t;
                                 variable msg : inout msg_t);
 end package;

@@ -22,7 +22,6 @@ use work.string_ptr_pkg.all;
 
 package com_pkg is
   signal net : network_t := idle_network;
-  alias event is net;
 
   -----------------------------------------------------------------------------
   -- Handling of actors

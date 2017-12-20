@@ -39,7 +39,7 @@ package axi_stream_pkg is
 
   constant push_axi_stream_msg : msg_type_t := new_msg_type("push axi stream");
 
-  procedure push_axi_stream(signal event : inout event_t;
+  procedure push_axi_stream(signal net : inout network_t;
                             axi_stream : axi_stream_master_t;
                             tdata : std_logic_vector;
                             tlast : std_logic := '1');
@@ -84,7 +84,7 @@ package body axi_stream_pkg is
     return (p_actor => slave.p_actor);
   end;
 
-  procedure push_axi_stream(signal event : inout event_t;
+  procedure push_axi_stream(signal net : inout network_t;
                             axi_stream : axi_stream_master_t;
                             tdata : std_logic_vector;
                             tlast : std_logic := '1') is
@@ -94,7 +94,7 @@ package body axi_stream_pkg is
     push_msg_type(msg, push_axi_stream_msg);
     push_std_ulogic_vector(msg, normalized_data);
     push_std_ulogic(msg, tlast);
-    send(event, axi_stream.p_actor, msg);
+    send(net, axi_stream.p_actor, msg);
   end;
 
 end package body;

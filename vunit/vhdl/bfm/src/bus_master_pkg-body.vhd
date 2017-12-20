@@ -49,7 +49,7 @@ package body bus_master_pkg is
     return std_logic_vector(to_unsigned(address, address_length(bus_handle)));
   end;
 
-  procedure write_bus(signal event : inout event_t;
+  procedure write_bus(signal net : inout network_t;
                       constant bus_handle : bus_master_t;
                       constant address : std_logic_vector;
                       constant data : std_logic_vector;
@@ -75,20 +75,20 @@ package body bus_master_pkg is
     end if;
     push_std_ulogic_vector(request_msg, full_byte_enable);
 
-    send(event, bus_handle.p_actor, request_msg);
+    send(net, bus_handle.p_actor, request_msg);
   end procedure;
 
-  procedure write_bus(signal event : inout event_t;
+  procedure write_bus(signal net : inout network_t;
                       constant bus_handle : bus_master_t;
                       constant address : natural;
                       constant data : std_logic_vector;
                       -- default byte enable is all bytes
                       constant byte_enable : std_logic_vector := "") is
   begin
-    write_bus(event, bus_handle, to_address(bus_handle, address), data, byte_enable);
+    write_bus(net, bus_handle, to_address(bus_handle, address), data, byte_enable);
   end;
 
-  procedure check_bus(signal event : inout event_t;
+  procedure check_bus(signal net : inout network_t;
                       constant bus_handle : bus_master_t;
                       constant address : std_logic_vector;
                       constant expected : std_logic_vector;
@@ -113,23 +113,23 @@ package body bus_master_pkg is
 
     edata(expected'length-1 downto 0) := expected;
 
-    read_bus(event, bus_handle, address, data);
+    read_bus(net, bus_handle, address, data);
     if not std_match(data, edata) then
       failure(bus_handle.p_logger, base_error);
     end if;
   end procedure;
 
-  procedure check_bus(signal event : inout event_t;
+  procedure check_bus(signal net : inout network_t;
                       constant bus_handle : bus_master_t;
                       constant address : natural;
                       constant expected : std_logic_vector;
                       constant msg : string := "") is
   begin
-    check_bus(event, bus_handle, to_address(bus_handle, address), expected, msg);
+    check_bus(net, bus_handle, to_address(bus_handle, address), expected, msg);
   end;
 
   -- Non blocking read with delayed reply
-  procedure read_bus(signal event : inout event_t;
+  procedure read_bus(signal net : inout network_t;
                      constant bus_handle : bus_master_t;
                      constant address : std_logic_vector;
                      variable reference : inout bus_reference_t) is
@@ -140,52 +140,52 @@ package body bus_master_pkg is
     push_msg_type(request_msg, bus_read_msg);
     full_address(address'length-1 downto 0) := address;
     push_std_ulogic_vector(request_msg, full_address);
-    send(event, bus_handle.p_actor, request_msg);
+    send(net, bus_handle.p_actor, request_msg);
   end procedure;
 
-  procedure read_bus(signal event : inout event_t;
+  procedure read_bus(signal net : inout network_t;
                      constant bus_handle : bus_master_t;
                      constant address : natural;
                      variable reference : inout bus_reference_t) is
   begin
-    read_bus(event, bus_handle, to_address(bus_handle, address), reference);
+    read_bus(net, bus_handle, to_address(bus_handle, address), reference);
   end;
 
   -- Await read bus reply
-  procedure await_read_bus_reply(signal event : inout event_t;
+  procedure await_read_bus_reply(signal net : inout network_t;
                                  variable reference : inout bus_reference_t;
                                  variable data : inout std_logic_vector) is
     variable reply_msg : msg_t;
     alias request_msg : msg_t is reference;
   begin
-    receive_reply(event, request_msg, reply_msg);
+    receive_reply(net, request_msg, reply_msg);
     data := pop_std_ulogic_vector(reply_msg)(data'range);
     delete(request_msg);
     delete(reply_msg);
   end procedure;
 
   -- Blocking read with immediate reply
-  procedure read_bus(signal event : inout event_t;
+  procedure read_bus(signal net : inout network_t;
                      constant bus_handle : bus_master_t;
                      constant address : std_logic_vector;
                      variable data : inout std_logic_vector) is
     variable reference : bus_reference_t;
   begin
-    read_bus(event, bus_handle, address, reference);
-    await_read_bus_reply(event, reference, data);
+    read_bus(net, bus_handle, address, reference);
+    await_read_bus_reply(net, reference, data);
   end procedure;
 
 
-  procedure read_bus(signal event : inout event_t;
+  procedure read_bus(signal net : inout network_t;
                      constant bus_handle : bus_master_t;
                      constant address : natural;
                      variable data : inout std_logic_vector) is
   begin
-    read_bus(event, bus_handle, to_address(bus_handle, address), data);
+    read_bus(net, bus_handle, to_address(bus_handle, address), data);
   end;
 
   procedure wait_until_read_equals(
-    signal event : inout event_t;
+    signal net : inout network_t;
     bus_handle   : bus_master_t;
     addr         : std_logic_vector;
     value        : std_logic_vector;
@@ -199,7 +199,7 @@ package body bus_master_pkg is
       -- Do the waited calculation here so that a read delay is allowed when
       -- timeout is set to zero.
       waited := now - start_time;
-      read_bus(event, bus_handle, addr, data);
+      read_bus(net, bus_handle, addr, data);
       if std_match(data(value'length-1 downto 0), value) then
         return;
       end if;
@@ -213,7 +213,7 @@ package body bus_master_pkg is
   end;
 
   procedure wait_until_read_bit_equals(
-    signal event : inout event_t;
+    signal net : inout network_t;
     bus_handle   : bus_master_t;
     addr         : std_logic_vector;
     idx          : natural;
@@ -224,7 +224,7 @@ package body bus_master_pkg is
   begin
     data      := (others => '-');
     data(idx) := value;
-    wait_until_read_equals(event, bus_handle, addr, data, timeout, msg);
+    wait_until_read_equals(net, bus_handle, addr, data, timeout, msg);
   end;
 
 end package body;

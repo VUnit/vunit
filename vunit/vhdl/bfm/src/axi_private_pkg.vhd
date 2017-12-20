@@ -65,7 +65,7 @@ package axi_private_pkg is
   end protected;
 
   procedure main_loop(variable self : inout axi_slave_private_t;
-                      signal event : inout event_t);
+                      signal net : inout network_t);
 
   procedure check_axi_resp(bus_handle : bus_master_t; got, expected : axi_resp_t; msg : string);
 end package;
@@ -271,30 +271,30 @@ package body axi_private_pkg is
   end;
 
   procedure main_loop(variable self : inout axi_slave_private_t;
-                      signal event : inout event_t) is
+                      signal net : inout network_t) is
     variable request_msg, reply_msg : msg_t;
     variable msg_type : msg_type_t;
   begin
     loop
-      receive(event, self.get_actor, request_msg);
+      receive(net, self.get_actor, request_msg);
       msg_type := pop_msg_type(request_msg);
 
       reply_msg := create;
       if msg_type = axi_slave_set_address_channel_fifo_depth_msg then
         self.set_address_channel_fifo_depth(pop(request_msg));
-        acknowledge(event, request_msg, true);
+        acknowledge(net, request_msg, true);
 
       elsif msg_type = axi_slave_set_write_response_fifo_depth_msg then
         self.set_write_response_fifo_depth(pop(request_msg));
-        acknowledge(event, request_msg, true);
+        acknowledge(net, request_msg, true);
 
       elsif msg_type = axi_slave_set_address_channel_stall_probability_msg then
         self.set_address_channel_stall_probability(pop_real(request_msg));
-        acknowledge(event, request_msg, true);
+        acknowledge(net, request_msg, true);
 
       elsif msg_type = axi_slave_enable_well_behaved_check_msg then
         self.enable_well_behaved_check;
-        acknowledge(event, request_msg, true);
+        acknowledge(net, request_msg, true);
       else
         unexpected_msg_type(msg_type);
       end if;

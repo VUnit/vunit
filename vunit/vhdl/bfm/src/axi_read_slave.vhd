@@ -47,7 +47,7 @@ begin
   begin
     self.init(axi_slave, rdata);
     initialized <= true;
-    main_loop(self, event);
+    main_loop(self, net);
     wait;
   end process;
 

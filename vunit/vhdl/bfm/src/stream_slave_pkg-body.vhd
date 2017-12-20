@@ -10,42 +10,42 @@ package body stream_slave_pkg is
     return (p_actor => create);
   end;
 
-  procedure pop_stream(signal event : inout event_t;
+  procedure pop_stream(signal net : inout network_t;
                        stream : stream_slave_t;
                        variable reference : inout stream_reference_t) is
   begin
     reference := create;
     push_msg_type(reference, stream_pop_msg);
-    send(event, stream.p_actor, reference);
+    send(net, stream.p_actor, reference);
   end;
 
-  procedure await_pop_stream_reply(signal event : inout event_t;
+  procedure await_pop_stream_reply(signal net : inout network_t;
                                    variable reference : inout stream_reference_t;
                                    variable data : out std_logic_vector) is
     variable reply_msg : msg_t;
   begin
-    receive_reply(event, reference, reply_msg);
+    receive_reply(net, reference, reply_msg);
     data := pop_std_ulogic_vector(reply_msg);
     delete(reference);
     delete(reply_msg);
   end;
 
-  procedure pop_stream(signal event : inout event_t;
+  procedure pop_stream(signal net : inout network_t;
                        stream : stream_slave_t;
                        variable data : out std_logic_vector) is
     variable reference : stream_reference_t;
   begin
-    pop_stream(event, stream, reference);
-    await_pop_stream_reply(event, reference, data);
+    pop_stream(net, stream, reference);
+    await_pop_stream_reply(net, reference, data);
   end;
 
-  procedure check_stream(signal event : inout event_t;
+  procedure check_stream(signal net : inout network_t;
                          stream : stream_slave_t;
                          expected : std_logic_vector;
                          msg : string := "") is
     variable got : std_logic_vector(expected'range);
   begin
-    pop_stream(event, stream, got);
+    pop_stream(net, stream, got);
     check_equal(got, expected, msg);
   end procedure;
 end package body;

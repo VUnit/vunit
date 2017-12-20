@@ -50,10 +50,10 @@ begin
     variable baud_rate : natural := uart.p_baud_rate;
     variable msg_type : msg_type_t;
   begin
-    receive(event, uart.p_actor, msg);
+    receive(net, uart.p_actor, msg);
     msg_type := pop_msg_type(msg);
 
-    handle_sync_message(event, msg_type, msg);
+    handle_sync_message(net, msg_type, msg);
 
     if msg_type = stream_push_msg then
       uart_send(pop_std_ulogic_vector(msg), tx, baud_rate);

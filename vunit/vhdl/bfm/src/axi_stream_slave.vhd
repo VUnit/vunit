@@ -30,7 +30,7 @@ begin
     variable reply_msg, msg : msg_t;
     variable msg_type : msg_type_t;
   begin
-    receive(event, slave.p_actor, msg);
+    receive(net, slave.p_actor, msg);
     msg_type := pop_msg_type(msg);
 
     if msg_type = stream_pop_msg then
@@ -44,7 +44,7 @@ begin
 
       reply_msg := create;
       push_std_ulogic_vector(reply_msg, tdata);
-      reply(event, msg, reply_msg);
+      reply(net, msg, reply_msg);
     else
       unexpected_msg_type(msg_type);
     end if;

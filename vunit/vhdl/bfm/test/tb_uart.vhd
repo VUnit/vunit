@@ -39,14 +39,14 @@ begin
       variable start : time;
       variable got, expected : time;
     begin
-      set_baud_rate(event, master_uart, baud_rate);
-      set_baud_rate(event, slave_uart, baud_rate);
+      set_baud_rate(net, master_uart, baud_rate);
+      set_baud_rate(net, slave_uart, baud_rate);
 
       start := now;
-      push_stream(event, master_stream, x"77");
-      check_stream(event, slave_stream, x"77");
+      push_stream(net, master_stream, x"77");
+      check_stream(net, slave_stream, x"77");
 
-      wait_for_idle(event, as_sync(master_uart));
+      wait_for_idle(net, as_sync(master_uart));
 
       got := now - start;
       expected := (10 * (1 sec)) / (baud_rate);
@@ -58,24 +58,24 @@ begin
     test_runner_setup(runner, runner_cfg);
 
     if run("test single push and pop") then
-      push_stream(event, master_stream, x"77");
-      pop_stream(event, slave_stream, data);
+      push_stream(net, master_stream, x"77");
+      pop_stream(net, slave_stream, data);
       check_equal(data, std_logic_vector'(x"77"), "pop stream data");
 
     elsif run("test pop before push") then
       for i in 0 to 7 loop
-        pop_stream(event, slave_stream, reference);
+        pop_stream(net, slave_stream, reference);
         push(reference_queue, reference);
       end loop;
 
       for i in 0 to 7 loop
-        push_stream(event, master_stream,
+        push_stream(net, master_stream,
                     std_logic_vector(to_unsigned(i+1, data'length)));
       end loop;
 
       for i in 0 to 7 loop
         reference := pop(reference_queue);
-        await_pop_stream_reply(event, reference, data);
+        await_pop_stream_reply(net, reference, data);
         check_equal(data, to_unsigned(i+1, data'length));
       end loop;
 

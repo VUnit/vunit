@@ -22,22 +22,22 @@ package stream_slave_pkg is
   alias stream_reference_t is msg_t;
 
   -- Blocking: pop a value from the stream
-  procedure pop_stream(signal event : inout event_t;
+  procedure pop_stream(signal net : inout network_t;
                        stream : stream_slave_t;
                        variable data : out std_logic_vector);
 
   -- Non-blocking: pop a value from the stream to be read in the future
-  procedure pop_stream(signal event : inout event_t;
+  procedure pop_stream(signal net : inout network_t;
                        stream : stream_slave_t;
                        variable reference : inout stream_reference_t);
 
   -- Blocking: Wait for reply to non-blocking pop
-  procedure await_pop_stream_reply(signal event : inout event_t;
+  procedure await_pop_stream_reply(signal net : inout network_t;
                                    variable reference : inout stream_reference_t;
                                    variable data : out std_logic_vector);
 
   -- Blocking: read stream and check result against expected value
-  procedure check_stream(signal event : inout event_t;
+  procedure check_stream(signal net : inout network_t;
                          stream : stream_slave_t;
                          expected : std_logic_vector;
                          msg : string := "");

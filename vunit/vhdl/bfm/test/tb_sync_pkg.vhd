@@ -25,13 +25,13 @@ begin
     test_runner_setup(runner, runner_cfg);
 
     start := now;
-    wait_for_time(event, actor, 11 ns);
-    wait_for_idle(event, actor);
+    wait_for_time(net, actor, 11 ns);
+    wait_for_idle(net, actor);
     check_equal(now - start, 11 ns, "wait for time mismatch");
 
     start := now;
-    wait_for_time(event, actor, 37 ms);
-    wait_for_idle(event, actor);
+    wait_for_time(net, actor, 37 ms);
+    wait_for_idle(net, actor);
     check_equal(now - start, 37 ms, "wait for time mismatch");
 
     test_runner_cleanup(runner);
@@ -41,9 +41,9 @@ begin
     variable msg : msg_t;
     variable msg_type : msg_type_t;
   begin
-    receive(event, actor, msg);
+    receive(net, actor, msg);
     msg_type := pop_msg_type(msg);
-    handle_sync_message(event, msg_type, msg);
+    handle_sync_message(net, msg_type, msg);
     unexpected_msg_type(msg_type);
   end process;
 end architecture;

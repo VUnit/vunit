@@ -53,19 +53,19 @@ begin
 
     while test_suite loop
       if run("test_send_one_byte") then
-        push_stream(event, axi_stream, rnd_stimuli.RandSlv(tdata'length));
-        check_stream(event, uart_stream, rnd_expected.RandSlv(tdata'length));
+        push_stream(net, axi_stream, rnd_stimuli.RandSlv(tdata'length));
+        check_stream(net, uart_stream, rnd_expected.RandSlv(tdata'length));
       elsif run("test_send_two_bytes") then
-        push_stream(event, axi_stream, rnd_stimuli.RandSlv(tdata'length));
-        check_stream(event, uart_stream, rnd_expected.RandSlv(tdata'length));
-        push_stream(event, axi_stream, rnd_stimuli.RandSlv(tdata'length));
-        check_stream(event, uart_stream, rnd_expected.RandSlv(tdata'length));
+        push_stream(net, axi_stream, rnd_stimuli.RandSlv(tdata'length));
+        check_stream(net, uart_stream, rnd_expected.RandSlv(tdata'length));
+        push_stream(net, axi_stream, rnd_stimuli.RandSlv(tdata'length));
+        check_stream(net, uart_stream, rnd_expected.RandSlv(tdata'length));
       elsif run("test_send_many_bytes") then
         for i in 0 to 7 loop
-          push_stream(event, axi_stream, rnd_stimuli.RandSlv(tdata'length));
+          push_stream(net, axi_stream, rnd_stimuli.RandSlv(tdata'length));
         end loop;
         for i in 0 to 7 loop
-          check_stream(event, uart_stream, rnd_expected.RandSlv(tdata'length));
+          check_stream(net, uart_stream, rnd_expected.RandSlv(tdata'length));
         end loop;
       end if;
     end loop;

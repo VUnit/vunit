@@ -9,18 +9,18 @@ use work.queue_pkg.all;
 context work.com_context;
 
 package body sync_pkg is
-  procedure wait_for_idle(signal event : inout event_t;
+  procedure wait_for_idle(signal net : inout network_t;
                           handle : sync_handle_t) is
     variable msg, reply_msg : msg_t;
   begin
     msg := create;
     push_msg_type(msg, wait_for_idle_msg);
-    send(event, handle, msg);
-    receive_reply(event, msg, reply_msg);
+    send(net, handle, msg);
+    receive_reply(net, msg, reply_msg);
     delete(reply_msg);
   end;
 
-  procedure wait_for_time(signal event : inout event_t;
+  procedure wait_for_time(signal net : inout network_t;
                           handle : sync_handle_t;
                           delay : delay_length) is
     variable msg : msg_t;
@@ -28,10 +28,10 @@ package body sync_pkg is
     msg := create;
     push_msg_type(msg, wait_for_time_msg);
     push_time(msg, delay);
-    send(event, handle, msg);
+    send(net, handle, msg);
   end;
 
-  procedure handle_sync_message(signal event : inout event_t;
+  procedure handle_sync_message(signal net : inout network_t;
                                 variable msg_type : inout msg_type_t;
                                 variable msg : inout msg_t) is
     variable reply_msg : msg_t;
@@ -40,7 +40,7 @@ package body sync_pkg is
     if msg_type = wait_for_idle_msg then
       handle_message(msg_type);
       reply_msg := create;
-      reply(event, msg, reply_msg);
+      reply(net, msg, reply_msg);
 
     elsif msg_type = wait_for_time_msg then
       handle_message(msg_type);

@@ -45,24 +45,24 @@ begin
     wait for 0 ns;
 
     if run("Test single write") then
-      write_bus(event, bus_handle, x"77", x"11223344");
+      write_bus(net, bus_handle, x"77", x"11223344");
 
     elsif run("Test single write with byte enable") then
-      write_bus(event, bus_handle, x"77", x"11223344", byte_enable => "0101");
+      write_bus(net, bus_handle, x"77", x"11223344", byte_enable => "0101");
 
     elsif run("Test single read") then
-      read_bus(event, bus_handle, x"33", tmp);
+      read_bus(net, bus_handle, x"33", tmp);
       check_equal(tmp, std_logic_vector'(x"55667788"), "read data");
 
     elsif run("Test read back to back") then
       for i in 1 to num_back_to_back_reads loop
-        read_bus(event, bus_handle, std_logic_vector(to_unsigned(i, addr'length)), reference);
+        read_bus(net, bus_handle, std_logic_vector(to_unsigned(i, addr'length)), reference);
         push(reference_queue, reference);
       end loop;
 
       for i in 1 to num_back_to_back_reads loop
         reference := pop(reference_queue);
-        await_read_bus_reply(event, reference, tmp);
+        await_read_bus_reply(net, reference, tmp);
         check_equal(tmp, std_logic_vector(to_unsigned(111*i, tmp'length)), "read data");
       end loop;
     end if;

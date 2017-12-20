@@ -29,11 +29,11 @@ package uart_pkg is
   end record;
 
   -- Set the baud rate [bits/s]
-  procedure set_baud_rate(signal event : inout event_t;
+  procedure set_baud_rate(signal net : inout network_t;
                           uart_master : uart_master_t;
                           baud_rate : natural);
 
-  procedure set_baud_rate(signal event : inout event_t;
+  procedure set_baud_rate(signal net : inout network_t;
                           uart_slave : uart_slave_t;
                           baud_rate : natural);
 
@@ -94,27 +94,27 @@ package body uart_pkg is
     return uart_slave.p_actor;
   end;
 
-  procedure set_baud_rate(signal event : inout event_t;
+  procedure set_baud_rate(signal net : inout network_t;
                           actor : actor_t;
                           baud_rate : natural) is
     variable msg : msg_t := create;
   begin
     push_msg_type(msg, uart_set_baud_rate_msg);
     push(msg, baud_rate);
-    send(event, actor, msg);
+    send(net, actor, msg);
   end;
 
-  procedure set_baud_rate(signal event : inout event_t;
+  procedure set_baud_rate(signal net : inout network_t;
                           uart_master : uart_master_t;
                           baud_rate : natural) is
   begin
-    set_baud_rate(event, uart_master.p_actor, baud_rate);
+    set_baud_rate(net, uart_master.p_actor, baud_rate);
   end;
 
-  procedure set_baud_rate(signal event : inout event_t;
+  procedure set_baud_rate(signal net : inout network_t;
                           uart_slave : uart_slave_t;
                           baud_rate : natural) is
   begin
-    set_baud_rate(event, uart_slave.p_actor, baud_rate);
+    set_baud_rate(net, uart_slave.p_actor, baud_rate);
   end;
 end package body;
