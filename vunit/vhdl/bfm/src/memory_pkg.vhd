@@ -10,7 +10,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 use work.integer_vector_ptr_pkg.all;
-use work.integer_array_pkg.all;
 use work.string_ptr_pkg.all;
 use work.logger_pkg.all;
 
@@ -93,6 +92,10 @@ package memory_pkg is
   procedure clear_expected_byte(memory : memory_t; address : natural);
   procedure set_expected_byte(memory : memory_t; address : natural; expected : byte_t);
   procedure set_expected_word(memory : memory_t; address : natural; expected : std_logic_vector; big_endian : boolean := false);
+  procedure set_expected_integer(memory : memory_t; address : natural;
+                                 expected : integer;
+                                 bytes_per_word : natural range 1 to 4 := 4;
+                                 big_endian : boolean := false);
   impure function get_expected_byte(memory : memory_t; address : natural) return byte_t;
 
   impure function describe_address(memory : memory_t; address : natural) return string;
@@ -100,47 +103,5 @@ package memory_pkg is
   impure function base_address(alloc : alloc_t) return natural;
   impure function last_address(alloc : alloc_t) return natural;
   impure function num_bytes(alloc : alloc_t) return natural;
-
-  -- Allocate memory for the integer_vector_ptr, write it there
-  -- and by default set read_only permission
-  impure function allocate_integer_vector_ptr(memory : memory_t;
-                                              integer_vector_ptr : integer_vector_ptr_t;
-                                              name : string := "";
-                                              alignment : positive := 1;
-                                              bytes_per_word : natural range 1 to 4 := 4;
-                                              big_endian : boolean := false;
-                                              permissions : permissions_t := read_only) return alloc_t;
-
-  -- Allocate memory for the integer_vector_ptr, set it as expected data
-  -- and by default set write_only permission
-  impure function allocate_expected_integer_vector_ptr(memory : memory_t;
-                                                       integer_vector_ptr : integer_vector_ptr_t;
-                                                       name : string := "";
-                                                       alignment : positive := 1;
-                                                       bytes_per_word : natural range 1 to 4 := 4;
-                                                       big_endian : boolean := false;
-                                                       permissions : permissions_t := write_only) return alloc_t;
-
-  -- Allocate memory for the integer_array, write it there
-  -- and by default set read_only permission
-  -- padding bytes inducted by stride_in_bytes are set to no_access
-  impure function allocate_integer_array(memory : memory_t;
-                                         integer_array : integer_array_t;
-                                         name : string := "";
-                                         alignment : positive := 1;
-                                         stride_in_bytes : natural := 0; -- 0 stride means use image width
-                                         big_endian : boolean := false;
-                                         permissions : permissions_t := read_only) return alloc_t;
-
-  -- Allocate memory for the integer_array, set it as expected data
-  -- and by default set write_only permission
-  -- padding bytes inducted by stride_in_bytes are set to no_access
-  impure function allocate_expected_integer_array(memory : memory_t;
-                                                  integer_array : integer_array_t;
-                                                  name : string := "";
-                                                  alignment : positive := 1;
-                                                  stride_in_bytes : natural := 0; -- 0 stride means use image width
-                                                  big_endian : boolean := false;
-                                                  permissions : permissions_t := write_only) return alloc_t;
 
 end package;

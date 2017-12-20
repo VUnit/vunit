@@ -297,27 +297,6 @@ package body memory_pkg is
     end if;
   end;
 
-  impure function describe_address(memory : memory_t; address : natural) return string is
-    variable alloc : alloc_t := address_to_allocation(memory, address);
-
-    impure function describe_allocation return string is
-    begin
-      if to_string(alloc.p_name) = "" then
-        return "anonymous allocation";
-      else
-        return "allocation '" & to_string(alloc.p_name) & "'";
-      end if;
-    end;
-  begin
-    if alloc = null_alloc then
-      return "address " & to_string(address) & " at unallocated location";
-    end if;
-
-    return ("address " & to_string(address) & " at offset " & to_string(address - base_address(alloc)) &
-            " within " & describe_allocation & " at range " &
-            "(" & to_string(base_address(alloc)) & " to " & to_string(last_address(alloc)) & ")");
-  end;
-
   impure function serialize(word : integer;
                             bytes_per_word : natural range 1 to 4;
                             big_endian : boolean) return integer_vector is
@@ -342,6 +321,39 @@ package body memory_pkg is
     end if;
     return result;
   end function;
+
+  procedure set_expected_integer(memory : memory_t;
+                                 address : natural;
+                                 expected : integer;
+                                 bytes_per_word : natural range 1 to 4 := 4;
+                                 big_endian : boolean := false) is
+    constant bytes : integer_vector(0 to bytes_per_word-1) := serialize(expected, bytes_per_word, big_endian);
+  begin
+    for byte_idx in 0 to bytes_per_word-1 loop
+      set_expected_byte(memory, address + byte_idx, bytes(byte_idx));
+    end loop;
+  end;
+
+  impure function describe_address(memory : memory_t; address : natural) return string is
+    variable alloc : alloc_t := address_to_allocation(memory, address);
+
+    impure function describe_allocation return string is
+    begin
+      if to_string(alloc.p_name) = "" then
+        return "anonymous allocation";
+      else
+        return "allocation '" & to_string(alloc.p_name) & "'";
+      end if;
+    end;
+  begin
+    if alloc = null_alloc then
+      return "address " & to_string(address) & " at unallocated location";
+    end if;
+
+    return ("address " & to_string(address) & " at offset " & to_string(address - base_address(alloc)) &
+            " within " & describe_allocation & " at range " &
+            "(" & to_string(base_address(alloc)) & " to " & to_string(last_address(alloc)) & ")");
+  end;
 
   procedure write_word(memory : memory_t;
                        address : natural;
@@ -407,144 +419,4 @@ package body memory_pkg is
                  check_permissions => check_permissions);
     end loop;
   end procedure;
-
-  -- Allocate memory for the integer_vector_ptr and set read_only permission
-  impure function allocate_integer_vector_ptr(memory : memory_t;
-                                              integer_vector_ptr : integer_vector_ptr_t;
-                                              name : string := "";
-                                              alignment : positive := 1;
-                                              bytes_per_word : natural range 1 to 4 := 4;
-                                              big_endian : boolean := false;
-                                              permissions : permissions_t := read_only) return alloc_t is
-
-    variable alloc : alloc_t;
-    variable base_addr : integer;
-  begin
-    alloc := allocate(memory, length(integer_vector_ptr) * bytes_per_word, name => name,
-                      alignment => alignment, permissions => permissions);
-
-    base_addr := base_address(alloc);
-    for i in 0 to length(integer_vector_ptr)-1 loop
-      write_integer(memory, base_addr + bytes_per_word*i, get(integer_vector_ptr, i),
-                    bytes_per_word => bytes_per_word,
-                    big_endian => big_endian);
-    end loop;
-    return alloc;
-  end;
-
-  impure function allocate_expected_integer_vector_ptr(memory : memory_t;
-                                                       integer_vector_ptr : integer_vector_ptr_t;
-                                                       name : string := "";
-                                                       alignment : positive := 1;
-                                                       bytes_per_word : natural range 1 to 4 := 4;
-                                                       big_endian : boolean := false;
-                                                       permissions : permissions_t := write_only) return alloc_t is
-    variable alloc : alloc_t;
-    variable base_addr : integer;
-    variable bytes : integer_vector(0 to bytes_per_word-1);
-  begin
-    alloc := allocate(memory, length(integer_vector_ptr) * bytes_per_word, name => name,
-                      alignment => alignment, permissions => permissions);
-
-    base_addr := base_address(alloc);
-    for i in 0 to length(integer_vector_ptr)-1 loop
-      bytes := serialize(get(integer_vector_ptr, i), bytes_per_word, big_endian);
-      for byte_idx in 0 to bytes_per_word-1 loop
-        set_expected_byte(memory, base_addr + bytes_per_word*i + byte_idx, bytes(byte_idx));
-      end loop;
-    end loop;
-    return alloc;
-  end function;
-
-  impure function allocate_integer_array(memory : memory_t;
-                                         integer_array : integer_array_t;
-                                         name : string := "";
-                                         alignment : positive := 1;
-                                         stride_in_bytes : natural := 0; -- 0 stride means use image width
-                                         big_endian : boolean := false;
-                                         permissions : permissions_t := read_only) return alloc_t is
-
-    variable alloc : alloc_t;
-    constant bytes_per_word : natural := (integer_array.bit_width + 7)/8;
-    variable stride_in_bytes_v : natural;
-    variable addr : natural;
-  begin
-    stride_in_bytes_v := stride_in_bytes;
-
-    if stride_in_bytes_v = 0 then
-      stride_in_bytes_v := integer_array.width * bytes_per_word;
-    end if;
-
-    alloc := allocate(memory, integer_array.depth * integer_array.height * stride_in_bytes_v,
-                      name => name, alignment => alignment, permissions => permissions);
-
-    for z in 0 to integer_array.depth-1 loop
-      for y in 0 to integer_array.height-1 loop
-        addr := base_address(alloc) + stride_in_bytes_v*(y + z*integer_array.height);
-        for x in 0 to integer_array.width-1 loop
-          write_integer(memory,
-                        addr,
-                        get(integer_array, x, y, z),
-                        bytes_per_word => bytes_per_word,
-                        big_endian => big_endian);
-         addr := addr + bytes_per_word;
-        end loop;
-
-        for x in bytes_per_word*integer_array.width to stride_in_bytes_v-1 loop
-          set_permissions(memory, addr, no_access);
-          addr := addr + 1;
-        end loop;
-
-      end loop;
-    end loop;
-
-    return alloc;
-  end;
-
-  impure function allocate_expected_integer_array(memory : memory_t;
-                                                  integer_array : integer_array_t;
-                                                  name : string := "";
-                                                  alignment : positive := 1;
-                                                  stride_in_bytes : natural := 0; -- 0 stride means use image width
-                                                  big_endian : boolean := false;
-                                                  permissions : permissions_t := write_only) return alloc_t is
-
-    variable alloc : alloc_t;
-    constant bytes_per_word : natural := (integer_array.bit_width + 7)/8;
-    variable bytes : integer_vector(0 to bytes_per_word-1);
-    variable stride_in_bytes_v : natural;
-    variable addr : natural;
-  begin
-    stride_in_bytes_v := stride_in_bytes;
-
-    if stride_in_bytes_v = 0 then
-      stride_in_bytes_v := integer_array.width * bytes_per_word;
-    end if;
-
-    alloc := allocate(memory, integer_array.depth * integer_array.height * stride_in_bytes_v,
-                      name => name, alignment => alignment, permissions => permissions);
-
-    for z in 0 to integer_array.depth-1 loop
-      for y in 0 to integer_array.height-1 loop
-        addr := base_address(alloc) + stride_in_bytes_v*(y + z*integer_array.height);
-
-        for x in 0 to integer_array.width-1 loop
-          bytes := serialize(get(integer_array, x, y, z), bytes_per_word, big_endian);
-          for byte_idx in 0 to bytes_per_word-1 loop
-            set_expected_byte(memory, addr + byte_idx, bytes(byte_idx));
-            addr := addr + 1;
-          end loop;
-        end loop;
-
-        for x in bytes_per_word*integer_array.width to stride_in_bytes_v-1 loop
-          set_permissions(memory, addr, no_access);
-          addr := addr + 1;
-        end loop;
-
-      end loop;
-    end loop;
-
-    return alloc;
-  end;
-
 end package body;
