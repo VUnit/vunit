@@ -142,7 +142,7 @@ package body checker_pkg is
     set(checkers, id, to_integer(checker.p_data));
 
     set(checker.p_data, id_idx, id);
-    set(checker.p_data, name_idx, to_integer(allocate(name)));
+    set(checker.p_data, name_idx, to_integer(new_string_ptr(name)));
     set(checker.p_data, logger_idx, to_integer(logger.p_data));
     set(checker.p_data, default_log_level_idx, log_level_t'pos(default_log_level));
     reset_checker_stat(checker);

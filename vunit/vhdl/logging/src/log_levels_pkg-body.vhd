@@ -27,7 +27,7 @@ package body log_levels_pkg is
       set(levels.max_level_length, 0, name'length);
     end if;
 
-    set(levels.names, log_level, to_integer(allocate(name)));
+    set(levels.names, log_level, to_integer(new_string_ptr(name)));
 
     set(levels.colors, log_level,
         to_integer(integer_vector_ptr_t'(new_integer_vector_ptr(3))));

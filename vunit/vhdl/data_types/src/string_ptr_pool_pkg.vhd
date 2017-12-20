@@ -45,7 +45,7 @@ package body string_ptr_pool_pkg is
     else
 
       -- Allocate new
-      ptr := allocate(min_length);
+      ptr := new_string_ptr(min_length);
     end if;
     return ptr;
   end;
@@ -59,7 +59,7 @@ package body string_ptr_pool_pkg is
       reallocate(ptr, value);
     else
       -- Allocate new
-      ptr := allocate(value);
+      ptr := new_string_ptr(value);
     end if;
     return ptr;
   end;

@@ -57,7 +57,7 @@ package body log_handler_pkg is
     constant log_handler : log_handler_t := (p_data => new_integer_vector_ptr(log_handler_length));
   begin
     set(log_handler.p_data, id_idx, id);
-    set(log_handler.p_data, file_name_idx, to_integer(allocate(file_name)));
+    set(log_handler.p_data, file_name_idx, to_integer(new_string_ptr(file_name)));
     init_log_file(log_handler, file_name);
     set(log_handler.p_data, max_logger_name_idx, 0);
     set_format(log_handler, format, use_color);

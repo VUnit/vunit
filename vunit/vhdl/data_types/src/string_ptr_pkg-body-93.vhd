@@ -12,7 +12,7 @@ package body string_ptr_pkg is
   shared variable current_index : integer := 0;
   shared variable ptrs : string_access_vector_access_t := null;
 
-  impure function allocate(length : natural := 0) return string_ptr_t is
+  impure function new_string_ptr(length : natural := 0) return string_ptr_t is
     variable old_ptrs : string_access_vector_access_t;
     variable retval : string_ptr_t := (index => current_index);
   begin
@@ -106,8 +106,8 @@ package body string_ptr_pkg is
     return (index => value);
   end function;
 
-  impure function allocate(value : string) return string_ptr_t is
-    variable result : string_ptr_t := allocate(value'length);
+  impure function new_string_ptr(value : string) return string_ptr_t is
+    variable result : string_ptr_t := new_string_ptr(value'length);
     variable n_value : string(1 to value'length) := value;
   begin
     for i in 1 to n_value'length loop

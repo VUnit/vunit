@@ -10,7 +10,7 @@ package body string_ptr_pkg is
   type string_access_vector_access_t is access string_access_vector_t;
 
   type string_ptr_storage_t is protected
-    impure function allocate(length : natural := 0) return string_ptr_t;
+    impure function new_string_ptr(length : natural := 0) return string_ptr_t;
     procedure deallocate(ptr : string_ptr_t);
     impure function length(ptr : string_ptr_t) return integer;
     procedure set(ptr : string_ptr_t; index : integer; value : character);
@@ -25,7 +25,7 @@ package body string_ptr_pkg is
     variable current_index : integer := 0;
     variable ptrs : string_access_vector_access_t := null;
 
-    impure function allocate(length : natural := 0) return string_ptr_t is
+    impure function new_string_ptr(length : natural := 0) return string_ptr_t is
       variable old_ptrs : string_access_vector_access_t;
       variable retval : string_ptr_t := (index => current_index);
     begin
@@ -123,13 +123,13 @@ package body string_ptr_pkg is
     return (index => value);
   end function;
 
-  impure function allocate(length : natural := 0) return string_ptr_t is
+  impure function new_string_ptr(length : natural := 0) return string_ptr_t is
   begin
-    return string_ptr_storage.allocate(length);
+    return string_ptr_storage.new_string_ptr(length);
   end function;
 
-  impure function allocate(value : string) return string_ptr_t is
-    variable result : string_ptr_t := allocate(value'length);
+  impure function new_string_ptr(value : string) return string_ptr_t is
+    variable result : string_ptr_t := new_string_ptr(value'length);
     variable n_value : string(1 to value'length) := value;
   begin
     for i in 1 to n_value'length loop

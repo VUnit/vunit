@@ -73,7 +73,7 @@ package ansi_pkg is
 end package;
 
 package body ansi_pkg is
-  constant colors_enabled : string_ptr_t := allocate("0");
+  constant colors_enabled : string_ptr_t := new_string_ptr("0");
 
   impure function colors_are_enabled return boolean is
   begin

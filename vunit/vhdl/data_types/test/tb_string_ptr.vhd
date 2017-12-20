@@ -26,23 +26,23 @@ begin
     test_runner_setup(runner, runner_cfg);
 
     while test_suite loop
-      if run("test_allocate") then
-        ptr := allocate;
+      if run("test_new_string_ptr") then
+        ptr := new_string_ptr;
         check_equal(length(ptr), 0);
 
-        ptr := allocate(1);
+        ptr := new_string_ptr(1);
         check_equal(length(ptr), 1);
 
-        ptr := allocate(2);
+        ptr := new_string_ptr(2);
         check_equal(length(ptr), 2);
 
-      elsif run("test_allocate_string") then
-        ptr := allocate("hello");
+      elsif run("test_new_string_ptr_with_string") then
+        ptr := new_string_ptr("hello");
         check_equal(length(ptr), 5);
         check_equal(to_string(ptr), "hello");
 
       elsif run("test_reallocate_string") then
-        ptr := allocate("hello");
+        ptr := new_string_ptr("hello");
         check_equal(length(ptr), 5);
         check_equal(to_string(ptr), "hello");
 
@@ -51,11 +51,11 @@ begin
         check_equal(to_string(ptr), "foobar");
 
       elsif run("test_element_access") then
-        ptr := allocate(1);
+        ptr := new_string_ptr(1);
         set(ptr, 1, a_random_value);
         assert get(ptr, 1) = a_random_value;
 
-        ptr2 := allocate(2);
+        ptr2 := new_string_ptr(2);
         set(ptr2, 1, another_random_value);
         set(ptr2, 2, a_random_value);
         assert get(ptr2, 1) = another_random_value;
@@ -65,7 +65,7 @@ begin
           "Checking that ptr was not affected by ptr2";
 
       elsif run("test_resize") then
-        ptr := allocate(1);
+        ptr := new_string_ptr(1);
         check_equal(length(ptr), 1);
         set(ptr, 1, a_random_value);
         assert get(ptr, 1) = a_random_value;
@@ -84,7 +84,7 @@ begin
 
       elsif run("test_resize_with_drop") then
 
-        ptr := allocate(8);
+        ptr := new_string_ptr(8);
         for i in 1 to 8 loop
           set(ptr, i, character'val(i));
         end loop;
@@ -95,11 +95,11 @@ begin
         end loop;
 
       elsif run("test_from_and_to_integer") then
-        ptr := allocate(2);
+        ptr := new_string_ptr(2);
         assert to_string_ptr(to_integer(ptr)) = ptr;
 
       elsif run("test_to_string") then
-        ptr := allocate(3);
+        ptr := new_string_ptr(3);
         set(ptr, 1, 'a');
         set(ptr, 2, 'b');
         set(ptr, 3, 'c');
@@ -109,16 +109,16 @@ begin
         assert to_string(ptr) = "abc1";
 
       elsif run("Test codecs") then
-        ptr := allocate(0);
+        ptr := new_string_ptr(0);
         check(decode(encode(ptr)) = ptr);
 
-        ptr2 := allocate(2);
+        ptr2 := new_string_ptr(2);
         set(ptr2, 1, another_random_value);
         set(ptr2, 2, a_random_value);
         check(decode(encode(ptr2)) = ptr2);
 
       elsif run("Test denormal string") then
-        ptr := allocate(denormal_string);
+        ptr := new_string_ptr(denormal_string);
         check_equal(to_string(ptr), "ab");
 
         reallocate(ptr, denormal_string);

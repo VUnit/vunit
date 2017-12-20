@@ -56,7 +56,7 @@ package body logger_pkg is
   begin
     logger := (p_data => new_integer_vector_ptr(logger_length));
     set(logger.p_data, id_idx, id);
-    set(logger.p_data, name_idx, to_integer(allocate(name)));
+    set(logger.p_data, name_idx, to_integer(new_string_ptr(name)));
     set(logger.p_data, parent_idx, to_integer(parent));
     set(logger.p_data, children_idx, to_integer(new_integer_vector_ptr));
     set(logger.p_data, log_count_idx, to_integer(new_integer_vector_ptr(log_level_t'pos(log_level_t'high)+1, value => 0)));

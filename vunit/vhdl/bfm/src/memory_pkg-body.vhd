@@ -72,7 +72,7 @@ package body memory_pkg is
     variable num_allocs : natural;
   begin
     alloc.p_memory_ref := memory;
-    alloc.p_name := allocate(name);
+    alloc.p_name := new_string_ptr(name);
     alloc.p_address := work.memory_pkg.num_bytes(memory);
     alloc.p_address := alloc.p_address + ((-alloc.p_address) mod alignment);
     alloc.p_num_bytes := num_bytes;

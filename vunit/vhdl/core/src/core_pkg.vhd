@@ -58,7 +58,7 @@ package body core_pkg is
   begin
     set(state, is_mocked_idx, 0);
     set(state, core_failure_called_idx, 0);
-    set(state, core_failure_message_idx, to_integer(string_ptr_t'(allocate)));
+    set(state, core_failure_message_idx, to_integer(new_string_ptr));
     return state;
   end;
 

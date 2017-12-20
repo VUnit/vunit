@@ -22,8 +22,8 @@ package string_ptr_pkg is
 
   function to_integer(value : string_ptr_t) return integer;
   impure function to_string_ptr(value : integer) return string_ptr_t;
-  impure function allocate(length : natural := 0) return string_ptr_t;
-  impure function allocate(value : string) return string_ptr_t;
+  impure function new_string_ptr(length : natural := 0) return string_ptr_t;
+  impure function new_string_ptr(value : string) return string_ptr_t;
   procedure deallocate(ptr : string_ptr_t);
   impure function length(ptr : string_ptr_t) return integer;
   procedure set(ptr : string_ptr_t; index : integer; value : character);

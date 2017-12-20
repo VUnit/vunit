@@ -47,7 +47,7 @@ package body msg_types_pkg is
     variable code : integer := length(p_msg_types.p_name_ptrs);
   begin
     resize(p_msg_types.p_name_ptrs, code+1);
-    set(p_msg_types.p_name_ptrs, code, to_integer(allocate(name)));
+    set(p_msg_types.p_name_ptrs, code, to_integer(new_string_ptr(name)));
     return (p_code => code);
   end function;
 
