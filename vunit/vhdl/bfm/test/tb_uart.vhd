@@ -32,7 +32,7 @@ begin
 
   main : process
     variable data : std_logic_vector(7 downto 0);
-    variable reference_queue : queue_t := allocate;
+    variable reference_queue : queue_t := new_queue;
     variable reference : stream_reference_t;
 
     procedure test_baud_rate(baud_rate : natural) is

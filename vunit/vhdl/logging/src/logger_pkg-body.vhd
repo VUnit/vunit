@@ -52,7 +52,7 @@ package body logger_pkg is
                              parent : logger_t) return logger_t is
     variable logger : logger_t;
     variable log_handler : log_handler_t;
-    variable mocked_log_queue : queue_t := allocate;
+    variable mocked_log_queue : queue_t := new_queue;
   begin
     logger := (p_data => allocate(logger_length));
     set(logger.p_data, id_idx, id);

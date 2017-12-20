@@ -27,7 +27,7 @@ package body integer_vector_ptr_pool_pkg is
 
   impure function allocate return integer_vector_ptr_pool_t is
   begin
-    return (ptrs => allocate);
+    return (ptrs => new_queue);
   end;
 
   impure function allocate(pool : integer_vector_ptr_pool_t; min_length : natural := 0) return integer_vector_ptr_t is

@@ -35,7 +35,7 @@ begin
 
   main : process
     variable data : std_logic_vector(tdata'range);
-    variable reference_queue : queue_t := allocate;
+    variable reference_queue : queue_t := new_queue;
     variable reference : stream_reference_t;
   begin
     test_runner_setup(runner, runner_cfg);

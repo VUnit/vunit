@@ -32,7 +32,7 @@ end entity;
 architecture a of ram_master is
   signal rd : std_logic := '0';
   signal rd_pipe : std_logic_vector(0 to latency-1);
-  constant request_queue : queue_t := allocate;
+  constant request_queue : queue_t := new_queue;
 begin
   main : process
     variable request_msg : msg_t;

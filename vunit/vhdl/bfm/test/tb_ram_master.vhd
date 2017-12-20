@@ -37,7 +37,7 @@ begin
 
   main : process
     variable reference : bus_reference_t;
-    variable reference_queue : queue_t := allocate;
+    variable reference_queue : queue_t := new_queue;
     variable tmp : std_logic_vector(rdata'range);
   begin
     test_runner_setup(runner, runner_cfg);

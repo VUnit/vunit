@@ -25,7 +25,7 @@ package queue_pkg is
 
   constant null_queue : queue_t := (p_meta => null_ptr, data => null_string_ptr);
 
-  impure function allocate return queue_t;
+  impure function new_queue return queue_t;
   impure function length(queue : queue_t) return integer;
   procedure flush(queue : queue_t);
   impure function copy(queue : queue_t) return queue_t;
@@ -164,7 +164,7 @@ package body queue_pkg is
   constant head_idx : natural := 1;
   constant num_meta : natural := head_idx + 1;
 
-  impure function allocate return queue_t is
+  impure function new_queue return queue_t is
   begin
     return (p_meta => allocate(num_meta),
             data => allocate);
@@ -185,7 +185,7 @@ package body queue_pkg is
   end;
 
   impure function copy(queue : queue_t) return queue_t is
-    variable result : queue_t := allocate;
+    variable result : queue_t := new_queue;
   begin
     for i in 0 to length(queue) - 1 loop
       push(result, get(queue.data, 1+i));

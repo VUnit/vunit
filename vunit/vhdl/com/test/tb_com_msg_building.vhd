@@ -85,7 +85,7 @@ begin
         assert pop_character(msg) = '2';
       elsif run("Test push and pop queue") then
         msg   := new_msg;
-        queue := allocate;
+        queue := new_queue;
         push(queue, 22);
         push_queue_ref(msg, queue);
         assert pop_queue_ref(msg) = queue report "Queue should come back";

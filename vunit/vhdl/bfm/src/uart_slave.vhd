@@ -24,7 +24,7 @@ end entity;
 architecture a of uart_slave is
   signal baud_rate : natural := uart.p_baud_rate;
   signal local_event : std_logic := '0';
-  constant data_queue : queue_t := allocate;
+  constant data_queue : queue_t := new_queue;
 begin
 
   main : process

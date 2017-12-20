@@ -93,9 +93,9 @@ package body axi_private_pkg is
       p_axi_slave := axi_slave;
       p_data_size := data'length/8;
       p_burst_queue_max_length := axi_slave.p_initial_address_channel_fifo_depth;
-      p_burst_queue := allocate;
+      p_burst_queue := new_queue;
       p_resp_queue_max_length := 1;
-      p_resp_queue := allocate;
+      p_resp_queue := new_queue;
       p_check_well_behaved := false;
       set_address_channel_stall_probability(0.0);
     end;

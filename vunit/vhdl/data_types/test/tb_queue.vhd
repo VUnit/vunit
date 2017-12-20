@@ -36,7 +36,7 @@ begin
       assert queue = null_queue report "Expected null queue";
 
     elsif run("Test push and pop integer") then
-      queue := allocate;
+      queue := new_queue;
       assert queue /= null_queue report "Expected non null queue";
       check_equal(length(queue), 0, "Empty queue length");
 
@@ -56,7 +56,7 @@ begin
       check_equal(pop_integer(queue), integer'high, "data");
 
     elsif run("Test push and pop character") then
-      queue := allocate;
+      queue := new_queue;
       assert queue /= null_queue report "Expected non null queue";
       check_equal(length(queue), 0, "Empty queue length");
 
@@ -71,7 +71,7 @@ begin
       check_equal(length(queue), 0, "Length");
 
     elsif run("Test flush queue") then
-      queue := allocate;
+      queue := new_queue;
       push_character(queue, '1');
       check_equal(length(queue), 1, "Length");
       push_character(queue, '2');
@@ -80,14 +80,14 @@ begin
       check_equal(length(queue), 0, "Length");
 
     elsif run("Test push and pop queue") then
-      queue := allocate;
-      another_queue := allocate;
+      queue := new_queue;
+      another_queue := new_queue;
       push(another_queue, 22);
       push_queue_ref(queue, another_queue);
       assert pop_queue_ref(queue) = another_queue report "Queue should come back";
 
     elsif run("Test push and pop string") then
-      queue := allocate;
+      queue := new_queue;
       push_string(queue, "hello world");
       push_string(queue, "two");
       push_string(queue, test_string1);
@@ -98,14 +98,14 @@ begin
       assert pop_string(queue) = test_string2;
 
     elsif run("Test push and pop bit") then
-      queue := allocate;
+      queue := new_queue;
       push_bit(queue, '0');
       push_bit(queue, '1');
       check(pop_bit(queue) = '0');
       check(pop_bit(queue) = '1');
 
     elsif run("Test push and pop std_ulogic") then
-      queue := allocate;
+      queue := new_queue;
       push_std_ulogic(queue, 'U');
       push_std_ulogic(queue, 'X');
       push_std_ulogic(queue, '0');
@@ -126,98 +126,98 @@ begin
       assert pop_std_ulogic(queue) = '-';
 
     elsif run("Test push and pop severity_level") then
-      queue := allocate;
+      queue := new_queue;
       push_severity_level(queue, note);
       push_severity_level(queue, error);
       check(pop_severity_level(queue) = note);
       check(pop_severity_level(queue) = error);
 
     elsif run("Test push and pop file_open_status") then
-      queue := allocate;
+      queue := new_queue;
       push_file_open_status(queue, open_ok);
       push_file_open_status(queue, mode_error);
       check(pop_file_open_status(queue) = open_ok);
       check(pop_file_open_status(queue) = mode_error);
 
     elsif run("Test push and pop file_open_kind") then
-      queue := allocate;
+      queue := new_queue;
       push_file_open_kind(queue, read_mode);
       push_file_open_kind(queue, append_mode);
       check(pop_file_open_kind(queue) = read_mode);
       check(pop_file_open_kind(queue) = append_mode);
 
     elsif run("Test push and pop bit_vector") then
-      queue := allocate;
+      queue := new_queue;
       push_bit_vector(queue, "1");
       push_bit_vector(queue, "010101");
       check(pop_bit_vector(queue) = "1");
       check(pop_bit_vector(queue) = "010101");
 
     elsif run("Test push and pop std_ulogic_vector") then
-      queue := allocate;
+      queue := new_queue;
       push_std_ulogic_vector(queue, descending_sulv);
       push_std_ulogic_vector(queue, ascending_sulv);
       assert pop_std_ulogic_vector(queue) = descending_sulv;
       assert pop_std_ulogic_vector(queue) = ascending_sulv;
 
     elsif run("Test push and pop complex") then
-      queue := allocate;
+      queue := new_queue;
       push_complex(queue, (1.0, 2.2));
       push_complex(queue, (-1.0, -2.2));
       check(pop_complex(queue) = (1.0, 2.2));
       check(pop_complex(queue) = (-1.0, -2.2));
 
     elsif run("Test push and pop complex_polar") then
-      queue := allocate;
+      queue := new_queue;
       push_complex_polar(queue, (1.0, 0.707));
       push_complex_polar(queue, (3.14, -0.707));
       check(pop_complex_polar(queue) = (1.0, 0.707));
       check(pop_complex_polar(queue) = (3.14, -0.707));
 
     elsif run("Test push and pop ieee.numeric_bit.unsigned") then
-      queue := allocate;
+      queue := new_queue;
       push_numeric_bit_unsigned(queue, "1");
       push_numeric_bit_unsigned(queue, "010101");
       check(pop_numeric_bit_unsigned(queue) = "1");
       check(pop_numeric_bit_unsigned(queue) = "010101");
 
     elsif run("Test push and pop ieee.numeric_bit.signed") then
-      queue := allocate;
+      queue := new_queue;
       push_numeric_bit_signed(queue, "1");
       push_numeric_bit_signed(queue, "010101");
       check(pop_numeric_bit_signed(queue) = "1");
       check(pop_numeric_bit_signed(queue) = "010101");
 
     elsif run("Test push and pop ieee.numeric_std.unsigned") then
-      queue := allocate;
+      queue := new_queue;
       push_numeric_std_unsigned(queue, "1");
       push_numeric_std_unsigned(queue, "010101");
       check(pop_numeric_std_unsigned(queue) = "1");
       check(pop_numeric_std_unsigned(queue) = "010101");
 
     elsif run("Test push and pop ieee.numeric_std.signed") then
-      queue := allocate;
+      queue := new_queue;
       push_numeric_std_signed(queue, "1");
       push_numeric_std_signed(queue, "010101");
       check(pop_numeric_std_signed(queue) = "1");
       check(pop_numeric_std_signed(queue) = "010101");
 
     elsif run("Test push and pop std_logic_vector") then
-      queue := allocate;
+      queue := new_queue;
       push_std_ulogic_vector(queue, std_ulogic_vector(descending_slv));
       push_std_ulogic_vector(queue, std_ulogic_vector(ascending_slv));
       assert std_logic_vector(pop_std_ulogic_vector(queue)) = descending_slv;
       assert std_logic_vector(pop_std_ulogic_vector(queue)) = ascending_slv;
 
     elsif run("Test push and pop signed and unsigned") then
-      queue := allocate;
+      queue := new_queue;
       push_std_ulogic_vector(queue, std_ulogic_vector(ieee.numeric_std.to_unsigned(11, 16)));
       push_std_ulogic_vector(queue, std_ulogic_vector(ieee.numeric_std.to_signed(-1, 8)));
       assert ieee.numeric_std.unsigned(pop_std_ulogic_vector(queue)) = ieee.numeric_std.to_unsigned(11, 16);
       assert ieee.numeric_std.signed(pop_std_ulogic_vector(queue)) = ieee.numeric_std.to_signed(-1, 8);
 
     elsif run("Test push and pop real") then
-      queue := allocate;
+      queue := new_queue;
       push_real(queue, 1.0);
       push_real(queue, -1.0);
       push_real(queue, 2.0);
@@ -239,7 +239,7 @@ begin
       assert pop_real(queue) = -(1.0 + 0.5**53);
 
     elsif run("Test push and pop time") then
-      queue := allocate;
+      queue := new_queue;
       push_time(queue, 1 fs);
       push_time(queue, 1 ps);
       push_time(queue, 1 ns);
@@ -265,10 +265,10 @@ begin
       assert pop_time(queue) = -1 hr;
       assert pop_time(queue) = -1 hr - 1 fs;
     elsif run("Test codecs") then
-      queue := allocate;
+      queue := new_queue;
       check(decode(encode(queue)) = queue);
 
-      another_queue := allocate;
+      another_queue := new_queue;
       push_string(another_queue, "hello world");
       push_real(another_queue, 1.0);
       check(decode(encode(another_queue)) = another_queue);

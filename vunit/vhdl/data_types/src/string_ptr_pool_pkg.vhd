@@ -29,7 +29,7 @@ package body string_ptr_pool_pkg is
 
   impure function allocate return string_ptr_pool_t is
   begin
-    return (ptrs => allocate);
+    return (ptrs => new_queue);
   end;
 
   impure function allocate(pool : string_ptr_pool_t; min_length : natural := 0) return string_ptr_t is
