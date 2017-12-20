@@ -72,7 +72,7 @@ package integer_array_pkg is
   impure function bytes_per_word(arr : integer_array_t) return integer;
   impure function lower_limit(arr : integer_array_t) return integer;
   impure function upper_limit(arr : integer_array_t) return integer;
-                                     
+
   impure function get(arr : integer_array_t; idx : integer) return integer;
   impure function get(arr : integer_array_t; x,y : integer) return integer;
   impure function get(arr : integer_array_t; x,y,z : integer) return integer;

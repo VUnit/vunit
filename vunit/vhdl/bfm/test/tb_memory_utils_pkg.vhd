@@ -31,11 +31,11 @@ begin
   begin
     test_runner_setup(runner, runner_cfg);
 
-    if run("Test allocate integer_vector_ptr") then
+    if run("Test write integer_vector_ptr") then
       memory := new_memory;
       integer_vector_ptr := random_integer_vector_ptr(10, 0, 255);
 
-      allocation := allocate_integer_vector_ptr(memory, integer_vector_ptr);
+      allocation := write_integer_vector_ptr(memory, integer_vector_ptr);
       check_equal(base_address(allocation), 0);
       check_equal(last_address(allocation), 4*10-1);
 
@@ -50,11 +50,11 @@ begin
         check_equal(read_byte(memory, base_address(allocation) + 4*i+3), 0);
       end loop;
 
-      allocation := allocate_integer_vector_ptr(memory, integer_vector_ptr, alignment => 16);
+      allocation := write_integer_vector_ptr(memory, integer_vector_ptr, alignment => 16);
       check_equal(base_address(allocation), 48);
       check_equal(last_address(allocation), 48 + 4*10-1);
 
-      allocation := allocate_integer_vector_ptr(memory, integer_vector_ptr, bytes_per_word => 1,
+      allocation := write_integer_vector_ptr(memory, integer_vector_ptr, bytes_per_word => 1,
                                              permissions => read_and_write);
       check_equal(base_address(allocation), 48 + 4*10);
       check_equal(last_address(allocation), 48 + 4*10 + 10 - 1);
@@ -64,11 +64,11 @@ begin
         check_equal(read_byte(memory, addr), get(integer_vector_ptr, addr - base_address(allocation)));
       end loop;
 
-    elsif run("Test allocate expected integer_vector_ptr") then
+    elsif run("Test set expected integer_vector_ptr") then
       memory := new_memory;
       integer_vector_ptr := random_integer_vector_ptr(10, 0, 255);
 
-      allocation := allocate_expected_integer_vector_ptr(memory, integer_vector_ptr);
+      allocation := set_expected_integer_vector_ptr(memory, integer_vector_ptr);
       check_equal(base_address(allocation), 0);
       check_equal(last_address(allocation), 4*10-1);
 
@@ -83,12 +83,12 @@ begin
         check_equal(get_expected_byte(memory, base_address(allocation) + 4*i+3), 0);
       end loop;
 
-      allocation := allocate_expected_integer_vector_ptr(memory, integer_vector_ptr, alignment => 16);
+      allocation := set_expected_integer_vector_ptr(memory, integer_vector_ptr, alignment => 16);
       check_equal(base_address(allocation), 48);
       check_equal(last_address(allocation), 48 + 4*10-1);
 
-      allocation := allocate_expected_integer_vector_ptr(memory, integer_vector_ptr,
-                                                    bytes_per_word => 1, permissions => read_and_write);
+      allocation := set_expected_integer_vector_ptr(memory, integer_vector_ptr,
+                                                         bytes_per_word => 1, permissions => read_and_write);
       check_equal(base_address(allocation), 48 + 4*10);
       check_equal(last_address(allocation), 48 + 4*10 + 10 - 1);
 
@@ -97,11 +97,11 @@ begin
         check_equal(get_expected_byte(memory, addr), get(integer_vector_ptr, addr - base_address(allocation)));
       end loop;
 
-    elsif run("Test allocate integer_array") then
+    elsif run("Test write integer_array") then
       memory := new_memory;
 
       integer_array := random_integer_array(10, min_value => 0, max_value => 255);
-      allocation := allocate_integer_array(memory, integer_array);
+      allocation := write_integer_array(memory, integer_array);
       check_equal(base_address(allocation), 0);
       check_equal(last_address(allocation), 10-1);
 
@@ -113,11 +113,11 @@ begin
         check_equal(read_byte(memory, base_address(allocation) + i), get(integer_array, i));
       end loop;
 
-    elsif run("Test allocate integer_array with stride") then
+    elsif run("Test write integer_array with stride") then
       memory := new_memory;
 
       integer_array := random_integer_array(2, 2, min_value => 0, max_value => 255);
-      allocation := allocate_integer_array(memory, integer_array, stride_in_bytes => 4);
+      allocation := write_integer_array(memory, integer_array, stride_in_bytes => 4);
       check_equal(base_address(allocation), 0);
       check_equal(last_address(allocation), 2*4-1);
 
@@ -128,16 +128,16 @@ begin
         end loop;
 
         for x in integer_array.width to 3 loop
-          check(get_permissions(memory, base_address(allocation) + x + 4*y) = no_access,
-                "Stride should have no-access");
+          check(get_permissions(memory, base_address(allocation) + x + 4*y) = read_only,
+                "Padding bytes should have same permissions");
         end loop;
       end loop;
 
-    elsif run("Test allocate expected integer_array") then
+    elsif run("Test set expected integer_array") then
       memory := new_memory;
 
       integer_array := random_integer_array(10, min_value => 0, max_value => 255);
-      allocation := allocate_expected_integer_array(memory, integer_array);
+      allocation := set_expected_integer_array(memory, integer_array);
       check_equal(base_address(allocation), 0);
       check_equal(last_address(allocation), 10-1);
 
@@ -149,11 +149,11 @@ begin
         check_equal(get_expected_byte(memory, base_address(allocation) + i), get(integer_array, i));
       end loop;
 
-    elsif run("Test allocate expected integer_array with stride") then
+    elsif run("Test set expected integer_array with stride") then
       memory := new_memory;
 
       integer_array := random_integer_array(2, 2, min_value => 0, max_value => 255);
-      allocation := allocate_expected_integer_array(memory, integer_array, stride_in_bytes => 4);
+      allocation := set_expected_integer_array(memory, integer_array, stride_in_bytes => 4);
       check_equal(base_address(allocation), 0);
       check_equal(last_address(allocation), 2*4-1);
 
@@ -164,8 +164,8 @@ begin
         end loop;
 
         for x in integer_array.width to 3 loop
-          check(get_permissions(memory, base_address(allocation) + x + 4*y) = no_access,
-                "Stride should have no-access");
+          check(get_permissions(memory, base_address(allocation) + x + 4*y) = write_only,
+                "Padding bytes should have same permissions");
         end loop;
       end loop;
 

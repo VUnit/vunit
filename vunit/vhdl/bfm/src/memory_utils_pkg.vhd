@@ -15,47 +15,85 @@ use work.memory_pkg.all;
 
 package memory_utils_pkg is
 
-  -- Allocate memory for the integer_vector_ptr, write it there
-  -- and by default set read_only permission
+  -- Allocate memory for the integer_vector_ptr
   impure function allocate_integer_vector_ptr(memory : memory_t;
                                               integer_vector_ptr : integer_vector_ptr_t;
                                               name : string := "";
                                               alignment : positive := 1;
                                               bytes_per_word : natural range 1 to 4 := 4;
-                                              endian : endianness_arg_t := default_endian;
-                                              permissions : permissions_t := read_only) return alloc_t;
+                                              permissions : permissions_t := write_only) return alloc_t;
 
-  -- Allocate memory for the integer_vector_ptr, set it as expected data
-  -- and by default set write_only permission
-  impure function allocate_expected_integer_vector_ptr(memory : memory_t;
-                                                       integer_vector_ptr : integer_vector_ptr_t;
-                                                       name : string := "";
-                                                       alignment : positive := 1;
-                                                       bytes_per_word : natural range 1 to 4 := 4;
-                                                       endian : endianness_arg_t := default_endian;
-                                                       permissions : permissions_t := write_only) return alloc_t;
+  -- Write integer vector pointer to memory address
+  procedure write_integer_vector_ptr(memory : memory_t;
+                                     base_address : natural;
+                                     integer_vector_ptr : integer_vector_ptr_t;
+                                     bytes_per_word : natural range 1 to 4 := 4;
+                                     endian : endianness_arg_t := default_endian);
 
-  -- Allocate memory for the integer_array, write it there
-  -- and by default set read_only permission
-  -- padding bytes inducted by stride_in_bytes are set to no_access
+  -- Allocate memory for the integer_vector_ptr and write it there
+  impure function write_integer_vector_ptr(memory : memory_t;
+                                           integer_vector_ptr : integer_vector_ptr_t;
+                                           name : string := "";
+                                           alignment : positive := 1;
+                                           bytes_per_word : natural range 1 to 4 := 4;
+                                           endian : endianness_arg_t := default_endian;
+                                           permissions : permissions_t := read_only) return alloc_t;
+
+  -- Set expected integer vector pointer data at memory address
+  procedure set_expected_integer_vector_ptr(memory : memory_t;
+                                            base_address : natural;
+                                            integer_vector_ptr : integer_vector_ptr_t;
+                                            bytes_per_word : natural range 1 to 4 := 4;
+                                            endian : endianness_arg_t := default_endian);
+
+  -- Allocate memory and set expected integer vector pointer data at memory address
+  impure function set_expected_integer_vector_ptr(memory : memory_t;
+                                                  integer_vector_ptr : integer_vector_ptr_t;
+                                                  name : string := "";
+                                                  alignment : positive := 1;
+                                                  bytes_per_word : natural range 1 to 4 := 4;
+                                                  endian : endianness_arg_t := default_endian;
+                                                  permissions : permissions_t := write_only) return alloc_t;
+
+  -- Allocate memory for the integer_array
   impure function allocate_integer_array(memory : memory_t;
                                          integer_array : integer_array_t;
                                          name : string := "";
                                          alignment : positive := 1;
                                          stride_in_bytes : natural := 0; -- 0 stride means use image width
-                                         endian : endianness_arg_t := default_endian;
                                          permissions : permissions_t := read_only) return alloc_t;
 
-  -- Allocate memory for the integer_array, set it as expected data
-  -- and by default set write_only permission
-  -- padding bytes inducted by stride_in_bytes are set to no_access
-  impure function allocate_expected_integer_array(memory : memory_t;
-                                                  integer_array : integer_array_t;
-                                                  name : string := "";
-                                                  alignment : positive := 1;
-                                                  stride_in_bytes : natural := 0; -- 0 stride means use image width
-                                                  endian : endianness_arg_t := default_endian;
-                                                  permissions : permissions_t := write_only) return alloc_t;
+  -- Write integer array to memory address
+  procedure write_integer_array(memory : memory_t;
+                                base_address : natural;
+                                integer_array : integer_array_t;
+                                stride_in_bytes : natural := 0; -- 0 stride means use image width
+                                endian : endianness_arg_t := default_endian);
+
+  -- Allocate memory for the integer_array and write the data there
+  impure function write_integer_array(memory : memory_t;
+                                      integer_array : integer_array_t;
+                                      name : string := "";
+                                      alignment : positive := 1;
+                                      stride_in_bytes : natural := 0; -- 0 stride means use image width
+                                      endian : endianness_arg_t := default_endian;
+                                      permissions : permissions_t := read_only) return alloc_t;
+
+  -- Set integer_array as expected data
+  procedure set_expected_integer_array(memory : memory_t;
+                                       base_address : natural;
+                                       integer_array : integer_array_t;
+                                       stride_in_bytes : natural := 0; -- 0 stride means use image width
+                                       endian : endianness_arg_t := default_endian);
+
+  -- Allocate memory for the integer_array and set it as expected data
+  impure function set_expected_integer_array(memory : memory_t;
+                                             integer_array : integer_array_t;
+                                             name : string := "";
+                                             alignment : positive := 1;
+                                             stride_in_bytes : natural := 0; -- 0 stride means use image width
+                                             endian : endianness_arg_t := default_endian;
+                                             permissions : permissions_t := write_only) return alloc_t;
 
 end package;
 
@@ -67,130 +105,163 @@ package body memory_utils_pkg is
                                               name : string := "";
                                               alignment : positive := 1;
                                               bytes_per_word : natural range 1 to 4 := 4;
-                                              endian : endianness_arg_t := default_endian;
-                                              permissions : permissions_t := read_only) return alloc_t is
-
-    variable alloc : alloc_t;
-    variable base_addr : integer;
+                                              permissions : permissions_t := write_only) return alloc_t is
   begin
-    alloc := allocate(memory, length(integer_vector_ptr) * bytes_per_word, name => name,
-                      alignment => alignment, permissions => permissions);
+    return allocate(memory, length(integer_vector_ptr) * bytes_per_word, name => name,
+                    alignment => alignment, permissions => permissions);
+  end;
 
-    base_addr := base_address(alloc);
+  procedure write_integer_vector_ptr(memory : memory_t;
+                                     base_address : natural;
+                                     integer_vector_ptr : integer_vector_ptr_t;
+                                     bytes_per_word : natural range 1 to 4 := 4;
+                                     endian : endianness_arg_t := default_endian) is
+  begin
     for i in 0 to length(integer_vector_ptr)-1 loop
-      write_integer(memory, base_addr + bytes_per_word*i, get(integer_vector_ptr, i),
+      write_integer(memory, base_address + bytes_per_word*i, get(integer_vector_ptr, i),
                     bytes_per_word => bytes_per_word,
                     endian => endian);
     end loop;
+  end;
+
+  impure function write_integer_vector_ptr(memory : memory_t;
+                                           integer_vector_ptr : integer_vector_ptr_t;
+                                           name : string := "";
+                                           alignment : positive := 1;
+                                           bytes_per_word : natural range 1 to 4 := 4;
+                                           endian : endianness_arg_t := default_endian;
+                                           permissions : permissions_t := read_only) return alloc_t is
+    variable alloc : alloc_t;
+  begin
+    alloc := allocate_integer_vector_ptr(memory, integer_vector_ptr, name, alignment, bytes_per_word, permissions);
+    write_integer_vector_ptr(memory, base_address(alloc), integer_vector_ptr, bytes_per_word, endian);
     return alloc;
   end;
 
-  impure function allocate_expected_integer_vector_ptr(memory : memory_t;
-                                                       integer_vector_ptr : integer_vector_ptr_t;
-                                                       name : string := "";
-                                                       alignment : positive := 1;
-                                                       bytes_per_word : natural range 1 to 4 := 4;
-                                                       endian : endianness_arg_t := default_endian;
-                                                       permissions : permissions_t := write_only) return alloc_t is
-    variable alloc : alloc_t;
-    variable base_addr : integer;
+  procedure set_expected_integer_vector_ptr(memory : memory_t;
+                                            base_address : natural;
+                                            integer_vector_ptr : integer_vector_ptr_t;
+                                            bytes_per_word : natural range 1 to 4 := 4;
+                                            endian : endianness_arg_t := default_endian) is
   begin
-    alloc := allocate(memory, length(integer_vector_ptr) * bytes_per_word, name => name,
-                      alignment => alignment, permissions => permissions);
-
-    base_addr := base_address(alloc);
     for i in 0 to length(integer_vector_ptr)-1 loop
       set_expected_integer(memory,
-                           base_addr + bytes_per_word*i,
+                           base_address + bytes_per_word*i,
                            get(integer_vector_ptr, i), bytes_per_word, endian);
     end loop;
+  end;
+
+  impure function set_expected_integer_vector_ptr(memory : memory_t;
+                                                  integer_vector_ptr : integer_vector_ptr_t;
+                                                  name : string := "";
+                                                  alignment : positive := 1;
+                                                  bytes_per_word : natural range 1 to 4 := 4;
+                                                  endian : endianness_arg_t := default_endian;
+                                                  permissions : permissions_t := write_only) return alloc_t is
+    variable alloc : alloc_t;
+  begin
+    alloc := allocate_integer_vector_ptr(memory, integer_vector_ptr, name, alignment, bytes_per_word, permissions);
+    set_expected_integer_vector_ptr(memory, base_address(alloc), integer_vector_ptr, bytes_per_word, endian);
     return alloc;
   end function;
+
+  impure function get_stride_in_bytes(integer_array : integer_array_t;
+                                      -- 0 stride means integer_array.width * bytes_per_word
+                                      stride_in_bytes : natural := 0) return natural is
+  begin
+    if stride_in_bytes = 0 then
+      return integer_array.width * bytes_per_word(integer_array);
+    else
+      return stride_in_bytes;
+    end if;
+  end;
 
   impure function allocate_integer_array(memory : memory_t;
                                          integer_array : integer_array_t;
                                          name : string := "";
                                          alignment : positive := 1;
                                          stride_in_bytes : natural := 0; -- 0 stride means use image width
-                                         endian : endianness_arg_t := default_endian;
                                          permissions : permissions_t := read_only) return alloc_t is
+  begin
+    return allocate(memory,
+                      integer_array.depth * integer_array.height * get_stride_in_bytes(integer_array, stride_in_bytes),
+                      name => name, alignment => alignment, permissions => permissions);
+  end;
 
-    variable alloc : alloc_t;
-    constant bytes_per_word : natural := (integer_array.bit_width + 7)/8;
-    variable stride_in_bytes_v : natural;
+  procedure write_integer_array(memory : memory_t;
+                                base_address : natural;
+                                integer_array : integer_array_t;
+                                stride_in_bytes : natural := 0; -- 0 stride means use image width
+                                endian : endianness_arg_t := default_endian) is
+    constant bytes_per_word : natural := work.integer_array_pkg.bytes_per_word(integer_array);
+    variable stride : natural;
     variable addr : natural;
   begin
-    stride_in_bytes_v := stride_in_bytes;
-
-    if stride_in_bytes_v = 0 then
-      stride_in_bytes_v := integer_array.width * bytes_per_word;
-    end if;
-
-    alloc := allocate(memory, integer_array.depth * integer_array.height * stride_in_bytes_v,
-                      name => name, alignment => alignment, permissions => permissions);
+    stride := get_stride_in_bytes(integer_array, stride_in_bytes);
 
     for z in 0 to integer_array.depth-1 loop
       for y in 0 to integer_array.height-1 loop
-        addr := base_address(alloc) + stride_in_bytes_v*(y + z*integer_array.height);
+        addr := base_address + stride*(y + z*integer_array.height);
         for x in 0 to integer_array.width-1 loop
           write_integer(memory,
                         addr,
                         get(integer_array, x, y, z),
                         bytes_per_word => bytes_per_word,
                         endian => endian);
-         addr := addr + bytes_per_word;
+          addr := addr + bytes_per_word;
         end loop;
-
-        for x in bytes_per_word*integer_array.width to stride_in_bytes_v-1 loop
-          set_permissions(memory, addr, no_access);
-          addr := addr + 1;
-        end loop;
-
       end loop;
     end loop;
+  end;
 
+  impure function write_integer_array(memory : memory_t;
+                                      integer_array : integer_array_t;
+                                      name : string := "";
+                                      alignment : positive := 1;
+                                      stride_in_bytes : natural := 0; -- 0 stride means use image width
+                                      endian : endianness_arg_t := default_endian;
+                                      permissions : permissions_t := read_only) return alloc_t is
+    variable alloc : alloc_t;
+  begin
+    alloc := allocate_integer_array(memory, integer_array, name, alignment, stride_in_bytes, permissions);
+    write_integer_array(memory, base_address(alloc), integer_array, stride_in_bytes, endian);
     return alloc;
   end;
 
-  impure function allocate_expected_integer_array(memory : memory_t;
-                                                  integer_array : integer_array_t;
-                                                  name : string := "";
-                                                  alignment : positive := 1;
-                                                  stride_in_bytes : natural := 0; -- 0 stride means use image width
-                                                  endian : endianness_arg_t := default_endian;
-                                                  permissions : permissions_t := write_only) return alloc_t is
-
-    variable alloc : alloc_t;
-    constant bytes_per_word : natural := (integer_array.bit_width + 7)/8;
-    variable stride_in_bytes_v : natural;
+  procedure set_expected_integer_array(memory : memory_t;
+                                       base_address : natural;
+                                       integer_array : integer_array_t;
+                                       stride_in_bytes : natural := 0; -- 0 stride means use image width
+                                       endian : endianness_arg_t := default_endian) is
+    constant bytes_per_word : natural := work.integer_array_pkg.bytes_per_word(integer_array);
+    constant stride : natural := get_stride_in_bytes(integer_array, stride_in_bytes);
     variable addr : natural;
   begin
-    stride_in_bytes_v := stride_in_bytes;
-
-    if stride_in_bytes_v = 0 then
-      stride_in_bytes_v := integer_array.width * bytes_per_word;
-    end if;
-
-    alloc := allocate(memory, integer_array.depth * integer_array.height * stride_in_bytes_v,
-                      name => name, alignment => alignment, permissions => permissions);
-
     for z in 0 to integer_array.depth-1 loop
       for y in 0 to integer_array.height-1 loop
-        addr := base_address(alloc) + stride_in_bytes_v*(y + z*integer_array.height);
+        addr := base_address + stride*(y + z*integer_array.height);
 
         for x in 0 to integer_array.width-1 loop
           set_expected_integer(memory, addr, get(integer_array, x, y, z), bytes_per_word, endian);
           addr := addr + bytes_per_word;
         end loop;
 
-        for x in bytes_per_word*integer_array.width to stride_in_bytes_v-1 loop
-          set_permissions(memory, addr, no_access);
-          addr := addr + 1;
-        end loop;
-
       end loop;
     end loop;
+  end;
 
+  impure function set_expected_integer_array(memory : memory_t;
+                                             integer_array : integer_array_t;
+                                             name : string := "";
+                                             alignment : positive := 1;
+                                             stride_in_bytes : natural := 0; -- 0 stride means use image width
+                                             endian : endianness_arg_t := default_endian;
+                                             permissions : permissions_t := write_only) return alloc_t is
+
+    variable alloc : alloc_t;
+  begin
+    alloc := allocate_integer_array(memory, integer_array, name, alignment, stride_in_bytes, permissions);
+    set_expected_integer_array(memory, base_address(alloc), integer_array, stride_in_bytes, endian);
     return alloc;
   end;
 end package body;
