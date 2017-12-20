@@ -18,21 +18,21 @@ package string_ptr_pool_pkg is
   end record;
   constant null_string_ptr_pool : string_ptr_pool_t := (others => null_queue);
 
-  impure function allocate return string_ptr_pool_t;
-  impure function allocate(pool : string_ptr_pool_t; min_length : natural := 0) return string_ptr_t;
-  impure function allocate(pool : string_ptr_pool_t; value : string) return string_ptr_t;
+  impure function new_string_ptr_pool return string_ptr_pool_t;
+  impure function new_string_ptr(pool : string_ptr_pool_t; min_length : natural := 0) return string_ptr_t;
+  impure function new_string_ptr(pool : string_ptr_pool_t; value : string) return string_ptr_t;
   procedure recycle(pool : string_ptr_pool_t; variable ptr : inout string_ptr_t);
 
 end package;
 
 package body string_ptr_pool_pkg is
 
-  impure function allocate return string_ptr_pool_t is
+  impure function new_string_ptr_pool return string_ptr_pool_t is
   begin
     return (ptrs => new_queue);
   end;
 
-  impure function allocate(pool : string_ptr_pool_t; min_length : natural := 0) return string_ptr_t is
+  impure function new_string_ptr(pool : string_ptr_pool_t; min_length : natural := 0) return string_ptr_t is
     variable ptr : string_ptr_t;
   begin
     if length(pool.ptrs) > 0 then
@@ -50,7 +50,7 @@ package body string_ptr_pool_pkg is
     return ptr;
   end;
 
-  impure function allocate(pool : string_ptr_pool_t; value : string) return string_ptr_t is
+  impure function new_string_ptr(pool : string_ptr_pool_t; value : string) return string_ptr_t is
     variable ptr : string_ptr_t;
   begin
     if length(pool.ptrs) > 0 then

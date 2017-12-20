@@ -29,8 +29,8 @@ package dict_pkg is
 end package;
 
 package body dict_pkg is
-  constant int_pool : integer_vector_ptr_pool_t := allocate;
-  constant str_pool : string_ptr_pool_t := allocate;
+  constant int_pool : integer_vector_ptr_pool_t := new_integer_vector_ptr_pool;
+  constant str_pool : string_ptr_pool_t := new_string_ptr_pool;
 
   constant meta_num_keys : natural := 0;
   constant meta_length : natural := meta_num_keys+1;
@@ -42,10 +42,10 @@ package body dict_pkg is
     variable tmp : integer_vector_ptr_t;
     constant num_buckets : natural := 1;
   begin
-    dict := (p_meta => allocate(int_pool, meta_length),
-             p_bucket_lengths => allocate(int_pool, num_buckets),
-             p_bucket_keys => allocate(int_pool, num_buckets),
-             p_bucket_values => allocate(int_pool, num_buckets));
+    dict := (p_meta => new_integer_vector_ptr(int_pool, meta_length),
+             p_bucket_lengths => new_integer_vector_ptr(int_pool, num_buckets),
+             p_bucket_keys => new_integer_vector_ptr(int_pool, num_buckets),
+             p_bucket_values => new_integer_vector_ptr(int_pool, num_buckets));
 
     set(dict.p_meta, meta_num_keys, 0);
 
@@ -53,10 +53,10 @@ package body dict_pkg is
       -- Zero items in bucket
       set(dict.p_bucket_lengths, i, 0);
 
-      tmp := allocate(int_pool, new_bucket_size);
+      tmp := new_integer_vector_ptr(int_pool, new_bucket_size);
       set(dict.p_bucket_keys, i, to_integer(tmp));
 
-      tmp := allocate(int_pool, new_bucket_size);
+      tmp := new_integer_vector_ptr(int_pool, new_bucket_size);
       set(dict.p_bucket_values, i, to_integer(tmp));
     end loop;
     return dict;
@@ -208,8 +208,8 @@ package body dict_pkg is
 
     -- Create new buckets
     for i in old_num_buckets to num_buckets-1 loop
-      set(dict.p_bucket_keys, i, to_integer(allocate(int_pool, new_bucket_size)));
-      set(dict.p_bucket_values, i, to_integer(allocate(int_pool, new_bucket_size)));
+      set(dict.p_bucket_keys, i, to_integer(new_integer_vector_ptr(int_pool, new_bucket_size)));
+      set(dict.p_bucket_values, i, to_integer(new_integer_vector_ptr(int_pool, new_bucket_size)));
       set(dict.p_bucket_lengths, i, 0);
     end loop;
 
@@ -224,7 +224,7 @@ package body dict_pkg is
       -- Reuse existing value storage
       reallocate(old_value_ptr, value);
     else
-      insert_new(dict, key_hash, allocate(str_pool, key), allocate(str_pool, value));
+      insert_new(dict, key_hash, new_string_ptr(str_pool, key), new_string_ptr(str_pool, value));
     end if;
   end;
 

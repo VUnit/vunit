@@ -29,25 +29,25 @@ begin
       assert pool = null_integer_vector_ptr_pool report "Expected null pool";
 
     elsif run("Test allocated ptr has length") then
-      pool := allocate;
-      ptr := allocate(pool, 77);
+      pool := new_integer_vector_ptr_pool;
+      ptr := new_integer_vector_ptr(pool, 77);
       assert ptr /= null_ptr report "Expected non null ptr";
       check_equal(length(ptr), 77);
       recycle(pool, ptr);
 
     elsif run("Test recycled ptr is null") then
-      pool := allocate;
-      ptr := allocate(pool);
+      pool := new_integer_vector_ptr_pool;
+      ptr := new_integer_vector_ptr(pool);
       assert ptr /= null_ptr report "Expected non null ptr";
       recycle(pool, ptr);
       assert ptr = null_ptr report "Expected null ptr";
 
     elsif run("Test ptr is recycled") then
-      pool := allocate;
-      ptr := allocate(pool, 2);
+      pool := new_integer_vector_ptr_pool;
+      ptr := new_integer_vector_ptr(pool, 2);
       old_ptr := ptr;
       recycle(pool, ptr);
-      ptr := allocate(pool, 2);
+      ptr := new_integer_vector_ptr(pool, 2);
       assert ptr = old_ptr report "Was recycled";
     end if;
 

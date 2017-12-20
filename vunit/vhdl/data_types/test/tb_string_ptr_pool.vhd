@@ -28,36 +28,36 @@ begin
     if run("Test default pool is null") then
       assert pool = null_string_ptr_pool report "Expected null pool";
 
-    elsif run("Test allocated ptr has length") then
-      pool := allocate;
-      ptr := allocate(pool, 77);
+    elsif run("Test new ptr has length") then
+      pool := new_string_ptr_pool;
+      ptr := new_string_ptr(pool, 77);
       assert ptr /= null_string_ptr report "Expected non null ptr";
       check_equal(length(ptr), 77);
       recycle(pool, ptr);
 
     elsif run("Test allocate string recycled") then
-      pool := allocate;
-      ptr := allocate(pool, "hello");
+      pool := new_string_ptr_pool;
+      ptr := new_string_ptr(pool, "hello");
       check_equal(to_string(ptr), "hello");
       old_ptr := ptr;
       recycle(pool, ptr);
-      ptr := allocate(pool, "foobar");
+      ptr := new_string_ptr(pool, "foobar");
       check_equal(to_string(ptr), "foobar");
       assert ptr = old_ptr report "Was recycled";
 
     elsif run("Test recycled ptr is null") then
-      pool := allocate;
-      ptr := allocate(pool);
+      pool := new_string_ptr_pool;
+      ptr := new_string_ptr(pool);
       assert ptr /= null_string_ptr report "Expected non null ptr";
       recycle(pool, ptr);
       assert ptr = null_string_ptr report "Expected null ptr";
 
     elsif run("Test ptr is recycled") then
-      pool := allocate;
-      ptr := allocate(pool, 2);
+      pool := new_string_ptr_pool;
+      ptr := new_string_ptr(pool, 2);
       old_ptr := ptr;
       recycle(pool, ptr);
-      ptr := allocate(pool, 2);
+      ptr := new_string_ptr(pool, 2);
       assert ptr = old_ptr report "Was recycled";
     end if;
 

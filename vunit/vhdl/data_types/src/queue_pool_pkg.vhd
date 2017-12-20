@@ -26,15 +26,15 @@ end package;
 package body queue_pool_pkg is
   impure function allocate return queue_pool_t is
   begin
-    return (index_pool => allocate,
-            data_pool => allocate);
+    return (index_pool => new_integer_vector_ptr_pool,
+            data_pool => new_string_ptr_pool);
   end;
 
   impure function allocate(pool : queue_pool_t) return queue_t is
     variable queue : queue_t;
   begin
-    queue := (p_meta => allocate(pool.index_pool, 2),
-              data => allocate(pool.data_pool, 0));
+    queue := (p_meta => new_integer_vector_ptr(pool.index_pool, 2),
+              data => new_string_ptr(pool.data_pool, 0));
     flush(queue);
     return queue;
   end;
