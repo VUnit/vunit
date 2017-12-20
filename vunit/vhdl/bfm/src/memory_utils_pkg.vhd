@@ -22,7 +22,7 @@ package memory_utils_pkg is
                                               name : string := "";
                                               alignment : positive := 1;
                                               bytes_per_word : natural range 1 to 4 := 4;
-                                              big_endian : boolean := false;
+                                              endian : endianness_arg_t := default_endian;
                                               permissions : permissions_t := read_only) return alloc_t;
 
   -- Allocate memory for the integer_vector_ptr, set it as expected data
@@ -32,7 +32,7 @@ package memory_utils_pkg is
                                                        name : string := "";
                                                        alignment : positive := 1;
                                                        bytes_per_word : natural range 1 to 4 := 4;
-                                                       big_endian : boolean := false;
+                                                       endian : endianness_arg_t := default_endian;
                                                        permissions : permissions_t := write_only) return alloc_t;
 
   -- Allocate memory for the integer_array, write it there
@@ -43,7 +43,7 @@ package memory_utils_pkg is
                                          name : string := "";
                                          alignment : positive := 1;
                                          stride_in_bytes : natural := 0; -- 0 stride means use image width
-                                         big_endian : boolean := false;
+                                         endian : endianness_arg_t := default_endian;
                                          permissions : permissions_t := read_only) return alloc_t;
 
   -- Allocate memory for the integer_array, set it as expected data
@@ -54,7 +54,7 @@ package memory_utils_pkg is
                                                   name : string := "";
                                                   alignment : positive := 1;
                                                   stride_in_bytes : natural := 0; -- 0 stride means use image width
-                                                  big_endian : boolean := false;
+                                                  endian : endianness_arg_t := default_endian;
                                                   permissions : permissions_t := write_only) return alloc_t;
 
 end package;
@@ -67,7 +67,7 @@ package body memory_utils_pkg is
                                               name : string := "";
                                               alignment : positive := 1;
                                               bytes_per_word : natural range 1 to 4 := 4;
-                                              big_endian : boolean := false;
+                                              endian : endianness_arg_t := default_endian;
                                               permissions : permissions_t := read_only) return alloc_t is
 
     variable alloc : alloc_t;
@@ -80,7 +80,7 @@ package body memory_utils_pkg is
     for i in 0 to length(integer_vector_ptr)-1 loop
       write_integer(memory, base_addr + bytes_per_word*i, get(integer_vector_ptr, i),
                     bytes_per_word => bytes_per_word,
-                    big_endian => big_endian);
+                    endian => endian);
     end loop;
     return alloc;
   end;
@@ -90,7 +90,7 @@ package body memory_utils_pkg is
                                                        name : string := "";
                                                        alignment : positive := 1;
                                                        bytes_per_word : natural range 1 to 4 := 4;
-                                                       big_endian : boolean := false;
+                                                       endian : endianness_arg_t := default_endian;
                                                        permissions : permissions_t := write_only) return alloc_t is
     variable alloc : alloc_t;
     variable base_addr : integer;
@@ -102,7 +102,7 @@ package body memory_utils_pkg is
     for i in 0 to length(integer_vector_ptr)-1 loop
       set_expected_integer(memory,
                            base_addr + bytes_per_word*i,
-                           get(integer_vector_ptr, i), bytes_per_word, big_endian);
+                           get(integer_vector_ptr, i), bytes_per_word, endian);
     end loop;
     return alloc;
   end function;
@@ -112,7 +112,7 @@ package body memory_utils_pkg is
                                          name : string := "";
                                          alignment : positive := 1;
                                          stride_in_bytes : natural := 0; -- 0 stride means use image width
-                                         big_endian : boolean := false;
+                                         endian : endianness_arg_t := default_endian;
                                          permissions : permissions_t := read_only) return alloc_t is
 
     variable alloc : alloc_t;
@@ -137,7 +137,7 @@ package body memory_utils_pkg is
                         addr,
                         get(integer_array, x, y, z),
                         bytes_per_word => bytes_per_word,
-                        big_endian => big_endian);
+                        endian => endian);
          addr := addr + bytes_per_word;
         end loop;
 
@@ -157,7 +157,7 @@ package body memory_utils_pkg is
                                                   name : string := "";
                                                   alignment : positive := 1;
                                                   stride_in_bytes : natural := 0; -- 0 stride means use image width
-                                                  big_endian : boolean := false;
+                                                  endian : endianness_arg_t := default_endian;
                                                   permissions : permissions_t := write_only) return alloc_t is
 
     variable alloc : alloc_t;
@@ -179,7 +179,7 @@ package body memory_utils_pkg is
         addr := base_address(alloc) + stride_in_bytes_v*(y + z*integer_array.height);
 
         for x in 0 to integer_array.width-1 loop
-          set_expected_integer(memory, addr, get(integer_array, x, y, z), bytes_per_word, big_endian);
+          set_expected_integer(memory, addr, get(integer_array, x, y, z), bytes_per_word, endian);
           addr := addr + bytes_per_word;
         end loop;
 

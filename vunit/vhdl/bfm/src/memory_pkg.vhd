@@ -25,6 +25,9 @@ package memory_pkg is
   end record;
   constant null_memory : memory_t := (p_logger => null_logger, others => null_ptr);
 
+  type endianness_arg_t is (little_endian, big_endian, default_endian);
+  subtype endianness_t is endianness_arg_t range little_endian to big_endian;
+
   -- Reference to buffer allocation within memory
   type alloc_t is record
     -- Private
@@ -43,7 +46,8 @@ package memory_pkg is
   subtype byte_t is integer range 0 to 255;
 
   constant memory_logger : logger_t := get_logger("vunit_lib:memory_pkg");
-  impure function new_memory(logger : logger_t := memory_logger) return memory_t;
+  impure function new_memory(logger : logger_t := memory_logger;
+                             endian : endianness_t := little_endian) return memory_t;
   procedure clear(memory : memory_t);
   procedure deallocate(variable alloc : inout alloc_t);
   impure function allocate(memory : memory_t;
@@ -61,20 +65,20 @@ package memory_pkg is
   procedure write_word(memory : memory_t;
                        address : natural;
                        word : std_logic_vector;
-                       big_endian : boolean := false;
+                       endian : endianness_arg_t := default_endian;
                        check_permissions : boolean := false);
 
   impure function read_word(memory : memory_t;
                             address : natural;
                             bytes_per_word : positive;
-                            big_endian : boolean := false;
+                            endian : endianness_arg_t := default_endian;
                             check_permissions : boolean := false) return std_logic_vector;
 
   procedure write_integer(memory : memory_t;
                           address : natural;
                           word : integer;
                           bytes_per_word : natural range 1 to 4 := 4;
-                          big_endian : boolean := false;
+                          endian : endianness_arg_t := default_endian;
                           check_permissions : boolean := false);
 
   -- Check that all expected bytes was written to addresses within alloc
@@ -91,11 +95,14 @@ package memory_pkg is
   impure function has_expected_byte(memory : memory_t; address : natural) return boolean;
   procedure clear_expected_byte(memory : memory_t; address : natural);
   procedure set_expected_byte(memory : memory_t; address : natural; expected : byte_t);
-  procedure set_expected_word(memory : memory_t; address : natural; expected : std_logic_vector; big_endian : boolean := false);
+  procedure set_expected_word(memory : memory_t;
+                              address : natural;
+                              expected : std_logic_vector;
+                              endian : endianness_arg_t := default_endian);
   procedure set_expected_integer(memory : memory_t; address : natural;
                                  expected : integer;
                                  bytes_per_word : natural range 1 to 4 := 4;
-                                 big_endian : boolean := false);
+                                 endian : endianness_arg_t := default_endian);
   impure function get_expected_byte(memory : memory_t; address : natural) return byte_t;
 
   impure function describe_address(memory : memory_t; address : natural) return string;

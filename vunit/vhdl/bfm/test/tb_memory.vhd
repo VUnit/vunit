@@ -30,7 +30,7 @@ begin
       for i in 0 to bytes'length-1 loop
         check_equal(read_byte(memory, i), bytes(i));
       end loop;
-      write_integer(memory, 0, word, bytes_per_word => bytes'length, big_endian => true);
+      write_integer(memory, 0, word, bytes_per_word => bytes'length, endian => big_endian);
       for i in 0 to bytes'length-1 loop
         check_equal(read_byte(memory, i), bytes(bytes'length - 1 - i));
       end loop;
@@ -43,7 +43,7 @@ begin
         check_equal(read_byte(memory, i), bytes(i));
       end loop;
 
-      write_word(memory, 0, word, big_endian => true);
+      write_word(memory, 0, word, endian => big_endian);
       for i in 0 to word'length/8-1 loop
         check_equal(read_byte(memory, i), bytes(word'length/8 - 1 - i));
       end loop;
@@ -257,7 +257,7 @@ begin
       check_equal(get_expected_byte(memory, 0), 16#22#);
       check_equal(get_expected_byte(memory, 1), 16#33#);
 
-      set_expected_integer(memory, 0, 16#3322#, bytes_per_word => 2, big_endian => true);
+      set_expected_integer(memory, 0, 16#3322#, bytes_per_word => 2, endian => big_endian);
       check_equal(get_expected_byte(memory, 0), 16#33#);
       check_equal(get_expected_byte(memory, 1), 16#22#);
 
@@ -352,10 +352,20 @@ begin
 
       write_word(memory, 0, x"11223344556677");
       check_equal(read_word(memory, 0, 7), std_logic_vector'(x"11223344556677"));
+      check_equal(read_word(memory, 0, 1), std_logic_vector'(x"77"));
+      check_equal(read_word(memory, 1, 1), std_logic_vector'(x"66"));
 
-      write_word(memory, 7, x"aaffbbccdd", big_endian => True);
-      check_equal(read_word(memory, 7, 5, big_endian => True), std_logic_vector'(x"aaffbbccdd"));
+      write_word(memory, 7, x"aaffbbccdd", endian => big_endian);
+      check_equal(read_word(memory, 7, 5, endian => big_endian), std_logic_vector'(x"aaffbbccdd"));
 
+      -- Default endian
+      memory := new_memory(endian => big_endian);
+      allocation := allocate(memory, 7+5);
+
+      write_word(memory, 7, x"aaffbbccdd");
+      check_equal(read_word(memory, 7, 5), std_logic_vector'(x"aaffbbccdd"));
+      check_equal(read_word(memory, 7, 1), std_logic_vector'(x"aa"));
+      check_equal(read_word(memory, 8, 1), std_logic_vector'(x"ff"));
     end if;
 
     test_runner_cleanup(runner);

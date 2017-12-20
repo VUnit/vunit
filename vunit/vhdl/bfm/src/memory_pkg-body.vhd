@@ -11,7 +11,8 @@ package body memory_pkg is
 
   constant num_bytes_idx : natural := 0;
   constant num_allocations_idx : natural := 1;
-  constant num_meta : natural := num_allocations_idx + 1;
+  constant default_endian_idx : natural := 2;
+  constant num_meta : natural := default_endian_idx + 1;
 
   type memory_data_t is record
     byte : byte_t;
@@ -20,9 +21,15 @@ package body memory_pkg is
     perm : permissions_t;
   end record;
 
-  impure function new_memory(logger : logger_t := memory_logger) return memory_t is
+  impure function new_memory(logger : logger_t := memory_logger;
+                             endian : endianness_t := little_endian) return memory_t is
+    constant p_meta : integer_vector_ptr_t := new_integer_vector_ptr(num_meta);
   begin
-    return (p_meta => new_integer_vector_ptr(num_meta),
+    set(p_meta, num_bytes_idx, 0);
+    set(p_meta, num_allocations_idx, 0);
+    set(p_meta, default_endian_idx, endianness_t'pos(endian));
+
+    return (p_meta => p_meta,
             p_data => new_integer_vector_ptr(0),
             p_allocs => new_integer_vector_ptr(0),
             p_logger => logger);
@@ -36,6 +43,15 @@ package body memory_pkg is
     reallocate(memory.p_data, 0);
     reallocate(memory.p_allocs, 0);
   end procedure;
+
+  impure function evaluate_endian(memory : memory_t; endian : endianness_arg_t) return endianness_t is
+  begin
+    if endian = default_endian then
+      return endianness_t'val(get(memory.p_meta, default_endian_idx));
+    else
+      return endian;
+    end if;
+  end;
 
   impure function decode(value : integer) return memory_data_t is
   begin
@@ -279,46 +295,51 @@ package body memory_pkg is
     return get(memory, address, true).exp;
   end;
 
-  procedure set_expected_word(memory : memory_t; address : natural; expected : std_logic_vector; big_endian : boolean := false) is
+  procedure set_expected_word(memory : memory_t;
+                              address : natural;
+                              expected : std_logic_vector;
+                              endian : endianness_arg_t := default_endian) is
     -- Normalize to downto range to enable std_logic_vector literals which are
     -- 1 to N
     constant word_i : std_logic_vector(expected'length-1 downto 0) := expected;
+    constant endianness : endianness_t := evaluate_endian(memory, endian);
   begin
-    if big_endian then
-      for idx in 0 to word_i'length/8-1 loop
-        set_expected_byte(memory, address + word_i'length/8 - 1 - idx,
-                          to_integer(unsigned(word_i(8*idx+7 downto 8*idx))));
-      end loop;
-    else
-      for idx in 0 to word_i'length/8-1 loop
-        set_expected_byte(memory, address + idx,
-                          to_integer(unsigned(word_i(8*idx+7 downto 8*idx))));
-      end loop;
-    end if;
+    case endianness is
+      when big_endian =>
+        for idx in 0 to word_i'length/8-1 loop
+          set_expected_byte(memory, address + word_i'length/8 - 1 - idx,
+                            to_integer(unsigned(word_i(8*idx+7 downto 8*idx))));
+        end loop;
+      when little_endian =>
+        for idx in 0 to word_i'length/8-1 loop
+          set_expected_byte(memory, address + idx,
+                            to_integer(unsigned(word_i(8*idx+7 downto 8*idx))));
+        end loop;
+    end case;
   end;
 
   impure function serialize(word : integer;
                             bytes_per_word : natural range 1 to 4;
-                            big_endian : boolean) return integer_vector is
+                            endian : endianness_t) return integer_vector is
 
     variable result : integer_vector(0 to bytes_per_word-1);
     variable byte : byte_t;
     variable word_i : integer := word;
-
   begin
-    if big_endian then
-      for byte_idx in 0 to bytes_per_word-1 loop
-        byte := word_i mod 256;
-        word_i := (word_i - byte)/256;
-        result(bytes_per_word-1-byte_idx) := byte;
-      end loop;
-    else
-      for byte_idx in 0 to bytes_per_word-1 loop
-        byte := word_i mod 256;
-        word_i := (word_i - byte)/256;
-        result(byte_idx) := byte;
-      end loop;
-    end if;
+    case endian is
+      when big_endian =>
+        for byte_idx in 0 to bytes_per_word-1 loop
+          byte := word_i mod 256;
+          word_i := (word_i - byte)/256;
+          result(bytes_per_word-1-byte_idx) := byte;
+        end loop;
+      when little_endian =>
+        for byte_idx in 0 to bytes_per_word-1 loop
+          byte := word_i mod 256;
+          word_i := (word_i - byte)/256;
+          result(byte_idx) := byte;
+        end loop;
+    end case;
     return result;
   end function;
 
@@ -326,8 +347,10 @@ package body memory_pkg is
                                  address : natural;
                                  expected : integer;
                                  bytes_per_word : natural range 1 to 4 := 4;
-                                 big_endian : boolean := false) is
-    constant bytes : integer_vector(0 to bytes_per_word-1) := serialize(expected, bytes_per_word, big_endian);
+                                 endian : endianness_arg_t := default_endian) is
+    constant bytes : integer_vector(0 to bytes_per_word-1) := serialize(expected,
+                                                                        bytes_per_word,
+                                                                        evaluate_endian(memory, endian));
   begin
     for byte_idx in 0 to bytes_per_word-1 loop
       set_expected_byte(memory, address + byte_idx, bytes(byte_idx));
@@ -358,43 +381,46 @@ package body memory_pkg is
   procedure write_word(memory : memory_t;
                        address : natural;
                        word : std_logic_vector;
-                       big_endian : boolean := false;
+                       endian : endianness_arg_t := default_endian;
                        check_permissions : boolean := false) is
-
+    constant endianness : endianness_t := evaluate_endian(memory, endian);
     -- Normalize to downto range to enable std_logic_vector literals which are
     -- 1 to N
     constant word_i : std_logic_vector(word'length-1 downto 0) := word;
   begin
-    if big_endian then
-      for idx in 0 to word_i'length/8-1 loop
-        write_byte(memory, address + word_i'length/8 - 1 - idx,
-                   to_integer(unsigned(word_i(8*idx+7 downto 8*idx))),
-                   check_permissions => check_permissions);
-      end loop;
-    else
-      for idx in 0 to word_i'length/8-1 loop
-        write_byte(memory, address + idx,
-                   to_integer(unsigned(word_i(8*idx+7 downto 8*idx))),
-                   check_permissions => check_permissions);
-      end loop;
-    end if;
+    case endianness is
+      when big_endian =>
+        for idx in 0 to word_i'length/8-1 loop
+          write_byte(memory, address + word_i'length/8 - 1 - idx,
+                     to_integer(unsigned(word_i(8*idx+7 downto 8*idx))),
+                     check_permissions => check_permissions);
+        end loop;
+      when little_endian =>
+        for idx in 0 to word_i'length/8-1 loop
+          write_byte(memory, address + idx,
+                     to_integer(unsigned(word_i(8*idx+7 downto 8*idx))),
+                     check_permissions => check_permissions);
+        end loop;
+    end case;
   end procedure;
 
 
   impure function read_word(memory : memory_t;
                             address : natural;
                             bytes_per_word : positive;
-                            big_endian : boolean := false;
+                            endian : endianness_arg_t := default_endian;
                             check_permissions : boolean := false) return std_logic_vector is
+    constant endianness : endianness_t := evaluate_endian(memory, endian);
     variable result : std_logic_vector(8*bytes_per_word-1 downto 0);
     variable bidx : natural;
   begin
     for idx in 0 to bytes_per_word-1 loop
-      if big_endian then
-        bidx := bytes_per_word - 1 - idx;
-      else
-        bidx := idx;
-      end if;
+      case endianness is
+        when big_endian =>
+          bidx := bytes_per_word - 1 - idx;
+        when little_endian =>
+          bidx := idx;
+      end case;
 
       result(8*bidx+7 downto 8*bidx) := std_logic_vector(
         to_unsigned(read_byte(memory, address + idx,
@@ -408,10 +434,12 @@ package body memory_pkg is
                           address : natural;
                           word : integer;
                           bytes_per_word : natural range 1 to 4 := 4;
-                          big_endian : boolean := false;
+                          endian : endianness_arg_t := default_endian;
                           check_permissions : boolean := false) is
 
-    constant bytes : integer_vector := serialize(word, bytes_per_word, big_endian);
+    constant bytes : integer_vector := serialize(word,
+                                                 bytes_per_word,
+                                                 evaluate_endian(memory, endian));
   begin
     for byte_idx in 0 to bytes_per_word-1 loop
       write_byte(memory, address + byte_idx,
