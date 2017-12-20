@@ -50,7 +50,7 @@ package log_deprecated_pkg is
 end package log_deprecated_pkg;
 
 package body log_deprecated_pkg is
-  constant anonymous_counter : integer_vector_ptr_t := allocate(1);
+  constant anonymous_counter : integer_vector_ptr_t := new_integer_vector_ptr(1);
 
   procedure logger_init (
     variable logger : inout logger_t;

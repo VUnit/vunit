@@ -30,7 +30,7 @@ package body log_levels_pkg is
     set(levels.names, log_level, to_integer(allocate(name)));
 
     set(levels.colors, log_level,
-        to_integer(integer_vector_ptr_t'(allocate(3))));
+        to_integer(integer_vector_ptr_t'(new_integer_vector_ptr(3))));
     set(to_integer_vector_ptr(get(levels.colors, log_level)), 0,
         ansi_color_t'pos(fg));
     set(to_integer_vector_ptr(get(levels.colors, log_level)), 1,
@@ -49,11 +49,11 @@ package body log_levels_pkg is
       add_level(result, log_level_t'image(log_level), log_level_t'pos(log_level), fg, bg, style);
     end;
   begin
-    result := (names => allocate(log_level_t'pos(log_level_t'high)+1,
+    result := (names => new_integer_vector_ptr(log_level_t'pos(log_level_t'high)+1,
                                  value => to_integer(null_string_ptr)),
-               colors => allocate(log_level_t'pos(log_level_t'high)+1,
+               colors => new_integer_vector_ptr(log_level_t'pos(log_level_t'high)+1,
                                  value => to_integer(null_ptr)),
-               max_level_length => allocate(1, value => 0));
+               max_level_length => new_integer_vector_ptr(1, value => 0));
 
     add_level(verbose, fg => magenta, style => bright);
     add_level(debug, fg => cyan, style => bright);

@@ -152,14 +152,14 @@ package body runner_pkg is
     set_phase(runner, runner_phase_t'low);
     set_active_python_runner(runner, false);
 
-    set(runner.p_data, test_case_names_idx, to_integer(integer_vector_ptr_t'(allocate)));
+    set(runner.p_data, test_case_names_idx, to_integer(integer_vector_ptr_t'(new_integer_vector_ptr)));
 
     set(runner.p_data, n_test_cases_idx, unknown_num_of_test_cases_c);
     set(runner.p_data, active_test_case_index_idx, 1);
     set(runner.p_data, test_suite_completed_idx, to_integer(false));
     set(runner.p_data, test_suite_iteration_idx, 0);
 
-    set(runner.p_data, run_test_cases_idx, to_integer(integer_vector_ptr_t'(allocate)));
+    set(runner.p_data, run_test_cases_idx, to_integer(integer_vector_ptr_t'(new_integer_vector_ptr)));
     set(runner.p_data, running_test_case_idx, to_integer(null_string_ptr));
 
     set(runner.p_data, n_run_test_cases_idx, 0);

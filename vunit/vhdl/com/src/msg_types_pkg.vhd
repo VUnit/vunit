@@ -16,7 +16,7 @@ package msg_types_pkg is
   end record;
 
   constant p_msg_types : msg_types_t := (
-    p_name_ptrs => allocate);
+    p_name_ptrs => new_integer_vector_ptr);
 
   type msg_type_t is record
     p_code : integer;
@@ -36,7 +36,7 @@ package msg_types_pkg is
   impure function pop_msg_type(msg : msg_t;
                                    logger : logger_t := msg_types_logger) return msg_type_t;
   alias pop is pop_msg_type [msg_t, logger_t return msg_type_t];
-  
+
   procedure handle_message(variable msg_type : inout msg_type_t);
   impure function is_already_handled(msg_type : msg_type_t) return boolean;
 

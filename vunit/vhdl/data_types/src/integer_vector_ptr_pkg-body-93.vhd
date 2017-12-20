@@ -13,7 +13,7 @@ package body integer_vector_ptr_pkg is
   shared variable current_index : integer := 0;
   shared variable ptrs : integer_vector_access_vector_access_t := null;
 
-  impure function allocate(length : natural := 0; value : integer := 0) return integer_vector_ptr_t is
+  impure function new_integer_vector_ptr(length : natural := 0; value : integer := 0) return integer_vector_ptr_t is
     variable old_ptrs : integer_vector_access_vector_access_t;
     variable retval : integer_vector_ptr_t := (index => current_index);
   begin

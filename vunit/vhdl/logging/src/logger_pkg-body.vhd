@@ -12,8 +12,8 @@ use work.string_ops.all;
 
 package body logger_pkg is
   constant root_logger_id : natural := 0;
-  constant next_logger_id : integer_vector_ptr_t := allocate(1, value => root_logger_id + 1);
-  constant global_log_count : integer_vector_ptr_t := allocate(1, value => 0);
+  constant next_logger_id : integer_vector_ptr_t := new_integer_vector_ptr(1, value => root_logger_id + 1);
+  constant global_log_count : integer_vector_ptr_t := new_integer_vector_ptr(1, value => 0);
 
   constant id_idx : natural := 0;
   constant name_idx : natural := 1;
@@ -54,20 +54,20 @@ package body logger_pkg is
     variable log_handler : log_handler_t;
     variable mocked_log_queue : queue_t := new_queue;
   begin
-    logger := (p_data => allocate(logger_length));
+    logger := (p_data => new_integer_vector_ptr(logger_length));
     set(logger.p_data, id_idx, id);
     set(logger.p_data, name_idx, to_integer(allocate(name)));
     set(logger.p_data, parent_idx, to_integer(parent));
-    set(logger.p_data, children_idx, to_integer(integer_vector_ptr_t'(allocate)));
-    set(logger.p_data, log_count_idx, to_integer(allocate(log_level_t'pos(log_level_t'high)+1, value => 0)));
-    set(logger.p_data, mock_log_count_idx, to_integer(allocate(log_level_t'pos(log_level_t'high)+1, value => 0)));
+    set(logger.p_data, children_idx, to_integer(new_integer_vector_ptr));
+    set(logger.p_data, log_count_idx, to_integer(new_integer_vector_ptr(log_level_t'pos(log_level_t'high)+1, value => 0)));
+    set(logger.p_data, mock_log_count_idx, to_integer(new_integer_vector_ptr(log_level_t'pos(log_level_t'high)+1, value => 0)));
     set(logger.p_data, stop_level_idx, log_level_t'pos(failure));
-    set(logger.p_data, log_level_idx, to_integer(integer_vector_ptr_t'(allocate)));
-    set(logger.p_data, handlers_idx, to_integer(integer_vector_ptr_t'(allocate)));
+    set(logger.p_data, log_level_idx, to_integer(new_integer_vector_ptr));
+    set(logger.p_data, handlers_idx, to_integer(new_integer_vector_ptr));
     set(logger.p_data, is_mocked_idx, 0);
     set(logger.p_data, mocked_log_queue_meta_idx, to_integer(mocked_log_queue.p_meta));
     set(logger.p_data, mocked_log_queue_data_idx, to_integer(mocked_log_queue.data));
-    set(logger.p_data, block_filters_idx, to_integer(integer_vector_ptr_t'(allocate)));
+    set(logger.p_data, block_filters_idx, to_integer(new_integer_vector_ptr));
 
     if parent /= null_logger then
       add_child(parent, logger);
@@ -402,7 +402,7 @@ package body logger_pkg is
     block_filter := to_integer_vector_ptr(get(block_filters, handler_id));
 
     if block_filter = null_ptr then
-      block_filter := integer_vector_ptr_t'(allocate(length => n_user_log_levels, value => log_level_enabled));
+      block_filter := integer_vector_ptr_t'(new_integer_vector_ptr(length => n_user_log_levels, value => log_level_enabled));
     else
       reallocate(block_filter, length => n_user_log_levels, value => log_level_enabled);
     end if;

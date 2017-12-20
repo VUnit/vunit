@@ -11,7 +11,7 @@ package body integer_vector_ptr_pkg is
   type integer_vector_access_vector_access_t is access integer_vector_access_vector_t;
 
  type integer_vector_ptr_storage_t is protected
-    impure function allocate(length : natural := 0; value : integer := 0) return integer_vector_ptr_t;
+    impure function new_integer_vector_ptr(length : natural := 0; value : integer := 0) return integer_vector_ptr_t;
     procedure deallocate(ptr : integer_vector_ptr_t);
     impure function length(ptr : integer_vector_ptr_t) return integer;
     procedure set(ptr : integer_vector_ptr_t; index : integer; value : integer);
@@ -24,7 +24,7 @@ package body integer_vector_ptr_pkg is
     variable current_index : integer := 0;
     variable ptrs : integer_vector_access_vector_access_t := null;
 
-    impure function allocate(length : natural := 0; value : integer := 0) return integer_vector_ptr_t is
+    impure function new_integer_vector_ptr(length : natural := 0; value : integer := 0) return integer_vector_ptr_t is
       variable old_ptrs : integer_vector_access_vector_access_t;
       variable retval : integer_vector_ptr_t := (index => current_index);
     begin
@@ -108,9 +108,9 @@ package body integer_vector_ptr_pkg is
     return (index => value);
   end function;
 
-  impure function allocate(length : natural := 0; value : integer := 0) return integer_vector_ptr_t is
+  impure function new_integer_vector_ptr(length : natural := 0; value : integer := 0) return integer_vector_ptr_t is
   begin
-    return integer_vector_ptr_storage.allocate(length, value);
+    return integer_vector_ptr_storage.new_integer_vector_ptr(length, value);
   end function;
 
   procedure deallocate(ptr : integer_vector_ptr_t) is

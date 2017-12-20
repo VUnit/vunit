@@ -22,9 +22,9 @@ package body memory_pkg is
 
   impure function new_memory(logger : logger_t := memory_logger) return memory_t is
   begin
-    return (p_meta => allocate(num_meta),
-            p_data => allocate(0),
-            p_allocs => allocate(0),
+    return (p_meta => new_integer_vector_ptr(num_meta),
+            p_data => new_integer_vector_ptr(0),
+            p_allocs => new_integer_vector_ptr(0),
             p_logger => logger);
   end;
 

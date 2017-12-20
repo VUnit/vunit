@@ -79,7 +79,7 @@ package check_deprecated_pkg is
 end package check_deprecated_pkg;
 
 package body check_deprecated_pkg is
-  constant anonymous_counter : integer_vector_ptr_t := allocate(1);
+  constant anonymous_counter : integer_vector_ptr_t := new_integer_vector_ptr(1);
 
   procedure checker_init (
     variable checker : inout checker_t;

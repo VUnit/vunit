@@ -166,7 +166,7 @@ package body queue_pkg is
 
   impure function new_queue return queue_t is
   begin
-    return (p_meta => allocate(num_meta),
+    return (p_meta => new_integer_vector_ptr(num_meta),
             data => allocate);
   end;
 

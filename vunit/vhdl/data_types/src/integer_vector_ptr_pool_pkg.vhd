@@ -43,7 +43,7 @@ package body integer_vector_ptr_pool_pkg is
     else
 
       -- Allocate new
-      ptr := allocate(min_length);
+      ptr := new_integer_vector_ptr(min_length);
     end if;
     return ptr;
   end;

@@ -96,7 +96,7 @@ package body checker_pkg is
   constant stat_passed_idx       : natural := 6;
   constant checker_length        : natural := stat_passed_idx + 1;
 
-  constant checkers : integer_vector_ptr_t := allocate;
+  constant checkers : integer_vector_ptr_t := new_integer_vector_ptr;
 
   impure function num_checkers return natural is
   begin
@@ -136,7 +136,7 @@ package body checker_pkg is
       end if;
     end loop;
 
-    checker := (p_data => allocate(checker_length));
+    checker := (p_data => new_integer_vector_ptr(checker_length));
     id      := length(checkers);
     resize(checkers, length(checkers)+1);
     set(checkers, id, to_integer(checker.p_data));

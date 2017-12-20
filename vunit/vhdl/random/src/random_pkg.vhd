@@ -75,7 +75,7 @@ package body random_pkg is
                                       max_value : integer) is
   begin
     if integer_vector_ptr = null_ptr then
-      integer_vector_ptr := allocate(length);
+      integer_vector_ptr := new_integer_vector_ptr(length);
     else
       reallocate(integer_vector_ptr, length);
     end if;

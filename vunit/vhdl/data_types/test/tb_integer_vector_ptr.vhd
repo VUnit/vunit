@@ -26,14 +26,14 @@ begin
 
     while test_suite loop
       if run("test_allocate") then
-        ptr := allocate;
+        ptr := new_integer_vector_ptr;
         check_equal(length(ptr), 0);
 
-        ptr := allocate(1);
+        ptr := new_integer_vector_ptr(1);
         check_equal(length(ptr), 1);
         check_equal(get(ptr, 0), 0, "init value");
 
-        ptr := allocate(2, value => 3);
+        ptr := new_integer_vector_ptr(2, value => 3);
         check_equal(length(ptr), 2);
         check_equal(get(ptr, 0), 3, "init value");
         check_equal(get(ptr, 1), 3, "init value");
@@ -46,11 +46,11 @@ begin
         end loop;
 
       elsif run("test_element_access") then
-        ptr := allocate(1);
+        ptr := new_integer_vector_ptr(1);
         set(ptr, 0, a_random_value);
         check_equal(get(ptr, 0), a_random_value);
 
-        ptr2 := allocate(2);
+        ptr2 := new_integer_vector_ptr(2);
         set(ptr2, 0, another_random_value);
         set(ptr2, 1, a_random_value);
         check_equal(get(ptr2, 0), another_random_value);
@@ -60,7 +60,7 @@ begin
                     "Checking that ptr was not affected by ptr2");
 
       elsif run("test_resize") then
-        ptr := allocate(1);
+        ptr := new_integer_vector_ptr(1);
         check_equal(length(ptr), 1);
         set(ptr, 0, a_random_value);
         check_equal(get(ptr, 0), a_random_value);
@@ -78,7 +78,7 @@ begin
                     "Checking that shrunk ptr still contain old value");
 
       elsif run("test_resize_with_drop") then
-        ptr := allocate(8);
+        ptr := new_integer_vector_ptr(8);
         for i in 0 to 7 loop
           set(ptr, i, i);
         end loop;
@@ -89,20 +89,20 @@ begin
         end loop;
 
       elsif run("test_resize_with_default") then
-        ptr := allocate(0);
+        ptr := new_integer_vector_ptr(0);
         resize(ptr, 2, value => a_random_value);
         check_equal(length(ptr), 2);
         check_equal(get(ptr, 0), a_random_value);
         check_equal(get(ptr, 1), a_random_value);
 
       elsif run("test_from_and_to_integer") then
-        ptr := allocate(2);
+        ptr := new_integer_vector_ptr(2);
         assert to_integer_vector_ptr(to_integer(ptr)) = ptr;
       elsif run("Test codecs") then
-        ptr := allocate(0);
+        ptr := new_integer_vector_ptr(0);
         check(decode(encode(ptr)) = ptr);
 
-        ptr2 := allocate(2);
+        ptr2 := new_integer_vector_ptr(2);
         set(ptr2, 0, another_random_value);
         set(ptr2, 1, a_random_value);
         check(decode(encode(ptr2)) = ptr2);

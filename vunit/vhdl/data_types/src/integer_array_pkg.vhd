@@ -210,7 +210,7 @@ package body integer_array_pkg is
   begin
     if arr.data = null_ptr then
       -- Array was empty
-      arr.data := allocate(new_length);
+      arr.data := new_integer_vector_ptr(new_length);
     elsif new_length > length(arr.data) then
       -- Reallocate if more length is required
       -- Add extra length to avoid excessive reallocation when appending
@@ -361,7 +361,7 @@ package body integer_array_pkg is
     arr.depth := depth;
 
     if arr.length > 0 then
-      arr.data := allocate(arr.length);
+      arr.data := new_integer_vector_ptr(arr.length);
     else
       arr.data := null_ptr;
     end if;

@@ -23,7 +23,7 @@ package integer_vector_ptr_pkg is
 
   function to_integer(value : integer_vector_ptr_t) return integer;
   impure function to_integer_vector_ptr(value : integer) return integer_vector_ptr_t;
-  impure function allocate(length : natural := 0; value : integer := 0) return integer_vector_ptr_t;
+  impure function new_integer_vector_ptr(length : natural := 0; value : integer := 0) return integer_vector_ptr_t;
   procedure deallocate(ptr : integer_vector_ptr_t);
   impure function length(ptr : integer_vector_ptr_t) return integer;
   procedure set(ptr : integer_vector_ptr_t; index : integer; value : integer);

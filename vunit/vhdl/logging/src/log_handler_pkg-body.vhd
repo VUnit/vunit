@@ -17,7 +17,7 @@ package body log_handler_pkg is
 
   constant display_handler_id : natural := 0;
   constant file_handler_id : natural := 1;
-  constant next_log_handler_id : integer_vector_ptr_t := allocate(1, value => file_handler_id+1);
+  constant next_log_handler_id : integer_vector_ptr_t := new_integer_vector_ptr(1, value => file_handler_id+1);
 
   constant id_idx : natural := 0;
   constant file_name_idx : natural := 1;
@@ -54,7 +54,7 @@ package body log_handler_pkg is
                                   file_name : string;
                                   format : log_format_t;
                                   use_color : boolean) return log_handler_t is
-    constant log_handler : log_handler_t := (p_data => allocate(log_handler_length));
+    constant log_handler : log_handler_t := (p_data => new_integer_vector_ptr(log_handler_length));
   begin
     set(log_handler.p_data, id_idx, id);
     set(log_handler.p_data, file_name_idx, to_integer(allocate(file_name)));
