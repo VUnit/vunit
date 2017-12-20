@@ -46,7 +46,7 @@ begin
       push_stream(event, master_stream, x"77");
       check_stream(event, slave_stream, x"77");
 
-      await_completion(event, as_sync(master_uart));
+      wait_for_idle(event, as_sync(master_uart));
 
       got := now - start;
       expected := (10 * (1 sec)) / (baud_rate);

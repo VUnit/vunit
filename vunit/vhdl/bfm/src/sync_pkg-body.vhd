@@ -9,12 +9,12 @@ use work.queue_pkg.all;
 context work.com_context;
 
 package body sync_pkg is
-  procedure await_completion(signal event : inout event_t;
-                             handle : sync_handle_t) is
+  procedure wait_for_idle(signal event : inout event_t;
+                          handle : sync_handle_t) is
     variable msg, reply_msg : msg_t;
   begin
     msg := create;
-    push_msg_type(msg, await_completion_msg);
+    push_msg_type(msg, wait_for_idle_msg);
     send(event, handle, msg);
     receive_reply(event, msg, reply_msg);
     delete(reply_msg);
@@ -37,7 +37,7 @@ package body sync_pkg is
     variable reply_msg : msg_t;
     variable delay : delay_length;
   begin
-    if msg_type = await_completion_msg then
+    if msg_type = wait_for_idle_msg then
       handle_message(msg_type);
       reply_msg := create;
       reply(event, msg, reply_msg);

@@ -26,12 +26,12 @@ begin
 
     start := now;
     wait_for_time(event, actor, 11 ns);
-    await_completion(event, actor);
+    wait_for_idle(event, actor);
     check_equal(now - start, 11 ns, "wait for time mismatch");
 
     start := now;
     wait_for_time(event, actor, 37 ms);
-    await_completion(event, actor);
+    wait_for_idle(event, actor);
     check_equal(now - start, 37 ms, "wait for time mismatch");
 
     test_runner_cleanup(runner);

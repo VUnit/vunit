@@ -15,8 +15,8 @@ package sync_pkg is
   alias sync_handle_t is actor_t;
 
   -- Blocking: Wait until all operations requested from the VC have been finished
-  procedure await_completion(signal event : inout event_t;
-                             handle : sync_handle_t);
+  procedure wait_for_idle(signal event : inout event_t;
+                          handle : sync_handle_t);
 
   -- Non-blocking: Make VC wait for a delay before starting the next operation
   procedure wait_for_time(signal event : inout event_t;
@@ -24,7 +24,7 @@ package sync_pkg is
                           delay : delay_length);
 
   -- Message type definitions used by VC implementing the synchronization VCI
-  constant await_completion_msg : msg_type_t := new_msg_type("await completion");
+  constant wait_for_idle_msg : msg_type_t := new_msg_type("wait for idle");
   constant wait_for_time_msg : msg_type_t := new_msg_type("wait for time");
 
   -- Standard implementation of synchronization VCI which may be used by VC
