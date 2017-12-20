@@ -9,8 +9,8 @@ use work.queue_pkg.all;
 context work.com_context;
 
 package body sync_pkg is
-  procedure wait_for_idle(signal net : inout network_t;
-                          handle : sync_handle_t) is
+  procedure wait_until_idle(signal net : inout network_t;
+                            handle : sync_handle_t) is
     variable msg, reply_msg : msg_t;
   begin
     msg := create;

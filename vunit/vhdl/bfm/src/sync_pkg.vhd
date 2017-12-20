@@ -15,8 +15,8 @@ package sync_pkg is
   alias sync_handle_t is actor_t;
 
   -- Blocking: Wait until all operations requested from the VC have been finished
-  procedure wait_for_idle(signal net : inout network_t;
-                          handle : sync_handle_t);
+  procedure wait_until_idle(signal net : inout network_t;
+                            handle : sync_handle_t);
 
   -- Non-blocking: Make VC wait for a delay before starting the next operation
   procedure wait_for_time(signal net : inout network_t;

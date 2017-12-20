@@ -46,7 +46,7 @@ begin
       push_stream(net, master_stream, x"77");
       check_stream(net, slave_stream, x"77");
 
-      wait_for_idle(net, as_sync(master_uart));
+      wait_until_idle(net, as_sync(master_uart));
 
       got := now - start;
       expected := (10 * (1 sec)) / (baud_rate);
