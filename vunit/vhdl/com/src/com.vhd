@@ -130,7 +130,7 @@ package body com_pkg is
     variable msg : msg_t;
   begin
     msg.sender := sender;
-    msg.data   := allocate(queue_pool);
+    msg.data   := new_queue(queue_pool);
     return msg;
   end;
 

@@ -29,15 +29,15 @@ begin
       assert pool = null_queue_pool report "Expected null pool";
 
     elsif run("Test allocated queue is empty") then
-      pool := allocate;
-      queue := allocate(pool);
+      pool := new_queue_pool;
+      queue := new_queue(pool);
       assert queue /= null_queue report "Expected non null queue";
       check_equal(length(queue), 0);
       recycle(pool, queue);
 
     elsif run("Test recycled queue is null") then
-      pool := allocate;
-      queue := allocate(pool);
+      pool := new_queue_pool;
+      queue := new_queue(pool);
       assert queue /= null_queue report "Expected non null queue";
       recycle(pool, queue);
       assert queue = null_queue report "Expected null queue";

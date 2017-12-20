@@ -16,7 +16,7 @@ use work.codec_pkg.all;
 use std.textio.all;
 
 package com_messenger_pkg is
-  constant queue_pool : queue_pool_t := allocate;
+  constant queue_pool : queue_pool_t := new_queue_pool;
   type mailbox_name_t is (inbox, outbox);
   type subscription_traffic_types_t is array (natural range <>) of subscription_traffic_type_t;
 
