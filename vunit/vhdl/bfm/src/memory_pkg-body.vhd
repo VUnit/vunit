@@ -150,7 +150,7 @@ package body memory_pkg is
 
   impure function check_address(memory : memory_t; address : natural;
                                 reading : boolean;
-                                ignore_permissions : boolean := false) return boolean is
+                                check_permissions : boolean := false) return boolean is
     impure function verb return string is
     begin
       if reading then
@@ -167,22 +167,22 @@ package body memory_pkg is
     elsif address >= length(memory.p_data) then
       failure(memory.p_logger, verb & " address " & to_string(address) & " out of range 0 to " & to_string(length(memory.p_data)-1));
       return false;
-    elsif not ignore_permissions and get_permissions(memory, address) = no_access then
+    elsif check_permissions and get_permissions(memory, address) = no_access then
       failure(memory.p_logger, verb & " " & describe_address(memory, address) & " without permission (no_access)");
       return false;
-    elsif not ignore_permissions and reading and get_permissions(memory, address) = write_only then
+    elsif check_permissions and reading and get_permissions(memory, address) = write_only then
       failure(memory.p_logger, verb & " " & describe_address(memory, address) & " without permission (write_only)");
       return false;
-    elsif not ignore_permissions and not reading and get_permissions(memory, address) = read_only then
+    elsif check_permissions and not reading and get_permissions(memory, address) = read_only then
       failure(memory.p_logger, verb & " " & describe_address(memory, address) & " without permission (read_only)");
       return false;
     end if;
     return true;
   end;
 
-  impure function get(memory : memory_t; address : natural; reading : boolean; ignore_permissions : boolean) return memory_data_t is
+  impure function get(memory : memory_t; address : natural; reading : boolean; check_permissions : boolean := false) return memory_data_t is
   begin
-    if not check_address(memory, address, reading, ignore_permissions) then
+    if not check_address(memory, address, reading, check_permissions) then
       return decode(0);
     end if;
     return decode(get(memory.p_data, address));
@@ -193,24 +193,22 @@ package body memory_pkg is
     return get(memory.p_meta, num_bytes_idx);
   end;
 
-  procedure write_byte(memory : memory_t; address : natural; byte : byte_t; ignore_permissions : boolean := false) is
+  procedure write_byte(memory : memory_t; address : natural; byte : byte_t; check_permissions : boolean := false) is
     variable old : memory_data_t;
   begin
-    if not check_address(memory, address, false, ignore_permissions) then
+    if not check_address(memory, address, false, check_permissions) then
       return;
     end if;
 
-    if not ignore_permissions then
-      check_write_data(memory, address, byte);
-    end if;
+    check_write_data(memory, address, byte);
 
     old := decode(get(memory.p_data, address));
     set(memory.p_data, address, encode((byte => byte, exp => old.exp, has_exp => old.has_exp, perm => old.perm)));
   end;
 
-  impure function read_byte(memory : memory_t; address : natural; ignore_permissions : boolean := false) return byte_t is
+  impure function read_byte(memory : memory_t; address : natural; check_permissions : boolean := false) return byte_t is
   begin
-    return get(memory, address, true, ignore_permissions).byte;
+    return get(memory, address, true, check_permissions).byte;
   end;
 
   procedure check_expected_was_written(memory : memory_t; address : natural; num_bytes : natural) is
@@ -238,13 +236,13 @@ package body memory_pkg is
 
   impure function get_permissions(memory : memory_t; address : natural) return permissions_t is
   begin
-    return get(memory, address, true, ignore_permissions => true).perm;
+    return get(memory, address, true).perm;
   end;
 
   procedure set_permissions(memory : memory_t; address : natural; permissions : permissions_t) is
     variable old : memory_data_t;
   begin
-    if not check_address(memory, address, false, ignore_permissions => true) then
+    if not check_address(memory, address, false) then
       return;
     end if;
     old := decode(get(memory.p_data, address));
@@ -253,13 +251,13 @@ package body memory_pkg is
 
   impure function has_expected_byte(memory : memory_t; address : natural) return boolean is
   begin
-    return get(memory, address, true, ignore_permissions => true).has_exp;
+    return get(memory, address, true).has_exp;
   end;
 
   procedure clear_expected_byte(memory : memory_t; address : natural) is
     variable old : memory_data_t;
   begin
-    if not check_address(memory, address, false, ignore_permissions => true) then
+    if not check_address(memory, address, false) then
       return;
     end if;
     old := decode(get(memory.p_data, address));
@@ -269,7 +267,7 @@ package body memory_pkg is
   procedure set_expected_byte(memory : memory_t; address : natural; expected : byte_t) is
     variable old : memory_data_t;
   begin
-    if not check_address(memory, address, false, ignore_permissions => true) then
+    if not check_address(memory, address, false) then
       return;
     end if;
     old := decode(get(memory.p_data, address));
@@ -278,7 +276,7 @@ package body memory_pkg is
 
   impure function get_expected_byte(memory : memory_t; address : natural) return byte_t is
   begin
-    return get(memory, address, true, ignore_permissions => true).exp;
+    return get(memory, address, true).exp;
   end;
 
   procedure set_expected_word(memory : memory_t; address : natural; expected : std_logic_vector; big_endian : boolean := false) is
@@ -349,7 +347,7 @@ package body memory_pkg is
                        address : natural;
                        word : std_logic_vector;
                        big_endian : boolean := false;
-                       ignore_permissions : boolean := false) is
+                       check_permissions : boolean := false) is
 
     -- Normalize to downto range to enable std_logic_vector literals which are
     -- 1 to N
@@ -359,13 +357,13 @@ package body memory_pkg is
       for idx in 0 to word_i'length/8-1 loop
         write_byte(memory, address + word_i'length/8 - 1 - idx,
                    to_integer(unsigned(word_i(8*idx+7 downto 8*idx))),
-                   ignore_permissions => ignore_permissions);
+                   check_permissions => check_permissions);
       end loop;
     else
       for idx in 0 to word_i'length/8-1 loop
         write_byte(memory, address + idx,
                    to_integer(unsigned(word_i(8*idx+7 downto 8*idx))),
-                   ignore_permissions => ignore_permissions);
+                   check_permissions => check_permissions);
       end loop;
     end if;
   end procedure;
@@ -375,7 +373,7 @@ package body memory_pkg is
                             address : natural;
                             bytes_per_word : positive;
                             big_endian : boolean := false;
-                            ignore_permissions : boolean := false) return std_logic_vector is
+                            check_permissions : boolean := false) return std_logic_vector is
     variable result : std_logic_vector(8*bytes_per_word-1 downto 0);
     variable bidx : natural;
   begin
@@ -388,7 +386,7 @@ package body memory_pkg is
 
       result(8*bidx+7 downto 8*bidx) := std_logic_vector(
         to_unsigned(read_byte(memory, address + idx,
-                              ignore_permissions => ignore_permissions), 8));
+                              check_permissions => check_permissions), 8));
 
     end loop;
     return result;
@@ -399,14 +397,14 @@ package body memory_pkg is
                           word : integer;
                           bytes_per_word : natural range 1 to 4 := 4;
                           big_endian : boolean := false;
-                          ignore_permissions : boolean := false) is
+                          check_permissions : boolean := false) is
 
     constant bytes : integer_vector := serialize(word, bytes_per_word, big_endian);
   begin
     for byte_idx in 0 to bytes_per_word-1 loop
       write_byte(memory, address + byte_idx,
                  bytes(byte_idx),
-                 ignore_permissions => true);
+                 check_permissions => check_permissions);
     end loop;
   end procedure;
 
@@ -429,8 +427,7 @@ package body memory_pkg is
     for i in 0 to length(integer_vector_ptr)-1 loop
       write_integer(memory, base_addr + bytes_per_word*i, get(integer_vector_ptr, i),
                     bytes_per_word => bytes_per_word,
-                    big_endian => big_endian,
-                    ignore_permissions => true);
+                    big_endian => big_endian);
     end loop;
     return alloc;
   end;
@@ -489,8 +486,7 @@ package body memory_pkg is
                         addr,
                         get(integer_array, x, y, z),
                         bytes_per_word => bytes_per_word,
-                        big_endian => big_endian,
-                        ignore_permissions => true);
+                        big_endian => big_endian);
          addr := addr + bytes_per_word;
         end loop;
 

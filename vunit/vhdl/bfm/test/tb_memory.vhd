@@ -171,33 +171,33 @@ begin
       set_permissions(memory, 5, no_access);
 
       mock(memory_logger);
-      write_byte(memory, 5, 255);
+      write_byte(memory, 5, 255, check_permissions => true);
       check_only_log(memory_logger, "Writing to " & describe_address(memory, 5) & " without permission (no_access)", failure);
 
-      byte := read_byte(memory, 5);
+      byte := read_byte(memory, 5, check_permissions => true);
       check_only_log(memory_logger, "Reading from " & describe_address(memory, 5) & " without permission (no_access)", failure);
       unmock(memory_logger);
 
       -- Ignore permissions
-      write_byte(memory, 5, 255, ignore_permissions => true);
-      byte := read_byte(memory, 5, ignore_permissions => true);
+      write_byte(memory, 5, 255);
+      byte := read_byte(memory, 5);
 
     elsif run("Test access memory without permission (write_only)") then
       memory := new_memory;
       allocation := allocate(memory, 10);
       set_permissions(memory, 5, write_only);
 
-      write_byte(memory, 5, 255);
+      write_byte(memory, 5, 255, check_permissions => true);
 
       mock(memory_logger);
-      byte := read_byte(memory, 5);
+      byte := read_byte(memory, 5, check_permissions => true);
       check_only_log(memory_logger, "Reading from " & describe_address(memory, 5) & " without permission (write_only)", failure);
       unmock(memory_logger);
 
       -- Ignore permissions
-      write_byte(memory, 5, 255, ignore_permissions => true);
+      write_byte(memory, 5, 255);
 
-      byte := read_byte(memory, 5, ignore_permissions => true);
+      byte := read_byte(memory, 5);
 
     elsif run("Test access memory without permission (read_only)") then
       memory := new_memory;
@@ -205,16 +205,16 @@ begin
       set_permissions(memory, 5, read_only);
 
       mock(memory_logger);
-      write_byte(memory, 5, 255);
+      write_byte(memory, 5, 255, check_permissions => true);
       check_only_log(memory_logger, "Writing to " & describe_address(memory, 5) & " without permission (read_only)", failure);
       unmock(memory_logger);
 
       byte := read_byte(memory, 5);
 
       -- Ignore permissions
-      write_byte(memory, 5, 255, ignore_permissions => true);
+      write_byte(memory, 5, 255);
 
-      byte := read_byte(memory, 5, ignore_permissions => true);
+      byte := read_byte(memory, 5);
 
     elsif run("Test describe address") then
       memory := new_memory;

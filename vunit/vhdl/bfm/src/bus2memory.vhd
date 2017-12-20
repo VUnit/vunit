@@ -36,7 +36,8 @@ begin
 
       if msg_type = bus_read_msg then
         address := pop_std_ulogic_vector(request_msg);
-        data := read_word(memory, to_integer(unsigned(address)), bytes_per_word => data'length/8);
+        data := read_word(memory, to_integer(unsigned(address)), bytes_per_word => data'length/8,
+                          check_permissions => true);
         reply_msg := create;
         push_std_ulogic_vector(reply_msg, data);
         reply(net, request_msg, reply_msg);
@@ -49,7 +50,8 @@ begin
         for i in byte_enable'range loop
           -- @TODO byte_enable on memory_t?
           if byte_enable(i) = '1' then
-            write_word(memory, to_integer(unsigned(address))+i, data(blen*(i+1)-1 downto blen*i));
+            write_word(memory, to_integer(unsigned(address))+i, data(blen*(i+1)-1 downto blen*i),
+                       check_permissions => true);
           end if;
         end loop;
       else

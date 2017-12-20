@@ -90,7 +90,8 @@ begin
         aligned_address := address - (address mod self.data_size);
         for j in 0 to self.data_size-1 loop
           if wstrb(j) = '1' then
-            write_byte(memory, aligned_address+j, to_integer(unsigned(wdata(8*j+7 downto 8*j))));
+            write_byte(memory, aligned_address+j, to_integer(unsigned(wdata(8*j+7 downto 8*j))),
+                       check_permissions => true);
           end if;
         end loop;
 

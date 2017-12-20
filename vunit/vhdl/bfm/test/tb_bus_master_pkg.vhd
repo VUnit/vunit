@@ -52,8 +52,8 @@ begin
 
     elsif run("test read_bus") then
       alloc := allocate(memory, 8, permissions => read_only);
-      write_word(memory, base_address(alloc), x"00112233", ignore_permissions => True);
-      write_word(memory, base_address(alloc) + 4, x"00112233", ignore_permissions => True);
+      write_word(memory, base_address(alloc), x"00112233");
+      write_word(memory, base_address(alloc) + 4, x"00112233");
       read_bus(net, bus_handle, x"00000000", read_data);
       check_equal(read_data, std_logic_vector'(x"00112233"));
       read_bus(net, bus_handle, x"4", reference);
@@ -62,7 +62,7 @@ begin
 
     elsif run("test check_bus") then
       alloc := allocate(memory, 4, permissions => read_only);
-      write_word(memory, base_address(alloc), x"00112233", ignore_permissions => True);
+      write_word(memory, base_address(alloc), x"00112233");
       check_bus(net, bus_handle, x"00000000", std_logic_vector'(x"00112233"));
       check_bus(net, bus_handle, x"00000000", std_logic_vector'(x"001122--"));
 
@@ -79,10 +79,10 @@ begin
 
     elsif run("test check_bus support reduced data length") then
       alloc := allocate(memory, 4, permissions => read_only);
-      write_word(memory, base_address(alloc), x"00112233", ignore_permissions => True);
+      write_word(memory, base_address(alloc), x"00112233");
       check_bus(net, bus_handle, x"00000000", std_logic_vector'(x"112233"));
 
-      write_word(memory, base_address(alloc), x"77112233", ignore_permissions => True);
+      write_word(memory, base_address(alloc), x"77112233");
       mock(bus_logger);
       check_bus(net, bus_handle, x"00000000", std_logic_vector'(x"112233"));
       check_only_log(bus_logger, "check_bus(x""00000000"") - Got x""77112233"" expected x""00112233""", failure);
