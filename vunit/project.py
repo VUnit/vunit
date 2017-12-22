@@ -260,7 +260,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         that are the result of component instantiations
         """
         for unit_name in source_file.depending_components:
-            found_component_entity = False
+            found_component_match = False
 
             for library in self.get_libraries():
                 try:
@@ -268,11 +268,20 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 except KeyError:
                     continue
                 else:
-                    found_component_entity = True
+                    found_component_match = True
                     yield primary_unit.source_file
 
-            if not found_component_entity:
-                LOGGER.debug("failed to find a matching entity for component '%s' ", unit_name)
+            for library in self.get_libraries():
+                try:
+                    module = library.modules[unit_name]
+                except KeyError:
+                    continue
+                else:
+                    found_component_match = True
+                    yield module.source_file
+
+            if not found_component_match:
+                LOGGER.debug("failed to find a matching entity/module for component '%s' ", unit_name)
 
     def create_dependency_graph(self, implementation_dependencies=False):
         """
