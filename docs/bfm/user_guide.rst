@@ -56,6 +56,13 @@ computer system. The AXI slave VCs make transactions against the
 memory model which provides access permissions, expected data settings
 as well as the actual buffer for reading and writing data.
 
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   memory_model
+
+
 .. _verification_components:
 
 Verification Components
@@ -87,7 +94,6 @@ and the VC-developers.
    :maxdepth: 1
    :hidden:
 
-   memory_model
    vci/bus_master
    vci/stream
    vci/sync
