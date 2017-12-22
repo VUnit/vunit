@@ -128,6 +128,17 @@ begin
         end loop;
       end loop;
 
+    elsif run("Test that permissions are checked") then
+      -- Also checks that the axi slave logger is used for memory errors
+      alloc := allocate(memory, data_size, permissions => no_access);
+      mock(axi_slave_logger);
+      write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_fixed);
+      wait until get_mock_log_count(axi_slave_logger, failure) > 0 and rising_edge(clk);
+      check_only_log(axi_slave_logger,
+                     "Reading from address 0 at offset 0 within anonymous allocation at range (0 to 15) without permission (no_access)",
+                     failure);
+      unmock(axi_slave_logger);
+
     elsif run("Test error on unsupported wrap burst") then
       mock(axi_slave_logger);
 
