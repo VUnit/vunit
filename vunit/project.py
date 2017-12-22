@@ -176,7 +176,9 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         return self._libraries[real_library_name]
 
     def _find_other_vhdl_design_unit_dependencies(self,  # pylint: disable=too-many-branches
-                                                  source_file, depend_on_package_body):
+                                                  source_file,
+                                                  depend_on_package_body,
+                                                  implementation_dependencies):
         """
         Iterate over the dependencies on other design unit of the source_file
         """
@@ -207,6 +209,9 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 if ref.reference_all_names_within():
                     # Reference all architectures,
                     # We make configuration declarations implicitly reference all architectures
+                    names = primary_unit.architecture_names.keys()
+                elif ref.name_within is None and implementation_dependencies:
+                    # For implementation dependencies we add a dependency to all architectures
                     names = primary_unit.architecture_names.keys()
                 else:
                     names = [ref.name_within]
@@ -264,11 +269,14 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
 
             try:
                 primary_unit = source_file.library.primary_design_units[unit_name]
+                yield primary_unit.source_file
+
+                for file_name in primary_unit.architecture_names.values():
+                    yield source_file.library.get_source_file(file_name)
             except KeyError:
                 pass
             else:
                 found_component_match = True
-                yield primary_unit.source_file
 
             try:
                 module = source_file.library.modules[unit_name]
@@ -316,7 +324,9 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
 
         depend_on_package_bodies = self._depend_on_package_body or implementation_dependencies
         add_dependencies(
-            lambda source_file: self._find_other_vhdl_design_unit_dependencies(source_file, depend_on_package_bodies),
+            lambda source_file: self._find_other_vhdl_design_unit_dependencies(source_file,
+                                                                               depend_on_package_bodies,
+                                                                               implementation_dependencies),
             vhdl_files)
         add_dependencies(self._find_primary_secondary_design_unit_dependencies, vhdl_files)
 

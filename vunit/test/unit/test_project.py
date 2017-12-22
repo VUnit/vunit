@@ -726,10 +726,6 @@ end architecture;
         comp1 = self.add_source_file("toplib", "comp1.vhd", """\
 entity foo is
 end entity;
-
-architecture arch of foo is
-begin
-end architecture;
 """)
 
         comp2 = self.add_source_file("toplib", "comp2.vhd", """\
@@ -740,11 +736,17 @@ architecture arch of foo2 is
 begin
 end architecture;
 """)
+        comp1_arch = self.add_source_file("toplib", "comp1_arch.vhd", """\
+architecture arch of foo is
+begin
+end architecture;
+""")
 
         self.assert_has_component_instantiation("top.vhd", "foo")
         self.assert_has_component_instantiation("top.vhd", "foo2")
         dependencies = self.project.get_dependencies_in_compile_order([top], implementation_dependencies=True)
         self.assertIn(comp1, dependencies)
+        self.assertIn(comp1_arch, dependencies)
         self.assertIn(comp2, dependencies)
 
     def test_get_dependencies_in_compile_order_without_target(self):
