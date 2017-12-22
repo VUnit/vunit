@@ -200,6 +200,27 @@ begin
 
       assert num_ops > 5000;
 
+    elsif run("Test that permissions are checked") then
+      -- Also check that memory errors are made to the axi slave logger
+      alloc := allocate(memory, data_size, permissions => no_access);
+      write_addr(x"0", base_address(alloc), 1, log_data_size, axi_burst_type_fixed);
+
+      wvalid <= '1';
+      wlast <= '1';
+      wstrb <= (0 => '1', others => '0');
+      wdata <= (others => '0');
+      mock(axi_slave_logger);
+      wait until (wvalid and wready) = '1' and rising_edge(clk);
+      wait until get_mock_log_count(axi_slave_logger, failure) > 0 and rising_edge(clk);
+      check_only_log(axi_slave_logger,
+                     "Writing to address 0 at offset 0 within anonymous allocation at range (0 to 15) without permission (no_access)",
+                     failure);
+      unmock(axi_slave_logger);
+      wvalid <= '0';
+      wlast <= '0';
+      wstrb <= (others => '0');
+      wdata <= (others => '0');
+
     elsif run("Test narrow write") then
       -- Half bus width starting at aligned address
       len := 2;
