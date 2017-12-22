@@ -262,23 +262,21 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         for unit_name in source_file.depending_components:
             found_component_match = False
 
-            for library in self.get_libraries():
-                try:
-                    primary_unit = library.primary_design_units[unit_name]
-                except KeyError:
-                    continue
-                else:
-                    found_component_match = True
-                    yield primary_unit.source_file
+            try:
+                primary_unit = source_file.library.primary_design_units[unit_name]
+            except KeyError:
+                pass
+            else:
+                found_component_match = True
+                yield primary_unit.source_file
 
-            for library in self.get_libraries():
-                try:
-                    module = library.modules[unit_name]
-                except KeyError:
-                    continue
-                else:
-                    found_component_match = True
-                    yield module.source_file
+            try:
+                module = source_file.library.modules[unit_name]
+            except KeyError:
+                pass
+            else:
+                found_component_match = True
+                yield module.source_file
 
             if not found_component_match:
                 LOGGER.debug("failed to find a matching entity/module for component '%s' ", unit_name)

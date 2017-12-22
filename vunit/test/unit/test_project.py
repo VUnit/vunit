@@ -723,8 +723,7 @@ begin
 end architecture;
 """)
 
-        self.project.add_library("libcomp1", "work_path")
-        comp1 = self.add_source_file("libcomp1", "comp1.vhd", """\
+        comp1 = self.add_source_file("toplib", "comp1.vhd", """\
 entity foo is
 end entity;
 
@@ -733,8 +732,7 @@ begin
 end architecture;
 """)
 
-        self.project.add_library("libcomp2", "work_path")
-        comp2 = self.add_source_file("libcomp2", "comp2.vhd", """\
+        comp2 = self.add_source_file("toplib", "comp2.vhd", """\
 entity foo2 is
 end entity;
 
@@ -1103,22 +1101,45 @@ end architecture;
         self.project.add_library("lib_2", "work_path")
         self.project.add_library("lib", "work_path")
         text_file_1_2 = """\
-        library ieee;use ieee.std_logic_1164.all;
-        entity buffer1 is port (Q : out std_logic);end entity;
-        architecture arch of buffer1 is begin Q <= '1';end architecture;
-        library ieee;use ieee.std_logic_1164.all;
-        entity buffer2 is port (Q : out std_logic);end entity;
+        library ieee;
+        use ieee.std_logic_1164.all;
+
+        entity buffer1 is
+          port (Q : out std_logic);
+        end entity;
+
+        architecture arch of buffer1 is begin
+          Q <= '1';
+        end architecture;
+
+        library ieee;
+        use ieee.std_logic_1164.all;
+
+        entity buffer2 is
+          port (Q : out std_logic);
+        end entity;
+
         architecture arch of buffer2 is
-        component buffer1 port (Q : out std_logic);end component buffer1;
-        begin my_buffer_i : buffer1 port map (Q => Q); end architecture;
+          component buffer1
+            port (Q : out std_logic);
+          end component buffer1;
+
+        begin
+          my_buffer_i : buffer1
+            port map (Q => Q);
+        end architecture;
         """
         self.add_source_file("lib_1", "file1.vhd", text_file_1_2)
         self.add_source_file("lib_2", "file2.vhd", text_file_1_2)
         file3 = self.add_source_file("lib", "file3.vhd", """\
         library lib_1;
-        entity your_buffer is end entity;
-        architecture arch of your_buffer is begin
-        my_buffer_i : entity lib_1.buffer1;
+
+        entity your_buffer is
+        end entity;
+
+        architecture arch of your_buffer is
+        begin
+          my_buffer_i : entity lib_1.buffer1;
         end architecture;
         """)
         self.project.get_dependencies_in_compile_order([file3], implementation_dependencies=True)
@@ -1164,17 +1185,38 @@ begin  my_buffer_i : buffer1 port map (D => D,Q => Q);end architecture;
         self.project = Project()
         self.project.add_library("lib", "work_path")
         self.add_source_file("lib", "file1.vhd", """\
-library ieee;use ieee.std_logic_1164.all;
-entity buffer1 is  port (D : in std_logic;Q : out std_logic);end entity;
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity buffer1 is
+  port (D : in std_logic;
+        Q : out std_logic);
+end entity;
         """)
+
         self.add_source_file("lib", "file1_arch.vhd", """\
-library ieee;use ieee.std_logic_1164.all;
-architecture arch of buffer1 is begin Q <= D; end architecture;
+library ieee;
+use ieee.std_logic_1164.all;
+
+architecture arch of buffer1 is
+begin
+  Q <= D;
+end architecture;
         """)
+
         file3 = self.add_source_file("lib", "file3.vhd", """\
-library ieee;use ieee.std_logic_1164.all;
-entity your_buffer is port (D : in std_logic;Q : out std_logic);end entity;
-architecture arch of your_buffer is begin my_buffer_i : entity work.buffer1 port map (D => D,Q => Q);end architecture;
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity your_buffer is
+port (D : in std_logic; Q : out std_logic);
+end entity;
+
+architecture arch of your_buffer is
+begin
+my_buffer_i : entity work.buffer1
+  port map (D => D,Q => Q);
+end architecture;
         """)
         dep_files = self.project.get_dependencies_in_compile_order([file3], implementation_dependencies=True)
         file1_arc_found = False;
