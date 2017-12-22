@@ -15,7 +15,9 @@ use work.logger_pkg.all;
 
 package memory_pkg is
 
-  type endianness_arg_t is (little_endian, big_endian, default_endian);
+  type endianness_arg_t is (little_endian,
+                            big_endian,
+                            default_endian);
   subtype endianness_t is endianness_arg_t range little_endian to big_endian;
 
   -- Memory model object
@@ -50,8 +52,11 @@ package memory_pkg is
   -- Memory data read and write functions
   -----------------------------------------------------
   subtype byte_t is integer range 0 to 255;
-  procedure write_byte(memory : memory_t; address : natural; byte : byte_t);
-  impure function read_byte(memory : memory_t; address : natural) return byte_t;
+  procedure write_byte(memory : memory_t;
+                       address : natural;
+                       byte : byte_t);
+  impure function read_byte(memory : memory_t;
+                            address : natural) return byte_t;
 
   procedure write_word(memory : memory_t;
                        address : natural;
@@ -73,30 +78,44 @@ package memory_pkg is
   -----------------------------------------------------
   -- Memory access permission control functions
   -----------------------------------------------------
-  type permissions_t is (no_access, write_only, read_only, read_and_write);
-  impure function get_permissions(memory : memory_t; address : natural) return permissions_t;
-  procedure set_permissions(memory : memory_t; address : natural; permissions : permissions_t);
+  type permissions_t is (no_access,
+                         write_only,
+                         read_only,
+                         read_and_write);
+  impure function get_permissions(memory : memory_t;
+                                  address : natural) return permissions_t;
+  procedure set_permissions(memory : memory_t;
+                            address : natural;
+                            permissions : permissions_t);
 
   -----------------------------------------------------
   -- Functions to set memory expected data
   -----------------------------------------------------
-  impure function has_expected_byte(memory : memory_t; address : natural) return boolean;
-  procedure clear_expected_byte(memory : memory_t; address : natural);
-  procedure set_expected_byte(memory : memory_t; address : natural; expected : byte_t);
+  impure function has_expected_byte(memory : memory_t;
+                                    address : natural) return boolean;
+  procedure clear_expected_byte(memory : memory_t;
+                                address : natural);
+  procedure set_expected_byte(memory : memory_t;
+                              address : natural;
+                              expected : byte_t);
   procedure set_expected_word(memory : memory_t;
                               address : natural;
                               expected : std_logic_vector;
                               endian : endianness_arg_t := default_endian);
-  procedure set_expected_integer(memory : memory_t; address : natural;
+  procedure set_expected_integer(memory : memory_t;
+                                 address : natural;
                                  expected : integer;
                                  bytes_per_word : natural range 1 to 4 := 4;
                                  endian : endianness_arg_t := default_endian);
-  impure function get_expected_byte(memory : memory_t; address : natural) return byte_t;
+  impure function get_expected_byte(memory : memory_t;
+                                    address : natural) return byte_t;
 
 
   -- Check that all expected bytes within address range was written
   -- with correct value
-  procedure check_expected_was_written(memory : memory_t; address : natural; num_bytes : natural);
+  procedure check_expected_was_written(memory : memory_t;
+                                       address : natural;
+                                       num_bytes : natural);
 
   -- Check that all expected bytes with the entire memory was written
   -- with correct value
@@ -134,7 +153,8 @@ package memory_pkg is
 
   -- Return a string describing the address with name of allocation and
   -- permission settings
-  impure function describe_address(memory : memory_t; address : natural) return string;
+  impure function describe_address(memory : memory_t;
+                                   address : natural) return string;
 
   -- Return a reference to the memory object that can be used in a verification
   -- component. The verification component can use its own logger and
