@@ -103,8 +103,11 @@ Simulators
    -  Integrated support for using `GTKWave`_ to view waveforms.
 -  `Cadence Incisive`_ (**Experimental**)
 
-   -  Community contribution. VUnit maintainers does not have access to this simulator to verify the functionality.
-   -  Run ``incisive_vhdl_fixup.py`` to remove VHDL constructs that are not compatible with Incisive
+   - Community contribution by `Colin Marquardt
+     <https://github.com/cmarqu>`_.  VUnit maintainers does not have
+     access to this simulator to verify the functionality.
+   - Run ``incisive_vhdl_fixup.py`` to remove VHDL constructs that are
+      not compatible with Incisive
 
 Getting Started
 ---------------
@@ -127,11 +130,18 @@ Support
 Any bug reports, feature requests or questions about the usage of VUnit
 can be made by creating a `new issue`_.
 
-Main Contributors
------------------
+Credits
+-------
 
--  Lars Asplund
--  Olof Kraigher
+Founders
+********
+-  `Lars Asplund <https://github.com/LarsAsplund>`_
+-  `Olof Kraigher <https://github.com/kraigher>`_
+
+Notable contributors
+********************
+- `Colin Marquardt <https://github.com/cmarqu>`_ (Cadence Incisive support)
+
 
 License
 -------
