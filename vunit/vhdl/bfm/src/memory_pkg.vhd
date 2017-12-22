@@ -144,6 +144,7 @@ package memory_pkg is
                            name : string := "";
                            alignment : positive := 1;
                            permissions : permissions_t := read_and_write) return buffer_t;
+  impure function name(buf : buffer_t) return string;
   impure function num_bytes(buf : buffer_t) return natural;
   impure function base_address(buf : buffer_t) return natural;
   impure function last_address(buf: buffer_t) return natural;

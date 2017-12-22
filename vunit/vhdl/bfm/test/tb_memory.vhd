@@ -216,6 +216,7 @@ begin
       memory := new_memory;
       buf := allocate(memory, 2);
       buf := allocate(memory, 10, name => "buffer_name");
+      assert name(buf) = "buffer_name";
 
       check_equal(describe_address(memory, 12),
                   "address 12 at unallocated location");

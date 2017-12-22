@@ -112,6 +112,11 @@ package body memory_pkg is
     return buf;
   end function;
 
+  impure function name(buf : buffer_t) return string is
+  begin
+    return to_string(buf.p_name);
+  end function;
+
   impure function base_address(buf : buffer_t) return natural is
   begin
     return buf.p_address;
