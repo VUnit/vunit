@@ -1166,7 +1166,7 @@ component buffer1 port (D : in  std_logic;Q : out std_logic);end component buffe
 begin my_buffer_i : buffer1 port map (D => D,Q => Q);end architecture;
         """
         self.add_source_file("lib_1", "file1.vhd", text_file_1_2)
-        self.add_source_file("lib_2", "file1.vhd", text_file_1_2)
+        lib2_file1_vhd = self.add_source_file("lib_2", "file1.vhd", text_file_1_2)
         file3 = self.add_source_file("lib", "file3.vhd", """\
 library ieee;use ieee.std_logic_1164.all;
 library lib_1;entity your_buffer is port (D : in std_logic; Q : out std_logic);end entity;
@@ -1175,9 +1175,7 @@ component buffer1 port (D : in  std_logic;Q : out std_logic);end component buffe
 begin  my_buffer_i : buffer1 port map (D => D,Q => Q);end architecture;
         """)
         dep_files = self.project.get_dependencies_in_compile_order([file3], implementation_dependencies=True)
-        for file in dep_files:
-            if file.library.name == "lib_2" and file.name == "file1.vhd":
-                assert False, "Error: file3.vhd does not dependes from file1.vhd into lib_2"
+        self.assertNotIn(lib2_file1_vhd, dep_files)
 
     def test_dependencies_on_separated_architecture(self):
         """
@@ -1196,7 +1194,7 @@ entity buffer1 is
 end entity;
         """)
 
-        self.add_source_file("lib", "file1_arch.vhd", """\
+        file1_arch_vhd = self.add_source_file("lib", "file1_arch.vhd", """\
 library ieee;
 use ieee.std_logic_1164.all;
 
@@ -1221,12 +1219,7 @@ my_buffer_i : entity work.buffer1
 end architecture;
         """)
         dep_files = self.project.get_dependencies_in_compile_order([file3], implementation_dependencies=True)
-        file1_arc_found = False;
-        for file in dep_files:
-            if file.library.name == "lib" and file.name == "file1_arch.vhd":
-                file1_arc_found = True;
-        if not file1_arc_found:
-            assert False, "Error: file1_arch.vhd should be a dependency"
+        self.assertIn(file1_arch_vhd, dep_files)
 
     def test_dependencies_on_verilog_component(self):
         """
@@ -1235,7 +1228,7 @@ end architecture;
         """
         self.project = Project()
         self.project.add_library("lib", "work_path")
-        self.add_source_file("lib", "file1.v", """\
+        file1_v = self.add_source_file("lib", "file1.v", """\
 module buffer1 (input   D,output   Q);
 assign Q = D;
 endmodule
@@ -1248,12 +1241,7 @@ component buffer1 port (D : in  std_logic;Q : out std_logic);end component buffe
 begin my_buffer_i : buffer1 port map (D => D,Q => Q);end architecture;
         """)
         dep_files = self.project.get_dependencies_in_compile_order([file3], implementation_dependencies=True)
-        file1_found = False;
-        for file in dep_files:
-            if file.library.name == "lib" and file.name == "file1.v":
-                file1_found = True;
-        if not file1_found:
-            assert False, "Error: file1.v should be a dependency"
+        self.assertIn(file1_v, dep_files)
 
     def create_dummy_three_file_project(self, update_file1=False):
         """

@@ -259,7 +259,8 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 except KeyError:
                     pass
 
-    def _find_component_design_unit_dependencies(self, source_file):
+    @staticmethod
+    def _find_component_design_unit_dependencies(source_file):
         """
         Iterate over the dependencies on other design units of the source_file
         that are the result of component instantiations
