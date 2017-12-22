@@ -114,4 +114,12 @@ package memory_pkg is
   impure function last_address(alloc : alloc_t) return natural;
   impure function num_bytes(alloc : alloc_t) return natural;
 
+  -- Return a reference to the memory object that can be used in a verification
+  -- component. The verification component can use its own logger and
+  -- permissions should be checked.
+  impure function to_vc_interface(memory : memory_t;
+
+                                  -- Override logger, null_logger means no override
+                                  logger : logger_t := null_logger) return memory_t;
+
 end package;

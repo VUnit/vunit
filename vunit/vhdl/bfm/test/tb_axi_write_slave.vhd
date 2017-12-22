@@ -50,8 +50,8 @@ architecture a of tb_axi_write_slave is
   signal bid     : std_logic_vector(awid'range);
   signal bresp   : axi_resp_t;
 
-  constant axi_slave : axi_slave_t := new_axi_slave;
   constant memory : memory_t := new_memory;
+  constant axi_slave : axi_slave_t := new_axi_slave(memory => memory);
 
 begin
   main : process
@@ -480,8 +480,7 @@ begin
 
   dut : entity work.axi_write_slave
     generic map (
-      axi_slave => axi_slave,
-      memory => memory)
+      axi_slave => axi_slave)
     port map (
       aclk    => clk,
       awvalid => awvalid,

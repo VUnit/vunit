@@ -9,7 +9,7 @@ use ieee.std_logic_1164.all;
 
 use work.queue_pkg.all;
 use work.logger_pkg.all;
-use work.msg_types_pkg.all;
+use work.memory_pkg.all;
 context work.com_context;
 
 package axi_pkg is
@@ -30,11 +30,13 @@ package axi_pkg is
   type axi_slave_t is record
     p_initial_address_channel_fifo_depth : positive;
     p_actor : actor_t;
+    p_memory : memory_t;
     p_logger : logger_t;
   end record;
 
   constant axi_slave_logger : logger_t := get_logger("vunit_lib:axi_slave_pkg");
   impure function new_axi_slave(address_channel_fifo_depth : positive := 1;
+                                memory : memory_t;
                                 logger : logger_t := axi_slave_logger) return axi_slave_t;
 
   -- Set the maximum number address channel tokens that can be queued
@@ -69,10 +71,12 @@ end package;
 
 package body axi_pkg is
   impure function new_axi_slave(address_channel_fifo_depth : positive := 1;
+                                memory : memory_t;
                                 logger : logger_t := axi_slave_logger) return axi_slave_t is
   begin
     return (p_actor => create,
             p_initial_address_channel_fifo_depth => address_channel_fifo_depth,
+            p_memory => to_vc_interface(memory, logger),
             p_logger => logger);
   end;
 

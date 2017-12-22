@@ -16,8 +16,7 @@ context work.com_context;
 
 entity axi_read_slave is
   generic (
-    axi_slave : axi_slave_t;
-    memory : memory_t);
+    axi_slave : axi_slave_t);
   port (
     aclk : in std_logic;
 
@@ -88,7 +87,7 @@ begin
         rvalid <= '1';
         for j in 0 to burst.size-1 loop
           idx := (address + j) mod self.data_size;
-          rdata(8*idx+7 downto 8*idx) <= std_logic_vector(to_unsigned(read_byte(memory, address+j, check_permissions => true), 8));
+          rdata(8*idx+7 downto 8*idx) <= std_logic_vector(to_unsigned(read_byte(axi_slave.p_memory, address+j, check_permissions => true), 8));
         end loop;
 
         if burst.burst_type = axi_burst_type_incr then

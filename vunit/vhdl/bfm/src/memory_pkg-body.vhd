@@ -446,4 +446,16 @@ package body memory_pkg is
                  check_permissions => check_permissions);
     end loop;
   end procedure;
+
+  impure function to_vc_interface(memory : memory_t;
+
+                                  -- Override logger, null_logger means no override
+                                  logger : logger_t := null_logger) return memory_t is
+    variable result : memory_t := memory;
+  begin
+    if logger /= null_logger then
+      result.p_logger := logger;
+    end if;
+    return result;
+  end;
 end package body;
