@@ -21,6 +21,7 @@ entity bus2memory is
 end entity;
 
 architecture a of bus2memory is
+  constant my_memory : memory_t := to_vc_interface(memory);
 begin
   main : process
     variable request_msg, reply_msg : msg_t;
@@ -36,8 +37,7 @@ begin
 
       if msg_type = bus_read_msg then
         address := pop_std_ulogic_vector(request_msg);
-        data := read_word(memory, to_integer(unsigned(address)), bytes_per_word => data'length/8,
-                          check_permissions => true);
+        data := read_word(my_memory, to_integer(unsigned(address)), bytes_per_word => data'length/8);
         reply_msg := create;
         push_std_ulogic_vector(reply_msg, data);
         reply(net, request_msg, reply_msg);
@@ -50,8 +50,7 @@ begin
         for i in byte_enable'range loop
           -- @TODO byte_enable on memory_t?
           if byte_enable(i) = '1' then
-            write_word(memory, to_integer(unsigned(address))+i, data(blen*(i+1)-1 downto blen*i),
-                       check_permissions => true);
+            write_word(my_memory, to_integer(unsigned(address))+i, data(blen*(i+1)-1 downto blen*i));
           end if;
         end loop;
       else

@@ -167,10 +167,10 @@ begin
       set_permissions(memory, 5, no_access);
 
       mock(memory_logger);
-      write_byte(memory, 5, 255, check_permissions => true);
+      write_byte(to_vc_interface(memory), 5, 255);
       check_only_log(memory_logger, "Writing to " & describe_address(memory, 5) & " without permission (no_access)", failure);
 
-      byte := read_byte(memory, 5, check_permissions => true);
+      byte := read_byte(to_vc_interface(memory), 5);
       check_only_log(memory_logger, "Reading from " & describe_address(memory, 5) & " without permission (no_access)", failure);
       unmock(memory_logger);
 
@@ -183,10 +183,10 @@ begin
       allocation := allocate(memory, 10);
       set_permissions(memory, 5, write_only);
 
-      write_byte(memory, 5, 255, check_permissions => true);
+      write_byte(to_vc_interface(memory), 5, 255);
 
       mock(memory_logger);
-      byte := read_byte(memory, 5, check_permissions => true);
+      byte := read_byte(to_vc_interface(memory), 5);
       check_only_log(memory_logger, "Reading from " & describe_address(memory, 5) & " without permission (write_only)", failure);
       unmock(memory_logger);
 
@@ -201,7 +201,7 @@ begin
       set_permissions(memory, 5, read_only);
 
       mock(memory_logger);
-      write_byte(memory, 5, 255, check_permissions => true);
+      write_byte(to_vc_interface(memory), 5, 255);
       check_only_log(memory_logger, "Writing to " & describe_address(memory, 5) & " without permission (read_only)", failure);
       unmock(memory_logger);
 

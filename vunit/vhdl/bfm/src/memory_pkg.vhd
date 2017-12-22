@@ -23,11 +23,13 @@ package memory_pkg is
     -- Private
     p_meta : integer_vector_ptr_t;
     p_default_endian : endianness_t;
+    p_check_permissions : boolean;
     p_data : integer_vector_ptr_t;
     p_allocs : integer_vector_ptr_t;
     p_logger : logger_t;
   end record;
   constant null_memory : memory_t := (p_logger => null_logger,
+                                      p_check_permissions => boolean'low,
                                       p_default_endian => endianness_t'low,
                                       others => null_ptr);
 
@@ -62,27 +64,24 @@ package memory_pkg is
   -- Return the number of allocated bytes in the memory
   impure function num_bytes(memory : memory_t) return natural;
 
-  procedure write_byte(memory : memory_t; address : natural; byte : byte_t; check_permissions : boolean := false);
-  impure function read_byte(memory : memory_t; address : natural; check_permissions : boolean := false) return byte_t;
+  procedure write_byte(memory : memory_t; address : natural; byte : byte_t);
+  impure function read_byte(memory : memory_t; address : natural) return byte_t;
 
   procedure write_word(memory : memory_t;
                        address : natural;
                        word : std_logic_vector;
-                       endian : endianness_arg_t := default_endian;
-                       check_permissions : boolean := false);
+                       endian : endianness_arg_t := default_endian);
 
   impure function read_word(memory : memory_t;
                             address : natural;
                             bytes_per_word : positive;
-                            endian : endianness_arg_t := default_endian;
-                            check_permissions : boolean := false) return std_logic_vector;
+                            endian : endianness_arg_t := default_endian) return std_logic_vector;
 
   procedure write_integer(memory : memory_t;
                           address : natural;
                           word : integer;
                           bytes_per_word : natural range 1 to 4 := 4;
-                          endian : endianness_arg_t := default_endian;
-                          check_permissions : boolean := false);
+                          endian : endianness_arg_t := default_endian);
 
   -- Check that all expected bytes was written to addresses within alloc
   procedure check_expected_was_written(alloc : alloc_t);

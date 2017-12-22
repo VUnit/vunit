@@ -29,6 +29,7 @@ package body memory_pkg is
 
     return (p_meta => p_meta,
             p_default_endian => endian,
+            p_check_permissions => false,
             p_data => new_integer_vector_ptr(0),
             p_allocs => new_integer_vector_ptr(0),
             p_logger => logger);
@@ -195,7 +196,10 @@ package body memory_pkg is
     return true;
   end;
 
-  impure function get(memory : memory_t; address : natural; reading : boolean; check_permissions : boolean := false) return memory_data_t is
+  impure function get(memory : memory_t;
+                      address : natural;
+                      reading : boolean;
+                      check_permissions : boolean := false) return memory_data_t is
   begin
     if not check_address(memory, address, reading, check_permissions) then
       return decode(0);
@@ -208,10 +212,10 @@ package body memory_pkg is
     return get(memory.p_meta, num_bytes_idx);
   end;
 
-  procedure write_byte(memory : memory_t; address : natural; byte : byte_t; check_permissions : boolean := false) is
+  procedure write_byte(memory : memory_t; address : natural; byte : byte_t) is
     variable old : memory_data_t;
   begin
-    if not check_address(memory, address, false, check_permissions) then
+    if not check_address(memory, address, false, memory.p_check_permissions) then
       return;
     end if;
 
@@ -221,9 +225,9 @@ package body memory_pkg is
     set(memory.p_data, address, encode((byte => byte, exp => old.exp, has_exp => old.has_exp, perm => old.perm)));
   end;
 
-  impure function read_byte(memory : memory_t; address : natural; check_permissions : boolean := false) return byte_t is
+  impure function read_byte(memory : memory_t; address : natural) return byte_t is
   begin
-    return get(memory, address, true, check_permissions).byte;
+    return get(memory, address, true, memory.p_check_permissions).byte;
   end;
 
   procedure check_expected_was_written(memory : memory_t; address : natural; num_bytes : natural) is
@@ -380,8 +384,7 @@ package body memory_pkg is
   procedure write_word(memory : memory_t;
                        address : natural;
                        word : std_logic_vector;
-                       endian : endianness_arg_t := default_endian;
-                       check_permissions : boolean := false) is
+                       endian : endianness_arg_t := default_endian) is
     constant endianness : endianness_t := evaluate_endian(memory, endian);
     -- Normalize to downto range to enable std_logic_vector literals which are
     -- 1 to N
@@ -391,14 +394,12 @@ package body memory_pkg is
       when big_endian =>
         for idx in 0 to word_i'length/8-1 loop
           write_byte(memory, address + word_i'length/8 - 1 - idx,
-                     to_integer(unsigned(word_i(8*idx+7 downto 8*idx))),
-                     check_permissions => check_permissions);
+                     to_integer(unsigned(word_i(8*idx+7 downto 8*idx))));
         end loop;
       when little_endian =>
         for idx in 0 to word_i'length/8-1 loop
           write_byte(memory, address + idx,
-                     to_integer(unsigned(word_i(8*idx+7 downto 8*idx))),
-                     check_permissions => check_permissions);
+                     to_integer(unsigned(word_i(8*idx+7 downto 8*idx))));
         end loop;
     end case;
   end procedure;
@@ -407,8 +408,7 @@ package body memory_pkg is
   impure function read_word(memory : memory_t;
                             address : natural;
                             bytes_per_word : positive;
-                            endian : endianness_arg_t := default_endian;
-                            check_permissions : boolean := false) return std_logic_vector is
+                            endian : endianness_arg_t := default_endian) return std_logic_vector is
     constant endianness : endianness_t := evaluate_endian(memory, endian);
     variable result : std_logic_vector(8*bytes_per_word-1 downto 0);
     variable bidx : natural;
@@ -422,8 +422,7 @@ package body memory_pkg is
       end case;
 
       result(8*bidx+7 downto 8*bidx) := std_logic_vector(
-        to_unsigned(read_byte(memory, address + idx,
-                              check_permissions => check_permissions), 8));
+        to_unsigned(read_byte(memory, address + idx), 8));
 
     end loop;
     return result;
@@ -433,8 +432,7 @@ package body memory_pkg is
                           address : natural;
                           word : integer;
                           bytes_per_word : natural range 1 to 4 := 4;
-                          endian : endianness_arg_t := default_endian;
-                          check_permissions : boolean := false) is
+                          endian : endianness_arg_t := default_endian) is
 
     constant bytes : integer_vector := serialize(word,
                                                  bytes_per_word,
@@ -442,8 +440,7 @@ package body memory_pkg is
   begin
     for byte_idx in 0 to bytes_per_word-1 loop
       write_byte(memory, address + byte_idx,
-                 bytes(byte_idx),
-                 check_permissions => check_permissions);
+                 bytes(byte_idx));
     end loop;
   end procedure;
 
@@ -456,6 +453,7 @@ package body memory_pkg is
     if logger /= null_logger then
       result.p_logger := logger;
     end if;
+    result.p_check_permissions := true;
     return result;
   end;
 end package body;
