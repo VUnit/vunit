@@ -723,22 +723,21 @@ begin
 end architecture;
 """)
 
-        self.project.add_library("libcomp1", "work_path")
-        comp1 = self.add_source_file("libcomp1", "comp1.vhd", """\
+        comp1 = self.add_source_file("toplib", "comp1.vhd", """\
 entity foo is
 end entity;
-
-architecture arch of foo is
-begin
-end architecture;
 """)
 
-        self.project.add_library("libcomp2", "work_path")
-        comp2 = self.add_source_file("libcomp2", "comp2.vhd", """\
+        comp2 = self.add_source_file("toplib", "comp2.vhd", """\
 entity foo2 is
 end entity;
 
 architecture arch of foo2 is
+begin
+end architecture;
+""")
+        comp1_arch = self.add_source_file("toplib", "comp1_arch.vhd", """\
+architecture arch of foo is
 begin
 end architecture;
 """)
@@ -747,6 +746,7 @@ end architecture;
         self.assert_has_component_instantiation("top.vhd", "foo2")
         dependencies = self.project.get_dependencies_in_compile_order([top], implementation_dependencies=True)
         self.assertIn(comp1, dependencies)
+        self.assertIn(comp1_arch, dependencies)
         self.assertIn(comp2, dependencies)
 
     def test_get_dependencies_in_compile_order_without_target(self):
@@ -1092,6 +1092,156 @@ end architecture;
         self.assertEqual(file_type_of("file.v"), "verilog")
         self.assertEqual(file_type_of("file.vams"), "verilog")
         self.assertRaises(RuntimeError, file_type_of, "file.foo")
+
+    def test_circular_dependencies_through_libraries(self):
+        """
+        Create a projected containing two identical files in two separated
+        library and instantiate an entity from the first library.
+        """
+        self.project = Project()
+        self.project.add_library("lib_1", "work_path")
+        self.project.add_library("lib_2", "work_path")
+        self.project.add_library("lib", "work_path")
+        text_file_1_2 = """\
+        library ieee;
+        use ieee.std_logic_1164.all;
+
+        entity buffer1 is
+          port (Q : out std_logic);
+        end entity;
+
+        architecture arch of buffer1 is begin
+          Q <= '1';
+        end architecture;
+
+        library ieee;
+        use ieee.std_logic_1164.all;
+
+        entity buffer2 is
+          port (Q : out std_logic);
+        end entity;
+
+        architecture arch of buffer2 is
+          component buffer1
+            port (Q : out std_logic);
+          end component buffer1;
+
+        begin
+          my_buffer_i : buffer1
+            port map (Q => Q);
+        end architecture;
+        """
+        self.add_source_file("lib_1", "file1.vhd", text_file_1_2)
+        self.add_source_file("lib_2", "file2.vhd", text_file_1_2)
+        file3 = self.add_source_file("lib", "file3.vhd", """\
+        library lib_1;
+
+        entity your_buffer is
+        end entity;
+
+        architecture arch of your_buffer is
+        begin
+          my_buffer_i : entity lib_1.buffer1;
+        end architecture;
+        """)
+        self.project.get_dependencies_in_compile_order([file3], implementation_dependencies=True)
+
+    def test_dependencies_on_multiple_libraries(self):
+        """
+        Create a projected containing two identical files in two separated
+        library and instantiate an entity from the first library.
+        """
+        self.project = Project()
+        self.project.add_library("lib_1", "work_path")
+        self.project.add_library("lib_2", "work_path")
+        self.project.add_library("lib", "work_path")
+        text_file_1_2 = """\
+library ieee;use ieee.std_logic_1164.all;
+entity buffer1 is  port (D : in std_logic;Q : out std_logic);end entity;
+architecture arch of buffer1 is begin Q <= D; end architecture;
+library ieee;use ieee.std_logic_1164.all;
+entity buffer2 is port (D : in std_logic; Q : out std_logic);end entity;
+architecture arch of buffer2 is
+component buffer1 port (D : in  std_logic;Q : out std_logic);end component buffer1;
+begin my_buffer_i : buffer1 port map (D => D,Q => Q);end architecture;
+        """
+        self.add_source_file("lib_1", "file1.vhd", text_file_1_2)
+        lib2_file1_vhd = self.add_source_file("lib_2", "file1.vhd", text_file_1_2)
+        file3 = self.add_source_file("lib", "file3.vhd", """\
+library ieee;use ieee.std_logic_1164.all;
+library lib_1;entity your_buffer is port (D : in std_logic; Q : out std_logic);end entity;
+architecture arch of your_buffer is
+component buffer1 port (D : in  std_logic;Q : out std_logic);end component buffer1;
+begin  my_buffer_i : buffer1 port map (D => D,Q => Q);end architecture;
+        """)
+        dep_files = self.project.get_dependencies_in_compile_order([file3], implementation_dependencies=True)
+        self.assertNotIn(lib2_file1_vhd, dep_files)
+
+    def test_dependencies_on_separated_architecture(self):
+        """
+        Create a projected containing an entity file separated from architecture file.
+        Dependency should involve also architecture.
+        """
+        self.project = Project()
+        self.project.add_library("lib", "work_path")
+        self.add_source_file("lib", "file1.vhd", """\
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity buffer1 is
+  port (D : in std_logic;
+        Q : out std_logic);
+end entity;
+        """)
+
+        file1_arch_vhd = self.add_source_file("lib", "file1_arch.vhd", """\
+library ieee;
+use ieee.std_logic_1164.all;
+
+architecture arch of buffer1 is
+begin
+  Q <= D;
+end architecture;
+        """)
+
+        file3 = self.add_source_file("lib", "file3.vhd", """\
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity your_buffer is
+port (D : in std_logic; Q : out std_logic);
+end entity;
+
+architecture arch of your_buffer is
+begin
+my_buffer_i : entity work.buffer1
+  port map (D => D,Q => Q);
+end architecture;
+        """)
+        dep_files = self.project.get_dependencies_in_compile_order([file3], implementation_dependencies=True)
+        self.assertIn(file1_arch_vhd, dep_files)
+
+    def test_dependencies_on_verilog_component(self):
+        """
+      Create a projected containing an verilog file separated.
+      Dependency should involve it.
+        """
+        self.project = Project()
+        self.project.add_library("lib", "work_path")
+        file1_v = self.add_source_file("lib", "file1.v", """\
+module buffer1 (input   D,output   Q);
+assign Q = D;
+endmodule
+        """)
+        file3 = self.add_source_file("lib", "file3.vhd", """\
+library ieee;use ieee.std_logic_1164.all;
+entity your_buffer is port (D : in std_logic;Q : out std_logic);end entity;
+architecture arch of your_buffer is
+component buffer1 port (D : in  std_logic;Q : out std_logic);end component buffer1;
+begin my_buffer_i : buffer1 port map (D => D,Q => Q);end architecture;
+        """)
+        dep_files = self.project.get_dependencies_in_compile_order([file3], implementation_dependencies=True)
+        self.assertIn(file1_v, dep_files)
 
     def create_dummy_three_file_project(self, update_file1=False):
         """

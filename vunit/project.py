@@ -176,7 +176,9 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         return self._libraries[real_library_name]
 
     def _find_other_vhdl_design_unit_dependencies(self,  # pylint: disable=too-many-branches
-                                                  source_file, depend_on_package_body):
+                                                  source_file,
+                                                  depend_on_package_body,
+                                                  implementation_dependencies):
         """
         Iterate over the dependencies on other design unit of the source_file
         """
@@ -207,6 +209,9 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 if ref.reference_all_names_within():
                     # Reference all architectures,
                     # We make configuration declarations implicitly reference all architectures
+                    names = primary_unit.architecture_names.keys()
+                elif ref.name_within is None and implementation_dependencies:
+                    # For implementation dependencies we add a dependency to all architectures
                     names = primary_unit.architecture_names.keys()
                 else:
                     names = [ref.name_within]
@@ -254,25 +259,36 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 except KeyError:
                     pass
 
-    def _find_component_design_unit_dependencies(self, source_file):
+    @staticmethod
+    def _find_component_design_unit_dependencies(source_file):
         """
         Iterate over the dependencies on other design units of the source_file
         that are the result of component instantiations
         """
         for unit_name in source_file.depending_components:
-            found_component_entity = False
+            found_component_match = False
 
-            for library in self.get_libraries():
-                try:
-                    primary_unit = library.primary_design_units[unit_name]
-                except KeyError:
-                    continue
-                else:
-                    found_component_entity = True
-                    yield primary_unit.source_file
+            try:
+                primary_unit = source_file.library.primary_design_units[unit_name]
+                yield primary_unit.source_file
 
-            if not found_component_entity:
-                LOGGER.debug("failed to find a matching entity for component '%s' ", unit_name)
+                for file_name in primary_unit.architecture_names.values():
+                    yield source_file.library.get_source_file(file_name)
+            except KeyError:
+                pass
+            else:
+                found_component_match = True
+
+            try:
+                module = source_file.library.modules[unit_name]
+            except KeyError:
+                pass
+            else:
+                found_component_match = True
+                yield module.source_file
+
+            if not found_component_match:
+                LOGGER.debug("failed to find a matching entity/module for component '%s' ", unit_name)
 
     def create_dependency_graph(self, implementation_dependencies=False):
         """
@@ -309,7 +325,9 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
 
         depend_on_package_bodies = self._depend_on_package_body or implementation_dependencies
         add_dependencies(
-            lambda source_file: self._find_other_vhdl_design_unit_dependencies(source_file, depend_on_package_bodies),
+            lambda source_file: self._find_other_vhdl_design_unit_dependencies(source_file,
+                                                                               depend_on_package_bodies,
+                                                                               implementation_dependencies),
             vhdl_files)
         add_dependencies(self._find_primary_secondary_design_unit_dependencies, vhdl_files)
 
