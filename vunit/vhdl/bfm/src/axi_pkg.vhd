@@ -28,7 +28,9 @@ package axi_pkg is
   subtype axi4_size_t is std_logic_vector(2 downto 0);
 
   type axi_slave_t is record
+    -- Private
     p_initial_address_channel_fifo_depth : positive;
+    p_initial_check_4kbyte_boundary : boolean;
     p_actor : actor_t;
     p_memory : memory_t;
     p_logger : logger_t;
@@ -36,6 +38,7 @@ package axi_pkg is
 
   constant axi_slave_logger : logger_t := get_logger("vunit_lib:axi_slave_pkg");
   impure function new_axi_slave(address_channel_fifo_depth : positive := 1;
+                                check_4kbyte_boundary : boolean := true;
                                 memory : memory_t;
                                 logger : logger_t := axi_slave_logger) return axi_slave_t;
 
@@ -47,6 +50,9 @@ package axi_pkg is
 
   -- Set the address channel stall probability
   procedure set_address_channel_stall_probability(signal net : inout network_t; axi_slave : axi_slave_t; probability : real);
+
+  procedure enable_4kbyte_boundary_check(signal net : inout network_t; axi_slave : axi_slave_t);
+  procedure disable_4kbyte_boundary_check(signal net : inout network_t; axi_slave : axi_slave_t);
 
   -- Check that bursts are well behaved, that is that data channel traffic is
   -- as compact as possible
@@ -65,17 +71,20 @@ package axi_pkg is
   constant axi_slave_set_address_channel_fifo_depth_msg : msg_type_t := new_msg_type("axi slave set address channel fifo depth");
   constant axi_slave_set_write_response_fifo_depth_msg : msg_type_t := new_msg_type("set write response fifo depth");
   constant axi_slave_set_address_channel_stall_probability_msg : msg_type_t := new_msg_type("axi slave set address channel stall probability");
+  constant axi_slave_configure_4kbyte_boundary_check_msg : msg_type_t := new_msg_type("axi slave configure 4kbyte boundary check");
   constant axi_slave_enable_well_behaved_check_msg : msg_type_t := new_msg_type("axi slave enable well behaved check");
 
 end package;
 
 package body axi_pkg is
   impure function new_axi_slave(address_channel_fifo_depth : positive := 1;
+                                check_4kbyte_boundary : boolean := true;
                                 memory : memory_t;
                                 logger : logger_t := axi_slave_logger) return axi_slave_t is
   begin
     return (p_actor => create,
             p_initial_address_channel_fifo_depth => address_channel_fifo_depth,
+            p_initial_check_4kbyte_boundary => check_4kbyte_boundary,
             p_memory => to_vc_interface(memory, logger),
             p_logger => logger);
   end;
@@ -111,6 +120,29 @@ package body axi_pkg is
     push_real(request_msg, probability);
     request(net, axi_slave.p_actor, request_msg, ack);
     assert ack report "Failed on set_address_channel_stall_probability command";
+  end;
+
+  procedure configure_4kbyte_boundary_check(signal net : inout network_t;
+                                            axi_slave : axi_slave_t;
+                                            value : boolean) is
+    variable request_msg : msg_t;
+    variable ack : boolean;
+  begin
+    request_msg := create;
+    push_msg_type(request_msg, axi_slave_configure_4kbyte_boundary_check_msg);
+    push_boolean(request_msg, value);
+    request(net, axi_slave.p_actor, request_msg, ack);
+    assert ack report "Failed on configure_4kbyte_boundary_check command";
+  end;
+
+  procedure enable_4kbyte_boundary_check(signal net : inout network_t; axi_slave : axi_slave_t) is
+  begin
+    configure_4kbyte_boundary_check(net, axi_slave, true);
+  end;
+
+  procedure disable_4kbyte_boundary_check(signal net : inout network_t; axi_slave : axi_slave_t) is
+  begin
+    configure_4kbyte_boundary_check(net, axi_slave, false);
   end;
 
   procedure enable_well_behaved_check(signal net : inout network_t; axi_slave : axi_slave_t) is

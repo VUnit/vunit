@@ -291,13 +291,19 @@ begin
       check_only_log(axi_slave_logger, "Wrapping burst type not supported", failure);
       unmock(axi_slave_logger);
 
-    elsif run("Test error 4KB boundary crossing") then
+    elsif run("Test error 4KByte boundary crossing") then
       buf := allocate(memory, 4096+32, alignment => 4096);
       mock(axi_slave_logger);
       write_addr(x"2", base_address(buf)+4000, 256, 0, axi_burst_type_incr);
       wait until get_mock_log_count(axi_slave_logger, failure) > 0 and rising_edge(clk);
-      check_only_log(axi_slave_logger, "Crossing 4KB boundary", failure);
+      check_only_log(axi_slave_logger, "Crossing 4KByte boundary. First page = 0 (4000/4096), last page = 1 (4255/4096)", failure);
       unmock(axi_slave_logger);
+
+    elsif run("Test no error on 4KByte boundary crossing with disabled check") then
+      buf := allocate(memory, 4096+32, alignment => 4096);
+      disable_4kbyte_boundary_check(net, axi_slave);
+      write_addr(x"2", base_address(buf)+4000, 256, 0, axi_burst_type_incr);
+      wait until awvalid = '0' and rising_edge(clk);
 
     elsif run("Test default address channel depth is 1") then
       write_addr(x"2", 0, 1, 0, axi_burst_type_incr); -- Taken data process

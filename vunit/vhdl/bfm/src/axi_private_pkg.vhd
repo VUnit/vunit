@@ -39,6 +39,7 @@ package axi_private_pkg is
     procedure set_address_channel_fifo_depth(depth : positive);
     procedure set_write_response_fifo_depth(depth : positive);
     procedure set_address_channel_stall_probability(probability : real);
+    procedure set_check_4kbyte_boundary(value : boolean);
     procedure enable_well_behaved_check;
     impure function should_check_well_behaved return boolean;
     impure function should_stall_address_channel return boolean;
@@ -60,7 +61,7 @@ package axi_private_pkg is
     impure function pop_resp return axi_burst_t;
 
     procedure fail(msg : string);
-    procedure check_4kb_boundary(burst : axi_burst_t);
+    procedure check_4kbyte_boundary(burst : axi_burst_t);
     impure function data_size return integer;
   end protected;
 
@@ -84,6 +85,7 @@ package body axi_private_pkg is
     variable p_burst_queue : queue_t;
     variable p_resp_queue_max_length : natural;
     variable p_resp_queue : queue_t;
+    variable p_check_4kbyte_boundary : boolean;
     variable p_addr_stall_rnd : RandomPType;
     variable p_addr_stall_prob : real;
     variable p_check_well_behaved : boolean;
@@ -96,6 +98,7 @@ package body axi_private_pkg is
       p_burst_queue := new_queue;
       p_resp_queue_max_length := 1;
       p_resp_queue := new_queue;
+      p_check_4kbyte_boundary := axi_slave.p_initial_check_4kbyte_boundary;
       p_check_well_behaved := false;
       set_address_channel_stall_probability(0.0);
     end;
@@ -129,6 +132,11 @@ package body axi_private_pkg is
     begin
       assert probability >= 0.0 and probability <= 1.0;
       p_addr_stall_prob := probability;
+    end;
+
+    procedure set_check_4kbyte_boundary(value : boolean) is
+    begin
+      p_check_4kbyte_boundary := value;
     end;
 
     procedure enable_well_behaved_check is
@@ -168,7 +176,9 @@ package body axi_private_pkg is
                          axburst : axi_burst_type_t) is
       constant burst : axi_burst_t := decode_burst(axid, axaddr, axlen, axsize, axburst);
     begin
-      check_4kb_boundary(burst);
+      if p_check_4kbyte_boundary then
+        check_4kbyte_boundary(burst);
+      end if;
 
       if burst.burst_type = axi_burst_type_wrap then
         fail("Wrapping burst type not supported");
@@ -226,14 +236,21 @@ package body axi_private_pkg is
       failure(p_axi_slave.p_logger, msg);
     end;
 
-    procedure check_4kb_boundary(burst : axi_burst_t) is
+    procedure check_4kbyte_boundary(burst : axi_burst_t) is
       variable first_address, last_address : integer;
+      variable first_page, last_page : integer;
     begin
       first_address := burst.address - (burst.address mod data_size); -- Aligned
       last_address := burst.address + burst.size*burst.length - 1;
 
-      if first_address / 4096 /= last_address / 4096 then
-        fail("Crossing 4KB boundary");
+      first_page := first_address / 4096;
+      last_page := last_address / 4096;
+
+      if first_page /= last_page then
+        fail("Crossing 4KByte boundary. First page = "
+             & integer'image(first_page) & " (" & to_string(first_address) & "/4096)"
+             & ", last page = "
+             & integer'image(last_page) & " (" & to_string(last_address) & "/4096)");
       end if;
     end procedure;
 
@@ -272,14 +289,13 @@ package body axi_private_pkg is
 
   procedure main_loop(variable self : inout axi_slave_private_t;
                       signal net : inout network_t) is
-    variable request_msg, reply_msg : msg_t;
+    variable request_msg : msg_t;
     variable msg_type : msg_type_t;
   begin
     loop
       receive(net, self.get_actor, request_msg);
       msg_type := pop_msg_type(request_msg);
 
-      reply_msg := create;
       if msg_type = axi_slave_set_address_channel_fifo_depth_msg then
         self.set_address_channel_fifo_depth(pop(request_msg));
         acknowledge(net, request_msg, true);
@@ -290,6 +306,10 @@ package body axi_private_pkg is
 
       elsif msg_type = axi_slave_set_address_channel_stall_probability_msg then
         self.set_address_channel_stall_probability(pop_real(request_msg));
+        acknowledge(net, request_msg, true);
+
+      elsif msg_type = axi_slave_configure_4kbyte_boundary_check_msg then
+        self.set_check_4kbyte_boundary(pop_boolean(request_msg));
         acknowledge(net, request_msg, true);
 
       elsif msg_type = axi_slave_enable_well_behaved_check_msg then
