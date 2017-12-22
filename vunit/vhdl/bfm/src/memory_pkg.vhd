@@ -15,18 +15,21 @@ use work.logger_pkg.all;
 
 package memory_pkg is
 
+  type endianness_arg_t is (little_endian, big_endian, default_endian);
+  subtype endianness_t is endianness_arg_t range little_endian to big_endian;
+
   -- Memory model object
   type memory_t is record
     -- Private
     p_meta : integer_vector_ptr_t;
+    p_default_endian : endianness_t;
     p_data : integer_vector_ptr_t;
     p_allocs : integer_vector_ptr_t;
     p_logger : logger_t;
   end record;
-  constant null_memory : memory_t := (p_logger => null_logger, others => null_ptr);
-
-  type endianness_arg_t is (little_endian, big_endian, default_endian);
-  subtype endianness_t is endianness_arg_t range little_endian to big_endian;
+  constant null_memory : memory_t := (p_logger => null_logger,
+                                      p_default_endian => endianness_t'low,
+                                      others => null_ptr);
 
   -- Reference to buffer allocation within memory
   type alloc_t is record

@@ -11,8 +11,7 @@ package body memory_pkg is
 
   constant num_bytes_idx : natural := 0;
   constant num_allocations_idx : natural := 1;
-  constant default_endian_idx : natural := 2;
-  constant num_meta : natural := default_endian_idx + 1;
+  constant num_meta : natural := num_allocations_idx + 1;
 
   type memory_data_t is record
     byte : byte_t;
@@ -27,9 +26,9 @@ package body memory_pkg is
   begin
     set(p_meta, num_bytes_idx, 0);
     set(p_meta, num_allocations_idx, 0);
-    set(p_meta, default_endian_idx, endianness_t'pos(endian));
 
     return (p_meta => p_meta,
+            p_default_endian => endian,
             p_data => new_integer_vector_ptr(0),
             p_allocs => new_integer_vector_ptr(0),
             p_logger => logger);
@@ -47,7 +46,7 @@ package body memory_pkg is
   impure function evaluate_endian(memory : memory_t; endian : endianness_arg_t) return endianness_t is
   begin
     if endian = default_endian then
-      return endianness_t'val(get(memory.p_meta, default_endian_idx));
+      return memory.p_default_endian;
     else
       return endian;
     end if;

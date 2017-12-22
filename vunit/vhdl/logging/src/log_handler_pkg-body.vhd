@@ -173,7 +173,7 @@ package body log_handler_pkg is
       procedure pad(variable l : inout line; len : integer) is
       begin
         if len > 0 then
-          write(l, string'((1 to len => ' ')));
+          write(l, string'(1 to len => ' '));
         end if;
       end;
 
