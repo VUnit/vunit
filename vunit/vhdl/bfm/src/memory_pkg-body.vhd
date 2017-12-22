@@ -10,8 +10,8 @@ use ieee.numeric_std.all;
 package body memory_pkg is
 
   constant num_bytes_idx : natural := 0;
-  constant num_allocations_idx : natural := 1;
-  constant num_meta : natural := num_allocations_idx + 1;
+  constant num_buffers_idx : natural := 1;
+  constant num_meta : natural := num_buffers_idx + 1;
 
   type memory_data_t is record
     byte : byte_t;
@@ -25,13 +25,13 @@ package body memory_pkg is
     constant p_meta : integer_vector_ptr_t := new_integer_vector_ptr(num_meta);
   begin
     set(p_meta, num_bytes_idx, 0);
-    set(p_meta, num_allocations_idx, 0);
+    set(p_meta, num_buffers_idx, 0);
 
     return (p_meta => p_meta,
             p_default_endian => endian,
             p_check_permissions => false,
             p_data => new_integer_vector_ptr(0),
-            p_allocs => new_integer_vector_ptr(0),
+            p_buffers => new_integer_vector_ptr(0),
             p_logger => logger);
   end;
 
@@ -39,9 +39,9 @@ package body memory_pkg is
   begin
     assert memory /= null_memory;
     set(memory.p_meta, num_bytes_idx, 0);
-    set(memory.p_meta, num_allocations_idx, 0);
+    set(memory.p_meta, num_buffers_idx, 0);
     reallocate(memory.p_data, 0);
-    reallocate(memory.p_allocs, 0);
+    reallocate(memory.p_buffers, 0);
   end procedure;
 
   impure function evaluate_endian(memory : memory_t; endian : endianness_arg_t) return endianness_t is
@@ -73,84 +73,78 @@ package body memory_pkg is
     return result;
   end;
 
-  procedure deallocate(variable alloc : inout alloc_t) is
-  begin
-    deallocate(alloc.p_name);
-    alloc := null_alloc;
-  end;
-
   impure function allocate(memory : memory_t;
                            num_bytes : natural;
                            name : string := "";
                            alignment : positive := 1;
-                           permissions : permissions_t := read_and_write) return alloc_t is
-    variable alloc : alloc_t;
-    variable num_allocs : natural;
+                           permissions : permissions_t := read_and_write) return buffer_t is
+    variable buf : buffer_t;
+    variable num_buffers : natural;
   begin
-    alloc.p_memory_ref := memory;
-    alloc.p_name := new_string_ptr(name);
-    alloc.p_address := work.memory_pkg.num_bytes(memory);
-    alloc.p_address := alloc.p_address + ((-alloc.p_address) mod alignment);
-    alloc.p_num_bytes := num_bytes;
-    set(memory.p_meta, num_bytes_idx, last_address(alloc)+1);
+    buf.p_memory_ref := memory;
+    buf.p_name := new_string_ptr(name);
+    buf.p_address := work.memory_pkg.num_bytes(memory);
+    buf.p_address := buf.p_address + ((-buf.p_address) mod alignment);
+    buf.p_num_bytes := num_bytes;
+    set(memory.p_meta, num_bytes_idx, last_address(buf)+1);
 
-    if length(memory.p_data) < last_address(alloc) + 1 then
+    if length(memory.p_data) < last_address(buf) + 1 then
       -- Allocate exponentially more memory to avoid to much copying
-      resize(memory.p_data, 2*last_address(alloc) + 1, value => encode((byte => 0, exp => 0, has_exp => false, perm => no_access)));
+      resize(memory.p_data, 2*last_address(buf) + 1, value => encode((byte => 0, exp => 0, has_exp => false, perm => no_access)));
     end if;
 
-    num_allocs := get(memory.p_meta, num_allocations_idx) + 1;
+    num_buffers := get(memory.p_meta, num_buffers_idx) + 1;
 
-    set(memory.p_meta, num_allocations_idx, num_allocs);
-    if length(memory.p_allocs) < num_allocs*3 then
+    set(memory.p_meta, num_buffers_idx, num_buffers);
+    if length(memory.p_buffers) < num_buffers*3 then
       -- Allocate exponentially more memory to avoid to much copying
-      resize(memory.p_allocs, 2*num_allocs*3);
+      resize(memory.p_buffers, 2*num_buffers*3);
     end if;
 
-    set(memory.p_allocs, 3*num_allocs-3, to_integer(alloc.p_name));
-    set(memory.p_allocs, 3*num_allocs-2, alloc.p_address);
-    set(memory.p_allocs, 3*num_allocs-1, alloc.p_num_bytes);
+    set(memory.p_buffers, 3*num_buffers-3, to_integer(buf.p_name));
+    set(memory.p_buffers, 3*num_buffers-2, buf.p_address);
+    set(memory.p_buffers, 3*num_buffers-1, buf.p_num_bytes);
 
     -- Set default access type
     for i in 0 to num_bytes-1 loop
-      set(memory.p_data, alloc.p_address + i, encode((byte => 0, exp => 0, has_exp => false, perm => permissions)));
+      set(memory.p_data, buf.p_address + i, encode((byte => 0, exp => 0, has_exp => false, perm => permissions)));
     end loop;
-    return alloc;
+    return buf;
   end function;
 
-  impure function base_address(alloc : alloc_t) return natural is
+  impure function base_address(buf : buffer_t) return natural is
   begin
-    return alloc.p_address;
+    return buf.p_address;
   end function;
 
-  impure function last_address(alloc : alloc_t) return natural is
+  impure function last_address(buf : buffer_t) return natural is
   begin
-    return alloc.p_address + num_bytes(alloc) - 1;
+    return buf.p_address + num_bytes(buf) - 1;
   end function;
 
-  impure function num_bytes(alloc : alloc_t) return natural is
+  impure function num_bytes(buf : buffer_t) return natural is
   begin
-    return alloc.p_num_bytes;
+    return buf.p_num_bytes;
   end function;
 
-  impure function address_to_allocation(memory : memory_t; address : natural) return alloc_t is
-    variable alloc : alloc_t;
+  impure function address_to_allocation(memory : memory_t; address : natural) return buffer_t is
+    variable buf : buffer_t;
   begin
     -- @TODO use bisection for speedup
-    for i in 0 to get(memory.p_meta, num_allocations_idx)-1 loop
-      alloc.p_address := get(memory.p_allocs, 3*i+1);
+    for i in 0 to get(memory.p_meta, num_buffers_idx)-1 loop
+      buf.p_address := get(memory.p_buffers, 3*i+1);
 
-      if address >= alloc.p_address then
-        alloc.p_num_bytes := get(memory.p_allocs, 3*i+2);
+      if address >= buf.p_address then
+        buf.p_num_bytes := get(memory.p_buffers, 3*i+2);
 
-        if address < alloc.p_address + alloc.p_num_bytes then
-          alloc.p_name := to_string_ptr(get(memory.p_allocs, 3*i));
-          return alloc;
+        if address < buf.p_address + buf.p_num_bytes then
+          buf.p_name := to_string_ptr(get(memory.p_buffers, 3*i));
+          return buf;
         end if;
       end if;
     end loop;
 
-    return null_alloc;
+    return null_buffer;
   end;
 
   procedure check_write_data(memory : memory_t;
@@ -243,9 +237,9 @@ package body memory_pkg is
     end loop;
   end procedure;
 
-  procedure check_expected_was_written(alloc : alloc_t) is
+  procedure check_expected_was_written(buf : buffer_t) is
   begin
-    check_expected_was_written(alloc.p_memory_ref, base_address(alloc), num_bytes(alloc));
+    check_expected_was_written(buf.p_memory_ref, base_address(buf), num_bytes(buf));
   end procedure;
 
   procedure check_expected_was_written(memory : memory_t) is
@@ -361,24 +355,24 @@ package body memory_pkg is
   end;
 
   impure function describe_address(memory : memory_t; address : natural) return string is
-    variable alloc : alloc_t := address_to_allocation(memory, address);
+    variable buf : buffer_t := address_to_allocation(memory, address);
 
-    impure function describe_allocation return string is
+    impure function describe_buffer return string is
     begin
-      if to_string(alloc.p_name) = "" then
-        return "anonymous allocation";
+      if to_string(buf.p_name) = "" then
+        return "anonymous buffer";
       else
-        return "allocation '" & to_string(alloc.p_name) & "'";
+        return "buffer '" & to_string(buf.p_name) & "'";
       end if;
     end;
   begin
-    if alloc = null_alloc then
+    if buf = null_buffer then
       return "address " & to_string(address) & " at unallocated location";
     end if;
 
-    return ("address " & to_string(address) & " at offset " & to_string(address - base_address(alloc)) &
-            " within " & describe_allocation & " at range " &
-            "(" & to_string(base_address(alloc)) & " to " & to_string(last_address(alloc)) & ")");
+    return ("address " & to_string(address) & " at offset " & to_string(address - base_address(buf)) &
+            " within " & describe_buffer & " at range " &
+            "(" & to_string(base_address(buf)) & " to " & to_string(last_address(buf)) & ")");
   end;
 
   procedure write_word(memory : memory_t;

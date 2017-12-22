@@ -49,7 +49,7 @@ begin
       end loop;
     end procedure;
 
-    variable allocation : alloc_t;
+    variable buf : buffer_t;
     variable byte : byte_t;
     variable dummy_permissions : permissions_t;
     variable dummy_boolean : boolean;
@@ -68,9 +68,9 @@ begin
     elsif run("Test clear memory") then
       memory := new_memory;
       for i in 0 to 2 loop
-        allocation := allocate(memory, 1024);
-        check_equal(base_address(allocation), 0, "base address");
-        check_equal(last_address(allocation), 1023, "last address");
+        buf := allocate(memory, 1024);
+        check_equal(base_address(buf), 0, "base address");
+        check_equal(last_address(buf), 1023, "last address");
         clear(memory);
       end loop;
 
@@ -78,40 +78,40 @@ begin
       memory := new_memory;
 
       for i in 0 to 2 loop
-        allocation := allocate(memory, 1024);
-        check_equal(base_address(allocation), 1024*i, "base address");
-        check_equal(last_address(allocation), 1024*(i+1)-1, "last address");
+        buf := allocate(memory, 1024);
+        check_equal(base_address(buf), 1024*i, "base address");
+        check_equal(last_address(buf), 1024*(i+1)-1, "last address");
 
-        assert num_bytes(allocation) = 1024;
+        assert num_bytes(buf) = 1024;
         assert num_bytes(memory) = (i+1)*1024;
 
       end loop;
 
     elsif run("Test allocate a lot") then
-      -- Test that allocation is efficient
+      -- Test that buf is efficient
       memory := new_memory;
 
       for i in 0 to 500-1 loop
-        allocation := allocate(memory, 500);
-        check_equal(base_address(allocation), 500*i, "base address");
-        check_equal(last_address(allocation), 500*(i+1)-1, "last address");
+        buf := allocate(memory, 500);
+        check_equal(base_address(buf), 500*i, "base address");
+        check_equal(last_address(buf), 500*(i+1)-1, "last address");
       end loop;
 
     elsif run("Test allocate with alignment") then
       memory := new_memory;
-      allocation := allocate(memory, 1);
-      allocation := allocate(memory, 1, alignment => 8);
-      check_equal(base_address(allocation), 8, "aligned base address");
+      buf := allocate(memory, 1);
+      buf := allocate(memory, 1, alignment => 8);
+      check_equal(base_address(buf), 8, "aligned base address");
 
       assert get_permissions(memory, 1) = no_access report "No access at unallocated location";
       assert get_permissions(memory, 7) = no_access report "No access at unallocated location";
 
-      allocation := allocate(memory, 1, alignment => 16);
-      check_equal(base_address(allocation), 16, "aligned base address");
+      buf := allocate(memory, 1, alignment => 16);
+      check_equal(base_address(buf), 16, "aligned base address");
 
     elsif run("Test read and write byte") then
       memory := new_memory;
-      allocation := allocate(memory, 2);
+      buf := allocate(memory, 2);
 
       write_byte(memory, 0, 255);
       write_byte(memory, 1, 128);
@@ -130,7 +130,7 @@ begin
 
     elsif run("Test access memory out of range") then
       memory := new_memory;
-      allocation := allocate(memory, 1);
+      buf := allocate(memory, 1);
 
       mock(memory_logger);
       write_byte(memory, 1, 255);
@@ -142,12 +142,12 @@ begin
 
     elsif run("Test default permissions") then
       memory := new_memory;
-      allocation := allocate(memory, 1);
+      buf := allocate(memory, 1);
       assert get_permissions(memory, 0) = read_and_write;
 
     elsif run("Test set permissions") then
       memory := new_memory;
-      allocation := allocate(memory, 1);
+      buf := allocate(memory, 1);
 
       set_permissions(memory, 0, no_access);
       assert get_permissions(memory, 0) = no_access;
@@ -163,7 +163,7 @@ begin
 
     elsif run("Test access memory without permission (no_access)") then
       memory := new_memory;
-      allocation := allocate(memory, 10);
+      buf := allocate(memory, 10);
       set_permissions(memory, 5, no_access);
 
       mock(memory_logger);
@@ -180,7 +180,7 @@ begin
 
     elsif run("Test access memory without permission (write_only)") then
       memory := new_memory;
-      allocation := allocate(memory, 10);
+      buf := allocate(memory, 10);
       set_permissions(memory, 5, write_only);
 
       write_byte(to_vc_interface(memory), 5, 255);
@@ -197,7 +197,7 @@ begin
 
     elsif run("Test access memory without permission (read_only)") then
       memory := new_memory;
-      allocation := allocate(memory, 10);
+      buf := allocate(memory, 10);
       set_permissions(memory, 5, read_only);
 
       mock(memory_logger);
@@ -214,21 +214,21 @@ begin
 
     elsif run("Test describe address") then
       memory := new_memory;
-      allocation := allocate(memory, 2);
-      allocation := allocate(memory, 10, name => "alloc_name");
+      buf := allocate(memory, 2);
+      buf := allocate(memory, 10, name => "buffer_name");
 
       check_equal(describe_address(memory, 12),
                   "address 12 at unallocated location");
       check_equal(describe_address(memory, 1),
-                  "address 1 at offset 1 within anonymous allocation at range (0 to 1)");
+                  "address 1 at offset 1 within anonymous buffer at range (0 to 1)");
       check_equal(describe_address(memory, 2),
-                  "address 2 at offset 0 within allocation 'alloc_name' at range (2 to 11)");
+                  "address 2 at offset 0 within buffer 'buffer_name' at range (2 to 11)");
       check_equal(describe_address(memory, 5),
-                  "address 5 at offset 3 within allocation 'alloc_name' at range (2 to 11)");
+                  "address 5 at offset 3 within buffer 'buffer_name' at range (2 to 11)");
 
     elsif run("Test set expected byte") then
       memory := new_memory;
-      allocation := allocate(memory, 2);
+      buf := allocate(memory, 2);
       set_expected_byte(memory, 0, 77);
       check_equal(has_expected_byte(memory, 0), true, "address 0 has expected byte");
       check_equal(has_expected_byte(memory, 1), false, "address 1 has no expected byte");
@@ -240,7 +240,7 @@ begin
 
     elsif run("Test set expected word") then
       memory := new_memory;
-      allocation := allocate(memory, 2);
+      buf := allocate(memory, 2);
       set_expected_word(memory, 0, x"3322");
 
       mock(memory_logger);
@@ -252,7 +252,7 @@ begin
 
     elsif run("Test set expected integer") then
       memory := new_memory;
-      allocation := allocate(memory, 2);
+      buf := allocate(memory, 2);
       set_expected_integer(memory, 0, 16#3322#, bytes_per_word => 2);
       check_equal(get_expected_byte(memory, 0), 16#22#);
       check_equal(get_expected_byte(memory, 1), 16#33#);
@@ -263,7 +263,7 @@ begin
 
     elsif run("Test clear expected byte") then
       memory := new_memory;
-      allocation := allocate(memory, 2);
+      buf := allocate(memory, 2);
       set_expected_byte(memory, 0, 77);
       check_equal(has_expected_byte(memory, 0), true, "address 0 has expected byte");
       check_equal(has_expected_byte(memory, 1), false, "address 1 has no expected byte");
@@ -272,7 +272,7 @@ begin
 
     elsif run("Test permissions and expected access functions ignore permissions") then
       memory := new_memory;
-      allocation := allocate(memory, 1, permissions => no_access);
+      buf := allocate(memory, 1, permissions => no_access);
 
       dummy_permissions := get_permissions(memory, 0);
       set_permissions(memory, 0, no_access);
@@ -307,27 +307,27 @@ begin
 
     elsif run("Test check expected was written") then
       memory := new_memory;
-      allocation := allocate(memory, 3);
+      buf := allocate(memory, 3);
       set_expected_byte(memory, 0, 77);
       set_expected_byte(memory, 2, 66);
 
       mock(memory_logger);
-      check_expected_was_written(allocation);
+      check_expected_was_written(buf);
       check_log(memory_logger, "The " & describe_address(memory, 0) & " was never written with expected byte 77", failure);
       check_only_log(memory_logger, "The " & describe_address(memory, 2) & " was never written with expected byte 66", failure);
 
       write_byte(memory, 0, 77);
-      check_expected_was_written(allocation);
+      check_expected_was_written(buf);
       check_only_log(memory_logger, "The " & describe_address(memory, 2) & " was never written with expected byte 66", failure);
       unmock(memory_logger);
 
       write_byte(memory, 2, 66);
-      check_expected_was_written(allocation);
+      check_expected_was_written(buf);
       unmock(memory_logger);
 
     elsif run("Test write_integer") then
       memory := new_memory;
-      allocation := allocate(memory, 4);
+      buf := allocate(memory, 4);
 
       test_write_integer(1, (0 => 1));
       test_write_integer(-1, (0 => 255));
@@ -343,12 +343,12 @@ begin
 
     elsif run("Test write word") then
       memory := new_memory;
-      allocation := allocate(memory, 7);
+      buf := allocate(memory, 7);
       test_write_word(x"11223344556677", (16#77#, 16#66#, 16#55#, 16#44#, 16#33#, 16#22#, 16#11#));
 
     elsif run("Test read word") then
       memory := new_memory;
-      allocation := allocate(memory, 7+5);
+      buf := allocate(memory, 7+5);
 
       write_word(memory, 0, x"11223344556677");
       check_equal(read_word(memory, 0, 7), std_logic_vector'(x"11223344556677"));
@@ -360,7 +360,7 @@ begin
 
       -- Default endian
       memory := new_memory(endian => big_endian);
-      allocation := allocate(memory, 7+5);
+      buf := allocate(memory, 7+5);
 
       write_word(memory, 7, x"aaffbbccdd");
       check_equal(read_word(memory, 7, 5), std_logic_vector'(x"aaffbbccdd"));

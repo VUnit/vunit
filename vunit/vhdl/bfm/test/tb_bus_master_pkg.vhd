@@ -27,33 +27,33 @@ architecture a of tb_bus_master_pkg is
   constant bus_handle : bus_master_t := new_bus(data_length => 32, address_length => 32);
 begin
   main : process
-    variable alloc : alloc_t;
+    variable buf : buffer_t;
     variable read_data : std_logic_vector(data_length(bus_handle)-1 downto 0);
     variable reference : bus_reference_t;
   begin
     test_runner_setup(runner, runner_cfg);
 
     if run("test write_bus") then
-      alloc := allocate(memory, 12, permissions => write_only);
-      set_expected_word(memory, base_address(alloc), x"00112233");
-      set_expected_word(memory, base_address(alloc) + 4, x"00112233");
-      set_expected_word(memory, base_address(alloc) + 8, x"00112233");
+      buf := allocate(memory, 12, permissions => write_only);
+      set_expected_word(memory, base_address(buf), x"00112233");
+      set_expected_word(memory, base_address(buf) + 4, x"00112233");
+      set_expected_word(memory, base_address(buf) + 8, x"00112233");
       write_bus(net, bus_handle, x"00000000", x"00112233");
       write_bus(net, bus_handle, x"4", x"00112233");
       write_bus(net, bus_handle, x"00000008", x"112233");
 
     elsif run("test write_bus with byte_enable") then
-      alloc := allocate(memory, 12, permissions => write_only);
-      set_permissions(memory, base_address(alloc), no_access);
-      set_expected_byte(memory, base_address(alloc)+1, 16#33#);
-      set_permissions(memory, base_address(alloc)+2, no_access);
-      set_expected_byte(memory, base_address(alloc)+3, 16#11#);
-      write_bus(net, bus_handle, base_address(alloc), x"11223344", byte_enable => "1010");
+      buf := allocate(memory, 12, permissions => write_only);
+      set_permissions(memory, base_address(buf), no_access);
+      set_expected_byte(memory, base_address(buf)+1, 16#33#);
+      set_permissions(memory, base_address(buf)+2, no_access);
+      set_expected_byte(memory, base_address(buf)+3, 16#11#);
+      write_bus(net, bus_handle, base_address(buf), x"11223344", byte_enable => "1010");
 
     elsif run("test read_bus") then
-      alloc := allocate(memory, 8, permissions => read_only);
-      write_word(memory, base_address(alloc), x"00112233");
-      write_word(memory, base_address(alloc) + 4, x"00112233");
+      buf := allocate(memory, 8, permissions => read_only);
+      write_word(memory, base_address(buf), x"00112233");
+      write_word(memory, base_address(buf) + 4, x"00112233");
       read_bus(net, bus_handle, x"00000000", read_data);
       check_equal(read_data, std_logic_vector'(x"00112233"));
       read_bus(net, bus_handle, x"4", reference);
@@ -61,8 +61,8 @@ begin
       check_equal(read_data, std_logic_vector'(x"00112233"));
 
     elsif run("test check_bus") then
-      alloc := allocate(memory, 4, permissions => read_only);
-      write_word(memory, base_address(alloc), x"00112233");
+      buf := allocate(memory, 4, permissions => read_only);
+      write_word(memory, base_address(buf), x"00112233");
       check_bus(net, bus_handle, x"00000000", std_logic_vector'(x"00112233"));
       check_bus(net, bus_handle, x"00000000", std_logic_vector'(x"001122--"));
 
@@ -78,11 +78,11 @@ begin
       unmock(bus_logger);
 
     elsif run("test check_bus support reduced data length") then
-      alloc := allocate(memory, 4, permissions => read_only);
-      write_word(memory, base_address(alloc), x"00112233");
+      buf := allocate(memory, 4, permissions => read_only);
+      write_word(memory, base_address(buf), x"00112233");
       check_bus(net, bus_handle, x"00000000", std_logic_vector'(x"112233"));
 
-      write_word(memory, base_address(alloc), x"77112233");
+      write_word(memory, base_address(buf), x"77112233");
       mock(bus_logger);
       check_bus(net, bus_handle, x"00000000", std_logic_vector'(x"112233"));
       check_only_log(bus_logger, "check_bus(x""00000000"") - Got x""77112233"" expected x""00112233""", failure);

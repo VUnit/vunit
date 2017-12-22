@@ -52,7 +52,7 @@ architecture a of tb_axi_read_slave is
 
 begin
   main : process
-    variable alloc : alloc_t;
+    variable buf : buffer_t;
     variable rnd : RandomPType;
 
     procedure write_addr(id : std_logic_vector;
@@ -116,62 +116,62 @@ begin
         size := 2**log_size;
         random_integer_vector_ptr(rnd, data, size * len, 0, 255);
 
-        alloc := allocate(memory, 8 * len, alignment => 4096);
+        buf := allocate(memory, 8 * len, alignment => 4096);
         for i in 0 to length(data)-1 loop
-          write_byte(memory, base_address(alloc)+i, get(data, i));
+          write_byte(memory, base_address(buf)+i, get(data, i));
         end loop;
 
-        write_addr(id, base_address(alloc), len, log_size, burst);
+        write_addr(id, base_address(buf), len, log_size, burst);
 
         for i in 0 to len-1 loop
-          read_data(id, base_address(alloc)+size*i, size, axi_resp_okay, i=len-1);
+          read_data(id, base_address(buf)+size*i, size, axi_resp_okay, i=len-1);
         end loop;
       end loop;
 
     elsif run("Test that permissions are checked") then
       -- Also checks that the axi slave logger is used for memory errors
-      alloc := allocate(memory, data_size, permissions => no_access);
+      buf := allocate(memory, data_size, permissions => no_access);
       mock(axi_slave_logger);
-      write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_fixed);
+      write_addr(x"2", base_address(buf), 1, 0, axi_burst_type_fixed);
       wait until get_mock_log_count(axi_slave_logger, failure) > 0 and rising_edge(clk);
       check_only_log(axi_slave_logger,
-                     "Reading from address 0 at offset 0 within anonymous allocation at range (0 to 15) without permission (no_access)",
+                     "Reading from address 0 at offset 0 within anonymous buffer at range (0 to 15) without permission (no_access)",
                      failure);
       unmock(axi_slave_logger);
 
     elsif run("Test error on unsupported wrap burst") then
       mock(axi_slave_logger);
 
-      alloc := allocate(memory, 8);
-      write_addr(x"2", base_address(alloc), 2, 0, axi_burst_type_wrap);
+      buf := allocate(memory, 8);
+      write_addr(x"2", base_address(buf), 2, 0, axi_burst_type_wrap);
       wait until get_mock_log_count(axi_slave_logger, failure) > 0 and rising_edge(clk);
       check_only_log(axi_slave_logger, "Wrapping burst type not supported", failure);
       unmock(axi_slave_logger);
 
     elsif run("Test error 4KB boundary crossing") then
-      alloc := allocate(memory, 4096+32, alignment => 4096);
+      buf := allocate(memory, 4096+32, alignment => 4096);
       mock(axi_slave_logger);
-      write_addr(x"2", base_address(alloc)+4000, 256, 0, axi_burst_type_incr);
+      write_addr(x"2", base_address(buf)+4000, 256, 0, axi_burst_type_incr);
       wait until get_mock_log_count(axi_slave_logger, failure) > 0 and rising_edge(clk);
       check_only_log(axi_slave_logger, "Crossing 4KB boundary", failure);
       unmock(axi_slave_logger);
 
     elsif run("Test default address channel fifo depth is 1") then
-      alloc := allocate(memory, 1024);
-      write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr); -- Taken data process
-      write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr); -- In the queue
+      buf := allocate(memory, 1024);
+      write_addr(x"2", base_address(buf), 1, 0, axi_burst_type_incr); -- Taken data process
+      write_addr(x"2", base_address(buf), 1, 0, axi_burst_type_incr); -- In the queue
       for i in 0 to 127 loop
         wait until rising_edge(clk);
         assert arready = '0' report "Can only have one address in the queue";
       end loop;
 
     elsif run("Test set address channel fifo depth") then
-      alloc := allocate(memory, 1024);
+      buf := allocate(memory, 1024);
       set_address_channel_fifo_depth(net, axi_slave, 16);
 
-      write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr); -- Taken data process
+      write_addr(x"2", base_address(buf), 1, 0, axi_burst_type_incr); -- Taken data process
       for i in 1 to 16 loop
-        write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr); -- In the queue
+        write_addr(x"2", base_address(buf), 1, 0, axi_burst_type_incr); -- In the queue
       end loop;
 
       for i in 0 to 127 loop
@@ -180,12 +180,12 @@ begin
       end loop;
 
     elsif run("Test changing address channel depth to smaller than content gives error") then
-      alloc := allocate(memory, 1024);
+      buf := allocate(memory, 1024);
       set_address_channel_fifo_depth(net, axi_slave, 16);
 
-      write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr); -- Taken data process
+      write_addr(x"2", base_address(buf), 1, 0, axi_burst_type_incr); -- Taken data process
       for i in 1 to 16 loop
-        write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr); -- In the queue
+        write_addr(x"2", base_address(buf), 1, 0, axi_burst_type_incr); -- In the queue
       end loop;
 
       set_address_channel_fifo_depth(net, axi_slave, 17);
@@ -197,24 +197,24 @@ begin
       unmock(axi_slave_logger);
 
     elsif run("Test address channel stall probability") then
-      alloc := allocate(memory, 1024);
+      buf := allocate(memory, 1024);
       set_address_channel_fifo_depth(net, axi_slave, 128);
 
       start_time := now;
       for i in 1 to 16 loop
-        write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr);
+        write_addr(x"2", base_address(buf), 1, 0, axi_burst_type_incr);
       end loop;
       diff_time := now - start_time;
 
       set_address_channel_stall_probability(net, axi_slave, 0.9);
       start_time := now;
       for i in 1 to 16 loop
-        write_addr(x"2", base_address(alloc), 1, 0, axi_burst_type_incr);
+        write_addr(x"2", base_address(buf), 1, 0, axi_burst_type_incr);
       end loop;
       assert (now - start_time) > 5.0 * diff_time report "Should take about longer with stall probability";
 
     elsif run("Test well behaved check does not fail for well behaved bursts") then
-      alloc := allocate(memory, 128);
+      buf := allocate(memory, 128);
       enable_well_behaved_check(net, axi_slave);
       set_address_channel_fifo_depth(net, axi_slave, 3);
       set_write_response_fifo_depth(net, axi_slave, 3);
@@ -223,13 +223,13 @@ begin
       rready <= '1';
       assert rvalid = '0';
       -- Only allow non max size for single beat bursts
-      write_addr(x"0", base_address(alloc), len => 1, log_size => log_data_size, burst => axi_burst_type_incr);
+      write_addr(x"0", base_address(buf), len => 1, log_size => log_data_size, burst => axi_burst_type_incr);
       rready <= '1';
       assert rvalid = '0';
-      write_addr(x"0", base_address(alloc), len => 2, log_size => log_data_size, burst => axi_burst_type_incr);
+      write_addr(x"0", base_address(buf), len => 2, log_size => log_data_size, burst => axi_burst_type_incr);
       rready <= '1';
       assert rvalid = '1';
-      write_addr(x"0", base_address(alloc), len => 1, log_size => 0, burst => axi_burst_type_incr);
+      write_addr(x"0", base_address(buf), len => 1, log_size => 0, burst => axi_burst_type_incr);
       rready <= '1';
       assert rvalid = '1';
       wait until rising_edge(clk);
@@ -249,14 +249,14 @@ begin
       assert rvalid = '0';
 
     elsif run("Test well behaved check does not fail after well behaved burst finished") then
-      alloc := allocate(memory, 128);
+      buf := allocate(memory, 128);
       enable_well_behaved_check(net, axi_slave);
 
       wait until rising_edge(clk);
       rready <= '1';
       assert rvalid = '0';
       -- Only allow non max size for single beat bursts
-      write_addr(x"0", base_address(alloc), len => 3, log_size => log_data_size, burst => axi_burst_type_incr);
+      write_addr(x"0", base_address(buf), len => 3, log_size => log_data_size, burst => axi_burst_type_incr);
       rready <= '1';
       assert rvalid = '0';
       wait until rising_edge(clk);
@@ -278,26 +278,26 @@ begin
       assert rvalid = '0';
 
     elsif run("Test well behaved check fails for ill behaved awsize") then
-      alloc := allocate(memory, 8);
+      buf := allocate(memory, 8);
       enable_well_behaved_check(net, axi_slave);
       mock(axi_slave_logger);
       rready <= '1';
       wait until rising_edge(clk);
-      write_addr(x"0", base_address(alloc), len => 2, log_size => 0, burst => axi_burst_type_incr);
+      write_addr(x"0", base_address(buf), len => 2, log_size => 0, burst => axi_burst_type_incr);
       check_only_log(axi_slave_logger, "Burst not well behaved, axi size = 1 but bus data width allows " & to_string(data_size), failure);
       unmock(axi_slave_logger);
 
     elsif run("Test well behaved check fails when rready not high during active burst") then
-      alloc := allocate(memory, 128);
+      buf := allocate(memory, 128);
       enable_well_behaved_check(net, axi_slave);
       mock(axi_slave_logger);
       wait until rising_edge(clk);
-      write_addr(x"0", base_address(alloc), len => 2, log_size => log_data_size, burst => axi_burst_type_incr);
+      write_addr(x"0", base_address(buf), len => 2, log_size => log_data_size, burst => axi_burst_type_incr);
       check_only_log(axi_slave_logger, "Burst not well behaved, rready was not high during active burst", failure);
       unmock(axi_slave_logger);
 
     elsif run("Test well behaved check fails when wvalid not high during active burst and arready is low") then
-      alloc := allocate(memory, 8);
+      buf := allocate(memory, 8);
       enable_well_behaved_check(net, axi_slave);
       mock(axi_slave_logger);
       set_address_channel_stall_probability(net, axi_slave, 1.0);
@@ -308,7 +308,7 @@ begin
 
       arvalid <= '1';
       arid <= x"0";
-      araddr <= std_logic_vector(to_unsigned(base_address(alloc), araddr'length));
+      araddr <= std_logic_vector(to_unsigned(base_address(buf), araddr'length));
       arlen <= std_logic_vector(to_unsigned(0, arlen'length));
       arsize <= std_logic_vector(to_unsigned(log_size, arsize'length));
       arburst <= axi_burst_type_incr;
