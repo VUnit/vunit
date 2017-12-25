@@ -171,7 +171,7 @@ files are licensed under the terms of `ARTISTIC License`_.
 .. _Aldec Active-HDL: https://www.aldec.com/en/products/fpga_simulation/active-hdl
 .. _Mentor Graphics ModelSim/Questa: http://www.mentor.com/products/fv/modelsim/
 .. _Cadence Incisive: https://www.cadence.com/content/cadence-www/global/en_US/home/tools/system-design-and-verification/simulation-and-testbench-verification/incisive-enterprise-simulator.html
-.. _GHDL: https://sourceforge.net/projects/ghdl-updates/
+.. _GHDL: https://github.com/ghdl/ghdl
 .. _GTKWave: http://gtkwave.sourceforge.net/
 .. _YouTube: https://www.youtube.com/channel/UCCPVCaeWkz6C95aRUTbIwdg
 .. _an introduction to unit testing (6 min): https://www.youtube.com/watch?v=PZuBqcxS8t4
