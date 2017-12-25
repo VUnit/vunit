@@ -12,7 +12,7 @@ Provided functionality to run a suite of test in a robust way
 from __future__ import print_function
 
 import os
-from os.path import join, exists, abspath, basename
+from os.path import join, exists, abspath, basename, relpath
 import traceback
 import threading
 import sys
@@ -135,7 +135,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                 with self._lock:  # pylint: disable=not-context-manager
                     for test_name in test_suite.test_cases:
                         print("Starting %s" % test_name)
-                    print("Output file: %s" % output_file_name)
+                    print("Output file: %s" % relpath(output_file_name))
 
                 self._run_test_suite(test_suite,
                                      write_stdout,
