@@ -3,7 +3,7 @@
 Synchronization VCI
 ===================
 
-.. literalinclude:: ../../../vunit/vhdl/bfm/src/sync_pkg.vhd
+.. literalinclude:: ../../../vunit/vhdl/verification_components/src/sync_pkg.vhd
    :caption: Synchronization verification component interface
    :language: vhdl
    :lines: 7-

@@ -1,11 +1,11 @@
-.. _bfm_library:
+.. _vc_library:
 
-Bus Functional Model Library
-============================
+Verification Component Library
+===============================
 
-The VUnit Bus Functional Model Library (BFM) contains a number of
-:ref:`Verification Components <verification_components>` (VC) as well
-as a set of utilities for writing your own verification
+The VUnit Verification Component Library (VCL) contains a number of
+useful :ref:`Verification Components <verification_components>` (VC)
+as well as a set of utilities for writing your own verification
 component. Verification components allow a better overview in the test
 bench by raising the abstraction level of bus transactions. Even if
 you do not need the advanced features that VCs offer you may still

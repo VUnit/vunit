@@ -11,7 +11,7 @@ root = dirname(__file__)
 
 ui = VUnit.from_argv()
 ui.add_random()
-ui.add_bfm()
+ui.add_verification_components()
 lib = ui.library("vunit_lib")
 lib.add_source_files(join(root, "test", "*.vhd"))
 ui.main()

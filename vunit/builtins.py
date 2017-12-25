@@ -32,7 +32,7 @@ class Builtins(object):
 
         add("array_util")
         add("com")
-        add("bfm", ["com", "osvvm"])
+        add("verification_components", ["com", "osvvm"])
         add("osvvm")
         add("random", ["osvvm"])
 
@@ -100,13 +100,13 @@ class Builtins(object):
 
         self._add_files(join(VHDL_PATH, "com", "src", "*.vhd"))
 
-    def _add_bfm(self):
+    def _add_verification_components(self):
         """
-        Add bfm utility library
+        Add verification component library
         """
         if self._vhdl_standard != '2008':
-            raise RuntimeError("BFM library only supports vhdl 2008")
-        self._add_files(join(VHDL_PATH, "bfm", "src", "*.vhd"))
+            raise RuntimeError("Verification component library only supports vhdl 2008")
+        self._add_files(join(VHDL_PATH, "verification_components", "src", "*.vhd"))
 
     def _add_osvvm(self):
         """

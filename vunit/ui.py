@@ -887,11 +887,11 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         self._builtins.add("random")
 
-    def add_bfm(self):
+    def add_verification_components(self):
         """
-        Add bus functional models
+        Add verification component library
         """
-        self._builtins.add("bfm")
+        self._builtins.add("verification_components")
 
     def add_osvvm(self):
         """

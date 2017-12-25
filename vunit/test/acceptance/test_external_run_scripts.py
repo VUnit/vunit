@@ -141,8 +141,8 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_random_vhdl_2008(self):
         self.check(join(VHDL_PATH, "random", "run.py"))
 
-    def test_bfm_vhdl_2008(self):
-        self.check(join(VHDL_PATH, "bfm", "run.py"))
+    def test_verification_components_vhdl_2008(self):
+        self.check(join(VHDL_PATH, "verification_components", "run.py"))
 
     def test_check_vhdl_2008(self):
         self.check(join(VHDL_PATH, "check", "run.py"))

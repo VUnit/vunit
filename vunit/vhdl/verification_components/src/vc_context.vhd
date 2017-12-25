@@ -4,7 +4,7 @@
 --
 -- Copyright (c) 2017, Lars Asplund lars.anders.asplund@gmail.com
 
-context bfm_context is
+context vc_context is
   library vunit_lib;
   use vunit_lib.bus_master_pkg.all;
   use vunit_lib.axi_pkg.all;

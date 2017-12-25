@@ -40,7 +40,7 @@ model.
 API
 ---
 
-.. literalinclude:: ../../vunit/vhdl/bfm/src/memory_pkg.vhd
+.. literalinclude:: ../../vunit/vhdl/verification_components/src/memory_pkg.vhd
    :caption: Memory model API
    :language: vhdl
    :lines: 7-

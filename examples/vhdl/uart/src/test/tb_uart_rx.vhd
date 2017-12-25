@@ -10,7 +10,7 @@ use ieee.numeric_std.all;
 
 library vunit_lib;
 context vunit_lib.vunit_context;
-context vunit_lib.bfm_context;
+context vunit_lib.vc_context;
 
 library uart_lib;
 
