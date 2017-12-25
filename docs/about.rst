@@ -10,44 +10,48 @@ testing of your HDL code. VUnit doesn't replace but rather complements
 traditional testing methodologies by supporting a "test early and
 often" approach through automation.
 
-**NOTE:** SystemVerilog support is experimental.
+VUnit reduces the overhead of testing by supporting automatic
+discovery of test benches and compilation order as well as including
+libraries for common verification tasks. It improves the speed of
+development by supporting incremental compilation and by enabling
+large test benches to be split up into smaller independent tests. It
+increases the quality of projects by enabling large regression suites
+to be run on a continuous integration server.
 
-Project Mission
----------------
-
-The VUnit project mission is to apply best SW testing practices to the
-world of HDLs by providing the tools missing to adapt to such
-practices. The major missing piece is the unit testing framework,
-hence the name V(HDL)Unit. However, VUnit also provides supporting
-functionality not normally considered as a part of a unit testing
-framework.
+VUnit does not impose any specific verification methodology on its
+users. The benefits of VUnit can be enjoyed when writing tests first
+or last, when writing long running top level tests or short running
+unit tests, when using directed or constrained random testing. Often
+projects adopt mix of approaches for different testing needs. VUnit
+has been used in production environments where thousands of tests take
+several hours to run on powerful multi-core machines as well as in
+small open source projects where only a small package is tested in a
+few seconds.
 
 Main Features
 -------------
 
--  Builds on the commonly used `xUnit`_ architecture.
--  Python test runner that enables powerful test administration, can
-   handle fatal run-time errors (e.g. division by zero), and
-   ensures test case independence.
--  Scanners for identifying files, tests, file dependencies, and file
+-  Python test suite runner that enables powerful test administration,
+   can continue testing after fatal run-time errors (e.g. division by
+   zero), and ensures test case independence.
+-  Automatic scanning of files for tests, file dependencies, and file
    changes enable automatic (re)compilation and execution of test
    suites.
 -  Can run test cases in parallel to take advantage of multi-core
    machines.
+-  Support for running test benches with multiple generic/parameter settings.
 -  :ref:`Scriptable API <python_interface>` as well as :ref:`command line <cli>`
    support.
--  Support for running same test suite with different generics.
--  :doc:`VHDL test runner <./run/user_guide>` which enables test execution for not fully supported
-   simulators.
+-  Has ``--gui`` switch to launch test cases in the simulator GUI when debugging is necessary.
 -  :doc:`Assertion checker library <./check/user_guide>` that extends VHDL built-in support
    (assert).
 -  :doc:`Logging framework <./logging/user_guide>` supporting display and file output, different log
    levels, filtering on level and design hierarchy, output formatting
-   and multiple loggers. Spreadsheet tool integration.
--  Location preprocessor that traces log and check calls back to file
+   and multiple loggers. Supports machine readable output formats that for example can be read by a spreadsheet.
+-  Optional location preprocessor that traces log and check calls back to file
    and line number.
--  JUnit report files for better `Jenkins`_ :ref:`integration
-   <continuous_integration>`.
+-  Outputs JUnit report files for better `Jenkins`_ :ref:`integration <continuous_integration>`.
+-  Builds on the commonly used `xUnit`_ architecture.
 
 Requirements
 ------------
@@ -55,9 +59,9 @@ Requirements
 VUnit depends on a number of components as listed below. Full VUnit
 functionality requires Python and a simulator supported by the VUnit
 Python test runner. However, VUnit can run with limited functionality
-entirely within VHDL which means that unsupported simulators can be used
-as well. Prototype work has been done to fully support other simulators
-but this work is yet to be completed and released.
+entirely within VHDL using the :doc:`VHDL test runner
+<./run/user_guide>`.
+
 
 Languages
 *********
@@ -66,7 +70,7 @@ Languages
 -  VHDL-2002
 -  VHDL-2008
 -  Verilog
--  SystemVerilog
+-  SystemVerilog (Support is experimental)
 
 Operating systems
 *****************
