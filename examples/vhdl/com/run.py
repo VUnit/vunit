@@ -7,11 +7,15 @@
 from os.path import join, dirname
 from vunit import VUnit
 
-ui = VUnit.from_argv()
-ui.add_com()
-ui.add_verification_components()
+prj = VUnit.from_argv()
+prj.add_com()
+prj.add_verification_components()
+prj.add_osvvm()
 
-tb_lib = ui.add_library('tb_lib')
+lib = prj.add_library('lib')
+lib.add_source_files(join(dirname(__file__), 'src', '*.vhd'))
+
+tb_lib = prj.add_library('tb_lib')
 tb_lib.add_source_files(join(dirname(__file__), 'test', '*.vhd'))
 
-ui.main()
+prj.main()

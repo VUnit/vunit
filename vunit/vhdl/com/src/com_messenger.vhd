@@ -25,7 +25,7 @@ package com_messenger_pkg is
     -- Handling of actors
     -----------------------------------------------------------------------------
     impure function create (name : string := ""; inbox_size : positive := positive'high) return actor_t;  --
-    impure function find (name : string; enable_deferred_creation : boolean := true) return actor_t;
+    impure function find (name  : string; enable_deferred_creation : boolean := true) return actor_t;
     -- TODO: Add test case
     impure function name (actor : actor_t) return string;
 
@@ -34,38 +34,42 @@ package com_messenger_pkg is
 
     impure function num_of_actors return natural;
     impure function num_of_deferred_creations return natural;
-    impure function unknown_actor (actor : actor_t) return boolean;
-    impure function deferred (actor      : actor_t) return boolean;
-    impure function is_full (actor : actor_t; mailbox_name : mailbox_name_t) return boolean;
+    impure function unknown_actor (actor   : actor_t) return boolean;
+    impure function deferred (actor        : actor_t) return boolean;
+    impure function is_full (actor         : actor_t; mailbox_name : mailbox_name_t) return boolean;
     impure function num_of_messages (actor : actor_t; mailbox_name : mailbox_name_t) return natural;
-    impure function inbox_size (actor    : actor_t) return natural;  --
+    impure function inbox_size (actor      : actor_t) return natural;  --
     procedure resize_inbox (actor : actor_t; new_size : natural);
     impure function subscriber_inbox_is_full (
-      publisher : actor_t;
+      publisher                  : actor_t;
       subscription_traffic_types : subscription_traffic_types_t) return boolean;
     impure function has_subscribers (
-      actor : actor_t;
+      actor                     : actor_t;
       subscription_traffic_type : subscription_traffic_type_t := published) return boolean;
 
     -----------------------------------------------------------------------------
     -- Send related subprograms
     -----------------------------------------------------------------------------
     procedure send (
-      constant sender     : in  actor_t;
-      constant receiver   : in  actor_t;
-      constant mailbox_name : in mailbox_name_t;
-      constant request_id : in  message_id_t;
-      constant payload    : in  string;
-      variable receipt    : out receipt_t);
+      constant sender       : in  actor_t;
+      constant receiver     : in  actor_t;
+      constant mailbox_name : in  mailbox_name_t;
+      constant request_id   : in  message_id_t;
+      constant payload      : in  string;
+      variable receipt      : out receipt_t);
     procedure send (
-      constant receiver   : in  actor_t;
-      constant mailbox_name : in mailbox_name_t;
-      variable msg    : inout  msg_t);
+      constant receiver     : in    actor_t;
+      constant mailbox_name : in    mailbox_name_t;
+      variable msg          : inout msg_t);
     procedure publish (sender : actor_t; payload : string);
     procedure publish (
-      constant sender : in actor_t;
-      variable msg : inout msg_t;
-      constant subscriber_traffic_types : in subscription_traffic_types_t);
+      constant sender                   : in    actor_t;
+      variable msg                      : inout msg_t;
+      constant subscriber_traffic_types : in    subscription_traffic_types_t);
+    procedure internal_publish (
+      constant sender                   : in    actor_t;
+      variable msg                      : inout msg_t;
+      constant subscriber_traffic_types : in    subscription_traffic_types_t);
 
     -----------------------------------------------------------------------------
     -- Receive related subprograms
@@ -74,6 +78,7 @@ package com_messenger_pkg is
     impure function has_messages (actor_vec             : actor_vec_t) return boolean;
     impure function get_first_message_payload (actor    : actor_t) return string;
     impure function get_first_message_sender (actor     : actor_t) return actor_t;
+    impure function get_first_message_receiver (actor   : actor_t) return actor_t;
     impure function get_first_message_id (actor         : actor_t) return message_id_t;
     impure function get_first_message_request_id (actor : actor_t) return message_id_t;
 
@@ -88,19 +93,19 @@ package com_messenger_pkg is
     impure function get_reply_stash_message_id (actor         : actor_t) return message_id_t;
     impure function get_reply_stash_message_request_id (actor : actor_t) return message_id_t;
     impure function find_and_stash_reply_message (
-      actor : actor_t;
-      request_id : message_id_t;
+      actor        : actor_t;
+      request_id   : message_id_t;
       mailbox_name : mailbox_name_t := inbox)
       return boolean;
-    procedure clear_reply_stash (actor                        : actor_t);
+    procedure clear_reply_stash (actor : actor_t);
 
     procedure subscribe (
-      subscriber : actor_t;
-      publisher : actor_t;
+      subscriber   : actor_t;
+      publisher    : actor_t;
       traffic_type : subscription_traffic_type_t := published);
     procedure unsubscribe (
-      subscriber : actor_t;
-      publisher : actor_t;
+      subscriber   : actor_t;
+      publisher    : actor_t;
       traffic_type : subscription_traffic_type_t := published);
 
     ---------------------------------------------------------------------------
@@ -126,7 +131,7 @@ package body com_messenger_pkg is
 
   type mailbox_t is record
     num_of_messages : natural;
-    size : natural;
+    size            : natural;
     first_envelope  : envelope_ptr_t;
     last_envelope   : envelope_ptr_t;
   end record mailbox_t;
@@ -149,13 +154,13 @@ package body com_messenger_pkg is
   type subscribers_t is array (subscription_traffic_type_t range published to inbound) of subscriber_item_ptr_t;
 
   type actor_item_t is record
-    actor               : actor_t;
-    name                : line;
-    deferred_creation   : boolean;
-    inbox               : mailbox_ptr_t;
-    outbox               : mailbox_ptr_t;
-    reply_stash         : envelope_ptr_t;
-    subscribers         : subscribers_t;
+    actor             : actor_t;
+    name              : line;
+    deferred_creation : boolean;
+    inbox             : mailbox_ptr_t;
+    outbox            : mailbox_ptr_t;
+    reply_stash       : envelope_ptr_t;
+    subscribers       : subscribers_t;
   end record actor_item_t;
 
   type actor_item_array_t is array (natural range <>) of actor_item_t;
@@ -163,20 +168,20 @@ package body com_messenger_pkg is
 
   type messenger_t is protected
     body
-    variable null_actor_item_c : actor_item_t := (
-      actor => null_actor_c,
-      name => null,
-      deferred_creation => false,
-      inbox => create(0),
-      outbox => create(0),
-      reply_stash => null,
-      subscribers => (null, null, null));  --
+      variable null_actor_item_c : actor_item_t := (
+        actor             => null_actor_c,
+        name              => null,
+        deferred_creation => false,
+        inbox             => create(0),
+        outbox            => create(0),
+        reply_stash       => null,
+        subscribers       => (null, null, null));  --
     variable envelope_recycle_bin : envelope_ptr_array(1 to 1000);
-    variable n_recycled_envelopes : natural                := 0;
-    variable null_message         : message_t              := (0, ok, null_actor_c, null_actor_c, no_message_id_c, null);
-    variable next_message_id      : message_id_t           := no_message_id_c + 1;
-    variable timeout_allowed : boolean := false;
-    variable deprecated_allowed : boolean := false;
+    variable n_recycled_envelopes : natural      := 0;
+    variable null_message         : message_t    := (0, ok, null_actor_c, null_actor_c, no_message_id_c, null);
+    variable next_message_id      : message_id_t := no_message_id_c + 1;
+    variable timeout_allowed      : boolean      := false;
+    variable deprecated_allowed   : boolean      := false;
 
     -----------------------------------------------------------------------------
     -- Handling of actors
@@ -213,7 +218,7 @@ package body com_messenger_pkg is
     return ret_val;
   end function init_actors;
 
-  variable actors               : actor_item_array_ptr_t := init_actors;
+  variable actors : actor_item_array_ptr_t := init_actors;
 
   impure function find_actor (name : string) return actor_t is
     variable ret_val : actor_t;
@@ -262,7 +267,12 @@ package body com_messenger_pkg is
 
   impure function name (actor : actor_t) return string is
   begin
-    return actors(actor.id).name.all;
+    if actors(actor.id).name /= null then
+      return actors(actor.id).name.all;
+    else
+      return "";
+    end if;
+
   end;
 
 
@@ -272,8 +282,8 @@ package body com_messenger_pkg is
     if (actor = null_actor_c) or (name = "") then
       actor := create_actor(name, false, inbox_size);
     elsif actors(actor.id).deferred_creation then
-      actors(actor.id).deferred_creation   := false;
-      actors(actor.id).inbox.size := inbox_size;
+      actors(actor.id).deferred_creation := false;
+      actors(actor.id).inbox.size        := inbox_size;
     else
       check_failed(duplicate_actor_name_error);
     end if;
@@ -282,8 +292,8 @@ package body com_messenger_pkg is
   end;
 
   impure function is_subscriber (
-    subscriber : actor_t;
-    publisher : actor_t;
+    subscriber   : actor_t;
+    publisher    : actor_t;
     traffic_type : subscription_traffic_type_t) return boolean is
     variable item : subscriber_item_ptr_t := actors(publisher.id).subscribers(traffic_type);
   begin
@@ -335,7 +345,7 @@ package body com_messenger_pkg is
 
     for t in subscription_traffic_type_t'left to subscription_traffic_type_t'right loop
       while actors(actor.id).subscribers(t) /= null loop
-        item                         := actors(actor.id).subscribers(t);
+        item                            := actors(actor.id).subscribers(t);
         actors(actor.id).subscribers(t) := item.next_item;
         deallocate(item);
       end loop;
@@ -431,21 +441,23 @@ package body com_messenger_pkg is
   procedure resize_inbox (actor : actor_t; new_size : natural) is
   begin
     check(num_of_messages(actor, inbox) <= new_size, insufficient_size_error);
-    actors(actor.id).inbox.size := new_size;
+    actors(actor.id).inbox.size         := new_size;
   end;
 
   impure function subscriber_inbox_is_full (
-    publisher : actor_t;
+    publisher                  : actor_t;
     subscription_traffic_types : subscription_traffic_types_t) return boolean is
     variable result : boolean_vector(subscription_traffic_types'range) := (others => false);
     procedure has_full_inboxes (
-      variable subscribers : in subscriber_item_ptr_t;
-      variable result : out boolean) is
+      variable subscribers : in  subscriber_item_ptr_t;
+      variable result      : out boolean) is
       variable item : subscriber_item_ptr_t := subscribers;
     begin
       result := false;
       while item /= null loop
         result := is_full(item.actor, inbox);
+        exit when result;
+        has_full_inboxes(actors(item.actor.id).subscribers(inbound), result);
         exit when result;
         item   := item.next_item;
       end loop;
@@ -459,7 +471,7 @@ package body com_messenger_pkg is
   end function;
 
   impure function has_subscribers (
-    actor : actor_t;
+    actor                     : actor_t;
     subscription_traffic_type : subscription_traffic_type_t := published) return boolean is
   begin
     return actors(actor.id).subscribers(subscription_traffic_type) /= null;
@@ -474,14 +486,14 @@ package body com_messenger_pkg is
   -- Send related subprograms
   -----------------------------------------------------------------------------
   procedure send (
-    constant sender     : in  actor_t;
-    constant receiver   : in  actor_t;
-    constant mailbox_name : in mailbox_name_t;
-    constant request_id : in  message_id_t;
-    constant payload    : in  string;
-    variable receipt    : out receipt_t) is
+    constant sender       : in  actor_t;
+    constant receiver     : in  actor_t;
+    constant mailbox_name : in  mailbox_name_t;
+    constant request_id   : in  message_id_t;
+    constant payload      : in  string;
+    variable receipt      : out receipt_t) is
     variable envelope : envelope_ptr_t;
-    variable mailbox : mailbox_ptr_t;
+    variable mailbox  : mailbox_ptr_t;
   begin
     check(not is_full(receiver, mailbox_name), full_inbox_error);
 
@@ -495,7 +507,7 @@ package body com_messenger_pkg is
     write(envelope.message.payload, payload);
     next_message_id             := next_message_id + 1;
 
-    mailbox := actors(receiver.id).inbox when mailbox_name = inbox else actors(receiver.id).outbox;
+    mailbox                 := actors(receiver.id).inbox when mailbox_name = inbox else actors(receiver.id).outbox;
     mailbox.num_of_messages := mailbox.num_of_messages + 1;
     if mailbox.last_envelope /= null then
       mailbox.last_envelope.next_envelope := envelope;
@@ -521,23 +533,23 @@ package body com_messenger_pkg is
 
 
   procedure put_message (
-    receiver : actor_t;
-    msg : msg_t;
+    receiver     : actor_t;
+    msg          : msg_t;
     mailbox_name : mailbox_name_t) is
     variable envelope : envelope_ptr_t;
-    variable data : msg_data_t := copy(msg.data);
-    variable mailbox : mailbox_ptr_t;
+    variable data     : msg_data_t := copy(msg.data);
+    variable mailbox  : mailbox_ptr_t;
   begin
 
     envelope                    := new_envelope;
     envelope.message.id         := msg.id;
     envelope.message.sender     := msg.sender;
-    envelope.message.receiver   := receiver;
+    envelope.message.receiver   := msg.receiver;
     envelope.message.request_id := msg.request_id;
     write(envelope.message.payload, encode(data));
-    data := copy(data);
+    data                        := copy(data);
 
-    mailbox := actors(receiver.id).inbox when mailbox_name = inbox else actors(receiver.id).outbox;
+    mailbox                 := actors(receiver.id).inbox when mailbox_name = inbox else actors(receiver.id).outbox;
     mailbox.num_of_messages := mailbox.num_of_messages + 1;
     if mailbox.last_envelope /= null then
       mailbox.last_envelope.next_envelope := envelope;
@@ -548,44 +560,61 @@ package body com_messenger_pkg is
   end procedure;
 
   procedure put_subscriber_messages (
-    variable subscribers : inout subscriber_item_ptr_t;
-    constant msg : in msg_t;
-    constant mailbox_name : in mailbox_name_t) is
+    variable subscribers      : inout subscriber_item_ptr_t;
+    variable msg              : inout msg_t;
+    constant set_msg_receiver : in    boolean) is
     variable subscriber_item : subscriber_item_ptr_t := subscribers;
   begin
     while subscriber_item /= null loop
+      if set_msg_receiver then
+        msg.receiver := subscriber_item.actor;
+      end if;
       put_message(subscriber_item.actor, msg, inbox);
+      internal_publish(subscriber_item.actor, msg, (0 => inbound));
       subscriber_item := subscriber_item.next_item;
     end loop;
   end;
 
   procedure publish (
-    constant sender : in actor_t;
-    variable msg : inout msg_t;
-    constant subscriber_traffic_types : in subscription_traffic_types_t) is
+    constant sender                   : in    actor_t;
+    variable msg                      : inout msg_t;
+    constant subscriber_traffic_types : in    subscription_traffic_types_t) is
   begin
     check(not unknown_actor(sender), unknown_publisher_error);
     check(msg.data /= null_queue, null_message_error);
 
-    msg.id := next_message_id;
-    msg.status              := ok;
-    msg.sender   := sender;
-    msg.receiver := null_actor_c;
+    msg.id     := next_message_id;
+    msg.status := ok;
+    msg.sender := sender;
 
     for t in subscriber_traffic_types'range loop
-      put_subscriber_messages(actors(sender.id).subscribers(subscriber_traffic_types(t)), msg, inbox);
+      put_subscriber_messages(actors(sender.id).subscribers(subscriber_traffic_types(t)),
+                              msg, set_msg_receiver => true);
+    end loop;
+
+    msg.receiver := null_actor_c;
+  end;
+
+  procedure internal_publish (
+    constant sender                   : in    actor_t;
+    variable msg                      : inout msg_t;
+    constant subscriber_traffic_types : in    subscription_traffic_types_t) is
+  begin
+    for t in subscriber_traffic_types'range loop
+      put_subscriber_messages(actors(sender.id).subscribers(subscriber_traffic_types(t)),
+                              msg, set_msg_receiver => false);
     end loop;
   end;
 
   procedure send (
-    constant receiver   : in  actor_t;
-    constant mailbox_name : in mailbox_name_t;
-    variable msg    : inout  msg_t) is
+    constant receiver     : in    actor_t;
+    constant mailbox_name : in    mailbox_name_t;
+    variable msg          : inout msg_t) is
   begin
-    msg.id := next_message_id;
+    msg.id          := next_message_id;
     next_message_id := next_message_id + 1;
-    msg.status              := ok;
-    msg.receiver := receiver;
+    msg.status      := ok;
+    msg.receiver    := receiver;
 
     put_message(receiver, msg, mailbox_name);
   end;
@@ -621,6 +650,15 @@ package body com_messenger_pkg is
   begin
     if actors(actor.id).inbox.first_envelope /= null then
       return actors(actor.id).inbox.first_envelope.message.sender;
+    else
+      return null_actor_c;
+    end if;
+  end;
+
+  impure function get_first_message_receiver (actor : actor_t) return actor_t is
+  begin
+    if actors(actor.id).inbox.first_envelope /= null then
+      return actors(actor.id).inbox.first_envelope.message.receiver;
     else
       return null_actor_c;
     end if;
@@ -713,15 +751,15 @@ package body com_messenger_pkg is
   end;
 
   impure function find_and_stash_reply_message (
-    actor : actor_t;
-    request_id : message_id_t;
+    actor        : actor_t;
+    request_id   : message_id_t;
     mailbox_name : mailbox_name_t := inbox)
     return boolean is
     variable envelope          : envelope_ptr_t;
     variable previous_envelope : envelope_ptr_t := null;
-    variable mailbox : mailbox_ptr_t;
+    variable mailbox           : mailbox_ptr_t;
   begin
-    mailbox := actors(actor.id).inbox when mailbox_name = inbox else actors(actor.id).outbox;
+    mailbox  := actors(actor.id).inbox when mailbox_name = inbox else actors(actor.id).outbox;
     envelope := mailbox.first_envelope;
 
     while envelope /= null loop
@@ -752,8 +790,8 @@ package body com_messenger_pkg is
   end procedure clear_reply_stash;
 
   procedure subscribe (
-    subscriber : actor_t;
-    publisher : actor_t;
+    subscriber   : actor_t;
+    publisher    : actor_t;
     traffic_type : subscription_traffic_type_t := published) is
     variable new_subscriber : subscriber_item_ptr_t;
   begin
@@ -767,20 +805,20 @@ package body com_messenger_pkg is
     end if;
 
     if traffic_type = published then
-      new_subscriber := new subscriber_item_t'(subscriber, actors(publisher.id).subscribers(published));
+      new_subscriber                              := new subscriber_item_t'(subscriber, actors(publisher.id).subscribers(published));
       actors(publisher.id).subscribers(published) := new_subscriber;
     elsif traffic_type = outbound then
-      new_subscriber := new subscriber_item_t'(subscriber, actors(publisher.id).subscribers(outbound));
+      new_subscriber                             := new subscriber_item_t'(subscriber, actors(publisher.id).subscribers(outbound));
       actors(publisher.id).subscribers(outbound) := new_subscriber;
     else
-      new_subscriber := new subscriber_item_t'(subscriber, actors(publisher.id).subscribers(inbound));
+      new_subscriber                            := new subscriber_item_t'(subscriber, actors(publisher.id).subscribers(inbound));
       actors(publisher.id).subscribers(inbound) := new_subscriber;
     end if;
   end procedure subscribe;
 
   procedure unsubscribe (
-    subscriber : actor_t;
-    publisher : actor_t;
+    subscriber   : actor_t;
+    publisher    : actor_t;
     traffic_type : subscription_traffic_type_t := published) is
   begin
     check(not unknown_actor(subscriber), unknown_subscriber_error);

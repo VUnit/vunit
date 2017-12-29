@@ -149,6 +149,11 @@ package body com_pkg is
     return msg.sender;
   end;
 
+  function receiver(msg : msg_t) return actor_t is
+  begin
+    return msg.receiver;
+  end;
+
   procedure push(msg : msg_t; value : integer) is
   begin
     push(msg.data, value);
@@ -578,9 +583,9 @@ package body com_pkg is
 
 
   procedure wait_on_subscribers (
-    publisher    : actor_t;
+    publisher                  : actor_t;
     subscription_traffic_types : subscription_traffic_types_t;
-    timeout      : time) is
+    timeout                    : time) is
   begin
     if messenger.subscriber_inbox_is_full(publisher, subscription_traffic_types) then
       wait on net until not messenger.subscriber_inbox_is_full(publisher, subscription_traffic_types) for timeout;
@@ -614,9 +619,14 @@ package body com_pkg is
 
     if msg.sender /= null_actor_c then
       if messenger.has_subscribers(msg.sender, outbound) then
-        wait_on_subscribers(msg.sender, (0 => outbound), timeout);
-        messenger.publish(msg.sender, msg, (0 => outbound));
+        wait_on_subscribers(msg.sender, (0             => outbound), timeout - (now - t_start));
+        messenger.internal_publish(msg.sender, msg, (0 => outbound));
       end if;
+    end if;
+
+    if (mailbox_name = inbox) and messenger.has_subscribers(receiver, inbound) then
+      wait_on_subscribers(receiver, (0             => inbound), timeout - (now - t_start));
+      messenger.internal_publish(receiver, msg, (0 => inbound));
     end if;
 
     notify(net);
@@ -650,7 +660,7 @@ package body com_pkg is
     constant timeout   : in    time := max_timeout_c) is
     variable status                  : com_status_t;
     variable started_with_full_inbox : boolean;
-    variable receiver : actor_t;
+    variable receiver                : actor_t;
   begin
     delete(msg);
     wait_for_message(net, receivers, status, timeout);
@@ -666,11 +676,6 @@ package body com_pkg is
         exit;
       end if;
     end loop;
-
-    if messenger.has_subscribers(receiver, inbound) then
-      wait_on_subscribers(receiver, (0 => inbound), timeout);
-      messenger.publish(receiver, msg, (0 => inbound));
-    end if;
 
     if started_with_full_inbox or messenger.has_subscribers(receiver, inbound) then
       notify(net);
@@ -958,10 +963,10 @@ package body com_pkg is
 
 
   procedure wait_for_reply (
-    signal net       : inout network_t;
+    signal net           : inout network_t;
     variable request_msg : inout msg_t;
-    variable status  : out   com_status_t;
-    constant timeout : in    time := max_timeout_c) is
+    variable status      : out   com_status_t;
+    constant timeout     : in    time := max_timeout_c) is
     variable source_actor : actor_t;
     variable mailbox      : mailbox_name_t;
   begin
@@ -980,7 +985,7 @@ package body com_pkg is
     msg.id         := messenger.get_first_message_id(receiver);
     msg.request_id := messenger.get_first_message_request_id(receiver);
     msg.sender     := messenger.get_first_message_sender(receiver);
-    msg.receiver   := receiver;
+    msg.receiver   := messenger.get_first_message_receiver(receiver);
     msg.data       := decode(messenger.get_first_message_payload(receiver));
     messenger.delete_first_envelope(receiver);
 
@@ -994,7 +999,7 @@ package body com_pkg is
     source_actor := request_msg.sender when request_msg.sender /= null_actor_c else request_msg.receiver;
 
     check(messenger.has_reply_stash_message(source_actor), null_message_error);
-    message := get_reply_stash_message(source_actor);
+    message              := get_reply_stash_message(source_actor);
     check(message.request_id = request_msg.id, unknown_request_id_error);
     reply_msg.id         := message.id;
     reply_msg.status     := message.status;
@@ -1009,16 +1014,16 @@ package body com_pkg is
   -- Subscriptions
   -----------------------------------------------------------------------------
   procedure subscribe (
-    subscriber : actor_t;
-    publisher : actor_t;
+    subscriber   : actor_t;
+    publisher    : actor_t;
     traffic_type : subscription_traffic_type_t := published) is
   begin
     messenger.subscribe(subscriber, publisher, traffic_type);
   end procedure subscribe;
 
   procedure unsubscribe (
-    subscriber : actor_t;
-    publisher : actor_t;
+    subscriber   : actor_t;
+    publisher    : actor_t;
     traffic_type : subscription_traffic_type_t := published) is
   begin
     messenger.unsubscribe(subscriber, publisher, traffic_type);

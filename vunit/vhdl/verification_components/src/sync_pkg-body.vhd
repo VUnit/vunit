@@ -10,7 +10,7 @@ context work.com_context;
 
 package body sync_pkg is
   procedure wait_until_idle(signal net : inout network_t;
-                            handle : sync_handle_t) is
+                            handle     :       sync_handle_t) is
     variable msg, reply_msg : msg_t;
   begin
     msg := create;
@@ -20,8 +20,8 @@ package body sync_pkg is
   end;
 
   procedure wait_for_time(signal net : inout network_t;
-                          handle : sync_handle_t;
-                          delay : delay_length) is
+                          handle     :       sync_handle_t;
+                          delay      :       delay_length) is
     variable msg : msg_t;
   begin
     msg := create;
@@ -30,22 +30,37 @@ package body sync_pkg is
     send(net, handle, msg);
   end;
 
-  procedure handle_sync_message(signal net : inout network_t;
-                                variable msg_type : inout msg_type_t;
-                                variable msg : inout msg_t) is
+  procedure handle_wait_until_idle(signal net        : inout network_t;
+                                   variable msg_type : inout msg_type_t;
+                                   variable msg      : inout msg_t) is
     variable reply_msg : msg_t;
-    variable delay : delay_length;
   begin
     if msg_type = wait_until_idle_msg then
       handle_message(msg_type);
       reply_msg := create;
+      push(reply_msg, wait_until_idle_reply_msg);
       reply(net, msg, reply_msg);
+    end if;
+  end;
 
-    elsif msg_type = wait_for_time_msg then
+  procedure handle_wait_for_time(signal net        : inout network_t;
+                                 variable msg_type : inout msg_type_t;
+                                 variable msg      : inout msg_t) is
+    variable delay : delay_length;
+  begin
+    if msg_type = wait_for_time_msg then
       handle_message(msg_type);
       delay := pop_time(msg);
       wait for delay;
     end if;
+  end;
+
+  procedure handle_sync_message(signal net        : inout network_t;
+                                variable msg_type : inout msg_type_t;
+                                variable msg      : inout msg_t) is
+  begin
+    handle_wait_until_idle(net, msg_type, msg);
+    handle_wait_for_time(net, msg_type, msg);
   end;
 
 end package body;

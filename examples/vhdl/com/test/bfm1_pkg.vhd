@@ -89,6 +89,7 @@ package body bfm1_pkg is
   begin
     receive_reply(net, future, reply_msg);
     data := pop(reply_msg);
+    delete(reply_msg);
   end;
 
   procedure read(

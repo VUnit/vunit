@@ -32,13 +32,13 @@ architecture test_fixture of tb_com is
   constant com_logger : logger_t := get_logger("vunit_lib:com");
 begin
   test_runner : process
-    variable self, actor, actor2, receiver, server, publisher, subscriber  : actor_t;
-    variable status                                                        : com_status_t;
-    variable receipt, receipt2, receipt3                                   : receipt_t;
-    variable n_actors                                                      : natural;
-    variable t_start, t_stop                                               : time;
-    variable ack                                                           : boolean;
-    variable msg, msg2, request_msg, request_msg2, request_msg3, reply_msg : msg_t;
+    variable self, actor, actor2, my_receiver, my_sender, server, publisher, subscriber : actor_t;
+    variable status                                                                     : com_status_t;
+    variable receipt, receipt2, receipt3                                                : receipt_t;
+    variable n_actors                                                                   : natural;
+    variable t_start, t_stop                                                            : time;
+    variable ack                                                                        : boolean;
+    variable msg, msg2, request_msg, request_msg2, request_msg3, reply_msg              : msg_t;
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -59,6 +59,8 @@ begin
         actor := new_actor;
         check(actor /= null_actor_c, "Failed to create no name actor");
         check_equal(name(actor), "");
+      elsif run("Test that the null actor has no name") then
+        check_equal(name(null_actor_c), "");
       elsif run("Test that two actors of the same name cannot be created") then
         actor := new_actor("actor2");
         mock(com_logger);
@@ -138,12 +140,12 @@ begin
       elsif run("Test that an actor can send a message to another actor") then
         start_receiver <= true;
         wait for 1 ns;
-        receiver       := find("receiver");
+        my_receiver    := find("my_receiver");
         msg            := new_msg(self);
         push_string(msg, "hello world");
-        send(net, receiver, msg);
+        send(net, my_receiver, msg);
         check(msg.sender = self);
-        check(msg.receiver = receiver);
+        check(msg.receiver = my_receiver);
         wait until hello_world_received for 1 ns;
         check(hello_world_received, "Expected ""hello world"" to be received at the server");
       elsif run("Test that an actor can send a message in response to another message from an a priori unknown actor") then
@@ -289,7 +291,7 @@ begin
           receive(net, actor_vec_t'(actor, actor2), msg);
           check_equal(name(msg.sender), pop_string(msg));
         end loop;
-      elsif run("Test that the sender of a message can be retrieved") then
+      elsif run("Test that the sender and the receiver of a message can be retrieved") then
         actor  := new_actor;
         actor2 := new_actor;
         msg    := new_msg(actor2);
@@ -297,11 +299,13 @@ begin
         send(net, actor, msg);
         receive(net, actor, msg);
         check(sender(msg) = actor2);
+        check(receiver(msg) = actor);
         msg    := new_msg;
         push_string(msg, "To actor");
         send(net, actor, msg);
         receive(net, actor, msg);
         check(sender(msg) = null_actor_c);
+        check(receiver(msg) = actor);
 
       -- Publish, subscribe, and unsubscribe
       elsif run("Test that an actor can publish messages to multiple subscribers") then
@@ -316,14 +320,33 @@ begin
         wait until hello_subscriber_received = "11" for 1 ns;
         check(hello_subscriber_received = "11", "Expected ""hello subscribers"" to be received at the subscribers");
       elsif run("Test that subscribers receive messages sent on outbound subscription") then
-        publisher         := new_actor("publisher");
-        start_subscribers <= true;
-        wait for 1 ns;
-        msg               := new_msg(publisher);
-        push_string(msg, "hello subscriber");
-        send(net, self, msg);
-        wait until hello_subscriber_received = "11" for 1 ns;
-        check(hello_subscriber_received = "11", "Expected ""hello subscribers"" to be received at the subscribers");
+        my_sender   := new_actor;
+        my_receiver := new_actor;
+        subscribe(self, my_sender, outbound);
+
+        msg := new_msg(my_sender);
+        push_string(msg, "hello");
+        send(net, my_receiver, msg);
+
+        receive(net, my_receiver, msg2, 0 ns);
+        check(sender(msg2) = my_sender);
+        check(receiver(msg2) = my_receiver);
+        check_equal(pop_string(msg2), "hello");
+
+        receive(net, self, msg2, 0 ns);
+        check(sender(msg2) = my_sender);
+        check(receiver(msg2) = my_receiver);
+        check_equal(pop_string(msg2), "hello");
+
+        msg := new_msg;
+        push_string(msg, "hello2");
+        publish(net, my_sender, msg);
+
+        receive(net, self, msg2, 0 ns);
+        check(sender(msg2) = my_sender);
+        check(receiver(msg2) = self);
+        check_equal(pop_string(msg2), "hello2");
+
       elsif run("Test that subscribers don't receive duplicate message") then
         publisher := new_actor("publisher");
         subscribe(self, publisher);
@@ -347,25 +370,93 @@ begin
         wait_for_message(net, self, status, 0 ns);
         check(status = timeout, "Expected no message");
       elsif run("Test that actors can subscribe to inbound traffic") then
-        receiver := new_actor;
-        subscribe(self, receiver, inbound);
-        msg      := new_msg;
+        my_receiver := new_actor;
+        subscribe(self, my_receiver, inbound);
+
+        msg := new_msg;
         push_string(msg, "hello");
-        send(net, receiver, msg);
-        receive(net, receiver, msg2, 0 ns);
-        receive(net, self, msg2, 0 ns);
+        send(net, my_receiver, msg);
+
+        receive(net, my_receiver, msg2, 0 ns);
+        check(sender(msg2) = null_actor_c);
+        check(receiver(msg2) = my_receiver);
         check_equal(pop_string(msg2), "hello");
-        msg      := new_msg;
+
+        receive(net, self, msg2, 0 ns);
+        check(sender(msg2) = null_actor_c);
+        check(receiver(msg2) = my_receiver);
+        check_equal(pop_string(msg2), "hello");
+
+        msg := new_msg;
         push_string(msg, "publication");
-        publish(net, receiver, msg);
+        publish(net, my_receiver, msg);
+
         wait_for_message(net, self, status, 0 ns);
         check(status = timeout, "Expected no message");
-        actor    := new_actor("actor");
-        msg      := new_msg(receiver);
+
+        actor := new_actor("actor");
+        msg   := new_msg(my_receiver);
         push_string(msg, "hello");
+
         send(net, actor, msg);
         wait_for_message(net, self, status, 0 ns);
         check(status = timeout, "Expected no message");
+      elsif run("Test request/reply with actor having inbound subscribers") then
+        subscriber    := new_actor("subscriber");
+        start_server5 <= true;
+        wait for 1 ns;
+        server        := find("server5");
+        subscribe(subscriber, server, inbound);
+
+        request_msg := new_msg(self);
+        push_string(request_msg, "request");
+        send(net, server, request_msg);
+
+        receive_reply(net, request_msg, reply_msg, 100 ns);
+        check_equal(pop_string(reply_msg), "reply");
+
+        receive(net, subscriber, reply_msg, 0 ns);
+        check_equal(pop_string(reply_msg), "request");
+      elsif run("Test chained subscribers") then
+        my_sender   := new_actor;
+        my_receiver := new_actor;
+        subscriber := new_actor;
+        subscribe(self, my_sender, outbound);
+        subscribe(subscriber, self, inbound);
+
+        msg := new_msg(my_sender);
+        push_string(msg, "hello");
+        send(net, my_receiver, msg);
+
+        receive(net, my_receiver, msg2, 0 ns);
+        check(sender(msg2) = my_sender);
+        check(receiver(msg2) = my_receiver);
+        check_equal(pop_string(msg2), "hello");
+
+        receive(net, self, msg2, 0 ns);
+        check(sender(msg2) = my_sender);
+        check(receiver(msg2) = my_receiver);
+        check_equal(pop_string(msg2), "hello");
+
+        receive(net, subscriber, msg2, 0 ns);
+        check(sender(msg2) = my_sender);
+        check(receiver(msg2) = my_receiver);
+        check_equal(pop_string(msg2), "hello");
+
+        msg := new_msg;
+        push_string(msg, "hello2");
+        publish(net, my_sender, msg);
+
+        receive(net, self, msg2, 0 ns);
+        check(sender(msg2) = my_sender);
+        check(receiver(msg2) = self);
+        check_equal(pop_string(msg2), "hello2");
+
+        receive(net, subscriber, msg2, 0 ns);
+        check(sender(msg2) = my_sender);
+        check(receiver(msg2) = self, "Got: " & name(receiver(msg2)));
+        check_equal(pop_string(msg2), "hello2");
+
       elsif run("Test that a subscriber can unsubscribe") then
         subscribe(self, self, published);
         subscribe(self, self, inbound);
@@ -543,19 +634,19 @@ begin
 
   test_runner_watchdog(runner, 100 ms);
 
-  receiver : process is
+  my_receiver : process is
     variable self   : actor_t;
     variable msg    : msg_t;
     variable status : com_status_t;
   begin
     wait until start_receiver;
-    self                 := new_actor("receiver");
+    self                 := new_actor("my_receiver");
     receive(net, self, msg);
     check(msg.sender = find("test runner"));
     check(msg.receiver = self);
     hello_world_received <= check_equal(pop_string(msg), "hello world");
     wait;
-  end process receiver;
+  end process;
 
   server : process is
     variable self                   : actor_t;
@@ -580,8 +671,10 @@ begin
       wait until start_subscribers;
       self      := new_actor("subscriber " & integer'image(i));
       publisher := find("publisher");
-      subscribe(self, publisher, outbound);
+      subscribe(self, publisher);
       receive(net, self, msg);
+      check(sender(msg) = find("publisher"));
+      check(receiver(msg) = self);
       if check_equal(pop_string(msg), "hello subscriber") then
         hello_subscriber_received(i)     <= '1';
         hello_subscriber_received(3 - i) <= 'Z';

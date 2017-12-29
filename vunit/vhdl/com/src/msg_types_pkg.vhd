@@ -25,6 +25,8 @@ package msg_types_pkg is
   constant msg_types_logger : logger_t := get_logger("vunit_lib:msg_types_pkg");
 
   impure function new_msg_type(name : string) return msg_type_t;
+  impure function name( msg_type : msg_type_t) return string;
+
   procedure unexpected_msg_type(msg_type : msg_type_t;
                                     logger : logger_t := msg_types_logger);
 
@@ -50,6 +52,11 @@ package body msg_types_pkg is
     set(p_msg_types.p_name_ptrs, code, to_integer(new_string_ptr(name)));
     return (p_code => code);
   end function;
+
+  impure function name( msg_type : msg_type_t) return string is
+  begin
+    return to_string(to_string_ptr(get(p_msg_types.p_name_ptrs, msg_type.p_code)));
+  end;
 
   constant message_handled : msg_type_t := new_msg_type("message handled");
 

@@ -57,6 +57,7 @@ package com_pkg is
   alias create is new_msg [actor_t return msg_t];
   procedure delete (msg          : inout msg_t);
   function sender(msg : msg_t) return actor_t;
+  function receiver(msg : msg_t) return actor_t;
 
   procedure push(msg : msg_t; value : integer);
   impure function pop(msg : msg_t) return integer;
