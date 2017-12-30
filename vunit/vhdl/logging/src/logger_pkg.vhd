@@ -108,6 +108,19 @@ package logger_pkg is
   -- Get the idx'th child of this logger
   impure function get_child(logger : logger_t; idx : natural) return logger_t;
 
+  -- Set the threshold for stopping simulation for a specific log level and logger
+  -- including all children
+  procedure set_stop_count(logger : logger_t;
+                           log_level : log_level_t;
+                           value : positive);
+
+  -- Get the threshold for stopping simulation for a specific log level and logger
+  impure function get_stop_count(logger : logger_t;
+                                 log_level : log_level_t) return natural;
+
+  -- Set the threshold for stopping simulation for all loggers
+  procedure set_stop_count(log_level : log_level_t; value : positive);
+
   -- Stop simulation for all levels >= level for this logger and all children
   procedure set_stop_level(logger : logger_t; log_level : log_level_t);
 
@@ -115,11 +128,9 @@ package logger_pkg is
   procedure set_stop_level(level : log_level_t);
 
   -- Disable stopping simulation for this logger and all children
-  -- Equivalent with set_stop_level(logger, above_all_log_levels)
   procedure disable_stop(logger : logger_t);
 
   -- Disable stopping simulation
-  -- Equivalent with set_stop_level(above_all_log_levels)
   procedure disable_stop;
 
   -- Disable logging for all levels < level to this handler. Additional log
@@ -175,20 +186,16 @@ package logger_pkg is
                    levels : log_level_vec_t);
 
   -- Enable all log levels to the log handler
-  -- equivalent with setting log level to below_all_log_levels
   procedure enable_all(log_handler : log_handler_t);
 
   -- Enable all log levels for this handler from specific logger and all children
-  -- equivalent with setting log level to below_all_log_levels
   procedure enable_all(logger : logger_t;
                        log_handler : log_handler_t);
 
   -- Disable all log levels for this handler
-  -- equivalent with setting log level to above_all_log_levels
   procedure disable_all(log_handler : log_handler_t);
 
   -- Disable all log levels for this handler from specific logger and all children
-  -- equivalent with setting log level to above_all_log_levels
   procedure disable_all(logger : logger_t;
                         log_handler : log_handler_t);
 

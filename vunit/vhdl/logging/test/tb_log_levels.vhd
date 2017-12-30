@@ -35,13 +35,13 @@ begin
       assert_equal(get_name(error), "error");
       assert_equal(get_name(failure), "failure");
 
-      assert_true(below_all_log_levels < verbose);
+      assert_true(log_level_t'low < verbose);
       assert_true(verbose < debug);
       assert_true(debug < info);
       assert_true(info < log_level_t'(warning));
       assert_true(log_level_t'(warning) < log_level_t'(error));
       assert_true(log_level_t'(error) < log_level_t'(failure));
-      assert_true(log_level_t'(failure) < above_all_log_levels);
+      assert_true(log_level_t'(failure) < log_level_t'high);
 
       assert_true(is_valid(verbose));
       assert_true(is_valid(debug));

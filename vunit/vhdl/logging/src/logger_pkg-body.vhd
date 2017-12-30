@@ -20,7 +20,7 @@ package body logger_pkg is
   constant parent_idx : natural := 2;
   constant children_idx : natural := 3;
   constant log_count_idx : natural := 4;
-  constant stop_level_idx : natural := 5;
+  constant stop_counts_idx : natural := 5;
   constant handlers_idx : natural := 6;
   constant is_mocked_idx : natural := 7;
   constant mock_log_count_idx : natural := 8;
@@ -60,7 +60,7 @@ package body logger_pkg is
     set(logger.p_data, children_idx, to_integer(new_integer_vector_ptr));
     set(logger.p_data, log_count_idx, to_integer(new_integer_vector_ptr(log_level_t'pos(log_level_t'high)+1, value => 0)));
     set(logger.p_data, mock_log_count_idx, to_integer(new_integer_vector_ptr(log_level_t'pos(log_level_t'high)+1, value => 0)));
-    set(logger.p_data, stop_level_idx, log_level_t'pos(failure));
+    set(logger.p_data, stop_counts_idx, to_integer(new_integer_vector_ptr));
     set(logger.p_data, handlers_idx, to_integer(new_integer_vector_ptr));
     set(logger.p_data, is_mocked_idx, 0);
     set(logger.p_data, mocked_log_queue_meta_idx, to_integer(mocked_log_queue.p_meta));
@@ -312,13 +312,54 @@ package body logger_pkg is
     return (p_data => to_integer_vector_ptr(get(children, idx)));
   end;
 
-  -- Stop simulation for levels with weigths >= this
-  procedure set_stop_level(logger : logger_t; weight : integer) is
+  procedure set_stop_count(logger : logger_t;
+                           log_level : log_level_t;
+                           value : positive) is
+
+    -- Add that saturates on integer'high
+    function add(value1, value2 : natural) return natural is
+    begin
+      if integer'high - value1 < value2 then
+        return integer'high;
+      else
+        return value1 + value2;
+      end if;
+    end;
+
+    constant stop_counts : integer_vector_ptr_t := to_integer_vector_ptr(
+      get(logger.p_data, stop_counts_idx));
+    constant log_level_idx : natural := log_level_t'pos(log_level);
+    constant log_count : natural := get_log_count(logger, log_level);
   begin
-    set(logger.p_data, stop_level_idx, weight);
-    for i in 0 to num_children(logger)-1 loop
-      set_stop_level(get_child(logger, i), weight);
+    if log_level_idx >= length(stop_counts) then
+      resize(stop_counts, log_level_idx + 1, value => integer'high);
+    end if;
+
+    -- Add stop level to existing log count
+    set(stop_counts, log_level_idx, add(log_count, value));
+
+    for child_idx in 0 to num_children(logger)-1 loop
+      set_stop_count(get_child(logger, child_idx), log_level, value);
     end loop;
+  end;
+
+  impure function get_stop_count(logger : logger_t;
+                                 log_level : log_level_t) return natural is
+    constant stop_counts : integer_vector_ptr_t := to_integer_vector_ptr(
+      get(logger.p_data, stop_counts_idx));
+    constant log_level_idx : natural := log_level_t'pos(log_level);
+  begin
+    if log_level_idx >= length(stop_counts) then
+      resize(stop_counts, log_level_idx + 1, value => integer'high);
+    end if;
+
+    return get(stop_counts, log_level_idx);
+  end;
+
+  procedure set_stop_count(log_level : log_level_t;
+                           value : positive) is
+  begin
+    set_stop_count(root_logger, log_level, value);
   end;
 
   procedure set_stop_level(level : log_level_t) is
@@ -329,7 +370,13 @@ package body logger_pkg is
   -- Stop simulation for all levels >= level for this logger and all children
   procedure set_stop_level(logger : logger_t; log_level : log_level_t) is
   begin
-    set_stop_level(logger, log_level_t'pos(log_level));
+    for level in log_level_t'low to log_level_t'high loop
+      if level >= log_level then
+        set_stop_count(logger, level, 1);
+      else
+        set_stop_count(logger, level, integer'high);
+      end if;
+    end loop;
   end;
 
   procedure disable_stop is
@@ -340,7 +387,9 @@ package body logger_pkg is
   -- Disable stopping simulation
   procedure disable_stop(logger : logger_t) is
   begin
-    set_stop_level(logger, above_all_log_levels);
+    for level in log_level_t'low to log_level_t'high loop
+      set_stop_count(logger, level, integer'high);
+    end loop;
   end;
 
   impure function get_log_level_filter(logger : logger_t;
@@ -621,14 +670,23 @@ package body logger_pkg is
     set(log_counts, log_level_t'pos(log_level), get(log_counts, log_level_t'pos(log_level)) + 1);
   end;
 
+  procedure check_stop_condition(logger : logger_t;
+                                 log_level : log_level_t) is
+    constant log_count : natural := get_log_count(logger, log_level);
+    constant stop_count : natural := get_stop_count(logger, log_level);
+  begin
+    if log_count >= stop_count then
+      core_failure("Stop simulation on log level " & get_name(log_level) & ". " &
+                   "Log count " & integer'image(log_count) & " >= " &
+                   "stop count " & integer'image(stop_count));
+    end if;
+  end;
+
   procedure count_log(logger : logger_t; log_level : log_level_t) is
-    constant stop_level : integer := get(logger.p_data, stop_level_idx);
   begin
     set(global_log_count, 0, get(global_log_count, 0) + 1);
     count_log(logger, log_count_idx, log_level);
-    if log_level_t'pos(log_level) >= stop_level then
-      core_failure("Stop simulation on log level " & get_name(log_level));
-    end if;
+    check_stop_condition(logger, log_level);
   end;
 
   procedure mock(logger : logger_t) is

@@ -10,7 +10,7 @@ use work.ansi_pkg.all;
 package log_levels_pkg is
 
   type log_level_t is (
-    below_all_log_levels,
+    null_log_level,
 
     custom_level1,
     custom_level2,
@@ -123,16 +123,13 @@ package log_levels_pkg is
     custom_level97,
     custom_level98,
     custom_level99,
-    custom_level100,
-
-    above_all_log_levels,
-
-    null_log_level
+    custom_level100
     );
   type log_level_vec_t is array (natural range <>) of log_level_t;
   constant null_vec : log_level_vec_t(1 to 0) := (others => info);
 
-  subtype numeric_log_level_t is integer range 1 to 100;
+  subtype legal_log_level_t is log_level_t range custom_level1 to log_level_t'high;
+  subtype numeric_log_level_t is integer range log_level_t'pos(legal_log_level_t'low) to log_level_t'pos(legal_log_level_t'high);
 
   impure function "+" (reference_level : log_level_t; offset : numeric_log_level_t) return numeric_log_level_t;
   impure function "-" (reference_level : log_level_t; offset : numeric_log_level_t) return numeric_log_level_t;

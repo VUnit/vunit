@@ -475,13 +475,32 @@ begin
     elsif run("log above stop level fails") then
       set_stop_level(warning);
       mock_core_failure;
-      warning(logger, "message");
+      warning("message");
       check_and_unmock_core_failure;
+      reset_log_count(default_logger);
 
       set_stop_level(logger, warning);
       mock_core_failure;
       warning(logger, "message");
       check_and_unmock_core_failure;
+      reset_log_count(logger);
+
+    elsif run("log above stop count fails") then
+      set_stop_count(logger, failure, 2);
+      -- Should not fail
+      failure(logger, "message");
+      mock_core_failure;
+      failure(logger, "message");
+      check_and_unmock_core_failure;
+      reset_log_count(logger);
+
+      set_stop_count(failure, 2);
+      -- Should not fail
+      failure("message");
+      mock_core_failure;
+      failure("message");
+      check_and_unmock_core_failure;
+      reset_log_count(default_logger);
 
     elsif run("disable_stop pass all levels") then
       disable_stop;

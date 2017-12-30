@@ -44,7 +44,7 @@ package body run_pkg is
                       new_log_handler(file_name => join(output_path(runner_cfg), "runner.csv"),
                                       format => csv, use_color => false)));
     update_max_logger_name_length(get_log_handler(runner_trace_logger, 0), get_max_logger_name_length(display_handler));
-    
+
     if has_active_python_runner(runner_state) then
       set_log_level(runner_trace_logger, get_log_handler(runner_trace_logger, 0), warning);
     else
@@ -130,13 +130,15 @@ package body run_pkg is
           return false;
         end if;
 
-        for i in log_level_t'pos(error) to above_all_log_levels - 1 loop
-          count := get_log_count(child, log_level_t'val(i));
-          if count > 0 then
-            core_pkg.core_failure("Logger """ & get_full_name(child) &
-                                  """ has " & integer'image(count) & " " & get_name(log_level_t'val(i)) &
-                                  " " & entry_spelling(count > 1) & ".");
-            return false;
+        for level in error to legal_log_level_t'high loop
+          if is_valid(level) then
+            count := get_log_count(child, level);
+            if count > 0 then
+              core_pkg.core_failure("Logger """ & get_full_name(child) &
+                                    """ has " & integer'image(count) & " " & get_name(level) &
+                                    " " & entry_spelling(count > 1) & ".");
+              return false;
+            end if;
           end if;
         end loop;
 

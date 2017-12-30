@@ -74,7 +74,7 @@ package body test_support_pkg is
     log(logger, "Hello world", pass_level);
     mock_core_failure;
     log(logger, "Hello world", stop_level);
-    check_and_unmock_core_failure("Stop simulation on log level " & log_level_t'image(stop_level));
+    check_and_unmock_core_failure;
     reset_log_count(logger, stop_level);
     reset_log_count(logger, pass_level);
   end;
@@ -92,15 +92,15 @@ package body test_support_pkg is
     end if;
 
     if expected = off then
-      for l in above_all_log_levels - 1 downto below_all_log_levels + 1 loop
-        assert_false(is_enabled(logger, handler, log_level_t'val(l)),
-                    "Level enabled: " & log_level_t'image(log_level_t'val(l)));
+      for level in log_level_t'low to log_level_t'high loop
+        assert_false(is_enabled(logger, handler, level),
+                    "Level enabled: " & log_level_t'image(level));
       end loop;
     else
       assert_true(format = expected);
-      for l in above_all_log_levels - 1 downto below_all_log_levels + 1 loop
-        assert_true(is_enabled(logger, handler, log_level_t'val(l)),
-                    "Level disabled: " & log_level_t'image(log_level_t'val(l)));
+      for level in log_level_t'low to log_level_t'high loop
+        assert_true(is_enabled(logger, handler, level),
+                    "Level disabled: " & log_level_t'image(level));
       end loop;
     end if;
   end;

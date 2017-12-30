@@ -284,7 +284,7 @@ begin
 
     ---------------------------------------------------------------------------
     banner("Test that log entries with custom levels above error cause failure on test_runner_cleanup");
-    for i in error + 1 to above_all_log_levels - 1 loop
+    for i in error + 1 to log_level_t'pos(legal_log_level_t'high) loop
       next when log_level_t'val(i) = failure;
       test_case_setup;
       level := new_log_level("my_level" & to_string(i), i);
@@ -326,12 +326,12 @@ begin
 
     ---------------------------------------------------------------------------
     banner("Test that failing checks on any level cause failure on test_runner_cleanup");
-    for i in below_all_log_levels + 1 to above_all_log_levels - 1 loop
+    for lvl in legal_log_level_t'low to legal_log_level_t'high loop
       test_case_setup;
-      if not is_valid(log_level_t'val(i)) then
-        level := new_log_level("my_level" & to_string(i), i);
+      if not is_valid(lvl) then
+        level := new_log_level("my_level" & to_string(log_level_t'pos(lvl)), log_level_t'pos(lvl));
       else
-        level := log_level_t'val(i);
+        level := lvl;
       end if;
       disable_stop;
       check_failed("Message", level => level);
