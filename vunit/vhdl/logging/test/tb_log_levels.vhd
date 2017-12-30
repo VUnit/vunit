@@ -35,6 +35,13 @@ begin
       assert_equal(get_name(error), "error");
       assert_equal(get_name(failure), "failure");
 
+      assert_true(is_standard(verbose));
+      assert_true(is_standard(debug));
+      assert_true(is_standard(info));
+      assert_true(is_standard(warning));
+      assert_true(is_standard(error));
+      assert_true(is_standard(failure));
+
       assert_true(log_level_t'low < verbose);
       assert_true(verbose < debug);
       assert_true(debug < info);
@@ -55,6 +62,7 @@ begin
       assert_equal(get_name(level), "my_level");
       assert(get_color(level) = (fg => no_color, bg => no_color, style => normal));
       assert_true(level = custom_level23);
+      assert_false(is_standard(level));
 
       level := new_log_level("my_level2", 24, fg => red, bg => yellow, style => bright);
       assert(get_color(level) = (fg => red, bg => yellow, style => bright));

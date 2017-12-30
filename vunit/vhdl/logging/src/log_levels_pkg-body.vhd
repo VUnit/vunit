@@ -77,6 +77,16 @@ package body log_levels_pkg is
     return log_level_t'pos(reference_level) - offset;
   end;
 
+  impure function is_standard(log_level : log_level_t) return boolean is
+  begin
+    case log_level is
+      when verbose|debug|info|warning|error|failure =>
+        return true;
+      when others =>
+        return false;
+    end case;
+  end;
+
   impure function new_log_level(name : string;
                                 log_level : numeric_log_level_t;
                                 fg : ansi_color_t := no_color;

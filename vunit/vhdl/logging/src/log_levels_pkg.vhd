@@ -139,6 +139,10 @@ package log_levels_pkg is
                                 bg : ansi_color_t := no_color;
                                 style : ansi_style_t := normal) return log_level_t;
   impure function is_valid(log_level : log_level_t) return boolean;
+
+  -- Returns true if the log_level is not a custom level
+  impure function is_standard(log_level : log_level_t) return boolean;
+
   impure function get_name(log_level : log_level_t) return string;
   impure function get_color(log_level : log_level_t) return ansi_colors_t;
   impure function max_level_length return natural;
