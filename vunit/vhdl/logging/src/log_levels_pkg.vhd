@@ -12,6 +12,13 @@ package log_levels_pkg is
   type log_level_t is (
     null_log_level,
 
+    verbose,
+    debug,
+    info,
+    warning,
+    error,
+    failure,
+
     custom_level1,
     custom_level2,
     custom_level3,
@@ -19,122 +26,23 @@ package log_levels_pkg is
     custom_level5,
     custom_level6,
     custom_level7,
-    custom_level8,
-    custom_level9,
-    custom_level10,
-    custom_level11,
-    custom_level12,
-    custom_level13,
-    custom_level14,
+    custom_level8);
 
-    verbose,
-
-    custom_level16,
-    custom_level17,
-    custom_level18,
-    custom_level19,
-    custom_level20,
-    custom_level21,
-    custom_level22,
-    custom_level23,
-    custom_level24,
-    custom_level25,
-    custom_level26,
-    custom_level27,
-    custom_level28,
-    custom_level29,
-
-    debug,
-
-    custom_level31,
-    custom_level32,
-    custom_level33,
-    custom_level34,
-    custom_level35,
-    custom_level36,
-    custom_level37,
-    custom_level38,
-    custom_level39,
-    custom_level40,
-    custom_level41,
-    custom_level42,
-    custom_level43,
-    custom_level44,
-
-    info,
-
-    custom_level46,
-    custom_level47,
-    custom_level48,
-    custom_level49,
-    custom_level50,
-    custom_level51,
-    custom_level52,
-    custom_level53,
-    custom_level54,
-    custom_level55,
-    custom_level56,
-    custom_level57,
-    custom_level58,
-    custom_level59,
-
-    warning,
-
-    custom_level61,
-    custom_level62,
-    custom_level63,
-    custom_level64,
-    custom_level65,
-    custom_level66,
-    custom_level67,
-    custom_level68,
-    custom_level69,
-    custom_level70,
-    custom_level71,
-    custom_level72,
-    custom_level73,
-    custom_level74,
-
-    error,
-
-    custom_level76,
-    custom_level77,
-    custom_level78,
-    custom_level79,
-    custom_level80,
-    custom_level81,
-    custom_level82,
-    custom_level83,
-    custom_level84,
-    custom_level85,
-    custom_level86,
-    custom_level87,
-    custom_level88,
-    custom_level89,
-
-    failure,
-
-    custom_level91,
-    custom_level92,
-    custom_level93,
-    custom_level94,
-    custom_level95,
-    custom_level96,
-    custom_level97,
-    custom_level98,
-    custom_level99,
-    custom_level100
-    );
   type log_level_vec_t is array (natural range <>) of log_level_t;
   constant null_vec : log_level_vec_t(1 to 0) := (others => info);
 
-  subtype legal_log_level_t is log_level_t range custom_level1 to log_level_t'high;
-  subtype numeric_log_level_t is integer range log_level_t'pos(legal_log_level_t'low) to log_level_t'pos(legal_log_level_t'high);
+  subtype standard_log_level_t is log_level_t range verbose to failure;
+  subtype legal_log_level_t is log_level_t range log_level_t'succ(null_log_level) to log_level_t'high;
 
-  impure function "+" (reference_level : log_level_t; offset : numeric_log_level_t) return numeric_log_level_t;
-  impure function "-" (reference_level : log_level_t; offset : numeric_log_level_t) return numeric_log_level_t;
+  constant num_standard_log_levels : natural := (standard_log_level_t'pos(standard_log_level_t'high) -
+                                                 standard_log_level_t'pos(standard_log_level_t'low) + 1);
+
+  constant num_legal_log_levels : natural := (legal_log_level_t'pos(legal_log_level_t'high) -
+                                              legal_log_level_t'pos(legal_log_level_t'low) + 1);
+
+  constant max_num_custom_log_levels : natural := num_legal_log_levels - num_standard_log_levels;
+
   impure function new_log_level(name : string;
-                                log_level : numeric_log_level_t;
                                 fg : ansi_color_t := no_color;
                                 bg : ansi_color_t := no_color;
                                 style : ansi_style_t := normal) return log_level_t;

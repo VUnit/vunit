@@ -22,7 +22,6 @@ architecture a of tb_log_levels is
 begin
   main : process
     variable level : log_level_t;
-    variable count : natural;
   begin
 
     test_runner_setup(runner, runner_cfg);
@@ -58,62 +57,21 @@ begin
       assert_true(is_valid(failure));
 
     elsif run("Can create level") then
-      level := new_log_level("my_level", 23);
+      level := new_log_level("my_level");
       assert_equal(get_name(level), "my_level");
       assert(get_color(level) = (fg => no_color, bg => no_color, style => normal));
-      assert_true(level = custom_level23);
       assert_false(is_standard(level));
 
-      level := new_log_level("my_level2", 24, fg => red, bg => yellow, style => bright);
+      level := new_log_level("my_level2", fg => red, bg => yellow, style => bright);
       assert(get_color(level) = (fg => red, bg => yellow, style => bright));
 
-    elsif run("Can create level relative to other level") then
-      level := new_log_level("my level", info + 3);
-      assert_true(level = custom_level48);
-      level := new_log_level("my level 2", level + 3);
-      assert_true(level = custom_level51);
-
-      level := new_log_level("my level 3", info - 3);
-      assert_true(level = custom_level42);
-      level := new_log_level("my level 4", level - 3);
-      assert_true(level = custom_level39);
-
     elsif run("Can create max num custom levels") then
-      count := 0;
-      for lvl in numeric_log_level_t'low to numeric_log_level_t'high loop
-        level := log_level_t'val(lvl);
-
-        case level is
-          when verbose|debug|info|warning|error|failure =>
-            assert_true(is_valid(level));
-          when others =>
-            if level /= pass then
-              assert_false(is_valid(level));
-              level := new_log_level("my_level" & integer'image(lvl), lvl);
-              assert_true(is_valid(level));
-              assert_equal(get_name(level), "my_level" & integer'image(lvl));
-              count := count + 1;
-            else
-              assert_true(is_valid(level));
-            end if;
-        end case;
+      -- NOTE: checker package creates a pass level
+      for i in 0 to max_num_custom_log_levels - 2 loop
+        level := new_log_level("my_level" & integer'image(i));
+        assert_true(is_valid(level));
+        assert_equal(get_name(level), "my_level" & integer'image(i));
       end loop;
-      assert_equal(count, numeric_log_level_t'high - numeric_log_level_t'low - 7 + 1);
-
-    elsif run("Error on level that already exists") then
-
-      mock_core_failure;
-      level := new_log_level("my_bad_level", log_level_t'pos(verbose));
-      check_core_failure(
-        "Cannot create log level ""my_bad_level"" with level 15 already used by ""verbose"".");
-      unmock_core_failure;
-
-      level := new_log_level("my_level1", 1);
-      mock_core_failure;
-      level := new_log_level("my_level2", 1);
-      check_core_failure(
-        "Cannot create log level ""my_level2"" with level 1 already used by ""my_level1"".");
-      unmock_core_failure;
 
     elsif run("Error on undefined level") then
       mock_core_failure;
@@ -122,7 +80,7 @@ begin
       unmock_core_failure;
 
     elsif run("Max name length") then
-      level := new_log_level("a_long_log_level_name", 1);
+      level := new_log_level("a_long_log_level_name");
       assert_equal(max_level_length, 21);
     end if;
 

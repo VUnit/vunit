@@ -126,12 +126,13 @@ package logger_pkg is
   -- Stop simulation for all levels >= level for this logger and all children
   -- Only affects and can only be used with the standard log levels
   -- where an ordering is defined
-  procedure set_stop_level(logger : logger_t; log_level : log_level_t);
+  procedure set_stop_level(logger : logger_t;
+                           log_level : standard_log_level_t);
 
   -- Stop simulation for all levels >= level
   -- Only affects and can only be used with the standard log levels
   -- where an ordering is defined
-  procedure set_stop_level(level : log_level_t);
+  procedure set_stop_level(level : standard_log_level_t);
 
   -- Disable stopping simulation for this logger and all children
   procedure disable_stop(logger : logger_t);
@@ -143,7 +144,7 @@ package logger_pkg is
   -- Only affects and can only be used with the standard log levels
   -- where an ordering is defined
   procedure set_log_level(log_handler : log_handler_t;
-                          level : log_level_t);
+                          level : standard_log_level_t);
 
   -- Disable logging for all levels < level to this handler from specific
   -- logger and all children.
@@ -151,7 +152,7 @@ package logger_pkg is
   -- where an ordering is defined
   procedure set_log_level(logger : logger_t;
                           log_handler : log_handler_t;
-                          level : log_level_t);
+                          level : standard_log_level_t);
 
   -- Disable logging for the specified level to this handler.
   procedure disable(log_handler : log_handler_t;

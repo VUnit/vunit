@@ -64,7 +64,7 @@ package checker_pkg is
   constant null_checker : checker_t := (p_data => null_ptr);
 
   constant pass : log_level_t :=
-    new_log_level("pass", (log_level_t'pos(debug) + log_level_t'pos(verbose)) / 2, fg => green, style => bright);
+    new_log_level("pass", fg => green, style => bright);
 
   impure function is_passing_check_msg_enabled(checker : checker_t) return boolean;
 

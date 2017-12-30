@@ -146,8 +146,10 @@ package body logger_pkg is
     variable logger : logger_t := new_logger(root_logger_id, "", null_logger);
   begin
     p_set_log_handlers(logger, (display_handler, file_handler));
-    set_log_level(logger, display_handler, info);
-    set_log_level(logger, file_handler, debug);
+    disable_all(logger, display_handler);
+    enable(logger, display_handler, (info, warning, error, failure));
+    disable_all(logger, file_handler);
+    enable(logger, file_handler, (debug, info, warning, error, failure));
     return logger;
   end;
 
@@ -362,19 +364,22 @@ package body logger_pkg is
     set_stop_count(root_logger, log_level, value);
   end;
 
-  procedure set_stop_level(level : log_level_t) is
+  procedure set_stop_level(level : standard_log_level_t) is
   begin
     set_stop_level(root_logger, level);
   end;
 
   -- Stop simulation for all levels >= level for this logger and all children
-  procedure set_stop_level(logger : logger_t; log_level : log_level_t) is
+  procedure set_stop_level(logger : logger_t;
+                           log_level : standard_log_level_t) is
   begin
     for level in log_level_t'low to log_level_t'high loop
-      if level >= log_level then
-        set_stop_count(logger, level, 1);
-      else
-        set_stop_count(logger, level, integer'high);
+      if is_standard(level) then
+        if level >= log_level then
+          set_stop_count(logger, level, 1);
+        else
+          set_stop_count(logger, level, integer'high);
+        end if;
       end if;
     end loop;
   end;
@@ -450,20 +455,22 @@ package body logger_pkg is
   -- Disable logging for all levels < level to this handler for this specific logger
   procedure set_log_level(logger : logger_t;
                           log_handler : log_handler_t;
-                          level : log_level_t) is
+                          level : standard_log_level_t) is
   begin
     for lvl in log_level_t'low to log_level_t'high loop
-      if lvl < level then
-        disable(logger, log_handler, lvl);
-      else
-        enable(logger, log_handler, lvl);
+      if is_standard(lvl) then
+        if lvl < level then
+          disable(logger, log_handler, lvl);
+        else
+          enable(logger, log_handler, lvl);
+        end if;
       end if;
     end loop;
   end;
 
   -- Disable logging for all levels < level to this handler
   procedure set_log_level(log_handler : log_handler_t;
-                          level : log_level_t) is
+                          level : standard_log_level_t) is
   begin
     set_log_level(root_logger, log_handler, level);
   end;

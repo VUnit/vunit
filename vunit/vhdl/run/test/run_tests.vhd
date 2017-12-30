@@ -283,23 +283,6 @@ begin
     test_case_cleanup;
 
     ---------------------------------------------------------------------------
-    banner("Test that log entries with custom levels above error cause failure on test_runner_cleanup");
-    for i in error + 1 to log_level_t'pos(legal_log_level_t'high) loop
-      next when log_level_t'val(i) = failure;
-      test_case_setup;
-      level := new_log_level("my_level" & to_string(i), i);
-      disable_stop;
-      log(get_logger("parent:my_logger"), "error message" & to_string(i), level);
-      set_stop_level(failure);
-      core_pkg.mock_core_failure;
-      test_runner_cleanup(runner);
-      core_pkg.check_core_failure("Logger ""parent:my_logger"" has 1 my_level" & to_string(i) & " entry.");
-      core_pkg.unmock_core_failure;
-      test_case_cleanup;
-      reset_log_count(get_logger("parent:my_logger"), level);
-    end loop;
-
-    ---------------------------------------------------------------------------
     banner("Error log cause failure on test_runner_cleanup");
     test_case_setup;
     error(get_logger("parent:my_logger"), "error message");
@@ -323,27 +306,6 @@ begin
     core_pkg.unmock_core_failure;
     test_case_cleanup;
     reset_log_count(get_logger("parent:my_logger"), failure);
-
-    ---------------------------------------------------------------------------
-    banner("Test that failing checks on any level cause failure on test_runner_cleanup");
-    for lvl in legal_log_level_t'low to legal_log_level_t'high loop
-      test_case_setup;
-      if not is_valid(lvl) then
-        level := new_log_level("my_level" & to_string(log_level_t'pos(lvl)), log_level_t'pos(lvl));
-      else
-        level := lvl;
-      end if;
-      disable_stop;
-      check_failed("Message", level => level);
-      set_stop_level(failure);
-      core_pkg.mock_core_failure;
-      test_runner_cleanup(runner);
-      core_pkg.check_core_failure("Default checker has 1 failed check.");
-      core_pkg.unmock_core_failure;
-      test_case_cleanup;
-      reset_log_count(check_logger, level);
-      reset_checker_stat(default_checker);
-    end loop;
 
     ---------------------------------------------------------------------------
     banner("Test that failing checks on custom checkers cause failure on test_runner_cleanup");

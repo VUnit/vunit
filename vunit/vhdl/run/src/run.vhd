@@ -130,7 +130,7 @@ package body run_pkg is
           return false;
         end if;
 
-        for level in error to legal_log_level_t'high loop
+        for level in error to standard_log_level_t'high loop
           if is_valid(level) then
             count := get_log_count(child, level);
             if count > 0 then

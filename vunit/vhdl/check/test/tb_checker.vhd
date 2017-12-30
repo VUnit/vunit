@@ -119,7 +119,6 @@ begin
       elsif run("Test that a green pass level exists") then
         assert get_name(pass) = "pass";
         assert get_color(pass) = (fg => green, bg => no_color, style => bright);
-        assert pass = log_level_t'val((log_level_t'pos(debug) + log_level_t'pos(verbose)) / 2);
       end if;
     end loop;
 

@@ -34,7 +34,7 @@ begin
     constant my_actor : actor_t := new_actor("My actor");
   begin
     test_runner_setup(runner, runner_cfg);
-    set_log_level(display_handler, pass);
+    enable(display_handler, pass);
 
     while test_suite loop
       if run("Test sending a message to a known actor") then

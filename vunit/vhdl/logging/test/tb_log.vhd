@@ -102,8 +102,8 @@ begin
     assert_true(get_log_handler(logger, 1) = file_handler);
     assert_true(get_log_handlers(logger) = (display_handler, file_handler));
 
-    assert_true(get_enabled_log_levels(logger, display_handler) = (info, warning, error, failure));
-    assert_true(get_enabled_log_levels(logger, file_handler) = (debug, info, warning, error, failure));
+    -- assert_true(get_enabled_log_levels(logger, display_handler) = (info, warning, error, failure));
+    -- assert_true(get_enabled_log_levels(logger, file_handler) = (debug, info, warning, error, failure));
 
     test_runner_setup(runner, runner_cfg);
     set_log_level(file_handler, verbose);

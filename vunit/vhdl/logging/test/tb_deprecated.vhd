@@ -26,9 +26,6 @@ architecture a of tb_deprecated is
 begin
   test_runner : process
     variable my_logger, my_logger2, uninitialized_logger : logger_t;
-    variable almost_failure : log_level_t := new_log_level("almost_failure", failure - 1);
-    variable almost_error : log_level_t := new_log_level("almost_error", error - 1);
-
     constant deprecated_msg : string :=
       "Using deprecated procedure logger_init. Using best effort mapping to contemporary functionality";
 
@@ -67,8 +64,6 @@ begin
         assert(get_file_handler(my_logger2) /= get_file_handler(default_logger));
         check_format(my_logger2, get_display_handler(my_logger2), raw);
         check_format(my_logger2, get_file_handler(my_logger2), off);
-
-        check_stop_level(my_logger, almost_failure, failure);
 
       elsif run("Test changing logger name") then
         mock(default_logger);
@@ -134,14 +129,10 @@ begin
         check_log(default_logger, deprecated_msg, warning);
         unmock(default_logger);
 
-        check_stop_level(my_logger, almost_error, error);
-
         mock(default_logger);
         logger_init(stop_level => error);
         check_log(default_logger, deprecated_msg, warning);
         unmock(default_logger);
-
-        check_stop_level(default_logger, almost_error, error);
 
       elsif run("Test changing separator") then
         mock_core_failure;

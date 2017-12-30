@@ -19,23 +19,25 @@ package body log_levels_pkg is
   procedure add_level(
     levels : levels_t;
     name : string;
-    log_level : numeric_log_level_t;
+    log_level : log_level_t;
     fg, bg : ansi_color_t := no_color;
     style : ansi_style_t := normal) is
+
+    constant log_level_idx : natural := log_level_t'pos(log_level);
   begin
     if get(levels.max_level_length, 0) < name'length then
       set(levels.max_level_length, 0, name'length);
     end if;
 
-    set(levels.names, log_level, to_integer(new_string_ptr(name)));
+    set(levels.names, log_level_idx, to_integer(new_string_ptr(name)));
 
-    set(levels.colors, log_level,
+    set(levels.colors, log_level_idx,
         to_integer(integer_vector_ptr_t'(new_integer_vector_ptr(3))));
-    set(to_integer_vector_ptr(get(levels.colors, log_level)), 0,
+    set(to_integer_vector_ptr(get(levels.colors, log_level_idx)), 0,
         ansi_color_t'pos(fg));
-    set(to_integer_vector_ptr(get(levels.colors, log_level)), 1,
+    set(to_integer_vector_ptr(get(levels.colors, log_level_idx)), 1,
         ansi_color_t'pos(bg));
-    set(to_integer_vector_ptr(get(levels.colors, log_level)), 2,
+    set(to_integer_vector_ptr(get(levels.colors, log_level_idx)), 2,
         ansi_style_t'pos(style));
 
   end;
@@ -46,7 +48,7 @@ package body log_levels_pkg is
 
     procedure add_level(log_level : log_level_t; fg, bg : ansi_color_t := no_color; style : ansi_style_t := normal) is
     begin
-      add_level(result, log_level_t'image(log_level), log_level_t'pos(log_level), fg, bg, style);
+      add_level(result, log_level_t'image(log_level), log_level, fg, bg, style);
     end;
   begin
     result := (names => new_integer_vector_ptr(log_level_t'pos(log_level_t'high)+1,
@@ -67,16 +69,6 @@ package body log_levels_pkg is
 
   constant levels : levels_t := create_levels;
 
-  impure function "+" (reference_level : log_level_t; offset : numeric_log_level_t) return numeric_log_level_t is
-  begin
-    return log_level_t'pos(reference_level) + offset;
-  end;
-
-  impure function "-" (reference_level : log_level_t; offset : numeric_log_level_t) return numeric_log_level_t is
-  begin
-    return log_level_t'pos(reference_level) - offset;
-  end;
-
   impure function is_standard(log_level : log_level_t) return boolean is
   begin
     case log_level is
@@ -88,23 +80,30 @@ package body log_levels_pkg is
   end;
 
   impure function new_log_level(name : string;
-                                log_level : numeric_log_level_t;
                                 fg : ansi_color_t := no_color;
                                 bg : ansi_color_t := no_color;
                                 style : ansi_style_t := normal) return log_level_t is
-    variable name_ptr : string_ptr_t := to_string_ptr(get(levels.names, log_level));
+    variable log_level : log_level_t := null_log_level;
   begin
 
-    if name_ptr /= null_string_ptr then
-      core_failure("Cannot create log level """ & name
-                   & """ with level " & integer'image(log_level)
-                   & " already used by """ & to_string(name_ptr) & """.");
+    -- Take first free log level
+    for level in legal_log_level_t'low to legal_log_level_t'high loop
+      if not is_valid(level) then
+        log_level := level;
+        exit;
+      end if;
+    end loop;
+
+    if log_level = null_log_level then
+      core_failure("Cannot create custom log level " & name &
+                   " already used all " & integer'image(max_num_custom_log_levels) &
+                   " custom log levels");
       return null_log_level;
     end if;
 
     add_level(levels, name, log_level, fg, bg, style);
 
-    return log_level_t'val(log_level);
+    return log_level;
   end;
 
   impure function is_valid(log_level : log_level_t) return boolean is

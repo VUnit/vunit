@@ -32,7 +32,7 @@ begin
   test_runner : process
     variable my_checker : checker_t;
     variable my_checker_logger : logger_t;
-    variable almost_failure : log_level_t := new_log_level("almost_failure", failure - 1);
+
     variable found_errors : boolean;
 
     constant deprecated_logger_init_msg : string :=
@@ -68,8 +68,6 @@ begin
 
       check_format(logger, get_display_handler(logger), level);
       check_format(logger, get_file_handler(logger), off);
-
-      check_stop_level(logger, almost_failure, failure);
     end;
   begin
     test_runner_setup(runner, runner_cfg);
