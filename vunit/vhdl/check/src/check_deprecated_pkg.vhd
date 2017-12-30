@@ -133,20 +133,12 @@ package body check_deprecated_pkg is
 
   procedure enable_pass_msg(checker : checker_t; handler : log_handler_t) is
   begin
-    if log_level_t'pos(get_log_level(get_logger(checker), handler)) <= log_level_t'pos(pass) then
-      return;
-    end if;
-
-    set_log_level(get_logger(checker), handler, pass);
+    enable(get_logger(checker), handler, pass);
   end;
 
   procedure disable_pass_msg(checker : checker_t; handler : log_handler_t) is
   begin
-    if log_level_t'pos(get_log_level(get_logger(checker), handler)) > log_level_t'pos(pass) then
-      return;
-    end if;
-
-    set_log_level(get_logger(checker), handler, debug);
+    disable(get_logger(checker), handler, pass);
   end;
 
   procedure enable_pass_msg(checker : checker_t) is

@@ -49,7 +49,7 @@ begin
     set_log_level(get_parent(my_logger), display_handler, debug);
     verbose(my_logger, "This will not be shown on stdout");
     warning(my_logger, "This will be shown on stdout");
-    set_block_filter(my_logger, display_handler, (warning, debug));
+    disable(my_logger, display_handler, (warning, debug));
     warning(my_logger, "This is no longer shown on stdout");
     warning(get_parent(my_logger), "This is still shown on stdout");
 

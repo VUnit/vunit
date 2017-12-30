@@ -115,78 +115,23 @@ begin
         my_checker := new_checker("my_checker");
         my_checker_logger := get_logger(my_checker);
 
-        check(get_log_level(my_checker_logger, display_handler) = info);
-        check(get_log_level(my_checker_logger, file_handler) = debug);
+        check_false(is_enabled(my_checker_logger, display_handler, pass));
         enable_pass_msg(my_checker, display_handler);
-        check(get_log_level(my_checker_logger, display_handler) = pass);
-        check(get_log_level(my_checker_logger, file_handler) = debug);
+
+        check(is_enabled(my_checker_logger, display_handler, pass));
+
         disable_pass_msg(my_checker, display_handler);
-        check(get_log_level(my_checker_logger, display_handler) = debug);
-        check(get_log_level(my_checker_logger, file_handler) = debug);
-
-        set_log_level(my_checker_logger, display_handler, log_level_t'leftof(pass));
-        enable_pass_msg(my_checker, display_handler);
-        check(get_log_level(my_checker_logger, display_handler) = log_level_t'leftof(pass));
-        check(get_log_level(my_checker_logger, file_handler) = debug);
-        set_log_level(my_checker_logger, display_handler, log_level_t'rightof(pass));
-        disable_pass_msg(my_checker, display_handler);
-        check(get_log_level(my_checker_logger, display_handler) = log_level_t'rightof(pass));
-        check(get_log_level(my_checker_logger, file_handler) = debug);
-
-        enable_pass_msg(my_checker);
-        check(get_log_level(my_checker_logger, display_handler) = pass);
-        check(get_log_level(my_checker_logger, file_handler) = pass);
-        disable_pass_msg(my_checker);
-        check(get_log_level(my_checker_logger, display_handler) = debug);
-        check(get_log_level(my_checker_logger, file_handler) = debug);
-
-        set_log_level(my_checker_logger, display_handler, log_level_t'leftof(pass));
-        set_log_level(my_checker_logger, file_handler, log_level_t'leftof(pass));
-        enable_pass_msg(my_checker);
-        check(get_log_level(my_checker_logger, display_handler) = log_level_t'leftof(pass));
-        check(get_log_level(my_checker_logger, file_handler) = log_level_t'leftof(pass));
-        set_log_level(my_checker_logger, display_handler, log_level_t'rightof(pass));
-        set_log_level(my_checker_logger, file_handler, log_level_t'rightof(pass));
-        disable_pass_msg(my_checker);
-        check(get_log_level(my_checker_logger, display_handler) = log_level_t'rightof(pass));
-        check(get_log_level(my_checker_logger, file_handler) = log_level_t'rightof(pass));
+        check_false(is_enabled(my_checker_logger, display_handler, pass));
 
       elsif run("Test enabling and disabling of pass messages for default checker") then
-        check(get_log_level(check_logger, display_handler) = info);
-        check(get_log_level(check_logger, file_handler) = debug);
+        check_false(is_enabled(check_logger, display_handler, pass));
         enable_pass_msg(display_handler);
-        check(get_log_level(check_logger, display_handler) = pass);
-        check(get_log_level(check_logger, file_handler) = debug);
+
+        check(is_enabled(check_logger, display_handler, pass));
+
         disable_pass_msg(display_handler);
-        check(get_log_level(check_logger, display_handler) = debug);
-        check(get_log_level(check_logger, file_handler) = debug);
+        check_false(is_enabled(check_logger, display_handler, pass));
 
-        set_log_level(check_logger, display_handler, log_level_t'leftof(pass));
-        enable_pass_msg(display_handler);
-        check(get_log_level(check_logger, display_handler) = log_level_t'leftof(pass));
-        check(get_log_level(check_logger, file_handler) = debug);
-        set_log_level(check_logger, display_handler, log_level_t'rightof(pass));
-        disable_pass_msg(display_handler);
-        check(get_log_level(check_logger, display_handler) = log_level_t'rightof(pass));
-        check(get_log_level(check_logger, file_handler) = debug);
-
-        enable_pass_msg;
-        check(get_log_level(check_logger, display_handler) = pass);
-        check(get_log_level(check_logger, file_handler) = pass);
-        disable_pass_msg;
-        check(get_log_level(check_logger, display_handler) = debug);
-        check(get_log_level(check_logger, file_handler) = debug);
-
-        set_log_level(check_logger, display_handler, log_level_t'leftof(pass));
-        set_log_level(check_logger, file_handler, log_level_t'leftof(pass));
-        enable_pass_msg;
-        check(get_log_level(check_logger, display_handler) = log_level_t'leftof(pass));
-        check(get_log_level(check_logger, file_handler) = log_level_t'leftof(pass));
-        set_log_level(check_logger, display_handler, log_level_t'rightof(pass));
-        set_log_level(check_logger, file_handler, log_level_t'rightof(pass));
-        disable_pass_msg;
-        check(get_log_level(check_logger, display_handler) = log_level_t'rightof(pass));
-        check(get_log_level(check_logger, file_handler) = log_level_t'rightof(pass));
       elsif run("Test found errors subprograms") then
         my_checker := new_checker("my_checker");
 

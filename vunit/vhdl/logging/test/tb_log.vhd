@@ -102,11 +102,8 @@ begin
     assert_true(get_log_handler(logger, 1) = file_handler);
     assert_true(get_log_handlers(logger) = (display_handler, file_handler));
 
-    assert_true(get_log_level(logger, display_handler) = info);
-    assert_true(get_log_level(logger, file_handler) = debug);
-
-    assert_true(get_block_filter(logger, display_handler) = null_vec);
-    assert_true(get_block_filter(logger, file_handler) = null_vec);
+    assert_true(get_enabled_log_levels(logger, display_handler) = (info, warning, error, failure));
+    assert_true(get_enabled_log_levels(logger, file_handler) = (debug, info, warning, error, failure));
 
     test_runner_setup(runner, runner_cfg);
     set_log_level(file_handler, verbose);
@@ -305,7 +302,8 @@ begin
       check_empty_log_file(log_file_name);
 
       set_log_level(file_handler, info);
-      set_block_filter(file_handler, (0 => warning));
+      disable(file_handler, warning);
+
       enable_all(file_handler);
       for log_level in verbose to failure loop
         assert_true(is_enabled(default_logger, file_handler, log_level));
@@ -336,27 +334,12 @@ begin
       reset_log_count(logger, error);
       reset_log_count(logger, failure);
 
-    elsif run("can set block filter") then
+    elsif run("can set disable individual levels") then
       init_log_handler(file_handler, file_name => log_file_name, format => level);
-      set_block_filter(file_handler, (info, debug, verbose));
+      disable(file_handler, (verbose, debug, info, error, failure));
       disable_stop;
       perform_logging(logger);
       set(entries, "0", "WARNING - message 4");
-      set(entries, "1", "  ERROR - message 5");
-      set(entries, "2", "FAILURE - message 6");
-      check_log_file(log_file_name, entries);
-      reset_log_count(logger, error);
-      reset_log_count(logger, failure);
-
-    elsif run("Test that log level and block filter add up") then
-      init_log_handler(file_handler, file_name => log_file_name, format => level);
-      set_log_level(file_handler, info);
-      set_block_filter(file_handler, (0 => warning));
-      disable_stop;
-      perform_logging(logger);
-      set(entries, "0", "   INFO - message 3");
-      set(entries, "1", "  ERROR - message 5");
-      set(entries, "2", "FAILURE - message 6");
       check_log_file(log_file_name, entries);
       reset_log_count(logger, error);
       reset_log_count(logger, failure);
@@ -389,7 +372,7 @@ begin
 
       init_log_handler(file_handler, file_name => log_file_name, format => level);
       set_log_level(logger, file_handler, info);
-      set_block_filter(logger, file_handler, (0 => warning));
+      disable(logger, file_handler, warning);
       enable_all(logger, file_handler);
       for log_level in verbose to failure loop
         assert_true(is_enabled(default_logger, file_handler, log_level));

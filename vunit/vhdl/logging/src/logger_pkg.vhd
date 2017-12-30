@@ -134,18 +134,45 @@ package logger_pkg is
                           log_handler : log_handler_t;
                           level : log_level_t);
 
-  -- Disable logging for the specified levels to this handler. Additional log
-  -- levels may have been disabled by the log level setting
-  procedure set_block_filter(log_handler : log_handler_t;
-                             levels : user_log_level_vec_t);
+  -- Disable logging for the specified level to this handler.
+  procedure disable(log_handler : log_handler_t;
+                    level : log_level_t);
+
+  -- Disable logging for the specified level to this handler from specific
+  -- logger and all children.
+  procedure disable(logger : logger_t;
+                    log_handler : log_handler_t;
+                    level : log_level_t);
+
+  -- Disable logging for the specified levels to this handler.
+  procedure disable(log_handler : log_handler_t;
+                    levels : log_level_vec_t);
 
   -- Disable logging for the specified levels to this handler from specific
-  -- logger and all children. Additional log levels may have been disabled by
-  -- the log level setting
-  procedure set_block_filter(logger : logger_t;
-                             log_handler : log_handler_t;
-                             levels : user_log_level_vec_t);
+  -- logger and all children.
+  procedure disable(logger : logger_t;
+                    log_handler : log_handler_t;
+                    levels : log_level_vec_t);
 
+  -- Enable logging for the specified level to this handler.
+  procedure enable(log_handler : log_handler_t;
+                   level : log_level_t);
+
+  -- Enable logging for the specified level to this handler from specific
+  -- logger and all children.
+  procedure enable(logger : logger_t;
+                   log_handler : log_handler_t;
+                   level : log_level_t);
+
+  -- Enable logging for the specified levels to this handler.
+  procedure enable(log_handler : log_handler_t;
+                   levels : log_level_vec_t);
+
+  -- Enable logging for the specified levels to this handler from specific
+  -- logger and all children.
+  procedure enable(logger : logger_t;
+                   log_handler : log_handler_t;
+                   levels : log_level_vec_t);
 
   -- Enable all log levels to the log handler
   -- equivalent with setting log level to below_all_log_levels
@@ -177,17 +204,13 @@ package logger_pkg is
                              log_handler : log_handler_t;
                              level : log_level_t) return boolean;
 
-  -- Get the current log level setting for a specific logger to this log handler
-  impure function get_log_level(logger : logger_t;
-                                log_handler : log_handler_t) return log_level_t;
+  -- Get the current enabled log levels for a specific logger to this log handler
+  impure function get_enabled_log_levels(logger : logger_t;
+                                         log_handler : log_handler_t) return log_level_vec_t;
 
-  -- Get the number of levels disabled by the block filter setting for a specific logger to this log handler
-  impure function num_block_filter_levels(logger : logger_t;
-                                          log_handler : log_handler_t) return natural;
-
-  -- Get the current block filter setting for a specific logger to this log handler
-  impure function get_block_filter(logger : logger_t;
-                                   log_handler : log_handler_t) return user_log_level_vec_t;
+  -- Get the current disabled log levels for a specific logger to this log handler
+  impure function get_disabled_log_levels(logger : logger_t;
+                                          log_handler : log_handler_t) return log_level_vec_t;
 
   -- Get the number of log handlers attached to this logger
   impure function num_log_handlers(logger : logger_t) return natural;
