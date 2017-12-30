@@ -664,7 +664,10 @@ package body logger_pkg is
     return get_log_count(logger, log_count_idx, log_level);
   end;
 
-  procedure count_log(logger : logger_t; idx : natural; log_level : log_level_t) is
+  -- Helper method to count either the normal log count or the mocked log count
+  procedure count_log_helper(logger : logger_t;
+                             idx : natural; -- Index in p_data for log count vector
+                             log_level : log_level_t) is
     constant log_counts : integer_vector_ptr_t := to_integer_vector_ptr(get(logger.p_data, idx));
   begin
     set(log_counts, log_level_t'pos(log_level), get(log_counts, log_level_t'pos(log_level)) + 1);
@@ -682,10 +685,10 @@ package body logger_pkg is
     end if;
   end;
 
-  procedure count_log(logger : logger_t; log_level : log_level_t) is
+  procedure count_log_no_mock(logger : logger_t; log_level : log_level_t) is
   begin
     set(global_log_count, 0, get(global_log_count, 0) + 1);
-    count_log(logger, log_count_idx, log_level);
+    count_log_helper(logger, log_count_idx, log_level);
     check_stop_condition(logger, log_level);
   end;
 
@@ -802,7 +805,7 @@ package body logger_pkg is
     report ("Got mocked log item to (" & get_full_name(logger) & ")" & LF &
             make_string(msg, log_level, log_time, line_num, file_name, check_time => true)
             & LF);
-    count_log(logger, mock_log_count_idx, log_level);
+    count_log_helper(logger, mock_log_count_idx, log_level);
 
     push_byte(queue, log_level_t'pos(log_level));
     push_string(queue, msg);
@@ -835,8 +838,7 @@ package body logger_pkg is
         end if;
       end loop;
 
-      -- Count after message has been displayed
-      count_log(logger, log_level);
+      count_log_no_mock(logger, log_level);
     end if;
   end procedure;
 
