@@ -109,15 +109,22 @@ package logger_pkg is
   impure function get_child(logger : logger_t; idx : natural) return logger_t;
 
   -- Set the threshold for stopping simulation for a specific log level and logger
+  -- The setting is immediately checked for violation where the log count is
+  -- larger or equal the set stop count.
+  procedure set_stop_count(logger : logger_t;
+                           log_level : log_level_t;
+                           value : positive);
+
+  -- Get the threshold for stopping simulation for a specific log level and logger
+  impure function get_stop_count(logger : logger_t;
+                                 log_level : log_level_t) return natural;
+
+  -- Set the threshold for stopping simulation for a specific log level and logger
   -- including all children
   -- The threshold is relative the current log count of the log level
   procedure set_relative_stop_count(logger : logger_t;
                                     log_level : log_level_t;
                                     value : positive);
-
-  -- Get the threshold for stopping simulation for a specific log level and logger
-  impure function get_stop_count(logger : logger_t;
-                                 log_level : log_level_t) return natural;
 
   -- Set the threshold for stopping simulation for all loggers
   -- The threshold is relative the current log count of the log level

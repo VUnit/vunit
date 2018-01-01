@@ -314,6 +314,33 @@ package body logger_pkg is
     return (p_data => to_integer_vector_ptr(get(children, idx)));
   end;
 
+  procedure check_stop_condition(logger : logger_t;
+                                 log_level : log_level_t) is
+    constant log_count : natural := get_log_count(logger, log_level);
+    constant stop_count : natural := get_stop_count(logger, log_level);
+  begin
+    if log_count >= stop_count then
+      core_failure("Stop simulation on log level " & get_name(log_level) & ". " &
+                   "Log count " & integer'image(log_count) & " >= " &
+                   "stop count " & integer'image(stop_count));
+    end if;
+  end;
+
+  procedure set_stop_count(logger : logger_t;
+                           log_level : log_level_t;
+                           value : positive) is
+    constant stop_counts : integer_vector_ptr_t := to_integer_vector_ptr(
+      get(logger.p_data, stop_counts_idx));
+    constant log_level_idx : natural := log_level_t'pos(log_level);
+  begin
+    if log_level_idx >= length(stop_counts) then
+      resize(stop_counts, log_level_idx + 1, value => integer'high);
+    end if;
+
+    set(stop_counts, log_level_idx, value);
+    check_stop_condition(logger, log_level);
+  end;
+
   procedure set_relative_stop_count(logger : logger_t;
                                     log_level : log_level_t;
                                     value : positive) is
@@ -328,17 +355,10 @@ package body logger_pkg is
       end if;
     end;
 
-    constant stop_counts : integer_vector_ptr_t := to_integer_vector_ptr(
-      get(logger.p_data, stop_counts_idx));
-    constant log_level_idx : natural := log_level_t'pos(log_level);
     constant log_count : natural := get_log_count(logger, log_level);
   begin
-    if log_level_idx >= length(stop_counts) then
-      resize(stop_counts, log_level_idx + 1, value => integer'high);
-    end if;
-
     -- Add stop level to existing log count
-    set(stop_counts, log_level_idx, add(log_count, value));
+    set_stop_count(logger, log_level, add(log_count, value));
 
     for child_idx in 0 to num_children(logger)-1 loop
       set_relative_stop_count(get_child(logger, child_idx), log_level, value);
@@ -678,18 +698,6 @@ package body logger_pkg is
     constant log_counts : integer_vector_ptr_t := to_integer_vector_ptr(get(logger.p_data, idx));
   begin
     set(log_counts, log_level_t'pos(log_level), get(log_counts, log_level_t'pos(log_level)) + 1);
-  end;
-
-  procedure check_stop_condition(logger : logger_t;
-                                 log_level : log_level_t) is
-    constant log_count : natural := get_log_count(logger, log_level);
-    constant stop_count : natural := get_stop_count(logger, log_level);
-  begin
-    if log_count >= stop_count then
-      core_failure("Stop simulation on log level " & get_name(log_level) & ". " &
-                   "Log count " & integer'image(log_count) & " >= " &
-                   "stop count " & integer'image(stop_count));
-    end if;
   end;
 
   procedure count_log_no_mock(logger : logger_t; log_level : log_level_t) is
