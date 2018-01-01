@@ -101,7 +101,8 @@ package body logger_pkg is
   procedure set_log_level_filter(logger : logger_t;
                                  log_handler : log_handler_t;
                                  log_levels : log_level_vec_t;
-                                 enabled : boolean) is
+                                 enabled : boolean;
+                                 include_children : boolean) is
     constant log_level_filters : integer_vector_ptr_t :=
       to_integer_vector_ptr(get(logger.p_data, log_level_filters_idx));
     constant handler_id : natural := get_id(log_handler);
@@ -137,9 +138,12 @@ package body logger_pkg is
       set(log_level_filter, log_level_t'pos(log_levels(i)), log_level_setting);
     end loop;
 
-    for i in 0 to num_children(logger)-1 loop
-      set_log_level_filter(get_child(logger, i), log_handler, log_levels, enabled);
-    end loop;
+    if include_children then
+      for i in 0 to num_children(logger)-1 loop
+        set_log_level_filter(get_child(logger, i), log_handler, log_levels, enabled,
+                             include_children => true);
+      end loop;
+    end if;
   end;
 
   impure function new_root_logger return logger_t is
@@ -328,7 +332,8 @@ package body logger_pkg is
 
   procedure set_stop_count(logger : logger_t;
                            log_level : log_level_t;
-                           value : positive) is
+                           value : positive;
+                           include_children : boolean := false) is
     constant stop_counts : integer_vector_ptr_t := to_integer_vector_ptr(
       get(logger.p_data, stop_counts_idx));
     constant log_level_idx : natural := log_level_t'pos(log_level);
@@ -339,11 +344,19 @@ package body logger_pkg is
 
     set(stop_counts, log_level_idx, value);
     check_stop_condition(logger, log_level);
+
+    if include_children then
+      for idx in 0 to num_children(logger)-1 loop
+        set_stop_count(get_child(logger, idx), log_level, value,
+                       include_children => true);
+      end loop;
+    end if;
   end;
 
   procedure set_relative_stop_count(logger : logger_t;
                                     log_level : log_level_t;
-                                    value : positive) is
+                                    value : positive;
+                                    include_children : boolean := true) is
 
     -- Add that saturates on integer'high
     function add(value1, value2 : natural) return natural is
@@ -360,9 +373,12 @@ package body logger_pkg is
     -- Add stop level to existing log count
     set_stop_count(logger, log_level, add(log_count, value));
 
-    for child_idx in 0 to num_children(logger)-1 loop
-      set_relative_stop_count(get_child(logger, child_idx), log_level, value);
-    end loop;
+    if include_children then
+      for idx in 0 to num_children(logger)-1 loop
+        set_relative_stop_count(get_child(logger, idx), log_level, value,
+                                include_children => true);
+      end loop;
+    end if;
   end;
 
   impure function get_stop_count(logger : logger_t;
@@ -410,10 +426,11 @@ package body logger_pkg is
   end;
 
   -- Disable stopping simulation
-  procedure disable_stop(logger : logger_t) is
+  procedure disable_stop(logger : logger_t;
+                         include_children : boolean := true) is
   begin
     for level in log_level_t'low to log_level_t'high loop
-      set_relative_stop_count(logger, level, integer'high);
+      set_stop_count(logger, level, integer'high, include_children);
     end loop;
   end;
 
@@ -499,24 +516,28 @@ package body logger_pkg is
   -- logger and all children.
   procedure disable(logger : logger_t;
                     log_handler : log_handler_t;
-                    level : log_level_t) is
+                    level : log_level_t;
+                    include_children : boolean := true) is
   begin
-    set_log_level_filter(logger, log_handler, (0 => level), enabled => false);
+    set_log_level_filter(logger, log_handler, (0 => level), enabled => false,
+                         include_children => include_children);
   end;
 
   -- Disable logging for the specified level to this handler
   procedure disable(log_handler : log_handler_t;
                     level : log_level_t) is
   begin
-    disable(root_logger, log_handler, level);
+    disable(root_logger, log_handler, level, include_children => true);
   end;
   -- Disable logging for the specified levels to this handler from specific
   -- logger and all children.
   procedure disable(logger : logger_t;
                     log_handler : log_handler_t;
-                    levels : log_level_vec_t) is
+                    levels : log_level_vec_t;
+                    include_children : boolean := true) is
   begin
-    set_log_level_filter(logger, log_handler, levels, enabled => false);
+    set_log_level_filter(logger, log_handler, levels, enabled => false,
+                         include_children => include_children);
   end;
 
   -- Disable logging for the specified levels to this handler
@@ -527,61 +548,68 @@ package body logger_pkg is
   end;
 
   procedure disable_all(logger : logger_t;
-                        log_handler : log_handler_t) is
+                        log_handler : log_handler_t;
+                        include_children : boolean := true) is
   begin
     for log_level in log_level_t'low to log_level_t'high loop
-      disable(logger, log_handler, log_level);
+      disable(logger, log_handler, log_level, include_children => include_children);
     end loop;
   end;
 
   procedure disable_all(log_handler : log_handler_t) is
   begin
-    disable_all(root_logger, log_handler);
+    disable_all(root_logger, log_handler, include_children => true);
   end;
 
   -- Enable logging for the specified level to this handler from specific
   -- logger and all children.
   procedure enable(logger : logger_t;
                    log_handler : log_handler_t;
-                   level : log_level_t) is
+                   level : log_level_t;
+                   include_children : boolean := true) is
   begin
-    set_log_level_filter(logger, log_handler, (0 => level), enabled => true);
+    set_log_level_filter(logger, log_handler, (0 => level), enabled => true,
+                         include_children => include_children);
   end;
 
   -- Enable logging for the specified level to this handler
   procedure enable(log_handler : log_handler_t;
-                    level : log_level_t) is
+                   level : log_level_t) is
   begin
-    enable(root_logger, log_handler, level);
+    enable(root_logger, log_handler, level, include_children => true);
   end;
 
   -- Enable logging for the specified levels to this handler from specific
   -- logger and all children.
   procedure enable(logger : logger_t;
                    log_handler : log_handler_t;
-                   levels : log_level_vec_t) is
+                   levels : log_level_vec_t;
+                    include_children : boolean := true) is
   begin
-    set_log_level_filter(logger, log_handler, levels, enabled => true);
+    set_log_level_filter(logger, log_handler, levels, enabled => true,
+                         include_children => include_children);
   end;
 
   -- Enable logging for the specified levels to this handler
   procedure enable(log_handler : log_handler_t;
                    levels : log_level_vec_t) is
   begin
-    enable(root_logger, log_handler, levels);
+    enable(root_logger, log_handler, levels, include_children => true);
   end;
 
   procedure enable_all(logger : logger_t;
-                       log_handler : log_handler_t) is
+                       log_handler : log_handler_t;
+                       include_children : boolean := true) is
   begin
     for log_level in log_level_t'low to log_level_t'high loop
-      enable(logger, log_handler, log_level);
+      enable(logger, log_handler, log_level,
+             include_children => include_children);
     end loop;
   end;
 
   procedure enable_all(log_handler : log_handler_t) is
   begin
-    enable_all(root_logger, log_handler);
+    enable_all(root_logger, log_handler, include_children => true);
   end;
 
   impure function is_enabled(logger : logger_t;
@@ -632,13 +660,17 @@ package body logger_pkg is
   end;
 
   procedure set_log_handlers(logger : logger_t;
-                             log_handlers : log_handler_vec_t) is
+                             log_handlers : log_handler_vec_t;
+                             include_children : boolean := true) is
   begin
     p_set_log_handlers(logger, log_handlers);
 
-    for i in 0 to num_children(logger)-1 loop
-      set_log_handlers(get_child(logger, i), log_handlers);
-    end loop;
+    if include_children then
+      for i in 0 to num_children(logger)-1 loop
+        set_log_handlers(get_child(logger, i), log_handlers,
+                         include_children => true);
+      end loop;
+    end if;
   end;
 
   procedure clear_log_count(logger : logger_t; idx : natural) is
@@ -667,9 +699,9 @@ package body logger_pkg is
     return result;
   end;
 
-  procedure reset_log_count(
-    logger : logger_t;
-    log_level : log_level_t := null_log_level) is
+  procedure reset_log_count(logger : logger_t;
+                            log_level : log_level_t := null_log_level;
+                            include_children : boolean := true) is
     constant log_counts : integer_vector_ptr_t := to_integer_vector_ptr(get(logger.p_data, log_count_idx));
   begin
     if log_level = null_log_level then
@@ -678,6 +710,12 @@ package body logger_pkg is
       end loop;
     else
       set(log_counts, log_level_t'pos(log_level), 0);
+    end if;
+
+    if include_children then
+      for idx in 0 to num_children(logger)-1 loop
+        reset_log_count(get_child(logger, idx), log_level, include_children => true);
+      end loop;
     end if;
   end;
 

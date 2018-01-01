@@ -113,22 +113,24 @@ package logger_pkg is
   -- larger or equal the set stop count.
   procedure set_stop_count(logger : logger_t;
                            log_level : log_level_t;
-                           value : positive);
+                           value : positive;
+                           include_children : boolean := false);
 
   -- Get the threshold for stopping simulation for a specific log level and logger
   impure function get_stop_count(logger : logger_t;
                                  log_level : log_level_t) return natural;
 
   -- Set the threshold for stopping simulation for a specific log level and logger
-  -- including all children
   -- The threshold is relative the current log count of the log level
   procedure set_relative_stop_count(logger : logger_t;
                                     log_level : log_level_t;
-                                    value : positive);
+                                    value : positive;
+                                    include_children : boolean := true);
 
   -- Set the threshold for stopping simulation for all loggers
   -- The threshold is relative the current log count of the log level
-  procedure set_relative_stop_count(log_level : log_level_t; value : positive);
+  procedure set_relative_stop_count(log_level : log_level_t;
+                                    value : positive);
 
   -- Stop simulation for all levels >= level for this logger and all children
   -- Only affects and can only be used with the standard log levels
@@ -141,10 +143,12 @@ package logger_pkg is
   -- where an ordering is defined
   procedure set_stop_level(level : standard_log_level_t);
 
-  -- Disable stopping simulation for this logger and all children
-  procedure disable_stop(logger : logger_t);
+  -- Disable stopping simulation for this logger by setting the stop
+  -- count to integer'high
+  procedure disable_stop(logger : logger_t;
+                         include_children : boolean := true);
 
-  -- Disable stopping simulation
+  -- Disable stopping simulation for all loggers by setting the stop count to integer'high
   procedure disable_stop;
 
   -- Disable logging for all levels < level to this handler.
@@ -166,10 +170,10 @@ package logger_pkg is
                     level : log_level_t);
 
   -- Disable logging for the specified level to this handler from specific
-  -- logger and all children.
   procedure disable(logger : logger_t;
                     log_handler : log_handler_t;
-                    level : log_level_t);
+                    level : log_level_t;
+                    include_children : boolean := true);
 
   -- Disable logging for the specified levels to this handler.
   procedure disable(log_handler : log_handler_t;
@@ -179,7 +183,8 @@ package logger_pkg is
   -- logger and all children.
   procedure disable(logger : logger_t;
                     log_handler : log_handler_t;
-                    levels : log_level_vec_t);
+                    levels : log_level_vec_t;
+                    include_children : boolean := true);
 
   -- Enable logging for the specified level to this handler.
   procedure enable(log_handler : log_handler_t;
@@ -189,7 +194,8 @@ package logger_pkg is
   -- logger and all children.
   procedure enable(logger : logger_t;
                    log_handler : log_handler_t;
-                   level : log_level_t);
+                   level : log_level_t;
+                    include_children : boolean := true);
 
   -- Enable logging for the specified levels to this handler.
   procedure enable(log_handler : log_handler_t;
@@ -199,22 +205,24 @@ package logger_pkg is
   -- logger and all children.
   procedure enable(logger : logger_t;
                    log_handler : log_handler_t;
-                   levels : log_level_vec_t);
+                   levels : log_level_vec_t;
+                    include_children : boolean := true);
 
   -- Enable all log levels to the log handler
   procedure enable_all(log_handler : log_handler_t);
 
-  -- Enable all log levels for this handler from specific logger and all children
+  -- Enable all log levels for this handler from specific logger
   procedure enable_all(logger : logger_t;
-                       log_handler : log_handler_t);
+                       log_handler : log_handler_t;
+                       include_children : boolean := true);
 
   -- Disable all log levels for this handler
   procedure disable_all(log_handler : log_handler_t);
 
-  -- Disable all log levels for this handler from specific logger and all children
+  -- Disable all log levels for this handler from specific logger
   procedure disable_all(logger : logger_t;
-                        log_handler : log_handler_t);
-
+                        log_handler : log_handler_t;
+                        include_children : boolean := true);
 
   -- Return true if logging to this logger at this level is enabled in any handler
   -- Can be used to avoid expensive string creation when not logging a specific
@@ -244,22 +252,22 @@ package logger_pkg is
   -- Get all log handlers attached to this logger
   impure function get_log_handlers(logger : logger_t) return log_handler_vec_t;
 
-  -- Set the log handlers for this logger and all children
+  -- Set the log handlers for this logger
   procedure set_log_handlers(logger : logger_t;
-                             log_handlers : log_handler_vec_t);
+                             log_handlers : log_handler_vec_t;
+                             include_children : boolean := true);
 
   -- Get the total number of log calls to all loggers
   impure function get_log_count return natural;
 
   -- Get number of log calls to a specific level or all levels when level = null_log_level
-  impure function get_log_count(
-    logger : logger_t;
-    log_level : log_level_t := null_log_level) return natural;
+  impure function get_log_count(logger : logger_t;
+                                log_level : log_level_t := null_log_level) return natural;
 
   -- Reset the log call count of a specific level or all levels when level = null_log_level
-  procedure reset_log_count(
-    logger : logger_t;
-    log_level : log_level_t := null_log_level);
+  procedure reset_log_count(logger : logger_t;
+                            log_level : log_level_t := null_log_level;
+                            include_children : boolean := true);
 
   ---------------------------------------------------------------------
   -- Mock procedures to enable unit testing of code performing logging
