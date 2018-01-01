@@ -314,9 +314,9 @@ package body logger_pkg is
     return (p_data => to_integer_vector_ptr(get(children, idx)));
   end;
 
-  procedure set_stop_count(logger : logger_t;
-                           log_level : log_level_t;
-                           value : positive) is
+  procedure set_relative_stop_count(logger : logger_t;
+                                    log_level : log_level_t;
+                                    value : positive) is
 
     -- Add that saturates on integer'high
     function add(value1, value2 : natural) return natural is
@@ -341,7 +341,7 @@ package body logger_pkg is
     set(stop_counts, log_level_idx, add(log_count, value));
 
     for child_idx in 0 to num_children(logger)-1 loop
-      set_stop_count(get_child(logger, child_idx), log_level, value);
+      set_relative_stop_count(get_child(logger, child_idx), log_level, value);
     end loop;
   end;
 
@@ -358,10 +358,10 @@ package body logger_pkg is
     return get(stop_counts, log_level_idx);
   end;
 
-  procedure set_stop_count(log_level : log_level_t;
-                           value : positive) is
+  procedure set_relative_stop_count(log_level : log_level_t;
+                                    value : positive) is
   begin
-    set_stop_count(root_logger, log_level, value);
+    set_relative_stop_count(root_logger, log_level, value);
   end;
 
   procedure set_stop_level(level : standard_log_level_t) is
@@ -376,9 +376,9 @@ package body logger_pkg is
     for level in log_level_t'low to log_level_t'high loop
       if is_standard(level) then
         if level >= log_level then
-          set_stop_count(logger, level, 1);
+          set_relative_stop_count(logger, level, 1);
         else
-          set_stop_count(logger, level, integer'high);
+          set_relative_stop_count(logger, level, integer'high);
         end if;
       end if;
     end loop;
@@ -393,7 +393,7 @@ package body logger_pkg is
   procedure disable_stop(logger : logger_t) is
   begin
     for level in log_level_t'low to log_level_t'high loop
-      set_stop_count(logger, level, integer'high);
+      set_relative_stop_count(logger, level, integer'high);
     end loop;
   end;
 
