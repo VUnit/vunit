@@ -659,10 +659,7 @@ though, for example by only handling ``wait_for_idle`` transactions aimed at the
 not have great practical value but can, if misused, create an infinite loop of subscriptions which will hang the
 simulation.
 * A subscription on the outbound traffic of an actor won't pick up messages sent anonymously.
-* A subscriber of inbound traffic to an actor will generally receive a message when it reaches the inbox of that actor
-and not when the actor is ready to consume the message. An exception is when the message is the reply to an anonymous
-request. In that case the message is stored in the replying actor's outbox until the requesting actor actively searches
-for the message using ``receive_reply``. This is also the point in time when the subscriber gets the message.
+* A subscription on the inbound traffic of an actor won't pick up replies to an anonymously request.
 
 Blocking subscribers
 -------------------------
