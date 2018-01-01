@@ -92,10 +92,13 @@ To send the created message to the receiver you call the ``send`` procedure
 
   send(net, receiver, msg);
 
-``send`` is asynchronous and takes no simulation time, only delta cycles. Messages will be stored in the receiver inbox until
-the receiver is ready to receive. 
+``send`` is asynchronous and takes no simulation time, only delta cycles. Messages will be stored in the receiver inbox
+until the receiver is ready to receive.
 
-``net`` is a network connecting actors and it is used to signal that an event has occurred, for example that a message has been sent. The event notifies all connected actors that something has happened which they may be interested in. For example, the event created when sending a message will wake up all receivers such that they can see if they are the receiver for the message.
+``net`` is a network connecting actors and it is used to signal that an event has occurred, for example that a message
+has been sent. The event notifies all connected actors that something has happened which they may be interested in.
+For example, the event created when sending a message will wake up all receivers such that they can see if they are the
+receiver for the message.
 
 An actor waiting for a message uses the receive procedure
 
@@ -103,8 +106,10 @@ An actor waiting for a message uses the receive procedure
 
   receive(net, receiver, msg);
 
-This procedure returns immediately if there are pending message(s) in the receiver's inbox or blocks until the first message arrives. The returned message contains the oldest incoming message and its information can be retrieved using ``pop`` functions.
-The code below will verify that the message has the expected content using the VUnit ``check_equal`` procedure.
+This procedure returns immediately if there are pending message(s) in the receiver's inbox or blocks until the first
+message arrives. The returned message contains the oldest incoming message and its information can be retrieved using
+``pop`` functions. The code below will verify that the message has the expected content using the VUnit ``check_equal``
+procedure.
 
 .. code-block:: vhdl
 
@@ -117,23 +122,29 @@ Just like ``push`` there are both ``pop`` functions and more verbose aliases on 
 Message Types
 -------------
 
-In the example above the sender and the receiver exchanged one type of message (a string followed by an integer) but the normal use case is that a receiver can handle several types of messages. For example, if the receiver is a bus functional model (BFM) connected to a memory bus it would be able to handle both read and write messages.
+In the example above the sender and the receiver exchanged one type of message (a string followed by an integer) but
+the normal use case is that a receiver can handle several types of messages. For example, if the receiver is a bus
+functional model (BFM) connected to a memory bus it would be able to handle both read and write messages.
 
-Rather than using a regular type as the message type, for example the string ``"write"`` for a write message, ``com`` provides a special message type.
+Rather than using a regular type as the message type, for example the string ``"write"`` for a write message, ``com``
+provides a special message type.
 
 .. code-block:: vhdl
 
   constant write_msg : msg_type_t := new_msg_type("write");
 
-Even if we have two independently created BFMs, both providing the constant above in their own packages, they would be given different values by the ``new_msg_type`` function. This means that we can safely create the different types of write messages without any risk of mistaking one for the other.
+``"write"`` is just a description of the message type and not a unique identifier. Even if we have two independently
+created BFMs, both providing the constant above in their own packages, they would be given different values by the
+``new_msg_type`` function. This means that we can safely create the different types of write messages without any risk
+of mistaking one for the other.
 
 .. code-block:: vhdl
 
    msg := new_msg;
-   push(msg, bfm1_pkg.write_msg);
+   push(msg, memory_bfm_pkg.write_msg);
    push(msg, my_unsigned_address);
    push(msg, my_std_logic_vector_data);
-   send(net, bfm1_pkg.actor, msg);
+   send(net, memory_bfm_pkg.actor, msg);
 
 The receiver starts by popping the message type and then handles the message types it recognizes.
 
@@ -156,11 +167,14 @@ The receiver starts by popping the message type and then handles the message typ
     end if;
   end process;
 
-Normally a BFM would never be exposed to a write message aimed for another BFM but under certain cases it can happen. For example when using the publisher/subscriber pattern described later. A typical BFM would also provide a write transaction procedure which hides the message passing details (creating message, pushing data, and sending). That gives an extra level of type safety (and readability).
+Normally a BFM would never be exposed to a write message aimed for another BFM but under certain cases it can happen.
+For example when using the publisher/subscriber pattern described later. A typical BFM would also provide a write
+transaction procedure which hides the message passing details (creating message, pushing data, and sending). That gives
+an extra level of type safety (and readability).
 
 .. code-block:: vhdl
 
-  bfm1_pkg.write(net, my_unsigned_address, my_std_logic_vector_data);
+  memory_bfm_pkg.write(net, my_unsigned_address, my_std_logic_vector_data);
 
 If you do not expect the receiver to receive massages of a type it can't handle you can add this else statement
 
@@ -176,19 +190,27 @@ which will cause an unrecognize message to fail the testbench.
 Message Ownership
 -----------------
 
-The sender of a message is the owner of that message while it's being created. As soon as the ``send`` procedure is called that ownership is handed over to the receiver and the message passed to the ``send`` call can no longer be used to retrieve the information you pushed into it. Since memory is allocated whenever you push to a message its important that the receiver side deallocates that memory to avoid memory leaks. This can be done explicitly by deleting the message.
+The sender of a message is the owner of that message while it's being created. As soon as the ``send`` procedure is
+called that ownership is handed over to the receiver and the message passed to the ``send`` call can no longer be used
+to retrieve the information you pushed into it. Since memory is allocated whenever you push to a message its important
+that the receiver side deallocates that memory to avoid memory leaks. This can be done explicitly by deleting the
+message.
 
 .. code-block:: vhdl
 
   delete(msg);
 
-However, the typical receiver is a looping process that calls the ``receive`` procedure as soon as the previous message has been handled. To simplify the design of the such a receiver the ``delete`` procedure is called first in the ``receive`` procedure to delete the message from the previous loop iteration.
+However, the typical receiver is a looping process that calls the ``receive`` procedure as soon as the previous message
+has been handled. To simplify the design of the such a receiver the ``delete`` procedure is called first in the
+``receive`` procedure to delete the message from the previous loop iteration.
 
 
 Replying to a Message
 ---------------------
 
-Replying to a message is done with the ``reply`` procedure. Below is the previous message handler process which has been updated to also handle read request messages. Every such message results in a reply message targeting the requesting actor.
+Replying to a message is done with the ``reply`` procedure. Below is the previous message handler process which has
+been updated to also handle read request messages. Every such message results in a reply message targeting the
+requesting actor.
 
 .. code-block:: vhdl
 
@@ -224,7 +246,8 @@ Just like the ``send`` procedure ``reply`` will hand message ownership to the re
 Receiving a Reply
 -----------------
 
-If you want to await a specific message like the reply to a request message you can use the ``receive_reply`` procedure. Below is a read procedure for our example BFM.
+If you want to await a specific message like the reply to a request message you can use the ``receive_reply``
+procedure. Below is a read procedure for our memory BFM.
 
 .. code-block:: vhdl
 
@@ -243,32 +266,42 @@ If you want to await a specific message like the reply to a request message you 
     delete(reply_msg);
   end;
 
-``receive_reply`` will block until the specified message is received. All other incoming messages will be ignored but can be retrieved later.
+``receive_reply`` will block until the specified message is received. All other incoming messages will be ignored but
+can be retrieved later.
 
-Sending a request and directly receiving the reply is a common sequence of calls so it has been given a dedicated ``request`` procedure. The two lines above can be replaced by
-
-.. code-block:: vhdl
-
-  request(net, actor, request_msg, reply_msg);   
-
-Another approach to the read procedure is to think of it as two steps. The first step sends the the non-blocking read request and the second waits to get the requested data. The link between the two is the request message. This message is sometimes called a future since it represents the requested data that will be available in the future. Splitting blocking procedures like this allow you to initiate several concurrent transactions on different DUT interfaces or perform other tasks while waiting for the replies.
+Sending a request and directly receiving the reply is a common sequence of calls so it has been given a dedicated
+``request`` procedure. The two lines above can be replaced by
 
 .. code-block:: vhdl
 
-  bfm1_pkg.non_blocking_read(net, address => x"80", future => future1);
+  request(net, actor, request_msg, reply_msg);
+
+Another approach to the read procedure is to think of it as two steps. The first step sends the the non-blocking read
+request and the second waits to get the requested data. The link between the two is the request message. This message
+is sometimes called a future since it represents the requested data that will be available in the future. Splitting
+blocking procedures like this allow you to initiate several concurrent transactions on different DUT interfaces or
+perform other tasks while waiting for the replies.
+
+.. code-block:: vhdl
+
+  memory_bfm_pkg.non_blocking_read(net, address => x"80", future => future1);
   some_other_bfm_pkg.non_blocking_transaction(net, some_input_parameters, future2);
 
   <Do other things>
 
-  bfm1_pkg.get(net, future1, data);
+  memory_bfm_pkg.get(net, future1, data);
   some_other_bfm_pkg.get(net, future2, requested_information);
 
 Signing Messages
 ----------------
 
-So far all request messages have been anonymous, I've only created an actor for the receiving part. In these situations the receiver ``reply`` call can't send a reply back to the sender so the reply message is placed in the receiver outbox. The ``receive_reply`` procedure called by the sender knows that the request message was anonymous and waits for the reply to appear in the receiver outbox instead of its own inbox.
+So far all request messages have been anonymous, I've only created an actor for the receiving part. In these situations
+the receiver ``reply`` call can't send a reply back to the sender so the reply message is placed in the receiver
+outbox. The ``receive_reply`` procedure called by the sender knows that the request message was anonymous and waits
+for the reply to appear in the receiver outbox instead of its own inbox.
 
-Some communication patterns, for example the publisher/subscriber pattern described later, requires that all messages are signed. To sign a message you can provide the sending actor when the message is created.
+Some communication patterns, for example the publisher/subscriber pattern described later, requires that all messages
+are signed. To sign a message you can provide the sending actor when the message is created.
 
 .. code-block:: vhdl
 
@@ -277,7 +310,11 @@ Some communication patterns, for example the publisher/subscriber pattern descri
 Receiving on Multiple Actors
 ----------------------------
 
-The ``message_handler`` process presented above had a single actor. However, the actor model is not limited to have one actor for each concurrently running process. A process may have several actors, each representing some other object like a channel. A typical receiver in such a design needs to act on messages from several actors and to support that you can call ``receive`` with an array of actors rather than a single actor. If several actors have messages the procedure will return the oldest message from the leftmost actor with a non-empty inbox.
+The ``message_handler`` process presented above had a single actor. However, the actor model is not limited to have one
+actor for each concurrently running process. A process may have several actors, each representing some other object
+like a channel. A typical receiver in such a design needs to act on messages from several actors and to support that
+you can call ``receive`` with an array of actors rather than a single actor. If several actors have messages the
+procedure will return the oldest message from the leftmost actor with a non-empty inbox.
 
 .. code-block:: vhdl
 
@@ -287,9 +324,17 @@ The ``message_handler`` process presented above had a single actor. However, the
 Synchronous Communication
 *************************
 
-Message passing based on the actor model is inherently asynchronous in nature. Sending a message takes no time which means that the sender can send any number of messages before the receiver starts processing the first one. Transactions requesting a reply, like the read transaction presented before, will naturally break this flow of unprocessed messages by blocking while waiting for a reply. Sometimes it's also useful to synchronize the sender and receiver on transactions which initiate an action without expecting a reply, a write transaction for example. To do that we can create a reply message with a positive or negative acknowledge   to signal the completion of the transaction or the failure to complete the request. Rather than doing that explicitly you can use one of the convenience procedures that ``com`` provides.
+Message passing based on the actor model is inherently asynchronous in nature. Sending a message takes no time which
+means that the sender can send any number of messages before the receiver starts processing the first one. Transactions
+requesting a reply, like the read transaction presented before, will naturally break this flow of unprocessed messages
+by blocking while waiting for a reply. Sometimes it's also useful to synchronize the sender and receiver on
+transactions which initiate an action without expecting a reply, a write transaction for example. To do that we can
+create a reply message with a positive or negative acknowledge   to signal the completion of the transaction or the
+failure to complete the request. Rather than doing that explicitly you can use one of the convenience procedures that
+``com`` provides.
 
-Instead of using the ``reply`` procedure with a reply message the receiver can use ``acknowledge`` with a positive/negative response in the form of true/false boolean as the third parameter
+Instead of using the ``reply`` procedure with a reply message the receiver can use ``acknowledge`` with a
+positive/negative response in the form of true/false boolean as the third parameter
 
 .. code-block:: vhdl
 
@@ -323,7 +368,8 @@ It's also possible to resize the inbox of an already created actor.
 
 Reducing the size below the number of messages in the inbox will cause a run-time failure.
 
-A third way to synchronize actors is to have a dedicated message for that purpose but without any information exchange. The message exchange will just be an indication that the receiver is idling waiting for new messages.
+A third way to synchronize actors is to have a dedicated message for that purpose but without any information exchange.
+The message exchange will just be an indication that the receiver is idling waiting for new messages.
 
 .. code-block:: vhdl
 
@@ -331,9 +377,11 @@ A third way to synchronize actors is to have a dedicated message for that purpos
   push(request_msg, wait_until_idle_msg);
   request(net, actor_to_synchronize, request_msg, reply_msg);
 
-The sender will block on the ``request`` call until the actor to synchronize has replied and the two actors becomes synchronized. Since there is no information exchange there is no need to pop the reply message.
+The sender will block on the ``request`` call until the actor to synchronize has replied and the two actors becomes
+synchronized. Since there is no information exchange there is no need to pop the reply message.
 
-The actor to synchronize will have to add an if statement branch to handle the new message type. Below I've extended the message handling of the previous BFM example.
+The actor to synchronize will have to add an if statement branch to handle the new message type. Below I've extended
+the message handling of the previous BFM example.
 
 .. code-block:: vhdl
 
@@ -345,7 +393,7 @@ The actor to synchronize will have to add an if statement branch to handle the n
     reply(net, request_msg, reply_msg);
   elsif msg_type = write_msg then
 
-    ... 
+    ...
 
   else
     unexpected_msg_type(msg_type);
@@ -357,11 +405,13 @@ Note that no information is pushed to the reply message.
 Message Handlers and Verification Component Interfaces (VCI)
 ************************************************************
 
-The synchronization based on ``wait_until_idle_msg`` is something that can be used by many actors. We've seen before how we can create transaction procedures like ``read`` and ``write`` and we can also create such a procedure for this message. To synchronize with the BFM 1 actor we would just do
+The synchronization based on ``wait_until_idle_msg`` is something that can be used by many actors. We've seen before
+how we can create transaction procedures like ``read`` and ``write`` and we can also create such a procedure for this
+message. To synchronize with the memory BFM actor we would just do
 
 .. code-block:: vhdl
 
-  wait_until_idle(net, bfm1_pkg.actor);
+  wait_until_idle(net, memory_bfm_pkg.actor);
 
 We can also create a reusable procedure for the message handling.
 
@@ -380,7 +430,10 @@ We can also create a reusable procedure for the message handling.
     end if;
   end;
 
-This is the same code I showed before to handle the wait until idle message with one addition - the call to the ``handle_message`` procedure. ``handle_message`` is in itself a message handler, the simplest message handler possible. The only thing it does is to set ``msg_type`` to a special value ``message_handled``. To understand why we can look at the updated BFM.
+This is the same code I showed before to handle the wait until idle message with one addition - the call to the
+``handle_message`` procedure. ``handle_message`` is in itself a message handler, the simplest message handler possible.
+The only thing it does is to set ``msg_type`` to a special value ``message_handled``. To understand why we can look at
+the updated BFM.
 
 .. code-block:: vhdl
 
@@ -397,9 +450,15 @@ This is the same code I showed before to handle the wait until idle message with
     unexpected_msg_type(msg_type);
   end if;
 
-After ``handle_wait_until_idle`` returns, ``msg_type`` has the value ``message_handled`` and no more message handling takes place in the following if statement. The ``unexpected_msg_type`` procedure of the else branch will be called but that procedure takes no action when the message type is ``message_handled``.
+After ``handle_wait_until_idle`` returns, ``msg_type`` has the value ``message_handled`` and no more message handling
+takes place in the following if statement. The ``unexpected_msg_type`` procedure of the else branch will be called but
+that procedure takes no action when the message type is ``message_handled``.
 
-By putting the ``wait_until_idle_msg`` message type and the ``wait_until_idle`` and ``handle_wait_until_idle`` procedures in a package we can create a reusable verification component interface (VCI) that can be added to actors. An actor can call several message handlers, that is add several interfaces, and you can create message handlers that call other message handlers to bundle interfaces. The interface I just presented is actually already provided as a part of VUnit's :ref:`synchronization VCI <sync_vci>`.
+By putting the ``wait_until_idle_msg`` message type and the ``wait_until_idle`` and ``handle_wait_until_idle``
+procedures in a package we can create a reusable verification component interface (VCI) that can be added to actors.
+An actor can call several message handlers, that is add several interfaces, and you can create message handlers that
+call other message handlers to bundle interfaces. The interface I just presented is actually already provided as a part
+of VUnit's :ref:`synchronization VCI <sync_vci>`.
 
 Timeout
 -------
@@ -410,7 +469,10 @@ Receive and send procedures which may block on empty or full inboxes have an opt
 
   receive(net, actor, msg, timeout => 10 ns);
 
-Reaching the timeout limit is an error that will fail the testbench. If you need to timeout a receive call without failing you can use the ``wait_for_message``, ``has_message``, and ``get_message`` subprograms. The ``status`` returned by the ``wait_for_message`` procedure below will be ``ok`` if a message is received before the timeout and ``timeout`` if the timeout limit is reached.
+Reaching the timeout limit is an error that will fail the testbench. If you need to timeout a receive call without
+failing you can use the ``wait_for_message``, ``has_message``, and ``get_message`` subprograms. The ``status`` returned
+by the ``wait_for_message`` procedure below will be ``ok`` if a message is received before the timeout and ``timeout``
+if the timeout limit is reached.
 
 .. code-block:: vhdl
 
@@ -441,25 +503,47 @@ It's also possible to wait for a reply with a timeout.
 Deferred Actor Creation
 -----------------------------
 
-When finding an actor using the ``find`` function there is a potential race condition. What if the actor hasn't been created yet? The default VUnit solution is that the ``find`` function creates a temporary actor with limited functionality and defer proper actor creation until the ``new_actor`` function is called. The process calling ``find`` can send messages to this actor and can't tell the difference. However, it's not possible to call receive type of procedures on such an actor. Full actor capabilities are acquired when the receiver process has created the actor with ``new_actor``.
+When finding an actor using the ``find`` function there is a potential race condition. What if the actor hasn't been
+created yet? The default VUnit solution is that the ``find`` function creates a temporary actor with limited
+functionality and defer proper actor creation until the ``new_actor`` function is called. The process calling ``find``
+can send messages to this actor and can't tell the difference. However, it's not possible to call receive type of
+procedures on such an actor. Full actor capabilities are acquired when the receiver process has created the actor with
+``new_actor``.
 
-The danger with this approach is if the actor "found" by the sender is never created, maybe as a result of a misspelled name. In that case the sender will send messages that are never received but it will block on the second send since the temporary actor has an inbox of size one. The safest way to avoid this is to not use ``find`` but rather make the actor constant available to the sender. It's also possible to to disable the deferred creation by adding an extra parameter to the ``find`` call
+The danger with this approach is if the actor "found" by the sender is never created, maybe as a result of a misspelled
+name. In that case the sender will send messages that are never received but it will block on the second send since the
+temporary actor has an inbox of size one. The safest way to avoid this is to not use ``find`` but rather make the actor
+constant available to the sender. It's also possible to to disable the deferred creation by adding an extra parameter
+to the ``find`` call
 
 .. code-block:: vhdl
 
   find("actor name", enable_deferred_creation => false);
 
-If the actor isn't found the function returns ``null_actor_c`` so to make this work you must make sure that the ``find`` function is called after ``new_actor``, for example by adding an initial delay before making the call.
+If the actor isn't found the function returns ``null_actor_c`` so to make this work you must make sure that the
+``find`` function is called after ``new_actor``, for example by adding an initial delay before making the call.
 
-Another approach is to make sure that there are no deferred creations pending a short delay into the simulation, before the actual testing starts. You can find out by calling the ``num_of_deferred_creations`` function.
+Another approach is to make sure that there are no deferred creations pending a short delay into the simulation, before
+the actual testing starts. You can find out by calling the ``num_of_deferred_creations`` function.
 
 ****************************
 Publisher/Subscriber Pattern
 ****************************
 
-A common message pattern is the publisher/subscriber pattern where a publisher actor publishes a messages rather than sending it. Actors interested in these messages subscribe to the publisher and the published messages are received just like messages sent directly to the subscribers. The purpose of this pattern is to decouple the publisher from the subscribers, it doesn't have to know who the subscribers are and there is no need to update the publisher when subscribers are added or removed.
+A common message pattern is the publisher/subscriber pattern where a publisher actor publishes a messages rather than
+sending it. Actors interested in these messages subscribe to the publisher and the published messages are received just
+like messages sent directly to the subscribers. The purpose of this pattern is to decouple the publisher from the
+subscribers, it doesn't have to know who the subscribers are and there is no need to update the publisher when
+subscribers are added or removed.
 
-An example for how this pattern can be used is when you have a verification component monitoring an interface of the DUT. Let's say we have a simple adder with streaming input and output interfaces. The input interface consists of two unsigned operands and a data valid signal while the output consists of an unsigned ``sum`` and a data valid. The input interface is controlled by a driver BFM which receives ``add`` transactions as well as ``wait_for_time`` to insert idle cycles in the input stream. ``wait_for_time`` is a standard VCI provided by the :ref:`sync_pkg <sync_vci>`. The output interface has a monitor process which creates sum messages from valid output sums. Just like the input driver doesn't know or care who's sending the add transactions, the monitor doesn't have to know who's consuming the sum messages. To achieve that it will publish the sum messages and just provide the publishing actor (``monitor``).
+An example for how this pattern can be used is when you have a verification component monitoring an interface of the
+DUT. Let's say we have a simple adder with streaming input and output interfaces. The input interface consists of two
+unsigned operands and a data valid signal while the output consists of an unsigned ``sum`` and a data valid. The input
+interface is controlled by a driver BFM which receives ``add`` transactions as well as ``wait_for_time`` to insert idle
+cycles in the input stream. ``wait_for_time`` is a standard VCI provided by the :ref:`sync_pkg <sync_vci>`. The output
+interface has a monitor process which creates sum messages from valid output sums. Just like the input driver doesn't
+know or care who's sending the add transactions, the monitor doesn't have to know who's consuming the sum messages. To
+achieve that it will publish the sum messages and just provide the publishing actor (``monitor``).
 
 .. code-block:: vhdl
 
@@ -473,21 +557,33 @@ An example for how this pattern can be used is when you have a verification comp
    publish(net, monitor, msg);
  end process;
 
-In addition to the driver and the monitor there is a scoreboard process to verify the adder functionality. The scoreboard subscribes to the sum messages published by the monitor using the ``subscribe`` procedure. Rather than having a single actor the scoreboard has several actors called channels and the ``slave_channel`` is setup to subscribe to messages published by the ``monitor`` actor.
+In addition to the driver and the monitor there is a scoreboard process to verify the adder functionality. The
+scoreboard subscribes to the sum messages published by the monitor using the ``subscribe`` procedure. Rather than
+having a single actor the scoreboard has several actors called channels and the ``slave_channel`` is setup to subscribe
+to messages published by the ``monitor`` actor.
 
 .. code-block:: vhdl
 
  subscribe(slave_channel, monitor);
 
-The next step is to make sure that the scoreboard also receives the add transactions on the input interface. There are several ways to do this. One is to build another monitor for the input interface and another is to let the driver publish the add transactions. However, in order to demonstrate ``com`` functionality this scoreboard will use a third approach and let the scoreboard subscribe to inbound traffic to the driver. This can be done by adding a third parameter to the ``subscribe`` call.
+The next step is to make sure that the scoreboard also receives the add transactions on the input interface. There are
+several ways to do this. One is to build another monitor for the input interface and another is to let the driver
+publish the add transactions. However, in order to demonstrate ``com`` functionality this scoreboard will use a third
+approach and let the scoreboard subscribe to inbound traffic to the driver. This can be done by adding a third
+parameter to the ``subscribe`` call.
 
 .. code-block:: vhdl
 
  subscribe(master_channel, driver, inbound);
 
-The default value used before is ``published`` and it is also possible to subscribe to ``outbound`` traffic. ``outbound`` traffic is every output message from an actor regardless if that message is the result of a ``publish``, ``send``, or ``reply`` call.
+The default value used before is ``published`` and it is also possible to subscribe to ``outbound`` traffic.
+``outbound`` traffic is every output message from an actor regardless if that message is the result of a ``publish``,
+``send``, or ``reply`` call.
 
-With the two subscriptions at hand we can create a scoreboard process. The main flow of the code below is to wait for an ``add_msg`` on the ``master_channel`` (``wait_for_time`` is ignored) and when it's received wait for the associated ``sum_msg`` on the ``slave_channel``. Once both these messages are available the scoreboard will use its reference model to verify that the output data matches the input.
+With the two subscriptions at hand we can create a scoreboard process. The main flow of the code below is to wait for
+an ``add_msg`` on the ``master_channel`` (``wait_for_time`` is ignored) and when it's received wait for the associated
+``sum_msg`` on the ``slave_channel``. Once both these messages are available the scoreboard will use its reference
+model to verify that the output data matches the input.
 
 .. code-block:: vhdl
 
@@ -523,7 +619,10 @@ With the two subscriptions at hand we can create a scoreboard process. The main 
     end loop;
   end process;
 
-In order for the test sequencer to know when the verification is complete it will send a ``wait_for_idle`` transaction after all add transactions. That transaction is handled by the ``handle_wait_until_idle`` message handler on the scoreboard side. The example test sequencer below just sends 10 random add messages separated by a random delay (not good for functional coverage but good enough for this example). 
+In order for the test sequencer to know when the verification is complete it will send a ``wait_for_idle`` transaction
+after all add transactions. That transaction is handled by the ``handle_wait_until_idle`` message handler on the
+scoreboard side. The example test sequencer below just sends 10 random add messages separated by a random delay
+(not good for functional coverage but good enough for this example).
 
 .. code-block:: vhdl
 
@@ -537,10 +636,18 @@ In order for the test sequencer to know when the verification is complete it wil
         end loop;
         wait_until_idle(net, master_channel);
 
-Subscribing to messages actively being published is the classic form of the publisher/subscriber communication pattern while subscriptions on inbound or outbound traffic is more like eavesdropping. This has implications that you need to be aware of:
+Subscribing to messages actively being published is the classic form of the publisher/subscriber communication pattern
+while subscriptions on inbound or outbound traffic is more like eavesdropping. This has implications that you need to
+be aware of:
 
-* When receiving a message that has been published, a call to ``sender`` or ``receiver`` on that message will return the publisher and subscriber actors respectively. However, when receiving a message resulting from an inbound or outbound subscription the two functions will return the sender and the receiver for the original message transaction.
-* The subscriber of inbound and outbound traffic will receive all messages, not only those that would have been published if the decision was more active. For example, if someone sends a ``wait_for_idle`` transaction to the driver it will also be sent to the subscriber which will act upon it "thinking" it was from the test sequencer. This wouldn't be a problem if we had a monitor for the input interface only publishing add messages. It's still possible to fix though, for example by only handling ``wait_for_idle`` transactions aimed at the master channel.
+* When receiving a message that has been published, a call to ``sender`` or ``receiver`` on that message will return
+the publisher and subscriber actors respectively. However, when receiving a message resulting from an inbound or
+outbound subscription the two functions will return the sender and the receiver for the original message transaction.
+* The subscriber of inbound and outbound traffic will receive all messages, not only those that would have been
+published if the decision was more active. For example, if someone sends a ``wait_for_idle`` transaction to the driver
+it will also be sent to the subscriber which will act upon it "thinking" it was from the test sequencer. This wouldn't
+be a problem if we had a monitor for the input interface only publishing add messages. It's still possible to fix
+though, for example by only handling ``wait_for_idle`` transactions aimed at the master channel.
 
 .. code-block:: vhdl
 
@@ -548,16 +655,24 @@ Subscribing to messages actively being published is the classic form of the publ
         handle_wait_until_idle(net, msg_type, master_msg);
       end if;
 
-* Since you can subscribe on inbound traffic you can also subscribe to the inbound traffic of a subscriber. This may not have great practical value but can, if misused, create an infinite loop of subscriptions which will hang the simulation.
+* Since you can subscribe on inbound traffic you can also subscribe to the inbound traffic of a subscriber. This may
+not have great practical value but can, if misused, create an infinite loop of subscriptions which will hang the
+simulation.
 * A subscription on the outbound traffic of an actor won't pick up messages sent anonymously.
-* A subscriber of inbound traffic to an actor will generally receive a message when it reaches the inbox of that actor and not when the actor is ready to consume the message. An exception is when the message is the reply to an anonymous request. In that case the message is stored in the replying actor's outbox until the requesting actor actively searches for the message using ``receive_reply``. This is also the point in time when the subscriber gets the message.
+* A subscriber of inbound traffic to an actor will generally receive a message when it reaches the inbox of that actor
+and not when the actor is ready to consume the message. An exception is when the message is the reply to an anonymous
+request. In that case the message is stored in the replying actor's outbox until the requesting actor actively searches
+for the message using ``receive_reply``. This is also the point in time when the subscriber gets the message.
 
 Blocking subscribers
 -------------------------
 
-Although the intent of the publisher/subscriber pattern is to decouple the publisher from the subscribers it can still be affected if a subscriber inbox is full. A message transaction will be blocked until all of its subscribers and any regular receiver have available space in their inboxes.
+Although the intent of the publisher/subscriber pattern is to decouple the publisher from the subscribers it can still
+be affected if a subscriber inbox is full. A message transaction will be blocked until all of its subscribers and any
+regular receiver have available space in their inboxes.
 
 Unsubscribing
 -----------------
 
-An actor can unsubscribe from a subscription at any time by calling ``unsubscribe`` with the same parameters used when calling the ``subscribe`` procedure.
+An actor can unsubscribe from a subscription at any time by calling ``unsubscribe`` with the same parameters used when
+calling the ``subscribe`` procedure.

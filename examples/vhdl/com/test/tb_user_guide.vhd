@@ -9,8 +9,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.bfm1_pkg;
-use work.bfm2_pkg;
+use work.memory_bfm_pkg;
 
 library osvvm;
 use osvvm.RandomPkg.all;
@@ -26,15 +25,15 @@ architecture a of tb_user_guide is
   signal sum           : unsigned(8 downto 0);
   signal dv_in, dv_out : std_logic := '0';
 
-  constant driver          : actor_t             := new_actor("driver");
-  constant monitor         : actor_t             := new_actor("monitor");
-  constant master_channel  : actor_t             := new_actor("driver channel");
-  constant slave_channel : actor_t             := new_actor("monitor channel");
-  constant add_msg         : msg_type_t          := new_msg_type("add");
-  constant sum_msg         : msg_type_t          := new_msg_type("sum");
-  constant my_receiver     : actor_t             := new_actor("my receiver");
-  constant channels        : actor_vec_t(1 to 2) := (new_actor("channel 1"), new_actor("channel 2"));
-  constant clk_period      : time                := 10 ns;
+  constant driver         : actor_t             := new_actor("driver");
+  constant monitor        : actor_t             := new_actor("monitor");
+  constant master_channel : actor_t             := new_actor("driver channel");
+  constant slave_channel  : actor_t             := new_actor("monitor channel");
+  constant add_msg        : msg_type_t          := new_msg_type("add");
+  constant sum_msg        : msg_type_t          := new_msg_type("sum");
+  constant my_receiver    : actor_t             := new_actor("my receiver");
+  constant channels       : actor_vec_t(1 to 2) := (new_actor("channel 1"), new_actor("channel 2"));
+  constant clk_period     : time                := 10 ns;
 begin
   test_runner : process
     variable msg, request_msg, reply_msg : msg_t;
@@ -50,6 +49,7 @@ begin
     variable status                      : com_status_t;
     variable start                       : time;
     constant my_actor                    : actor_t                      := new_actor("My actor");
+    constant write_msg                   : msg_type_t                   := new_msg_type("write");
   begin
     test_runner_setup(runner, runner_cfg);
     enable(display_handler, pass);
@@ -60,51 +60,60 @@ begin
         push_string(msg, "10101010");
         push(msg, my_integer);
         send(net, my_receiver, msg);
+
       elsif run("Test sending a message to a found actor") then
         msg := new_msg;
         push_string(msg, "10101010");
         push(msg, my_integer);
         send(net, found_receiver, msg);
+
       elsif run("Test sending messages with a message type with a name identical to another message type") then
         msg := new_msg;
-        push(msg, bfm1_pkg.write_msg);
+        push(msg, memory_bfm_pkg.write_msg);
         push(msg, my_unsigned_address);
         push(msg, my_std_logic_vector_data);
-        send(net, bfm1_pkg.actor, msg);
+        send(net, memory_bfm_pkg.actor, msg);
+
       elsif run("Test encapsulating message passing details in transaction procedures") then
-        bfm1_pkg.write(net, address => x"80", data => x"21");
+        memory_bfm_pkg.write(net, address => x"80", data => x"21");
+
       elsif run("Test requesting information") then
-        bfm1_pkg.write(net, address => x"80", data => x"21");
+        memory_bfm_pkg.write(net, address => x"80", data => x"21");
         request_msg := new_msg;
-        push(request_msg, bfm1_pkg.read_msg);
+        push(request_msg, memory_bfm_pkg.read_msg);
         push(request_msg, unsigned'(x"80"));
-        request(net, bfm1_pkg.actor, request_msg, reply_msg);
+        request(net, memory_bfm_pkg.actor, request_msg, reply_msg);
         data        := pop(reply_msg);
         check_equal(data, std_logic_vector'(x"21"));
+
       elsif run("Test sending/receiving a reply") then
-        bfm1_pkg.write(net, address => x"80", data => x"21");
-        bfm1_pkg.read(net, address  => x"80", data => data);
+        memory_bfm_pkg.write(net, address => x"80", data => x"21");
+        memory_bfm_pkg.read(net, address  => x"80", data => data);
         check_equal(data, std_logic_vector'(x"21"));
+
       elsif run("Test blocking and non-blocking transactions") then
-        bfm1_pkg.write(net, address             => x"80", data => x"21");
-        bfm1_pkg.write(net, address             => x"84", data => x"17");
-        bfm1_pkg.non_blocking_read(net, address => x"80", future => future);
-        bfm1_pkg.blocking_read(net, address     => x"84", data => data);
+        memory_bfm_pkg.write(net, address             => x"80", data => x"21");
+        memory_bfm_pkg.write(net, address             => x"84", data => x"17");
+        memory_bfm_pkg.non_blocking_read(net, address => x"80", future => future);
+        memory_bfm_pkg.blocking_read(net, address     => x"84", data => data);
         check_equal(data, std_logic_vector'(x"17"));
-        bfm1_pkg.get(net, future, data);
+        memory_bfm_pkg.get(net, future, data);
         check_equal(data, std_logic_vector'(x"21"));
+
       elsif run("Test blocking on acknowledge") then
         start := now;
-        bfm1_pkg.write(net, address          => x"80", data => x"21");
+        memory_bfm_pkg.write(net, address          => x"80", data => x"21");
         check_equal(now, start);
         start := now;
-        bfm1_pkg.blocking_write(net, address => x"84", data => x"17");
+        memory_bfm_pkg.blocking_write(net, address => x"84", data => x"17");
         check(now > start);
+
       elsif run("Synchronize with a rendezvous") then
-        bfm1_pkg.write(net, address => x"80", data => x"21");
+        memory_bfm_pkg.write(net, address => x"80", data => x"21");
         info("Synchronizing at " & to_string(now));
-        wait_until_idle(net, bfm1_pkg.actor);
+        wait_until_idle(net, memory_bfm_pkg.actor);
         info("Synchronized at " & to_string(now));
+
       elsif run("Test timeout") then
         wait_for_message(net, my_actor, status, timeout => 10 ns);
         check(status = timeout, result("for status = timeout when no messages have been sent"));
@@ -118,6 +127,7 @@ begin
         check(status = ok, result("for status = ok when a message has been sent"));
         check(has_message(my_actor), result("for presence of messages when a message has been sent"));
         check_equal(pop_string(get_message(my_actor)), "hello");
+
       elsif run("Test actor with multiple channels (actors)") then
         msg := new_msg;
         push_string(msg, "alpha");
@@ -126,21 +136,23 @@ begin
         msg := new_msg;
         push_string(msg, "beta");
         send(net, channels(2), msg);
+
       elsif run("Signing messages") then
-        bfm1_pkg.write(net, address             => x"80", data => x"21");
-        bfm1_pkg.non_blocking_read(net, address => x"80", future => future);
+        memory_bfm_pkg.write(net, address             => x"80", data => x"21");
+        memory_bfm_pkg.non_blocking_read(net, address => x"80", future => future);
 
         wait_for_message(net, sending_actor, status, timeout => 1 ns);
         check(status = timeout, "The read request reply shouldn't be able to find it's way to the sender's inbox");
 
-        bfm1_pkg.write(net, address              => x"84", data => x"17");
+        memory_bfm_pkg.write(net, address        => x"84", data => x"17");
         msg  := new_msg(sending_actor);
-        push(msg, bfm1_pkg.read_msg);
+        push(msg, memory_bfm_pkg.read_msg);
         push(msg, unsigned'(x"84"));
-        send(net, bfm1_pkg.actor, msg);
+        send(net, memory_bfm_pkg.actor, msg);
         receive(net, sending_actor, msg, timeout => 100 ns);
         data := pop(msg);
         check_equal(data, std_logic_vector'(x"17"));
+
       elsif run("Test publisher/subscriber") then
         for i in 1 to 10 loop
           msg := new_msg;
@@ -182,7 +194,7 @@ begin
     end if;
   end process;
 
-  bfm1 : entity work.bfm1;
+  memory_bfm : entity work.memory_bfm;
 
   test_runner_watchdog(runner, 500 ms);
 
@@ -220,7 +232,7 @@ begin
 
   scoreboard_process : process is
     variable master_msg, slave_msg : msg_t;
-    variable msg_type         : msg_type_t;
+    variable msg_type              : msg_type_t;
 
     procedure do_model_check(indata, outdata : msg_t) is
       variable op_a, op_b, sum : natural;

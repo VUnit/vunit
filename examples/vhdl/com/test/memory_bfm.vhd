@@ -8,19 +8,19 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.numeric_std_unsigned.all;
 
-use work.bfm1_pkg.all;
+use work.memory_bfm_pkg.all;
 
-entity bfm1 is
-end entity bfm1;
+entity memory_bfm is
+end entity memory_bfm;
 
-architecture a of bfm1 is
+architecture a of memory_bfm is
 begin
-  message_handler: process is
+  message_handler : process is
     variable request_msg, reply_msg : msg_t;
-    variable msg_type : msg_type_t;
-    variable address : unsigned(7 downto 0);
-    variable data : std_logic_vector(7 downto 0);
-    variable memory : integer_vector(0 to 255) := (others => 0);
+    variable msg_type               : msg_type_t;
+    variable address                : unsigned(7 downto 0);
+    variable data                   : std_logic_vector(7 downto 0);
+    variable memory                 : integer_vector(0 to 255) := (others => 0);
 
     procedure emulate_memory_access_delay is
     begin
@@ -33,22 +33,22 @@ begin
     handle_sync_message(net, msg_type, request_msg);
 
     if msg_type = write_msg then
-      address := pop(request_msg);
-      data := pop(request_msg);
+      address                     := pop(request_msg);
+      data                        := pop(request_msg);
       emulate_memory_access_delay;
       memory(to_integer(address)) := to_integer(data);
 
     elsif msg_type = write_with_acknowledge_msg then
-      address := pop(request_msg);
-      data := pop(request_msg);
+      address                     := pop(request_msg);
+      data                        := pop(request_msg);
       emulate_memory_access_delay;
       memory(to_integer(address)) := to_integer(data);
       acknowledge(net, request_msg, true);
 
     elsif msg_type = read_msg then
-      address := pop(request_msg);
+      address   := pop(request_msg);
       emulate_memory_access_delay;
-      data := to_std_logic_vector(memory(to_integer(address)), 8);
+      data      := to_std_logic_vector(memory(to_integer(address)), 8);
       reply_msg := new_msg;
       push(reply_msg, data);
       reply(net, request_msg, reply_msg);
