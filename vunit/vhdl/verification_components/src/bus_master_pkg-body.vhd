@@ -17,7 +17,7 @@ package body bus_master_pkg is
                           byte_length : natural := 8;
                           logger : logger_t := bus_logger) return bus_master_t is
   begin
-    return (p_actor => create,
+    return (p_actor => new_actor,
             p_data_length => data_length,
             p_address_length => address_length,
             p_byte_length => byte_length,

@@ -51,7 +51,7 @@ package body axi_stream_pkg is
   impure function new_axi_stream_master(data_length : natural;
                                         logger : logger_t := axi_stream_logger) return axi_stream_master_t is
   begin
-    return (p_actor => create,
+    return (p_actor => new_actor,
             p_data_length => data_length,
             p_logger => logger);
   end;
@@ -59,7 +59,7 @@ package body axi_stream_pkg is
   impure function new_axi_stream_slave(data_length : natural;
                                        logger : logger_t := axi_stream_logger) return axi_stream_slave_t is
   begin
-    return (p_actor => create,
+    return (p_actor => new_actor,
             p_data_length => data_length,
             p_logger => logger);
   end;

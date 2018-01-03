@@ -7,6 +7,8 @@
 use work.com_types_pkg.all;
 use work.com_pkg.all;
 use work.codec_pkg.all;
+use work.com_deprecated_pkg.all;
+use work.com_common_pkg.all;
 
 package com_string_payload_pkg is
   procedure send (
@@ -81,6 +83,7 @@ package body com_string_payload_pkg is
     constant timeout  : in    time   := max_timeout_c) is
     variable message : message_ptr_t;
   begin
+    deprecated("send() with string payload");
     message := compose(payload, sender);
     send(net, receiver, message, timeout, keep_message => true);
     receipt := (status => ok, id => message.id);
@@ -95,6 +98,7 @@ package body com_string_payload_pkg is
     constant timeout  : in    time   := max_timeout_c) is
     variable message : message_ptr_t;
   begin
+    deprecated("send() with string payload");
     message := compose(payload, sender);
     send(net, receiver, message, timeout, keep_message => false);
   end;
@@ -107,6 +111,7 @@ package body com_string_payload_pkg is
     constant timeout  : in    time   := max_timeout_c) is
     variable message : message_ptr_t;
   begin
+    deprecated("send() with string payload");
     message := compose(payload);
     send(net, receiver, message, timeout, keep_message => true);
     receipt := (status => ok, id => message.id);
@@ -120,6 +125,7 @@ package body com_string_payload_pkg is
     constant timeout  : in    time   := max_timeout_c) is
     variable message : message_ptr_t;
   begin
+    deprecated("send() with string payload");
     message := compose(payload);
     send(net, receiver, message, timeout, keep_message => false);
   end;
@@ -133,6 +139,7 @@ package body com_string_payload_pkg is
     constant timeout         : in    time   := max_timeout_c) is
     variable request_message : message_ptr_t;
   begin
+    deprecated("request() with string payload");
     request_message := compose(request_payload, sender);
     request(net, receiver, request_message, reply_message, timeout);
   end;
@@ -146,6 +153,7 @@ package body com_string_payload_pkg is
     constant timeout         : in    time   := max_timeout_c) is
     variable request_message : message_ptr_t;
   begin
+    deprecated("request() with string payload");
     request_message := compose(request_payload, sender);
     request(net, receiver, request_message, positive_ack, timeout);
   end;
@@ -157,6 +165,7 @@ package body com_string_payload_pkg is
     constant timeout    : in    time   := max_timeout_c) is
     variable message : message_ptr_t;
   begin
+    deprecated("reply() with string payload");
     message := compose(payload);
     reply(net, request, message, timeout);
   end;
@@ -168,6 +177,7 @@ package body com_string_payload_pkg is
     constant timeout : in    time   := max_timeout_c) is
     variable message : message_ptr_t;
   begin
+    deprecated("publish() with string payload");
     message := compose(payload, sender);
     publish(net, message, timeout);
   end;
@@ -180,6 +190,7 @@ package body com_string_payload_pkg is
     constant timeout    : in    time := max_timeout_c) is
     variable request : message_ptr_t := new_message;
   begin
+    deprecated("receive_reply() with string payload");
     request.sender := receiver;
     request.id := receipt.id;
     receive_reply(net, request, message, timeout);
@@ -194,6 +205,7 @@ package body com_string_payload_pkg is
     constant timeout      : in    time := max_timeout_c) is
     variable message : message_ptr_t;
   begin
+    deprecated("receive_reply() with string payload");
     receive_reply(net, receiver, receipt, message, timeout);
     positive_ack := decode(message.payload.all);
     delete(message);

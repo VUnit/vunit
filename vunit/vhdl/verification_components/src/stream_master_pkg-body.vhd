@@ -13,7 +13,7 @@ context work.com_context;
 package body stream_master_pkg is
   impure function new_stream_master return stream_master_t is
   begin
-    return (p_actor => create);
+    return (p_actor => new_actor);
   end;
 
   procedure push_stream(signal net : inout network_t;

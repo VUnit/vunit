@@ -82,7 +82,7 @@ package body axi_pkg is
                                 memory : memory_t;
                                 logger : logger_t := axi_slave_logger) return axi_slave_t is
   begin
-    return (p_actor => create,
+    return (p_actor => new_actor,
             p_initial_address_channel_fifo_depth => address_channel_fifo_depth,
             p_initial_check_4kbyte_boundary => check_4kbyte_boundary,
             p_memory => to_vc_interface(memory, logger),

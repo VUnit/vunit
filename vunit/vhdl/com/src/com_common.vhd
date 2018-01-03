@@ -17,6 +17,7 @@ use std.textio.all;
 
 package com_common_pkg is
   shared variable messenger : messenger_t;
+  procedure delete (message : inout message_ptr_t);
 
   procedure notify (signal net : inout network_t);
 
@@ -37,6 +38,14 @@ package com_common_pkg is
 end package com_common_pkg;
 
 package body com_common_pkg is
+  procedure delete (message : inout message_ptr_t) is
+  begin
+    if message /= null then
+      deallocate(message.payload);
+      deallocate(message);
+    end if;
+  end procedure delete;
+
   procedure notify (signal net : inout network_t) is
   begin
     if net /= network_event then

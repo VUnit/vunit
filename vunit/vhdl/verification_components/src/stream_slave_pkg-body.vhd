@@ -7,7 +7,7 @@
 package body stream_slave_pkg is
   impure function new_stream_slave return stream_slave_t is
   begin
-    return (p_actor => create);
+    return (p_actor => new_actor);
   end;
 
   procedure pop_stream(signal net : inout network_t;
