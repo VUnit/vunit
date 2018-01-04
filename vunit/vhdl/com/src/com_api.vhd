@@ -21,32 +21,60 @@ use work.integer_vector_ptr_pkg.all;
 use work.string_ptr_pkg.all;
 
 package com_pkg is
+  -- net is used to notify actors that an event has occured that they may
+  -- need to act upon
   signal net : network_t := idle_network;
 
   -----------------------------------------------------------------------------
   -- Handling of actors
   -----------------------------------------------------------------------------
-  impure function new_actor (name : string := ""; inbox_size : positive := positive'high) return actor_t;  --
+  -- Create a new actor. Any number of unnamed actors (name = "") can be
+  -- created. Named actors must be unique
+  impure function new_actor (name : string := ""; inbox_size : positive := positive'high) return actor_t;
+
+  -- Find named actor by name. Enable deferred creation to create a deferred
+  -- actor when no actor is found
   impure function find (name  : string; enable_deferred_creation : boolean := true) return actor_t;
+
   impure function name (actor : actor_t) return string;
 
+  -- Destroy actor. Mailboxes are deallocated and dependent subscriptions are
+  -- removed. Returns null_actor_c.
   procedure destroy (actor : inout actor_t);
+
+  -- Reset communication system. All actors are destroyed.
   procedure reset_messenger;
 
   impure function num_of_actors return natural;
   impure function num_of_deferred_creations return natural;
   impure function inbox_size (actor      : actor_t) return natural;
   impure function num_of_messages (actor : actor_t) return natural;
+
+  -- Resize actor inbox. Reducing size below the number of messages in the
+  -- inbox in runtime error
   procedure resize_inbox (actor          : actor_t; new_size : natural);
 
   -----------------------------------------------------------------------------
   -- Message related subprograms
   -----------------------------------------------------------------------------
+
+  -- Create a new empty message. The message can be anonymous or signed with
+  -- the sending actor
   impure function new_msg (sender :       actor_t := null_actor_c) return msg_t;
+
+  -- Delete message. Memory allocated by the message is deallocated.
   procedure delete (msg          : inout msg_t);
+
+  -- Return sending actor of message if defined, null_actor_c otherwise
   function sender(msg : msg_t) return actor_t;
+
+  -- Return sending actor of message if defined, null_actor_c otherwise
   function receiver(msg : msg_t) return actor_t;
 
+  -----------------------------------------------------------------------------
+  -- Subprograms for pushing/popping data to/from a message. Data is popped
+  -- from a message in the same order they were pushed (FIFO)
+  -----------------------------------------------------------------------------
   procedure push(msg : msg_t; value : integer);
   impure function pop(msg : msg_t) return integer;
   alias push_integer is push[msg_t, integer];
@@ -194,32 +222,52 @@ package com_pkg is
 
   -----------------------------------------------------------------------------
   -- Primary send and receive related subprograms
+  --
+  -- All timeouts will result in a runtime error unless otherwise noted.
   -----------------------------------------------------------------------------
+
+  -- Send message to receiver. Blocking if reciever or any subscriber inbox is
+  -- full.
   procedure send (
     signal net        : inout network_t;
     constant receiver : in    actor_t;
     variable msg      : inout msg_t;
     constant timeout  : in    time := max_timeout_c);
+
+  -- Receive message sent to receiver. Returns oldest message or the first
+  -- incoming if the inbox is empty. msg is initially deleted.
   procedure receive (
     signal net        : inout network_t;
     constant receiver : in    actor_t;
     variable msg      : inout msg_t;
     constant timeout  : in    time := max_timeout_c);
+
+  -- Receive message sent to any of the listed receivers. Returns oldest message or the first
+  -- incoming if the inboxes are empty. Receiver inboxes are emptied from left
+  -- to right. msg is initially deleted.
   procedure receive (
     signal net         : inout network_t;
     constant receivers : in    actor_vec_t;
     variable msg       : inout msg_t;
     constant timeout   : in    time := max_timeout_c);
+
+  -- Reply to request_msg with reply_msg. request_msg may be anonymous. Blocking if reciever
+  -- or any subscriber inbox is full.
   procedure reply (
     signal net           : inout network_t;
     variable request_msg : inout msg_t;
     variable reply_msg   : inout msg_t;
     constant timeout     : in    time := max_timeout_c);
+
+  -- Receive a reply_msg to request_msg. request_msg may be anonymous. reply_msg is initially deleted.
   procedure receive_reply (
     signal net           : inout network_t;
     variable request_msg : inout msg_t;
     variable reply_msg   : inout msg_t;
     constant timeout     : in    time := max_timeout_c);
+
+  -- Publish a message from sender to all its subscribers. Blocking if reciever or any subscriber inbox is
+  -- full.
   procedure publish (
     signal net       : inout network_t;
     constant sender  : in    actor_t;
@@ -228,59 +276,97 @@ package com_pkg is
 
   -----------------------------------------------------------------------------
   -- Secondary send and receive related subprograms
+  --
+  -- All timeouts will result in a runtime error unless otherwise noted.
   -----------------------------------------------------------------------------
-  procedure request (
-    signal net               : inout network_t;
-    constant receiver        : in    actor_t;
-    variable request_msg : inout msg_t;
-    variable reply_msg   : inout msg_t;
-    constant timeout         : in    time    := max_timeout_c);
-  procedure request (
-    signal net               : inout network_t;
-    constant receiver        : in    actor_t;
-    variable request_msg : inout msg_t;
-    variable positive_ack    : out   boolean;
-    constant timeout         : in    time    := max_timeout_c);
+
+  -- Positive or negative acknowledge of a request_msg. Same as a reply with a
+  -- boolean reply message.
   procedure acknowledge (
     signal net            : inout network_t;
     variable request_msg      : inout msg_t;
     constant positive_ack : in    boolean := true;
     constant timeout      : in    time    := max_timeout_c);
+
+  -- Receive positive or negative acknowledge for a request_msg. request_msg
+  -- may be anonymous. reply_msg is initially deleted.
   procedure receive_reply (
     signal net            : inout network_t;
     variable request_msg      : inout msg_t;
     variable positive_ack : out   boolean;
     constant timeout      : in    time := max_timeout_c);
 
+  -- This request is the same as send of request_msg to receiver followed by a
+  -- receive_reply of a reply_msg
+  procedure request (
+    signal net               : inout network_t;
+    constant receiver        : in    actor_t;
+    variable request_msg : inout msg_t;
+    variable reply_msg   : inout msg_t;
+    constant timeout         : in    time    := max_timeout_c);
+
+  -- This request is the same as send of request_msg to receiver followed by a
+  -- receive_reply of a positive or negative acknowledge.
+  procedure request (
+    signal net               : inout network_t;
+    constant receiver        : in    actor_t;
+    variable request_msg : inout msg_t;
+    variable positive_ack    : out   boolean;
+    constant timeout         : in    time    := max_timeout_c);
+
   -----------------------------------------------------------------------------
   -- Low-level subprograms primarily used for handling timeout wihout error
   -----------------------------------------------------------------------------
+
+  -- Wait for message sent to receiver. status = ok if message is
+  -- received before the timeout, status = timeout otherwise.
   procedure wait_for_message (
     signal net        : in  network_t;
     constant receiver : in  actor_t;
     variable status   : out com_status_t;
     constant timeout  : in  time := max_timeout_c);
+
+  -- Wait for message sent to any of the listed receivers. status = ok
+  -- if message is received before the timeout, status = timeout otherwise.
   procedure wait_for_message (
     signal net         : in  network_t;
     constant receivers : in  actor_vec_t;
     variable status    : out com_status_t;
     constant timeout   : in  time := max_timeout_c);
+
+  -- Returns true if there is at least one message in the actor's inbox.
   impure function has_message (actor    : actor_t) return boolean;
+
+  -- Wait for reply to request_msg. status = ok
+  -- if message is received before the timeout, status = timeout otherwise.
   procedure wait_for_reply (
     signal net       : inout network_t;
     variable request_msg : inout msg_t;
     variable status  : out   com_status_t;
     constant timeout : in    time := max_timeout_c);
+
+  -- Get oldest message from receiver inbox. Runtime error if inbox is empty.
   impure function get_message (receiver : actor_t) return msg_t;
+
+  -- Get reply message to request_msg. Runtime error if reply message isn't available.
   procedure get_reply (variable request_msg : inout msg_t; variable reply_msg : inout msg_t);
 
   -----------------------------------------------------------------------------
   -- Subscriptions
   -----------------------------------------------------------------------------
+
+  -- Make subscriber subscribe on
+  --
+  -- * Messages published by publisher when traffic_type = published
+  -- * All non-anonymous outbound messages from publisher when traffic_type = outbound
+  -- * All inbound messages to publisher when traffic_type = inbound. Replies
+  --   to anonymous requests are excluded.
   procedure subscribe (
     subscriber : actor_t;
     publisher : actor_t;
     traffic_type : subscription_traffic_type_t := published);
+
+  -- Remove subscription on the given publisher and traffic type.
   procedure unsubscribe (
     subscriber : actor_t;
     publisher : actor_t;
@@ -291,9 +377,17 @@ package com_pkg is
   -- Misc
   -----------------------------------------------------------------------------
 
-  procedure allow_timeout;
-  procedure allow_deprecated;
-  procedure deprecated (msg : string);
+  -- Push message into a queue.
   procedure push(queue : queue_t; variable value : inout msg_t);
+
+  -- Pop a message from a queue.
   impure function pop(queue : queue_t) return msg_t;
+
+  -- Allow deprecated APIs
+  procedure allow_deprecated;
+
+  -- Allow timeout in deprecated functionality. If not allowed timeouts will
+  -- cause a runtime error.
+  procedure allow_timeout;
+
 end package;

@@ -218,6 +218,11 @@ package com_deprecated_pkg is
 end package;
 
 package body com_deprecated_pkg is
+  procedure deprecated (msg : string) is
+  begin
+    messenger.deprecated(msg);
+  end;
+
   -----------------------------------------------------------------------------
   -- Handling of actors
   -----------------------------------------------------------------------------

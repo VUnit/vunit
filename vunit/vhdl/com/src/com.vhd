@@ -734,11 +734,6 @@ package body com_pkg is
     messenger.allow_deprecated;
   end;
 
-  procedure deprecated (msg : string) is
-  begin
-    messenger.deprecated(msg);
-  end;
-
   procedure push(queue : queue_t; variable value : inout msg_t) is
   begin
     push(queue, value.id);

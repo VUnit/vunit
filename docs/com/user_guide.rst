@@ -673,3 +673,16 @@ Unsubscribing
 
 An actor can unsubscribe from a subscription at any time by calling ``unsubscribe`` with the same parameters used when
 calling the ``subscribe`` procedure.
+
+****************************
+Deprecated APIs
+****************************
+
+``com`` maintains a number of deprecated APIs for better backward compatibility. Using these APIs will result in
+a runtime error unless enabled by calling the ``allow_deprecated`` procedure.
+
+Earlier releases of ``com`` would not cause a runtime error on timeout. This behavior can be enabled with the
+deprecated APIs by calling ``allow_timeout``. If not, a timeout will result in an error with the exception of the
+``wait_for_messages`` procedure which returns a status.
+
+The deprecated APIs will be removed in the future so it's recommended to replace these with contemporary APIs.
