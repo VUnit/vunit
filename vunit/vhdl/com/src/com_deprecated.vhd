@@ -62,16 +62,72 @@ package com_deprecated_pkg is
     variable request : inout message_ptr_t;
     variable message : inout message_ptr_t;
     constant timeout : in    time := max_timeout_c);
-  procedure publish (
+  procedure send (
     signal net            : inout network_t;
-    constant sender       : in    actor_t;
+    constant receiver     : in    actor_t;
     variable message      : inout message_ptr_t;
+    variable receipt      : out   receipt_t;
     constant timeout      : in    time    := max_timeout_c;
     constant keep_message : in    boolean := true);
+  procedure reply (
+    signal net          : inout network_t;
+    constant sender     : in    actor_t;
+    constant receiver   : in    actor_t;
+    constant request_id : in    message_id_t;
+    constant payload    : in    string := "";
+    variable receipt    : out   receipt_t;
+    constant timeout    : in    time   := max_timeout_c);
+  procedure reply (
+    signal net          : inout network_t;
+    constant receiver   : in    actor_t;
+    constant request_id : in    message_id_t;
+    constant payload    : in    string := "";
+    variable receipt    : out   receipt_t;
+    constant timeout    : in    time   := max_timeout_c);
+  procedure reply (
+    signal net            : inout network_t;
+    constant receiver     : in    actor_t;
+    variable message      : inout message_ptr_t;
+    variable receipt      : out   receipt_t;
+    constant timeout      : in    time    := max_timeout_c;
+    constant keep_message : in    boolean := false);
+  procedure receive_reply (
+    signal net          : inout network_t;
+    constant receiver   : in    actor_t;
+    constant request_id : in    message_id_t;
+    variable message    : inout message_ptr_t;
+    constant timeout    : in    time := max_timeout_c);
+  procedure receive_reply (
+    signal net            : inout network_t;
+    constant receiver     : in    actor_t;
+    constant request_id   : in    message_id_t;
+    variable positive_ack : out   boolean;
+    variable status       : out   com_status_t;
+    constant timeout      : in    time := max_timeout_c);
 
   -----------------------------------------------------------------------------
   -- Secondary send and receive related subprograms
   -----------------------------------------------------------------------------
+  procedure send (
+    signal net        : inout network_t;
+    constant sender   : in    actor_t;
+    constant receiver : in    actor_t;
+    constant payload  : in    string := "";
+    variable receipt  : out   receipt_t;
+    constant timeout  : in    time   := max_timeout_c);
+  procedure send (
+    signal net        : inout network_t;
+    constant receiver : in    actor_t;
+    constant payload  : in    string := "";
+    variable receipt  : out   receipt_t;
+    constant timeout  : in    time   := max_timeout_c);
+  procedure request (
+    signal net               : inout network_t;
+    constant sender          : in    actor_t;
+    constant receiver        : in    actor_t;
+    constant request_payload : in    string := "";
+    variable reply_message   : inout message_ptr_t;
+    constant timeout         : in    time   := max_timeout_c);
   procedure request (
     signal net               : inout network_t;
     constant receiver        : in    actor_t;
@@ -91,100 +147,6 @@ package com_deprecated_pkg is
     variable message      : inout message_ptr_t;
     constant timeout      : in    time    := max_timeout_c;
     constant keep_message : in    boolean := false);
-  procedure acknowledge (
-    signal net            : inout network_t;
-    variable request      : inout message_ptr_t;
-    constant positive_ack : in    boolean := true;
-    constant timeout      : in    time    := max_timeout_c);
-  procedure receive_reply (
-    signal net            : inout network_t;
-    variable request      : inout message_ptr_t;
-    variable positive_ack : out   boolean;
-    constant timeout      : in    time := max_timeout_c);
-
-  -----------------------------------------------------------------------------
-  -- Low-level subprograms primarily used for handling timeout wihout error
-  -----------------------------------------------------------------------------
-  procedure wait_for_reply (
-    signal net       : inout network_t;
-    variable request : inout message_ptr_t;
-    variable status  : out   com_status_t;
-    constant timeout : in    time := max_timeout_c);
-  procedure wait_for_reply (
-    signal net        : inout network_t;
-    constant receiver : in    actor_t;
-    constant receipt  : in    receipt_t;
-    variable status   : out   com_status_t;
-    constant timeout  : in    time := max_timeout_c);
-  impure function get_message (receiver : actor_t; delete_from_inbox : boolean := true) return message_ptr_t;
-  impure function get_reply (
-    receiver          : actor_t;
-    receipt           : receipt_t;
-    delete_from_inbox : boolean := true)
-    return message_ptr_t;
-  procedure get_reply (
-    variable request           : inout message_ptr_t;
-    variable reply             : inout message_ptr_t;
-    constant delete_from_inbox : in    boolean := true);
-
-
-
-
-
-  procedure wait_for_messages (
-    signal net               : in  network_t;
-    constant receiver        : in  actor_t;
-    variable status          : out com_status_t;
-    constant receive_timeout : in  time := max_timeout_c);
-  impure function has_messages (actor   : actor_t) return boolean;
-  procedure send (
-    signal net            : inout network_t;
-    constant receiver     : in    actor_t;
-    variable message      : inout message_ptr_t;
-    variable receipt      : out   receipt_t;
-    constant timeout      : in    time    := max_timeout_c;
-    constant keep_message : in    boolean := true);
-  procedure reply (
-    signal net          : inout network_t;
-    constant sender     : in    actor_t;
-    constant receiver   : in    actor_t;
-    constant request_id : in    message_id_t;
-    constant payload    : in    string := "";
-    variable receipt    : out   receipt_t;
-    constant timeout    : in    time   := max_timeout_c);
-  procedure reply (
-    signal net          : inout network_t;
-    constant sender     : in    actor_t;
-    constant receiver   : in    actor_t;
-    constant request_id : in    message_id_t;
-    constant payload    : in    string := "";
-    constant timeout    : in    time   := max_timeout_c);
-  procedure reply (
-    signal net          : inout network_t;
-    constant receiver   : in    actor_t;
-    constant request_id : in    message_id_t;
-    constant payload    : in    string := "";
-    variable receipt    : out   receipt_t;
-    constant timeout    : in    time   := max_timeout_c);
-  procedure reply (
-    signal net          : inout network_t;
-    constant receiver   : in    actor_t;
-    constant request_id : in    message_id_t;
-    constant payload    : in    string := "";
-    constant timeout    : in    time   := max_timeout_c);
-  procedure reply (
-    signal net            : inout network_t;
-    constant receiver     : in    actor_t;
-    variable message      : inout message_ptr_t;
-    variable receipt      : out   receipt_t;
-    constant timeout      : in    time    := max_timeout_c;
-    constant keep_message : in    boolean := false);
-  procedure reply (
-    signal net            : inout network_t;
-    constant receiver     : in    actor_t;
-    variable message      : inout message_ptr_t;
-    constant timeout      : in    time    := max_timeout_c;
-    constant keep_message : in    boolean := false);
   procedure request (
     signal net               : inout network_t;
     constant sender          : in    actor_t;
@@ -201,6 +163,18 @@ package com_deprecated_pkg is
     variable status          : out   com_status_t;
     constant timeout         : in    time    := max_timeout_c;
     constant keep_message    : in    boolean := false);
+  procedure publish (
+    signal net       : inout network_t;
+    constant sender  : in    actor_t;
+    constant payload : in    string := "";
+    variable status  : out   com_status_t;
+    constant timeout : in    time   := max_timeout_c);
+  procedure publish (
+    signal net            : inout network_t;
+    variable message      : inout message_ptr_t;
+    variable status       : out   com_status_t;
+    constant timeout      : in    time    := max_timeout_c;
+    constant keep_message : in    boolean := false);
   procedure acknowledge (
     signal net            : inout network_t;
     constant sender       : in    actor_t;
@@ -216,56 +190,21 @@ package com_deprecated_pkg is
     constant positive_ack : in    boolean := true;
     variable receipt      : out   receipt_t;
     constant timeout      : in    time    := max_timeout_c);
-  procedure acknowledge (
-    signal net            : inout network_t;
-    constant receiver     : in    actor_t;
-    constant request_id   : in    message_id_t;
-    constant positive_ack : in    boolean := true;
-    constant timeout      : in    time    := max_timeout_c);
-  procedure publish (
-    signal net       : inout network_t;
-    constant sender  : in    actor_t;
-    constant payload : in    string := "";
-    variable status  : out   com_status_t;
-    constant timeout : in    time   := max_timeout_c);
-  procedure publish (
-    signal net            : inout network_t;
-    variable message      : inout message_ptr_t;
-    variable status       : out   com_status_t;
-    constant timeout      : in    time    := max_timeout_c;
-    constant keep_message : in    boolean := false);
-  procedure receive_reply (
-    signal net          : inout network_t;
-    constant receiver   : in    actor_t;
-    constant request_id : in    message_id_t;
-    variable message    : inout message_ptr_t;
-    constant timeout    : in    time := max_timeout_c);
-  procedure receive_reply (
-    signal net            : inout network_t;
-    constant receiver     : in    actor_t;
-    constant request_id   : in    message_id_t;
-    variable positive_ack : out   boolean;
-    variable status       : out   com_status_t;
-    constant timeout      : in    time := max_timeout_c);
-  procedure receive_reply (
-    signal net            : inout network_t;
-    constant receiver     : in    actor_t;
-    constant request_id   : in    message_id_t;
-    variable positive_ack : out   boolean;
-    constant timeout      : in    time := max_timeout_c);
-  procedure receive_reply (
-    signal net            : inout network_t;
-    constant receiver     : in    actor_t;
-    constant receipt    : in    receipt_t;
-    variable positive_ack : out   boolean;
-    variable status       : out   com_status_t;
-    constant timeout      : in    time := max_timeout_c);
-  procedure receive_reply (
-    signal net            : inout network_t;
-    variable request    : inout    message_ptr_t;
-    variable positive_ack : out   boolean;
-    variable status       : out   com_status_t;
-    constant timeout      : in    time := max_timeout_c);
+
+  -----------------------------------------------------------------------------
+  -- Low-level subprograms primarily used for handling timeout wihout error
+  -----------------------------------------------------------------------------
+  impure function has_messages (actor   : actor_t) return boolean;
+  impure function get_message (receiver : actor_t; delete_from_inbox : boolean := true) return message_ptr_t;
+  procedure wait_for_messages (
+    signal net               : in  network_t;
+    constant receiver        : in  actor_t;
+    variable status          : out com_status_t;
+    constant receive_timeout : in  time := max_timeout_c);
+
+  -----------------------------------------------------------------------------
+  -- Receive related subprograms
+  -----------------------------------------------------------------------------
   procedure subscribe (
     constant subscriber : in  actor_t;
     constant publisher  : in  actor_t;
@@ -450,6 +389,7 @@ package body com_deprecated_pkg is
     end if;
   end;
 
+  --
   procedure publish (
     signal net            : inout network_t;
     constant sender       : in    actor_t;
@@ -473,162 +413,7 @@ package body com_deprecated_pkg is
     if not keep_message then
       delete(message);
     end if;
-  end;
-
-  -----------------------------------------------------------------------------
-  -- Secondary send and receive related subprograms
-  -----------------------------------------------------------------------------
-  procedure request (
-    signal net               : inout network_t;
-    constant receiver        : in    actor_t;
-    variable request_message : inout message_ptr_t;
-    variable reply_message   : inout message_ptr_t;
-    constant timeout         : in    time    := max_timeout_c;
-    constant keep_message    : in    boolean := false) is
-    variable start : time;
-  begin
-    deprecated("request() based on message_ptr_t");
-    start := now;
-    send(net, receiver, request_message, timeout, keep_message => true);
-    receive_reply(net, request_message, reply_message, timeout - (now - start));
-    if not keep_message then
-      delete(request_message);
-    end if;
-  end;
-
-  procedure request (
-    signal net               : inout network_t;
-    constant receiver        : in    actor_t;
-    variable request_message : inout message_ptr_t;
-    variable positive_ack    : out   boolean;
-    constant timeout         : in    time    := max_timeout_c;
-    constant keep_message    : in    boolean := false) is
-    variable start : time;
-  begin
-    deprecated("request() based on message_ptr_t");
-    start := now;
-    send(net, receiver, request_message, timeout, keep_message => true);
-    receive_reply(net, request_message, positive_ack, timeout - (now - start));
-    if not keep_message then
-      delete(request_message);
-    end if;
-  end;
-
-  procedure publish (
-    signal net            : inout network_t;
-    variable message      : inout message_ptr_t;
-    constant timeout      : in    time    := max_timeout_c;
-    constant keep_message : in    boolean := false) is
-  begin
-    publish(net, message.sender, message, timeout, keep_message);
-  end;
-
-  procedure acknowledge (
-    signal net            : inout network_t;
-    variable request      : inout message_ptr_t;
-    constant positive_ack : in    boolean := true;
-    constant timeout      : in    time    := max_timeout_c) is
-    variable message : message_ptr_t;
-  begin
-    deprecated("acknowledge() based on message_ptr_t");
-    message := compose(encode(positive_ack));
-    reply(net, request, message, timeout, keep_message => false);
-  end;
-
-  procedure receive_reply (
-    signal net            : inout network_t;
-    variable request      : inout message_ptr_t;
-    variable positive_ack : out   boolean;
-    constant timeout      : in    time := max_timeout_c) is
-    variable message : message_ptr_t;
-  begin
-    receive_reply(net, request, message, timeout);
-    positive_ack := decode(message.payload.all);
-    delete(message);
-  end;
-
-  -----------------------------------------------------------------------------
-  -- Low-level subprograms primarily used for handling timeout wihout error
-  -----------------------------------------------------------------------------
-  procedure wait_for_reply (
-    signal net       : inout network_t;
-    variable request : inout message_ptr_t;
-    variable status  : out   com_status_t;
-    constant timeout : in    time := max_timeout_c) is
-  begin
-    deprecated("wait_for_reply() based on message_ptr_t");
-    wait_for_reply_stash_message(net, request.sender, inbox, request.id, status, timeout);
-  end;
-
-  procedure wait_for_reply (
-    signal net        : inout network_t;
-    constant receiver : in    actor_t;
-    constant receipt  : in    receipt_t;
-    variable status   : out   com_status_t;
-    constant timeout  : in    time := max_timeout_c) is
-  begin
-    deprecated("wait_for_reply() with receipt");
-    wait_for_reply_stash_message(net, receiver, inbox, receipt.id, status, timeout);
-  end;
-
-  impure function get_message (receiver : actor_t; delete_from_inbox : boolean := true) return message_ptr_t is
-    variable message : message_ptr_t;
-  begin
-    deprecated("get_message() based on message_ptr_t");
-    check(messenger.has_messages(receiver), null_message_error);
-
-    message            := new message_t;
-    message.status     := ok;
-    message.id         := messenger.get_first_message_id(receiver);
-    message.request_id := messenger.get_first_message_request_id(receiver);
-    message.sender     := messenger.get_first_message_sender(receiver);
-    message.receiver   := receiver;
-    write(message.payload, messenger.get_first_message_payload(receiver));
-    if delete_from_inbox then
-      messenger.delete_first_envelope(receiver);
-    end if;
-
-    return message;
-  end function get_message;
-
-  impure function get_reply (
-    receiver          : actor_t;
-    receipt           : receipt_t;
-    delete_from_inbox : boolean := true)
-    return message_ptr_t is
-  begin
-    deprecated("get_repl() with receipt");
-    check(messenger.get_reply_stash_message_request_id(receiver) = receipt.id, unknown_request_id_error);
-
-    return get_reply_stash_message(receiver, delete_from_inbox);
-  end;
-
-  procedure get_reply (
-    variable request           : inout message_ptr_t;
-    variable reply             : inout message_ptr_t;
-    constant delete_from_inbox : in    boolean := true) is
-  begin
-    deprecated("get_reply() based on message_ptr_t");
-    check(messenger.get_reply_stash_message_request_id(request.sender) = request.id, unknown_request_id_error);
-    reply := get_reply_stash_message(request.sender, delete_from_inbox);
-  end;
-
-  procedure wait_for_messages (
-    signal net               : in  network_t;
-    constant receiver        : in  actor_t;
-    variable status          : out com_status_t;
-    constant receive_timeout : in  time := max_timeout_c) is
-  begin
-    deprecated("wait_for_messages() with old naming. Use wait_for_message() instead");
-    wait_for_message(net, receiver, status, receive_timeout);
-  end procedure wait_for_messages;
-
-  impure function has_messages (actor : actor_t) return boolean is
-  begin
-    deprecated("has_messages() with old naming. Use has_message() instead");
-    return has_message(actor);
-  end function has_messages;
-
+ end;
   procedure send (
     signal net            : inout network_t;
     constant receiver     : in    actor_t;
@@ -653,6 +438,189 @@ package body com_deprecated_pkg is
 
     if not keep_message then
       delete(message);
+    end if;
+  end;
+
+  --
+  procedure receive_reply (
+    signal net            : inout network_t;
+    constant receiver     : in    actor_t;
+    constant receipt    : in    receipt_t;
+    variable positive_ack : out   boolean;
+    variable status       : out   com_status_t;
+    constant timeout      : in    time := max_timeout_c) is
+    variable message : message_ptr_t;
+  begin
+    deprecated("receive_reply() with status output. Use without or wait_for_reply() if accepting timeout");
+    wait_for_reply_stash_message(net, receiver, inbox, receipt.id, status, timeout);
+    check(no_error_status(status, true), status);
+    if status = ok then
+      message := get_reply_stash_message(receiver);
+      status := message.status;
+      positive_ack := decode(message.payload.all);
+      delete(message);
+    else
+      positive_ack := false;
+    end if;
+  end;
+
+  --
+  procedure receive_reply (
+    signal net            : inout network_t;
+    variable request    : inout    message_ptr_t;
+    variable positive_ack : out   boolean;
+    variable status       : out   com_status_t;
+    constant timeout      : in    time := max_timeout_c) is
+    constant receipt : receipt_t := (status => ok, id => request.id);
+  begin
+    receive_reply(net, request.sender, receipt, positive_ack, status, timeout);
+  end;
+
+  procedure receive_reply (
+    signal net          : inout network_t;
+    constant receiver   : in    actor_t;
+    constant request_id : in    message_id_t;
+    variable message    : inout message_ptr_t;
+    constant timeout    : in    time := max_timeout_c) is
+    variable status : com_status_t;
+  begin
+    deprecated("receive_reply() with request ID input. Use send receipt or message input instead");
+    delete(message);
+    wait_for_reply_stash_message(net, receiver, inbox, request_id, status, timeout);
+    if status = ok then
+      message := get_reply_stash_message(receiver);
+    else
+      message        := new message_t;
+      message.status := status;
+    end if;
+  end;
+
+  procedure receive_reply (
+    signal net            : inout network_t;
+    constant receiver     : in    actor_t;
+    constant request_id   : in    message_id_t;
+    variable positive_ack : out   boolean;
+    variable status       : out   com_status_t;
+    constant timeout      : in    time := max_timeout_c) is
+    variable message : message_ptr_t;
+  begin
+    deprecated("receive_reply() with request ID input. Use send receipt or message input instead");
+    receive_reply(net, receiver, request_id, message, timeout);
+    if message.status = ok then
+      positive_ack := decode(message.payload.all);
+    else
+      positive_ack := false;
+    end if;
+
+    status := message.status;
+  end;
+
+  procedure reply (
+    signal net          : inout network_t;
+    constant sender     : in    actor_t;
+    constant receiver   : in    actor_t;
+    constant request_id : in    message_id_t;
+    constant payload    : in    string := "";
+    variable receipt    : out   receipt_t;
+    constant timeout    : in    time   := max_timeout_c) is
+    variable message : message_ptr_t;
+  begin
+    deprecated("reply() with sender (already known by requestor)");
+    deprecated("reply() with receipt. A reply being a request for which a reply is expected is not common ");
+    message := compose(payload, sender, request_id);
+    reply(net, receiver, message, receipt, timeout);
+  end;
+
+  procedure reply (
+    signal net            : inout network_t;
+    constant receiver     : in    actor_t;
+    variable message      : inout message_ptr_t;
+    variable receipt      : out   receipt_t;
+    constant timeout      : in    time    := max_timeout_c;
+    constant keep_message : in    boolean := false) is
+  begin
+    deprecated("reply() with receipt. A reply being a request for which a reply is expected is not common ");
+    check(message.request_id /= no_message_id_c, reply_missing_request_id_error);
+
+    send(net, receiver, message, receipt, timeout, keep_message);
+  end;
+
+  procedure reply (
+    signal net          : inout network_t;
+    constant receiver   : in    actor_t;
+    constant request_id : in    message_id_t;
+    constant payload    : in    string := "";
+    variable receipt    : out   receipt_t;
+    constant timeout    : in    time   := max_timeout_c) is
+    variable message : message_ptr_t;
+  begin
+    deprecated("reply() with receipt. A reply being a request for which a reply is expected is not common ");
+    message := compose(payload, request_id => request_id);
+    reply(net, receiver, message, receipt, timeout);
+  end;
+
+  -----------------------------------------------------------------------------
+  -- Secondary send and receive related subprograms
+  -----------------------------------------------------------------------------
+  procedure send (
+    signal net        : inout network_t;
+    constant sender   : in    actor_t;
+    constant receiver : in    actor_t;
+    constant payload  : in    string := "";
+    variable receipt  : out   receipt_t;
+    constant timeout  : in    time   := max_timeout_c) is
+    variable message : message_ptr_t;
+  begin
+    deprecated("send() with string payload");
+    message := compose(payload, sender);
+    send(net, receiver, message, timeout, keep_message => true);
+    receipt := (status => ok, id => message.id);
+    delete(message);
+  end;
+  procedure send (
+    signal net        : inout network_t;
+    constant receiver : in    actor_t;
+    constant payload  : in    string := "";
+    variable receipt  : out   receipt_t;
+    constant timeout  : in    time   := max_timeout_c) is
+    variable message : message_ptr_t;
+  begin
+    deprecated("send() with string payload");
+    message := compose(payload);
+    send(net, receiver, message, timeout, keep_message => true);
+    receipt := (status => ok, id => message.id);
+    delete(message);
+  end;
+
+  procedure request (
+    signal net               : inout network_t;
+    constant sender          : in    actor_t;
+    constant receiver        : in    actor_t;
+    constant request_payload : in    string := "";
+    variable reply_message   : inout message_ptr_t;
+    constant timeout         : in    time   := max_timeout_c) is
+    variable request_message : message_ptr_t;
+  begin
+    deprecated("request() with string payload");
+    request_message := compose(request_payload, sender);
+    request(net, receiver, request_message, reply_message, timeout);
+  end;
+
+  procedure request (
+    signal net               : inout network_t;
+    constant receiver        : in    actor_t;
+    variable request_message : inout message_ptr_t;
+    variable reply_message   : inout message_ptr_t;
+    constant timeout         : in    time    := max_timeout_c;
+    constant keep_message    : in    boolean := false) is
+    variable start : time;
+  begin
+    deprecated("request() based on message_ptr_t");
+    start := now;
+    send(net, receiver, request_message, timeout, keep_message => true);
+    receive_reply(net, request_message, reply_message, timeout - (now - start));
+    if not keep_message then
+      delete(request_message);
     end if;
   end;
 
@@ -690,87 +658,44 @@ package body com_deprecated_pkg is
     end if;
   end;
 
-  procedure reply (
-    signal net          : inout network_t;
-    constant sender     : in    actor_t;
-    constant receiver   : in    actor_t;
-    constant request_id : in    message_id_t;
-    constant payload    : in    string := "";
-    variable receipt    : out   receipt_t;
-    constant timeout    : in    time   := max_timeout_c) is
-    variable message : message_ptr_t;
-  begin
-    deprecated("reply() with sender (already known by requestor)");
-    deprecated("reply() with receipt. A reply being a request for which a reply is expected is not common ");
-    message := compose(payload, sender, request_id);
-    reply(net, receiver, message, receipt, timeout);
-  end;
-
-  procedure reply (
-    signal net          : inout network_t;
-    constant sender     : in    actor_t;
-    constant receiver   : in    actor_t;
-    constant request_id : in    message_id_t;
-    constant payload    : in    string := "";
-    constant timeout    : in    time   := max_timeout_c) is
-    variable message : message_ptr_t;
-  begin
-    deprecated("reply() with sender (already known by requestor)");
-    message := compose(payload, sender, request_id);
-    reply(net, receiver, message, timeout);
-  end;
-
-  procedure reply (
-    signal net          : inout network_t;
-    constant receiver   : in    actor_t;
-    constant request_id : in    message_id_t;
-    constant payload    : in    string := "";
-    variable receipt    : out   receipt_t;
-    constant timeout    : in    time   := max_timeout_c) is
-    variable message : message_ptr_t;
-  begin
-    deprecated("reply() with receipt. A reply being a request for which a reply is expected is not common ");
-    message := compose(payload, request_id => request_id);
-    reply(net, receiver, message, receipt, timeout);
-  end;
-
-  procedure reply (
-    signal net          : inout network_t;
-    constant receiver   : in    actor_t;
-    constant request_id : in    message_id_t;
-    constant payload    : in    string := "";
-    constant timeout    : in    time   := max_timeout_c) is
-    variable message : message_ptr_t;
-  begin
-    deprecated("reply() with receiver and request_id. Input request message instead");
-    message := compose(payload, request_id => request_id);
-    reply(net, receiver, message, timeout);
-  end;
-
-  procedure reply (
+  --
+  procedure receive_reply (
     signal net            : inout network_t;
-    constant receiver     : in    actor_t;
-    variable message      : inout message_ptr_t;
-    variable receipt      : out   receipt_t;
-    constant timeout      : in    time    := max_timeout_c;
-    constant keep_message : in    boolean := false) is
+    variable request      : inout message_ptr_t;
+    variable positive_ack : out   boolean;
+    constant timeout      : in    time := max_timeout_c) is
+    variable message : message_ptr_t;
   begin
-    deprecated("reply() with receipt. A reply being a request for which a reply is expected is not common ");
-    check(message.request_id /= no_message_id_c, reply_missing_request_id_error);
-
-    send(net, receiver, message, receipt, timeout, keep_message);
+    receive_reply(net, request, message, timeout);
+    positive_ack := decode(message.payload.all);
+    delete(message);
   end;
 
-  procedure reply (
+  procedure request (
+    signal net               : inout network_t;
+    constant receiver        : in    actor_t;
+    variable request_message : inout message_ptr_t;
+    variable positive_ack    : out   boolean;
+    constant timeout         : in    time    := max_timeout_c;
+    constant keep_message    : in    boolean := false) is
+    variable start : time;
+  begin
+    deprecated("request() based on message_ptr_t");
+    start := now;
+    send(net, receiver, request_message, timeout, keep_message => true);
+    receive_reply(net, request_message, positive_ack, timeout - (now - start));
+    if not keep_message then
+      delete(request_message);
+    end if;
+  end;
+
+  procedure publish (
     signal net            : inout network_t;
-    constant receiver     : in    actor_t;
     variable message      : inout message_ptr_t;
     constant timeout      : in    time    := max_timeout_c;
     constant keep_message : in    boolean := false) is
-    variable receipt : receipt_t;
   begin
-    deprecated("reply() with receiver. Input request message instead");
-    reply(net, receiver, message, receipt, timeout, keep_message);
+    publish(net, message.sender, message, timeout, keep_message);
   end;
 
   procedure acknowledge (
@@ -801,17 +726,46 @@ package body com_deprecated_pkg is
     acknowledge(net, null_actor_c, receiver, request_id, positive_ack, receipt, timeout);
   end;
 
-  procedure acknowledge (
-    signal net            : inout network_t;
-    constant receiver     : in    actor_t;
-    constant request_id   : in    message_id_t;
-    constant positive_ack : in    boolean := true;
-    constant timeout      : in    time    := max_timeout_c) is
-    variable receipt      : receipt_t;
+
+  -----------------------------------------------------------------------------
+  -- Low-level subprograms primarily used for handling timeout wihout error
+  -----------------------------------------------------------------------------
+  impure function has_messages (actor : actor_t) return boolean is
   begin
-    deprecated("acknowledge() with receiver and request_id. Input request message instead");
-    acknowledge(net, null_actor_c, receiver, request_id, positive_ack, receipt, timeout);
-  end;
+    deprecated("has_messages() with old naming. Use has_message() instead");
+    return has_message(actor);
+  end function has_messages;
+
+  impure function get_message (receiver : actor_t; delete_from_inbox : boolean := true) return message_ptr_t is
+    variable message : message_ptr_t;
+  begin
+    deprecated("get_message() based on message_ptr_t");
+    check(messenger.has_messages(receiver), null_message_error);
+
+    message            := new message_t;
+    message.status     := ok;
+    message.id         := messenger.get_first_message_id(receiver);
+    message.request_id := messenger.get_first_message_request_id(receiver);
+    message.sender     := messenger.get_first_message_sender(receiver);
+    message.receiver   := receiver;
+    write(message.payload, messenger.get_first_message_payload(receiver));
+    if delete_from_inbox then
+      messenger.delete_first_envelope(receiver);
+    end if;
+
+    return message;
+  end function get_message;
+
+  procedure wait_for_messages (
+    signal net               : in  network_t;
+    constant receiver        : in  actor_t;
+    variable status          : out com_status_t;
+    constant receive_timeout : in  time := max_timeout_c) is
+  begin
+    deprecated("wait_for_messages() with old naming. Use wait_for_message() instead");
+    wait_for_message(net, receiver, status, receive_timeout);
+  end procedure wait_for_messages;
+
 
   procedure publish (
     signal net       : inout network_t;
@@ -854,91 +808,6 @@ package body com_deprecated_pkg is
   -----------------------------------------------------------------------------
   -- Receive related subprograms
   -----------------------------------------------------------------------------
-  procedure receive_reply (
-    signal net          : inout network_t;
-    constant receiver   : in    actor_t;
-    constant request_id : in    message_id_t;
-    variable message    : inout message_ptr_t;
-    constant timeout    : in    time := max_timeout_c) is
-    variable status : com_status_t;
-  begin
-    deprecated("receive_reply() with request ID input. Use send receipt or message input instead");
-    delete(message);
-    wait_for_reply_stash_message(net, receiver, inbox, request_id, status, timeout);
-    if status = ok then
-      message := get_reply_stash_message(receiver);
-    else
-      message        := new message_t;
-      message.status := status;
-    end if;
-  end;
-
-  procedure receive_reply (
-    signal net            : inout network_t;
-    constant receiver     : in    actor_t;
-    constant request_id   : in    message_id_t;
-    variable positive_ack : out   boolean;
-    variable status       : out   com_status_t;
-    constant timeout      : in    time := max_timeout_c) is
-    variable message : message_ptr_t;
-  begin
-    deprecated("receive_reply() with request ID input. Use send receipt or message input instead");
-    receive_reply(net, receiver, request_id, message, timeout);
-    if message.status = ok then
-      positive_ack := decode(message.payload.all);
-    else
-      positive_ack := false;
-    end if;
-
-    status := message.status;
-  end;
-
-  procedure receive_reply (
-    signal net            : inout network_t;
-    constant receiver     : in    actor_t;
-    constant request_id   : in    message_id_t;
-    variable positive_ack : out   boolean;
-    constant timeout      : in    time := max_timeout_c) is
-    variable message : message_ptr_t;
-    variable status  : com_status_t;
-  begin
-    deprecated("receive_reply() with request ID input. Use send receipt o message input instead");
-    receive_reply(net, receiver, request_id, positive_ack, status, timeout);
-  end;
-
-  procedure receive_reply (
-    signal net            : inout network_t;
-    constant receiver     : in    actor_t;
-    constant receipt    : in    receipt_t;
-    variable positive_ack : out   boolean;
-    variable status       : out   com_status_t;
-    constant timeout      : in    time := max_timeout_c) is
-    variable message : message_ptr_t;
-  begin
-    deprecated("receive_reply() with status output. Use without or wait_for_reply() if accepting timeout");
-    wait_for_reply_stash_message(net, receiver, inbox, receipt.id, status, timeout);
-    check(no_error_status(status, true), status);
-    if status = ok then
-      message := get_reply_stash_message(receiver);
-      status := message.status;
-      positive_ack := decode(message.payload.all);
-      delete(message);
-    else
-      positive_ack := false;
-    end if;
-  end;
-
-  procedure receive_reply (
-    signal net            : inout network_t;
-    variable request    : inout    message_ptr_t;
-    variable positive_ack : out   boolean;
-    variable status       : out   com_status_t;
-    constant timeout      : in    time := max_timeout_c) is
-    constant receipt : receipt_t := (status => ok, id => request.id);
-  begin
-    receive_reply(net, request.sender, receipt, positive_ack, status, timeout);
-  end;
-
   procedure subscribe (
     constant subscriber : in  actor_t;
     constant publisher  : in  actor_t;

@@ -88,7 +88,7 @@ package body axi_stream_pkg is
                             axi_stream : axi_stream_master_t;
                             tdata : std_logic_vector;
                             tlast : std_logic := '1') is
-    variable msg : msg_t := create;
+    variable msg : msg_t := new_msg;
     constant normalized_data : std_logic_vector(tdata'length-1 downto 0) := tdata;
   begin
     push_msg_type(msg, push_axi_stream_msg);

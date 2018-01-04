@@ -39,6 +39,7 @@ begin
     variable t_start, t_stop                                                            : time;
     variable ack                                                                        : boolean;
     variable msg, msg2, request_msg, request_msg2, request_msg3, reply_msg              : msg_t;
+    variable deprecated_message                                                         : message_ptr_t;
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -98,7 +99,7 @@ begin
         check(inbox_size(null_actor_c) = 0, "Expected no inbox on null actor");
         check(inbox_size(find("actor to be created")) = 1,
               "Expected inbox size on actor with deferred creation to be one");
-        check(inbox_size(create("actor to be created", 42)) = 42,
+        check(inbox_size(new_actor("actor to be created", 42)) = 42,
               "Expected inbox size on actor with deferred creation to change to given value when created");
       elsif run("Test that no-name actors can't be found") then
         actor  := new_actor;
@@ -420,7 +421,7 @@ begin
       elsif run("Test chained subscribers") then
         my_sender   := new_actor;
         my_receiver := new_actor;
-        subscriber := new_actor;
+        subscriber  := new_actor;
         subscribe(self, my_sender, outbound);
         subscribe(subscriber, self, inbound);
 
@@ -467,8 +468,9 @@ begin
         receive(net, self, msg, 0 ns);
         check_equal(pop_string(msg), "hello subscriber");
         unsubscribe(self, self, published);
-        publish(net, self, "hello subscriber");
+        msg := new_msg;
         push_string(msg, "hello subscriber");
+        publish(net, self, msg);
         wait_for_message(net, self, status, 0 ns);
         check(status = timeout, "Expected no message");
       elsif run("Test that a destroyed subscriber is not addressed by the publisher") then
@@ -621,9 +623,8 @@ begin
       -- Deprecated APIs
       elsif run("Test that use of deprecated API leads to an error") then
         mock(com_logger);
-        publish(net, self, "hello world", status);
-        check_log(com_logger, "DEPRECATED INTERFACE ERROR. publish() with status output", failure);
-        check_only_log(com_logger, "DEPRECATED INTERFACE ERROR. publish() with status output", failure);
+        deprecated_message := compose("hello world");
+        check_only_log(com_logger, "DEPRECATED INTERFACE ERROR. compose()", failure);
         unmock(com_logger);
       end if;
     end loop;

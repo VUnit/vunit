@@ -67,7 +67,7 @@ begin
         rready <= '0';
         check_axi_resp(bus_handle, rresp, axi_resp_okay, "rresp");
 
-        reply_msg := create;
+        reply_msg := new_msg;
         push_std_ulogic_vector(reply_msg, rdata);
         reply(net, request_msg, reply_msg);
         delete(request_msg);

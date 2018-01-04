@@ -43,7 +43,6 @@ package com_pkg is
   -- Message related subprograms
   -----------------------------------------------------------------------------
   impure function new_msg (sender :       actor_t := null_actor_c) return msg_t;
-  alias create is new_msg [actor_t return msg_t];
   procedure delete (msg          : inout msg_t);
   function sender(msg : msg_t) return actor_t;
   function receiver(msg : msg_t) return actor_t;

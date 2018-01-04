@@ -14,7 +14,7 @@ package body stream_slave_pkg is
                        stream : stream_slave_t;
                        variable reference : inout stream_reference_t) is
   begin
-    reference := create;
+    reference := new_msg;
     push_msg_type(reference, stream_pop_msg);
     send(net, stream.p_actor, reference);
   end;

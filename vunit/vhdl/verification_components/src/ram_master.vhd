@@ -75,7 +75,7 @@ begin
 
     if rd_pipe(0) = '1' then
       request_msg := pop(request_queue);
-      reply_msg := create;
+      reply_msg := new_msg;
       push_std_ulogic_vector(reply_msg, rdata);
       reply(net, request_msg, reply_msg);
       delete(request_msg);

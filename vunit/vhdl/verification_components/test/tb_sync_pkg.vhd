@@ -16,7 +16,7 @@ entity tb_sync_pkg is
 end entity;
 
 architecture a of tb_sync_pkg is
-  constant actor : actor_t := create;
+  constant actor : actor_t := new_actor;
 begin
 
   main : process

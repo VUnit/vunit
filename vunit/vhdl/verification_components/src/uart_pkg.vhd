@@ -97,7 +97,7 @@ package body uart_pkg is
   procedure set_baud_rate(signal net : inout network_t;
                           actor : actor_t;
                           baud_rate : natural) is
-    variable msg : msg_t := create;
+    variable msg : msg_t := new_msg;
   begin
     push_msg_type(msg, uart_set_baud_rate_msg);
     push(msg, baud_rate);

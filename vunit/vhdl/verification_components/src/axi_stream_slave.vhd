@@ -42,7 +42,7 @@ begin
         failure(slave.p_logger, "Expected tlast = '1' got '" & to_string(tlast) & "'");
       end if;
 
-      reply_msg := create;
+      reply_msg := new_msg;
       push_std_ulogic_vector(reply_msg, tdata);
       reply(net, msg, reply_msg);
     else

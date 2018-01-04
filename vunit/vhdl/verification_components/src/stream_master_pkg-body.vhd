@@ -19,7 +19,7 @@ package body stream_master_pkg is
   procedure push_stream(signal net : inout network_t;
                         stream : stream_master_t;
                         data : std_logic_vector) is
-    variable msg : msg_t := create;
+    variable msg : msg_t := new_msg;
     constant normalized_data : std_logic_vector(data'length-1 downto 0) := data;
   begin
     push_msg_type(msg, stream_push_msg);

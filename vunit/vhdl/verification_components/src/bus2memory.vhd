@@ -38,7 +38,7 @@ begin
       if msg_type = bus_read_msg then
         address := pop_std_ulogic_vector(request_msg);
         data := read_word(my_memory, to_integer(unsigned(address)), bytes_per_word => data'length/8);
-        reply_msg := create;
+        reply_msg := new_msg;
         push_std_ulogic_vector(reply_msg, data);
         reply(net, request_msg, reply_msg);
 

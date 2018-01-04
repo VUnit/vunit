@@ -598,7 +598,7 @@ package body com_pkg is
     constant timeout      : in    time    := max_timeout_c) is
     variable reply_msg : msg_t;
   begin
-    reply_msg := create;
+    reply_msg := new_msg;
     push_boolean(reply_msg.data, positive_ack);
     reply(net, request_msg, reply_msg, timeout);
   end;
@@ -750,7 +750,7 @@ package body com_pkg is
   end;
 
   impure function pop(queue : queue_t) return msg_t is
-    variable ret_val : msg_t := create;
+    variable ret_val : msg_t := new_msg;
   begin
     ret_val.id          := pop(queue);
     ret_val.status      := com_status_t'val(integer'(pop(queue)));
