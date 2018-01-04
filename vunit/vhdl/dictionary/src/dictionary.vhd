@@ -27,7 +27,11 @@ package dictionary is
     constant d   : frozen_dictionary_t;
     constant key : string)
     return boolean;
-
+  impure function get (
+    d             : frozen_dictionary_t; 
+    key           : string; 
+    default_value : string) 
+    return string;
 end package dictionary;
 
 package body dictionary is
@@ -105,4 +109,18 @@ package body dictionary is
     return status = valid_value;
   end;
 
+  impure function get (
+    d             : frozen_dictionary_t; 
+    key           : string; 
+    default_value : string) 
+    return string is
+  begin
+    if (has_key(d, key) = True) then
+      return get(d, key);
+    else
+      return default_value;
+    end if; 
+  end function get; 
+  
+  
 end package body dictionary;
