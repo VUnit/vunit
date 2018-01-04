@@ -108,29 +108,32 @@ package logger_pkg is
   -- Get the idx'th child of this logger
   impure function get_child(logger : logger_t; idx : natural) return logger_t;
 
-  -- Set the threshold for stopping simulation for a specific log level and logger
-  -- The setting is immediately checked for violation where the log count is
-  -- larger or equal the set stop count.
+  -- Set the threshold for stopping simulation for a specific log level and
+  -- logger tree
   procedure set_stop_count(logger : logger_t;
                            log_level : log_level_t;
                            value : positive;
-                           include_children : boolean := false);
+                           unset_children : boolean := false);
 
-  -- Get the threshold for stopping simulation for a specific log level and logger
-  impure function get_stop_count(logger : logger_t;
-                                 log_level : log_level_t) return natural;
-
-  -- Set the threshold for stopping simulation for a specific log level and logger
-  -- The threshold is relative the current log count of the log level
-  procedure set_relative_stop_count(logger : logger_t;
+  -- Set the infinite threshold for stopping simulation for a specific log level and
+  -- logger tree
+  procedure set_infinite_stop_count(logger : logger_t;
                                     log_level : log_level_t;
-                                    value : positive;
-                                    include_children : boolean := true);
+                                    unset_children : boolean := false);
 
-  -- Set the threshold for stopping simulation for all loggers
-  -- The threshold is relative the current log count of the log level
-  procedure set_relative_stop_count(log_level : log_level_t;
-                                    value : positive);
+  -- Unset stop count for stopping simulation for a specific log level and
+  -- logger tree
+  procedure unset_stop_count(logger : logger_t;
+                             log_level : log_level_t;
+                             unset_children : boolean := false);
+
+  -- Returns true if logger has stop count set
+  impure function has_stop_count(logger : logger_t;
+                                 log_level : log_level_t) return boolean;
+
+  -- Get the stop count for logger and log_level if set, else fail
+  impure function get_stop_count(logger : logger_t;
+                                 log_level : log_level_t) return positive;
 
   -- Stop simulation for all levels >= level for this logger and all children
   -- Only affects and can only be used with the standard log levels

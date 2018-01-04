@@ -434,14 +434,14 @@ begin
       unmock(logger);
       check_and_unmock_core_failure;
 
-    elsif run("check_only_log when no log fails") then
+    elsif run("check_only_log with no log fails") then
       mock(logger);
       mock_core_failure;
       check_only_log(logger, "message", warning, 0 ns);
       check_and_unmock_core_failure;
       unmock(logger);
 
-    elsif run("check_log when wrong level fails") then
+    elsif run("check_log with wrong level fails") then
       mock(logger);
       debug(logger, "message");
       mock_core_failure;
@@ -449,7 +449,7 @@ begin
       check_and_unmock_core_failure;
       unmock(logger);
 
-    elsif run("check_log when wrong message fails") then
+    elsif run("check_log with wrong message fails") then
       mock(logger);
       warning(logger, "another message");
       mock_core_failure;
@@ -457,7 +457,7 @@ begin
       check_and_unmock_core_failure;
       unmock(logger);
 
-    elsif run("check_log when wrong time fails") then
+    elsif run("check_log with wrong time fails") then
       mock(logger);
       wait for 1 ns;
       warning(logger, "message");
@@ -486,7 +486,7 @@ begin
       reset_log_count(logger);
 
     elsif run("log above stop count fails") then
-      set_relative_stop_count(logger, failure, 2);
+      set_stop_count(logger, failure, 2);
       -- Should not fail
       failure(logger, "message");
       mock_core_failure;
@@ -494,7 +494,7 @@ begin
       check_and_unmock_core_failure;
       reset_log_count(logger);
 
-      set_relative_stop_count(failure, 2);
+      set_stop_count(root_logger, failure, 2);
       -- Should not fail
       failure("message");
       mock_core_failure;
@@ -508,6 +508,12 @@ begin
       failure(logger, "failure");
       reset_log_count(default_logger);
       reset_log_count(logger);
+
+    elsif run("Unset stop count on root logger fails") then
+      unset_stop_count(root_logger, warning);
+      mock_core_failure;
+      warning("failure");
+      check_and_unmock_core_failure("Stop condition not set on root_logger");
 
     elsif run("Get logger") then
       tmp_logger := get_logger("logger:child");
