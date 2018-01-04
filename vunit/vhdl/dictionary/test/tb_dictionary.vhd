@@ -73,6 +73,12 @@ begin
         check(c, get_log_call_count = log_call_count + 1, "Expected error log call at this point.");
         get_log_call_args(args);
         check(c, args.level = failure, "Expected the error call to be on failure level.");
+      elsif run("Test that get with default value returns value for existing key") then
+        passed := get(test_dict, "input path", "banana") = "c:\ying\yang";
+        check(c, passed, "Expected ""c:\ying\yang"" when getting input path key from test dictionary (got """ & get(test_dict, "input path", "banana") & """).");  
+      elsif run("Test that get with default value returns default value for non-existing key") then
+        passed := get(test_dict, "meatballs", "falafel") = "falafel";
+        check(c, passed, "Expected ""falafel"" when getting meatballs key from test dictionary (got """ & get(test_dict, "meatballs", "falafel") & """).");
       end if;
     end loop;
     reset_checker_stat;
