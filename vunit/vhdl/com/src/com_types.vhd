@@ -14,6 +14,9 @@ use std.textio.all;
 use work.queue_pkg.all;
 
 package com_types_pkg is
+
+  -- These status types are mostly internal to com and will cause runtime
+  -- errors. Only ok and timeout will ever be returned to the user
   type com_status_t is (ok,
                         timeout,
                         null_message_error,
@@ -33,15 +36,20 @@ package com_types_pkg is
 
   subtype com_error_t is com_status_t range timeout to duplicate_actor_name_error;
 
+  -- All fields of the actor type are private
   type actor_t is record
     id : natural;
   end record actor_t;
   type actor_vec_t is array(integer range <>) of actor_t;
   constant null_actor_c : actor_t := (id => 0);
 
+  -- Every message has a unique ID unless its a message from an inbound or
+  -- outbound traffic subscription. These messages will have the same ID as
+  -- the original message
   subtype message_id_t is natural;
   constant no_message_id_c : message_id_t := 0;
 
+  -- Deprecated message type
   type message_t is record
     id         : message_id_t;
     status     : com_status_t;
@@ -53,25 +61,42 @@ package com_types_pkg is
   type message_ptr_t is access message_t;
 
   subtype msg_data_t is queue_t;
+
+  -- Message type. All fields of the record are private and should not be
+  -- referenced directly by the user.
   type msg_t is record
     id         : message_id_t;
     status     : com_status_t;
     sender     : actor_t;
     receiver   : actor_t;
+
+    -- ID for the request message if this is a reply
     request_id : message_id_t;
+
     data       : msg_data_t;
   end record msg_t;
 
+  -- A subscriber can subscribe on three different types of traffic:
+  --
+  -- published - Messages published by publisher
+  -- outbound - All non-anonymous outbound messages from publisher
+  -- inbound - All inbound messages to publisher. Replies anonymous requests are excluded.
   type subscription_traffic_type_t is (published, outbound, inbound);
 
+  -- Deprecated
   type receipt_t is record
     status : com_status_t;
     id     : message_id_t;
   end record receipt_t;
 
+  -- An event type representing the network over which actors communicate. An event in
+  -- the network notifies connected actors which can determine the cause of the
+  -- event by consulting the com messenger (com_messenger.vhd). Actors can be
+  -- connected to different networks but there's only one global messenger.
   subtype network_t is std_logic;
   constant network_event : std_logic := '1';
   constant idle_network  : std_logic := 'Z';
 
-  constant max_timeout_c : time := 1 hr;  -- ModelSim can't handle time'high
+  -- Default value for timeout parameters. ModelSim can't handle time'high
+  constant max_timeout_c : time := 1 hr;
 end package;

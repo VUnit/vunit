@@ -21,8 +21,8 @@ use work.integer_vector_ptr_pkg.all;
 use work.string_ptr_pkg.all;
 
 package com_pkg is
-  -- net is used to notify actors that an event has occured that they may
-  -- need to act upon
+  -- Global predefined network. See network_t description in com_types.vhd for
+  -- more information.
   signal net : network_t := idle_network;
 
   -----------------------------------------------------------------------------
@@ -355,12 +355,8 @@ package com_pkg is
   -- Subscriptions
   -----------------------------------------------------------------------------
 
-  -- Make subscriber subscribe on
-  --
-  -- * Messages published by publisher when traffic_type = published
-  -- * All non-anonymous outbound messages from publisher when traffic_type = outbound
-  -- * All inbound messages to publisher when traffic_type = inbound. Replies
-  --   to anonymous requests are excluded.
+  -- Make subscriber subscribe on the specified publisher and traffic type. For
+  -- a description of the traffic types see com_types.vhd
   procedure subscribe (
     subscriber : actor_t;
     publisher : actor_t;
