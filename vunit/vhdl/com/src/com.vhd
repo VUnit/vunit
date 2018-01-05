@@ -120,6 +120,32 @@ package body com_pkg is
     return msg.receiver;
   end;
 
+  impure function to_string(msg : msg_t) return string is
+    function to_id_string(id : message_id_t) return string is
+    begin
+      if id = no_message_id_c then
+        return "-";
+      else
+        return to_string(id);
+      end if;
+    end function;
+    impure function to_actor_string(actor : actor_t) return string is
+    begin
+      if actor = null_actor_c then
+        return "-";
+      else
+        return name(actor);
+      end if;
+    end function;
+  begin
+    return to_id_string(msg.id) & ":" & to_id_string(msg.request_id) & " " &
+      to_actor_string(msg.sender) & " -> " & to_actor_string(msg.receiver);
+  end;
+
+  -----------------------------------------------------------------------------
+  -- Subprograms for pushing/popping data to/from a message. Data is popped
+  -- from a message in the same order they were pushed (FIFO)
+  -----------------------------------------------------------------------------
   procedure push(msg : msg_t; value : integer) is
   begin
     push(msg.data, value);

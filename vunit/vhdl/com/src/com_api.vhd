@@ -73,6 +73,14 @@ package com_pkg is
   -- Return sending actor of message if defined, null_actor_c otherwise
   function receiver(msg : msg_t) return actor_t;
 
+  -- Return string representation of message on the following format
+  --
+  -- <message id>:<request message id> <sender name> -> <receiver name>
+  --
+  -- <request message id> is the message id for the request message if the
+  -- message is a reply to a request. Any undefined field is marked with "-"
+  impure function to_string(msg : msg_t) return string;
+
   -----------------------------------------------------------------------------
   -- Subprograms for pushing/popping data to/from a message. Data is popped
   -- from a message in the same order they were pushed (FIFO)

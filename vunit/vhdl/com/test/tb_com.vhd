@@ -181,6 +181,22 @@ begin
         check_equal(msg2.request_id, 21);
         check_equal(pop_string(msg2), "hello");
 
+      -- to_string
+      elsif run("Test string representation of message") then
+        my_sender   := new_actor("my sender");
+        my_receiver := new_actor("my receiver");
+
+        msg := new_msg;
+        check_equal(to_string(msg), "-:- - -> -");
+        msg.id := 1;
+        check_equal(to_string(msg), "1:- - -> -");
+        msg.sender := my_sender;
+        check_equal(to_string(msg), "1:- my sender -> -");
+        msg.receiver := my_receiver;
+        check_equal(to_string(msg), "1:- my sender -> my receiver");
+        msg.request_id := 7;
+        check_equal(to_string(msg), "1:7 my sender -> my receiver");
+
       -- Send and receive
       elsif run("Test that data ownership is lost at send") then
         msg := new_msg;
