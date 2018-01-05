@@ -319,8 +319,8 @@ are signed. To sign a message you can provide the sending actor when the message
 
   msg := new_msg(sending_actor);
 
-Receiving on Multiple Actors
-----------------------------
+Sending/Receiving to/from Multiple Actors
+-----------------------------------------
 
 The ``message_handler`` process presented above had a single actor. However, the actor model is not limited to have one
 actor for each concurrently running process. A process may have several actors, each representing some other object
@@ -331,6 +331,15 @@ procedure will return the oldest message from the leftmost actor with a non-empt
 .. code-block:: vhdl
 
   receive(net, actor_vec_t'(channel_1, channel_2), msg);
+
+It's also possible to send a message to multiple receiving actors. Just call ``send`` with an array of receivers.
+
+.. code-block:: vhdl
+
+  send(net, actor_vec_t'(receiver_1, receiver_2), msg);
+
+There is no shared ownership of ``msg`` once it's sent. The sender loses ownership and each receiver get its own
+copy.
 
 *************************
 Synchronous Communication

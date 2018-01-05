@@ -32,14 +32,16 @@ architecture test_fixture of tb_com is
   constant com_logger : logger_t := get_logger("vunit_lib:com");
 begin
   test_runner : process
-    variable self, actor, actor2, my_receiver, my_sender, server, publisher, subscriber : actor_t;
-    variable status                                                                     : com_status_t;
-    variable receipt, receipt2, receipt3                                                : receipt_t;
-    variable n_actors                                                                   : natural;
-    variable t_start, t_stop                                                            : time;
-    variable ack                                                                        : boolean;
-    variable msg, msg2, request_msg, request_msg2, request_msg3, reply_msg              : msg_t;
-    variable deprecated_message                                                         : message_ptr_t;
+    variable self, actor, actor2, my_receiver, my_sender                   : actor_t;
+    variable server, publisher, subscriber                                 : actor_t;
+    variable actor_vec                                                     : actor_vec_t(0 to 2);
+    variable status                                                        : com_status_t;
+    variable receipt, receipt2, receipt3                                   : receipt_t;
+    variable n_actors                                                      : natural;
+    variable t_start, t_stop                                               : time;
+    variable ack                                                           : boolean;
+    variable msg, msg2, request_msg, request_msg2, request_msg3, reply_msg : msg_t;
+    variable deprecated_message                                            : message_ptr_t;
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -134,14 +136,14 @@ begin
 
       -- Copy and delete message
       elsif run("Test that a message can be deleted") then
-        my_sender := new_actor("my sender");
+        my_sender   := new_actor("my sender");
         my_receiver := new_actor("my receiver");
 
-        msg := new_msg;
-        msg.id := 17;
-        msg.status := timeout;
-        msg.sender := my_sender;
-        msg.receiver := my_receiver;
+        msg            := new_msg;
+        msg.id         := 17;
+        msg.status     := timeout;
+        msg.sender     := my_sender;
+        msg.receiver   := my_receiver;
         msg.request_id := 21;
         push_string(msg, "hello");
 
@@ -155,21 +157,21 @@ begin
         check(msg.data = null_queue);
 
       elsif run("Test that a message can be copied") then
-        my_sender := new_actor("my sender");
+        my_sender   := new_actor("my sender");
         my_receiver := new_actor("my receiver");
 
-        msg := new_msg;
-        msg.id := 17;
-        msg.status := timeout;
-        msg.sender := my_sender;
-        msg.receiver := my_receiver;
+        msg            := new_msg;
+        msg.id         := 17;
+        msg.status     := timeout;
+        msg.sender     := my_sender;
+        msg.receiver   := my_receiver;
         msg.request_id := 21;
         push_string(msg, "hello");
 
         msg2 := copy(msg);
         push_string(msg, "world");
         delete(msg);
-        msg := new_msg;
+        msg  := new_msg;
         push_string(msg, "peanuts");
 
         check_equal(msg2.id, 17);
@@ -329,14 +331,28 @@ begin
         check_true(has_message(actor2));
         check_false(has_message(actor));
         check_equal(pop_string(get_message(actor2)), "To actor2");
+      elsif run("Test sending to several actors") then
+        actor_vec := (others => new_actor);
+        for n in 0 to 2 loop
+          msg := new_msg;
+          push_string(msg, "hello");
+          send(net, actor_vec(1 to n), msg);
+          check(msg.data = null_queue);
+          for i in 1 to n loop
+            receive(net, actor_vec(i), msg, 0 ns);
+            check_equal(pop_string(msg), "hello");
+          end loop;
+        end loop;
       elsif run("Test receiving from several actors") then
-        actor            := new_actor;
-        actor2           := new_actor;
-        subscribe(actor, find("publisher 1"));
-        subscribe(actor2, find("publisher 2"));
+        actor_vec := (others => new_actor);
+        for i in 0 to 2 loop
+          subscribe(actor_vec(i), find("publisher " & to_string(i)));
+        end loop;
         start_publishers <= true;
+        receive(net, actor_vec(0 to 0), msg);
+        check_equal(name(msg.sender), pop_string(msg));
         for i in 1 to 2 loop
-          receive(net, actor_vec_t'(actor, actor2), msg);
+          receive(net, actor_vec(1 to 2), msg);
           check_equal(name(msg.sender), pop_string(msg));
         end loop;
       elsif run("Test that the sender and the receiver of a message can be retrieved") then
@@ -856,7 +872,7 @@ begin
     wait;
   end process limited_inbox_subscriber;
 
-  publishers : for i in 1 to 2 generate
+  publishers : for i in 0 to 2 generate
     process is
       variable self : actor_t;
       variable msg  : msg_t;

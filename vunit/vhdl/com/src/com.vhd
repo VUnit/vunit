@@ -473,6 +473,28 @@ package body com_pkg is
     send(net, receiver, inbox, msg, timeout);
   end;
 
+  procedure send (
+    signal net         : inout network_t;
+    constant receivers : in    actor_vec_t;
+    variable msg       : inout msg_t;
+    constant timeout   : in    time := max_timeout_c) is
+    variable msg_to_send : msg_t;
+  begin
+    if receivers'length = 0 then
+      delete(msg);
+      return;
+    end if;
+
+    for i in receivers'range loop
+      if i = receivers'right then
+        send(net, receivers(i), msg);
+      else
+        msg_to_send := copy(msg);
+        send(net, receivers(i), msg_to_send);
+      end if;
+    end loop;
+  end;
+
   procedure receive (
     signal net        : inout network_t;
     constant receiver : in    actor_t;
