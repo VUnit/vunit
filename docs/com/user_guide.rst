@@ -119,6 +119,15 @@ procedure.
 
 Just like ``push`` there are both ``pop`` functions and more verbose aliases on the form ``pop_<type>``.
 
+Data is always popped from the message in the same order they were pushed into the message. Once all data have been
+popped the message is empty. If you want to keep a message for later you can make a copy before popping.
+
+.. code-block:: vhdl
+
+  msg_copy := copy(original_msg);
+
+
+
 Message Types
 -------------
 
@@ -192,7 +201,10 @@ Message Ownership
 
 The sender of a message is the owner of that message while it's being created. As soon as the ``send`` procedure is
 called that ownership is handed over to the receiver and the message passed to the ``send`` call can no longer be used
-to retrieve the information you pushed into it. Since memory is allocated whenever you push to a message its important
+to retrieve the information you pushed into it. If you need to keep the message information you can make a copy
+before calling ``send``.
+
+Since memory is allocated whenever you push to a message its important
 that the receiver side deallocates that memory to avoid memory leaks. This can be done explicitly by deleting the
 message.
 

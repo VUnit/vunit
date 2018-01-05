@@ -132,6 +132,53 @@ begin
         reset_messenger;
         check(num_of_actors = 0, "Failed to destroy all actors");
 
+      -- Copy and delete message
+      elsif run("Test that a message can be deleted") then
+        my_sender := new_actor("my sender");
+        my_receiver := new_actor("my receiver");
+
+        msg := new_msg;
+        msg.id := 17;
+        msg.status := timeout;
+        msg.sender := my_sender;
+        msg.receiver := my_receiver;
+        msg.request_id := 21;
+        push_string(msg, "hello");
+
+        delete(msg);
+
+        check_equal(msg.id, no_message_id_c);
+        check(msg.status = ok);
+        check(msg.sender = null_actor_c);
+        check(msg.receiver = null_actor_c);
+        check_equal(msg.request_id, no_message_id_c);
+        check(msg.data = null_queue);
+
+      elsif run("Test that a message can be copied") then
+        my_sender := new_actor("my sender");
+        my_receiver := new_actor("my receiver");
+
+        msg := new_msg;
+        msg.id := 17;
+        msg.status := timeout;
+        msg.sender := my_sender;
+        msg.receiver := my_receiver;
+        msg.request_id := 21;
+        push_string(msg, "hello");
+
+        msg2 := copy(msg);
+        push_string(msg, "world");
+        delete(msg);
+        msg := new_msg;
+        push_string(msg, "peanuts");
+
+        check_equal(msg2.id, 17);
+        check(msg2.status = timeout);
+        check(msg2.sender = my_sender);
+        check(msg2.receiver = my_receiver);
+        check_equal(msg2.request_id, 21);
+        check_equal(pop_string(msg2), "hello");
+
       -- Send and receive
       elsif run("Test that data ownership is lost at send") then
         msg := new_msg;

@@ -62,6 +62,8 @@ package com_pkg is
   -- the sending actor
   impure function new_msg (sender :       actor_t := null_actor_c) return msg_t;
 
+  impure function copy(msg : msg_t) return msg_t;
+
   -- Delete message. Memory allocated by the message is deallocated.
   procedure delete (msg          : inout msg_t);
 

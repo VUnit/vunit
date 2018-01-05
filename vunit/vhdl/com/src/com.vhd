@@ -103,6 +103,13 @@ package body com_pkg is
     recycle(queue_pool, msg.data);
   end procedure delete;
 
+  impure function copy(msg : msg_t) return msg_t is
+    variable result : msg_t := msg;
+  begin
+    result.data := copy(msg.data);
+    return result;
+  end;
+
   function sender(msg : msg_t) return actor_t is
   begin
     return msg.sender;
