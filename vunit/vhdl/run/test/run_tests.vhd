@@ -308,21 +308,6 @@ begin
     reset_log_count(get_logger("parent:my_logger"), failure);
 
     ---------------------------------------------------------------------------
-    banner("Test that failing checks on custom checkers cause failure on test_runner_cleanup");
-    test_case_setup;
-    my_checker := new_checker("my checker");
-    disable_stop;
-    check_failed(my_checker, "Message");
-    set_stop_level(failure);
-    core_pkg.mock_core_failure;
-    test_runner_cleanup(runner);
-    core_pkg.check_core_failure("Checker ""my checker"" has 1 failed check.");
-    core_pkg.unmock_core_failure;
-    test_case_cleanup;
-    reset_log_count(get_logger("check:my checker"), error);
-    reset_checker_stat(my_checker);
-
-    ---------------------------------------------------------------------------
     banner("Should loop over enabled_test_case once and in order unless re-initialized.");
     test_case_setup;
     test_runner_setup(runner, "enabled_test_cases : Should one ,,  Should two  ,, Should three");
