@@ -284,7 +284,7 @@ package body com_deprecated_pkg is
   procedure send (
     signal net            : inout network_t;
     constant receiver     : in    actor_t;
-    constant mailbox_name : in    mailbox_id_t;
+    constant mailbox_id : in    mailbox_id_t;
     variable message      : inout message_ptr_t;
     constant timeout      : in    time    := max_timeout_c;
     constant keep_message : in    boolean := true) is
@@ -294,12 +294,12 @@ package body com_deprecated_pkg is
     check(message /= null, null_message_error);
     check(not messenger.unknown_actor(receiver), unknown_receiver_error);
 
-    if messenger.is_full(receiver, mailbox_name) then
-      wait on net until not messenger.is_full(receiver, mailbox_name) for timeout;
-      check(not messenger.is_full(receiver, mailbox_name), full_inbox_error);
+    if messenger.is_full(receiver, mailbox_id) then
+      wait on net until not messenger.is_full(receiver, mailbox_id) for timeout;
+      check(not messenger.is_full(receiver, mailbox_id), full_inbox_error);
     end if;
 
-    messenger.send(message.sender, receiver, mailbox_name, message.request_id, message.payload.all, receipt);
+    messenger.send(message.sender, receiver, mailbox_id, message.request_id, message.payload.all, receipt);
     message.id       := receipt.id;
     message.receiver := receiver;
     notify(net);
@@ -749,11 +749,11 @@ package body com_deprecated_pkg is
 
     message            := new message_t;
     message.status     := ok;
-    message.id         := messenger.get_first_message_id(receiver);
-    message.request_id := messenger.get_first_message_request_id(receiver);
-    message.sender     := messenger.get_first_message_sender(receiver);
+    message.id         := messenger.get_id(receiver);
+    message.request_id := messenger.get_request_id(receiver);
+    message.sender     := messenger.get_sender(receiver);
     message.receiver   := receiver;
-    write(message.payload, messenger.get_first_message_payload(receiver));
+    write(message.payload, messenger.get_payload(receiver));
     if delete_from_inbox then
       messenger.delete_first_envelope(receiver);
     end if;

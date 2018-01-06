@@ -35,8 +35,8 @@ package com_messenger_pkg is
     impure function num_of_deferred_creations return natural;
     impure function unknown_actor (actor   : actor_t) return boolean;
     impure function deferred (actor        : actor_t) return boolean;
-    impure function is_full (actor         : actor_t; mailbox_name : mailbox_id_t) return boolean;
-    impure function num_of_messages (actor : actor_t; mailbox_name : mailbox_id_t) return natural;
+    impure function is_full (actor         : actor_t; mailbox_id : mailbox_id_t) return boolean;
+    impure function num_of_messages (actor : actor_t; mailbox_id : mailbox_id_t) return natural;
     impure function inbox_size (actor      : actor_t) return natural;  --
     procedure resize_inbox (actor : actor_t; new_size : natural);
     impure function subscriber_inbox_is_full (
@@ -50,16 +50,16 @@ package com_messenger_pkg is
     -- Send related subprograms
     -----------------------------------------------------------------------------
     procedure send (
-      constant sender       : in  actor_t;
-      constant receiver     : in  actor_t;
-      constant mailbox_name : in  mailbox_id_t;
-      constant request_id   : in  message_id_t;
-      constant payload      : in  string;
-      variable receipt      : out receipt_t);
+      constant sender     : in  actor_t;
+      constant receiver   : in  actor_t;
+      constant mailbox_id : in  mailbox_id_t;
+      constant request_id : in  message_id_t;
+      constant payload    : in  string;
+      variable receipt    : out receipt_t);
     procedure send (
-      constant receiver     : in    actor_t;
-      constant mailbox_name : in    mailbox_id_t;
-      variable msg          : inout msg_t);
+      constant receiver   : in    actor_t;
+      constant mailbox_id : in    mailbox_id_t;
+      variable msg        : inout msg_t);
     procedure publish (sender : actor_t; payload : string);
     procedure publish (
       constant sender                   : in    actor_t;
@@ -73,13 +73,28 @@ package com_messenger_pkg is
     -----------------------------------------------------------------------------
     -- Receive related subprograms
     -----------------------------------------------------------------------------
-    impure function has_messages (actor                 : actor_t) return boolean;
-    impure function has_messages (actor_vec             : actor_vec_t) return boolean;
-    impure function get_first_message_payload (actor    : actor_t) return string;
-    impure function get_first_message_sender (actor     : actor_t) return actor_t;
-    impure function get_first_message_receiver (actor   : actor_t) return actor_t;
-    impure function get_first_message_id (actor         : actor_t) return message_id_t;
-    impure function get_first_message_request_id (actor : actor_t) return message_id_t;
+    impure function has_messages (actor     : actor_t) return boolean;
+    impure function has_messages (actor_vec : actor_vec_t) return boolean;
+    impure function get_payload (
+      actor      : actor_t;
+      position   : natural      := 0;
+      mailbox_id : mailbox_id_t := inbox) return string;
+    impure function get_sender (
+      actor      : actor_t;
+      position   : natural      := 0;
+      mailbox_id : mailbox_id_t := inbox) return actor_t;
+    impure function get_receiver (
+      actor      : actor_t;
+      position   : natural      := 0;
+      mailbox_id : mailbox_id_t := inbox) return actor_t;
+    impure function get_id (
+      actor      : actor_t;
+      position   : natural      := 0;
+      mailbox_id : mailbox_id_t := inbox) return message_id_t;
+    impure function get_request_id (
+      actor      : actor_t;
+      position   : natural      := 0;
+      mailbox_id : mailbox_id_t := inbox) return message_id_t;
 
     procedure delete_first_envelope (actor : actor_t);
 
@@ -92,9 +107,9 @@ package com_messenger_pkg is
     impure function get_reply_stash_message_id (actor         : actor_t) return message_id_t;
     impure function get_reply_stash_message_request_id (actor : actor_t) return message_id_t;
     impure function find_and_stash_reply_message (
-      actor        : actor_t;
-      request_id   : message_id_t;
-      mailbox_name : mailbox_id_t := inbox)
+      actor      : actor_t;
+      request_id : message_id_t;
+      mailbox_id : mailbox_id_t := inbox)
       return boolean;
     procedure clear_reply_stash (actor : actor_t);
 
@@ -417,19 +432,19 @@ package body com_messenger_pkg is
     return actors(actor.id).deferred_creation;
   end function deferred;
 
-  impure function is_full (actor : actor_t; mailbox_name : mailbox_id_t) return boolean is
+  impure function is_full (actor : actor_t; mailbox_id : mailbox_id_t) return boolean is
   begin
-    if mailbox_name = inbox then
+    if mailbox_id = inbox then
       return actors(actor.id).inbox.num_of_messages >= actors(actor.id).inbox.size;
     else
       return actors(actor.id).outbox.num_of_messages >= actors(actor.id).outbox.size;
     end if;
   end function;
 
-  impure function num_of_messages (actor : actor_t; mailbox_name : mailbox_id_t) return natural is
+  impure function num_of_messages (actor : actor_t; mailbox_id : mailbox_id_t) return natural is
     variable n : natural;
   begin
-    if mailbox_name = inbox then
+    if mailbox_id = inbox then
       n := actors(actor.id).inbox.num_of_messages;
       return actors(actor.id).inbox.num_of_messages;
     else
@@ -485,16 +500,16 @@ package body com_messenger_pkg is
   -- Send related subprograms
   -----------------------------------------------------------------------------
   procedure send (
-    constant sender       : in  actor_t;
-    constant receiver     : in  actor_t;
-    constant mailbox_name : in  mailbox_id_t;
-    constant request_id   : in  message_id_t;
-    constant payload      : in  string;
-    variable receipt      : out receipt_t) is
+    constant sender     : in  actor_t;
+    constant receiver   : in  actor_t;
+    constant mailbox_id : in  mailbox_id_t;
+    constant request_id : in  message_id_t;
+    constant payload    : in  string;
+    variable receipt    : out receipt_t) is
     variable envelope : envelope_ptr_t;
     variable mailbox  : mailbox_ptr_t;
   begin
-    check(not is_full(receiver, mailbox_name), full_inbox_error);
+    check(not is_full(receiver, mailbox_id), full_inbox_error);
 
     receipt.status              := ok;
     receipt.id                  := next_message_id;
@@ -506,7 +521,7 @@ package body com_messenger_pkg is
     write(envelope.message.payload, payload);
     next_message_id             := next_message_id + 1;
 
-    mailbox                 := actors(receiver.id).inbox when mailbox_name = inbox else actors(receiver.id).outbox;
+    mailbox                 := actors(receiver.id).inbox when mailbox_id = inbox else actors(receiver.id).outbox;
     mailbox.num_of_messages := mailbox.num_of_messages + 1;
     if mailbox.last_envelope /= null then
       mailbox.last_envelope.next_envelope := envelope;
@@ -532,9 +547,9 @@ package body com_messenger_pkg is
 
 
   procedure put_message (
-    receiver     : actor_t;
-    msg          : msg_t;
-    mailbox_name : mailbox_id_t) is
+    receiver   : actor_t;
+    msg        : msg_t;
+    mailbox_id : mailbox_id_t) is
     variable envelope : envelope_ptr_t;
     variable data     : msg_data_t := copy(msg.data);
     variable mailbox  : mailbox_ptr_t;
@@ -548,7 +563,7 @@ package body com_messenger_pkg is
     write(envelope.message.payload, encode(data));
     data                        := copy(data);
 
-    mailbox                 := actors(receiver.id).inbox when mailbox_name = inbox else actors(receiver.id).outbox;
+    mailbox                 := actors(receiver.id).inbox when mailbox_id = inbox else actors(receiver.id).outbox;
     mailbox.num_of_messages := mailbox.num_of_messages + 1;
     if mailbox.last_envelope /= null then
       mailbox.last_envelope.next_envelope := envelope;
@@ -606,16 +621,16 @@ package body com_messenger_pkg is
   end;
 
   procedure send (
-    constant receiver     : in    actor_t;
-    constant mailbox_name : in    mailbox_id_t;
-    variable msg          : inout msg_t) is
+    constant receiver   : in    actor_t;
+    constant mailbox_id : in    mailbox_id_t;
+    variable msg        : inout msg_t) is
   begin
     msg.id          := next_message_id;
     next_message_id := next_message_id + 1;
     msg.status      := ok;
     msg.receiver    := receiver;
 
-    put_message(receiver, msg, mailbox_name);
+    put_message(receiver, msg, mailbox_id);
   end;
 
   -----------------------------------------------------------------------------
@@ -636,46 +651,86 @@ package body com_messenger_pkg is
     return false;
   end function has_messages;
 
-  impure function get_first_message_payload (actor : actor_t) return string is
+  impure function get_envelope(
+    actor      : actor_t;
+    position   : natural;
+    mailbox_id : mailbox_id_t) return envelope_ptr_t is
+    variable envelope : envelope_ptr_t;
   begin
-    if actors(actor.id).inbox.first_envelope /= null then
-      return actors(actor.id).inbox.first_envelope.message.payload.all;
+    if mailbox_id = inbox then
+      envelope := actors(actor.id).inbox.first_envelope;
+    else
+      envelope := actors(actor.id).outbox.first_envelope;
+    end if;
+
+    for i in 1 to position loop
+      exit when envelope = null;
+      envelope := envelope.next_envelope;
+    end loop;
+
+    return envelope;
+  end;
+
+  impure function get_payload (
+    actor      : actor_t;
+    position   : natural      := 0;
+    mailbox_id : mailbox_id_t := inbox) return string is
+    variable envelope : envelope_ptr_t := get_envelope(actor, position, mailbox_id);
+  begin
+    if envelope /= null then
+      return envelope.message.payload.all;
     else
       return "";
     end if;
   end;
 
-  impure function get_first_message_sender (actor : actor_t) return actor_t is
+  impure function get_sender (
+    actor      : actor_t;
+    position   : natural      := 0;
+    mailbox_id : mailbox_id_t := inbox) return actor_t is
+    variable envelope : envelope_ptr_t := get_envelope(actor, position, mailbox_id);
   begin
-    if actors(actor.id).inbox.first_envelope /= null then
-      return actors(actor.id).inbox.first_envelope.message.sender;
+    if envelope /= null then
+      return envelope.message.sender;
     else
       return null_actor_c;
     end if;
   end;
 
-  impure function get_first_message_receiver (actor : actor_t) return actor_t is
+  impure function get_receiver (
+    actor      : actor_t;
+    position   : natural      := 0;
+    mailbox_id : mailbox_id_t := inbox) return actor_t is
+    variable envelope : envelope_ptr_t := get_envelope(actor, position, mailbox_id);
   begin
-    if actors(actor.id).inbox.first_envelope /= null then
-      return actors(actor.id).inbox.first_envelope.message.receiver;
+    if envelope /= null then
+      return envelope.message.receiver;
     else
       return null_actor_c;
     end if;
   end;
 
-  impure function get_first_message_id (actor : actor_t) return message_id_t is
+  impure function get_id (
+    actor      : actor_t;
+    position   : natural      := 0;
+    mailbox_id : mailbox_id_t := inbox) return message_id_t is
+    variable envelope : envelope_ptr_t := get_envelope(actor, position, mailbox_id);
   begin
-    if actors(actor.id).inbox.first_envelope /= null then
-      return actors(actor.id).inbox.first_envelope.message.id;
+    if envelope /= null then
+      return envelope.message.id;
     else
       return no_message_id_c;
     end if;
   end;
 
-  impure function get_first_message_request_id (actor : actor_t) return message_id_t is
+  impure function get_request_id (
+    actor      : actor_t;
+    position   : natural      := 0;
+    mailbox_id : mailbox_id_t := inbox) return message_id_t is
+    variable envelope : envelope_ptr_t := get_envelope(actor, position, mailbox_id);
   begin
-    if actors(actor.id).inbox.first_envelope /= null then
-      return actors(actor.id).inbox.first_envelope.message.request_id;
+    if envelope /= null then
+      return envelope.message.request_id;
     else
       return no_message_id_c;
     end if;
@@ -750,15 +805,15 @@ package body com_messenger_pkg is
   end;
 
   impure function find_and_stash_reply_message (
-    actor        : actor_t;
-    request_id   : message_id_t;
-    mailbox_name : mailbox_id_t := inbox)
+    actor      : actor_t;
+    request_id : message_id_t;
+    mailbox_id : mailbox_id_t := inbox)
     return boolean is
     variable envelope          : envelope_ptr_t;
     variable previous_envelope : envelope_ptr_t := null;
     variable mailbox           : mailbox_ptr_t;
   begin
-    mailbox  := actors(actor.id).inbox when mailbox_name = inbox else actors(actor.id).outbox;
+    mailbox  := actors(actor.id).inbox when mailbox_id = inbox else actors(actor.id).outbox;
     envelope := mailbox.first_envelope;
 
     while envelope /= null loop

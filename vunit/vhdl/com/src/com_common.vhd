@@ -22,12 +22,12 @@ package com_common_pkg is
   procedure notify (signal net : inout network_t);
 
   procedure wait_for_reply_stash_message (
-    signal net            : inout network_t;
-    constant receiver     : in    actor_t;
-    constant mailbox_name : in    mailbox_id_t := inbox;
-    constant request_id   : in    message_id_t;
-    variable status       : out   com_status_t;
-    constant timeout      : in    time         := max_timeout_c);
+    signal net          : inout network_t;
+    constant receiver   : in    actor_t;
+    constant mailbox_id : in    mailbox_id_t := inbox;
+    constant request_id : in    message_id_t;
+    variable status     : out   com_status_t;
+    constant timeout    : in    time         := max_timeout_c);
 
   impure function get_reply_stash_message (
     receiver          : actor_t;
@@ -57,30 +57,30 @@ package body com_common_pkg is
 
   -- TODO: Don't stash when finding reply. Remove when getting it.
   procedure wait_for_reply_stash_message (
-    signal net            : inout network_t;
-    constant receiver     : in    actor_t;
-    constant mailbox_name : in    mailbox_id_t := inbox;
-    constant request_id   : in    message_id_t;
-    variable status       : out   com_status_t;
-    constant timeout      : in    time         := max_timeout_c) is
+    signal net          : inout network_t;
+    constant receiver   : in    actor_t;
+    constant mailbox_id : in    mailbox_id_t := inbox;
+    constant request_id : in    message_id_t;
+    variable status     : out   com_status_t;
+    constant timeout    : in    time         := max_timeout_c) is
     variable started_with_full_inbox : boolean := false;
   begin
     check(not messenger.deferred(receiver), deferred_receiver_error);
 
     status := ok;
-    if mailbox_name = inbox then
+    if mailbox_id = inbox then
       started_with_full_inbox := messenger.is_full(receiver, inbox);
     end if;
 
     if messenger.has_reply_stash_message(receiver, request_id) then
       return;
-    elsif messenger.find_and_stash_reply_message(receiver, request_id, mailbox_name) then
+    elsif messenger.find_and_stash_reply_message(receiver, request_id, mailbox_id) then
       if started_with_full_inbox then
         notify(net);
       end if;
       return;
     else
-      wait on net until messenger.find_and_stash_reply_message(receiver, request_id, mailbox_name) for timeout;
+      wait on net until messenger.find_and_stash_reply_message(receiver, request_id, mailbox_id) for timeout;
       if not messenger.has_reply_stash_message(receiver, request_id) then
         status := work.com_types_pkg.timeout;
       elsif started_with_full_inbox then

@@ -41,6 +41,7 @@ begin
     variable t_start, t_stop                                               : time;
     variable ack                                                           : boolean;
     variable msg, msg2, request_msg, request_msg2, request_msg3, reply_msg : msg_t;
+    variable peeked_msg1, peeked_msg2                                      : msg_t;
     variable deprecated_message                                            : message_ptr_t;
   begin
     test_runner_setup(runner, runner_cfg);
@@ -186,13 +187,13 @@ begin
         my_sender   := new_actor("my sender");
         my_receiver := new_actor("my receiver");
 
-        msg := new_msg;
+        msg            := new_msg;
         check_equal(to_string(msg), "-:- - -> -");
-        msg.id := 1;
+        msg.id         := 1;
         check_equal(to_string(msg), "1:- - -> -");
-        msg.sender := my_sender;
+        msg.sender     := my_sender;
         check_equal(to_string(msg), "1:- my sender -> -");
-        msg.receiver := my_receiver;
+        msg.receiver   := my_receiver;
         check_equal(to_string(msg), "1:- my sender -> my receiver");
         msg.request_id := 7;
         check_equal(to_string(msg), "1:7 my sender -> my receiver");
@@ -714,13 +715,13 @@ begin
         check_equal(num_of_messages(self), 0);
 
         check_equal(num_of_messages(self, outbox), 0);
-        msg := new_msg;
+        msg       := new_msg;
         send(net, self, msg);
         receive(net, self, request_msg);
         reply_msg := new_msg;
         reply(net, request_msg, reply_msg);
         check_equal(num_of_messages(self, outbox), 1);
-        msg2 := new_msg;
+        msg2      := new_msg;
         send(net, self, msg2);
         receive(net, self, request_msg);
         reply_msg := new_msg;
@@ -730,6 +731,49 @@ begin
         check_equal(num_of_messages(self, outbox), 1);
         receive_reply(net, msg2, reply_msg);
         check_equal(num_of_messages(self, outbox), 0);
+
+      elsif run("Test peeking at messages in a mailbox") then
+        actor      := new_actor;
+        mock(com_logger);
+        peeked_msg1 := peek_message(actor);
+        check_only_log(com_logger, "Peeking non-existing position.", failure);
+        unmock(com_logger);
+
+        msg        := new_msg;
+        send(net, actor, msg);
+        msg        := new_msg;
+        send(net, actor, msg);
+        peeked_msg1 := peek_message(actor);
+        peeked_msg2 := peek_message(actor, 1);
+        receive(net, actor, msg);
+        check(peeked_msg1 = msg);
+        receive(net, actor, msg);
+        check(peeked_msg2 = msg);
+
+        msg        := new_msg;
+        send(net, actor, msg);
+        msg2        := new_msg;
+        send(net, actor, msg2);
+
+        mock(com_logger);
+        peeked_msg1 := peek_message(actor, 0, outbox);
+        check_only_log(com_logger, "Peeking non-existing position.", failure);
+        unmock(com_logger);
+
+        receive(net, actor, request_msg);
+        reply_msg := new_msg;
+        reply(net, request_msg, reply_msg);
+        receive(net, actor, request_msg);
+        reply_msg := new_msg;
+        reply(net, request_msg, reply_msg);
+
+        peeked_msg1 := peek_message(actor, 0, outbox);
+        peeked_msg2 := peek_message(actor, 1, outbox);
+
+        receive_reply(net, msg, reply_msg);
+        check(peeked_msg1 = reply_msg);
+        receive_reply(net, msg2, reply_msg);
+        check(peeked_msg2 = reply_msg);
 
       -- Deprecated APIs
       elsif run("Test that use of deprecated API leads to an error") then

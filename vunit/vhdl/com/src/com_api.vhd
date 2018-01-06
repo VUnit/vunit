@@ -48,7 +48,6 @@ package com_pkg is
   impure function num_of_actors return natural;
   impure function num_of_deferred_creations return natural;
   impure function inbox_size (actor      : actor_t) return natural;
-  impure function num_of_messages (actor : actor_t) return natural;
 
   -- Resize actor inbox. Reducing size below the number of messages in the
   -- inbox in runtime error
@@ -386,6 +385,19 @@ package com_pkg is
     publisher    : actor_t;
     traffic_type : subscription_traffic_type_t := published);
 
+  -----------------------------------------------------------------------------
+  -- Debugging
+  -----------------------------------------------------------------------------
+
+  -- Number of messages in actor mailbox
+  impure function num_of_messages (actor : actor_t; mailbox_id : mailbox_id_t := inbox) return natural;
+
+  -- Peek at message in actor mailbox but don't remove it. Position 0 is the oldest message. Runtime error if
+  -- position doesn't exist.
+  impure function peek_message(
+    actor : actor_t;
+    position : natural := 0;
+    mailbox_id : mailbox_id_t := inbox) return msg_t;
 
   -----------------------------------------------------------------------------
   -- Misc

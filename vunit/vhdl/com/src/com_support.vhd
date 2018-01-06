@@ -8,6 +8,8 @@ context work.vunit_context;
 use work.com_types_pkg.all;
 
 package com_support_pkg is
+  constant com_logger : logger_t := get_logger("vunit_lib:com");
+
   procedure check (
     expr      : boolean;
     err       : com_status_t;
@@ -29,8 +31,6 @@ end package com_support_pkg;
 
 package body com_support_pkg is
 
-  constant logger : logger_t := get_logger("vunit_lib:com");
-
   procedure check_failed (
     err       : com_error_t;
     msg       : string  := "";
@@ -41,9 +41,9 @@ package body com_support_pkg is
     constant err_msg_capitalized : string := upper(err_msg_aligned) & ".";
   begin
     if msg /= "" then
-      failure(logger, err_msg_capitalized & " " & msg, line_num => line_num, file_name => file_name);
+      failure(com_logger, err_msg_capitalized & " " & msg, line_num => line_num, file_name => file_name);
     else
-      failure(logger, err_msg_capitalized, line_num => line_num, file_name => file_name);
+      failure(com_logger, err_msg_capitalized, line_num => line_num, file_name => file_name);
     end if;
   end;
 
