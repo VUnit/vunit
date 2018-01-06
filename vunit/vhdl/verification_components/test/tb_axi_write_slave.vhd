@@ -211,7 +211,7 @@ begin
       wdata <= (others => '0');
       mock(axi_slave_logger);
       wait until (wvalid and wready) = '1' and rising_edge(clk);
-      wait until get_mock_log_count(axi_slave_logger, failure) > 0 and rising_edge(clk);
+      wait until mock_queue_length > 0 and rising_edge(clk);
       check_only_log(axi_slave_logger,
                      "Writing to address 0 at offset 0 within anonymous buffer at range (0 to 15) without permission (no_access)",
                      failure);
@@ -258,7 +258,7 @@ begin
       wait until (wvalid and wready) = '1' and rising_edge(clk);
       wvalid <= '0';
 
-      wait until get_mock_log_count(axi_slave_logger, failure) > 0 and rising_edge(clk);
+      wait until mock_queue_length > 0 and rising_edge(clk);
       check_only_log(axi_slave_logger, "Expected wlast='1' on last beat of burst with length 1 starting at address 0", failure);
       unmock(axi_slave_logger);
       read_response(x"2", axi_resp_okay);
@@ -277,7 +277,7 @@ begin
       wvalid <= '1';
       wait until (wvalid and wready) = '1' and rising_edge(clk);
       wvalid <= '0';
-      wait until get_mock_log_count(axi_slave_logger, failure) > 0 and rising_edge(clk);
+      wait until mock_queue_length > 0 and rising_edge(clk);
 
       check_only_log(axi_slave_logger, "Expected wlast='1' on last beat of burst with length 2 starting at address 0", failure);
       unmock(axi_slave_logger);
@@ -287,7 +287,7 @@ begin
       mock(axi_slave_logger);
       buf := allocate(memory, 8);
       write_addr(x"2", base_address(buf), 2, 0, axi_burst_type_wrap);
-      wait until get_mock_log_count(axi_slave_logger, failure) > 0 and rising_edge(clk);
+      wait until mock_queue_length > 0 and rising_edge(clk);
       check_only_log(axi_slave_logger, "Wrapping burst type not supported", failure);
       unmock(axi_slave_logger);
 
@@ -295,7 +295,7 @@ begin
       buf := allocate(memory, 4096+32, alignment => 4096);
       mock(axi_slave_logger);
       write_addr(x"2", base_address(buf)+4000, 256, 0, axi_burst_type_incr);
-      wait until get_mock_log_count(axi_slave_logger, failure) > 0 and rising_edge(clk);
+      wait until mock_queue_length > 0 and rising_edge(clk);
       check_only_log(axi_slave_logger, "Crossing 4KByte boundary. First page = 0 (4000/4096), last page = 1 (4255/4096)", failure);
       unmock(axi_slave_logger);
 
@@ -494,7 +494,7 @@ begin
 
       wait until rising_edge(clk);
       assert awready = '0';
-      wait until get_mock_log_count(axi_slave_logger, failure) > 0 for 0 ns;
+      wait until mock_queue_length > 0 for 0 ns;
 
       check_only_log(axi_slave_logger, "Burst not well behaved, vwalid was not high during active burst", failure);
       unmock(axi_slave_logger);

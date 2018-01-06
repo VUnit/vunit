@@ -159,7 +159,7 @@ begin
       mock(bus_logger);
       wait until (bready and bvalid) = '1' and rising_edge(clk);
       bvalid <= '0';
-      wait until get_mock_log_count(bus_logger, failure) > 0 for 0 ns;
+      wait until mock_queue_length > 0 for 0 ns;
       check_only_log(bus_logger, "bresp - Got AXI response SLVERR(10) expected OKAY(00)", failure);
       unmock(bus_logger);
 
@@ -190,7 +190,7 @@ begin
       mock(bus_logger);
       wait until (rready and rvalid) = '1' and rising_edge(clk);
       rvalid <= '0';
-      wait until get_mock_log_count(bus_logger, failure) > 0 for 0 ns;
+      wait until mock_queue_length > 0 for 0 ns;
       check_only_log(bus_logger, "rresp - Got AXI response DECERR(11) expected OKAY(00)", failure);
       unmock(bus_logger);
 

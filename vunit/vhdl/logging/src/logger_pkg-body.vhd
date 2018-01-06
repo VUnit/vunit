@@ -14,6 +14,8 @@ package body logger_pkg is
   constant root_logger_id : natural := 0;
   constant next_logger_id : integer_vector_ptr_t := new_integer_vector_ptr(1, value => root_logger_id + 1);
   constant global_log_count : integer_vector_ptr_t := new_integer_vector_ptr(1, value => 0);
+  constant p_mock_queue_length : integer_vector_ptr_t := new_integer_vector_ptr(1, value => 0);
+  constant mock_queue : queue_t := new_queue;
 
   constant id_idx : natural := 0;
   constant name_idx : natural := 1;
@@ -23,11 +25,8 @@ package body logger_pkg is
   constant stop_counts_idx : natural := 5;
   constant handlers_idx : natural := 6;
   constant is_mocked_idx : natural := 7;
-  constant mock_log_count_idx : natural := 8;
-  constant mocked_log_queue_meta_idx : natural := 9;
-  constant mocked_log_queue_data_idx : natural := 10;
-  constant log_level_filters_idx : natural := 11;
-  constant logger_length : natural := 12;
+  constant log_level_filters_idx : natural := 8;
+  constant logger_length : natural := 9;
 
   constant log_level_disabled : integer := 0;
   constant log_level_enabled : integer := 1;
@@ -51,7 +50,6 @@ package body logger_pkg is
                              parent : logger_t) return logger_t is
     variable logger : logger_t;
     variable log_handler : log_handler_t;
-    variable mocked_log_queue : queue_t := new_queue;
   begin
     logger := (p_data => new_integer_vector_ptr(logger_length));
     set(logger.p_data, id_idx, id);
@@ -59,12 +57,9 @@ package body logger_pkg is
     set(logger.p_data, parent_idx, to_integer(parent));
     set(logger.p_data, children_idx, to_integer(new_integer_vector_ptr));
     set(logger.p_data, log_count_idx, to_integer(new_integer_vector_ptr(log_level_t'pos(log_level_t'high)+1, value => 0)));
-    set(logger.p_data, mock_log_count_idx, to_integer(new_integer_vector_ptr(log_level_t'pos(log_level_t'high)+1, value => 0)));
     set(logger.p_data, stop_counts_idx, to_integer(new_integer_vector_ptr));
     set(logger.p_data, handlers_idx, to_integer(new_integer_vector_ptr));
     set(logger.p_data, is_mocked_idx, 0);
-    set(logger.p_data, mocked_log_queue_meta_idx, to_integer(mocked_log_queue.p_meta));
-    set(logger.p_data, mocked_log_queue_data_idx, to_integer(mocked_log_queue.data));
     set(logger.p_data, log_level_filters_idx, to_integer(new_integer_vector_ptr));
 
     if parent /= null_logger then
@@ -731,15 +726,6 @@ package body logger_pkg is
     return get_log_count(logger, log_count_idx, log_level);
   end;
 
-  -- Helper method to count either the normal log count or the mocked log count
-  procedure count_log_helper(logger : logger_t;
-                             idx : natural; -- Index in p_data for log count vector
-                             log_level : log_level_t) is
-    constant log_counts : integer_vector_ptr_t := to_integer_vector_ptr(get(logger.p_data, idx));
-  begin
-    set(log_counts, log_level_t'pos(log_level), get(log_counts, log_level_t'pos(log_level)) + 1);
-  end;
-
   procedure decrease_stop_count(logger : logger_t;
                                 log_level : log_level_t) is
     constant stop_count : natural := p_get_stop_count(logger, log_level);
@@ -761,10 +747,11 @@ package body logger_pkg is
     end if;
   end;
 
-  procedure count_log_no_mock(logger : logger_t; log_level : log_level_t) is
+  procedure count_log(logger : logger_t; log_level : log_level_t) is
+    constant log_counts : integer_vector_ptr_t := to_integer_vector_ptr(get(logger.p_data, log_count_idx));
   begin
     set(global_log_count, 0, get(global_log_count, 0) + 1);
-    count_log_helper(logger, log_count_idx, log_level);
+    set(log_counts, log_level_t'pos(log_level), get(log_counts, log_level_t'pos(log_level)) + 1);
     decrease_stop_count(logger, log_level);
   end;
 
@@ -773,19 +760,15 @@ package body logger_pkg is
     set(logger.p_data, is_mocked_idx, 1);
   end;
 
-  impure function get_mocked_log_queue(logger : logger_t) return queue_t is
-  begin
-    return (p_meta => to_integer_vector_ptr(get(logger.p_data, mocked_log_queue_meta_idx)),
-            data => to_string_ptr(get(logger.p_data, mocked_log_queue_data_idx)));
-  end;
-
-  impure function make_string(msg : string;
+  impure function make_string(logger_name : string;
+                              msg : string;
                               log_level : log_level_t;
                               log_time : time;
                               line_num : natural;
                               file_name : string;
                               check_time : boolean) return string is
-    constant without_time : string := ("   log_level = " & get_name(log_level) & LF &
+    constant without_time : string := ("   logger = " & logger_name & LF &
+                                       "   log_level = " & get_name(log_level) & LF &
                                        "   msg = " & msg & LF &
                                        "   file_name:line_num = " & file_name & ":" & integer'image(line_num));
   begin
@@ -796,20 +779,16 @@ package body logger_pkg is
     end if;
   end;
 
-  impure function pop_log_item_string(logger : logger_t; check_time : boolean) return string is
-    constant queue : queue_t := get_mocked_log_queue(logger);
-    constant got_level : log_level_t := log_level_t'val(pop_byte(queue));
-    constant got_msg : string := pop_string(queue);
-    constant got_log_time : time := pop_time(queue);
-    constant got_line_num : natural := pop_integer(queue);
-    constant got_file_name : string := pop_string(queue);
+  impure function pop_log_item_string(check_time : boolean) return string is
+    constant got_logger_name : string := pop_string(mock_queue);
+    constant got_level : log_level_t := log_level_t'val(pop_byte(mock_queue));
+    constant got_msg : string := pop_string(mock_queue);
+    constant got_log_time : time := pop_time(mock_queue);
+    constant got_line_num : natural := pop_integer(mock_queue);
+    constant got_file_name : string := pop_string(mock_queue);
   begin
-    return make_string(got_msg, got_level, got_log_time, got_line_num, got_file_name, check_time);
-  end;
-
-  impure function get_mock_log_count(logger : logger_t; log_level : log_level_t := null_log_level) return natural is
-  begin
-    return get_log_count(logger, mock_log_count_idx, log_level);
+    set(p_mock_queue_length, 0, get(p_mock_queue_length, 0) - 1);
+    return make_string(got_logger_name, got_msg, got_level, got_log_time, got_line_num, got_file_name, check_time);
   end;
 
   procedure check_log(logger : logger_t;
@@ -819,20 +798,19 @@ package body logger_pkg is
                       line_num : natural := 0;
                       file_name : string := "") is
 
-    constant expected_item : string := make_string(msg, log_level, log_time, line_num, file_name,
+    constant expected_item : string := make_string(get_full_name(logger),
+                                                   msg, log_level, log_time, line_num, file_name,
                                                    log_time /= no_time_check);
 
-    constant queue : queue_t := get_mocked_log_queue(logger);
-
     procedure check_log_when_not_empty is
-      constant got_item : string := pop_log_item_string(logger, log_time /= no_time_check);
+      constant got_item : string := pop_log_item_string(log_time /= no_time_check);
     begin
       if expected_item /= got_item then
         core_failure("log item mismatch:" & LF & LF & "Got:" & LF & got_item & LF & LF & "expected:" & LF & expected_item & LF);
       end if;
     end;
   begin
-    if length(queue) > 0 then
+    if length(mock_queue) > 0 then
       check_log_when_not_empty;
     else
       core_failure("log item mismatch - Got no log item " & LF & LF & "expected" & LF & expected_item & LF);
@@ -847,15 +825,14 @@ package body logger_pkg is
                            file_name : string := "") is
   begin
     check_log(logger, msg, log_level, log_time, line_num, file_name);
-    check_no_log(logger);
+    check_no_log;
   end;
 
-  procedure check_no_log(logger : logger_t) is
-    constant queue : queue_t := get_mocked_log_queue(logger);
-    variable fail : boolean := length(queue) > 0;
+  procedure check_no_log is
+    variable fail : boolean := length(mock_queue) > 0;
   begin
-    while length(queue) > 0 loop
-      report "Got unexpected log item " & LF & LF & pop_log_item_string(logger, true) & LF;
+    while length(mock_queue) > 0 loop
+      report "Got unexpected log item " & LF & LF & pop_log_item_string(true) & LF;
     end loop;
 
     if fail then
@@ -863,11 +840,15 @@ package body logger_pkg is
     end if;
   end;
 
+  impure function mock_queue_length return natural is
+  begin
+    return get(p_mock_queue_length, 0);
+  end;
+
   procedure unmock(logger : logger_t) is
   begin
-    check_no_log(logger);
+    check_no_log;
     set(logger.p_data, is_mocked_idx, 0);
-    clear_log_count(logger, mock_log_count_idx);
   end;
 
   procedure mock_log(logger : logger_t;
@@ -876,18 +857,18 @@ package body logger_pkg is
                      log_time : time;
                      line_num : natural := 0;
                      file_name : string := "") is
-    constant queue : queue_t := get_mocked_log_queue(logger);
   begin
-    report ("Got mocked log item to (" & get_full_name(logger) & ")" & LF &
-            make_string(msg, log_level, log_time, line_num, file_name, check_time => true)
-            & LF);
-    count_log_helper(logger, mock_log_count_idx, log_level);
+    report ("Got mocked log item " & LF &
+            make_string(get_full_name(logger), msg, log_level, log_time, line_num, file_name,
+                        check_time => true) & LF);
+    push_string(mock_queue, get_full_name(logger));
+    push_byte(mock_queue, log_level_t'pos(log_level));
+    push_string(mock_queue, msg);
+    push_time(mock_queue, log_time);
+    push_integer(mock_queue, line_num);
+    push_string(mock_queue, file_name);
 
-    push_byte(queue, log_level_t'pos(log_level));
-    push_string(queue, msg);
-    push_time(queue, log_time);
-    push_integer(queue, line_num);
-    push_string(queue, file_name);
+    set(p_mock_queue_length, 0, get(p_mock_queue_length, 0) + 1);
   end;
 
   procedure log(logger : logger_t;
@@ -914,7 +895,7 @@ package body logger_pkg is
         end if;
       end loop;
 
-      count_log_no_mock(logger, log_level);
+      count_log(logger, log_level);
     end if;
   end procedure;
 

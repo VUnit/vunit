@@ -398,6 +398,19 @@ begin
       check_only_log(logger, "message", warning, 0 ns);
       unmock(logger);
 
+    elsif run("mock_queue_length") then
+      mock(logger);
+      assert_equal(mock_queue_length, 0);
+      warning(logger, "message");
+      assert_equal(mock_queue_length, 1);
+      warning(logger, "message2");
+      assert_equal(mock_queue_length, 2);
+      check_log(logger, "message", warning, 0 ns);
+      assert_equal(mock_queue_length, 1);
+      check_only_log(logger, "message2", warning, 0 ns);
+      assert_equal(mock_queue_length, 0);
+      unmock(logger);
+
     elsif run("mocked logger does not stop simulation") then
       mock(logger);
       failure(logger, "message");
@@ -463,6 +476,14 @@ begin
       warning(logger, "message");
       mock_core_failure;
       check_log(logger, "message", warning, 0 ns);
+      check_and_unmock_core_failure;
+      unmock(logger);
+
+    elsif run("check_log with wrong logger fails") then
+      mock(logger);
+      failure(logger, "message");
+      mock_core_failure;
+      check_only_log(default_logger, "message", failure);
       check_and_unmock_core_failure;
       unmock(logger);
 
@@ -566,8 +587,6 @@ begin
 
           for lvl2 in verbose to failure loop
             if is_valid(lvl2) then
-              assert_equal(get_mock_log_count(logger, lvl2), 0, "no mock log count");
-
               if lvl2 <= lvl then
                 assert_equal(get_log_count(logger, lvl2), 1);
               else
@@ -615,28 +634,22 @@ begin
       tmp := 0;
       for lvl in verbose to failure loop
         if is_valid(lvl) then
-          assert_equal(get_mock_log_count(logger, lvl), 0);
           log(logger, "message", lvl);
-          assert_equal(get_mock_log_count(logger, lvl), 1);
           assert_equal(get_log_count(logger, lvl), 0);
           check_only_log(logger, "message", lvl);
           tmp := tmp + 1;
         end if;
       end loop;
 
-      assert_equal(get_mock_log_count(logger), tmp);
       assert_equal(get_log_count(logger), 0);
 
       unmock(logger);
 
-      assert_equal(get_mock_log_count(logger), 0);
       assert_equal(get_log_count(logger), 0);
 
       for lvl in verbose to failure loop
         if is_valid(lvl) then
           assert_equal(get_log_count(logger, lvl), 0);
-          assert_equal(get_mock_log_count(logger, lvl), 0,
-                       "reset mock log count after unmock");
         end if;
       end loop;
 

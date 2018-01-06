@@ -286,11 +286,6 @@ package logger_pkg is
   -- Returns true if the logger is mocked
   impure function is_mocked(logger : logger_t) return boolean;
 
-  -- Get the log count of specific or all log levels occured during mocked state
-  impure function get_mock_log_count(
-    logger : logger_t;
-    log_level : log_level_t := null_log_level) return natural;
-
   -- Constant to ignore time value when checking log call
   constant no_time_check : time := -1 ns;
 
@@ -314,6 +309,9 @@ package logger_pkg is
 
   -- Check that there are no remaining recorded log calls, automatically called
   -- during unmock
-  procedure check_no_log(logger : logger_t);
+  procedure check_no_log;
+
+  -- Return the number of unchecked messages in the mock queue
+  impure function mock_queue_length return natural;
 
 end package;

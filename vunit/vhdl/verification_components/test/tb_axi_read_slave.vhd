@@ -133,7 +133,7 @@ begin
       buf := allocate(memory, data_size, permissions => no_access);
       mock(axi_slave_logger);
       write_addr(x"2", base_address(buf), 1, 0, axi_burst_type_fixed);
-      wait until get_mock_log_count(axi_slave_logger, failure) > 0 and rising_edge(clk);
+      wait until mock_queue_length > 0 and rising_edge(clk);
       check_only_log(axi_slave_logger,
                      "Reading from address 0 at offset 0 within anonymous buffer at range (0 to 15) without permission (no_access)",
                      failure);
@@ -144,7 +144,7 @@ begin
 
       buf := allocate(memory, 8);
       write_addr(x"2", base_address(buf), 2, 0, axi_burst_type_wrap);
-      wait until get_mock_log_count(axi_slave_logger, failure) > 0 and rising_edge(clk);
+      wait until mock_queue_length > 0 and rising_edge(clk);
       check_only_log(axi_slave_logger, "Wrapping burst type not supported", failure);
       unmock(axi_slave_logger);
 
@@ -152,7 +152,7 @@ begin
       buf := allocate(memory, 4096+32, alignment => 4096);
       mock(axi_slave_logger);
       write_addr(x"2", base_address(buf)+4000, 256, 0, axi_burst_type_incr);
-      wait until get_mock_log_count(axi_slave_logger, failure) > 0 and rising_edge(clk);
+      wait until mock_queue_length > 0 and rising_edge(clk);
       check_only_log(axi_slave_logger, "Crossing 4KByte boundary. First page = 0 (4000/4096), last page = 1 (4255/4096)", failure);
       unmock(axi_slave_logger);
 
@@ -321,7 +321,7 @@ begin
 
       wait until rising_edge(clk);
       assert arready = '0';
-      wait until get_mock_log_count(axi_slave_logger, failure) > 0 for 0 ns;
+      wait until mock_queue_length > 0 for 0 ns;
 
       check_only_log(axi_slave_logger, "Burst not well behaved, rready was not high during active burst", failure);
       unmock(axi_slave_logger);

@@ -46,7 +46,7 @@ begin
         check_only_log(check_logger, "Check true", pass);
 
         passing_check(default_checker);
-        check_no_log(check_logger);
+        check_no_log;
 
         failing_check(default_checker, "Custom error message");
         check_only_log(check_logger, "Custom error message", error);
