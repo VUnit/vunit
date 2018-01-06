@@ -52,7 +52,7 @@ begin
     constant write_msg                   : msg_type_t                   := new_msg_type("write");
   begin
     test_runner_setup(runner, runner_cfg);
-    enable(display_handler, pass);
+    show(display_handler, pass);
 
     while test_suite loop
       if run("Test sending a message to a known actor") then
