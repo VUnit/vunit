@@ -48,7 +48,7 @@ package body run_pkg is
     else
       set_log_level(runner_trace_logger, get_log_handler(runner_trace_logger, 0), info);
     end if;
-    enable_all(runner_trace_logger, get_log_handler(runner_trace_logger, 1));
+    show_all(runner_trace_logger, get_log_handler(runner_trace_logger, 1));
 
     if has_key(runner_cfg, "use_color") and boolean'value(get(runner_cfg, "use_color")) then
       enable_colors;

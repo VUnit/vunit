@@ -192,7 +192,7 @@ package body checker_pkg is
 
   impure function is_passing_check_msg_enabled(checker : checker_t) return boolean is
   begin
-    return is_enabled(get_logger(checker), pass);
+    return is_visible(get_logger(checker), pass);
   end;
 
   procedure passing_check(checker : checker_t) is
@@ -211,7 +211,7 @@ package body checker_pkg is
     -- pragma translate_off
     passing_check(checker);
 
-    if is_enabled(logger, pass) then
+    if is_visible(logger, pass) then
       log(logger, msg, pass, line_num, file_name);
     end if;
 

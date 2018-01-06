@@ -154,13 +154,13 @@ package logger_pkg is
   -- Disable stopping simulation for all loggers by setting the stop count to integer'high
   procedure disable_stop;
 
-  -- Disable logging for all levels < level to this handler.
+  -- Hide log messages for all levels < level to this handler.
   -- Only affects and can only be used with the standard log levels
   -- where an ordering is defined
   procedure set_log_level(log_handler : log_handler_t;
                           level : standard_log_level_t);
 
-  -- Disable logging for all levels < level to this handler from specific
+  -- Hide log messages for all levels < level to this handler from specific
   -- logger and all children.
   -- Only affects and can only be used with the standard log levels
   -- where an ordering is defined
@@ -168,83 +168,80 @@ package logger_pkg is
                           log_handler : log_handler_t;
                           level : standard_log_level_t);
 
-  -- Disable logging for the specified level to this handler.
-  procedure disable(log_handler : log_handler_t;
-                    level : log_level_t);
+  -- Hide log messages of specified level to this handler.
+  procedure hide(log_handler : log_handler_t;
+                 level : log_level_t);
 
-  -- Disable logging for the specified level to this handler from specific
-  procedure disable(logger : logger_t;
-                    log_handler : log_handler_t;
-                    level : log_level_t;
-                    include_children : boolean := true);
+  -- Hide log messages from the logger of the specified level to this handler
+  procedure hide(logger : logger_t;
+                 log_handler : log_handler_t;
+                 level : log_level_t;
+                 include_children : boolean := true);
 
-  -- Disable logging for the specified levels to this handler.
-  procedure disable(log_handler : log_handler_t;
-                    levels : log_level_vec_t);
+  -- Hide log messages of the specified levels to this handler.
+  procedure hide(log_handler : log_handler_t;
+                 levels : log_level_vec_t);
 
-  -- Disable logging for the specified levels to this handler from specific
-  -- logger and all children.
-  procedure disable(logger : logger_t;
-                    log_handler : log_handler_t;
-                    levels : log_level_vec_t;
-                    include_children : boolean := true);
+  -- Hide log messages from the logger of the specified levels to this handler
+  procedure hide(logger : logger_t;
+                 log_handler : log_handler_t;
+                 levels : log_level_vec_t;
+                 include_children : boolean := true);
 
-  -- Enable logging for the specified level to this handler.
-  procedure enable(log_handler : log_handler_t;
-                   level : log_level_t);
+  -- Show log messages of the specified log_level to this handler
+  procedure show(log_handler : log_handler_t;
+                 level : log_level_t);
 
-  -- Enable logging for the specified level to this handler from specific
-  -- logger and all children.
-  procedure enable(logger : logger_t;
-                   log_handler : log_handler_t;
-                   level : log_level_t;
-                    include_children : boolean := true);
+  -- Show log messages from the logger of the specified log_level to this handler
+  procedure show(logger : logger_t;
+                 log_handler : log_handler_t;
+                 level : log_level_t;
+                 include_children : boolean := true);
 
-  -- Enable logging for the specified levels to this handler.
-  procedure enable(log_handler : log_handler_t;
-                   levels : log_level_vec_t);
+  -- Show log messages of the specified log_levels to this handler
+  procedure show(log_handler : log_handler_t;
+                 levels : log_level_vec_t);
 
-  -- Enable logging for the specified levels to this handler from specific
-  -- logger and all children.
-  procedure enable(logger : logger_t;
-                   log_handler : log_handler_t;
-                   levels : log_level_vec_t;
-                    include_children : boolean := true);
+  -- Show log messages from the logger of the specified log_levels to this handler
+  procedure show(logger : logger_t;
+                 log_handler : log_handler_t;
+                 levels : log_level_vec_t;
+                 include_children : boolean := true);
 
-  -- Enable all log levels to the log handler
-  procedure enable_all(log_handler : log_handler_t);
+  -- Show all log levels to the log handler
+  procedure show_all(log_handler : log_handler_t);
 
-  -- Enable all log levels for this handler from specific logger
-  procedure enable_all(logger : logger_t;
-                       log_handler : log_handler_t;
-                       include_children : boolean := true);
+  -- Show all log levels to the handler from specific logger
+  procedure show_all(logger : logger_t;
+                     log_handler : log_handler_t;
+                     include_children : boolean := true);
 
-  -- Disable all log levels for this handler
-  procedure disable_all(log_handler : log_handler_t);
+  -- Hide all log levels from this handler
+  procedure hide_all(log_handler : log_handler_t);
 
-  -- Disable all log levels for this handler from specific logger
-  procedure disable_all(logger : logger_t;
-                        log_handler : log_handler_t;
-                        include_children : boolean := true);
+  -- Hide all log levels from this handler from specific logger
+  procedure hide_all(logger : logger_t;
+                     log_handler : log_handler_t;
+                     include_children : boolean := true);
 
-  -- Return true if logging to this logger at this level is enabled in any handler
+  -- Return true if logging to this logger at this level is visible anywhere
   -- Can be used to avoid expensive string creation when not logging a specific
   -- level
-  impure function is_enabled(logger : logger_t;
+  impure function is_visible(logger : logger_t;
                              level : log_level_t) return boolean;
 
-  -- Returns true if a logger at this level is enabled to this handler
-  impure function is_enabled(logger : logger_t;
+  -- Return true if logging to this logger at this level is visible to handler
+  impure function is_visible(logger : logger_t;
                              log_handler : log_handler_t;
                              level : log_level_t) return boolean;
 
-  -- Get the current enabled log levels for a specific logger to this log handler
-  impure function get_enabled_log_levels(logger : logger_t;
+  -- Get the current visible log levels for a specific logger to this log handler
+  impure function get_visible_log_levels(logger : logger_t;
                                          log_handler : log_handler_t) return log_level_vec_t;
 
-  -- Get the current disabled log levels for a specific logger to this log handler
-  impure function get_disabled_log_levels(logger : logger_t;
-                                          log_handler : log_handler_t) return log_level_vec_t;
+  -- Get the current invisible log levels for a specific logger to this log handler
+  impure function get_invisible_log_levels(logger : logger_t;
+                                           log_handler : log_handler_t) return log_level_vec_t;
 
   -- Get the number of log handlers attached to this logger
   impure function num_log_handlers(logger : logger_t) return natural;

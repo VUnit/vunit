@@ -134,9 +134,9 @@ package body log_deprecated_pkg is
       constant format    : in    deprecated_log_format_t) is
     begin
       if format = off then
-        disable_all(logger, handler);
+        hide_all(logger, handler);
       else
-        enable_all(logger, handler);
+        show_all(logger, handler);
       end if;
     end procedure filter_output;
 

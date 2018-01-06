@@ -102,8 +102,8 @@ begin
     assert_true(get_log_handler(logger, 1) = file_handler);
     assert_true(get_log_handlers(logger) = (display_handler, file_handler));
 
-    assert_true(get_enabled_log_levels(logger, display_handler) = (info, warning, error, failure));
-    assert_true(get_enabled_log_levels(logger, file_handler) = (debug, info, warning, error, failure));
+    assert_true(get_visible_log_levels(logger, display_handler) = (info, warning, error, failure));
+    assert_true(get_visible_log_levels(logger, file_handler) = (debug, info, warning, error, failure));
 
     test_runner_setup(runner, runner_cfg);
     set_log_level(file_handler, verbose);
@@ -287,28 +287,28 @@ begin
       reset_log_count(default_logger, error);
       reset_log_count(default_logger, failure);
 
-    elsif run("can enable and disable handler") then
+    elsif run("can show and hide from handler") then
       init_log_handler(file_handler, file_name => log_file_name, format => level);
       disable_stop;
 
-      disable_all(file_handler);
+      hide_all(file_handler);
       for log_level in verbose to failure loop
-        assert_false(is_enabled(default_logger, file_handler, log_level));
-        assert_false(is_enabled(logger, file_handler, log_level));
-        assert_false(is_enabled(nested_logger, file_handler, log_level));
+        assert_false(is_visible(default_logger, file_handler, log_level));
+        assert_false(is_visible(logger, file_handler, log_level));
+        assert_false(is_visible(nested_logger, file_handler, log_level));
       end loop;
 
       perform_logging(logger);
       check_empty_log_file(log_file_name);
 
       set_log_level(file_handler, info);
-      disable(file_handler, warning);
+      hide(file_handler, warning);
 
-      enable_all(file_handler);
+      show_all(file_handler);
       for log_level in verbose to failure loop
-        assert_true(is_enabled(default_logger, file_handler, log_level));
-        assert_true(is_enabled(logger, file_handler, log_level));
-        assert_true(is_enabled(nested_logger, file_handler, log_level));
+        assert_true(is_visible(default_logger, file_handler, log_level));
+        assert_true(is_visible(logger, file_handler, log_level));
+        assert_true(is_visible(nested_logger, file_handler, log_level));
       end loop;
 
       perform_logging(logger);
@@ -336,7 +336,7 @@ begin
 
     elsif run("can set disable individual levels") then
       init_log_handler(file_handler, file_name => log_file_name, format => level);
-      disable(file_handler, (verbose, debug, info, error, failure));
+      hide(file_handler, (verbose, debug, info, error, failure));
       disable_stop;
       perform_logging(logger);
       set(entries, "0", "WARNING - message 4");
@@ -354,14 +354,14 @@ begin
       set(entries, "0", "   INFO - message 3");
       check_log_file(log_file_name, entries);
 
-    elsif run("can enable and disable source") then
+    elsif run("can show and hide source") then
       init_log_handler(file_handler, file_name => log_file_name, format => level);
-      disable_all(logger, file_handler);
+      hide_all(logger, file_handler);
 
       for log_level in verbose to failure loop
-        assert_true(is_enabled(default_logger, file_handler, log_level));
-        assert_false(is_enabled(logger, file_handler, log_level));
-        assert_false(is_enabled(nested_logger, file_handler, log_level));
+        assert_true(is_visible(default_logger, file_handler, log_level));
+        assert_false(is_visible(logger, file_handler, log_level));
+        assert_false(is_visible(nested_logger, file_handler, log_level));
       end loop;
 
       info(logger, "message");
@@ -372,12 +372,12 @@ begin
 
       init_log_handler(file_handler, file_name => log_file_name, format => level);
       set_log_level(logger, file_handler, info);
-      disable(logger, file_handler, warning);
-      enable_all(logger, file_handler);
+      hide(logger, file_handler, warning);
+      show_all(logger, file_handler);
       for log_level in verbose to failure loop
-        assert_true(is_enabled(default_logger, file_handler, log_level));
-        assert_true(is_enabled(logger, file_handler, log_level));
-        assert_true(is_enabled(nested_logger, file_handler, log_level));
+        assert_true(is_visible(default_logger, file_handler, log_level));
+        assert_true(is_visible(logger, file_handler, log_level));
+        assert_true(is_visible(nested_logger, file_handler, log_level));
       end loop;
 
       info(logger, "message 1");
@@ -418,17 +418,17 @@ begin
       unmock(logger);
 
     elsif run("mocked logger is always enabled") then
-      assert_true(is_enabled(logger, failure));
+      assert_true(is_visible(logger, failure));
 
-      disable_all(logger, display_handler);
-      disable_all(logger, file_handler);
-      assert_false(is_enabled(logger, failure));
+      hide_all(logger, display_handler);
+      hide_all(logger, file_handler);
+      assert_false(is_visible(logger, failure));
 
       mock(logger);
-      assert_true(is_enabled(logger, failure));
+      assert_true(is_visible(logger, failure));
 
       unmock(logger);
-      assert_false(is_enabled(logger, failure));
+      assert_false(is_visible(logger, failure));
 
     elsif run("mock check_log") then
       mock(logger);

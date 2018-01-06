@@ -92,15 +92,15 @@ package body test_support_pkg is
     end if;
 
     if expected = off then
-      for level in log_level_t'low to log_level_t'high loop
-        assert_false(is_enabled(logger, handler, level),
-                    "Level enabled: " & log_level_t'image(level));
+      for level in legal_log_level_t'low to legal_log_level_t'high loop
+        assert_false(is_visible(logger, handler, level),
+                    "Level visible: " & log_level_t'image(level));
       end loop;
     else
       assert_true(format = expected);
-      for level in log_level_t'low to log_level_t'high loop
-        assert_true(is_enabled(logger, handler, level),
-                    "Level disabled: " & log_level_t'image(level));
+      for level in legal_log_level_t'low to legal_log_level_t'high loop
+        assert_true(is_visible(logger, handler, level),
+                    "Level invisible: " & log_level_t'image(level));
       end loop;
     end if;
   end;

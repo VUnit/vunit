@@ -49,7 +49,7 @@ begin
     set_log_level(get_parent(my_logger), display_handler, debug);
     verbose(my_logger, "This will not be shown on stdout");
     warning(my_logger, "This will be shown on stdout");
-    disable(my_logger, display_handler, (warning, debug));
+    hide(my_logger, display_handler, (warning, debug));
     warning(my_logger, "This is no longer shown on stdout");
     warning(get_parent(my_logger), "This is still shown on stdout");
 
@@ -70,7 +70,7 @@ begin
 
     -- We disable the simulation stop to show error and failure
     disable_stop;
-    enable_all(display_handler);
+    show_all(display_handler);
     set_format(display_handler, level, use_color => true);
     verbose("Level format");
     debug("Level format");
