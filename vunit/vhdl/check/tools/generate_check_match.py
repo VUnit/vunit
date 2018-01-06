@@ -107,7 +107,7 @@ impl_template = """  procedure check_match(
     if std_match(got, expected) then
       pass := true;
 
-      if is_passing_check_msg_enabled(checker) then
+      if is_pass_message_visible(checker) then
         passing_check(
           checker,
           std_msg(

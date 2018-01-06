@@ -66,7 +66,7 @@ package checker_pkg is
   constant pass : log_level_t :=
     new_log_level("pass", fg => green, style => bright);
 
-  impure function is_passing_check_msg_enabled(checker : checker_t) return boolean;
+  impure function is_pass_message_visible(checker : checker_t) return boolean;
 
   procedure passing_check(checker : checker_t);
 
@@ -190,15 +190,18 @@ package body checker_pkg is
     return to_string(to_string_ptr(get(checker.p_data, name_idx)));
   end;
 
-  impure function is_passing_check_msg_enabled(checker : checker_t) return boolean is
+  impure function is_pass_message_visible(checker : checker_t) return boolean is
   begin
     return is_visible(get_logger(checker), pass);
   end;
 
   procedure passing_check(checker : checker_t) is
+    constant logger : logger_t := get_logger(checker);
   begin
     set(checker.p_data, stat_checks_idx, get(checker.p_data, stat_checks_idx) + 1);
     set(checker.p_data, stat_passed_idx, get(checker.p_data, stat_passed_idx) + 1);
+
+    log(logger, "", pass); -- invisible log
   end;
 
   procedure passing_check(
@@ -209,10 +212,13 @@ package body checker_pkg is
     constant logger : logger_t := get_logger(checker);
   begin
     -- pragma translate_off
-    passing_check(checker);
+    set(checker.p_data, stat_checks_idx, get(checker.p_data, stat_checks_idx) + 1);
+    set(checker.p_data, stat_passed_idx, get(checker.p_data, stat_passed_idx) + 1);
 
     if is_visible(logger, pass) then
       log(logger, msg, pass, line_num, file_name);
+    else
+      log(logger, "", pass); -- invisible log
     end if;
 
   -- pragma translate_on
