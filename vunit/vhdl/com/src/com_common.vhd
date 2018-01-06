@@ -16,21 +16,21 @@ use work.com_support_pkg.all;
 use std.textio.all;
 
 package com_common_pkg is
-  shared variable messenger : messenger_t;
+  shared variable messenger :       messenger_t;
   procedure delete (message : inout message_ptr_t);
 
   procedure notify (signal net : inout network_t);
 
   procedure wait_for_reply_stash_message (
-    signal net               : inout network_t;
-    constant receiver        : in    actor_t;
-    constant mailbox_name : in mailbox_name_t := inbox;
-    constant request_id      : in    message_id_t;
-    variable status          : out   com_status_t;
-    constant timeout : in    time := max_timeout_c);
+    signal net            : inout network_t;
+    constant receiver     : in    actor_t;
+    constant mailbox_name : in    mailbox_id_t := inbox;
+    constant request_id   : in    message_id_t;
+    variable status       : out   com_status_t;
+    constant timeout      : in    time         := max_timeout_c);
 
   impure function get_reply_stash_message (
-    receiver : actor_t;
+    receiver          : actor_t;
     clear_reply_stash : boolean := true)
     return message_ptr_t;
 
@@ -57,17 +57,17 @@ package body com_common_pkg is
 
   -- TODO: Don't stash when finding reply. Remove when getting it.
   procedure wait_for_reply_stash_message (
-    signal net               : inout network_t;
-    constant receiver        : in    actor_t;
-    constant mailbox_name : in mailbox_name_t := inbox;
-    constant request_id      : in    message_id_t;
-    variable status          : out   com_status_t;
-    constant timeout : in    time := max_timeout_c) is
+    signal net            : inout network_t;
+    constant receiver     : in    actor_t;
+    constant mailbox_name : in    mailbox_id_t := inbox;
+    constant request_id   : in    message_id_t;
+    variable status       : out   com_status_t;
+    constant timeout      : in    time         := max_timeout_c) is
     variable started_with_full_inbox : boolean := false;
   begin
     check(not messenger.deferred(receiver), deferred_receiver_error);
 
-    status                  := ok;
+    status := ok;
     if mailbox_name = inbox then
       started_with_full_inbox := messenger.is_full(receiver, inbox);
     end if;
@@ -90,7 +90,7 @@ package body com_common_pkg is
   end procedure wait_for_reply_stash_message;
 
   impure function get_reply_stash_message (
-    receiver : actor_t;
+    receiver          : actor_t;
     clear_reply_stash : boolean := true)
     return message_ptr_t is
     variable message : message_ptr_t;

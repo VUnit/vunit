@@ -23,8 +23,8 @@ package com_deprecated_pkg is
   -----------------------------------------------------------------------------
   -- Handling of actors
   -----------------------------------------------------------------------------
-  impure function create (name : string := ""; inbox_size : positive := positive'high) return actor_t;
-  procedure destroy (actor : inout actor_t; status : out com_status_t);
+  impure function create (name :       string := ""; inbox_size : positive := positive'high) return actor_t;
+  procedure destroy (actor     : inout actor_t; status : out com_status_t);
 
   -----------------------------------------------------------------------------
   -- Message related subprograms
@@ -35,7 +35,7 @@ package com_deprecated_pkg is
     sender     : actor_t      := null_actor_c;
     request_id : message_id_t := no_message_id_c)
     return message_ptr_t;
-  procedure copy (src       : inout message_ptr_t; dst : inout message_ptr_t);
+  procedure copy (src : inout message_ptr_t; dst : inout message_ptr_t);
 
   -----------------------------------------------------------------------------
   -- Primary send and receive related subprograms
@@ -284,7 +284,7 @@ package body com_deprecated_pkg is
   procedure send (
     signal net            : inout network_t;
     constant receiver     : in    actor_t;
-    constant mailbox_name : in    mailbox_name_t;
+    constant mailbox_name : in    mailbox_id_t;
     variable message      : inout message_ptr_t;
     constant timeout      : in    time    := max_timeout_c;
     constant keep_message : in    boolean := true) is
@@ -375,7 +375,7 @@ package body com_deprecated_pkg is
     constant timeout : in    time := max_timeout_c) is
     variable status       : com_status_t;
     variable source_actor : actor_t;
-    variable mailbox      : mailbox_name_t;
+    variable mailbox      : mailbox_id_t;
   begin
     deprecated("receive_reply() based on message_ptr_t");
     delete(message);
@@ -418,7 +418,7 @@ package body com_deprecated_pkg is
     if not keep_message then
       delete(message);
     end if;
- end;
+  end;
   procedure send (
     signal net            : inout network_t;
     constant receiver     : in    actor_t;
@@ -437,7 +437,7 @@ package body com_deprecated_pkg is
     end if;
 
     messenger.send(message.sender, receiver, inbox, message.request_id, message.payload.all, receipt);
-    message.id := receipt.id;
+    message.id       := receipt.id;
     message.receiver := receiver;
     notify(net);
 
@@ -450,7 +450,7 @@ package body com_deprecated_pkg is
   procedure receive_reply (
     signal net            : inout network_t;
     constant receiver     : in    actor_t;
-    constant receipt    : in    receipt_t;
+    constant receipt      : in    receipt_t;
     variable positive_ack : out   boolean;
     variable status       : out   com_status_t;
     constant timeout      : in    time := max_timeout_c) is
@@ -460,8 +460,8 @@ package body com_deprecated_pkg is
     wait_for_reply_stash_message(net, receiver, inbox, receipt.id, status, timeout);
     check(no_error_status(status, true), status);
     if status = ok then
-      message := get_reply_stash_message(receiver);
-      status := message.status;
+      message      := get_reply_stash_message(receiver);
+      status       := message.status;
       positive_ack := decode(message.payload.all);
       delete(message);
     else
@@ -472,7 +472,7 @@ package body com_deprecated_pkg is
   --
   procedure receive_reply (
     signal net            : inout network_t;
-    variable request    : inout    message_ptr_t;
+    variable request      : inout message_ptr_t;
     variable positive_ack : out   boolean;
     variable status       : out   com_status_t;
     constant timeout      : in    time := max_timeout_c) is
@@ -579,7 +579,7 @@ package body com_deprecated_pkg is
     deprecated("send() with string payload");
     message := compose(payload, sender);
     send(net, receiver, message, timeout, keep_message => true);
-    receipt := (status => ok, id => message.id);
+    receipt := (status                                 => ok, id => message.id);
     delete(message);
   end;
   procedure send (
@@ -593,7 +593,7 @@ package body com_deprecated_pkg is
     deprecated("send() with string payload");
     message := compose(payload);
     send(net, receiver, message, timeout, keep_message => true);
-    receipt := (status => ok, id => message.id);
+    receipt := (status                                 => ok, id => message.id);
     delete(message);
   end;
 
@@ -652,7 +652,7 @@ package body com_deprecated_pkg is
     variable status          : out   com_status_t;
     constant timeout         : in    time    := max_timeout_c;
     constant keep_message    : in    boolean := false) is
-    variable start   : time;
+    variable start : time;
   begin
     deprecated("request() with status. use request() without status or send + wait_for_reply for polling requests");
     start := now;

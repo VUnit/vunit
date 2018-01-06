@@ -699,6 +699,38 @@ begin
         check_only_log(com_logger, "TIMEOUT.", failure);
         unmock(com_logger);
 
+      -- Debugging
+      elsif run("Test getting the number of messages in a mailbox") then
+        check_equal(num_of_messages(self), 0);
+        msg := new_msg;
+        send(net, self, msg);
+        check_equal(num_of_messages(self), 1);
+        msg := new_msg;
+        send(net, self, msg);
+        check_equal(num_of_messages(self), 2);
+        receive(net, self, msg);
+        check_equal(num_of_messages(self), 1);
+        receive(net, self, msg);
+        check_equal(num_of_messages(self), 0);
+
+        check_equal(num_of_messages(self, outbox), 0);
+        msg := new_msg;
+        send(net, self, msg);
+        receive(net, self, request_msg);
+        reply_msg := new_msg;
+        reply(net, request_msg, reply_msg);
+        check_equal(num_of_messages(self, outbox), 1);
+        msg2 := new_msg;
+        send(net, self, msg2);
+        receive(net, self, request_msg);
+        reply_msg := new_msg;
+        reply(net, request_msg, reply_msg);
+        check_equal(num_of_messages(self, outbox), 2);
+        receive_reply(net, msg, reply_msg);
+        check_equal(num_of_messages(self, outbox), 1);
+        receive_reply(net, msg2, reply_msg);
+        check_equal(num_of_messages(self, outbox), 0);
+
       -- Deprecated APIs
       elsif run("Test that use of deprecated API leads to an error") then
         mock(com_logger);

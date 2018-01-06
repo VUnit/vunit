@@ -43,6 +43,9 @@ package com_types_pkg is
   type actor_vec_t is array(integer range <>) of actor_t;
   constant null_actor_c : actor_t := (id => 0);
 
+  -- Mailboxes owned by an actor
+  type mailbox_id_t is (inbox, outbox);
+
   -- Every message has a unique ID unless its a message from an inbound or
   -- outbound traffic subscription. These messages will have the same ID as
   -- the original message
