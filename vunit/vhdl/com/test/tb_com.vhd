@@ -42,6 +42,7 @@ begin
     variable ack                                                           : boolean;
     variable msg, msg2, request_msg, request_msg2, request_msg3, reply_msg : msg_t;
     variable peeked_msg1, peeked_msg2                                      : msg_t;
+    variable msg_vec_ptr                                                   : msg_vec_ptr_t;
     variable deprecated_message                                            : message_ptr_t;
   begin
     test_runner_setup(runner, runner_cfg);
@@ -774,6 +775,49 @@ begin
         check(peeked_msg1 = reply_msg);
         receive_reply(net, msg2, reply_msg);
         check(peeked_msg2 = reply_msg);
+
+      elsif run("Test peeking all messages in a mailbox") then
+        actor      := new_actor;
+        msg_vec_ptr := peek_all_messages(actor);
+        check(msg_vec_ptr = null);
+
+        msg        := new_msg;
+        send(net, actor, msg);
+        msg2        := new_msg;
+        send(net, actor, msg2);
+
+        msg_vec_ptr := peek_all_messages(actor);
+        check_equal(msg_vec_ptr'length, 2);
+
+        receive(net, actor, request_msg);
+        check(msg_vec_ptr(0) = request_msg);
+        reply_msg := new_msg;
+        reply(net, request_msg, reply_msg);
+        receive(net, actor, request_msg);
+        check(msg_vec_ptr(1) = request_msg);
+        reply_msg := new_msg;
+        reply(net, request_msg, reply_msg);
+
+        msg_vec_ptr := peek_all_messages(actor, outbox);
+        check_equal(msg_vec_ptr'length, 2);
+
+        receive_reply(net, msg, reply_msg);
+        check(msg_vec_ptr(0) = reply_msg);
+        receive_reply(net, msg2, reply_msg);
+        check(msg_vec_ptr(1) = reply_msg);
+
+      elsif run("Test making a string of all messages in a mailbox") then
+        actor      := new_actor("my actor");
+        msg        := new_msg(self);
+        send(net, actor, msg);
+        msg        := new_msg;
+        send(net, actor, msg);
+
+        msg_vec_ptr := peek_all_messages(actor);
+
+        check_equal(
+          to_string(msg_vec_ptr.all),
+          "0. " & to_string(msg_vec_ptr(0)) & LF & "1. " & to_string(msg_vec_ptr(1)));
 
       -- Deprecated APIs
       elsif run("Test that use of deprecated API leads to an error") then

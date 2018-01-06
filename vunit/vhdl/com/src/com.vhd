@@ -139,6 +139,20 @@ package body com_pkg is
       to_actor_string(msg.sender) & " -> " & to_actor_string(msg.receiver);
   end;
 
+  impure function to_string (msg_vec : msg_vec_t) return string is
+    variable l : line;
+  begin
+    for i in msg_vec'range loop
+      write(l, to_string(i) & ". " & to_string(msg_vec(i)));
+      if i /= msg_vec'right then
+        write(l, LF);
+      end if;
+    end loop;
+
+    return l.all;
+  end;
+
+
   -----------------------------------------------------------------------------
   -- Subprograms for pushing/popping data to/from a message. Data is popped
   -- from a message in the same order they were pushed (FIFO)
@@ -801,6 +815,22 @@ package body com_pkg is
     msg.data       := decode(messenger.get_payload(actor, position, mailbox_id));
 
     return msg;
+  end;
+
+  impure function peek_all_messages(actor : actor_t; mailbox_id : mailbox_id_t := inbox) return msg_vec_ptr_t is
+    variable msg_vec_ptr : msg_vec_ptr_t;
+    constant n_messages  : natural := messenger.num_of_messages(actor, mailbox_id);
+  begin
+    if n_messages = 0 then
+      return null;
+    end if;
+
+    msg_vec_ptr := new msg_vec_t(0 to n_messages - 1);
+    for i in msg_vec_ptr'range loop
+      msg_vec_ptr(i) := peek_message(actor, i, mailbox_id);
+    end loop;
+
+    return msg_vec_ptr;
   end;
 
   -----------------------------------------------------------------------------

@@ -78,6 +78,8 @@ package com_types_pkg is
 
     data       : msg_data_t;
   end record msg_t;
+  type msg_vec_t is array (integer range <>) of msg_t;
+  type msg_vec_ptr_t is access msg_vec_t;
 
   -- A subscriber can subscribe on three different types of traffic:
   --

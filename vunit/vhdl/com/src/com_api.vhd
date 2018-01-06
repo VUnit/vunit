@@ -80,6 +80,10 @@ package com_pkg is
   -- message is a reply to a request. Any undefined field is marked with "-"
   impure function to_string(msg : msg_t) return string;
 
+  -- Return string representation of a message vector with an index and message
+  -- per line
+  impure function to_string (msg_vec : msg_vec_t) return string;
+
   -----------------------------------------------------------------------------
   -- Subprograms for pushing/popping data to/from a message. Data is popped
   -- from a message in the same order they were pushed (FIFO)
@@ -398,6 +402,9 @@ package com_pkg is
     actor : actor_t;
     position : natural := 0;
     mailbox_id : mailbox_id_t := inbox) return msg_t;
+
+  -- Peek at all messages in actor mailbox.
+  impure function peek_all_messages(actor : actor_t; mailbox_id : mailbox_id_t := inbox) return msg_vec_ptr_t;
 
   -----------------------------------------------------------------------------
   -- Misc
