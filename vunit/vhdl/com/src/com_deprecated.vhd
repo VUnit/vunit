@@ -315,7 +315,6 @@ package body com_deprecated_pkg is
     variable message      : inout message_ptr_t;
     constant timeout      : in    time    := max_timeout_c;
     constant keep_message : in    boolean := true) is
-    variable receipt : receipt_t;
   begin
     send(net, receiver, inbox, message, timeout, keep_message);
   end;

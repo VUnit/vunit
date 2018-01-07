@@ -537,8 +537,6 @@ package body com_pkg is
     constant receiver : in    actor_t;
     variable msg      : inout msg_t;
     constant timeout  : in    time := max_timeout_c) is
-    variable status                  : com_status_t;
-    variable started_with_full_inbox : boolean;
   begin
     receive(net, actor_vec_t'(0 => receiver), msg, timeout);
   end;

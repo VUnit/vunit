@@ -345,8 +345,7 @@ package body com_messenger_pkg is
 
   procedure destroy (actor : inout actor_t) is
     variable envelope           : envelope_ptr_t;
-    variable item               : subscriber_item_ptr_t;
-    variable unsubscribe_status : com_status_t;
+    variable item               : subscriber_item_ptr_t;    
   begin
     check(not unknown_actor(actor), unknown_actor_error);
 
@@ -442,10 +441,8 @@ package body com_messenger_pkg is
   end function;
 
   impure function num_of_messages (actor : actor_t; mailbox_id : mailbox_id_t) return natural is
-    variable n : natural;
   begin
     if mailbox_id = inbox then
-      n := actors(actor.id).inbox.num_of_messages;
       return actors(actor.id).inbox.num_of_messages;
     else
       return actors(actor.id).outbox.num_of_messages;

@@ -46,7 +46,7 @@ end package;
 
 package body msg_types_pkg is
   impure function new_msg_type(name : string) return msg_type_t is
-    variable code : integer := length(p_msg_types.p_name_ptrs);
+    constant code : integer := length(p_msg_types.p_name_ptrs);
   begin
     resize(p_msg_types.p_name_ptrs, code+1);
     set(p_msg_types.p_name_ptrs, code, to_integer(new_string_ptr(name)));

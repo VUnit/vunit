@@ -31,12 +31,10 @@ architecture test_fixture of tb_com_deprecated is
   constant com_logger : logger_t := get_logger("vunit_lib:com");
 begin
   test_runner : process
-    variable actor_to_be_found, actor_with_deferred_creation, actor_to_destroy,
-      actor_to_destroy_copy, actor_to_keep, actor,
-      self, receiver, server, deferred_actor, publisher, subscriber,
-      limited_inbox, actor_with_max_inbox, actor_with_bounded_inbox : actor_t;
+    variable actor_to_destroy, actor_to_keep, actor, self,
+      receiver, server, deferred_actor, publisher, subscriber : actor_t;
     variable status                      : com_status_t;
-    variable receipt, receipt2, receipt3 : receipt_t;
+    variable receipt, receipt2 : receipt_t;
     variable n_actors                    : natural;
     variable message                     : message_ptr_t;
     variable reply_message               : message_ptr_t;
@@ -417,13 +415,11 @@ begin
   end process server5;
 
   limited_inbox_actor : process is
-    variable self, test_runner : actor_t;
+    variable self : actor_t;
     variable msg               : msg_t;
-    variable status            : com_status_t;
   begin
     wait until start_limited_inbox;
     self                     := create("limited inbox", 2);
-    test_runner              := find("test runner");
     wait for 10 ns;
     receive(net, self, msg);
     receive(net, self, msg);

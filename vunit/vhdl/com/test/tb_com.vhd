@@ -36,7 +36,6 @@ begin
     variable server, publisher, subscriber                                 : actor_t;
     variable actor_vec                                                     : actor_vec_t(0 to 2);
     variable status                                                        : com_status_t;
-    variable receipt, receipt2, receipt3                                   : receipt_t;
     variable n_actors                                                      : natural;
     variable t_start, t_stop                                               : time;
     variable ack                                                           : boolean;
@@ -837,7 +836,6 @@ begin
   my_receiver : process is
     variable self   : actor_t;
     variable msg    : msg_t;
-    variable status : com_status_t;
   begin
     wait until start_receiver;
     self                 := new_actor("my_receiver");
@@ -981,13 +979,11 @@ begin
   end process server5;
 
   limited_inbox_actor : process is
-    variable self, test_runner : actor_t;
+    variable self : actor_t;
     variable msg               : msg_t;
-    variable status            : com_status_t;
   begin
     wait until start_limited_inbox;
     self                     := new_actor("limited inbox", 2);
-    test_runner              := find("test runner");
     wait for 10 ns;
     receive(net, self, msg);
     receive(net, self, msg);
