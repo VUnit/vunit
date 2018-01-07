@@ -516,18 +516,20 @@ package body com_pkg is
     variable msg       : inout msg_t;
     constant timeout   : in    time := max_timeout_c) is
     variable msg_to_send : msg_t;
+    variable t_start : time;
   begin
     if receivers'length = 0 then
       delete(msg);
       return;
     end if;
 
+    t_start := now;
     for i in receivers'range loop
       if i = receivers'right then
-        send(net, receivers(i), msg);
+        send(net, receivers(i), msg, timeout - (now - t_start));
       else
         msg_to_send := copy(msg);
-        send(net, receivers(i), msg_to_send);
+        send(net, receivers(i), msg_to_send, timeout - (now - t_start));
       end if;
     end loop;
   end;

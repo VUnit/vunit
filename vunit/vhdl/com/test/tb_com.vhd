@@ -349,7 +349,7 @@ begin
         check_false(has_message(actor));
         check_equal(pop_string(get_message(actor2)), "To actor2");
       elsif run("Test sending to several actors") then
-        actor_vec := (others => new_actor);
+        actor_vec := (new_actor, new_actor, new_actor);
         for n in 0 to 2 loop
           msg := new_msg;
           push_string(msg, "hello");
@@ -360,6 +360,21 @@ begin
             check_equal(pop_string(msg), "hello");
           end loop;
         end loop;
+      elsif run("Test sending to several actors with timeout") then
+        actor_vec := (new_actor(inbox_size => 1), new_actor(inbox_size => 1), new_actor(inbox_size => 1));
+        msg := new_msg;
+        push_string(msg, "hello");
+        send(net, actor_vec, msg);
+        mock(com_logger);
+        msg := new_msg;
+        push_string(msg, "hello");
+        t_start := now;
+        send(net, actor_vec, msg, 10 ns);
+        check_equal(now - t_start, 10 ns);
+        check_log(com_logger, "FULL INBOX ERROR.", failure);
+        check_log(com_logger, "FULL INBOX ERROR.", failure);
+        check_log(com_logger, "FULL INBOX ERROR.", failure);
+        unmock(com_logger);
       elsif run("Test receiving from several actors") then
         actor_vec := (others => new_actor);
         for i in 0 to 2 loop
