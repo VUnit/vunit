@@ -389,6 +389,8 @@ package com_pkg is
     publisher    : actor_t;
     traffic_type : subscription_traffic_type_t := published);
 
+  impure function to_string (subscription_vec : subscription_vec_t) return string;
+
   -----------------------------------------------------------------------------
   -- Debugging
   -----------------------------------------------------------------------------
@@ -405,6 +407,12 @@ package com_pkg is
 
   -- Peek at all messages in actor mailbox.
   impure function peek_all_messages(actor : actor_t; mailbox_id : mailbox_id_t := inbox) return msg_vec_ptr_t;
+
+  -- Get subscriptions from subscriber
+  impure function get_subscriptions_from(subscriber : actor_t) return subscription_vec_ptr_t;
+
+  -- Get subscriptions to publisher
+  impure function get_subscriptions_to(publisher : actor_t) return subscription_vec_ptr_t;
 
   -----------------------------------------------------------------------------
   -- Misc

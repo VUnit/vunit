@@ -78,7 +78,7 @@ package com_types_pkg is
 
     data       : msg_data_t;
   end record msg_t;
-  type msg_vec_t is array (integer range <>) of msg_t;
+  type msg_vec_t is array (natural range <>) of msg_t;
   type msg_vec_ptr_t is access msg_vec_t;
 
   -- A subscriber can subscribe on three different types of traffic:
@@ -87,6 +87,14 @@ package com_types_pkg is
   -- outbound - All non-anonymous outbound messages from publisher
   -- inbound - All inbound messages to publisher. Replies anonymous requests are excluded.
   type subscription_traffic_type_t is (published, outbound, inbound);
+
+  type subscription_t is record
+    subscriber   : actor_t;
+    publisher    : actor_t;
+    traffic_type : subscription_traffic_type_t;
+  end record subscription_t;
+  type subscription_vec_t is array (natural range <>) of subscription_t;
+  type subscription_vec_ptr_t is access subscription_vec_t;
 
   -- Deprecated
   type receipt_t is record

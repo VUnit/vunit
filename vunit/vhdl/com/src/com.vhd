@@ -787,6 +787,27 @@ package body com_pkg is
     messenger.unsubscribe(subscriber, publisher, traffic_type);
   end procedure unsubscribe;
 
+  impure function to_string (subscription_vec : subscription_vec_t) return string is
+    variable l : line;
+  begin
+    for s in subscription_vec'range loop
+      if subscription_vec(s).traffic_type = inbound then
+        write(l, name(subscription_vec(s).subscriber) & " subscribes to inbound messages to " &
+              name(subscription_vec(s).publisher));
+      else
+        write(l, name(subscription_vec(s).subscriber) & " subscribes to " &
+              subscription_traffic_type_t'image(subscription_vec(s).traffic_type) &
+              " messages from " & name(subscription_vec(s).publisher));
+      end if;
+
+      if s /= subscription_vec'right then
+        write(l, LF);
+      end if;
+    end loop;
+
+    return l.all;
+  end;
+
   -----------------------------------------------------------------------------
   -- Debugging
   -----------------------------------------------------------------------------
@@ -831,6 +852,26 @@ package body com_pkg is
     end loop;
 
     return msg_vec_ptr;
+  end;
+
+  impure function get_subscriptions_from(subscriber : actor_t) return subscription_vec_ptr_t is
+    constant subscriptions : subscription_vec_t := messenger.get_subscriptions_from(subscriber);
+  begin
+    if subscriptions'length = 0 then
+      return null;
+    else
+      return new subscription_vec_t'(subscriptions);
+    end if;
+  end;
+
+  impure function get_subscriptions_to(publisher : actor_t) return subscription_vec_ptr_t is
+    constant subscriptions : subscription_vec_t := messenger.get_subscriptions_to(publisher);
+  begin
+    if subscriptions'length = 0 then
+      return null;
+    else
+      return new subscription_vec_t'(subscriptions);
+    end if;
   end;
 
   -----------------------------------------------------------------------------

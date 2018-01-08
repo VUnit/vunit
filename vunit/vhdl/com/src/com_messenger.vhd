@@ -123,6 +123,12 @@ package com_messenger_pkg is
       traffic_type : subscription_traffic_type_t := published);
 
     ---------------------------------------------------------------------------
+    -- Debugging
+    ---------------------------------------------------------------------------
+    impure function get_subscriptions_from(subscriber : actor_t) return subscription_vec_t;
+    impure function get_subscriptions_to(publisher : actor_t) return subscription_vec_t;
+
+    ---------------------------------------------------------------------------
     -- Misc
     ---------------------------------------------------------------------------
     procedure allow_timeout;
@@ -157,6 +163,7 @@ package body com_messenger_pkg is
     return new mailbox_t'(0, size, null, null);
   end function create;
 
+  -- TODO: subscriber can be simplified to a pointer to an array.
   type subscriber_item_t;
   type subscriber_item_ptr_t is access subscriber_item_t;
 
@@ -345,7 +352,7 @@ package body com_messenger_pkg is
 
   procedure destroy (actor : inout actor_t) is
     variable envelope           : envelope_ptr_t;
-    variable item               : subscriber_item_ptr_t;    
+    variable item               : subscriber_item_ptr_t;
   begin
     check(not unknown_actor(actor), unknown_actor_error);
 
@@ -878,6 +885,87 @@ package body com_messenger_pkg is
 
     remove_subscriber(subscriber, publisher, traffic_type);
   end procedure unsubscribe;
+
+  ---------------------------------------------------------------------------
+  -- Debugging
+  ---------------------------------------------------------------------------
+  impure function get_subscriptions_from(subscriber : actor_t) return subscription_vec_t is
+    impure function num_of_subscriptions return natural is
+      variable n_subscriptions : natural := 0;
+      variable item : subscriber_item_ptr_t;
+    begin
+      for a in actors'range loop
+        for t in subscription_traffic_type_t'left to subscription_traffic_type_t'right loop
+          item := actors(a).subscribers(t);
+          while item /= null loop
+            if item.actor = subscriber then
+              n_subscriptions := n_subscriptions + 1;
+            end if;
+            item := item.next_item;
+          end loop;
+        end loop;
+      end loop;
+
+      return n_subscriptions;
+    end;
+
+    constant n_subscriptions : natural := num_of_subscriptions;
+    variable subscriptions : subscription_vec_t(0 to n_subscriptions - 1);
+    variable item : subscriber_item_ptr_t;
+    variable idx : natural := 0;
+  begin
+    for a in actors'range loop
+      for t in subscription_traffic_type_t'left to subscription_traffic_type_t'right loop
+        item := actors(a).subscribers(t);
+        while item /= null loop
+          if item.actor = subscriber then
+            subscriptions(idx).subscriber := subscriber;
+            subscriptions(idx).publisher := actors(a).actor;
+            subscriptions(idx).traffic_type := t;
+            idx := idx + 1;
+          end if;
+          item := item.next_item;
+        end loop;
+      end loop;
+    end loop;
+
+    return subscriptions;
+  end;
+
+  impure function get_subscriptions_to(publisher : actor_t) return subscription_vec_t is
+    impure function num_of_subscriptions return natural is
+      variable n_subscriptions : natural := 0;
+      variable item : subscriber_item_ptr_t;
+    begin
+      for t in subscription_traffic_type_t'left to subscription_traffic_type_t'right loop
+        item := actors(publisher.id).subscribers(t);
+        while item /= null loop
+          n_subscriptions := n_subscriptions + 1;
+          item := item.next_item;
+        end loop;
+      end loop;
+
+      return n_subscriptions;
+    end;
+    constant n_subscriptions : natural := num_of_subscriptions;
+    variable subscriptions : subscription_vec_t(0 to n_subscriptions - 1);
+    variable item : subscriber_item_ptr_t;
+    variable idx : natural := 0;
+  begin
+    for t in subscription_traffic_type_t'left to subscription_traffic_type_t'right loop
+      item := actors(publisher.id).subscribers(t);
+      while item /= null loop
+        subscriptions(idx).subscriber := item.actor;
+        subscriptions(idx).publisher := publisher;
+        subscriptions(idx).traffic_type := t;
+        idx := idx + 1;
+        item := item.next_item;
+      end loop;
+    end loop;
+
+    return subscriptions;
+  end;
+
 
   -----------------------------------------------------------------------------
   -- Misc

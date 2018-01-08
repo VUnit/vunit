@@ -32,8 +32,9 @@ architecture test_fixture of tb_com is
   constant com_logger : logger_t := get_logger("vunit_lib:com");
 begin
   test_runner : process
-    variable self, actor, actor2, my_receiver, my_sender                   : actor_t;
-    variable server, publisher, subscriber                                 : actor_t;
+    variable self, actor, actor2, my_receiver, my_sender : actor_t;
+    variable server, publisher, publisher2, subscriber,
+      subscriber2, subscriber3 : actor_t;
     variable actor_vec                                                     : actor_vec_t(0 to 2);
     variable status                                                        : com_status_t;
     variable n_actors                                                      : natural;
@@ -43,6 +44,7 @@ begin
     variable peeked_msg1, peeked_msg2                                      : msg_t;
     variable msg_vec_ptr                                                   : msg_vec_ptr_t;
     variable deprecated_message                                            : message_ptr_t;
+    variable subscription_vec_ptr                                          : subscription_vec_ptr_t;
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -362,13 +364,13 @@ begin
         end loop;
       elsif run("Test sending to several actors with timeout") then
         actor_vec := (new_actor(inbox_size => 1), new_actor(inbox_size => 1), new_actor(inbox_size => 1));
-        msg := new_msg;
+        msg       := new_msg;
         push_string(msg, "hello");
         send(net, actor_vec, msg);
         mock(com_logger);
-        msg := new_msg;
+        msg       := new_msg;
         push_string(msg, "hello");
-        t_start := now;
+        t_start   := now;
         send(net, actor_vec, msg, 10 ns);
         check_equal(now - t_start, 10 ns);
         check_log(com_logger, "FULL INBOX ERROR.", failure);
@@ -748,15 +750,15 @@ begin
         check_equal(num_of_messages(self, outbox), 0);
 
       elsif run("Test peeking at messages in a mailbox") then
-        actor      := new_actor;
+        actor       := new_actor;
         mock(com_logger);
         peeked_msg1 := peek_message(actor);
         check_only_log(com_logger, "Peeking non-existing position.", failure);
         unmock(com_logger);
 
-        msg        := new_msg;
+        msg         := new_msg;
         send(net, actor, msg);
-        msg        := new_msg;
+        msg         := new_msg;
         send(net, actor, msg);
         peeked_msg1 := peek_message(actor);
         peeked_msg2 := peek_message(actor, 1);
@@ -765,9 +767,9 @@ begin
         receive(net, actor, msg);
         check(peeked_msg2 = msg);
 
-        msg        := new_msg;
+        msg  := new_msg;
         send(net, actor, msg);
-        msg2        := new_msg;
+        msg2 := new_msg;
         send(net, actor, msg2);
 
         mock(com_logger);
@@ -791,13 +793,13 @@ begin
         check(peeked_msg2 = reply_msg);
 
       elsif run("Test peeking all messages in a mailbox") then
-        actor      := new_actor;
+        actor       := new_actor;
         msg_vec_ptr := peek_all_messages(actor);
         check(msg_vec_ptr = null);
 
-        msg        := new_msg;
+        msg  := new_msg;
         send(net, actor, msg);
-        msg2        := new_msg;
+        msg2 := new_msg;
         send(net, actor, msg2);
 
         msg_vec_ptr := peek_all_messages(actor);
@@ -821,10 +823,10 @@ begin
         check(msg_vec_ptr(1) = reply_msg);
 
       elsif run("Test making a string of all messages in a mailbox") then
-        actor      := new_actor("my actor");
-        msg        := new_msg(self);
+        actor := new_actor("my actor");
+        msg   := new_msg(self);
         send(net, actor, msg);
-        msg        := new_msg;
+        msg   := new_msg;
         send(net, actor, msg);
 
         msg_vec_ptr := peek_all_messages(actor);
@@ -832,6 +834,71 @@ begin
         check_equal(
           to_string(msg_vec_ptr.all),
           "0. " & to_string(msg_vec_ptr(0)) & LF & "1. " & to_string(msg_vec_ptr(1)));
+
+      elsif run("Test getting all subscriptions to a publisher") then
+        publisher   := new_actor;
+        subscriber  := new_actor;
+        subscriber2 := new_actor;
+
+        check(get_subscriptions_to(publisher) = null);
+
+        subscribe(subscriber, publisher);
+        subscription_vec_ptr := get_subscriptions_to(publisher);
+        check_equal(subscription_vec_ptr'length, 1);
+        check(subscription_vec_ptr(0) = (subscriber   => subscriber,
+                                         publisher    => publisher,
+                                         traffic_type => published));
+
+        subscribe(subscriber2, publisher, inbound);
+        subscription_vec_ptr := get_subscriptions_to(publisher);
+        check_equal(subscription_vec_ptr'length, 2);
+        check(subscription_vec_ptr(0) = (subscriber   => subscriber,
+                                         publisher    => publisher,
+                                         traffic_type => published));
+        check(subscription_vec_ptr(1) = (subscriber   => subscriber2,
+                                         publisher    => publisher,
+                                         traffic_type => inbound));
+
+      elsif run("Test getting all subscriptions from a subscriber") then
+        publisher   := new_actor;
+        publisher2   := new_actor;
+        subscriber  := new_actor;
+
+        check(get_subscriptions_from(subscriber) = null);
+
+        subscribe(subscriber, publisher);
+        subscription_vec_ptr := get_subscriptions_from(subscriber);
+        check_equal(subscription_vec_ptr'length, 1);
+        check(subscription_vec_ptr(0) = (subscriber   => subscriber,
+                                         publisher    => publisher,
+                                         traffic_type => published));
+
+        subscribe(subscriber, publisher2, inbound);
+        subscription_vec_ptr := get_subscriptions_from(subscriber);
+        check_equal(subscription_vec_ptr'length, 2);
+        check(subscription_vec_ptr(0) = (subscriber   => subscriber,
+                                         publisher    => publisher,
+                                         traffic_type => published));
+        check(subscription_vec_ptr(1) = (subscriber   => subscriber,
+                                         publisher    => publisher2,
+                                         traffic_type => inbound));
+
+      elsif run("Test making a string of a subscription vector") then
+        publisher   := new_actor("publisher");
+        subscriber  := new_actor("subscriber");
+        subscriber2 := new_actor("subscriber 2");
+        subscriber3 := new_actor("subscriber 3");
+
+        subscribe(subscriber, publisher);
+        subscribe(subscriber2, publisher, outbound);
+        subscribe(subscriber3, publisher, inbound);
+
+        subscription_vec_ptr := get_subscriptions_to(publisher);
+
+        check_equal(to_string(subscription_vec_ptr.all),
+                    "subscriber subscribes to published messages from publisher" & LF &
+                    "subscriber 2 subscribes to outbound messages from publisher" & LF &
+                    "subscriber 3 subscribes to inbound messages to publisher");
 
       -- Deprecated APIs
       elsif run("Test that use of deprecated API leads to an error") then
@@ -849,8 +916,8 @@ begin
   test_runner_watchdog(runner, 100 ms);
 
   my_receiver : process is
-    variable self   : actor_t;
-    variable msg    : msg_t;
+    variable self : actor_t;
+    variable msg  : msg_t;
   begin
     wait until start_receiver;
     self                 := new_actor("my_receiver");
@@ -995,7 +1062,7 @@ begin
 
   limited_inbox_actor : process is
     variable self : actor_t;
-    variable msg               : msg_t;
+    variable msg  : msg_t;
   begin
     wait until start_limited_inbox;
     self                     := new_actor("limited inbox", 2);
