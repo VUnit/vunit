@@ -45,8 +45,12 @@ package com_pkg is
   -- Reset communication system. All actors are destroyed.
   procedure reset_messenger;
 
-  impure function num_of_actors return natural;
+  -- Check if an actor's creation is deferred
+  impure function is_deferred(actor : actor_t) return boolean;
+
   impure function num_of_deferred_creations return natural;
+  impure function num_of_actors return natural;
+
   impure function inbox_size (actor      : actor_t) return natural;
 
   -- Resize actor inbox. Reducing size below the number of messages in the

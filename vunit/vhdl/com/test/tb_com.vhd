@@ -86,11 +86,13 @@ begin
         actor := new_actor("actor to be found");
         check(find("actor to be found", false) /= null_actor_c, "Failed to find created actor");
         check_equal(num_of_deferred_creations, 0, "Expected no deferred creations");
+        check_false(is_deferred(actor));
       elsif run("Test that an actor not created is found and its creation is deferred") then
         check_equal(num_of_deferred_creations, 0, "Expected no deferred creations");
         actor := find("actor with deferred creation");
         check(actor /= null_actor_c, "Failed to find actor with deferred creation");
         check_equal(num_of_deferred_creations, 1, "Expected one deferred creations");
+        check(is_deferred(actor));
       elsif run("Test that deferred creation can be suppressed when an actor is not found") then
         actor  := new_actor("actor");
         actor2 := find("actor with deferred creation", false);

@@ -32,6 +32,7 @@ package com_messenger_pkg is
     procedure reset_messenger;
 
     impure function num_of_actors return natural;
+    impure function is_deferred(actor : actor_t) return boolean;
     impure function num_of_deferred_creations return natural;
     impure function unknown_actor (actor   : actor_t) return boolean;
     impure function deferred (actor        : actor_t) return boolean;
@@ -408,6 +409,11 @@ package body com_messenger_pkg is
     end loop;
 
     return n_actors;
+  end;
+
+  impure function is_deferred(actor : actor_t) return boolean is
+  begin
+    return actors(actor.id).deferred_creation;
   end;
 
   impure function num_of_deferred_creations return natural is

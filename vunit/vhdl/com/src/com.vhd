@@ -63,6 +63,11 @@ package body com_pkg is
     return messenger.num_of_actors;
   end;
 
+  impure function is_deferred(actor : actor_t) return boolean is
+  begin
+    return messenger.is_deferred(actor);
+  end;
+
   impure function num_of_deferred_creations
     return natural is
   begin
