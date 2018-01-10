@@ -81,6 +81,13 @@ package com_types_pkg is
   type msg_vec_t is array (natural range <>) of msg_t;
   type msg_vec_ptr_t is access msg_vec_t;
 
+  -- Current state of mailbox
+  type mailbox_state_t is record
+    id       : mailbox_id_t;
+    size     : natural;
+    messages : msg_vec_ptr_t;
+  end record mailbox_state_t;
+
   -- A subscriber can subscribe on three different types of traffic:
   --
   -- published - Messages published by publisher
@@ -112,4 +119,14 @@ package com_types_pkg is
 
   -- Default value for timeout parameters. ModelSim can't handle time'high
   constant max_timeout_c : time := 1 hr;
+
+  -- Captures the state of an actor
+  type actor_state_t is record
+    name               : line;
+    is_deferred        : boolean;
+    inbox              : msg_vec_ptr_t;
+    outbox             : msg_vec_ptr_t;
+    subscriptions      : subscription_vec_ptr_t;
+    subscribers        : subscription_vec_ptr_t;
+  end record actor_state_t;
 end package;

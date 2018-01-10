@@ -23,7 +23,11 @@ package com_messenger_pkg is
     -----------------------------------------------------------------------------
     -- Handling of actors
     -----------------------------------------------------------------------------
-    impure function create (name : string := ""; inbox_size : positive := positive'high) return actor_t;  --
+    impure function create (
+      name : string := "";
+      inbox_size : positive := positive'high;
+      outbox_size : positive := positive'high
+      ) return actor_t;
     impure function find (name  : string; enable_deferred_creation : boolean := true) return actor_t;
     -- TODO: Add test case
     impure function name (actor : actor_t) return string;
@@ -38,8 +42,8 @@ package com_messenger_pkg is
     impure function deferred (actor        : actor_t) return boolean;
     impure function is_full (actor         : actor_t; mailbox_id : mailbox_id_t) return boolean;
     impure function num_of_messages (actor : actor_t; mailbox_id : mailbox_id_t) return natural;
-    impure function inbox_size (actor      : actor_t) return natural;  --
-    procedure resize_inbox (actor : actor_t; new_size : natural);
+    impure function mailbox_size (actor : actor_t; mailbox_id : mailbox_id_t) return natural;
+    procedure resize_mailbox (actor : actor_t; new_size : natural; mailbox_id : mailbox_id_t);
     impure function subscriber_inbox_is_full (
       publisher                  : actor_t;
       subscription_traffic_types : subscription_traffic_types_t) return boolean;
@@ -105,6 +109,7 @@ package com_messenger_pkg is
       return boolean;                   --
     impure function get_reply_stash_message_payload (actor    : actor_t) return string;
     impure function get_reply_stash_message_sender (actor     : actor_t) return actor_t;
+    impure function get_reply_stash_message_receiver (actor     : actor_t) return actor_t;
     impure function get_reply_stash_message_id (actor         : actor_t) return message_id_t;
     impure function get_reply_stash_message_request_id (actor : actor_t) return message_id_t;
     impure function find_and_stash_reply_message (
@@ -126,8 +131,8 @@ package com_messenger_pkg is
     ---------------------------------------------------------------------------
     -- Debugging
     ---------------------------------------------------------------------------
-    impure function get_subscriptions_from(subscriber : actor_t) return subscription_vec_t;
-    impure function get_subscriptions_to(publisher : actor_t) return subscription_vec_t;
+    impure function get_subscriptions(subscriber : actor_t) return subscription_vec_t;
+    impure function get_subscribers(publisher : actor_t) return subscription_vec_t;
 
     ---------------------------------------------------------------------------
     -- Misc
@@ -258,7 +263,8 @@ package body com_messenger_pkg is
   impure function create_actor (
     name              :    string  := "";
     deferred_creation : in boolean := false;
-    inbox_size        : in natural := natural'high)
+    inbox_size        : in natural := natural'high;
+    outbox_size        : in natural := natural'high)
     return actor_t is
     variable old_actors : actor_item_array_ptr_t;
   begin
@@ -270,7 +276,7 @@ package body com_messenger_pkg is
     end loop;
     deallocate(old_actors);
     actors(actors'length - 1) := ((id => actors'length - 1), new string'(name),
-                                  deferred_creation, create(inbox_size), create, null, (null, null, null));
+                                  deferred_creation, create(inbox_size), create(outbox_size), null, (null, null, null));
 
     return actors(actors'length - 1).actor;
   end function;
@@ -298,14 +304,19 @@ package body com_messenger_pkg is
   end;
 
 
-  impure function create (name : string := ""; inbox_size : positive := positive'high) return actor_t is
+  impure function create (
+    name : string := "";
+    inbox_size : positive := positive'high;
+    outbox_size : positive := positive'high
+    ) return actor_t is
     variable actor : actor_t := find_actor(name);
   begin
     if (actor = null_actor_c) or (name = "") then
-      actor := create_actor(name, false, inbox_size);
+      actor := create_actor(name, false, inbox_size, outbox_size);
     elsif actors(actor.id).deferred_creation then
       actors(actor.id).deferred_creation := false;
       actors(actor.id).inbox.size        := inbox_size;
+      actors(actor.id).outbox.size       := outbox_size;
     else
       check_failed(duplicate_actor_name_error);
     end if;
@@ -462,10 +473,15 @@ package body com_messenger_pkg is
     end if;
   end function;
 
-  procedure resize_inbox (actor : actor_t; new_size : natural) is
+  procedure resize_mailbox (actor : actor_t; new_size : natural; mailbox_id : mailbox_id_t) is
   begin
-    check(num_of_messages(actor, inbox) <= new_size, insufficient_size_error);
-    actors(actor.id).inbox.size         := new_size;
+    if mailbox_id = inbox then
+      check(num_of_messages(actor, inbox) <= new_size, insufficient_size_error);
+      actors(actor.id).inbox.size         := new_size;
+    else
+      check(num_of_messages(actor, outbox) <= new_size, insufficient_size_error);
+      actors(actor.id).outbox.size         := new_size;
+    end if;
   end;
 
   impure function subscriber_inbox_is_full (
@@ -501,9 +517,13 @@ package body com_messenger_pkg is
     return actors(actor.id).subscribers(subscription_traffic_type) /= null;
   end;
 
-  impure function inbox_size (actor : actor_t) return natural is
+  impure function mailbox_size (actor : actor_t; mailbox_id : mailbox_id_t) return natural is
   begin
-    return actors(actor.id).inbox.size;
+    if mailbox_id = inbox then
+      return actors(actor.id).inbox.size;
+    else
+      return actors(actor.id).outbox.size;
+    end if;
   end function;
 
   -----------------------------------------------------------------------------
@@ -638,7 +658,13 @@ package body com_messenger_pkg is
     msg.id          := next_message_id;
     next_message_id := next_message_id + 1;
     msg.status      := ok;
-    msg.receiver    := receiver;
+    if mailbox_id = inbox then
+      msg.receiver    := receiver;
+    else
+      msg.sender    := receiver;
+      msg.receiver    := null_actor_c;
+    end if;
+
 
     put_message(receiver, msg, mailbox_id);
   end;
@@ -794,6 +820,16 @@ package body com_messenger_pkg is
     end if;
   end;
 
+  impure function get_reply_stash_message_receiver (actor     : actor_t) return actor_t is
+    variable envelope : envelope_ptr_t := actors(actor.id).reply_stash;
+  begin
+    if envelope /= null then
+      return envelope.message.receiver;
+    else
+      return null_actor_c;
+    end if;
+  end;
+
   impure function get_reply_stash_message_id (actor : actor_t) return message_id_t is
     variable envelope : envelope_ptr_t := actors(actor.id).reply_stash;
   begin
@@ -895,7 +931,7 @@ package body com_messenger_pkg is
   ---------------------------------------------------------------------------
   -- Debugging
   ---------------------------------------------------------------------------
-  impure function get_subscriptions_from(subscriber : actor_t) return subscription_vec_t is
+  impure function get_subscriptions(subscriber : actor_t) return subscription_vec_t is
     impure function num_of_subscriptions return natural is
       variable n_subscriptions : natural := 0;
       variable item : subscriber_item_ptr_t;
@@ -938,7 +974,7 @@ package body com_messenger_pkg is
     return subscriptions;
   end;
 
-  impure function get_subscriptions_to(publisher : actor_t) return subscription_vec_t is
+  impure function get_subscribers(publisher : actor_t) return subscription_vec_t is
     impure function num_of_subscriptions return natural is
       variable n_subscriptions : natural := 0;
       variable item : subscriber_item_ptr_t;

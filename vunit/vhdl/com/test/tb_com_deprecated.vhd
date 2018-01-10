@@ -31,7 +31,7 @@ architecture test_fixture of tb_com_deprecated is
   constant com_logger : logger_t := get_logger("vunit_lib:com");
 begin
   test_runner : process
-    variable actor_to_destroy, actor_to_keep, actor, self,
+    variable actor_to_destroy, actor_to_keep, actor, actor2, self,
       receiver, server, deferred_actor, publisher, subscriber : actor_t;
     variable status                      : com_status_t;
     variable receipt, receipt2 : receipt_t;
@@ -66,6 +66,16 @@ begin
         destroy(actor, status);
         check_only_log(com_logger, "UNKNOWN ACTOR ERROR.", failure);
         unmock(com_logger);
+      elsif run("Test that a created actor get the correct inbox size") then
+        actor  := new_actor("actor with max inbox");
+        check(inbox_size(actor) = positive'high, "Expected maximum sized inbox");
+        actor2 := new_actor("actor with bounded inbox", 23);
+        check(inbox_size(actor2) = 23, "Expected inbox size = 23");
+        check(inbox_size(null_actor_c) = 0, "Expected no inbox on null actor");
+        check(inbox_size(find("actor to be created")) = 1,
+              "Expected inbox size on actor with deferred creation to be one");
+        check(inbox_size(new_actor("actor to be created", 42)) = 42,
+              "Expected inbox size on actor with deferred creation to change to given value when created");
       elsif run("Test that a message can be deleted") then
         message := compose("hello");
         delete(message);

@@ -25,6 +25,7 @@ package com_deprecated_pkg is
   -----------------------------------------------------------------------------
   impure function create (name :       string := ""; inbox_size : positive := positive'high) return actor_t;
   procedure destroy (actor     : inout actor_t; status : out com_status_t);
+  impure function inbox_size (actor      : actor_t) return natural;
 
   -----------------------------------------------------------------------------
   -- Message related subprograms
@@ -237,6 +238,12 @@ package body com_deprecated_pkg is
     deprecated("destroy() with status output");
     status := ok;
     messenger.destroy(actor);
+  end;
+
+  impure function inbox_size (actor : actor_t) return natural is
+  begin
+    deprecated("inbox_size() instead of mailbox_size()");
+    return messenger.mailbox_size(actor, inbox);
   end;
 
   -----------------------------------------------------------------------------

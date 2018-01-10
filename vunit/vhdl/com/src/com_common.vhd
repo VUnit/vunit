@@ -102,7 +102,7 @@ package body com_common_pkg is
     message.id         := messenger.get_reply_stash_message_id(receiver);
     message.request_id := messenger.get_reply_stash_message_request_id(receiver);
     message.sender     := messenger.get_reply_stash_message_sender(receiver);
-    message.receiver   := receiver;
+    message.receiver   := messenger.get_reply_stash_message_receiver(receiver);
     write(message.payload, messenger.get_reply_stash_message_payload(receiver));
     if clear_reply_stash then
       messenger.clear_reply_stash(receiver);

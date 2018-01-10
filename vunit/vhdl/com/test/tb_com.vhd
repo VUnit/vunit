@@ -45,6 +45,9 @@ begin
     variable msg_vec_ptr                                                   : msg_vec_ptr_t;
     variable deprecated_message                                            : message_ptr_t;
     variable subscription_vec_ptr                                          : subscription_vec_ptr_t;
+    variable actor_state                                                   : actor_state_t;
+    variable mailbox_state                                                 : mailbox_state_t;
+    variable l                                                             : line;
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -98,16 +101,58 @@ begin
         actor2 := find("actor with deferred creation", false);
         check(actor2 = null_actor_c, "Didn't expect to find any actor");
         check_equal(num_of_deferred_creations, 0, "Expected no deferred creations");
-      elsif run("Test that a created actor get the correct inbox size") then
-        actor  := new_actor("actor with max inbox");
-        check(inbox_size(actor) = positive'high, "Expected maximum sized inbox");
-        actor2 := new_actor("actor with bounded inbox", 23);
-        check(inbox_size(actor2) = 23, "Expected inbox size = 23");
-        check(inbox_size(null_actor_c) = 0, "Expected no inbox on null actor");
-        check(inbox_size(find("actor to be created")) = 1,
-              "Expected inbox size on actor with deferred creation to be one");
-        check(inbox_size(new_actor("actor to be created", 42)) = 42,
-              "Expected inbox size on actor with deferred creation to change to given value when created");
+      elsif run("Test that a created actor get the correct mailbox size") then
+        actor := new_actor("actor with max inbox");
+        check_equal(mailbox_size(actor), positive'high, result("for inbox size"));
+        check_equal(mailbox_size(actor, outbox), positive'high, result("for outbox size"));
+
+        actor2 := new_actor("actor with bounded inbox", 23, 17);
+        check_equal(mailbox_size(actor2), 23, result("for inbox size"));
+        check_equal(mailbox_size(actor2, outbox), 17, result("for outbox size"));
+
+        check_equal(mailbox_size(null_actor_c), 0, result("for inbox size"));
+        check_equal(mailbox_size(null_actor_c, outbox), 0, result("for outbox size"));
+
+        check_equal(mailbox_size(find("actor to be created")), 1, result("for inbox size"));
+        check_equal(mailbox_size(find("actor to be created"), outbox), positive'high, result("for outbox size"));
+
+        check_equal(mailbox_size(new_actor("actor to be created", 42, 99)), 42, result("for inbox size"));
+        check_equal(mailbox_size(find("actor to be created"), outbox), 99, result("for outbox size"));
+
+      elsif run("Test that mailboxes can be resize") then
+        actor := new_actor("actor with max inbox");
+
+        resize_mailbox(actor, 17);
+        check_equal(mailbox_size(actor), 17, result("for inbox size"));
+        check_equal(mailbox_size(actor, outbox), positive'high, result("for outbox size"));
+
+        resize_mailbox(actor, 23, outbox);
+        check_equal(mailbox_size(actor), 17, result("for inbox size"));
+        check_equal(mailbox_size(actor, outbox), 23, result("for outbox size"));
+
+        for i in 1 to 10 loop
+          msg := new_msg;
+          send(net, actor, msg);
+        end loop;
+
+        for i in 1 to 2 loop
+          receive(net, actor, request_msg);
+          reply_msg := new_msg;
+          reply(net, request_msg, reply_msg);
+        end loop;
+
+        resize_mailbox(actor, 8);
+        mock(com_logger);
+        resize_mailbox(actor, 7);
+        check_only_log(com_logger, "INSUFFICIENT SIZE ERROR.", failure);
+        unmock(com_logger);
+
+        resize_mailbox(actor, 2, outbox);
+        mock(com_logger);
+        resize_mailbox(actor, 1, outbox);
+        check_only_log(com_logger, "INSUFFICIENT SIZE ERROR.", failure);
+        unmock(com_logger);
+
       elsif run("Test that no-name actors can't be found") then
         actor  := new_actor;
         actor2 := new_actor;
@@ -698,7 +743,10 @@ begin
         send(net, server, request_msg);
         wait for 10 ns;
         receive_reply(net, request_msg, reply_msg);
+        check(reply_msg.sender = server);
+        check(reply_msg.receiver = null_actor_c);
         check_equal(pop_string(reply_msg), "reply");
+        check_equal(reply_msg.request_id, request_msg.id);
 
         request_msg := new_msg;
         push_string(request_msg, "request2");
@@ -824,83 +872,129 @@ begin
         receive_reply(net, msg2, reply_msg);
         check(msg_vec_ptr(1) = reply_msg);
 
-      elsif run("Test making a string of all messages in a mailbox") then
-        actor := new_actor("my actor");
-        msg   := new_msg(self);
+      elsif run("Test getting mailbox state") then
+        actor         := new_actor("actor", 17, 23);
+        msg           := new_msg;
         send(net, actor, msg);
-        msg   := new_msg;
+        mailbox_state := get_mailbox_state(actor);
+        check(mailbox_state.id = inbox);
+        check(mailbox_state.size = 17);
+        receive(net, actor, request_msg);
+        check(mailbox_state.messages(0) = request_msg);
+
+        reply_msg     := new_msg;
+        reply(net, request_msg, reply_msg);
+        mailbox_state := get_mailbox_state(actor, outbox);
+        check(mailbox_state.id = outbox);
+        check(mailbox_state.size = 23);
+        receive_reply(net, msg, reply_msg);
+        check(mailbox_state.messages(0) = reply_msg);
+
+      elsif run("Test making a string of mailbox state") then
+        actor         := new_actor("actor", 17);
+        check_equal(get_mailbox_state_string(actor, inbox),
+                    "Mailbox: inbox" & LF &
+                    "  Size: 17" & LF &
+                    "  Messages:");
+
+        msg           := new_msg(self);
+        send(net, actor, msg);
+        msg           := new_msg;
+        send(net, actor, msg);
+        mailbox_state := get_mailbox_state(actor);
+        write(l, get_mailbox_state_string(actor, inbox, "  "));
+        receive(net, actor, request_msg);
+        info(l.all);
+        check_equal(l.all,
+                    "  Mailbox: inbox" & LF &
+                    "    Size: 17" & LF &
+                    "    Messages:" & LF &
+                    "      0. " & to_string(mailbox_state.messages(0)) & LF &
+                    "      1. " & to_string(mailbox_state.messages(1)));
+
+      elsif run("Test getting actor state") then
+        actor       := find("my actor");
+        actor_state := get_actor_state(actor);
+        check_equal(actor_state.name.all, "my actor");
+        check(actor_state.is_deferred);
+
+        actor       := new_actor("my actor");
+        actor_state := get_actor_state(actor);
+        check_false(actor_state.is_deferred);
+
+        msg         := new_msg;
+        send(net, actor, msg);
+        actor_state := get_actor_state(actor);
+        receive(net, actor, request_msg);
+        check(actor_state.inbox(0) = request_msg);
+
+        reply_msg   := new_msg;
+        reply(net, request_msg, reply_msg);
+        actor_state := get_actor_state(actor);
+        receive_reply(net, msg, reply_msg);
+        check(actor_state.outbox(0) = reply_msg);
+
+        actor2      := new_actor;
+        subscribe(actor, actor2, inbound);
+        subscribe(self, actor);
+        actor_state := get_actor_state(actor);
+        check(actor_state.subscriptions(0) =
+              subscription_t'(subscriber => actor, publisher => actor2, traffic_type => inbound));
+        check(actor_state.subscribers(0) =
+              subscription_t'(subscriber => self, publisher => actor, traffic_type => published));
+
+      elsif run("Test making a string of actor state") then
+        actor       := find("my actor");
+        check_equal(get_actor_state_string(actor),
+                    "Name: my actor" & LF &
+                    "  Is deferred: yes" & LF &
+                    get_mailbox_state_string(actor, inbox, "  ") & LF &
+                    get_mailbox_state_string(actor, outbox, "  ") & LF &
+                    "  Subscriptions:" & LF &
+                    "  Subscribers:");
+
+        actor       := new_actor("my actor");
+        msg         := new_msg;
         send(net, actor, msg);
 
-        msg_vec_ptr := peek_all_messages(actor);
+        check_equal(get_actor_state_string(actor),
+                    "Name: my actor" & LF &
+                    "  Is deferred: no" & LF &
+                    get_mailbox_state_string(actor, inbox, "  ") & LF &
+                    get_mailbox_state_string(actor, outbox, "  ") & LF &
+                    "  Subscriptions:" & LF &
+                    "  Subscribers:");
 
-        check_equal(
-          to_string(msg_vec_ptr.all),
-          "0. " & to_string(msg_vec_ptr(0)) & LF & "1. " & to_string(msg_vec_ptr(1)));
+        receive(net, actor, request_msg);
+        reply_msg   := new_msg;
+        reply(net, request_msg, reply_msg);
 
-      elsif run("Test getting all subscriptions to a publisher") then
-        publisher   := new_actor;
-        subscriber  := new_actor;
-        subscriber2 := new_actor;
+        check_equal(get_actor_state_string(actor),
+                    "Name: my actor" & LF &
+                    "  Is deferred: no" & LF &
+                    get_mailbox_state_string(actor, inbox, "  ") & LF &
+                    get_mailbox_state_string(actor, outbox, "  ") & LF &
+                    "  Subscriptions:" & LF &
+                    "  Subscribers:");
 
-        check(get_subscriptions_to(publisher) = null);
+        actor2      := new_actor("actor 2");
+        subscribe(actor, actor2);
+        subscribe(actor, actor2, inbound);
+        subscribe(self, actor, inbound);
+        subscribe(self, actor, outbound);
 
-        subscribe(subscriber, publisher);
-        subscription_vec_ptr := get_subscriptions_to(publisher);
-        check_equal(subscription_vec_ptr'length, 1);
-        check(subscription_vec_ptr(0) = (subscriber   => subscriber,
-                                         publisher    => publisher,
-                                         traffic_type => published));
-
-        subscribe(subscriber2, publisher, inbound);
-        subscription_vec_ptr := get_subscriptions_to(publisher);
-        check_equal(subscription_vec_ptr'length, 2);
-        check(subscription_vec_ptr(0) = (subscriber   => subscriber,
-                                         publisher    => publisher,
-                                         traffic_type => published));
-        check(subscription_vec_ptr(1) = (subscriber   => subscriber2,
-                                         publisher    => publisher,
-                                         traffic_type => inbound));
-
-      elsif run("Test getting all subscriptions from a subscriber") then
-        publisher   := new_actor;
-        publisher2   := new_actor;
-        subscriber  := new_actor;
-
-        check(get_subscriptions_from(subscriber) = null);
-
-        subscribe(subscriber, publisher);
-        subscription_vec_ptr := get_subscriptions_from(subscriber);
-        check_equal(subscription_vec_ptr'length, 1);
-        check(subscription_vec_ptr(0) = (subscriber   => subscriber,
-                                         publisher    => publisher,
-                                         traffic_type => published));
-
-        subscribe(subscriber, publisher2, inbound);
-        subscription_vec_ptr := get_subscriptions_from(subscriber);
-        check_equal(subscription_vec_ptr'length, 2);
-        check(subscription_vec_ptr(0) = (subscriber   => subscriber,
-                                         publisher    => publisher,
-                                         traffic_type => published));
-        check(subscription_vec_ptr(1) = (subscriber   => subscriber,
-                                         publisher    => publisher2,
-                                         traffic_type => inbound));
-
-      elsif run("Test making a string of a subscription vector") then
-        publisher   := new_actor("publisher");
-        subscriber  := new_actor("subscriber");
-        subscriber2 := new_actor("subscriber 2");
-        subscriber3 := new_actor("subscriber 3");
-
-        subscribe(subscriber, publisher);
-        subscribe(subscriber2, publisher, outbound);
-        subscribe(subscriber3, publisher, inbound);
-
-        subscription_vec_ptr := get_subscriptions_to(publisher);
-
-        check_equal(to_string(subscription_vec_ptr.all),
-                    "subscriber subscribes to published messages from publisher" & LF &
-                    "subscriber 2 subscribes to outbound messages from publisher" & LF &
-                    "subscriber 3 subscribes to inbound messages to publisher");
+        info(get_actor_state_string(actor));
+        check_equal(get_actor_state_string(actor),
+                    "Name: my actor" & LF &
+                    "  Is deferred: no" & LF &
+                    get_mailbox_state_string(actor, inbox, "  ") & LF &
+                    get_mailbox_state_string(actor, outbox, "  ") & LF &
+                    "  Subscriptions:" & LF &
+                    "    published traffic from actor 2" & LF &
+                    "    inbound traffic to actor 2" & LF &
+                    "  Subscribers:" & LF &
+                    "    test runner subscribes to outbound traffic" & LF &
+                    "    test runner subscribes to inbound traffic");
 
       -- Deprecated APIs
       elsif run("Test that use of deprecated API leads to an error") then

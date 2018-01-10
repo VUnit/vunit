@@ -32,9 +32,13 @@ package body com_pkg is
   -----------------------------------------------------------------------------
   -- Handling of actors
   -----------------------------------------------------------------------------
-  impure function new_actor (name : string := ""; inbox_size : positive := positive'high) return actor_t is
+  impure function new_actor (
+    name : string := "";
+    inbox_size : positive := positive'high;
+    outbox_size : positive := positive'high
+    ) return actor_t is
   begin
-    return messenger.create(name, inbox_size);
+    return messenger.create(name, inbox_size, outbox_size);
   end;
 
   impure function find (name : string; enable_deferred_creation : boolean := true) return actor_t is
@@ -74,14 +78,14 @@ package body com_pkg is
     return messenger.num_of_deferred_creations;
   end;
 
-  impure function inbox_size (actor : actor_t) return natural is
+  impure function mailbox_size (actor : actor_t; mailbox_id : mailbox_id_t := inbox) return natural is
   begin
-    return messenger.inbox_size(actor);
+    return messenger.mailbox_size(actor, mailbox_id);
   end;
 
-  procedure resize_inbox (actor : actor_t; new_size : natural) is
+  procedure resize_mailbox (actor : actor_t; new_size : natural; mailbox_id : mailbox_id_t := inbox) is
   begin
-    messenger.resize_inbox(actor, new_size);
+    messenger.resize_mailbox(actor, new_size, mailbox_id);
   end;
 
   -----------------------------------------------------------------------------
@@ -123,7 +127,7 @@ package body com_pkg is
   end;
 
   impure function to_string(msg : msg_t) return string is
-    function to_id_string(id : message_id_t) return string is
+    function id_to_string(id : message_id_t) return string is
     begin
       if id = no_message_id_c then
         return "-";
@@ -131,7 +135,7 @@ package body com_pkg is
         return to_string(id);
       end if;
     end function;
-    impure function to_actor_string(actor : actor_t) return string is
+    impure function actor_to_string(actor : actor_t) return string is
     begin
       if actor = null_actor_c then
         return "-";
@@ -140,23 +144,9 @@ package body com_pkg is
       end if;
     end function;
   begin
-    return to_id_string(msg.id) & ":" & to_id_string(msg.request_id) & " " &
-      to_actor_string(msg.sender) & " -> " & to_actor_string(msg.receiver);
+    return id_to_string(msg.id) & ":" & id_to_string(msg.request_id) & " " &
+      actor_to_string(msg.sender) & " -> " & actor_to_string(msg.receiver);
   end;
-
-  impure function to_string (msg_vec : msg_vec_t) return string is
-    variable l : line;
-  begin
-    for i in msg_vec'range loop
-      write(l, to_string(i) & ". " & to_string(msg_vec(i)));
-      if i /= msg_vec'right then
-        write(l, LF);
-      end if;
-    end loop;
-
-    return l.all;
-  end;
-
 
   -----------------------------------------------------------------------------
   -- Subprograms for pushing/popping data to/from a message. Data is popped
@@ -792,27 +782,6 @@ package body com_pkg is
     messenger.unsubscribe(subscriber, publisher, traffic_type);
   end procedure unsubscribe;
 
-  impure function to_string (subscription_vec : subscription_vec_t) return string is
-    variable l : line;
-  begin
-    for s in subscription_vec'range loop
-      if subscription_vec(s).traffic_type = inbound then
-        write(l, name(subscription_vec(s).subscriber) & " subscribes to inbound messages to " &
-              name(subscription_vec(s).publisher));
-      else
-        write(l, name(subscription_vec(s).subscriber) & " subscribes to " &
-              subscription_traffic_type_t'image(subscription_vec(s).traffic_type) &
-              " messages from " & name(subscription_vec(s).publisher));
-      end if;
-
-      if s /= subscription_vec'right then
-        write(l, LF);
-      end if;
-    end loop;
-
-    return l.all;
-  end;
-
   -----------------------------------------------------------------------------
   -- Debugging
   -----------------------------------------------------------------------------
@@ -859,8 +828,39 @@ package body com_pkg is
     return msg_vec_ptr;
   end;
 
-  impure function get_subscriptions_from(subscriber : actor_t) return subscription_vec_ptr_t is
-    constant subscriptions : subscription_vec_t := messenger.get_subscriptions_from(subscriber);
+  impure function get_mailbox_state(actor : actor_t; mailbox_id : mailbox_id_t := inbox) return mailbox_state_t is
+    variable state : mailbox_state_t;
+  begin
+    state.id := mailbox_id;
+    state.size := mailbox_size(actor, mailbox_id);
+    state.messages := peek_all_messages(actor, mailbox_id);
+
+    return state;
+  end;
+
+  impure function get_mailbox_state_string (
+    actor : actor_t;
+    mailbox_id : mailbox_id_t := inbox;
+    indent : string := "") return string is
+    variable messages : msg_vec_ptr_t := peek_all_messages(actor, mailbox_id);
+    variable l : line;
+  begin
+    write(l, indent & "Mailbox: " & mailbox_id_t'image(mailbox_id) & LF);
+    write(l, indent & "  Size: " & to_string(mailbox_size(actor, mailbox_id)) & LF);
+    write(l, indent & "  Messages:");
+    if messages /= null then
+      for i in messages'range loop
+        write(l, LF & indent & "    " & to_string(i) & ". " & to_string(messages(i)));
+      end loop;
+    end if;
+
+    deallocate(messages);
+
+    return l.all;
+  end;
+
+  impure function get_subscriptions(subscriber : actor_t) return subscription_vec_ptr_t is
+    constant subscriptions : subscription_vec_t := messenger.get_subscriptions(subscriber);
   begin
     if subscriptions'length = 0 then
       return null;
@@ -869,14 +869,69 @@ package body com_pkg is
     end if;
   end;
 
-  impure function get_subscriptions_to(publisher : actor_t) return subscription_vec_ptr_t is
-    constant subscriptions : subscription_vec_t := messenger.get_subscriptions_to(publisher);
+  impure function get_subscribers(publisher : actor_t) return subscription_vec_ptr_t is
+    constant subscriptions : subscription_vec_t := messenger.get_subscribers(publisher);
   begin
     if subscriptions'length = 0 then
       return null;
     else
       return new subscription_vec_t'(subscriptions);
     end if;
+  end;
+
+  impure function get_actor_state(actor : actor_t) return actor_state_t is
+    variable state : actor_state_t;
+  begin
+    write(state.name, name(actor));
+    state.is_deferred := is_deferred(actor);
+    state.inbox := peek_all_messages(actor, inbox);
+    state.outbox := peek_all_messages(actor, outbox);
+    state.subscriptions := get_subscriptions(actor);
+    state.subscribers := get_subscribers(actor);
+
+    return state;
+  end;
+
+  impure function get_actor_state_string (actor : actor_t; indent : string := "") return string is
+    variable state : actor_state_t := get_actor_state(actor);
+    variable l : line;
+    variable traffic_type : subscription_traffic_type_t;
+  begin
+    write(l, indent & "Name: " & state.name.all & LF);
+
+    write(l, indent & "  Is deferred: ");
+    if state.is_deferred then
+      write(l, "yes" & LF);
+    else
+      write(l, "no" & LF);
+    end if;
+
+    write(l, get_mailbox_state_string(actor, inbox, "  ") & LF);
+    write(l, get_mailbox_state_string(actor, outbox, "  ") & LF);
+
+    write(l, indent & "  Subscriptions:");
+    if state.subscriptions /= null then
+      for i in state.subscriptions'range loop
+        traffic_type := state.subscriptions(i).traffic_type;
+        write(l, LF & indent & "    " & subscription_traffic_type_t'image(traffic_type) & " traffic ");
+        if state.subscriptions(i).traffic_type = inbound then
+          write(l, indent & "to ");
+        else
+          write(l, indent & "from ");
+        end if;
+        write(l, name(state.subscriptions(i).publisher));
+      end loop;
+    end if;
+
+    write(l, LF & indent & "  Subscribers:");
+    if state.Subscribers /= null then
+      for i in state.subscribers'range loop
+        write(l, LF & indent & "    " & name(state.subscribers(i).subscriber) & " subscribes to ");
+        write(l, subscription_traffic_type_t'image(state.subscribers(i).traffic_type) & " traffic");
+      end loop;
+    end if;
+
+    return l.all;
   end;
 
   -----------------------------------------------------------------------------

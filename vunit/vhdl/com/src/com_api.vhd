@@ -30,7 +30,11 @@ package com_pkg is
   -----------------------------------------------------------------------------
   -- Create a new actor. Any number of unnamed actors (name = "") can be
   -- created. Named actors must be unique
-  impure function new_actor (name : string := ""; inbox_size : positive := positive'high) return actor_t;
+  impure function new_actor (
+    name : string := "";
+    inbox_size : positive := positive'high;
+    outbox_size : positive := positive'high
+    ) return actor_t;
 
   -- Find named actor by name. Enable deferred creation to create a deferred
   -- actor when no actor is found
@@ -51,11 +55,12 @@ package com_pkg is
   impure function num_of_deferred_creations return natural;
   impure function num_of_actors return natural;
 
-  impure function inbox_size (actor      : actor_t) return natural;
+  -- Return the maximum number of messages that can be stored in an inbox
+  impure function mailbox_size (actor : actor_t; mailbox_id : mailbox_id_t := inbox) return natural;
 
-  -- Resize actor inbox. Reducing size below the number of messages in the
-  -- inbox in runtime error
-  procedure resize_inbox (actor : actor_t; new_size : natural);
+  -- Resize actor mailbox. Reducing size below the number of messages in the
+  -- mailbox in runtime error
+  procedure resize_mailbox (actor : actor_t; new_size : natural; mailbox_id : mailbox_id_t := inbox);
 
   -----------------------------------------------------------------------------
   -- Message related subprograms
@@ -83,10 +88,6 @@ package com_pkg is
   -- <request message id> is the message id for the request message if the
   -- message is a reply to a request. Any undefined field is marked with "-"
   impure function to_string(msg : msg_t) return string;
-
-  -- Return string representation of a message vector with an index and message
-  -- per line
-  impure function to_string (msg_vec : msg_vec_t) return string;
 
   -----------------------------------------------------------------------------
   -- Subprograms for pushing/popping data to/from a message. Data is popped
@@ -393,8 +394,6 @@ package com_pkg is
     publisher    : actor_t;
     traffic_type : subscription_traffic_type_t := published);
 
-  impure function to_string (subscription_vec : subscription_vec_t) return string;
-
   -----------------------------------------------------------------------------
   -- Debugging
   -----------------------------------------------------------------------------
@@ -409,14 +408,25 @@ package com_pkg is
     position : natural := 0;
     mailbox_id : mailbox_id_t := inbox) return msg_t;
 
+  -- TODO: provide deallocation for state types
+
   -- Peek at all messages in actor mailbox.
   impure function peek_all_messages(actor : actor_t; mailbox_id : mailbox_id_t := inbox) return msg_vec_ptr_t;
 
-  -- Get subscriptions from subscriber
-  impure function get_subscriptions_from(subscriber : actor_t) return subscription_vec_ptr_t;
+  -- Get current state for actor mailbox
+  impure function get_mailbox_state(actor : actor_t; mailbox_id : mailbox_id_t := inbox) return mailbox_state_t;
 
-  -- Get subscriptions to publisher
-  impure function get_subscriptions_to(publisher : actor_t) return subscription_vec_ptr_t;
+  -- Return string representation of a mailbox state
+  impure function get_mailbox_state_string (
+    actor : actor_t;
+    mailbox_id : mailbox_id_t := inbox;
+    indent : string := "") return string;
+
+  -- Get current state of actor
+  impure function get_actor_state(actor : actor_t) return actor_state_t;
+
+  -- Return string representation of an actor
+  impure function get_actor_state_string (actor : actor_t; indent : string := "") return string;
 
   -----------------------------------------------------------------------------
   -- Misc
