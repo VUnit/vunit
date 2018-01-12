@@ -15,7 +15,7 @@ from collections import OrderedDict
 from vunit.ostools import file_exists
 from vunit.cached import cached
 from vunit.test_list import TestList
-from vunit.vhdl_parser import remove_comments
+from vunit.vhdl_parser import remove_comments as remove_vhdl_comments
 from vunit.test_suites import IndependentSimTestCase, SameSimTestSuite
 from vunit.parsing.encodings import HDL_FILE_ENCODING
 from vunit.project import file_type_of, VERILOG_FILE_TYPES
@@ -245,7 +245,7 @@ class TestCase(ConfigurationVisitor):
 
 
 _RE_VHDL_TEST_CASE = re.compile(r'(\s|\()+run\s*\(\s*"(?P<name>.*?)"\s*\)', re.IGNORECASE)
-_RE_VERILOG_TEST_CASE = re.compile(r'`TEST_CASE\("(?P<name>.*?)"\)')
+_RE_VERILOG_TEST_CASE = re.compile(r'`TEST_CASE\s*\(\s*"(?P<name>.*?)"\s*\)')
 
 
 def _find_test_cases(code, file_name):
@@ -254,9 +254,10 @@ def _find_test_cases(code, file_name):
     """
     is_verilog = file_type_of(file_name) in VERILOG_FILE_TYPES
     if is_verilog:
+        code = remove_verilog_comments(code)
         regexp = _RE_VERILOG_TEST_CASE
     else:
-        code = remove_comments(code)
+        code = remove_vhdl_comments(code)
         regexp = _RE_VHDL_TEST_CASE
 
     test_cases = [match.group("name")
@@ -297,3 +298,14 @@ def _find_pragmas(code, file_name):
                            file_name)
         pragmas.append(pragma)
     return pragmas
+
+
+VERILOG_REMOVE_COMMENT_RE = re.compile(r'(//[^\n]*)|(/\*.*?\*/)',
+                                       re.DOTALL)
+
+
+def remove_verilog_comments(code):
+    """
+    Remove all verilog comments
+    """
+    return VERILOG_REMOVE_COMMENT_RE.sub('', code)

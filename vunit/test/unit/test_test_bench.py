@@ -82,7 +82,7 @@ class TestTestBench(unittest.TestCase):
         else:
             assert False, "RuntimeError not raised"
 
-    def test_creates_tests(self):
+    def test_creates_tests_vhdl(self):
         design_unit = Entity('tb_entity', contents='''\
 if run("Test 1")
 --if run("Test 2")
@@ -106,6 +106,27 @@ if my_protected_variable.run("Test 10")
                                "lib.tb_entity.Test 7",
                                "lib.tb_entity.Test 8",
                                "lib.tb_entity.Test 9"])
+
+    def test_creates_tests_verilog(self):
+        design_unit = Module('tb_module', contents='''\
+`TEST_CASE("Test 1")
+`TEST_CASE  ("Test 2")
+`TEST_CASE( "Test 3"  )
+// `TEST_CASE("Test 4")
+/*
+ `TEST_CASE("Test 5")
+*/
+/* `TEST_CASE("Test 6") */
+`TEST_CASE("Test 7")
+''')
+        design_unit.generic_names = ["runner_cfg"]
+        test_bench = TestBench(design_unit)
+        tests = self.create_tests(test_bench)
+        self.assert_has_tests(tests,
+                              ["lib.tb_module.Test 1",
+                               "lib.tb_module.Test 2",
+                               "lib.tb_module.Test 3",
+                               "lib.tb_module.Test 7"])
 
     @mock.patch("vunit.test_bench.LOGGER")
     def test_duplicate_tests_cause_error(self, mock_logger):

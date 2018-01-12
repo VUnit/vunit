@@ -968,8 +968,11 @@ class VHDLReference(object):
         return self.name_within == "all"
 
 
+VHDL_REMOVE_COMMENT_RE = re.compile(r'--[^\n]*')
+
+
 def remove_comments(code):
     """
     Return the code with comments removed
     """
-    return re.sub(r'--[^\n]*', '', code)
+    return VHDL_REMOVE_COMMENT_RE.sub('', code)
