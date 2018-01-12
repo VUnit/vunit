@@ -93,12 +93,9 @@ To make a log entry with the custom level use any of the `log` procedures:
     log(my_logger, "Mozilla Public License, v. 2.0.", license_info);
 
 
-Stop Level
-----------
-
-By default the simulation will stop if the log level is ``failure`` or
-more severe. This can be changed to any of the other levels by changing
-the stop level configuration.
+Stopping simulation
+-------------------
+By default the simulation will stop if a log with level ``failure`` is made.
 
 .. code-block:: vhdl
 
@@ -193,16 +190,12 @@ the two filters.
 .. code-block:: vhdl
 
     -- Disable all logging to the display.
-    disable_all(display_handler);
+    hide_all(display_handler);
 
-    -- Set the log level to block display handler logs below debug from all loggers within system0
-    set_log_level(get_logger("system0"), display_handler, debug);
-
-    -- Also block display handler warnings and debug messages from all loggers within system0
-    set_block_filter(get_logger("system0"), display_handler, (warning, debug));
+    show(get_logger("system0"), display_handler, debug);
 
     -- Enable all logging from the uart module in system0
-    enable_all(get_logger("system0:uart"), display_handler);
+    show_all(get_logger("system0:uart"), display_handler);
 
 
 Custom Loggers
