@@ -12,7 +12,7 @@ commonly used assertions as a number of check procedures and functions.
 Architecture
 ------------
 
-The check subprograms are mainly a number conditional log messages. If
+The check subprograms are conditional log messages. If
 the condition represents a failing check then an error message is issued
 using the VUnit :doc:`log package <../logging/user_guide>`.
 
@@ -135,8 +135,8 @@ for any log handler.
 
 .. code-block:: vhdl
 
-    set_log_level(get_logger(default_checker), display_handler, pass);
-    set_log_level(get_logger(default_checker), file_handler, pass);
+    show(get_logger(default_checker), display_handler, pass);
+    show(get_logger(default_checker), file_handler, pass);
 
 The difference between a passing check log message and a failing check log message is
 the log level used. A passing check like this
