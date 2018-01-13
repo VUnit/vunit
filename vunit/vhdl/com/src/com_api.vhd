@@ -40,6 +40,7 @@ package com_pkg is
   -- actor when no actor is found
   impure function find (name : string; enable_deferred_creation : boolean := true) return actor_t;
 
+  -- Name of actor
   impure function name (actor : actor_t) return string;
 
   -- Destroy actor. Mailboxes are deallocated and dependent subscriptions are
@@ -52,8 +53,14 @@ package com_pkg is
   -- Check if an actor's creation is deferred
   impure function is_deferred(actor : actor_t) return boolean;
 
+  -- Total number of actors with deferred creation
   impure function num_of_deferred_creations return natural;
+
+  -- Total number of actors
   impure function num_of_actors return natural;
+
+  -- Number of messages in actor mailbox
+  impure function num_of_messages (actor : actor_t; mailbox_id : mailbox_id_t := inbox) return natural;
 
   -- Return the maximum number of messages that can be stored in an inbox
   impure function mailbox_size (actor : actor_t; mailbox_id : mailbox_id_t := inbox) return natural;
@@ -300,6 +307,13 @@ package com_pkg is
     variable msg     : inout msg_t;
     constant timeout : in    time := max_timeout_c);
 
+  -- Peek at message in actor mailbox but don't remove it. Position 0 is the oldest message. Runtime error if
+  -- position doesn't exist.
+  impure function peek_message(
+    actor : actor_t;
+    position : natural := 0;
+    mailbox_id : mailbox_id_t := inbox) return msg_t;
+
   -----------------------------------------------------------------------------
   -- Secondary send and receive related subprograms
   --
@@ -398,20 +412,7 @@ package com_pkg is
   -- Debugging
   -----------------------------------------------------------------------------
 
-  -- Number of messages in actor mailbox
-  impure function num_of_messages (actor : actor_t; mailbox_id : mailbox_id_t := inbox) return natural;
-
-  -- Peek at message in actor mailbox but don't remove it. Position 0 is the oldest message. Runtime error if
-  -- position doesn't exist.
-  impure function peek_message(
-    actor : actor_t;
-    position : natural := 0;
-    mailbox_id : mailbox_id_t := inbox) return msg_t;
-
   -- TODO: provide deallocation for state types
-
-  -- Peek at all messages in actor mailbox.
-  impure function peek_all_messages(actor : actor_t; mailbox_id : mailbox_id_t := inbox) return msg_vec_ptr_t;
 
   -- Get current state for actor mailbox
   impure function get_mailbox_state(actor : actor_t; mailbox_id : mailbox_id_t := inbox) return mailbox_state_t;
@@ -425,8 +426,14 @@ package com_pkg is
   -- Get current state of actor
   impure function get_actor_state(actor : actor_t) return actor_state_t;
 
-  -- Return string representation of an actor
+  -- Return string representation of an actor state
   impure function get_actor_state_string (actor : actor_t; indent : string := "") return string;
+
+  -- Get current state of messenger
+  impure function get_messenger_state return messenger_state_t;
+
+  -- Return string representation of the messenger state
+  impure function get_messenger_state_string(indent : string := "") return string;
 
   -----------------------------------------------------------------------------
   -- Misc

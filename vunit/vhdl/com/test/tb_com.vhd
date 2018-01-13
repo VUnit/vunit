@@ -32,7 +32,7 @@ architecture test_fixture of tb_com is
   constant com_logger : logger_t := get_logger("vunit_lib:com");
 begin
   test_runner : process
-    variable self, actor, actor2, my_receiver, my_sender : actor_t;
+    variable self, actor, actor2, actor3, actor4, actor5, my_receiver, my_sender : actor_t;
     variable server, publisher, publisher2, subscriber,
       subscriber2, subscriber3 : actor_t;
     variable actor_vec                                                     : actor_vec_t(0 to 2);
@@ -48,6 +48,7 @@ begin
     variable actor_state                                                   : actor_state_t;
     variable mailbox_state                                                 : mailbox_state_t;
     variable l                                                             : line;
+    variable messenger_state                                               : messenger_state_t;
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -842,36 +843,6 @@ begin
         receive_reply(net, msg2, reply_msg);
         check(peeked_msg2 = reply_msg);
 
-      elsif run("Test peeking all messages in a mailbox") then
-        actor       := new_actor;
-        msg_vec_ptr := peek_all_messages(actor);
-        check(msg_vec_ptr = null);
-
-        msg  := new_msg;
-        send(net, actor, msg);
-        msg2 := new_msg;
-        send(net, actor, msg2);
-
-        msg_vec_ptr := peek_all_messages(actor);
-        check_equal(msg_vec_ptr'length, 2);
-
-        receive(net, actor, request_msg);
-        check(msg_vec_ptr(0) = request_msg);
-        reply_msg := new_msg;
-        reply(net, request_msg, reply_msg);
-        receive(net, actor, request_msg);
-        check(msg_vec_ptr(1) = request_msg);
-        reply_msg := new_msg;
-        reply(net, request_msg, reply_msg);
-
-        msg_vec_ptr := peek_all_messages(actor, outbox);
-        check_equal(msg_vec_ptr'length, 2);
-
-        receive_reply(net, msg, reply_msg);
-        check(msg_vec_ptr(0) = reply_msg);
-        receive_reply(net, msg2, reply_msg);
-        check(msg_vec_ptr(1) = reply_msg);
-
       elsif run("Test getting mailbox state") then
         actor         := new_actor("actor", 17, 23);
         msg           := new_msg;
@@ -891,7 +862,7 @@ begin
         check(mailbox_state.messages(0) = reply_msg);
 
       elsif run("Test making a string of mailbox state") then
-        actor         := new_actor("actor", 17);
+        actor := new_actor("actor", 17);
         check_equal(get_mailbox_state_string(actor, inbox),
                     "Mailbox: inbox" & LF &
                     "  Size: 17" & LF &
@@ -918,7 +889,7 @@ begin
         check_equal(actor_state.name.all, "my actor");
         check(actor_state.is_deferred);
 
-        actor       := new_actor("my actor");
+        actor       := new_actor("my actor", 17, 21);
         actor_state := get_actor_state(actor);
         check_false(actor_state.is_deferred);
 
@@ -926,13 +897,17 @@ begin
         send(net, actor, msg);
         actor_state := get_actor_state(actor);
         receive(net, actor, request_msg);
-        check(actor_state.inbox(0) = request_msg);
+        check(actor_state.inbox.id = inbox);
+        check(actor_state.inbox.size = 17);
+        check(actor_state.inbox.messages(0) = request_msg);
 
         reply_msg   := new_msg;
         reply(net, request_msg, reply_msg);
         actor_state := get_actor_state(actor);
         receive_reply(net, msg, reply_msg);
-        check(actor_state.outbox(0) = reply_msg);
+        check(actor_state.outbox.id = outbox);
+        check(actor_state.outbox.size = 21);
+        check(actor_state.outbox.messages(0) = reply_msg);
 
         actor2      := new_actor;
         subscribe(actor, actor2, inbound);
@@ -944,7 +919,7 @@ begin
               subscription_t'(subscriber => self, publisher => actor, traffic_type => published));
 
       elsif run("Test making a string of actor state") then
-        actor       := find("my actor");
+        actor := find("my actor");
         check_equal(get_actor_state_string(actor),
                     "Name: my actor" & LF &
                     "  Is deferred: yes" & LF &
@@ -953,8 +928,8 @@ begin
                     "  Subscriptions:" & LF &
                     "  Subscribers:");
 
-        actor       := new_actor("my actor");
-        msg         := new_msg;
+        actor := new_actor("my actor");
+        msg   := new_msg;
         send(net, actor, msg);
 
         check_equal(get_actor_state_string(actor),
@@ -966,7 +941,7 @@ begin
                     "  Subscribers:");
 
         receive(net, actor, request_msg);
-        reply_msg   := new_msg;
+        reply_msg := new_msg;
         reply(net, request_msg, reply_msg);
 
         check_equal(get_actor_state_string(actor),
@@ -977,7 +952,7 @@ begin
                     "  Subscriptions:" & LF &
                     "  Subscribers:");
 
-        actor2      := new_actor("actor 2");
+        actor2 := new_actor("actor 2");
         subscribe(actor, actor2);
         subscribe(actor, actor2, inbound);
         subscribe(self, actor, inbound);
@@ -995,6 +970,121 @@ begin
                     "  Subscribers:" & LF &
                     "    test runner subscribes to outbound traffic" & LF &
                     "    test runner subscribes to inbound traffic");
+
+      elsif run("Test getting messenger state") then
+        reset_messenger;
+        messenger_state := get_messenger_state;
+        check(messenger_state.active_actors = null);
+        check(messenger_state.deferred_actors = null);
+
+        actor := new_actor("actor");
+        messenger_state := get_messenger_state;
+        check_equal(messenger_state.active_actors'length, 1);
+        check(messenger_state.deferred_actors = null);
+        actor_state := get_actor_state(actor);
+        check_equal(messenger_state.active_actors(0).name.all, actor_state.name.all);
+        check_equal(messenger_state.active_actors(0).is_deferred, actor_state.is_deferred);
+        check(messenger_state.active_actors(0).inbox = actor_state.inbox);
+        check(messenger_state.active_actors(0).outbox = actor_state.outbox);
+        check(messenger_state.active_actors(0).subscriptions = actor_state.subscriptions);
+        check(messenger_state.active_actors(0).subscribers = actor_state.subscribers);
+
+        actor2 := new_actor("actor 2");
+        messenger_state := get_messenger_state;
+        check_equal(messenger_state.active_actors'length, 2);
+        check(messenger_state.deferred_actors = null);
+        actor_state := get_actor_state(actor2);
+        check_equal(messenger_state.active_actors(1).name.all, actor_state.name.all);
+        check_equal(messenger_state.active_actors(1).is_deferred, actor_state.is_deferred);
+        check(messenger_state.active_actors(1).inbox = actor_state.inbox);
+        check(messenger_state.active_actors(1).outbox = actor_state.outbox);
+        check(messenger_state.active_actors(1).subscriptions = actor_state.subscriptions);
+        check(messenger_state.active_actors(1).subscribers = actor_state.subscribers);
+
+        destroy(actor);
+
+        messenger_state := get_messenger_state;
+        check_equal(messenger_state.active_actors'length, 1);
+        check(messenger_state.deferred_actors = null);
+        actor_state := get_actor_state(actor2);
+        check_equal(messenger_state.active_actors(0).name.all, actor_state.name.all);
+        check_equal(messenger_state.active_actors(0).is_deferred, actor_state.is_deferred);
+        check(messenger_state.active_actors(0).inbox = actor_state.inbox);
+        check(messenger_state.active_actors(0).outbox = actor_state.outbox);
+        check(messenger_state.active_actors(0).subscriptions = actor_state.subscriptions);
+        check(messenger_state.active_actors(0).subscribers = actor_state.subscribers);
+
+        actor3 := find("actor 3");
+        messenger_state := get_messenger_state;
+        check_equal(messenger_state.active_actors'length, 1);
+        check_equal(messenger_state.deferred_actors'length, 1);
+        actor_state := get_actor_state(actor2);
+        check_equal(messenger_state.active_actors(0).name.all, actor_state.name.all);
+        check_equal(messenger_state.active_actors(0).is_deferred, actor_state.is_deferred);
+        check(messenger_state.active_actors(0).inbox = actor_state.inbox);
+        check(messenger_state.active_actors(0).outbox = actor_state.outbox);
+        check(messenger_state.active_actors(0).subscriptions = actor_state.subscriptions);
+        check(messenger_state.active_actors(0).subscribers = actor_state.subscribers);
+        actor_state := get_actor_state(actor3);
+        check_equal(messenger_state.deferred_actors(0).name.all, actor_state.name.all);
+        check_equal(messenger_state.deferred_actors(0).is_deferred, actor_state.is_deferred);
+        check(messenger_state.deferred_actors(0).inbox = actor_state.inbox);
+        check(messenger_state.deferred_actors(0).outbox = actor_state.outbox);
+        check(messenger_state.deferred_actors(0).subscriptions = actor_state.subscriptions);
+        check(messenger_state.deferred_actors(0).subscribers = actor_state.subscribers);
+
+        destroy(actor2);
+
+        messenger_state := get_messenger_state;
+        check(messenger_state.active_actors = null);
+        check_equal(messenger_state.deferred_actors'length, 1);
+        actor_state := get_actor_state(actor3);
+        check_equal(messenger_state.deferred_actors(0).name.all, actor_state.name.all);
+        check_equal(messenger_state.deferred_actors(0).is_deferred, actor_state.is_deferred);
+        check(messenger_state.deferred_actors(0).inbox = actor_state.inbox);
+        check(messenger_state.deferred_actors(0).outbox = actor_state.outbox);
+        check(messenger_state.deferred_actors(0).subscriptions = actor_state.subscriptions);
+        check(messenger_state.deferred_actors(0).subscribers = actor_state.subscribers);
+
+      elsif run("Test making a string of messenger state") then
+        reset_messenger;
+        check_equal(get_messenger_state_string,
+                    "Active actors:" & LF &
+                    "Deferred actors:");
+
+        actor := new_actor("actor");
+        check_equal(get_messenger_state_string,
+                    "Active actors:" & LF &
+                    get_actor_state_string(actor, "  ") & LF & LF &
+                    "Deferred actors:");
+
+        actor2 := new_actor("actor 2");
+        check_equal(get_messenger_state_string,
+                    "Active actors:" & LF &
+                    get_actor_state_string(actor, "  ") & LF & LF &
+                    get_actor_state_string(actor2, "  ") & LF & LF &
+                    "Deferred actors:");
+
+        actor3 := find("actor 3");
+        actor4 := find("actor 4");
+        actor5 := new_actor("actor 5");
+        check_equal(get_messenger_state_string("  "),
+                    "  Active actors:" & LF &
+                    get_actor_state_string(actor, "    ") & LF & LF &
+                    get_actor_state_string(actor2, "    ") & LF & LF &
+                    get_actor_state_string(actor5, "    ") & LF & LF &
+                    "  Deferred actors:" & LF &
+                    get_actor_state_string(actor3, "    ") & LF & LF &
+                    get_actor_state_string(actor4, "    "));
+
+        destroy(actor);
+        destroy(actor2);
+        destroy(actor5);
+        check_equal(get_messenger_state_string,
+                    "Active actors:" & LF &
+                    "Deferred actors:" & LF &
+                    get_actor_state_string(actor3, "  ") & LF & LF &
+                    get_actor_state_string(actor4, "  "));
 
       -- Deprecated APIs
       elsif run("Test that use of deprecated API leads to an error") then

@@ -78,6 +78,11 @@ package body com_pkg is
     return messenger.num_of_deferred_creations;
   end;
 
+  impure function num_of_messages (actor : actor_t; mailbox_id : mailbox_id_t := inbox) return natural is
+  begin
+    return messenger.num_of_messages(actor, mailbox_id);
+  end;
+
   impure function mailbox_size (actor : actor_t; mailbox_id : mailbox_id_t := inbox) return natural is
   begin
     return messenger.mailbox_size(actor, mailbox_id);
@@ -623,6 +628,27 @@ package body com_pkg is
     recycle(queue_pool, msg.data);
   end;
 
+  impure function peek_message(
+    actor      : actor_t;
+    position   : natural      := 0;
+    mailbox_id : mailbox_id_t := inbox) return msg_t is
+    variable msg : msg_t;
+  begin
+    if position > messenger.num_of_messages(actor, mailbox_id) - 1 then
+      failure(com_logger, "Peeking non-existing position.");
+      return msg;
+    end if;
+
+    msg.status     := ok;
+    msg.id         := messenger.get_id(actor, position, mailbox_id);
+    msg.request_id := messenger.get_request_id(actor, position, mailbox_id);
+    msg.sender     := messenger.get_sender(actor, position, mailbox_id);
+    msg.receiver   := messenger.get_receiver(actor, position, mailbox_id);
+    msg.data       := decode(messenger.get_payload(actor, position, mailbox_id));
+
+    return msg;
+  end;
+
   -----------------------------------------------------------------------------
   -- Secondary send and receive related subprograms
   -----------------------------------------------------------------------------
@@ -786,32 +812,6 @@ package body com_pkg is
   -- Debugging
   -----------------------------------------------------------------------------
 
-  impure function num_of_messages (actor : actor_t; mailbox_id : mailbox_id_t := inbox) return natural is
-  begin
-    return messenger.num_of_messages(actor, mailbox_id);
-  end;
-
-  impure function peek_message(
-    actor      : actor_t;
-    position   : natural      := 0;
-    mailbox_id : mailbox_id_t := inbox) return msg_t is
-    variable msg : msg_t;
-  begin
-    if position > messenger.num_of_messages(actor, mailbox_id) - 1 then
-      failure(com_logger, "Peeking non-existing position.");
-      return msg;
-    end if;
-
-    msg.status     := ok;
-    msg.id         := messenger.get_id(actor, position, mailbox_id);
-    msg.request_id := messenger.get_request_id(actor, position, mailbox_id);
-    msg.sender     := messenger.get_sender(actor, position, mailbox_id);
-    msg.receiver   := messenger.get_receiver(actor, position, mailbox_id);
-    msg.data       := decode(messenger.get_payload(actor, position, mailbox_id));
-
-    return msg;
-  end;
-
   impure function peek_all_messages(actor : actor_t; mailbox_id : mailbox_id_t := inbox) return msg_vec_ptr_t is
     variable msg_vec_ptr : msg_vec_ptr_t;
     constant n_messages  : natural := messenger.num_of_messages(actor, mailbox_id);
@@ -884,8 +884,8 @@ package body com_pkg is
   begin
     write(state.name, name(actor));
     state.is_deferred := is_deferred(actor);
-    state.inbox := peek_all_messages(actor, inbox);
-    state.outbox := peek_all_messages(actor, outbox);
+    state.inbox := get_mailbox_state(actor, inbox);
+    state.outbox := get_mailbox_state(actor, outbox);
     state.subscriptions := get_subscriptions(actor);
     state.subscribers := get_subscribers(actor);
 
@@ -906,8 +906,8 @@ package body com_pkg is
       write(l, "no" & LF);
     end if;
 
-    write(l, get_mailbox_state_string(actor, inbox, "  ") & LF);
-    write(l, get_mailbox_state_string(actor, outbox, "  ") & LF);
+    write(l, get_mailbox_state_string(actor, inbox, indent & "  ") & LF);
+    write(l, get_mailbox_state_string(actor, outbox, indent & "  ") & LF);
 
     write(l, indent & "  Subscriptions:");
     if state.subscriptions /= null then
@@ -929,6 +929,66 @@ package body com_pkg is
         write(l, LF & indent & "    " & name(state.subscribers(i).subscriber) & " subscribes to ");
         write(l, subscription_traffic_type_t'image(state.subscribers(i).traffic_type) & " traffic");
       end loop;
+    end if;
+
+    return l.all;
+  end;
+
+  impure function get_messenger_state return messenger_state_t is
+    variable state : messenger_state_t;
+    constant actors : actor_vec_t := messenger.get_all_actors;
+    constant n_deferred : natural := messenger.num_of_deferred_creations;
+    constant n_active : natural := actors'length - n_deferred;
+    variable active_idx, deferred_idx : natural := 0;
+  begin
+    if n_active > 0 then
+      state.active_actors := new actor_state_vec_t(0 to n_active - 1);
+    end if;
+
+    if n_deferred > 0 then
+      state.deferred_actors := new actor_state_vec_t(0 to n_deferred - 1);
+    end if;
+
+    for i in actors'range loop
+      if is_deferred(actors(i)) then
+        state.deferred_actors(deferred_idx) := get_actor_state(actors(i));
+        deferred_idx := deferred_idx + 1;
+      else
+        state.active_actors(active_idx) := get_actor_state(actors(i));
+        active_idx := active_idx + 1;
+      end if;
+    end loop;
+
+    return state;
+  end;
+
+  impure function get_messenger_state_string(indent : string := "") return string is
+    constant actors : actor_vec_t := messenger.get_all_actors;
+    variable l, active_actors, deferred_actors : line;
+    variable first_deferred : boolean := true;
+  begin
+    for i in actors'range loop
+      if is_deferred(actors(i)) then
+        if first_deferred then
+          first_deferred := false;
+        else
+          write(deferred_actors, LF & LF);
+        end if;
+        write(deferred_actors, get_actor_state_string(actors(i), indent & "  "));
+      else
+        write(active_actors, get_actor_state_string(actors(i), indent & "  ") & LF & LF);
+      end if;
+    end loop;
+
+
+    write(l, indent & "Active actors:" & LF);
+    if active_actors /= null then
+      write(l, active_actors.all);
+    end if;
+
+    write(l, indent & "Deferred actors:");
+    if deferred_actors /= null then
+      write(l, LF & deferred_actors.all);
     end if;
 
     return l.all;

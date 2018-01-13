@@ -29,13 +29,13 @@ package com_messenger_pkg is
       outbox_size : positive := positive'high
       ) return actor_t;
     impure function find (name  : string; enable_deferred_creation : boolean := true) return actor_t;
-    -- TODO: Add test case
     impure function name (actor : actor_t) return string;
 
     procedure destroy (actor : inout actor_t);
     procedure reset_messenger;
 
     impure function num_of_actors return natural;
+    impure function get_all_actors return actor_vec_t;
     impure function is_deferred(actor : actor_t) return boolean;
     impure function num_of_deferred_creations return natural;
     impure function unknown_actor (actor   : actor_t) return boolean;
@@ -421,6 +421,22 @@ package body com_messenger_pkg is
 
     return n_actors;
   end;
+
+  impure function get_all_actors return actor_vec_t is
+    constant n_actors : natural := num_of_actors;
+    variable result : actor_vec_t(0 to n_actors - 1);
+    variable idx : natural := 0;
+  begin
+    for i in actors'range loop
+      if actors(i).actor /= null_actor_c then
+        result(idx) := actors(i).actor;
+        idx := idx + 1;
+      end if;
+    end loop;
+
+    return result;
+  end;
+
 
   impure function is_deferred(actor : actor_t) return boolean is
   begin
