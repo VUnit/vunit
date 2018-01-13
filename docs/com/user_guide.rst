@@ -509,7 +509,7 @@ When there are messages in the inbox you can get the oldest with
 
 .. code-block:: vhdl
 
-  get_message(my_actor);
+  get_message(net, my_actor, msg);
 
 It's also possible to wait for a reply with a timeout.
 
@@ -517,7 +517,7 @@ It's also possible to wait for a reply with a timeout.
 
   wait_for_reply(net, request_msg, status, timeout => 10 ns);
   if status = ok then
-    get_reply(request_msg, reply_msg);
+    get_reply(net, request_msg, reply_msg);
   end if;
 
 

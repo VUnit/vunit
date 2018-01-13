@@ -24,7 +24,7 @@ end entity tb_com;
 architecture test_fixture of tb_com is
   signal hello_world_received, start_receiver, start_server,
     start_server2, start_server3, start_server4, start_server5,
-    start_subscribers, start_publishers : boolean := false;
+    start_server6, start_subscribers, start_publishers : boolean := false;
   signal hello_subscriber_received                     : std_logic_vector(1 to 2) := "ZZ";
   signal start_limited_inbox, limited_inbox_actor_done : boolean                  := false;
   signal start_limited_inbox_subscriber                : boolean                  := false;
@@ -49,6 +49,7 @@ begin
     variable mailbox_state                                                 : mailbox_state_t;
     variable l                                                             : line;
     variable messenger_state                                               : messenger_state_t;
+
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -297,7 +298,7 @@ begin
         send(net, self, msg);
         wait_for_message(net, self, status, 0 ns);
         check(status = ok, "Expected ok status");
-        msg2 := get_message(self);
+        get_message(net, self, msg2);
         check(msg2.status = ok, "Expected no problems with receive");
         check_equal(pop_string(msg2), "hello again");
         check(msg2.sender = self, "Expected message from myself");
@@ -389,7 +390,8 @@ begin
         check(status = ok, "Expected ok status");
         check_true(has_message(actor));
         check_false(has_message(actor2));
-        check_equal(pop_string(get_message(actor)), "To actor");
+        get_message(net, actor, msg);
+        check_equal(pop_string(msg), "To actor");
         msg    := new_msg;
         push_string(msg, "To actor2");
         send(net, actor2, msg);
@@ -397,7 +399,8 @@ begin
         check(status = ok, "Expected ok status");
         check_true(has_message(actor2));
         check_false(has_message(actor));
-        check_equal(pop_string(get_message(actor2)), "To actor2");
+        get_message(net, actor2, msg);
+        check_equal(pop_string(msg), "To actor2");
       elsif run("Test sending to several actors") then
         actor_vec := (new_actor, new_actor, new_actor);
         for n in 0 to 2 loop
@@ -452,6 +455,27 @@ begin
         receive(net, actor, msg);
         check(sender(msg) = null_actor_c);
         check(receiver(msg) = actor);
+      elsif run("Test that get_message will wake up sender blocking on full inbox") then
+        actor := new_actor("actor", 1);
+        start_server6 <= true;
+        wait for 1 ns;
+        server       := find("server6");
+
+        request_msg  := new_msg(actor);
+        push_string(request_msg, "request1");
+        send(net, server, request_msg);
+
+        request_msg2  := new_msg(actor);
+        push_string(request_msg2, "request2");
+        send(net, server, request_msg2);
+
+        wait_for_message(net, actor, status);
+        get_message(net, actor, reply_msg);
+        check_equal(pop_string(reply_msg), "reply to request1");
+
+        wait_for_message(net, actor, status);
+        get_message(net, actor, reply_msg);
+        check_equal(pop_string(reply_msg), "reply to request2");
 
       -- Publish, subscribe, and unsubscribe
       elsif run("Test that an actor can publish messages to multiple subscribers") then
@@ -725,7 +749,7 @@ begin
         push_string(request_msg, "request3");
         send(net, server, request_msg);
         wait_for_reply(net, request_msg, status);
-        get_reply(request_msg, reply_msg);
+        get_reply(net, request_msg, reply_msg);
         check_equal(pop_string(reply_msg), "reply3");
 
         t_start     := now;
@@ -733,8 +757,35 @@ begin
         push_string(request_msg, "request4");
         send(net, server, request_msg);
         wait_for_reply(net, request_msg, status);
-        get_reply(request_msg, reply_msg);
+        get_reply(net, request_msg, reply_msg);
         check_equal(pop_string(reply_msg), "reply4");
+      elsif run("Test waiting and getting a reply out-of-order") then
+        start_server2 <= true;
+        server        := find("server2");
+
+        request_msg  := new_msg(self);
+        push_string(request_msg, "request1");
+        send(net, server, request_msg);
+        request_msg2 := new_msg(self);
+        push_string(request_msg2, "request2");
+        send(net, server, request_msg2);
+        request_msg3 := new_msg(self);
+        push_string(request_msg3, "request3");
+        send(net, server, request_msg3);
+
+        wait_for_reply(net, request_msg, status);
+        check(status = ok);
+        wait_for_reply(net, request_msg2, status);
+        check(status = ok);
+        wait_for_reply(net, request_msg3, status);
+        check(status = ok);
+
+        get_reply(net, request_msg2, reply_msg);
+        check_equal(pop_string(reply_msg), "reply2");
+        get_reply(net, request_msg, reply_msg);
+        check_false(pop_boolean(reply_msg));
+        get_reply(net, request_msg3, reply_msg);
+        check(pop_boolean(reply_msg));
       elsif run("Test that an anonymous request can be made") then
         start_server5 <= true;
         server        := find("server5");
@@ -760,6 +811,26 @@ begin
         send(net, server, request_msg);
         receive_reply(net, request_msg, reply_msg);
         check_equal(pop_string(reply_msg), "reply3");
+
+      elsif run("Test that get_reply will wake up sender blocking on full inbox") then
+        actor := new_actor("actor", 1);
+        start_server6 <= true;
+        wait for 1 ns;
+        server       := find("server6");
+
+        request_msg  := new_msg(actor);
+        push_string(request_msg, "request1");
+        send(net, server, request_msg);
+
+        request_msg2  := new_msg(actor);
+        push_string(request_msg2, "request2");
+        send(net, server, request_msg2);
+
+        receive_reply(net, request_msg, reply_msg);
+        check_equal(pop_string(reply_msg), "reply to request1");
+
+        receive_reply(net, request_msg2, reply_msg);
+        check_equal(pop_string(reply_msg), "reply to request2");
 
       -- Timeout
       elsif run("Test that timeout on receive leads to an error") then
@@ -1245,6 +1316,20 @@ begin
 
     wait;
   end process server5;
+
+  server6 : process is
+    variable self                   : actor_t;
+    variable request_msg, reply_msg : msg_t;
+  begin
+    wait until start_server6;
+    self := new_actor("server6");
+    loop
+      receive(net, self, request_msg);
+      reply_msg := new_msg;
+      push_string(reply_msg, "reply to " & pop_string(request_msg));
+      reply(net, request_msg, reply_msg);
+    end loop;
+  end process server6;
 
   limited_inbox_actor : process is
     variable self : actor_t;

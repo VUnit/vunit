@@ -126,7 +126,8 @@ begin
         wait_for_message(net, my_actor, status, timeout => 10 ns);
         check(status = ok, result("for status = ok when a message has been sent"));
         check(has_message(my_actor), result("for presence of messages when a message has been sent"));
-        check_equal(pop_string(get_message(my_actor)), "hello");
+        get_message(net, my_actor, msg);
+        check_equal(pop_string(msg), "hello");
 
       elsif run("Test actor with multiple channels (actors)") then
         msg := new_msg;
@@ -183,12 +184,14 @@ begin
 
   multiple_channel_process : process is
     variable status : com_status_t;
+    variable msg : msg_t;
   begin
     wait_for_message(net, channels, status);
     if status = ok then
       for i in channels'range loop
         if has_message(channels(i)) then
-          info("Received " & pop_string(get_message(channels(i))) & " on " & name(channels(i)));
+          get_message(net, channels(i), msg);
+          info("Received " & pop_string(msg) & " on " & name(channels(i)));
         end if;
       end loop;
     end if;

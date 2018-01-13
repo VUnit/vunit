@@ -81,6 +81,14 @@ package com_types_pkg is
   type msg_vec_t is array (natural range <>) of msg_t;
   type msg_vec_ptr_t is access msg_vec_t;
 
+  constant null_msg_c : msg_t := (
+    id => no_message_id_c,
+    status => null_message_error,
+    sender => null_actor_c,
+    receiver => null_actor_c,
+    request_id => no_message_id_c,
+    data => null_queue);
+
   -- A subscriber can subscribe on three different types of traffic:
   --
   -- published - Messages published by publisher

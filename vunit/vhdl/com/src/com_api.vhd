@@ -386,10 +386,13 @@ package com_pkg is
     constant timeout     : in    time := max_timeout_c);
 
   -- Get oldest message from receiver inbox. Runtime error if inbox is empty.
-  impure function get_message (receiver : actor_t) return msg_t;
+  procedure get_message (signal net : inout network_t; receiver : actor_t; variable msg : inout msg_t);
 
   -- Get reply message to request_msg. Runtime error if reply message isn't available.
-  procedure get_reply (variable request_msg : inout msg_t; variable reply_msg : inout msg_t);
+  procedure get_reply (
+    signal net           : inout network_t;
+    variable request_msg : inout msg_t;
+    variable reply_msg : inout msg_t);
 
   -----------------------------------------------------------------------------
   -- Subscriptions

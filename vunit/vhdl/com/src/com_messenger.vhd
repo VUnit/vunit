@@ -100,8 +100,15 @@ package com_messenger_pkg is
       actor      : actor_t;
       position   : natural      := 0;
       mailbox_id : mailbox_id_t := inbox) return message_id_t;
+    impure function get_all_but_payload (
+      actor      : actor_t;
+      position   : natural      := 0;
+      mailbox_id : mailbox_id_t := inbox) return msg_t;
 
-    procedure delete_first_envelope (actor : actor_t);
+    procedure delete_envelope (
+      actor      : actor_t;
+      position   : natural      := 0;
+      mailbox_id : mailbox_id_t := inbox);
 
     impure function has_reply_stash_message (
       actor      : actor_t;
@@ -112,6 +119,11 @@ package com_messenger_pkg is
     impure function get_reply_stash_message_receiver (actor     : actor_t) return actor_t;
     impure function get_reply_stash_message_id (actor         : actor_t) return message_id_t;
     impure function get_reply_stash_message_request_id (actor : actor_t) return message_id_t;
+    impure function find_reply_message (
+      actor      : actor_t;
+      request_id : message_id_t;
+      mailbox_id : mailbox_id_t := inbox)
+      return integer;
     impure function find_and_stash_reply_message (
       actor      : actor_t;
       request_id : message_id_t;
@@ -703,32 +715,33 @@ package body com_messenger_pkg is
     return false;
   end function has_messages;
 
-  impure function get_envelope(
+  procedure get_envelope(
     actor      : actor_t;
     position   : natural;
-    mailbox_id : mailbox_id_t) return envelope_ptr_t is
-    variable envelope : envelope_ptr_t;
+    mailbox_id : mailbox_id_t;
+    variable mailbox : inout mailbox_ptr_t;
+    variable envelope : inout envelope_ptr_t;
+    variable previous_envelope : inout envelope_ptr_t) is
   begin
-    if mailbox_id = inbox then
-      envelope := actors(actor.id).inbox.first_envelope;
-    else
-      envelope := actors(actor.id).outbox.first_envelope;
-    end if;
+    mailbox  := actors(actor.id).inbox when mailbox_id = inbox else actors(actor.id).outbox;
+    envelope := mailbox.first_envelope;
+    previous_envelope := null;
 
     for i in 1 to position loop
       exit when envelope = null;
+      previous_envelope := envelope;
       envelope := envelope.next_envelope;
     end loop;
-
-    return envelope;
   end;
 
   impure function get_payload (
     actor      : actor_t;
     position   : natural      := 0;
     mailbox_id : mailbox_id_t := inbox) return string is
-    variable envelope : envelope_ptr_t := get_envelope(actor, position, mailbox_id);
+    variable envelope, previous_envelope : envelope_ptr_t;
+    variable mailbox : mailbox_ptr_t;
   begin
+    get_envelope(actor, position, mailbox_id, mailbox, envelope, previous_envelope);
     if envelope /= null then
       return envelope.message.payload.all;
     else
@@ -740,8 +753,10 @@ package body com_messenger_pkg is
     actor      : actor_t;
     position   : natural      := 0;
     mailbox_id : mailbox_id_t := inbox) return actor_t is
-    variable envelope : envelope_ptr_t := get_envelope(actor, position, mailbox_id);
+    variable envelope, previous_envelope : envelope_ptr_t;
+    variable mailbox : mailbox_ptr_t;
   begin
+    get_envelope(actor, position, mailbox_id, mailbox, envelope, previous_envelope);
     if envelope /= null then
       return envelope.message.sender;
     else
@@ -753,8 +768,10 @@ package body com_messenger_pkg is
     actor      : actor_t;
     position   : natural      := 0;
     mailbox_id : mailbox_id_t := inbox) return actor_t is
-    variable envelope : envelope_ptr_t := get_envelope(actor, position, mailbox_id);
+    variable envelope, previous_envelope : envelope_ptr_t;
+    variable mailbox : mailbox_ptr_t;
   begin
+    get_envelope(actor, position, mailbox_id, mailbox, envelope, previous_envelope);
     if envelope /= null then
       return envelope.message.receiver;
     else
@@ -766,8 +783,10 @@ package body com_messenger_pkg is
     actor      : actor_t;
     position   : natural      := 0;
     mailbox_id : mailbox_id_t := inbox) return message_id_t is
-    variable envelope : envelope_ptr_t := get_envelope(actor, position, mailbox_id);
+    variable envelope, previous_envelope : envelope_ptr_t;
+    variable mailbox : mailbox_ptr_t;
   begin
+    get_envelope(actor, position, mailbox_id, mailbox, envelope, previous_envelope);
     if envelope /= null then
       return envelope.message.id;
     else
@@ -779,8 +798,10 @@ package body com_messenger_pkg is
     actor      : actor_t;
     position   : natural      := 0;
     mailbox_id : mailbox_id_t := inbox) return message_id_t is
-    variable envelope : envelope_ptr_t := get_envelope(actor, position, mailbox_id);
+    variable envelope, previous_envelope : envelope_ptr_t;
+    variable mailbox : mailbox_ptr_t;
   begin
+    get_envelope(actor, position, mailbox_id, mailbox, envelope, previous_envelope);
     if envelope /= null then
       return envelope.message.request_id;
     else
@@ -788,17 +809,53 @@ package body com_messenger_pkg is
     end if;
   end;
 
-  procedure delete_first_envelope (actor : actor_t) is
-    variable first_envelope : envelope_ptr_t := actors(actor.id).inbox.first_envelope;
+  impure function get_all_but_payload (
+    actor      : actor_t;
+    position   : natural      := 0;
+    mailbox_id : mailbox_id_t := inbox) return msg_t is
+    variable envelope, previous_envelope : envelope_ptr_t;
+    variable mailbox : mailbox_ptr_t;
+    variable msg : msg_t;
   begin
-    if first_envelope /= null then
-      deallocate(first_envelope.message.payload);
-      actors(actor.id).inbox.first_envelope := first_envelope.next_envelope;
-      deallocate_envelope(first_envelope);
-      if actors(actor.id).inbox.first_envelope = null then
-        actors(actor.id).inbox.last_envelope := null;
+    get_envelope(actor, position, mailbox_id, mailbox, envelope, previous_envelope);
+    if envelope /= null then
+      msg.id := envelope.message.id;
+      msg.status := envelope.message.status;
+      msg.sender := envelope.message.sender;
+      msg.receiver := envelope.message.receiver;
+      msg.request_id := envelope.message.request_id;
+      msg.data := null_queue;
+    else
+      msg := null_msg_c;
+    end if;
+
+    return msg;
+  end;
+
+  procedure delete_envelope (
+    actor      : actor_t;
+    position   : natural      := 0;
+    mailbox_id : mailbox_id_t := inbox) is
+    variable envelope, previous_envelope : envelope_ptr_t;
+    variable mailbox : mailbox_ptr_t;
+  begin
+    get_envelope(actor, position, mailbox_id, mailbox, envelope, previous_envelope);
+
+    if envelope /= null then
+      deallocate(envelope.message.payload);
+
+      if previous_envelope /= null then
+        previous_envelope.next_envelope := envelope.next_envelope;
+      else
+        mailbox.first_envelope := envelope.next_envelope;
       end if;
-      actors(actor.id).inbox.num_of_messages := actors(actor.id).inbox.num_of_messages - 1;
+
+      if mailbox.first_envelope = null then
+        mailbox.last_envelope := null;
+      end if;
+
+      deallocate_envelope(envelope);
+      mailbox.num_of_messages := mailbox.num_of_messages - 1;
     end if;
   end;
 
@@ -866,6 +923,49 @@ package body com_messenger_pkg is
     end if;
   end;
 
+  procedure find_reply_message (
+    actor      : actor_t;
+    request_id : message_id_t;
+    mailbox_id : mailbox_id_t;
+    variable mailbox : inout mailbox_ptr_t;
+    variable envelope : inout envelope_ptr_t;
+    variable previous_envelope : out envelope_ptr_t;
+    variable position : out natural) is
+  begin
+    mailbox  := actors(actor.id).inbox when mailbox_id = inbox else actors(actor.id).outbox;
+    envelope := mailbox.first_envelope;
+    previous_envelope := null;
+    position := 0;
+
+    while envelope /= null loop
+      if envelope.message.request_id = request_id then
+        return;
+      end if;
+      previous_envelope := envelope;
+      envelope := envelope.next_envelope;
+      position := position + 1;
+    end loop;
+  end;
+
+  impure function find_reply_message (
+    actor      : actor_t;
+    request_id : message_id_t;
+    mailbox_id : mailbox_id_t := inbox)
+    return integer is
+    variable envelope          : envelope_ptr_t;
+    variable previous_envelope : envelope_ptr_t := null;
+    variable mailbox           : mailbox_ptr_t;
+    variable position : natural;
+  begin
+    find_reply_message(actor, request_id, mailbox_id, mailbox, envelope, previous_envelope, position);
+
+    if envelope /= null then
+      return position;
+    else
+      return -1;
+    end if;
+  end;
+
   impure function find_and_stash_reply_message (
     actor      : actor_t;
     request_id : message_id_t;
@@ -874,27 +974,27 @@ package body com_messenger_pkg is
     variable envelope          : envelope_ptr_t;
     variable previous_envelope : envelope_ptr_t := null;
     variable mailbox           : mailbox_ptr_t;
+    variable position : natural;
   begin
-    mailbox  := actors(actor.id).inbox when mailbox_id = inbox else actors(actor.id).outbox;
-    envelope := mailbox.first_envelope;
+    find_reply_message(actor, request_id, mailbox_id, mailbox, envelope, previous_envelope, position);
 
-    while envelope /= null loop
-      if envelope.message.request_id = request_id then
-        actors(actor.id).reply_stash := envelope;
-        if previous_envelope /= null then
-          previous_envelope.next_envelope := envelope.next_envelope;
-        else
-          mailbox.first_envelope := envelope.next_envelope;
-        end if;
-        if mailbox.first_envelope = null then
-          mailbox.last_envelope := null;
-        end if;
-        mailbox.num_of_messages := mailbox.num_of_messages - 1;
-        return true;
+    if envelope /= null then
+      actors(actor.id).reply_stash := envelope;
+
+      if previous_envelope /= null then
+        previous_envelope.next_envelope := envelope.next_envelope;
+      else
+        mailbox.first_envelope := envelope.next_envelope;
       end if;
-      previous_envelope := envelope;
-      envelope          := envelope.next_envelope;
-    end loop;
+
+      if mailbox.first_envelope = null then
+        mailbox.last_envelope := null;
+      end if;
+
+      mailbox.num_of_messages := mailbox.num_of_messages - 1;
+
+      return true;
+    end if;
 
     return false;
   end function find_and_stash_reply_message;

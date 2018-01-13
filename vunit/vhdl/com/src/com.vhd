@@ -33,8 +33,8 @@ package body com_pkg is
   -- Handling of actors
   -----------------------------------------------------------------------------
   impure function new_actor (
-    name : string := "";
-    inbox_size : positive := positive'high;
+    name        : string   := "";
+    inbox_size  : positive := positive'high;
     outbox_size : positive := positive'high
     ) return actor_t is
   begin
@@ -516,7 +516,7 @@ package body com_pkg is
     variable msg       : inout msg_t;
     constant timeout   : in    time := max_timeout_c) is
     variable msg_to_send : msg_t;
-    variable t_start : time;
+    variable t_start     : time;
   begin
     if receivers'length = 0 then
       delete(msg);
@@ -548,9 +548,8 @@ package body com_pkg is
     constant receivers : in    actor_vec_t;
     variable msg       : inout msg_t;
     constant timeout   : in    time := max_timeout_c) is
-    variable status                  : com_status_t;
-    variable started_with_full_inbox : boolean;
-    variable receiver                : actor_t;
+    variable status   : com_status_t;
+    variable receiver : actor_t;
   begin
     delete(msg);
     wait_for_message(net, receivers, status, timeout);
@@ -561,15 +560,10 @@ package body com_pkg is
     for i in receivers'range loop
       receiver := receivers(i);
       if has_message(receiver) then
-        started_with_full_inbox := messenger.is_full(receiver, inbox);
-        msg                     := get_message(receiver);
+        get_message(net, receiver, msg);
         exit;
       end if;
     end loop;
-
-    if started_with_full_inbox or messenger.has_subscribers(receiver, inbound) then
-      notify(net);
-    end if;
   end;
 
   procedure reply (
@@ -601,19 +595,10 @@ package body com_pkg is
   begin
     delete(reply_msg);
 
-    source_actor := request_msg.sender when request_msg.sender /= null_actor_c else request_msg.receiver;
-    mailbox      := inbox              when request_msg.sender /= null_actor_c else outbox;
-
-    wait_for_reply_stash_message(net, source_actor, mailbox, request_msg.id, status, timeout);
+    wait_for_reply(net, request_msg, status, timeout);
     check(no_error_status(status), status);
-    message              := get_reply_stash_message(source_actor);
-    reply_msg.id         := message.id;
-    reply_msg.status     := message.status;
-    reply_msg.sender     := message.sender;
-    reply_msg.receiver   := message.receiver;
-    reply_msg.request_id := message.request_id;
-    reply_msg.data       := decode(message.payload.all);
-    delete(message);
+
+    get_reply(net, request_msg, reply_msg);
   end;
 
   procedure publish (
@@ -639,12 +624,8 @@ package body com_pkg is
       return msg;
     end if;
 
-    msg.status     := ok;
-    msg.id         := messenger.get_id(actor, position, mailbox_id);
-    msg.request_id := messenger.get_request_id(actor, position, mailbox_id);
-    msg.sender     := messenger.get_sender(actor, position, mailbox_id);
-    msg.receiver   := messenger.get_receiver(actor, position, mailbox_id);
-    msg.data       := decode(messenger.get_payload(actor, position, mailbox_id));
+    msg      := messenger.get_all_but_payload(actor, position, mailbox_id);
+    msg.data := decode(messenger.get_payload(actor, position, mailbox_id));
 
     return msg;
   end;
@@ -686,7 +667,7 @@ package body com_pkg is
     variable reply_msg : msg_t;
   begin
     reply_msg := new_msg;
-    push_boolean(reply_msg.data, positive_ack);
+    push_boolean(reply_msg, positive_ack);
     reply(net, request_msg, reply_msg, timeout);
   end;
 
@@ -698,7 +679,7 @@ package body com_pkg is
     variable reply_msg : msg_t;
   begin
     receive_reply(net, request_msg, reply_msg, timeout);
-    positive_ack := pop_boolean(reply_msg.data);
+    positive_ack := pop_boolean(reply_msg);
     delete(reply_msg);
   end;
 
@@ -741,6 +722,51 @@ package body com_pkg is
     return messenger.has_messages(actor);
   end function has_message;
 
+  procedure get_message (
+    signal net   : inout network_t;
+    actor        :       actor_t;
+    position     :       natural;
+    mailbox_id   :       mailbox_id_t;
+    variable msg : inout msg_t) is
+    variable started_with_full_mailbox : boolean;
+  begin
+    started_with_full_mailbox := messenger.is_full(actor, mailbox_id);
+
+    msg      := messenger.get_all_but_payload(actor, position, mailbox_id);
+    msg.data := decode(messenger.get_payload(actor, position, mailbox_id));
+    messenger.delete_envelope(actor, position, mailbox_id);
+
+    if started_with_full_mailbox then
+      notify(net);
+    end if;
+  end;
+
+  procedure get_message (signal net : inout network_t; receiver : actor_t; variable msg : inout msg_t) is
+  begin
+    check(messenger.has_messages(receiver), null_message_error);
+    get_message(net, receiver, 0, inbox, msg);
+  end;
+
+  procedure wait_for_reply_message (
+    signal net          : inout network_t;
+    constant actor      : in    actor_t;
+    constant mailbox_id : in    mailbox_id_t := inbox;
+    constant request_id : in    message_id_t;
+    variable status     : out   com_status_t;
+    constant timeout    : in    time         := max_timeout_c) is
+
+  begin
+    check(not messenger.deferred(actor), deferred_receiver_error);
+
+    status := ok;
+    if messenger.find_reply_message(actor, request_id, mailbox_id) = -1 then
+      wait on net until messenger.find_reply_message(actor, request_id, mailbox_id) /= -1 for timeout;
+      if messenger.find_reply_message(actor, request_id, mailbox_id) = -1 then
+        status := work.com_types_pkg.timeout;
+      end if;
+    end if;
+  end procedure;
+
   procedure wait_for_reply (
     signal net           : inout network_t;
     variable request_msg : inout msg_t;
@@ -752,41 +778,24 @@ package body com_pkg is
     source_actor := request_msg.sender when request_msg.sender /= null_actor_c else request_msg.receiver;
     mailbox      := inbox              when request_msg.sender /= null_actor_c else outbox;
 
-    wait_for_reply_stash_message(net, source_actor, mailbox, request_msg.id, status, timeout);
+    wait_for_reply_message(net, source_actor, mailbox, request_msg.id, status, timeout);
   end;
 
-  impure function get_message (receiver : actor_t) return msg_t is
-    variable msg : msg_t;
-  begin
-    check(messenger.has_messages(receiver), null_message_error);
-
-    msg.status     := ok;
-    msg.id         := messenger.get_id(receiver);
-    msg.request_id := messenger.get_request_id(receiver);
-    msg.sender     := messenger.get_sender(receiver);
-    msg.receiver   := messenger.get_receiver(receiver);
-    msg.data       := decode(messenger.get_payload(receiver));
-    messenger.delete_first_envelope(receiver);
-
-    return msg;
-  end function get_message;
-
-  procedure get_reply (variable request_msg : inout msg_t; variable reply_msg : inout msg_t) is
+  procedure get_reply (
+    signal net           : inout network_t;
+    variable request_msg : inout msg_t;
+    variable reply_msg   : inout msg_t) is
     variable source_actor : actor_t;
-    variable message      : message_ptr_t;
+    variable mailbox_id   : mailbox_id_t;
+    variable position     : integer;
   begin
     source_actor := request_msg.sender when request_msg.sender /= null_actor_c else request_msg.receiver;
+    mailbox_id   := inbox              when request_msg.sender /= null_actor_c else outbox;
+    position     := messenger.find_reply_message(source_actor, request_msg.id, mailbox_id);
 
-    check(messenger.has_reply_stash_message(source_actor), null_message_error);
-    message              := get_reply_stash_message(source_actor);
-    check(message.request_id = request_msg.id, unknown_request_id_error);
-    reply_msg.id         := message.id;
-    reply_msg.status     := message.status;
-    reply_msg.sender     := message.sender;
-    reply_msg.receiver   := message.receiver;
-    reply_msg.request_id := message.request_id;
-    reply_msg.data       := decode(message.payload.all);
-    delete(message);
+    check(position /= -1, null_message_error);
+
+    get_message(net, source_actor, position, mailbox_id, reply_msg);
   end;
 
   -----------------------------------------------------------------------------
@@ -831,19 +840,19 @@ package body com_pkg is
   impure function get_mailbox_state(actor : actor_t; mailbox_id : mailbox_id_t := inbox) return mailbox_state_t is
     variable state : mailbox_state_t;
   begin
-    state.id := mailbox_id;
-    state.size := mailbox_size(actor, mailbox_id);
+    state.id       := mailbox_id;
+    state.size     := mailbox_size(actor, mailbox_id);
     state.messages := peek_all_messages(actor, mailbox_id);
 
     return state;
   end;
 
   impure function get_mailbox_state_string (
-    actor : actor_t;
+    actor      : actor_t;
     mailbox_id : mailbox_id_t := inbox;
-    indent : string := "") return string is
+    indent     : string       := "") return string is
     variable messages : msg_vec_ptr_t := peek_all_messages(actor, mailbox_id);
-    variable l : line;
+    variable l        : line;
   begin
     write(l, indent & "Mailbox: " & mailbox_id_t'image(mailbox_id) & LF);
     write(l, indent & "  Size: " & to_string(mailbox_size(actor, mailbox_id)) & LF);
@@ -883,18 +892,18 @@ package body com_pkg is
     variable state : actor_state_t;
   begin
     write(state.name, name(actor));
-    state.is_deferred := is_deferred(actor);
-    state.inbox := get_mailbox_state(actor, inbox);
-    state.outbox := get_mailbox_state(actor, outbox);
+    state.is_deferred   := is_deferred(actor);
+    state.inbox         := get_mailbox_state(actor, inbox);
+    state.outbox        := get_mailbox_state(actor, outbox);
     state.subscriptions := get_subscriptions(actor);
-    state.subscribers := get_subscribers(actor);
+    state.subscribers   := get_subscribers(actor);
 
     return state;
   end;
 
   impure function get_actor_state_string (actor : actor_t; indent : string := "") return string is
-    variable state : actor_state_t := get_actor_state(actor);
-    variable l : line;
+    variable state        : actor_state_t := get_actor_state(actor);
+    variable l            : line;
     variable traffic_type : subscription_traffic_type_t;
   begin
     write(l, indent & "Name: " & state.name.all & LF);
@@ -935,11 +944,11 @@ package body com_pkg is
   end;
 
   impure function get_messenger_state return messenger_state_t is
-    variable state : messenger_state_t;
-    constant actors : actor_vec_t := messenger.get_all_actors;
-    constant n_deferred : natural := messenger.num_of_deferred_creations;
-    constant n_active : natural := actors'length - n_deferred;
-    variable active_idx, deferred_idx : natural := 0;
+    variable state                    : messenger_state_t;
+    constant actors                   : actor_vec_t := messenger.get_all_actors;
+    constant n_deferred               : natural     := messenger.num_of_deferred_creations;
+    constant n_active                 : natural     := actors'length - n_deferred;
+    variable active_idx, deferred_idx : natural     := 0;
   begin
     if n_active > 0 then
       state.active_actors := new actor_state_vec_t(0 to n_active - 1);
@@ -952,10 +961,10 @@ package body com_pkg is
     for i in actors'range loop
       if is_deferred(actors(i)) then
         state.deferred_actors(deferred_idx) := get_actor_state(actors(i));
-        deferred_idx := deferred_idx + 1;
+        deferred_idx                        := deferred_idx + 1;
       else
         state.active_actors(active_idx) := get_actor_state(actors(i));
-        active_idx := active_idx + 1;
+        active_idx                      := active_idx + 1;
       end if;
     end loop;
 
@@ -963,9 +972,9 @@ package body com_pkg is
   end;
 
   impure function get_messenger_state_string(indent : string := "") return string is
-    constant actors : actor_vec_t := messenger.get_all_actors;
+    constant actors                            : actor_vec_t := messenger.get_all_actors;
     variable l, active_actors, deferred_actors : line;
-    variable first_deferred : boolean := true;
+    variable first_deferred                    : boolean     := true;
   begin
     for i in actors'range loop
       if is_deferred(actors(i)) then
