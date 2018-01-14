@@ -661,14 +661,22 @@ Subscribing to messages actively being published is the classic form of the publ
 while subscriptions on inbound or outbound traffic is more like eavesdropping. This has implications that you need to
 be aware of:
 
-* When receiving a message that has been published, a call to ``sender`` or ``receiver`` on that message will return
-the publisher and subscriber actors respectively. However, when receiving a message resulting from an inbound or
-outbound subscription the two functions will return the sender and the receiver for the original message transaction.
-* The subscriber of inbound and outbound traffic will receive all messages, not only those that would have been
-published if the decision was more active. For example, if someone sends a ``wait_for_idle`` transaction to the driver
-it will also be sent to the subscriber which will act upon it "thinking" it was from the test sequencer. This wouldn't
-be a problem if we had a monitor for the input interface only publishing add messages. It's still possible to fix
-though, for example by only handling ``wait_for_idle`` transactions aimed at the master channel.
+* When receiving a message that has been published, a call to
+  ``sender`` or ``receiver`` on that message will return the publisher
+  and subscriber actors respectively. However, when receiving a
+  message resulting from an inbound or outbound subscription the two
+  functions will return the sender and the receiver for the original
+  message transaction.
+
+* The subscriber of inbound and outbound traffic will receive all
+  messages, not only those that would have been published if the
+  decision was more active. For example, if someone sends a
+  ``wait_for_idle`` transaction to the driver it will also be sent to
+  the subscriber which will act upon it "thinking" it was from the
+  test sequencer. This wouldn't be a problem if we had a monitor for
+  the input interface only publishing add messages. It's still
+  possible to fix though, for example by only handling
+  ``wait_for_idle`` transactions aimed at the master channel.
 
 .. code-block:: vhdl
 
@@ -676,9 +684,11 @@ though, for example by only handling ``wait_for_idle`` transactions aimed at the
         handle_wait_until_idle(net, msg_type, master_msg);
       end if;
 
-* Since you can subscribe on inbound traffic you can also subscribe to the inbound traffic of a subscriber. This may
-not have great practical value but can, if misused, create an infinite loop of subscriptions which will hang the
-simulation.
+* Since you can subscribe on inbound traffic you can also subscribe to
+  the inbound traffic of a subscriber. This may not have great
+  practical value but can, if misused, create an infinite loop of
+  subscriptions which will hang the simulation.
+
 * A subscription on the outbound traffic of an actor won't pick up messages sent anonymously.
 * A subscription on the inbound traffic of an actor won't pick up replies to an anonymously request.
 
