@@ -9,7 +9,6 @@ library vunit_lib;
 context vunit_lib.vunit_context;
 context work.com_context;
 use work.sync_pkg.all;
-use work.msg_types_pkg.all;
 
 entity tb_sync_pkg is
   generic (runner_cfg : string);

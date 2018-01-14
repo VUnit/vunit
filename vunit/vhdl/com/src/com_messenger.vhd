@@ -12,11 +12,12 @@ use work.com_support_pkg.all;
 use work.queue_pkg.all;
 use work.queue_pool_pkg.all;
 use work.codec_pkg.all;
+use work.logger_pkg.all;
+use work.log_levels_pkg.all;
 
 use std.textio.all;
 
 package com_messenger_pkg is
-  constant queue_pool : queue_pool_t := new_queue_pool;
   type subscription_traffic_types_t is array (natural range <>) of subscription_traffic_type_t;
 
   type messenger_t is protected
@@ -143,6 +144,7 @@ package com_messenger_pkg is
     ---------------------------------------------------------------------------
     -- Debugging
     ---------------------------------------------------------------------------
+    impure function to_string(msg : msg_t) return string;
     impure function get_subscriptions(subscriber : actor_t) return subscription_vec_t;
     impure function get_subscribers(publisher : actor_t) return subscription_vec_t;
 
@@ -217,7 +219,8 @@ package body com_messenger_pkg is
         subscribers       => (null, null, null));  --
     variable envelope_recycle_bin : envelope_ptr_array(1 to 1000);
     variable n_recycled_envelopes : natural      := 0;
-    variable null_message         : message_t    := (0, ok, null_actor_c, null_actor_c, no_message_id_c, null);
+    variable null_message         : message_t    := (no_message_id_c, null_msg_type_c, ok, null_actor_c,
+                                                     null_actor_c, no_message_id_c, null);
     variable next_message_id      : message_id_t := no_message_id_c + 1;
     variable timeout_allowed      : boolean      := false;
     variable deprecated_allowed   : boolean      := false;
@@ -602,7 +605,39 @@ package body com_messenger_pkg is
     end loop;
   end;
 
+  impure function to_string(msg : msg_t) return string is
+    function id_to_string(id : message_id_t) return string is
+    begin
+      if id = no_message_id_c then
+        return "-";
+      else
+        return to_string(id);
+      end if;
+    end function;
 
+    impure function actor_to_string(actor : actor_t) return string is
+    begin
+      if actor = null_actor_c then
+        return "-";
+      else
+        return name(actor);
+      end if;
+    end function;
+
+    impure function msg_type_to_string (msg_type : msg_type_t) return string is
+    begin
+      if msg_type = null_msg_type_c then
+        return "-";
+      else
+        return name(msg_type);
+      end if;
+    end;
+
+  begin
+    return id_to_string(msg.id) & ":" & id_to_string(msg.request_id) & " " &
+      actor_to_string(msg.sender) & " -> " & actor_to_string(msg.receiver) &
+      " (" & msg_type_to_string(msg.msg_type) & ")";
+  end;
 
   procedure put_message (
     receiver   : actor_t;
@@ -611,10 +646,15 @@ package body com_messenger_pkg is
     variable envelope : envelope_ptr_t;
     variable data     : msg_data_t := copy(msg.data);
     variable mailbox  : mailbox_ptr_t;
+
   begin
+    if is_visible(com_logger, verbose) then
+      verbose(com_logger, "[" & to_string(msg) & "] => " & name(receiver) & " " & mailbox_id_t'image(mailbox_id));
+    end if;
 
     envelope                    := new_envelope;
     envelope.message.id         := msg.id;
+    envelope.message.msg_type   := msg.msg_type;
     envelope.message.sender     := msg.sender;
     envelope.message.receiver   := msg.receiver;
     envelope.message.request_id := msg.request_id;
@@ -820,6 +860,7 @@ package body com_messenger_pkg is
     get_envelope(actor, position, mailbox_id, mailbox, envelope, previous_envelope);
     if envelope /= null then
       msg.id := envelope.message.id;
+      msg.msg_type := envelope.message.msg_type;
       msg.status := envelope.message.status;
       msg.sender := envelope.message.sender;
       msg.receiver := envelope.message.receiver;
@@ -838,10 +879,20 @@ package body com_messenger_pkg is
     mailbox_id : mailbox_id_t := inbox) is
     variable envelope, previous_envelope : envelope_ptr_t;
     variable mailbox : mailbox_ptr_t;
+    variable msg : msg_t;
   begin
     get_envelope(actor, position, mailbox_id, mailbox, envelope, previous_envelope);
 
     if envelope /= null then
+      if is_visible(com_logger, verbose) then
+        msg.id := envelope.message.id;
+        msg.msg_type := envelope.message.msg_type;
+        msg.sender := envelope.message.sender;
+        msg.receiver := envelope.message.receiver;
+        msg.request_id := envelope.message.request_id;
+        verbose(com_logger, name(actor) & " " & mailbox_id_t'image(mailbox_id) & " => [" & to_string(msg) & "]");
+      end if;
+
       deallocate(envelope.message.payload);
 
       if previous_envelope /= null then

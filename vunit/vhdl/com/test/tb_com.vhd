@@ -202,7 +202,7 @@ begin
         delete(msg);
 
         check_equal(msg.id, no_message_id_c);
-        check(msg.status = ok);
+        check(msg.status = null_message_error);
         check(msg.sender = null_actor_c);
         check(msg.receiver = null_actor_c);
         check_equal(msg.request_id, no_message_id_c);
@@ -239,16 +239,17 @@ begin
         my_receiver := new_actor("my receiver");
 
         msg            := new_msg;
-        check_equal(to_string(msg), "-:- - -> -");
+        check_equal(to_string(msg), "-:- - -> - (-)");
         msg.id         := 1;
-        check_equal(to_string(msg), "1:- - -> -");
+        check_equal(to_string(msg), "1:- - -> - (-)");
         msg.sender     := my_sender;
-        check_equal(to_string(msg), "1:- my sender -> -");
+        check_equal(to_string(msg), "1:- my sender -> - (-)");
         msg.receiver   := my_receiver;
-        check_equal(to_string(msg), "1:- my sender -> my receiver");
+        check_equal(to_string(msg), "1:- my sender -> my receiver (-)");
         msg.request_id := 7;
-        check_equal(to_string(msg), "1:7 my sender -> my receiver");
-
+        check_equal(to_string(msg), "1:7 my sender -> my receiver (-)");
+        push_msg_type(msg, new_msg_type("msg type"));
+        check_equal(to_string(msg), "1:7 my sender -> my receiver (msg type)");
       -- Send and receive
       elsif run("Test that data ownership is lost at send") then
         msg := new_msg;
@@ -378,7 +379,8 @@ begin
         push_string(msg, "Third message");
         mock(com_logger);
         send(net, actor, msg, 9 ns);
-        check_only_log(com_logger, "FULL INBOX ERROR.", failure);
+        check_log(com_logger, "FULL INBOX ERROR.", failure);
+        check_only_log(com_logger, "[3:- - -> limited inbox (-)] => limited inbox inbox", verbose);
         unmock(com_logger);
       elsif run("Test that messages can be awaited from several actors") then
         actor  := new_actor;
@@ -425,8 +427,11 @@ begin
         send(net, actor_vec, msg, 10 ns);
         check_equal(now - t_start, 10 ns);
         check_log(com_logger, "FULL INBOX ERROR.", failure);
+        check_log(com_logger, "[4:- - ->  (-)] =>  inbox", verbose);
         check_log(com_logger, "FULL INBOX ERROR.", failure);
+        check_log(com_logger, "[5:- - ->  (-)] =>  inbox", verbose);
         check_log(com_logger, "FULL INBOX ERROR.", failure);
+        check_log(com_logger, "[6:- - ->  (-)] =>  inbox", verbose);
         unmock(com_logger);
       elsif run("Test receiving from several actors") then
         actor_vec := (others => new_actor);
@@ -669,7 +674,10 @@ begin
         push_string(msg, "hello subscriber");
         mock(com_logger);
         publish(net, self, msg, 8 ns);
-        check_only_log(com_logger, "FULL INBOX ERROR.", failure);
+        check_log(com_logger, "FULL INBOX ERROR.", failure);
+        check_only_log(com_logger,
+                       "[1:- test runner -> limited inbox subscriber (-)] => limited inbox subscriber inbox",
+                       verbose);
         unmock(com_logger);
       elsif run("Test that publishing to subscribers with full inboxes results passes if waiting") then
         start_limited_inbox_subscriber <= true;
@@ -1156,6 +1164,31 @@ begin
                     "Deferred actors:" & LF &
                     get_actor_state_string(actor3, "  ") & LF & LF &
                     get_actor_state_string(actor4, "  "));
+
+      elsif run("Test trace log") then
+        mock(com_logger);
+        my_sender := new_actor("sender");
+        my_receiver := new_actor("receiver");
+
+        msg := new_msg(my_sender);
+        push_msg_type(msg, new_msg_type("msg type"));
+        send(net, my_receiver, msg);
+        check_only_log(com_logger, "[1:- sender -> receiver (msg type)] => receiver inbox", verbose);
+        receive(net, my_receiver, msg);
+        check_only_log(com_logger, "receiver inbox => [1:- sender -> receiver (msg type)]", verbose);
+
+        request_msg := new_msg;
+        send(net, my_receiver, request_msg);
+        check_only_log(com_logger, "[2:- - -> receiver (-)] => receiver inbox", verbose);
+        receive(net, my_receiver, reply_msg);
+        check_only_log(com_logger, "receiver inbox => [2:- - -> receiver (-)]", verbose);
+
+        reply(net, request_msg, reply_msg);
+        check_only_log(com_logger, "[3:2 receiver -> - (-)] => receiver outbox", verbose);
+        receive_reply(net, request_msg, reply_msg);
+        check_only_log(com_logger, "receiver outbox => [3:2 receiver -> - (-)]", verbose);
+
+        unmock(com_logger);
 
       -- Deprecated APIs
       elsif run("Test that use of deprecated API leads to an error") then

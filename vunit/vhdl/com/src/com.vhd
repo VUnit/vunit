@@ -8,23 +8,19 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.math_complex.all;
-use ieee.numeric_bit.all;
-use ieee.numeric_std.all;
-use ieee.fixed_pkg.all;
-use ieee.float_pkg.all;
 
 context work.vunit_context;
 
 use work.queue_pkg.all;
 use work.queue_2008_pkg.all;
+use work.queue_pool_pkg.all;
 use work.integer_vector_ptr_pkg.all;
 use work.string_ptr_pkg.all;
 use work.codec_pkg.all;
 use work.com_support_pkg.all;
 use work.com_messenger_pkg.all;
 use work.com_common_pkg.all;
-use work.queue_pool_pkg.all;
+use work.logger_pkg.all;
 
 use std.textio.all;
 
@@ -91,360 +87,6 @@ package body com_pkg is
   procedure resize_mailbox (actor : actor_t; new_size : natural; mailbox_id : mailbox_id_t := inbox) is
   begin
     messenger.resize_mailbox(actor, new_size, mailbox_id);
-  end;
-
-  -----------------------------------------------------------------------------
-  -- Message related subprograms
-  -----------------------------------------------------------------------------
-  impure function new_msg (sender : actor_t := null_actor_c) return msg_t is
-    variable msg : msg_t;
-  begin
-    msg.sender := sender;
-    msg.data   := new_queue(queue_pool);
-    return msg;
-  end;
-
-  procedure delete (msg : inout msg_t) is
-  begin
-    msg.id         := no_message_id_c;
-    msg.status     := ok;
-    msg.sender     := null_actor_c;
-    msg.receiver   := null_actor_c;
-    msg.request_id := no_message_id_c;
-    recycle(queue_pool, msg.data);
-  end procedure delete;
-
-  impure function copy(msg : msg_t) return msg_t is
-    variable result : msg_t := msg;
-  begin
-    result.data := copy(msg.data);
-    return result;
-  end;
-
-  function sender(msg : msg_t) return actor_t is
-  begin
-    return msg.sender;
-  end;
-
-  function receiver(msg : msg_t) return actor_t is
-  begin
-    return msg.receiver;
-  end;
-
-  impure function to_string(msg : msg_t) return string is
-    function id_to_string(id : message_id_t) return string is
-    begin
-      if id = no_message_id_c then
-        return "-";
-      else
-        return to_string(id);
-      end if;
-    end function;
-    impure function actor_to_string(actor : actor_t) return string is
-    begin
-      if actor = null_actor_c then
-        return "-";
-      else
-        return name(actor);
-      end if;
-    end function;
-  begin
-    return id_to_string(msg.id) & ":" & id_to_string(msg.request_id) & " " &
-      actor_to_string(msg.sender) & " -> " & actor_to_string(msg.receiver);
-  end;
-
-  -----------------------------------------------------------------------------
-  -- Subprograms for pushing/popping data to/from a message. Data is popped
-  -- from a message in the same order they were pushed (FIFO)
-  -----------------------------------------------------------------------------
-  procedure push(msg : msg_t; value : integer) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return integer is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : character) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return character is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : boolean) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return boolean is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : real) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return real is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : bit) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return bit is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : std_ulogic) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return std_ulogic is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : severity_level) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return severity_level is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : file_open_status) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return file_open_status is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : file_open_kind) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return file_open_kind is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : bit_vector) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return bit_vector is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : std_ulogic_vector) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return std_ulogic_vector is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : complex) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return complex is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : complex_polar) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return complex_polar is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : ieee.numeric_bit.unsigned) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return ieee.numeric_bit.unsigned is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : ieee.numeric_bit.signed) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return ieee.numeric_bit.signed is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : ieee.numeric_std.unsigned) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return ieee.numeric_std.unsigned is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : ieee.numeric_std.signed) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return ieee.numeric_std.signed is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : string) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return string is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : time) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return time is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : integer_vector_ptr_t) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return integer_vector_ptr_t is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : string_ptr_t) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return string_ptr_t is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : queue_t) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return queue_t is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : boolean_vector) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return boolean_vector is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : integer_vector) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return integer_vector is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : real_vector) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return real_vector is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : time_vector) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return time_vector is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : ufixed) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return ufixed is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : sfixed) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return sfixed is
-  begin
-    return pop(msg.data);
-  end;
-
-  procedure push(msg : msg_t; value : float) is
-  begin
-    push(msg.data, value);
-  end;
-
-  impure function pop(msg : msg_t) return float is
-  begin
-    return pop(msg.data);
   end;
 
   -----------------------------------------------------------------------------
@@ -820,6 +462,10 @@ package body com_pkg is
   -----------------------------------------------------------------------------
   -- Debugging
   -----------------------------------------------------------------------------
+  impure function to_string(msg : msg_t) return string is
+  begin
+    return messenger.to_string(msg);
+  end;
 
   impure function peek_all_messages(actor : actor_t; mailbox_id : mailbox_id_t := inbox) return msg_vec_ptr_t is
     variable msg_vec_ptr : msg_vec_ptr_t;
@@ -859,7 +505,7 @@ package body com_pkg is
     write(l, indent & "  Messages:");
     if messages /= null then
       for i in messages'range loop
-        write(l, LF & indent & "    " & to_string(i) & ". " & to_string(messages(i)));
+        write(l, LF & indent & "    " & to_string(i) & ". " & messenger.to_string(messages(i)));
       end loop;
     end if;
 

@@ -32,6 +32,9 @@ begin
     variable actor     : actor_t;
     variable msg, msg2 : msg_t;
     variable queue     : queue_t;
+
+    constant msg_type_1 : msg_type_t := new_msg_type("msg type 1");
+    constant msg_type_2 : msg_type_t := new_msg_type("msg type 2");
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -66,7 +69,7 @@ begin
         delete(msg);
 
         check_equal(msg.id, no_message_id_c);
-        check(msg.status = ok);
+        check(msg.status = null_message_error);
         check(msg.sender = null_actor_c);
         check(msg.receiver = null_actor_c);
         check_equal(msg.request_id, no_message_id_c);
@@ -239,6 +242,19 @@ begin
         push_float(msg, to_float(-21.21));
         check(pop_float(msg) = to_float(17.17));
         check(pop_float(msg) = to_float(-21.21));
+      elsif run("Test push and pop of msg_type") then
+        msg := new_msg;
+        check(msg_type(msg) = null_msg_type_c);
+        push_msg_type(msg, msg_type_1);
+        check(msg_type(msg) = msg_type_1);
+        push_msg_type(msg, msg_type_2);
+        check(msg_type(msg) = msg_type_1);
+        check(pop_msg_type(msg) = msg_type_1);
+        check(msg_type(msg) = msg_type_1);
+        check(pop_msg_type(msg) = msg_type_2);
+        check(msg_type(msg) = msg_type_1);
+        push_msg_type(msg, msg_type_2);
+        check(msg_type(msg) = msg_type_2);
       end if;
     end loop;
 

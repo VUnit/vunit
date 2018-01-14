@@ -8,7 +8,6 @@ context work.vunit_context;
 use work.com_types_pkg.all;
 
 package com_support_pkg is
-  constant com_logger : logger_t := get_logger("vunit_lib:com");
 
   procedure check (
     expr      : boolean;

@@ -53,6 +53,7 @@ begin
   begin
     test_runner_setup(runner, runner_cfg);
     show(display_handler, pass);
+    show(display_handler, verbose);
 
     while test_suite loop
       if run("Test sending a message to a known actor") then

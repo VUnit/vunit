@@ -16,7 +16,6 @@ use work.axi_pkg.all;
 use work.logger_pkg.all;
 use work.queue_pkg.all;
 use work.bus_master_pkg.all;
-use work.msg_types_pkg.all;
 context work.com_context;
 
 library osvvm;
