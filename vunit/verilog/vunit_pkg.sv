@@ -27,13 +27,13 @@ class test_runner;
 
    function automatic string search_replace(string original, string old, string replacement);
       // First find the index of the old string
-      int 	start_index = 0;
-      int 	original_index = 0;
-      int 	replace_index = 0;
-      bit 	found = 0;
+      int       start_index = 0;
+      int       original_index = 0;
+      int       replace_index = 0;
+      bit       found = 0;
 
       while(1) begin
-	 if (original[original_index] == old[replace_index]) begin
+         if (original[original_index] == old[replace_index]) begin
             if (replace_index == 0) begin
                start_index = original_index;
             end
@@ -43,25 +43,25 @@ class test_runner;
                found = 1;
                break;
             end
-	 end else if (replace_index != 0) begin
+         end else if (replace_index != 0) begin
             replace_index = 0;
             original_index = start_index + 1;
-	 end else begin
+         end else begin
             original_index++;
-	 end
-	 if (original_index == original.len()) begin
+         end
+         if (original_index == original.len()) begin
             // Not found
             break;
-	 end
+         end
       end
 
       if (!found) return original;
 
       return {
-	      original.substr(0, start_index-1),
-	      replacement,
-	      original.substr(start_index+old.len(), original.len()-1)
-	      };
+              original.substr(0, start_index-1),
+              replacement,
+              original.substr(start_index+old.len(), original.len()-1)
+              };
 
    endfunction
 
@@ -73,20 +73,20 @@ class test_runner;
       prefix = "enabled_test_cases : ";
       index = -1;
       for (int i=0; i<runner_cfg.len(); i++) begin
-	 if (runner_cfg.substr(i, i+prefix.len()-1) == prefix) begin
-	    index = i + prefix.len();
-	    break;
-	 end
+         if (runner_cfg.substr(i, i+prefix.len()-1) == prefix) begin
+            index = i + prefix.len();
+            break;
+         end
       end
 
       if (index == -1) begin
-	 $error("Internal error: Cannot find 'enabled_test_cases' key");
+         $error("Internal error: Cannot find 'enabled_test_cases' key");
       end
 
       for (int i=index; i<runner_cfg.len(); i++) begin
-	 if (i == runner_cfg.len()-1) begin
+         if (i == runner_cfg.len()-1) begin
             test_cases_to_run.push_back(runner_cfg.substr(index, i));
-	 end
+         end
          else if (runner_cfg[i] == ",") begin
             test_cases_to_run.push_back(runner_cfg.substr(index, i-1));
             index = i+2;
@@ -100,21 +100,21 @@ class test_runner;
       prefix = "output path : ";
       index = -1;
       for (int i=0; i<runner_cfg.len(); i++) begin
-	 if (runner_cfg.substr(i, i+prefix.len()-1) == prefix) begin
-	    index = i + prefix.len();
-	    break;
-	 end
+         if (runner_cfg.substr(i, i+prefix.len()-1) == prefix) begin
+            index = i + prefix.len();
+            break;
+         end
       end
 
       if (index == -1) begin
-	 $error("Internal error: Cannot find 'output path' key");
+         $error("Internal error: Cannot find 'output path' key");
       end
 
       for (int i=index; i<runner_cfg.len(); i++) begin
-	 if (i == runner_cfg.len()-1) begin
+         if (i == runner_cfg.len()-1) begin
             output_path = runner_cfg.substr(index, i);
             break;
-	 end
+         end
          else if (runner_cfg[i] == ",") begin
             i++;
             if (runner_cfg[i] != ",") begin

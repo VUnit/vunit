@@ -22,17 +22,17 @@ module tb_example;
       end
 
       `TEST_CASE_SETUP begin
-	 // By default VUnit will run each test separately. However,
-	 // advanced users may want to run tests consecutively rather
-	 // than in separate instances of the HDL-simulator. In that
-	 // case the code placed in a TEST_CASE_SETUP block should
-	 // restore the unit under test to the state expected by the
-	 // test cases below. In many cases this block would only
-	 // assert/deassert the reset signal for a couple of
-	 // clock-cycles.
-	 //
-	 // When trying out VUnit for the first time this section
-	 // should probably be left empty.
+         // By default VUnit will run each test separately. However,
+         // advanced users may want to run tests consecutively rather
+         // than in separate instances of the HDL-simulator. In that
+         // case the code placed in a TEST_CASE_SETUP block should
+         // restore the unit under test to the state expected by the
+         // test cases below. In many cases this block would only
+         // assert/deassert the reset signal for a couple of
+         // clock-cycles.
+         //
+         // When trying out VUnit for the first time this section
+         // should probably be left empty.
          $display("Running test case setup code");
       end
 
@@ -44,12 +44,12 @@ module tb_example;
       `TEST_CASE("Test that a failing test case actually fails") begin
          $display("This test case is expected to fail");
          `CHECK_EQUAL(0, 1, "You may also optionally add a diagnostic message to CHECK_EQUAL");
-	 // Note: A test case will also be marked as failing if the
-	 // simulator stops for other reasons before the end of the
-	 // TEST_SUITE block is reached. This means that you don't
-	 // need to use CHECK_EQUAL if the testbench you want to
-	 // convert to VUnit already contains code that for example
-	 // calls $stop if an error-condition is detected.
+         // Note: A test case will also be marked as failing if the
+         // simulator stops for other reasons before the end of the
+         // TEST_SUITE block is reached. This means that you don't
+         // need to use CHECK_EQUAL if the testbench you want to
+         // convert to VUnit already contains code that for example
+         // calls $stop if an error-condition is detected.
       end
 
       `TEST_CASE("Test that a test case that takes too long time fails with a timeout") begin
@@ -58,14 +58,14 @@ module tb_example;
       end
 
       `TEST_CASE_CLEANUP begin
-	 // This section will run after the end of a test case. In
-	 // many cases this section will not be needed.
+         // This section will run after the end of a test case. In
+         // many cases this section will not be needed.
          $display("Cleaning up after a test case");
       end
 
       `TEST_SUITE_CLEANUP begin
-	 // This section will run last before the TEST_SUITE block
-	 // exits. In many cases this section will not be needed.
+         // This section will run last before the TEST_SUITE block
+         // exits. In many cases this section will not be needed.
          $display("Cleaning up after running the complete test suite");
       end
    end;
