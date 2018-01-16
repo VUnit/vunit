@@ -6,7 +6,7 @@
 
 `define WATCHDOG(runtime) \
    initial begin \
-      __runner__.watchdog(runtime); \
+      __runner__.watchdog((runtime) / 1ns); \
    end
 
 `define TEST_SUITE_FROM_PARAMETER(parameter_name) \

@@ -211,11 +211,11 @@ class test_runner;
       return phase == test_suite_cleanup;
    endfunction;
 
-   task automatic watchdog(realtime timeout);
+   task automatic watchdog(real timeout_in_ns);
       fork : wait_or_timeout
          begin
-            #timeout;
-            $error("Timeout waiting finish after %.3f ns", timeout / 1ns);
+            #(timeout_in_ns * 1ns);
+            $error("Timeout waiting finish after %.3f ns", timeout_in_ns);
             disable wait_or_timeout;
          end
          begin
