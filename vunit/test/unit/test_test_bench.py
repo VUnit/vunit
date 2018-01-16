@@ -118,6 +118,9 @@ if my_protected_variable.run("Test 10")
 */
 /* `TEST_CASE("Test 6") */
 `TEST_CASE("Test 7")
+/* comment */
+`TEST_CASE("Test 8")
+/* comment */
 ''')
         design_unit.generic_names = ["runner_cfg"]
         test_bench = TestBench(design_unit)
@@ -126,7 +129,8 @@ if my_protected_variable.run("Test 10")
                               ["lib.tb_module.Test 1",
                                "lib.tb_module.Test 2",
                                "lib.tb_module.Test 3",
-                               "lib.tb_module.Test 7"])
+                               "lib.tb_module.Test 7",
+                               "lib.tb_module.Test 8"])
 
     @mock.patch("vunit.test_bench.LOGGER")
     def test_duplicate_tests_cause_error(self, mock_logger):
