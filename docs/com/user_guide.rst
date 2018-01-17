@@ -59,10 +59,10 @@ unnamed actors
 
 .. code-block:: vhdl
 
-  constant receiver : actor_t := new_actor("my receiver");
+  constant my_receiver : actor_t := new_actor("my receiver");
 
-To send a message to the receiver the sender must have access to the value of the ``receiver`` constant.
-If the receiver made ``receiver`` publically available, for example with a package, it can be accessed
+To send a message to the receiver the sender must have access to the value of the ``my_receiver`` constant.
+If the receiver made ``my_receiver`` publically available, for example with a package, it can be accessed
 directly. If not, it can be found with the ``find`` function providing it has a name.
 
 .. code-block:: vhdl
@@ -84,13 +84,13 @@ different types into it.
   push(msg, my_integer);
 
 ``com`` supports pushing of all native and standardized IEEE types. In case there is no ambiguity you can just
-do ``push`` otherwise you have to use the more specific alias ``push_<type>`` as exemplified above.
+do ``push``, otherwise you have to use the more specific alias ``push_<type>`` as exemplified above.
 
 To send the created message to the receiver you call the ``send`` procedure
 
 .. code-block:: vhdl
 
-  send(net, receiver, msg);
+  send(net, my_receiver, msg);
 
 ``send`` is asynchronous and takes no simulation time, only delta cycles. Messages will be stored in the receiver inbox
 until the receiver is ready to receive.
@@ -104,12 +104,12 @@ An actor waiting for a message uses the receive procedure
 
 .. code-block:: vhdl
 
-  receive(net, receiver, msg);
+  receive(net, my_receiver, msg);
 
 This procedure returns immediately if there are pending message(s) in the receiver's inbox or blocks until the first
 message arrives. The returned message contains the oldest incoming message and its information can be retrieved using
-``pop`` functions. The code below will verify that the message has the expected content using the VUnit ``check_equal``
-procedure.
+``pop`` functions. The code below will verify that the message has the expected content using the VUnit
+:ref:`check_equal <equality_check>` procedure.
 
 .. code-block:: vhdl
 
@@ -119,8 +119,8 @@ procedure.
 
 Just like ``push`` there are both ``pop`` functions and more verbose aliases on the form ``pop_<type>``.
 
-Data is always popped from the message in the same order they were pushed into the message. Once all data have been
-popped the message is empty. If you want to keep a message for later you can make a copy before popping.
+Objects are always popped from the message in the same order they were pushed into the message and once all objects
+have been popped the message is empty. If you want to keep a message for later you can make a copy before popping.
 
 .. code-block:: vhdl
 
@@ -177,9 +177,9 @@ The receiver starts by popping the message type and then handles the message typ
   end process;
 
 Normally a BFM would never be exposed to a write message aimed for another BFM but under certain cases it can happen.
-For example when using the publisher/subscriber pattern described later. A typical BFM would also provide a write
-transaction procedure which hides the message passing details (creating message, pushing data, and sending). That gives
-an extra level of type safety (and readability).
+For example when using the :ref:`publisher\/subscriber pattern <publisher_subscriber>` described later.
+A typical BFM would also provide a write transaction procedure which hides the message passing details (creating
+message, pushing data, and sending). That gives an extra level of type safety (and readability).
 
 .. code-block:: vhdl
 
@@ -245,6 +245,7 @@ requesting actor.
       address := pop(request_msg);
       data := to_std_logic_vector(memory(to_integer(address)), 8);
       reply_msg := new_msg;
+      push(reply_msg, read_reply_msg);
       push(reply_msg, data);
       reply(net, request_msg, reply_msg);
 
@@ -269,17 +270,20 @@ procedure. Below is a read procedure for our memory BFM.
     variable data : out std_logic_vector(7 downto 0)) is
     variable request_msg : msg_t := new_msg;
     variable reply_msg : msg_t;
+    variable msg_type : msg_type_t;
   begin
     push(request_msg, read_msg);
     push(request_msg, address);
     send(net, actor, request_msg);
     receive_reply(net, request_msg, reply_msg);
+    msg_type := pop(reply_msg);
     data := pop(reply_msg);
     delete(reply_msg);
   end;
 
 ``receive_reply`` will block until the specified message is received. All other incoming messages will be ignored but
-can be retrieved later.
+can be retrieved later. Note that we didn't need a message type for the reply messages, the read procedure just
+throws it away. However, we will see later that including it can be helpful when debugging a communication system.
 
 Sending a request and directly receiving the reply is a common sequence of calls so it has been given a dedicated
 ``request`` procedure. The two lines above can be replaced by
@@ -312,7 +316,7 @@ the receiver ``reply`` call can't send a reply back to the sender so the reply m
 outbox. The ``receive_reply`` procedure called by the sender knows that the request message was anonymous and waits
 for the reply to appear in the receiver outbox instead of its own inbox.
 
-Some communication patterns, for example the publisher/subscriber pattern described later, requires that all messages
+Some communication patterns, for example the publisher/subscriber pattern, requires that all messages
 are signed. To sign a message you can provide the sending actor when the message is created.
 
 .. code-block:: vhdl
@@ -420,7 +424,8 @@ the message handling of the previous BFM example.
     unexpected_msg_type(msg_type);
   end if;
 
-Note that no information is pushed to the reply message.
+Note that no information is pushed to the reply message in this example but you may want to have a message type for
+debugging purposes.
 
 ************************************************************
 Message Handlers and Verification Component Interfaces (VCI)
@@ -546,6 +551,8 @@ If the actor isn't found the function returns ``null_actor_c`` so to make this w
 
 Another approach is to make sure that there are no deferred creations pending a short delay into the simulation, before
 the actual testing starts. You can find out by calling the ``num_of_deferred_creations`` function.
+
+.. _publisher_subscriber:
 
 ****************************
 Publisher/Subscriber Pattern
@@ -706,6 +713,162 @@ An actor can unsubscribe from a subscription at any time by calling ``unsubscrib
 calling the ``subscribe`` procedure.
 
 ****************************
+Debugging
+****************************
+Message passing provides a communication mechanism an abstraction level above the normal signalling in VHDL.
+This also means that there is a need for an equally elevated level of debugging. To support that ``com`` has
+a number of built-in features specially targeting debugging.
+
+Logging Messages
+-----------------
+
+One way of debugging is to inspect the messages that flow through the system, for example by subscribing to actor
+traffic. You can use previously presented functions to find out sender, receiver and message content but you can
+also convert a message to a string such that it can be logged.
+
+.. code-block:: vhdl
+
+  to_string(reply_msg)
+
+The resulting string may look something like this
+
+.. code-block:: console
+
+  3:2 memory BFM -> test sequencer (read reply)
+
+The first number (``3``) is the message ID which is unique to this message. The second number (``2``) is present
+in reply messages and denotes the message ID for the request message. After that we have the sender
+(``memory BFM``) which sent the message to (``->``) the receiver (``test sequencer``). Finally, the value in
+parentheses (``read reply``) is the message type. All communicated messages have a message ID but not all messages
+are replies, sender and receivers may be anonymous and not all messages have a message type. Fields missing a
+value will be replaced with ``-``.
+
+Note that ``com`` has limited knowledge of the contents of a message. All data pushed into a message is encoded
+and is basically handled as a sequence of bytes without any overhead for type information. ``com`` doesn't
+know if four bytes represents an integer, four characters or something else. The interpretation of
+these bytes takes place when the user pops data using a type specific pop function. The exception is the message
+type for which the type overhead is included to provide better debugging. Higher levels of debug information,
+for example that a message represents a read request to a specific address is something that the verification
+component using ``com`` provides.
+
+Trace Log
+---------
+
+Rather than manually logging messages you can quickly see all messages by showing the trace logs. ``com`` provides
+a logger, ``com_logger``, and you enable the trace logs by showing log entries on the ``verbose`` log level.
+
+.. code-block:: vhdl
+
+  show(com_logger, display_handler, verbose);
+
+Ignoring the initial part introduced by the logging framework (everything up to and including ``VERBOSE -``) we
+still see a difference when compared to the string presented above.
+
+.. code-block:: console
+
+  30000 ps - vunit_lib:com - VERBOSE - test sequencer inbox => [3:2 memory BFM -> test sequencer (read reply)]
+
+First is an actor mailbox (``test sequencer inbox``), than an arrow (``=>``) followed by the message string
+enclosed in square brackets. This means that the message was removed from the mailbox, for example as a result
+of a ``receive_reply`` call. ``com`` also logs when a message is put into a mailbox. In this
+example that event is logged 10 ns earlier and is the result of a ``reply`` call
+
+.. code-block:: console
+
+  20000 ps - vunit_lib:com - VERBOSE - [3:2 memory BFM -> test sequencer (read reply)] => test sequencer inbox
+
+Now that we have all these transactions available it becomes possible to follow sequences of events. For example,
+at time 0 ps we have the message with ID = 2 which is the request message for the reply above.
+
+.. code-block:: console
+
+  0 ps - vunit_lib:com - VERBOSE - [2:- test sequencer -> memory BFM (read)] => memory BFM inbox
+
+Again, if you want higher level of debug information you can add debug logging to your BFM which may
+result in something like this.
+
+.. code-block:: console
+
+      0 ps - vunit_lib:com - VERBOSE - [2:- test sequencer -> memory BFM (read)] => memory BFM inbox
+  10000 ps - vunit_lib:com - VERBOSE - memory BFM inbox => [2:- test sequencer -> memory BFM (read)]
+  20000 ps - memory BFM    -   DEBUG - Reading x"21" from address x"80"
+  20000 ps - vunit_lib:com - VERBOSE - [3:2 memory BFM -> test sequencer (read reply)] => test sequencer inbox
+  30000 ps - vunit_lib:com - VERBOSE - test sequencer inbox => [3:2 memory BFM -> test sequencer (read reply)]
+
+State Information
+-----------------
+
+In addition to tracing messages you can also examine the state of the communication system. By calling
+``get_mailbox_state`` you can take a snapshot and examine all messages in an actor mailbox.
+
+.. code-block:: vhdl
+
+  mailbox_state := get_mailbox_state(memory_bfm_pkg.actor, inbox);
+
+``mailbox_state`` is a record that you can expand and examine in your simulator. Be aware that this gives you a
+glimpse of internal representations of data which we may change. It's suitable for browsing but not something you
+should act upon programmatically.
+
+You can also create a string representation of the mailbox state by calling
+
+.. code-block:: vhdl
+
+  get_mailbox_state_string(memory_bfm_pkg.actor, inbox)
+
+The result is something like this
+
+.. code-block:: console
+
+  Mailbox: inbox
+    Size: 2147483647
+    Messages:
+      0. 5:- - -> memory BFM (write)
+      1. 6:- - -> memory BFM (read)
+
+The size is the maximum number of messages that the mailbox can contain (this is dynamically allocated) while the
+list at the bottom shows the actual messages in the mailbox. Message 0 is the oldest message and the first one
+to be returned when you call ``receive``.
+
+You can also get an actor's state as well as the string representation for that state
+
+.. code-block:: vhdl
+
+  actor_state := get_actor_state(driver);
+  debug(get_actor_state_string(driver));
+
+The string representation contains information about both mailboxes, subscriptions and subscribers and if the
+actor's creation is deferred. For example,
+
+.. code-block:: console
+
+  Name: driver
+    Is deferred: no
+    Mailbox: inbox
+      Size: 2147483647
+      Messages:
+        0. 8:- - -> driver (add)
+        1. 9:- - -> driver (add)
+        2. 10:- - -> driver (add)
+    Mailbox: outbox
+      Size: 2147483647
+      Messages:
+    Subscriptions:
+    Subscribers:
+      driver channel subscribes to inbound traffic
+
+In this case the outbox is empty and `driver` doesn't subscribe to anything. However, the ``driver channel``
+actor subscribes to inbound traffic to ``driver``.
+
+Finally, you can get the state for the messenger which is the manager of the communication system. That state
+contains two lists - one with the states of all active actors (those not deferred) and one with the states of
+all deferred actors.
+
+.. code-block:: vhdl
+
+  messenger_state := get_messenger_state;
+  debug(get_messenger_state_string);
+
+****************************
 Deprecated APIs
 ****************************
 
@@ -714,6 +877,6 @@ a runtime error unless enabled by calling the ``allow_deprecated`` procedure.
 
 Earlier releases of ``com`` would not cause a runtime error on timeout. This behavior can be enabled with the
 deprecated APIs by calling ``allow_timeout``. If not, a timeout will result in an error with the exception of the
-``wait_for_messages`` procedure which returns a status.
+``wait_for_messages`` and ``wait_for_reply`` procedures which return a status.
 
 The deprecated APIs will be removed in the future so it's recommended to replace these with contemporary APIs.

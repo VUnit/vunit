@@ -32,6 +32,7 @@ architecture a of tb_user_guide is
   constant add_msg        : msg_type_t          := new_msg_type("add");
   constant sum_msg        : msg_type_t          := new_msg_type("sum");
   constant my_receiver    : actor_t             := new_actor("my receiver");
+  constant test_sequencer : actor_t             := new_actor("test sequencer");
   constant channels       : actor_vec_t(1 to 2) := (new_actor("channel 1"), new_actor("channel 2"));
   constant clk_period     : time                := 10 ns;
 begin
@@ -49,11 +50,13 @@ begin
     variable status                      : com_status_t;
     variable start                       : time;
     constant my_actor                    : actor_t                      := new_actor("My actor");
-    constant write_msg                   : msg_type_t                   := new_msg_type("write");
+    variable msg_type                    : msg_type_t;
+    variable mailbox_state               : mailbox_state_t;
+    variable actor_state                 : actor_state_t;
+    variable messenger_state             : messenger_state_t;
   begin
     test_runner_setup(runner, runner_cfg);
     show(display_handler, pass);
-    show(display_handler, verbose);
 
     while test_suite loop
       if run("Test sending a message to a known actor") then
@@ -84,6 +87,7 @@ begin
         push(request_msg, memory_bfm_pkg.read_msg);
         push(request_msg, unsigned'(x"80"));
         request(net, memory_bfm_pkg.actor, request_msg, reply_msg);
+        msg_type    := pop(reply_msg);
         data        := pop(reply_msg);
         check_equal(data, std_logic_vector'(x"21"));
 
@@ -152,6 +156,7 @@ begin
         push(msg, unsigned'(x"84"));
         send(net, memory_bfm_pkg.actor, msg);
         receive(net, sending_actor, msg, timeout => 100 ns);
+        msg_type := pop(msg);
         data := pop(msg);
         check_equal(data, std_logic_vector'(x"17"));
 
@@ -165,6 +170,44 @@ begin
           wait_for_time(net, driver, rnd.RandTime(0 ns, 10 * clk_period));
         end loop;
         wait_until_idle(net, master_channel);
+
+      elsif run("Test debugging features") then
+        show(com_logger, display_handler, verbose);
+        show(display_handler, debug);
+
+        msg         := new_msg;
+        push(msg, memory_bfm_pkg.write_msg);
+        push(msg, my_unsigned_address);
+        push(msg, my_std_logic_vector_data);
+        send(net, memory_bfm_pkg.actor, msg);
+        request_msg := new_msg(test_sequencer);
+        push(request_msg, memory_bfm_pkg.read_msg);
+        push(request_msg, unsigned'(x"80"));
+        send(net, memory_bfm_pkg.actor, request_msg);
+        wait for 30 ns;
+        receive_reply(net, request_msg, reply_msg);
+
+        memory_bfm_pkg.write(net, address             => x"80", data => x"17");
+        memory_bfm_pkg.write(net, address             => x"84", data => x"21");
+        memory_bfm_pkg.non_blocking_read(net, address => x"80", future => future);
+
+        mailbox_state := get_mailbox_state(memory_bfm_pkg.actor, inbox);
+        debug(get_mailbox_state_string(memory_bfm_pkg.actor, inbox));
+
+        memory_bfm_pkg.get(net, future, data);
+
+        for i in 1 to 3 loop
+          msg := new_msg;
+          push(msg, add_msg);
+          push(msg, rnd.RandInt(0, 255));
+          push(msg, rnd.RandInt(0, 255));
+          send(net, driver, msg);
+        end loop;
+        actor_state := get_actor_state(driver);
+        debug(get_actor_state_string(driver));
+
+        messenger_state := get_messenger_state;
+        debug(get_messenger_state_string);
       end if;
     end loop;
 
@@ -185,7 +228,7 @@ begin
 
   multiple_channel_process : process is
     variable status : com_status_t;
-    variable msg : msg_t;
+    variable msg    : msg_t;
   begin
     wait_for_message(net, channels, status);
     if status = ok then

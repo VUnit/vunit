@@ -10,7 +10,9 @@ package memory_bfm_pkg is
   constant write_msg                  : msg_type_t := new_msg_type("write");
   constant write_with_acknowledge_msg : msg_type_t := new_msg_type("write with acknowledge");
   constant read_msg                   : msg_type_t := new_msg_type("read");
-  constant actor                      : actor_t    := new_actor("BFM 1");
+  constant read_reply_msg             : msg_type_t := new_msg_type("read reply");
+  constant actor                      : actor_t    := new_actor("memory BFM");
+  constant memory_bfm_logger          : logger_t := get_logger("memory BFM");
 
   procedure write(
     signal net       : inout network_t;
@@ -86,8 +88,10 @@ package body memory_bfm_pkg is
     variable future : inout msg_t;
     variable data   : out   std_logic_vector(7 downto 0)) is
     variable reply_msg : msg_t;
+    variable msg_type : msg_type_t;
   begin
     receive_reply(net, future, reply_msg);
+    msg_type := pop(reply_msg);
     data := pop(reply_msg);
     delete(reply_msg);
   end;

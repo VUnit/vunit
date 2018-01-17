@@ -35,12 +35,14 @@ begin
     if msg_type = write_msg then
       address                     := pop(request_msg);
       data                        := pop(request_msg);
+      debug(memory_bfm_logger, "Writing x""" & to_hstring(data) & """ to address x""" & to_hstring(address) & """");
       emulate_memory_access_delay;
       memory(to_integer(address)) := to_integer(data);
 
     elsif msg_type = write_with_acknowledge_msg then
       address                     := pop(request_msg);
       data                        := pop(request_msg);
+      debug(memory_bfm_logger, "Writing x""" & to_hstring(data) & """ to address x""" & to_hstring(address) & """");
       emulate_memory_access_delay;
       memory(to_integer(address)) := to_integer(data);
       acknowledge(net, request_msg, true);
@@ -49,7 +51,9 @@ begin
       address   := pop(request_msg);
       emulate_memory_access_delay;
       data      := to_std_logic_vector(memory(to_integer(address)), 8);
+      debug(memory_bfm_logger, "Reading x""" & to_hstring(data) & """ from address x""" & to_hstring(address) & """");
       reply_msg := new_msg;
+      push(reply_msg, read_reply_msg);
       push(reply_msg, data);
       reply(net, request_msg, reply_msg);
 

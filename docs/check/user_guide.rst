@@ -570,6 +570,8 @@ the following six unclocked formats.
       <preprocessor parameters>)
       return boolean;
 
+.. _equality_check:
+
 Equality Check (check\_equal)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 +-------------------+
