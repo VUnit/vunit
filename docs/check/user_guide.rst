@@ -136,7 +136,6 @@ for any log handler.
 .. code-block:: vhdl
 
     show(get_logger(default_checker), display_handler, pass);
-    show(get_logger(default_checker), file_handler, pass);
 
 The difference between a passing check log message and a failing check log message is
 the log level used. A passing check like this

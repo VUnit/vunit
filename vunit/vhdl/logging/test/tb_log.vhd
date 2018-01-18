@@ -93,6 +93,10 @@ begin
     begin
       return (1 to (max_time_str'length - time_str'length) => ' ') & time_str;
     end function;
+
+    variable file_handler : log_handler_t := new_log_handler(log_file_name,
+                                                             format => verbose,
+                                                             use_color => false);
   begin
 
     -- Check defaults before test runner setup

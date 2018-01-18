@@ -37,10 +37,6 @@ package log_handler_pkg is
   -- Display handler; Write to stdout
   impure function display_handler return log_handler_t;
 
-  -- File handler; Write to file
-  -- Is configured to output_path/log.csv by test_runner_setup
-  impure function file_handler return log_handler_t;
-
   -- Get the name of the file used by the handler
   impure function get_file_name (log_handler : log_handler_t) return string;
 

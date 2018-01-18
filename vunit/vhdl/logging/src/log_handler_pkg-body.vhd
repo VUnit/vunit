@@ -16,8 +16,7 @@ use work.string_ops.upper;
 package body log_handler_pkg is
 
   constant display_handler_id : natural := 0;
-  constant file_handler_id : natural := 1;
-  constant next_log_handler_id : integer_vector_ptr_t := new_integer_vector_ptr(1, value => file_handler_id+1);
+  constant next_log_handler_id : integer_vector_ptr_t := new_integer_vector_ptr(1, value => display_handler_id+1);
 
   constant id_idx : natural := 0;
   constant file_name_idx : natural := 1;
@@ -79,21 +78,9 @@ package body log_handler_pkg is
                                                                 format => verbose,
                                                                 use_color => true);
 
-  -- File handler; Write to file
-  -- Is configured to output_path/log.csv by test_runner_setup
-  constant p_file_handler : log_handler_t := new_log_handler(file_handler_id,
-                                                             null_file_name,
-                                                             format => verbose,
-                                                             use_color => false);
-
   impure function display_handler return log_handler_t is
   begin
     return p_display_handler;
-  end function;
-
-  impure function file_handler return log_handler_t is
-  begin
-    return p_file_handler;
   end function;
 
   impure function get_id(log_handler : log_handler_t) return natural is
