@@ -38,7 +38,7 @@ begin
     variable msg_type : msg_type_t;
   begin
     receive(net, bus_handle.p_actor, request_msg);
-    msg_type := pop_msg_type(request_msg);
+    msg_type := message_type(request_msg);
 
     if msg_type = bus_read_msg then
       en <= '1';

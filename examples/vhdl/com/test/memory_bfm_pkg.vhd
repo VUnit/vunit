@@ -48,9 +48,8 @@ package body memory_bfm_pkg is
     signal net       : inout network_t;
     constant address : in    unsigned(7 downto 0);
     constant data    : in    std_logic_vector(7 downto 0)) is
-    variable msg : msg_t := new_msg;
+    variable msg : msg_t := new_msg(write_msg);
   begin
-    push(msg, write_msg);
     push(msg, address);
     push(msg, data);
     send(net, actor, msg);
@@ -60,10 +59,9 @@ package body memory_bfm_pkg is
     signal net       : inout network_t;
     constant address : in    unsigned(7 downto 0);
     constant data    : in    std_logic_vector(7 downto 0)) is
-    variable msg          : msg_t := new_msg;
+    variable msg          : msg_t := new_msg(write_with_acknowledge_msg);
     variable positive_ack : boolean;
   begin
-    push(msg, write_with_acknowledge_msg);
     push(msg, address);
     push(msg, data);
     request(net, actor, msg, positive_ack);
@@ -74,10 +72,9 @@ package body memory_bfm_pkg is
     signal net       : inout network_t;
     constant address : in    unsigned(7 downto 0);
     variable future  : out   msg_t) is
-    variable request_msg : msg_t := new_msg;
+    variable request_msg : msg_t := new_msg(read_msg);
     variable reply_msg   : msg_t;
   begin
-    push(request_msg, read_msg);
     push(request_msg, address);
     send(net, actor, request_msg);
     future := request_msg;
@@ -91,7 +88,7 @@ package body memory_bfm_pkg is
     variable msg_type : msg_type_t;
   begin
     receive_reply(net, future, reply_msg);
-    msg_type := pop(reply_msg);
+    msg_type := message_type(reply_msg);
     data := pop(reply_msg);
     delete(reply_msg);
   end;

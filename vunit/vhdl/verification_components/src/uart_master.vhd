@@ -51,7 +51,7 @@ begin
     variable msg_type : msg_type_t;
   begin
     receive(net, uart.p_actor, msg);
-    msg_type := pop_msg_type(msg);
+    msg_type := message_type(msg);
 
     handle_sync_message(net, msg_type, msg);
 

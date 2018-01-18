@@ -184,9 +184,7 @@ package com_types_pkg is
   procedure unexpected_msg_type(msg_type : msg_type_t;
                                     logger : logger_t := com_logger);
 
-  procedure push_msg_type(variable msg : inout msg_t;
-                              msg_type : msg_type_t;
-                              logger : logger_t := com_logger);
+  procedure push_msg_type(msg : msg_t; msg_type : msg_type_t; logger : logger_t := com_logger);
   alias push is push_msg_type [msg_t, msg_type_t, logger_t];
 
   impure function pop_msg_type(msg : msg_t;
@@ -200,9 +198,11 @@ package com_types_pkg is
   -- Message related subprograms
   -----------------------------------------------------------------------------
 
-  -- Create a new empty message. The message can be anonymous or signed with
-  -- the sending actor
-  impure function new_msg (sender : actor_t := null_actor_c) return msg_t;
+  -- Create a new empty message. The message has an optional type and can anonymous
+  -- or signed with the sending actor
+  impure function new_msg (
+    msg_type : msg_type_t := null_msg_type_c;
+    sender : actor_t := null_actor_c) return msg_t;
 
   impure function copy(msg : msg_t) return msg_t;
 
@@ -216,7 +216,7 @@ package com_types_pkg is
   function receiver(msg : msg_t) return actor_t;
 
   -- Return message type of message without consuming it as pop_msg_type would
-  function msg_type(msg : msg_t) return msg_type_t;
+  function message_type(msg : msg_t) return msg_type_t;
 
   -- Check if message is empty
   impure function is_empty(msg : msg_t) return boolean;
@@ -421,18 +421,12 @@ package body com_types_pkg is
     end if;
   end procedure;
 
-  procedure push_msg_type(variable msg : inout msg_t;
-                              msg_type : msg_type_t;
-                              logger : logger_t := com_logger) is
+  procedure push_msg_type(msg : msg_t; msg_type : msg_type_t; logger : logger_t := com_logger) is
   begin
-    if length(msg.data) = 0 then
-      msg.msg_type := msg_type;
-    end if;
     push(msg, msg_type.p_code);
   end;
 
-  impure function pop_msg_type(msg : msg_t;
-                                   logger : logger_t := com_logger) return msg_type_t is
+  impure function pop_msg_type(msg : msg_t; logger : logger_t := com_logger) return msg_type_t is
     constant code : integer := pop(msg);
   begin
     if not is_valid(code) then
@@ -444,12 +438,14 @@ package body com_types_pkg is
   -----------------------------------------------------------------------------
   -- Message related subprograms
   -----------------------------------------------------------------------------
-  impure function new_msg (sender : actor_t := null_actor_c) return msg_t is
+  impure function new_msg (
+    msg_type : msg_type_t := null_msg_type_c;
+    sender : actor_t := null_actor_c) return msg_t is
     variable msg : msg_t;
   begin
     msg.sender := sender;
     msg.data   := new_queue(queue_pool);
-    msg.msg_type := null_msg_type_c;
+    msg.msg_type := msg_type;
     return msg;
   end;
 
@@ -476,7 +472,7 @@ package body com_types_pkg is
     return msg.receiver;
   end;
 
-  function msg_type(msg : msg_t) return msg_type_t is
+  function message_type(msg : msg_t) return msg_type_t is
   begin
     return msg.msg_type;
   end;

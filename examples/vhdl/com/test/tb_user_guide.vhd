@@ -72,8 +72,7 @@ begin
         send(net, found_receiver, msg);
 
       elsif run("Test sending messages with a message type with a name identical to another message type") then
-        msg := new_msg;
-        push(msg, memory_bfm_pkg.write_msg);
+        msg := new_msg(memory_bfm_pkg.write_msg);
         push(msg, my_unsigned_address);
         push(msg, my_std_logic_vector_data);
         send(net, memory_bfm_pkg.actor, msg);
@@ -83,11 +82,10 @@ begin
 
       elsif run("Test requesting information") then
         memory_bfm_pkg.write(net, address => x"80", data => x"21");
-        request_msg := new_msg;
-        push(request_msg, memory_bfm_pkg.read_msg);
+        request_msg := new_msg(memory_bfm_pkg.read_msg);
         push(request_msg, unsigned'(x"80"));
         request(net, memory_bfm_pkg.actor, request_msg, reply_msg);
-        msg_type    := pop(reply_msg);
+        msg_type    := message_type(reply_msg);
         data        := pop(reply_msg);
         check_equal(data, std_logic_vector'(x"21"));
 
@@ -151,19 +149,17 @@ begin
         check(status = timeout, "The read request reply shouldn't be able to find it's way to the sender's inbox");
 
         memory_bfm_pkg.write(net, address        => x"84", data => x"17");
-        msg  := new_msg(sending_actor);
-        push(msg, memory_bfm_pkg.read_msg);
+        msg  := new_msg(memory_bfm_pkg.read_msg, sending_actor);
         push(msg, unsigned'(x"84"));
         send(net, memory_bfm_pkg.actor, msg);
         receive(net, sending_actor, msg, timeout => 100 ns);
-        msg_type := pop(msg);
+        msg_type := message_type(msg);
         data := pop(msg);
         check_equal(data, std_logic_vector'(x"17"));
 
       elsif run("Test publisher/subscriber") then
         for i in 1 to 10 loop
-          msg := new_msg;
-          push(msg, add_msg);
+          msg := new_msg(add_msg);
           push(msg, rnd.RandInt(0, 255));
           push(msg, rnd.RandInt(0, 255));
           send(net, driver, msg);
@@ -175,13 +171,11 @@ begin
         show(com_logger, display_handler, verbose);
         show(display_handler, debug);
 
-        msg         := new_msg;
-        push(msg, memory_bfm_pkg.write_msg);
+        msg         := new_msg(memory_bfm_pkg.write_msg);
         push(msg, my_unsigned_address);
         push(msg, my_std_logic_vector_data);
         send(net, memory_bfm_pkg.actor, msg);
-        request_msg := new_msg(test_sequencer);
-        push(request_msg, memory_bfm_pkg.read_msg);
+        request_msg := new_msg(memory_bfm_pkg.read_msg, test_sequencer);
         push(request_msg, unsigned'(x"80"));
         send(net, memory_bfm_pkg.actor, request_msg);
         wait for 30 ns;
@@ -197,8 +191,7 @@ begin
         memory_bfm_pkg.get(net, future, data);
 
         for i in 1 to 3 loop
-          msg := new_msg;
-          push(msg, add_msg);
+          msg := new_msg(add_msg);
           push(msg, rnd.RandInt(0, 255));
           push(msg, rnd.RandInt(0, 255));
           send(net, driver, msg);
@@ -252,7 +245,7 @@ begin
     variable msg_type    : msg_type_t;
   begin
     receive(net, driver, request_msg);
-    msg_type := pop(request_msg);
+    msg_type := message_type(request_msg);
 
     handle_wait_for_time(net, msg_type, request_msg);
 
@@ -271,8 +264,7 @@ begin
     variable msg : msg_t;
   begin
     wait until rising_edge(clk) and (dv_out = '1');
-    msg := new_msg;
-    push(msg, sum_msg);
+    msg := new_msg(sum_msg);
     push(msg, to_integer(sum));
     publish(net, monitor, msg);
   end process;
@@ -294,7 +286,7 @@ begin
     subscribe(slave_channel, monitor);
     loop
       receive(net, master_channel, master_msg);
-      msg_type := pop(master_msg);
+      msg_type := message_type(master_msg);
 
       if receiver(master_msg) = master_channel then
         handle_wait_until_idle(net, msg_type, master_msg);
@@ -302,9 +294,8 @@ begin
 
       if msg_type = add_msg then
         receive(net, slave_channel, slave_msg);
-        msg_type := pop(slave_msg);
 
-        if msg_type = sum_msg then
+        if message_type(slave_msg) = sum_msg then
           do_model_check(master_msg, slave_msg);
         end if;
       end if;

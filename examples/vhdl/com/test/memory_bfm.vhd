@@ -28,7 +28,7 @@ begin
     end procedure;
   begin
     receive(net, actor, request_msg);
-    msg_type := pop(request_msg);
+    msg_type := message_type(request_msg);
 
     handle_sync_message(net, msg_type, request_msg);
 
@@ -52,8 +52,7 @@ begin
       emulate_memory_access_delay;
       data      := to_std_logic_vector(memory(to_integer(address)), 8);
       debug(memory_bfm_logger, "Reading x""" & to_hstring(data) & """ from address x""" & to_hstring(address) & """");
-      reply_msg := new_msg;
-      push(reply_msg, read_reply_msg);
+      reply_msg := new_msg(read_reply_msg);
       push(reply_msg, data);
       reply(net, request_msg, reply_msg);
 

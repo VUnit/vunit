@@ -93,8 +93,7 @@ package body axi_pkg is
     variable request_msg : msg_t;
     variable ack : boolean;
   begin
-    request_msg := new_msg;
-    push_msg_type(request_msg, axi_slave_set_address_channel_fifo_depth_msg);
+    request_msg := new_msg(axi_slave_set_address_channel_fifo_depth_msg);
     push(request_msg, depth);
     request(net, axi_slave.p_actor, request_msg, ack);
     assert ack report "Failed on set_address_channel_fifo_depth command";
@@ -104,8 +103,7 @@ package body axi_pkg is
     variable request_msg : msg_t;
     variable ack : boolean;
   begin
-    request_msg := new_msg;
-    push_msg_type(request_msg, axi_slave_set_write_response_fifo_depth_msg);
+    request_msg := new_msg(axi_slave_set_write_response_fifo_depth_msg);
     push(request_msg, depth);
     request(net, axi_slave.p_actor, request_msg, ack);
     assert ack report "Failed on set_write_response_fifo_depth command";
@@ -115,8 +113,7 @@ package body axi_pkg is
     variable request_msg : msg_t;
     variable ack : boolean;
   begin
-    request_msg := new_msg;
-    push_msg_type(request_msg, axi_slave_set_address_channel_stall_probability_msg);
+    request_msg := new_msg(axi_slave_set_address_channel_stall_probability_msg);
     push_real(request_msg, probability);
     request(net, axi_slave.p_actor, request_msg, ack);
     assert ack report "Failed on set_address_channel_stall_probability command";
@@ -128,8 +125,7 @@ package body axi_pkg is
     variable request_msg : msg_t;
     variable ack : boolean;
   begin
-    request_msg := new_msg;
-    push_msg_type(request_msg, axi_slave_configure_4kbyte_boundary_check_msg);
+    request_msg := new_msg(axi_slave_configure_4kbyte_boundary_check_msg);
     push_boolean(request_msg, value);
     request(net, axi_slave.p_actor, request_msg, ack);
     assert ack report "Failed on configure_4kbyte_boundary_check command";
@@ -149,8 +145,7 @@ package body axi_pkg is
     variable request_msg : msg_t;
     variable ack : boolean;
   begin
-    request_msg := new_msg;
-    push_msg_type(request_msg, axi_slave_enable_well_behaved_check_msg);
+    request_msg := new_msg(axi_slave_enable_well_behaved_check_msg);
     request(net, axi_slave.p_actor, request_msg, ack);
     assert ack report "Failed on msg_enable_well_behaved_check command";
   end;

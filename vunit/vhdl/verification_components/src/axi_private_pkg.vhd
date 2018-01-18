@@ -293,7 +293,7 @@ package body axi_private_pkg is
   begin
     loop
       receive(net, self.get_actor, request_msg);
-      msg_type := pop_msg_type(request_msg);
+      msg_type := message_type(request_msg);
 
       if msg_type = axi_slave_set_address_channel_fifo_depth_msg then
         self.set_address_channel_fifo_depth(pop(request_msg));

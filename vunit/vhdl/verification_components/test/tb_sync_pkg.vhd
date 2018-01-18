@@ -41,7 +41,7 @@ begin
     variable msg_type : msg_type_t;
   begin
     receive(net, actor, msg);
-    msg_type := pop_msg_type(msg);
+    msg_type := message_type(msg);
     handle_sync_message(net, msg_type, msg);
     unexpected_msg_type(msg_type);
   end process;

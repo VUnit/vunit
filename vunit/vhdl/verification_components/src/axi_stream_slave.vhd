@@ -31,7 +31,7 @@ begin
     variable msg_type : msg_type_t;
   begin
     receive(net, slave.p_actor, msg);
-    msg_type := pop_msg_type(msg);
+    msg_type := message_type(msg);
 
     if msg_type = stream_pop_msg then
       tready <= '1';

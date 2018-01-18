@@ -32,7 +32,7 @@ begin
   begin
     loop
       receive(net, bus_handle.p_actor, request_msg);
-      msg_type := pop_msg_type(request_msg);
+      msg_type := message_type(request_msg);
 
       if msg_type = bus_read_msg then
         address := pop_std_ulogic_vector(request_msg);

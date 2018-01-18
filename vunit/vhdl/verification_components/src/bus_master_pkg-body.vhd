@@ -55,13 +55,11 @@ package body bus_master_pkg is
                       constant data : std_logic_vector;
                       -- default byte enable is all bytes
                       constant byte_enable : std_logic_vector := "") is
-    variable request_msg : msg_t := new_msg;
+    variable request_msg : msg_t := new_msg(bus_write_msg);
     variable full_data : std_logic_vector(bus_handle.p_data_length-1 downto 0) := (others => '0');
     variable full_address : std_logic_vector(bus_handle.p_address_length-1 downto 0) := (others => '0');
     variable full_byte_enable : std_logic_vector(byte_enable_length(bus_handle)-1 downto 0);
   begin
-    push_msg_type(request_msg, bus_write_msg);
-
     full_address(address'length-1 downto 0) := address;
     push_std_ulogic_vector(request_msg, full_address);
 
@@ -136,8 +134,7 @@ package body bus_master_pkg is
     variable full_address : std_logic_vector(bus_handle.p_address_length-1 downto 0) := (others => '0');
     alias request_msg : msg_t is reference;
   begin
-    request_msg := new_msg;
-    push_msg_type(request_msg, bus_read_msg);
+    request_msg := new_msg(bus_read_msg);
     full_address(address'length-1 downto 0) := address;
     push_std_ulogic_vector(request_msg, full_address);
     send(net, bus_handle.p_actor, request_msg);

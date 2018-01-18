@@ -240,16 +240,17 @@ begin
 
         msg            := new_msg;
         check_equal(to_string(msg), "-:- - -> - (-)");
+        msg            := new_msg(new_msg_type("msg type"));
+        check_equal(to_string(msg), "-:- - -> - (msg type)");
         msg.id         := 1;
-        check_equal(to_string(msg), "1:- - -> - (-)");
+        check_equal(to_string(msg), "1:- - -> - (msg type)");
         msg.sender     := my_sender;
-        check_equal(to_string(msg), "1:- my sender -> - (-)");
+        check_equal(to_string(msg), "1:- my sender -> - (msg type)");
         msg.receiver   := my_receiver;
-        check_equal(to_string(msg), "1:- my sender -> my receiver (-)");
+        check_equal(to_string(msg), "1:- my sender -> my receiver (msg type)");
         msg.request_id := 7;
-        check_equal(to_string(msg), "1:7 my sender -> my receiver (-)");
-        push_msg_type(msg, new_msg_type("msg type"));
         check_equal(to_string(msg), "1:7 my sender -> my receiver (msg type)");
+
       -- Send and receive
       elsif run("Test that data ownership is lost at send") then
         msg := new_msg;
@@ -260,7 +261,7 @@ begin
         start_receiver <= true;
         wait for 1 ns;
         my_receiver    := find("my_receiver");
-        msg            := new_msg(self);
+        msg            := new_msg(sender => self);
         push_string(msg, "hello world");
         send(net, my_receiver, msg);
         check(msg.sender = self);
@@ -271,7 +272,7 @@ begin
         start_server <= true;
         wait for 1 ns;
         server       := find("server");
-        request_msg  := new_msg(self);
+        request_msg  := new_msg(sender => self);
         push_string(request_msg, "request");
         send(net, server, request_msg);
         receive(net, self, reply_msg);
@@ -294,7 +295,7 @@ begin
       elsif run("Test that an actor can poll for incoming messages") then
         wait_for_message(net, self, status, 0 ns);
         check(status = timeout, "Expected timeout");
-        msg  := new_msg(self);
+        msg  := new_msg(sender => self);
         push_string(msg, "hello again");
         send(net, self, msg);
         wait_for_message(net, self, status, 0 ns);
@@ -448,7 +449,7 @@ begin
       elsif run("Test that the sender and the receiver of a message can be retrieved") then
         actor  := new_actor;
         actor2 := new_actor;
-        msg    := new_msg(actor2);
+        msg    := new_msg(sender => actor2);
         push_string(msg, "To actor");
         send(net, actor, msg);
         receive(net, actor, msg);
@@ -466,11 +467,11 @@ begin
         wait for 1 ns;
         server       := find("server6");
 
-        request_msg  := new_msg(actor);
+        request_msg  := new_msg(sender => actor);
         push_string(request_msg, "request1");
         send(net, server, request_msg);
 
-        request_msg2  := new_msg(actor);
+        request_msg2  := new_msg(sender => actor);
         push_string(request_msg2, "request2");
         send(net, server, request_msg2);
 
@@ -499,7 +500,7 @@ begin
         my_receiver := new_actor;
         subscribe(self, my_sender, outbound);
 
-        msg := new_msg(my_sender);
+        msg := new_msg(sender => my_sender);
         push_string(msg, "hello");
         send(net, my_receiver, msg);
 
@@ -526,7 +527,7 @@ begin
         publisher := new_actor("publisher");
         subscribe(self, publisher);
 
-        msg := new_msg(publisher);
+        msg := new_msg(sender => publisher);
         push_string(msg, "hello");
         send(net, self, msg);
 
@@ -538,7 +539,7 @@ begin
         publisher := new_actor("publisher");
         subscribe(self, publisher);
 
-        msg := new_msg(publisher);
+        msg := new_msg(sender => publisher);
         push_string(msg, "hello");
         send(net, publisher, msg);
 
@@ -570,7 +571,7 @@ begin
         check(status = timeout, "Expected no message");
 
         actor := new_actor("actor");
-        msg   := new_msg(my_receiver);
+        msg   := new_msg(sender => my_receiver);
         push_string(msg, "hello");
 
         send(net, actor, msg);
@@ -583,7 +584,7 @@ begin
         server        := find("server5");
         subscribe(subscriber, server, inbound);
 
-        request_msg := new_msg(self);
+        request_msg := new_msg(sender => self);
         push_string(request_msg, "request");
         send(net, server, request_msg);
 
@@ -599,7 +600,7 @@ begin
         subscribe(self, my_sender, outbound);
         subscribe(subscriber, self, inbound);
 
-        msg := new_msg(my_sender);
+        msg := new_msg(sender => my_sender);
         push_string(msg, "hello");
         send(net, my_receiver, msg);
 
@@ -694,13 +695,13 @@ begin
         start_server2 <= true;
         server        := find("server2");
 
-        request_msg  := new_msg(self);
+        request_msg  := new_msg(sender => self);
         push_string(request_msg, "request1");
         send(net, server, request_msg);
-        request_msg2 := new_msg(self);
+        request_msg2 := new_msg(sender => self);
         push_string(request_msg2, "request2");
         send(net, server, request_msg2);
-        request_msg3 := new_msg(self);
+        request_msg3 := new_msg(sender => self);
         push_string(request_msg3, "request3");
         send(net, server, request_msg3);
 
@@ -719,17 +720,17 @@ begin
         start_server3 <= true;
         server        := find("server3");
 
-        request_msg := new_msg(self);
+        request_msg := new_msg(sender => self);
         push_string(request_msg, "request1");
         request(net, server, request_msg, reply_msg);
         check_equal(pop_string(reply_msg), "reply1");
 
-        request_msg := new_msg(self);
+        request_msg := new_msg(sender => self);
         push_string(request_msg, "request2");
         request(net, server, request_msg, ack);
         check(ack, "Expected positive acknowledgement");
 
-        request_msg := new_msg(self);
+        request_msg := new_msg(sender => self);
         push_string(request_msg, "request3");
         request(net, server, request_msg, ack);
         check_false(ack, "Expected negative acknowledgement");
@@ -738,7 +739,7 @@ begin
         server        := find("server4");
 
         t_start     := now;
-        request_msg := new_msg(self);
+        request_msg := new_msg(sender => self);
         push_string(request_msg, "request1");
         send(net, server, request_msg);
         wait_for_reply(net, request_msg, status, 2 ns);
@@ -753,7 +754,7 @@ begin
         check(status = timeout, "Expected timeout");
         check_equal(now - t_start, 2 ns);
 
-        request_msg := new_msg(self);
+        request_msg := new_msg(sender => self);
         push_string(request_msg, "request3");
         send(net, server, request_msg);
         wait_for_reply(net, request_msg, status);
@@ -771,13 +772,13 @@ begin
         start_server2 <= true;
         server        := find("server2");
 
-        request_msg  := new_msg(self);
+        request_msg  := new_msg(sender => self);
         push_string(request_msg, "request1");
         send(net, server, request_msg);
-        request_msg2 := new_msg(self);
+        request_msg2 := new_msg(sender => self);
         push_string(request_msg2, "request2");
         send(net, server, request_msg2);
-        request_msg3 := new_msg(self);
+        request_msg3 := new_msg(sender => self);
         push_string(request_msg3, "request3");
         send(net, server, request_msg3);
 
@@ -826,11 +827,11 @@ begin
         wait for 1 ns;
         server       := find("server6");
 
-        request_msg  := new_msg(actor);
+        request_msg  := new_msg(sender => actor);
         push_string(request_msg, "request1");
         send(net, server, request_msg);
 
-        request_msg2  := new_msg(actor);
+        request_msg2  := new_msg(sender => actor);
         push_string(request_msg2, "request2");
         send(net, server, request_msg2);
 
@@ -947,7 +948,7 @@ begin
                     "  Size: 17" & LF &
                     "  Messages:");
 
-        msg           := new_msg(self);
+        msg           := new_msg(sender => self);
         send(net, actor, msg);
         msg           := new_msg;
         send(net, actor, msg);
@@ -1170,8 +1171,7 @@ begin
         my_sender := new_actor("sender");
         my_receiver := new_actor("receiver");
 
-        msg := new_msg(my_sender);
-        push_msg_type(msg, new_msg_type("msg type"));
+        msg := new_msg(new_msg_type("msg type"), sender => my_sender);
         send(net, my_receiver, msg);
         check_only_log(com_logger, "[1:- sender -> receiver (msg type)] => receiver inbox", verbose);
         receive(net, my_receiver, msg);

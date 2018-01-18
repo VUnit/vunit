@@ -33,8 +33,7 @@ begin
     variable msg, msg2 : msg_t;
     variable queue     : queue_t;
 
-    constant msg_type_1 : msg_type_t := new_msg_type("msg type 1");
-    constant msg_type_2 : msg_type_t := new_msg_type("msg type 2");
+    constant my_msg_type : msg_type_t := new_msg_type("my msg type");
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -49,7 +48,7 @@ begin
         check_equal(length(msg.data), 0);
 
         actor := new_actor("sender");
-        msg2  := new_msg(actor);
+        msg2  := new_msg(sender => actor);
         check_equal(msg2.id, no_message_id_c);
         check(msg2.status = ok);
         check(msg2.sender = actor);
@@ -59,7 +58,7 @@ begin
       elsif run("Test that a message can be deleted") then
         actor := new_actor("sender");
 
-        msg            := new_msg(actor);
+        msg            := new_msg(sender => actor);
         msg.id         := 1;
         msg.status     := null_message_error;
         msg.receiver   := actor;
@@ -244,17 +243,15 @@ begin
         check(pop_float(msg) = to_float(-21.21));
       elsif run("Test push and pop of msg_type") then
         msg := new_msg;
-        check(msg_type(msg) = null_msg_type_c);
-        push_msg_type(msg, msg_type_1);
-        check(msg_type(msg) = msg_type_1);
-        push_msg_type(msg, msg_type_2);
-        check(msg_type(msg) = msg_type_1);
-        check(pop_msg_type(msg) = msg_type_1);
-        check(msg_type(msg) = msg_type_1);
-        check(pop_msg_type(msg) = msg_type_2);
-        check(msg_type(msg) = msg_type_1);
-        push_msg_type(msg, msg_type_2);
-        check(msg_type(msg) = msg_type_2);
+        push_msg_type(msg, my_msg_type);
+        check(pop_msg_type(msg) = my_msg_type);
+      elsif run("Test setting and getting msg_type") then
+        msg := new_msg;
+        check(message_type(msg) = null_msg_type_c);
+        msg := new_msg(my_msg_type);
+        check(message_type(msg) = my_msg_type);
+        delete(msg);
+        check(message_type(msg) = null_msg_type_c);
       elsif run("Test message for being empty") then
         msg := new_msg;
         check(is_empty(msg));
