@@ -149,13 +149,12 @@ of mistaking one for the other.
 
 .. code-block:: vhdl
 
-   msg := new_msg;
-   push(msg, memory_bfm_pkg.write_msg);
-   push(msg, my_unsigned_address);
-   push(msg, my_std_logic_vector_data);
-   send(net, memory_bfm_pkg.actor, msg);
+  msg := new_msg(memory_bfm_pkg.write_msg);
+  push(msg, my_unsigned_address);
+  push(msg, my_std_logic_vector_data);
+  send(net, memory_bfm_pkg.actor, msg);
 
-The receiver starts by popping the message type and then handles the message types it recognizes.
+The receiver starts by looking at the message type and then handles the message types it recognizes.
 
 .. code-block:: vhdl
 
@@ -167,7 +166,7 @@ The receiver starts by popping the message type and then handles the message typ
     variable memory : integer_vector(0 to 255) := (others => 0);
   begin
     receive(net, actor, request_msg);
-    msg_type := pop(request_msg);
+    msg_type := message_type(request_msg);
 
     if msg_type = write_msg then
       address := pop(request_msg);
@@ -234,7 +233,7 @@ requesting actor.
     variable memory : integer_vector(0 to 255) := (others => 0);
   begin
     receive(net, actor, request_msg);
-    msg_type := pop(request_msg);
+    msg_type := message_type(request_msg);
 
     if msg_type = write_msg then
       address := pop(request_msg);
@@ -244,8 +243,7 @@ requesting actor.
     elsif msg_type = read_msg then
       address := pop(request_msg);
       data := to_std_logic_vector(memory(to_integer(address)), 8);
-      reply_msg := new_msg;
-      push(reply_msg, read_reply_msg);
+      reply_msg := new_msg(read_reply_msg);
       push(reply_msg, data);
       reply(net, request_msg, reply_msg);
 
@@ -268,15 +266,14 @@ procedure. Below is a read procedure for our memory BFM.
     signal net : inout event_t;
     constant address : in unsigned(7 downto 0);
     variable data : out std_logic_vector(7 downto 0)) is
-    variable request_msg : msg_t := new_msg;
+    variable request_msg : msg_t := new_msg(read_msg);
     variable reply_msg : msg_t;
     variable msg_type : msg_type_t;
   begin
-    push(request_msg, read_msg);
     push(request_msg, address);
     send(net, actor, request_msg);
     receive_reply(net, request_msg, reply_msg);
-    msg_type := pop(reply_msg);
+    msg_type := message_type(reply_msg);
     data := pop(reply_msg);
     delete(reply_msg);
   end;
@@ -321,7 +318,7 @@ are signed. To sign a message you can provide the sending actor when the message
 
 .. code-block:: vhdl
 
-  msg := new_msg(sending_actor);
+  msg := new_msg(sender => sending_actor);
 
 Sending/Receiving to/from Multiple Actors
 -----------------------------------------
@@ -354,7 +351,7 @@ means that the sender can send any number of messages before the receiver starts
 requesting a reply, like the read transaction presented before, will naturally break this flow of unprocessed messages
 by blocking while waiting for a reply. Sometimes it's also useful to synchronize the sender and receiver on
 transactions which initiate an action without expecting a reply, a write transaction for example. To do that we can
-create a reply message with a positive or negative acknowledge   to signal the completion of the transaction or the
+create a reply message with a positive or negative acknowledge to signal the completion of the transaction or the
 failure to complete the request. Rather than doing that explicitly you can use one of the convenience procedures that
 ``com`` provides.
 
@@ -398,8 +395,7 @@ The message exchange will just be an indication that the receiver is idling wait
 
 .. code-block:: vhdl
 
-  request_msg := new_msg;
-  push(request_msg, wait_until_idle_msg);
+  request_msg := new_msg(wait_until_idle_msg);
   request(net, actor_to_synchronize, request_msg, reply_msg);
 
 The sender will block on the ``request`` call until the actor to synchronize has replied and the two actors becomes
@@ -411,7 +407,7 @@ the message handling of the previous BFM example.
 .. code-block:: vhdl
 
   receive(net, actor, request_msg);
-  msg_type := pop(request_msg);
+  msg_type := message_type(request_msg);
 
   if msg_type = wait_until_idle_msg then
     reply_msg := new_msg;
@@ -464,7 +460,7 @@ the updated BFM.
 .. code-block:: vhdl
 
   receive(net, actor, request_msg);
-  msg_type := pop(request_msg);
+  msg_type := message_type(request_msg);
 
   handle_wait_until_idle(net, msg_type, request_msg);
 
@@ -579,8 +575,7 @@ achieve that it will publish the sum messages and just provide the publishing ac
    variable msg : msg_t;
  begin
    wait until rising_edge(clk) and (dv_out = '1');
-   msg := new_msg;
-   push(msg, sum_msg);
+   msg := new_msg(sum_msg);
    push(msg, to_integer(sum));
    publish(net, monitor, msg);
  end process;
@@ -632,15 +627,14 @@ model to verify that the output data matches the input.
     subscribe(slave_channel, monitor);
     loop
       receive(net, master_channel, master_msg);
-      msg_type := pop(master_msg);
+      msg_type := message_type(master_msg);
 
       handle_wait_until_idle(net, msg_type, master_msg);
 
       if msg_type = add_msg then
         receive(net, slave_channel, slave_msg);
-        msg_type := pop(slave_msg);
 
-        if msg_type = sum_msg then
+        if message_type(slave_msg) = sum_msg then
           do_model_check(master_msg, slave_msg);
         end if;
       end if;
@@ -655,8 +649,7 @@ scoreboard side. The example test sequencer below just sends 10 random add messa
 .. code-block:: vhdl
 
         for i in 1 to 10 loop
-          msg := new_msg;
-          push(msg, add_msg);
+          msg := new_msg(add_msg);
           push(msg, rnd.RandInt(0, 255));
           push(msg, rnd.RandInt(0, 255));
           send(net, driver, msg);
