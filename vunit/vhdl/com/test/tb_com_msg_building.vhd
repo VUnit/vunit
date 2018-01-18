@@ -255,6 +255,16 @@ begin
         check(msg_type(msg) = msg_type_1);
         push_msg_type(msg, msg_type_2);
         check(msg_type(msg) = msg_type_2);
+      elsif run("Test message for being empty") then
+        msg := new_msg;
+        check(is_empty(msg));
+        push_integer(msg, 11);
+        check_false(is_empty(msg));
+        check_equal(pop_integer(msg), 11);
+        check(is_empty(msg));
+        push_integer(msg, 11);
+        delete(msg);
+        check(is_empty(msg));
       end if;
     end loop;
 

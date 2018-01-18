@@ -218,6 +218,9 @@ package com_types_pkg is
   -- Return message type of message without consuming it as pop_msg_type would
   function msg_type(msg : msg_t) return msg_type_t;
 
+  -- Check if message is empty
+  impure function is_empty(msg : msg_t) return boolean;
+
   -----------------------------------------------------------------------------
   -- Subprograms for pushing/popping data to/from a message. Data is popped
   -- from a message in the same order they were pushed (FIFO)
@@ -476,6 +479,15 @@ package body com_types_pkg is
   function msg_type(msg : msg_t) return msg_type_t is
   begin
     return msg.msg_type;
+  end;
+
+  impure function is_empty(msg : msg_t) return boolean is
+  begin
+    if msg.data = null_queue then
+      return true;
+    end if;
+
+    return length(msg.data) = 0;
   end;
 
   -----------------------------------------------------------------------------
