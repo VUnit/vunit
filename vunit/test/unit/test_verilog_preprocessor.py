@@ -469,15 +469,58 @@ keep''')
             '`foo(1, 2)\n'
             "~~~~")
 
+    def test_preprocess_substitute_define_with_nested_argument(self):
+        result = self.preprocess(
+            "`define foo(arg1, arg2)arg1\n"
+            "`foo([1, 2], 3)")
+        self.assertFalse(result.logger.warning.called)
+        result.assert_has_tokens("[1, 2]")
+
+        result = self.preprocess(
+            "`define foo(arg1, arg2)arg1\n"
+            "`foo({1, 2}, 3)")
+        self.assertFalse(result.logger.warning.called)
+        result.assert_has_tokens("{1, 2}")
+
+        result = self.preprocess(
+            "`define foo(arg1, arg2)arg1\n"
+            "`foo((1, 2), 3)")
+        self.assertFalse(result.logger.warning.called)
+        result.assert_has_tokens("(1, 2)")
+
+        result = self.preprocess(
+            "`define foo(arg1)arg1\n"
+            "`foo((1, 2))")
+        self.assertFalse(result.logger.warning.called)
+        result.assert_has_tokens("(1, 2)")
+
+        # Not OK in simulator but we let the simulator
+        # tell the user that this is a problem
+        result = self.preprocess(
+            "`define foo(arg1)arg1\n"
+            "`foo([1, 2)")
+        self.assertFalse(result.logger.warning.called)
+        result.assert_has_tokens("[1, 2")
+
     def test_preprocess_substitute_define_eof(self):
-        result = self.preprocess("""\
-`define foo(arg1, arg2)arg1,arg2
-`foo(1 2""")
+        result = self.preprocess(
+            "`define foo(arg1, arg2)arg1,arg2\n"
+            "`foo(1 2")
         result.assert_has_tokens("")
         result.logger.warning.assert_called_once_with(
             "EOF reached when parsing `define actuals\n%s",
             "at fn.v line 2:\n"
             '`foo(1 2\n'
+            "~~~~")
+
+        result = self.preprocess(
+            "`define foo(arg1, arg2)arg1,arg2\n"
+            "`foo((1 2)")
+        result.assert_has_tokens("")
+        result.logger.warning.assert_called_once_with(
+            "EOF reached when parsing `define actuals\n%s",
+            "at fn.v line 2:\n"
+            '`foo((1 2)\n'
             "~~~~")
 
     def test_substitute_undefined(self):

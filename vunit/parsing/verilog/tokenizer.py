@@ -104,6 +104,22 @@ class VerilogTokenizer(object):
             r"\)",
             remove_value)
 
+        add(LBRACKET,
+            r"\[",
+            remove_value)
+
+        add(RBRACKET,
+            r"\]",
+            remove_value)
+
+        add(LBRACE,
+            r"{",
+            remove_value)
+
+        add(RBRACE,
+            r"}",
+            remove_value)
+
         add(COMMA,
             r",",
             remove_value)

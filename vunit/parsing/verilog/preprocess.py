@@ -449,8 +449,31 @@ class Macro(object):
         token = stream.pop()
         value = []
         values = []
-        while token.kind != RPAR:
-            if token.kind == COMMA:
+
+        bracket_count = 0
+        brace_count = 0
+        par_count = 0
+
+        while not (token.kind == RPAR and par_count == 0):
+            if token.kind is LBRACKET:
+                bracket_count += 1
+            elif token.kind is RBRACKET:
+                bracket_count += -1
+            elif token.kind is LBRACE:
+                brace_count += 1
+            elif token.kind is RBRACE:
+                brace_count += -1
+            elif token.kind is LPAR:
+                par_count += 1
+            elif token.kind is RPAR:
+                par_count += -1
+
+            value_ok = (token.kind == COMMA and
+                        bracket_count == 0 and
+                        brace_count == 0 and
+                        par_count == 0)
+
+            if value_ok:
                 values.append(value)
                 value = []
             else:
