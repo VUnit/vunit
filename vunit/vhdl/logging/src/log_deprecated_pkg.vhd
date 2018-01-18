@@ -92,7 +92,7 @@ package body log_deprecated_pkg is
 
       impure function get_logger_display_handler return log_handler_t is
       begin
-        for idx in 0 to num_log_handlers(logger) loop
+        for idx in 0 to num_log_handlers(logger) - 1 loop
           if get_file_name(get_log_handler(logger, idx)) = stdout_file_name then
             return get_log_handler(logger, idx);
           end if;
@@ -103,7 +103,7 @@ package body log_deprecated_pkg is
 
       impure function get_logger_file_handler return log_handler_t is
       begin
-        for idx in 0 to num_log_handlers(logger) loop
+        for idx in 0 to num_log_handlers(logger) - 1 loop
           if get_file_name(get_log_handler(logger, idx)) /= stdout_file_name then
             return get_log_handler(logger, idx);
           end if;
@@ -120,7 +120,7 @@ package body log_deprecated_pkg is
       end if;
 
       logger_file_handler := get_logger_file_handler;
-      if new_logger or (logger_display_handler = null_handler) then
+      if new_logger or (logger_file_handler = null_handler) then
         logger_file_handler := new_log_handler(file_name, real_format(file_format), false);
       else
         init_log_handler(logger_file_handler, real_format(file_format), file_name, false);

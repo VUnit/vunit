@@ -135,9 +135,7 @@ level, the logger, and the message.
 
 The ``raw`` formatter just emits the log message and nothing else. The
 ``csv`` formatter emits all information in the log entry as a comma
-separated list for convenient parsing. By the default the VUnit test
-runner configures the file handler to create a ``csv`` formatted
-``log.csv`` file in the test case output path.
+separated list for convenient parsing.
 
 Print Procedure
 ---------------

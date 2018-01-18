@@ -97,15 +97,13 @@ begin
 
     -- Check defaults before test runner setup
     assert_equal(get_log_count, 0);
-    assert_equal(num_log_handlers(logger), 2);
+    assert_equal(num_log_handlers(logger), 1);
     assert_true(get_log_handler(logger, 0) = display_handler);
-    assert_true(get_log_handler(logger, 1) = file_handler);
-    assert_true(get_log_handlers(logger) = (display_handler, file_handler));
-
+    assert_true(get_log_handlers(logger) = (0 => display_handler));
     assert_true(get_visible_log_levels(logger, display_handler) = (info, warning, error, failure));
-    assert_true(get_visible_log_levels(logger, file_handler) = (debug, info, warning, error, failure));
 
     test_runner_setup(runner, runner_cfg);
+    set_log_handlers(root_logger, (display_handler, file_handler));
     set_log_level(file_handler, verbose);
     set_log_level(display_handler, verbose);
 

@@ -11,22 +11,4 @@ ui = VUnit.from_argv()
 lib = ui.add_library("lib")
 lib.add_source_files(join(dirname(__file__), "*.vhd"))
 
-def print_log(output_path):
-    log_file_path = join(output_path, "log.csv")
-    with open(log_file_path) as fptr:
-        log = fptr.read()
-
-    print("")
-    msg = "= Contents of log file: %s" % log_file_path
-    length = len(msg) + 1
-    print("=" * length)
-    print(msg)
-    print("=" * length)
-    print(log)
-    print("=" * length)
-
-    return True
-
-lib.test_bench("tb_logging_example").set_post_check(print_log)
-
 ui.main()

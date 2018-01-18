@@ -53,20 +53,24 @@ package body test_support_pkg is
 
   impure function get_display_handler(logger : logger_t) return log_handler_t is
   begin
-    if get_file_name(get_log_handler(logger, 0)) = stdout_file_name then
-      return get_log_handler(logger, 0);
-    else
-      return get_log_handler(logger, 1);
-    end if;
+    for idx in 0 to num_log_handlers(logger) - 1 loop
+      if get_file_name(get_log_handler(logger, idx)) = stdout_file_name then
+        return get_log_handler(logger, idx);
+      end if;
+    end loop;
+
+    return null_handler;
   end function;
 
   impure function get_file_handler(logger : logger_t) return log_handler_t is
   begin
-    if get_file_name(get_log_handler(logger, 0)) = stdout_file_name then
-      return get_log_handler(logger, 1);
-    else
-      return get_log_handler(logger, 0);
-    end if;
+    for idx in 0 to num_log_handlers(logger) - 1 loop
+      if get_file_name(get_log_handler(logger, idx)) /= stdout_file_name then
+        return get_log_handler(logger, idx);
+      end if;
+    end loop;
+
+    return null_handler;
   end function;
 
   procedure check_stop_level(logger : logger_t; pass_level : log_level_t; stop_level : log_level_t) is

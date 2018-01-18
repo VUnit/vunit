@@ -22,6 +22,7 @@ begin
 
   example_process: process is
     variable my_logger : logger_t := get_logger("logging_example:my_logger");
+    constant file_name : string := output_path(runner_cfg) & "log.csv";
 
     file fptr : text;
     variable status : file_open_status;
@@ -35,7 +36,7 @@ begin
     info("Hello" & LF & "world");
 
     -- Verbose and debug messages are not written to the display by default
-    debug("not visible but found in log.csv file");
+    debug("not visible");
     verbose("not visible");
 
     -- Custom loggers can also be used
@@ -62,9 +63,9 @@ begin
 
     -- The print procedure is independent of logging
     print("Print on stdout");
-    print("Print on file using file name", get_file_name(file_handler));
-    file_open(status, fptr, get_file_name(file_handler), append_mode);
-    assert status = open_ok report "Failed to open file " & get_file_name(file_handler) severity failure;
+    print("Print on file using file name", file_name);
+    file_open(status, fptr, file_name, append_mode);
+    assert status = open_ok report "Failed to open file " & file_name severity failure;
     print("Print on file using file object", fptr);
     file_close(fptr);
 

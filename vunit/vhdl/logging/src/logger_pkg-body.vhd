@@ -144,11 +144,9 @@ package body logger_pkg is
   impure function new_root_logger return logger_t is
     variable logger : logger_t := new_logger(root_logger_id, "", null_logger);
   begin
-    p_set_log_handlers(logger, (display_handler, file_handler));
+    p_set_log_handlers(logger, (0 => display_handler));
     hide_all(logger, display_handler);
     show(logger, display_handler, (info, warning, error, failure));
-    hide_all(logger, file_handler);
-    show(logger, file_handler, (debug, info, warning, error, failure));
     return logger;
   end;
 

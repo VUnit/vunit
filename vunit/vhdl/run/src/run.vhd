@@ -34,21 +34,10 @@ package body run_pkg is
       core_pkg.setup(output_path(runner_cfg) & "vunit_results");
     end if;
 
-    init_log_handler(file_handler,
-                     file_name => join(output_path(runner_cfg), "log.csv"),
-                     format => csv);
-    set_log_handlers(runner_trace_logger,
-                     (new_log_handler(file_name => stdout_file_name, format => verbose, use_color => true),
-                      new_log_handler(file_name => join(output_path(runner_cfg), "runner.csv"),
-                                      format => csv, use_color => false)));
-    update_max_logger_name_length(get_log_handler(runner_trace_logger, 0), get_max_logger_name_length(display_handler));
 
     if has_active_python_runner(runner_state) then
-      set_log_level(runner_trace_logger, get_log_handler(runner_trace_logger, 0), warning);
-    else
-      set_log_level(runner_trace_logger, get_log_handler(runner_trace_logger, 0), info);
+      hide(runner_trace_logger, display_handler, info);
     end if;
-    show_all(runner_trace_logger, get_log_handler(runner_trace_logger, 1));
 
     if has_key(runner_cfg, "use_color") and boolean'value(get(runner_cfg, "use_color")) then
       enable_colors;

@@ -95,7 +95,7 @@ begin
         logger_init(file_format => csv, file_name => "my_logger.csv");
         check_log(default_logger, deprecated_msg, warning);
         unmock(default_logger);
-        assert_equal(get_file_name(file_handler), "my_logger.csv");
+        assert_equal(get_file_name(get_file_handler(default_logger)), "my_logger.csv");
 
       elsif run("Test changing display format") then
         mock(default_logger);
