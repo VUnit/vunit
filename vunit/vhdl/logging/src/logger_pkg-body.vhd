@@ -487,11 +487,11 @@ package body logger_pkg is
   -- Disable logging for all levels < level to this handler for this specific logger
   procedure set_log_level(logger : logger_t;
                           log_handler : log_handler_t;
-                          level : standard_log_level_t) is
+                          log_level : standard_log_level_t) is
   begin
     for lvl in log_level_t'low to log_level_t'high loop
       if is_standard(lvl) then
-        if lvl < level then
+        if lvl < log_level then
           hide(logger, log_handler, lvl);
         else
           show(logger, log_handler, lvl);
@@ -502,44 +502,44 @@ package body logger_pkg is
 
   -- Disable logging for all levels < level to this handler
   procedure set_log_level(log_handler : log_handler_t;
-                          level : standard_log_level_t) is
+                          log_level : standard_log_level_t) is
   begin
-    set_log_level(root_logger, log_handler, level);
+    set_log_level(root_logger, log_handler, log_level);
   end;
 
   -- Disable logging for the specified level to this handler from specific
   -- logger and all children.
   procedure hide(logger : logger_t;
                  log_handler : log_handler_t;
-                 level : log_level_t;
+                 log_level : log_level_t;
                  include_children : boolean := true) is
   begin
-    set_log_level_filter(logger, log_handler, (0 => level), visible => false,
+    set_log_level_filter(logger, log_handler, (0 => log_level), visible => false,
                          include_children => include_children);
   end;
 
   -- Disable logging for the specified level to this handler
   procedure hide(log_handler : log_handler_t;
-                 level : log_level_t) is
+                 log_level : log_level_t) is
   begin
-    hide(root_logger, log_handler, level, include_children => true);
+    hide(root_logger, log_handler, log_level, include_children => true);
   end;
   -- Disable logging for the specified levels to this handler from specific
   -- logger and all children.
   procedure hide(logger : logger_t;
                  log_handler : log_handler_t;
-                 levels : log_level_vec_t;
+                 log_levels : log_level_vec_t;
                  include_children : boolean := true) is
   begin
-    set_log_level_filter(logger, log_handler, levels, visible => false,
+    set_log_level_filter(logger, log_handler, log_levels, visible => false,
                          include_children => include_children);
   end;
 
   -- Disable logging for the specified levels to this handler
   procedure hide(log_handler : log_handler_t;
-                 levels : log_level_vec_t) is
+                 log_levels : log_level_vec_t) is
   begin
-    hide(root_logger, log_handler, levels);
+    hide(root_logger, log_handler, log_levels);
   end;
 
   procedure hide_all(logger : logger_t;
@@ -558,32 +558,32 @@ package body logger_pkg is
 
   procedure show(logger : logger_t;
                  log_handler : log_handler_t;
-                 level : log_level_t;
+                 log_level : log_level_t;
                  include_children : boolean := true) is
   begin
-    set_log_level_filter(logger, log_handler, (0 => level), visible => true,
+    set_log_level_filter(logger, log_handler, (0 => log_level), visible => true,
                          include_children => include_children);
   end;
 
   procedure show(log_handler : log_handler_t;
-                 level : log_level_t) is
+                 log_level : log_level_t) is
   begin
-    show(root_logger, log_handler, level, include_children => true);
+    show(root_logger, log_handler, log_level, include_children => true);
   end;
 
   procedure show(logger : logger_t;
                  log_handler : log_handler_t;
-                 levels : log_level_vec_t;
+                 log_levels : log_level_vec_t;
                  include_children : boolean := true) is
   begin
-    set_log_level_filter(logger, log_handler, levels, visible => true,
+    set_log_level_filter(logger, log_handler, log_levels, visible => true,
                          include_children => include_children);
   end;
 
   procedure show(log_handler : log_handler_t;
-                 levels : log_level_vec_t) is
+                 log_levels : log_level_vec_t) is
   begin
-    show(root_logger, log_handler, levels, include_children => true);
+    show(root_logger, log_handler, log_levels, include_children => true);
   end;
 
   procedure show_all(logger : logger_t;
@@ -602,14 +602,14 @@ package body logger_pkg is
   end;
 
   impure function is_visible(logger : logger_t;
-                             level : log_level_t) return boolean is
+                             log_level : log_level_t) return boolean is
   begin
     if is_mocked(logger) then
       return true;
     end if;
 
     for i in 0 to num_log_handlers(logger)-1 loop
-      if is_visible(logger, get_log_handler(logger, i), level) then
+      if is_visible(logger, get_log_handler(logger, i), log_level) then
         return true;
       end if;
     end loop;
@@ -619,11 +619,11 @@ package body logger_pkg is
 
   impure function is_visible(logger : logger_t;
                              log_handler : log_handler_t;
-                             level : log_level_t) return boolean is
+                             log_level : log_level_t) return boolean is
     constant log_level_filter : integer_vector_ptr_t := get_log_level_filter(logger, log_handler);
   begin
     assert log_level_filter /= null_ptr;
-    return get(log_level_filter, log_level_t'pos(level)) = log_level_visible;
+    return get(log_level_filter, log_level_t'pos(log_level)) = log_level_visible;
   end;
 
   impure function num_log_handlers(logger : logger_t) return natural is

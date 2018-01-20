@@ -158,7 +158,7 @@ package logger_pkg is
   -- Only affects and can only be used with the standard log levels
   -- where an ordering is defined
   procedure set_log_level(log_handler : log_handler_t;
-                          level : standard_log_level_t);
+                          log_level : standard_log_level_t);
 
   -- Hide log messages for all levels < level to this handler from specific
   -- logger and all children.
@@ -166,46 +166,46 @@ package logger_pkg is
   -- where an ordering is defined
   procedure set_log_level(logger : logger_t;
                           log_handler : log_handler_t;
-                          level : standard_log_level_t);
+                          log_level : standard_log_level_t);
 
   -- Hide log messages of specified level to this handler.
   procedure hide(log_handler : log_handler_t;
-                 level : log_level_t);
+                 log_level : log_level_t);
 
   -- Hide log messages from the logger of the specified level to this handler
   procedure hide(logger : logger_t;
                  log_handler : log_handler_t;
-                 level : log_level_t;
+                 log_level : log_level_t;
                  include_children : boolean := true);
 
   -- Hide log messages of the specified levels to this handler.
   procedure hide(log_handler : log_handler_t;
-                 levels : log_level_vec_t);
+                 log_levels : log_level_vec_t);
 
   -- Hide log messages from the logger of the specified levels to this handler
   procedure hide(logger : logger_t;
                  log_handler : log_handler_t;
-                 levels : log_level_vec_t;
+                 log_levels : log_level_vec_t;
                  include_children : boolean := true);
 
   -- Show log messages of the specified log_level to this handler
   procedure show(log_handler : log_handler_t;
-                 level : log_level_t);
+                 log_level : log_level_t);
 
   -- Show log messages from the logger of the specified log_level to this handler
   procedure show(logger : logger_t;
                  log_handler : log_handler_t;
-                 level : log_level_t;
+                 log_level : log_level_t;
                  include_children : boolean := true);
 
   -- Show log messages of the specified log_levels to this handler
   procedure show(log_handler : log_handler_t;
-                 levels : log_level_vec_t);
+                 log_levels : log_level_vec_t);
 
   -- Show log messages from the logger of the specified log_levels to this handler
   procedure show(logger : logger_t;
                  log_handler : log_handler_t;
-                 levels : log_level_vec_t;
+                 log_levels : log_level_vec_t;
                  include_children : boolean := true);
 
   -- Show all log levels to the log handler
@@ -228,12 +228,12 @@ package logger_pkg is
   -- Can be used to avoid expensive string creation when not logging a specific
   -- level
   impure function is_visible(logger : logger_t;
-                             level : log_level_t) return boolean;
+                             log_level : log_level_t) return boolean;
 
   -- Return true if logging to this logger at this level is visible to handler
   impure function is_visible(logger : logger_t;
                              log_handler : log_handler_t;
-                             level : log_level_t) return boolean;
+                             log_level : log_level_t) return boolean;
 
   -- Get the current visible log levels for a specific logger to this log handler
   impure function get_visible_log_levels(logger : logger_t;
