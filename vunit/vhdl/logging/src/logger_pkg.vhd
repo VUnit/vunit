@@ -154,20 +154,6 @@ package logger_pkg is
   -- Disable stopping simulation for all loggers by setting the stop count to integer'high
   procedure disable_stop;
 
-  -- Hide log messages for all levels < level to this handler.
-  -- Only affects and can only be used with the standard log levels
-  -- where an ordering is defined
-  procedure set_log_level(log_handler : log_handler_t;
-                          log_level : standard_log_level_t);
-
-  -- Hide log messages for all levels < level to this handler from specific
-  -- logger and all children.
-  -- Only affects and can only be used with the standard log levels
-  -- where an ordering is defined
-  procedure set_log_level(logger : logger_t;
-                          log_handler : log_handler_t;
-                          log_level : standard_log_level_t);
-
   -- Hide log messages of specified level to this handler.
   procedure hide(log_handler : log_handler_t;
                  log_level : log_level_t);

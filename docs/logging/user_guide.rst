@@ -17,7 +17,7 @@ frameworks. For example
 -  Configurable formatting of message output
 -  Automatic file and line number tagging of output messages
 -  File and stdout output channels with independent formatting and
-   filtering settings
+   visibility settings
 
 Architecture
 ------------
@@ -43,8 +43,7 @@ two output handlers, one for handling display (stdout) output and one
 for handling output to a file. Every log entry you do is passed to
 both these handlers. Each handler may have a different output format
 and log level setting. The format is used to control they layout and
-amount of information being displayed. The log level is used to filter
-log messages. Individual loggers can also be filered.
+amount of information being displayed.
 
 Log Level
 ---------
@@ -174,26 +173,24 @@ results in something like this with the ``verbose`` formatter.
     1000 ps - temperature_sensor -    INFO - Over-temperature (73 degrees C)!
 
 
-Log filtering
--------------
+Log visibility
+--------------
 
-Log filtering is controlled by applying filters to a logger or to a group of
-loggers. A log must pass all filters to be propagated to the handler output.
-Display and file handlers are configured individually.
-
-You can set the log level to create a filter that will block all logs below that log level
-or you can create a filter that will block an arbitrary set of log levels or you can combine
-the two filters.
+Log visibility to a log handler can be configured for specific log_levels of a logger.
 
 .. code-block:: vhdl
 
     -- Disable all logging to the display.
     hide_all(display_handler);
 
+    -- Show debug log_level of system0 logger to the display
     show(get_logger("system0"), display_handler, debug);
 
-    -- Enable all logging from the uart module in system0
+    -- Show all logging from the uart module in system0 to the display
     show_all(get_logger("system0:uart"), display_handler);
+
+    -- Hide all debug output to display handler
+    hide(display_handler, debug);
 
 
 Custom Loggers

@@ -46,7 +46,7 @@ Main Features
 -  :doc:`Assertion checker library <./check/user_guide>` that extends VHDL built-in support
    (assert).
 -  :doc:`Logging framework <./logging/user_guide>` supporting display and file output, different log
-   levels, filtering on level and design hierarchy, output formatting
+   levels, visibility settings of levels and design hierarchy, output formatting
    and multiple loggers. Supports machine readable output formats that for example can be read by a spreadsheet.
 -  Optional location preprocessor that traces log and check calls back to file
    and line number.

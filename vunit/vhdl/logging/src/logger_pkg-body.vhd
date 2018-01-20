@@ -495,29 +495,6 @@ package body logger_pkg is
     return get_log_level_filter(logger, log_handler, visible => false);
   end;
 
-  -- Disable logging for all levels < level to this handler for this specific logger
-  procedure set_log_level(logger : logger_t;
-                          log_handler : log_handler_t;
-                          log_level : standard_log_level_t) is
-  begin
-    for lvl in log_level_t'low to log_level_t'high loop
-      if is_standard(lvl) then
-        if lvl < log_level then
-          hide(logger, log_handler, lvl);
-        else
-          show(logger, log_handler, lvl);
-        end if;
-      end if;
-    end loop;
-  end;
-
-  -- Disable logging for all levels < level to this handler
-  procedure set_log_level(log_handler : log_handler_t;
-                          log_level : standard_log_level_t) is
-  begin
-    set_log_level(root_logger, log_handler, log_level);
-  end;
-
   -- Disable logging for the specified level to this handler from specific
   -- logger and all children.
   procedure hide(logger : logger_t;

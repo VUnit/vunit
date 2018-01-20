@@ -108,8 +108,8 @@ begin
 
     test_runner_setup(runner, runner_cfg);
     set_log_handlers(root_logger, (display_handler, file_handler));
-    set_log_level(file_handler, verbose);
-    set_log_level(display_handler, verbose);
+    show_all(root_logger, file_handler);
+    show_all(root_logger, display_handler);
 
     if run("raw format") then
       set_format(display_handler, format => raw);
@@ -303,9 +303,6 @@ begin
       perform_logging(logger);
       check_empty_log_file(log_file_name);
 
-      set_log_level(file_handler, info);
-      hide(file_handler, warning);
-
       show_all(file_handler);
       for log_level in verbose to failure loop
         assert_true(is_visible(default_logger, file_handler, log_level));
@@ -324,9 +321,10 @@ begin
       reset_log_count(logger, error);
       reset_log_count(logger, failure);
 
-    elsif run("can set log level") then
+    elsif run("can show individual levels") then
       init_log_handler(file_handler, file_name => log_file_name, format => level);
-      set_log_level(file_handler, warning);
+      hide_all(file_handler);
+      show(file_handler, (warning, error, failure));
       disable_stop;
       perform_logging(logger);
       set(entries, "0", "WARNING - message 4");
@@ -336,7 +334,7 @@ begin
       reset_log_count(logger, error);
       reset_log_count(logger, failure);
 
-    elsif run("can set disable individual levels") then
+    elsif run("can hide individual levels") then
       init_log_handler(file_handler, file_name => log_file_name, format => level);
       hide(file_handler, (verbose, debug, info, error, failure));
       disable_stop;
@@ -346,9 +344,10 @@ begin
       reset_log_count(logger, error);
       reset_log_count(logger, failure);
 
-    elsif run("log level also set for nested loggers") then
+    elsif run("visibility also set for nested loggers") then
       init_log_handler(file_handler, file_name => log_file_name, format => level);
-      set_log_level(logger, file_handler, failure);
+      hide_all(logger, file_handler);
+      show(logger, file_handler, failure);
       disable_stop;
       info(logger, "message 1");
       info(nested_logger, "message 2");
@@ -373,8 +372,6 @@ begin
       check_log_file(log_file_name, entries);
 
       init_log_handler(file_handler, file_name => log_file_name, format => level);
-      set_log_level(logger, file_handler, info);
-      hide(logger, file_handler, warning);
       show_all(logger, file_handler);
       for log_level in verbose to failure loop
         assert_true(is_visible(default_logger, file_handler, log_level));
@@ -638,8 +635,6 @@ begin
       info(logger, "msg");
       assert_equal(get_log_count - tmp, 1);
 
-      set_log_level(file_handler, failure);
-      set_log_level(display_handler, failure);
       verbose(logger, "msg");
       assert_equal(get_log_count - tmp, 2);
 

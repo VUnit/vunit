@@ -46,13 +46,13 @@ begin
     assert get_parent(my_logger) = get_logger("logging_example");
     assert get_child(get_logger("logging_example"), 0) = my_logger;
 
-    -- Log filter settings are inherited by all children
-    set_log_level(get_parent(my_logger), display_handler, debug);
-    verbose(my_logger, "This will not be shown on stdout");
-    warning(my_logger, "This will be shown on stdout");
-    hide(my_logger, display_handler, (warning, debug));
-    warning(my_logger, "This is no longer shown on stdout");
-    warning(get_parent(my_logger), "This is still shown on stdout");
+    -- Log visibility settings are inherited by all children
+    show(get_parent(my_logger), display_handler, debug);
+    debug(my_logger, "This will be shown on stdout");
+    debug(get_parent(my_logger), "This will be shown on stdout");
+    hide(my_logger, display_handler, debug);
+    debug(my_logger, "This is no longer shown on stdout");
+    debug(get_parent(my_logger), "This is still shown on stdout");
 
     -- The log format can be changed
     set_format(display_handler, raw);
