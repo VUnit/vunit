@@ -45,8 +45,8 @@ both these handlers. Each handler may have a different output format
 and log level setting. The format is used to control they layout and
 amount of information being displayed.
 
-Log Level
----------
+Log Levels
+----------
 
 Every log entry you make has a log level which is defined by dedicated
 procedure calls for each log level. The standard log levels and their
@@ -55,41 +55,14 @@ associated procedure calls are:
 .. code-block:: vhdl
 
     -- Visible to display by default
-    failure("Most severe error that by default causes simulation error");
-    error("Error message that by default casues simulation error.");
-    warning("A warning.");
-
-    -- Visible to file by default
+    failure("Fatal error, there is most likely no point in going further");
+    error("An error but we could still keep running for a while");
+    warning("A warning");
     info("Informative message for very useful public information");
-    debug("Debug message for seldom useful or internal information");
 
     -- Not visible by default
-    verbose("Verbose messages only used for tracing program flow");
-
-Every log level is associated with a numeric value. failure = 90, error = 75,
-warning = 60, info = 45, debug = 30, and verbose = 15. Other values between
-0 and 99 are free for custom defined levels. For example
-
-.. code-block:: vhdl
-
-    license_info := new_log_level("license", 50, fg => red, bg => yellow, style => bright);
-
-The numeric value can also be defined relative to other levels
-
-.. code-block:: vhdl
-
-    license_info := new_log_level("license", info + 5, fg => red, bg => yellow, style => bright);
-
-
-The last optional parameters define the foreground, background and style of the output color.
-Valid values are defined in ansi_pkg.
-
-To make a log entry with the custom level use any of the `log` procedures:
-
-.. code-block:: vhdl
-
-    log("Mozilla Public License, v. 2.0.", license_info);
-    log(my_logger, "Mozilla Public License, v. 2.0.", license_info);
+    debug("Debug message for seldom useful or internal information");
+    verbose("Verbose TRACE messages only used for tracing program flow");
 
 
 Stopping simulation
