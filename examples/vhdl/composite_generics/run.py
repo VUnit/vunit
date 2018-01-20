@@ -12,7 +12,7 @@ prj = VUnit.from_argv()
 tb_lib = prj.add_library('tb_lib')
 tb_lib.add_source_files(join(dirname(__file__), 'test', '*.vhd'))
 
-testbench = tb_lib.entity("tb_composite_generics")
+testbench = tb_lib.test_bench("tb_composite_generics")
 test_1 = testbench.test("Test 1")
 
 def encode(tb_cfg):

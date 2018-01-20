@@ -58,7 +58,7 @@ ui = VUnit.from_argv()
 lib = ui.add_library("lib")
 lib.add_source_files(join(test_path, "*.vhd"))
 
-tb_generated = lib.entity("tb_generated")
+tb_generated = lib.test_bench("tb_generated")
 
 # Just set a generic for all configurations within the test bench
 tb_generated.set_generic("message", "set-for-entity")
