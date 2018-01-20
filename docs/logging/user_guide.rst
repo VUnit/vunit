@@ -229,7 +229,7 @@ expected calls to it.
 .. code-block:: vhdl
 
     logger := get_logger("my_library");
-    mock(logger);
+    mock(logger, failure);
     my_library.verify_something(args);
     check_only_log(logger, "Failed to verify something", failure);
     unmock(logger);
@@ -247,17 +247,20 @@ state.  The ``unmock`` call also checks that all recorded log messages
 have been checked by a corresponding ``check_log`` or
 ``check_only_log`` procedure.
 
-There is also the ``get_mock_log_count`` function which returs the
-number of recorded log items that occurred for one or all log
-levels. This can be used in a test bench to wait for a log to occur
-before issuing the ``check_log`` procedure.
+It is possible to mock several logger or log_levels simultaneously.
+All mocked log messages are written to the same global mock queue.
+The number of log messages in this queue is returned by the
+``mock_queue_length`` function.
+
+The mock queue length can be used in a test bench to wait for a log to
+occur before issuing the ``check_log`` procedure.
 
 
 .. code-block:: vhdl
 
-    mock(logger);
+    mock(logger, failure);
     trigger_error(clk);
-    wait until get_mock_logger(logger, failure) > 0 and rising_edge(clk);
+    wait until mock_queue_length > 0 and rising_edge(clk);
     check_only_log(logger, "Error was triggered", failure);
     unmock(logger);
 
