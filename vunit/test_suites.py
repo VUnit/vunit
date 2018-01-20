@@ -28,7 +28,7 @@ class IndependentSimTestCase(object):
         if test_case is not None:
             self._name += "." + test_case
         elif config.is_default:
-            # JUnit XML test reports wants three dotted name hiearchies
+            # JUnit XML test reports wants three dotted name hierarchies
             self._name += ".all"
 
         self._test_case = test_case
@@ -123,7 +123,7 @@ class SameSimTestSuite(object):
                                self._simulator_if.get_output_path()):
             return False
 
-        enabled_test_cases = [encode_test_case(test_case) for test_case in self._test_cases]
+        enabled_test_cases = [test_case for test_case in self._test_cases]
         config = _add_runner_cfg(self._config, output_path, enabled_test_cases)
         sim_ok = self._simulator_if.simulate(join(output_path, self._simulator_if.name),
                                              self._name,
