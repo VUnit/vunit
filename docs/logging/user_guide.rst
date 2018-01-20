@@ -94,14 +94,37 @@ To make a log entry with the custom level use any of the `log` procedures:
 
 Stopping simulation
 -------------------
-By default the simulation will stop if a log with level ``failure`` is made.
+By default the simulation will come to a stop if a single log with
+level ``error`` or ``failure`` is made. In VUnit a simulation stop
+before ``test_runner_cleanup`` is considered a failure.
 
+Simulation stop is controlled via a stop count mechanism. The stop count mechanism works in the following way:
+
+- Stop count may be ether set or not set for a specific logger and log level.
+- When a log is made to a logger it is checked if there is a stop count set.
+
+  - If set it is decremented and reaching zero means simulation stops.
+  - If not set the decrementation is recursively propagated to the parent logger.
+- It is possible to disable stopping simulation by setting an infinite stop count.
+- By default the only the root logger has a stop count set.
+
+  - Root logger has stop count set to 1 for ``error`` and ``failure``.
+  - Root logger has stop count set to infinite for all other log levels.
+
+Example:
+<<<<<<<<
 .. code-block:: vhdl
 
-    -- Set stop level for all loggers
+    -- Allow 10 errors from my_logger and its children
+    set_stop_count(my_logger, error, 10);
+
+    -- Allow infinite errors from my_logger and its children
+    set_infinite_stop_count(my_logger, error);
+
+    -- Short hand for stopping on error and failure but not warning globally
     set_stop_level(error);
 
-    -- Set stop level for specific logger and all children
+    -- Short hand for stopping on warning, error and failure for specific logger
     set_stop_level(get_logger("my_library:my_component"), warning)
 
 
@@ -317,7 +340,7 @@ Public API
 ----------
 
 logger_pkg
-^^^^^^^^^^
+<<<<<<<<<<
 Contains ``logger_t`` datatype and logger local procedures.
 
 .. literalinclude:: ../../vunit/vhdl/logging/src/logger_pkg.vhd
@@ -326,7 +349,7 @@ Contains ``logger_t`` datatype and logger local procedures.
 
 
 log_handler_pkg
-^^^^^^^^^^^^^^^
+<<<<<<<<<<<<<<<
 Contains ``log_handler_t`` datatype and log handler local configuration
 procedures.
 
