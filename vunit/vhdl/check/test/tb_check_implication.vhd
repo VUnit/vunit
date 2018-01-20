@@ -126,11 +126,11 @@ begin
     while test_suite loop
       if run("Test sequential checkers should fail on true implies false but pass on other inputs") then
         for i in test_antecedents'range loop
-          mock(check_logger);
+          mock(default_logger);
           get_checker_stat(stat);
           check_implication(test_antecedents(i), test_consequents(i));
           verify_result(i, default_checker, stat);
-          unmock(check_logger);
+          unmock(default_logger);
 
           mock(get_logger(my_checker));
           get_checker_stat(my_checker, stat);
@@ -138,17 +138,17 @@ begin
           verify_result(i, my_checker, stat);
           unmock(get_logger(my_checker));
 
-          mock(check_logger);
+          mock(default_logger);
           get_checker_stat(stat);
           check_implication(pass, test_antecedents(i), test_consequents(i));
           verify_result(i, default_checker, stat);
-          unmock(check_logger);
+          unmock(default_logger);
 
-          mock(check_logger);
+          mock(default_logger);
           get_checker_stat(stat);
           pass := check_implication(test_antecedents(i), test_consequents(i));
           verify_result(i, default_checker, stat);
-          unmock(check_logger);
+          unmock(default_logger);
 
           mock(get_logger(my_checker));
           get_checker_stat(my_checker, stat);

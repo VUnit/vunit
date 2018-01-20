@@ -80,7 +80,7 @@ begin
         check_checker_init(my_checker, "anonymous0", true);
 
         checker_init;
-        check_checker_init(default_checker, "check", false);
+        check_checker_init(default_checker, "default", false);
       elsif run("Test changing checker default level") then
         checker_init(my_checker);
         check_warnings(true);
@@ -100,35 +100,32 @@ begin
         check_warnings(true);
         checker_init(my_checker, default_src => "my_checker");
         check_log(default_logger, deprecated_checker_init_msg,  warning);
-        check_core_failure("Changing checker name is not supported");
 
         checker_init;
         check_warnings(false);
         checker_init(default_src => "my_checker");
         check_log(default_logger, deprecated_checker_init_msg,  warning);
-        check_core_failure("Changing checker name is not supported");
 
-        unmock_core_failure;
       elsif run("Test enabling and disabling of pass messages for custom checker") then
         my_checker := new_checker("my_checker");
         my_checker_logger := get_logger(my_checker);
 
-        check_false(is_visible(my_checker_logger, display_handler, passed));
+        assert_false(is_visible(my_checker_logger, display_handler, passed));
         enable_pass_msg(my_checker, display_handler);
 
-        check(is_visible(my_checker_logger, display_handler, passed));
+        assert_true(is_visible(my_checker_logger, display_handler, passed));
 
         disable_pass_msg(my_checker, display_handler);
-        check_false(is_visible(my_checker_logger, display_handler, passed));
+        assert_false(is_visible(my_checker_logger, display_handler, passed));
 
       elsif run("Test enabling and disabling of pass messages for default checker") then
-        check_false(is_visible(check_logger, display_handler, passed));
+        assert_false(is_visible(default_logger, display_handler, passed));
         enable_pass_msg(display_handler);
 
-        check(is_visible(check_logger, display_handler, passed));
+        assert_true(is_visible(default_logger, display_handler, passed));
 
         disable_pass_msg(display_handler);
-        check_false(is_visible(check_logger, display_handler, passed));
+        assert_false(is_visible(default_logger, display_handler, passed));
 
       elsif run("Test found errors subprograms") then
         my_checker := new_checker("my_checker");
@@ -149,6 +146,7 @@ begin
 
         check_failed(level => warning);
         assert_true(checker_found_errors);
+        check_log(default_logger, "Unconditional check failed.", warning);
         check_only_log(default_logger, "Using deprecated checker_found_errors. Use get_checker_stat instead.", warning);
 
         checker_found_errors(found_errors);

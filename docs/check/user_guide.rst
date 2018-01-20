@@ -64,16 +64,14 @@ Since a check is a conditional log it uses a ``logger_t`` from the
 logging library described in the :doc:`logging user guide
 <../logging/user_guide>` under the hood.
 
-A ``checker_t`` is created with a name used for naming the logger used
-internally. The logger will be named ``check:<checker_name>``. The
-name of the default checker logger is ``check``.  Additionally there
-is a ``default_log_level`` parameter to specify the log level of a
-failing check.
+A ``checker_t`` is created with a logger name used for the logger
+internally. Additionally there is a ``default_log_level`` parameter to
+specify the log level of a failing check.
 
 .. code-block:: vhdl
 
     impure function new_checker (
-      constant name : in string;
+      constant logger_name : in string;
       constant default_log_level  : in log_level_t  := error)
       return checker_t;
 
@@ -95,7 +93,7 @@ the error message will be something like
 
 .. code-block:: console
 
-    10000 ps - check -  ERROR - Expected active read enable at this point
+    10000 ps - default -  ERROR - Expected active read enable at this point
 
 If you wish to have another log level than the default one set by
 ``new_checker`` you can override this for each check call. For example
@@ -148,7 +146,7 @@ will result in a log entry like this
 
 .. code-block:: console
 
-    1000 ps - check - PASSED - Checking that read enable is active
+    1000 ps - default - PASSED - Checking that read enable is active
 
 Note that a message that reads well for both the passed and the fail cases was used.
 
@@ -162,7 +160,7 @@ Message Format
 ~~~~~~~~~~~~~~
 
 In the previous examples the outputs from passing and failing checks were the messages provided by
-the user with the addition of a timestamp, the checker name and the log level.
+the user with the addition of a timestamp, the logger name and the log level.
 If we change the log format to ``raw`` there would be no additions at all, just the user message.
 However, the check subprograms may also add information to the user message before the log format
 additions are applied. For example, checking a pixel value after an image processing operation can
@@ -176,7 +174,7 @@ Resulting in an error message like this:
 
 .. code-block:: console
 
-    1000 ps - check - ERROR - Comparing output pixel with reference model - Got 1111_1010 (250). Expected 249 (1111_1001).
+    1000 ps - default - ERROR - Comparing output pixel with reference model - Got 1111_1010 (250). Expected 249 (1111_1001).
 
 The last part of the message provides an error context to help debugging. Such a context is only given
 if that provides extra information. In the case of a failing ``check`` we know that the input boolean is
@@ -185,7 +183,7 @@ error messages. For example, a pass message from ``check_equal`` looks like this
 
 .. code-block:: console
 
-    1000 ps - check - PASSED - Comparing output pixel with reference model - Got 1111_1010 (250).
+    1000 ps - default - PASSED - Comparing output pixel with reference model - Got 1111_1010 (250).
 
 Redundancy is avoided by excluding the expected value which is the same as the value received.
 
@@ -200,13 +198,13 @@ gives the following messages:
 
 .. code-block:: console
 
-    1000 ps - check - ERROR - Equality check failed for output pixel - Got 1111_1010 (250). Expected 249 (1111_1001).
+    1000 ps - default - ERROR - Equality check failed for output pixel - Got 1111_1010 (250). Expected 249 (1111_1001).
 
 and
 
 .. code-block:: console
 
-    1000 ps - check - ERROR - Equality check passed for output pixel - Got 1111_1010 (250).
+    1000 ps - default - ERROR - Equality check passed for output pixel - Got 1111_1010 (250).
 
 The ``result`` function prepends the provided string with the check type (equality check in this case)
 and passed/failed depending on the result. The ``result`` function is also used as the default value for
@@ -220,13 +218,13 @@ gives the following messages:
 
 .. code-block:: console
 
-    1000 ps - check - ERROR - Equality check failed - Got 1111_1010 (250). Expected 249 (1111_1001).
+    1000 ps - default - ERROR - Equality check failed - Got 1111_1010 (250). Expected 249 (1111_1001).
 
 and
 
 .. code-block:: console
 
-    1000 ps - check - PASSED - Equality check passed - Got 1111_1010 (250).
+    1000 ps - default - PASSED - Equality check passed - Got 1111_1010 (250).
 
 If you look at the default value for the user message in the check subprogram APIs you will see that the
 ``result`` function isn't used. This is a workaround for one of the supported simulators which exposes the
@@ -460,7 +458,7 @@ will result in
 
 .. code-block:: console
 
-    1000 ps - check - ERROR - Check failed for my data.
+    1000 ps - default - ERROR - Check failed for my data.
 
 while
 
@@ -472,7 +470,7 @@ will result in
 
 .. code-block:: console
 
-    1000 ps - check - ERROR - True check failed for my data.
+    1000 ps - default - ERROR - True check failed for my data.
 
 False Check (check\_false)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -701,7 +699,7 @@ will generate the following error message if it fails.
 
 .. code-block:: console
 
-    1000 ps - check - ERROR - Response too late - Expected real_time_clock <= timeout. Left is 23:15:06. Right is 23:15:04.
+    1000 ps - default - ERROR - Response too late - Expected real_time_clock <= timeout. Left is 23:15:06. Right is 23:15:04.
 
 This works for **any** type of relation between **any** types as long as
 the operator and the ``to_string`` function are defined for the types

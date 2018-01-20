@@ -105,10 +105,8 @@ package body check_deprecated_pkg is
         write(name, default_src);
       end if;
       logger_init(logger, name.all, file_name, display_format, file_format, stop_level, separator, append);
-      checker := new_checker(name.all, logger, default_level);
+      checker := new_checker(logger, default_level);
       deallocate(name);
-    elsif default_src /= "" and default_src /= get_name(checker) then
-      core_failure("Changing checker name is not supported");
     else
       logger := get_logger(checker);
       logger_init(logger, default_src, file_name, display_format, file_format, stop_level, separator, append);

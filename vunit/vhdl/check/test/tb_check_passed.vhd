@@ -45,19 +45,19 @@ begin
         verify_failed_checks(my_checker, stat, 0);
 
       elsif run("Test pass message") then
-        mock(check_logger);
+        mock(default_logger);
         check_passed;
-        check_only_log(check_logger, "Unconditional check passed.", passed);
+        check_only_log(default_logger, "Unconditional check passed.", passed);
 
         check_passed("");
-        check_only_log(check_logger, "", passed);
+        check_only_log(default_logger, "", passed);
 
         check_passed("Checking my data.");
-        check_only_log(check_logger, "Checking my data.", passed);
+        check_only_log(default_logger, "Checking my data.", passed);
 
         check_passed(result("for my data."));
-        check_only_log(check_logger, "Unconditional check passed for my data.", passed);
-        unmock(check_logger);
+        check_only_log(default_logger, "Unconditional check passed for my data.", passed);
+        unmock(default_logger);
       end if;
     end loop;
 

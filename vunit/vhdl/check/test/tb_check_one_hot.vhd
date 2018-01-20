@@ -126,67 +126,67 @@ begin
         verify_passed_checks(my_checker3, stat, 2);
 
       elsif run("Test pass message") then
-        mock(check_logger);
+        mock(default_logger);
         check_one_hot("10000");
-        check_only_log(check_logger, "One-hot check passed - Got 1_0000.", passed);
+        check_only_log(default_logger, "One-hot check passed - Got 1_0000.", passed);
 
         check_one_hot("10000", "");
-        check_only_log(check_logger, "Got 1_0000.", passed);
+        check_only_log(default_logger, "Got 1_0000.", passed);
 
         check_one_hot("10000", "Checking my data");
-        check_only_log(check_logger, "Checking my data - Got 1_0000.", passed);
+        check_only_log(default_logger, "Checking my data - Got 1_0000.", passed);
 
         check_one_hot("10000", result("for my data"));
-        check_only_log(check_logger, "One-hot check passed for my data - Got 1_0000.", passed);
-        unmock(check_logger);
+        check_only_log(default_logger, "One-hot check passed for my data - Got 1_0000.", passed);
+        unmock(default_logger);
 
       elsif run("Test should fail on zero or more than one high bit") then
         get_checker_stat(stat);
-        mock(check_logger);
+        mock(default_logger);
         check_one_hot("00000");
-        check_only_log(check_logger, "One-hot check failed - Got 0_0000.", default_level);
+        check_only_log(default_logger, "One-hot check failed - Got 0_0000.", default_level);
 
         check_one_hot("0L00L");
-        check_only_log(check_logger, "One-hot check failed - Got 0_L00L.", default_level);
+        check_only_log(default_logger, "One-hot check failed - Got 0_L00L.", default_level);
 
         check_one_hot("01001");
-        check_only_log(check_logger, "One-hot check failed - Got 0_1001.", default_level);
+        check_only_log(default_logger, "One-hot check failed - Got 0_1001.", default_level);
 
         check_one_hot("0100H");
-        check_only_log(check_logger, "One-hot check failed - Got 0_100H.", default_level);
+        check_only_log(default_logger, "One-hot check failed - Got 0_100H.", default_level);
 
         check_one_hot(pass, "01001");
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(check_logger, "One-hot check failed - Got 0_1001.", default_level);
+        check_only_log(default_logger, "One-hot check failed - Got 0_1001.", default_level);
 
         check_one_hot(pass, "0100H");
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(check_logger, "One-hot check failed - Got 0_100H.", default_level);
+        check_only_log(default_logger, "One-hot check failed - Got 0_100H.", default_level);
 
         pass := check_one_hot("01001");
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(check_logger, "One-hot check failed - Got 0_1001.", default_level);
+        check_only_log(default_logger, "One-hot check failed - Got 0_1001.", default_level);
 
         pass := check_one_hot("0100H");
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(check_logger, "One-hot check failed - Got 0_100H.", default_level);
+        check_only_log(default_logger, "One-hot check failed - Got 0_100H.", default_level);
 
         check_one_hot(pass, "00000");
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(check_logger, "One-hot check failed - Got 0_0000.", default_level);
+        check_only_log(default_logger, "One-hot check failed - Got 0_0000.", default_level);
 
         check_one_hot(pass, "0L00L");
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(check_logger, "One-hot check failed - Got 0_L00L.", default_level);
+        check_only_log(default_logger, "One-hot check failed - Got 0_L00L.", default_level);
 
         pass := check_one_hot("00000");
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(check_logger, "One-hot check failed - Got 0_0000.", default_level);
+        check_only_log(default_logger, "One-hot check failed - Got 0_0000.", default_level);
 
         pass := check_one_hot("0L00L");
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(check_logger, "One-hot check failed - Got 0_L00L.", default_level);
-        unmock(check_logger);
+        check_only_log(default_logger, "One-hot check failed - Got 0_L00L.", default_level);
+        unmock(default_logger);
         verify_passed_checks(stat, 0);
         verify_failed_checks(stat, 12);
         reset_checker_stat;
@@ -243,18 +243,18 @@ begin
 
       elsif run("Test should fail on unknowns") then
         get_checker_stat(stat);
-        mock(check_logger);
+        mock(default_logger);
         check_one_hot("0000X");
-        check_only_log(check_logger, "One-hot check failed - Got 0_000X.", default_level);
+        check_only_log(default_logger, "One-hot check failed - Got 0_000X.", default_level);
 
         check_one_hot(pass, "0000X");
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(check_logger, "One-hot check failed - Got 0_000X.", default_level);
+        check_only_log(default_logger, "One-hot check failed - Got 0_000X.", default_level);
 
         pass := check_one_hot("0000X");
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(check_logger, "One-hot check failed - Got 0_000X.", default_level);
-        unmock(check_logger);
+        check_only_log(default_logger, "One-hot check failed - Got 0_000X.", default_level);
+        unmock(default_logger);
         verify_passed_checks(stat, 0);
         verify_failed_checks(stat, 3);
         reset_checker_stat;

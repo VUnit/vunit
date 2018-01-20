@@ -162,59 +162,59 @@ begin
         verify_passed_checks(my_checker3, stat, 7);
 
       elsif run("Test pass message") then
-        mock(check_logger);
+        mock(default_logger);
         check_not_unknown('0');
-        check_only_log(check_logger, "Not unknown check passed - Got 0.", passed);
+        check_only_log(default_logger, "Not unknown check passed - Got 0.", passed);
 
         check_not_unknown("00110");
-        check_only_log(check_logger, "Not unknown check passed - Got 0_0110 (6).", passed);
+        check_only_log(default_logger, "Not unknown check passed - Got 0_0110 (6).", passed);
 
         check_not_unknown('0', "");
-        check_only_log(check_logger, "Got 0.", passed);
+        check_only_log(default_logger, "Got 0.", passed);
 
         check_not_unknown("00110", "");
-        check_only_log(check_logger, "Got 0_0110 (6).", passed);
+        check_only_log(default_logger, "Got 0_0110 (6).", passed);
 
         check_not_unknown('0', "Checking my data");
-        check_only_log(check_logger, "Checking my data - Got 0.", passed);
+        check_only_log(default_logger, "Checking my data - Got 0.", passed);
 
         check_not_unknown("00110", "Checking my data");
-        check_only_log(check_logger, "Checking my data - Got 0_0110 (6).", passed);
+        check_only_log(default_logger, "Checking my data - Got 0_0110 (6).", passed);
 
         check_not_unknown('0', result("for my data"));
-        check_only_log(check_logger, "Not unknown check passed for my data - Got 0.", passed);
+        check_only_log(default_logger, "Not unknown check passed for my data - Got 0.", passed);
 
         check_not_unknown("00110", result("for my data"));
-        check_only_log(check_logger, "Not unknown check passed for my data - Got 0_0110 (6).", passed);
-        unmock(check_logger);
+        check_only_log(default_logger, "Not unknown check passed for my data - Got 0_0110 (6).", passed);
+        unmock(default_logger);
 
       elsif run("Test should fail on all std logic values except zero and one") then
         for i in metadata'range loop
           get_checker_stat(stat);
           test_expr := (others => metadata(i));
-          mock(check_logger);
+          mock(default_logger);
           check_not_unknown(metadata(i));
-          check_only_log(check_logger, "Not unknown check failed - Got " & std_logic'image(metadata(i))(2) & ".", default_level);
+          check_only_log(default_logger, "Not unknown check failed - Got " & std_logic'image(metadata(i))(2) & ".", default_level);
 
           check_not_unknown(test_expr);
-          check_only_log(check_logger, "Not unknown check failed - Got " & to_nibble_string(test_expr) & ".", default_level);
+          check_only_log(default_logger, "Not unknown check failed - Got " & to_nibble_string(test_expr) & ".", default_level);
 
           check_not_unknown(pass, metadata(i));
           assert_true(not pass, "Should return pass = false on failing check");
-          check_only_log(check_logger, "Not unknown check failed - Got " & std_logic'image(metadata(i))(2) & ".", default_level);
+          check_only_log(default_logger, "Not unknown check failed - Got " & std_logic'image(metadata(i))(2) & ".", default_level);
 
           check_not_unknown(pass, test_expr);
           assert_true(not pass, "Should return pass = false on failing check");
-          check_only_log(check_logger, "Not unknown check failed - Got " & to_nibble_string(test_expr) & ".", default_level);
+          check_only_log(default_logger, "Not unknown check failed - Got " & to_nibble_string(test_expr) & ".", default_level);
 
           pass := check_not_unknown(metadata(i));
           assert_true(not pass, "Should return pass = false on failing check");
-          check_only_log(check_logger, "Not unknown check failed - Got " & std_logic'image(metadata(i))(2) & ".", default_level);
+          check_only_log(default_logger, "Not unknown check failed - Got " & std_logic'image(metadata(i))(2) & ".", default_level);
 
           pass := check_not_unknown(test_expr);
           assert_true(not pass, "Should return pass = false on failing check");
-          check_only_log(check_logger, "Not unknown check failed - Got " & to_nibble_string(test_expr) & ".", default_level);
-          unmock(check_logger);
+          check_only_log(default_logger, "Not unknown check failed - Got " & to_nibble_string(test_expr) & ".", default_level);
+          unmock(default_logger);
           verify_passed_checks(stat, 0);
           verify_failed_checks(stat, 6);
           reset_checker_stat;

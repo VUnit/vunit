@@ -29,41 +29,44 @@ end entity;
 architecture test_fixture of tb_checker is
 begin
   test_runner : process
-    variable my_checker : checker_t := new_checker("my_checker");
     variable checker1, checker2 : checker_t;
-    variable my_logger : logger_t := get_logger(my_checker);
     variable stat, stat1, stat2 : checker_stat_t;
     variable stat_before, stat_after : checker_stat_t;
+    variable my_checker : checker_t := new_checker("my_checker");
+    variable my_logger : logger_t := get_logger(my_checker);
   begin
     test_runner_setup(runner, runner_cfg);
 
     while test_suite loop
       if run("Test default checker") then
         stat_before := get_checker_stat;
-        mock(check_logger);
+        mock(default_logger);
 
         passing_check(default_checker, "Check true");
-        check_only_log(check_logger, "Check true", passed);
+        check_only_log(default_logger, "Check true", passed);
 
         passing_check(default_checker);
-        check_only_log(check_logger, "", passed);
+        check_only_log(default_logger, "", passed);
 
         failing_check(default_checker, "Custom error message");
-        check_only_log(check_logger, "Custom error message", error);
+        check_only_log(default_logger, "Custom error message", error);
 
         failing_check(default_checker, "Custom level", info);
-        check_only_log(check_logger, "Custom level", info);
+        check_only_log(default_logger, "Custom level", info);
 
         failing_check(default_checker, "Line and file name", info, 377, "some_file.vhd");
-        check_only_log(check_logger, "Line and file name", info,
+        check_only_log(default_logger, "Line and file name", info,
                        line_num => 377, file_name => "some_file.vhd");
-        unmock(check_logger);
+        unmock(default_logger);
 
         stat_after := get_checker_stat;
         assert_true(stat_after = stat_before + (5, 3, 2), "Expected 5 checks, 3 fail, and 2 pass but got " & to_string(stat_after - stat_before));
         reset_checker_stat;
 
       elsif run("Test custom checker") then
+        my_checker := new_checker("my_checker");
+        my_logger := get_logger("my_checker");
+        assert_true(get_full_name(get_logger(my_checker)) = get_full_name(my_logger));
         stat_before := get_checker_stat(my_checker);
 
         mock(my_logger);
@@ -92,30 +95,6 @@ begin
         assert_true(stat1 + stat2 = (31, 16, 15), "Expected sum = (31, 16, 15)");
         assert_true(to_string(stat1) = "checker_stat'(n_checks => 20, n_failed => 13, n_passed => 7)",
                         "Format error of checker_stat_t. Got:" & to_string(stat1));
-
-      elsif run("Test get checker name") then
-        checker1 := new_checker("foo");
-        assert get_name(checker1) = "foo";
-
-      elsif run("Test num checkers and get checkers") then
-        for i in 0 to num_checkers-1 loop
-          info(get_name(get_checker(i)));
-        end loop;
-
-        checker1 := new_checker("foo");
-        assert num_checkers = 3;
-        assert get_name(get_checker(num_checkers-1)) = "foo";
-
-        checker1 := new_checker("bar");
-        assert num_checkers = 4;
-        assert get_name(get_checker(num_checkers-1)) = "bar";
-
-      elsif run("Test that checkers with same name can not be created") then
-        checker1 := new_checker("foo");
-        mock(default_logger);
-        checker2 := new_checker("foo");
-        check_only_log(default_logger, "Checker with name ""foo"" already exists.", failure);
-        unmock(default_logger);
       end if;
     end loop;
 

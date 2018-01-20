@@ -42,21 +42,17 @@ package checker_pkg is
     p_data : integer_vector_ptr_t;
   end record;
 
-  impure function num_checkers return natural;
-  impure function get_checker(id : natural) return checker_t;
-
-  impure function new_checker(name              : string;
-                              logger            : logger_t;
+  impure function new_checker(logger_name : string;
                               default_log_level : log_level_t := error) return checker_t;
-  impure function new_checker(name              : string;
+  impure function new_checker(logger            : logger_t;
                               default_log_level : log_level_t := error) return checker_t;
+  impure function new_checker(default_log_level : log_level_t := error) return checker_t;
 
   impure function get_logger(checker            : checker_t) return logger_t;
   impure function get_default_log_level(checker : checker_t) return log_level_t;
   procedure set_default_log_level(checker : checker_t; default_log_level : log_level_t);
 
   impure function get_checker_stat(checker : checker_t) return checker_stat_t;
-  impure function get_name(checker : checker_t) return string;
   procedure reset_checker_stat(checker     : checker_t);
   procedure get_checker_stat(checker       :     checker_t;
                              variable stat : out checker_stat_t);
@@ -86,60 +82,36 @@ package body checker_pkg is
 
   constant logger_idx            : natural := 0;
   constant id_idx                : natural := 1;
-  constant name_idx              : natural := 2;
-  constant default_log_level_idx : natural := 3;
-  constant stat_checks_idx       : natural := 4;
-  constant stat_failed_idx       : natural := 5;
-  constant stat_passed_idx       : natural := 6;
+  constant default_log_level_idx : natural := 2;
+  constant stat_checks_idx       : natural := 3;
+  constant stat_failed_idx       : natural := 4;
+  constant stat_passed_idx       : natural := 5;
   constant checker_length        : natural := stat_passed_idx + 1;
 
   constant checkers : integer_vector_ptr_t := new_integer_vector_ptr;
 
-  impure function num_checkers return natural is
-  begin
-    return length(checkers);
-  end;
-
-  impure function get_checker(id : natural) return checker_t is
-  begin
-    return (p_data => to_integer_vector_ptr(get(checkers, id)));
-  end;
-
-  impure function new_checker(name              : string;
+  impure function new_checker(logger_name : string;
                               default_log_level : log_level_t := error) return checker_t is
-    variable logger : logger_t;
   begin
-
-    if name = "" then
-      -- Default checker
-      logger := get_logger("check");
-    else
-      logger := get_logger(name, parent => get_logger("check"));
-    end if;
-
-    return new_checker(name, logger, default_log_level);
+    return new_checker(get_logger(logger_name), default_log_level);
   end;
 
-  impure function new_checker(name              : string;
-                              logger            : logger_t;
+  impure function new_checker(default_log_level : log_level_t := error) return checker_t is
+  begin
+    return new_checker(default_logger, default_log_level);
+  end;
+
+  impure function new_checker(logger            : logger_t;
                               default_log_level : log_level_t := error) return checker_t is
     variable checker : checker_t;
     variable id      : natural;
   begin
-    for i in 0 to num_checkers-1 loop
-      if get_name(get_checker(i)) = name then
-        failure("Checker with name """ & name & """ already exists.");
-        return null_checker;
-      end if;
-    end loop;
-
     checker := (p_data => new_integer_vector_ptr(checker_length));
     id      := length(checkers);
     resize(checkers, length(checkers)+1);
     set(checkers, id, to_integer(checker.p_data));
 
     set(checker.p_data, id_idx, id);
-    set(checker.p_data, name_idx, to_integer(new_string_ptr(name)));
     set(checker.p_data, logger_idx, to_integer(logger.p_data));
     set(checker.p_data, default_log_level_idx, log_level_t'pos(default_log_level));
     reset_checker_stat(checker);
@@ -180,11 +152,6 @@ package body checker_pkg is
                              variable stat : out checker_stat_t) is
   begin
     stat := get_checker_stat(checker);
-  end;
-
-  impure function get_name(checker : checker_t) return string is
-  begin
-    return to_string(to_string_ptr(get(checker.p_data, name_idx)));
   end;
 
   impure function is_pass_message_visible(checker : checker_t) return boolean is

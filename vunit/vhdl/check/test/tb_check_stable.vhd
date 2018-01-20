@@ -578,42 +578,42 @@ begin
 
       elsif run("Test pass message and that internal checks don't count for std_logic_vector") then
         get_checker_stat(stat);
-        mock(check_logger);
+        mock(default_logger);
         apply_sequence("00.101;10.101;00.111;01.101;00.101;00.101", clk, check_stable_in_8);
-        check_only_log(check_logger,
+        check_only_log(default_logger,
                        "Checking stability - Got 111 (7) at 2nd active and enabled clock edge. Expected 101 (5).",
                        default_level);
         apply_sequence("00.101;10.101;00.101;01.101;00.101", clk, check_stable_in_8);
         wait for 1 ns;
-        check_only_log(check_logger,
+        check_only_log(default_logger,
                         "Checking stability - Got 101 (5) for 3 active and enabled clock edges.",
                         passed);
         apply_sequence("00.101;10.101;00.101;10.111;00.111", clk, check_stable_in_8);
         wait for 1 ns;
-        check_only_log(check_logger,
+        check_only_log(default_logger,
                         "Checking stability - Got 101 (5) for 2 active and enabled clock edges.",
                         passed);
-        unmock(check_logger);        verify_passed_checks(stat, 2);
+        unmock(default_logger);        verify_passed_checks(stat, 2);
         verify_failed_checks(stat, 1);
         reset_checker_stat;
       elsif run("Test pass message and that internal checks don't count for std_logic") then
         get_checker_stat(stat);
-        mock(check_logger);
+        mock(default_logger);
         apply_sequence("00.1;10.1;00.0;01.1;00.1;00.1", clk, check_stable_in_9);
-        check_only_log(check_logger,
+        check_only_log(default_logger,
                        "Stability check failed for my data - Got 0 at 2nd active and enabled clock edge. Expected 1.",
                        default_level);
         apply_sequence("00.1;10.1;00.1;01.1;00.1", clk, check_stable_in_9);
         wait for 1 ns;
-        check_only_log(check_logger,
+        check_only_log(default_logger,
                         "Stability check passed for my data - Got 1 for 3 active and enabled clock edges.",
                         passed);
         apply_sequence("00.1;10.1;00.1;10.0;00.0", clk, check_stable_in_9);
         wait for 1 ns;
-        check_only_log(check_logger,
+        check_only_log(default_logger,
                         "Stability check passed for my data - Got 1 for 2 active and enabled clock edges.",
                         passed);
-        unmock(check_logger);
+        unmock(default_logger);
         verify_passed_checks(stat, 2);
         verify_failed_checks(stat, 1);
       elsif run("Test that a new start event restarts a std_logic_vector window when allowed") then

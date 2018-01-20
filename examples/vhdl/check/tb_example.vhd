@@ -37,7 +37,6 @@ begin
     -- This file contains a number of runnable examples that you can step through. Supporting information
     -- is brief. It is assumed that you've already read the user guide.
 
-    -- Checker Initialization
     -- The default settings is to stop on error but for these examples I want to continue
     -- on errors so I'm going to raise the stop level.
     set_stop_level(failure);
@@ -48,9 +47,7 @@ begin
     check(some_true_condition, "Expect to pass so this should not be displayed");
     check(some_false_condition, "Expected to fail");
 
-    -- checker_init takes all the inputs logger_init does to configure the logger that errors are reported
-    -- to. It also takes a default_level input that controls the level reported to the logger. This is error
-    -- unless specified. The default level can also be overridden in a specific check call.
+    -- The default log level of error can also be overridden in a specific check call.
     check(some_false_condition, "This is not very good", warning);
 
     -- Note that every failing check will be regarded as a failure from a testing point of view regardless

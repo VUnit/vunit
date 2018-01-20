@@ -19,8 +19,7 @@ package check_pkg is
   signal check_enabled : std_logic := '1';
 
   constant check_result_tag_c : string    := "<+/->";
-  constant default_checker    : checker_t := new_checker("");
-  constant check_logger       : logger_t  := get_logger(default_checker);
+  constant default_checker    : checker_t := new_checker;
 
   procedure get_checker_stat (variable stat : out checker_stat_t);
   impure function get_checker_stat return checker_stat_t;

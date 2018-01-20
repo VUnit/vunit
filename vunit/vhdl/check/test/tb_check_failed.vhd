@@ -36,19 +36,19 @@ begin
       if run("Test that default checker check_failed always fails") then
         get_checker_stat(stat);
 
-        mock(check_logger);
+        mock(default_logger);
         check_failed;
-        check_only_log(check_logger, "Unconditional check failed.", error);
+        check_only_log(default_logger, "Unconditional check failed.", error);
 
         check_failed("");
-        check_only_log(check_logger, "", error);
+        check_only_log(default_logger, "", error);
 
         check_failed("Checking my data.");
-        check_only_log(check_logger, "Checking my data.", error);
+        check_only_log(default_logger, "Checking my data.", error);
 
         check_failed(result("for my data."));
-        check_only_log(check_logger, "Unconditional check failed for my data.", error);
-        unmock(check_logger);
+        check_only_log(default_logger, "Unconditional check failed for my data.", error);
+        unmock(default_logger);
 
         verify_passed_checks(stat, 0);
         verify_failed_checks(stat, 4);

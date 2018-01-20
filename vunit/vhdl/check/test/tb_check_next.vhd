@@ -141,11 +141,11 @@ begin
         verify_passed_checks(checker, stat, 1);
 
       elsif enabled("Test should fail when expr is false num_cks enabled cycles after start_event") then
-        mock(check_logger);
+        mock(default_logger);
         apply_sequence("001;111;011;011;010;011;001;011;001", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
-        check_only_log(check_logger, "Next check failed - Got 0 at the 4th active and enabled clock edge.", level);
-        unmock(check_logger);
+        check_only_log(default_logger, "Next check failed - Got 0 at the 4th active and enabled clock edge.", level);
+        unmock(default_logger);
         verify_passed_checks(checker, stat, 0);
         verify_failed_checks(checker, stat, 1);
         reset_checker_stat;
@@ -162,7 +162,7 @@ begin
         verify_failed_checks(checker, stat, 0);
         apply_sequence("001;001", clk, check_input, active_rising_clock_edge);
         wait for 1 ns;
-        check_only_log(check_logger, "Next check failed - Got 0 at the 4th active and enabled clock edge.", level);
+        check_only_log(default_logger, "Next check failed - Got 0 at the 4th active and enabled clock edge.", level);
         verify_passed_checks(checker, stat, 2);
         verify_failed_checks(checker, stat, 1);
         reset_checker_stat(checker);
@@ -197,13 +197,13 @@ begin
         verify_failed_checks(stat, 0);
       elsif run("Test should fail when expr is false num_cks=0 enabled cycles after start_event") then
         get_checker_stat(stat);
-        mock(check_logger);
+        mock(default_logger);
         apply_sequence("001;101;001", clk, check_next_in_7);
         wait for 1 ns;
         verify_passed_checks(stat, 0);
         verify_failed_checks(stat, 1);
-        check_only_log(check_logger, "Next check failed - Got 0 at the 0th active and enabled clock edge.", default_level);
-        unmock(check_logger);
+        check_only_log(default_logger, "Next check failed - Got 0 at the 0th active and enabled clock edge.", default_level);
+        unmock(default_logger);
       elsif run("Test should pass a true expr without start_event if missing start is allowed and num_cks=0") then
         get_checker_stat(stat);
         apply_sequence("001;011;001", clk, check_next_in_7);
@@ -240,12 +240,12 @@ begin
         unmock(get_logger(my_checker5));
       elsif run("Test should fail a true expr without start event if missing start is not allowed and num_cks=0") then
         get_checker_stat(stat);
-        mock(check_logger);
+        mock(default_logger);
         apply_sequence("001;011;001", clk, check_next_in_8);
         wait for 1 ns;
         verify_passed_checks(stat, 0);
-        check_only_log(check_logger, "Next check failed for my data - Missing start event for true expression.", default_level);
-        unmock(check_logger);
+        check_only_log(default_logger, "Next check failed for my data - Missing start event for true expression.", default_level);
+        unmock(default_logger);
       elsif run("Test should handle meta values") then
         get_checker_stat(my_checker5, stat);
         apply_sequence("00H;10H;00H;00H;00L;00H;01H;00H;00H", clk, check_next_in_5);
@@ -279,16 +279,16 @@ begin
 
       elsif run("Test pass message and that internal checks don't count") then
         get_checker_stat(stat);
-        mock(check_logger);
+        mock(default_logger);
         apply_sequence("001;101;0U1;011", clk, check_next_in_6);
         wait for 1 ns;
         verify_passed_checks(stat, 0);
         verify_failed_checks(stat, 1);
-        check_only_log(check_logger, "Next check failed for my data - Got U at the 1st active and enabled clock edge.", default_level);
+        check_only_log(default_logger, "Next check failed for my data - Got U at the 1st active and enabled clock edge.", default_level);
         apply_sequence("011;101;011;001", clk, check_next_in_6);
         wait for 1 ns;
-        check_only_log(check_logger, "Next check passed for my data", passed);
-        unmock(check_logger);
+        check_only_log(default_logger, "Next check passed for my data", passed);
+        unmock(default_logger);
         verify_passed_checks(stat, 1);
         verify_failed_checks(stat, 1);
         reset_checker_stat;
