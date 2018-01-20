@@ -43,7 +43,7 @@ package body run_pkg is
       enable_colors;
     end if;
 
-    if active_python_runner(runner_cfg) then
+    if not active_python_runner(runner_cfg) then
       set_stop_level(error);
     else
       set_stop_level(failure);

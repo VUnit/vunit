@@ -296,10 +296,10 @@ begin
     ---------------------------------------------------------------------------
     banner("Error log cause failure on test_runner_cleanup");
     test_case_setup;
-    disable_stop;
+    set_infinite_stop_count(get_logger("parent:my_logger"), failure);
     failure(get_logger("parent:my_logger"), "failure message 1");
     failure(get_logger("parent:my_logger"), "failure message 2");
-    set_stop_level(failure);
+    set_stop_count(get_logger("parent:my_logger"), failure, 1);
     core_pkg.mock_core_failure;
     test_runner_cleanup(runner);
     core_pkg.check_core_failure("Logger ""parent:my_logger"" has 2 failure entries.");

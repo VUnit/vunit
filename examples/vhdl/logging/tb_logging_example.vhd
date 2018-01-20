@@ -70,7 +70,8 @@ begin
     file_close(fptr);
 
     -- We disable the simulation stop to show error and failure
-    disable_stop;
+    set_infinite_stop_count(default_logger, failure);
+    set_infinite_stop_count(default_logger, error);
     show_all(display_handler);
     set_format(display_handler, level, use_color => true);
     verbose("Level format");
@@ -98,7 +99,6 @@ begin
     -- Any log to error or failure causes test failure so we reset those levels
     reset_log_count(default_logger, error);
     reset_log_count(default_logger, failure);
-    reset_log_count(my_logger, failure);
 
     test_runner_cleanup(runner);
     wait;

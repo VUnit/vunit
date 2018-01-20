@@ -425,21 +425,6 @@ package body logger_pkg is
     end loop;
   end;
 
-  procedure disable_stop is
-  begin
-    disable_stop(root_logger);
-  end;
-
-  -- Disable stopping simulation
-  procedure disable_stop(logger : logger_t;
-                         include_children : boolean := true) is
-  begin
-    for level in log_level_t'low to log_level_t'high loop
-      set_stop_count(logger, level, stop_count_infinite,
-                     unset_children => true);
-    end loop;
-  end;
-
   impure function get_log_level_filter(logger : logger_t;
                                        log_handler : log_handler_t) return integer_vector_ptr_t is
     constant log_level_filters : integer_vector_ptr_t :=
