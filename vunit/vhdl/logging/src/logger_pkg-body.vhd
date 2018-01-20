@@ -59,7 +59,7 @@ package body logger_pkg is
     set(logger.p_data, log_count_idx, to_integer(new_integer_vector_ptr(log_level_t'pos(log_level_t'high)+1, value => 0)));
     set(logger.p_data, stop_counts_idx, to_integer(new_integer_vector_ptr));
     set(logger.p_data, handlers_idx, to_integer(new_integer_vector_ptr));
-    set(logger.p_data, is_mocked_idx, 0);
+    set(logger.p_data, is_mocked_idx, to_integer(new_integer_vector_ptr(log_level_t'pos(log_level_t'high)+1, value => 0)));
     set(logger.p_data, log_level_filters_idx, to_integer(new_integer_vector_ptr));
 
     if parent /= null_logger then
@@ -294,9 +294,20 @@ package body logger_pkg is
     return (p_data => to_integer_vector_ptr(get(logger.p_data, parent_idx)));
   end;
 
+  impure function is_mocked(logger : logger_t; log_level : log_level_t) return boolean is
+    constant is_mocked_vec : integer_vector_ptr_t := to_integer_vector_ptr(get(logger.p_data, is_mocked_idx));
+  begin
+    return get(is_mocked_vec, log_level_t'pos(log_level)) = 1;
+  end;
+
   impure function is_mocked(logger : logger_t) return boolean is
   begin
-    return get(logger.p_data, is_mocked_idx) = 1;
+    for log_level in legal_log_level_t'low to legal_log_level_t'high loop
+      if is_mocked(logger, log_level) then
+        return true;
+      end if;
+    end loop;
+    return false;
   end;
 
   impure function num_children(logger : logger_t) return natural is
@@ -604,7 +615,7 @@ package body logger_pkg is
   impure function is_visible(logger : logger_t;
                              log_level : log_level_t) return boolean is
   begin
-    if is_mocked(logger) then
+    if is_mocked(logger, log_level) then
       return true;
     end if;
 
@@ -749,7 +760,15 @@ package body logger_pkg is
 
   procedure mock(logger : logger_t) is
   begin
-    set(logger.p_data, is_mocked_idx, 1);
+    for log_level in legal_log_level_t'low to legal_log_level_t'high loop
+      mock(logger, log_level);
+    end loop;
+  end;
+
+  procedure mock(logger : logger_t; log_level : log_level_t) is
+    constant is_mocked_vec : integer_vector_ptr_t := to_integer_vector_ptr(get(logger.p_data, is_mocked_idx));
+  begin
+    set(is_mocked_vec, log_level_t'pos(log_level), 1);
   end;
 
   impure function make_string(logger_name : string;
@@ -838,9 +857,13 @@ package body logger_pkg is
   end;
 
   procedure unmock(logger : logger_t) is
+    constant is_mocked_vec : integer_vector_ptr_t := to_integer_vector_ptr(get(logger.p_data, is_mocked_idx));
   begin
     check_no_log;
-    set(logger.p_data, is_mocked_idx, 0);
+
+    for log_level in legal_log_level_t'low to legal_log_level_t'high loop
+      set(is_mocked_vec, legal_log_level_t'pos(log_level), 0);
+    end loop;
   end;
 
   procedure mock_log(logger : logger_t;
@@ -875,7 +898,7 @@ package body logger_pkg is
   begin
     if logger = null_logger then
       core_failure("Attempt to log to uninitialized logger");
-    elsif is_mocked(logger) then
+    elsif is_mocked(logger, log_level) then
       mock_log(logger, msg, log_level, t_now, line_num, file_name);
     else
       for i in 0 to num_log_handlers(logger) - 1 loop

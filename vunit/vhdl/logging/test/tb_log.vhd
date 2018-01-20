@@ -400,6 +400,19 @@ begin
       check_only_log(logger, "message", warning, 0 ns);
       unmock(logger);
 
+    elsif run("mock individual levels") then
+      mock(logger, error);
+
+      warning(logger, "message");
+      assert_equal(mock_queue_length, 0);
+      check_no_log;
+
+      error(logger, "message");
+      assert_equal(mock_queue_length, 1);
+      check_only_log(logger, "message", error, 0 ns);
+
+      unmock(logger);
+
     elsif run("mock_queue_length") then
       mock(logger);
       assert_equal(mock_queue_length, 0);

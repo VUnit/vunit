@@ -276,6 +276,9 @@ package logger_pkg is
   -- Mock the logger preventing simulaton abort and recording all logs to it
   procedure mock(logger : logger_t);
 
+  -- Mock log_level of logger preventing simulaton abort and recording all logs to it
+  procedure mock(logger : logger_t; log_level : log_level_t);
+
   -- Unmock the logger returning it to its normal state
   -- Results in failures if there are still unchecked log calls recorded
   procedure unmock(logger : logger_t);
