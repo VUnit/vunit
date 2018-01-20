@@ -254,13 +254,15 @@ def call_pre_config(pre_config, output_path, simulator_output_path):
     """
     if pre_config is not None:
         args = inspect.getargspec(pre_config).args  # pylint: disable=deprecated-method
-        if args == ["output_path", "simulator_output_path"]:
-            if not pre_config(output_path, simulator_output_path):
-                return False
-        elif "output_path" in args:
-            if not pre_config(output_path):
-                return False
-        else:
-            if not pre_config():
-                return False
+
+        kwargs = {"output_path": output_path,
+                  "simulator_output_path": simulator_output_path}
+
+        for argname in list(kwargs.keys()):
+            if argname not in args:
+                del kwargs[argname]
+
+        if not pre_config(**kwargs):
+            return False
+
     return True

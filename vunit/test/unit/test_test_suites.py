@@ -63,3 +63,28 @@ class TestTestSuites(TestCase):
             raise WasHere
 
         self.assertRaises(WasHere, call_pre_config, pre_config, "output_path", "simulator_output_path")
+
+    def test_call_pre_config_class_method(self):
+
+        class WasHere(Exception):
+            pass
+
+        class MyClass(object):
+            """
+            Class to test pre_config method
+            """
+            def __init__(self, value):
+                self.value = value
+
+            def pre_config(self, output_path, simulator_output_path):
+                """
+                Pre config with output path
+                """
+                assert self.value == 2
+                assert output_path == "output_path"
+                assert simulator_output_path == "simulator_output_path"
+                raise WasHere
+
+        self.assertRaises(WasHere,
+                          call_pre_config,
+                          MyClass(value=2).pre_config, "output_path", "simulator_output_path")
