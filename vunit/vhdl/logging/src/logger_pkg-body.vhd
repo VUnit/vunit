@@ -999,4 +999,55 @@ package body logger_pkg is
     failure(default_logger, msg, line_num, file_name);
   end procedure;
 
+  impure function final_log_check(logger : logger_t) return boolean is
+
+    impure function entry_spelling(is_plural : boolean) return string is
+    begin
+      if is_plural then
+        return "entries";
+      end if;
+      return "entry";
+    end;
+
+    variable child : logger_t;
+    variable count : natural;
+  begin
+    for i in 0 to num_children(logger)-1 loop
+      child := get_child(logger, i);
+
+      if is_mocked(child) then
+        core_failure("Logger """ & get_full_name(child) & """ is still mocked.");
+        return false;
+      end if;
+
+      for level in error to alert_log_level_t'high loop
+        count := get_log_count(child, level);
+        if count > 0 then
+          core_failure("Logger """ & get_full_name(child) &
+                       """ has " & integer'image(count) & " " & get_name(level) &
+                       " " & entry_spelling(count > 1) & ".");
+          return false;
+        end if;
+      end loop;
+
+      if not final_log_check(child) then
+        return false;
+      end if;
+
+    end loop;
+
+    return true;
+  end;
+
+  impure function final_log_check return boolean is
+  begin
+    return final_log_check(root_logger);
+  end;
+
+  procedure final_log_check is
+    variable result : boolean;
+  begin
+    result := final_log_check;
+  end;
+
 end package body;

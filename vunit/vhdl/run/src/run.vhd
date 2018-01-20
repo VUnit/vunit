@@ -94,48 +94,6 @@ package body run_pkg is
     signal runner: inout runner_sync_t;
     constant external_failure : in boolean := false) is
 
-    impure function check_logger_status(logger : logger_t) return boolean is
-
-      impure function entry_spelling(is_plural : boolean) return string is
-      begin
-        if is_plural then
-          return "entries";
-        end if;
-        return "entry";
-      end;
-
-      variable child : logger_t;
-      variable count : natural;
-    begin
-      for i in 0 to num_children(logger)-1 loop
-        child := get_child(logger, i);
-
-        if is_mocked(child) then
-          core_pkg.core_failure("Logger """ & get_full_name(child) & """ is still mocked.");
-          return false;
-        end if;
-
-        for level in error to alert_log_level_t'high loop
-          if is_valid(level) then
-            count := get_log_count(child, level);
-            if count > 0 then
-              core_pkg.core_failure("Logger """ & get_full_name(child) &
-                                    """ has " & integer'image(count) & " " & get_name(level) &
-                                    " " & entry_spelling(count > 1) & ".");
-              return false;
-            end if;
-          end if;
-        end loop;
-
-        if not check_logger_status(child) then
-          return false;
-        end if;
-
-      end loop;
-
-      return true;
-    end;
-
   begin
     set_phase(runner_state, test_runner_cleanup);
     runner.phase <= test_runner_cleanup;
@@ -148,7 +106,7 @@ package body run_pkg is
     wait for 0 ns;
     verbose(runner_trace_logger, "Entering test runner exit phase.");
 
-    if not check_logger_status(root_logger) then
+    if not final_log_check then
       return;
     end if;
 

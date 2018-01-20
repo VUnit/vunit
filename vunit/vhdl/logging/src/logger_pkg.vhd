@@ -261,6 +261,9 @@ package logger_pkg is
                             log_level : log_level_t := null_log_level;
                             include_children : boolean := true);
 
+  procedure final_log_check;
+  impure function final_log_check return boolean;
+
   ---------------------------------------------------------------------
   -- Mock procedures to enable unit testing of code performing logging
   ---------------------------------------------------------------------
