@@ -59,7 +59,7 @@ package checker_pkg is
 
   constant null_checker : checker_t := (p_data => null_ptr);
 
-  impure function is_pass_message_visible(checker : checker_t) return boolean;
+  impure function is_passed_visible(checker : checker_t) return boolean;
 
   procedure passing_check(checker : checker_t);
 
@@ -154,7 +154,7 @@ package body checker_pkg is
     stat := get_checker_stat(checker);
   end;
 
-  impure function is_pass_message_visible(checker : checker_t) return boolean is
+  impure function is_passed_visible(checker : checker_t) return boolean is
   begin
     return is_visible(get_logger(checker), passed);
   end;

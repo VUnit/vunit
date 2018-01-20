@@ -105,7 +105,7 @@ impl_template = """  procedure check_equal(
     -- pragma translate_off
     if got = expected then
       pass := true;
-      if is_pass_message_visible(checker) then
+      if is_passed_visible(checker) then
         passing_check(
           checker,
           std_msg(
