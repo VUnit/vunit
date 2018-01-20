@@ -44,8 +44,6 @@ package body run_pkg is
     end if;
 
     if not active_python_runner(runner_cfg) then
-      set_stop_level(error);
-    else
       set_stop_level(failure);
     end if;
 
@@ -117,7 +115,7 @@ package body run_pkg is
           return false;
         end if;
 
-        for level in error to standard_log_level_t'high loop
+        for level in error to alert_log_level_t'high loop
           if is_valid(level) then
             count := get_log_count(child, level);
             if count > 0 then

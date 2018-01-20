@@ -38,7 +38,7 @@ begin
     -- is brief. It is assumed that you've already read the user guide.
 
     -- Checker Initialization
-    -- The default settings is to stop on error but  for these examples I want to continue
+    -- The default settings is to stop on error but for these examples I want to continue
     -- on errors so I'm going to raise the stop level.
     set_stop_level(failure);
 

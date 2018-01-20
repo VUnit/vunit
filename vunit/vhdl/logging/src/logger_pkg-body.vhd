@@ -31,6 +31,9 @@ package body logger_pkg is
   constant log_level_invisible : integer := 0;
   constant log_level_visible : integer := 1;
 
+  constant stop_count_unset : integer := 0;
+  constant stop_count_infinite : integer := integer'high;
+
   constant n_log_levels : natural := log_level_t'pos(log_level_t'high) + 1;
 
   impure function to_integer(logger : logger_t) return integer is
@@ -57,7 +60,7 @@ package body logger_pkg is
     set(logger.p_data, parent_idx, to_integer(parent));
     set(logger.p_data, children_idx, to_integer(new_integer_vector_ptr));
     set(logger.p_data, log_count_idx, to_integer(new_integer_vector_ptr(log_level_t'pos(log_level_t'high)+1, value => 0)));
-    set(logger.p_data, stop_counts_idx, to_integer(new_integer_vector_ptr));
+    set(logger.p_data, stop_counts_idx, to_integer(new_integer_vector_ptr(log_level_t'pos(log_level_t'high)+1, value => stop_count_unset)));
     set(logger.p_data, handlers_idx, to_integer(new_integer_vector_ptr));
     set(logger.p_data, is_mocked_idx, to_integer(new_integer_vector_ptr(log_level_t'pos(log_level_t'high)+1, value => 0)));
     set(logger.p_data, log_level_filters_idx, to_integer(new_integer_vector_ptr));
@@ -139,21 +142,6 @@ package body logger_pkg is
                              include_children => true);
       end loop;
     end if;
-  end;
-
-  impure function new_root_logger return logger_t is
-    variable logger : logger_t := new_logger(root_logger_id, "", null_logger);
-  begin
-    p_set_log_handlers(logger, (0 => display_handler));
-    hide_all(logger, display_handler);
-    show(logger, display_handler, (info, warning, error, failure));
-    return logger;
-  end;
-
-  constant p_root_logger : logger_t := new_root_logger;
-  impure function root_logger return logger_t is
-  begin
-    return p_root_logger;
   end;
 
   impure function new_logger(name : string; parent : logger_t) return logger_t is
@@ -322,10 +310,6 @@ package body logger_pkg is
     return (p_data => to_integer_vector_ptr(get(children, idx)));
   end;
 
-
-  constant stop_count_unset : integer := 0;
-  constant stop_count_infinite : integer := integer'high;
-
   procedure p_set_stop_count(logger : logger_t;
                              log_level : log_level_t;
                              value : natural;
@@ -364,6 +348,39 @@ package body logger_pkg is
     p_set_stop_count(logger, log_level, stop_count_infinite, unset_children);
   end;
 
+  procedure set_stop_count(log_level : log_level_t;
+                           value : positive) is
+  begin
+    set_stop_count(root_logger, log_level, value, unset_children => true);
+  end;
+
+  procedure set_infinite_stop_count(log_level : log_level_t) is
+  begin
+    set_infinite_stop_count(root_logger, log_level, unset_children => true);
+  end;
+
+  procedure set_stop_level(level : alert_log_level_t) is
+  begin
+    set_stop_level(root_logger, level);
+  end;
+
+  procedure set_stop_level(logger : logger_t;
+                           log_level : alert_log_level_t) is
+    variable stop_count : natural;
+  begin
+    for level in log_level_t'low to log_level_t'high loop
+      set_infinite_stop_count(logger, level,
+                              unset_children => true);
+    end loop;
+
+    for level in alert_log_level_t'low to alert_log_level_t'high loop
+      if level >= log_level then
+        set_stop_count(logger, level, 1,
+                       unset_children => true);
+      end if;
+    end loop;
+  end;
+
   procedure unset_stop_count(logger : logger_t;
                              log_level : log_level_t;
                              unset_children : boolean := false) is
@@ -400,29 +417,6 @@ package body logger_pkg is
     constant stop_count : integer := p_get_stop_count(logger, log_level);
   begin
     return stop_count /= stop_count_unset;
-  end;
-
-  procedure set_stop_level(level : standard_log_level_t) is
-  begin
-    set_stop_level(root_logger, level);
-  end;
-
-  -- Stop simulation for all levels >= level for this logger and all children
-  procedure set_stop_level(logger : logger_t;
-                           log_level : standard_log_level_t) is
-    variable stop_count : natural;
-  begin
-    for level in log_level_t'low to log_level_t'high loop
-      if is_standard(level) then
-        if level >= log_level then
-          stop_count := 1;
-        else
-          stop_count := stop_count_infinite;
-        end if;
-        set_stop_count(logger, level, stop_count,
-                       unset_children => true);
-      end if;
-    end loop;
   end;
 
   impure function get_log_level_filter(logger : logger_t;
@@ -923,6 +917,31 @@ package body logger_pkg is
   begin
     log(logger, msg, failure, line_num, file_name);
   end procedure;
+
+  impure function new_root_logger return logger_t is
+    variable logger : logger_t := new_logger(root_logger_id, "", null_logger);
+  begin
+    p_set_log_handlers(logger, (0 => display_handler));
+
+    for log_level in legal_log_level_t'low to legal_log_level_t'high loop
+      case log_level is
+        when error|failure =>
+          set_stop_count(logger, log_level, 1);
+        when others =>
+          set_infinite_stop_count(logger, log_level);
+      end case;
+    end loop;
+
+    hide_all(logger, display_handler);
+    show(logger, display_handler, (info, warning, error, failure));
+    return logger;
+  end;
+
+  constant p_root_logger : logger_t := new_root_logger;
+  impure function root_logger return logger_t is
+  begin
+    return p_root_logger;
+  end;
 
   constant p_default_logger : logger_t := get_logger("default");
   impure function default_logger return logger_t is

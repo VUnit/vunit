@@ -106,6 +106,16 @@ begin
     assert_true(get_log_handlers(logger) = (0 => display_handler));
     assert_true(get_visible_log_levels(logger, display_handler) = (info, warning, error, failure));
 
+    -- Check default stop count
+    for log_level in legal_log_level_t'low to legal_log_level_t'high loop
+      case log_level is
+        when error|failure =>
+          assert_equal(get_stop_count(root_logger, log_level), 1);
+        when others =>
+          assert_equal(get_stop_count(root_logger, log_level), integer'high);
+      end case;
+    end loop;
+
     test_runner_setup(runner, runner_cfg);
     set_log_handlers(root_logger, (display_handler, file_handler));
     show_all(root_logger, file_handler);
@@ -503,25 +513,6 @@ begin
       check_and_unmock_core_failure;
       unmock(logger);
 
-    elsif run("log below stop level") then
-      set_stop_level(warning);
-      info(logger, "message");
-      set_stop_level(logger, warning);
-      info(logger, "message");
-
-    elsif run("log above stop level fails") then
-      set_stop_level(warning);
-      mock_core_failure;
-      warning("message");
-      check_and_unmock_core_failure;
-      reset_log_count(default_logger);
-
-      set_stop_level(logger, warning);
-      mock_core_failure;
-      warning(logger, "message");
-      check_and_unmock_core_failure;
-      reset_log_count(logger);
-
     elsif run("log above stop count fails") then
       set_stop_count(logger, failure, 2);
       -- Should not fail
@@ -539,11 +530,44 @@ begin
       check_and_unmock_core_failure;
       reset_log_count(default_logger);
 
-    elsif run("Unset stop count on root logger fails") then
+    elsif run("unset stop count on root logger fails") then
       unset_stop_count(root_logger, warning);
       mock_core_failure;
       warning("failure");
       check_and_unmock_core_failure("Stop condition not set on root_logger");
+
+    elsif run("set_stop_level") then
+      set_stop_level(warning);
+      assert_equal(get_stop_count(root_logger, warning), 1);
+      assert_equal(get_stop_count(root_logger, error), 1);
+      assert_equal(get_stop_count(root_logger, failure), 1);
+
+      set_stop_level(error);
+      assert_equal(get_stop_count(root_logger, warning), integer'high);
+      assert_equal(get_stop_count(root_logger, error), 1);
+      assert_equal(get_stop_count(root_logger, failure), 1);
+
+      set_stop_level(failure);
+      assert_equal(get_stop_count(root_logger, warning), integer'high);
+      assert_equal(get_stop_count(root_logger, error), integer'high);
+      assert_equal(get_stop_count(root_logger, failure), 1);
+
+      -- Sets others to infinite
+      set_stop_count(root_logger, info, 1);
+      set_stop_level(failure);
+      assert_equal(get_stop_count(root_logger, info), integer'high);
+
+    elsif run("set_stop_level clears subtree") then
+      set_stop_count(get_logger("parent:my_logger"), error, 1);
+      set_stop_level(get_logger("parent"), failure);
+      assert_false(has_stop_count(get_logger("parent:my_logger"), error));
+
+    elsif run("new logger has unset stop counts") then
+      tmp_logger := get_logger("new_logger");
+
+      for log_level in legal_log_level_t'low to legal_log_level_t'high loop
+        assert_false(has_stop_count(tmp_logger, log_level));
+      end loop;
 
     elsif run("Get logger") then
       tmp_logger := get_logger("logger:child");

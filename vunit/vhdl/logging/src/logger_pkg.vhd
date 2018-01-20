@@ -121,6 +121,31 @@ package logger_pkg is
                                     log_level : log_level_t;
                                     unset_children : boolean := false);
 
+    -- Set the threshold for stopping simulation for a specific log level in
+    -- the entire logging tree.
+
+    -- NOTE: Removes all other stop count settings for log_level in entire tree.
+  procedure set_stop_count(log_level : log_level_t;
+                           value : positive);
+
+    -- Set disable stopping simulation for a specific log level in
+    -- the entire logging tree.
+
+    -- NOTE: Removes all other stop count settings for log_level in entire tree.
+  procedure set_infinite_stop_count(log_level : log_level_t);
+
+  -- Shorthand for configuring the stop counts for (warning, error, failure) in
+  -- a logger subtree. Set stop count to infinite for all levels < log_level and
+  -- 1 for all (warning, error, failure) >= log_level.
+
+  -- NOTE: Removes all other stop count settings from logger subtree.
+  procedure set_stop_level(logger : logger_t;
+                           log_level : alert_log_level_t);
+
+  -- Shorthand for configuring the stop counts in entire logger tree.
+  -- Same behavior as set_stop_level for specific logger subtree above
+  procedure set_stop_level(level : alert_log_level_t);
+
   -- Unset stop count for stopping simulation for a specific log level and
   -- logger tree
   procedure unset_stop_count(logger : logger_t;
@@ -134,17 +159,6 @@ package logger_pkg is
   -- Get the stop count for logger and log_level if set, else fail
   impure function get_stop_count(logger : logger_t;
                                  log_level : log_level_t) return positive;
-
-  -- Stop simulation for all levels >= level for this logger and all children
-  -- Only affects and can only be used with the standard log levels
-  -- where an ordering is defined
-  procedure set_stop_level(logger : logger_t;
-                           log_level : standard_log_level_t);
-
-  -- Stop simulation for all levels >= level
-  -- Only affects and can only be used with the standard log levels
-  -- where an ordering is defined
-  procedure set_stop_level(level : standard_log_level_t);
 
   -- Hide log messages of specified level to this handler.
   procedure hide(log_handler : log_handler_t;

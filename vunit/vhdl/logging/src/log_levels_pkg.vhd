@@ -31,25 +31,17 @@ package log_levels_pkg is
   type log_level_vec_t is array (natural range <>) of log_level_t;
   constant null_vec : log_level_vec_t(1 to 0) := (others => info);
 
-  subtype standard_log_level_t is log_level_t range verbose to failure;
+  subtype alert_log_level_t is log_level_t range warning to failure;
   subtype legal_log_level_t is log_level_t range log_level_t'succ(null_log_level) to log_level_t'high;
 
-  constant num_standard_log_levels : natural := (standard_log_level_t'pos(standard_log_level_t'high) -
-                                                 standard_log_level_t'pos(standard_log_level_t'low) + 1);
-
-  constant num_legal_log_levels : natural := (legal_log_level_t'pos(legal_log_level_t'high) -
-                                              legal_log_level_t'pos(legal_log_level_t'low) + 1);
-
-  constant max_num_custom_log_levels : natural := num_legal_log_levels - num_standard_log_levels;
+  constant max_num_custom_log_levels : natural := (
+    1 + log_level_t'pos(log_level_t'high) - log_level_t'pos(custom_level1));
 
   impure function new_log_level(name : string;
                                 fg : ansi_color_t := no_color;
                                 bg : ansi_color_t := no_color;
                                 style : ansi_style_t := normal) return log_level_t;
   impure function is_valid(log_level : log_level_t) return boolean;
-
-  -- Returns true if the log_level is not a custom level
-  impure function is_standard(log_level : log_level_t) return boolean;
 
   impure function get_name(log_level : log_level_t) return string;
   impure function get_color(log_level : log_level_t) return ansi_colors_t;

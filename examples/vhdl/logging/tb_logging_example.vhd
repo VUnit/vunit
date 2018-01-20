@@ -88,7 +88,6 @@ begin
     warning("Verbose format");
     error("Verbose format");
     failure("Verbose format");
-    set_stop_level(error);
 
     -- Loggers can also be mocked
     mock(my_logger);
