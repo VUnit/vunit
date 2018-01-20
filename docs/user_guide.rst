@@ -143,6 +143,7 @@ A warning will be given if the name *does* match the above pattern but
 lacks a ``runner_cfg`` generic or parameter preventing it to be run
 by VUnit.
 
+.. _special_generics:
 
 Special generics/parameters
 ---------------------------

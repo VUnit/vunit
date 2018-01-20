@@ -183,7 +183,7 @@ Configurations
 In VUnit Python API the name ``configuration`` is used to denote the
 user controllable configuration of one test run such as
 generic/parameter settings, simulation options as well as the
-pre_config and post_check callback functions.
+pre_config and post_check :ref:`callback functions <pre_and_post_hooks>`.
 
 Configurations can either be unique for each test case or must be
 common for the entire test bench depending on the situation.  For test
@@ -1332,7 +1332,8 @@ class TestBench(object):
 
     def set_pre_config(self, value):
         """
-        Set pre_config function of all |configurations| of this test bench or test cases within it
+        Set :ref:`pre_config <pre_and_post_hooks>` function of all
+        |configurations| of this test bench or test cases within it
 
         :param value: The pre_config function
         """
@@ -1340,7 +1341,8 @@ class TestBench(object):
 
     def set_post_check(self, value):
         """
-        Set post_check function of all |configurations| of this test bench or test cases within it
+        Set :ref:`post_check <pre_and_post_hooks>` function of all
+        |configurations| of this test bench or test cases within it
 
         :param value: The post_check function
         """
@@ -1357,18 +1359,8 @@ class TestBench(object):
         :param name: The name of the configuration. Will be added as a suffix on the test name
         :param generics: A `dict` containing the generics to be set in addition to the default configuration
         :param parameters: A `dict` containing the parameters to be set in addition to the default configuration
-        :param pre_config: A function to be called before test execution, replaces the default if not None
-           The function accepts an optional first argument `output_path` which is the filesystem path to the
-           directory where test outputs are stored. An optional second argument
-           `simulator_output_path` is the filesystem path to the simulator working directory.
-           Please note that `simulator_output_path` is shared by all test runs. The user must take
-           care that test runs do not read or write the same files asynchronously. It is therefore
-           recommended to use `output_path` in favor of `simulator_output_path`.
-           The function must return `True` or the test will fail
-        :param post_check: A function to be called after test execution, replaces the default if not None
-           The function must accept a string which is the filesystem path to the
-           directory where test outputs are stored.
-           The function must return `True` or the test will fail
+        :param pre_config: A :ref:`callback function <pre_and_post_hooks>` to be called before test execution.
+        :param post_check: A :ref:`callback function <pre_and_post_hooks>` to be called after test execution.
         :param sim_options: A `dict` containing the sim_options to be set in addition to the default configuration
 
         :example:
@@ -1510,14 +1502,8 @@ class Test(object):
         :param name: The name of the configuration. Will be added as a suffix on the test name
         :param generics: A `dict` containing the generics to be set in addition to the default configuration.
         :param parameters: A `dict` containing the parameters to be set in addition to the default configuration.
-        :param pre_config: A function to be called before test execution, replaces the default if not None.
-           The function may accept a string which is the filesystem path to the
-           directory where test outputs are stored.
-           The function must return `True` or the test will fail
-        :param post_check: A function to be called after test execution, replaces the default if not None.
-           The function must accept a string which is the filesystem path to the
-           directory where test outputs are stored.
-           The function must return `True` or the test will fail
+        :param pre_config: A :ref:`callback function <pre_and_post_hooks>` to be called before test execution.
+        :param post_check: A :ref:`callback function <pre_and_post_hooks>` to be called after test execution.
         :param sim_options: A `dict` containing the sim_options to be set in addition to the default configuration.
 
         :example:
@@ -1603,7 +1589,7 @@ class Test(object):
 
     def set_pre_config(self, value):
         """
-        Set pre_config function of all |configurations| of this test
+        Set :ref:`pre_config <pre_and_post_hooks>` function of all |configurations| of this test
 
         :param value: The pre_config function
         """
@@ -1611,7 +1597,7 @@ class Test(object):
 
     def set_post_check(self, value):
         """
-        Set post_check function of all |configurations| of this test
+        Set :ref:`post_check <pre_and_post_hooks>` function of all |configurations| of this test
 
         :param value: The post_check function
         """
