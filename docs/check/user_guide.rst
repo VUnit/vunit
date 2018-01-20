@@ -130,12 +130,12 @@ Logging Passing Checks
 The provided message in a check call is also logged when the check
 passes. The typical use case is to create a debug trace to investigate
 what happened before a bug occured. This feature uses the log
-level ``pass`` that is not visible by default but can be enabled
+level ``passed`` that is not visible by default but can be enabled
 for any log handler.
 
 .. code-block:: vhdl
 
-    show(get_logger(default_checker), display_handler, pass);
+    show(get_logger(default_checker), display_handler, passed);
 
 The difference between a passing check log message and a failing check log message is
 the log level used. A passing check like this
@@ -148,16 +148,15 @@ will result in a log entry like this
 
 .. code-block:: console
 
-    1000 ps - check - PASS - Checking that read enable is active
+    1000 ps - check - PASSED - Checking that read enable is active
 
-Note that a message that reads well for both the pass and the fail cases was used. Note
-also that ``pass`` isn't a standard log level but a custom log level created by the check library.
+Note that a message that reads well for both the passed and the fail cases was used.
 
 A number of check subprograms perform several checks for every call, each of which can fail
-and generate an error message. However, there will only be one pass message for such a call
+and generate an error message. However, there will only be one passed message for such a call
 to avoid confusion. For example, ``check_stable`` checks the stability of a signal for every
 clock cycle in a window. If the window is 100 clock cycles there will be 100 checks for
-stability but there will only be one pass message, not 100, if the signal is stable.
+stability but there will only be one passed message, not 100, if the signal is stable.
 
 Message Format
 ~~~~~~~~~~~~~~
@@ -181,12 +180,12 @@ Resulting in an error message like this:
 
 The last part of the message provides an error context to help debugging. Such a context is only given
 if that provides extra information. In the case of a failing ``check`` we know that the input boolean is
-false so there is no need to provide that information. The context may also be different between pass and
+false so there is no need to provide that information. The context may also be different between passed and
 error messages. For example, a pass message from ``check_equal`` looks like this:
 
 .. code-block:: console
 
-    1000 ps - check - PASS - Comparing output pixel with reference model - Got 1111_1010 (250).
+    1000 ps - check - PASSED - Comparing output pixel with reference model - Got 1111_1010 (250).
 
 Redundancy is avoided by excluding the expected value which is the same as the value received.
 
@@ -227,7 +226,7 @@ and
 
 .. code-block:: console
 
-    1000 ps - check - PASS - Equality check passed - Got 1111_1010 (250).
+    1000 ps - check - PASSED - Equality check passed - Got 1111_1010 (250).
 
 If you look at the default value for the user message in the check subprogram APIs you will see that the
 ``result`` function isn't used. This is a workaround for one of the supported simulators which exposes the

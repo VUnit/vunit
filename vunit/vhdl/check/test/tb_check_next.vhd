@@ -124,7 +124,6 @@ begin
 
   check_next_runner : process
     variable stat : checker_stat_t;
-    constant pass_level : log_level_t := pass;
     constant default_level : log_level_t := error;
 
     procedure test_concurrent_check (
@@ -220,7 +219,7 @@ begin
         verify_passed_checks(my_checker4, stat, 1);
         verify_failed_checks(my_checker4, stat, 1);
         check_log(get_logger(my_checker4), "Next check failed for my data - Got overlapping start event at the 2nd active and enabled clock edge.", default_level);
-        check_log(get_logger(my_checker4), "Next check passed for my data", pass_level);
+        check_log(get_logger(my_checker4), "Next check passed for my data", passed);
         unmock(get_logger(my_checker4));
         apply_sequence("001;101;001;001;001;111;001;001;001;011;001", clk, check_next_in_4);
         wait until rising_edge(clk);
@@ -275,7 +274,7 @@ begin
         verify_failed_checks(my_checker5, stat, 1);
         reset_checker_stat(my_checker5);
         check_log(get_logger(my_checker5), "Checking my data - Start event is X.", default_level);
-        check_log(get_logger(my_checker5), "Checking my data", pass_level);
+        check_log(get_logger(my_checker5), "Checking my data", passed);
         unmock(get_logger(my_checker5));
 
       elsif run("Test pass message and that internal checks don't count") then
@@ -288,7 +287,7 @@ begin
         check_only_log(check_logger, "Next check failed for my data - Got U at the 1st active and enabled clock edge.", default_level);
         apply_sequence("011;101;011;001", clk, check_next_in_6);
         wait for 1 ns;
-        check_only_log(check_logger, "Next check passed for my data", pass_level);
+        check_only_log(check_logger, "Next check passed for my data", passed);
         unmock(check_logger);
         verify_passed_checks(stat, 1);
         verify_failed_checks(stat, 1);

@@ -85,7 +85,6 @@ begin
 
   check_sequence_runner : process
     variable stat : checker_stat_t;
-    constant pass_level : log_level_t := pass;
     constant default_level : log_level_t := error;
   begin
     test_runner_setup(runner, runner_cfg);
@@ -219,14 +218,14 @@ begin
         wait for 1 ns;
         verify_passed_checks(stat, 1);
         verify_failed_checks(stat, 3);
-        check_only_log(check_logger, "Sequence check passed", pass_level);
+        check_only_log(check_logger, "Sequence check passed", passed);
 
         apply_sequence("0000.1;1000.1;1100.1;0X10.1;0011.1;0001.1;0000.1", clk, inp(1));
         verify_passed_checks(stat, 2);
         verify_failed_checks(stat, 5);
         check_log(check_logger, "Sequence check failed - Missing required event at 1st active and enabled clock edge.", default_level);
         check_log(check_logger, "Sequence check failed - Got 0X10.", default_level);
-        check_only_log(check_logger, "Sequence check passed", pass_level);
+        check_only_log(check_logger, "Sequence check passed", passed);
         unmock(check_logger);
         reset_checker_stat;
 
@@ -263,7 +262,7 @@ begin
         mock(get_logger(my_checker_5));
         apply_sequence("0000.1;1000.1;0100.1;0010.1;0001.1;0000.1", clk, inp(5));
         wait for 1 ns;
-        check_only_log(get_logger(my_checker_5), "Sequence check passed for my data", pass_level);
+        check_only_log(get_logger(my_checker_5), "Sequence check passed for my data", passed);
         unmock(get_logger(my_checker_5));
         verify_passed_checks(my_checker_5, stat, 1);
         verify_failed_checks(my_checker_5, stat, 0);

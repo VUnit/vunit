@@ -14,6 +14,7 @@ package log_levels_pkg is
 
     verbose,
     debug,
+    passed,
     info,
     warning,
     error,

@@ -202,16 +202,16 @@ test_template = """\
       elsif run("Test pass message on $left_type equal $right_type") then
         mock(check_logger);
         check_equal($left_pass, $right_pass);
-        check_only_log(check_logger, "Equality check passed - Got $left_pass_str.", pass_level);
+        check_only_log(check_logger, "Equality check passed - Got $left_pass_str.", passed);
 
         check_equal($left_pass, $right_pass, "");
-        check_only_log(check_logger, "Got $left_pass_str.", pass_level);
+        check_only_log(check_logger, "Got $left_pass_str.", passed);
 
         check_equal($left_pass, $right_pass, "Checking my data");
-        check_only_log(check_logger, "Checking my data - Got $left_pass_str.", pass_level);
+        check_only_log(check_logger, "Checking my data - Got $left_pass_str.", passed);
 
         check_equal($left_pass, $right_pass, result("for my data"));
-        check_only_log(check_logger, "Equality check passed for my data - Got $left_pass_str.", pass_level);
+        check_only_log(check_logger, "Equality check passed for my data - Got $left_pass_str.", passed);
         unmock(check_logger);
 
       elsif run("Test should fail on $left_type not equal $right_type") then
@@ -468,7 +468,6 @@ begin
     variable my_checker : checker_t := new_checker("my_checker");
     variable my_logger : logger_t := get_logger(my_checker);
     variable pass : boolean;
-    constant pass_level : log_level_t := vunit_lib.checker_pkg.pass;
     constant default_level : log_level_t := error;
 
   begin

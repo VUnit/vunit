@@ -58,8 +58,7 @@ begin
       assert(get_color(level) = (fg => red, bg => yellow, style => bright));
 
     elsif run("Can create max num custom levels") then
-      -- NOTE: checker package creates a pass level
-      for i in 0 to max_num_custom_log_levels - 2 loop
+      for i in 0 to max_num_custom_log_levels - 1 loop
         level := new_log_level("my_level" & integer'image(i));
         assert_true(is_valid(level));
         assert_equal(get_name(level), "my_level" & integer'image(i));

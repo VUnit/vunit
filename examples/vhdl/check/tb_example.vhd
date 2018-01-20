@@ -62,7 +62,7 @@ begin
     -- Logging Passing Checks
     -- You can also have the check message logged on a passing check to create a debug trace. If you use
     -- the result function the message becomes nice in both the passing and failing case.
-    show(get_logger(default_checker), display_handler, pass);
+    show(get_logger(default_checker), display_handler, passed);
 
     check(some_false_condition, result("for error status flag"));
     check(some_true_condition, result("for error status flag"));

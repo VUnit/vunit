@@ -878,6 +878,14 @@ package body logger_pkg is
     log(logger, msg, debug, line_num, file_name);
   end procedure;
 
+  procedure passed(logger : logger_t;
+                   msg : string;
+                   line_num : natural := 0;
+                   file_name : string := "") is
+  begin
+    log(logger, msg, passed, line_num, file_name);
+  end procedure;
+
   procedure verbose(logger : logger_t;
                     msg : string;
                     line_num : natural := 0;
@@ -962,6 +970,13 @@ package body logger_pkg is
                   file_name : string := "") is
   begin
     debug(default_logger, msg, line_num, file_name);
+  end procedure;
+
+  procedure passed(msg : string;
+                   line_num : natural := 0;
+                   file_name : string := "") is
+  begin
+    passed(default_logger, msg, line_num, file_name);
   end procedure;
 
   procedure verbose(msg : string;

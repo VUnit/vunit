@@ -205,17 +205,17 @@ test_template = """
       elsif run("Test pass message for $left_type matching $right_type") then
         mock(check_logger);
         check_match($left_pass, $right_pass);
-        check_only_log(check_logger, "Match check passed - Got $pass_str. Expected $pass_str.", pass_level);
+        check_only_log(check_logger, "Match check passed - Got $pass_str. Expected $pass_str.", passed);
 
         check_match($left_pass_dc, $right_pass, "");
-        check_only_log(check_logger, "Got $pass_dc_str. Expected $pass_str.", pass_level);
+        check_only_log(check_logger, "Got $pass_dc_str. Expected $pass_str.", passed);
 
         check_match($left_pass, $right_pass_dc, "Checking my data");
-        check_only_log(check_logger, "Checking my data - Got $pass_str. Expected $pass_dc_str.", pass_level);
+        check_only_log(check_logger, "Checking my data - Got $pass_str. Expected $pass_dc_str.", passed);
 
         check_match($left_pass_dc, $right_pass_dc, result("for my data"));
         check_only_log(check_logger, "Match check passed for my data - Got $pass_dc_str. Expected $pass_dc_str.",
-                       pass_level);
+                       passed);
         unmock(check_logger);
 
       elsif run("Test should fail on $left_type not matching $right_type") then
@@ -360,7 +360,6 @@ begin
     variable my_checker : checker_t := new_checker("my_checker");
     constant my_logger : logger_t := get_logger(my_checker);
     variable pass : boolean;
-    constant pass_level : log_level_t := vunit_lib.checker_pkg.pass;
     constant default_level : log_level_t := error;
   begin
     test_runner_setup(runner, runner_cfg);

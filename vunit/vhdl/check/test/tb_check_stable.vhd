@@ -161,7 +161,6 @@ begin
 
   check_stable_runner : process
     variable stat       : checker_stat_t;
-    constant pass_level : log_level_t := pass;
     constant default_level : log_level_t := error;
 
     procedure test_concurrent_std_logic_vector_check (
@@ -588,12 +587,12 @@ begin
         wait for 1 ns;
         check_only_log(check_logger,
                         "Checking stability - Got 101 (5) for 3 active and enabled clock edges.",
-                        pass_level);
+                        passed);
         apply_sequence("00.101;10.101;00.101;10.111;00.111", clk, check_stable_in_8);
         wait for 1 ns;
         check_only_log(check_logger,
                         "Checking stability - Got 101 (5) for 2 active and enabled clock edges.",
-                        pass_level);
+                        passed);
         unmock(check_logger);        verify_passed_checks(stat, 2);
         verify_failed_checks(stat, 1);
         reset_checker_stat;
@@ -608,12 +607,12 @@ begin
         wait for 1 ns;
         check_only_log(check_logger,
                         "Stability check passed for my data - Got 1 for 3 active and enabled clock edges.",
-                        pass_level);
+                        passed);
         apply_sequence("00.1;10.1;00.1;10.0;00.0", clk, check_stable_in_9);
         wait for 1 ns;
         check_only_log(check_logger,
                         "Stability check passed for my data - Got 1 for 2 active and enabled clock edges.",
-                        pass_level);
+                        passed);
         unmock(check_logger);
         verify_passed_checks(stat, 2);
         verify_failed_checks(stat, 1);

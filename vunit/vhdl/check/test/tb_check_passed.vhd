@@ -26,7 +26,6 @@ end entity tb_check_passed;
 architecture test_fixture of tb_check_passed is
 begin
   test_runner : process
-    constant pass_level : log_level_t := pass;
     variable my_checker : checker_t := new_checker("my_checker");
     variable stat : checker_stat_t;
   begin
@@ -48,16 +47,16 @@ begin
       elsif run("Test pass message") then
         mock(check_logger);
         check_passed;
-        check_only_log(check_logger, "Unconditional check passed.", pass_level);
+        check_only_log(check_logger, "Unconditional check passed.", passed);
 
         check_passed("");
-        check_only_log(check_logger, "", pass_level);
+        check_only_log(check_logger, "", passed);
 
         check_passed("Checking my data.");
-        check_only_log(check_logger, "Checking my data.", pass_level);
+        check_only_log(check_logger, "Checking my data.", passed);
 
         check_passed(result("for my data."));
-        check_only_log(check_logger, "Unconditional check passed for my data.", pass_level);
+        check_only_log(check_logger, "Unconditional check passed for my data.", passed);
         unmock(check_logger);
       end if;
     end loop;

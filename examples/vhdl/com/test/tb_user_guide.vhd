@@ -56,7 +56,7 @@ begin
     variable messenger_state             : messenger_state_t;
   begin
     test_runner_setup(runner, runner_cfg);
-    show(display_handler, pass);
+    show(display_handler, passed);
 
     while test_suite loop
       if run("Test sending a message to a known actor") then

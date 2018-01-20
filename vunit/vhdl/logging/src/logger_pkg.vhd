@@ -25,14 +25,18 @@ package logger_pkg is
   -------------------------------------
   -- Log procedures for each log level
   -------------------------------------
+  procedure verbose(logger : logger_t; msg : string;
+                    line_num : natural := 0;
+                    file_name : string := "");
+
   procedure debug(logger : logger_t;
                   msg : string;
                   line_num : natural := 0;
                   file_name : string := "");
 
-  procedure verbose(logger : logger_t; msg : string;
-                    line_num : natural := 0;
-                    file_name : string := "");
+  procedure passed(logger : logger_t; msg : string;
+                   line_num : natural := 0;
+                   file_name : string := "");
 
   procedure info(logger : logger_t; msg : string;
                  line_num : natural := 0;
@@ -57,13 +61,17 @@ package logger_pkg is
   -- The default logger, all log calls without logger argument go to this logger.
   impure function default_logger return logger_t;
 
+  procedure verbose(msg : string;
+                    line_num : natural := 0;
+                    file_name : string := "");
+
   procedure debug(msg : string;
                   line_num : natural := 0;
                   file_name : string := "");
 
-  procedure verbose(msg : string;
-                    line_num : natural := 0;
-                    file_name : string := "");
+  procedure passed(msg : string;
+                   line_num : natural := 0;
+                   file_name : string := "");
 
   procedure info(msg : string;
                  line_num : natural := 0;

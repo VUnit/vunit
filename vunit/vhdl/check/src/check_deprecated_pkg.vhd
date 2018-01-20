@@ -133,12 +133,12 @@ package body check_deprecated_pkg is
 
   procedure enable_pass_msg(checker : checker_t; handler : log_handler_t) is
   begin
-    show(get_logger(checker), handler, pass);
+    show(get_logger(checker), handler, passed);
   end;
 
   procedure disable_pass_msg(checker : checker_t; handler : log_handler_t) is
   begin
-    hide(get_logger(checker), handler, pass);
+    hide(get_logger(checker), handler, passed);
   end;
 
   procedure enable_pass_msg(checker : checker_t) is

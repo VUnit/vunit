@@ -60,7 +60,6 @@ begin
   check_runner : process
     variable pass : boolean;
     variable stat : checker_stat_t;
-    constant pass_level : log_level_t := vunit_lib.checker_pkg.pass;
     constant default_level : log_level_t := error;
 
     function prefix return string is
@@ -198,16 +197,16 @@ begin
       elsif run("Test pass message") then
         mock(check_logger);
         internal_check(true);
-        check_only_log(check_logger, prefix & "passed.", pass_level);
+        check_only_log(check_logger, prefix & "passed.", passed);
 
         internal_check(true, "");
-        check_only_log(check_logger, "", pass_level);
+        check_only_log(check_logger, "", passed);
 
         internal_check(true, "Checking my data.");
-        check_only_log(check_logger, "Checking my data.", pass_level);
+        check_only_log(check_logger, "Checking my data.", passed);
 
         internal_check(true, result("for my data."));
-        check_only_log(check_logger, prefix & "passed for my data.", pass_level);
+        check_only_log(check_logger, prefix & "passed for my data.", passed);
         unmock(check_logger);
 
       elsif run("Test should fail on false inputs to sequential checks") then
@@ -269,14 +268,14 @@ begin
         apply_sequence("1UXZWL-1", clk, check_in_4);
         wait until rising_edge(clk);
         wait for 1 ns;
-        check_log(get_logger(check_checker4), prefix & "passed.", pass_level);
+        check_log(get_logger(check_checker4), prefix & "passed.", passed);
         check_log(get_logger(check_checker4), prefix & "failed.", default_level);
         check_log(get_logger(check_checker4), prefix & "failed.", default_level);
         check_log(get_logger(check_checker4), prefix & "failed.", default_level);
         check_log(get_logger(check_checker4), prefix & "failed.", default_level);
         check_log(get_logger(check_checker4), prefix & "failed.", default_level);
         check_log(get_logger(check_checker4), prefix & "failed.", default_level);
-        check_log(get_logger(check_checker4), prefix & "passed.", pass_level);
+        check_log(get_logger(check_checker4), prefix & "passed.", passed);
         unmock(get_logger(check_checker4));
         verify_passed_checks(check_checker4, stat, 2);
         verify_failed_checks(check_checker4, stat, 6);

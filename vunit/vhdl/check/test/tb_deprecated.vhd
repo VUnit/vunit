@@ -113,22 +113,22 @@ begin
         my_checker := new_checker("my_checker");
         my_checker_logger := get_logger(my_checker);
 
-        check_false(is_visible(my_checker_logger, display_handler, pass));
+        check_false(is_visible(my_checker_logger, display_handler, passed));
         enable_pass_msg(my_checker, display_handler);
 
-        check(is_visible(my_checker_logger, display_handler, pass));
+        check(is_visible(my_checker_logger, display_handler, passed));
 
         disable_pass_msg(my_checker, display_handler);
-        check_false(is_visible(my_checker_logger, display_handler, pass));
+        check_false(is_visible(my_checker_logger, display_handler, passed));
 
       elsif run("Test enabling and disabling of pass messages for default checker") then
-        check_false(is_visible(check_logger, display_handler, pass));
+        check_false(is_visible(check_logger, display_handler, passed));
         enable_pass_msg(display_handler);
 
-        check(is_visible(check_logger, display_handler, pass));
+        check(is_visible(check_logger, display_handler, passed));
 
         disable_pass_msg(display_handler);
-        check_false(is_visible(check_logger, display_handler, pass));
+        check_false(is_visible(check_logger, display_handler, passed));
 
       elsif run("Test found errors subprograms") then
         my_checker := new_checker("my_checker");

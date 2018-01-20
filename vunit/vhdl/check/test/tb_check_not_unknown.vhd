@@ -72,7 +72,6 @@ begin
     constant metadata : std_logic_vector(1 to 5) := "UXZW-";
     constant not_unknowns : string(1 to 4) := "01LH";
     constant reversed_and_offset_expr : std_logic_vector(23 downto 16) := "10100101";
-    constant pass_level : log_level_t := vunit_lib.checker_pkg.pass;
     constant default_level : log_level_t := error;
 
     procedure test_concurrent_check (
@@ -165,28 +164,28 @@ begin
       elsif run("Test pass message") then
         mock(check_logger);
         check_not_unknown('0');
-        check_only_log(check_logger, "Not unknown check passed - Got 0.", pass_level);
+        check_only_log(check_logger, "Not unknown check passed - Got 0.", passed);
 
         check_not_unknown("00110");
-        check_only_log(check_logger, "Not unknown check passed - Got 0_0110 (6).", pass_level);
+        check_only_log(check_logger, "Not unknown check passed - Got 0_0110 (6).", passed);
 
         check_not_unknown('0', "");
-        check_only_log(check_logger, "Got 0.", pass_level);
+        check_only_log(check_logger, "Got 0.", passed);
 
         check_not_unknown("00110", "");
-        check_only_log(check_logger, "Got 0_0110 (6).", pass_level);
+        check_only_log(check_logger, "Got 0_0110 (6).", passed);
 
         check_not_unknown('0', "Checking my data");
-        check_only_log(check_logger, "Checking my data - Got 0.", pass_level);
+        check_only_log(check_logger, "Checking my data - Got 0.", passed);
 
         check_not_unknown("00110", "Checking my data");
-        check_only_log(check_logger, "Checking my data - Got 0_0110 (6).", pass_level);
+        check_only_log(check_logger, "Checking my data - Got 0_0110 (6).", passed);
 
         check_not_unknown('0', result("for my data"));
-        check_only_log(check_logger, "Not unknown check passed for my data - Got 0.", pass_level);
+        check_only_log(check_logger, "Not unknown check passed for my data - Got 0.", passed);
 
         check_not_unknown("00110", result("for my data"));
-        check_only_log(check_logger, "Not unknown check passed for my data - Got 0_0110 (6).", pass_level);
+        check_only_log(check_logger, "Not unknown check passed for my data - Got 0_0110 (6).", passed);
         unmock(check_logger);
 
       elsif run("Test should fail on all std logic values except zero and one") then

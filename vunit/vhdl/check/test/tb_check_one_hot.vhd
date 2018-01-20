@@ -49,7 +49,6 @@ begin
     variable pass : boolean;
     variable stat : checker_stat_t;
     constant reversed_and_offset_expr : std_logic_vector(23 downto 20) := "1000";
-    constant pass_level : log_level_t := vunit_lib.checker_pkg.pass;
     constant default_level : log_level_t := error;
 
     procedure test_concurrent_check (
@@ -129,16 +128,16 @@ begin
       elsif run("Test pass message") then
         mock(check_logger);
         check_one_hot("10000");
-        check_only_log(check_logger, "One-hot check passed - Got 1_0000.", pass_level);
+        check_only_log(check_logger, "One-hot check passed - Got 1_0000.", passed);
 
         check_one_hot("10000", "");
-        check_only_log(check_logger, "Got 1_0000.", pass_level);
+        check_only_log(check_logger, "Got 1_0000.", passed);
 
         check_one_hot("10000", "Checking my data");
-        check_only_log(check_logger, "Checking my data - Got 1_0000.", pass_level);
+        check_only_log(check_logger, "Checking my data - Got 1_0000.", passed);
 
         check_one_hot("10000", result("for my data"));
-        check_only_log(check_logger, "One-hot check passed for my data - Got 1_0000.", pass_level);
+        check_only_log(check_logger, "One-hot check passed for my data - Got 1_0000.", passed);
         unmock(check_logger);
 
       elsif run("Test should fail on zero or more than one high bit") then

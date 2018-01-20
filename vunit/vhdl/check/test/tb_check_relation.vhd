@@ -66,7 +66,6 @@ begin
     variable my_checker : checker_t := new_checker("my_checker");
     variable my_logger : logger_t := get_logger(my_checker);
     constant cash : cash_t := (99,95);
-    constant pass_level : log_level_t := vunit_lib.checker_pkg.pass;
     constant default_level : log_level_t := error;
     variable data : natural;
   begin
@@ -95,16 +94,16 @@ begin
         data := 5;
         mock(check_logger);
         check_relation(data > 3);
-        check_only_log(check_logger, "Relation check passed - Expected data > 3. Left is 5. Right is 3.", pass_level);
+        check_only_log(check_logger, "Relation check passed - Expected data > 3. Left is 5. Right is 3.", passed);
 
         check_relation(data > 3, "");
-        check_only_log(check_logger, "Expected data > 3. Left is 5. Right is 3.", pass_level);
+        check_only_log(check_logger, "Expected data > 3. Left is 5. Right is 3.", passed);
 
         check_relation(data > 3, "Checking my data");
-        check_only_log(check_logger, "Checking my data - Expected data > 3. Left is 5. Right is 3.", pass_level);
+        check_only_log(check_logger, "Checking my data - Expected data > 3. Left is 5. Right is 3.", passed);
 
         check_relation(data > 3, result("for my data"));
-        check_only_log(check_logger, "Relation check passed for my data - Expected data > 3. Left is 5. Right is 3.", pass_level);
+        check_only_log(check_logger, "Relation check passed for my data - Expected data > 3. Left is 5. Right is 3.", passed);
         unmock(check_logger);
 
       elsif run("Test that all pre VHDL 2008 relational operators are supported") then

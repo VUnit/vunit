@@ -63,9 +63,6 @@ package checker_pkg is
 
   constant null_checker : checker_t := (p_data => null_ptr);
 
-  constant pass : log_level_t :=
-    new_log_level("pass", fg => green, style => bright);
-
   impure function is_pass_message_visible(checker : checker_t) return boolean;
 
   procedure passing_check(checker : checker_t);
@@ -192,7 +189,7 @@ package body checker_pkg is
 
   impure function is_pass_message_visible(checker : checker_t) return boolean is
   begin
-    return is_visible(get_logger(checker), pass);
+    return is_visible(get_logger(checker), passed);
   end;
 
   procedure passing_check(checker : checker_t) is
@@ -201,7 +198,7 @@ package body checker_pkg is
     set(checker.p_data, stat_checks_idx, get(checker.p_data, stat_checks_idx) + 1);
     set(checker.p_data, stat_passed_idx, get(checker.p_data, stat_passed_idx) + 1);
 
-    log(logger, "", pass); -- invisible log
+    log(logger, "", passed); -- invisible log
   end;
 
   procedure passing_check(
@@ -215,10 +212,10 @@ package body checker_pkg is
     set(checker.p_data, stat_checks_idx, get(checker.p_data, stat_checks_idx) + 1);
     set(checker.p_data, stat_passed_idx, get(checker.p_data, stat_passed_idx) + 1);
 
-    if is_visible(logger, pass) then
-      log(logger, msg, pass, line_num, file_name);
+    if is_visible(logger, passed) then
+      log(logger, msg, passed, line_num, file_name);
     else
-      log(logger, "", pass); -- invisible log
+      log(logger, "", passed); -- invisible log
     end if;
 
   -- pragma translate_on
