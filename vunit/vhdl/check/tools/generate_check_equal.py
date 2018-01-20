@@ -233,11 +233,13 @@ test_template = """\
 
         check_equal(pass, $left_pass, $right_fail);
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(default_logger, "Equality check failed - Got $left_pass_str. Expected $fail_str.", default_level);
+        check_only_log(default_logger, "Equality check failed - Got $left_pass_str. Expected $fail_str.",
+                       default_level);
 
         pass := check_equal($left_pass, $right_fail);
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(default_logger, "Equality check failed - Got $left_pass_str. Expected $fail_str.", default_level);
+        check_only_log(default_logger, "Equality check failed - Got $left_pass_str. Expected $fail_str.",
+                       default_level);
         unmock(default_logger);
         verify_passed_checks(stat, 0);
         verify_failed_checks(stat, 6);
