@@ -17,7 +17,8 @@ use work.log_levels_pkg.all;
 
 package check_pkg is
 
-  constant default_checker    : checker_t := new_checker;
+  constant default_checker : checker_t := new_checker("check");
+  constant check_logger : logger_t := get_logger(default_checker);
 
   signal check_enabled : std_logic := '1';
 

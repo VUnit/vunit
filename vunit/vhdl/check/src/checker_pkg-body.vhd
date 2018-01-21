@@ -22,11 +22,6 @@ package body checker_pkg is
     return new_checker(get_logger(logger_name), default_log_level);
   end;
 
-  impure function new_checker(default_log_level : log_level_t := error) return checker_t is
-  begin
-    return new_checker(default_logger, default_log_level);
-  end;
-
   impure function new_checker(logger            : logger_t;
                               default_log_level : log_level_t := error) return checker_t is
     variable checker : checker_t;

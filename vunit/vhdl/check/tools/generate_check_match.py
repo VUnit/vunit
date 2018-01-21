@@ -203,39 +203,39 @@ test_template = """
         verify_passed_checks(my_checker,stat, 3);
 
       elsif run("Test pass message for $left_type matching $right_type") then
-        mock(default_logger);
+        mock(check_logger);
         check_match($left_pass, $right_pass);
-        check_only_log(default_logger, "Match check passed - Got $pass_str. Expected $pass_str.", passed);
+        check_only_log(check_logger, "Match check passed - Got $pass_str. Expected $pass_str.", passed);
 
         check_match($left_pass_dc, $right_pass, "");
-        check_only_log(default_logger, "Got $pass_dc_str. Expected $pass_str.", passed);
+        check_only_log(check_logger, "Got $pass_dc_str. Expected $pass_str.", passed);
 
         check_match($left_pass, $right_pass_dc, "Checking my data");
-        check_only_log(default_logger, "Checking my data - Got $pass_str. Expected $pass_dc_str.", passed);
+        check_only_log(check_logger, "Checking my data - Got $pass_str. Expected $pass_dc_str.", passed);
 
         check_match($left_pass_dc, $right_pass_dc, result("for my data"));
-        check_only_log(default_logger, "Match check passed for my data - Got $pass_dc_str. Expected $pass_dc_str.",
+        check_only_log(check_logger, "Match check passed for my data - Got $pass_dc_str. Expected $pass_dc_str.",
                        passed);
-        unmock(default_logger);
+        unmock(check_logger);
 
       elsif run("Test should fail on $left_type not matching $right_type") then
         get_checker_stat(stat);
-        mock(default_logger);
+        mock(check_logger);
         check_match($left_pass, $right_fail_dc);
-        check_only_log(default_logger, "Match check failed - Got $pass_str. Expected $fail_dc_str.", default_level);
+        check_only_log(check_logger, "Match check failed - Got $pass_str. Expected $fail_dc_str.", default_level);
 
         check_match($left_pass, $right_fail_dc, "");
-        check_only_log(default_logger, "Got $pass_str. Expected $fail_dc_str.", default_level);
+        check_only_log(check_logger, "Got $pass_str. Expected $fail_dc_str.", default_level);
 
         check_match(pass, $left_pass, $right_fail, "Checking my data");
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(default_logger, "Checking my data - Got $pass_str. Expected $fail_str.", default_level);
+        check_only_log(check_logger, "Checking my data - Got $pass_str. Expected $fail_str.", default_level);
 
         pass := check_match($left_pass, $right_fail, result("for my data"));
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(default_logger, "Match check failed for my data - Got $pass_str. Expected $fail_str.",
+        check_only_log(check_logger, "Match check failed for my data - Got $pass_str. Expected $fail_str.",
                        default_level);
-        unmock(default_logger);
+        unmock(check_logger);
         verify_passed_checks(stat, 0);
         verify_failed_checks(stat, 4);
         reset_checker_stat;

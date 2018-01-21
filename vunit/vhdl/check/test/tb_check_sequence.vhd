@@ -161,15 +161,15 @@ begin
         wait for 1 ns;
         verify_passed_checks(stat, 1);
         verify_failed_checks(stat, 0);
-        mock(default_logger);
+        mock(check_logger);
         apply_sequence("0000.1;0000.0", clk, inp(1));
         wait for 1 ns;
         verify_passed_checks(stat, 1);
         verify_failed_checks(stat, 1);
-        check_only_log(default_logger,
+        check_only_log(check_logger,
                        "Sequence check failed - Missing required event at 2nd active and enabled clock edge.",
                        default_level);
-        unmock(default_logger);
+        unmock(check_logger);
         reset_checker_stat;
 
       elsif run("Test should ignore a first triggered and simulataneously initiated event sequence when pipelining is not supported") then
@@ -202,31 +202,31 @@ begin
         verify_failed_checks(my_checker_2, stat, 1);
         reset_checker_stat(my_checker_2);
         get_checker_stat(stat);
-        mock(default_logger);
+        mock(check_logger);
         apply_sequence("0000.1;10X0.1;0100.1", clk, inp(1));
         wait for 1 ns;
         verify_passed_checks(stat, 0);
         verify_failed_checks(stat, 1);
-        check_only_log(default_logger, "Sequence check failed - Got 10X0.", default_level);
+        check_only_log(check_logger, "Sequence check failed - Got 10X0.", default_level);
         apply_sequence("0100.1;10X0.1;0101.1;0010.1", clk, inp(1));
         wait for 1 ns;
         verify_passed_checks(stat, 0);
         verify_failed_checks(stat, 3);
-        check_log(default_logger, "Sequence check failed - Missing required event at 2nd active and enabled clock edge.", default_level);
-        check_only_log(default_logger, "Sequence check failed - Got 10X0.", default_level);
+        check_log(check_logger, "Sequence check failed - Missing required event at 2nd active and enabled clock edge.", default_level);
+        check_only_log(check_logger, "Sequence check failed - Got 10X0.", default_level);
         apply_sequence("0010.1;0001.1;0000.0", clk, inp(1));
         wait for 1 ns;
         verify_passed_checks(stat, 1);
         verify_failed_checks(stat, 3);
-        check_only_log(default_logger, "Sequence check passed", passed);
+        check_only_log(check_logger, "Sequence check passed", passed);
 
         apply_sequence("0000.1;1000.1;1100.1;0X10.1;0011.1;0001.1;0000.1", clk, inp(1));
         verify_passed_checks(stat, 2);
         verify_failed_checks(stat, 5);
-        check_log(default_logger, "Sequence check failed - Missing required event at 1st active and enabled clock edge.", default_level);
-        check_log(default_logger, "Sequence check failed - Got 0X10.", default_level);
-        check_only_log(default_logger, "Sequence check passed", passed);
-        unmock(default_logger);
+        check_log(check_logger, "Sequence check failed - Missing required event at 1st active and enabled clock edge.", default_level);
+        check_log(check_logger, "Sequence check failed - Got 0X10.", default_level);
+        check_only_log(check_logger, "Sequence check passed", passed);
+        unmock(check_logger);
         reset_checker_stat;
 
       elsif run("Test should support weak high and low meta values") then

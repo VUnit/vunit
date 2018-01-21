@@ -20,7 +20,6 @@ package checker_pkg is
                               default_log_level : log_level_t := error) return checker_t;
   impure function new_checker(logger            : logger_t;
                               default_log_level : log_level_t := error) return checker_t;
-  impure function new_checker(default_log_level : log_level_t := error) return checker_t;
 
   impure function get_logger(checker            : checker_t) return logger_t;
   impure function get_default_log_level(checker : checker_t) return log_level_t;

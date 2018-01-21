@@ -200,47 +200,47 @@ test_template = """\
         verify_passed_checks(my_checker, stat, 3);
 
       elsif run("Test pass message on $left_type equal $right_type") then
-        mock(default_logger);
+        mock(check_logger);
         check_equal($left_pass, $right_pass);
-        check_only_log(default_logger, "Equality check passed - Got $left_pass_str.", passed);
+        check_only_log(check_logger, "Equality check passed - Got $left_pass_str.", passed);
 
         check_equal($left_pass, $right_pass, "");
-        check_only_log(default_logger, "Got $left_pass_str.", passed);
+        check_only_log(check_logger, "Got $left_pass_str.", passed);
 
         check_equal($left_pass, $right_pass, "Checking my data");
-        check_only_log(default_logger, "Checking my data - Got $left_pass_str.", passed);
+        check_only_log(check_logger, "Checking my data - Got $left_pass_str.", passed);
 
         check_equal($left_pass, $right_pass, result("for my data"));
-        check_only_log(default_logger, "Equality check passed for my data - Got $left_pass_str.", passed);
-        unmock(default_logger);
+        check_only_log(check_logger, "Equality check passed for my data - Got $left_pass_str.", passed);
+        unmock(check_logger);
 
       elsif run("Test should fail on $left_type not equal $right_type") then
         get_checker_stat(stat);
-        mock(default_logger);
+        mock(check_logger);
         check_equal($left_pass, $right_fail);
-        check_only_log(default_logger, "Equality check failed - Got $left_pass_str. Expected $fail_str.",
+        check_only_log(check_logger, "Equality check failed - Got $left_pass_str. Expected $fail_str.",
                        default_level);
 
         check_equal($left_pass, $right_fail, "");
-        check_only_log(default_logger, "Got $left_pass_str. Expected $fail_str.", default_level);
+        check_only_log(check_logger, "Got $left_pass_str. Expected $fail_str.", default_level);
 
         check_equal($left_pass, $right_fail, "Checking my data");
-        check_only_log(default_logger, "Checking my data - Got $left_pass_str. Expected $fail_str.", default_level);
+        check_only_log(check_logger, "Checking my data - Got $left_pass_str. Expected $fail_str.", default_level);
 
         check_equal($left_pass, $right_fail, result("for my data"));
-        check_only_log(default_logger, "Equality check failed for my data - Got $left_pass_str. Expected $fail_str.",
+        check_only_log(check_logger, "Equality check failed for my data - Got $left_pass_str. Expected $fail_str.",
                        default_level);
 
         check_equal(pass, $left_pass, $right_fail);
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(default_logger, "Equality check failed - Got $left_pass_str. Expected $fail_str.",
+        check_only_log(check_logger, "Equality check failed - Got $left_pass_str. Expected $fail_str.",
                        default_level);
 
         pass := check_equal($left_pass, $right_fail);
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(default_logger, "Equality check failed - Got $left_pass_str. Expected $fail_str.",
+        check_only_log(check_logger, "Equality check failed - Got $left_pass_str. Expected $fail_str.",
                        default_level);
-        unmock(default_logger);
+        unmock(check_logger);
         verify_passed_checks(stat, 0);
         verify_failed_checks(stat, 6);
         reset_checker_stat;
@@ -485,62 +485,62 @@ begin
         verify_passed_checks(stat, 4);
         verify_failed_checks(stat, 0);
 
-        mock(default_logger);
+        mock(check_logger);
         check_equal(unsigned'(X"A5A5A5A5A"), unsigned'(X"B5A5A5A5A"));
-        check_only_log(default_logger, "\
+        check_only_log(check_logger, "\
 Equality check failed - Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). \
 Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).", default_level);
 
         check_equal(std_logic_vector'(X"A5A5A5A5A"), unsigned'(X"B5A5A5A5A"));
-        check_only_log(default_logger, "\
+        check_only_log(check_logger, "\
 Equality check failed - Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). \
 Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).", default_level);
 
         check_equal(unsigned'(X"A5A5A5A5A"), std_logic_vector'(X"B5A5A5A5A"));
-        check_only_log(default_logger, "\
+        check_only_log(check_logger, "\
 Equality check failed - Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). \
 Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).", default_level);
 
         check_equal(std_logic_vector'(X"A5A5A5A5A"), std_logic_vector'(X"B5A5A5A5A"));
-        check_only_log(default_logger, "\
+        check_only_log(check_logger, "\
 Equality check failed - Got 1010_0101_1010_0101_1010_0101_1010_0101_1010 (44465543770). \
 Expected 1011_0101_1010_0101_1010_0101_1010_0101_1010 (48760511066).", default_level);
-        unmock(default_logger);
+        unmock(check_logger);
         verify_passed_checks(stat, 4);
         verify_failed_checks(stat, 4);
         reset_checker_stat;
 
       elsif run("Test print full integer vector when fail on comparison with to short vector") then
         get_checker_stat(stat);
-        mock(default_logger);
+        mock(check_logger);
         check_equal(unsigned'(X"A5"), natural'(256));
-        check_only_log(default_logger, "Equality check failed - Got 1010_0101 (165). Expected 256 (1_0000_0000).",
+        check_only_log(check_logger, "Equality check failed - Got 1010_0101 (165). Expected 256 (1_0000_0000).",
                        default_level);
 
         check_equal(natural'(256), unsigned'(X"A5"));
-        check_only_log(default_logger, "Equality check failed - Got 256 (1_0000_0000). Expected 1010_0101 (165).",
+        check_only_log(check_logger, "Equality check failed - Got 256 (1_0000_0000). Expected 1010_0101 (165).",
                        default_level);
 
         check_equal(unsigned'(X"A5"), natural'(2147483647));
-        check_only_log(default_logger, "Equality check failed - Got 1010_0101 (165). \
+        check_only_log(check_logger, "Equality check failed - Got 1010_0101 (165). \
 Expected 2147483647 (111_1111_1111_1111_1111_1111_1111_1111).", default_level);
 
         check_equal(signed'(X"A5"), integer'(-256));
-        check_only_log(default_logger, "Equality check failed - Got 1010_0101 (-91). Expected -256 (1_0000_0000).",
+        check_only_log(check_logger, "Equality check failed - Got 1010_0101 (-91). Expected -256 (1_0000_0000).",
                        default_level);
 
         check_equal(integer'(-256), signed'(X"A5"));
-        check_only_log(default_logger, "Equality check failed - Got -256 (1_0000_0000). Expected 1010_0101 (-91).",
+        check_only_log(check_logger, "Equality check failed - Got -256 (1_0000_0000). Expected 1010_0101 (-91).",
                        default_level);
 
         check_equal(signed'(X"05"), integer'(256));
-        check_only_log(default_logger, "Equality check failed - Got 0000_0101 (5). Expected 256 (01_0000_0000).",
+        check_only_log(check_logger, "Equality check failed - Got 0000_0101 (5). Expected 256 (01_0000_0000).",
                        default_level);
 
         check_equal(signed'(X"A5"), integer'(-2147483648));
-        check_only_log(default_logger, "Equality check failed - Got 1010_0101 (-91). \
+        check_only_log(check_logger, "Equality check failed - Got 1010_0101 (-91). \
 Expected -2147483648 (1000_0000_0000_0000_0000_0000_0000_0000).", default_level);
-        unmock(default_logger);
+        unmock(check_logger);
         verify_passed_checks(stat, 0);
         verify_failed_checks(stat, 7);
         reset_checker_stat;

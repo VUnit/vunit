@@ -195,37 +195,37 @@ begin
         verify_passed_checks(check_checker, stat, 3);
 
       elsif run("Test pass message") then
-        mock(default_logger);
+        mock(check_logger);
         internal_check(true);
-        check_only_log(default_logger, prefix & "passed.", passed);
+        check_only_log(check_logger, prefix & "passed.", passed);
 
         internal_check(true, "");
-        check_only_log(default_logger, "", passed);
+        check_only_log(check_logger, "", passed);
 
         internal_check(true, "Checking my data.");
-        check_only_log(default_logger, "Checking my data.", passed);
+        check_only_log(check_logger, "Checking my data.", passed);
 
         internal_check(true, result("for my data."));
-        check_only_log(default_logger, prefix & "passed for my data.", passed);
-        unmock(default_logger);
+        check_only_log(check_logger, prefix & "passed for my data.", passed);
+        unmock(check_logger);
 
       elsif run("Test should fail on false inputs to sequential checks") then
         get_checker_stat(stat);
-        mock(default_logger);
+        mock(check_logger);
         internal_check(false);
-        check_only_log(default_logger, prefix & "failed.", default_level);
+        check_only_log(check_logger, prefix & "failed.", default_level);
 
         internal_check(false, "");
-        check_only_log(default_logger, "", default_level);
+        check_only_log(check_logger, "", default_level);
 
         internal_check(pass, false, "Checking my data.");
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(default_logger, "Checking my data.", default_level);
+        check_only_log(check_logger, "Checking my data.", default_level);
 
         pass := internal_check(false, result("for my data."));
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(default_logger, prefix & "failed for my data.", default_level);
-        unmock(default_logger);
+        check_only_log(check_logger, prefix & "failed for my data.", default_level);
+        unmock(check_logger);
         verify_failed_checks(stat, 4);
         reset_checker_stat;
 

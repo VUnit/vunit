@@ -38,28 +38,28 @@ begin
     while test_suite loop
       if run("Test that VHDL 2008 matching relational operators are supported") then
         get_checker_stat(stat);
-        mock(default_logger);
+        mock(check_logger);
         check_relation(sl_1 ?= sl_0);
-        check_only_log(default_logger, "Relation check failed - Expected sl_1 ?= sl_0. Left is 1. Right is 0.", default_level);
+        check_only_log(check_logger, "Relation check failed - Expected sl_1 ?= sl_0. Left is 1. Right is 0.", default_level);
 
         check_relation(bit_1 ?= bit_0);
-        check_only_log(default_logger, "Relation check failed - Expected bit_1 ?= bit_0. Left is 1. Right is 0.", default_level);
+        check_only_log(check_logger, "Relation check failed - Expected bit_1 ?= bit_0. Left is 1. Right is 0.", default_level);
 
         check_relation(sl_1 ?/= sl_1);
-        check_only_log(default_logger, "Relation check failed - Expected sl_1 ?/= sl_1. Left is 1. Right is 1.", default_level);
+        check_only_log(check_logger, "Relation check failed - Expected sl_1 ?/= sl_1. Left is 1. Right is 1.", default_level);
 
         check_relation(sl_1 ?< sl_0);
-        check_only_log(default_logger, "Relation check failed - Expected sl_1 ?< sl_0. Left is 1. Right is 0.", default_level);
+        check_only_log(check_logger, "Relation check failed - Expected sl_1 ?< sl_0. Left is 1. Right is 0.", default_level);
 
         check_relation(sl_1 ?<= sl_0);
-        check_only_log(default_logger, "Relation check failed - Expected sl_1 ?<= sl_0. Left is 1. Right is 0.", default_level);
+        check_only_log(check_logger, "Relation check failed - Expected sl_1 ?<= sl_0. Left is 1. Right is 0.", default_level);
 
         check_relation(sl_0 ?> sl_1);
-        check_only_log(default_logger, "Relation check failed - Expected sl_0 ?> sl_1. Left is 0. Right is 1.", default_level);
+        check_only_log(check_logger, "Relation check failed - Expected sl_0 ?> sl_1. Left is 0. Right is 1.", default_level);
 
         check_relation(sl_0 ?>= sl_1);
-        check_only_log(default_logger, "Relation check failed - Expected sl_0 ?>= sl_1. Left is 0. Right is 1.", default_level);
-        unmock(default_logger);
+        check_only_log(check_logger, "Relation check failed - Expected sl_0 ?>= sl_1. Left is 0. Right is 1.", default_level);
+        unmock(check_logger);
         verify_passed_checks(stat, 0);
         verify_failed_checks(stat, 7);
         reset_checker_stat;

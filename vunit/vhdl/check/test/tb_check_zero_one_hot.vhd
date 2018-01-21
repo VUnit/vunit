@@ -144,45 +144,45 @@ begin
         verify_passed_checks(my_checker3, stat, 4);
 
       elsif run("Test pass message") then
-        mock(default_logger);
+        mock(check_logger);
         check_zero_one_hot("00000");
-        check_only_log(default_logger, "Zero one-hot check passed - Got 0_0000.", passed);
+        check_only_log(check_logger, "Zero one-hot check passed - Got 0_0000.", passed);
 
         check_zero_one_hot("00000", "");
-        check_only_log(default_logger, "Got 0_0000.", passed);
+        check_only_log(check_logger, "Got 0_0000.", passed);
 
         check_zero_one_hot("00000", "Checking my data");
-        check_only_log(default_logger, "Checking my data - Got 0_0000.", passed);
+        check_only_log(check_logger, "Checking my data - Got 0_0000.", passed);
 
         check_zero_one_hot("00000", result("for my data"));
-        check_only_log(default_logger, "Zero one-hot check passed for my data - Got 0_0000.", passed);
-        unmock(default_logger);
+        check_only_log(check_logger, "Zero one-hot check passed for my data - Got 0_0000.", passed);
+        unmock(check_logger);
 
       elsif run("Test should fail on more than one high bit") then
         get_checker_stat(stat);
-        mock(default_logger);
+        mock(check_logger);
         check_zero_one_hot("01001");
-        check_only_log(default_logger, "Zero one-hot check failed - Got 0_1001.", default_level);
+        check_only_log(check_logger, "Zero one-hot check failed - Got 0_1001.", default_level);
 
         check_zero_one_hot("0100H");
-        check_only_log(default_logger, "Zero one-hot check failed - Got 0_100H.", default_level);
+        check_only_log(check_logger, "Zero one-hot check failed - Got 0_100H.", default_level);
 
         check_zero_one_hot(pass, "01001");
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(default_logger, "Zero one-hot check failed - Got 0_1001.", default_level);
+        check_only_log(check_logger, "Zero one-hot check failed - Got 0_1001.", default_level);
 
         check_zero_one_hot(pass, "0100H");
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(default_logger, "Zero one-hot check failed - Got 0_100H.", default_level);
+        check_only_log(check_logger, "Zero one-hot check failed - Got 0_100H.", default_level);
 
         pass := check_zero_one_hot("01001");
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(default_logger, "Zero one-hot check failed - Got 0_1001.", default_level);
+        check_only_log(check_logger, "Zero one-hot check failed - Got 0_1001.", default_level);
 
         pass := check_zero_one_hot("0100H");
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(default_logger, "Zero one-hot check failed - Got 0_100H.", default_level);
-        unmock(default_logger);
+        check_only_log(check_logger, "Zero one-hot check failed - Got 0_100H.", default_level);
+        unmock(check_logger);
         verify_passed_checks(stat, 0);
         verify_failed_checks(stat, 6);
         reset_checker_stat;
@@ -217,18 +217,18 @@ begin
 
       elsif run("Test should fail on unknowns") then
         get_checker_stat(stat);
-        mock(default_logger);
+        mock(check_logger);
         check_zero_one_hot("0000X");
-        check_only_log(default_logger, "Zero one-hot check failed - Got 0_000X.", default_level);
+        check_only_log(check_logger, "Zero one-hot check failed - Got 0_000X.", default_level);
 
         check_zero_one_hot(pass, "0000X");
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(default_logger, "Zero one-hot check failed - Got 0_000X.", default_level);
+        check_only_log(check_logger, "Zero one-hot check failed - Got 0_000X.", default_level);
 
         pass := check_zero_one_hot("0000X");
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(default_logger, "Zero one-hot check failed - Got 0_000X.", default_level);
-        unmock(default_logger);
+        check_only_log(check_logger, "Zero one-hot check failed - Got 0_000X.", default_level);
+        unmock(check_logger);
         verify_passed_checks(stat, 0);
         verify_failed_checks(stat, 3);
         reset_checker_stat;

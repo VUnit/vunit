@@ -40,24 +40,24 @@ begin
     while test_suite loop
       if run("Test default checker") then
         stat_before := get_checker_stat;
-        mock(default_logger);
+        mock(check_logger);
 
         passing_check(default_checker, "Check true");
-        check_only_log(default_logger, "Check true", passed);
+        check_only_log(check_logger, "Check true", passed);
 
         passing_check(default_checker);
-        check_only_log(default_logger, "", passed);
+        check_only_log(check_logger, "", passed);
 
         failing_check(default_checker, "Custom error message");
-        check_only_log(default_logger, "Custom error message", error);
+        check_only_log(check_logger, "Custom error message", error);
 
         failing_check(default_checker, "Custom level", info);
-        check_only_log(default_logger, "Custom level", info);
+        check_only_log(check_logger, "Custom level", info);
 
         failing_check(default_checker, "Line and file name", info, 377, "some_file.vhd");
-        check_only_log(default_logger, "Line and file name", info,
+        check_only_log(check_logger, "Line and file name", info,
                        line_num => 377, file_name => "some_file.vhd");
-        unmock(default_logger);
+        unmock(check_logger);
 
         stat_after := get_checker_stat;
         assert_true(stat_after = stat_before + (5, 3, 2), "Expected 5 checks, 3 fail, and 2 pass but got " & to_string(stat_after - stat_before));

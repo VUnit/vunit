@@ -90,21 +90,21 @@ begin
     while test_suite loop
       if run("Test should fail on true and logic 1 inputs to sequential checks") then
         get_checker_stat(stat);
-        mock(default_logger);
+        mock(check_logger);
         check_false(true);
-        check_only_log(default_logger, "False check failed.", default_level);
+        check_only_log(check_logger, "False check failed.", default_level);
 
         check_false(true, "");
-        check_only_log(default_logger, "", default_level);
+        check_only_log(check_logger, "", default_level);
 
         check_false(pass, true, "Checking my data.", default_level);
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(default_logger, "Checking my data.", default_level);
+        check_only_log(check_logger, "Checking my data.", default_level);
 
         pass := check_false(true, result("for my data."), default_level);
         assert_true(not pass, "Should return pass = false on failing check");
-        check_only_log(default_logger, "False check failed for my data.", default_level);
-        unmock(default_logger);
+        check_only_log(check_logger, "False check failed for my data.", default_level);
+        unmock(check_logger);
         verify_passed_checks(stat, 0);
         verify_failed_checks(stat, 4);
         reset_checker_stat;
@@ -145,19 +145,19 @@ begin
         verify_passed_checks(check_false_checker, stat, 3);
 
       elsif run("Test pass message") then
-        mock(default_logger);
+        mock(check_logger);
         check_false(false);
-        check_only_log(default_logger, "False check passed.", passed);
+        check_only_log(check_logger, "False check passed.", passed);
 
         check_false(false, "");
-        check_only_log(default_logger, "", passed);
+        check_only_log(check_logger, "", passed);
 
         check_false(false, "Checking my data.");
-        check_only_log(default_logger, "Checking my data.", passed);
+        check_only_log(check_logger, "Checking my data.", passed);
 
         check_false(false, result("for my data."));
-        check_only_log(default_logger, "False check passed for my data.", passed);
-        unmock(default_logger);
+        check_only_log(check_logger, "False check passed for my data.", passed);
+        unmock(check_logger);
 
       elsif run("Test should be possible to use concurrently") then
         test_concurrent_check(clk, check_false_in_1, default_checker);
