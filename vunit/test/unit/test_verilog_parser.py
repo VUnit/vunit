@@ -174,7 +174,7 @@ endmodule
         self.assertEqual(instances[1], "true2")
         self.assertEqual(instances[2], "true3")
 
-    def test_parse_generated_instances(self):
+    def test_parse_instances_after_block_label(self):
         instances = self.parse("""\
 module name;
 genvar i;
