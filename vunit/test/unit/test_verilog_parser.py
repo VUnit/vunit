@@ -189,6 +189,26 @@ endmodule
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0], "true1")
 
+    def test_parse_generated_instances_2loops(self):
+        instances = self.parse("""\
+module name;
+genvar i;
+  generate
+    for( i=0; i < 10; i = i + 1 )
+      begin: INST_GEN1
+      for( i=0; i < 10; i = i + 1 )
+        begin: INST_GEN2
+          true1 instance_name1();
+      end
+    end
+  endgenerate
+endmodule
+""").instances
+        self.assertEqual(len(instances), 1)
+        self.assertEqual(instances[0], "true1")
+
+
+
     def test_parse_instances_without_crashing(self):
         instances = self.parse("""\
 module name;
