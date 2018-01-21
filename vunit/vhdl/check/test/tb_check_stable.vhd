@@ -587,12 +587,12 @@ begin
         wait for 1 ns;
         check_only_log(check_logger,
                         "Checking stability - Got 101 (5) for 3 active and enabled clock edges.",
-                        passed);
+                        pass);
         apply_sequence("00.101;10.101;00.101;10.111;00.111", clk, check_stable_in_8);
         wait for 1 ns;
         check_only_log(check_logger,
                         "Checking stability - Got 101 (5) for 2 active and enabled clock edges.",
-                        passed);
+                        pass);
         unmock(check_logger);        verify_passed_checks(stat, 2);
         verify_failed_checks(stat, 1);
         reset_checker_stat;
@@ -607,12 +607,12 @@ begin
         wait for 1 ns;
         check_only_log(check_logger,
                         "Stability check passed for my data - Got 1 for 3 active and enabled clock edges.",
-                        passed);
+                        pass);
         apply_sequence("00.1;10.1;00.1;10.0;00.0", clk, check_stable_in_9);
         wait for 1 ns;
         check_only_log(check_logger,
                         "Stability check passed for my data - Got 1 for 2 active and enabled clock edges.",
-                        passed);
+                        pass);
         unmock(check_logger);
         verify_passed_checks(stat, 2);
         verify_failed_checks(stat, 1);

@@ -34,9 +34,9 @@ package logger_pkg is
                   line_num : natural := 0;
                   file_name : string := "");
 
-  procedure passed(logger : logger_t; msg : string;
-                   line_num : natural := 0;
-                   file_name : string := "");
+  procedure pass(logger : logger_t; msg : string;
+                 line_num : natural := 0;
+                 file_name : string := "");
 
   procedure info(logger : logger_t; msg : string;
                  line_num : natural := 0;
@@ -105,9 +105,9 @@ package logger_pkg is
                   line_num : natural := 0;
                   file_name : string := "");
 
-  procedure passed(msg : string;
-                   line_num : natural := 0;
-                   file_name : string := "");
+  procedure pass(msg : string;
+                 line_num : natural := 0;
+                 file_name : string := "");
 
   procedure info(msg : string;
                  line_num : natural := 0;

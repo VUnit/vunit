@@ -61,7 +61,7 @@ associated procedure calls are:
     info("Informative message for very useful public information");
 
     -- Not visible by default
-    passed("Message from a passing check");
+    pass("Message from a passing check");
     debug("Debug message for seldom useful or internal information");
     verbose("Verbose TRACE messages only used for tracing program flow");
 

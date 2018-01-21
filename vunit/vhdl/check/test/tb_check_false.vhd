@@ -49,7 +49,7 @@ begin
   check_false_4 : check_false(check_false_checker4, clk, check_false_en_4, check_false_in_4);
 
   check_false_runner : process
-    variable pass : boolean;
+    variable passed : boolean;
     variable stat : checker_stat_t;
 
     procedure test_concurrent_check (
@@ -97,12 +97,12 @@ begin
         check_false(true, "");
         check_only_log(check_logger, "", default_level);
 
-        check_false(pass, true, "Checking my data.", default_level);
-        assert_true(not pass, "Should return pass = false on failing check");
+        check_false(passed, true, "Checking my data.", default_level);
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(check_logger, "Checking my data.", default_level);
 
-        pass := check_false(true, result("for my data."), default_level);
-        assert_true(not pass, "Should return pass = false on failing check");
+        passed := check_false(true, result("for my data."), default_level);
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(check_logger, "False check failed for my data.", default_level);
         unmock(check_logger);
         verify_passed_checks(stat, 0);
@@ -114,12 +114,12 @@ begin
         check_false(check_false_checker, true);
         check_only_log(get_logger(check_false_checker), "False check failed.", default_level);
 
-        check_false(check_false_checker, pass, true, result("for my data."));
-        assert_true(not pass, "Should return pass = false on failing check");
+        check_false(check_false_checker, passed, true, result("for my data."));
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(get_logger(check_false_checker), "False check failed for my data.", default_level);
 
-        pass := check_false(check_false_checker, true, result("for my data."), default_level);
-        assert_true(not pass, "Should return pass = false on failing check");
+        passed := check_false(check_false_checker, true, result("for my data."), default_level);
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(get_logger(check_false_checker), "False check failed for my data.", default_level);
         unmock(get_logger(check_false_checker));
         verify_passed_checks(check_false_checker,stat, 0);
@@ -129,34 +129,34 @@ begin
       elsif run("Test should pass on false and logic 0 inputs to sequential checks") then
         get_checker_stat(stat);
         check_false(false);
-        check_false(pass, false);
-        assert_true(pass, "Should return pass = true on passing check");
-        pass := check_false(false);
-        assert_true(pass, "Should return pass = true on passing check");
+        check_false(passed, false);
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := check_false(false);
+        assert_true(passed, "Should return pass = true on passing check");
         verify_passed_checks(stat, 3);
 
         get_checker_stat(check_false_checker, stat);
-        check_false(check_false_checker,false);
-        check_false(check_false_checker,pass, false);
-        assert_true(pass, "Should return pass = true on passing check");
-        pass := check_false(check_false_checker, false);
-        assert_true(pass, "Should return pass = true on passing check");
+        check_false(check_false_checker, false);
+        check_false(check_false_checker, passed, false);
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := check_false(check_false_checker, false);
+        assert_true(passed, "Should return pass = true on passing check");
         verify_passed_checks(stat, 3);
         verify_passed_checks(check_false_checker, stat, 3);
 
       elsif run("Test pass message") then
         mock(check_logger);
         check_false(false);
-        check_only_log(check_logger, "False check passed.", passed);
+        check_only_log(check_logger, "False check passed.", pass);
 
         check_false(false, "");
-        check_only_log(check_logger, "", passed);
+        check_only_log(check_logger, "", pass);
 
         check_false(false, "Checking my data.");
-        check_only_log(check_logger, "Checking my data.", passed);
+        check_only_log(check_logger, "Checking my data.", pass);
 
         check_false(false, result("for my data."));
-        check_only_log(check_logger, "False check passed for my data.", passed);
+        check_only_log(check_logger, "False check passed for my data.", pass);
         unmock(check_logger);
 
       elsif run("Test should be possible to use concurrently") then
@@ -178,14 +178,14 @@ begin
         apply_sequence("0UXZWH-0", clk, check_false_in_4);
         wait until rising_edge(clk);
         wait for 1 ns;
-        check_log(get_logger(check_false_checker4), "False check passed.", passed);
+        check_log(get_logger(check_false_checker4), "False check passed.", pass);
         check_log(get_logger(check_false_checker4), "False check failed.", default_level);
         check_log(get_logger(check_false_checker4), "False check failed.", default_level);
         check_log(get_logger(check_false_checker4), "False check failed.", default_level);
         check_log(get_logger(check_false_checker4), "False check failed.", default_level);
         check_log(get_logger(check_false_checker4), "False check failed.", default_level);
         check_log(get_logger(check_false_checker4), "False check failed.", default_level);
-        check_log(get_logger(check_false_checker4), "False check passed.", passed);
+        check_log(get_logger(check_false_checker4), "False check passed.", pass);
         unmock(get_logger(check_false_checker4));
         verify_passed_checks(check_false_checker4, stat, 5);
         verify_failed_checks(check_false_checker4, stat, 6);

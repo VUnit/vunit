@@ -184,7 +184,7 @@ package body check_pkg is
     -- pragma translate_off
     if expr then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(checker, std_msg("Check passed", msg, ""), line_num, file_name);
       else
         passing_check(checker);
@@ -291,7 +291,7 @@ package body check_pkg is
     constant file_name : in string  := "") is
   begin
     -- pragma translate_off
-    if is_passed_visible(checker) then
+    if is_pass_visible(checker) then
       passing_check(checker, std_msg("Unconditional check passed", msg, ""), line_num, file_name);
     else
       passing_check(checker);
@@ -367,7 +367,7 @@ package body check_pkg is
     -- pragma translate_off
     if expr then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(checker, std_msg("True check passed", msg, ""), line_num, file_name);
       else
         passing_check(checker);
@@ -496,7 +496,7 @@ package body check_pkg is
     -- pragma translate_off
     if not expr then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(checker, std_msg("False check passed", msg, ""), line_num, file_name);
       else
         passing_check(checker);
@@ -630,7 +630,7 @@ package body check_pkg is
     -- pragma translate_off
     if (not antecedent_expr) or consequent_expr then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(
@@ -811,7 +811,7 @@ package body check_pkg is
       end if;
 
       if close_ok then
-        if is_passed_visible(checker) then
+        if is_pass_visible(checker) then
           passing_check(checker,
                         std_msg("Stability check passed", msg,
                                 "Got " & format(ref) &
@@ -1010,7 +1010,7 @@ package body check_pkg is
     -- pragma translate_off
     if not is_x(expr) then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(checker,
                       std_msg("Not unknown check passed",
                               msg,
@@ -1146,7 +1146,7 @@ package body check_pkg is
     -- pragma translate_off
     if not is_x(expr) then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(checker,
                       std_msg("Not unknown check passed",
                               msg,
@@ -1304,7 +1304,7 @@ package body check_pkg is
     -- pragma translate_off
     if n_hot_in_valid_range(expr, 0, 1) then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(checker,
                       std_msg("Zero one-hot check passed", msg,
                               "Got " & to_nibble_string(expr) & "."),
@@ -1441,7 +1441,7 @@ package body check_pkg is
     -- pragma translate_off
     if n_hot_in_valid_range(expr, 1, 1) then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(checker,
                       std_msg("One-hot check passed", msg,
                               "Got " & to_nibble_string(expr) & "."),
@@ -1599,7 +1599,7 @@ package body check_pkg is
     procedure check_expr is
     begin
       if to_x01(expr) = '1' then
-        if is_passed_visible(checker) then
+        if is_pass_visible(checker) then
           passing_check(checker, std_msg("Next check passed", msg, ""), line_num, file_name);
         else
           passing_check(checker);
@@ -1764,7 +1764,7 @@ package body check_pkg is
                                   " active and enabled clock edge."),
                           level, line_num, file_name);
           elsif i = seq'right then
-            if is_passed_visible(checker) then
+            if is_pass_visible(checker) then
               passing_check(checker, std_msg("Sequence check passed", msg, ""), line_num, file_name);
             else
               passing_check(checker);
@@ -1846,7 +1846,7 @@ package body check_pkg is
     -- pragma translate_off
     if expr then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(checker, std_msg("Relation check passed", msg, context_msg), line_num, file_name);
       else
         passing_check(checker);
@@ -2297,7 +2297,7 @@ package body check_pkg is
     -- pragma translate_off
     if got = expected then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(
@@ -2409,7 +2409,7 @@ package body check_pkg is
     -- pragma translate_off
     if got = expected then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(
@@ -2521,7 +2521,7 @@ package body check_pkg is
     -- pragma translate_off
     if got = expected then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(
@@ -2633,7 +2633,7 @@ package body check_pkg is
     -- pragma translate_off
     if got = expected then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(
@@ -2745,7 +2745,7 @@ package body check_pkg is
     -- pragma translate_off
     if got = expected then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(
@@ -2857,7 +2857,7 @@ package body check_pkg is
     -- pragma translate_off
     if got = expected then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(
@@ -2969,7 +2969,7 @@ package body check_pkg is
     -- pragma translate_off
     if got = expected then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(
@@ -3081,7 +3081,7 @@ package body check_pkg is
     -- pragma translate_off
     if got = expected then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(
@@ -3193,7 +3193,7 @@ package body check_pkg is
     -- pragma translate_off
     if got = expected then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(
@@ -3305,7 +3305,7 @@ package body check_pkg is
     -- pragma translate_off
     if got = expected then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(
@@ -3417,7 +3417,7 @@ package body check_pkg is
     -- pragma translate_off
     if got = expected then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(
@@ -3529,7 +3529,7 @@ package body check_pkg is
     -- pragma translate_off
     if got = expected then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(
@@ -3641,7 +3641,7 @@ package body check_pkg is
     -- pragma translate_off
     if got = expected then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(
@@ -3753,7 +3753,7 @@ package body check_pkg is
     -- pragma translate_off
     if got = expected then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(
@@ -3865,7 +3865,7 @@ package body check_pkg is
     -- pragma translate_off
     if got = expected then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(
@@ -3977,7 +3977,7 @@ package body check_pkg is
     -- pragma translate_off
     if got = expected then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(
@@ -4089,7 +4089,7 @@ package body check_pkg is
     -- pragma translate_off
     if got = expected then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(
@@ -4201,7 +4201,7 @@ package body check_pkg is
     -- pragma translate_off
     if got = expected then
       pass := true;
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(
@@ -4317,7 +4317,7 @@ package body check_pkg is
     if std_match(got, expected) then
       pass := true;
 
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(
@@ -4431,7 +4431,7 @@ package body check_pkg is
     if std_match(got, expected) then
       pass := true;
 
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(
@@ -4545,7 +4545,7 @@ package body check_pkg is
     if std_match(got, expected) then
       pass := true;
 
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(
@@ -4659,7 +4659,7 @@ package body check_pkg is
     if std_match(got, expected) then
       pass := true;
 
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(

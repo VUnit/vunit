@@ -61,7 +61,7 @@ begin
       return integer'image(value);
     end function to_string;
 
-    variable pass : boolean;
+    variable passed : boolean;
     variable stat : checker_stat_t;
     variable my_checker : checker_t := new_checker("my_checker");
     variable my_logger : logger_t := get_logger(my_checker);
@@ -76,34 +76,34 @@ begin
         data := 5;
         get_checker_stat(stat);
         check_relation(data > 3);
-        check_relation(pass, data > 3);
-        assert_true(pass, "Should return pass = true on passing check");
-        pass := check_relation(data > 3);
-        assert_true(pass, "Should return pass = true on passing check");
+        check_relation(passed, data > 3);
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := check_relation(data > 3);
+        assert_true(passed, "Should return pass = true on passing check");
         verify_passed_checks(stat, 3);
 
         get_checker_stat(my_checker, stat);
         check_relation(my_checker, data > 3);
-        check_relation(my_checker, pass, data > 3);
-        assert_true(pass, "Should return pass = true on passing check");
-        pass := check_relation(my_checker, data > 3);
-        assert_true(pass, "Should return pass = true on passing check");
+        check_relation(my_checker, passed, data > 3);
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := check_relation(my_checker, data > 3);
+        assert_true(passed, "Should return pass = true on passing check");
         verify_passed_checks(my_checker, stat, 3);
 
       elsif run("Test pass message") then
         data := 5;
         mock(check_logger);
         check_relation(data > 3);
-        check_only_log(check_logger, "Relation check passed - Expected data > 3. Left is 5. Right is 3.", passed);
+        check_only_log(check_logger, "Relation check passed - Expected data > 3. Left is 5. Right is 3.", pass);
 
         check_relation(data > 3, "");
-        check_only_log(check_logger, "Expected data > 3. Left is 5. Right is 3.", passed);
+        check_only_log(check_logger, "Expected data > 3. Left is 5. Right is 3.", pass);
 
         check_relation(data > 3, "Checking my data");
-        check_only_log(check_logger, "Checking my data - Expected data > 3. Left is 5. Right is 3.", passed);
+        check_only_log(check_logger, "Checking my data - Expected data > 3. Left is 5. Right is 3.", pass);
 
         check_relation(data > 3, result("for my data"));
-        check_only_log(check_logger, "Relation check passed for my data - Expected data > 3. Left is 5. Right is 3.", passed);
+        check_only_log(check_logger, "Relation check passed for my data - Expected data > 3. Left is 5. Right is 3.", pass);
         unmock(check_logger);
 
       elsif run("Test that all pre VHDL 2008 relational operators are supported") then
@@ -138,12 +138,12 @@ begin
         check_relation(len("foo") = 4);
         check_only_log(check_logger, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.", default_level);
 
-        check_relation(pass, len("foo") = 4);
-        assert_true(not pass, "Should return pass = false on failing check");
+        check_relation(passed, len("foo") = 4);
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(check_logger, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.", default_level);
 
-        pass := check_relation(len("foo") = 4);
-        assert_true(not pass, "Should return pass = false on failing check");
+        passed := check_relation(len("foo") = 4);
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(check_logger, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.", default_level);
         unmock(check_logger);
         verify_passed_checks(stat, 0);
@@ -155,12 +155,12 @@ begin
         check_relation(my_checker, len("foo") = 4);
         check_only_log(my_logger, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.", default_level);
 
-        check_relation(my_checker, pass, len("foo") = 4);
-        assert_true(not pass, "Should return pass = false on failing check");
+        check_relation(my_checker, passed, len("foo") = 4);
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(my_logger, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.", default_level);
 
-        pass := check_relation(my_checker, len("foo") = 4);
-        assert_true(not pass, "Should return pass = false on failing check");
+        passed := check_relation(my_checker, len("foo") = 4);
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(my_logger, "Relation check failed - Expected len(""foo"") = 4. Left is 3. Right is 4.", default_level);
         unmock(my_logger);
         verify_passed_checks(my_checker, stat, 0);
@@ -173,12 +173,12 @@ begin
         check_relation(cash > cash_t'((100,0)));
         check_only_log(check_logger, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.", default_level);
 
-        check_relation(pass, cash > cash_t'((100,0)));
-        assert_true(not pass, "Should return pass = false on failing check");
+        check_relation(passed, cash > cash_t'((100,0)));
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(check_logger, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.", default_level);
 
-        pass := check_relation(cash > cash_t'((100,0)));
-        assert_true(not pass, "Should return pass = false on failing check");
+        passed := check_relation(cash > cash_t'((100,0)));
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(check_logger, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.", default_level);
         unmock(check_logger);
         verify_passed_checks(stat, 0);
@@ -190,12 +190,12 @@ begin
         check_relation(my_checker, cash > cash_t'((100,0)));
         check_only_log(my_logger, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.", default_level);
 
-        check_relation(my_checker, pass, cash > cash_t'((100,0)));
-        assert_true(not pass, "Should return pass = false on failing check");
+        check_relation(my_checker, passed, cash > cash_t'((100,0)));
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(my_logger, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.", default_level);
 
-        pass := check_relation(my_checker, cash > cash_t'((100,0)));
-        assert_true(not pass, "Should return pass = false on failing check");
+        passed := check_relation(my_checker, cash > cash_t'((100,0)));
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(my_logger, "Relation check failed - Expected cash > cash_t'((100,0)). Left is $99.95. Right is $100.0.", default_level);
         unmock(my_logger);
         verify_passed_checks(my_checker, stat, 0);

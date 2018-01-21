@@ -46,7 +46,7 @@ begin
   check_one_hot_3 : check_one_hot(my_checker3, clk, check_one_hot_en_3, check_one_hot_in_3);
 
   check_one_hot_runner : process
-    variable pass : boolean;
+    variable passed : boolean;
     variable stat : checker_stat_t;
     constant reversed_and_offset_expr : std_logic_vector(23 downto 20) := "1000";
     constant default_level : log_level_t := error;
@@ -98,46 +98,46 @@ begin
         verify_passed_checks(my_checker3, stat, 2);
 
         get_checker_stat(stat);
-        check_one_hot(pass, "1000");
-        assert_true(pass, "Should return pass = true on passing check");
-        check_one_hot(pass, "HL00");
-        assert_true(pass, "Should return pass = true on passing check");
+        check_one_hot(passed, "1000");
+        assert_true(passed, "Should return pass = true on passing check");
+        check_one_hot(passed, "HL00");
+        assert_true(passed, "Should return pass = true on passing check");
         verify_passed_checks(stat, 2);
 
         get_checker_stat(stat);
-        pass := check_one_hot("1000");
-        assert_true(pass, "Should return pass = true on passing check");
-        pass := check_one_hot("HL00");
-        assert_true(pass, "Should return pass = true on passing check");
+        passed := check_one_hot("1000");
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := check_one_hot("HL00");
+        assert_true(passed, "Should return pass = true on passing check");
         verify_passed_checks(stat, 2);
 
         get_checker_stat(my_checker3, stat);
-        check_one_hot(my_checker3, pass, "1000");
-        assert_true(pass, "Should return pass = true on passing check");
-        check_one_hot(my_checker3, pass, "HL00");
-        assert_true(pass, "Should return pass = true on passing check");
+        check_one_hot(my_checker3, passed, "1000");
+        assert_true(passed, "Should return pass = true on passing check");
+        check_one_hot(my_checker3, passed, "HL00");
+        assert_true(passed, "Should return pass = true on passing check");
         verify_passed_checks(my_checker3, stat, 2);
 
         get_checker_stat(my_checker3, stat);
-        pass := check_one_hot(my_checker3, "1000");
-        assert_true(pass, "Should return pass = true on passing check");
-        pass := check_one_hot(my_checker3, "HL00");
-        assert_true(pass, "Should return pass = true on passing check");
+        passed := check_one_hot(my_checker3, "1000");
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := check_one_hot(my_checker3, "HL00");
+        assert_true(passed, "Should return pass = true on passing check");
         verify_passed_checks(my_checker3, stat, 2);
 
       elsif run("Test pass message") then
         mock(check_logger);
         check_one_hot("10000");
-        check_only_log(check_logger, "One-hot check passed - Got 1_0000.", passed);
+        check_only_log(check_logger, "One-hot check passed - Got 1_0000.", pass);
 
         check_one_hot("10000", "");
-        check_only_log(check_logger, "Got 1_0000.", passed);
+        check_only_log(check_logger, "Got 1_0000.", pass);
 
         check_one_hot("10000", "Checking my data");
-        check_only_log(check_logger, "Checking my data - Got 1_0000.", passed);
+        check_only_log(check_logger, "Checking my data - Got 1_0000.", pass);
 
         check_one_hot("10000", result("for my data"));
-        check_only_log(check_logger, "One-hot check passed for my data - Got 1_0000.", passed);
+        check_only_log(check_logger, "One-hot check passed for my data - Got 1_0000.", pass);
         unmock(check_logger);
 
       elsif run("Test should fail on zero or more than one high bit") then
@@ -155,36 +155,36 @@ begin
         check_one_hot("0100H");
         check_only_log(check_logger, "One-hot check failed - Got 0_100H.", default_level);
 
-        check_one_hot(pass, "01001");
-        assert_true(not pass, "Should return pass = false on failing check");
+        check_one_hot(passed, "01001");
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(check_logger, "One-hot check failed - Got 0_1001.", default_level);
 
-        check_one_hot(pass, "0100H");
-        assert_true(not pass, "Should return pass = false on failing check");
+        check_one_hot(passed, "0100H");
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(check_logger, "One-hot check failed - Got 0_100H.", default_level);
 
-        pass := check_one_hot("01001");
-        assert_true(not pass, "Should return pass = false on failing check");
+        passed := check_one_hot("01001");
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(check_logger, "One-hot check failed - Got 0_1001.", default_level);
 
-        pass := check_one_hot("0100H");
-        assert_true(not pass, "Should return pass = false on failing check");
+        passed := check_one_hot("0100H");
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(check_logger, "One-hot check failed - Got 0_100H.", default_level);
 
-        check_one_hot(pass, "00000");
-        assert_true(not pass, "Should return pass = false on failing check");
+        check_one_hot(passed, "00000");
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(check_logger, "One-hot check failed - Got 0_0000.", default_level);
 
-        check_one_hot(pass, "0L00L");
-        assert_true(not pass, "Should return pass = false on failing check");
+        check_one_hot(passed, "0L00L");
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(check_logger, "One-hot check failed - Got 0_L00L.", default_level);
 
-        pass := check_one_hot("00000");
-        assert_true(not pass, "Should return pass = false on failing check");
+        passed := check_one_hot("00000");
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(check_logger, "One-hot check failed - Got 0_0000.", default_level);
 
-        pass := check_one_hot("0L00L");
-        assert_true(not pass, "Should return pass = false on failing check");
+        passed := check_one_hot("0L00L");
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(check_logger, "One-hot check failed - Got 0_L00L.", default_level);
         unmock(check_logger);
         verify_passed_checks(stat, 0);
@@ -205,36 +205,36 @@ begin
         check_one_hot(my_checker3, "0100H");
         check_only_log(get_logger(my_checker3), "One-hot check failed - Got 0_100H.", info);
 
-        check_one_hot(my_checker3, pass, "01001");
-        assert_true(not pass, "Should return pass = false on failing check");
+        check_one_hot(my_checker3, passed, "01001");
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(get_logger(my_checker3), "One-hot check failed - Got 0_1001.", info);
 
-        check_one_hot(my_checker3, pass, "0100H");
-        assert_true(not pass, "Should return pass = false on failing check");
+        check_one_hot(my_checker3, passed, "0100H");
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(get_logger(my_checker3), "One-hot check failed - Got 0_100H.", info);
 
-        pass := check_one_hot(my_checker3, "01001");
-        assert_true(not pass, "Should return pass = false on failing check");
+        passed := check_one_hot(my_checker3, "01001");
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(get_logger(my_checker3), "One-hot check failed - Got 0_1001.", info);
 
-        pass := check_one_hot(my_checker3, "0100H");
-        assert_true(not pass, "Should return pass = false on failing check");
+        passed := check_one_hot(my_checker3, "0100H");
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(get_logger(my_checker3), "One-hot check failed - Got 0_100H.", info);
 
-        check_one_hot(my_checker3, pass, "00000");
-        assert_true(not pass, "Should return pass = false on failing check");
+        check_one_hot(my_checker3, passed, "00000");
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(get_logger(my_checker3), "One-hot check failed - Got 0_0000.", info);
 
-        check_one_hot(my_checker3, pass, "0L00L");
-        assert_true(not pass, "Should return pass = false on failing check");
+        check_one_hot(my_checker3, passed, "0L00L");
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(get_logger(my_checker3), "One-hot check failed - Got 0_L00L.", info);
 
-        pass := check_one_hot(my_checker3, "00000");
-        assert_true(not pass, "Should return pass = false on failing check");
+        passed := check_one_hot(my_checker3, "00000");
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(get_logger(my_checker3), "One-hot check failed - Got 0_0000.", info);
 
-        pass := check_one_hot(my_checker3, "0L00L");
-        assert_true(not pass, "Should return pass = false on failing check");
+        passed := check_one_hot(my_checker3, "0L00L");
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(get_logger(my_checker3), "One-hot check failed - Got 0_L00L.", info);
         unmock(get_logger(my_checker3));
         verify_passed_checks(my_checker3, stat, 0);
@@ -247,12 +247,12 @@ begin
         check_one_hot("0000X");
         check_only_log(check_logger, "One-hot check failed - Got 0_000X.", default_level);
 
-        check_one_hot(pass, "0000X");
-        assert_true(not pass, "Should return pass = false on failing check");
+        check_one_hot(passed, "0000X");
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(check_logger, "One-hot check failed - Got 0_000X.", default_level);
 
-        pass := check_one_hot("0000X");
-        assert_true(not pass, "Should return pass = false on failing check");
+        passed := check_one_hot("0000X");
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(check_logger, "One-hot check failed - Got 0_000X.", default_level);
         unmock(check_logger);
         verify_passed_checks(stat, 0);
@@ -264,12 +264,12 @@ begin
         check_one_hot(my_checker3, "0000X");
         check_only_log(get_logger(my_checker3), "One-hot check failed - Got 0_000X.", info);
 
-        check_one_hot(my_checker3, pass, "0000X");
-        assert_true(not pass, "Should return pass = false on failing check");
+        check_one_hot(my_checker3, passed, "0000X");
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(get_logger(my_checker3), "One-hot check failed - Got 0_000X.", info);
 
-        pass := check_one_hot(my_checker3, "0000X");
-        assert_true(not pass, "Should return pass = false on failing check");
+        passed := check_one_hot(my_checker3, "0000X");
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(get_logger(my_checker3), "One-hot check failed - Got 0_000X.", info);
         unmock(get_logger(my_checker3));
         verify_passed_checks(my_checker3, stat, 0);

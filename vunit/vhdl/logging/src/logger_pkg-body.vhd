@@ -925,12 +925,12 @@ package body logger_pkg is
     log(logger, msg, debug, line_num, file_name);
   end procedure;
 
-  procedure passed(logger : logger_t;
-                   msg : string;
-                   line_num : natural := 0;
-                   file_name : string := "") is
+  procedure pass(logger : logger_t;
+                 msg : string;
+                 line_num : natural := 0;
+                 file_name : string := "") is
   begin
-    log(logger, msg, passed, line_num, file_name);
+    log(logger, msg, pass, line_num, file_name);
   end procedure;
 
   procedure verbose(logger : logger_t;
@@ -1086,11 +1086,11 @@ package body logger_pkg is
     debug(default_logger, msg, line_num, file_name);
   end procedure;
 
-  procedure passed(msg : string;
-                   line_num : natural := 0;
-                   file_name : string := "") is
+  procedure pass(msg : string;
+                 line_num : natural := 0;
+                 file_name : string := "") is
   begin
-    passed(default_logger, msg, line_num, file_name);
+    pass(default_logger, msg, line_num, file_name);
   end procedure;
 
   procedure verbose(msg : string;

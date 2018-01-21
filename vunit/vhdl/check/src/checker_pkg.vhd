@@ -25,7 +25,7 @@ package checker_pkg is
   impure function get_default_log_level(checker : checker_t) return log_level_t;
   procedure set_default_log_level(checker : checker_t; default_log_level : log_level_t);
 
-  impure function is_passed_visible(checker : checker_t) return boolean;
+  impure function is_pass_visible(checker : checker_t) return boolean;
 
   procedure passing_check(checker : checker_t);
 

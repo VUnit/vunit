@@ -59,7 +59,7 @@ package body log_levels_pkg is
 
     add_level(verbose, fg => magenta, style => bright);
     add_level(debug, fg => cyan, style => bright);
-    add_level(passed, fg => green, style => bright);
+    add_level(pass, fg => green, style => bright);
     add_level(info, fg => white, style => bright);
     add_level(warning, fg => yellow, style => bright);
     add_level(error, fg => red, style => bright);

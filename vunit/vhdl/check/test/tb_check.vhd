@@ -58,7 +58,7 @@ begin
   end generate concurrent_true_checks;
 
   check_runner : process
-    variable pass : boolean;
+    variable passed : boolean;
     variable stat : checker_stat_t;
     constant default_level : log_level_t := error;
 
@@ -180,33 +180,33 @@ begin
       if run("Test should pass on true inputs to sequential checks") then
         get_checker_stat(stat);
         internal_check(true);
-        internal_check(pass, true);
-        assert_true(pass, "Should return pass = true on passing check");
-        pass := internal_check(true);
-        assert_true(pass, "Should return pass = true on passing check");
+        internal_check(passed, true);
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := internal_check(true);
+        assert_true(passed, "Should return pass = true on passing check");
         verify_passed_checks(stat, 3);
 
         get_checker_stat(check_checker, stat);
         internal_check(check_checker, true);
-        internal_check(check_checker, pass, true);
-        assert_true(pass, "Should return pass = true on passing check");
-        pass := internal_check(check_checker, true);
-        assert_true(pass, "Should return pass = true on passing check");
+        internal_check(check_checker, passed, true);
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := internal_check(check_checker, true);
+        assert_true(passed, "Should return pass = true on passing check");
         verify_passed_checks(check_checker, stat, 3);
 
       elsif run("Test pass message") then
         mock(check_logger);
         internal_check(true);
-        check_only_log(check_logger, prefix & "passed.", passed);
+        check_only_log(check_logger, prefix & "passed.", pass);
 
         internal_check(true, "");
-        check_only_log(check_logger, "", passed);
+        check_only_log(check_logger, "", pass);
 
         internal_check(true, "Checking my data.");
-        check_only_log(check_logger, "Checking my data.", passed);
+        check_only_log(check_logger, "Checking my data.", pass);
 
         internal_check(true, result("for my data."));
-        check_only_log(check_logger, prefix & "passed for my data.", passed);
+        check_only_log(check_logger, prefix & "passed for my data.", pass);
         unmock(check_logger);
 
       elsif run("Test should fail on false inputs to sequential checks") then
@@ -218,12 +218,12 @@ begin
         internal_check(false, "");
         check_only_log(check_logger, "", default_level);
 
-        internal_check(pass, false, "Checking my data.");
-        assert_true(not pass, "Should return pass = false on failing check");
+        internal_check(passed, false, "Checking my data.");
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(check_logger, "Checking my data.", default_level);
 
-        pass := internal_check(false, result("for my data."));
-        assert_true(not pass, "Should return pass = false on failing check");
+        passed := internal_check(false, result("for my data."));
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(check_logger, prefix & "failed for my data.", default_level);
         unmock(check_logger);
         verify_failed_checks(stat, 4);
@@ -234,12 +234,12 @@ begin
         internal_check(check_checker, false);
         check_only_log(get_logger(check_checker), prefix & "failed.", default_level);
 
-        internal_check(check_checker, pass, false, result("for my data."));
-        assert_true(not pass, "Should return pass = false on failing check");
+        internal_check(check_checker, passed, false, result("for my data."));
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(get_logger(check_checker), prefix & "failed for my data.", default_level);
 
-        pass := internal_check(check_checker, false, result("for my data."));
-        assert_true(not pass, "Should return pass = false on failing check");
+        passed := internal_check(check_checker, false, result("for my data."));
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(get_logger(check_checker), prefix & "failed for my data.", default_level);
         unmock(get_logger(check_checker));
         verify_failed_checks(check_checker, stat, 3);
@@ -268,14 +268,14 @@ begin
         apply_sequence("1UXZWL-1", clk, check_in_4);
         wait until rising_edge(clk);
         wait for 1 ns;
-        check_log(get_logger(check_checker4), prefix & "passed.", passed);
+        check_log(get_logger(check_checker4), prefix & "passed.", pass);
         check_log(get_logger(check_checker4), prefix & "failed.", default_level);
         check_log(get_logger(check_checker4), prefix & "failed.", default_level);
         check_log(get_logger(check_checker4), prefix & "failed.", default_level);
         check_log(get_logger(check_checker4), prefix & "failed.", default_level);
         check_log(get_logger(check_checker4), prefix & "failed.", default_level);
         check_log(get_logger(check_checker4), prefix & "failed.", default_level);
-        check_log(get_logger(check_checker4), prefix & "passed.", passed);
+        check_log(get_logger(check_checker4), prefix & "passed.", pass);
         unmock(get_logger(check_checker4));
         verify_passed_checks(check_checker4, stat, 2);
         verify_failed_checks(check_checker4, stat, 6);

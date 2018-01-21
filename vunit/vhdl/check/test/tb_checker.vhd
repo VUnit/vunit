@@ -43,10 +43,10 @@ begin
         mock(check_logger);
 
         passing_check(default_checker, "Check true");
-        check_only_log(check_logger, "Check true", passed);
+        check_only_log(check_logger, "Check true", pass);
 
         passing_check(default_checker);
-        check_only_log(check_logger, "", passed);
+        check_only_log(check_logger, "", pass);
 
         failing_check(default_checker, "Custom error message");
         check_only_log(check_logger, "Custom error message", error);
@@ -71,7 +71,7 @@ begin
 
         mock(my_logger);
         passing_check(my_checker, "Check true");
-        check_only_log(my_logger, "Check true", passed);
+        check_only_log(my_logger, "Check true", pass);
 
         failing_check(my_checker, "Custom error message");
         check_only_log(my_logger, "Custom error message", error);

@@ -107,7 +107,7 @@ impl_template = """  procedure check_match(
     if std_match(got, expected) then
       pass := true;
 
-      if is_passed_visible(checker) then
+      if is_pass_visible(checker) then
         passing_check(
           checker,
           std_msg(
@@ -188,34 +188,35 @@ test_template = """
         check_match($left_pass_dc, $right_pass);
         check_match($left_pass, $right_pass_dc);
         check_match($left_pass_dc, $right_pass_dc);
-        check_match(pass, $left_pass, $right_pass);
-        assert_true(pass, "Should return pass = true on passing check");
-        pass := check_match($left_pass, $right_pass);
-        assert_true(pass, "Should return pass = true on passing check");
+        check_match(passed, $left_pass, $right_pass);
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := check_match($left_pass, $right_pass);
+        assert_true(passed, "Should return pass = true on passing check");
         verify_passed_checks(stat, 6);
 
         get_checker_stat(my_checker, stat);
         check_match(my_checker, $left_pass, $right_pass);
-        check_match(my_checker, pass, $left_pass, $right_pass);
-        assert_true(pass, "Should return pass = true on passing check");
-        pass := check_match(my_checker, $left_pass, $right_pass);
-        assert_true(pass, "Should return pass = true on passing check");
+        check_match(my_checker, passed, $left_pass, $right_pass);
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := check_match(my_checker, $left_pass, $right_pass);
+        assert_true(passed, "Should return pass = true on passing check");
         verify_passed_checks(my_checker,stat, 3);
 
       elsif run("Test pass message for $left_type matching $right_type") then
         mock(check_logger);
         check_match($left_pass, $right_pass);
-        check_only_log(check_logger, "Match check passed - Got $pass_str. Expected $pass_str.", passed);
+        check_only_log(check_logger, "Match check passed - Got $pass_str. Expected $pass_str.", pass);
 
         check_match($left_pass_dc, $right_pass, "");
-        check_only_log(check_logger, "Got $pass_dc_str. Expected $pass_str.", passed);
+        check_only_log(check_logger, "Got $pass_dc_str. Expected $pass_str.", pass);
 
         check_match($left_pass, $right_pass_dc, "Checking my data");
-        check_only_log(check_logger, "Checking my data - Got $pass_str. Expected $pass_dc_str.", passed);
+        check_only_log(check_logger, "Checking my data - Got $pass_str. Expected $pass_dc_str.", pass);
 
         check_match($left_pass_dc, $right_pass_dc, result("for my data"));
-        check_only_log(check_logger, "Match check passed for my data - Got $pass_dc_str. Expected $pass_dc_str.",
-                       passed);
+        check_only_log(check_logger,
+                       "Match check passed for my data - Got $pass_dc_str. Expected $pass_dc_str.",
+                       pass);
         unmock(check_logger);
 
       elsif run("Test should fail on $left_type not matching $right_type") then
@@ -227,12 +228,12 @@ test_template = """
         check_match($left_pass, $right_fail_dc, "");
         check_only_log(check_logger, "Got $pass_str. Expected $fail_dc_str.", default_level);
 
-        check_match(pass, $left_pass, $right_fail, "Checking my data");
-        assert_true(not pass, "Should return pass = false on failing check");
+        check_match(passed, $left_pass, $right_fail, "Checking my data");
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(check_logger, "Checking my data - Got $pass_str. Expected $fail_str.", default_level);
 
-        pass := check_match($left_pass, $right_fail, result("for my data"));
-        assert_true(not pass, "Should return pass = false on failing check");
+        passed := check_match($left_pass, $right_fail, result("for my data"));
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(check_logger, "Match check failed for my data - Got $pass_str. Expected $fail_str.",
                        default_level);
         unmock(check_logger);
@@ -245,12 +246,12 @@ test_template = """
         check_match(my_checker, $left_pass, $right_fail);
         check_only_log(my_logger, "Match check failed - Got $pass_str. Expected $fail_str.", default_level);
 
-        check_match(my_checker, pass, $left_pass, $right_fail);
-        assert_true(not pass, "Should return pass = false on failing check");
+        check_match(my_checker, passed, $left_pass, $right_fail);
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(my_logger, "Match check failed - Got $pass_str. Expected $fail_str.", default_level);
 
-        pass := check_match(my_checker, $left_pass, $right_fail, result("for my data"));
-        assert_true(not pass, "Should return pass = false on failing check");
+        passed := check_match(my_checker, $left_pass, $right_fail, result("for my data"));
+        assert_true(not passed, "Should return pass = false on failing check");
         check_only_log(my_logger, "Match check failed for my data - Got $pass_str. Expected $fail_str.",
                        default_level);
         unmock(my_logger);
@@ -359,7 +360,7 @@ begin
     variable stat : checker_stat_t;
     variable my_checker : checker_t := new_checker("my_checker");
     constant my_logger : logger_t := get_logger(my_checker);
-    variable pass : boolean;
+    variable passed : boolean;
     constant default_level : log_level_t := error;
   begin
     test_runner_setup(runner, runner_cfg);

@@ -61,7 +61,7 @@ begin
                                           antecedent_4, consequent_4, result("between x and y."));
 
   check_implication_runner : process
-    variable pass : boolean;
+    variable passed : boolean;
     type boolean_vector is array (natural range <>) of boolean;
     constant test_antecedents : boolean_vector(1 to 4) := (false, false, true, true);
     constant test_consequents : boolean_vector(1 to 4) := (false, true, false, true);
@@ -110,7 +110,7 @@ begin
         check_only_log(get_logger(checker),
                        "Implication check passed. - Got " &
                        boolean'image(test_antecedents(iteration)) &" -> " & boolean'image(test_consequents(iteration)) &
-                       ".", passed);
+                       ".", pass);
       else
         verify_passed_checks(checker, stat, 0);
         verify_failed_checks(checker, stat, 1);
@@ -140,25 +140,25 @@ begin
 
           mock(check_logger);
           get_checker_stat(stat);
-          check_implication(pass, test_antecedents(i), test_consequents(i));
+          check_implication(passed, test_antecedents(i), test_consequents(i));
           verify_result(i, default_checker, stat);
           unmock(check_logger);
 
           mock(check_logger);
           get_checker_stat(stat);
-          pass := check_implication(test_antecedents(i), test_consequents(i));
+          passed := check_implication(test_antecedents(i), test_consequents(i));
           verify_result(i, default_checker, stat);
           unmock(check_logger);
 
           mock(get_logger(my_checker));
           get_checker_stat(my_checker, stat);
-          check_implication(my_checker, pass, test_antecedents(i), test_consequents(i));
+          check_implication(my_checker, passed, test_antecedents(i), test_consequents(i));
           verify_result(i, my_checker, stat);
           unmock(get_logger(my_checker));
 
           mock(get_logger(my_checker));
           get_checker_stat(my_checker, stat);
-          pass := check_implication(my_checker, test_antecedents(i), test_consequents(i));
+          passed := check_implication(my_checker, test_antecedents(i), test_consequents(i));
           verify_result(i, my_checker, stat);
           unmock(get_logger(my_checker));
         end loop;
@@ -184,27 +184,27 @@ begin
         apply_sequence("00HL00", clk, check_implication_in_4);
         wait until rising_edge(clk);
         wait for 1 ns;
-        check_log(get_logger(my_checker4), "Implication check passed between x and y. - Got false -> false.", passed);
+        check_log(get_logger(my_checker4), "Implication check passed between x and y. - Got false -> false.", pass);
         check_log(get_logger(my_checker4), "Implication check failed between x and y.", default_level);
-        check_log(get_logger(my_checker4), "Implication check passed between x and y. - Got false -> false.", passed);
+        check_log(get_logger(my_checker4), "Implication check passed between x and y. - Got false -> false.", pass);
         check_no_log;
         verify_passed_checks(my_checker4, stat, 7);
         verify_failed_checks(my_checker4, stat, 1);
         apply_sequence("00H000", clk, check_implication_in_4);
         wait until rising_edge(clk);
         wait for 1 ns;
-        check_log(get_logger(my_checker4), "Implication check passed between x and y. - Got false -> false.", passed);
+        check_log(get_logger(my_checker4), "Implication check passed between x and y. - Got false -> false.", pass);
         check_log(get_logger(my_checker4), "Implication check failed between x and y.", default_level);
-        check_log(get_logger(my_checker4), "Implication check passed between x and y. - Got false -> false.", passed);
+        check_log(get_logger(my_checker4), "Implication check passed between x and y. - Got false -> false.", pass);
         check_no_log;
         verify_passed_checks(my_checker4, stat, 9);
         verify_failed_checks(my_checker4, stat, 2);
         apply_sequence("00HX00", clk, check_implication_in_4);
         wait until rising_edge(clk);
         wait for 1 ns;
-        check_log(get_logger(my_checker4), "Implication check passed between x and y. - Got false -> false.", passed);
+        check_log(get_logger(my_checker4), "Implication check passed between x and y. - Got false -> false.", pass);
         check_log(get_logger(my_checker4), "Implication check failed between x and y.", default_level);
-        check_log(get_logger(my_checker4), "Implication check passed between x and y. - Got false -> false.", passed);
+        check_log(get_logger(my_checker4), "Implication check passed between x and y. - Got false -> false.", pass);
         unmock(get_logger(my_checker4));
         verify_passed_checks(my_checker4, stat, 11);
         verify_failed_checks(my_checker4, stat, 3);

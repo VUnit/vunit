@@ -66,7 +66,7 @@ begin
   check_not_unknown_6 : check_not_unknown(my_checker6, clk, en_6, expr_6);
 
   check_not_unknown_runner : process
-    variable pass : boolean;
+    variable passed : boolean;
     variable stat : checker_stat_t;
     variable test_expr : std_logic_vector(7 downto 0);
     constant metadata : std_logic_vector(1 to 5) := "UXZW-";
@@ -137,55 +137,55 @@ begin
         check_not_unknown('0');
         check_not_unknown('1');
         check_not_unknown("10100101");
-        check_not_unknown(pass, "10100101");
-        assert_true(pass, "Should return pass = true on passing check");
-        pass := check_not_unknown('0');
-        assert_true(pass, "Should return pass = true on passing check");
-        pass := check_not_unknown('1');
-        assert_true(pass, "Should return pass = true on passing check");
-        pass := check_not_unknown("10100101");
-        assert_true(pass, "Should return pass = true on passing check");
+        check_not_unknown(passed, "10100101");
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := check_not_unknown('0');
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := check_not_unknown('1');
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := check_not_unknown("10100101");
+        assert_true(passed, "Should return pass = true on passing check");
         verify_passed_checks(stat, 7);
 
         get_checker_stat(my_checker3, stat);
         check_not_unknown(my_checker3, '0');
         check_not_unknown(my_checker3, '1');
         check_not_unknown(my_checker3, "10100101");
-        check_not_unknown(my_checker3, pass, "10100101");
-        assert_true(pass, "Should return pass = true on passing check");
-        pass := check_not_unknown(my_checker3, '0');
-        assert_true(pass, "Should return pass = true on passing check");
-        pass := check_not_unknown(my_checker3, '1');
-        assert_true(pass, "Should return pass = true on passing check");
-        pass := check_not_unknown(my_checker3, "10100101");
-        assert_true(pass, "Should return pass = true on passing check");
+        check_not_unknown(my_checker3, passed, "10100101");
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := check_not_unknown(my_checker3, '0');
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := check_not_unknown(my_checker3, '1');
+        assert_true(passed, "Should return pass = true on passing check");
+        passed := check_not_unknown(my_checker3, "10100101");
+        assert_true(passed, "Should return pass = true on passing check");
         verify_passed_checks(my_checker3, stat, 7);
 
       elsif run("Test pass message") then
         mock(check_logger);
         check_not_unknown('0');
-        check_only_log(check_logger, "Not unknown check passed - Got 0.", passed);
+        check_only_log(check_logger, "Not unknown check passed - Got 0.", pass);
 
         check_not_unknown("00110");
-        check_only_log(check_logger, "Not unknown check passed - Got 0_0110 (6).", passed);
+        check_only_log(check_logger, "Not unknown check passed - Got 0_0110 (6).", pass);
 
         check_not_unknown('0', "");
-        check_only_log(check_logger, "Got 0.", passed);
+        check_only_log(check_logger, "Got 0.", pass);
 
         check_not_unknown("00110", "");
-        check_only_log(check_logger, "Got 0_0110 (6).", passed);
+        check_only_log(check_logger, "Got 0_0110 (6).", pass);
 
         check_not_unknown('0', "Checking my data");
-        check_only_log(check_logger, "Checking my data - Got 0.", passed);
+        check_only_log(check_logger, "Checking my data - Got 0.", pass);
 
         check_not_unknown("00110", "Checking my data");
-        check_only_log(check_logger, "Checking my data - Got 0_0110 (6).", passed);
+        check_only_log(check_logger, "Checking my data - Got 0_0110 (6).", pass);
 
         check_not_unknown('0', result("for my data"));
-        check_only_log(check_logger, "Not unknown check passed for my data - Got 0.", passed);
+        check_only_log(check_logger, "Not unknown check passed for my data - Got 0.", pass);
 
         check_not_unknown("00110", result("for my data"));
-        check_only_log(check_logger, "Not unknown check passed for my data - Got 0_0110 (6).", passed);
+        check_only_log(check_logger, "Not unknown check passed for my data - Got 0_0110 (6).", pass);
         unmock(check_logger);
 
       elsif run("Test should fail on all std logic values except zero and one") then
@@ -199,20 +199,20 @@ begin
           check_not_unknown(test_expr);
           check_only_log(check_logger, "Not unknown check failed - Got " & to_nibble_string(test_expr) & ".", default_level);
 
-          check_not_unknown(pass, metadata(i));
-          assert_true(not pass, "Should return pass = false on failing check");
+          check_not_unknown(passed, metadata(i));
+          assert_true(not passed, "Should return pass = false on failing check");
           check_only_log(check_logger, "Not unknown check failed - Got " & std_logic'image(metadata(i))(2) & ".", default_level);
 
-          check_not_unknown(pass, test_expr);
-          assert_true(not pass, "Should return pass = false on failing check");
+          check_not_unknown(passed, test_expr);
+          assert_true(not passed, "Should return pass = false on failing check");
           check_only_log(check_logger, "Not unknown check failed - Got " & to_nibble_string(test_expr) & ".", default_level);
 
-          pass := check_not_unknown(metadata(i));
-          assert_true(not pass, "Should return pass = false on failing check");
+          passed := check_not_unknown(metadata(i));
+          assert_true(not passed, "Should return pass = false on failing check");
           check_only_log(check_logger, "Not unknown check failed - Got " & std_logic'image(metadata(i))(2) & ".", default_level);
 
-          pass := check_not_unknown(test_expr);
-          assert_true(not pass, "Should return pass = false on failing check");
+          passed := check_not_unknown(test_expr);
+          assert_true(not passed, "Should return pass = false on failing check");
           check_only_log(check_logger, "Not unknown check failed - Got " & to_nibble_string(test_expr) & ".", default_level);
           unmock(check_logger);
           verify_passed_checks(stat, 0);
@@ -227,22 +227,22 @@ begin
           check_not_unknown(my_checker3, test_expr);
           check_only_log(get_logger(my_checker3), "Not unknown check failed - Got " & to_nibble_string(test_expr) & ".",
                           info);
-          check_not_unknown(my_checker3, pass, metadata(i));
-          assert_true(not pass, "Should return pass = false on failing check");
+          check_not_unknown(my_checker3, passed, metadata(i));
+          assert_true(not passed, "Should return pass = false on failing check");
           check_only_log(get_logger(my_checker3), "Not unknown check failed - Got " & std_logic'image(metadata(i))(2) & ".",
                          info);
-          check_not_unknown(my_checker3, pass, test_expr);
-          assert_true(not pass, "Should return pass = false on failing check");
+          check_not_unknown(my_checker3, passed, test_expr);
+          assert_true(not passed, "Should return pass = false on failing check");
           check_only_log(get_logger(my_checker3), "Not unknown check failed - Got " & to_nibble_string(test_expr) & ".",
                          info);
 
-          pass := check_not_unknown(my_checker3, metadata(i));
-          assert_true(not pass, "Should return pass = false on failing check");
+          passed := check_not_unknown(my_checker3, metadata(i));
+          assert_true(not passed, "Should return pass = false on failing check");
           check_only_log(get_logger(my_checker3),
                          "Not unknown check failed - Got " & std_logic'image(metadata(i))(2) & ".", info);
 
-          pass := check_not_unknown(my_checker3, test_expr);
-          assert_true(not pass, "Should return pass = false on failing check");
+          passed := check_not_unknown(my_checker3, test_expr);
+          assert_true(not passed, "Should return pass = false on failing check");
           check_only_log(get_logger(my_checker3),
                          "Not unknown check failed - Got " & to_nibble_string(test_expr) & ".", info);
           unmock(get_logger(my_checker3));

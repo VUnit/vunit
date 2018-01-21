@@ -47,16 +47,16 @@ begin
       elsif run("Test pass message") then
         mock(check_logger);
         check_passed;
-        check_only_log(check_logger, "Unconditional check passed.", passed);
+        check_only_log(check_logger, "Unconditional check passed.", pass);
 
         check_passed("");
-        check_only_log(check_logger, "", passed);
+        check_only_log(check_logger, "", pass);
 
         check_passed("Checking my data.");
-        check_only_log(check_logger, "Checking my data.", passed);
+        check_only_log(check_logger, "Checking my data.", pass);
 
         check_passed(result("for my data."));
-        check_only_log(check_logger, "Unconditional check passed for my data.", passed);
+        check_only_log(check_logger, "Unconditional check passed for my data.", pass);
         unmock(check_logger);
       end if;
     end loop;
