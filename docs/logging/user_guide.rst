@@ -65,6 +65,18 @@ associated procedure calls are:
     debug("Debug message for seldom useful or internal information");
     verbose("Verbose TRACE messages only used for tracing program flow");
 
+There are also conditional log procedures for warning, error and failure:
+
+.. code-block:: vhdl
+
+    warning_if(True, "A warning happened");
+    warning_if(False, "A warning did not happen");
+    warning_unless(False, "A warning happened");
+    warning_unless(True, "A warning did not happen");
+
+    -- There are also variants for error and failure as well as with
+    -- non-default logger argument.
+
 
 Stopping simulation
 -------------------

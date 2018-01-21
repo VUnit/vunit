@@ -733,6 +733,95 @@ begin
       unmock_core_failure;
 
       unmock(get_logger("parent:my_logger"));
+
+
+    elsif run("Test conditional logs") then
+      mock(logger);
+
+      -- Warning
+      warning_if(logger, True, "message");
+      check_only_log(logger, "message", warning);
+
+      warning_if(logger, False, "message");
+      check_no_log;
+
+      warning_unless(logger, True, "message");
+      check_no_log;
+
+      warning_unless(logger, False, "message");
+      check_only_log(logger, "message", warning);
+
+      -- Error
+      error_if(logger, True, "message");
+      check_only_log(logger, "message", error);
+
+      error_if(logger, False, "message");
+      check_no_log;
+
+      error_unless(logger, True, "message");
+      check_no_log;
+
+      error_unless(logger, False, "message");
+      check_only_log(logger, "message", error);
+
+      -- Failure
+      failure_if(logger, True, "message");
+      check_only_log(logger, "message", failure);
+
+      failure_if(logger, False, "message");
+      check_no_log;
+
+      failure_unless(logger, True, "message");
+      check_no_log;
+
+      failure_unless(logger, False, "message");
+      check_only_log(logger, "message", failure);
+
+      unmock(logger);
+
+    elsif run("Test conditional default logs") then
+      mock(default_logger);
+
+      -- Warning
+      warning_if(True, "message");
+      check_only_log(default_logger, "message", warning);
+
+      warning_if(False, "message");
+      check_no_log;
+
+      warning_unless(True, "message");
+      check_no_log;
+
+      warning_unless(False, "message");
+      check_only_log(default_logger, "message", warning);
+
+      -- Error
+      error_if(True, "message");
+      check_only_log(default_logger, "message", error);
+
+      error_if(False, "message");
+      check_no_log;
+
+      error_unless(True, "message");
+      check_no_log;
+
+      error_unless(False, "message");
+      check_only_log(default_logger, "message", error);
+
+      -- Failure
+      failure_if(True, "message");
+      check_only_log(default_logger, "message", failure);
+
+      failure_if(False, "message");
+      check_no_log;
+
+      failure_unless(True, "message");
+      check_no_log;
+
+      failure_unless(False, "message");
+      check_only_log(default_logger, "message", failure);
+
+      unmock(default_logger);
     end if;
 
     test_runner_cleanup(runner);

@@ -54,6 +54,42 @@ package logger_pkg is
                     line_num : natural := 0;
                     file_name : string := "");
 
+  procedure warning_if(logger : logger_t;
+                       condition : boolean;
+                       msg : string;
+                       line_num : natural := 0;
+                       file_name : string := "");
+
+  procedure error_if(logger : logger_t;
+                     condition : boolean;
+                     msg : string;
+                     line_num : natural := 0;
+                     file_name : string := "");
+
+  procedure failure_if(logger : logger_t;
+                       condition : boolean;
+                       msg : string;
+                       line_num : natural := 0;
+                       file_name : string := "");
+
+  procedure warning_unless(logger : logger_t;
+                           condition : boolean;
+                           msg : string;
+                           line_num : natural := 0;
+                           file_name : string := "");
+
+  procedure error_unless(logger : logger_t;
+                         condition : boolean;
+                         msg : string;
+                         line_num : natural := 0;
+                         file_name : string := "");
+
+  procedure failure_unless(logger : logger_t;
+                           condition : boolean;
+                           msg : string;
+                           line_num : natural := 0;
+                           file_name : string := "");
+
   ------------------------------------------------
   -- Log procedure short hands for default logger
   ------------------------------------------------
@@ -88,6 +124,36 @@ package logger_pkg is
   procedure failure(msg : string;
                     line_num : natural := 0;
                     file_name : string := "");
+
+  procedure warning_if(condition : boolean;
+                       msg : string;
+                       line_num : natural := 0;
+                       file_name : string := "");
+
+  procedure error_if(condition : boolean;
+                     msg : string;
+                     line_num : natural := 0;
+                     file_name : string := "");
+
+  procedure failure_if(condition : boolean;
+                       msg : string;
+                       line_num : natural := 0;
+                       file_name : string := "");
+
+  procedure warning_unless(condition : boolean;
+                           msg : string;
+                           line_num : natural := 0;
+                           file_name : string := "");
+
+  procedure error_unless(condition : boolean;
+                         msg : string;
+                         line_num : natural := 0;
+                         file_name : string := "");
+
+  procedure failure_unless(condition : boolean;
+                           msg : string;
+                           line_num : natural := 0;
+                           file_name : string := "");
 
   -- Log procedure with level as argument
   procedure log(logger : logger_t;
