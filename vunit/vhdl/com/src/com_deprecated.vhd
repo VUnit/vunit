@@ -23,6 +23,7 @@ package com_deprecated_pkg is
   -----------------------------------------------------------------------------
   -- Handling of actors
   -----------------------------------------------------------------------------
+  alias null_actor_c is null_actor;
   impure function create (name :       string := ""; inbox_size : positive := positive'high) return actor_t;
   procedure destroy (actor     : inout actor_t; status : out com_status_t);
   impure function inbox_size (actor      : actor_t) return natural;
@@ -30,6 +31,7 @@ package com_deprecated_pkg is
   -----------------------------------------------------------------------------
   -- Message related subprograms
   -----------------------------------------------------------------------------
+  alias no_message_id_c is no_message_id;
   impure function new_message (sender : actor_t := null_actor_c) return message_ptr_t;
   impure function compose (
     payload    : string       := "";
@@ -42,6 +44,7 @@ package com_deprecated_pkg is
   -----------------------------------------------------------------------------
   -- Primary send and receive related subprograms
   -----------------------------------------------------------------------------
+  alias max_timeout_c is max_timeout;
   procedure send (
     signal net            : inout network_t;
     constant receiver     : in    actor_t;

@@ -542,7 +542,7 @@ to the ``find`` call
 
   find("actor name", enable_deferred_creation => false);
 
-If the actor isn't found the function returns ``null_actor_c`` so to make this work you must make sure that the
+If the actor isn't found the function returns ``null_actor`` so to make this work you must make sure that the
 ``find`` function is called after ``new_actor``, for example by adding an initial delay before making the call.
 
 Another approach is to make sure that there are no deferred creations pending a short delay into the simulation, before

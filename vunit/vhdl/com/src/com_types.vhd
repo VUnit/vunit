@@ -51,7 +51,7 @@ package com_types_pkg is
     id : natural;
   end record actor_t;
   type actor_vec_t is array(integer range <>) of actor_t;
-  constant null_actor_c : actor_t := (id => 0);
+  constant null_actor : actor_t := (id => 0);
 
   -- Mailboxes owned by an actor
   type mailbox_id_t is (inbox, outbox);
@@ -59,7 +59,7 @@ package com_types_pkg is
   type msg_type_t is record
     p_code : integer;
   end record;
-  constant null_msg_type_c : msg_type_t := (p_code => -1);
+  constant null_msg_type : msg_type_t := (p_code => -1);
 
   type msg_types_t is record
     p_name_ptrs : integer_vector_ptr_t;
@@ -73,7 +73,7 @@ package com_types_pkg is
   -- outbound traffic subscription. These messages will have the same ID as
   -- the original message
   subtype message_id_t is natural;
-  constant no_message_id_c : message_id_t := 0;
+  constant no_message_id : message_id_t := 0;
 
   -- Deprecated message type
   type message_t is record
@@ -106,13 +106,13 @@ package com_types_pkg is
   type msg_vec_t is array (natural range <>) of msg_t;
   type msg_vec_ptr_t is access msg_vec_t;
 
-  constant null_msg_c : msg_t := (
-    id => no_message_id_c,
-    msg_type => null_msg_type_c,
+  constant null_msg : msg_t := (
+    id => no_message_id,
+    msg_type => null_msg_type,
     status => null_message_error,
-    sender => null_actor_c,
-    receiver => null_actor_c,
-    request_id => no_message_id_c,
+    sender => null_actor,
+    receiver => null_actor,
+    request_id => no_message_id,
     data => null_queue);
 
   -- A subscriber can subscribe on three different types of traffic:
@@ -145,7 +145,7 @@ package com_types_pkg is
   constant idle_network  : std_logic := 'Z';
 
   -- Default value for timeout parameters. ModelSim can't handle time'high
-  constant max_timeout_c : time := 1 hr;
+  constant max_timeout : time := 1 hr;
 
   -- Captures the state of a mailbox
   type mailbox_state_t is record
@@ -201,18 +201,18 @@ package com_types_pkg is
   -- Create a new empty message. The message has an optional type and can anonymous
   -- or signed with the sending actor
   impure function new_msg (
-    msg_type : msg_type_t := null_msg_type_c;
-    sender : actor_t := null_actor_c) return msg_t;
+    msg_type : msg_type_t := null_msg_type;
+    sender : actor_t := null_actor) return msg_t;
 
   impure function copy(msg : msg_t) return msg_t;
 
   -- Delete message. Memory allocated by the message is deallocated.
   procedure delete (msg : inout msg_t);
 
-  -- Return sending actor of message if defined, null_actor_c otherwise
+  -- Return sending actor of message if defined, null_actor otherwise
   function sender(msg : msg_t) return actor_t;
 
-  -- Return sending actor of message if defined, null_actor_c otherwise
+  -- Return sending actor of message if defined, null_actor otherwise
   function receiver(msg : msg_t) return actor_t;
 
   -- Return message type of message without consuming it as pop_msg_type would
@@ -439,8 +439,8 @@ package body com_types_pkg is
   -- Message related subprograms
   -----------------------------------------------------------------------------
   impure function new_msg (
-    msg_type : msg_type_t := null_msg_type_c;
-    sender : actor_t := null_actor_c) return msg_t is
+    msg_type : msg_type_t := null_msg_type;
+    sender : actor_t := null_actor) return msg_t is
     variable msg : msg_t;
   begin
     msg.sender := sender;
@@ -452,7 +452,7 @@ package body com_types_pkg is
   procedure delete (msg : inout msg_t) is
   begin
     recycle(queue_pool, msg.data);
-    msg := null_msg_c;
+    msg := null_msg;
   end procedure delete;
 
   impure function copy(msg : msg_t) return msg_t is

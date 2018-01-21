@@ -108,7 +108,7 @@ package body com_pkg is
     constant receiver   : in    actor_t;
     constant mailbox_id : in    mailbox_id_t;
     variable msg        : inout msg_t;
-    constant timeout    : in    time := max_timeout_c) is
+    constant timeout    : in    time := max_timeout) is
     variable t_start : time;
   begin
     if not check(msg.data /= null_queue, null_message_error) then
@@ -127,7 +127,7 @@ package body com_pkg is
 
     messenger.send(receiver, mailbox_id, msg);
 
-    if msg.sender /= null_actor_c then
+    if msg.sender /= null_actor then
       if messenger.has_subscribers(msg.sender, outbound) then
         wait_on_subscribers(msg.sender, (0             => outbound), timeout - (now - t_start));
         messenger.internal_publish(msg.sender, msg, (0 => outbound));
@@ -147,7 +147,7 @@ package body com_pkg is
     signal net        : inout network_t;
     constant receiver : in    actor_t;
     variable msg      : inout msg_t;
-    constant timeout  : in    time := max_timeout_c) is
+    constant timeout  : in    time := max_timeout) is
   begin
     send(net, receiver, inbox, msg, timeout);
   end;
@@ -156,7 +156,7 @@ package body com_pkg is
     signal net         : inout network_t;
     constant receivers : in    actor_vec_t;
     variable msg       : inout msg_t;
-    constant timeout   : in    time := max_timeout_c) is
+    constant timeout   : in    time := max_timeout) is
     variable msg_to_send : msg_t;
     variable t_start     : time;
   begin
@@ -180,7 +180,7 @@ package body com_pkg is
     signal net        : inout network_t;
     constant receiver : in    actor_t;
     variable msg      : inout msg_t;
-    constant timeout  : in    time := max_timeout_c) is
+    constant timeout  : in    time := max_timeout) is
   begin
     receive(net, actor_vec_t'(0 => receiver), msg, timeout);
   end;
@@ -189,7 +189,7 @@ package body com_pkg is
     signal net         : inout network_t;
     constant receivers : in    actor_vec_t;
     variable msg       : inout msg_t;
-    constant timeout   : in    time := max_timeout_c) is
+    constant timeout   : in    time := max_timeout) is
     variable status   : com_status_t;
     variable receiver : actor_t;
   begin
@@ -212,13 +212,13 @@ package body com_pkg is
     signal net           : inout network_t;
     variable request_msg : inout msg_t;
     variable reply_msg   : inout msg_t;
-    constant timeout     : in    time := max_timeout_c) is
+    constant timeout     : in    time := max_timeout) is
   begin
-    check(request_msg.id /= no_message_id_c, reply_missing_request_id_error);
+    check(request_msg.id /= no_message_id, reply_missing_request_id_error);
     reply_msg.request_id := request_msg.id;
     reply_msg.sender     := request_msg.receiver;
 
-    if request_msg.sender /= null_actor_c then
+    if request_msg.sender /= null_actor then
       send(net, request_msg.sender, inbox, reply_msg, timeout);
     else
       send(net, request_msg.receiver, outbox, reply_msg, timeout);
@@ -229,7 +229,7 @@ package body com_pkg is
     signal net           : inout network_t;
     variable request_msg : inout msg_t;
     variable reply_msg   : inout msg_t;
-    constant timeout     : in    time := max_timeout_c) is
+    constant timeout     : in    time := max_timeout) is
     variable status       : com_status_t;
     variable source_actor : actor_t;
     variable mailbox      : mailbox_id_t;
@@ -247,7 +247,7 @@ package body com_pkg is
     signal net       : inout network_t;
     constant sender  : in    actor_t;
     variable msg     : inout msg_t;
-    constant timeout : in    time := max_timeout_c) is
+    constant timeout : in    time := max_timeout) is
   begin
     wait_on_subscribers(sender, (published, outbound), timeout);
     messenger.publish(sender, msg, (published, outbound));
@@ -280,7 +280,7 @@ package body com_pkg is
     constant receiver    : in    actor_t;
     variable request_msg : inout msg_t;
     variable reply_msg   : inout msg_t;
-    constant timeout     : in    time := max_timeout_c) is
+    constant timeout     : in    time := max_timeout) is
     variable start : time;
   begin
     start := now;
@@ -293,7 +293,7 @@ package body com_pkg is
     constant receiver     : in    actor_t;
     variable request_msg  : inout msg_t;
     variable positive_ack : out   boolean;
-    constant timeout      : in    time := max_timeout_c) is
+    constant timeout      : in    time := max_timeout) is
     variable start : time;
   begin
     start := now;
@@ -305,7 +305,7 @@ package body com_pkg is
     signal net            : inout network_t;
     variable request_msg  : inout msg_t;
     constant positive_ack : in    boolean := true;
-    constant timeout      : in    time    := max_timeout_c) is
+    constant timeout      : in    time    := max_timeout) is
     variable reply_msg : msg_t;
   begin
     reply_msg := new_msg;
@@ -317,7 +317,7 @@ package body com_pkg is
     signal net            : inout network_t;
     variable request_msg  : inout msg_t;
     variable positive_ack : out   boolean;
-    constant timeout      : in    time := max_timeout_c) is
+    constant timeout      : in    time := max_timeout) is
     variable reply_msg : msg_t;
   begin
     receive_reply(net, request_msg, reply_msg, timeout);
@@ -332,7 +332,7 @@ package body com_pkg is
     signal net        : in  network_t;
     constant receiver : in  actor_t;
     variable status   : out com_status_t;
-    constant timeout  : in  time := max_timeout_c) is
+    constant timeout  : in  time := max_timeout) is
   begin
     wait_for_message(net, actor_vec_t'(0 => receiver), status, timeout);
   end procedure wait_for_message;
@@ -341,7 +341,7 @@ package body com_pkg is
     signal net         : in  network_t;
     constant receivers : in  actor_vec_t;
     variable status    : out com_status_t;
-    constant timeout   : in  time := max_timeout_c) is
+    constant timeout   : in  time := max_timeout) is
   begin
     for i in receivers'range loop
       if not check(not messenger.deferred(receivers(i)), deferred_receiver_error) then
@@ -395,7 +395,7 @@ package body com_pkg is
     constant mailbox_id : in    mailbox_id_t := inbox;
     constant request_id : in    message_id_t;
     variable status     : out   com_status_t;
-    constant timeout    : in    time         := max_timeout_c) is
+    constant timeout    : in    time         := max_timeout) is
 
   begin
     check(not messenger.deferred(actor), deferred_receiver_error);
@@ -413,12 +413,12 @@ package body com_pkg is
     signal net           : inout network_t;
     variable request_msg : inout msg_t;
     variable status      : out   com_status_t;
-    constant timeout     : in    time := max_timeout_c) is
+    constant timeout     : in    time := max_timeout) is
     variable source_actor : actor_t;
     variable mailbox      : mailbox_id_t;
   begin
-    source_actor := request_msg.sender when request_msg.sender /= null_actor_c else request_msg.receiver;
-    mailbox      := inbox              when request_msg.sender /= null_actor_c else outbox;
+    source_actor := request_msg.sender when request_msg.sender /= null_actor else request_msg.receiver;
+    mailbox      := inbox              when request_msg.sender /= null_actor else outbox;
 
     wait_for_reply_message(net, source_actor, mailbox, request_msg.id, status, timeout);
   end;
@@ -431,8 +431,8 @@ package body com_pkg is
     variable mailbox_id   : mailbox_id_t;
     variable position     : integer;
   begin
-    source_actor := request_msg.sender when request_msg.sender /= null_actor_c else request_msg.receiver;
-    mailbox_id   := inbox              when request_msg.sender /= null_actor_c else outbox;
+    source_actor := request_msg.sender when request_msg.sender /= null_actor else request_msg.receiver;
+    mailbox_id   := inbox              when request_msg.sender /= null_actor else outbox;
     position     := messenger.find_reply_message(source_actor, request_msg.id, mailbox_id);
 
     check(position /= -1, null_message_error);

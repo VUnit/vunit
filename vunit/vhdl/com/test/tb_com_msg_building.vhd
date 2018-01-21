@@ -40,20 +40,20 @@ begin
     while test_suite loop
       if run("Test that a message can be created") then
         msg := new_msg;
-        check_equal(msg.id, no_message_id_c);
+        check_equal(msg.id, no_message_id);
         check(msg.status = ok);
-        check(msg.sender = null_actor_c);
-        check(msg.receiver = null_actor_c);
-        check_equal(msg.request_id, no_message_id_c);
+        check(msg.sender = null_actor);
+        check(msg.receiver = null_actor);
+        check_equal(msg.request_id, no_message_id);
         check_equal(length(msg.data), 0);
 
         actor := new_actor("sender");
         msg2  := new_msg(sender => actor);
-        check_equal(msg2.id, no_message_id_c);
+        check_equal(msg2.id, no_message_id);
         check(msg2.status = ok);
         check(msg2.sender = actor);
-        check(msg2.receiver = null_actor_c);
-        check_equal(msg2.request_id, no_message_id_c);
+        check(msg2.receiver = null_actor);
+        check_equal(msg2.request_id, no_message_id);
         check_equal(length(msg2.data), 0);
       elsif run("Test that a message can be deleted") then
         actor := new_actor("sender");
@@ -67,11 +67,11 @@ begin
 
         delete(msg);
 
-        check_equal(msg.id, no_message_id_c);
+        check_equal(msg.id, no_message_id);
         check(msg.status = null_message_error);
-        check(msg.sender = null_actor_c);
-        check(msg.receiver = null_actor_c);
-        check_equal(msg.request_id, no_message_id_c);
+        check(msg.sender = null_actor);
+        check(msg.receiver = null_actor);
+        check_equal(msg.request_id, no_message_id);
         check(msg.data = null_queue);
       elsif run("Test push and pop integer") then
         msg := new_msg;
@@ -247,11 +247,11 @@ begin
         check(pop_msg_type(msg) = my_msg_type);
       elsif run("Test setting and getting msg_type") then
         msg := new_msg;
-        check(message_type(msg) = null_msg_type_c);
+        check(message_type(msg) = null_msg_type);
         msg := new_msg(my_msg_type);
         check(message_type(msg) = my_msg_type);
         delete(msg);
-        check(message_type(msg) = null_msg_type_c);
+        check(message_type(msg) = null_msg_type);
       elsif run("Test message for being empty") then
         msg := new_msg;
         check(is_empty(msg));

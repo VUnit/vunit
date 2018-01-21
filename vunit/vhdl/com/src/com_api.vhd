@@ -39,7 +39,7 @@ package com_pkg is
   impure function name (actor : actor_t) return string;
 
   -- Destroy actor. Mailboxes are deallocated and dependent subscriptions are
-  -- removed. Returns null_actor_c.
+  -- removed. Returns null_actor.
   procedure destroy (actor : inout actor_t);
 
   -- Reset communication system. All actors are destroyed.
@@ -76,7 +76,7 @@ package com_pkg is
     signal net        : inout network_t;
     constant receiver : in    actor_t;
     variable msg      : inout msg_t;
-    constant timeout  : in    time := max_timeout_c);
+    constant timeout  : in    time := max_timeout);
 
   -- Send message to an array of receivers. Blocking if any reciever or any subscriber inbox is
   -- full.
@@ -84,7 +84,7 @@ package com_pkg is
     signal net         : inout network_t;
     constant receivers : in    actor_vec_t;
     variable msg       : inout msg_t;
-    constant timeout   : in    time := max_timeout_c);
+    constant timeout   : in    time := max_timeout);
 
   -- Receive message sent to receiver. Returns oldest message or the first
   -- incoming if the inbox is empty. msg is initially deleted.
@@ -92,7 +92,7 @@ package com_pkg is
     signal net        : inout network_t;
     constant receiver : in    actor_t;
     variable msg      : inout msg_t;
-    constant timeout  : in    time := max_timeout_c);
+    constant timeout  : in    time := max_timeout);
 
   -- Receive message sent to any of the receivers. Returns oldest message or the first
   -- incoming if the inboxes are empty. Receiver inboxes are emptied from left
@@ -101,7 +101,7 @@ package com_pkg is
     signal net         : inout network_t;
     constant receivers : in    actor_vec_t;
     variable msg       : inout msg_t;
-    constant timeout   : in    time := max_timeout_c);
+    constant timeout   : in    time := max_timeout);
 
   -- Reply to request_msg with reply_msg. request_msg may be anonymous. Blocking if reciever
   -- or any subscriber inbox is full.
@@ -109,14 +109,14 @@ package com_pkg is
     signal net           : inout network_t;
     variable request_msg : inout msg_t;
     variable reply_msg   : inout msg_t;
-    constant timeout     : in    time := max_timeout_c);
+    constant timeout     : in    time := max_timeout);
 
   -- Receive a reply_msg to request_msg. request_msg may be anonymous. reply_msg is initially deleted.
   procedure receive_reply (
     signal net           : inout network_t;
     variable request_msg : inout msg_t;
     variable reply_msg   : inout msg_t;
-    constant timeout     : in    time := max_timeout_c);
+    constant timeout     : in    time := max_timeout);
 
   -- Publish a message from sender to all its subscribers. Blocking if reciever or any subscriber inbox is
   -- full.
@@ -124,7 +124,7 @@ package com_pkg is
     signal net       : inout network_t;
     constant sender  : in    actor_t;
     variable msg     : inout msg_t;
-    constant timeout : in    time := max_timeout_c);
+    constant timeout : in    time := max_timeout);
 
   -- Peek at message in actor mailbox but don't remove it. Position 0 is the oldest message. Runtime error if
   -- position doesn't exist.
@@ -145,7 +145,7 @@ package com_pkg is
     signal net            : inout network_t;
     variable request_msg  : inout msg_t;
     constant positive_ack : in    boolean := true;
-    constant timeout      : in    time    := max_timeout_c);
+    constant timeout      : in    time    := max_timeout);
 
   -- Receive positive or negative acknowledge for a request_msg. request_msg
   -- may be anonymous. reply_msg is initially deleted.
@@ -153,7 +153,7 @@ package com_pkg is
     signal net            : inout network_t;
     variable request_msg  : inout msg_t;
     variable positive_ack : out   boolean;
-    constant timeout      : in    time := max_timeout_c);
+    constant timeout      : in    time := max_timeout);
 
   -- This request is the same as send of request_msg to receiver followed by a
   -- receive_reply of a reply_msg
@@ -162,7 +162,7 @@ package com_pkg is
     constant receiver    : in    actor_t;
     variable request_msg : inout msg_t;
     variable reply_msg   : inout msg_t;
-    constant timeout     : in    time := max_timeout_c);
+    constant timeout     : in    time := max_timeout);
 
   -- This request is the same as send of request_msg to receiver followed by a
   -- receive_reply of a positive or negative acknowledge.
@@ -171,7 +171,7 @@ package com_pkg is
     constant receiver     : in    actor_t;
     variable request_msg  : inout msg_t;
     variable positive_ack : out   boolean;
-    constant timeout      : in    time := max_timeout_c);
+    constant timeout      : in    time := max_timeout);
 
   -----------------------------------------------------------------------------
   -- Low-level subprograms primarily used for handling timeout wihout error
@@ -183,7 +183,7 @@ package com_pkg is
     signal net        : in  network_t;
     constant receiver : in  actor_t;
     variable status   : out com_status_t;
-    constant timeout  : in  time := max_timeout_c);
+    constant timeout  : in  time := max_timeout);
 
   -- Wait for message sent to any of the listed receivers. status = ok
   -- if message is received before the timeout, status = timeout otherwise.
@@ -191,7 +191,7 @@ package com_pkg is
     signal net         : in  network_t;
     constant receivers : in  actor_vec_t;
     variable status    : out com_status_t;
-    constant timeout   : in  time := max_timeout_c);
+    constant timeout   : in  time := max_timeout);
 
   -- Returns true if there is at least one message in the actor's inbox.
   impure function has_message (actor : actor_t) return boolean;
@@ -202,7 +202,7 @@ package com_pkg is
     signal net           : inout network_t;
     variable request_msg : inout msg_t;
     variable status      : out   com_status_t;
-    constant timeout     : in    time := max_timeout_c);
+    constant timeout     : in    time := max_timeout);
 
   -- Get oldest message from receiver inbox. Runtime error if inbox is empty.
   procedure get_message (signal net : inout network_t; receiver : actor_t; variable msg : inout msg_t);

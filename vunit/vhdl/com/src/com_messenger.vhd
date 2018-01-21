@@ -113,7 +113,7 @@ package com_messenger_pkg is
 
     impure function has_reply_stash_message (
       actor      : actor_t;
-      request_id : message_id_t := no_message_id_c)
+      request_id : message_id_t := no_message_id)
       return boolean;                   --
     impure function get_reply_stash_message_payload (actor    : actor_t) return string;
     impure function get_reply_stash_message_sender (actor     : actor_t) return actor_t;
@@ -210,7 +210,7 @@ package body com_messenger_pkg is
   type messenger_t is protected
     body
       variable null_actor_item_c : actor_item_t := (
-        actor             => null_actor_c,
+        actor             => null_actor,
         name              => null,
         deferred_creation => false,
         inbox             => create(0),
@@ -219,9 +219,9 @@ package body com_messenger_pkg is
         subscribers       => (null, null, null));  --
     variable envelope_recycle_bin : envelope_ptr_array(1 to 1000);
     variable n_recycled_envelopes : natural      := 0;
-    variable null_message         : message_t    := (no_message_id_c, null_msg_type_c, ok, null_actor_c,
-                                                     null_actor_c, no_message_id_c, null);
-    variable next_message_id      : message_id_t := no_message_id_c + 1;
+    variable null_message         : message_t    := (no_message_id, null_msg_type, ok, null_actor,
+                                                     null_actor, no_message_id, null);
+    variable next_message_id      : message_id_t := no_message_id + 1;
     variable timeout_allowed      : boolean      := false;
     variable deprecated_allowed   : boolean      := false;
 
@@ -300,8 +300,8 @@ package body com_messenger_pkg is
     constant actor : actor_t := find_actor(name);
   begin
     if name = "" then
-      return null_actor_c;
-    elsif (actor = null_actor_c) and enable_deferred_creation then
+      return null_actor;
+    elsif (actor = null_actor) and enable_deferred_creation then
       return create_actor(name, true, 1);
     else
       return actor;
@@ -326,7 +326,7 @@ package body com_messenger_pkg is
     ) return actor_t is
     variable actor : actor_t := find_actor(name);
   begin
-    if (actor = null_actor_c) or (name = "") then
+    if (actor = null_actor) or (name = "") then
       actor := create_actor(name, false, inbox_size, outbox_size);
     elsif actors(actor.id).deferred_creation then
       actors(actor.id).deferred_creation := false;
@@ -410,26 +410,26 @@ package body com_messenger_pkg is
     deallocate(actors(actor.id).inbox);
     deallocate(actors(actor.id).outbox);
     actors(actor.id) := null_actor_item_c;
-    actor            := null_actor_c;
+    actor            := null_actor;
   end;
 
   procedure reset_messenger is
   begin
     for i in actors'range loop
-      if actors(i).actor /= null_actor_c then
+      if actors(i).actor /= null_actor then
         destroy(actors(i).actor);
       end if;
     end loop;
     deallocate(actors);
     actors          := init_actors;
-    next_message_id := no_message_id_c + 1;
+    next_message_id := no_message_id + 1;
   end;
 
   impure function num_of_actors return natural is
     variable n_actors : natural := 0;
   begin
     for i in actors'range loop
-      if actors(i).actor /= null_actor_c then
+      if actors(i).actor /= null_actor then
         n_actors := n_actors + 1;
       end if;
     end loop;
@@ -443,7 +443,7 @@ package body com_messenger_pkg is
     variable idx : natural := 0;
   begin
     for i in actors'range loop
-      if actors(i).actor /= null_actor_c then
+      if actors(i).actor /= null_actor then
         result(idx) := actors(i).actor;
         idx := idx + 1;
       end if;
@@ -474,7 +474,7 @@ package body com_messenger_pkg is
   begin
     if (actor.id = 0) or (actor.id > actors'length - 1) then
       return true;
-    elsif actors(actor.id).actor = null_actor_c then
+    elsif actors(actor.id).actor = null_actor then
       return true;
     end if;
 
@@ -600,7 +600,7 @@ package body com_messenger_pkg is
 
     subscriber_item := actors(sender.id).subscribers(published);
     while subscriber_item /= null loop
-      send(sender, subscriber_item.actor, inbox, no_message_id_c, payload, receipt);
+      send(sender, subscriber_item.actor, inbox, no_message_id, payload, receipt);
       subscriber_item := subscriber_item.next_item;
     end loop;
   end;
@@ -608,7 +608,7 @@ package body com_messenger_pkg is
   impure function to_string(msg : msg_t) return string is
     function id_to_string(id : message_id_t) return string is
     begin
-      if id = no_message_id_c then
+      if id = no_message_id then
         return "-";
       else
         return to_string(id);
@@ -617,7 +617,7 @@ package body com_messenger_pkg is
 
     impure function actor_to_string(actor : actor_t) return string is
     begin
-      if actor = null_actor_c then
+      if actor = null_actor then
         return "-";
       else
         return name(actor);
@@ -626,7 +626,7 @@ package body com_messenger_pkg is
 
     impure function msg_type_to_string (msg_type : msg_type_t) return string is
     begin
-      if msg_type = null_msg_type_c then
+      if msg_type = null_msg_type then
         return "-";
       else
         return name(msg_type);
@@ -704,7 +704,7 @@ package body com_messenger_pkg is
                               msg, set_msg_receiver => true);
     end loop;
 
-    msg.receiver := null_actor_c;
+    msg.receiver := null_actor;
   end;
 
   procedure internal_publish (
@@ -730,7 +730,7 @@ package body com_messenger_pkg is
       msg.receiver    := receiver;
     else
       msg.sender    := receiver;
-      msg.receiver    := null_actor_c;
+      msg.receiver    := null_actor;
     end if;
 
 
@@ -800,7 +800,7 @@ package body com_messenger_pkg is
     if envelope /= null then
       return envelope.message.sender;
     else
-      return null_actor_c;
+      return null_actor;
     end if;
   end;
 
@@ -815,7 +815,7 @@ package body com_messenger_pkg is
     if envelope /= null then
       return envelope.message.receiver;
     else
-      return null_actor_c;
+      return null_actor;
     end if;
   end;
 
@@ -830,7 +830,7 @@ package body com_messenger_pkg is
     if envelope /= null then
       return envelope.message.id;
     else
-      return no_message_id_c;
+      return no_message_id;
     end if;
   end;
 
@@ -845,7 +845,7 @@ package body com_messenger_pkg is
     if envelope /= null then
       return envelope.message.request_id;
     else
-      return no_message_id_c;
+      return no_message_id;
     end if;
   end;
 
@@ -867,7 +867,7 @@ package body com_messenger_pkg is
       msg.request_id := envelope.message.request_id;
       msg.data := null_queue;
     else
-      msg := null_msg_c;
+      msg := null_msg;
     end if;
 
     return msg;
@@ -912,10 +912,10 @@ package body com_messenger_pkg is
 
   impure function has_reply_stash_message (
     actor      : actor_t;
-    request_id : message_id_t := no_message_id_c)
+    request_id : message_id_t := no_message_id)
     return boolean is
   begin
-    if request_id = no_message_id_c then
+    if request_id = no_message_id then
       return actors(actor.id).reply_stash /= null;
     elsif actors(actor.id).reply_stash /= null then
       return actors(actor.id).reply_stash.message.request_id = request_id;
@@ -940,7 +940,7 @@ package body com_messenger_pkg is
     if envelope /= null then
       return envelope.message.sender;
     else
-      return null_actor_c;
+      return null_actor;
     end if;
   end;
 
@@ -950,7 +950,7 @@ package body com_messenger_pkg is
     if envelope /= null then
       return envelope.message.receiver;
     else
-      return null_actor_c;
+      return null_actor;
     end if;
   end;
 
@@ -960,7 +960,7 @@ package body com_messenger_pkg is
     if envelope /= null then
       return envelope.message.id;
     else
-      return no_message_id_c;
+      return no_message_id;
     end if;
   end;
 
@@ -970,7 +970,7 @@ package body com_messenger_pkg is
     if envelope /= null then
       return envelope.message.request_id;
     else
-      return no_message_id_c;
+      return no_message_id;
     end if;
   end;
 
