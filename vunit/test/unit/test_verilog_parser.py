@@ -182,26 +182,7 @@ genvar i;
     for( i=0; i < 10; i = i + 1 )
       begin: INST_GEN
         true1 instance_name1();
-    end
-  endgenerate
-endmodule
-""").instances
-        self.assertEqual(len(instances), 1)
-        self.assertEqual(instances[0], "true1")
-
-    def test_parse_generated_instances_2loops(self):
-        instances = self.parse("""\
-module name;
-genvar i;
-genvar j;
-  generate
-    for( j=0; j < 10; j = j + 1 )
-      begin: INST_GEN1
-      for( i=0; i < 10; i = i + 1 )
-        begin: INST_GEN2
-          true1 instance_name1();
-      end
-    end
+    end : INST_GEN
   endgenerate
 endmodule
 """).instances
