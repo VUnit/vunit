@@ -183,11 +183,13 @@ genvar i;
       begin: INST_GEN
         true1 instance_name1();
     end : INST_GEN
+    true2 instance_name2();
   endgenerate
 endmodule
 """).instances
-        self.assertEqual(len(instances), 1)
+        self.assertEqual(len(instances), 2)
         self.assertEqual(instances[0], "true1")
+        self.assertEqual(instances[1], "true2")
 
     def test_parse_instances_without_crashing(self):
         instances = self.parse("""\

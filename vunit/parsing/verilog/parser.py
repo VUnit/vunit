@@ -220,7 +220,7 @@ class VerilogDesignFile(object):
         while not stream.eof:
             token = stream.pop()
 
-            if token.kind == BEGIN:
+            if token.kind in (BEGIN, END):
                 _parse_block_label(stream)
                 continue
 
@@ -245,7 +245,7 @@ class VerilogDesignFile(object):
 
 def _parse_block_label(stream):
     """
-    Parse a optional block label after begin keyword
+    Parse a optional block label after begin|end keyword
     """
     try:
         token = stream.peek()
