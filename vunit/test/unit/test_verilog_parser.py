@@ -174,7 +174,6 @@ endmodule
         self.assertEqual(instances[1], "true2")
         self.assertEqual(instances[2], "true3")
 
-
     def test_parse_generated_instances(self):
         instances = self.parse("""\
 module name;
@@ -189,7 +188,6 @@ endmodule
 """).instances
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0], "true1")
-
 
     def test_parse_instances_without_crashing(self):
         instances = self.parse("""\
