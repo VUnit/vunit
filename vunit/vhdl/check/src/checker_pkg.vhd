@@ -17,9 +17,6 @@ use work.string_ptr_pkg.all;
 use work.ansi_pkg.all;
 
 package checker_pkg is
-  type edge_t is (rising_edge, falling_edge, both_edges);
-  type trigger_event_t is (first_pipe, first_no_pipe, penultimate);
-
   type checker_stat_t is record
     n_checks : natural;
     n_failed : natural;

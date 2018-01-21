@@ -16,16 +16,20 @@ use work.logger_pkg.all;
 use work.log_levels_pkg.all;
 
 package check_pkg is
-  signal check_enabled : std_logic := '1';
 
-  constant check_result_tag_c : string    := "<+/->";
   constant default_checker    : checker_t := new_checker;
+
+  signal check_enabled : std_logic := '1';
 
   procedure get_checker_stat (variable stat : out checker_stat_t);
   impure function get_checker_stat return checker_stat_t;
   procedure reset_checker_stat;
 
+  constant check_result_tag_c : string    := "<+/->";
   function result (msg : string := "") return string;
+
+  type edge_t is (rising_edge, falling_edge, both_edges);
+  type trigger_event_t is (first_pipe, first_no_pipe, penultimate);
 
   -----------------------------------------------------------------------------
   -- check
