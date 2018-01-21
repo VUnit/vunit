@@ -220,6 +220,10 @@ class VerilogDesignFile(object):
         while not stream.eof:
             token = stream.pop()
 
+            if token.kind in (BEGIN, END):
+                _parse_block_label(stream)
+                continue
+
             if not token.kind == IDENTIFIER:
                 continue
             modulename = token.value
@@ -237,6 +241,24 @@ class VerilogDesignFile(object):
                 continue
 
         return results
+
+
+def _parse_block_label(stream):
+    """
+    Parse a optional block label after begin|end keyword
+    """
+    try:
+        token = stream.peek()
+
+        if token.kind != COLON:
+            # Is not block label
+            return
+        else:
+            stream.pop()
+            stream.expect(IDENTIFIER)
+
+    except EOFException:
+        return
 
 
 class VerilogModule(object):

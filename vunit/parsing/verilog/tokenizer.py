@@ -84,6 +84,10 @@ class VerilogTokenizer(object):
             r"::",
             remove_value)
 
+        add(COLON,
+            r":",
+            remove_value)
+
         add(SEMI_COLON,
             r";",
             remove_value)
