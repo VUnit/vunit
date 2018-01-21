@@ -271,6 +271,21 @@ occur before issuing the ``check_log`` procedure.
     unmock(logger);
 
 
+Disabled logs
+-------------
+In addition to visibility settings a log level from a specific logger
+can be disabled. The use case for disabling a log is to ignore an
+irrelevant or unwanted log message. Disabling prevents simulation
+stop and all visibility to log handlers. A disabled log is still
+counted to get statistics on disabled log messages.
+
+
+.. code-block:: vhdl
+
+    -- Irrelevant warning
+    disable(get_logger("memory_ip:timing_check"), warning);
+
+
 Log Location Preprocessing
 --------------------------
 

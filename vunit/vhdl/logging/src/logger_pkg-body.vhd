@@ -24,7 +24,7 @@ package body logger_pkg is
   constant log_count_idx : natural := 4;
   constant stop_counts_idx : natural := 5;
   constant handlers_idx : natural := 6;
-  constant is_mocked_idx : natural := 7;
+  constant state_idx : natural := 7;
   constant log_level_filters_idx : natural := 8;
   constant logger_length : natural := 9;
 
@@ -33,6 +33,10 @@ package body logger_pkg is
 
   constant stop_count_unset : integer := 0;
   constant stop_count_infinite : integer := integer'high;
+
+  constant enabled_state : natural := 0;
+  constant disabled_state : natural := 1;
+  constant mocked_state : natural := 2;
 
   constant n_log_levels : natural := log_level_t'pos(log_level_t'high) + 1;
 
@@ -62,7 +66,7 @@ package body logger_pkg is
     set(logger.p_data, log_count_idx, to_integer(new_integer_vector_ptr(log_level_t'pos(log_level_t'high)+1, value => 0)));
     set(logger.p_data, stop_counts_idx, to_integer(new_integer_vector_ptr(log_level_t'pos(log_level_t'high)+1, value => stop_count_unset)));
     set(logger.p_data, handlers_idx, to_integer(new_integer_vector_ptr));
-    set(logger.p_data, is_mocked_idx, to_integer(new_integer_vector_ptr(log_level_t'pos(log_level_t'high)+1, value => 0)));
+    set(logger.p_data, state_idx, to_integer(new_integer_vector_ptr(log_level_t'pos(log_level_t'high)+1, value => enabled_state)));
     set(logger.p_data, log_level_filters_idx, to_integer(new_integer_vector_ptr));
 
     if parent /= null_logger then
@@ -282,10 +286,21 @@ package body logger_pkg is
     return (p_data => to_integer_vector_ptr(get(logger.p_data, parent_idx)));
   end;
 
-  impure function is_mocked(logger : logger_t; log_level : log_level_t) return boolean is
-    constant is_mocked_vec : integer_vector_ptr_t := to_integer_vector_ptr(get(logger.p_data, is_mocked_idx));
+  impure function get_state(logger : logger_t; log_level : log_level_t) return natural is
+    constant state_vec : integer_vector_ptr_t := to_integer_vector_ptr(get(logger.p_data, state_idx));
   begin
-    return get(is_mocked_vec, log_level_t'pos(log_level)) = 1;
+    return get(state_vec, log_level_t'pos(log_level));
+  end;
+
+  procedure set_state(logger : logger_t; log_level : log_level_t; state : natural) is
+    constant state_vec : integer_vector_ptr_t := to_integer_vector_ptr(get(logger.p_data, state_idx));
+  begin
+    set(state_vec, log_level_t'pos(log_level), state);
+  end;
+
+  impure function is_mocked(logger : logger_t; log_level : log_level_t) return boolean is
+  begin
+    return get_state(logger, log_level) = mocked_state;
   end;
 
   impure function is_mocked(logger : logger_t) return boolean is
@@ -474,6 +489,19 @@ package body logger_pkg is
     return get_log_level_filter(logger, log_handler, visible => false);
   end;
 
+  procedure disable(logger : logger_t;
+                    log_level : log_level_t;
+                    include_children : boolean := true) is
+  begin
+    set_state(logger, log_level, disabled_state);
+
+    if include_children then
+      for idx in 0 to num_children(logger)-1 loop
+        disable(get_child(logger, idx), log_level, include_children => true);
+      end loop;
+    end if;
+  end;
+
   -- Disable logging for the specified level to this handler from specific
   -- logger and all children.
   procedure hide(logger : logger_t;
@@ -570,9 +598,12 @@ package body logger_pkg is
 
   impure function is_visible(logger : logger_t;
                              log_level : log_level_t) return boolean is
+    constant state : natural := get_state(logger, log_level);
   begin
-    if is_mocked(logger, log_level) then
+    if state = mocked_state then
       return true;
+    elsif state = disabled_state then
+      return false;
     end if;
 
     for i in 0 to num_log_handlers(logger)-1 loop
@@ -711,7 +742,6 @@ package body logger_pkg is
   begin
     set(global_log_count, 0, get(global_log_count, 0) + 1);
     set(log_counts, log_level_t'pos(log_level), get(log_counts, log_level_t'pos(log_level)) + 1);
-    decrease_stop_count(logger, log_level);
   end;
 
   procedure mock(logger : logger_t) is
@@ -722,9 +752,8 @@ package body logger_pkg is
   end;
 
   procedure mock(logger : logger_t; log_level : log_level_t) is
-    constant is_mocked_vec : integer_vector_ptr_t := to_integer_vector_ptr(get(logger.p_data, is_mocked_idx));
   begin
-    set(is_mocked_vec, log_level_t'pos(log_level), 1);
+    set_state(logger, log_level, mocked_state);
   end;
 
   impure function make_string(logger_name : string;
@@ -813,12 +842,13 @@ package body logger_pkg is
   end;
 
   procedure unmock(logger : logger_t) is
-    constant is_mocked_vec : integer_vector_ptr_t := to_integer_vector_ptr(get(logger.p_data, is_mocked_idx));
   begin
     check_no_log;
 
     for log_level in legal_log_level_t'low to legal_log_level_t'high loop
-      set(is_mocked_vec, legal_log_level_t'pos(log_level), 0);
+      if is_mocked(logger, log_level) then
+        set_state(logger, log_level, enabled_state);
+      end if;
     end loop;
   end;
 
@@ -851,21 +881,32 @@ package body logger_pkg is
     variable log_handler : log_handler_t;
     constant t_now : time := now;
     constant sequence_number : natural := get_log_count;
+    variable state : natural;
   begin
     if logger = null_logger then
       core_failure("Attempt to log to uninitialized logger");
-    elsif is_mocked(logger, log_level) then
+      return;
+    end if;
+
+    state := get_state(logger, log_level);
+
+    if state = mocked_state then
       mock_log(logger, msg, log_level, t_now, line_num, file_name);
     else
-      for i in 0 to num_log_handlers(logger) - 1 loop
-        log_handler := get_log_handler(logger, i);
-        if is_visible(logger, log_handler, log_level) then
-          log_to_handler(log_handler, get_full_name(logger), msg, log_level,
-                         t_now, sequence_number,
-                         line_num, file_name);
-        end if;
-      end loop;
+      if state = enabled_state then
+        for i in 0 to num_log_handlers(logger) - 1 loop
+          log_handler := get_log_handler(logger, i);
+          if is_visible(logger, log_handler, log_level) then
+            log_to_handler(log_handler, get_full_name(logger), msg, log_level,
+                           t_now, sequence_number,
+                           line_num, file_name);
+          end if;
+        end loop;
 
+        decrease_stop_count(logger, log_level);
+      end if;
+
+      -- Count even if disabled
       count_log(logger, log_level);
     end if;
   end procedure;

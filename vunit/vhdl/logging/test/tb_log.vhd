@@ -443,7 +443,7 @@ begin
       check_only_log(logger, "message", failure, 0 ns);
       unmock(logger);
 
-    elsif run("mocked logger is always enabled") then
+    elsif run("mocked logger is always visible") then
       assert_true(is_visible(logger, failure));
 
       hide_all(logger, display_handler);
@@ -822,6 +822,30 @@ begin
       check_only_log(default_logger, "message", failure);
 
       unmock(default_logger);
+
+    elsif run("Disabled log does not stop simulation") then
+      set_stop_count(logger, warning, 1);
+
+      -- Disabled log level should not stop simulation
+      disable(logger, warning);
+      warning(logger, "message");
+
+      -- But still be counted
+      assert_equal(get_log_count(logger, warning), 1);
+
+    elsif run("Disabled log is not visible") then
+      init_log_handler(file_handler, file_name => log_file_name, format => raw);
+      warning(logger, "message");
+      set(entries, "0", "message");
+      check_log_file(log_file_name, entries);
+
+      init_log_handler(file_handler, file_name => log_file_name, format => raw);
+      disable(logger, warning);
+      assert_false(is_visible(logger, warning));
+      warning(logger, "message");
+      set(entries, "0", "message");
+      check_empty_log_file(log_file_name);
+
     end if;
 
     test_runner_cleanup(runner);

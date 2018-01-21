@@ -234,6 +234,17 @@ package logger_pkg is
   impure function get_stop_count(logger : logger_t;
                                  log_level : log_level_t) return positive;
 
+  -- Disable a log_level from specific logger including all children.
+  -- Disable is used when a log message is unwanted and it should be ignored.
+
+  -- NOTE: A disabled log message is still counted to get a disabled log count
+  --       statistics.
+  --       errors and failures can be disabled but the final_log_check must
+  --       explicitly allow it as well as an extra safety mechanism.
+  procedure disable(logger : logger_t;
+                    log_level : log_level_t;
+                    include_children : boolean := true);
+
   -- Hide log messages of specified level to this handler.
   procedure hide(log_handler : log_handler_t;
                  log_level : log_level_t);
