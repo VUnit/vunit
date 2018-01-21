@@ -541,13 +541,7 @@ reaching the ``test_runner_cleanup`` call.
     Starting lib.tb_counting_errors.Test that fails multiple times but doesn't stop
                    0 fs - check                -   ERROR - Equality check failed - Got 17. Expected 18.
                    0 fs - check                -   ERROR - Equality check failed - Got 17. Expected 19.
-    D:\Programming\github\vunit\vunit\vhdl\core\src\core_pkg.vhd:84:7:@0ms:(report failure): Default checker has 2 failed checks.
-    C:\ghdl\dev\bin\ghdl.exe:error: report failed
-      from: vunit_lib.core_pkg.core_failure at core_pkg.vhd:84
-      from: vunit_lib.run_pkg.test_runner_cleanup.check_checker_status at run.vhd:168
-      from: vunit_lib.run_pkg.test_runner_cleanup at run.vhd:194
-      from: process lib.tb_counting_errors(tb).test_runner at tb_counting_errors.vhd:22
-    C:\ghdl\dev\bin\ghdl.exe:error: simulation failed
+    0ms:(report failure): Failure: Logger "check" has 2 error entries.
     fail (P=0 S=0 F=1 T=1) lib.tb_counting_errors.Test that fails multiple times but doesn't stop (0.3 seconds)
 
     ==== Summary ==================================================================================
