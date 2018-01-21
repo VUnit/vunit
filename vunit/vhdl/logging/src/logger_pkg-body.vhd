@@ -298,6 +298,12 @@ package body logger_pkg is
     set(state_vec, log_level_t'pos(log_level), state);
   end;
 
+  impure function is_disabled(logger : logger_t;
+                              log_level : log_level_t) return boolean is
+  begin
+    return get_state(logger, log_level) = disabled_state;
+  end;
+
   impure function is_mocked(logger : logger_t; log_level : log_level_t) return boolean is
   begin
     return get_state(logger, log_level) = mocked_state;
@@ -1182,55 +1188,66 @@ package body logger_pkg is
     end if;
   end;
 
-  impure function final_log_check(logger : logger_t) return boolean is
 
-    impure function entry_spelling(is_plural : boolean) return string is
+  impure function final_log_check(allow_disabled_errors : boolean := false;
+                                  allow_disabled_failures : boolean := false) return boolean is
+
+    impure function p_final_log_check(logger : logger_t) return boolean is
+
+      impure function entry_spelling(is_plural : boolean) return string is
+      begin
+        if is_plural then
+          return "entries";
+        end if;
+        return "entry";
+      end;
+
+      impure function check_log_level(log_level : log_level_t; allow_disabled : boolean) return boolean is
+        variable count : natural;
+      begin
+        count := get_log_count(logger, log_level);
+        if count > 0 and not (allow_disabled and is_disabled(logger, log_level)) then
+          core_failure("Logger """ & get_full_name(logger) &
+                       """ has " & integer'image(count) & " " & get_name(log_level) &
+                       " " & entry_spelling(count > 1) & ".");
+          return false;
+        end if;
+        return true;
+      end;
+
     begin
-      if is_plural then
-        return "entries";
-      end if;
-      return "entry";
-    end;
-
-    variable child : logger_t;
-    variable count : natural;
-  begin
-    for i in 0 to num_children(logger)-1 loop
-      child := get_child(logger, i);
-
-      if is_mocked(child) then
-        core_failure("Logger """ & get_full_name(child) & """ is still mocked.");
+      if is_mocked(logger) then
+        core_failure("Logger """ & get_full_name(logger) & """ is still mocked.");
         return false;
       end if;
 
-      for level in error to alert_log_level_t'high loop
-        count := get_log_count(child, level);
-        if count > 0 then
-          core_failure("Logger """ & get_full_name(child) &
-                       """ has " & integer'image(count) & " " & get_name(level) &
-                       " " & entry_spelling(count > 1) & ".");
+      if not check_log_level(error, allow_disabled_errors) then
+        return false;
+      end if;
+
+      if not check_log_level(failure, allow_disabled_failures) then
+        return false;
+      end if;
+
+      for idx in 0 to num_children(logger)-1 loop
+        if not p_final_log_check(get_child(logger, idx)) then
           return false;
         end if;
       end loop;
 
-      if not final_log_check(child) then
-        return false;
-      end if;
+      return true;
+    end;
 
-    end loop;
-
-    return true;
-  end;
-
-  impure function final_log_check return boolean is
   begin
-    return final_log_check(root_logger);
+    return p_final_log_check(root_logger);
   end;
 
-  procedure final_log_check is
+  procedure final_log_check(allow_disabled_errors : boolean := false;
+                            allow_disabled_failures : boolean := false) is
     variable result : boolean;
   begin
-    result := final_log_check;
+    result := final_log_check(allow_disabled_errors => allow_disabled_errors,
+                              allow_disabled_failures => allow_disabled_failures);
   end;
 
 end package body;

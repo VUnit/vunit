@@ -734,6 +734,27 @@ begin
 
       unmock(get_logger("parent:my_logger"));
 
+    elsif run("Test final log check fails for disabled error") then
+      disable(get_logger("parent:my_logger"), error);
+      error(get_logger("parent:my_logger"), "message");
+      mock_core_failure;
+      final_log_check;
+      check_core_failure("Logger ""parent:my_logger"" has 1 error entry.");
+      unmock_core_failure;
+
+      reset_log_count(get_logger("parent:my_logger"), error);
+
+    elsif run("Test final log check can allow for disabled errors") then
+      disable(get_logger("parent:my_logger"), error);
+      error(get_logger("parent:my_logger"), "message");
+      final_log_check(allow_disabled_errors => true);
+      reset_log_count(get_logger("parent:my_logger"), error);
+
+    elsif run("Test final log check fails for disabled failures") then
+      disable(get_logger("parent:my_logger"), failure);
+      failure(get_logger("parent:my_logger"), "message");
+      final_log_check(allow_disabled_failures => true);
+      reset_log_count(get_logger("parent:my_logger"), failure);
 
     elsif run("Test conditional logs") then
       mock(logger);

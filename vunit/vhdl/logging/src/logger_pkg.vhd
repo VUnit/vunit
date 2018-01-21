@@ -245,6 +245,10 @@ package logger_pkg is
                     log_level : log_level_t;
                     include_children : boolean := true);
 
+  -- Returns true if the logger and log_level is disabled
+  impure function is_disabled(logger : logger_t;
+                              log_level : log_level_t) return boolean;
+
   -- Hide log messages of specified level to this handler.
   procedure hide(log_handler : log_handler_t;
                  log_level : log_level_t);
@@ -346,8 +350,10 @@ package logger_pkg is
                             log_level : log_level_t := null_log_level;
                             include_children : boolean := true);
 
-  procedure final_log_check;
-  impure function final_log_check return boolean;
+  procedure final_log_check(allow_disabled_errors : boolean := false;
+                            allow_disabled_failures : boolean := false);
+  impure function final_log_check(allow_disabled_errors : boolean := false;
+                                  allow_disabled_failures : boolean := false) return boolean;
 
   ---------------------------------------------------------------------
   -- Mock procedures to enable unit testing of code performing logging
