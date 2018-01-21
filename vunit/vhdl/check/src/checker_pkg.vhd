@@ -81,14 +81,11 @@ end package;
 package body checker_pkg is
 
   constant logger_idx            : natural := 0;
-  constant id_idx                : natural := 1;
-  constant default_log_level_idx : natural := 2;
-  constant stat_checks_idx       : natural := 3;
-  constant stat_failed_idx       : natural := 4;
-  constant stat_passed_idx       : natural := 5;
+  constant default_log_level_idx : natural := 1;
+  constant stat_checks_idx       : natural := 2;
+  constant stat_failed_idx       : natural := 3;
+  constant stat_passed_idx       : natural := 4;
   constant checker_length        : natural := stat_passed_idx + 1;
-
-  constant checkers : integer_vector_ptr_t := new_integer_vector_ptr;
 
   impure function new_checker(logger_name : string;
                               default_log_level : log_level_t := error) return checker_t is
@@ -107,11 +104,6 @@ package body checker_pkg is
     variable id      : natural;
   begin
     checker := (p_data => new_integer_vector_ptr(checker_length));
-    id      := length(checkers);
-    resize(checkers, length(checkers)+1);
-    set(checkers, id, to_integer(checker.p_data));
-
-    set(checker.p_data, id_idx, id);
     set(checker.p_data, logger_idx, to_integer(logger.p_data));
     set(checker.p_data, default_log_level_idx, log_level_t'pos(default_log_level));
     reset_checker_stat(checker);
