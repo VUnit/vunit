@@ -756,6 +756,19 @@ begin
       final_log_check(allow_disabled_failures => true);
       reset_log_count(get_logger("parent:my_logger"), failure);
 
+    elsif run("Test final log check optionally fails for warnings") then
+      warning(get_logger("parent:my_logger"), "message");
+      final_log_check; -- Does not fail
+
+      mock_core_failure;
+      final_log_check(fail_on_warning => true);
+      check_core_failure("Logger ""parent:my_logger"" has 1 warning entry.");
+      unmock_core_failure;
+
+      -- Does not fail for disabled warnings
+      disable(get_logger("parent:my_logger"), warning);
+      final_log_check(fail_on_warning => true);
+
     elsif run("Test conditional logs") then
       mock(logger);
 

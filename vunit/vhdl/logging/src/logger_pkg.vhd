@@ -350,10 +350,20 @@ package logger_pkg is
                             log_level : log_level_t := null_log_level;
                             include_children : boolean := true);
 
+
+  -- Perform a check of the log counts and fail unless there are no errors or failures.
+  -- By default no disabled errors or failures are not allowed.
+  -- Disabled errors and failrues can be allowed by setting the corresponding
+  -- arguments to true.
+  -- By default warnings are allowed but failure on warning can be enabled.
+  -- When fail on warning is enabled it also allows disabled warnings.
   procedure final_log_check(allow_disabled_errors : boolean := false;
-                            allow_disabled_failures : boolean := false);
+                            allow_disabled_failures : boolean := false;
+                            fail_on_warning : boolean := false);
+
   impure function final_log_check(allow_disabled_errors : boolean := false;
-                                  allow_disabled_failures : boolean := false) return boolean;
+                                  allow_disabled_failures : boolean := false;
+                                  fail_on_warning : boolean := false) return boolean;
 
   ---------------------------------------------------------------------
   -- Mock procedures to enable unit testing of code performing logging

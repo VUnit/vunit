@@ -1190,7 +1190,8 @@ package body logger_pkg is
 
 
   impure function final_log_check(allow_disabled_errors : boolean := false;
-                                  allow_disabled_failures : boolean := false) return boolean is
+                                  allow_disabled_failures : boolean := false;
+                                  fail_on_warning : boolean := false) return boolean is
 
     impure function p_final_log_check(logger : logger_t) return boolean is
 
@@ -1229,6 +1230,10 @@ package body logger_pkg is
         return false;
       end if;
 
+      if fail_on_warning and not check_log_level(warning, true) then
+        return false;
+      end if;
+
       for idx in 0 to num_children(logger)-1 loop
         if not p_final_log_check(get_child(logger, idx)) then
           return false;
@@ -1243,11 +1248,13 @@ package body logger_pkg is
   end;
 
   procedure final_log_check(allow_disabled_errors : boolean := false;
-                            allow_disabled_failures : boolean := false) is
+                            allow_disabled_failures : boolean := false;
+                            fail_on_warning : boolean := false) is
     variable result : boolean;
   begin
     result := final_log_check(allow_disabled_errors => allow_disabled_errors,
-                              allow_disabled_failures => allow_disabled_failures);
+                              allow_disabled_failures => allow_disabled_failures,
+                              fail_on_warning => fail_on_warning);
   end;
 
 end package body;
