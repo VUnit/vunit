@@ -709,8 +709,7 @@ begin
       error(get_logger("parent:my_logger"), "message");
       mock_core_failure;
       final_log_check;
-      check_core_failure("Logger ""parent:my_logger"" has 1 error entry.");
-      unmock_core_failure;
+      check_and_unmock_core_failure;
 
       reset_log_count(get_logger("parent:my_logger"), error);
 
@@ -720,8 +719,7 @@ begin
       failure(get_logger("parent:my_logger"), "message");
       mock_core_failure;
       final_log_check;
-      check_core_failure("Logger ""parent:my_logger"" has 2 failure entries.");
-      unmock_core_failure;
+      check_and_unmock_core_failure;
 
       reset_log_count(get_logger("parent:my_logger"), failure);
 
@@ -729,8 +727,7 @@ begin
       mock(get_logger("parent:my_logger"), failure);
       mock_core_failure;
       final_log_check;
-      check_core_failure("Logger ""parent:my_logger"" is still mocked.");
-      unmock_core_failure;
+      check_and_unmock_core_failure;
 
       unmock(get_logger("parent:my_logger"));
 
@@ -739,18 +736,26 @@ begin
       error(get_logger("parent:my_logger"), "message");
       mock_core_failure;
       final_log_check;
-      check_core_failure("Logger ""parent:my_logger"" has 1 error entry.");
-      unmock_core_failure;
+      check_and_unmock_core_failure;
 
       reset_log_count(get_logger("parent:my_logger"), error);
 
-    elsif run("Test final log check can allow for disabled errors") then
+    elsif run("Test final log check fails for disabled failure") then
+      disable(get_logger("parent:my_logger"), failure);
+      failure(get_logger("parent:my_logger"), "message");
+      mock_core_failure;
+      final_log_check;
+      check_and_unmock_core_failure;
+
+      reset_log_count(get_logger("parent:my_logger"), failure);
+
+    elsif run("Test final log check can allow disabled errors") then
       disable(get_logger("parent:my_logger"), error);
       error(get_logger("parent:my_logger"), "message");
       final_log_check(allow_disabled_errors => true);
       reset_log_count(get_logger("parent:my_logger"), error);
 
-    elsif run("Test final log check fails for disabled failures") then
+    elsif run("Test final log check can allow disabled failures") then
       disable(get_logger("parent:my_logger"), failure);
       failure(get_logger("parent:my_logger"), "message");
       final_log_check(allow_disabled_failures => true);
@@ -762,8 +767,7 @@ begin
 
       mock_core_failure;
       final_log_check(fail_on_warning => true);
-      check_core_failure("Logger ""parent:my_logger"" has 1 warning entry.");
-      unmock_core_failure;
+      check_and_unmock_core_failure;
 
       -- Does not fail for disabled warnings
       disable(get_logger("parent:my_logger"), warning);

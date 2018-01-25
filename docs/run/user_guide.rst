@@ -541,7 +541,7 @@ reaching the ``test_runner_cleanup`` call.
     Starting lib.tb_counting_errors.Test that fails multiple times but doesn't stop
                    0 fs - check                -   ERROR - Equality check failed - Got 17. Expected 18.
                    0 fs - check                -   ERROR - Equality check failed - Got 17. Expected 19.
-    0ms:(report failure): Failure: Logger "check" has 2 error entries.
+    FAILURE - Logger check has 2 errors
     fail (P=0 S=0 F=1 T=1) lib.tb_counting_errors.Test that fails multiple times but doesn't stop (0.3 seconds)
 
     ==== Summary ==================================================================================

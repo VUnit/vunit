@@ -8,7 +8,10 @@ use work.string_ptr_pkg.all;
 use work.integer_vector_ptr_pkg.all;
 use work.queue_pkg.all;
 use work.core_pkg.core_failure;
+use std.textio.all;
 use work.string_ops.all;
+use work.print_pkg.print;
+use work.ansi_pkg.all;
 
 package body logger_pkg is
   constant root_logger_id : natural := 0;
@@ -1189,62 +1192,110 @@ package body logger_pkg is
   end;
 
 
+  impure function level_to_color(log_level : log_level_t) return string is
+  begin
+    return colorize(upper(get_name(log_level)), get_color(log_level));
+  end;
+
+  impure function source_to_color(logger_name : string) return string is
+    variable l : line;
+
+    impure function create_string return string is
+      variable lines : lines_t;
+    begin
+      lines := split(logger_name, ":");
+      for idx in 0 to lines'length-1 loop
+        write(l, colorize(lines(idx).all, fg => white, style => bright));
+        deallocate(lines(idx));
+        if idx /= lines'length - 1 then
+          write(l, colorize(":", fg => lightcyan, style => bright));
+        end if;
+      end loop;
+      deallocate(lines);
+      return l.all;
+    end;
+
+    constant result : string := create_string;
+  begin
+    deallocate(l);
+    return result;
+  end;
+
   impure function final_log_check(allow_disabled_errors : boolean := false;
                                   allow_disabled_failures : boolean := false;
                                   fail_on_warning : boolean := false) return boolean is
 
     impure function p_final_log_check(logger : logger_t) return boolean is
 
-      impure function entry_spelling(is_plural : boolean) return string is
-      begin
-        if is_plural then
-          return "entries";
-        end if;
-        return "entry";
-      end;
-
       impure function check_log_level(log_level : log_level_t; allow_disabled : boolean) return boolean is
+
+        function disabled_str(disabled : boolean) return string is
+        begin
+          if disabled then
+            return " disabled";
+          else
+            return "";
+          end if;
+        end;
+
+        function plural_suffix(is_plural : boolean) return string is
+        begin
+          if is_plural then
+            return "s";
+          else
+            return "";
+          end if;
+        end;
+
         variable count : natural;
+        variable level_is_disabled : boolean := is_disabled(logger, log_level);
       begin
         count := get_log_count(logger, log_level);
-        if count > 0 and not (allow_disabled and is_disabled(logger, log_level)) then
-          core_failure("Logger """ & get_full_name(logger) &
-                       """ has " & integer'image(count) & " " & get_name(log_level) &
-                       " " & entry_spelling(count > 1) & ".");
+        if count > 0 and not (allow_disabled and level_is_disabled) then
+          print(level_to_color(failure) & " - Logger " & source_to_color(get_full_name(logger)) &
+                " has " & integer'image(count) & disabled_str(level_is_disabled) & " " &
+                get_name(log_level) & plural_suffix(count > 1));
           return false;
         end if;
         return true;
       end;
 
+      variable failed : boolean := false;
     begin
-      if is_mocked(logger) then
-        core_failure("Logger """ & get_full_name(logger) & """ is still mocked.");
-        return false;
-      end if;
-
-      if not check_log_level(error, allow_disabled_errors) then
-        return false;
-      end if;
-
-      if not check_log_level(failure, allow_disabled_failures) then
-        return false;
-      end if;
-
-      if fail_on_warning and not check_log_level(warning, true) then
-        return false;
-      end if;
-
       for idx in 0 to num_children(logger)-1 loop
         if not p_final_log_check(get_child(logger, idx)) then
-          return false;
+          failed := true;
         end if;
       end loop;
 
-      return true;
+      if is_mocked(logger) then
+        print(level_to_color(failure) & " - Logger " & source_to_color(get_full_name(logger)) &
+              " is still mocked.");
+        failed := true;
+      end if;
+
+      if fail_on_warning and not check_log_level(warning, true) then
+        failed := true;
+      end if;
+
+      if not check_log_level(error, allow_disabled_errors) then
+        failed := true;
+      end if;
+
+      if not check_log_level(failure, allow_disabled_failures) then
+        failed := true;
+      end if;
+
+      return not failed;
     end;
 
   begin
-    return p_final_log_check(root_logger);
+    if p_final_log_check(root_logger) then
+      return true;
+    else
+      core_failure("Final log check failed");
+      return false;
+    end if;
   end;
 
   procedure final_log_check(allow_disabled_errors : boolean := false;

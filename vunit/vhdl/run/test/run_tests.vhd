@@ -276,8 +276,7 @@ begin
 
     core_pkg.mock_core_failure;
     test_runner_cleanup(runner);
-    core_pkg.check_core_failure("Logger ""parent:unmocked_logger"" is still mocked.");
-    core_pkg.unmock_core_failure;
+    core_pkg.check_and_unmock_core_failure;
 
     unmock(get_logger("parent:unmocked_logger"));
     test_case_cleanup;
@@ -288,8 +287,7 @@ begin
     error(get_logger("parent:my_logger"), "error message");
     core_pkg.mock_core_failure;
     test_runner_cleanup(runner);
-    core_pkg.check_core_failure("Logger ""parent:my_logger"" has 1 error entry.");
-    core_pkg.unmock_core_failure;
+    core_pkg.check_and_unmock_core_failure;
     test_case_cleanup;
     reset_log_count(get_logger("parent:my_logger"), error);
 
@@ -302,8 +300,7 @@ begin
     set_stop_count(get_logger("parent:my_logger"), failure, 1);
     core_pkg.mock_core_failure;
     test_runner_cleanup(runner);
-    core_pkg.check_core_failure("Logger ""parent:my_logger"" has 2 failure entries.");
-    core_pkg.unmock_core_failure;
+    core_pkg.check_and_unmock_core_failure;
     test_case_cleanup;
     reset_log_count(get_logger("parent:my_logger"), failure);
 
@@ -693,7 +690,7 @@ begin
     core_pkg.mock_core_failure;
     p_disable_simulation_exit(runner_state);
     test_runner_cleanup(runner);
-    core_pkg.check_core_failure("Logger ""runner"" is still mocked.");
+    core_pkg.check_core_failure("Final log check failed");
     core_pkg.unmock_core_failure;
 
     check_log(runner_trace_logger, "Entering test runner cleanup phase.", verbose);
