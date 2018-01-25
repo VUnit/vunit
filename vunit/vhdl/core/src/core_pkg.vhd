@@ -62,7 +62,7 @@ package body core_pkg is
     return state;
   end;
 
-  constant core_failure_mock_state : integer_vector_ptr_t := new_integer_vector_ptr(core_failure_mock_state_length, value => 0);
+  constant core_failure_mock_state : integer_vector_ptr_t := new_core_failure_mock_state;
 
   procedure mock_core_failure is
   begin
