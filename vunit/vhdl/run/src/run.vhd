@@ -91,8 +91,7 @@ package body run_pkg is
   end test_runner_setup;
 
   procedure test_runner_cleanup (
-    signal runner: inout runner_sync_t;
-    constant external_failure : in boolean := false) is
+    signal runner: inout runner_sync_t) is
 
   begin
     set_phase(runner_state, test_runner_cleanup);
@@ -107,11 +106,6 @@ package body run_pkg is
     verbose(runner_trace_logger, "Entering test runner exit phase.");
 
     if not final_log_check then
-      return;
-    end if;
-
-    if external_failure then
-      core_pkg.core_failure("External failure.");
       return;
     end if;
 

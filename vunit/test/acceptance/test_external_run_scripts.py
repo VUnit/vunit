@@ -69,8 +69,7 @@ class TestExternalRunScripts(unittest.TestCase):
                       ("failed", "lib.tb_standalone.Test that fails on VUnit check procedure"),
                       ("failed", "lib.tb_many_ways_to_fail.Test that fails on an assert"),
                       ("failed", "lib.tb_many_ways_to_fail.Test that crashes on boundary problems"),
-                      ("failed", "lib.tb_many_ways_to_fail.Test that fails on VUnit check procedure"),
-                      ("failed", "lib.tb_other_error_mechanism.Test that fails on other mechanism")])
+                      ("failed", "lib.tb_many_ways_to_fail.Test that fails on VUnit check procedure")])
 
     def test_vhdl_third_party_integration_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "third_party_integration", "run.py"), exit_code=1)

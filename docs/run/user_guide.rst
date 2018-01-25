@@ -555,50 +555,6 @@ reaching the ``test_runner_cleanup`` call.
     ===============================================================================================
     Some failed!
 
-Foreign Error Mechanisms
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-If you have some other error handling mechanism that doesn't stop on error you can still make a test fail as
-long as you can provide the error state to the ``test_runner_cleanup`` procedure as a boolean value.
-
-.. code-block:: vhdl
-
-    test_runner : process
-      variable error_counter : natural := 0;
-    begin
-      test_runner_setup(runner, runner_cfg);
-
-      while test_suite loop
-        if run("Test that fails on other mechanism") then
-          error_counter := error_counter + 1;
-        end if;
-      end loop;
-
-      test_runner_cleanup(runner, error_counter > 0);
-    end process;
-
-.. code-block:: console
-
-    > python run.py *mech*
-    Starting lib.tb_other_error_mechanism.Test that fails on other mechanism
-    C:\vunit\vunit\vhdl\core\src\core_pkg.vhd:84:7:@0ms:(report failure): External failure.
-    C:\ghdl\bin\ghdl.exe:error: report failed
-    from: vunit_lib.core_pkg.core_failure at core_pkg.vhd:84
-    from: vunit_lib.run_pkg.test_runner_cleanup at run.vhd:193
-    from: process lib.tb_other_error_mechanism(tb).test_runner at tb_other_error_mechanism.vhd:21
-    C:\ghdl\bin\ghdl.exe:error: simulation failed
-    fail (P=0 S=0 F=1 T=1) lib.tb_other_error_mechanism.Test that fails on other mechanism (0.3 seconds)
-
-    ==== Summary ===========================================================================
-    fail lib.tb_other_error_mechanism.Test that fails on other mechanism (0.3 seconds)
-    ========================================================================================
-    pass 0 of 1
-    fail 1 of 1
-    ========================================================================================
-    Total time was 0.3 seconds
-    Elapsed time was 0.3 seconds
-    ========================================================================================
-    Some failed!
 
 Running A VUnit Testbench Standalone
 ------------------------------------
