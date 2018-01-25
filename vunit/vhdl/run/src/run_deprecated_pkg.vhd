@@ -29,11 +29,8 @@ package body run_deprecated_pkg is
     warning("Using deprecated procedure test_runner_cleanup with " &
             "checker_stat and external_failure input.");
 
-    if external_failure then
-      core_pkg.core_failure("External failure.");
-      return;
-    end if;
-
+    failure_if(checker_stat.n_failed > 0, to_string(checker_stat));
+    failure_if(external_failure, "External failure.");
     test_runner_cleanup(runner);
   end;
 end package body run_deprecated_pkg;
