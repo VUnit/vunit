@@ -66,9 +66,10 @@ begin
       end if;
     end loop;
 
-    -- Set second parameter in test_runner_cleanup to true when there are errors
-    -- which VUnit doesn't know about.
-    test_runner_cleanup(runner, error_counter > 0);
+    -- Add failure if external error counter > 0 which is not known to VUnit
+    assert not (error_counter > 0) report "External failure" severity failure;
+
+    test_runner_cleanup(runner);
 
   end process test_runner;
 end;
