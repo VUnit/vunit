@@ -91,8 +91,10 @@ package body run_pkg is
   end test_runner_setup;
 
   procedure test_runner_cleanup (
-    signal runner: inout runner_sync_t) is
-
+    signal runner: inout runner_sync_t;
+    allow_disabled_errors : boolean := false;
+    allow_disabled_failures : boolean := false;
+    fail_on_warning : boolean := false) is
   begin
     set_phase(runner_state, test_runner_cleanup);
     runner.phase <= test_runner_cleanup;
@@ -105,7 +107,9 @@ package body run_pkg is
     wait for 0 ns;
     verbose(runner_trace_logger, "Entering test runner exit phase.");
 
-    if not final_log_check then
+    if not final_log_check(allow_disabled_errors => allow_disabled_errors,
+                           allow_disabled_failures => allow_disabled_failures,
+                           fail_on_warning => fail_on_warning) then
       return;
     end if;
 

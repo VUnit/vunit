@@ -53,7 +53,10 @@ package run_pkg is
     return string;
 
   procedure test_runner_cleanup (
-    signal runner: inout runner_sync_t);
+    signal runner: inout runner_sync_t;
+    allow_disabled_errors : boolean := false;
+    allow_disabled_failures : boolean := false;
+    fail_on_warning : boolean := false);
 
   impure function test_suite_error (
     constant err : boolean)
