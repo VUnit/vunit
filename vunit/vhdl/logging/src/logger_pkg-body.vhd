@@ -1202,9 +1202,11 @@ package body logger_pkg is
 
     impure function create_string return string is
       variable lines : lines_t;
+      variable num_items : natural;
     begin
       lines := split(logger_name, ":");
-      for idx in 0 to lines'length-1 loop
+      num_items := integer'(lines.all'length);
+      for idx in 0 to num_items - 1 loop
         write(l, colorize(lines(idx).all, fg => white, style => bright));
         deallocate(lines(idx));
         if idx /= lines'length - 1 then
