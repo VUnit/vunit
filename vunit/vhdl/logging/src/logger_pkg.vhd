@@ -195,17 +195,17 @@ package logger_pkg is
                                     log_level : log_level_t;
                                     unset_children : boolean := false);
 
-    -- Set the threshold for stopping simulation for a specific log level in
-    -- the entire logging tree.
+  -- Set the threshold for stopping simulation for a specific log level in
+  -- the entire logging tree.
 
-    -- NOTE: Removes all other stop count settings for log_level in entire tree.
+  -- NOTE: Removes all other stop count settings for log_level in entire tree.
   procedure set_stop_count(log_level : log_level_t;
                            value : positive);
 
-    -- Set disable stopping simulation for a specific log level in
-    -- the entire logging tree.
+  -- Set disable stopping simulation for a specific log level in
+  -- the entire logging tree.
 
-    -- NOTE: Removes all other stop count settings for log_level in entire tree.
+  -- NOTE: Removes all other stop count settings for log_level in entire tree.
   procedure set_infinite_stop_count(log_level : log_level_t);
 
   -- Shorthand for configuring the stop counts for (warning, error, failure) in

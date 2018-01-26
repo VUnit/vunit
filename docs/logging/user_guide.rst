@@ -42,7 +42,7 @@ Log messages are then handled by a log handler. By default there are
 two output handlers, one for handling display (stdout) output and one
 for handling output to a file. Every log entry you do is passed to
 both these handlers. Each handler may have a different output format
-and log level setting. The format is used to control they layout and
+and log level setting. The format is used to control the layout and
 amount of information being displayed.
 
 Log Levels
@@ -92,7 +92,7 @@ Simulation stop is controlled via a stop count mechanism. The stop count mechani
   - If set it is decremented and reaching zero means simulation stops.
   - If not set the decrementation is recursively propagated to the parent logger.
 - It is possible to disable stopping simulation by setting an infinite stop count.
-- By default the only the root logger has a stop count set.
+- By default only the root logger has a stop count set.
 
   - Root logger has stop count set to 1 for ``error`` and ``failure``.
   - Root logger has stop count set to infinite for all other log levels.
@@ -185,14 +185,14 @@ results in something like this with the ``verbose`` formatter.
 Log visibility
 --------------
 
-Log visibility to a log handler can be configured for specific log_levels of a logger.
+Log visibility to a log handler can be configured for specific log levels of a logger.
 
 .. code-block:: vhdl
 
     -- Disable all logging to the display.
     hide_all(display_handler);
 
-    -- Show debug log_level of system0 logger to the display
+    -- Show debug log level of system0 logger to the display
     show(get_logger("system0"), display_handler, debug);
 
     -- Show all logging from the uart module in system0 to the display
@@ -253,7 +253,7 @@ state.  The ``unmock`` call also checks that all recorded log messages
 have been checked by a corresponding ``check_log`` or
 ``check_only_log`` procedure.
 
-It is possible to mock several logger or log_levels simultaneously.
+It is possible to mock several logger or log levels simultaneously.
 All mocked log messages are written to the same global mock queue.
 The number of log messages in this queue is returned by the
 ``mock_queue_length`` function.

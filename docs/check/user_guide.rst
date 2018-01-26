@@ -148,13 +148,13 @@ will result in a log entry like this
 
     1000 ps - check - PASS - Checking that read enable is active
 
-Note that a message that reads well for both the passed and the fail cases was used.
+Note that a message that reads well for both the pass and the fail cases was used.
 
 A number of check subprograms perform several checks for every call, each of which can fail
-and generate an error message. However, there will only be one passed message for such a call
+and generate an error message. However, there will only be one pass message for such a call
 to avoid confusion. For example, ``check_stable`` checks the stability of a signal for every
 clock cycle in a window. If the window is 100 clock cycles there will be 100 checks for
-stability but there will only be one passed message, not 100, if the signal is stable.
+stability but there will only be one pass message, not 100, if the signal is stable.
 
 Message Format
 ~~~~~~~~~~~~~~
@@ -204,7 +204,7 @@ and
 
 .. code-block:: console
 
-    1000 ps - check - ERROR - Equality check passed for output pixel - Got 1111_1010 (250).
+    1000 ps - check - PASS - Equality check passed for output pixel - Got 1111_1010 (250).
 
 The ``result`` function prepends the provided string with the check type (equality check in this case)
 and passed/failed depending on the result. The ``result`` function is also used as the default value for
