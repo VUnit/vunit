@@ -518,6 +518,12 @@ If you use the VUnit check/logging library you can set the :doc:`stop_level <../
 simulation continues on an error. Such errors will be remembered and the test will fail despite
 reaching the ``test_runner_cleanup`` call.
 
+By default ``test_runner_cleanup`` will fail if there were any error
+or failure log even if they where disabled. Disabled errors or
+failures can be allowed using the ``allow_disabled_errors`` or
+``allow_disabled_failures`` flags. Warnings can also optionally cause
+failure by setting the ``fail_on_warning`` flag.
+
 .. code-block:: vhdl
 
     test_runner : process
