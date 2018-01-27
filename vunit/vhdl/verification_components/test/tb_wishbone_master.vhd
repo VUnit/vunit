@@ -39,7 +39,8 @@ architecture a of tb_wishbone_master is
   constant bus_handle : bus_master_t := new_bus(data_length => dat_width,
       address_length => adr_width);
 	constant ack_actor 		: actor_t := new_actor("ack_actor");
-  constant logger : logger_t := get_logger("slave_ack");
+  constant tb_logger : logger_t := get_logger("tb");
+  constant slave_logger : logger_t := get_logger("slave");
 
 begin
 
@@ -55,6 +56,12 @@ begin
       read_bus(net, bus_handle, x"e", tmp);
       info("Check equal");
       check_equal(tmp, std_logic_vector'(x"5566"), "read data");
+    elsif run("Test block write") then
+      verbose(tb_logger, "Test block write`");
+      write_bus(net, bus_handle, x"e", x"abcd");
+      verbose(tb_logger, "Wrote first");
+      write_bus(net, bus_handle, x"e", x"abcd");
+      verbose(tb_logger, "Wrote second");
     end if;
 
     wait for 200 ns;
@@ -63,7 +70,9 @@ begin
   end process;
   test_runner_watchdog(runner, 100 us);
   set_format(display_handler, verbose, true);
-  show(logger, display_handler, verbose);
+  show(slave_logger, display_handler, verbose);
+  show(tb_logger, display_handler, verbose);
+  show(default_logger, display_handler, verbose);
   -- Show log messages from the logger of the specified log_levels to this handler
 --  procedure show(logger : logger_t;
 --                 log_handler : log_handler_t;
@@ -71,7 +80,7 @@ begin
 --                 include_children : boolean := true);
 
   slave : process
-    variable wr_request_msg : msg_t := new_msg(bus_write_msg);
+    variable wr_request_msg : msg_t;
     variable rd_request_msg : msg_t := new_msg(bus_read_msg);
   begin
     wait for 1 ns;
@@ -86,14 +95,22 @@ begin
       wait until (cyc and stb) = '1' and we = '0' and rising_edge(clk);
       check_equal(adr, std_logic_vector'(x"e"), "adr");
       send(net, ack_actor, rd_request_msg);
+
+    elsif enabled("Test block write") then
+      verbose(slave_logger, "Wait on write cycle start");
+      wait until (cyc and stb and we) = '1' and rising_edge(clk);
+      check_equal(adr, std_logic_vector'(x"e"), "adr");
+      wr_request_msg := new_msg(bus_write_msg);
+      push_std_ulogic_vector(wr_request_msg, x"abcd");
+      send(net, ack_actor, wr_request_msg);
     end if;
   end process;
 
-  support_ack : process
+  slave_ack : process
     variable request_msg : msg_t;
     variable msg_type : msg_type_t;
   begin
-    verbose(logger, "Support ack: blocking on receive");
+    verbose(slave_logger, "Support ack: blocking on receive");
     receive(net, ack_actor, request_msg);
     msg_type := message_type(request_msg);
 
@@ -102,14 +119,14 @@ begin
       wait until rising_edge(clk);
       ack <= '0';
       check_equal(dat_o, std_logic_vector'(x"abcd"), "dat_o");
-      verbose(logger, "Write cycle passed");
+      verbose(slave_logger, "Write cycle passed");
 
     elsif msg_type = bus_read_msg then
       dat_i <= x"5566";
       ack <= '1';
       wait until rising_edge(clk);
       ack <= '0';
-      verbose(logger, "Read cycle passed");
+      verbose(slave_logger, "Read cycle passed");
 
     else
       unexpected_msg_type(msg_type);
