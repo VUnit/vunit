@@ -95,10 +95,11 @@ begin
     variable rd_request_msg : msg_t;
   begin
     wait for 1 ns;
-    if enabled("Test single write") then
+    if enabled("Test single write") or enabled("Test block write") then
       info("Wait on write cycle start");
       wait until (cyc and stb and we) = '1' and rising_edge(clk);
       check_equal(adr, std_logic_vector'(x"e"), "adr");
+      wr_request_msg := new_msg(bus_write_msg);
       send(net, ack_actor, wr_request_msg);
 
     elsif enabled("Test single read") or enabled("Test block read") then
@@ -107,13 +108,6 @@ begin
       check_equal(adr, std_logic_vector'(x"e"), "adr");
       rd_request_msg := new_msg(bus_read_msg);
       send(net, ack_actor, rd_request_msg);
-
-    elsif enabled("Test block write") then
-      verbose(slave_logger, "Wait on write cycle start");
-      wait until (cyc and stb and we) = '1' and rising_edge(clk);
-      check_equal(adr, std_logic_vector'(x"e"), "adr");
-      wr_request_msg := new_msg(bus_write_msg);
-      send(net, ack_actor, wr_request_msg);
 
     end if;
   end process;
