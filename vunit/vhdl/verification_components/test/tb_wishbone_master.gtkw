@@ -1,0 +1,33 @@
+[*]
+[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
+[*] Sat Jan 27 19:20:41 2018
+[*]
+[dumpfile] "/home/slawek/git/github/vunit/vunit/vhdl/verification_components/vunit_out/test_output/vunit_lib.tb_wishbone_master.Test_block_read_202b7531a60c370a612dc5673435d50d290a40aa/ghdl/wave.ghw"
+[dumpfile_mtime] "Sat Jan 27 19:20:28 2018"
+[dumpfile_size] 2167
+[savefile] "/home/slawek/git/github/vunit/vunit/vhdl/verification_components/test/tb_wishbone_master.gtkw"
+[timestart] 0
+[size] 1000 600
+[pos] -1 -1
+*-26.057610 25000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] top.
+[treeopen] top.tb_wishbone_master.
+[sst_width] 225
+[signals_width] 202
+[sst_expanded] 1
+[sst_vpaned_height] 278
+@28
+top.tb_wishbone_master.dut.cyc
+top.tb_wishbone_master.dut.stb
+top.tb_wishbone_master.dut.ack
+top.tb_wishbone_master.dut.we
+top.tb_wishbone_master.dut.clk
+#{top.tb_wishbone_master.sel[1:0]} top.tb_wishbone_master.sel[1] top.tb_wishbone_master.sel[0]
+@22
+#{top.tb_wishbone_master.dat_o[15:0]} top.tb_wishbone_master.dat_o[15] top.tb_wishbone_master.dat_o[14] top.tb_wishbone_master.dat_o[13] top.tb_wishbone_master.dat_o[12] top.tb_wishbone_master.dat_o[11] top.tb_wishbone_master.dat_o[10] top.tb_wishbone_master.dat_o[9] top.tb_wishbone_master.dat_o[8] top.tb_wishbone_master.dat_o[7] top.tb_wishbone_master.dat_o[6] top.tb_wishbone_master.dat_o[5] top.tb_wishbone_master.dat_o[4] top.tb_wishbone_master.dat_o[3] top.tb_wishbone_master.dat_o[2] top.tb_wishbone_master.dat_o[1] top.tb_wishbone_master.dat_o[0]
+#{top.tb_wishbone_master.dat_i[15:0]} top.tb_wishbone_master.dat_i[15] top.tb_wishbone_master.dat_i[14] top.tb_wishbone_master.dat_i[13] top.tb_wishbone_master.dat_i[12] top.tb_wishbone_master.dat_i[11] top.tb_wishbone_master.dat_i[10] top.tb_wishbone_master.dat_i[9] top.tb_wishbone_master.dat_i[8] top.tb_wishbone_master.dat_i[7] top.tb_wishbone_master.dat_i[6] top.tb_wishbone_master.dat_i[5] top.tb_wishbone_master.dat_i[4] top.tb_wishbone_master.dat_i[3] top.tb_wishbone_master.dat_i[2] top.tb_wishbone_master.dat_i[1] top.tb_wishbone_master.dat_i[0]
+#{top.tb_wishbone_master.adr[3:0]} top.tb_wishbone_master.adr[3] top.tb_wishbone_master.adr[2] top.tb_wishbone_master.adr[1] top.tb_wishbone_master.adr[0]
+@421
+top.tb_wishbone_master.slave_index
+[pattern_trace] 1
+[pattern_trace] 0

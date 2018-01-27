@@ -2,7 +2,13 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2017, Lars Asplund lars.anders.asplund@gmail.com
+-- Slawomir Siluk slaweksiluk@gazeta.pl 2018
+-- TODO:
+-- - stall
+-- - generic num_block_cycles
+-- - generic ack delay
+-- - random ack 0/1
+-- - fix slave_index when reading
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -41,41 +47,41 @@ architecture a of tb_wishbone_master is
 	constant ack_actor 		: actor_t := new_actor("ack_actor");
   constant tb_logger : logger_t := get_logger("tb");
   constant slave_logger : logger_t := get_logger("slave");
+  signal slave_index : natural := 0;
 
+  constant num_block_cycles : natural := 4;
 begin
 
-  main : process
+  main_stim : process
     variable tmp : std_logic_vector(dat_i'range);
     variable bus_rd_ref1 : bus_reference_t;
     variable bus_rd_ref2 : bus_reference_t;
+    type bus_reference_arr_t is array (0 to num_block_cycles-1) of bus_reference_t;
+    variable rd_ref : bus_reference_arr_t;
   begin
     test_runner_setup(runner, runner_cfg);
-	wait until rising_edge(clk);
-    if run("Test single write") then
-      write_bus(net, bus_handle, x"e", x"abcd");
-    elsif run("Test single read") then
-      info("Start read test");
-      read_bus(net, bus_handle, x"e", tmp);
-      info("Check equal");
-      check_equal(tmp, std_logic_vector'(x"5566"), "read data");
-    elsif run("Test block write") then
-      verbose(tb_logger, "Test block write`");
-      write_bus(net, bus_handle, x"e", x"abcd");
-      verbose(tb_logger, "Wrote first");
-      write_bus(net, bus_handle, x"e", x"abcd");
-      verbose(tb_logger, "Wrote second");
+	  wait until rising_edge(clk);
+    if run("Test block write") then
+      verbose(tb_logger, "Test block write");
+      for i in 0 to num_block_cycles-1 loop
+        write_bus(net, bus_handle, i,
+            std_logic_vector(to_unsigned(i, dat_i'length)));
+      end loop;
+
     elsif run("Test block read") then
       verbose(tb_logger, "Test block read");
-      read_bus(net, bus_handle, x"e", bus_rd_ref1);
-      read_bus(net, bus_handle, x"e", bus_rd_ref2);
-      verbose(tb_logger, "Get data");
-      await_read_bus_reply(net, bus_rd_ref1, tmp);
-      check_equal(tmp, std_logic_vector'(x"5566"), "read data");
-      await_read_bus_reply(net, bus_rd_ref2, tmp);
-      check_equal(tmp, std_logic_vector'(x"5566"), "read data");
+      for i in 0 to num_block_cycles-1 loop
+        read_bus(net, bus_handle, i, rd_ref(i));
+      end loop;
+      verbose(tb_logger, "Get data by its references");
+      for i in 0 to num_block_cycles-1 loop
+        await_read_bus_reply(net, rd_ref(i), tmp);
+        check_equal(tmp, std_logic_vector(to_unsigned(i, dat_i'length)), "read data");
+      end loop;
     end if;
 
-    wait for 200 ns;
+    wait until rising_edge(clk) and slave_index >= num_block_cycles-1;
+    wait for 100 ns;
     test_runner_cleanup(runner);
     wait;
   end process;
@@ -84,51 +90,50 @@ begin
   show(slave_logger, display_handler, verbose);
   show(tb_logger, display_handler, verbose);
   show(default_logger, display_handler, verbose);
-  -- Show log messages from the logger of the specified log_levels to this handler
---  procedure show(logger : logger_t;
---                 log_handler : log_handler_t;
---                 log_levels : log_level_vec_t;
---                 include_children : boolean := true);
 
   slave : process
     variable wr_request_msg : msg_t;
     variable rd_request_msg : msg_t;
   begin
-    wait for 1 ns;
-    if enabled("Test single write") or enabled("Test block write") then
-      info("Wait on write cycle start");
-      wait until (cyc and stb and we) = '1' and rising_edge(clk);
-      check_equal(adr, std_logic_vector'(x"e"), "adr");
+    wait until (cyc and stb) = '1' and rising_edge(clk);
+    if we = '1' then
+      verbose(slave_logger, "Write cycle start");
+      check_equal(adr, std_logic_vector(to_unsigned(slave_index, adr'length)), "adr");
+      check_equal(dat_o, std_logic_vector(to_unsigned(slave_index, dat_o'length)), "dat_o");
       wr_request_msg := new_msg(bus_write_msg);
       send(net, ack_actor, wr_request_msg);
-
-    elsif enabled("Test single read") or enabled("Test block read") then
-      info("Wait on read cycle start");
-      wait until (cyc and stb) = '1' and we = '0' and rising_edge(clk);
-      check_equal(adr, std_logic_vector'(x"e"), "adr");
+      slave_index <= slave_index +1;
+    elsif we = '0' then
+      verbose(slave_logger, "Read cycle start");
+      check_equal(adr, std_logic_vector(to_unsigned(slave_index, adr'length)), "adr");
       rd_request_msg := new_msg(bus_read_msg);
+      push_std_ulogic_vector(rd_request_msg,
+              std_logic_vector(to_unsigned(slave_index, dat_o'length)));
       send(net, ack_actor, rd_request_msg);
-
+      slave_index <= slave_index +1;
     end if;
   end process;
 
   slave_ack : process
     variable request_msg : msg_t;
     variable msg_type : msg_type_t;
+    variable data : std_logic_vector(dat_i'range);
   begin
-    verbose(slave_logger, "Support ack: blocking on receive");
+    verbose(slave_logger, "Slave ack: blocking on receive");
     receive(net, ack_actor, request_msg);
     msg_type := message_type(request_msg);
 
     if msg_type = bus_write_msg then
+      verbose(slave_logger, "Start ack write");
       ack <= '1';
       wait until rising_edge(clk);
       ack <= '0';
-      check_equal(dat_o, std_logic_vector'(x"abcd"), "dat_o");
       verbose(slave_logger, "Write cycle passed");
 
     elsif msg_type = bus_read_msg then
-      dat_i <= x"5566";
+      verbose(slave_logger, "Start ack read");
+      data := pop_std_ulogic_vector(request_msg);
+      dat_i <= data;
       ack <= '1';
       wait until rising_edge(clk);
       ack <= '0';
