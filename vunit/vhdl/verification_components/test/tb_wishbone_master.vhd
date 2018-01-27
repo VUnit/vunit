@@ -46,6 +46,8 @@ begin
 
   main : process
     variable tmp : std_logic_vector(dat_i'range);
+    variable bus_rd_ref1 : bus_reference_t;
+    variable bus_rd_ref2 : bus_reference_t;
   begin
     test_runner_setup(runner, runner_cfg);
 	wait until rising_edge(clk);
@@ -62,6 +64,15 @@ begin
       verbose(tb_logger, "Wrote first");
       write_bus(net, bus_handle, x"e", x"abcd");
       verbose(tb_logger, "Wrote second");
+    elsif run("Test block read") then
+      verbose(tb_logger, "Test block read");
+      read_bus(net, bus_handle, x"e", bus_rd_ref1);
+      read_bus(net, bus_handle, x"e", bus_rd_ref2);
+      verbose(tb_logger, "Get data");
+      await_read_bus_reply(net, bus_rd_ref1, tmp);
+      check_equal(tmp, std_logic_vector'(x"5566"), "read data");
+      await_read_bus_reply(net, bus_rd_ref2, tmp);
+      check_equal(tmp, std_logic_vector'(x"5566"), "read data");
     end if;
 
     wait for 200 ns;
@@ -81,7 +92,7 @@ begin
 
   slave : process
     variable wr_request_msg : msg_t;
-    variable rd_request_msg : msg_t := new_msg(bus_read_msg);
+    variable rd_request_msg : msg_t;
   begin
     wait for 1 ns;
     if enabled("Test single write") then
@@ -90,10 +101,11 @@ begin
       check_equal(adr, std_logic_vector'(x"e"), "adr");
       send(net, ack_actor, wr_request_msg);
 
-    elsif enabled("Test single read") then
+    elsif enabled("Test single read") or enabled("Test block read") then
       info("Wait on read cycle start");
       wait until (cyc and stb) = '1' and we = '0' and rising_edge(clk);
       check_equal(adr, std_logic_vector'(x"e"), "adr");
+      rd_request_msg := new_msg(bus_read_msg);
       send(net, ack_actor, rd_request_msg);
 
     elsif enabled("Test block write") then
@@ -101,8 +113,8 @@ begin
       wait until (cyc and stb and we) = '1' and rising_edge(clk);
       check_equal(adr, std_logic_vector'(x"e"), "adr");
       wr_request_msg := new_msg(bus_write_msg);
-      push_std_ulogic_vector(wr_request_msg, x"abcd");
       send(net, ack_actor, wr_request_msg);
+
     end if;
   end process;
 
