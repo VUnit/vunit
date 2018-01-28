@@ -381,7 +381,7 @@ begin
         mock(com_logger);
         send(net, actor, msg, 9 ns);
         check_log(com_logger, "FULL INBOX ERROR.", failure);
-        check_only_log(com_logger, "[3:- - -> limited inbox (-)] => limited inbox inbox", verbose);
+        check_only_log(com_logger, "[3:- - -> limited inbox (-)] => limited inbox inbox", trace);
         unmock(com_logger);
       elsif run("Test that messages can be awaited from several actors") then
         actor  := new_actor;
@@ -428,11 +428,11 @@ begin
         send(net, actor_vec, msg, 10 ns);
         check_equal(now - t_start, 10 ns);
         check_log(com_logger, "FULL INBOX ERROR.", failure);
-        check_log(com_logger, "[4:- - ->  (-)] =>  inbox", verbose);
+        check_log(com_logger, "[4:- - ->  (-)] =>  inbox", trace);
         check_log(com_logger, "FULL INBOX ERROR.", failure);
-        check_log(com_logger, "[5:- - ->  (-)] =>  inbox", verbose);
+        check_log(com_logger, "[5:- - ->  (-)] =>  inbox", trace);
         check_log(com_logger, "FULL INBOX ERROR.", failure);
-        check_log(com_logger, "[6:- - ->  (-)] =>  inbox", verbose);
+        check_log(com_logger, "[6:- - ->  (-)] =>  inbox", trace);
         unmock(com_logger);
       elsif run("Test receiving from several actors") then
         actor_vec := (others => new_actor);
@@ -678,7 +678,7 @@ begin
         check_log(com_logger, "FULL INBOX ERROR.", failure);
         check_only_log(com_logger,
                        "[1:- test runner -> limited inbox subscriber (-)] => limited inbox subscriber inbox",
-                       verbose);
+                       trace);
         unmock(com_logger);
       elsif run("Test that publishing to subscribers with full inboxes results passes if waiting") then
         start_limited_inbox_subscriber <= true;
@@ -1173,20 +1173,20 @@ begin
 
         msg := new_msg(new_msg_type("msg type"), sender => my_sender);
         send(net, my_receiver, msg);
-        check_only_log(com_logger, "[1:- sender -> receiver (msg type)] => receiver inbox", verbose);
+        check_only_log(com_logger, "[1:- sender -> receiver (msg type)] => receiver inbox", trace);
         receive(net, my_receiver, msg);
-        check_only_log(com_logger, "receiver inbox => [1:- sender -> receiver (msg type)]", verbose);
+        check_only_log(com_logger, "receiver inbox => [1:- sender -> receiver (msg type)]", trace);
 
         request_msg := new_msg;
         send(net, my_receiver, request_msg);
-        check_only_log(com_logger, "[2:- - -> receiver (-)] => receiver inbox", verbose);
+        check_only_log(com_logger, "[2:- - -> receiver (-)] => receiver inbox", trace);
         receive(net, my_receiver, reply_msg);
-        check_only_log(com_logger, "receiver inbox => [2:- - -> receiver (-)]", verbose);
+        check_only_log(com_logger, "receiver inbox => [2:- - -> receiver (-)]", trace);
 
         reply(net, request_msg, reply_msg);
-        check_only_log(com_logger, "[3:2 receiver -> - (-)] => receiver outbox", verbose);
+        check_only_log(com_logger, "[3:2 receiver -> - (-)] => receiver outbox", trace);
         receive_reply(net, request_msg, reply_msg);
-        check_only_log(com_logger, "receiver outbox => [3:2 receiver -> - (-)]", verbose);
+        check_only_log(com_logger, "receiver outbox => [3:2 receiver -> - (-)]", trace);
 
         unmock(com_logger);
 

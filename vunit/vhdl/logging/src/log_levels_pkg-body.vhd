@@ -57,7 +57,7 @@ package body log_levels_pkg is
                                  value => to_integer(null_ptr)),
                max_level_length => new_integer_vector_ptr(1, value => 0));
 
-    add_level(verbose, fg => magenta, style => bright);
+    add_level(trace, fg => magenta, style => bright);
     add_level(debug, fg => cyan, style => bright);
     add_level(pass, fg => green, style => bright);
     add_level(info, fg => white, style => bright);
@@ -69,16 +69,6 @@ package body log_levels_pkg is
   end;
 
   constant levels : levels_t := create_levels;
-
-  impure function is_standard(log_level : log_level_t) return boolean is
-  begin
-    case log_level is
-      when verbose|debug|info|warning|error|failure =>
-        return true;
-      when others =>
-        return false;
-    end case;
-  end;
 
   impure function new_log_level(name : string;
                                 fg : ansi_color_t := no_color;

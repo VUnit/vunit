@@ -648,8 +648,8 @@ package body com_messenger_pkg is
     variable mailbox  : mailbox_ptr_t;
 
   begin
-    if is_visible(com_logger, verbose) then
-      verbose(com_logger, "[" & to_string(msg) & "] => " & name(receiver) & " " & mailbox_id_t'image(mailbox_id));
+    if is_visible(com_logger, trace) then
+      trace(com_logger, "[" & to_string(msg) & "] => " & name(receiver) & " " & mailbox_id_t'image(mailbox_id));
     end if;
 
     envelope                    := new_envelope;
@@ -884,13 +884,13 @@ package body com_messenger_pkg is
     get_envelope(actor, position, mailbox_id, mailbox, envelope, previous_envelope);
 
     if envelope /= null then
-      if is_visible(com_logger, verbose) then
+      if is_visible(com_logger, trace) then
         msg.id := envelope.message.id;
         msg.msg_type := envelope.message.msg_type;
         msg.sender := envelope.message.sender;
         msg.receiver := envelope.message.receiver;
         msg.request_id := envelope.message.request_id;
-        verbose(com_logger, name(actor) & " " & mailbox_id_t'image(mailbox_id) & " => [" & to_string(msg) & "]");
+        trace(com_logger, name(actor) & " " & mailbox_id_t'image(mailbox_id) & " => [" & to_string(msg) & "]");
       end if;
 
       deallocate(envelope.message.payload);

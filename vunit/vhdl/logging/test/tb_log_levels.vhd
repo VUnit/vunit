@@ -27,22 +27,22 @@ begin
     test_runner_setup(runner, runner_cfg);
 
     if run("Default levels have correct names") then
-      assert_equal(get_name(verbose), "verbose");
+      assert_equal(get_name(trace), "trace");
       assert_equal(get_name(debug), "debug");
       assert_equal(get_name(info), "info");
       assert_equal(get_name(warning), "warning");
       assert_equal(get_name(error), "error");
       assert_equal(get_name(failure), "failure");
 
-      assert_true(log_level_t'low < verbose);
-      assert_true(verbose < debug);
+      assert_true(log_level_t'low < trace);
+      assert_true(trace < debug);
       assert_true(debug < info);
       assert_true(info < log_level_t'(warning));
       assert_true(log_level_t'(warning) < log_level_t'(error));
       assert_true(log_level_t'(error) < log_level_t'(failure));
       assert_true(log_level_t'(failure) < log_level_t'high);
 
-      assert_true(is_valid(verbose));
+      assert_true(is_valid(trace));
       assert_true(is_valid(debug));
       assert_true(is_valid(info));
       assert_true(is_valid(warning));

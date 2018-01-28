@@ -579,70 +579,70 @@ begin
     start_locking_process <= true;
 
     wait for 1 ns;
-    check_log(runner_trace_logger, "Locked test runner setup phase entry gate.", verbose);
-    check_log(runner_trace_logger, "Locked test runner setup phase exit gate.", verbose);
-    check_log(runner_trace_logger, "Locked test suite setup phase entry gate.", verbose);
-    check_log(runner_trace_logger, "Locked test suite setup phase exit gate.", verbose);
+    check_log(runner_trace_logger, "Locked test runner setup phase entry gate.", trace);
+    check_log(runner_trace_logger, "Locked test runner setup phase exit gate.", trace);
+    check_log(runner_trace_logger, "Locked test suite setup phase entry gate.", trace);
+    check_log(runner_trace_logger, "Locked test suite setup phase exit gate.", trace);
     check_no_log;
 
     test_runner_setup(runner, "enabled_test_cases : test a");
-    check_log(runner_trace_logger, "Entering test runner setup phase.", verbose);
-    check_log(runner_trace_logger, "Halting on test runner setup phase entry gate.", verbose);
-    check_log(runner_trace_logger, "Unlocked test runner setup phase entry gate.", verbose);
-    check_log(runner_trace_logger, "Passed test runner setup phase entry gate.", verbose);
-    check_log(runner_trace_logger, "Halting on test runner setup phase exit gate.", verbose);
-    check_log(runner_trace_logger, "Unlocked test runner setup phase exit gate.", verbose);
-    check_log(runner_trace_logger, "Passed test runner setup phase exit gate.", verbose);
-    check_log(runner_trace_logger, "Entering test suite setup phase.", verbose);
-    check_log(runner_trace_logger, "Halting on test suite setup phase entry gate.", verbose);
-    check_log(runner_trace_logger, "Unlocked test suite setup phase entry gate.", verbose);
-    check_log(runner_trace_logger, "Passed test suite setup phase entry gate.", verbose);
+    check_log(runner_trace_logger, "Entering test runner setup phase.", trace);
+    check_log(runner_trace_logger, "Halting on test runner setup phase entry gate.", trace);
+    check_log(runner_trace_logger, "Unlocked test runner setup phase entry gate.", trace);
+    check_log(runner_trace_logger, "Passed test runner setup phase entry gate.", trace);
+    check_log(runner_trace_logger, "Halting on test runner setup phase exit gate.", trace);
+    check_log(runner_trace_logger, "Unlocked test runner setup phase exit gate.", trace);
+    check_log(runner_trace_logger, "Passed test runner setup phase exit gate.", trace);
+    check_log(runner_trace_logger, "Entering test suite setup phase.", trace);
+    check_log(runner_trace_logger, "Halting on test suite setup phase entry gate.", trace);
+    check_log(runner_trace_logger, "Unlocked test suite setup phase entry gate.", trace);
+    check_log(runner_trace_logger, "Passed test suite setup phase entry gate.", trace);
     check_no_log;
 
     test_suite_setup_entry_gate(runner);
     wait for 1 ns;
 
     test_suite_setup_exit_gate(runner);
-    check_log(runner_trace_logger, "Passed test suite setup phase entry gate.", verbose);
-    check_log(runner_trace_logger, "Halting on test suite setup phase exit gate.", verbose);
-    check_log(runner_trace_logger, "Locked test runner cleanup phase exit gate.", verbose);
-    check_log(runner_trace_logger, "Locked test case setup phase entry gate.", verbose);
-    check_log(runner_trace_logger, "Locked test case setup phase exit gate.", verbose);
-    check_log(runner_trace_logger, "Locked test case phase entry gate.", verbose);
-    check_log(runner_trace_logger, "Locked test case phase exit gate.", verbose);
-    check_log(runner_trace_logger, "Locked test case cleanup phase entry gate.", verbose);
-    check_log(runner_trace_logger, "Locked test case cleanup phase exit gate.", verbose);
-    check_log(runner_trace_logger, "Locked test suite cleanup phase entry gate.", verbose);
-    check_log(runner_trace_logger, "Locked test suite cleanup phase exit gate.", verbose);
-    check_log(runner_trace_logger, "Locked test runner cleanup phase entry gate.", verbose);
-    check_log(runner_trace_logger, "Locked test runner cleanup phase exit gate.", verbose);
-    check_log(runner_trace_logger, "Unlocked test suite setup phase exit gate.", verbose);
-    check_log(runner_trace_logger, "Passed test suite setup phase exit gate.", verbose);
+    check_log(runner_trace_logger, "Passed test suite setup phase entry gate.", trace);
+    check_log(runner_trace_logger, "Halting on test suite setup phase exit gate.", trace);
+    check_log(runner_trace_logger, "Locked test runner cleanup phase exit gate.", trace);
+    check_log(runner_trace_logger, "Locked test case setup phase entry gate.", trace);
+    check_log(runner_trace_logger, "Locked test case setup phase exit gate.", trace);
+    check_log(runner_trace_logger, "Locked test case phase entry gate.", trace);
+    check_log(runner_trace_logger, "Locked test case phase exit gate.", trace);
+    check_log(runner_trace_logger, "Locked test case cleanup phase entry gate.", trace);
+    check_log(runner_trace_logger, "Locked test case cleanup phase exit gate.", trace);
+    check_log(runner_trace_logger, "Locked test suite cleanup phase entry gate.", trace);
+    check_log(runner_trace_logger, "Locked test suite cleanup phase exit gate.", trace);
+    check_log(runner_trace_logger, "Locked test runner cleanup phase entry gate.", trace);
+    check_log(runner_trace_logger, "Locked test runner cleanup phase exit gate.", trace);
+    check_log(runner_trace_logger, "Unlocked test suite setup phase exit gate.", trace);
+    check_log(runner_trace_logger, "Passed test suite setup phase exit gate.", trace);
     check_no_log;
 
     while test_suite loop
-      check_only_log(runner_trace_logger, "Entering test case setup phase.", verbose);
+      check_only_log(runner_trace_logger, "Entering test case setup phase.", trace);
 
       test_case_setup_entry_gate(runner);
-      check_log(runner_trace_logger, "Halting on test case setup phase entry gate.", verbose);
-      check_log(runner_trace_logger, "Unlocked test case setup phase entry gate.", verbose);
-      check_log(runner_trace_logger, "Passed test case setup phase entry gate.", verbose);
+      check_log(runner_trace_logger, "Halting on test case setup phase entry gate.", trace);
+      check_log(runner_trace_logger, "Unlocked test case setup phase entry gate.", trace);
+      check_log(runner_trace_logger, "Passed test case setup phase entry gate.", trace);
       check_no_log;
 
       wait for 1 ns;
       test_case_setup_exit_gate(runner);
-      check_log(runner_trace_logger, "Halting on test case setup phase exit gate.", verbose);
-      check_log(runner_trace_logger, "Unlocked test case setup phase exit gate.", verbose);
-      check_log(runner_trace_logger, "Passed test case setup phase exit gate.", verbose);
+      check_log(runner_trace_logger, "Halting on test case setup phase exit gate.", trace);
+      check_log(runner_trace_logger, "Unlocked test case setup phase exit gate.", trace);
+      check_log(runner_trace_logger, "Passed test case setup phase exit gate.", trace);
       check_no_log;
 
       while in_test_case loop
-        check_only_log(runner_trace_logger, "Entering test case phase.", verbose);
+        check_only_log(runner_trace_logger, "Entering test case phase.", trace);
 
         test_case_entry_gate(runner);
-        check_log(runner_trace_logger, "Halting on test case phase entry gate.", verbose);
-        check_log(runner_trace_logger, "Unlocked test case phase entry gate.", verbose);
-        check_log(runner_trace_logger, "Passed test case phase entry gate.", verbose);
+        check_log(runner_trace_logger, "Halting on test case phase entry gate.", trace);
+        check_log(runner_trace_logger, "Unlocked test case phase entry gate.", trace);
+        check_log(runner_trace_logger, "Passed test case phase entry gate.", trace);
         check_no_log;
 
         if run("test a") then
@@ -651,40 +651,40 @@ begin
         check_only_log(runner_trace_logger, "Test case: test a", info);
 
         test_case_exit_gate(runner);
-        check_log(runner_trace_logger, "Halting on test case phase exit gate.", verbose);
-        check_log(runner_trace_logger, "Unlocked test case phase exit gate.", verbose);
-        check_log(runner_trace_logger, "Passed test case phase exit gate.", verbose);
+        check_log(runner_trace_logger, "Halting on test case phase exit gate.", trace);
+        check_log(runner_trace_logger, "Unlocked test case phase exit gate.", trace);
+        check_log(runner_trace_logger, "Passed test case phase exit gate.", trace);
         check_no_log;
       end loop;
-      check_only_log(runner_trace_logger, "Entering test case cleanup phase.", verbose);
+      check_only_log(runner_trace_logger, "Entering test case cleanup phase.", trace);
 
       test_case_cleanup_entry_gate(runner);
-      check_log(runner_trace_logger, "Halting on test case cleanup phase entry gate.", verbose);
-      check_log(runner_trace_logger, "Unlocked test case cleanup phase entry gate.", verbose);
-      check_log(runner_trace_logger, "Passed test case cleanup phase entry gate.", verbose);
+      check_log(runner_trace_logger, "Halting on test case cleanup phase entry gate.", trace);
+      check_log(runner_trace_logger, "Unlocked test case cleanup phase entry gate.", trace);
+      check_log(runner_trace_logger, "Passed test case cleanup phase entry gate.", trace);
       check_no_log;
 
       wait for 1 ns;
       test_case_cleanup_exit_gate(runner);
 
-      check_log(runner_trace_logger, "Halting on test case cleanup phase exit gate.", verbose);
-      check_log(runner_trace_logger, "Unlocked test case cleanup phase exit gate.", verbose);
-      check_log(runner_trace_logger, "Passed test case cleanup phase exit gate.", verbose);
+      check_log(runner_trace_logger, "Halting on test case cleanup phase exit gate.", trace);
+      check_log(runner_trace_logger, "Unlocked test case cleanup phase exit gate.", trace);
+      check_log(runner_trace_logger, "Passed test case cleanup phase exit gate.", trace);
       check_no_log;
     end loop;
-    check_only_log(runner_trace_logger, "Entering test suite cleanup phase.", verbose);
+    check_only_log(runner_trace_logger, "Entering test suite cleanup phase.", trace);
 
     test_suite_cleanup_entry_gate(runner);
-    check_log(runner_trace_logger, "Halting on test suite cleanup phase entry gate.", verbose);
-    check_log(runner_trace_logger, "Unlocked test suite cleanup phase entry gate.", verbose);
-    check_log(runner_trace_logger, "Passed test suite cleanup phase entry gate.", verbose);
+    check_log(runner_trace_logger, "Halting on test suite cleanup phase entry gate.", trace);
+    check_log(runner_trace_logger, "Unlocked test suite cleanup phase entry gate.", trace);
+    check_log(runner_trace_logger, "Passed test suite cleanup phase entry gate.", trace);
     check_no_log;
 
     wait for 1 ns;
     test_suite_cleanup_exit_gate(runner);
-    check_log(runner_trace_logger, "Halting on test suite cleanup phase exit gate.", verbose);
-    check_log(runner_trace_logger, "Unlocked test suite cleanup phase exit gate.", verbose);
-    check_log(runner_trace_logger, "Passed test suite cleanup phase exit gate.", verbose);
+    check_log(runner_trace_logger, "Halting on test suite cleanup phase exit gate.", trace);
+    check_log(runner_trace_logger, "Unlocked test suite cleanup phase exit gate.", trace);
+    check_log(runner_trace_logger, "Passed test suite cleanup phase exit gate.", trace);
     check_no_log;
 
     core_pkg.mock_core_failure;
@@ -693,15 +693,15 @@ begin
     core_pkg.check_core_failure("Final log check failed");
     core_pkg.unmock_core_failure;
 
-    check_log(runner_trace_logger, "Entering test runner cleanup phase.", verbose);
-    check_log(runner_trace_logger, "Halting on test runner cleanup phase entry gate.", verbose);
-    check_log(runner_trace_logger, "Unlocked test runner cleanup phase entry gate.", verbose);
-    check_log(runner_trace_logger, "Passed test runner cleanup phase entry gate.", verbose);
-    check_log(runner_trace_logger, "Halting on test runner cleanup phase exit gate.", verbose);
-    check_log(runner_trace_logger, "Unlocked test runner cleanup phase exit gate.", verbose);
-    check_log(runner_trace_logger, "Unlocked test runner cleanup phase exit gate.", verbose);
-    check_log(runner_trace_logger, "Passed test runner cleanup phase exit gate.", verbose);
-    check_log(runner_trace_logger, "Entering test runner exit phase.", verbose);
+    check_log(runner_trace_logger, "Entering test runner cleanup phase.", trace);
+    check_log(runner_trace_logger, "Halting on test runner cleanup phase entry gate.", trace);
+    check_log(runner_trace_logger, "Unlocked test runner cleanup phase entry gate.", trace);
+    check_log(runner_trace_logger, "Passed test runner cleanup phase entry gate.", trace);
+    check_log(runner_trace_logger, "Halting on test runner cleanup phase exit gate.", trace);
+    check_log(runner_trace_logger, "Unlocked test runner cleanup phase exit gate.", trace);
+    check_log(runner_trace_logger, "Unlocked test runner cleanup phase exit gate.", trace);
+    check_log(runner_trace_logger, "Passed test runner cleanup phase exit gate.", trace);
+    check_log(runner_trace_logger, "Entering test runner exit phase.", trace);
     unmock(runner_trace_logger);
     test_case_cleanup;
 
@@ -715,13 +715,13 @@ begin
     lock_exit(runner, test_case_setup, "me", 18, "foo2.vhd");
     unlock_entry(runner, test_case_setup, "me", 19, "foo3.vhd");
     unlock_exit(runner, test_case_setup, "me", 20, "foo4.vhd");
-    check_log(runner_trace_logger, "Locked test case setup phase entry gate.", verbose,
+    check_log(runner_trace_logger, "Locked test case setup phase entry gate.", trace,
               line_num => 17, file_name => "foo1.vhd");
-    check_log(runner_trace_logger, "Locked test case setup phase exit gate.", verbose,
+    check_log(runner_trace_logger, "Locked test case setup phase exit gate.", trace,
               line_num => 18, file_name => "foo2.vhd");
-    check_log(runner_trace_logger, "Unlocked test case setup phase entry gate.", verbose,
+    check_log(runner_trace_logger, "Unlocked test case setup phase entry gate.", trace,
               line_num => 19, file_name => "foo3.vhd");
-    check_log(runner_trace_logger, "Unlocked test case setup phase exit gate.", verbose,
+    check_log(runner_trace_logger, "Unlocked test case setup phase exit gate.", trace,
               line_num => 20, file_name => "foo4.vhd");
     unmock(runner_trace_logger);
     p_disable_simulation_exit(runner_state);

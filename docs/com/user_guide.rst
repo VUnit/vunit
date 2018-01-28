@@ -748,18 +748,18 @@ Trace Log
 ---------
 
 Rather than manually logging messages you can quickly see all messages by showing the trace logs. ``com`` provides
-a logger, ``com_logger``, and you enable the trace logs by showing log entries on the ``verbose`` log level.
+a logger, ``com_logger``, and you enable the trace logs by showing log entries on the ``trace`` log level.
 
 .. code-block:: vhdl
 
-  show(com_logger, display_handler, verbose);
+  show(com_logger, display_handler, trace);
 
-Ignoring the initial part introduced by the logging framework (everything up to and including ``VERBOSE -``) we
+Ignoring the initial part introduced by the logging framework (everything up to and including ``TRACE -``) we
 still see a difference when compared to the string presented above.
 
 .. code-block:: console
 
-  30000 ps - vunit_lib:com - VERBOSE - test sequencer inbox => [3:2 memory BFM -> test sequencer (read reply)]
+  30000 ps - vunit_lib:com -   TRACE - test sequencer inbox => [3:2 memory BFM -> test sequencer (read reply)]
 
 First is an actor mailbox (``test sequencer inbox``), than an arrow (``=>``) followed by the message string
 enclosed in square brackets. This means that the message was removed from the mailbox, for example as a result
@@ -768,25 +768,25 @@ example that event is logged 10 ns earlier and is the result of a ``reply`` call
 
 .. code-block:: console
 
-  20000 ps - vunit_lib:com - VERBOSE - [3:2 memory BFM -> test sequencer (read reply)] => test sequencer inbox
+  20000 ps - vunit_lib:com -   TRACE - [3:2 memory BFM -> test sequencer (read reply)] => test sequencer inbox
 
 Now that we have all these transactions available it becomes possible to follow sequences of events. For example,
 at time 0 ps we have the message with ID = 2 which is the request message for the reply above.
 
 .. code-block:: console
 
-  0 ps - vunit_lib:com - VERBOSE - [2:- test sequencer -> memory BFM (read)] => memory BFM inbox
+  0 ps - vunit_lib:com -   TRACE - [2:- test sequencer -> memory BFM (read)] => memory BFM inbox
 
 Again, if you want higher level of debug information you can add debug logging to your BFM which may
 result in something like this.
 
 .. code-block:: console
 
-      0 ps - vunit_lib:com - VERBOSE - [2:- test sequencer -> memory BFM (read)] => memory BFM inbox
-  10000 ps - vunit_lib:com - VERBOSE - memory BFM inbox => [2:- test sequencer -> memory BFM (read)]
+      0 ps - vunit_lib:com -   TRACE - [2:- test sequencer -> memory BFM (read)] => memory BFM inbox
+  10000 ps - vunit_lib:com -   TRACE - memory BFM inbox => [2:- test sequencer -> memory BFM (read)]
   20000 ps - memory BFM    -   DEBUG - Reading x"21" from address x"80"
-  20000 ps - vunit_lib:com - VERBOSE - [3:2 memory BFM -> test sequencer (read reply)] => test sequencer inbox
-  30000 ps - vunit_lib:com - VERBOSE - test sequencer inbox => [3:2 memory BFM -> test sequencer (read reply)]
+  20000 ps - vunit_lib:com -   TRACE - [3:2 memory BFM -> test sequencer (read reply)] => test sequencer inbox
+  30000 ps - vunit_lib:com -   TRACE - test sequencer inbox => [3:2 memory BFM -> test sequencer (read reply)]
 
 State Information
 -----------------

@@ -63,7 +63,7 @@ associated procedure calls are:
     -- Not visible by default
     pass("Message from a passing check");
     debug("Debug message for seldom useful or internal information");
-    verbose("Verbose TRACE messages only used for tracing program flow");
+    trace("Trace messages only used for tracing program flow");
 
 There are also conditional log procedures for warning, error and failure:
 

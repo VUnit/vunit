@@ -35,9 +35,9 @@ begin
     -- Log messages can also be multi line
     info("Hello" & LF & "world");
 
-    -- Verbose and debug messages are not written to the display by default
+    -- Trace and debug messages are not written to the display by default
     debug("not visible");
-    verbose("not visible");
+    trace("not visible");
 
     -- Custom loggers can also be used
     info(my_logger, "Message to my_logger");
@@ -74,7 +74,7 @@ begin
     set_infinite_stop_count(default_logger, error);
     show_all(display_handler);
     set_format(display_handler, level, use_color => true);
-    verbose("Level format");
+    trace("Level format");
     debug("Level format");
     info("Level format");
     warning("Level format");
@@ -82,7 +82,7 @@ begin
     failure("Level format");
 
     set_format(display_handler, verbose, use_color => true);
-    verbose("Verbose format");
+    trace("Verbose format");
     debug("Verbose format");
     info("Verbose format");
     warning("Verbose format");

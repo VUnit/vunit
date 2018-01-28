@@ -72,7 +72,7 @@ begin
 
     procedure perform_logging(logger : logger_t) is
     begin
-      verbose(logger, "message 1");
+      trace(logger, "message 1");
       wait for 1 ns;
       debug(logger, "message 2");
       wait for 1 ns;
@@ -146,9 +146,9 @@ begin
       init_log_handler(file_handler, file_name => log_file_name, format => level);
 
       print("message 1", log_file_name);
-      verbose(logger, "message 2");
+      trace(logger, "message 2");
       print("message 3", log_file_name);
-      verbose(logger, "message 4");
+      trace(logger, "message 4");
 
       file_open(status, fptr, log_file_name, append_mode);
       assert status = open_ok
@@ -157,9 +157,9 @@ begin
       file_close(fptr);
 
       set(entries, "0", "message 1");
-      set(entries, "1", "VERBOSE - message 2");
+      set(entries, "1", "  TRACE - message 2");
       set(entries, "2", "message 3");
-      set(entries, "3", "VERBOSE - message 4");
+      set(entries, "3", "  TRACE - message 4");
       set(entries, "4", "message 5");
       check_log_file(log_file_name, entries);
 
@@ -192,7 +192,7 @@ begin
       set_infinite_stop_count(logger, error);
       set_infinite_stop_count(logger, failure);
       perform_logging(logger);
-      set(entries, "0", "VERBOSE - message 1");
+      set(entries, "0", "  TRACE - message 1");
       set(entries, "1", "  DEBUG - message 2");
       set(entries, "2", "   INFO - message 3");
       set(entries, "3", "WARNING - message 4");
@@ -229,7 +229,7 @@ begin
       set_infinite_stop_count(logger, error);
       set_infinite_stop_count(logger, failure);
       perform_logging(logger);
-      set(entries, "0", format_time(0 ns) & " - logger               - VERBOSE - message 1");
+      set(entries, "0", format_time(0 ns) & " - logger               -   TRACE - message 1");
       set(entries, "1", format_time(1 ns) & " - logger               -   DEBUG - message 2");
       set(entries, "2", format_time(2 ns) & " - logger               -    INFO - message 3");
       set(entries, "3", format_time(3 ns) & " - logger               - WARNING - message 4");
@@ -264,7 +264,7 @@ begin
       set_infinite_stop_count(nested_logger, error);
       set_infinite_stop_count(nested_logger, failure);
       perform_logging(nested_logger);
-      set(entries, "0", format_time(0 ns) & " - logger:nested        - VERBOSE - message 1");
+      set(entries, "0", format_time(0 ns) & " - logger:nested        -   TRACE - message 1");
       set(entries, "1", format_time(1 ns) & " - logger:nested        -   DEBUG - message 2");
       set(entries, "2", format_time(2 ns) & " - logger:nested        -    INFO - message 3");
       set(entries, "3", format_time(3 ns) & " - logger:nested        - WARNING - message 4");
@@ -281,7 +281,7 @@ begin
       set_infinite_stop_count(default_logger, failure);
       debug("message 1");
       wait for 1 ns;
-      verbose("message 2");
+      trace("message 2");
       wait for 1 ns;
       info("message 3");
       wait for 1 ns;
@@ -292,7 +292,7 @@ begin
       failure("message 6");
 
       set(entries, "0", "  DEBUG - message 1");
-      set(entries, "1", "VERBOSE - message 2");
+      set(entries, "1", "  TRACE - message 2");
       set(entries, "2", "   INFO - message 3");
       set(entries, "3", "WARNING - message 4");
       set(entries, "4", "  ERROR - message 5");
@@ -307,7 +307,7 @@ begin
       set_infinite_stop_count(root_logger, failure);
 
       hide_all(file_handler);
-      for log_level in verbose to failure loop
+      for log_level in trace to failure loop
         assert_false(is_visible(default_logger, file_handler, log_level));
         assert_false(is_visible(logger, file_handler, log_level));
         assert_false(is_visible(nested_logger, file_handler, log_level));
@@ -317,14 +317,14 @@ begin
       check_empty_log_file(log_file_name);
 
       show_all(file_handler);
-      for log_level in verbose to failure loop
+      for log_level in trace to failure loop
         assert_true(is_visible(default_logger, file_handler, log_level));
         assert_true(is_visible(logger, file_handler, log_level));
         assert_true(is_visible(nested_logger, file_handler, log_level));
       end loop;
 
       perform_logging(logger);
-      set(entries, "0", "VERBOSE - message 1");
+      set(entries, "0", "  TRACE - message 1");
       set(entries, "1", "  DEBUG - message 2");
       set(entries, "2", "   INFO - message 3");
       set(entries, "3", "WARNING - message 4");
@@ -350,7 +350,7 @@ begin
 
     elsif run("can hide individual levels") then
       init_log_handler(file_handler, file_name => log_file_name, format => level);
-      hide(file_handler, (verbose, debug, info, error, failure));
+      hide(file_handler, (trace, debug, info, error, failure));
       set_infinite_stop_count(root_logger, error);
       set_infinite_stop_count(root_logger, failure);
       perform_logging(logger);
@@ -373,7 +373,7 @@ begin
       init_log_handler(file_handler, file_name => log_file_name, format => level);
       hide_all(logger, file_handler);
 
-      for log_level in verbose to failure loop
+      for log_level in trace to failure loop
         assert_true(is_visible(default_logger, file_handler, log_level));
         assert_false(is_visible(logger, file_handler, log_level));
         assert_false(is_visible(nested_logger, file_handler, log_level));
@@ -387,7 +387,7 @@ begin
 
       init_log_handler(file_handler, file_name => log_file_name, format => level);
       show_all(logger, file_handler);
-      for log_level in verbose to failure loop
+      for log_level in trace to failure loop
         assert_true(is_visible(default_logger, file_handler, log_level));
         assert_true(is_visible(logger, file_handler, log_level));
         assert_true(is_visible(nested_logger, file_handler, log_level));
@@ -598,7 +598,7 @@ begin
       set_infinite_stop_count(root_logger, failure);
       tmp := 0;
 
-      for lvl in verbose to failure loop
+      for lvl in trace to failure loop
         if is_valid(lvl) then
           log(logger, "msg", lvl);
           assert_equal(get_log_count(logger, lvl), 1);
@@ -607,19 +607,19 @@ begin
 
       reset_log_count(logger);
 
-      for lvl in verbose to failure loop
+      for lvl in trace to failure loop
         if is_valid(lvl) then
           assert_equal(get_log_count(logger, lvl), 0);
         end if;
       end loop;
 
-      for lvl in verbose to failure loop
+      for lvl in trace to failure loop
         if is_valid(lvl) then
           assert_equal(get_log_count(logger, lvl), 0);
           log(logger, "msg", lvl);
           tmp := tmp + 1;
 
-          for lvl2 in verbose to failure loop
+          for lvl2 in trace to failure loop
             if is_valid(lvl2) then
               if lvl2 <= lvl then
                 assert_equal(get_log_count(logger, lvl2), 1);
@@ -633,14 +633,14 @@ begin
         end if;
       end loop;
 
-      for lvl in verbose to failure loop
+      for lvl in trace to failure loop
         if is_valid(lvl) then
           reset_log_count(logger, lvl);
           assert_equal(get_log_count(logger, lvl), 0, "log count is reset");
           tmp := tmp - 1;
           assert_equal(get_log_count(logger), tmp, "total");
 
-          for lvl2 in verbose to failure loop
+          for lvl2 in trace to failure loop
             if is_valid(lvl2) then
               if lvl2 > lvl then
                 assert_equal(get_log_count(logger, lvl2), 1);
@@ -657,14 +657,14 @@ begin
       info(logger, "msg");
       assert_equal(get_log_count - tmp, 1);
 
-      verbose(logger, "msg");
+      trace(logger, "msg");
       assert_equal(get_log_count - tmp, 2);
 
     elsif run("Does not log counts when mocked") then
       mock(logger);
 
       tmp := 0;
-      for lvl in verbose to failure loop
+      for lvl in trace to failure loop
         if is_valid(lvl) then
           log(logger, "message", lvl);
           assert_equal(get_log_count(logger, lvl), 0);
@@ -679,7 +679,7 @@ begin
 
       assert_equal(get_log_count(logger), 0);
 
-      for lvl in verbose to failure loop
+      for lvl in trace to failure loop
         if is_valid(lvl) then
           assert_equal(get_log_count(logger, lvl), 0);
         end if;

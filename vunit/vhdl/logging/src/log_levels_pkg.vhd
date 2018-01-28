@@ -12,7 +12,7 @@ package log_levels_pkg is
   type log_level_t is (
     null_log_level,
 
-    verbose,
+    trace,
     debug,
     pass,
     info,

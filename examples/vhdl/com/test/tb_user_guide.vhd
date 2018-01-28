@@ -168,7 +168,7 @@ begin
         wait_until_idle(net, master_channel);
 
       elsif run("Test debugging features") then
-        show(com_logger, display_handler, verbose);
+        show(com_logger, display_handler, trace);
         show(display_handler, debug);
 
         msg         := new_msg(memory_bfm_pkg.write_msg);

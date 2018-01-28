@@ -25,32 +25,38 @@ package logger_pkg is
   -------------------------------------
   -- Log procedures for each log level
   -------------------------------------
-  procedure verbose(logger : logger_t; msg : string;
-                    line_num : natural := 0;
-                    file_name : string := "");
+  procedure trace(logger : logger_t;
+                  msg : string;
+                  line_num : natural := 0;
+                  file_name : string := "");
 
   procedure debug(logger : logger_t;
                   msg : string;
                   line_num : natural := 0;
                   file_name : string := "");
 
-  procedure pass(logger : logger_t; msg : string;
+  procedure pass(logger : logger_t;
+                 msg : string;
                  line_num : natural := 0;
                  file_name : string := "");
 
-  procedure info(logger : logger_t; msg : string;
+  procedure info(logger : logger_t;
+                 msg : string;
                  line_num : natural := 0;
                  file_name : string := "");
 
-  procedure warning(logger : logger_t; msg : string;
+  procedure warning(logger : logger_t;
+                    msg : string;
                     line_num : natural := 0;
                     file_name : string := "");
 
-  procedure error(logger : logger_t; msg : string;
+  procedure error(logger : logger_t;
+                  msg : string;
                   line_num : natural := 0;
                   file_name : string := "");
 
-  procedure failure(logger : logger_t; msg : string;
+  procedure failure(logger : logger_t;
+                    msg : string;
                     line_num : natural := 0;
                     file_name : string := "");
 
@@ -97,9 +103,9 @@ package logger_pkg is
   -- The default logger, all log calls without logger argument go to this logger.
   impure function default_logger return logger_t;
 
-  procedure verbose(msg : string;
-                    line_num : natural := 0;
-                    file_name : string := "");
+  procedure trace(msg : string;
+                  line_num : natural := 0;
+                  file_name : string := "");
 
   procedure debug(msg : string;
                   line_num : natural := 0;
@@ -409,5 +415,16 @@ package logger_pkg is
 
   -- Return the number of unchecked messages in the mock queue
   impure function mock_queue_length return natural;
+
+
+  -- Deprecated
+  -- VERBOSE is alias for TRACE
+  procedure verbose(logger : logger_t;
+                    msg : string;
+                    line_num : natural := 0;
+                    file_name : string := "");
+  procedure verbose(msg : string;
+                    line_num : natural := 0;
+                    file_name : string := "");
 
 end package;

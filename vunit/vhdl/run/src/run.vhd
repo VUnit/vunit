@@ -51,7 +51,7 @@ package body run_pkg is
     runner.phase <= test_runner_setup;
     runner.exit_without_errors <= false;
     wait for 0 ns;
-    verbose(runner_trace_logger, "Entering test runner setup phase.");
+    trace(runner_trace_logger, "Entering test runner setup phase.");
     entry_gate(runner);
 
     if selected_enabled_test_cases /= null then
@@ -86,7 +86,7 @@ package body run_pkg is
     set_phase(runner_state, test_suite_setup);
     runner.phase <= test_suite_setup;
     wait for 0 ns;
-    verbose(runner_trace_logger, "Entering test suite setup phase.");
+    trace(runner_trace_logger, "Entering test suite setup phase.");
     entry_gate(runner);
   end test_runner_setup;
 
@@ -99,13 +99,13 @@ package body run_pkg is
     set_phase(runner_state, test_runner_cleanup);
     runner.phase <= test_runner_cleanup;
     wait for 0 ns;
-    verbose(runner_trace_logger, "Entering test runner cleanup phase.");
+    trace(runner_trace_logger, "Entering test runner cleanup phase.");
     entry_gate(runner);
     exit_gate(runner);
     set_phase(runner_state, test_runner_exit);
     runner.phase <= test_runner_exit;
     wait for 0 ns;
-    verbose(runner_trace_logger, "Entering test runner exit phase.");
+    trace(runner_trace_logger, "Entering test runner exit phase.");
 
     if not final_log_check(allow_disabled_errors => allow_disabled_errors,
                            allow_disabled_failures => allow_disabled_failures,
@@ -174,11 +174,11 @@ package body run_pkg is
     if ret_val then
       inc_test_suite_iteration(runner_state);
       set_phase(runner_state, test_case_setup);
-      verbose(runner_trace_logger, "Entering test case setup phase.");
+      trace(runner_trace_logger, "Entering test case setup phase.");
     else
       set_test_suite_completed(runner_state);
       set_phase(runner_state, test_suite_cleanup);
-      verbose(runner_trace_logger, "Entering test suite cleanup phase.");
+      trace(runner_trace_logger, "Entering test suite cleanup phase.");
     end if;
 
     return ret_val;
@@ -189,7 +189,7 @@ package body run_pkg is
   begin
     if get_test_case_iteration(runner_state) = 0 then
       set_phase(runner_state, test_case);
-      verbose(runner_trace_logger, "Entering test case phase.");
+      trace(runner_trace_logger, "Entering test case phase.");
       inc_test_case_iteration(runner_state);
       clear_test_case_exit_after_error(runner_state);
       clear_test_suite_exit_after_error(runner_state);
@@ -197,7 +197,7 @@ package body run_pkg is
       return true;
     else
       set_phase(runner_state, test_case_cleanup);
-      verbose(runner_trace_logger, "Entering test case cleanup phase.");
+      trace(runner_trace_logger, "Entering test case cleanup phase.");
       return false;
     end if;
   end function test_case;
@@ -286,7 +286,7 @@ package body run_pkg is
     if err then
       set_test_suite_completed(runner_state);
       set_phase(runner_state, test_case_cleanup);
-      verbose(runner_trace_logger, "Entering test case cleanup phase.");
+      trace(runner_trace_logger, "Entering test case cleanup phase.");
       set_test_suite_exit_after_error(runner_state);
     end if;
 
@@ -299,7 +299,7 @@ package body run_pkg is
   begin
     if err then
       set_phase(runner_state, test_case_cleanup);
-      verbose(runner_trace_logger, "Entering test case cleanup phase.");
+      trace(runner_trace_logger, "Entering test case cleanup phase.");
       set_test_case_exit_after_error(runner_state);
     end if;
 
@@ -333,7 +333,7 @@ package body run_pkg is
   begin
     runner.locks(phase).entry_is_locked <= true;
     wait for 0 ns;
-    log(runner_trace_logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase entry gate.", verbose, line_num, file_name);
+    log(runner_trace_logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase entry gate.", trace, line_num, file_name);
   end;
 
   procedure unlock_entry (
@@ -344,7 +344,7 @@ package body run_pkg is
     constant file_name : in string := "") is
   begin
     runner.locks(phase).entry_is_locked <= false;
-    log(runner_trace_logger, "Unlocked " & replace(runner_phase_t'image(phase), "_", " ") & " phase entry gate.", verbose, line_num, file_name);
+    log(runner_trace_logger, "Unlocked " & replace(runner_phase_t'image(phase), "_", " ") & " phase entry gate.", trace, line_num, file_name);
     wait for 0 ns;
   end;
 
@@ -357,7 +357,7 @@ package body run_pkg is
   begin
     runner.locks(phase).exit_is_locked <= true;
     wait for 0 ns;
-    log(runner_trace_logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase exit gate.", verbose, line_num, file_name);
+    log(runner_trace_logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase exit gate.", trace, line_num, file_name);
   end;
 
   procedure unlock_exit (
@@ -368,7 +368,7 @@ package body run_pkg is
     constant file_name : in string := "") is
   begin
     runner.locks(phase).exit_is_locked <= false;
-    log(runner_trace_logger, "Unlocked " & replace(runner_phase_t'image(phase), "_", " ") & " phase exit gate.", verbose, line_num, file_name);
+    log(runner_trace_logger, "Unlocked " & replace(runner_phase_t'image(phase), "_", " ") & " phase exit gate.", trace, line_num, file_name);
     wait for 0 ns;
   end;
 
@@ -381,9 +381,9 @@ package body run_pkg is
   begin
     -- @TODO me
     if runner.phase /= phase then
-      log(runner_trace_logger, "Waiting for phase = " & replace(runner_phase_t'image(phase), "_", " ") & ".", verbose, line_num, file_name);
+      log(runner_trace_logger, "Waiting for phase = " & replace(runner_phase_t'image(phase), "_", " ") & ".", trace, line_num, file_name);
       wait until runner.phase = phase;
-      log(runner_trace_logger, "Waking up. Phase is " & replace(runner_phase_t'image(phase), "_", " ") & ".", verbose, line_num, file_name);
+      log(runner_trace_logger, "Waking up. Phase is " & replace(runner_phase_t'image(phase), "_", " ") & ".", trace, line_num, file_name);
     end if;
   end;
 
@@ -391,22 +391,22 @@ package body run_pkg is
     signal runner : inout runner_sync_t) is
   begin
     if runner.locks(get_phase(runner_state)).entry_is_locked then
-      verbose(runner_trace_logger, "Halting on " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase entry gate.");
+      trace(runner_trace_logger, "Halting on " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase entry gate.");
       wait on runner.locks until not runner.locks(get_phase(runner_state)).entry_is_locked for max_locked_time_c;
     end if;
     runner.phase <= get_phase(runner_state);
     wait for 0 ns;
-    verbose(runner_trace_logger, "Passed " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase entry gate.");
+    trace(runner_trace_logger, "Passed " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase entry gate.");
   end procedure entry_gate;
 
   procedure exit_gate (
     signal runner : in runner_sync_t) is
   begin
     if runner.locks(get_phase(runner_state)).exit_is_locked then
-      verbose(runner_trace_logger, "Halting on " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase exit gate.");
+      trace(runner_trace_logger, "Halting on " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase exit gate.");
       wait on runner.locks until not runner.locks(get_phase(runner_state)).exit_is_locked for max_locked_time_c;
     end if;
-    verbose(runner_trace_logger, "Passed " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase exit gate.");
+    trace(runner_trace_logger, "Passed " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase exit gate.");
   end procedure exit_gate;
 
   impure function active_python_runner (

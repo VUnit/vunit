@@ -936,12 +936,12 @@ package body logger_pkg is
     log(logger, msg, pass, line_num, file_name);
   end procedure;
 
-  procedure verbose(logger : logger_t;
-                    msg : string;
-                    line_num : natural := 0;
-                    file_name : string := "") is
+  procedure trace(logger : logger_t;
+                  msg : string;
+                  line_num : natural := 0;
+                  file_name : string := "") is
   begin
-    log(logger, msg, verbose, line_num, file_name);
+    log(logger, msg, trace, line_num, file_name);
   end procedure;
 
   procedure info(logger : logger_t;
@@ -1096,11 +1096,11 @@ package body logger_pkg is
     pass(default_logger, msg, line_num, file_name);
   end procedure;
 
-  procedure verbose(msg : string;
-                    line_num : natural := 0;
-                    file_name : string := "") is
+  procedure trace(msg : string;
+                  line_num : natural := 0;
+                  file_name : string := "") is
   begin
-    verbose(default_logger, msg, line_num, file_name);
+    trace(default_logger, msg, line_num, file_name);
   end procedure;
 
   procedure info(msg : string;
@@ -1309,5 +1309,22 @@ package body logger_pkg is
                               allow_disabled_failures => allow_disabled_failures,
                               fail_on_warning => fail_on_warning);
   end;
+
+  -- Deprecated alias for TRACE
+  procedure verbose(logger : logger_t;
+                    msg : string;
+                    line_num : natural := 0;
+                    file_name : string := "") is
+  begin
+    trace(logger, msg, line_num, file_name);
+  end procedure;
+
+  -- Deprecated alias for TRACE
+  procedure verbose(msg : string;
+                    line_num : natural := 0;
+                    file_name : string := "") is
+  begin
+    trace(default_logger, msg, line_num, file_name);
+  end procedure;
 
 end package body;
