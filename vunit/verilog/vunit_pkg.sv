@@ -132,7 +132,7 @@ class test_runner;
 
       trace_fd = $fopen({output_path, "vunit_results"}, "w");
       return 1;
-   endfunction;
+   endfunction
 
    function void cleanup();
       exit_without_errors = 1;
@@ -163,7 +163,7 @@ class test_runner;
                end
             end
          end
-      end;
+      end
 
       if (phase == test_case_cleanup) begin
          test_idx++;
@@ -197,19 +197,19 @@ class test_runner;
 
    function int is_test_case_setup();
       return phase == test_case_setup;
-   endfunction;
+   endfunction
 
    function int is_test_case_cleanup();
       return phase == test_case_cleanup;
-   endfunction;
+   endfunction
 
    function int is_test_suite_setup();
       return phase == test_suite_setup;
-   endfunction;
+   endfunction
 
    function int is_test_suite_cleanup();
       return phase == test_suite_cleanup;
-   endfunction;
+   endfunction
 
    task automatic watchdog(real timeout_in_ns);
       fork : wait_or_timeout
@@ -223,7 +223,7 @@ class test_runner;
             disable wait_or_timeout;
          end
       join
-   endtask;
+   endtask
 
 endclass
 
