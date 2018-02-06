@@ -168,6 +168,13 @@ begin
         unmock(default_logger);
         unmock_core_failure;
 
+      elsif run("Test verbose procedures and log level") then
+        mock(default_logger);
+        verbose("hello", 17, "foo.vhd");
+        check_log(default_logger, "Mapping deprecated procedure verbose to trace", warning);
+        check_log(default_logger, "hello", verbose, 0 ns, 17, "foo.vhd");
+        unmock(default_logger);
+
       end if;
     end loop;
 

@@ -14,6 +14,7 @@ use std.textio.all;
 
 package log_deprecated_pkg is
   alias verbose_csv is work.log_handler_pkg.csv [return deprecated_log_format_t];
+  alias verbose is work.log_levels_pkg.trace [return log_level_t];
 
   -- Deprecated interface to better support legacy testbenches. Calls to this
   -- procedure will be mapped to contemporary functionality using best effort:
@@ -46,6 +47,16 @@ package log_deprecated_pkg is
     stop_level     : log_level_t             := failure;
     separator      : character               := ',';
     append         : boolean                 := false);
+
+  -- VERBOSE is alias for TRACE
+  procedure verbose(logger : logger_t;
+                    msg : string;
+                    line_num : natural := 0;
+                    file_name : string := "");
+  procedure verbose(msg : string;
+                    line_num : natural := 0;
+                    file_name : string := "");
+
 
 end package log_deprecated_pkg;
 
@@ -177,5 +188,21 @@ package body log_deprecated_pkg is
   begin
     logger_init(logger, default_src, file_name, display_format, file_format, stop_level, separator, append);
   end;
+
+  procedure verbose(logger : logger_t;
+                    msg : string;
+                    line_num : natural := 0;
+                    file_name : string := "") is
+  begin
+    warning("Mapping deprecated procedure verbose to trace");
+    trace(logger, msg, line_num, file_name);
+  end procedure;
+
+  procedure verbose(msg : string;
+                    line_num : natural := 0;
+                    file_name : string := "") is
+  begin
+    verbose(default_logger, msg, line_num, file_name);
+  end procedure;
 
 end package body log_deprecated_pkg;

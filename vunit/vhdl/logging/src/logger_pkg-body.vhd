@@ -1245,21 +1245,4 @@ package body logger_pkg is
                               fail_on_warning => fail_on_warning);
   end;
 
-  -- Deprecated alias for TRACE
-  procedure verbose(logger : logger_t;
-                    msg : string;
-                    line_num : natural := 0;
-                    file_name : string := "") is
-  begin
-    trace(logger, msg, line_num, file_name);
-  end procedure;
-
-  -- Deprecated alias for TRACE
-  procedure verbose(msg : string;
-                    line_num : natural := 0;
-                    file_name : string := "") is
-  begin
-    trace(default_logger, msg, line_num, file_name);
-  end procedure;
-
 end package body;

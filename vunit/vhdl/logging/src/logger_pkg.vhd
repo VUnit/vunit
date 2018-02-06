@@ -383,15 +383,4 @@ package logger_pkg is
   -- Return the number of unchecked messages in the mock queue
   impure function mock_queue_length return natural;
 
-
-  -- Deprecated
-  -- VERBOSE is alias for TRACE
-  procedure verbose(logger : logger_t;
-                    msg : string;
-                    line_num : natural := 0;
-                    file_name : string := "");
-  procedure verbose(msg : string;
-                    line_num : natural := 0;
-                    file_name : string := "");
-
 end package;
