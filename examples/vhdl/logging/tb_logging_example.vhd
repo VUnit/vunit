@@ -98,8 +98,6 @@ begin
     -- Conditionall logging is also possible
     warning_if(True, "A warning happened");
     warning_if(False, "A warning did not happen");
-    warning_unless(False, "A warning happened");
-    warning_unless(True, "A warning did not happen");
 
     -- Any log to error or failure causes test failure so we reset those levels
     reset_log_count(default_logger, error);

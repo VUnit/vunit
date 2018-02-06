@@ -1009,40 +1009,6 @@ package body logger_pkg is
     end if;
   end;
 
-  procedure warning_unless(logger : logger_t;
-                           condition : boolean;
-                           msg : string;
-                           line_num : natural := 0;
-                           file_name : string := "") is
-  begin
-    if not condition then
-      warning(logger, msg, line_num => line_num, file_name => file_name);
-    end if;
-  end;
-
-  procedure error_unless(logger : logger_t;
-                         condition : boolean;
-                         msg : string;
-                         line_num : natural := 0;
-                         file_name : string := "") is
-  begin
-    if not condition then
-      error(logger, msg, line_num => line_num, file_name => file_name);
-    end if;
-  end;
-
-  procedure failure_unless(logger : logger_t;
-                           condition : boolean;
-                           msg : string;
-                           line_num : natural := 0;
-                           file_name : string := "") is
-  begin
-    if not condition then
-      failure(logger, msg, line_num => line_num, file_name => file_name);
-    end if;
-  end;
-
-
   impure function new_root_logger return logger_t is
     variable logger : logger_t := new_logger(root_logger_id, "", null_logger);
   begin
@@ -1160,37 +1126,6 @@ package body logger_pkg is
       failure(msg, line_num => line_num, file_name => file_name);
     end if;
   end;
-
-  procedure warning_unless(condition : boolean;
-                           msg : string;
-                           line_num : natural := 0;
-                           file_name : string := "") is
-  begin
-    if not condition then
-      warning(msg, line_num => line_num, file_name => file_name);
-    end if;
-  end;
-
-  procedure error_unless(condition : boolean;
-                         msg : string;
-                         line_num : natural := 0;
-                         file_name : string := "") is
-  begin
-    if not condition then
-      error(msg, line_num => line_num, file_name => file_name);
-    end if;
-  end;
-
-  procedure failure_unless(condition : boolean;
-                           msg : string;
-                           line_num : natural := 0;
-                           file_name : string := "") is
-  begin
-    if not condition then
-      failure(msg, line_num => line_num, file_name => file_name);
-    end if;
-  end;
-
 
   impure function level_to_color(log_level : log_level_t) return string is
   begin

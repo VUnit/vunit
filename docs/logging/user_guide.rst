@@ -71,8 +71,6 @@ There are also conditional log procedures for warning, error and failure:
 
     warning_if(True, "A warning happened");
     warning_if(False, "A warning did not happen");
-    warning_unless(False, "A warning happened");
-    warning_unless(True, "A warning did not happen");
 
     -- There are also variants for error and failure as well as with
     -- non-default logger argument.
