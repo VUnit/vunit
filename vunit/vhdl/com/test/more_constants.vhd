@@ -7,5 +7,5 @@
 -- Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 package more_constants_pkg is
-  constant byte_lsb_c : natural := 0;
+  constant byte_lsb : natural := 0;
 end package more_constants_pkg;

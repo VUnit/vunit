@@ -7,5 +7,5 @@
 -- Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
 
 package constants_pkg is
-  constant byte_msb_c : natural := 7;
+  constant byte_msb : natural := 7;
 end package constants_pkg;

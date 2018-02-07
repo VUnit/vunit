@@ -91,7 +91,7 @@ package custom_types_pkg is
   type record9_msg_type_t is (foo, bar);
   type record9_t is record
     msg_type : record9_msg_type_t;
-    slv   : std_logic_vector(byte_msb_c downto byte_lsb_c);
+    slv   : std_logic_vector(byte_msb downto byte_lsb);
     str   : string(1 to 3);
     int_2d : int_2d_t(1 to 2, 4 downto -1);
   end record record9_t;

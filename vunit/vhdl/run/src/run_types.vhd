@@ -13,8 +13,12 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 package run_types_pkg is
-  constant max_locked_time_c : time := 1 ms;
-  constant max_n_test_cases_c : natural := 1024;
+  constant max_locked_time : time := 1 ms;
+  constant max_n_test_cases : natural := 1024;
+
+  -- Deprecated
+  alias max_locked_time_c is max_locked_time;
+  alias max_n_test_cases_c is max_n_test_cases;
 
   subtype runner_cfg_t is string; -- Subtype deprecated, use string instead
   constant runner_cfg_default : string := "enabled_test_cases : __all__, output path : , active python runner : false";

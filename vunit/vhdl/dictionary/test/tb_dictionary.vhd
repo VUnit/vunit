@@ -27,7 +27,7 @@ begin
     variable value : line;
     variable stat : checker_stat_t;
     variable passed : boolean;
-    constant empty_dict : frozen_dictionary_t := empty_c;
+    constant empty_dict : frozen_dictionary_t := empty;
     constant test_dict : frozen_dictionary_t := "output path : c::\foo\bar, input path : c::\ying\yang, active python runner : true";
     constant corrupt_dict : frozen_dictionary_t := "output path : c::\foo\bar, input path, active python runner : true";
   begin

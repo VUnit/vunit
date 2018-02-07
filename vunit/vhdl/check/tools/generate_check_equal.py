@@ -10,7 +10,7 @@ from string import Template
 api_template = """  procedure check_equal(
     constant got       : in $got_type;
     constant expected  : in $expected_type;
-    constant msg       : in string      := check_result_tag_c;
+    constant msg       : in string      := check_result_tag;
     constant level     : in log_level_t := null_log_level;
     constant line_num  : in natural     := 0;
     constant file_name : in string      := "");
@@ -19,7 +19,7 @@ api_template = """  procedure check_equal(
     variable pass      : out boolean;
     constant got       : in $got_type;
     constant expected  : in $expected_type;
-    constant msg       : in string      := check_result_tag_c;
+    constant msg       : in string      := check_result_tag;
     constant level     : in log_level_t := null_log_level;
     constant line_num  : in natural     := 0;
     constant file_name : in string      := "");
@@ -29,7 +29,7 @@ api_template = """  procedure check_equal(
     variable pass      : out boolean;
     constant got       : in $got_type;
     constant expected  : in $expected_type;
-    constant msg       : in string      := check_result_tag_c;
+    constant msg       : in string      := check_result_tag;
     constant level     : in log_level_t := null_log_level;
     constant line_num  : in natural     := 0;
     constant file_name : in string      := "");
@@ -38,7 +38,7 @@ api_template = """  procedure check_equal(
     constant checker   : in checker_t;
     constant got       : in $got_type;
     constant expected  : in $expected_type;
-    constant msg       : in string      := check_result_tag_c;
+    constant msg       : in string      := check_result_tag;
     constant level     : in log_level_t := null_log_level;
     constant line_num  : in natural     := 0;
     constant file_name : in string      := "");
@@ -46,7 +46,7 @@ api_template = """  procedure check_equal(
   impure function check_equal(
     constant got       : in $got_type;
     constant expected  : in $expected_type;
-    constant msg       : in string      := check_result_tag_c;
+    constant msg       : in string      := check_result_tag;
     constant level     : in log_level_t := null_log_level;
     constant line_num  : in natural     := 0;
     constant file_name : in string      := "")
@@ -56,7 +56,7 @@ api_template = """  procedure check_equal(
     constant checker   : in checker_t;
     constant got       : in $got_type;
     constant expected  : in $expected_type;
-    constant msg       : in string      := check_result_tag_c;
+    constant msg       : in string      := check_result_tag;
     constant level     : in log_level_t := null_log_level;
     constant line_num  : in natural     := 0;
     constant file_name : in string      := "")
@@ -67,7 +67,7 @@ api_template = """  procedure check_equal(
 impl_template = """  procedure check_equal(
     constant got       : in $got_type;
     constant expected  : in $expected_type;
-    constant msg       : in string      := check_result_tag_c;
+    constant msg       : in string      := check_result_tag;
     constant level     : in log_level_t := null_log_level;
     constant line_num  : in natural     := 0;
     constant file_name : in string      := "") is
@@ -82,7 +82,7 @@ impl_template = """  procedure check_equal(
     variable pass      : out boolean;
     constant got       : in $got_type;
     constant expected  : in $expected_type;
-    constant msg       : in string      := check_result_tag_c;
+    constant msg       : in string      := check_result_tag;
     constant level     : in log_level_t := null_log_level;
     constant line_num  : in natural     := 0;
     constant file_name : in string      := "") is
@@ -97,7 +97,7 @@ impl_template = """  procedure check_equal(
     variable pass      : out boolean;
     constant got       : in $got_type;
     constant expected  : in $expected_type;
-    constant msg       : in string      := check_result_tag_c;
+    constant msg       : in string      := check_result_tag;
     constant level     : in log_level_t := null_log_level;
     constant line_num  : in natural     := 0;
     constant file_name : in string      := "") is
@@ -132,7 +132,7 @@ impl_template = """  procedure check_equal(
     constant checker   : in checker_t;
     constant got       : in $got_type;
     constant expected  : in $expected_type;
-    constant msg       : in string      := check_result_tag_c;
+    constant msg       : in string      := check_result_tag;
     constant level     : in log_level_t := null_log_level;
     constant line_num  : in natural     := 0;
     constant file_name : in string      := "") is
@@ -146,7 +146,7 @@ impl_template = """  procedure check_equal(
   impure function check_equal(
     constant got       : in $got_type;
     constant expected  : in $expected_type;
-    constant msg       : in string      := check_result_tag_c;
+    constant msg       : in string      := check_result_tag;
     constant level     : in log_level_t := null_log_level;
     constant line_num  : in natural     := 0;
     constant file_name : in string      := "")
@@ -163,7 +163,7 @@ impl_template = """  procedure check_equal(
     constant checker   : in checker_t;
     constant got       : in $got_type;
     constant expected  : in $expected_type;
-    constant msg       : in string      := check_result_tag_c;
+    constant msg       : in string      := check_result_tag;
     constant level     : in log_level_t := null_log_level;
     constant line_num  : in natural     := 0;
     constant file_name : in string      := "")

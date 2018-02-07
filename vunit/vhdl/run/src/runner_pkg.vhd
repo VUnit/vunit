@@ -19,7 +19,10 @@ package runner_pkg is
   end record;
 
   constant null_runner : runner_t := (p_data => null_ptr);
-  constant unknown_num_of_test_cases_c : integer := integer'left;
+  constant unknown_num_of_test_cases : integer := integer'left;
+
+  -- Deprecated
+  alias unknown_num_of_test_cases_c is unknown_num_of_test_cases;
 
   impure function new_runner return runner_t;
 
@@ -154,7 +157,7 @@ package body runner_pkg is
 
     set(runner.p_data, test_case_names_idx, to_integer(integer_vector_ptr_t'(new_integer_vector_ptr)));
 
-    set(runner.p_data, n_test_cases_idx, unknown_num_of_test_cases_c);
+    set(runner.p_data, n_test_cases_idx, unknown_num_of_test_cases);
     set(runner.p_data, active_test_case_index_idx, 1);
     set(runner.p_data, test_suite_completed_idx, to_integer(false));
     set(runner.p_data, test_suite_iteration_idx, 0);

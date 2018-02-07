@@ -395,7 +395,7 @@ package body run_pkg is
   begin
     if runner.locks(get_phase(runner_state)).entry_is_locked then
       trace(runner_trace_logger, "Halting on " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase entry gate.");
-      wait on runner.locks until not runner.locks(get_phase(runner_state)).entry_is_locked for max_locked_time_c;
+      wait on runner.locks until not runner.locks(get_phase(runner_state)).entry_is_locked for max_locked_time;
     end if;
     runner.phase <= get_phase(runner_state);
     wait for 0 ns;
@@ -407,7 +407,7 @@ package body run_pkg is
   begin
     if runner.locks(get_phase(runner_state)).exit_is_locked then
       trace(runner_trace_logger, "Halting on " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase exit gate.");
-      wait on runner.locks until not runner.locks(get_phase(runner_state)).exit_is_locked for max_locked_time_c;
+      wait on runner.locks until not runner.locks(get_phase(runner_state)).exit_is_locked for max_locked_time;
     end if;
     trace(runner_trace_logger, "Passed " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase exit gate.");
   end procedure exit_gate;

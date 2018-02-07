@@ -12,7 +12,9 @@ use std.textio.all;
 
 package dictionary is
   subtype frozen_dictionary_t is string;
-  constant empty_c : frozen_dictionary_t := "";
+  constant empty : frozen_dictionary_t := "";
+  -- Deprecated
+  alias empty_c is empty;
 
   function len (
     constant d : frozen_dictionary_t)

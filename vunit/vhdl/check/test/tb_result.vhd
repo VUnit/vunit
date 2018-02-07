@@ -21,29 +21,29 @@ end entity;
 architecture test_fixture of tb_result is
 begin
   test_runner : process
-    constant punctuation_marks_not_preceeded_by_space_c : string := ".,:;?!";
+    constant punctuation_marks_not_preceeded_by_space : string := ".,:;?!";
     variable stat : checker_stat_t;
   begin
     test_runner_setup(runner, runner_cfg);
 
     while test_suite loop
       if run("Test that result returns result tag by default") then
-        assert_true(result = check_result_tag_c);
+        assert_true(result = check_result_tag);
 
       elsif run("Test that result returns result tag on empty message") then
-        assert_true(result("") = check_result_tag_c);
+        assert_true(result("") = check_result_tag);
 
       elsif run("Test that result returns result tag + message if the message starts with a punctuation mark") then
-        for i in punctuation_marks_not_preceeded_by_space_c'range loop
-          assert_true(result(punctuation_marks_not_preceeded_by_space_c(i) & "Foo") =
-                          check_result_tag_c & punctuation_marks_not_preceeded_by_space_c(i) & "Foo");
+        for i in punctuation_marks_not_preceeded_by_space'range loop
+          assert_true(result(punctuation_marks_not_preceeded_by_space(i) & "Foo") =
+                          check_result_tag & punctuation_marks_not_preceeded_by_space(i) & "Foo");
         end loop;
 
       elsif run("Test that result returns result tag + space + message if the message doesn't start with a punctuation mark") then
         for c in character'left to character'right loop
-          if find(punctuation_marks_not_preceeded_by_space_c, c) = 0 then
+          if find(punctuation_marks_not_preceeded_by_space, c) = 0 then
             assert_true(result(c & "Foo") =
-                            check_result_tag_c & " " & c & "Foo");
+                            check_result_tag & " " & c & "Foo");
           end if;
         end loop;
       end if;

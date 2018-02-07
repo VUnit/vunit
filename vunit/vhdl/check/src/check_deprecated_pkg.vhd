@@ -76,6 +76,9 @@ package check_deprecated_pkg is
   impure function checker_found_errors
     return boolean;
 
+  -- Deprecated constant with _c suffix. Use without suffix instead
+  alias check_result_tag_c is check_result_tag;
+
 end package check_deprecated_pkg;
 
 package body check_deprecated_pkg is

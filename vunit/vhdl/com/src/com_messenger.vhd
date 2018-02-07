@@ -209,7 +209,7 @@ package body com_messenger_pkg is
 
   type messenger_t is protected
     body
-      variable null_actor_item_c : actor_item_t := (
+      variable null_actor_item : actor_item_t := (
         actor             => null_actor,
         name              => null,
         deferred_creation => false,
@@ -255,7 +255,7 @@ package body com_messenger_pkg is
     variable ret_val : actor_item_array_ptr_t;
   begin
     ret_val    := new actor_item_array_t(0 to 0);
-    ret_val(0) := null_actor_item_c;
+    ret_val(0) := null_actor_item;
 
     return ret_val;
   end function init_actors;
@@ -285,7 +285,7 @@ package body com_messenger_pkg is
   begin
     old_actors := actors;
     actors     := new actor_item_array_t(0 to actors'length);
-    actors(0)  := null_actor_item_c;
+    actors(0)  := null_actor_item;
     for i in old_actors'range loop
       actors(i) := old_actors(i);
     end loop;
@@ -409,7 +409,7 @@ package body com_messenger_pkg is
     deallocate(actors(actor.id).name);
     deallocate(actors(actor.id).inbox);
     deallocate(actors(actor.id).outbox);
-    actors(actor.id) := null_actor_item_c;
+    actors(actor.id) := null_actor_item;
     actor            := null_actor;
   end;
 
