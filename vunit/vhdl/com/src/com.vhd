@@ -493,6 +493,13 @@ package body com_pkg is
     return state;
   end;
 
+  procedure deallocate(variable mailbox_state : inout mailbox_state_t) is
+  begin
+    mailbox_state.id := inbox;
+    mailbox_state.size := 0;
+    deallocate(mailbox_state.messages);
+  end;
+
   impure function get_mailbox_state_string (
     actor      : actor_t;
     mailbox_id : mailbox_id_t := inbox;
@@ -545,6 +552,16 @@ package body com_pkg is
     state.subscribers   := get_subscribers(actor);
 
     return state;
+  end;
+
+  procedure deallocate(variable actor_state : inout actor_state_t) is
+  begin
+    deallocate(actor_state.name);
+    actor_state.is_deferred := false;
+    deallocate(actor_state.inbox);
+    deallocate(actor_state.outbox);
+    deallocate(actor_state.subscriptions);
+    deallocate(actor_state.subscribers);
   end;
 
   impure function get_actor_state_string (actor : actor_t; indent : string := "") return string is
@@ -615,6 +632,23 @@ package body com_pkg is
     end loop;
 
     return state;
+  end;
+
+  procedure deallocate(variable messenger_state : inout messenger_state_t) is
+  begin
+    if messenger_state.active_actors /= null then
+      for a in messenger_state.active_actors'range loop
+        deallocate(messenger_state.active_actors(a));
+      end loop;
+      deallocate(messenger_state.active_actors);
+    end if;
+
+    if messenger_state.deferred_actors /= null then
+      for a in messenger_state.deferred_actors'range loop
+        deallocate(messenger_state.deferred_actors(a));
+      end loop;
+      deallocate(messenger_state.deferred_actors);
+    end if;
   end;
 
   impure function get_messenger_state_string(indent : string := "") return string is

@@ -49,6 +49,9 @@ begin
     variable mailbox_state                                                 : mailbox_state_t;
     variable l                                                             : line;
     variable messenger_state                                               : messenger_state_t;
+    variable null_mailbox_state : mailbox_state_t := (inbox, 0, null);
+    variable null_actor_state : actor_state_t := (null, false, null_mailbox_state, null_mailbox_state, null, null);
+    variable null_messenger_state : messenger_state_t := (null, null);
 
   begin
     test_runner_setup(runner, runner_cfg);
@@ -923,7 +926,7 @@ begin
         receive_reply(net, msg2, reply_msg);
         check(peeked_msg2 = reply_msg);
 
-      elsif run("Test getting mailbox state") then
+      elsif run("Test getting and deallocating mailbox state") then
         actor         := new_actor("actor", 17, 23);
         msg           := new_msg;
         send(net, actor, msg);
@@ -940,6 +943,9 @@ begin
         check(mailbox_state.size = 23);
         receive_reply(net, msg, reply_msg);
         check(mailbox_state.messages(0) = reply_msg);
+
+        deallocate(mailbox_state);
+        check(mailbox_state = null_mailbox_state);
 
       elsif run("Test making a string of mailbox state") then
         actor := new_actor("actor", 17);
@@ -963,11 +969,13 @@ begin
                     "      0. " & to_string(mailbox_state.messages(0)) & LF &
                     "      1. " & to_string(mailbox_state.messages(1)));
 
-      elsif run("Test getting actor state") then
+      elsif run("Test getting and deallocating actor state") then
         actor       := find("my actor");
         actor_state := get_actor_state(actor);
         check_equal(actor_state.name.all, "my actor");
         check(actor_state.is_deferred);
+        deallocate(actor_state);
+        check(actor_state = null_actor_state);
 
         actor       := new_actor("my actor", 17, 21);
         actor_state := get_actor_state(actor);
@@ -988,6 +996,8 @@ begin
         check(actor_state.outbox.id = outbox);
         check(actor_state.outbox.size = 21);
         check(actor_state.outbox.messages(0) = reply_msg);
+        deallocate(actor_state);
+        check(actor_state = null_actor_state);
 
         actor2      := new_actor;
         subscribe(actor, actor2, inbound);
@@ -997,6 +1007,8 @@ begin
               subscription_t'(subscriber => actor, publisher => actor2, traffic_type => inbound));
         check(actor_state.subscribers(0) =
               subscription_t'(subscriber => self, publisher => actor, traffic_type => published));
+        deallocate(actor_state);
+        check(actor_state = null_actor_state);
 
       elsif run("Test making a string of actor state") then
         actor := find("my actor");
@@ -1051,11 +1063,12 @@ begin
                     "    test runner subscribes to outbound traffic" & LF &
                     "    test runner subscribes to inbound traffic");
 
-      elsif run("Test getting messenger state") then
+      elsif run("Test getting messenger and deallocating state") then
         reset_messenger;
         messenger_state := get_messenger_state;
-        check(messenger_state.active_actors = null);
-        check(messenger_state.deferred_actors = null);
+        check(messenger_state = null_messenger_state);
+        deallocate(messenger_state);
+        check(messenger_state = null_messenger_state);
 
         actor := new_actor("actor");
         messenger_state := get_messenger_state;
@@ -1068,6 +1081,8 @@ begin
         check(messenger_state.active_actors(0).outbox = actor_state.outbox);
         check(messenger_state.active_actors(0).subscriptions = actor_state.subscriptions);
         check(messenger_state.active_actors(0).subscribers = actor_state.subscribers);
+        deallocate(messenger_state);
+        check(messenger_state = null_messenger_state);
 
         actor2 := new_actor("actor 2");
         messenger_state := get_messenger_state;
@@ -1080,6 +1095,8 @@ begin
         check(messenger_state.active_actors(1).outbox = actor_state.outbox);
         check(messenger_state.active_actors(1).subscriptions = actor_state.subscriptions);
         check(messenger_state.active_actors(1).subscribers = actor_state.subscribers);
+        deallocate(messenger_state);
+        check(messenger_state = null_messenger_state);
 
         destroy(actor);
 
@@ -1093,6 +1110,8 @@ begin
         check(messenger_state.active_actors(0).outbox = actor_state.outbox);
         check(messenger_state.active_actors(0).subscriptions = actor_state.subscriptions);
         check(messenger_state.active_actors(0).subscribers = actor_state.subscribers);
+        deallocate(messenger_state);
+        check(messenger_state = null_messenger_state);
 
         actor3 := find("actor 3");
         messenger_state := get_messenger_state;
@@ -1112,6 +1131,8 @@ begin
         check(messenger_state.deferred_actors(0).outbox = actor_state.outbox);
         check(messenger_state.deferred_actors(0).subscriptions = actor_state.subscriptions);
         check(messenger_state.deferred_actors(0).subscribers = actor_state.subscribers);
+        deallocate(messenger_state);
+        check(messenger_state = null_messenger_state);
 
         destroy(actor2);
 
@@ -1125,6 +1146,8 @@ begin
         check(messenger_state.deferred_actors(0).outbox = actor_state.outbox);
         check(messenger_state.deferred_actors(0).subscriptions = actor_state.subscriptions);
         check(messenger_state.deferred_actors(0).subscribers = actor_state.subscribers);
+        deallocate(messenger_state);
+        check(messenger_state = null_messenger_state);
 
       elsif run("Test making a string of messenger state") then
         reset_messenger;

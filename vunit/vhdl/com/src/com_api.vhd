@@ -234,13 +234,14 @@ package com_pkg is
   -- Debugging
   -----------------------------------------------------------------------------
 
-  -- TODO: provide deallocation for state types
-
   -- Return string representation of a message
   impure function to_string(msg : msg_t) return string;
 
   -- Get current state for actor mailbox
   impure function get_mailbox_state(actor : actor_t; mailbox_id : mailbox_id_t := inbox) return mailbox_state_t;
+
+  -- Deallocate memory allocated to a mailbox state variable
+  procedure deallocate(variable mailbox_state : inout mailbox_state_t);
 
   -- Return string representation of a mailbox state
   impure function get_mailbox_state_string (
@@ -251,11 +252,17 @@ package com_pkg is
   -- Get current state of actor
   impure function get_actor_state(actor : actor_t) return actor_state_t;
 
+  -- Deallocate memory allocated to a actor state variable
+  procedure deallocate(variable actor_state : inout actor_state_t);
+
   -- Return string representation of an actor state
   impure function get_actor_state_string (actor : actor_t; indent : string := "") return string;
 
   -- Get current state of messenger
   impure function get_messenger_state return messenger_state_t;
+
+  -- Deallocate memory allocated to a messenger state variable
+  procedure deallocate(variable messenger_state : inout messenger_state_t);
 
   -- Return string representation of the messenger state
   impure function get_messenger_state_string(indent : string := "") return string;
