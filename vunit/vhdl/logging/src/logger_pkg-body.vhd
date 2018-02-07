@@ -629,8 +629,11 @@ package body logger_pkg is
                              log_level : log_level_t) return boolean is
     constant log_level_filter : integer_vector_ptr_t := get_log_level_filter(logger, log_handler);
   begin
-    assert log_level_filter /= null_ptr;
-    return get(log_level_filter, log_level_t'pos(log_level)) = log_level_visible;
+    if log_level_filter /= null_ptr then
+      return get(log_level_filter, log_level_t'pos(log_level)) = log_level_visible;
+    else
+      return false;
+    end if;
   end;
 
   impure function num_log_handlers(logger : logger_t) return natural is

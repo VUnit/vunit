@@ -12,6 +12,7 @@ use vunit_lib.integer_vector_ptr_pkg.all;
 
 use work.ansi_pkg.all;
 use work.string_ops.upper;
+use work.file_pkg.all;
 
 package body log_handler_pkg is
 
@@ -22,7 +23,7 @@ package body log_handler_pkg is
   constant file_name_idx : natural := 1;
   constant format_idx : natural := 2;
   constant use_color_idx : natural := 3;
-  constant file_is_initialized_idx : natural := 4;
+  constant file_id_idx : natural := 4;
   constant max_logger_name_idx : natural := 5;
   constant log_handler_length : natural := max_logger_name_idx + 1;
 
@@ -36,17 +37,12 @@ package body log_handler_pkg is
   end procedure;
 
   procedure init_log_file(log_handler : log_handler_t; file_name : string) is
-    file fptr : text;
-    variable status : file_open_status;
+    variable file_id : file_id_t := to_file_id(get(log_handler.p_data, file_id_idx));
   begin
     if (file_name /= null_file_name) and (file_name /= stdout_file_name) then
-      file_open(status, fptr, file_name, write_mode);
-      assert_status(status, file_name);
-      file_close(fptr);
-      set(log_handler.p_data, file_is_initialized_idx, 1);
-    else
-      set(log_handler.p_data, file_is_initialized_idx, 0);
+      file_open_for_write(file_id, file_name);
     end if;
+    set(log_handler.p_data, file_id_idx, to_integer(file_id));
   end procedure;
 
   impure function new_log_handler(id : natural;
@@ -57,6 +53,7 @@ package body log_handler_pkg is
   begin
     set(log_handler.p_data, id_idx, id);
     set(log_handler.p_data, file_name_idx, to_integer(new_string_ptr(file_name)));
+    set(log_handler.p_data, file_id_idx, to_integer(null_file_id));
     init_log_file(log_handler, file_name);
     set(log_handler.p_data, max_logger_name_idx, 0);
     set_format(log_handler, format, use_color);
@@ -99,6 +96,7 @@ package body log_handler_pkg is
                              use_color : boolean := false) is
     variable file_name_ptr : string_ptr_t := to_string_ptr(get(log_handler.p_data, file_name_idx));
   begin
+    assert log_handler /= null_log_handler;
     reallocate(file_name_ptr, file_name);
     init_log_file(log_handler, file_name);
     set_format(log_handler, format, use_color);
@@ -326,7 +324,7 @@ package body log_handler_pkg is
       writeline(OUTPUT, l);
     else
       log_to_line(l);
-      log_to_file(l);
+      writeline(to_file_id(get(log_handler.p_data, file_id_idx)), l);
     end if;
   end;
 

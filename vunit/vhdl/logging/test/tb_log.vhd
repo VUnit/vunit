@@ -37,13 +37,24 @@ begin
       file_close(fptr);
     end;
 
-    procedure check_log_file (
-      constant file_name : in string;
-      constant entries   : in dict_t) is
+    procedure flush_file_handler(file_handler : log_handler_t) is
+    begin
+      -- Dummy init to flush file handler
+      init_log_handler(file_handler,
+                       file_name => get_file_name(file_handler) & ".dummy",
+                       format => raw);
+    end;
+
+    procedure check_log_file (file_handler : log_handler_t;
+                              file_name : string;
+                              entries   : dict_t) is
       file fptr : text;
       variable l : line;
       variable status : file_open_status;
     begin
+      assert get_file_name(file_handler) = file_name report "file name mismatch";
+      flush_file_handler(file_handler);
+
       file_open(status, fptr, file_name, read_mode);
       assert status = open_ok
         report "Failed opening " & file_name & " (" & file_open_status'image(status) & ")."
@@ -97,6 +108,8 @@ begin
     variable file_handler : log_handler_t := new_log_handler(log_file_name,
                                                              format => verbose,
                                                              use_color => false);
+    variable file_handlers : log_handler_vec_t(0 to 63);
+    variable loggers : logger_vec_t(file_handlers'range);
   begin
 
     -- Check defaults before test runner setup
@@ -133,7 +146,8 @@ begin
       set(entries, "3", "message 4");
       set(entries, "4", "message 5");
       set(entries, "5", "message 6");
-      check_log_file(log_file_name, entries);
+
+      check_log_file(file_handler, log_file_name, entries);
       reset_log_count(logger, error);
       reset_log_count(logger, failure);
 
@@ -142,30 +156,30 @@ begin
       assert_equal(get_file_name(file_handler), log_file_name);
       assert_equal(get_file_name(display_handler), stdout_file_name);
 
-    elsif run("Can print independent of logging") then
-      init_log_handler(file_handler, file_name => log_file_name, format => level);
+    --elsif run("Can print independent of logging") then
+    --  init_log_handler(file_handler, file_name => log_file_name, format => level);
 
-      print("message 1", log_file_name);
-      trace(logger, "message 2");
-      print("message 3", log_file_name);
-      trace(logger, "message 4");
+    --  print("message 1", log_file_name);
+    --  trace(logger, "message 2");
+    --  print("message 3", log_file_name);
+    --  trace(logger, "message 4");
 
-      file_open(status, fptr, log_file_name, append_mode);
-      assert status = open_ok
-        report "Failed to open file " & log_file_name & " - " & file_open_status'image(status) severity failure;
-      print("message 5", fptr);
-      file_close(fptr);
+    --  file_open(status, fptr, log_file_name, append_mode);
+    --  assert status = open_ok
+    --    report "Failed to open file " & log_file_name & " - " & file_open_status'image(status) severity failure;
+    --  print("message 5", fptr);
+    --  file_close(fptr);
 
-      set(entries, "0", "message 1");
-      set(entries, "1", "  TRACE - message 2");
-      set(entries, "2", "message 3");
-      set(entries, "3", "  TRACE - message 4");
-      set(entries, "4", "message 5");
-      check_log_file(log_file_name, entries);
+    --  set(entries, "0", "message 1");
+    --  set(entries, "1", "  TRACE - message 2");
+    --  set(entries, "2", "message 3");
+    --  set(entries, "3", "  TRACE - message 4");
+    --  set(entries, "4", "message 5");
+    --  check_log_file(file_handler, log_file_name, entries);
 
-      print("message 6", log_file_name, write_mode);
-      set(entries2, "0", "message 6");
-      check_log_file(log_file_name, entries2);
+    --  print("message 6", log_file_name, write_mode);
+    --  set(entries2, "0", "message 6");
+    --  check_log_file(file_handler, log_file_name, entries2);
 
     elsif run("Can use 'instance_name") then
       tmp_logger := get_logger(tmp_logger'instance_name);
@@ -198,7 +212,7 @@ begin
       set(entries, "3", "WARNING - message 4");
       set(entries, "4", "  ERROR - message 5");
       set(entries, "5", "FAILURE - message 6");
-      check_log_file(log_file_name, entries);
+      check_log_file(file_handler, log_file_name, entries);
       reset_log_count(logger, error);
       reset_log_count(logger, failure);
 
@@ -209,7 +223,7 @@ begin
       set(entries, "0", "   INFO - hello");
       set(entries, "1", "          world");
       set(entries, "2", "              !");
-      check_log_file(log_file_name, entries);
+      check_log_file(file_handler, log_file_name, entries);
 
     elsif run("csv format") then
       set_format(display_handler, format => csv);
@@ -221,7 +235,7 @@ begin
       info(logger, "msg2", file_name => "file_name.vhd", line_num => 11);
       set(entries, "0", integer'image(tmp+0) & "," & time'image(3 ns) & ",WARNING,,,logger:nested,msg1");
       set(entries, "1", integer'image(tmp+1) & "," & time'image(3 ns) & ",INFO,file_name.vhd,11,logger,msg2");
-      check_log_file(log_file_name, entries);
+      check_log_file(file_handler, log_file_name, entries);
 
     elsif run("verbose format") then
       set_format(display_handler, format => verbose);
@@ -235,7 +249,7 @@ begin
       set(entries, "3", format_time(3 ns) & " - logger               - WARNING - message 4");
       set(entries, "4", format_time(4 ns) & " - logger               -   ERROR - message 5");
       set(entries, "5", format_time(5 ns) & " - logger               - FAILURE - message 6");
-      check_log_file(log_file_name, entries);
+      check_log_file(file_handler, log_file_name, entries);
       reset_log_count(logger, error);
       reset_log_count(logger, failure);
 
@@ -247,7 +261,7 @@ begin
       set(entries, "0", format_time(0 ns) & " - logger               -    INFO - message (tb_log.vhd:188)");
       set(entries, "1", format_time(0 ns) & " - logger               -    INFO - hello (tb_log.vhd:189)");
       set(entries, "2", time_padding      & "                                    world");
-      check_log_file(log_file_name, entries);
+      check_log_file(file_handler, log_file_name, entries);
 
     elsif run("verbose format aligns multi line logs") then
       set_format(display_handler, format => verbose);
@@ -256,7 +270,7 @@ begin
       set(entries, "0", format_time(0 ns) & " - logger               -    INFO - hello");
       set(entries, "1", time_padding      & "                                    world");
       set(entries, "2", time_padding      & "                                        !");
-      check_log_file(log_file_name, entries);
+      check_log_file(file_handler, log_file_name, entries);
 
     elsif run("hierarchical format") then
       set_format(display_handler, format => verbose);
@@ -270,7 +284,7 @@ begin
       set(entries, "3", format_time(3 ns) & " - logger:nested        - WARNING - message 4");
       set(entries, "4", format_time(4 ns) & " - logger:nested        -   ERROR - message 5");
       set(entries, "5", format_time(5 ns) & " - logger:nested        - FAILURE - message 6");
-      check_log_file(log_file_name, entries);
+      check_log_file(file_handler, log_file_name, entries);
       reset_log_count(nested_logger, error);
       reset_log_count(nested_logger, failure);
 
@@ -297,7 +311,7 @@ begin
       set(entries, "3", "WARNING - message 4");
       set(entries, "4", "  ERROR - message 5");
       set(entries, "5", "FAILURE - message 6");
-      check_log_file(log_file_name, entries);
+      check_log_file(file_handler, log_file_name, entries);
       reset_log_count(default_logger, error);
       reset_log_count(default_logger, failure);
 
@@ -330,7 +344,7 @@ begin
       set(entries, "3", "WARNING - message 4");
       set(entries, "4", "  ERROR - message 5");
       set(entries, "5", "FAILURE - message 6");
-      check_log_file(log_file_name, entries);
+      check_log_file(file_handler, log_file_name, entries);
       reset_log_count(logger, error);
       reset_log_count(logger, failure);
 
@@ -344,7 +358,7 @@ begin
       set(entries, "0", "WARNING - message 4");
       set(entries, "1", "  ERROR - message 5");
       set(entries, "2", "FAILURE - message 6");
-      check_log_file(log_file_name, entries);
+      check_log_file(file_handler, log_file_name, entries);
       reset_log_count(logger, error);
       reset_log_count(logger, failure);
 
@@ -355,7 +369,7 @@ begin
       set_infinite_stop_count(root_logger, failure);
       perform_logging(logger);
       set(entries, "0", "WARNING - message 4");
-      check_log_file(log_file_name, entries);
+      check_log_file(file_handler, log_file_name, entries);
       reset_log_count(logger, error);
       reset_log_count(logger, failure);
 
@@ -367,7 +381,7 @@ begin
       info(nested_logger, "message 2");
       info("message 3");
       set(entries, "0", "   INFO - message 3");
-      check_log_file(log_file_name, entries);
+      check_log_file(file_handler, log_file_name, entries);
 
     elsif run("can show and hide source") then
       init_log_handler(file_handler, file_name => log_file_name, format => level);
@@ -383,7 +397,7 @@ begin
       info(nested_logger, "message");
       info("message");
       set(entries, "0", "   INFO - message");
-      check_log_file(log_file_name, entries);
+      check_log_file(file_handler, log_file_name, entries);
 
       init_log_handler(file_handler, file_name => log_file_name, format => level);
       show_all(logger, file_handler);
@@ -399,7 +413,7 @@ begin
       set(entries, "0", "   INFO - message 1");
       set(entries, "1", "   INFO - message 2");
       set(entries, "2", "   INFO - message 3");
-      check_log_file(log_file_name, entries);
+      check_log_file(file_handler, log_file_name, entries);
 
     elsif run("mock and unmock") then
       mock(logger);
@@ -839,7 +853,7 @@ begin
       init_log_handler(file_handler, file_name => log_file_name, format => raw);
       warning(logger, "message");
       set(entries, "0", "message");
-      check_log_file(log_file_name, entries);
+      check_log_file(file_handler, log_file_name, entries);
 
       init_log_handler(file_handler, file_name => log_file_name, format => raw);
       disable(logger, warning);
@@ -847,6 +861,32 @@ begin
       warning(logger, "message");
       set(entries, "0", "message");
       check_empty_log_file(log_file_name);
+
+   elsif run("many log files") then
+     set_format(display_handler, format => raw);
+
+     for i in file_handlers'range loop
+       file_handlers(i) := new_log_handler(log_file_name & to_string(i),
+                                           format => raw,
+                                           use_color => false);
+       loggers(i) := get_logger("log_to_file" & to_string(i));
+       set_log_handlers(loggers(i), (0 => file_handlers(i)));
+       show(loggers(i), file_handlers(i), info);
+     end loop;
+
+     for i in file_handlers'range loop
+       info(loggers(i), "a " & to_string(i));
+       info(loggers(i), "b " & to_string(i));
+       info(loggers(i), "c " & to_string(i));
+     end loop;
+
+     for i in file_handlers'range loop
+       set(entries, "0", "a " & to_string(i));
+       set(entries, "1", "b " & to_string(i));
+       set(entries, "2", "c " & to_string(i));
+
+       check_log_file(file_handlers(i), log_file_name & to_string(i), entries);
+     end loop;
 
     end if;
 

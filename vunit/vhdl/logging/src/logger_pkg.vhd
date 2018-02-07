@@ -15,6 +15,7 @@ package logger_pkg is
     p_data : integer_vector_ptr_t;
   end record;
   constant null_logger : logger_t := (p_data => null_ptr);
+  type logger_vec_t is array (natural range <>) of logger_t;
   impure function root_logger return logger_t;
 
   -- Get a logger with name.

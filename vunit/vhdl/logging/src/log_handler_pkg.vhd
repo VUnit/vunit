@@ -31,7 +31,7 @@ package log_handler_pkg is
   type log_handler_t is record
     p_data : integer_vector_ptr_t;
   end record;
-  constant null_handler : log_handler_t := (p_data => null_ptr);
+  constant null_log_handler : log_handler_t := (p_data => null_ptr);
   type log_handler_vec_t is array (natural range <>) of log_handler_t;
 
   -- Display handler; Write to stdout

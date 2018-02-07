@@ -59,7 +59,7 @@ package body test_support_pkg is
       end if;
     end loop;
 
-    return null_handler;
+    return null_log_handler;
   end function;
 
   impure function get_file_handler(logger : logger_t) return log_handler_t is
@@ -70,7 +70,7 @@ package body test_support_pkg is
       end if;
     end loop;
 
-    return null_handler;
+    return null_log_handler;
   end function;
 
   procedure check_stop_level(logger : logger_t; pass_level : log_level_t; stop_level : log_level_t) is
