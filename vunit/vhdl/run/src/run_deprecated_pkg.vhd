@@ -15,22 +15,19 @@ package run_deprecated_pkg is
   -- Deprecated interface to better support legacy testbenches.
   procedure test_runner_cleanup (
     signal runner: inout runner_sync_t;
-    constant checker_stat : in checker_stat_t;
-    constant external_failure : in boolean := false);
+    constant checker_stat : in checker_stat_t);
 
 end package run_deprecated_pkg;
 
 package body run_deprecated_pkg is
   procedure test_runner_cleanup (
     signal runner: inout runner_sync_t;
-    constant checker_stat : in checker_stat_t;
-    constant external_failure : in boolean := false) is
+    constant checker_stat : in checker_stat_t) is
   begin
     warning("Using deprecated procedure test_runner_cleanup with " &
-            "checker_stat and external_failure input.");
+            "checker_stat.");
 
     failure_if(checker_stat.n_failed > 0, to_string(checker_stat));
-    failure_if(external_failure, "External failure.");
     test_runner_cleanup(runner);
   end;
 end package body run_deprecated_pkg;

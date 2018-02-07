@@ -92,10 +92,13 @@ package body run_pkg is
 
   procedure test_runner_cleanup (
     signal runner: inout runner_sync_t;
-    fail_on_warning : boolean := false;
+    external_failure : boolean := false;
     allow_disabled_errors : boolean := false;
-    allow_disabled_failures : boolean := false) is
+    allow_disabled_failures : boolean := false;
+    fail_on_warning : boolean := false) is
   begin
+    failure_if(runner_trace_logger, external_failure, "External failure.");
+
     set_phase(runner_state, test_runner_cleanup);
     runner.phase <= test_runner_cleanup;
     wait for 0 ns;
