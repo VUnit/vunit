@@ -56,11 +56,15 @@ package com_types_pkg is
   -- Mailboxes owned by an actor
   type mailbox_id_t is (inbox, outbox);
 
+  -- A message type (of type msg_type_t) can be used identify the type of a message
+  -- (of type msg_t) such that it can be parsed correctly.
   type msg_type_t is record
     p_code : integer;
   end record;
   constant null_msg_type : msg_type_t := (p_code => -1);
 
+
+  -- Storage for all registered message types
   type msg_types_t is record
     p_name_ptrs : integer_vector_ptr_t;
   end record;
@@ -87,10 +91,9 @@ package com_types_pkg is
   end record message_t;
   type message_ptr_t is access message_t;
 
-  subtype msg_data_t is queue_t;
-
   -- Message type. All fields of the record are private and should not be
   -- referenced directly by the user.
+  subtype msg_data_t is queue_t;
   type msg_t is record
     id         : message_id_t;
     msg_type   : msg_type_t;
