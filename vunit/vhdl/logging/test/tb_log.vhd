@@ -45,16 +45,12 @@ begin
                        format => raw);
     end;
 
-    procedure check_log_file (file_handler : log_handler_t;
-                              file_name : string;
-                              entries   : dict_t) is
+    procedure check_file(file_name : string;
+                         entries   : dict_t) is
       file fptr : text;
       variable l : line;
       variable status : file_open_status;
     begin
-      assert get_file_name(file_handler) = file_name report "file name mismatch";
-      flush_file_handler(file_handler);
-
       file_open(status, fptr, file_name, read_mode);
       assert status = open_ok
         report "Failed opening " & file_name & " (" & file_open_status'image(status) & ")."
@@ -70,7 +66,20 @@ begin
       end if;
     end;
 
+    procedure check_log_file (file_handler : log_handler_t;
+                              file_name : string;
+                              entries   : dict_t) is
+      file fptr : text;
+      variable l : line;
+      variable status : file_open_status;
+    begin
+      assert get_file_name(file_handler) = file_name report "file name mismatch";
+      flush_file_handler(file_handler);
+      check_file(file_name, entries);
+    end;
+
     constant log_file_name : string := output_path(runner_cfg) & "my_log.csv";
+    constant print_file_name : string := output_path(runner_cfg) & "print.csv";
     variable logger : logger_t := get_logger("logger");
     variable nested_logger : logger_t := get_logger("nested", parent => logger);
     variable other_logger : logger_t := get_logger("other");
@@ -156,30 +165,24 @@ begin
       assert_equal(get_file_name(file_handler), log_file_name);
       assert_equal(get_file_name(display_handler), stdout_file_name);
 
-    --elsif run("Can print independent of logging") then
-    --  init_log_handler(file_handler, file_name => log_file_name, format => level);
+    elsif run("Can print independent of logging") then
+      print("message 1", print_file_name);
+      print("message 2", print_file_name);
 
-    --  print("message 1", log_file_name);
-    --  trace(logger, "message 2");
-    --  print("message 3", log_file_name);
-    --  trace(logger, "message 4");
+      file_open(status, fptr, print_file_name, append_mode);
+      assert status = open_ok
+        report "Failed to open file " & print_file_name & " - " & file_open_status'image(status) severity failure;
+      print("message 3", fptr);
+      file_close(fptr);
 
-    --  file_open(status, fptr, log_file_name, append_mode);
-    --  assert status = open_ok
-    --    report "Failed to open file " & log_file_name & " - " & file_open_status'image(status) severity failure;
-    --  print("message 5", fptr);
-    --  file_close(fptr);
+      set(entries, "0", "message 1");
+      set(entries, "1", "message 2");
+      set(entries, "2", "message 3");
+      check_file(print_file_name, entries);
 
-    --  set(entries, "0", "message 1");
-    --  set(entries, "1", "  TRACE - message 2");
-    --  set(entries, "2", "message 3");
-    --  set(entries, "3", "  TRACE - message 4");
-    --  set(entries, "4", "message 5");
-    --  check_log_file(file_handler, log_file_name, entries);
-
-    --  print("message 6", log_file_name, write_mode);
-    --  set(entries2, "0", "message 6");
-    --  check_log_file(file_handler, log_file_name, entries2);
+      print("message 6", print_file_name, write_mode);
+      set(entries2, "0", "message 6");
+      check_file(print_file_name, entries2);
 
     elsif run("Can use 'instance_name") then
       tmp_logger := get_logger(tmp_logger'instance_name);
