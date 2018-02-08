@@ -75,6 +75,22 @@ There are also conditional log procedures for warning, error and failure:
     -- There are also variants for error and failure as well as with
     -- non-default logger argument.
 
+It's also possible to create custom log levels. For example
+
+.. code-block:: vhdl
+
+    license_info := new_log_level("license", fg => red, bg => yellow, style => bright);
+
+
+The last optional parameters define the foreground, background and style of the output color.
+Valid values are defined in ansi_pkg.
+
+To make a log entry with the custom level use any of the `log` procedures:
+
+.. code-block:: vhdl
+
+    log("Mozilla Public License, v. 2.0.", license_info);
+    log(my_logger, "Mozilla Public License, v. 2.0.", license_info);
 
 Stopping simulation
 -------------------
