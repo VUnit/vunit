@@ -866,26 +866,26 @@ begin
      set_format(display_handler, format => raw);
 
      for i in file_handlers'range loop
-       file_handlers(i) := new_log_handler(log_file_name & to_string(i),
+       file_handlers(i) := new_log_handler(log_file_name & integer'image(i),
                                            format => raw,
                                            use_color => false);
-       loggers(i) := get_logger("log_to_file" & to_string(i));
+       loggers(i) := get_logger("log_to_file" & integer'image(i));
        set_log_handlers(loggers(i), (0 => file_handlers(i)));
        show(loggers(i), file_handlers(i), info);
      end loop;
 
      for i in file_handlers'range loop
-       info(loggers(i), "a " & to_string(i));
-       info(loggers(i), "b " & to_string(i));
-       info(loggers(i), "c " & to_string(i));
+       info(loggers(i), "a " & integer'image(i));
+       info(loggers(i), "b " & integer'image(i));
+       info(loggers(i), "c " & integer'image(i));
      end loop;
 
      for i in file_handlers'range loop
-       set(entries, "0", "a " & to_string(i));
-       set(entries, "1", "b " & to_string(i));
-       set(entries, "2", "c " & to_string(i));
+       set(entries, "0", "a " & integer'image(i));
+       set(entries, "1", "b " & integer'image(i));
+       set(entries, "2", "c " & integer'image(i));
 
-       check_log_file(file_handlers(i), log_file_name & to_string(i), entries);
+       check_log_file(file_handlers(i), log_file_name & integer'image(i), entries);
      end loop;
 
     end if;
