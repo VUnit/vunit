@@ -32,6 +32,9 @@ begin
     variable actor     : actor_t;
     variable msg, msg2 : msg_t;
     variable queue     : queue_t;
+    variable bv : bit_vector(0 to 5);
+    variable sulv : std_ulogic_vector(0 to 5);
+    variable boolv : boolean_vector(0 to 1);
 
     constant my_msg_type : msg_type_t := new_msg_type("my msg type");
   begin
@@ -131,14 +134,18 @@ begin
         msg := new_msg;
         push_bit_vector(msg, "1");
         push_bit_vector(msg, "010101");
-        check(pop_bit_vector(msg) = "1");
-        check(pop_bit_vector(msg) = "010101");
+        bv(0 to 0) := pop_bit_vector(msg);
+        check(bv(0) = '1');
+        bv(0 to 5) := pop_bit_vector(msg) ;
+        check(bv(0 to 5) = "010101");
       elsif run("Test push and pop std_ulogic_vector") then
         msg := new_msg;
         push_std_ulogic_vector(msg, "1");
         push_std_ulogic_vector(msg, "010101");
-        check(pop_std_ulogic_vector(msg) = "1");
-        check(pop_std_ulogic_vector(msg) = "010101");
+        sulv(0 to 0) := pop_std_ulogic_vector(msg);
+        check(sulv(0) = '1');
+        sulv(0 to 5) := pop_std_ulogic_vector(msg);
+        check(sulv(0 to 5) = "010101");
       elsif run("Test push and pop complex") then
         msg := new_msg;
         push_complex(msg, (1.0, 2.2));
@@ -175,12 +182,6 @@ begin
         push_numeric_std_signed(msg, "010101");
         check(pop_numeric_std_signed(msg) = "1");
         check(pop_numeric_std_signed(msg) = "010101");
-      elsif run("Test push and pop std_logic_vector") then
-        msg := new_msg;
-        push_std_ulogic_vector(msg, "1");
-        push_std_ulogic_vector(msg, "010101");
-        check(pop_std_ulogic_vector(msg) = "1");
-        check(pop_std_ulogic_vector(msg) = "010101");
       elsif run("Test push and pop signed and unsigned") then
         msg := new_msg;
         push_std_ulogic_vector(msg, std_ulogic_vector(ieee.numeric_std.to_unsigned(11, 16)));
@@ -201,10 +202,12 @@ begin
         assert pop_time(msg) = 1 ps;
       elsif run("Test push and pop boolean_vector") then
         msg := new_msg;
-        push_boolean_vector(msg, (1        => true));
+        push_boolean_vector(msg, (1 => true));
         push_boolean_vector(msg, (false, true));
-        check(pop_boolean_vector(msg) = (1 => true));
-        check(pop_boolean_vector(msg) = (false, true));
+        boolv(0 to 0) := pop_boolean_vector(msg);
+        check(boolv(0) = true);
+        boolv(0 to 1) := pop_boolean_vector(msg);
+        check(boolv(0 to 1) = (false, true));
       elsif run("Test push and pop integer_vector") then
         msg := new_msg;
         push_integer_vector(msg, (1        => 17));
