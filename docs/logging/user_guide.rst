@@ -93,7 +93,7 @@ Simulation stop is controlled via a stop count mechanism. The stop count mechani
 - By default only the root logger has a stop count set.
 
   - Root logger has stop count set to 1 for ``error`` and ``failure``.
-  - Root logger has stop count set to infinite for all other log levels.
+  - Root logger has stop disabled for all other log levels.
 
 Example:
 <<<<<<<<
@@ -102,8 +102,8 @@ Example:
     -- Allow 10 errors from my_logger and its children
     set_stop_count(my_logger, error, 10);
 
-    -- Allow infinite errors from my_logger and its children
-    set_infinite_stop_count(my_logger, error);
+    -- Disable stop on errors from my_logger and its children
+    disable_stop(my_logger, error);
 
     -- Short hand for stopping on error and failure but not warning globally
     set_stop_level(error);

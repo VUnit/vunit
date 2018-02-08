@@ -365,7 +365,7 @@ package body logger_pkg is
     p_set_stop_count(logger, log_level, value, unset_children);
   end;
 
-  procedure set_infinite_stop_count(logger : logger_t;
+  procedure disable_stop(logger : logger_t;
                                     log_level : log_level_t;
                                     unset_children : boolean := false) is
   begin
@@ -378,9 +378,9 @@ package body logger_pkg is
     set_stop_count(root_logger, log_level, value, unset_children => true);
   end;
 
-  procedure set_infinite_stop_count(log_level : log_level_t) is
+  procedure disable_stop(log_level : log_level_t) is
   begin
-    set_infinite_stop_count(root_logger, log_level, unset_children => true);
+    disable_stop(root_logger, log_level, unset_children => true);
   end;
 
   procedure set_stop_level(level : alert_log_level_t) is
@@ -393,7 +393,7 @@ package body logger_pkg is
     variable stop_count : natural;
   begin
     for level in log_level_t'low to log_level_t'high loop
-      set_infinite_stop_count(logger, level,
+      disable_stop(logger, level,
                               unset_children => true);
     end loop;
 
@@ -1022,7 +1022,7 @@ package body logger_pkg is
         when error|failure =>
           set_stop_count(logger, log_level, 1);
         when others =>
-          set_infinite_stop_count(logger, log_level);
+          disable_stop(logger, log_level);
       end case;
     end loop;
 

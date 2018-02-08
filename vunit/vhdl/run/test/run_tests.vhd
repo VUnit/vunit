@@ -294,7 +294,7 @@ begin
     ---------------------------------------------------------------------------
     banner("Error log cause failure on test_runner_cleanup");
     test_case_setup;
-    set_infinite_stop_count(get_logger("parent:my_logger"), failure);
+    disable_stop(get_logger("parent:my_logger"), failure);
     failure(get_logger("parent:my_logger"), "failure message 1");
     failure(get_logger("parent:my_logger"), "failure message 2");
     set_stop_count(get_logger("parent:my_logger"), failure, 1);

@@ -163,11 +163,11 @@ package logger_pkg is
                            value : positive;
                            unset_children : boolean := false);
 
-  -- Set the infinite threshold for stopping simulation for a specific log level and
+  -- Disable stopping simulation for a specific log level and
   -- logger tree
-  procedure set_infinite_stop_count(logger : logger_t;
-                                    log_level : log_level_t;
-                                    unset_children : boolean := false);
+  procedure disable_stop(logger : logger_t;
+                         log_level : log_level_t;
+                         unset_children : boolean := false);
 
   -- Set the threshold for stopping simulation for a specific log level in
   -- the entire logging tree.
@@ -176,11 +176,11 @@ package logger_pkg is
   procedure set_stop_count(log_level : log_level_t;
                            value : positive);
 
-  -- Set disable stopping simulation for a specific log level in
+  -- Disable stopping simulation for a specific log level in
   -- the entire logging tree.
 
   -- NOTE: Removes all other stop count settings for log_level in entire tree.
-  procedure set_infinite_stop_count(log_level : log_level_t);
+  procedure disable_stop(log_level : log_level_t);
 
   -- Shorthand for configuring the stop counts for (warning, error, failure) in
   -- a logger subtree. Set stop count to infinite for all levels < log_level and

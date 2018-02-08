@@ -70,8 +70,8 @@ begin
     file_close(fptr);
 
     -- We disable the simulation stop to show error and failure
-    set_infinite_stop_count(default_logger, failure);
-    set_infinite_stop_count(default_logger, error);
+    disable_stop(default_logger, failure);
+    disable_stop(default_logger, error);
     show_all(display_handler);
     set_format(display_handler, level, use_color => true);
     trace("Level format");

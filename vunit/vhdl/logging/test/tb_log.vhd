@@ -146,8 +146,8 @@ begin
     if run("raw format") then
       set_format(display_handler, format => raw);
       init_log_handler(file_handler, file_name => log_file_name, format => raw);
-      set_infinite_stop_count(logger, error);
-      set_infinite_stop_count(logger, failure);
+      disable_stop(logger, error);
+      disable_stop(logger, failure);
       perform_logging(logger);
       set(entries, "0", "message 1");
       set(entries, "1", "message 2");
@@ -206,8 +206,8 @@ begin
     elsif run("level format") then
       set_format(display_handler, format => level);
       init_log_handler(file_handler, file_name => log_file_name, format => level);
-      set_infinite_stop_count(logger, error);
-      set_infinite_stop_count(logger, failure);
+      disable_stop(logger, error);
+      disable_stop(logger, failure);
       perform_logging(logger);
       set(entries, "0", "  TRACE - message 1");
       set(entries, "1", "  DEBUG - message 2");
@@ -243,8 +243,8 @@ begin
     elsif run("verbose format") then
       set_format(display_handler, format => verbose);
       init_log_handler(file_handler, file_name => log_file_name, format => verbose);
-      set_infinite_stop_count(logger, error);
-      set_infinite_stop_count(logger, failure);
+      disable_stop(logger, error);
+      disable_stop(logger, failure);
       perform_logging(logger);
       set(entries, "0", format_time(0 ns) & " - logger               -   TRACE - message 1");
       set(entries, "1", format_time(1 ns) & " - logger               -   DEBUG - message 2");
@@ -278,8 +278,8 @@ begin
     elsif run("hierarchical format") then
       set_format(display_handler, format => verbose);
       init_log_handler(file_handler, file_name => log_file_name, format => verbose);
-      set_infinite_stop_count(nested_logger, error);
-      set_infinite_stop_count(nested_logger, failure);
+      disable_stop(nested_logger, error);
+      disable_stop(nested_logger, failure);
       perform_logging(nested_logger);
       set(entries, "0", format_time(0 ns) & " - logger:nested        -   TRACE - message 1");
       set(entries, "1", format_time(1 ns) & " - logger:nested        -   DEBUG - message 2");
@@ -294,8 +294,8 @@ begin
     elsif run("can log to default logger") then
       init_log_handler(file_handler, file_name => log_file_name, format => level);
 
-      set_infinite_stop_count(default_logger, error);
-      set_infinite_stop_count(default_logger, failure);
+      disable_stop(default_logger, error);
+      disable_stop(default_logger, failure);
       debug("message 1");
       wait for 1 ns;
       trace("message 2");
@@ -320,8 +320,8 @@ begin
 
     elsif run("can show and hide from handler") then
       init_log_handler(file_handler, file_name => log_file_name, format => level);
-      set_infinite_stop_count(root_logger, error);
-      set_infinite_stop_count(root_logger, failure);
+      disable_stop(root_logger, error);
+      disable_stop(root_logger, failure);
 
       hide_all(file_handler);
       for log_level in trace to failure loop
@@ -355,8 +355,8 @@ begin
       init_log_handler(file_handler, file_name => log_file_name, format => level);
       hide_all(file_handler);
       show(file_handler, (warning, error, failure));
-      set_infinite_stop_count(root_logger, error);
-      set_infinite_stop_count(root_logger, failure);
+      disable_stop(root_logger, error);
+      disable_stop(root_logger, failure);
       perform_logging(logger);
       set(entries, "0", "WARNING - message 4");
       set(entries, "1", "  ERROR - message 5");
@@ -368,8 +368,8 @@ begin
     elsif run("can hide individual levels") then
       init_log_handler(file_handler, file_name => log_file_name, format => level);
       hide(file_handler, (trace, debug, info, error, failure));
-      set_infinite_stop_count(root_logger, error);
-      set_infinite_stop_count(root_logger, failure);
+      disable_stop(root_logger, error);
+      disable_stop(root_logger, failure);
       perform_logging(logger);
       set(entries, "0", "WARNING - message 4");
       check_log_file(file_handler, log_file_name, entries);
@@ -611,8 +611,8 @@ begin
       assert_true(get_parent(tmp_logger) = logger, "parent logger");
 
     elsif run("Log counts") then
-      set_infinite_stop_count(root_logger, error);
-      set_infinite_stop_count(root_logger, failure);
+      disable_stop(root_logger, error);
+      disable_stop(root_logger, failure);
       tmp := 0;
 
       for lvl in trace to failure loop
@@ -722,7 +722,7 @@ begin
       unmock_core_failure;
 
     elsif run("Test final log check fails for errors") then
-      set_infinite_stop_count(error);
+      disable_stop(error);
       error(get_logger("parent:my_logger"), "message");
       mock_core_failure;
       final_log_check;
@@ -731,7 +731,7 @@ begin
       reset_log_count(get_logger("parent:my_logger"), error);
 
     elsif run("Test final log check fails for failures") then
-      set_infinite_stop_count(failure);
+      disable_stop(failure);
       failure(get_logger("parent:my_logger"), "message");
       failure(get_logger("parent:my_logger"), "message");
       mock_core_failure;
