@@ -34,6 +34,7 @@ begin
     variable stat_before, stat_after : checker_stat_t;
     variable my_checker : checker_t := new_checker("my_checker");
     variable my_logger : logger_t := get_logger(my_checker);
+    variable passed : boolean;
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -93,8 +94,8 @@ begin
         stat1 := (20, 13, 7);
         stat2 := (11, 3, 8);
         assert_true(stat1 + stat2 = (31, 16, 15), "Expected sum = (31, 16, 15)");
-        assert_true(to_string(stat1) = "checker_stat'(n_checks => 20, n_failed => 13, n_passed => 7)",
-                        "Format error of checker_stat_t. Got:" & to_string(stat1));
+        passed := to_string(stat1) = "checker_stat'(n_checks => 20, n_failed => 13, n_passed => 7)";
+        assert_true(passed, "Format error of checker_stat_t. Got:" & to_string(stat1));
       end if;
     end loop;
 

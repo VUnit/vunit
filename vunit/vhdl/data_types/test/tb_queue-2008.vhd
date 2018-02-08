@@ -22,6 +22,7 @@ architecture a of tb_queue_2008 is
 begin
   main : process
     variable queue : queue_t;
+    variable boolv : boolean_vector(0 to 1);
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -29,8 +30,10 @@ begin
       queue := new_queue;
       push_boolean_vector(queue, (1 => true));
       push_boolean_vector(queue, (false, true));
-      check(pop_boolean_vector(queue) = (1 => true));
-      check(pop_boolean_vector(queue) = (false, true));
+      boolv(0 to 0) := pop_boolean_vector(queue);
+      check(boolv(0) = true);
+      boolv := pop_boolean_vector(queue);
+      check(boolv = (false, true));
 
     elsif run("Test push and pop integer_vector") then
       queue := new_queue;

@@ -136,16 +136,16 @@ begin
         push_bit_vector(msg, "010101");
         bv(0 to 0) := pop_bit_vector(msg);
         check(bv(0) = '1');
-        bv(0 to 5) := pop_bit_vector(msg) ;
-        check(bv(0 to 5) = "010101");
+        bv := pop_bit_vector(msg) ;
+        check(bv = "010101");
       elsif run("Test push and pop std_ulogic_vector") then
         msg := new_msg;
         push_std_ulogic_vector(msg, "1");
         push_std_ulogic_vector(msg, "010101");
         sulv(0 to 0) := pop_std_ulogic_vector(msg);
         check(sulv(0) = '1');
-        sulv(0 to 5) := pop_std_ulogic_vector(msg);
-        check(sulv(0 to 5) = "010101");
+        sulv := pop_std_ulogic_vector(msg);
+        check(sulv = "010101");
       elsif run("Test push and pop complex") then
         msg := new_msg;
         push_complex(msg, (1.0, 2.2));
@@ -206,8 +206,8 @@ begin
         push_boolean_vector(msg, (false, true));
         boolv(0 to 0) := pop_boolean_vector(msg);
         check(boolv(0) = true);
-        boolv(0 to 1) := pop_boolean_vector(msg);
-        check(boolv(0 to 1) = (false, true));
+        boolv := pop_boolean_vector(msg);
+        check(boolv = (false, true));
       elsif run("Test push and pop integer_vector") then
         msg := new_msg;
         push_integer_vector(msg, (1        => 17));

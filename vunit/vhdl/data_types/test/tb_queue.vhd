@@ -30,6 +30,7 @@ architecture a of tb_queue is
 begin
   main : process
     variable queue, another_queue : queue_t;
+    variable bv : bit_vector(0 to 5);
   begin
     test_runner_setup(runner, runner_cfg);
     if run("Test default queue is null") then
@@ -150,8 +151,10 @@ begin
       queue := new_queue;
       push_bit_vector(queue, "1");
       push_bit_vector(queue, "010101");
-      check(pop_bit_vector(queue) = "1");
-      check(pop_bit_vector(queue) = "010101");
+      bv(0 to 0) := pop_bit_vector(queue);
+      check(bv(0) = '1');
+      bv := pop_bit_vector(queue);
+      check(bv = "010101");
 
     elsif run("Test push and pop std_ulogic_vector") then
       queue := new_queue;
