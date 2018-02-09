@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 License header sanity check
@@ -10,7 +10,7 @@ License header sanity check
 from __future__ import print_function
 
 import unittest
-from os.path import join, splitext, abspath, commonprefix
+from os.path import join, splitext, abspath, commonprefix, dirname
 from os import walk
 import re
 from datetime import datetime
@@ -94,7 +94,7 @@ def find_expected_license_years_of(file_name):
     """
     Use git history to find expected license years of file_name
     """
-    proc = Popen(['git', 'log', '--follow', '--date=short', file_name],
+    proc = Popen(['git', 'log', '--follow', '--date=short', file_name], cwd=dirname(file_name),
                  bufsize=0, stdout=PIPE, stdin=PIPE, stderr=STDOUT, universal_newlines=True)
     out, _ = proc.communicate()
     first_year = None

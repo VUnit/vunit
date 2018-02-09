@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2017, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2015-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Provides documentation and version information
@@ -19,7 +19,7 @@ def license_text():
 VUnit except for OSVVM (see below) is released under the terms of
 Mozilla Public License, v. 2.0.
 
-Copyright (c) 2014-2017, Lars Asplund lars.anders.asplund@gmail.com
+Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 OSVVM
 -----

@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2016, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2017, Lars Asplund lars.anders.asplund@gmail.com
 
 --
 -- The purpose of this package is to provide an integer vector access type (pointer)
