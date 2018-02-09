@@ -3,10 +3,16 @@
 .. post:: Jan 02, 2018
    :tags: VUnit
    :author: kraigher, lasplund
-   :excerpt: 2
+   :image: 1
+   :excerpt: 1
 
-VUnit 3
-=======
+VUnit 3.0
+=========
+
+.. figure:: VUnit3.0.png
+   :alt: VUnit 3.0
+   :align: center
+
 A new year has come and it is time for a third major update of VUnit.
 The update contains a number of major enhancement to our VHDL libraries
 
