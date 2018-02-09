@@ -14,11 +14,59 @@ Message Passing
 ---------------
 
 We have improved the ease of use of the :ref:`com <com_user_guide>`
-message passing library. Message creation is now very simple using
-push/pop of any standard data type. We have also added better
-debug-capabilities.
+message passing library. Message creation and parsing is now very simple using
+push/pop of any standard data type together with message types.
 
-.. @TODO examples:
+A sending process pushes data into a message and sends it to the receiver, a
+bus functional model (BFM) in this example.
+
+.. code-block:: vhdl
+
+  msg := new_msg(write_msg);
+  push_integer(msg, address);
+  push_std_ulogic_vector(msg, data);
+  send(net, bfm, msg);
+
+The message passing details would typically be wrapped into a procedure to provide a
+more user friendly interface for the BFM
+
+.. code-block:: vhdl
+
+  write(net, address, data);
+
+Message types are registered with `com` to get a system unique identifier.
+
+.. code-block:: vhdl
+
+  constant write_msg : msg_type_t := new_msg_type("write");
+
+The type makes it easy for the receiver to handle incoming messages correctly.
+
+.. code-block:: vhdl
+
+  receive(net, bfm, msg);
+  msg_type := message_type(msg);
+
+  if msg_type = write_msg then
+    address := pop_integer(msg);
+    data := pop_std_ulogic_vector(msg);
+    perform_pin_wiggling_on_bus_interface(address, data);
+  elsif msg_type = read_msg then
+    ...
+
+We have also added better debug capabilities. It's possible to inspect the state of the
+message passing system and trace messages can be enabled to see the dynamic behavior.
+
+.. code-block:: console
+
+      0 ps - vunit_lib:com -   TRACE - [2:- test sequencer -> memory BFM (read)] => memory BFM inbox
+  10000 ps - vunit_lib:com -   TRACE - memory BFM inbox => [2:- test sequencer -> memory BFM (read)]
+  20000 ps - memory BFM    -   DEBUG - Reading x"21" from address x"80"
+  20000 ps - vunit_lib:com -   TRACE - [3:2 memory BFM -> test sequencer (read reply)] => test sequencer inbox
+  30000 ps - vunit_lib:com -   TRACE - test sequencer inbox => [3:2 memory BFM -> test sequencer (read reply)]
+
+For more information see the :ref:`com user guide <com_user_guide>`.
+
 
 Verification Components
 -----------------------
