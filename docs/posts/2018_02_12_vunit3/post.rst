@@ -94,8 +94,6 @@ Out of the box we provide the following verification components:
   - UART RX/TX
   - (B)RAM master
 
-    .. @TODO examples
-
 For more information see the :ref:`verification component library user guide <vc_library>`.
 
 Logging
