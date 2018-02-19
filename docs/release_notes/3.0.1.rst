@@ -1,0 +1,1 @@
+- Replace deprecated aliases with constants to work around Sigasi-limitation.
