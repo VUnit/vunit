@@ -17,8 +17,8 @@ package run_types_pkg is
   constant max_n_test_cases : natural := 1024;
 
   -- Deprecated
-  alias max_locked_time_c is max_locked_time;
-  alias max_n_test_cases_c is max_n_test_cases;
+  constant max_locked_time_c : time := max_locked_time;
+  constant max_n_test_cases_c : natural := max_n_test_cases;
 
   subtype runner_cfg_t is string; -- Subtype deprecated, use string instead
   constant runner_cfg_default : string := "enabled_test_cases : __all__, output path : , active python runner : false";

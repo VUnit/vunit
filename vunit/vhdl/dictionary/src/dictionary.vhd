@@ -14,7 +14,7 @@ package dictionary is
   subtype frozen_dictionary_t is string;
   constant empty : frozen_dictionary_t := "";
   -- Deprecated
-  alias empty_c is empty;
+  constant empty_c : frozen_dictionary_t := empty;
 
   function len (
     constant d : frozen_dictionary_t)

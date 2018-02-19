@@ -22,7 +22,7 @@ package runner_pkg is
   constant unknown_num_of_test_cases : integer := integer'left;
 
   -- Deprecated
-  alias unknown_num_of_test_cases_c is unknown_num_of_test_cases;
+  constant unknown_num_of_test_cases_c : integer := unknown_num_of_test_cases;
 
   impure function new_runner return runner_t;
 
