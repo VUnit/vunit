@@ -277,6 +277,7 @@ begin
       assert pop_time(queue) = -1 fs;
       assert pop_time(queue) = -1 hr;
       assert pop_time(queue) = -1 hr - 1 fs;
+
     elsif run("Test codecs") then
       queue := new_queue;
       check(decode(encode(queue)) = queue);
