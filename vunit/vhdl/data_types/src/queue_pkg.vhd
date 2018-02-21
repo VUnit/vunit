@@ -26,7 +26,10 @@ package queue_pkg is
   constant null_queue : queue_t := (p_meta => null_ptr, data => null_string_ptr);
 
   impure function new_queue return queue_t;
-  impure function length(queue : queue_t) return integer;
+
+  -- Returns the length of the queue in bytes
+  impure function length(queue : queue_t) return natural;
+  impure function is_empty(queue : queue_t) return boolean;
   procedure flush(queue : queue_t);
   impure function copy(queue : queue_t) return queue_t;
 
@@ -170,11 +173,16 @@ package body queue_pkg is
             data => new_string_ptr);
   end;
 
-  impure function length(queue : queue_t) return integer is
+  impure function length(queue : queue_t) return natural is
     variable head : integer := get(queue.p_meta, head_idx);
     variable tail : integer := get(queue.p_meta, tail_idx);
   begin
     return tail - head;
+  end;
+
+  impure function is_empty(queue : queue_t) return boolean is
+  begin
+    return length(queue) = 0;
   end;
 
   procedure flush(queue : queue_t) is

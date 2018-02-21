@@ -36,6 +36,16 @@ begin
     if run("Test default queue is null") then
       assert queue = null_queue report "Expected null queue";
 
+    elsif run("Test is_empty") then
+      queue := new_queue;
+      check(is_empty(queue), "Empty queue");
+
+      push_integer(queue, 11);
+      check_false(is_empty(queue), "Empty queue");
+
+      check_equal(pop_integer(queue), 11, "data");
+      check(is_empty(queue), "Empty queue");
+
     elsif run("Test push and pop integer") then
       queue := new_queue;
       assert queue /= null_queue report "Expected non null queue";
