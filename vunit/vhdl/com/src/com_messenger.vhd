@@ -11,6 +11,7 @@ use work.com_types_pkg.all;
 use work.com_support_pkg.all;
 use work.queue_pkg.all;
 use work.queue_pool_pkg.all;
+use work.string_ptr_pkg.all;
 use work.codec_pkg.all;
 use work.logger_pkg.all;
 use work.log_levels_pkg.all;
@@ -644,10 +645,14 @@ package body com_messenger_pkg is
     msg        : msg_t;
     mailbox_id : mailbox_id_t) is
     variable envelope : envelope_ptr_t;
-    variable data     : msg_data_t := copy(msg.data);
+    variable data     : msg_data_t := new_queue(queue_pool);
     variable mailbox  : mailbox_ptr_t;
 
   begin
+    for i in 0 to length(msg.data) - 1 loop
+      push(data, get(msg.data.data, 1+i));
+    end loop;
+
     if is_visible(com_logger, trace) then
       trace(com_logger, "[" & to_string(msg) & "] => " & name(receiver) & " " & mailbox_id_t'image(mailbox_id));
     end if;
@@ -659,7 +664,6 @@ package body com_messenger_pkg is
     envelope.message.receiver   := msg.receiver;
     envelope.message.request_id := msg.request_id;
     write(envelope.message.payload, encode(data));
-    data                        := copy(data);
 
     mailbox                 := actors(receiver.id).inbox when mailbox_id = inbox else actors(receiver.id).outbox;
     mailbox.num_of_messages := mailbox.num_of_messages + 1;

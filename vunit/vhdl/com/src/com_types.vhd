@@ -461,7 +461,11 @@ package body com_types_pkg is
   impure function copy(msg : msg_t) return msg_t is
     variable result : msg_t := msg;
   begin
-    result.data := copy(msg.data);
+    result.data := new_queue(queue_pool);
+    for i in 0 to length(msg.data) - 1 loop
+      push(result.data, get(msg.data.data, 1+i));
+    end loop;
+
     return result;
   end;
 
