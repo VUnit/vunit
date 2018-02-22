@@ -62,7 +62,7 @@ def version():
     return '%i.%i.%i' % (VERSION[0], VERSION[1], VERSION[2])
 
 
-VERSION = (3, 0, 1)
+VERSION = (3, 0, 2)
 
 # DO NOT TOUCH: Only set to False by PyPI deployment script
 PRE_RELEASE = True
