@@ -140,7 +140,7 @@ package body com_pkg is
     end if;
 
     notify(net);
-    recycle(queue_pool, msg.data);
+    msg.data := null_queue;
   end;
 
   procedure send (

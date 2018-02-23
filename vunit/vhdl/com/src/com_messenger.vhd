@@ -643,15 +643,19 @@ package body com_messenger_pkg is
   procedure put_message (
     receiver   : actor_t;
     msg        : msg_t;
-    mailbox_id : mailbox_id_t) is
+    mailbox_id : mailbox_id_t;
+    copy_msg : boolean) is
     variable envelope : envelope_ptr_t;
-    variable data     : msg_data_t := new_queue(queue_pool);
+    variable data     : msg_data_t := msg.data;
     variable mailbox  : mailbox_ptr_t;
 
   begin
-    for i in 0 to length(msg.data) - 1 loop
-      push(data, get(msg.data.data, 1+i));
-    end loop;
+    if copy_msg then
+      data := new_queue(queue_pool);
+      for i in 0 to length(msg.data) - 1 loop
+        push(data, get(msg.data.data, 1+i));
+      end loop;
+    end if;
 
     if is_visible(com_logger, trace) then
       trace(com_logger, "[" & to_string(msg) & "] => " & name(receiver) & " " & mailbox_id_t'image(mailbox_id));
@@ -685,7 +689,7 @@ package body com_messenger_pkg is
       if set_msg_receiver then
         msg.receiver := subscriber_item.actor;
       end if;
-      put_message(subscriber_item.actor, msg, inbox);
+      put_message(subscriber_item.actor, msg, inbox, true);
       internal_publish(subscriber_item.actor, msg, (0 => inbound));
       subscriber_item := subscriber_item.next_item;
     end loop;
@@ -738,7 +742,7 @@ package body com_messenger_pkg is
     end if;
 
 
-    put_message(receiver, msg, mailbox_id);
+    put_message(receiver, msg, mailbox_id, false);
   end;
 
   -----------------------------------------------------------------------------
