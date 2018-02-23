@@ -935,6 +935,29 @@ package check_pkg is
     return boolean;
 
   -----------------------------------------------------------------------------
+  -- check_(almost)_equal for real
+  -----------------------------------------------------------------------------
+
+  procedure check_equal(
+    constant got       : in real;
+    constant expected  : in real;
+    constant msg       : in string      := check_result_tag;
+    constant max_diff  : in real        := 0.0;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "");
+
+  procedure check_equal(
+    constant checker   : in checker_t;
+    constant got       : in real;
+    constant expected  : in real;
+    constant msg       : in string      := check_result_tag;
+    constant max_diff  : in real        := 0.0;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "");
+
+  -----------------------------------------------------------------------------
   -- check_equal
   -----------------------------------------------------------------------------
   procedure check_equal(

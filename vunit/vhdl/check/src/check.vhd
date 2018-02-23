@@ -2254,6 +2254,58 @@ package body check_pkg is
   end to_sufficient_signed;
 
   -----------------------------------------------------------------------------
+  -- check_(almost)_equal for real
+  -----------------------------------------------------------------------------
+
+  procedure check_equal(
+    constant got       : in real;
+    constant expected  : in real;
+    constant msg       : in string      := check_result_tag;
+    constant max_diff  : in real        := 0.0;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "") is
+  begin
+    -- pragma translate_off
+    check_equal(default_checker, got, expected, msg, max_diff, level, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+
+  procedure check_equal(
+    constant checker   : in checker_t;
+    constant got       : in real;
+    constant expected  : in real;
+    constant msg       : in string      := check_result_tag;
+    constant max_diff  : in real        := 0.0;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "") is
+  begin
+    -- pragma translate_off
+    if abs (got - expected) <= max_diff then
+      if is_pass_visible(checker) then
+        passing_check(
+          checker,
+          std_msg(
+            "Equality check passed", msg,
+            "Got abs (" & real'image(got) & " - " & real'image(expected) & ") <= " & real'image(max_diff) & "."),
+          line_num, file_name);
+      else
+        passing_check(checker);
+      end if;
+    else
+      failing_check(
+        checker,
+        std_msg(
+          "Equality check failed", msg,
+          "Got abs (" & real'image(got) & " - " & real'image(expected) & ") > " & real'image(max_diff) & "."),
+        level, line_num, file_name);
+    end if;
+    -- pragma translate_on
+  end;
+
+  -----------------------------------------------------------------------------
   -- check_equal
   -----------------------------------------------------------------------------
   procedure check_equal(

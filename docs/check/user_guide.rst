@@ -651,6 +651,22 @@ value fails.
 
     Got 17 (0001_0001). Expected 0001_0000 (16).
 
+Real value checks
+'''''''''''''''''
+For real values exact comparison is often not desired. Thus there is a ``check_equal`` variant taking a ``max_diff`` argument.
+The check fails if the absolute difference of the got and expected values are larger than ``max_diff``.
+
+.. code-block:: vhdl
+
+    check_equal(0.1, 0.2, max_diff => 0.1); -- Passes
+    check_equal(0.1, 0.2, max_diff => 0.05); -- Fails
+
+.. code-block:: console
+
+    Equality check passed - Got abs (0.1 - 0.2) <= 0.1.
+    Equality check failed - Got abs (0.1 - 0.2) > 0.05.
+
+
 Relation Check (check\_relation)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
