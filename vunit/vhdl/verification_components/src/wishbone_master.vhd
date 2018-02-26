@@ -48,7 +48,7 @@ begin
     stb <= '0';
     wait until rising_edge(clk);
     loop
-      verbose(bus_handle.p_logger, "blocking on receive");
+      info(bus_handle.p_logger, "blocking on receive");
       receive(net, bus_handle.p_actor, request_msg);
       msg_type := message_type(request_msg);
       if msg_type = bus_read_msg then
