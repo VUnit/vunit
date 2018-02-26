@@ -41,10 +41,10 @@ end entity;
 
 architecture a of wishbone_slave is
 
-	constant ack_actor 		: actor_t := new_actor("ack_actor");
+	constant ack_actor 		: actor_t := new_actor("slave ack actor");
   constant slave_logger : logger_t := get_logger("slave");
-  constant bus_write_msg   : msg_type_t := new_msg_type("wb bus write");  
-  constant bus_read_msg   : msg_type_t := new_msg_type("wb bus read");  
+  constant bus_write_msg   : msg_type_t := new_msg_type("wb slave write");  
+  constant bus_read_msg   : msg_type_t := new_msg_type("wb slave read");  
 begin
 
   show(slave_logger, display_handler, verbose);

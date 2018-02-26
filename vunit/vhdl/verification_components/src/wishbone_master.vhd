@@ -37,6 +37,7 @@ end entity;
 architecture a of wishbone_master is
   constant request_queue : queue_t := new_queue;
   constant bus_ack_msg   : msg_type_t := new_msg_type("ack bus");
+  constant wb_master_ack_actor : actor_t := new_actor("wb master ack");  
 begin
   main : process
     variable request_msg, reply_msg : msg_t;
@@ -100,7 +101,7 @@ begin
     request_msg := pop(request_queue);
     -- Reply only on read
     if we = '0' then
-      reply_msg := new_msg;
+      reply_msg := new_msg(sender => wb_master_ack_actor);
       push_std_ulogic_vector(reply_msg, dat_i);
       reply(net, request_msg, reply_msg);
       delete(request_msg);
