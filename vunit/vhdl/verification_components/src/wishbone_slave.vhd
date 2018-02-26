@@ -20,7 +20,6 @@ library vunit_lib;
 context vunit_lib.vunit_context;
 context work.com_context;
 
-use work.bus_master_pkg.all;
 use work.memory_pkg.all;
 
 entity wishbone_slave is
@@ -44,6 +43,8 @@ architecture a of wishbone_slave is
 
 	constant ack_actor 		: actor_t := new_actor("ack_actor");
   constant slave_logger : logger_t := get_logger("slave");
+  constant bus_write_msg   : msg_type_t := new_msg_type("wb bus write");  
+  constant bus_read_msg   : msg_type_t := new_msg_type("wb bus read");  
 begin
 
   show(slave_logger, display_handler, verbose);
@@ -54,14 +55,12 @@ begin
   begin
     wait until (cyc and stb) = '1' and rising_edge(clk);
     if we = '1' then
-      trace(slave_logger, "Write cycle start");
       wr_request_msg := new_msg(bus_write_msg);
       -- For write address and data is passed to ack proc
       push_integer(wr_request_msg, to_integer(unsigned(adr)));
       push_std_ulogic_vector(wr_request_msg, dat_i);      
       send(net, ack_actor, wr_request_msg);
     elsif we = '0' then
-      trace(slave_logger, "Read cycle start");
       rd_request_msg := new_msg(bus_read_msg);
       -- For read, only address is passed to ack proc
       push_integer(rd_request_msg, to_integer(unsigned(adr)));
@@ -78,29 +77,24 @@ begin
     variable buf : buffer_t := allocate(memory, 1024);        
   begin
     ack <= '0';
-    trace(slave_logger, "Slave ack: blocking on receive");
     receive(net, ack_actor, request_msg);
     msg_type := message_type(request_msg);
 
     if msg_type = bus_write_msg then
-      trace(slave_logger, "Start ack write");
       addr := pop_integer(request_msg);
       data := pop_std_ulogic_vector(request_msg);
       --write_word(memory, addr, data);      	
       ack <= '1';
       wait until rising_edge(clk);
       ack <= '0';
-      trace(slave_logger, "Write cycle passed");
 
     elsif msg_type = bus_read_msg then
-      trace(slave_logger, "Start ack read");
       addr := pop_integer(request_msg);
       --data := read_word(memory, addr, dat_o'length/8);
       dat_o <= data;
       ack <= '1';
       wait until rising_edge(clk);
       ack <= '0';
-      trace(slave_logger, "Read cycle passed");
 
     else
       unexpected_msg_type(msg_type);

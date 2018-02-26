@@ -48,11 +48,9 @@ begin
     stb <= '0';
     wait until rising_edge(clk);
     loop
-      trace(bus_handle.p_logger, "blocking on receive");
       receive(net, bus_handle.p_actor, request_msg);
       msg_type := message_type(request_msg);
       if msg_type = bus_read_msg then
-		trace(bus_handle.p_logger, "got bus read msg");      
         adr <= pop_std_ulogic_vector(request_msg);
         cyc <= '1';
         stb <= '1';
@@ -64,7 +62,6 @@ begin
         pending_acks := pending_acks +1;
 
       elsif msg_type = bus_write_msg then
-		trace(bus_handle.p_logger, "got bus write msg");            
         adr <= pop_std_ulogic_vector(request_msg);
         dat_o <= pop_std_ulogic_vector(request_msg);
         sel <= pop_std_ulogic_vector(request_msg);
@@ -80,7 +77,6 @@ begin
 
       elsif msg_type = bus_ack_msg then
         -- TODO bus errors detection
-        trace(bus_handle.p_logger, "Got bus ack msg");
         received_acks := received_acks +1;
         if pending_acks = received_acks then
           -- End of wb cycle
@@ -108,12 +104,10 @@ begin
       push_std_ulogic_vector(reply_msg, dat_i);
       reply(net, request_msg, reply_msg);
       delete(request_msg);
-      trace("Sent msg to bus_master_pkg");
     end if;
     -- Response main that ack is received
     ack_msg := new_msg(bus_ack_msg);
     send(net, bus_handle.p_actor, ack_msg);
-    trace("Sent msg to main");
   end loop;
   end process;
 end architecture;

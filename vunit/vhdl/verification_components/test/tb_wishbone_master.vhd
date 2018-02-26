@@ -62,7 +62,7 @@ begin
 	  wait until rising_edge(clk);
 
     if run("Test single write, read") then
-      trace(tb_logger, "RW single test");    
+      trace(tb_logger, "Single address write and read test");    
       write_bus(net, bus_handle, 0, value);
       
       wait for 50 ns;
