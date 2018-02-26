@@ -36,8 +36,8 @@ end entity;
 
 architecture a of wishbone_master is
   constant request_queue : queue_t := new_queue;
-  constant bus_ack_msg   : msg_type_t := new_msg_type("ack bus");
-  constant wb_master_ack_actor : actor_t := new_actor("wb master ack");  
+  constant bus_ack_msg   : msg_type_t := new_msg_type("wb master ack msg");
+  constant wb_master_ack_actor : actor_t := new_actor("wb master ack actor");  
 begin
   main : process
     variable request_msg, reply_msg : msg_t;
@@ -80,9 +80,10 @@ begin
         -- TODO bus errors detection
         received_acks := received_acks +1;
         if pending_acks = received_acks then
+          info(bus_handle.p_logger, "finished wb cycle");
           -- End of wb cycle
           cyc <= '0';
-          wait until rising_edge(clk);
+          --wait until rising_edge(clk);
           pending_acks := 0;
           received_acks := 0;
         end if;

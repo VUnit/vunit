@@ -83,14 +83,15 @@ begin
     if msg_type = bus_write_msg then
       addr := pop_integer(request_msg);
       data := pop_std_ulogic_vector(request_msg);
-      --write_word(memory, addr, data);      	
+      write_word(memory, addr, data);      	
       ack <= '1';
       wait until rising_edge(clk);
       ack <= '0';
 
     elsif msg_type = bus_read_msg then
+      data := (others => '0');
       addr := pop_integer(request_msg);
-      --data := read_word(memory, addr, dat_o'length/8);
+      data := read_word(memory, addr, 2);
       dat_o <= data;
       ack <= '1';
       wait until rising_edge(clk);
