@@ -224,6 +224,12 @@ package com_types_pkg is
   -- Check if message is empty
   impure function is_empty(msg : msg_t) return boolean;
 
+  -- Push message into a queue.
+  procedure push(queue : queue_t; value : msg_t);
+
+  -- Pop a message from a queue.
+  impure function pop(queue : queue_t) return msg_t;
+
   -----------------------------------------------------------------------------
   -- Subprograms for pushing/popping data to/from a message. Data is popped
   -- from a message in the same order they were pushed (FIFO)
@@ -373,6 +379,11 @@ package com_types_pkg is
   alias push_float is push[msg_t, float];
   alias pop_float is pop[msg_t return float];
 
+  procedure push(msg      : msg_t; value : msg_t);
+  impure function pop(msg : msg_t) return msg_t;
+  alias push_msg_t is push[msg_t, msg_t];
+  alias pop_msg_t is pop[msg_t return msg_t];
+
 end package;
 
 package body com_types_pkg is
@@ -491,6 +502,29 @@ package body com_types_pkg is
     end if;
 
     return length(msg.data) = 0;
+  end;
+
+  procedure push(queue : queue_t; value : msg_t) is
+  begin
+    push(queue, value.id);
+    push(queue, com_status_t'pos(value.status));
+    push(queue, value.sender.id);
+    push(queue, value.receiver.id);
+    push(queue, value.request_id);
+    push_queue_ref(queue, value.data);
+  end;
+
+  impure function pop(queue : queue_t) return msg_t is
+    variable ret_val : msg_t := new_msg;
+  begin
+    ret_val.id          := pop(queue);
+    ret_val.status      := com_status_t'val(integer'(pop(queue)));
+    ret_val.sender.id   := pop(queue);
+    ret_val.receiver.id := pop(queue);
+    ret_val.request_id  := pop(queue);
+    ret_val.data        := pop_queue_ref(queue);
+
+    return ret_val;
   end;
 
   -----------------------------------------------------------------------------
@@ -783,6 +817,16 @@ package body com_types_pkg is
   end;
 
   impure function pop(msg : msg_t) return float is
+  begin
+    return pop(msg.data);
+  end;
+
+  procedure push(msg      : msg_t; value : msg_t) is
+  begin
+    push(msg.data, value);
+  end;
+
+  impure function pop(msg : msg_t) return msg_t is
   begin
     return pop(msg.data);
   end;

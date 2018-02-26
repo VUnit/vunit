@@ -35,23 +35,24 @@ begin
     variable self, actor, actor2, actor3, actor4, actor5, my_receiver, my_sender : actor_t;
     variable server, publisher, publisher2, subscriber,
       subscriber2, subscriber3 : actor_t;
-    variable actor_vec                                                     : actor_vec_t(0 to 2);
-    variable status                                                        : com_status_t;
-    variable n_actors                                                      : natural;
-    variable t_start, t_stop                                               : time;
-    variable ack                                                           : boolean;
-    variable msg, msg2, request_msg, request_msg2, request_msg3, reply_msg : msg_t;
-    variable peeked_msg1, peeked_msg2                                      : msg_t;
-    variable msg_vec_ptr                                                   : msg_vec_ptr_t;
-    variable deprecated_message                                            : message_ptr_t;
-    variable subscription_vec_ptr                                          : subscription_vec_ptr_t;
-    variable actor_state                                                   : actor_state_t;
-    variable mailbox_state                                                 : mailbox_state_t;
-    variable l                                                             : line;
-    variable messenger_state                                               : messenger_state_t;
-    variable null_mailbox_state : mailbox_state_t := (inbox, 0, null);
-    variable null_actor_state : actor_state_t := (null, false, null_mailbox_state, null_mailbox_state, null, null);
-    variable null_messenger_state : messenger_state_t := (null, null);
+    variable actor_vec                                          : actor_vec_t(0 to 2);
+    variable status                                             : com_status_t;
+    variable n_actors                                           : natural;
+    variable t_start, t_stop                                    : time;
+    variable ack                                                : boolean;
+    variable msg, msg2, msg3, msg4                              : msg_t;
+    variable request_msg, request_msg2, request_msg3, reply_msg : msg_t;
+    variable peeked_msg1, peeked_msg2                           : msg_t;
+    variable msg_vec_ptr                                        : msg_vec_ptr_t;
+    variable deprecated_message                                 : message_ptr_t;
+    variable subscription_vec_ptr                               : subscription_vec_ptr_t;
+    variable actor_state                                        : actor_state_t;
+    variable mailbox_state                                      : mailbox_state_t;
+    variable l                                                  : line;
+    variable messenger_state                                    : messenger_state_t;
+    variable null_mailbox_state                                 : mailbox_state_t   := (inbox, 0, null);
+    variable null_actor_state                                   : actor_state_t     := (null, false, null_mailbox_state, null_mailbox_state, null, null);
+    variable null_messenger_state                               : messenger_state_t := (null, null);
 
   begin
     test_runner_setup(runner, runner_cfg);
@@ -298,7 +299,7 @@ begin
       elsif run("Test that an actor can poll for incoming messages") then
         wait_for_message(net, self, status, 0 ns);
         check(status = timeout, "Expected timeout");
-        msg  := new_msg(sender => self);
+        msg := new_msg(sender => self);
         push_string(msg, "hello again");
         send(net, self, msg);
         wait_for_message(net, self, status, 0 ns);
@@ -465,16 +466,16 @@ begin
         check(sender(msg) = null_actor);
         check(receiver(msg) = actor);
       elsif run("Test that get_message will wake up sender blocking on full inbox") then
-        actor := new_actor("actor", 1);
+        actor         := new_actor("actor", 1);
         start_server6 <= true;
         wait for 1 ns;
-        server       := find("server6");
+        server        := find("server6");
 
-        request_msg  := new_msg(sender => actor);
+        request_msg := new_msg(sender => actor);
         push_string(request_msg, "request1");
         send(net, server, request_msg);
 
-        request_msg2  := new_msg(sender => actor);
+        request_msg2 := new_msg(sender => actor);
         push_string(request_msg2, "request2");
         send(net, server, request_msg2);
 
@@ -485,6 +486,27 @@ begin
         wait_for_message(net, actor, status);
         get_message(net, actor, reply_msg);
         check_equal(pop_string(reply_msg), "reply to request2");
+
+      elsif run("Test that a message can be forwarded") then
+        actor  := new_actor("actor");
+        actor2 := new_actor("actor2");
+        actor3 := new_actor("actor3");
+        msg    := new_msg(sender => actor);
+        push_string(msg, "request");
+        send(net, actor2, msg);
+        receive(net, actor2, msg2);
+        msg3   := new_msg;
+        push_msg_t(msg3, msg2);
+        send(net, actor3, msg3);
+        receive(net, actor3, msg3);
+        msg2   := new_msg;
+        push_string(msg2, "reply");
+        msg4 := pop_msg_t(msg3);
+        reply(net, msg4, msg2);
+        receive_reply(net, msg, msg3);
+        check_equal(pop_string(msg3), "reply");
+        check(sender(msg3) = actor2);
+        check(receiver(msg3) = actor);
 
       -- Publish, subscribe, and unsubscribe
       elsif run("Test that an actor can publish messages to multiple subscribers") then
@@ -825,16 +847,16 @@ begin
         check_equal(pop_string(reply_msg), "reply3");
 
       elsif run("Test that get_reply will wake up sender blocking on full inbox") then
-        actor := new_actor("actor", 1);
+        actor         := new_actor("actor", 1);
         start_server6 <= true;
         wait for 1 ns;
-        server       := find("server6");
+        server        := find("server6");
 
-        request_msg  := new_msg(sender => actor);
+        request_msg := new_msg(sender => actor);
         push_string(request_msg, "request1");
         send(net, server, request_msg);
 
-        request_msg2  := new_msg(sender => actor);
+        request_msg2 := new_msg(sender => actor);
         push_string(request_msg2, "request2");
         send(net, server, request_msg2);
 
@@ -1070,11 +1092,11 @@ begin
         deallocate(messenger_state);
         check(messenger_state = null_messenger_state);
 
-        actor := new_actor("actor");
+        actor           := new_actor("actor");
         messenger_state := get_messenger_state;
         check_equal(messenger_state.active_actors'length, 1);
         check(messenger_state.deferred_actors = null);
-        actor_state := get_actor_state(actor);
+        actor_state     := get_actor_state(actor);
         check_equal(messenger_state.active_actors(0).name.all, actor_state.name.all);
         check_equal(messenger_state.active_actors(0).is_deferred, actor_state.is_deferred);
         check(messenger_state.active_actors(0).inbox = actor_state.inbox);
@@ -1084,11 +1106,11 @@ begin
         deallocate(messenger_state);
         check(messenger_state = null_messenger_state);
 
-        actor2 := new_actor("actor 2");
+        actor2          := new_actor("actor 2");
         messenger_state := get_messenger_state;
         check_equal(messenger_state.active_actors'length, 2);
         check(messenger_state.deferred_actors = null);
-        actor_state := get_actor_state(actor2);
+        actor_state     := get_actor_state(actor2);
         check_equal(messenger_state.active_actors(1).name.all, actor_state.name.all);
         check_equal(messenger_state.active_actors(1).is_deferred, actor_state.is_deferred);
         check(messenger_state.active_actors(1).inbox = actor_state.inbox);
@@ -1103,7 +1125,7 @@ begin
         messenger_state := get_messenger_state;
         check_equal(messenger_state.active_actors'length, 1);
         check(messenger_state.deferred_actors = null);
-        actor_state := get_actor_state(actor2);
+        actor_state     := get_actor_state(actor2);
         check_equal(messenger_state.active_actors(0).name.all, actor_state.name.all);
         check_equal(messenger_state.active_actors(0).is_deferred, actor_state.is_deferred);
         check(messenger_state.active_actors(0).inbox = actor_state.inbox);
@@ -1113,18 +1135,18 @@ begin
         deallocate(messenger_state);
         check(messenger_state = null_messenger_state);
 
-        actor3 := find("actor 3");
+        actor3          := find("actor 3");
         messenger_state := get_messenger_state;
         check_equal(messenger_state.active_actors'length, 1);
         check_equal(messenger_state.deferred_actors'length, 1);
-        actor_state := get_actor_state(actor2);
+        actor_state     := get_actor_state(actor2);
         check_equal(messenger_state.active_actors(0).name.all, actor_state.name.all);
         check_equal(messenger_state.active_actors(0).is_deferred, actor_state.is_deferred);
         check(messenger_state.active_actors(0).inbox = actor_state.inbox);
         check(messenger_state.active_actors(0).outbox = actor_state.outbox);
         check(messenger_state.active_actors(0).subscriptions = actor_state.subscriptions);
         check(messenger_state.active_actors(0).subscribers = actor_state.subscribers);
-        actor_state := get_actor_state(actor3);
+        actor_state     := get_actor_state(actor3);
         check_equal(messenger_state.deferred_actors(0).name.all, actor_state.name.all);
         check_equal(messenger_state.deferred_actors(0).is_deferred, actor_state.is_deferred);
         check(messenger_state.deferred_actors(0).inbox = actor_state.inbox);
@@ -1139,7 +1161,7 @@ begin
         messenger_state := get_messenger_state;
         check(messenger_state.active_actors = null);
         check_equal(messenger_state.deferred_actors'length, 1);
-        actor_state := get_actor_state(actor3);
+        actor_state     := get_actor_state(actor3);
         check_equal(messenger_state.deferred_actors(0).name.all, actor_state.name.all);
         check_equal(messenger_state.deferred_actors(0).is_deferred, actor_state.is_deferred);
         check(messenger_state.deferred_actors(0).inbox = actor_state.inbox);
@@ -1191,7 +1213,7 @@ begin
 
       elsif run("Test trace log") then
         mock(com_logger);
-        my_sender := new_actor("sender");
+        my_sender   := new_actor("sender");
         my_receiver := new_actor("receiver");
 
         msg := new_msg(new_msg_type("msg type"), sender => my_sender);
