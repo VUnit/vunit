@@ -97,7 +97,6 @@ begin
     variable request_msg, reply_msg, ack_msg : msg_t;
     variable msg_type : msg_type_t;
   begin
-  loop
     wait until ack = '1' and rising_edge(clk);
     request_msg := pop(request_queue);
     -- Reply only on read
@@ -110,6 +109,5 @@ begin
     -- Response main that ack is received
     ack_msg := new_msg(bus_ack_msg);
     send(net, bus_handle.p_actor, ack_msg);
-  end loop;
   end process;
 end architecture;

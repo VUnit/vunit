@@ -45,8 +45,8 @@ architecture a of wishbone_slave is
 
 	constant ack_actor 		: actor_t := new_actor("slave ack actor");
   constant slave_logger : logger_t := get_logger("slave");
-  constant bus_write_msg   : msg_type_t := new_msg_type("wb slave write");  
-  constant bus_read_msg   : msg_type_t := new_msg_type("wb slave read");  
+  constant slave_write_msg   : msg_type_t := new_msg_type("wb slave write");  
+  constant slave_read_msg   : msg_type_t := new_msg_type("wb slave read");  
 begin
 
   show(slave_logger, display_handler, verbose);
@@ -57,13 +57,13 @@ begin
   begin
     wait until (cyc and stb) = '1' and rising_edge(clk);
     if we = '1' then
-      wr_request_msg := new_msg(bus_write_msg);
+      wr_request_msg := new_msg(slave_write_msg);
       -- For write address and data is passed to ack proc
       push_integer(wr_request_msg, to_integer(unsigned(adr)));
       push_std_ulogic_vector(wr_request_msg, dat_i);      
       send(net, ack_actor, wr_request_msg);
     elsif we = '0' then
-      rd_request_msg := new_msg(bus_read_msg);
+      rd_request_msg := new_msg(slave_read_msg);
       -- For read, only address is passed to ack proc
       push_integer(rd_request_msg, to_integer(unsigned(adr)));
       send(net, ack_actor, rd_request_msg);
@@ -82,7 +82,7 @@ begin
     receive(net, ack_actor, request_msg);
     msg_type := message_type(request_msg);
 
-    if msg_type = bus_write_msg then
+    if msg_type = slave_write_msg then
       addr := pop_integer(request_msg);
       data := pop_std_ulogic_vector(request_msg);
       write_word(memory, addr, data);      	
@@ -90,9 +90,10 @@ begin
       wait until rising_edge(clk);
       ack <= '0';
 
-    elsif msg_type = bus_read_msg then
+    elsif msg_type = slave_read_msg then
       data := (others => '0');
-      addr := pop_integer(request_msg);
+			-- error: pop from empty queue below
+      --addr := pop_integer(request_msg);
       data := read_word(memory, addr, 2);
       dat_o <= data;
       ack <= '1';

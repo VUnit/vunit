@@ -47,7 +47,7 @@ architecture a of tb_wishbone_master is
   constant bus_handle : bus_master_t := new_bus(data_length => dat_width,
       address_length => adr_width, logger => master_logger);
 
-  constant num_block_cycles : natural := 2;
+  constant num_block_cycles : natural := 3;
 begin
 
   main_stim : process
@@ -91,6 +91,36 @@ begin
       info(tb_logger, "Reading...");
       for i in 0 to num_block_cycles-1 loop
         read_bus(net, bus_handle, i, tmp);
+        --check_equal(tmp, std_logic_vector(to_unsigned(i, dat_i'length)), "read data");
+      end loop;
+
+    elsif run("write_block read_block") then
+      info(tb_logger, "Writing...");
+      for i in 0 to num_block_cycles-1 loop
+        write_bus(net, bus_handle, i,
+            std_logic_vector(to_unsigned(i, dat_i'length)));
+      end loop;
+      
+      info(tb_logger, "Sleeping...");
+      for i in 1 to num_block_cycles loop
+        wait until ack = '1' and rising_edge(clk);
+      end loop;
+      wait for 100 ns;
+      wait until rising_edge(clk);
+
+      info(tb_logger, "Reading...");
+      for i in 0 to num_block_cycles-1 loop
+        read_bus(net, bus_handle, i, rd_ref(i));
+      end loop;
+
+      wait until rising_edge(clk);
+      wait until rising_edge(clk);
+      wait until rising_edge(clk);
+      wait for 100 ns;
+	
+      trace(tb_logger, "Get reads by references...");
+      for i in 0 to num_block_cycles-1 loop
+        await_read_bus_reply(net, rd_ref(i), tmp);
         --check_equal(tmp, std_logic_vector(to_unsigned(i, dat_i'length)), "read data");
       end loop;
 	  -- With references
