@@ -1,0 +1,107 @@
+-- This Source Code Form is subject to the terms of the Mozilla Public
+-- License, v. 2.0. If a copy of the MPL was not distributed with this file,
+-- You can obtain one at http://mozilla.org/MPL/2.0/.
+--
+-- Slawomir Siluk slaweksiluk@gazeta.pl 2018
+-- Wishbone slave wrapper for Vunit memory VC
+-- TODO:
+-- - wb sel
+-- - stall (random)
+-- - random ack delay
+-- - err and rty responses
+-- - variable memory size (currenlty 1024Bytes)
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+library vunit_lib;
+context vunit_lib.vunit_context;
+context work.com_context;
+
+use work.bus_master_pkg.all;
+use work.memory_pkg.all;
+
+entity wishbone_slave is
+--  generic (
+--    bus_handle : bus_master_t
+--    );
+  port (
+    clk   : in std_logic;
+    adr   : out std_logic_vector;
+    dat_i : in  std_logic_vector;
+    dat_o : out std_logic_vector;
+    sel   : in std_logic_vector;
+    cyc   : in std_logic;
+    stb   : in std_logic;
+    we    : in std_logic;
+    ack   : out  std_logic
+    );
+end entity;
+
+architecture a of wishbone_slave is
+
+	constant ack_actor 		: actor_t := new_actor("ack_actor");
+  constant tb_logger : logger_t := get_logger("tb");
+  constant slave_logger : logger_t := get_logger("slave");
+begin
+
+  request : process
+    variable wr_request_msg : msg_t;
+    variable rd_request_msg : msg_t;
+  begin
+    wait until (cyc and stb) = '1' and rising_edge(clk);
+    if we = '1' then
+      verbose(slave_logger, "Write cycle start");
+      wr_request_msg := new_msg(bus_write_msg);
+      -- For write address and data is passed to ack proc
+      push_integer(wr_request_msg, to_integer(unsigned(adr)));
+      push_std_ulogic_vector(wr_request_msg, dat_i);      
+      send(net, ack_actor, wr_request_msg);
+    elsif we = '0' then
+      verbose(slave_logger, "Read cycle start");
+      rd_request_msg := new_msg(bus_read_msg);
+      -- For read, only address is passed to ack proc
+      push_integer(wr_request_msg, to_integer(unsigned(adr)));
+      send(net, ack_actor, rd_request_msg);
+    end if;
+  end process;
+
+  acknowledge : process
+    variable request_msg : msg_t;
+    variable msg_type : msg_type_t;
+    variable data : std_logic_vector(dat_i'range);
+    variable addr : natural;
+    variable memory : memory_t := new_memory;
+    variable buf : buffer_t := allocate(memory, 1024);        
+  begin
+    verbose(slave_logger, "Slave ack: blocking on receive");
+    receive(net, ack_actor, request_msg);
+    msg_type := message_type(request_msg);
+
+    if msg_type = bus_write_msg then
+      verbose(slave_logger, "Start ack write");
+      addr := pop_integer(request_msg);
+      data := pop_std_ulogic_vector(request_msg);
+      write_word(memory, addr, data);      	
+      ack <= '1';
+      wait until rising_edge(clk);
+      ack <= '0';
+      verbose(slave_logger, "Write cycle passed");
+
+    elsif msg_type = bus_read_msg then
+      verbose(slave_logger, "Start ack read");
+      addr := pop_integer(request_msg);
+      -- TODO bytes per word?      
+      data := read_word(memory, addr, 4);
+      dat_o <= data;
+      ack <= '1';
+      wait until rising_edge(clk);
+      ack <= '0';
+      verbose(slave_logger, "Read cycle passed");
+
+    else
+      unexpected_msg_type(msg_type);
+    end if;
+  end process;
+end architecture;
