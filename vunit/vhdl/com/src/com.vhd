@@ -696,26 +696,4 @@ package body com_pkg is
     messenger.allow_deprecated;
   end;
 
-  procedure push(queue : queue_t; variable value : inout msg_t) is
-  begin
-    push(queue, value.id);
-    push(queue, com_status_t'pos(value.status));
-    push(queue, value.sender.id);
-    push(queue, value.receiver.id);
-    push(queue, value.request_id);
-    push_queue_ref(queue, value.data);
-  end;
-
-  impure function pop(queue : queue_t) return msg_t is
-    variable ret_val : msg_t := new_msg;
-  begin
-    ret_val.id          := pop(queue);
-    ret_val.status      := com_status_t'val(integer'(pop(queue)));
-    ret_val.sender.id   := pop(queue);
-    ret_val.receiver.id := pop(queue);
-    ret_val.request_id  := pop(queue);
-    ret_val.data        := pop_queue_ref(queue);
-
-    return ret_val;
-  end;
 end package body com_pkg;

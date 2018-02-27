@@ -271,12 +271,6 @@ package com_pkg is
   -- Misc
   -----------------------------------------------------------------------------
 
-  -- Push message into a queue.
-  procedure push(queue : queue_t; variable value : inout msg_t);
-
-  -- Pop a message from a queue.
-  impure function pop(queue : queue_t) return msg_t;
-
   -- Allow deprecated APIs
   procedure allow_deprecated;
 
