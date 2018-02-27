@@ -65,7 +65,9 @@ begin
     elsif we = '0' then
       rd_request_msg := new_msg(slave_read_msg);
       -- For read, only address is passed to ack proc
+			info(slave_logger, "push_integer");
       push_integer(rd_request_msg, to_integer(unsigned(adr)));
+			info(slave_logger, "send");
       send(net, ack_actor, rd_request_msg);
     end if;
   end process;
@@ -92,9 +94,11 @@ begin
 
     elsif msg_type = slave_read_msg then
       data := (others => '0');
-			-- error: pop from empty queue below
-      --addr := pop_integer(request_msg);
-      data := read_word(memory, addr, 2);
+			-- error: pop from empty queue 
+			info(slave_logger, "pop_integer");
+			addr := pop_integer(request_msg);
+			info(slave_logger, "read word");
+      data := read_word(memory, addr, 1);
       dat_o <= data;
       ack <= '1';
       wait until rising_edge(clk);

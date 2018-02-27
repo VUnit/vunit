@@ -16,19 +16,12 @@ use ieee.numeric_std.all;
 
 library vunit_lib;
 context vunit_lib.vunit_context;
-context work.com_context;
 
-use work.axi_pkg.all;
-use work.bus_master_pkg.all;
-
-library osvvm;
-use osvvm.RandomPkg.all;
-
-entity tb_wishbone_master is
+entity tb_wishbone_slave is
   generic (runner_cfg : string);
 end entity;
 
-architecture a of tb_wishbone_master is
+architecture a of tb_wishbone_slave is
   constant dat_width    : positive := 8;
   constant adr_width    : positive := 4;
 
@@ -42,10 +35,8 @@ architecture a of tb_wishbone_master is
   signal we    : std_logic := '0';
   signal ack   : std_logic := '0';
 
-  constant master_logger : logger_t := get_logger("master");
+
   constant tb_logger : logger_t := get_logger("tb");
-  constant bus_handle : bus_master_t := new_bus(data_length => dat_width,
-      address_length => adr_width, logger => master_logger);
 
   constant num_block_cycles : natural := 3;
 begin
@@ -53,10 +44,6 @@ begin
   main_stim : process
     variable tmp : std_logic_vector(dat_i'range);
     variable value : std_logic_vector(dat_i'range) := x"ab";
-    variable bus_rd_ref1 : bus_reference_t;
-    variable bus_rd_ref2 : bus_reference_t;
-    type bus_reference_arr_t is array (0 to num_block_cycles-1) of bus_reference_t;
-    variable rd_ref : bus_reference_arr_t;
   begin
     test_runner_setup(runner, runner_cfg);
 	  wait until rising_edge(clk);
