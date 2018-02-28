@@ -44,12 +44,16 @@ begin
     variable msg_type : msg_type_t;
     variable pending_acks : natural := 0;
     variable received_acks : natural := 0;
+    variable status		: com_status_t;
   begin
     cyc <= '0';
     stb <= '0';
     wait until rising_edge(clk);
     loop
-      receive(net, bus_handle.p_actor, request_msg);
+    	-- Cannot use receive, as it deletes the message
+      --receive(net, bus_handle.p_actor, request_msg);
+      wait_for_message(net, bus_handle.p_actor, status);
+      get_message(net, bus_handle.p_actor, request_msg);      
       msg_type := message_type(request_msg);
       if msg_type = bus_read_msg then
         adr <= pop_std_ulogic_vector(request_msg);
