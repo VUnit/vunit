@@ -98,11 +98,11 @@ begin
             std_logic_vector(to_unsigned(i, dat_i'length)));
       end loop;
 
+      -- Sleeping is needed to avoid wr and rd cycles coalescing
       info(tb_logger, "Sleeping...");
       for i in 1 to num_block_cycles loop
         wait until ack = '1' and rising_edge(clk);
       end loop;
-      wait for 100 ns;
       wait until rising_edge(clk);
 
       info(tb_logger, "Reading...");
@@ -110,35 +110,14 @@ begin
         read_bus(net, bus_handle, i, rd_ref(i));
       end loop;
 
-      wait until rising_edge(clk);
-      wait until rising_edge(clk);
-      wait until rising_edge(clk);
-      wait for 100 ns;
-
       trace(tb_logger, "Get reads by references...");
       for i in 0 to num_block_cycles-1 loop
         await_read_bus_reply(net, rd_ref(i), tmp);
-        --check_equal(tmp, std_logic_vector(to_unsigned(i, dat_i'length)), "read data");
+        check_equal(tmp, std_logic_vector(to_unsigned(i, dat_i'length)), "read data");
       end loop;
-    -- With references
---    elsif run("WR block") then
---      for i in 0 to num_block_cycles-1 loop
---        write_bus(net, bus_handle, i,
---            std_logic_vector(to_unsigned(i, dat_i'length)));
---      end loop;
-
---      trace(tb_logger, "Test block read");
---      for i in 0 to num_block_cycles-1 loop
---        read_bus(net, bus_handle, i, rd_ref(i));
---      end loop;
---      trace(tb_logger, "Get data by its references");
---      for i in 0 to num_block_cycles-1 loop
---        await_read_bus_reply(net, rd_ref(i), tmp);
---        check_equal(tmp, std_logic_vector(to_unsigned(i, dat_i'length)), "read data");
---      end loop;
     end if;
 
-    wait for 1000 ns;
+    wait for 10 ns;
     test_runner_cleanup(runner);
     wait;
   end process;
