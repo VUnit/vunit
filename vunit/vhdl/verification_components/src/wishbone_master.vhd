@@ -37,7 +37,7 @@ end entity;
 architecture a of wishbone_master is
   constant request_queue : queue_t := new_queue;
   constant bus_ack_msg   : msg_type_t := new_msg_type("wb master ack msg");
-  constant wb_master_ack_actor : actor_t := new_actor("wb master ack actor");  
+  constant wb_master_ack_actor : actor_t := new_actor("wb master ack actor");
 begin
   main : process
     variable request_msg, reply_msg : msg_t;
@@ -53,7 +53,7 @@ begin
       -- Cannot use receive, as it deletes the message
       --receive(net, bus_handle.p_actor, request_msg);
       wait_for_message(net, bus_handle.p_actor, status);
-      get_message(net, bus_handle.p_actor, request_msg);      
+      get_message(net, bus_handle.p_actor, request_msg);
       msg_type := message_type(request_msg);
       if msg_type = bus_read_msg then
         adr <= pop_std_ulogic_vector(request_msg);
@@ -87,7 +87,6 @@ begin
           info(bus_handle.p_logger, "finished wb cycle");
           -- End of wb cycle
           cyc <= '0';
-          --wait until rising_edge(clk);
           pending_acks := 0;
           received_acks := 0;
         end if;

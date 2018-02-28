@@ -11,7 +11,7 @@
 -- - err and rty responses
 -- - variable memory size (currenlty 1024Bytes)
 -- - variable address range
--- - consider passing memory object to slave instead of 
+-- - consider passing memory object to slave instead of
 --   create it locally
 
 library ieee;
@@ -43,10 +43,10 @@ end entity;
 
 architecture a of wishbone_slave is
 
-	constant ack_actor 		: actor_t := new_actor("slave ack actor");
-  constant slave_logger : logger_t := get_logger("slave");
-  constant slave_write_msg   : msg_type_t := new_msg_type("wb slave write");  
-  constant slave_read_msg   : msg_type_t := new_msg_type("wb slave read");  
+  constant ack_actor        : actor_t := new_actor("slave ack actor");
+  constant slave_logger     : logger_t := get_logger("slave");
+  constant slave_write_msg  : msg_type_t := new_msg_type("wb slave write");
+  constant slave_read_msg   : msg_type_t := new_msg_type("wb slave read");
 begin
 
   show(slave_logger, display_handler, verbose);
@@ -60,14 +60,12 @@ begin
       wr_request_msg := new_msg(slave_write_msg);
       -- For write address and data is passed to ack proc
       push_integer(wr_request_msg, to_integer(unsigned(adr)));
-      push_std_ulogic_vector(wr_request_msg, dat_i);      
+      push_std_ulogic_vector(wr_request_msg, dat_i);
       send(net, ack_actor, wr_request_msg);
     elsif we = '0' then
       rd_request_msg := new_msg(slave_read_msg);
       -- For read, only address is passed to ack proc
-			info(slave_logger, "push_integer");
       push_integer(rd_request_msg, to_integer(unsigned(adr)));
-			info(slave_logger, "send");
       send(net, ack_actor, rd_request_msg);
     end if;
   end process;
@@ -78,7 +76,7 @@ begin
     variable data : std_logic_vector(dat_i'range);
     variable addr : natural;
     variable memory : memory_t := new_memory;
-    variable buf : buffer_t := allocate(memory, 1024);        
+    variable buf : buffer_t := allocate(memory, 1024);
   begin
     ack <= '0';
     receive(net, ack_actor, request_msg);
@@ -87,17 +85,14 @@ begin
     if msg_type = slave_write_msg then
       addr := pop_integer(request_msg);
       data := pop_std_ulogic_vector(request_msg);
-      write_word(memory, addr, data);      	
+      write_word(memory, addr, data);
       ack <= '1';
       wait until rising_edge(clk);
       ack <= '0';
 
     elsif msg_type = slave_read_msg then
       data := (others => '0');
-			-- error: pop from empty queue 
-			info(slave_logger, "pop_integer");
-			addr := pop_integer(request_msg);
-			info(slave_logger, "read word");
+      addr := pop_integer(request_msg);
       data := read_word(memory, addr, 1);
       dat_o <= data;
       ack <= '1';

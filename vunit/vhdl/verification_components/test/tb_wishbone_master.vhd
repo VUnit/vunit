@@ -59,30 +59,27 @@ begin
     variable rd_ref : bus_reference_arr_t;
   begin
     test_runner_setup(runner, runner_cfg);
-	  wait until rising_edge(clk);
+    wait until rising_edge(clk);
 
     if run("wr single rd single") then
       write_bus(net, bus_handle, 0, value);
-      
       wait until ack = '1' and rising_edge(clk);
       wait until rising_edge(clk);
       read_bus(net, bus_handle, 0, tmp);
       check_equal(tmp, value, "read data");
-      
 --    elsif run("wr block") then
 --      -- TODO not sure if is allowed to toggle signal we during
 --      -- wishbone single cycle
 --      write_bus(net, bus_handle, 0, value);
 --      read_bus(net, bus_handle, 0, tmp);
 --      check_equal(tmp, value, "read data");
-      
     elsif run("wr block rd single") then
       info(tb_logger, "Writing...");
       for i in 0 to num_block_cycles-1 loop
         write_bus(net, bus_handle, i,
             std_logic_vector(to_unsigned(i, dat_i'length)));
       end loop;
-      
+
       for i in 1 to num_block_cycles loop
         wait until ack = '1' and rising_edge(clk);
       end loop;
@@ -100,7 +97,7 @@ begin
         write_bus(net, bus_handle, i,
             std_logic_vector(to_unsigned(i, dat_i'length)));
       end loop;
-      
+
       info(tb_logger, "Sleeping...");
       for i in 1 to num_block_cycles loop
         wait until ack = '1' and rising_edge(clk);
@@ -117,13 +114,13 @@ begin
       wait until rising_edge(clk);
       wait until rising_edge(clk);
       wait for 100 ns;
-	
+
       trace(tb_logger, "Get reads by references...");
       for i in 0 to num_block_cycles-1 loop
         await_read_bus_reply(net, rd_ref(i), tmp);
         --check_equal(tmp, std_logic_vector(to_unsigned(i, dat_i'length)), "read data");
       end loop;
-	  -- With references
+    -- With references
 --    elsif run("WR block") then
 --      for i in 0 to num_block_cycles-1 loop
 --        write_bus(net, bus_handle, i,
@@ -151,7 +148,7 @@ begin
   show(default_logger, display_handler, verbose);
   show(master_logger, display_handler, verbose);
   show(com_logger, display_handler, verbose);
-  
+
 
   dut : entity work.wishbone_master
     generic map (
@@ -167,7 +164,7 @@ begin
       we    => we,
       ack   => ack
     );
-    
+
   dut_slave : entity work.wishbone_slave
     port map (
       clk   => clk,
@@ -179,7 +176,7 @@ begin
       stb   => stb,
       we    => we,
       ack   => ack
-    );    
+    );
 
   clk <= not clk after 5 ns;
 

@@ -47,39 +47,39 @@ begin
     variable value : std_logic_vector(dat_i'range) := x"ab";
   begin
     test_runner_setup(runner, runner_cfg);
-	  wait until rising_edge(clk);
+    wait until rising_edge(clk);
 
 
     if run("wr block rd block") then
       info(tb_logger, "Writing...");
       for i in 0 to num_block_cycles-1 loop
-				cyc <= '1';
-				stb <= '1';
-				we	<= '1';
-				adr <= std_logic_vector(to_unsigned(i, adr'length));
-				dat_i <= std_logic_vector(to_unsigned(i, dat_i'length));
-				wait until rising_edge(clk);
+        cyc <= '1';
+        stb <= '1';
+        we  <= '1';
+        adr <= std_logic_vector(to_unsigned(i, adr'length));
+        dat_i <= std_logic_vector(to_unsigned(i, dat_i'length));
+        wait until rising_edge(clk);
       end loop;
-			cyc <= '0';
-			stb <= '0';
-			wait until rising_edge(clk);      
-      
+      cyc <= '0';
+      stb <= '0';
+      wait until rising_edge(clk);
+
       info(tb_logger, "Sleeping...");
       wait for 100 ns;
       wait until rising_edge(clk);
 
       info(tb_logger, "Reading...");
       for i in 0 to num_block_cycles-1 loop
-				cyc <= '1';
-				stb <= '1';
-				we	<= '0';
-				adr <= std_logic_vector(to_unsigned(i, adr'length));
-				--info(tb_logger, "dat_o="&to_hstring(dat_o));
-				--check_equal(dat_o, std_logic_vector(to_unsigned(i, dat_o'length)), "dat_o");
-				wait until rising_edge(clk);
+        cyc <= '1';
+        stb <= '1';
+        we  <= '0';
+        adr <= std_logic_vector(to_unsigned(i, adr'length));
+        --info(tb_logger, "dat_o="&to_hstring(dat_o));
+        --check_equal(dat_o, std_logic_vector(to_unsigned(i, dat_o'length)), "dat_o");
+        wait until rising_edge(clk);
       end loop;
-			cyc <= '0';
-			stb <= '0';
+      cyc <= '0';
+      stb <= '0';
     end if;
 
     wait for 200 ns;
@@ -91,8 +91,8 @@ begin
   show(tb_logger, display_handler, verbose);
   show(default_logger, display_handler, verbose);
   show(com_logger, display_handler, verbose);
-  
-    
+
+
   dut_slave : entity work.wishbone_slave
     port map (
       clk   => clk,
@@ -104,7 +104,7 @@ begin
       stb   => stb,
       we    => we,
       ack   => ack
-    );    
+    );
 
   clk <= not clk after 5 ns;
 
