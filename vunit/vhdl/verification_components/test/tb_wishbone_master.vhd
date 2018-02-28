@@ -59,9 +59,12 @@ begin
     wait until rising_edge(clk);
 
     if run("wr single rd single") then
+      info(tb_logger, "Writing...");
       write_bus(net, bus_handle, 0, value);
       wait until ack = '1' and rising_edge(clk);
       wait until rising_edge(clk);
+      wait for 100 ns;
+      info(tb_logger, "Reading...");
       read_bus(net, bus_handle, 0, tmp);
       check_equal(tmp, value, "read data");
 --    elsif run("wr block") then
@@ -107,18 +110,19 @@ begin
         read_bus(net, bus_handle, i, rd_ref(i));
       end loop;
 
-      trace(tb_logger, "Get reads by references...");
+      info(tb_logger, "Get reads by references...");
       for i in 0 to num_block_cycles-1 loop
         await_read_bus_reply(net, rd_ref(i), tmp);
         check_equal(tmp, std_logic_vector(to_unsigned(i, dat_i'length)), "read data");
       end loop;
     end if;
 
-    wait for 10 ns;
+    info(tb_logger, "Done, quit...");
+    wait for 50 ns;
     test_runner_cleanup(runner);
     wait;
   end process;
-  test_runner_watchdog(runner, 100 us);
+  test_runner_watchdog(runner, 300 ns);
   set_format(display_handler, verbose, true);
   show(tb_logger, display_handler, verbose);
   show(default_logger, display_handler, verbose);

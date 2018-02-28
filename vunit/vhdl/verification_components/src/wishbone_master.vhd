@@ -19,6 +19,7 @@ use work.bus_master_pkg.all;
 --use work.axi_private_pkg.all;
 context work.com_context;
 use work.logger_pkg.all;
+use work.check_pkg.all;
 
 entity wishbone_master is
   generic (
@@ -38,73 +39,104 @@ entity wishbone_master is
 end entity;
 
 architecture a of wishbone_master is
-  constant request_queue : queue_t := new_queue;
+  constant rd_request_queue : queue_t := new_queue;
+  constant wr_request_queue : queue_t := new_queue;
+  constant acknowledge_queue : queue_t := new_queue;
+  constant ack_return_queue : queue_t := new_queue;
   constant bus_ack_msg   : msg_type_t := new_msg_type("wb master ack msg");
   constant wb_master_ack_actor : actor_t := new_actor("wb master ack actor");
 begin
+
   main : process
-    variable request_msg, reply_msg : msg_t;
+    variable request_msg : msg_t;
     variable msg_type : msg_type_t;
-    variable pending_acks : natural := 0;
-    variable received_acks : natural := 0;
     variable status : com_status_t;
   begin
-    cyc <= '0';
-    stb <= '0';
-    wait until rising_edge(clk);
-    loop
       -- Cannot use receive, as it deletes the message
       --receive(net, bus_handle.p_actor, request_msg);
       wait_for_message(net, bus_handle.p_actor, status);
       get_message(net, bus_handle.p_actor, request_msg);
       msg_type := message_type(request_msg);
       if msg_type = bus_read_msg then
+        push(rd_request_queue, request_msg);
+      elsif msg_type = bus_write_msg then
+        push(wr_request_queue, request_msg);
+      else
+        unexpected_msg_type(msg_type);
+      end if;
+  end process;
+
+  request : process
+    variable request_msg : msg_t;
+    variable ack_msg : msg_t;
+    variable msg_type : msg_type_t;
+    variable pending_acks : natural := 0;
+    variable received_acks : natural := 0;
+    variable rd_cycle : boolean;
+    variable wr_cycle : boolean;
+    variable ack_mock : boolean;
+  begin
+    cyc <= '0';
+    stb <= '0';
+    wait until rising_edge(clk);
+    loop
+      check_false(rd_cycle and wr_cycle);
+      if not is_empty(rd_request_queue) and not wr_cycle then
+        request_msg := pop(rd_request_queue);
+        rd_cycle := true;
         adr <= pop_std_ulogic_vector(request_msg);
         cyc <= '1';
         stb <= '1';
         we <= '0';
         wait until rising_edge(clk);
         stb <= '0';
-
-        push(request_queue, request_msg);
+        push(acknowledge_queue, request_msg);
         pending_acks := pending_acks +1;
 
-      elsif msg_type = bus_write_msg then
+      elsif not is_empty(wr_request_queue) and not rd_cycle then
+        request_msg := pop(wr_request_queue);
+        wr_cycle := true;
         adr <= pop_std_ulogic_vector(request_msg);
         dat_o <= pop_std_ulogic_vector(request_msg);
         sel <= pop_std_ulogic_vector(request_msg);
-
         cyc <= '1';
         stb <= '1';
         we <= '1';
         wait until rising_edge(clk);
+        info(bus_handle.p_logger, "wr req");
         stb <= '0';
-
-        push(request_queue, request_msg);
+        push(acknowledge_queue, request_msg);
         pending_acks := pending_acks +1;
 
-      elsif msg_type = bus_ack_msg then
-        -- TODO bus errors detection
+      -- During cylce but no msg from tb? Have to wait for 
+      -- one - block on receive
+      elsif (wr_cycle or rd_cycle) then
+        receive(net, wb_master_ack_actor, ack_msg);
         received_acks := received_acks +1;
         if pending_acks = received_acks then
-          info(bus_handle.p_logger, "finished wb cycle");
           -- End of wb cycle
+          info(bus_handle.p_logger, "finished wb cycle");
           cyc <= '0';
           pending_acks := 0;
           received_acks := 0;
+          rd_cycle := false;
+          wr_cycle := false;
         end if;
+
+      -- No cycles, juest sleep
       else
-        unexpected_msg_type(msg_type);
+        wait until rising_edge(clk);
       end if;
     end loop;
   end process;
 
   acknowladge : process
     variable request_msg, reply_msg, ack_msg : msg_t;
-    variable msg_type : msg_type_t;
+    variable ack_mock : boolean;
   begin
     wait until ack = '1' and rising_edge(clk);
-    request_msg := pop(request_queue);
+    info(bus_handle.p_logger, "ack");
+    request_msg := pop(acknowledge_queue);
     -- Reply only on read
     if we = '0' then
       reply_msg := new_msg(sender => wb_master_ack_actor);
@@ -114,6 +146,6 @@ begin
     delete(request_msg);
     -- Response main that ack is received
     ack_msg := new_msg(bus_ack_msg);
-    send(net, bus_handle.p_actor, ack_msg);
+    send(net, wb_master_ack_actor, ack_msg);
   end process;
 end architecture;
