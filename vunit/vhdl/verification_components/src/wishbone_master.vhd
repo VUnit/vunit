@@ -44,13 +44,13 @@ begin
     variable msg_type : msg_type_t;
     variable pending_acks : natural := 0;
     variable received_acks : natural := 0;
-    variable status		: com_status_t;
+    variable status : com_status_t;
   begin
     cyc <= '0';
     stb <= '0';
     wait until rising_edge(clk);
     loop
-    	-- Cannot use receive, as it deletes the message
+      -- Cannot use receive, as it deletes the message
       --receive(net, bus_handle.p_actor, request_msg);
       wait_for_message(net, bus_handle.p_actor, status);
       get_message(net, bus_handle.p_actor, request_msg);      
@@ -108,8 +108,8 @@ begin
       reply_msg := new_msg(sender => wb_master_ack_actor);
       push_std_ulogic_vector(reply_msg, dat_i);
       reply(net, request_msg, reply_msg);
-      delete(request_msg);
     end if;
+    delete(request_msg);
     -- Response main that ack is received
     ack_msg := new_msg(bus_ack_msg);
     send(net, bus_handle.p_actor, ack_msg);
