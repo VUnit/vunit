@@ -39,6 +39,8 @@ architecture a of tb_wishbone_slave is
   constant tb_logger : logger_t := get_logger("tb");
 
   constant num_block_cycles : natural := 3;
+  signal wr_ack_cnt    : natural range 0 to num_block_cycles;
+  signal rd_ack_cnt    : natural range 0 to num_block_cycles;
 begin
 
   main_stim : process
@@ -59,9 +61,9 @@ begin
         dat_i <= std_logic_vector(to_unsigned(i, dat_i'length));
         wait until rising_edge(clk);
       end loop;
-      cyc <= '0';
       stb <= '0';
-      wait until rising_edge(clk);
+      wait until rising_edge(clk) and wr_ack_cnt = num_block_cycles-1;
+      cyc <= '0';
 
       info(tb_logger, "Sleeping...");
       wait for 100 ns;
@@ -73,15 +75,14 @@ begin
         stb <= '1';
         we  <= '0';
         adr <= std_logic_vector(to_unsigned(i, adr'length));
-        --info(tb_logger, "dat_o="&to_hstring(dat_o));
-        --check_equal(dat_o, std_logic_vector(to_unsigned(i, dat_o'length)), "dat_o");
         wait until rising_edge(clk);
       end loop;
-      cyc <= '0';
       stb <= '0';
+      wait until rising_edge(clk) and rd_ack_cnt = num_block_cycles-1;
+      cyc <= '0';
     end if;
 
-    wait for 200 ns;
+    wait for 50 ns;
     test_runner_cleanup(runner);
     wait;
   end process;
@@ -91,6 +92,19 @@ begin
   show(default_logger, display_handler, verbose);
   show(com_logger, display_handler, verbose);
 
+  wr_ack: process
+  begin
+    wait until rising_edge(clk) and ack = '1' and we = '1';
+    wr_ack_cnt <= wr_ack_cnt +1;
+  end process;
+
+  rd_ack: process
+  begin
+    wait until rising_edge(clk) and ack = '1' and we = '0';
+    check_equal(dat_o, std_logic_vector(to_unsigned(rd_ack_cnt,
+          dat_o'length)), "dat_o");
+    rd_ack_cnt <= rd_ack_cnt +1;
+  end process;
 
   dut_slave : entity work.wishbone_slave
     port map (
