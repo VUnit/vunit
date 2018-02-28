@@ -4,12 +4,9 @@
 --
 -- Slawomir Siluk slaweksiluk@gazeta.pl 2018
 -- TODO:
--- - stall
 -- - generic num_block_cycles
--- - generic ack delay
--- - random ack 0/1
--- - fix slave_index when reading
-
+-- - generic adr and dat width
+-- - generic random test
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;

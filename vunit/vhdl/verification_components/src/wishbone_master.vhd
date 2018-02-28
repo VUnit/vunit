@@ -3,8 +3,11 @@
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
 -- Slawomir Siluk slaweksiluk@gazeta.pl 2018
--- Wishbome Master Single Pipelined Bus Functional Model
--- Wb M S P BFM
+-- Wishbome Master Block Pipelined Bus Functional Model
+-- TODO:
+-- - stall input
+-- - how to handle read req msg received while some writes
+--   are still in progress?
 
 
 library ieee;

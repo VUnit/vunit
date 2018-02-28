@@ -8,7 +8,6 @@
 -- - generic num_block_cycles
 -- - generic ack delay
 -- - random ack 0/1
--- - fix slave_index when reading
 
 library ieee;
 use ieee.std_logic_1164.all;
