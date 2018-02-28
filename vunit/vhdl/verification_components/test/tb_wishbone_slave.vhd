@@ -62,11 +62,9 @@ begin
         wait until rising_edge(clk);
       end loop;
       stb <= '0';
-      wait until rising_edge(clk) and wr_ack_cnt = num_block_cycles-1;
+      wait until wr_ack_cnt = num_block_cycles;
       cyc <= '0';
-
-      info(tb_logger, "Sleeping...");
-      wait for 100 ns;
+     
       wait until rising_edge(clk);
 
       info(tb_logger, "Reading...");

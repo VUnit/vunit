@@ -24,10 +24,14 @@ context work.com_context;
 
 use work.memory_pkg.all;
 
+library osvvm;
+use osvvm.RandomPkg.all;
+
 entity wishbone_slave is
---  generic (
---    bus_handle : bus_master_t
---    );
+  generic (
+    --bus_handle : bus_master_t
+    rand_ack    : boolean := true
+  );
   port (
     clk   : in std_logic;
     adr   : in std_logic_vector;
@@ -47,6 +51,7 @@ architecture a of wishbone_slave is
   constant slave_logger     : logger_t := get_logger("slave");
   constant slave_write_msg  : msg_type_t := new_msg_type("wb slave write");
   constant slave_read_msg   : msg_type_t := new_msg_type("wb slave read");
+  constant max_ack_dly      : positive := 3;
 begin
 
   show(slave_logger, display_handler, verbose);
@@ -77,6 +82,7 @@ begin
     variable addr : natural;
     variable memory : memory_t := new_memory;
     variable buf : buffer_t := allocate(memory, 1024);
+    variable rnd : RandomPType;
   begin
     ack <= '0';
     receive(net, ack_actor, request_msg);
@@ -86,6 +92,9 @@ begin
       addr := pop_integer(request_msg);
       data := pop_std_ulogic_vector(request_msg);
       write_word(memory, addr, data);
+      for i in 1 to rnd.RandInt(1, max_ack_dly) loop
+        wait until rising_edge(clk);
+      end loop;
       ack <= '1';
       wait until rising_edge(clk);
       ack <= '0';
