@@ -5,7 +5,7 @@
 -- Slawomir Siluk slaweksiluk@gazeta.pl 2018
 -- TODO:
 -- - stall
--- - generic num_block_cycles
+-- - generic num_cycles
 -- - generic ack delay
 -- - random ack 0/1
 
@@ -18,13 +18,17 @@ context vunit_lib.vunit_context;
 context work.com_context;
 
 entity tb_wishbone_slave is
-  generic (runner_cfg : string);
+  generic (
+    runner_cfg : string;
+    dat_width    : positive := 8;
+    adr_width    : positive := 4;
+    num_cycles : positive := 1;
+    max_ack_dly : natural := 0;
+    rand_stall  : boolean := false
+  );
 end entity;
 
 architecture a of tb_wishbone_slave is
-  constant dat_width    : positive := 8;
-  constant adr_width    : positive := 4;
-
   signal clk    : std_logic := '0';
   signal adr    : std_logic_vector(adr_width-1 downto 0) := (others => '0');
   signal dat_i  : std_logic_vector(dat_width-1 downto 0) := (others => '0');
@@ -38,14 +42,13 @@ architecture a of tb_wishbone_slave is
 
   constant tb_logger : logger_t := get_logger("tb");
 
-  constant num_block_cycles : natural := 3;
-  signal wr_ack_cnt    : natural range 0 to num_block_cycles;
-  signal rd_ack_cnt    : natural range 0 to num_block_cycles;
+  signal wr_ack_cnt    : natural range 0 to num_cycles;
+  signal rd_ack_cnt    : natural range 0 to num_cycles;
 begin
 
   main_stim : process
     variable tmp : std_logic_vector(dat_i'range);
-    variable value : std_logic_vector(dat_i'range) := x"ab";
+    variable value : std_logic_vector(dat_i'range) := (others => '1');
   begin
     test_runner_setup(runner, runner_cfg);
     wait until rising_edge(clk);
@@ -53,30 +56,30 @@ begin
 
     if run("wr block rd block") then
       info(tb_logger, "Writing...");
-      for i in 0 to num_block_cycles-1 loop
+      for i in 0 to num_cycles-1 loop
         cyc <= '1';
         stb <= '1';
         we  <= '1';
-        adr <= std_logic_vector(to_unsigned(i, adr'length));
+        adr <= std_logic_vector(to_unsigned(i*(sel'length), adr'length));
         dat_i <= std_logic_vector(to_unsigned(i, dat_i'length));
         wait until rising_edge(clk);
       end loop;
       stb <= '0';
-      wait until wr_ack_cnt = num_block_cycles;
+      wait until wr_ack_cnt = num_cycles;
       cyc <= '0';
-     
+
       wait until rising_edge(clk);
 
       info(tb_logger, "Reading...");
-      for i in 0 to num_block_cycles-1 loop
+      for i in 0 to num_cycles-1 loop
         cyc <= '1';
         stb <= '1';
         we  <= '0';
-        adr <= std_logic_vector(to_unsigned(i, adr'length));
+        adr <= std_logic_vector(to_unsigned(i*(sel'length), adr'length));
         wait until rising_edge(clk);
       end loop;
       stb <= '0';
-      wait until rising_edge(clk) and rd_ack_cnt = num_block_cycles-1;
+      wait until rising_edge(clk) and rd_ack_cnt = num_cycles-1;
       cyc <= '0';
     end if;
 
@@ -105,6 +108,10 @@ begin
   end process;
 
   dut_slave : entity work.wishbone_slave
+    generic map (
+      max_ack_dly => max_ack_dly,
+      rand_stall => rand_stall
+    )
     port map (
       clk   => clk,
       adr   => adr,

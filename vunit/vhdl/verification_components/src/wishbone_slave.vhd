@@ -29,8 +29,8 @@ use osvvm.RandomPkg.all;
 
 entity wishbone_slave is
   generic (
-    --bus_handle : bus_master_t
-    rand_ack    : boolean := true
+    max_ack_dly : natural := 0;
+    rand_stall  : boolean := false
   );
   port (
     clk   : in std_logic;
@@ -51,7 +51,6 @@ architecture a of wishbone_slave is
   constant slave_logger     : logger_t := get_logger("slave");
   constant slave_write_msg  : msg_type_t := new_msg_type("wb slave write");
   constant slave_read_msg   : msg_type_t := new_msg_type("wb slave read");
-  constant max_ack_dly      : positive := 3;
 begin
 
   show(slave_logger, display_handler, verbose);
@@ -92,7 +91,7 @@ begin
       addr := pop_integer(request_msg);
       data := pop_std_ulogic_vector(request_msg);
       write_word(memory, addr, data);
-      for i in 1 to rnd.RandInt(1, max_ack_dly) loop
+      for i in 1 to rnd.RandInt(0, max_ack_dly) loop
         wait until rising_edge(clk);
       end loop;
       ack <= '1';
@@ -102,7 +101,10 @@ begin
     elsif msg_type = slave_read_msg then
       data := (others => '0');
       addr := pop_integer(request_msg);
-      data := read_word(memory, addr, 1);
+      data := read_word(memory, addr, sel'length);
+      for i in 1 to rnd.RandInt(0, max_ack_dly) loop
+        wait until rising_edge(clk);
+      end loop;
       dat_o <= data;
       ack <= '1';
       wait until rising_edge(clk);
