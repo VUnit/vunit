@@ -83,7 +83,7 @@ begin
     test_runner_cleanup(runner);
     wait;
   end process;
-  test_runner_watchdog(runner, 1 us);
+  test_runner_watchdog(runner, 100 us);
   set_format(display_handler, verbose, true);
   show(tb_logger, display_handler, verbose);
   show(default_logger, display_handler, verbose);

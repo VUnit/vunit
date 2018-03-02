@@ -3,13 +3,9 @@
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
 -- Slawomir Siluk slaweksiluk@gazeta.pl 2018
--- Wishbome Master Block Pipelined Bus Functional Model
+-- Wishbome Master BFM for pipelined block transfers
 -- TODO:
--- - stall input
--- - how to handle read req msg received while some writes
---   are still in progress?
-
-
+--  * Random strobe option
 library ieee;
 use ieee.std_logic_1164.all;
 
@@ -34,6 +30,7 @@ entity wishbone_master is
     cyc   : out std_logic;
     stb   : out std_logic;
     we    : out std_logic;
+    stall : in std_logic;
     ack   : in  std_logic
     );
 end entity;
@@ -88,7 +85,7 @@ begin
         cyc <= '1';
         stb <= '1';
         we <= '0';
-        wait until rising_edge(clk);
+        wait until rising_edge(clk) and stall = '0';
         stb <= '0';
         push(acknowledge_queue, request_msg);
         pending_acks := pending_acks +1;
@@ -102,7 +99,7 @@ begin
         cyc <= '1';
         stb <= '1';
         we <= '1';
-        wait until rising_edge(clk);
+        wait until rising_edge(clk) and stall = '0';
         info(bus_handle.p_logger, "wr req");
         stb <= '0';
         push(acknowledge_queue, request_msg);
@@ -121,6 +118,7 @@ begin
           received_acks := 0;
           rd_cycle := false;
           wr_cycle := false;
+	      wait until rising_edge(clk);
         end if;
 
       -- No cycles, juest sleep
