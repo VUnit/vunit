@@ -3,11 +3,6 @@
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
 -- Slawomir Siluk slaweksiluk@gazeta.pl 2018
--- TODO:
--- - stall
--- - generic num_cycles
--- - generic ack delay
--- - random ack 0/1
 
 library ieee;
 use ieee.std_logic_1164.all;
