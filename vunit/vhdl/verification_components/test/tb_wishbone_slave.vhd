@@ -37,6 +37,7 @@ architecture a of tb_wishbone_slave is
   signal cyc   : std_logic := '0';
   signal stb   : std_logic := '0';
   signal we    : std_logic := '0';
+  signal stall : std_logic := '0';
   signal ack   : std_logic := '0';
 
 
@@ -62,7 +63,7 @@ begin
         we  <= '1';
         adr <= std_logic_vector(to_unsigned(i*(sel'length), adr'length));
         dat_i <= std_logic_vector(to_unsigned(i, dat_i'length));
-        wait until rising_edge(clk);
+        wait until rising_edge(clk) and stall = '0';
       end loop;
       stb <= '0';
       wait until wr_ack_cnt = num_cycles;
@@ -76,7 +77,7 @@ begin
         stb <= '1';
         we  <= '0';
         adr <= std_logic_vector(to_unsigned(i*(sel'length), adr'length));
-        wait until rising_edge(clk);
+        wait until rising_edge(clk) and stall = '0';
       end loop;
       stb <= '0';
       wait until rising_edge(clk) and rd_ack_cnt = num_cycles-1;
@@ -121,6 +122,7 @@ begin
       cyc   => cyc,
       stb   => stb,
       we    => we,
+      stall => stall,
       ack   => ack
     );
 

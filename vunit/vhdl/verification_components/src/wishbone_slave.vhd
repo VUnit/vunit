@@ -7,7 +7,6 @@
 -- TODO:
 -- - wb sel
 -- - stall (random)
--- - random ack delay
 -- - err and rty responses
 -- - variable memory size (currenlty 1024Bytes)
 -- - variable address range
@@ -41,6 +40,7 @@ entity wishbone_slave is
     cyc   : in std_logic;
     stb   : in std_logic;
     we    : in std_logic;
+    stall : out std_logic;
     ack   : out  std_logic
     );
 end entity;
@@ -59,7 +59,7 @@ begin
     variable wr_request_msg : msg_t;
     variable rd_request_msg : msg_t;
   begin
-    wait until (cyc and stb) = '1' and rising_edge(clk);
+    wait until (cyc and stb) = '1' and stall = '0' and rising_edge(clk);
     if we = '1' then
       wr_request_msg := new_msg(slave_write_msg);
       -- For write address and data is passed to ack proc
@@ -114,4 +114,18 @@ begin
       unexpected_msg_type(msg_type);
     end if;
   end process;
+
+  stall_stim_gen: if rand_stall generate
+    signal stall_l    : std_logic := '0';
+    begin
+    stall_stim: process
+      variable rnd : RandomPType;
+    begin
+      wait until rising_edge(clk) and cyc = '1';
+      stall_l <= rnd.RandSlv(1, 1)(0);
+    end process;
+    stall <= stall_l;
+  else generate
+    stall <= '0';
+  end generate;
 end architecture;
