@@ -19,9 +19,9 @@ lib.add_source_files(join(root, "test", "*.vhd"))
 
 def gen_wb_slave_tests(obj, dat_width, num_cycles, max_ack_dly, rand_stall):
     for dat_width, num_cycles, max_ack_dly, rand_stall \
-		in product(dat_width, num_cycles, max_ack_dly, rand_stall):
+    in product(dat_width, num_cycles, max_ack_dly, rand_stall):
         config_name = "dat_width=%i,num_cycles=%i,max_ack_dly=%i,rand_stall=%s" % \
-        	(dat_width, num_cycles, max_ack_dly, rand_stall)
+          (dat_width, num_cycles, max_ack_dly, rand_stall)
         obj.add_config(name=config_name,
                        generics=dict(
                            dat_width=dat_width,
@@ -39,9 +39,9 @@ for test in tb_wishbone_slave.get_tests():
 
 def gen_wb_master_tests(obj, dat_width, num_cycles, max_ack_dly, rand_stall):
     for dat_width, num_cycles, max_ack_dly, rand_stall \
-		in product(dat_width, num_cycles, max_ack_dly, rand_stall):
+    in product(dat_width, num_cycles, max_ack_dly, rand_stall):
         config_name = "dat_width=%i,num_cycles=%i,max_ack_dly=%i,rand_stall=%s" % \
-        	(dat_width, num_cycles, max_ack_dly, rand_stall)
+          (dat_width, num_cycles, max_ack_dly, rand_stall)
         obj.add_config(name=config_name,
                        generics=dict(
                            dat_width=dat_width,

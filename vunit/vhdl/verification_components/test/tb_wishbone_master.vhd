@@ -20,7 +20,7 @@ use osvvm.RandomPkg.all;
 
 entity tb_wishbone_master is
   generic (
-  	runner_cfg : string;
+    runner_cfg : string;
     dat_width : positive := 8;
     adr_width : positive := 4;
     num_cycles : positive := 1;

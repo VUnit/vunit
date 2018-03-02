@@ -5,7 +5,7 @@
 -- Slawomir Siluk slaweksiluk@gazeta.pl 2018
 -- Wishbome Master BFM for pipelined block transfers
 -- TODO:
---  * Random strobe option
+--  * Random strobe?
 library ieee;
 use ieee.std_logic_1164.all;
 
@@ -71,7 +71,6 @@ begin
     variable received_acks : natural := 0;
     variable rd_cycle : boolean;
     variable wr_cycle : boolean;
-    variable ack_mock : boolean;
   begin
     cyc <= '0';
     stb <= '0';
@@ -118,7 +117,7 @@ begin
           received_acks := 0;
           rd_cycle := false;
           wr_cycle := false;
-	      wait until rising_edge(clk);
+          wait until rising_edge(clk);
         end if;
 
       -- No cycles, juest sleep
@@ -130,7 +129,6 @@ begin
 
   acknowladge : process
     variable request_msg, reply_msg, ack_msg : msg_t;
-    variable ack_mock : boolean;
   begin
     wait until ack = '1' and rising_edge(clk);
     info(bus_handle.p_logger, "ack");
@@ -142,7 +140,7 @@ begin
       reply(net, request_msg, reply_msg);
     end if;
     delete(request_msg);
-    -- Response main that ack is received
+    -- Response main sequencer that ack is received
     ack_msg := new_msg(bus_ack_msg);
     send(net, wb_master_ack_actor, ack_msg);
   end process;
