@@ -22,7 +22,12 @@ entity axi_stream_master is
     tvalid : out std_logic := '0';
     tready : in std_logic;
     tdata : out std_logic_vector(data_length(master)-1 downto 0) := (others => '0');
-    tlast : out std_logic := '0');
+    tlast : out std_logic := '0';
+    tkeep : out std_logic_vector(data_length(master)/8-1 downto 0) := (others => '0');
+    tstrb : out std_logic_vector(data_length(master)/8-1 downto 0) := (others => '0');
+    tid : out std_logic_vector(id_length(master)-1 downto 0) := (others => '0');
+    tdest : out std_logic_vector(dest_length(master)-1 downto 0) := (others => '0');
+    tuser : out std_logic_vector(user_length(master)-1 downto 0) := (others => '0'));
 end entity;
 
 architecture a of axi_stream_master is
@@ -41,12 +46,22 @@ begin
       tdata <= pop_std_ulogic_vector(msg);
       if msg_type = push_axi_stream_msg then
         tlast <= pop_std_ulogic(msg);
+        tkeep <= pop_std_ulogic_vector(msg);
+        tstrb <= pop_std_ulogic_vector(msg);
+        tid <= pop_std_ulogic_vector(msg);
+        tdest <= pop_std_ulogic_vector(msg);
+        tuser <= pop_std_ulogic_vector(msg);
       else
         if pop_boolean(msg) then
           tlast <= '1';
         else
           tlast <= '0';
         end if;
+        tkeep <= (others => '1');
+        tstrb <= (others => '1');
+        tid <= (others => '0');
+        tdest <= (others => '0');
+        tuser <= (others => '0');
       end if;
       wait until (tvalid and tready) = '1' and rising_edge(aclk);
       tvalid <= '0';

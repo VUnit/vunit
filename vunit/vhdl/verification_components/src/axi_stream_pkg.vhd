@@ -18,22 +18,40 @@ package axi_stream_pkg is
   type axi_stream_master_t is record
     p_actor : actor_t;
     p_data_length : natural;
+    p_id_length : natural;
+    p_dest_length : natural;
+    p_user_length : natural;
     p_logger : logger_t;
   end record;
 
   type axi_stream_slave_t is record
     p_actor : actor_t;
     p_data_length : natural;
+    p_id_length : natural;
+    p_dest_length : natural;
+    p_user_length : natural;
     p_logger : logger_t;
   end record;
 
   constant axi_stream_logger : logger_t := get_logger("vunit_lib:axi_stream_pkg");
   impure function new_axi_stream_master(data_length : natural;
+                                        id_length : natural;
+                                        dest_length : natural;
+                                        user_length : natural;
                                         logger : logger_t := axi_stream_logger) return axi_stream_master_t;
   impure function new_axi_stream_slave(data_length : natural;
+                                       id_length : natural;
+                                       dest_length : natural;
+                                       user_length : natural;
                                        logger : logger_t := axi_stream_logger) return axi_stream_slave_t;
   impure function data_length(master : axi_stream_master_t) return natural;
   impure function data_length(master : axi_stream_slave_t) return natural;
+  impure function id_length(master : axi_stream_master_t) return natural;
+  impure function id_length(master : axi_stream_slave_t) return natural;
+  impure function dest_length(master : axi_stream_master_t) return natural;
+  impure function dest_length(master : axi_stream_slave_t) return natural;
+  impure function user_length(master : axi_stream_master_t) return natural;
+  impure function user_length(master : axi_stream_slave_t) return natural;
   impure function as_stream(master : axi_stream_master_t) return stream_master_t;
   impure function as_stream(slave : axi_stream_slave_t) return stream_slave_t;
 
@@ -49,18 +67,30 @@ end package;
 package body axi_stream_pkg is
 
   impure function new_axi_stream_master(data_length : natural;
+                                        id_length : natural;
+                                        dest_length : natural;
+                                        user_length : natural;
                                         logger : logger_t := axi_stream_logger) return axi_stream_master_t is
   begin
     return (p_actor => new_actor,
             p_data_length => data_length,
+            p_id_length => id_length,
+            p_dest_length => dest_length,
+            p_user_length => user_length,
             p_logger => logger);
   end;
 
   impure function new_axi_stream_slave(data_length : natural;
+                                       id_length : natural;
+                                       dest_length : natural;
+                                       user_length : natural;
                                        logger : logger_t := axi_stream_logger) return axi_stream_slave_t is
   begin
     return (p_actor => new_actor,
             p_data_length => data_length,
+            p_id_length => id_length,
+            p_dest_length => dest_length,
+            p_user_length => user_length,
             p_logger => logger);
   end;
 
@@ -72,6 +102,36 @@ package body axi_stream_pkg is
   impure function data_length(master : axi_stream_slave_t) return natural is
   begin
     return master.p_data_length;
+  end;
+
+  impure function id_length(master : axi_stream_master_t) return natural is
+  begin
+    return master.p_id_length;
+  end;
+
+  impure function id_length(master : axi_stream_slave_t) return natural is
+  begin
+    return master.p_id_length;
+  end;
+
+  impure function dest_length(master : axi_stream_master_t) return natural is
+  begin
+    return master.p_dest_length;
+  end;
+
+  impure function dest_length(master : axi_stream_slave_t) return natural is
+  begin
+    return master.p_dest_length;
+  end;
+
+  impure function user_length(master : axi_stream_master_t) return natural is
+  begin
+    return master.p_user_length;
+  end;
+
+  impure function user_length(master : axi_stream_slave_t) return natural is
+  begin
+    return master.p_user_length;
   end;
 
   impure function as_stream(master : axi_stream_master_t) return stream_master_t is
@@ -87,12 +147,22 @@ package body axi_stream_pkg is
   procedure push_axi_stream(signal net : inout network_t;
                             axi_stream : axi_stream_master_t;
                             tdata : std_logic_vector;
-                            tlast : std_logic := '1') is
+                            tlast : std_logic := '1';
+                            tkeep : std_logic_vector := (others => '1');
+                            tstrb : std_logic_vector := (others => '1')
+                            tid : std_logic_vector := (others => '0');
+                            tdest : std_logic_vector := (others => '0');
+                            tuser : std_logic_vector := (others => '0')) is
     variable msg : msg_t := new_msg(push_axi_stream_msg);
     constant normalized_data : std_logic_vector(tdata'length-1 downto 0) := tdata;
   begin
     push_std_ulogic_vector(msg, normalized_data);
     push_std_ulogic(msg, tlast);
+    push_std_ulogic_vector(msg, tkeep);
+    push_std_ulogic_vector(msg, tstrb);
+    push_std_ulogic_vector(msg, tid);
+    push_std_ulogic_vector(msg, tdest);
+    push_std_ulogic_vector(msg, tuser);
     send(net, axi_stream.p_actor, msg);
   end;
 
