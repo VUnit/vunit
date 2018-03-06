@@ -9,9 +9,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library vunit_lib;
-context vunit_lib.vunit_context;
+context work.vunit_context;
 context work.com_context;
+use work.memory_pkg.all;
+use work.wishbone_pkg.all;
 
 entity tb_wishbone_slave is
   generic (
@@ -41,6 +42,10 @@ architecture a of tb_wishbone_slave is
 
   signal wr_ack_cnt    : natural range 0 to num_cycles;
   signal rd_ack_cnt    : natural range 0 to num_cycles;
+
+  constant memory : memory_t := new_memory;
+  constant buf : buffer_t := allocate(memory, num_cycles * sel'length);
+  constant wishbone_slave : wishbone_slave_t := new_wishbone_slave(memory => memory);
 begin
 
   main_stim : process
@@ -106,6 +111,7 @@ begin
 
   dut_slave : entity work.wishbone_slave
     generic map (
+      wishbone_slave => wishbone_slave,
       max_ack_dly => max_ack_dly,
       rand_stall => rand_stall
     )

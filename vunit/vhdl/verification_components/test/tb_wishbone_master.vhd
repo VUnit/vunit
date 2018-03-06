@@ -9,11 +9,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library vunit_lib;
-context vunit_lib.vunit_context;
+context work.vunit_context;
 context work.com_context;
-
-use work.axi_pkg.all;
+use work.memory_pkg.all;
+use work.wishbone_pkg.all;
 use work.bus_master_pkg.all;
 
 library osvvm;
@@ -47,6 +46,10 @@ architecture a of tb_wishbone_master is
   constant tb_logger : logger_t := get_logger("tb");
   constant bus_handle : bus_master_t := new_bus(data_length => dat_width,
       address_length => adr_width, logger => master_logger);
+
+  constant memory : memory_t := new_memory;
+  constant buf : buffer_t := allocate(memory, num_cycles * sel'length);
+  constant wishbone_slave : wishbone_slave_t := new_wishbone_slave(memory => memory);
 
 begin
 
@@ -147,6 +150,7 @@ begin
 
   dut_slave : entity work.wishbone_slave
     generic map (
+      wishbone_slave => wishbone_slave,
       max_ack_dly => max_ack_dly,
       rand_stall => rand_stall
     )

@@ -21,12 +21,14 @@ use ieee.numeric_std.all;
 context work.vunit_context;
 context work.com_context;
 use work.memory_pkg.all;
+use work.wishbone_pkg.all;
 
 library osvvm;
 use osvvm.RandomPkg.all;
 
 entity wishbone_slave is
   generic (
+    wishbone_slave : wishbone_slave_t;
     max_ack_dly : natural := 0;
     rand_stall  : boolean := false
   );
@@ -46,13 +48,9 @@ end entity;
 
 architecture a of wishbone_slave is
 
-  constant ack_actor        : actor_t := new_actor("slave ack actor");
-  constant slave_logger     : logger_t := get_logger("slave");
   constant slave_write_msg  : msg_type_t := new_msg_type("wb slave write");
   constant slave_read_msg   : msg_type_t := new_msg_type("wb slave read");
 begin
-
-  show(slave_logger, display_handler, verbose);
 
   request : process
     variable wr_request_msg : msg_t;
@@ -64,12 +62,12 @@ begin
       -- For write address and data is passed to ack proc
       push_integer(wr_request_msg, to_integer(unsigned(adr)));
       push_std_ulogic_vector(wr_request_msg, dat_i);
-      send(net, ack_actor, wr_request_msg);
+      send(net, wishbone_slave.p_ack_actor, wr_request_msg);
     elsif we = '0' then
       rd_request_msg := new_msg(slave_read_msg);
       -- For read, only address is passed to ack proc
       push_integer(rd_request_msg, to_integer(unsigned(adr)));
-      send(net, ack_actor, rd_request_msg);
+      send(net, wishbone_slave.p_ack_actor, rd_request_msg);
     end if;
   end process;
 
@@ -78,18 +76,16 @@ begin
     variable msg_type : msg_type_t;
     variable data : std_logic_vector(dat_i'range);
     variable addr : natural;
-    variable memory : memory_t := new_memory;
-    variable buf : buffer_t := allocate(memory, 1024);
     variable rnd : RandomPType;
   begin
     ack <= '0';
-    receive(net, ack_actor, request_msg);
+    receive(net, wishbone_slave.p_ack_actor, request_msg);
     msg_type := message_type(request_msg);
 
     if msg_type = slave_write_msg then
       addr := pop_integer(request_msg);
       data := pop_std_ulogic_vector(request_msg);
-      write_word(memory, addr, data);
+      write_word(wishbone_slave.p_memory, addr, data);
       for i in 1 to rnd.RandInt(0, max_ack_dly) loop
         wait until rising_edge(clk);
       end loop;
@@ -100,7 +96,7 @@ begin
     elsif msg_type = slave_read_msg then
       data := (others => '0');
       addr := pop_integer(request_msg);
-      data := read_word(memory, addr, sel'length);
+      data := read_word(wishbone_slave.p_memory, addr, sel'length);
       for i in 1 to rnd.RandInt(0, max_ack_dly) loop
         wait until rising_edge(clk);
       end loop;
