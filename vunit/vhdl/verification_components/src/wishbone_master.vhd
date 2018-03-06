@@ -14,6 +14,7 @@ use ieee.std_logic_1164.all;
 use work.queue_pkg.all;
 use work.bus_master_pkg.all;
 context work.com_context;
+use work.com_types_pkg.all;
 use work.logger_pkg.all;
 use work.check_pkg.all;
 
@@ -49,15 +50,15 @@ begin
     variable msg_type : msg_type_t;
     variable status : com_status_t;
   begin
-      -- Cannot use receive, as it deletes the message
-      --receive(net, bus_handle.p_actor, request_msg);
-      wait_for_message(net, bus_handle.p_actor, status);
-      get_message(net, bus_handle.p_actor, request_msg);
+      request_msg := null_msg;
+      receive(net, bus_handle.p_actor, request_msg);
       msg_type := message_type(request_msg);
       if msg_type = bus_read_msg then
         push(rd_request_queue, request_msg);
+        request_msg := null_msg;
       elsif msg_type = bus_write_msg then
         push(wr_request_queue, request_msg);
+        request_msg := null_msg;
       else
         unexpected_msg_type(msg_type);
       end if;
