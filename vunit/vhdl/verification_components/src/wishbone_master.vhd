@@ -42,7 +42,7 @@ architecture a of wishbone_master is
   constant acknowledge_queue : queue_t := new_queue;
   constant ack_return_queue : queue_t := new_queue;
   constant bus_ack_msg   : msg_type_t := new_msg_type("wb master ack msg");
-  constant wb_master_ack_actor : actor_t := new_actor("wb master ack actor");
+  constant wb_master_ack_actor : actor_t := new_actor;
 begin
 
   main : process
