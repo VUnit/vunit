@@ -2,17 +2,17 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Slawomir Siluk slaweksiluk@gazeta.pl 2018
+-- Copyright (c) 2017-2018, Lars Asplund lars.anders.asplund@gmail.com
+-- Author Slawomir Siluk slaweksiluk@gazeta.pl
 -- Wishbome Master BFM for pipelined block transfers
 -- TODO:
 --  * Random strobe?
+
 library ieee;
 use ieee.std_logic_1164.all;
 
---use work.axi_pkg.all;
 use work.queue_pkg.all;
 use work.bus_master_pkg.all;
---use work.axi_private_pkg.all;
 context work.com_context;
 use work.logger_pkg.all;
 use work.check_pkg.all;
@@ -127,7 +127,7 @@ begin
     end loop;
   end process;
 
-  acknowladge : process
+  acknowledge : process
     variable request_msg, reply_msg, ack_msg : msg_t;
   begin
     wait until ack = '1' and rising_edge(clk);

@@ -2,8 +2,9 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Slawomir Siluk slaweksiluk@gazeta.pl 2018
--- TODO:
+-- Copyright (c) 2017-2018, Lars Asplund lars.anders.asplund@gmail.com
+-- Author Slawomir Siluk slaweksiluk@gazeta.pl
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
