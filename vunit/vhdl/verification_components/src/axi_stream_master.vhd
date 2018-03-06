@@ -42,7 +42,11 @@ begin
       if msg_type = push_axi_stream_msg then
         tlast <= pop_std_ulogic(msg);
       else
-        tlast <= '1';
+        if pop_boolean(msg) then
+          tlast <= '1';
+        else
+          tlast <= '0';
+        end if;
       end if;
       wait until (tvalid and tready) = '1' and rising_edge(aclk);
       tvalid <= '0';
