@@ -52,7 +52,7 @@ begin
 
       elsif run("test_receives_one_byte") then
         push_stream(net, uart_stream, x"77");
-        check_stream(net, axi_stream, x"77");
+        check_stream(net, axi_stream, x"77",true);
         wait until rising_edge(clk);
         check_equal(tvalid, '0');
         check_equal(num_overflows, 0);
