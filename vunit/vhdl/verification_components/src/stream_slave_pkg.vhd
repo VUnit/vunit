@@ -26,6 +26,10 @@ package stream_slave_pkg is
                        stream : stream_slave_t;
                        variable data : out std_logic_vector;
                        variable last : out boolean);
+                       
+  procedure pop_stream(signal net : inout network_t;
+                       stream : stream_slave_t;
+                       variable data : out std_logic_vector);
 
   -- Non-blocking: pop a value from the stream to be read in the future
   procedure pop_stream(signal net : inout network_t;
@@ -37,6 +41,10 @@ package stream_slave_pkg is
                                    variable reference : inout stream_reference_t;
                                    variable data : out std_logic_vector;
                                    variable last : out boolean);
+                                   
+  procedure await_pop_stream_reply(signal net : inout network_t;
+                                   variable reference : inout stream_reference_t;
+                                   variable data : out std_logic_vector);
 
   -- Blocking: read stream and check result against expected value
   procedure check_stream(signal net : inout network_t;
