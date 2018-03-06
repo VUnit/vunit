@@ -48,6 +48,10 @@ begin
     variable value : std_logic_vector(dat_i'range) := (others => '1');
   begin
     test_runner_setup(runner, runner_cfg);
+    set_format(display_handler, verbose, true);
+    show(tb_logger, display_handler, verbose);
+    show(default_logger, display_handler, verbose);
+    show(com_logger, display_handler, verbose);
     wait until rising_edge(clk);
 
 
@@ -85,10 +89,6 @@ begin
     wait;
   end process;
   test_runner_watchdog(runner, 100 us);
-  set_format(display_handler, verbose, true);
-  show(tb_logger, display_handler, verbose);
-  show(default_logger, display_handler, verbose);
-  show(com_logger, display_handler, verbose);
 
   wr_ack: process
   begin

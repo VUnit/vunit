@@ -59,6 +59,12 @@ begin
     variable rd_ref : bus_reference_arr_t;
   begin
     test_runner_setup(runner, runner_cfg);
+    set_format(display_handler, verbose, true);
+    show(tb_logger, display_handler, verbose);
+    show(default_logger, display_handler, verbose);
+    show(master_logger, display_handler, verbose);
+    show(com_logger, display_handler, verbose);
+
     wait until rising_edge(clk);
 
     if run("wr single rd single") then
@@ -122,12 +128,6 @@ begin
     wait;
   end process;
   test_runner_watchdog(runner, 100 us);
-  set_format(display_handler, verbose, true);
-  show(tb_logger, display_handler, verbose);
-  show(default_logger, display_handler, verbose);
-  show(master_logger, display_handler, verbose);
-  show(com_logger, display_handler, verbose);
-
 
   dut : entity work.wishbone_master
     generic map (
