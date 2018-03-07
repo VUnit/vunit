@@ -20,10 +20,10 @@ entity tb_axi_stream is
 end entity;
 
 architecture a of tb_axi_stream is
-  constant master_axi_stream : axi_stream_master_t := new_axi_stream_master(data_length => 8);
+  constant master_axi_stream : axi_stream_master_t := new_axi_stream_master(data_length => 8, id_length => 8, dest_length => 8, user_length => 8);
   constant master_stream : stream_master_t := as_stream(master_axi_stream);
 
-  constant slave_axi_stream : axi_stream_slave_t := new_axi_stream_slave(data_length => 8);
+  constant slave_axi_stream : axi_stream_slave_t := new_axi_stream_slave(data_length => 8, id_length => 8, dest_length => 8, user_length => 8);
   constant slave_stream : stream_slave_t := as_stream(slave_axi_stream);
 
   signal aclk   : std_logic := '0';
@@ -31,11 +31,22 @@ architecture a of tb_axi_stream is
   signal tready : std_logic;
   signal tdata  : std_logic_vector(data_length(slave_axi_stream)-1 downto 0);
   signal tlast : std_logic;
+  signal tkeep : std_logic_vector(data_length(slave_axi_stream)/8-1 downto 0);
+  signal tstrb : std_logic_vector(data_length(slave_axi_stream)/8-1 downto 0);
+  signal tid : std_logic_vector(id_length(slave_axi_stream)-1 downto 0);
+  signal tdest : std_logic_vector(dest_length(slave_axi_stream)-1 downto 0);
+  signal tuser : std_logic_vector(user_length(slave_axi_stream)-1 downto 0);
 begin
 
   main : process
     variable data : std_logic_vector(tdata'range);
-    variable last : boolean;
+    variable last_bool : boolean;
+    variable last : std_logic;
+    variable keep : std_logic_vector(tkeep'range);
+    variable strb : std_logic_vector(tstrb'range);
+    variable id : std_logic_vector(tid'range);
+    variable dest : std_logic_vector(tdest'range);
+    variable user : std_logic_vector(tuser'range);
     variable reference_queue : queue_t := new_queue;
     variable reference : stream_reference_t;
   begin
@@ -48,15 +59,26 @@ begin
       
     elsif run("test single push and pop with tlast") then
       push_stream(net, master_stream, x"88", true);
-      pop_stream(net, slave_stream, data, last);
+      pop_stream(net, slave_stream, data, last_bool);
       check_equal(data, std_logic_vector'(x"88"), "pop stream data");
-      check_equal(last, true, "pop stream last");
+      check_equal(last_bool, true, "pop stream last");
 
     elsif run("test single axi push and pop") then
       push_axi_stream(net, master_axi_stream, x"99", tlast => '1');
-      pop_stream(net, slave_stream, data, last);
+      pop_stream(net, slave_stream, data, last_bool);
       check_equal(data, std_logic_vector'(x"99"), "pop stream data");
-      check_equal(last, true, "pop stream last");
+      check_equal(last_bool, true, "pop stream last");
+      
+    elsif run("test single axi push and axi pop") then
+      push_axi_stream(net, master_axi_stream, x"99", tlast => '1', tkeep => "1", tstrb => "1", tid => x"11", tdest => x"22", tuser => x"33" );
+      pop_axi_stream(net, slave_axi_stream, data, last, keep, strb, id, dest, user );
+      check_equal(data, std_logic_vector'(x"99"), "pop axi stream data");
+      check_equal(last, std_logic'('1'), "pop stream last");  
+      check_equal(keep, std_logic_vector'("1"), "pop stream keep");  
+      check_equal(strb, std_logic_vector'("1"), "pop stream strb");  
+      check_equal(id, std_logic_vector'(x"11"), "pop stream id");  
+      check_equal(dest, std_logic_vector'(x"22"), "pop stream dest");  
+      check_equal(user, std_logic_vector'(x"33"), "pop stream user");  
 
     elsif run("test pop before push") then
       for i in 0 to 7 loop
@@ -87,7 +109,12 @@ begin
       tvalid => tvalid,
       tready => tready,
       tdata  => tdata,
-      tlast  => tlast);
+      tlast  => tlast,
+      tkeep  => tkeep,
+      tstrb  => tstrb,
+      tid    => tid,
+      tuser  => tuser,
+      tdest  => tdest);
 
   axi_stream_slave_inst : entity work.axi_stream_slave
     generic map (
@@ -97,7 +124,12 @@ begin
       tvalid => tvalid,
       tready => tready,
       tdata  => tdata,
-      tlast  => tlast);
+      tlast  => tlast,
+      tkeep  => tkeep,
+      tstrb  => tstrb,
+      tid    => tid,
+      tuser  => tuser,
+      tdest  => tdest);
 
   aclk <= not aclk after 5 ns;
 end architecture;
