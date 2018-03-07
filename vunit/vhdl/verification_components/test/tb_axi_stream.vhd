@@ -35,6 +35,7 @@ begin
 
   main : process
     variable data : std_logic_vector(tdata'range);
+    variable last : boolean;
     variable reference_queue : queue_t := new_queue;
     variable reference : stream_reference_t;
   begin
@@ -44,20 +45,18 @@ begin
       push_stream(net, master_stream, x"77");
       pop_stream(net, slave_stream, data);
       check_equal(data, std_logic_vector'(x"77"), "pop stream data");
+      
+    elsif run("test single push and pop with tlast") then
+      push_stream(net, master_stream, x"88", true);
+      pop_stream(net, slave_stream, data, last);
+      check_equal(data, std_logic_vector'(x"88"), "pop stream data");
+      check_equal(last, true, "pop stream last");
 
     elsif run("test single axi push and pop") then
-      push_axi_stream(net, master_axi_stream, x"88", tlast => '1');
-      pop_stream(net, slave_stream, data);
-      check_equal(data, std_logic_vector'(x"88"), "pop stream data");
-
-    elsif run("test stream pop expects tlast") then
-      mock(axi_stream_logger);
-      push_axi_stream(net, master_axi_stream, x"99", tlast => '0');
-      pop_stream(net, slave_stream, data);
-      check_only_log(axi_stream_logger,
-                     "Expected tlast = '1' got '0'",
-                     failure);
-      unmock(axi_stream_logger);
+      push_axi_stream(net, master_axi_stream, x"99", tlast => '1');
+      pop_stream(net, slave_stream, data, last);
+      check_equal(data, std_logic_vector'(x"99"), "pop stream data");
+      check_equal(last, true, "pop stream last");
 
     elsif run("test pop before push") then
       for i in 0 to 7 loop

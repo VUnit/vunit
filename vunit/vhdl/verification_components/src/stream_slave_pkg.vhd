@@ -24,6 +24,11 @@ package stream_slave_pkg is
   -- Blocking: pop a value from the stream
   procedure pop_stream(signal net : inout network_t;
                        stream : stream_slave_t;
+                       variable data : out std_logic_vector;
+                       variable last : out boolean);
+                       
+  procedure pop_stream(signal net : inout network_t;
+                       stream : stream_slave_t;
                        variable data : out std_logic_vector);
 
   -- Non-blocking: pop a value from the stream to be read in the future
@@ -34,12 +39,18 @@ package stream_slave_pkg is
   -- Blocking: Wait for reply to non-blocking pop
   procedure await_pop_stream_reply(signal net : inout network_t;
                                    variable reference : inout stream_reference_t;
+                                   variable data : out std_logic_vector;
+                                   variable last : out boolean);
+                                   
+  procedure await_pop_stream_reply(signal net : inout network_t;
+                                   variable reference : inout stream_reference_t;
                                    variable data : out std_logic_vector);
 
   -- Blocking: read stream and check result against expected value
   procedure check_stream(signal net : inout network_t;
                          stream : stream_slave_t;
                          expected : std_logic_vector;
+                         last : boolean := false;
                          msg : string := "");
 
   -- Message type definitions used by VC implementing stream slave VCI

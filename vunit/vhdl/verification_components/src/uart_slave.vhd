@@ -43,6 +43,7 @@ begin
         wait on local_event until length(data_queue) > 0;
       end if;
       push_std_ulogic_vector(reply_msg, pop_std_ulogic_vector(data_queue));
+      push_boolean(reply_msg, false);
       reply(net, msg, reply_msg);
 
     else

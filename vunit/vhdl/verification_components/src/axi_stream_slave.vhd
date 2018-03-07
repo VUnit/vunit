@@ -38,12 +38,13 @@ begin
       wait until (tvalid and tready) = '1' and rising_edge(aclk);
       tready <= '0';
 
-      if tlast /= '1' then
-        failure(slave.p_logger, "Expected tlast = '1' got '" & to_string(tlast) & "'");
-      end if;
-
       reply_msg := new_msg;
       push_std_ulogic_vector(reply_msg, tdata);
+      if tlast = '0' then
+        push_boolean(reply_msg,false);
+      else
+        push_boolean(reply_msg,true);
+      end if;
       reply(net, msg, reply_msg);
     else
       unexpected_msg_type(msg_type);
