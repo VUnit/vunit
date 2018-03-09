@@ -15,7 +15,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 package run_pkg is
-  signal runner : runner_sync_t := (phase => test_runner_entry,
+  signal runner : runner_sync_t := (event => idle_runner,
                                     locks => ((false, false),
                                               (false, false),
                                               (false, false),
@@ -27,6 +27,8 @@ package run_pkg is
 
   constant runner_trace_logger : logger_t := get_logger("runner");
   constant runner_state : runner_t := new_runner;
+
+  procedure notify(signal runner : inout runner_sync_t);
 
   procedure test_runner_setup (
     signal runner : inout runner_sync_t;
