@@ -42,12 +42,12 @@ begin
     if get_phase /= test_suite_setup then
       wait on runner until get_phase = test_suite_setup for 20 ns;
     end if;
-    check(now - t_start = 17 ns, "Expected wait on test_suite_setup phase to be 17 ns.");
+    check_equal(now - t_start, 17 ns, "Expected wait on test_suite_setup phase to be 17 ns.");
     t_start := now;
     if get_phase /= test_case_setup then
       wait on runner until get_phase = test_case_setup for 20 ns;
     end if;
-    check(now - t_start = 9 ns, "Expected wait on test_case_setup phase to be 9 ns.");
+    check_equal(now - t_start, 9 ns, "Expected wait on test_case_setup phase to be 9 ns.");
     test_process_completed <= true;
     wait;
   end process;
@@ -77,7 +77,7 @@ begin
     unlock_exit(runner, test_runner_setup, "locking_proc1");
     wait for 1 ns;
     unlock_entry(runner, test_suite_setup, "locking_proc1");
-    wait for 2 ns;
+    wait for 3 ns;
 
     lock_entry(runner, test_case_setup, "locking_proc1");
     lock_exit(runner, test_case_setup, "locking_proc1");
@@ -118,7 +118,7 @@ begin
   locking_proc2: process is
   begin
     wait until start_locking_process = true;
-    wait for 5 ns;
+    wait for 6 ns;
     lock_exit(runner, test_runner_cleanup, "locking_proc2");
     wait for 21 ns;
     unlock_exit(runner, test_runner_cleanup, "locking_proc2");
@@ -365,6 +365,7 @@ begin
     check_false(c, run("Should b"), "Didn't expect ""Should b"" to run.");
     check_false(c, run("Should c"), "Didn't expect ""Should c"" to run.");
     check_false(c, run("Should d"), "Didn't expect ""Should d"" to run.");
+    test_case_setup;
     test_runner_setup(runner);
     check(c, run("Should a"), "Expected ""Should a"" to run.");
 
@@ -485,6 +486,7 @@ begin
     test_case_setup;
     start_test_process2 <= true;
     t_start := now;
+    wait for 1 ns;
     test_runner_setup(runner, "enabled_test_cases : test a");
     entry_gate(runner);
     check(c, now - t_start = 7 ns, "Expected a 7 ns delay due to phase lock");
@@ -508,6 +510,7 @@ begin
     wait for 9 ns;
     while test_suite loop
       entry_gate(runner);
+      wait for 1 ns;
       while in_test_case loop
       end loop;
     end loop;
@@ -516,6 +519,19 @@ begin
     if not test_process_completed then
       wait until test_process_completed;
     end if;
+    test_case_cleanup;
+
+    ---------------------------------------------------------------------------
+    banner("Test that unlocking an unlocked phase will trigger a failure");
+    test_case_setup;
+    mock(runner_trace_logger);
+    unlock_entry(runner, test_runner_setup);
+    unlock_exit(runner, test_runner_setup);
+    check_log(runner_trace_logger, "No locks to unlock on test runner setup entry gate.", failure);
+    check_log(runner_trace_logger, "Unlocked test runner setup phase entry gate.", trace);
+    check_log(runner_trace_logger, "No locks to unlock on test runner setup exit gate.", failure);
+    check_log(runner_trace_logger, "Unlocked test runner setup phase exit gate.", trace);
+    unmock(runner_trace_logger);
     test_case_cleanup;
 
     ---------------------------------------------------------------------------

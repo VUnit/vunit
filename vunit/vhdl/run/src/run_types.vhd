@@ -26,18 +26,13 @@ package run_types_pkg is
 
   type runner_phase_t is (test_runner_entry, test_runner_setup, test_suite_setup, test_case_setup,
                           test_case, test_case_cleanup, test_suite_cleanup, test_runner_cleanup,
-                          test_runner_exit, multiple_drivers);
+                          test_runner_exit);
+  subtype runner_legal_phase_t is runner_phase_t range test_runner_setup to test_runner_cleanup;
 
-  type phase_locks_unresolved_t is record
+  type phase_locks_t is record
     entry_is_locked : boolean;
     exit_is_locked : boolean;
-  end record phase_locks_unresolved_t;
-  type phase_locks_unresolved_array_t is array (integer range <>) of phase_locks_unresolved_t;
-  function resolve_phase_locks (
-    constant values : phase_locks_unresolved_array_t)
-    return phase_locks_unresolved_t;
-  subtype phase_locks_t is resolve_phase_locks phase_locks_unresolved_t;
-  type phase_locks_array_t is array (runner_phase_t range <>) of phase_locks_t;
+  end record;
 
   type boolean_array_t is array (integer range <>) of boolean;
   function resolve_runner_flag (
@@ -50,31 +45,11 @@ package run_types_pkg is
 
   type runner_sync_t is record
     event : std_logic;
-    locks : phase_locks_array_t(test_runner_setup to test_runner_cleanup);
     exit_without_errors : runner_flag_t;
   end record runner_sync_t;
 end package;
 
 package body run_types_pkg is
-  function resolve_phase_locks (
-    constant values : phase_locks_unresolved_array_t)
-    return phase_locks_unresolved_t is
-    variable result : phase_locks_t;
-  begin
-    result.entry_is_locked := false;
-    result.exit_is_locked := false;
-    for i in values'range loop
-      if values(i).entry_is_locked then
-        result.entry_is_locked := true;
-      end if;
-      if values(i).exit_is_locked then
-        result.exit_is_locked := true;
-      end if;
-    end loop;
-
-    return result;
-  end;
-
   function resolve_runner_flag (
     constant values : boolean_array_t)
     return boolean is

@@ -16,16 +16,8 @@ use ieee.std_logic_1164.all;
 
 package run_pkg is
   signal runner : runner_sync_t := (event => idle_runner,
-                                    locks => ((false, false),
-                                              (false, false),
-                                              (false, false),
-                                              (false, false),
-                                              (false, false),
-                                              (false, false),
-                                              (false, false)),
                                     exit_without_errors => false);
 
-  constant runner_trace_logger : logger_t := get_logger("runner");
   constant runner_state : runner_t := new_runner;
 
   procedure notify(signal runner : inout runner_sync_t);
@@ -88,36 +80,36 @@ package run_pkg is
     constant timeout                 : in    time);
 
   procedure lock_entry (
-    signal runner : out runner_sync_t;
-    constant phase : in runner_phase_t;
+    signal runner : inout runner_sync_t;
+    constant phase : in runner_legal_phase_t;
     constant me : in string := "";
     constant line_num  : in natural := 0;
     constant file_name : in string := "");
 
   procedure unlock_entry (
-    signal runner : out runner_sync_t;
-    constant phase : in runner_phase_t;
+    signal runner : inout runner_sync_t;
+    constant phase : in runner_legal_phase_t;
     constant me : in string := "";
     constant line_num  : in natural := 0;
     constant file_name : in string := "");
 
   procedure lock_exit (
-    signal runner : out runner_sync_t;
-    constant phase : in runner_phase_t;
+    signal runner : inout runner_sync_t;
+    constant phase : in runner_legal_phase_t;
     constant me : in string := "";
     constant line_num  : in natural := 0;
     constant file_name : in string := "");
 
   procedure unlock_exit (
-    signal runner : out runner_sync_t;
-    constant phase : in runner_phase_t;
+    signal runner : inout runner_sync_t;
+    constant phase : in runner_legal_phase_t;
     constant me : in string := "";
     constant line_num  : in natural := 0;
     constant file_name : in string := "");
 
   procedure wait_until (
     signal runner : in runner_sync_t;
-    constant phase : in runner_phase_t;
+    constant phase : in runner_legal_phase_t;
     constant me : in string := "";
     constant line_num  : in natural := 0;
     constant file_name : in string := "");
