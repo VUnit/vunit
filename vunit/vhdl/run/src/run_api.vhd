@@ -15,12 +15,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 package run_pkg is
-  signal runner : runner_sync_t := (event => idle_runner,
-                                    exit_without_errors => false);
+  signal runner : runner_sync_t := (runner_event_idx => idle_runner,
+                                    runner_exit_status_idx => runner_exit_with_errors);
 
   constant runner_state : runner_t := new_runner;
-
-  procedure notify(signal runner : inout runner_sync_t);
 
   procedure test_runner_setup (
     signal runner : inout runner_sync_t;

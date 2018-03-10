@@ -11,6 +11,7 @@ use ieee.std_logic_1164.all;
 library vunit_lib;
 use vunit_lib.run_types_pkg.all;
 use vunit_lib.run_pkg.all;
+use vunit_lib.runner_pkg.all;
 use vunit_lib.log_levels_pkg.all;
 use vunit_lib.logger_pkg.all;
 use vunit_lib.checker_pkg.all;
@@ -34,7 +35,7 @@ architecture test_fixture of tb_check_zero_one_hot is
 begin
   clock: process is
   begin
-    while runner.phase < test_runner_exit loop
+    while get_phase(runner_state) < test_runner_exit loop
       clk <= '1', '0' after 5 ns;
       wait for 10 ns;
     end loop;

@@ -19,10 +19,10 @@ use std.textio.all;
 package body run_pkg is
   procedure notify(signal runner : inout runner_sync_t) is
   begin
-    if runner.event /= runner_event then
-      runner.event <= runner_event;
-      wait until runner.event = runner_event;
-      runner.event <= idle_runner;
+    if runner(runner_event_idx) /= runner_event then
+      runner(runner_event_idx) <= runner_event;
+      wait until runner(runner_event_idx) = runner_event;
+      runner(runner_event_idx) <= idle_runner;
     end if;
   end procedure notify;
 
@@ -56,9 +56,9 @@ package body run_pkg is
     end if;
 
     set_phase(runner_state, test_runner_setup);
+    runner(runner_exit_status_idx) <= runner_exit_with_errors;
     notify(runner);
-    runner.exit_without_errors <= false;
-    wait for 0 ns;
+
     trace(runner_trace_logger, "Entering test runner setup phase.");
     entry_gate(runner);
 
@@ -121,8 +121,8 @@ package body run_pkg is
       return;
     end if;
 
-    runner.exit_without_errors <= true;
-    wait for 0 ns;
+    runner(runner_exit_status_idx) <= runner_exit_without_errors;
+    notify(runner);
 
     if has_active_python_runner(runner_state) then
       core_pkg.test_suite_done;
@@ -279,8 +279,8 @@ package body run_pkg is
     signal runner                    : inout runner_sync_t;
     constant timeout                 : in    time) is
   begin
-    wait until runner.exit_without_errors for timeout;
-    if not runner.exit_without_errors then
+    wait until runner(runner_exit_status_idx) = runner_exit_without_errors for timeout;
+    if not (runner(runner_exit_status_idx) = runner_exit_without_errors) then
       error(runner_trace_logger, "Test runner timeout after " & time'image(timeout) & ".");
       test_runner_cleanup(runner);
     end if;

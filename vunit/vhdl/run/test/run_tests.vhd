@@ -18,6 +18,9 @@ use vunit_lib.run_pkg.all;
 use vunit_lib.runner_pkg.all;
 use vunit_lib.core_pkg;
 
+library ieee;
+use ieee.std_logic_1164.all;
+
 entity run_tests is
   generic (output_path : string);
 end entity;
@@ -130,7 +133,7 @@ begin
     wait until start_test_runner_watchdog;
     test_runner_watchdog(runner, 10 ns);
     test_runner_watchdog_completed <= true;
-    runner.exit_without_errors <= false;
+    runner(runner_exit_status_idx) <= runner_exit_with_errors;
   end process watchdog;
 
   test_runner : process
@@ -149,8 +152,12 @@ begin
     procedure test_case_setup is
     begin
       runner_init(runner_state);
-      notify(runner);
-      runner.exit_without_errors <= false;
+      runner(runner_exit_status_idx) <= runner_exit_with_errors;
+      if runner(runner_event_idx) /= runner_event then
+        runner(runner_event_idx) <= runner_event;
+        wait until runner(runner_event_idx) = runner_event;
+        runner(runner_event_idx) <= idle_runner;
+      end if;
     end;
 
     constant c : checker_t := new_checker("checker_t", default_log_level => failure);
@@ -803,10 +810,14 @@ begin
     banner("Should be possible to externally figure out if the test runner terminated without errors.");
     test_case_setup;
     test_runner_setup(runner, "enabled_test_cases : test a,, test b,, test c,, test d");
-    check_false(c, runner.exit_without_errors, "Expected exit flag to be false after runner setup");
+    wait for 0 ns;
+    check_equal(c, runner(runner_exit_status_idx), runner_exit_with_errors,
+          "Expected exit with error status after runner setup");
     p_disable_simulation_exit(runner_state);
     test_runner_cleanup(runner);
-    check(c, runner.exit_without_errors, "Expected exit flag to be true after runner cleanup");
+    wait for 0 ns;
+    check_equal(c, runner(runner_exit_status_idx), runner_exit_without_errors,
+          "Expected exit without error status after runner cleanup");
     test_case_cleanup;
 
     ---------------------------------------------------------------------------

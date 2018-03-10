@@ -35,32 +35,18 @@ package run_types_pkg is
   end record;
 
   type boolean_array_t is array (integer range <>) of boolean;
-  function resolve_runner_flag (
-    constant values : boolean_array_t)
-    return boolean;
-  subtype runner_flag_t is resolve_runner_flag boolean;
+
+  constant runner_event_idx : natural := 0;
+  constant runner_exit_status_idx : natural := 1;
 
   constant runner_event : std_logic := '1';
   constant idle_runner  : std_logic := 'Z';
 
-  type runner_sync_t is record
-    event : std_logic;
-    exit_without_errors : runner_flag_t;
-  end record runner_sync_t;
+  constant runner_exit_with_errors : std_logic := 'Z';
+  constant runner_exit_without_errors : std_logic := '1';
+
+  subtype runner_sync_t is std_logic_vector(runner_event_idx to runner_exit_status_idx);
 end package;
 
 package body run_types_pkg is
-  function resolve_runner_flag (
-    constant values : boolean_array_t)
-    return boolean is
-  begin
-    for i in values'range loop
-      if values(i) = true then
-        return true;
-      end if;
-    end loop;
-
-    return false;
-  end;
-
 end package body run_types_pkg;
