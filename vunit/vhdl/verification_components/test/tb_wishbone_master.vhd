@@ -21,21 +21,36 @@ use osvvm.RandomPkg.all;
 entity tb_wishbone_master is
   generic (
     runner_cfg : string;
-    dat_width : positive := 8;
-    adr_width : positive := 4;
-    num_cycles : positive := 1;
-    max_ack_dly : natural := 0;
-    rand_stall : boolean := false
+    encoded_tb_cfg : string
   );
 end entity;
 
 architecture a of tb_wishbone_master is
 
+  type tb_cfg_t is record
+    dat_width : positive;
+    adr_width : positive;
+    num_cycles : positive;
+    ack_prob : real;
+    stall_prob : real;
+  end record tb_cfg_t;
+
+  impure function decode(encoded_tb_cfg : string) return tb_cfg_t is
+  begin
+    return (dat_width => positive'value(get(encoded_tb_cfg, "dat_width")),
+            adr_width => positive'value(get(encoded_tb_cfg, "adr_width")),
+            num_cycles => positive'value(get(encoded_tb_cfg, "num_cycles")),
+            ack_prob => real'value(get(encoded_tb_cfg, "ack_prob")),
+            stall_prob => real'value(get(encoded_tb_cfg, "stall_prob")));
+  end function decode;
+
+  constant tb_cfg : tb_cfg_t := decode(encoded_tb_cfg);
+
   signal clk    : std_logic := '0';
-  signal adr    : std_logic_vector(adr_width-1 downto 0);
-  signal dat_i  : std_logic_vector(dat_width-1 downto 0);
-  signal dat_o  : std_logic_vector(dat_width-1 downto 0);
-  signal sel   : std_logic_vector(dat_width/8 -1 downto 0);
+  signal adr    : std_logic_vector(tb_cfg.adr_width-1 downto 0);
+  signal dat_i  : std_logic_vector(tb_cfg.dat_width-1 downto 0);
+  signal dat_o  : std_logic_vector(tb_cfg.dat_width-1 downto 0);
+  signal sel   : std_logic_vector(tb_cfg.dat_width/8 -1 downto 0);
   signal cyc   : std_logic := '0';
   signal stb   : std_logic := '0';
   signal we    : std_logic := '0';
@@ -44,21 +59,21 @@ architecture a of tb_wishbone_master is
 
   constant master_logger : logger_t := get_logger("master");
   constant tb_logger : logger_t := get_logger("tb");
-  constant bus_handle : bus_master_t := new_bus(data_length => dat_width,
-      address_length => adr_width, logger => master_logger);
+  constant bus_handle : bus_master_t := new_bus(data_length => tb_cfg.dat_width,
+      address_length => tb_cfg.adr_width, logger => master_logger);
 
   constant memory : memory_t := new_memory;
-  constant buf : buffer_t := allocate(memory, num_cycles * sel'length);
+  constant buf : buffer_t := allocate(memory, tb_cfg.num_cycles * sel'length);
   constant wishbone_slave : wishbone_slave_t := new_wishbone_slave(memory => memory);
 
 begin
 
   main_stim : process
     variable tmp : std_logic_vector(dat_i'range);
-    variable value : std_logic_vector(dat_i'range) := x"ab";
+    variable value : std_logic_vector(dat_i'range) := (others => '1');
     variable bus_rd_ref1 : bus_reference_t;
     variable bus_rd_ref2 : bus_reference_t;
-    type bus_reference_arr_t is array (0 to num_cycles-1) of bus_reference_t;
+    type bus_reference_arr_t is array (0 to tb_cfg.num_cycles-1) of bus_reference_t;
     variable rd_ref : bus_reference_arr_t;
   begin
     test_runner_setup(runner, runner_cfg);
@@ -87,26 +102,26 @@ begin
 --      check_equal(tmp, value, "read data");
     elsif run("wr block rd single") then
       info(tb_logger, "Writing...");
-      for i in 0 to num_cycles-1 loop
-        write_bus(net, bus_handle, i,
+      for i in 0 to tb_cfg.num_cycles-1 loop
+        write_bus(net, bus_handle, i*(sel'length),
             std_logic_vector(to_unsigned(i, dat_i'length)));
       end loop;
 
-      for i in 1 to num_cycles loop
+      for i in 1 to tb_cfg.num_cycles loop
         wait until ack = '1' and rising_edge(clk);
       end loop;
       wait until rising_edge(clk);
 
       info(tb_logger, "Reading...");
-      for i in 0 to num_cycles-1 loop
-        read_bus(net, bus_handle, i, tmp);
+      for i in 0 to tb_cfg.num_cycles-1 loop
+        read_bus(net, bus_handle, i*(sel'length), tmp);
         check_equal(tmp, std_logic_vector(to_unsigned(i, dat_i'length)), "read data");
       end loop;
 
     elsif run("wr block rd block") then
       info(tb_logger, "Writing...");
-      for i in 0 to num_cycles-1 loop
-        write_bus(net, bus_handle, i,
+      for i in 0 to tb_cfg.num_cycles-1 loop
+        write_bus(net, bus_handle, i*(sel'length),
             std_logic_vector(to_unsigned(i, dat_i'length)));
       end loop;
 
@@ -114,12 +129,12 @@ begin
       wait until rising_edge(clk);
 
       info(tb_logger, "Reading...");
-      for i in 0 to num_cycles-1 loop
-        read_bus(net, bus_handle, i, rd_ref(i));
+      for i in 0 to tb_cfg.num_cycles-1 loop
+        read_bus(net, bus_handle, i*(sel'length), rd_ref(i));
       end loop;
 
       info(tb_logger, "Get reads by references...");
-      for i in 0 to num_cycles-1 loop
+      for i in 0 to tb_cfg.num_cycles-1 loop
         await_read_bus_reply(net, rd_ref(i), tmp);
         check_equal(tmp, std_logic_vector(to_unsigned(i, dat_i'length)), "read data");
       end loop;

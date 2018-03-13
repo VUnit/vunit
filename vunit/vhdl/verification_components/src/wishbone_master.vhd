@@ -121,7 +121,7 @@ begin
           wait until rising_edge(clk);
         end if;
 
-      -- No cycles, juest sleep
+      -- No cycles, wait one clk period
       else
         wait until rising_edge(clk);
       end if;
