@@ -15,7 +15,8 @@ context work.com_context;
 package wishbone_pkg is
 
   type wishbone_slave_t is record
-  	ack_high_probability : real range 0.0 to 1.0;
+    ack_high_probability : real range 0.0 to 1.0;
+    stall_high_probability : real range 0.0 to 1.0;
     -- Private
     p_actor : actor_t;
     p_ack_actor : actor_t;
@@ -27,6 +28,7 @@ package wishbone_pkg is
   impure function new_wishbone_slave(
     memory : memory_t;
     ack_high_probability : real := 1.0;
+    stall_high_probability : real := 0.0;
     logger : logger_t := wishbone_slave_logger)
     return wishbone_slave_t;
 
@@ -36,6 +38,7 @@ package body wishbone_pkg is
   impure function new_wishbone_slave(
     memory : memory_t;
     ack_high_probability : real := 1.0;
+    stall_high_probability : real := 0.0;
     logger : logger_t := wishbone_slave_logger)
     return wishbone_slave_t is
   begin
@@ -43,7 +46,8 @@ package body wishbone_pkg is
             p_ack_actor => new_actor,
             p_memory => to_vc_interface(memory, logger),
             p_logger => logger,
-            ack_high_probability => ack_high_probability
+            ack_high_probability => ack_high_probability,
+            stall_high_probability => stall_high_probability
         );
   end;
 

@@ -28,7 +28,7 @@ architecture a of tb_wishbone_slave is
     adr_width : positive;
     num_cycles : positive;
     ack_prob : real;
-    rand_stall : boolean;
+    stall_prob : real;
   end record tb_cfg_t;
 
   impure function decode(encoded_tb_cfg : string) return tb_cfg_t is
@@ -37,7 +37,7 @@ architecture a of tb_wishbone_slave is
             adr_width => positive'value(get(encoded_tb_cfg, "adr_width")),
             num_cycles => positive'value(get(encoded_tb_cfg, "num_cycles")),
             ack_prob => real'value(get(encoded_tb_cfg, "ack_prob")),
-            rand_stall => boolean'value(get(encoded_tb_cfg, "rand_stall")));
+            stall_prob => real'value(get(encoded_tb_cfg, "stall_prob")));
   end function decode;
 
   constant tb_cfg : tb_cfg_t := decode(encoded_tb_cfg);
@@ -62,7 +62,10 @@ architecture a of tb_wishbone_slave is
   constant memory : memory_t := new_memory;
   constant buf : buffer_t := allocate(memory, tb_cfg.num_cycles * sel'length);
   constant wishbone_slave : wishbone_slave_t :=
-      new_wishbone_slave(memory => memory, ack_high_probability => tb_cfg.ack_prob);
+      new_wishbone_slave(memory => memory,
+        ack_high_probability => tb_cfg.ack_prob,
+        stall_high_probability => tb_cfg.stall_prob
+      );
 begin
 
   main_stim : process
@@ -128,8 +131,7 @@ begin
 
   dut_slave : entity work.wishbone_slave
     generic map (
-      wishbone_slave => wishbone_slave,
-      rand_stall => tb_cfg.rand_stall
+      wishbone_slave => wishbone_slave
     )
     port map (
       clk   => clk,

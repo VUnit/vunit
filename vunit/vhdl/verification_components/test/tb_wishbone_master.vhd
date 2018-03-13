@@ -150,9 +150,7 @@ begin
 
   dut_slave : entity work.wishbone_slave
     generic map (
-      wishbone_slave => wishbone_slave,
-      max_ack_dly => max_ack_dly,
-      rand_stall => rand_stall
+      wishbone_slave => wishbone_slave
     )
     port map (
       clk   => clk,

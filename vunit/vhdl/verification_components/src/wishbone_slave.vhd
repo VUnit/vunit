@@ -28,9 +28,7 @@ use osvvm.RandomPkg.all;
 
 entity wishbone_slave is
   generic (
-    wishbone_slave : wishbone_slave_t;
-    max_ack_dly : natural := 0;
-    rand_stall  : boolean := false
+    wishbone_slave : wishbone_slave_t
   );
   port (
     clk   : in std_logic;
@@ -97,9 +95,6 @@ begin
       data := (others => '0');
       addr := pop_integer(request_msg);
       data := read_word(wishbone_slave.p_memory, addr, sel'length);
-      for i in 1 to rnd.RandInt(0, max_ack_dly) loop
-        wait until rising_edge(clk);
-      end loop;
       while rnd.Uniform(0.0, 1.0) > wishbone_slave.ack_high_probability loop
         wait until rising_edge(clk);
       end loop;
@@ -113,17 +108,14 @@ begin
     end if;
   end process;
 
-  stall_stim_gen: if rand_stall generate
-    signal stall_l    : std_logic := '0';
-    begin
-    stall_stim: process
-      variable rnd : RandomPType;
-    begin
-      wait until rising_edge(clk) and cyc = '1';
-      stall_l <= rnd.RandSlv(1, 1)(0);
-    end process;
-    stall <= stall_l;
-  else generate
-    stall <= '0';
-  end generate;
+  stall_stim: process
+    variable rnd : RandomPType;
+  begin
+    if rnd.Uniform(0.0, 1.0) < wishbone_slave.stall_high_probability then
+      stall <= '1';
+    else
+      stall <= '0';
+    end if;
+    wait until rising_edge(clk) and cyc = '1';
+  end process;
 end architecture;
