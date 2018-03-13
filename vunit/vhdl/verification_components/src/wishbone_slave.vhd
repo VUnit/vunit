@@ -86,7 +86,7 @@ begin
       addr := pop_integer(request_msg);
       data := pop_std_ulogic_vector(request_msg);
       write_word(wishbone_slave.p_memory, addr, data);
-      for i in 1 to rnd.RandInt(0, max_ack_dly) loop
+      while rnd.Uniform(0.0, 1.0) > wishbone_slave.ack_high_probability loop
         wait until rising_edge(clk);
       end loop;
       ack <= '1';
