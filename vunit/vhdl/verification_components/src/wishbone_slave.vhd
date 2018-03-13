@@ -100,6 +100,9 @@ begin
       for i in 1 to rnd.RandInt(0, max_ack_dly) loop
         wait until rising_edge(clk);
       end loop;
+      while rnd.Uniform(0.0, 1.0) > wishbone_slave.ack_high_probability loop
+        wait until rising_edge(clk);
+      end loop;
       dat_o <= data;
       ack <= '1';
       wait until rising_edge(clk);
