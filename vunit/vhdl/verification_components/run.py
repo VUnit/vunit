@@ -20,16 +20,15 @@ lib.add_source_files(join(root, "test", "*.vhd"))
 def encode(tb_cfg):
     return ",".join(["%s:%s" % (key, str(tb_cfg[key])) for key in tb_cfg])
 
+
 def gen_wb_tests(obj, dat_width, num_cycles, ack_prob, stall_prob):
-    for dat_width, num_cycles, ack_prob, stall_prob \
-    in product(dat_width, num_cycles, ack_prob, stall_prob):
+    for dat_width, num_cycles, ack_prob, stall_prob in product(dat_width, num_cycles, ack_prob, stall_prob):
         tb_cfg = dict(
-                dat_width=dat_width,
-                adr_width=32,
-                ack_prob=ack_prob,
-                stall_prob=stall_prob,
-                num_cycles=num_cycles
-                )
+            dat_width=dat_width,
+            adr_width=32,
+            ack_prob=ack_prob,
+            stall_prob=stall_prob,
+            num_cycles=num_cycles)
         config_name = encode(tb_cfg)
         obj.add_config(name=config_name,
                        generics=dict(encoded_tb_cfg=encode(tb_cfg)))
@@ -48,5 +47,3 @@ for test in tb_wishbone_master.get_tests():
 
 
 ui.main()
-
-
