@@ -5,8 +5,6 @@
 -- Copyright (c) 2017-2018, Lars Asplund lars.anders.asplund@gmail.com
 -- Author Slawomir Siluk slaweksiluk@gazeta.pl
 -- Wishbome Master BFM for pipelined block transfers
--- TODO:
---  * Random strobe?
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -93,6 +91,8 @@ begin
           wait until rising_edge(clk);
         end loop;
         adr <= pop_std_ulogic_vector(request_msg);
+        -- TODO why sel is not passed in msg for reading (present for writing)?
+        --sel <= pop_std_ulogic_vector(request_msg);
         stb <= '1';
         we <= '0';
         wait until rising_edge(clk) and stall = '0';
