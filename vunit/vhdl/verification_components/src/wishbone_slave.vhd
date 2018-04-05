@@ -116,6 +116,6 @@ begin
     else
       stall <= '0';
     end if;
-    wait until rising_edge(clk) and cyc = '1';
+    wait until rising_edge(clk);
   end process;
 end architecture;
