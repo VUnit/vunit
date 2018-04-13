@@ -1,3 +1,9 @@
+-- This Source Code Form is subject to the terms of the Mozilla Public
+-- License, v. 2.0. If a copy of the MPL was not distributed with this file,
+-- You can obtain one at http://mozilla.org/MPL/2.0/.
+--
+-- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
+
 -- This testbench is a Minimum Working Example (MWE) of VUnit's resources to read/write CSV files and to verify
 -- AXI4-Stream components. A CSV file that contains comma separated integers is read from `data_path & csv_i`, and it is
 -- sent row by row to an AXI4-Stream Slave. The AXI4-Stream Slave is expected to be connected to an AXI4-Stream Master
@@ -21,7 +27,7 @@ entity tb_axis_loop is
   generic (
     runner_cfg : string;
     tb_path    : string;
-    data_path  : string := "/work/data/";
+    data_path  : string := "data/";
     csv_i      : string := "in.csv";
     csv_o      : string := "out.csv"
   );
@@ -31,8 +37,8 @@ architecture tb of tb_axis_loop is
 
   -- Simulation constants
 
-  constant clk_period: time := 20 ns;
-  constant C_DATA_WIDTH: natural:=32;
+  constant clk_period : time := 20 ns;
+  constant C_DATA_WIDTH : natural := 32;
 
   -- AXI4Stream Verification Components
 
@@ -44,14 +50,14 @@ architecture tb of tb_axis_loop is
 
   -- Signals to/from the UUT from/to the verification components
 
-  signal m_valid, m_ready, m_last, s_valid, s_ready, s_last: std_logic;
-  signal m_data, s_data: std_logic_vector(data_length(master_axi_stream)-1 downto 0);
+  signal m_valid, m_ready, m_last, s_valid, s_ready, s_last : std_logic;
+  signal m_data, s_data : std_logic_vector(data_length(master_axi_stream)-1 downto 0);
 
   -- tb signals and variables
 
-  signal clk, rst, rstn: std_logic := '0';
-  shared variable m_I, m_O: array_t;
-  signal start, done, saved: boolean:=false;
+  signal clk, rst, rstn : std_logic := '0';
+  shared variable m_I, m_O : array_t;
+  signal start, done, saved : boolean := false;
 
 begin
 
@@ -81,13 +87,13 @@ begin
   end process;
 
   stimuli: process
-    variable last: std_logic;
+    variable last : std_logic;
   begin
     wait until start and rising_edge(clk);
     done <= false;
     wait until rising_edge(clk);
 
-    m_I.load_csv(data_path & csv_i);
+    m_I.load_csv(tb_path & data_path & csv_i);
 
     info("Sending m_I of size " & to_string(m_I.height) & "x" & to_string(m_I.width) & " to UUT...");
 
@@ -106,8 +112,8 @@ begin
   end process;
 
   save: process
-    variable o: std_logic_vector(31 downto 0);
-    variable last: boolean:=false;
+    variable o : std_logic_vector(31 downto 0);
+    variable last : boolean:=false;
   begin
     wait until start and rising_edge(clk);
     saved <= false;
@@ -130,7 +136,7 @@ begin
     info("m_O read!");
 
     wait until rising_edge(clk);
-    m_O.save_csv(data_path & csv_o);
+    m_O.save_csv(tb_path & data_path & csv_o);
 
     info("m_O saved!");
 
