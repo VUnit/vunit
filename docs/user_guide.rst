@@ -203,6 +203,13 @@ There are many examples demonstrating more specific usage of VUnit listed below:
   can be used to handle dynamically sized 1D, 2D and 3D data as well
   as storing and loading it from csv and raw files.
 
+:vunit_example:`AXI DMA <vhdl/axi_dma>`
+  Demonstrates the AXI read and write slave verification components as
+  well as the AXI-lite master verification component. An AXI DMA is
+  verified which uses an AXI master port to read and write data from
+  external memory.  The AXI DMA also has a control register interface
+  via AXI-lite.
+
 :vunit_example:`Array and AXI4 Stream Verification Components Example <vhdl/array_axis_vcs>`
   Demonstrates ``array_t``, ``axi_stream_master_t`` and ``axi_stream_slave_t``
   data types of ``array_pkg.vhd``, ``stream_master_pkg`` and ``stream_slave_pkg``,
