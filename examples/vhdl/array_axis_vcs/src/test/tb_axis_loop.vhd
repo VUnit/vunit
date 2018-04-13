@@ -27,9 +27,8 @@ entity tb_axis_loop is
   generic (
     runner_cfg : string;
     tb_path    : string;
-    data_path  : string := "data/";
-    csv_i      : string := "in.csv";
-    csv_o      : string := "out.csv"
+    csv_i      : string := "data/in.csv";
+    csv_o      : string := "data/out.csv"
   );
 end entity;
 
@@ -93,15 +92,15 @@ begin
     done <= false;
     wait until rising_edge(clk);
 
-    m_I.load_csv(tb_path & data_path & csv_i);
+    m_I.load_csv(tb_path & csv_i);
 
     info("Sending m_I of size " & to_string(m_I.height) & "x" & to_string(m_I.width) & " to UUT...");
 
-    for x in 0 to m_I.height-1 loop
-      for y in 0 to m_I.width-1 loop
+    for y in 0 to m_I.height-1 loop
+      for x in 0 to m_I.width-1 loop
         wait until rising_edge(clk);
-        if y = m_I.width-1 then last := '1'; else last := '0'; end if;
-        push_axi_stream(net, master_axi_stream, std_logic_vector(to_signed(m_I.get(y,x), C_DATA_WIDTH)) , tlast => last);
+        if x = m_I.width-1 then last := '1'; else last := '0'; end if;
+        push_axi_stream(net, master_axi_stream, std_logic_vector(to_signed(m_I.get(x,y), C_DATA_WIDTH)) , tlast => last);
       end loop;
     end loop;
 
@@ -123,20 +122,20 @@ begin
 
     info("Receiving m_O of size " & to_string(m_O.height) & "x" & to_string(m_O.width) & " from UUT...");
 
-    for x in 0 to m_O.height-1 loop
-      for y in 0 to m_O.width-1 loop
+    for y in 0 to m_O.height-1 loop
+      for x in 0 to m_O.width-1 loop
         pop_stream(net, slave_stream, o, last);
-        if (y = m_O.width-1) and (last=false) then
+        if (x = m_O.width-1) and (last=false) then
           error("Something went wrong. Last misaligned!");
         end if;
-        m_O.set(y,x,to_integer(signed(o)));
+        m_O.set(x,y,to_integer(signed(o)));
       end loop;
     end loop;
 
     info("m_O read!");
 
     wait until rising_edge(clk);
-    m_O.save_csv(tb_path & data_path & csv_o);
+    m_O.save_csv(tb_path & csv_o);
 
     info("m_O saved!");
 
