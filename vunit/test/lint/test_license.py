@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2018, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 License header sanity check
@@ -10,11 +10,9 @@ License header sanity check
 from __future__ import print_function
 
 import unittest
-from os.path import join, splitext, abspath, commonprefix, dirname
+from os.path import join, splitext, abspath, commonprefix
 from os import walk
 import re
-from datetime import datetime
-from subprocess import Popen, PIPE, STDOUT
 from vunit import ROOT
 from vunit.builtins import VHDL_PATH
 import vunit.ostools as ostools
@@ -29,6 +27,9 @@ RE_LICENSE_NOTICE = re.compile(
     r"Lars Asplund lars\.anders\.asplund@gmail\.com")
 
 RE_LOG_DATE = re.compile(r'Date:\s*(?P<year>20\d\d)-\d\d-\d\d')
+
+FIRST_YEAR = 2014
+LAST_YEAR = 2018
 
 
 class TestLicense(unittest.TestCase):
@@ -54,21 +55,12 @@ class TestLicense(unittest.TestCase):
         Check that the license header of file_name is valid
         """
 
-        first_year, last_year = find_expected_license_years_of(file_name)
         match = RE_LICENSE_NOTICE.search(code)
         self.assertIsNotNone(match, "Failed to find license notice in %s" % file_name)
-        if first_year == last_year:
-            self.assertEqual(int(match.group('first_year')), first_year,
-                             'Expected copyright year to be %d in %s' % (first_year, file_name))
-            self.assertIsNone(match.group('last_year'), 'Expected no copyright years range in %s' % file_name)
-
-        else:
-            self.assertIsNotNone(match.group('last_year'),
-                                 'Expected copyright year range %d-%d in %s' % (first_year, last_year, file_name))
-            self.assertEqual(int(match.group('first_year')), first_year,
-                             'Expected copyright year range to start with %d in %s' % (first_year, file_name))
-            self.assertEqual(int(match.group('last_year')), last_year,
-                             'Expected copyright year range to end with %d in %s' % (last_year, file_name))
+        self.assertEqual(int(match.group('first_year')), FIRST_YEAR,
+                         'Expected copyright year range to start with %d in %s' % (FIRST_YEAR, file_name))
+        self.assertEqual(int(match.group('last_year')), LAST_YEAR,
+                         'Expected copyright year range to end with %d in %s' % (LAST_YEAR, file_name))
 
     @staticmethod
     def _check_no_trailing_whitespace(code, file_name):
@@ -90,42 +82,18 @@ class TestLicense(unittest.TestCase):
             raise AssertionError("Line %i of %s contains trailing whitespace" % (idx + 1, file_name))
 
 
-def find_expected_license_years_of(file_name):
-    """
-    Use git history to find expected license years of file_name
-    """
-    proc = Popen(['git', 'log', '--follow', '--date=short', file_name], cwd=dirname(file_name),
-                 bufsize=0, stdout=PIPE, stdin=PIPE, stderr=STDOUT, universal_newlines=True)
-    out, _ = proc.communicate()
-    first_year = None
-    last_year = None
-    for date in RE_LOG_DATE.finditer(out):
-        first_year = int(date.group('year')) if first_year is None else min(int(date.group('year')), first_year)
-        last_year = int(date.group('year')) if last_year is None else max(int(date.group('year')), last_year)
-
-    if first_year is None and last_year is None:
-        # File not in log yet, set to current year
-        first_year = datetime.now().year
-        last_year = first_year
-
-    return first_year, last_year
-
-
 def fix_license(file_name):
     """
     Fix license notice in file
     """
-    first_year, last_year = find_expected_license_years_of(file_name)
 
     with open(file_name, "r") as fptr:
         text = fptr.read()
 
-    if last_year is None or first_year == last_year:
-        replacement = "Copyright (c) %i" % first_year
-    else:
-        replacement = "Copyright (c) %i-%i" % (first_year, last_year)
+    replacement = "Copyright (c) %i-%i, Lars Asplund lars.anders.asplund@gmail.com" % (FIRST_YEAR, LAST_YEAR)
 
-    text = re.sub(r"Copyright \(c\) (?P<first_year>20\d\d)(-(?P<last_year>20\d\d))?",
+    text = re.sub(r"Copyright \(c\) (?P<first_year>20\d\d)(-(?P<last_year>20\d\d))?, "
+                  r"Lars Asplund lars\.anders\.asplund@gmail\.com",
                   replacement,
                   text)
 
