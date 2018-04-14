@@ -203,15 +203,15 @@ There are many examples demonstrating more specific usage of VUnit listed below:
   can be used to handle dynamically sized 1D, 2D and 3D data as well
   as storing and loading it from csv and raw files.
 
-:vunit_example:`Array and AXI4 Stream Verification Components Example <vhdl/array>`
+:vunit_example:`Array and AXI4 Stream Verification Components Example <vhdl/array_axis_vcs>`
   Demonstrates ``array_t``, ``axi_stream_master_t`` and ``axi_stream_slave_t``
   data types of ``array_pkg.vhd``, ``stream_master_pkg`` and ``stream_slave_pkg``,
   respectively. Also, ``push_axi_stream`` of ``axi_stream_pkg`` is used. A CSV file
   is read, the content is sent in a row-major order to an AXI Stream buffer (FIFO)
   and it is received back to be saved in a different file. Further information can
-  be found in the :ref:`verification component library user guide <verification_components/user_guide>`,
-  in subsection :ref:`Stream <verification_components/vci/stream>` and in
-  :ref:`vhdl/verification_components/test/tb_axi_stream.vhd <../../vunit/vhdl/verification_components/test/tb_axi_stream.vhd>`.
+  be found in the :ref:`verification component library user guide <vc_library>`,
+  in subsection :ref:`Stream <stream_vci>` and in
+  :vunit_file:`vhdl/verification_components/test/tb_axi_stream.vhd <vunit/vhdl/verification_components/test/tb_axi_stream.vhd>`.
 
 :vunit_example:`Generating tests <vhdl/generate_tests>`
   Demonstrates generating multiple test runs of the same test bench
