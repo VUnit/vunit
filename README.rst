@@ -10,6 +10,12 @@ often" approach through automation.
 
 **Read more on our** `Website <https://vunit.github.io>`__
 
+Contributing
+============
+Contributing in the form of code, feedback, ideas or bug reports are
+welcome. Read our `contribution guide
+<https://vunit.github.io/contributing.html>`__ to get started.
+
 License
 =======
 VUnit
