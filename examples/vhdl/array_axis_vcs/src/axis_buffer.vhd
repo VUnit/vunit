@@ -9,45 +9,45 @@ context ieee.ieee_std_context;
 
 entity axis_buffer is
   generic (
-    C_DATA_WIDTH      : integer := 32;
-    C_FIFO_DEPTH_BITS : integer := 0  -- ceiling of the log base 2 of the desired FIFO length
+    data_width : integer := 32;
+    fifo_depth : integer := 0  -- ceiling of the log base 2 of the desired FIFO length
   );
   port (
-    S_AXIS_CLK   : in  std_logic;
-    S_AXIS_RSTN  : in  std_logic;
-    S_AXIS_RDY   : out std_logic;
-    S_AXIS_DATA  : in  std_logic_vector(C_DATA_WIDTH-1 downto 0);
-    S_AXIS_VALID : in  std_logic;
-    S_AXIS_STRB  : in  std_logic_vector((C_DATA_WIDTH/8)-1 downto 0);
-    S_AXIS_LAST  : in  std_logic;
+    s_axis_clk   : in  std_logic;
+    s_axis_rstn  : in  std_logic;
+    s_axis_rdy   : out std_logic;
+    s_axis_data  : in  std_logic_vector(data_width-1 downto 0);
+    s_axis_valid : in  std_logic;
+    s_axis_strb  : in  std_logic_vector((data_width/8)-1 downto 0);
+    s_axis_last  : in  std_logic;
 
-    M_AXIS_CLK   : in  std_logic;
-    M_AXIS_RSTN  : in  std_logic;
-    M_AXIS_VALID : out std_logic;
-    M_AXIS_DATA  : out std_logic_vector(C_DATA_WIDTH-1 downto 0);
-    M_AXIS_RDY   : in  std_logic;
-    M_AXIS_STRB  : out std_logic_vector((C_DATA_WIDTH/8)-1 downto 0);
-    M_AXIS_LAST  : out std_logic
+    m_axis_clk   : in  std_logic;
+    m_axis_rstn  : in  std_logic;
+    m_axis_valid : out std_logic;
+    m_axis_data  : out std_logic_vector(data_width-1 downto 0);
+    m_axis_rdy   : in  std_logic;
+    m_axis_strb  : out std_logic_vector((data_width/8)-1 downto 0);
+    m_axis_last  : out std_logic
   );
 end axis_buffer;
 
 architecture arch of axis_buffer is
 
   signal r, e, f, wr, rd, valid : std_logic;
-  signal d, q : std_logic_vector(C_DATA_WIDTH+C_DATA_WIDTH/8 downto 0);
+  signal d, q : std_logic_vector(data_width+data_width/8 downto 0);
 
 begin
 
-  r <= (S_AXIS_RSTN nand M_AXIS_RSTN);
+  r <= (s_axis_rstn nand m_axis_rstn);
 
   fifo: entity work.fifo
     generic map (
-      C_FIFO_DEPTH_BITS => C_FIFO_DEPTH_BITS,
-      C_DATA_WIDTH => C_DATA_WIDTH+C_DATA_WIDTH/8+1
+      fifo_depth => fifo_depth,
+      data_width => data_width+data_width/8+1
     )
     port map (
-      CLKW => S_AXIS_CLK,
-      CLKR => M_AXIS_CLK,
+      CLKW => s_axis_clk,
+      CLKR => m_axis_clk,
       RST => r,
       WR => wr,
       RD => rd,
@@ -59,18 +59,18 @@ begin
 
 -- AXI4 Stream Slave logic
 
-  wr <= S_AXIS_VALID and (not f);
-  d <= S_AXIS_LAST & S_AXIS_STRB & S_AXIS_DATA;
+  wr <= s_axis_valid and (not f);
+  d <= s_axis_last & s_axis_strb & s_axis_data;
 
-  S_AXIS_RDY  <= not f;
+  s_axis_rdy  <= not f;
 
 -- AXI4 Stream Master logic
 
-  rd <= (not e) and (valid nand (not M_AXIS_RDY));
+  rd <= (not e) and (valid nand (not m_axis_rdy));
 
-  process(M_AXIS_CLK) begin
-    if rising_edge(M_AXIS_CLK) then
-      if ((not M_AXIS_RSTN) or ((valid and E) and M_AXIS_RDY))='1' then
+  process(m_axis_clk) begin
+    if rising_edge(m_axis_clk) then
+      if ((not m_axis_rstn) or ((valid and E) and m_axis_rdy))='1' then
         valid <= '0';
       elsif rd then
         valid <= '1';
@@ -78,9 +78,9 @@ begin
     end if;
   end process;
 
-  M_AXIS_VALID <= valid;
-  M_AXIS_LAST <= q(d'left);
-  M_AXIS_STRB <= q(q'left-1 downto C_DATA_WIDTH);
-  M_AXIS_DATA <= q(C_DATA_WIDTH-1 downto 0);
+  m_axis_valid <= valid;
+  m_axis_last <= q(d'left);
+  m_axis_strb <= q(q'left-1 downto data_width);
+  m_axis_data <= q(data_width-1 downto 0);
 
 end architecture;
