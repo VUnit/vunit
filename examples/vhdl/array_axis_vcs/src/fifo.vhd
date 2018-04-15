@@ -9,94 +9,94 @@ context ieee.ieee_std_context;
 
 entity fifo is
   generic (
-    C_DATA_WIDTH      : positive := 8;
-    C_FIFO_DEPTH_BITS : positive := 8
+    data_width : positive := 8;
+    fifo_depth : positive := 8
   );
   port (
-    CLKW : in std_logic;
-    CLKR : in std_logic;
-    RST  : in std_logic;
-    WR   : in std_logic;
-    RD   : in std_logic;
-    D    : in std_logic_vector(C_DATA_WIDTH-1 downto 0);
-    E    : out std_logic;
-    F    : out std_logic;
-    Q    : out std_logic_vector(C_DATA_WIDTH-1 downto 0)
+    clkw : in std_logic;
+    clkr : in std_logic;
+    rst  : in std_logic;
+    wr   : in std_logic;
+    rd   : in std_logic;
+    d    : in std_logic_vector(data_width-1 downto 0);
+    e    : out std_logic;
+    f    : out std_logic;
+    q    : out std_logic_vector(data_width-1 downto 0)
   );
 end fifo;
 
 architecture arch of fifo is
 
-  type t_fifo is array (0 to 2**C_FIFO_DEPTH_BITS-1)
-    of std_logic_vector(C_DATA_WIDTH-1 downto 0);
-  signal mem : t_fifo;
+  type fifo_t is array (0 to 2**fifo_depth-1)
+    of std_logic_vector(data_width-1 downto 0);
+  signal mem : fifo_t;
 
-  signal rdp, wrp : unsigned(C_FIFO_DEPTH_BITS downto 0);
+  signal rdp, wrp : unsigned(fifo_depth downto 0);
 
 begin
 
 -- Assertions
-  process(CLKW, CLKR)
-    constant dx : std_logic_vector(D'left downto 0) := (others => 'X');
-    constant du : std_logic_vector(D'left downto 0) := (others => 'U');
+  process(clkw, clkr)
+    constant dx : std_logic_vector(d'left downto 0) := (others => 'X');
+    constant du : std_logic_vector(d'left downto 0) := (others => 'U');
   begin
-    if rising_edge(CLKW) then
-      if ( WR and ( D?=dx or D?=du ) ) then
-        assert false report "Wrote X|U to FIFO" severity failure;
+    if rising_edge(clkw) then
+      if ( wr and ( d?=dx or d?=du ) ) then
+        assert false report "wrote X|U to fIfO" severity failure;
       end if;
-      if (F and WR) then
-        assert false report "Wrote to FIFO while Full" severity failure;
+      if (f and wr) then
+        assert false report "wrote to fIfO while full" severity failure;
       end if;
     end if;
-    if rising_edge(CLKR) then
-      if (E and RD) then
-        assert false report "Read from FIFO while Empty" severity failure;
+    if rising_edge(clkr) then
+      if (e and rd) then
+        assert false report "Read from fIfO while empty" severity failure;
       end if;
     end if;
   end process;
 
 --
 
-  process(CLKW) begin
-    if rising_edge(CLKW) then
-      if WR then
-        mem(to_integer(wrp(C_FIFO_DEPTH_BITS-1 downto 0))) <= D;
+  process(clkw) begin
+    if rising_edge(clkw) then
+      if wr then
+        mem(to_integer(wrp(fifo_depth-1 downto 0))) <= d;
       end if;
     end if;
   end process;
 
-  process(CLKW) begin
-    if rising_edge(CLKW) then
-      if RST then
+  process(clkw) begin
+    if rising_edge(clkw) then
+      if rst then
         wrp <= (others => '0');
       else
-        if WR then
+        if wr then
           wrp <= wrp+1;
         end if;
       end if;
     end if;
   end process;
 
-  F <= rdp(C_FIFO_DEPTH_BITS-1 downto 0)?=wrp(C_FIFO_DEPTH_BITS-1 downto 0)
-       and (rdp(C_FIFO_DEPTH_BITS) xor wrp(C_FIFO_DEPTH_BITS));
-  E <= rdp ?= wrp;
+  f <= rdp(fifo_depth-1 downto 0)?=wrp(fifo_depth-1 downto 0)
+       and (rdp(fifo_depth) xor wrp(fifo_depth));
+  e <= rdp ?= wrp;
 
-  process(CLKR) begin
-    if rising_edge(CLKR) then
-      if RST then
-        Q <= (others => '0');
-      elsif RD then
-        Q <= mem(to_integer(rdp(C_FIFO_DEPTH_BITS-1 downto 0)));
+  process(clkr) begin
+    if rising_edge(clkr) then
+      if rst then
+        q <= (others => '0');
+      elsif rd then
+        q <= mem(to_integer(rdp(fifo_depth-1 downto 0)));
       end if;
     end if;
   end process;
 
-  process(CLKR) begin
-    if rising_edge(CLKR) then
-      if RST then
+  process(clkr) begin
+    if rising_edge(clkr) then
+      if rst then
         rdp <= (others => '0');
       else
-        if RD then rdp <= rdp+1; end if;
+        if rd then rdp <= rdp+1; end if;
       end if;
     end if;
   end process;

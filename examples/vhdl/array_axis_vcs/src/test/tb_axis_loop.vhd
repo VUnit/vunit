@@ -37,14 +37,14 @@ architecture tb of tb_axis_loop is
   -- Simulation constants
 
   constant clk_period : time := 20 ns;
-  constant C_DATA_WIDTH : natural := 32;
+  constant data_width : natural := 32;
 
   -- AXI4Stream Verification Components
 
-  constant master_axi_stream : axi_stream_master_t := new_axi_stream_master(data_length => C_DATA_WIDTH);
+  constant master_axi_stream : axi_stream_master_t := new_axi_stream_master(data_length => data_width);
   constant master_stream : stream_master_t := as_stream(master_axi_stream);
 
-  constant slave_axi_stream : axi_stream_slave_t := new_axi_stream_slave(data_length => C_DATA_WIDTH);
+  constant slave_axi_stream : axi_stream_slave_t := new_axi_stream_slave(data_length => data_width);
   constant slave_stream : stream_slave_t := as_stream(slave_axi_stream);
 
   -- Signals to/from the UUT from/to the verification components
@@ -100,7 +100,7 @@ begin
       for x in 0 to m_I.width-1 loop
         wait until rising_edge(clk);
         if x = m_I.width-1 then last := '1'; else last := '0'; end if;
-        push_axi_stream(net, master_axi_stream, std_logic_vector(to_signed(m_I.get(x,y), C_DATA_WIDTH)) , tlast => last);
+        push_axi_stream(net, master_axi_stream, std_logic_vector(to_signed(m_I.get(x,y), data_width)) , tlast => last);
       end loop;
     end loop;
 
@@ -169,25 +169,25 @@ begin
 
   uut: entity work.axis_buffer
   generic map (
-    C_DATA_WIDTH => C_DATA_WIDTH,
-    C_FIFO_DEPTH_BITS => 4
+    data_width => data_width,
+    fifo_depth => 4
   )
   port map (
-    S_AXIS_CLK   => clk,
-    S_AXIS_RSTN  => rstn,
-    S_AXIS_RDY   => m_ready,
-    S_AXIS_DATA  => m_data,
-    S_AXIS_VALID => m_valid,
-    S_AXIS_STRB  => "1111",
-    S_AXIS_LAST  => m_last,
+    s_axis_clk   => clk,
+    s_axis_rstn  => rstn,
+    s_axis_rdy   => m_ready,
+    s_axis_data  => m_data,
+    s_axis_valid => m_valid,
+    s_axis_strb  => "1111",
+    s_axis_last  => m_last,
 
-    M_AXIS_CLK   => clk,
-    M_AXIS_RSTN  => rstn,
-    M_AXIS_VALID => s_valid,
-    M_AXIS_DATA  => s_data,
-    M_AXIS_RDY   => s_ready,
-    M_AXIS_STRB  => open,
-    M_AXIS_LAST  => s_last
+    m_axis_clk   => clk,
+    m_axis_rstn  => rstn,
+    m_axis_valid => s_valid,
+    m_axis_data  => s_data,
+    m_axis_rdy   => s_ready,
+    m_axis_strb  => open,
+    m_axis_last  => s_last
   );
 
 end architecture;
