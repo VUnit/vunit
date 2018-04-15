@@ -117,9 +117,15 @@ Contributions of VHDL code should blend in with the VUnit code style.
   and ``foo`` to refer to the same identifier.
 - Name array types ``<base_type_name>_vec_t``
 - Name packages with suffix ``_pkg``
-- Name files the same as the package or entity they contain.
+- Name files the same as the package or entity they contain such as ``<entity_name>.vhd``
 - Never put more than one entity/package in the same file.
-- Keep the architecture in the same file as the entity unless there are several architectures.
+- Keep the architecture in the same file as the entity unless there
+  are several architectures. When there are several architectures put
+  them all in separate files named
+  ``<entity_name>_<architecture_name>.vhd``.
+- Put comments documenting functions and procedures above the
+  declaration in the package header rather than the definition in the
+  package body.
 
 Regarding formatting use look at other VHDL files and follow that
 style. For example :vunit_file:`examples/vhdl/uart/src/uart_tx.vhd`
