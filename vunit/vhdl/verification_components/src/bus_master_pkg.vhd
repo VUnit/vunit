@@ -126,6 +126,10 @@ package bus_master_pkg is
     msg    : string       := "");
 
 
+  -- Wait until all operations scheduled before this command has finished
+  procedure wait_until_idle(signal net : inout network_t;
+                            bus_handle : bus_master_t);
+
   -- Message type definitions, used by VC-instances
   constant bus_write_msg : msg_type_t := new_msg_type("write bus");
   constant bus_read_msg : msg_type_t := new_msg_type("read bus");

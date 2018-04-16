@@ -11,6 +11,7 @@ use ieee.std_logic_1164.all;
 use work.axi_pkg.all;
 use work.queue_pkg.all;
 use work.bus_master_pkg.all;
+use work.sync_pkg.all;
 use work.axi_private_pkg.all;
 context work.com_context;
 
@@ -99,6 +100,9 @@ begin
         wait until (bvalid and bready) = '1' and rising_edge(aclk);
         bready <= '0';
         check_axi_resp(bus_handle, bresp, axi_resp_okay, "bresp");
+
+      elsif msg_type = wait_until_idle_msg then
+        handle_wait_until_idle(net, msg_type, request_msg);
       else
         unexpected_msg_type(msg_type);
       end if;

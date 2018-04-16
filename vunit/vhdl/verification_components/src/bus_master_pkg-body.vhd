@@ -9,6 +9,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.queue_pkg.all;
+use work.sync_pkg.all;
 
 package body bus_master_pkg is
 
@@ -226,6 +227,12 @@ package body bus_master_pkg is
     data      := (others => '-');
     data(idx) := value;
     wait_until_read_equals(net, bus_handle, addr, data, timeout, msg);
+  end;
+
+  procedure wait_until_idle(signal net : inout network_t;
+                            bus_handle : bus_master_t) is
+  begin
+    wait_until_idle(net, bus_handle.p_actor);
   end;
 
 end package body;
