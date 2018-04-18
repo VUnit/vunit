@@ -30,7 +30,6 @@ entity axi_write_slave is
 
     wvalid : in std_logic;
     wready : out std_logic := '0';
-    wid : in std_logic_vector;
     wdata : in std_logic_vector;
     wstrb : in std_logic_vector;
     wlast : in std_logic;

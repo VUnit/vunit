@@ -40,7 +40,6 @@ architecture a of tb_axi_write_slave is
 
   signal wvalid  : std_logic;
   signal wready  : std_logic := '0';
-  signal wid     : std_logic_vector(awid'range);
   signal wdata   : std_logic_vector(8*data_size-1 downto 0);
   signal wstrb   : std_logic_vector(data_size downto 0);
   signal wlast   : std_logic;
@@ -171,7 +170,6 @@ begin
 
         write_addr(id, base_address(buf), len, log_size, burst);
 
-        wid <= id;
 
         for j in 0 to len-1 loop
           for i in 0 to size-1 loop
@@ -519,7 +517,6 @@ begin
       awburst => awburst,
       wvalid  => wvalid,
       wready  => wready,
-      wid     => wid,
       wdata   => wdata,
       wstrb   => wstrb,
       wlast   => wlast,
