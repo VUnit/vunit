@@ -29,6 +29,11 @@ package body bus_master_pkg is
             p_logger => logger);
   end;
 
+  function get_logger(bus_handle : bus_master_t) return logger_t is
+  begin
+    return bus_handle.p_logger;
+  end;
+
   impure function data_length(bus_handle : bus_master_t) return natural is
   begin
     return bus_handle.p_data_length;

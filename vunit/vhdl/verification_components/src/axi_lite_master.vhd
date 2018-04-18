@@ -14,6 +14,7 @@ use work.bus_master_pkg.all;
 use work.sync_pkg.all;
 use work.axi_private_pkg.all;
 context work.com_context;
+context work.vunit_context;
 
 entity axi_lite_master is
   generic (
@@ -67,6 +68,12 @@ begin
         rready <= '0';
         check_axi_resp(bus_handle, rresp, axi_resp_okay, "rresp");
 
+        if is_visible(bus_handle.p_logger, debug) then
+          debug(bus_handle.p_logger,
+                "Read 0x" & to_hstring(rdata) &
+                " from address 0x" & to_hstring(araddr));
+        end if;
+
         reply_msg := new_msg;
         push_std_ulogic_vector(reply_msg, rdata);
         reply(net, request_msg, reply_msg);
@@ -100,6 +107,12 @@ begin
         wait until (bvalid and bready) = '1' and rising_edge(aclk);
         bready <= '0';
         check_axi_resp(bus_handle, bresp, axi_resp_okay, "bresp");
+
+        if is_visible(bus_handle.p_logger, debug) then
+          debug(bus_handle.p_logger,
+                "Wrote 0x" & to_hstring(wdata) &
+                " to address 0x" & to_hstring(awaddr));
+        end if;
 
       elsif msg_type = wait_until_idle_msg then
         handle_wait_until_idle(net, msg_type, request_msg);

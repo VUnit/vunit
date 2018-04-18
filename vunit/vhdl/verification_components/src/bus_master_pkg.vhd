@@ -37,6 +37,9 @@ package bus_master_pkg is
                           logger : logger_t := bus_logger;
                           actor : actor_t := null_actor) return bus_master_t;
 
+  -- Return the logger used by the bus master
+  function get_logger(bus_handle : bus_master_t) return logger_t;
+
   -- Return the length of the data on this bus
   impure function data_length(bus_handle : bus_master_t) return natural;
 
