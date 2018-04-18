@@ -15,9 +15,13 @@ package body bus_master_pkg is
   impure function new_bus(data_length : natural;
                           address_length : natural;
                           byte_length : natural := 8;
-                          logger : logger_t := bus_logger) return bus_master_t is
+                          logger : logger_t := bus_logger;
+                          actor : actor_t := null_actor) return bus_master_t is
+    variable p_actor : actor_t;
   begin
-    return (p_actor => new_actor,
+    p_actor := actor when actor /= null_actor else new_actor;
+
+    return (p_actor => p_actor,
             p_data_length => data_length,
             p_address_length => address_length,
             p_byte_length => byte_length,
