@@ -9,6 +9,7 @@ context vc_context is
   use vunit_lib.bus_master_pkg.all;
   use vunit_lib.axi_pkg.all;
   use vunit_lib.axi_stream_pkg.all;
+  use vunit_lib.memory_pkg.all;
   use vunit_lib.uart_pkg.all;
   use vunit_lib.stream_master_pkg.all;
   use vunit_lib.stream_slave_pkg.all;
