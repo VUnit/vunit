@@ -196,7 +196,7 @@ class GHDLInterface(SimulatorInterface):
         cmd += config.sim_options.get("ghdl.sim_flags", [])
 
         for name, value in config.generics.items():
-            cmd += ['-g%s=%s' % (name, value)]
+            cmd += ['\'-g%s=%s\'' % (name, value)]
 
         cmd += ['--assert-level=%s' % config.vhdl_assert_stop_level]
 
