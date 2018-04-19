@@ -173,46 +173,56 @@ Examples
 --------
 There are many examples demonstrating more specific usage of VUnit listed below:
 
-:vunit_example:`VHDL User Guide Example <vhdl/user_guide/>`
+:vunit_example:`VHDL User Guide Example <vhdl/user_guide>`
   The most minimal VUnit VHDL project covering the basics of this user
   guide.
 
-:vunit_example:`SystemVerilog User Guide Example <verilog/user_guide/>`
+:vunit_example:`SystemVerilog User Guide Example <verilog/user_guide>`
   The most minimal VUnit SystemVerilog project covering the basics of
   this user guide.
 
-:vunit_example:`VHDL UART Example <vhdl/uart/>`
+:vunit_example:`VHDL UART Example <vhdl/uart>`
   A more realistic test bench of an UART to show VUnit VHDL usage on a
   typical module.
 
-:vunit_example:`SystemVerilog UART Example <verilog/uart/>`
+:vunit_example:`SystemVerilog UART Example <verilog/uart>`
   A more realistic test bench of an UART to show VUnit SystemVerilog
   usage on a typical module.
 
-:vunit_example:`Run Example <vhdl/run/>`
+:vunit_example:`Run Example <vhdl/run>`
   Demonstrates the VUnit run library.
 
-:vunit_example:`Check Example <vhdl/check/>`
+:vunit_example:`Check Example <vhdl/check>`
   Demonstrates the VUnit check library.
 
-:vunit_example:`Logging Example <vhdl/logging/>`
+:vunit_example:`Logging Example <vhdl/logging>`
   Demonstrates VUnit's support for logging.
 
-:vunit_example:`Array Example <vhdl/array/>`
+:vunit_example:`Array Example <vhdl/array>`
   Demonstrates the ``array_t`` data type of ``array_pkg.vhd`` which
   can be used to handle dynamically sized 1D, 2D and 3D data as well
   as storing and loading it from csv and raw files.
 
-:vunit_example:`Generating tests <vhdl/generate_tests/>`
+:vunit_example:`Array and AXI4 Stream Verification Components Example <vhdl/array_axis_vcs>`
+  Demonstrates ``array_t``, ``axi_stream_master_t`` and ``axi_stream_slave_t``
+  data types of ``array_pkg.vhd``, ``stream_master_pkg`` and ``stream_slave_pkg``,
+  respectively. Also, ``push_axi_stream`` of ``axi_stream_pkg`` is used. A CSV file
+  is read, the content is sent in a row-major order to an AXI Stream buffer (FIFO)
+  and it is received back to be saved in a different file. Further information can
+  be found in the :ref:`verification component library user guide <vc_library>`,
+  in subsection :ref:`Stream <stream_vci>` and in
+  :vunit_file:`vhdl/verification_components/test/tb_axi_stream.vhd <vunit/vhdl/verification_components/test/tb_axi_stream.vhd>`.
+
+:vunit_example:`Generating tests <vhdl/generate_tests>`
   Demonstrates generating multiple test runs of the same test bench
   with different generic values. Also demonstrates use of ``output_path`` generic
   to create test bench output files in location specified by VUnit python runner.
 
-:vunit_example:`Vivado IP example <vhdl/vivado/>`
+:vunit_example:`Vivado IP example <vhdl/vivado>`
   Demonstrates compiling and performing behavioral simulation of
   Vivado IPs with VUnit.
 
-:vunit_example:`Communication library example <vhdl/com/>`
+:vunit_example:`Communication library example <vhdl/com>`
   Demonstrates the ``com`` message passing package which can be used
   to communicate arbitrary objects between processes.  Further reading
   can be found in the :ref:`com user guide <com_user_guide>`

@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2017-2018, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 -- Author Slawomir Siluk slaweksiluk@gazeta.pl
 -- Wishbome Master BFM for pipelined block transfers
 
@@ -118,7 +118,7 @@ begin
         push(acknowledge_queue, request_msg);
         pending_acks := pending_acks +1;
 
-      -- During cylce but no msg from tb? Have to wait for 
+      -- During cylce but no msg from tb? Have to wait for
       -- one - block on receive
       elsif (wr_cycle or rd_cycle) then
         receive(net, wb_master_ack_actor, ack_msg);

@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2017, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -45,7 +45,7 @@ begin
       push_stream(net, master_stream, x"77");
       pop_stream(net, slave_stream, data);
       check_equal(data, std_logic_vector'(x"77"), "pop stream data");
-      
+
     elsif run("test single push and pop with tlast") then
       push_stream(net, master_stream, x"88", true);
       pop_stream(net, slave_stream, data, last);

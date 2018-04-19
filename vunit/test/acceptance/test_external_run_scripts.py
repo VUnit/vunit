@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2018, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Verify that all external run scripts work correctly
@@ -104,6 +104,9 @@ class TestExternalRunScripts(unittest.TestCase):
 
     def test_vhdl_array_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "array", "run.py"))
+
+    def test_vhdl_array_axis_vcs_example_project(self):
+        self.check(join(ROOT, "examples", "vhdl", "array_axis_vcs", "run.py"))
 
     def test_vhdl_user_guide_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "user_guide", "run.py"), exit_code=1)

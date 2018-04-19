@@ -357,5 +357,6 @@ html_favicon = join(html_static_path[0], 'vunit.ico')
 htmlhelp_basename = 'vunitdoc'
 
 extlinks = {'vunit_example' : ('https://github.com/VUnit/vunit/tree/master/examples/%s/', ''),
+            'vunit_file' : ('https://github.com/VUnit/vunit/tree/master/%s/', ''),
             'vunit_commit' : ('https://github.com/vunit/vunit/tree/%s/', '@'),
             'vunit_issue' : ('https://github.com/VUnit/vunit/issues/%s/', '#')}

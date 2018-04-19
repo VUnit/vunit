@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2017, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 -- Defines bus master verification component interface
 
@@ -34,7 +34,8 @@ package bus_master_pkg is
   impure function new_bus(data_length : natural;
                           address_length : natural;
                           byte_length : natural := 8;
-                          logger : logger_t := bus_logger) return bus_master_t;
+                          logger : logger_t := bus_logger;
+                          actor : actor_t := null_actor) return bus_master_t;
 
   -- Return the length of the data on this bus
   impure function data_length(bus_handle : bus_master_t) return natural;

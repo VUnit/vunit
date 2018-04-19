@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2017-2018, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -24,6 +24,10 @@ end entity;
 architecture a of tb_bus_master_pkg is
   constant memory : memory_t := new_memory;
   constant bus_handle : bus_master_t := new_bus(data_length => 32, address_length => 32);
+  constant logger : logger_t := get_logger("logger");
+  constant actor : actor_t := new_actor("actor");
+  constant custom_logger_and_actor_bus_handle : bus_master_t :=
+    new_bus(data_length => 32, address_length => 32, logger => logger, actor => actor);
 begin
   main : process
     variable buf : buffer_t;
@@ -86,6 +90,10 @@ begin
       check_bus(net, bus_handle, x"00000000", std_logic_vector'(x"112233"));
       check_only_log(bus_logger, "check_bus(x""00000000"") - Got x""77112233"" expected x""00112233""", failure);
       unmock(bus_logger);
+
+    elsif run("test custom logger and actor bus master") then
+      check(custom_logger_and_actor_bus_handle.p_logger = logger);
+      check(custom_logger_and_actor_bus_handle.p_actor = actor);
     end if;
     test_runner_cleanup(runner);
   end process;
