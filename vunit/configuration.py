@@ -10,6 +10,7 @@ Contains Configuration class which contains configuration of a test run
 
 import logging
 from os.path import dirname
+from copy import copy
 from vunit.simulator_factory import SIMULATOR_FACTORY
 
 
@@ -98,7 +99,7 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         Set sim option
         """
         SIMULATOR_FACTORY.check_sim_option(name, value)
-        self.sim_options[name] = value
+        self.sim_options[name] = copy(value)
 
     @property
     def vhdl_assert_stop_level(self):

@@ -52,6 +52,15 @@ class TestConfiguration(unittest.TestCase):
 
         self.assertRaises(ValueError, config.set_sim_option, "vhdl_assert_stop_level", "illegal")
 
+    def test_sim_option_is_not_mutated(self):
+        design_unit = Entity('tb_entity')
+        design_unit.generic_names = ["runner_cfg"]
+        config = Configuration('name', design_unit)
+        options = ["--foo"]
+        config.set_sim_option("ghdl.sim_flags", options)
+        options[0] = "--bar"
+        self.assertEqual(config.sim_options["ghdl.sim_flags"], ["--foo"])
+
     def test_adds_tb_path_generic(self):
         design_unit = Entity('tb_entity_with_tb_path')
         design_unit.generic_names = ["runner_cfg"]

@@ -664,6 +664,24 @@ endpackage
         file1.set_compile_option("ghdl.flags", ["--xyz"])
         self.assertEqual(file1.get_compile_option("ghdl.flags"), ["--xyz"])
 
+    def test_add_compile_option_does_not_mutate_argument(self):
+        self.project.add_library("lib", "lib_path")
+        file1 = self.add_source_file("lib", "file.vhd", "")
+        options = ["--foo"]
+        file1.add_compile_option("ghdl.flags", options)
+        options[0] = "--xyz"
+        self.assertEqual(file1.get_compile_option("ghdl.flags"), ["--foo"])
+        file1.add_compile_option("ghdl.flags", ["--bar"])
+        self.assertEqual(options, ["--xyz"])
+
+    def test_set_compile_option_does_not_mutate_argument(self):
+        self.project.add_library("lib", "lib_path")
+        file1 = self.add_source_file("lib", "file.vhd", "")
+        options = ["--foo"]
+        file1.set_compile_option("ghdl.flags", options)
+        options[0] = "--xyz"
+        self.assertEqual(file1.get_compile_option("ghdl.flags"), ["--foo"])
+
     def test_compile_option_validation(self):
         self.project.add_library("lib", "lib_path")
         source_file = self.add_source_file("lib", "file.vhd", "")

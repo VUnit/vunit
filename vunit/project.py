@@ -701,7 +701,7 @@ class SourceFile(object):
         Set compile option
         """
         SIMULATOR_FACTORY.check_compile_option(name, value)
-        self._compile_options[name] = value
+        self._compile_options[name] = copy(value)
 
     def add_compile_option(self, name, value):
         """
@@ -710,7 +710,7 @@ class SourceFile(object):
         SIMULATOR_FACTORY.check_compile_option(name, value)
 
         if name not in self._compile_options:
-            self._compile_options[name] = value
+            self._compile_options[name] = copy(value)
         else:
             self._compile_options[name] += value
 
