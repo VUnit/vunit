@@ -111,20 +111,20 @@ begin
         beats := burst.length;
       end if;
 
-      if not self.resp_queue_empty and (bvalid = '0' or bready = '1') then
+      if not self.resp_queue_empty and (bvalid = '0' or bready = '1') and not self.should_stall_write_response then
         resp_burst := self.pop_resp;
         bvalid <= '1';
         bid <= std_logic_vector(to_unsigned(resp_burst.id, bid'length));
         bresp <= axi_resp_okay;
       end if;
 
-      if beats > 0 and not (beats = 1 and self.resp_queue_full) then
+      if beats > 0 and not (beats = 1 and self.resp_queue_full) and not self.should_stall_data then
         wready <= '1';
       else
         wready <= '0';
       end if;
 
-      if self.should_stall_address_channel or self.burst_queue_full then
+      if self.should_stall_address or self.burst_queue_full then
         awready <= '0';
       else
         awready <= '1';

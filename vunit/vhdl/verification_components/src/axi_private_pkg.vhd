@@ -48,13 +48,17 @@ package axi_private_pkg is
                    data : std_logic_vector);
     impure function get_actor return actor_t;
 
-    procedure set_address_channel_fifo_depth(depth : positive);
+    procedure set_address_fifo_depth(depth : positive);
     procedure set_write_response_fifo_depth(depth : positive);
-    procedure set_address_channel_stall_probability(probability : real);
+    procedure set_address_stall_probability(probability : probability_t);
+    procedure set_data_stall_probability(probability : probability_t);
+    procedure set_write_response_stall_probability(probability : probability_t);
     procedure set_check_4kbyte_boundary(value : boolean);
     procedure enable_well_behaved_check;
     impure function should_check_well_behaved return boolean;
-    impure function should_stall_address_channel return boolean;
+    impure function should_stall_address return boolean;
+    impure function should_stall_data return boolean;
+    impure function should_stall_write_response return boolean;
 
     impure function create_burst(axid : std_logic_vector;
                                  axaddr : std_logic_vector;
@@ -110,8 +114,10 @@ package body axi_private_pkg is
     variable p_resp_queue_max_length : natural;
     variable p_resp_queue : queue_t;
     variable p_check_4kbyte_boundary : boolean;
-    variable p_addr_stall_rnd : RandomPType;
-    variable p_addr_stall_prob : real;
+    variable p_rnd : RandomPType;
+    variable p_addr_stall_prob : probability_t;
+    variable p_data_stall_prob : probability_t;
+    variable p_wresp_stall_prob : probability_t;
     variable p_check_well_behaved : boolean;
 
     procedure init(axi_slave : axi_slave_t;
@@ -124,13 +130,15 @@ package body axi_private_pkg is
       p_data_size := data'length/8;
       p_max_id := max_id;
       p_id_indexes := new_integer_vector_ptr(length => max_id+1, value => 0);
-      p_burst_queue_max_length := axi_slave.p_initial_address_channel_fifo_depth;
+      p_burst_queue_max_length := axi_slave.p_initial_address_fifo_depth;
       p_burst_queue := new_queue;
-      p_resp_queue_max_length := 1;
+      p_resp_queue_max_length := axi_slave.p_initial_write_response_fifo_depth;
       p_resp_queue := new_queue;
       p_check_4kbyte_boundary := axi_slave.p_initial_check_4kbyte_boundary;
       p_check_well_behaved := false;
-      set_address_channel_stall_probability(0.0);
+      set_address_stall_probability(axi_slave.p_initial_address_stall_probability);
+      set_data_stall_probability(axi_slave.p_initial_data_stall_probability);
+      set_write_response_stall_probability(axi_slave.p_initial_write_response_stall_probability);
     end;
 
     impure function get_actor return actor_t is
@@ -138,10 +146,10 @@ package body axi_private_pkg is
       return p_axi_slave.p_actor;
     end;
 
-    procedure set_address_channel_fifo_depth(depth : positive) is
+    procedure set_address_fifo_depth(depth : positive) is
     begin
       if burst_queue_length > depth then
-        fail("New address channel fifo depth " & to_string(depth) &
+        fail("New address fifo depth " & to_string(depth) &
              " is smaller than current content size " & to_string(burst_queue_length));
       else
         p_burst_queue_max_length := depth;
@@ -158,10 +166,19 @@ package body axi_private_pkg is
       end if;
     end procedure;
 
-    procedure set_address_channel_stall_probability(probability : real) is
+    procedure set_address_stall_probability(probability : probability_t) is
     begin
-      assert probability >= 0.0 and probability <= 1.0;
       p_addr_stall_prob := probability;
+    end;
+
+    procedure set_data_stall_probability(probability : probability_t) is
+    begin
+      p_data_stall_prob := probability;
+    end;
+
+    procedure set_write_response_stall_probability(probability : probability_t) is
+    begin
+      p_wresp_stall_prob := probability;
     end;
 
     procedure set_check_4kbyte_boundary(value : boolean) is
@@ -179,9 +196,25 @@ package body axi_private_pkg is
       return p_check_well_behaved;
     end;
 
-    impure function should_stall_address_channel return boolean is
+    impure function should_stall(prob : probability_t) return boolean is
     begin
-      return p_addr_stall_rnd.Uniform(0.0, 1.0) < p_addr_stall_prob;
+      -- Enhance performance when prob = 0.0
+      return prob /= 0.0 and p_rnd.Uniform(0.0, 1.0) < prob;
+    end;
+
+    impure function should_stall_address return boolean is
+    begin
+      return should_stall(p_addr_stall_prob);
+    end;
+
+    impure function should_stall_data return boolean is
+    begin
+      return should_stall(p_data_stall_prob);
+    end;
+
+    impure function should_stall_write_response return boolean is
+    begin
+      return should_stall(p_wresp_stall_prob);
     end;
 
     impure function create_burst(axid : std_logic_vector;
@@ -358,7 +391,7 @@ package body axi_private_pkg is
       end if;
     end procedure;
 
-  impure function data_size return integer is
+    impure function data_size return integer is
     begin
       return p_data_size;
     end;
@@ -402,16 +435,24 @@ package body axi_private_pkg is
       receive(net, self.get_actor, request_msg);
       msg_type := message_type(request_msg);
 
-      if msg_type = axi_slave_set_address_channel_fifo_depth_msg then
-        self.set_address_channel_fifo_depth(pop(request_msg));
+      if msg_type = axi_slave_set_address_fifo_depth_msg then
+        self.set_address_fifo_depth(pop(request_msg));
         acknowledge(net, request_msg, true);
 
       elsif msg_type = axi_slave_set_write_response_fifo_depth_msg then
         self.set_write_response_fifo_depth(pop(request_msg));
         acknowledge(net, request_msg, true);
 
-      elsif msg_type = axi_slave_set_address_channel_stall_probability_msg then
-        self.set_address_channel_stall_probability(pop_real(request_msg));
+      elsif msg_type = axi_slave_set_address_stall_probability_msg then
+        self.set_address_stall_probability(pop_real(request_msg));
+        acknowledge(net, request_msg, true);
+
+      elsif msg_type = axi_slave_set_data_stall_probability_msg then
+        self.set_data_stall_probability(pop_real(request_msg));
+        acknowledge(net, request_msg, true);
+
+      elsif msg_type = axi_slave_set_write_response_stall_probability_msg then
+        self.set_write_response_stall_probability(pop_real(request_msg));
         acknowledge(net, request_msg, true);
 
       elsif msg_type = axi_slave_configure_4kbyte_boundary_check_msg then

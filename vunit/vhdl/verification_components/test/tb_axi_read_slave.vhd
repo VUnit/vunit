@@ -26,7 +26,7 @@ entity tb_axi_read_slave is
 end entity;
 
 architecture a of tb_axi_read_slave is
-  signal clk    : std_logic := '0';
+  signal clk    : std_logic := '1';
 
   constant log_data_size : integer := 4;
   constant data_size : integer := 2**log_data_size;
@@ -47,12 +47,11 @@ architecture a of tb_axi_read_slave is
   signal rlast : std_logic;
 
   constant memory : memory_t := new_memory;
-  constant axi_slave : axi_slave_t := new_axi_slave(address_channel_fifo_depth => 1,
+  constant axi_slave : axi_slave_t := new_axi_slave(address_fifo_depth => 1,
                                                     memory => memory);
 
 begin
   main : process
-    variable buf : buffer_t;
     variable rnd : RandomPType;
 
     procedure write_addr(id : std_logic_vector;
@@ -87,8 +86,30 @@ begin
       check_equal(rlast, last, "rlast");
     end procedure;
 
-    variable data : integer_vector_ptr_t;
-    variable size, log_size : natural;
+    procedure transfer(log_size, len : natural;
+                       id : std_logic_vector;
+                       burst : std_logic_vector) is
+      variable buf : buffer_t;
+      variable size : natural;
+      variable data : integer_vector_ptr_t;
+    begin
+      size := 2**log_size;
+      random_integer_vector_ptr(rnd, data, size * len, 0, 255);
+
+      buf := allocate(memory, 8 * len, alignment => 4096);
+      for i in 0 to length(data)-1 loop
+        write_byte(memory, base_address(buf)+i, get(data, i));
+      end loop;
+
+      write_addr(id, base_address(buf), len, log_size, burst);
+
+      for i in 0 to len-1 loop
+        read_data(id, base_address(buf)+size*i, size, axi_resp_okay, i=len-1);
+      end loop;
+    end;
+
+    variable log_size : natural;
+    variable buf : buffer_t;
     variable id : std_logic_vector(arid'range);
     variable len : natural;
     variable burst : axi_burst_type_t;
@@ -113,19 +134,37 @@ begin
         end case;
 
         log_size := rnd.RandInt(0, 3);
-        size := 2**log_size;
-        random_integer_vector_ptr(rnd, data, size * len, 0, 255);
+        transfer(log_size, len, id, burst);
+      end loop;
 
-        buf := allocate(memory, 8 * len, alignment => 4096);
-        for i in 0 to length(data)-1 loop
-          write_byte(memory, base_address(buf)+i, get(data, i));
-        end loop;
+    elsif run("Test random data stall") then
+      log_size := 3;
+      len := 128;
+      id := (arid'range => '0');
+      burst := axi_burst_type_incr;
 
-        write_addr(id, base_address(buf), len, log_size, burst);
+      for i in 0 to 4 loop
+        if i = 2 then
+          set_data_stall_probability(net, axi_slave, 0.9);
+        else
+          set_data_stall_probability(net, axi_slave, 0.0);
+        end if;
 
-        for i in 0 to len-1 loop
-          read_data(id, base_address(buf)+size*i, size, axi_resp_okay, i=len-1);
-        end loop;
+        start_time := now;
+
+        transfer(log_size, len, id, burst);
+        info("diff_time := " & to_string(now - start_time));
+
+        if i = 1 or i = 4 then
+          -- First two and last two runs should have the same time with 0.0
+          -- stall probability
+          check_equal(diff_time, now - start_time);
+        elsif i = 2 then
+          -- Middle run should have larger time
+          check(5*diff_time < now - start_time);
+        end if;
+
+        diff_time := now - start_time;
       end loop;
 
     elsif run("Test that permissions are checked") then
@@ -162,7 +201,7 @@ begin
       write_addr(x"2", base_address(buf)+4000, 256, 0, axi_burst_type_incr);
       wait until arvalid = '0' and rising_edge(clk);
 
-    elsif run("Test default address channel fifo depth is 1") then
+    elsif run("Test default address fifo depth is 1") then
       buf := allocate(memory, 1024);
       write_addr(x"2", base_address(buf), 1, 0, axi_burst_type_incr); -- Taken data process
       write_addr(x"2", base_address(buf), 1, 0, axi_burst_type_incr); -- In the queue
@@ -171,9 +210,9 @@ begin
         assert arready = '0' report "Can only have one address in the queue";
       end loop;
 
-    elsif run("Test set address channel fifo depth") then
+    elsif run("Test set address fifo depth") then
       buf := allocate(memory, 1024);
-      set_address_channel_fifo_depth(net, axi_slave, 16);
+      set_address_fifo_depth(net, axi_slave, 16);
 
       write_addr(x"2", base_address(buf), 1, 0, axi_burst_type_incr); -- Taken data process
       for i in 1 to 16 loop
@@ -185,26 +224,26 @@ begin
         assert arready = '0' report "Address queue should be full";
       end loop;
 
-    elsif run("Test changing address channel depth to smaller than content gives error") then
+    elsif run("Test changing address depth to smaller than content gives error") then
       buf := allocate(memory, 1024);
-      set_address_channel_fifo_depth(net, axi_slave, 16);
+      set_address_fifo_depth(net, axi_slave, 16);
 
       write_addr(x"2", base_address(buf), 1, 0, axi_burst_type_incr); -- Taken data process
       for i in 1 to 16 loop
         write_addr(x"2", base_address(buf), 1, 0, axi_burst_type_incr); -- In the queue
       end loop;
 
-      set_address_channel_fifo_depth(net, axi_slave, 17);
-      set_address_channel_fifo_depth(net, axi_slave, 16);
+      set_address_fifo_depth(net, axi_slave, 17);
+      set_address_fifo_depth(net, axi_slave, 16);
 
       mock(axi_slave_logger, failure);
-      set_address_channel_fifo_depth(net, axi_slave, 1);
-      check_only_log(axi_slave_logger, "New address channel fifo depth 1 is smaller than current content size 16", failure);
+      set_address_fifo_depth(net, axi_slave, 1);
+      check_only_log(axi_slave_logger, "New address fifo depth 1 is smaller than current content size 16", failure);
       unmock(axi_slave_logger);
 
-    elsif run("Test address channel stall probability") then
+    elsif run("Test address stall probability") then
       buf := allocate(memory, 1024);
-      set_address_channel_fifo_depth(net, axi_slave, 128);
+      set_address_fifo_depth(net, axi_slave, 128);
 
       start_time := now;
       for i in 1 to 16 loop
@@ -212,7 +251,7 @@ begin
       end loop;
       diff_time := now - start_time;
 
-      set_address_channel_stall_probability(net, axi_slave, 0.9);
+      set_address_stall_probability(net, axi_slave, 0.9);
       start_time := now;
       for i in 1 to 16 loop
         write_addr(x"2", base_address(buf), 1, 0, axi_burst_type_incr);
@@ -222,7 +261,7 @@ begin
     elsif run("Test well behaved check does not fail for well behaved bursts") then
       buf := allocate(memory, 128);
       enable_well_behaved_check(net, axi_slave);
-      set_address_channel_fifo_depth(net, axi_slave, 3);
+      set_address_fifo_depth(net, axi_slave, 3);
       set_write_response_fifo_depth(net, axi_slave, 3);
 
       wait until rising_edge(clk);
@@ -306,7 +345,7 @@ begin
       buf := allocate(memory, 8);
       enable_well_behaved_check(net, axi_slave);
       mock(axi_slave_logger, failure);
-      set_address_channel_stall_probability(net, axi_slave, 1.0);
+      set_address_stall_probability(net, axi_slave, 1.0);
 
       wait until rising_edge(clk);
       wait until rising_edge(clk);

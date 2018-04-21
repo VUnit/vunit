@@ -84,7 +84,7 @@ begin
         address := burst.address;
       end if;
 
-      if beats > 0 and (rvalid = '0' or rready = '1') then
+      if beats > 0 and (rvalid = '0' or rready = '1') and not self.should_stall_data then
         rvalid <= '1';
         for j in 0 to burst.size-1 loop
           idx := (address + j) mod self.data_size;
@@ -103,7 +103,7 @@ begin
         end if;
       end if;
 
-      if self.should_stall_address_channel or self.burst_queue_full then
+      if self.should_stall_address or self.burst_queue_full then
         arready <= '0';
       else
         arready <= '1';
