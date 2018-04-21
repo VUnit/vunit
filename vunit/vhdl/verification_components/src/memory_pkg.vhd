@@ -165,4 +165,19 @@ package memory_pkg is
                                   -- Override logger, null_logger means no override
                                   logger : logger_t := null_logger) return memory_t;
 
+  -- Only perform checks related to address
+  -- Check for access permissions and address out of range
+  impure function check_address(memory : memory_t; address : natural;
+                                reading : boolean;
+                                check_permissions : boolean := false) return boolean;
+
+  -- Only perform checks related to write_byte data without performing the write
+  -- Does not check address
+  impure function check_write_data(memory : memory_t;
+                                   address : natural;
+                                   byte : byte_t) return boolean;
+
+  -- Perform write of one byte without running any address or data checks
+  procedure write_byte_unchecked(memory : memory_t; address : natural; byte : byte_t);
+
 end package;

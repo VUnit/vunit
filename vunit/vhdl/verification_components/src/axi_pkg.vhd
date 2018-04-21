@@ -25,6 +25,7 @@ package axi_pkg is
   constant axi_burst_type_wrap : axi_burst_type_t := "10";
 
   subtype axi4_len_t is std_logic_vector(7 downto 0);
+  constant max_axi4_burst_length : natural := 2**axi4_len_t'length;
   subtype axi4_size_t is std_logic_vector(2 downto 0);
 
   subtype probability_t is real range 0.0 to 1.0;
@@ -37,6 +38,8 @@ package axi_pkg is
     p_initial_address_stall_probability : probability_t;
     p_initial_data_stall_probability : probability_t;
     p_initial_write_response_stall_probability : probability_t;
+    p_initial_min_response_latency : delay_length;
+    p_initial_max_response_latency : delay_length;
     p_actor : actor_t;
     p_memory : memory_t;
     p_logger : logger_t;
@@ -50,28 +53,61 @@ package axi_pkg is
                                 address_stall_probability : probability_t := 0.0;
                                 data_stall_probability : probability_t := 0.0;
                                 write_response_stall_probability : probability_t := 0.0;
+                                min_response_latency : delay_length := 0 ns;
+                                max_response_latency : delay_length := 0 ns;
                                 logger : logger_t := axi_slave_logger) return axi_slave_t;
 
   -- Set the maximum number address channel tokens that can be queued
-  procedure set_address_fifo_depth(signal net : inout network_t; axi_slave : axi_slave_t; depth : positive);
+  procedure set_address_fifo_depth(signal net : inout network_t;
+                                   axi_slave : axi_slave_t;
+                                   depth : positive);
 
   -- Set the maximum number write responses that can be queued
-  procedure set_write_response_fifo_depth(signal net : inout network_t; axi_slave : axi_slave_t; depth : positive);
+  procedure set_write_response_fifo_depth(signal net : inout network_t;
+                                          axi_slave : axi_slave_t;
+                                          depth : positive);
 
   -- Set the address channel stall probability
-  procedure set_address_stall_probability(signal net : inout network_t; axi_slave : axi_slave_t;
+  procedure set_address_stall_probability(signal net : inout network_t;
+                                          axi_slave : axi_slave_t;
                                           probability : probability_t);
 
   -- Set the data channel stall probability
-  procedure set_data_stall_probability(signal net : inout network_t; axi_slave : axi_slave_t;
+  procedure set_data_stall_probability(signal net : inout network_t;
+                                       axi_slave : axi_slave_t;
                                        probability : probability_t);
 
   -- Set the write response stall probability
-  procedure set_write_response_stall_probability(signal net : inout network_t; axi_slave : axi_slave_t;
+  procedure set_write_response_stall_probability(signal net : inout network_t;
+                                                 axi_slave : axi_slave_t;
                                                  probability : probability_t);
 
-  procedure enable_4kbyte_boundary_check(signal net : inout network_t; axi_slave : axi_slave_t);
-  procedure disable_4kbyte_boundary_check(signal net : inout network_t; axi_slave : axi_slave_t);
+  -- Set the response latency
+  --
+  -- For a write slave this is the time between the last write data
+  -- and providing the write reponse. All write data is written to the
+  -- memory model right before providing write response.
+  -- Data address and expected value is still checked as soons as it arrives to
+  -- the axi slave and is not delayed until the write response time.
+  --
+  -- For a read slave this is the time between the read burst arrival and the
+  -- first provided read data
+  --
+  -- The response latency is randomly choosen in the uniform interval:
+  -- [min_latency, max_latency]
+  procedure set_response_latency(signal net : inout network_t;
+                                 axi_slave : axi_slave_t;
+                                 min_latency, max_latency : delay_length);
+
+  -- Short hand for set_response_latency when min and max are the same
+  procedure set_response_latency(signal net : inout network_t;
+                                 axi_slave : axi_slave_t;
+                                 latency : delay_length);
+
+  procedure enable_4kbyte_boundary_check(signal net : inout network_t;
+                                         axi_slave : axi_slave_t);
+  procedure disable_4kbyte_boundary_check(signal net : inout network_t;
+                                          axi_slave : axi_slave_t);
 
   -- Check that bursts are well behaved, that is that data channel traffic is
   -- as compact as possible
@@ -87,11 +123,15 @@ package axi_pkg is
   -- 2. uses max arsize supported by data width
   procedure enable_well_behaved_check(signal net : inout network_t; axi_slave : axi_slave_t);
 
+
+
+  -- Private constants
   constant axi_slave_set_address_fifo_depth_msg : msg_type_t := new_msg_type("axi slave set address channel fifo depth");
   constant axi_slave_set_write_response_fifo_depth_msg : msg_type_t := new_msg_type("set write response fifo depth");
   constant axi_slave_set_address_stall_probability_msg : msg_type_t := new_msg_type("axi slave set address channel stall probability");
   constant axi_slave_set_data_stall_probability_msg : msg_type_t := new_msg_type("axi slave set data stall probability");
   constant axi_slave_set_write_response_stall_probability_msg : msg_type_t := new_msg_type("axi slave set write response stall probability");
+  constant axi_slave_set_response_latency_msg : msg_type_t := new_msg_type("axi slave response latency probability");
   constant axi_slave_configure_4kbyte_boundary_check_msg : msg_type_t := new_msg_type("axi slave configure 4kbyte boundary check");
   constant axi_slave_enable_well_behaved_check_msg : msg_type_t := new_msg_type("axi slave enable well behaved check");
 
@@ -105,6 +145,8 @@ package body axi_pkg is
                                 address_stall_probability : probability_t := 0.0;
                                 data_stall_probability : probability_t := 0.0;
                                 write_response_stall_probability : probability_t := 0.0;
+                                min_response_latency : delay_length := 0 ns;
+                                max_response_latency : delay_length := 0 ns;
                                 logger : logger_t := axi_slave_logger) return axi_slave_t is
   begin
     return (p_actor => new_actor,
@@ -114,11 +156,15 @@ package body axi_pkg is
             p_initial_address_stall_probability => address_stall_probability,
             p_initial_data_stall_probability => data_stall_probability,
             p_initial_write_response_stall_probability => write_response_stall_probability,
+            p_initial_min_response_latency => min_response_latency,
+            p_initial_max_response_latency => max_response_latency,
             p_memory => to_vc_interface(memory, logger),
             p_logger => logger);
   end;
 
-  procedure set_address_fifo_depth(signal net : inout network_t; axi_slave : axi_slave_t; depth : positive) is
+  procedure set_address_fifo_depth(signal net : inout network_t;
+                                   axi_slave : axi_slave_t;
+                                   depth : positive) is
     variable request_msg : msg_t;
     variable ack : boolean;
   begin
@@ -128,7 +174,9 @@ package body axi_pkg is
     assert ack report "Failed on set_address_fifo_depth command";
   end;
 
-  procedure set_write_response_fifo_depth(signal net : inout network_t; axi_slave : axi_slave_t; depth : positive) is
+  procedure set_write_response_fifo_depth(signal net : inout network_t;
+                                          axi_slave : axi_slave_t;
+                                          depth : positive) is
     variable request_msg : msg_t;
     variable ack : boolean;
   begin
@@ -138,7 +186,8 @@ package body axi_pkg is
     assert ack report "Failed on set_write_response_fifo_depth command";
   end;
 
-  procedure set_address_stall_probability(signal net : inout network_t; axi_slave : axi_slave_t;
+  procedure set_address_stall_probability(signal net : inout network_t;
+                                          axi_slave : axi_slave_t;
                                           probability : probability_t) is
     variable request_msg : msg_t;
     variable ack : boolean;
@@ -149,7 +198,8 @@ package body axi_pkg is
     assert ack report "Failed on set_address_stall_probability command";
   end;
 
-  procedure set_data_stall_probability(signal net : inout network_t; axi_slave : axi_slave_t;
+  procedure set_data_stall_probability(signal net : inout network_t;
+                                       axi_slave : axi_slave_t;
                                        probability : probability_t) is
     variable request_msg : msg_t;
     variable ack : boolean;
@@ -183,17 +233,41 @@ package body axi_pkg is
     assert ack report "Failed on configure_4kbyte_boundary_check command";
   end;
 
-  procedure enable_4kbyte_boundary_check(signal net : inout network_t; axi_slave : axi_slave_t) is
+  procedure set_response_latency(signal net : inout network_t;
+                                 axi_slave : axi_slave_t;
+                                 min_latency, max_latency : delay_length) is
+    variable request_msg : msg_t;
+    variable ack : boolean;
+  begin
+    request_msg := new_msg(axi_slave_set_response_latency_msg);
+    push_time(request_msg, min_latency);
+    push_time(request_msg, max_latency);
+    request(net, axi_slave.p_actor, request_msg, ack);
+    assert ack report "Failed on set_response_latency command";
+  end;
+
+  -- Short hand for set_response_latency when min and max are the same
+  procedure set_response_latency(signal net : inout network_t;
+                                 axi_slave : axi_slave_t;
+                                 latency : delay_length) is
+  begin
+    set_response_latency(net, axi_slave, latency, latency);
+  end;
+
+  procedure enable_4kbyte_boundary_check(signal net : inout network_t;
+                                         axi_slave : axi_slave_t) is
   begin
     configure_4kbyte_boundary_check(net, axi_slave, true);
   end;
 
-  procedure disable_4kbyte_boundary_check(signal net : inout network_t; axi_slave : axi_slave_t) is
+  procedure disable_4kbyte_boundary_check(signal net : inout network_t;
+                                          axi_slave : axi_slave_t) is
   begin
     configure_4kbyte_boundary_check(net, axi_slave, false);
   end;
 
-  procedure enable_well_behaved_check(signal net : inout network_t; axi_slave : axi_slave_t) is
+  procedure enable_well_behaved_check(signal net : inout network_t;
+                                      axi_slave : axi_slave_t) is
     variable request_msg : msg_t;
     variable ack : boolean;
   begin

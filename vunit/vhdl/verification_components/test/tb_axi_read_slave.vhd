@@ -167,6 +167,29 @@ begin
         diff_time := now - start_time;
       end loop;
 
+    elsif run("Test response latency") then
+      log_size := 3;
+      len := 128;
+      id := (arid'range => '0');
+      burst := axi_burst_type_incr;
+
+      for i in 0 to 1 loop
+        if i = 1 then
+          set_response_latency(net, axi_slave, 1 us);
+        end if;
+
+        start_time := now;
+
+        transfer(log_size, len, id, burst);
+        info("diff_time := " & to_string(now - start_time));
+
+        if i = 1 then
+          check_equal(diff_time + 1 us, now - start_time);
+        end if;
+
+        diff_time := now - start_time;
+      end loop;
+
     elsif run("Test that permissions are checked") then
       -- Also checks that the axi slave logger is used for memory errors
       buf := allocate(memory, data_size, permissions => no_access);

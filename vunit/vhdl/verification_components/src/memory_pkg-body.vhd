@@ -152,16 +152,19 @@ package body memory_pkg is
     return null_buffer;
   end;
 
-  procedure check_write_data(memory : memory_t;
-                             address : natural;
-                             byte : byte_t) is
+  impure function check_write_data(memory : memory_t;
+                                   address : natural;
+                                   byte : byte_t) return boolean is
     variable memory_data : memory_data_t := decode(get(memory.p_data, address));
   begin
     if memory_data.has_exp and byte /= memory_data.exp then
       failure(memory.p_logger, "Writing to " & describe_address(memory, address) &
               ". Got " & to_string(byte) & " expected " & to_string(memory_data.exp));
+      return false;
     end if;
-  end procedure;
+
+    return true;
+  end;
 
   impure function check_address(memory : memory_t; address : natural;
                                 reading : boolean;
@@ -211,17 +214,23 @@ package body memory_pkg is
     return get(memory.p_meta, num_bytes_idx);
   end;
 
-  procedure write_byte(memory : memory_t; address : natural; byte : byte_t) is
+  procedure write_byte_unchecked(memory : memory_t; address : natural; byte : byte_t) is
     variable old : memory_data_t;
+  begin
+    old := decode(get(memory.p_data, address));
+    set(memory.p_data, address, encode((byte => byte, exp => old.exp, has_exp => old.has_exp, perm => old.perm)));
+  end;
+
+  procedure write_byte(memory : memory_t; address : natural; byte : byte_t) is
   begin
     if not check_address(memory, address, false, memory.p_check_permissions) then
       return;
     end if;
 
-    check_write_data(memory, address, byte);
-
-    old := decode(get(memory.p_data, address));
-    set(memory.p_data, address, encode((byte => byte, exp => old.exp, has_exp => old.has_exp, perm => old.perm)));
+    if not check_write_data(memory, address, byte) then
+      return;
+    end if;
+    write_byte_unchecked(memory, address, byte);
   end;
 
   impure function read_byte(memory : memory_t; address : natural) return byte_t is

@@ -119,7 +119,14 @@ begin
         wstrb <= (others => '0');
         wdata <= (others => '0');
       end loop;
+    end procedure;
 
+    procedure transfer(id : std_logic_vector;
+                       buf : buffer_t;
+                       log_size : natural;
+                       data : integer_vector_ptr_t) is
+    begin
+      transfer_data(id, buf, log_size, data);
       read_response(id, axi_resp_okay);
       check_expected_was_written(buf);
     end procedure;
@@ -133,6 +140,9 @@ begin
     variable idx : integer;
     variable num_ops : integer;
     variable start_time, diff_time : time;
+
+    constant dummy_byte : natural := 13;
+    constant large_latency : time := 1 us;
   begin
     test_runner_setup(runner, runner_cfg);
     rnd.InitSeed(rnd'instance_name);
@@ -192,7 +202,6 @@ begin
         end loop;
 
         read_response(id, axi_resp_okay);
-
         check_expected_was_written(buf);
       end loop;
 
@@ -232,7 +241,7 @@ begin
         random_integer_vector_ptr(rnd, data, size * 128, 0, 255);
         buf := allocate(memory, length(data), permissions => no_access);
         start_time := now;
-        transfer_data(x"2", buf, log_size, data);
+        transfer(x"2", buf, log_size, data);
         info("diff_time := " & to_string(now - start_time));
 
         if i = 1 or i = 4 then
@@ -242,6 +251,44 @@ begin
         elsif i = 2 then
           -- Middle run should have larger time
           check(5*diff_time < now - start_time);
+        end if;
+
+        diff_time := now - start_time;
+      end loop;
+
+    elsif run("Test response latency") then
+      for i in 0 to 1 loop
+        if i = 1 then
+          set_response_latency(net, axi_slave, large_latency);
+        end if;
+
+        log_size := log_data_size;
+        size := 2**log_size;
+        random_integer_vector_ptr(rnd, data, size * 128, 0, 255);
+        buf := allocate(memory, length(data), permissions => no_access);
+
+        -- Write known value to memory so that we can check that it has not
+        -- been changed to early when response latency is high
+        for addr in base_address(buf) to last_address(buf) loop
+          write_byte(memory, addr, dummy_byte);
+        end loop;
+
+        start_time := now;
+        transfer_data(x"2", buf, log_size, data);
+
+        if i = 1 then
+          wait for (large_latency - 10 ns);
+          -- Check that data was not set yet
+          for addr in base_address(buf) to last_address(buf) loop
+            check_equal(read_byte(memory, addr), dummy_byte, "Data should not be set yet");
+          end loop;
+        end if;
+        read_response(x"2", axi_resp_okay);
+        check_expected_was_written(buf);
+        info("diff_time := " & to_string(now - start_time));
+
+        if i = 1 then
+          check_equal(diff_time + large_latency, now - start_time);
         end if;
 
         diff_time := now - start_time;
@@ -261,7 +308,7 @@ begin
         buf := allocate(memory, length(data), permissions => no_access);
         start_time := now;
         for j in 0 to 128 loop
-          transfer_data(x"2", buf, log_size, data);
+          transfer(x"2", buf, log_size, data);
         end loop;
 
         info("diff_time := " & to_string(now - start_time));
@@ -285,7 +332,7 @@ begin
       size := 2**log_size;
       random_integer_vector_ptr(rnd, data, size * 2, 0, 255);
       buf := allocate(memory, length(data), permissions => no_access);
-      transfer_data(x"2", buf, log_size, data);
+      transfer(x"2", buf, log_size, data);
 
     elsif run("Test unaligned narrow write") then
       -- Half bus width starting at unaligned address
@@ -294,7 +341,7 @@ begin
       buf := allocate(memory, 1); -- Unaligned address
       random_integer_vector_ptr(rnd, data, size * 2, 0, 255);
       buf := allocate(memory, length(data), permissions => no_access);
-      transfer_data(x"2", buf, log_size, data);
+      transfer(x"2", buf, log_size, data);
 
     elsif run("Test unaligned write") then
       -- Full bus width starting at unaligned address
@@ -304,7 +351,7 @@ begin
       buf := allocate(memory, 1); -- Unaligned address
       random_integer_vector_ptr(rnd, data, size * 2, 0, 255);
       buf := allocate(memory, length(data), permissions => no_access);
-      transfer_data(x"2", buf, log_size, data);
+      transfer(x"2", buf, log_size, data);
 
     elsif run("Test error on missing tlast fixed") then
       mock(axi_slave_logger, failure);

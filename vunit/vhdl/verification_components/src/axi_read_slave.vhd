@@ -55,6 +55,9 @@ begin
     variable address : integer;
     variable idx : integer;
     variable beats : natural := 0;
+
+    variable response_time : time;
+    variable has_response_time : boolean := false;
   begin
     assert arid'length = rid'length report "arid vs rid data width mismatch";
     -- Initialization
@@ -73,15 +76,24 @@ begin
 
       if (arvalid and arready) = '1' then
         input_burst := self.create_burst(arid, araddr, arlen, arsize, arburst);
+        self.push_random_response_time;
         self.push_burst(input_burst);
       end if;
 
       if not self.burst_queue_empty and beats = 0 then
-        burst := self.pop_burst;
-        beats := burst.length;
-        rid <= std_logic_vector(to_unsigned(burst.id, rid'length));
-        rresp <= axi_resp_okay;
-        address := burst.address;
+        if not has_response_time then
+          has_response_time := true;
+          response_time := self.pop_response_time;
+        end if;
+
+        if has_response_time and response_time <= now then
+          has_response_time := false;
+          burst := self.pop_burst;
+          beats := burst.length;
+          rid <= std_logic_vector(to_unsigned(burst.id, rid'length));
+          rresp <= axi_resp_okay;
+          address := burst.address;
+        end if;
       end if;
 
       if beats > 0 and (rvalid = '0' or rready = '1') and not self.should_stall_data then

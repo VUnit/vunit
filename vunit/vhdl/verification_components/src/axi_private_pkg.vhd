@@ -53,6 +53,8 @@ package axi_private_pkg is
     procedure set_address_stall_probability(probability : probability_t);
     procedure set_data_stall_probability(probability : probability_t);
     procedure set_write_response_stall_probability(probability : probability_t);
+    procedure set_min_response_latency(latency : delay_length);
+    procedure set_max_response_latency(latency : delay_length);
     procedure set_check_4kbyte_boundary(value : boolean);
     procedure enable_well_behaved_check;
     impure function should_check_well_behaved return boolean;
@@ -80,6 +82,9 @@ package axi_private_pkg is
 
     procedure finish_burst(burst : axi_burst_t);
 
+    procedure push_random_response_time;
+    impure function pop_response_time return time;
+
     procedure fail(msg : string);
     procedure check_4kbyte_boundary(burst : axi_burst_t);
     impure function data_size return integer;
@@ -101,7 +106,6 @@ package body axi_private_pkg is
 
   procedure push_axi_burst(queue : queue_t; burst : axi_burst_t);
   impure function pop_axi_burst(queue : queue_t) return axi_burst_t;
-  constant qlen_per_burst : natural := 4*5+1;
 
   type axi_slave_private_t is protected body
     variable p_axi_slave : axi_slave_t;
@@ -111,13 +115,18 @@ package body axi_private_pkg is
     variable p_id_indexes : integer_vector_ptr_t;
     variable p_burst_queue_max_length : natural;
     variable p_burst_queue : queue_t;
+    variable p_burst_queue_length : natural;
     variable p_resp_queue_max_length : natural;
     variable p_resp_queue : queue_t;
+    variable p_resp_queue_length : natural;
     variable p_check_4kbyte_boundary : boolean;
     variable p_rnd : RandomPType;
     variable p_addr_stall_prob : probability_t;
     variable p_data_stall_prob : probability_t;
     variable p_wresp_stall_prob : probability_t;
+    variable p_min_response_latency : delay_length;
+    variable p_max_response_latency : delay_length;
+    variable p_response_time_queue : queue_t;
     variable p_check_well_behaved : boolean;
 
     procedure init(axi_slave : axi_slave_t;
@@ -132,13 +141,18 @@ package body axi_private_pkg is
       p_id_indexes := new_integer_vector_ptr(length => max_id+1, value => 0);
       p_burst_queue_max_length := axi_slave.p_initial_address_fifo_depth;
       p_burst_queue := new_queue;
+      p_burst_queue_length := 0;
       p_resp_queue_max_length := axi_slave.p_initial_write_response_fifo_depth;
       p_resp_queue := new_queue;
+      p_resp_queue_length := 0;
       p_check_4kbyte_boundary := axi_slave.p_initial_check_4kbyte_boundary;
       p_check_well_behaved := false;
       set_address_stall_probability(axi_slave.p_initial_address_stall_probability);
       set_data_stall_probability(axi_slave.p_initial_data_stall_probability);
       set_write_response_stall_probability(axi_slave.p_initial_write_response_stall_probability);
+      p_response_time_queue := new_queue;
+      set_min_response_latency(axi_slave.p_initial_min_response_latency);
+      set_max_response_latency(axi_slave.p_initial_max_response_latency);
     end;
 
     impure function get_actor return actor_t is
@@ -179,6 +193,16 @@ package body axi_private_pkg is
     procedure set_write_response_stall_probability(probability : probability_t) is
     begin
       p_wresp_stall_prob := probability;
+    end;
+
+    procedure set_min_response_latency(latency : delay_length) is
+    begin
+      p_min_response_latency := latency;
+    end;
+
+    procedure set_max_response_latency(latency : delay_length) is
+    begin
+      p_max_response_latency := latency;
     end;
 
     procedure set_check_4kbyte_boundary(value : boolean) is
@@ -291,6 +315,7 @@ package body axi_private_pkg is
     procedure push_burst(burst : axi_burst_t) is
     begin
       push_axi_burst(p_burst_queue, burst);
+      p_burst_queue_length := p_burst_queue_length + 1;
     end;
 
     impure function pop_burst return axi_burst_t is
@@ -306,6 +331,7 @@ package body axi_private_pkg is
                   "Start providing data for read burst " & describe_burst(burst));
         end case;
       end if;
+      p_burst_queue_length := p_burst_queue_length - 1;
       return burst;
     end;
 
@@ -321,12 +347,13 @@ package body axi_private_pkg is
 
     impure function burst_queue_length return natural is
     begin
-      return length(p_burst_queue)/qlen_per_burst;
+      return p_burst_queue_length;
     end;
 
     procedure push_resp(burst : axi_burst_t) is
     begin
       push_axi_burst(p_resp_queue, burst);
+      p_resp_queue_length := p_resp_queue_length + 1;
     end;
 
     impure function pop_resp return axi_burst_t is
@@ -336,6 +363,7 @@ package body axi_private_pkg is
         debug(p_axi_slave.p_logger,
               "Providing write response for burst " & describe_burst(resp_burst));
       end if;
+      p_resp_queue_length := p_resp_queue_length - 1;
       return resp_burst;
     end;
 
@@ -353,6 +381,25 @@ package body axi_private_pkg is
       end if;
     end;
 
+    impure function random_response_latency return delay_length is
+    begin
+      if p_min_response_latency = p_max_response_latency then
+        return p_min_response_latency;
+      else
+        return p_rnd.RandTime(p_min_response_latency, p_max_response_latency);
+      end if;
+    end;
+
+    procedure push_random_response_time is
+    begin
+      push_time(p_response_time_queue, now + random_response_latency);
+    end;
+
+    impure function pop_response_time return time is
+    begin
+      return pop_time(p_response_time_queue);
+    end;
+
     impure function resp_queue_full return boolean is
     begin
       return resp_queue_length = p_resp_queue_max_length;
@@ -365,7 +412,7 @@ package body axi_private_pkg is
 
     impure function resp_queue_length return natural is
     begin
-      return length(p_resp_queue)/qlen_per_burst;
+      return p_resp_queue_length;
     end;
 
     procedure fail(msg : string) is
@@ -453,6 +500,11 @@ package body axi_private_pkg is
 
       elsif msg_type = axi_slave_set_write_response_stall_probability_msg then
         self.set_write_response_stall_probability(pop_real(request_msg));
+        acknowledge(net, request_msg, true);
+
+      elsif msg_type = axi_slave_set_response_latency_msg then
+        self.set_min_response_latency(pop_time(request_msg));
+        self.set_max_response_latency(pop_time(request_msg));
         acknowledge(net, request_msg, true);
 
       elsif msg_type = axi_slave_configure_4kbyte_boundary_check_msg then
