@@ -131,7 +131,7 @@ begin
     elsif run("Test that permissions are checked") then
       -- Also checks that the axi slave logger is used for memory errors
       buf := allocate(memory, data_size, permissions => no_access);
-      mock(axi_slave_logger);
+      mock(axi_slave_logger, failure);
       write_addr(x"2", base_address(buf), 1, 0, axi_burst_type_fixed);
       wait until mock_queue_length > 0 and rising_edge(clk);
       check_only_log(axi_slave_logger,
@@ -140,7 +140,7 @@ begin
       unmock(axi_slave_logger);
 
     elsif run("Test error on unsupported wrap burst") then
-      mock(axi_slave_logger);
+      mock(axi_slave_logger, failure);
 
       buf := allocate(memory, 8);
       write_addr(x"2", base_address(buf), 2, 0, axi_burst_type_wrap);
@@ -150,7 +150,7 @@ begin
 
     elsif run("Test error 4KByte boundary crossing") then
       buf := allocate(memory, 4096+32, alignment => 4096);
-      mock(axi_slave_logger);
+      mock(axi_slave_logger, failure);
       write_addr(x"2", base_address(buf)+4000, 256, 0, axi_burst_type_incr);
       wait until mock_queue_length > 0 and rising_edge(clk);
       check_only_log(axi_slave_logger, "Crossing 4KByte boundary. First page = 0 (4000/4096), last page = 1 (4255/4096)", failure);
@@ -197,7 +197,7 @@ begin
       set_address_channel_fifo_depth(net, axi_slave, 17);
       set_address_channel_fifo_depth(net, axi_slave, 16);
 
-      mock(axi_slave_logger);
+      mock(axi_slave_logger, failure);
       set_address_channel_fifo_depth(net, axi_slave, 1);
       check_only_log(axi_slave_logger, "New address channel fifo depth 1 is smaller than current content size 16", failure);
       unmock(axi_slave_logger);
@@ -286,7 +286,7 @@ begin
     elsif run("Test well behaved check fails for ill behaved awsize") then
       buf := allocate(memory, 8);
       enable_well_behaved_check(net, axi_slave);
-      mock(axi_slave_logger);
+      mock(axi_slave_logger, failure);
       rready <= '1';
       wait until rising_edge(clk);
       write_addr(x"0", base_address(buf), len => 2, log_size => 0, burst => axi_burst_type_incr);
@@ -296,7 +296,7 @@ begin
     elsif run("Test well behaved check fails when rready not high during active burst") then
       buf := allocate(memory, 128);
       enable_well_behaved_check(net, axi_slave);
-      mock(axi_slave_logger);
+      mock(axi_slave_logger, failure);
       wait until rising_edge(clk);
       write_addr(x"0", base_address(buf), len => 2, log_size => log_data_size, burst => axi_burst_type_incr);
       check_only_log(axi_slave_logger, "Burst not well behaved, rready was not high during active burst", failure);
@@ -305,7 +305,7 @@ begin
     elsif run("Test well behaved check fails when wvalid not high during active burst and arready is low") then
       buf := allocate(memory, 8);
       enable_well_behaved_check(net, axi_slave);
-      mock(axi_slave_logger);
+      mock(axi_slave_logger, failure);
       set_address_channel_stall_probability(net, axi_slave, 1.0);
 
       wait until rising_edge(clk);

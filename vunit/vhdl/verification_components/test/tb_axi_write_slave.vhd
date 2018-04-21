@@ -207,7 +207,7 @@ begin
       wlast <= '1';
       wstrb <= (0 => '1', others => '0');
       wdata <= (others => '0');
-      mock(axi_slave_logger);
+      mock(axi_slave_logger, failure);
       wait until (wvalid and wready) = '1' and rising_edge(clk);
       wait until mock_queue_length > 0 and rising_edge(clk);
       check_only_log(axi_slave_logger,
@@ -248,7 +248,7 @@ begin
       transfer_data(x"2", buf, log_size, data);
 
     elsif run("Test error on missing tlast fixed") then
-      mock(axi_slave_logger);
+      mock(axi_slave_logger, failure);
 
       buf := allocate(memory, 8);
       write_addr(x"2", base_address(buf), 1, 0, axi_burst_type_fixed);
@@ -257,32 +257,36 @@ begin
       wvalid <= '0';
 
       wait until mock_queue_length > 0 and rising_edge(clk);
-      check_only_log(axi_slave_logger, "Expected wlast='1' on last beat of burst with length 1 starting at address 0", failure);
+      check_only_log(axi_slave_logger,
+                     "Expected wlast='1' on last beat of burst #0 for id 2 with length 1 starting at address 0",
+                     failure);
       unmock(axi_slave_logger);
       read_response(x"2", axi_resp_okay);
 
     elsif run("Test error on missing tlast incr") then
       buf := allocate(memory, 8);
-      write_addr(x"2", base_address(buf), 2, 0, axi_burst_type_incr);
+      write_addr(x"3", base_address(buf), 2, 0, axi_burst_type_incr);
 
       wvalid <= '1';
       wait until (wvalid and wready) = '1' and rising_edge(clk);
       wvalid <= '0';
       wait until wvalid = '0' and rising_edge(clk);
 
-      mock(axi_slave_logger);
+      mock(axi_slave_logger, failure);
 
       wvalid <= '1';
       wait until (wvalid and wready) = '1' and rising_edge(clk);
       wvalid <= '0';
       wait until mock_queue_length > 0 and rising_edge(clk);
 
-      check_only_log(axi_slave_logger, "Expected wlast='1' on last beat of burst with length 2 starting at address 0", failure);
+      check_only_log(axi_slave_logger,
+                     "Expected wlast='1' on last beat of burst #0 for id 3 with length 2 starting at address 0",
+                     failure);
       unmock(axi_slave_logger);
-      read_response(x"2", axi_resp_okay);
+      read_response(x"3", axi_resp_okay);
 
     elsif run("Test error on unsupported wrap burst") then
-      mock(axi_slave_logger);
+      mock(axi_slave_logger, failure);
       buf := allocate(memory, 8);
       write_addr(x"2", base_address(buf), 2, 0, axi_burst_type_wrap);
       wait until mock_queue_length > 0 and rising_edge(clk);
@@ -291,7 +295,7 @@ begin
 
     elsif run("Test error 4KByte boundary crossing") then
       buf := allocate(memory, 4096+32, alignment => 4096);
-      mock(axi_slave_logger);
+      mock(axi_slave_logger, failure);
       write_addr(x"2", base_address(buf)+4000, 256, 0, axi_burst_type_incr);
       wait until mock_queue_length > 0 and rising_edge(clk);
       check_only_log(axi_slave_logger, "Crossing 4KByte boundary. First page = 0 (4000/4096), last page = 1 (4255/4096)", failure);
@@ -335,7 +339,7 @@ begin
       set_address_channel_fifo_depth(net, axi_slave, 17);
       set_address_channel_fifo_depth(net, axi_slave, 16);
 
-      mock(axi_slave_logger);
+      mock(axi_slave_logger, failure);
 
       set_address_channel_fifo_depth(net, axi_slave, 1);
       check_only_log(axi_slave_logger, "New address channel fifo depth 1 is smaller than current content size 16", failure);
@@ -442,7 +446,7 @@ begin
     elsif run("Test well behaved check fails for ill behaved awsize") then
       buf := allocate(memory, 8);
       enable_well_behaved_check(net, axi_slave);
-      mock(axi_slave_logger);
+      mock(axi_slave_logger, failure);
       bready <= '1';
 
       wait until rising_edge(clk);
@@ -455,7 +459,7 @@ begin
     elsif run("Test well behaved check fails when wvalid not high during active burst") then
       buf := allocate(memory, 8);
       enable_well_behaved_check(net, axi_slave);
-      mock(axi_slave_logger);
+      mock(axi_slave_logger, failure);
       bready <= '1';
       wait until rising_edge(clk);
       write_addr(x"0", base_address(buf), len => 2, log_size => log_data_size, burst => axi_burst_type_incr);
@@ -465,7 +469,7 @@ begin
     elsif run("Test well behaved check fails when bready not high during active burst") then
       buf := allocate(memory, 8);
       enable_well_behaved_check(net, axi_slave);
-      mock(axi_slave_logger);
+      mock(axi_slave_logger, failure);
       wvalid <= '1';
       wait until rising_edge(clk);
       write_addr(x"0", base_address(buf), len => 2, log_size => log_data_size, burst => axi_burst_type_incr);
@@ -475,7 +479,7 @@ begin
     elsif run("Test well behaved check fails when wvalid not high during active burst and awready is low") then
       buf := allocate(memory, 8);
       enable_well_behaved_check(net, axi_slave);
-      mock(axi_slave_logger);
+      mock(axi_slave_logger, failure);
       set_address_channel_stall_probability(net, axi_slave, 1.0);
       bready <= '1';
 

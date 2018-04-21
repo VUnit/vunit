@@ -44,14 +44,14 @@ begin
 
   control_process : process
   begin
-    self.init(axi_slave, rdata);
+    self.init(axi_slave, read_slave, 2**arid'length-1, rdata);
     initialized <= true;
     main_loop(self, net);
     wait;
   end process;
 
   axi_process : process
-    variable burst : axi_burst_t;
+    variable input_burst, burst : axi_burst_t;
     variable address : integer;
     variable idx : integer;
     variable beats : natural := 0;
@@ -72,7 +72,8 @@ begin
       end if;
 
       if (arvalid and arready) = '1' then
-        self.push_burst(arid, araddr, arlen, arsize, arburst);
+        input_burst := self.create_burst(arid, araddr, arlen, arsize, arburst);
+        self.push_burst(input_burst);
       end if;
 
       if not self.burst_queue_empty and beats = 0 then
@@ -95,6 +96,7 @@ begin
         end if;
 
         if beats = 1 then
+          self.finish_burst(burst);
           rlast <= '1';
         else
           rlast <= '0';

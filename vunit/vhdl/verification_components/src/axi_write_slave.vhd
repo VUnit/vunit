@@ -48,14 +48,14 @@ begin
 
   control_process : process
   begin
-    self.init(axi_slave, wdata);
+    self.init(axi_slave, write_slave, 2**awid'length-1, wdata);
     initialized <= true;
     main_loop(self, net);
     wait;
   end process;
 
   axi_process : process
-    variable resp_burst, burst : axi_burst_t;
+    variable resp_burst, input_burst, burst : axi_burst_t;
     variable address, aligned_address : integer;
     variable idx : integer;
     variable beats : natural := 0;
@@ -76,12 +76,14 @@ begin
       end if;
 
       if (awvalid and awready) = '1' then
-        self.push_burst(awid, awaddr, awlen, awsize, awburst);
+        input_burst := self.create_burst(awid, awaddr, awlen, awsize, awburst);
+        self.push_burst(input_burst);
       end if;
 
       if (wvalid and wready) = '1' then
         if (wlast = '1') /= (beats = 1) then
-          self.fail("Expected wlast='1' on last beat of burst with length " & to_string(burst.length) &
+          self.fail("Expected wlast='1' on last beat of burst " & describe_burst(burst) &
+                    " with length " & to_string(burst.length) &
                     " starting at address " & to_string(burst.address));
         end if;
 
@@ -98,6 +100,7 @@ begin
 
         beats := beats - 1;
         if beats = 0 then
+          self.finish_burst(burst);
           self.push_resp(burst);
         end if;
       end if;
@@ -108,7 +111,7 @@ begin
         beats := burst.length;
       end if;
 
-      if not self.resp_queue_empty then
+      if not self.resp_queue_empty and (bvalid = '0' or bready = '1') then
         resp_burst := self.pop_resp;
         bvalid <= '1';
         bid <= std_logic_vector(to_unsigned(resp_burst.id, bid'length));
