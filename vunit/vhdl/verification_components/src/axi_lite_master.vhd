@@ -8,11 +8,12 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.axi_pkg.all;
 use work.queue_pkg.all;
 use work.bus_master_pkg.all;
 use work.sync_pkg.all;
-use work.axi_private_pkg.all;
+use work.axi_pkg.all;
+use work.axi_slave_pkg.all;
+use work.axi_slave_private_pkg.all;
 context work.com_context;
 context work.vunit_context;
 

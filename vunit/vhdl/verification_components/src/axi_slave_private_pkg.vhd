@@ -14,15 +14,15 @@ use std.textio.all;
 
 use work.axi_pkg.all;
 use work.queue_pkg.all;
-use work.bus_master_pkg.all;
 use work.integer_vector_ptr_pkg.all;
 context work.vunit_context;
 context work.com_context;
+context work.vc_context;
 
 library osvvm;
 use osvvm.RandomPkg.all;
 
-package axi_private_pkg is
+package axi_slave_private_pkg is
 
   type axi_burst_t is record
     id : integer;
@@ -88,6 +88,9 @@ package axi_private_pkg is
     procedure fail(msg : string);
     procedure check_4kbyte_boundary(burst : axi_burst_t);
     impure function data_size return integer;
+
+    impure function get_statistics return axi_statistics_t;
+    procedure clear_statistics;
   end protected;
 
   procedure main_loop(variable self : inout axi_slave_private_t;
@@ -97,7 +100,7 @@ package axi_private_pkg is
 end package;
 
 
-package body axi_private_pkg is
+package body axi_slave_private_pkg is
 
   impure function describe_burst(burst : axi_burst_t) return string is
   begin
@@ -128,6 +131,7 @@ package body axi_private_pkg is
     variable p_max_response_latency : delay_length;
     variable p_response_time_queue : queue_t;
     variable p_check_well_behaved : boolean;
+    variable p_statistics : axi_statistics_t;
 
     procedure init(axi_slave : axi_slave_t;
                    axi_slave_type : axi_slave_type_t;
@@ -153,6 +157,7 @@ package body axi_private_pkg is
       p_response_time_queue := new_queue;
       set_min_response_latency(axi_slave.p_initial_min_response_latency);
       set_max_response_latency(axi_slave.p_initial_max_response_latency);
+      p_statistics := new_axi_statistics;
     end;
 
     impure function get_actor return actor_t is
@@ -301,6 +306,8 @@ package body axi_private_pkg is
               );
       end if;
 
+      add_burst_length(p_statistics, burst.length);
+
       if burst.burst_type = axi_burst_type_wrap then
         fail("Wrapping burst type not supported");
       end if;
@@ -442,6 +449,17 @@ package body axi_private_pkg is
     begin
       return p_data_size;
     end;
+
+    impure function get_statistics return axi_statistics_t is
+    begin
+      return copy(p_statistics);
+    end;
+
+    procedure clear_statistics is
+    begin
+      clear(p_statistics);
+    end;
+
   end protected body;
 
 
@@ -475,8 +493,11 @@ package body axi_private_pkg is
 
   procedure main_loop(variable self : inout axi_slave_private_t;
                       signal net : inout network_t) is
-    variable request_msg : msg_t;
+    variable reply_msg, request_msg : msg_t;
     variable msg_type : msg_type_t;
+
+    variable clear_stat : boolean;
+    variable stat : axi_statistics_t;
   begin
     loop
       receive(net, self.get_actor, request_msg);
@@ -510,6 +531,19 @@ package body axi_private_pkg is
       elsif msg_type = axi_slave_configure_4kbyte_boundary_check_msg then
         self.set_check_4kbyte_boundary(pop_boolean(request_msg));
         acknowledge(net, request_msg, true);
+
+      elsif msg_type = axi_slave_get_statistics_msg then
+        clear_stat := pop_boolean(request_msg);
+        stat := self.get_statistics;
+
+        if clear_stat then
+          self.clear_statistics;
+        end if;
+
+        reply_msg := new_msg;
+        push_integer_vector_ptr_ref(reply_msg, stat.p_count_by_burst_length);
+        reply(net, request_msg, reply_msg);
+        delete(request_msg);
 
       elsif msg_type = axi_slave_enable_well_behaved_check_msg then
         self.enable_well_behaved_check;

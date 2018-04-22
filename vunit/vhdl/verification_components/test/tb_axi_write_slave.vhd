@@ -11,9 +11,9 @@ use ieee.numeric_std.all;
 library vunit_lib;
 context vunit_lib.vunit_context;
 context work.com_context;
-
 use work.axi_pkg.all;
-use work.memory_pkg.all;
+context work.vc_context;
+
 use work.integer_vector_ptr_pkg.all;
 use work.random_pkg.all;
 

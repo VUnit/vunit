@@ -9,7 +9,8 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.axi_pkg.all;
-use work.axi_private_pkg.all;
+use work.axi_slave_pkg.all;
+use work.axi_slave_private_pkg.all;
 use work.queue_pkg.all;
 use work.memory_pkg.all;
 use work.integer_vector_ptr_pkg.all;

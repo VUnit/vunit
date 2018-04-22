@@ -8,18 +8,19 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 context work.vunit_context;
+context work.vc_context;
 use work.axi_pkg.all;
-use work.axi_private_pkg.all;
-use work.memory_pkg.all;
+use work.axi_slave_private_pkg.all;
 
-entity tb_axi_private_pkg is
+entity tb_axi_slave_private_pkg is
   generic (runner_cfg : string);
 end entity;
 
-architecture tb of tb_axi_private_pkg is
+architecture tb of tb_axi_slave_private_pkg is
+  signal init : boolean := false;
+  shared variable axi_slave : axi_slave_private_t;
 begin
   main : process
-    variable axi_slave : axi_slave_private_t;
     variable data : std_logic_vector(127 downto 0);
 
     variable axid : std_logic_vector(3 downto 0);
@@ -31,11 +32,13 @@ begin
 
     variable burst : axi_burst_t;
     variable logger : logger_t := get_logger("axi_slave");
+    constant axi_public_slave : axi_slave_t := new_axi_slave(memory => new_memory,
+                                                             logger => logger);
+    variable stat : axi_statistics_t;
 
     procedure slave_init(axi_slave_type : axi_slave_type_t) is
     begin
-      axi_slave.init(new_axi_slave(memory => new_memory,
-                                   logger => logger),
+      axi_slave.init(axi_public_slave,
                      axi_slave_type,
                      max_id,
                      data);
@@ -43,7 +46,46 @@ begin
 
   begin
     test_runner_setup(runner, runner_cfg);
-    if run("test create_burst read debug messages") then
+
+    if run("test create_burst updates statistics") then
+      slave_init(read_slave);
+      init <= true;
+      wait for 0 ns;
+      axid := x"2";
+      axaddr := x"00100000";
+      axlen := x"ff";
+      axsize := "100";
+      axburst := axi_burst_type_fixed;
+
+      get_statistics(net, axi_public_slave, stat);
+      check_equal(get_num_burst_with_length(stat, 256), 0,
+                  "No burst before create");
+      burst := axi_slave.create_burst(axid, axaddr, axlen, axsize, axburst);
+      check_equal(get_num_burst_with_length(stat, 256), 0,
+                  "Statistics was copied before create");
+
+      get_statistics(net, axi_public_slave, stat);
+      check_equal(get_num_burst_with_length(stat, 256), 1,
+                  "Newly read statistics has one entry");
+
+      burst := axi_slave.create_burst(axid, axaddr, axlen, axsize, axburst);
+
+      get_statistics(net, axi_public_slave, stat, clear => true);
+      check_equal(get_num_burst_with_length(stat, 256), 2,
+                  "One more burst");
+
+      check_equal(min_burst_length(stat), 256,
+                  "min_burst_length");
+
+      check_equal(max_burst_length(stat), 256,
+                  "max_burst_length");
+
+      get_statistics(net, axi_public_slave, stat);
+
+      check_equal(get_num_burst_with_length(stat, 256), 0,
+                  "Cleared");
+
+    elsif run("test create_burst read debug messages") then
       slave_init(read_slave);
       mock(logger, debug);
       axid := x"2";
@@ -200,5 +242,11 @@ begin
       unmock(logger);
     end if;
     test_runner_cleanup(runner);
+  end process;
+
+  slave_main : process
+  begin
+    wait until init;
+    main_loop(axi_slave, net);
   end process;
 end architecture;
