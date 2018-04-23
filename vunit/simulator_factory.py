@@ -101,14 +101,13 @@ class SimulatorFactory(object):
         Select simulator class, either from VUNIT_SIMULATOR environment variable
         or the first available
         """
-        environ_name = "VUNIT_SIMULATOR"
-
-        available_simulators = self.available_simulators()
+        available_simulators = self._detect_available_simulators()
         name_mapping = {simulator_class.name: simulator_class for simulator_class in self.supported_simulators()}
         if not available_simulators:
             raise RuntimeError("No available simulator detected. "
                                "Simulator executables must be available in PATH environment variable.")
 
+        environ_name = "VUNIT_SIMULATOR"
         if environ_name in os.environ:
             simulator_name = os.environ[environ_name]
             if simulator_name not in name_mapping:
@@ -136,21 +135,20 @@ class SimulatorFactory(object):
             sim.add_arguments(parser)
 
     def __init__(self):
-        self._available_simulators = [simulator_class
-                                      for simulator_class in self.supported_simulators()
-                                      if simulator_class.is_available()]
         self._compile_options = self._extract_compile_options()
         self._sim_options = self._extract_sim_options()
 
-    def available_simulators(self):
+    def _detect_available_simulators(self):
         """
-        Return a list of available simulators
+        Detect available simulators and return a list
         """
-        return self._available_simulators
+        return [simulator_class
+                for simulator_class in self.supported_simulators()
+                if simulator_class.is_available()]
 
     @property
     def has_simulator(self):
-        return len(self._available_simulators) > 0
+        return bool(self._detect_available_simulators())
 
 
 SIMULATOR_FACTORY = SimulatorFactory()
