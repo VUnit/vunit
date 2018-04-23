@@ -856,6 +856,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
                             join(self._output_path, "test_output"),
                             verbosity=verbosity,
                             num_threads=self._args.num_threads,
+                            fail_fast=self._args.fail_fast,
                             dont_catch_exceptions=self._args.dont_catch_exceptions,
                             no_color=self._args.no_color)
         runner.run(test_cases)
