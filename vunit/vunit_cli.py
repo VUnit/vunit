@@ -165,8 +165,7 @@ def _create_argument_parser(description=None, for_documentation=False):
 
     parser.add_argument('--version', action='version', version=version())
 
-    SIMULATOR_FACTORY.add_arguments(parser,
-                                    for_all_simulators=for_documentation)
+    SIMULATOR_FACTORY.add_arguments(parser)
 
     return parser
 

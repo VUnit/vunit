@@ -20,11 +20,11 @@ class Builtins(object):
     """
     Manage VUnit builtins and their dependencies
     """
-    def __init__(self, vunit_obj, vhdl_standard, simulator_factory):
+    def __init__(self, vunit_obj, vhdl_standard, simulator_class):
         self._vunit_obj = vunit_obj
         self._vunit_lib = vunit_obj.add_library("vunit_lib")
         self._vhdl_standard = vhdl_standard
-        self._simulator_factory = simulator_factory
+        self._simulator_class = simulator_class
         self._builtins_adder = BuiltinsAdder()
 
         def add(name, deps=tuple()):
@@ -43,7 +43,7 @@ class Builtins(object):
         """
         Add files with naming convention to indicate which standard is supported
         """
-        supports_context = self._simulator_factory.supports_vhdl_2008_contexts() and self._vhdl_standard == "2008"
+        supports_context = self._simulator_class.supports_vhdl_2008_contexts() and self._vhdl_standard == "2008"
 
         tags = {
             "93": ("93",),
@@ -119,8 +119,8 @@ class Builtins(object):
         except KeyError:
             library = self._vunit_obj.add_library(library_name)
 
-        simulator_coverage_api = self._simulator_factory.get_osvvm_coverage_api()
-        supports_vhdl_package_generics = self._simulator_factory.supports_vhdl_package_generics()
+        simulator_coverage_api = self._simulator_class.get_osvvm_coverage_api()
+        supports_vhdl_package_generics = self._simulator_class.supports_vhdl_package_generics()
 
         if not osvvm_is_installed():
             raise RuntimeError("""

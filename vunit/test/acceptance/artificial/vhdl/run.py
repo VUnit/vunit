@@ -50,7 +50,7 @@ def configure_tb_same_sim_all_pass(ui):
 
 def configure_tb_set_generic(ui):
     tb = ui.library("lib").entity("tb_set_generic")
-    is_ghdl = ui._simulator_factory.simulator_name == "ghdl"
+    is_ghdl = ui._simulator_class.name == "ghdl"
     tb.set_generic("is_ghdl", is_ghdl)
     tb.set_generic("true_boolean", True)
     tb.set_generic("false_boolean", False)

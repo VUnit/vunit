@@ -787,26 +787,30 @@ class MockSimulatorFactory(object):
     """
     Mock a simulator factory
     """
-    simulator_name = "mocksim"
+    @staticmethod
+    def select_simulator():
+        return MockSimulator
 
-    def __init__(self):
-        self.mocksim = mock.Mock(spec=SimulatorInterface)
 
-        def compile_side_effect(*args, **kwargs):
-            return True
-
-        def simulate_side_effect(*args, **kwargs):
-            return True
-
-        self.mocksim.compile_project.side_effect = compile_side_effect
-        self.mocksim.simulate.side_effect = simulate_side_effect
+class MockSimulator(SimulatorInterface):
+    """
+    Mock of a SimulatorInterface
+    """
+    name = "mock"
 
     @staticmethod
-    def package_users_depend_on_bodies():
-        return False
+    def from_args(*args, **kwargs):
+        return MockSimulator(output_path="", gui=False)
 
-    def create(self, args, simulator_output_path):  # pylint: disable=unused-argument
-        return self.mocksim
+    package_users_depend_on_bodies = False
+
+    @staticmethod
+    def compile_source_file_command(*args, **kwargs):  # pylint: disable=arguments-differ
+        return True
+
+    @staticmethod
+    def simulate(*args, **kwargs):  # pylint: disable=arguments-differ
+        return True
 
 
 def names(lst):

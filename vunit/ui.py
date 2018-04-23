@@ -306,18 +306,18 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._location_preprocessor = None
         self._check_preprocessor = None
 
-        self._simulator_factory = SIMULATOR_FACTORY
-        self._simulator_output_path = join(self._output_path, SIMULATOR_FACTORY.simulator_name)
+        self._simulator_class = SIMULATOR_FACTORY.select_simulator()
+        self._simulator_output_path = join(self._output_path, self._simulator_class.name)
         self._create_output_path(args.clean)
 
         database = self._create_database()
         self._project = Project(
             database=database,
-            depend_on_package_body=self._simulator_factory.package_users_depend_on_bodies())
+            depend_on_package_body=self._simulator_class.package_users_depend_on_bodies)
 
         self._test_bench_list = TestBenchList(database=database)
 
-        self._builtins = Builtins(self, self._vhdl_standard, self._simulator_factory)
+        self._builtins = Builtins(self, self._vhdl_standard, self._simulator_class)
         if compile_builtins:
             self.add_builtins()
 
@@ -745,7 +745,14 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         return self._main_run()
 
     def _create_simulator_if(self):
-        return self._simulator_factory.create(self._args, self._simulator_output_path)
+        """
+        Create new simulator instance
+        """
+
+        if not exists(self._simulator_output_path):
+            os.makedirs(self._simulator_output_path)
+
+        return self._simulator_class.from_args(self._simulator_output_path, self._args)
 
     def _main_run(self):
         """

@@ -26,7 +26,7 @@ def simulator_is(*names):
     supported_names = [sim.name for sim in SIMULATOR_FACTORY.supported_simulators()]
     for name in names:
         assert name in supported_names
-    return SIMULATOR_FACTORY.simulator_name in names
+    return SIMULATOR_FACTORY.select_simulator().name in names
 
 
 def check_report(report_file, tests=None):
