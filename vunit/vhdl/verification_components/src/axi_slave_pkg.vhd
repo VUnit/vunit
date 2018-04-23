@@ -43,6 +43,9 @@ package axi_slave_pkg is
                                 max_response_latency : delay_length := 0 ns;
                                 logger : logger_t := axi_slave_logger) return axi_slave_t;
 
+  -- Get the logger used by the axi_slave
+  function get_logger(axi_slave : axi_slave_t) return logger_t;
+
   -- Set the maximum number address channel tokens that can be queued
   procedure set_address_fifo_depth(signal net : inout network_t;
                                    axi_slave : axi_slave_t;
@@ -155,6 +158,11 @@ package body axi_slave_pkg is
             p_initial_max_response_latency => max_response_latency,
             p_memory => to_vc_interface(memory, logger),
             p_logger => logger);
+  end;
+
+  function get_logger(axi_slave : axi_slave_t) return logger_t is
+  begin
+    return axi_slave.p_logger;
   end;
 
   procedure set_address_fifo_depth(signal net : inout network_t;
