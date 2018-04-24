@@ -10,6 +10,8 @@ library vunit_lib;
 context vunit_lib.vunit_context;
 context vunit_lib.com_context;
 use vunit_lib.queue_pkg.all;
+use vunit_lib.integer_vector_ptr_pkg.all;
+use vunit_lib.integer_array_pkg.all;
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -35,6 +37,8 @@ begin
     variable bv : bit_vector(0 to 5);
     variable sulv : std_ulogic_vector(0 to 5);
     variable boolv : boolean_vector(0 to 1);
+    variable integer_vector_ptr : integer_vector_ptr_t;
+    variable integer_array : integer_array_t;
 
     constant my_msg_type : msg_type_t := new_msg_type("my msg type");
   begin
@@ -248,6 +252,16 @@ begin
         msg := new_msg;
         push_msg_type(msg, my_msg_type);
         check(pop_msg_type(msg) = my_msg_type);
+      elsif run("Test push and pop of integer_vector_ptr_t") then
+        msg := new_msg;
+        integer_vector_ptr := new_integer_vector_ptr;
+        push_integer_vector_ptr_ref(msg, integer_vector_ptr);
+        check(pop_integer_vector_ptr_ref(msg) = integer_vector_ptr);
+      elsif run("Test push and pop of integer_array_t") then
+        msg := new_msg;
+        integer_array := new_3d(1, 2, 3, 4);
+        push_integer_array_t(msg, integer_array);
+        check(pop_integer_array_t(msg) = integer_array);
       elsif run("Test setting and getting msg_type") then
         msg := new_msg;
         check(message_type(msg) = null_msg_type);

@@ -17,6 +17,7 @@ use ieee.float_pkg.all;
 use std.textio.all;
 
 use work.integer_vector_ptr_pkg.all;
+use work.integer_array_pkg.all;
 use work.string_ptr_pkg.all;
 use work.logger_pkg.all;
 use work.queue_pkg.all;
@@ -383,6 +384,11 @@ package com_types_pkg is
   impure function pop(msg : msg_t) return msg_t;
   alias push_msg_t is push[msg_t, msg_t];
   alias pop_msg_t is pop[msg_t return msg_t];
+
+  procedure push(msg : msg_t; value : integer_array_t);
+  impure function pop(msg : msg_t) return integer_array_t;
+  alias push_integer_array_t is push[msg_t, integer_array_t];
+  alias pop_integer_array_t is pop[msg_t return integer_array_t];
 
 end package;
 
@@ -827,6 +833,16 @@ package body com_types_pkg is
   end;
 
   impure function pop(msg : msg_t) return msg_t is
+  begin
+    return pop(msg.data);
+  end;
+
+  procedure push(msg : msg_t; value : integer_array_t) is
+  begin
+    push(msg.data, value);
+  end;
+
+  impure function pop(msg : msg_t) return integer_array_t is
   begin
     return pop(msg.data);
   end;

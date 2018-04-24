@@ -11,6 +11,7 @@ use ieee.numeric_bit.all;
 use ieee.numeric_std.all;
 use work.integer_vector_ptr_pkg.all;
 use work.string_ptr_pkg.all;
+use work.integer_array_pkg.all;
 
 package queue_pkg is
 
@@ -147,6 +148,11 @@ package queue_pkg is
   impure function pop(queue : queue_t) return queue_t;
   alias push_queue_ref is push[queue_t, queue_t];
   alias pop_queue_ref is pop[queue_t return queue_t];
+
+  procedure push(queue : queue_t; value : integer_array_t);
+  impure function pop(queue : queue_t) return integer_array_t;
+  alias push_integer_array_t is push[queue_t, integer_array_t];
+  alias pop_integer_array_t is pop[queue_t return integer_array_t];
 
   -- Private functions
   function encode(data : queue_t) return string;
