@@ -367,7 +367,11 @@ proc _vunit_sim_restart {} {
 
         merge_command += " -o {%s}" % merged_coverage_file.replace('\\', '/')
 
-        vcover_cmd = [join(self._prefix, 'vsim'), '-c', '-do', '%s; quit;' % merge_command]
+        merge_script_name = join(self._output_path, "acdb_merge.tcl")
+        with open(merge_script_name, "w") as fptr:
+            fptr.write(merge_command + "\n")
+
+        vcover_cmd = [join(self._prefix, 'vsim'), '-c', '-do', 'source %s; quit;' % merge_script_name.replace('\\', '/')]
 
         print("Merging coverage files into %s..." % merged_coverage_file)
         vcover_merge_process = Process(vcover_cmd,
