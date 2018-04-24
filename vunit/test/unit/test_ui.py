@@ -578,6 +578,19 @@ Listed 2 files""".splitlines()))
         self.assertTrue("Found no test benches" in str(logger.warning.mock_calls))
         logger.reset_mock()
 
+    def test_post_run(self):
+        post_run = mock.Mock()
+
+        ui = self._create_ui()
+        self._run_main(ui, post_run=post_run)
+        self.assertTrue(post_run.called)
+
+        for no_run_arg in ['--compile', '--files', '--list']:
+            post_run.reset_mock()
+            ui = self._create_ui(no_run_arg)
+            self._run_main(ui, post_run=post_run)
+            self.assertFalse(post_run.called)
+
     def test_scan_tests_from_other_file(self):
         for tb_type in ["vhdl", "verilog"]:
             for tests_type in ["vhdl", "verilog"]:
@@ -695,12 +708,12 @@ endmodule
                                  compile_builtins=False)
         return ui
 
-    def _run_main(self, ui, code=0):
+    def _run_main(self, ui, code=0, post_run=None):
         """
         Run ui.main and expect exit code
         """
         try:
-            ui.main()
+            ui.main(post_run=post_run)
         except SystemExit as exc:
             self.assertEqual(exc.code, code)
 

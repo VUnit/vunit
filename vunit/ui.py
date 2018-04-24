@@ -696,12 +696,14 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         self._check_preprocessor = CheckPreprocessor()
 
-    def main(self):
+    def main(self, post_run=None):
         """
         Run vunit main function and exit
+
+        :param post_run: A function with no arguments to be called after running tests
         """
         try:
-            all_ok = self._main()
+            all_ok = self._main(post_run)
         except KeyboardInterrupt:
             sys.exit(1)
         except CompileError:
@@ -728,7 +730,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         test_list.keep_matches(self._test_filter)
         return test_list
 
-    def _main(self):
+    def _main(self, post_run):
         """
         Base vunit main function without performing exit
         """
@@ -742,7 +744,10 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         elif self._args.compile:
             return self._main_compile_only()
 
-        return self._main_run()
+        all_ok = self._main_run()
+        if post_run is not None:
+            post_run()
+        return all_ok
 
     def _create_simulator_if(self):
         """
@@ -925,7 +930,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         :returns: A list of :class:`.SourceFile` objects in compile order.
         """
         if source_files is None:
-            source_files = self.get_source_files()
+            source_files = self.get_source_files(allow_empty=True)
 
         target_files = [source_file._source_file  # pylint: disable=protected-access
                         for source_file in source_files]
