@@ -371,7 +371,8 @@ proc _vunit_sim_restart {} {
         with open(merge_script_name, "w") as fptr:
             fptr.write(merge_command + "\n")
 
-        vcover_cmd = [join(self._prefix, 'vsim'), '-c', '-do', 'source %s; quit;' % merge_script_name.replace('\\', '/')]
+        vcover_cmd = [join(self._prefix, 'vsim'), '-c', '-do',
+                      'source %s; quit;' % merge_script_name.replace('\\', '/')]
 
         print("Merging coverage files into %s..." % merged_coverage_file)
         vcover_merge_process = Process(vcover_cmd,
