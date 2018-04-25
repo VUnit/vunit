@@ -5,6 +5,8 @@
 # Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
+.. _custom_cli:
+
 Adding Custom Command Line Arguments
 ------------------------------------
 It is possible to add custom command line arguments to your ``run.py``
@@ -179,11 +181,6 @@ def _create_argument_parser(description=None, for_documentation=False):
                         action="store_true",
                         default=False,
                         help="Do not re-use the same simulator process for running different test cases (slower)")
-
-    parser.add_argument("--coverage",
-                        default=None,
-                        nargs="?",
-                        help="Enable code coverage. Works with ModelSim and RivieraPRO.")
 
     parser.add_argument("--export-json",
                         default=None,

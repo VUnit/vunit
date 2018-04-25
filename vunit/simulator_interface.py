@@ -139,11 +139,11 @@ class SimulatorInterface(object):
         """
         return False
 
-    def post_process(self, output_path):
+    def merge_coverage(self, file_name, args):  # pylint: disable=unused-argument, no-self-use
         """
-        Hook for simulator interface to perform post processing such as creating coverage reports
+        Hook for simulator interface to creating coverage reports
         """
-        pass
+        raise RuntimeError("This simulator does not support merging coverage")
 
     def add_simulator_specific(self, project):
         """

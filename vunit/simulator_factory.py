@@ -39,8 +39,7 @@ class SimulatorFactory(object):
         """
         Return all supported compile options
         """
-        result = dict((opt.name, opt) for opt in
-                      [BooleanOption("disable_coverage")])
+        result = dict()
         for sim_class in self.supported_simulators():
             for opt in sim_class.compile_options:
                 assert hasattr(opt, "name")
@@ -57,6 +56,7 @@ class SimulatorFactory(object):
         result = dict((opt.name, opt) for opt in
                       [VHDLAssertLevelOption(),
                        BooleanOption("disable_ieee_warnings"),
+                       BooleanOption("enable_coverage"),
                        ListOfStringOption("pli")])
 
         for sim_class in self.supported_simulators():

@@ -1085,7 +1085,7 @@ class MockSimulator(SimulatorInterface):
     name = "mock"
 
     @staticmethod
-    def from_args(output_path, args):  # pylint: disable=unused-argument
+    def from_args(output_path, *args, **kwargs):  # pylint: disable=unused-argument
         return MockSimulator(output_path="", gui=False)
 
     package_users_depend_on_bodies = False

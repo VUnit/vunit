@@ -46,7 +46,7 @@ class ActiveHDLInterface(SimulatorInterface):
     ]
 
     @classmethod
-    def from_args(cls, output_path, args):
+    def from_args(cls, args, output_path, **kwargs):
         """
         Create new instance from command line arguments object
         """

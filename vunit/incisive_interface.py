@@ -56,7 +56,7 @@ class IncisiveInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
                            help="The hdl.var file to use. If not given, VUnit does not use a hdl.var file.")
 
     @classmethod
-    def from_args(cls, output_path, args):
+    def from_args(cls, args, output_path, **kwargs):
         """
         Create new instance from command line arguments object
         """

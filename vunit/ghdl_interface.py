@@ -55,9 +55,7 @@ class GHDLInterface(SimulatorInterface):
                            help="Arguments to pass to gtkwave")
 
     @classmethod
-    def from_args(cls,
-                  output_path,  # pylint: disable=unused-argument
-                  args):
+    def from_args(cls, args, output_path, **kwargs):
         """
         Create instance from args namespace
         """

@@ -14,8 +14,12 @@ lib = ui.add_library("lib")
 lib.add_source_files(join(root, "*.vhd"))
 
 lib.set_compile_option("rivierapro.vcom_flags", ["-coverage", "bs"])
+lib.set_compile_option("rivierapro.vlog_flags", ["-coverage", "bs"])
+lib.set_compile_option("modelsim.vcom_flags", ["+cover=bs"])
+lib.set_compile_option("modelsim.vlog_flags", ["+cover=bs"])
 lib.set_sim_option("enable_coverage", True)
+
 def post_run(results):
-    results.merge_coverage("coverage.acdb")
+    results.merge_coverage(file_name="coverage_data")
 
 ui.main(post_run=post_run)
