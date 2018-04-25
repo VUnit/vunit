@@ -100,36 +100,6 @@ class TestModelSimInterface(unittest.TestCase):
 
     @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
-    def test_compile_project_vhdl_coverage(self, process, check_output):
-        for coverage_off in [False, True]:
-            check_output.reset_mock()
-
-            simif = ModelSimInterface(prefix=self.prefix_path,
-                                      output_path=self.output_path,
-                                      coverage="best",
-                                      persistent=False)
-            project = Project()
-            project.add_library("lib", "lib_path")
-            write_file("file.vhd", "")
-            source_file = project.add_source_file("file.vhd", "lib", file_type="vhdl")
-
-            if coverage_off:
-                source_file.set_compile_option("disable_coverage", True)
-                covargs = []
-            else:
-                covargs = ['+cover=best']
-
-            simif.compile_project(project)
-            process_args = [join(self.prefix_path, "vlib"), "-unix", "lib_path"]
-            process.assert_called_once_with(process_args, env=simif.get_env())
-            check_args = ([join(self.prefix_path, 'vcom'), '-quiet', '-modelsimini',
-                           join(self.output_path, "modelsim.ini")]
-                          + covargs
-                          + ['-2008', '-work', 'lib', 'file.vhd'])
-            check_output.assert_called_once_with(check_args, env=simif.get_env())
-
-    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
-    @mock.patch("vunit.modelsim_interface.Process", autospec=True)
     def test_compile_project_verilog(self, process, check_output):
         simif = ModelSimInterface(prefix=self.prefix_path,
                                   output_path=self.output_path,
@@ -180,25 +150,6 @@ class TestModelSimInterface(unittest.TestCase):
         process.assert_called_once_with(process_args, env=simif.get_env())
         check_args = [join(self.prefix_path, 'vlog'), '-quiet', '-modelsimini',
                       join(self.output_path, "modelsim.ini"), 'custom', 'flags',
-                      '-work', 'lib', 'file.v', '-L', 'lib']
-        check_output.assert_called_once_with(check_args, env=simif.get_env())
-
-    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
-    @mock.patch("vunit.modelsim_interface.Process", autospec=True)
-    def test_compile_project_verilog_coverage(self, process, check_output):
-        simif = ModelSimInterface(prefix=self.prefix_path,
-                                  output_path=self.output_path,
-                                  coverage="best",
-                                  persistent=False)
-        project = Project()
-        project.add_library("lib", "lib_path")
-        write_file("file.v", "")
-        project.add_source_file("file.v", "lib", file_type="verilog")
-        simif.compile_project(project)
-        process_args = [join(self.prefix_path, "vlib"), "-unix", "lib_path"]
-        process.assert_called_once_with(process_args, env=simif.get_env())
-        check_args = [join(self.prefix_path, 'vlog'), '-quiet', '-modelsimini',
-                      join(self.output_path, "modelsim.ini"), '+cover=best',
                       '-work', 'lib', 'file.v', '-L', 'lib']
         check_output.assert_called_once_with(check_args, env=simif.get_env())
 

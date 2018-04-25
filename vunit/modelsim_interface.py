@@ -58,7 +58,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
     ]
 
     @classmethod
-    def from_args(cls, output_path, args):
+    def from_args(cls, args, output_path, **kwargs):
         """
         Create new instance from command line arguments object
         """
@@ -67,7 +67,6 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         return cls(prefix=cls.find_prefix(),
                    output_path=output_path,
                    persistent=persistent,
-                   coverage=args.coverage,
                    gui=args.gui)
 
     @classmethod
@@ -88,12 +87,11 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         """
         return True
 
-    def __init__(self, prefix, output_path, persistent=False, gui=False, coverage=None):
+    def __init__(self, prefix, output_path, persistent=False, gui=False):
         SimulatorInterface.__init__(self, output_path, gui)
         VsimSimulatorMixin.__init__(self, prefix, persistent,
                                     sim_cfg_file_name=join(output_path, "modelsim.ini"))
         self._libraries = []
-        self._coverage = coverage
         self._coverage_files = set()
         assert not (persistent and gui)
         self._create_modelsim_ini()
@@ -120,15 +118,6 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         for library_name in mapped_libraries:
             if not project.has_library(library_name):
                 project.add_builtin_library(library_name)
-
-        if self._coverage is None:
-            return
-
-        # Add coverage options
-        for source_file in project.get_source_files_in_order():
-            if not source_file.compile_options.get("disable_coverage", False):
-                source_file.add_compile_option("modelsim.vcom_flags", ["+cover=" + self._coverage])
-                source_file.add_compile_option("modelsim.vlog_flags", ["+cover=" + self._coverage])
 
     def setup_library_mapping(self, project):
         """
@@ -226,17 +215,16 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         else:
             architecture_suffix = "(%s)" % config.architecture_name
 
-        if self._coverage is None:
-            coverage_save_cmd = ""
-            coverage_args = ""
-        else:
+        if config.sim_options.get("enable_coverage", False):
             coverage_file = join(output_path, "coverage.ucdb")
             self._coverage_files.add(coverage_file)
             coverage_save_cmd = (
                 "coverage save -onexit -testname {%s} -assert -directive -cvg -codeAll {%s}"
                 % (test_suite_name, fix_path(coverage_file)))
-
             coverage_args = "-coverage"
+        else:
+            coverage_save_cmd = ""
+            coverage_args = ""
 
         vsim_flags = ["-wlf {%s}" % fix_path(join(output_path, "vsim.wlf")),
                       "-quiet",
@@ -340,19 +328,17 @@ proc _vunit_sim_restart {} {
 
         return " ".join(vsim_extra_args)
 
-    def post_process(self, output_path):
+    def merge_coverage(self, file_name, args=None):
         """
-        Merge coverage from all test cases,
-        top hierarchy level is removed since it has different name in each test case
+        Merge coverage from all test cases
         """
-        if self._coverage is None:
-            return
-
         # Teardown to ensure ucdb file was written.
-        del self._persistent_shell
+        self._persistent_shell.teardown()
 
-        merged_coverage_file = join(output_path, "merged_coverage.ucdb")
-        vcover_cmd = [join(self._prefix, 'vcover'), 'merge', '-strip', '1', merged_coverage_file]
+        if args is None:
+            args = []
+
+        vcover_cmd = [join(self._prefix, 'vcover'), 'merge'] + args + [file_name]
 
         for coverage_file in self._coverage_files:
             if file_exists(coverage_file):
@@ -360,7 +346,7 @@ proc _vunit_sim_restart {} {
             else:
                 LOGGER.warning("Missing coverage file: %s", coverage_file)
 
-        print("Merging coverage files into %s..." % merged_coverage_file)
+        print("Merging coverage files into %s..." % file_name)
         vcover_merge_process = Process(vcover_cmd,
                                        env=self.get_env())
         vcover_merge_process.consume_output()

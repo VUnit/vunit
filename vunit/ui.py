@@ -28,6 +28,9 @@
 .. autoclass:: vunit.ui.Test()
    :members:
 
+.. autoclass:: vunit.ui.Results()
+   :members:
+
 .. _compile_options:
 
 Compilation Options
@@ -35,11 +38,6 @@ Compilation Options
 Compilation options allow customization of compilation behavior. Since simulators have
 differing options available, generic options may be specified through this interface.
 The following compilation options are known.
-
-``disable_coverage``
-  Disable coverage.
-  Do not add coverage compile flags when running with ``--coverage``. Default is False.
-  Boolean
 
 ``ghdl.flags``
    Extra arguments passed to ``ghdl -a`` command during compilation.
@@ -94,12 +92,25 @@ The following simulation options are known.
   precedence over the fail_on_warning attribute.
 
 ``disable_ieee_warnings``
-  Disable ieee warnings
-  Boolean
+  Disable ieee warnings. Must be a boolean value. Default is False.
+
+``enable_coverage``
+  Enables code coverage collection during simulator for the run affected by the sim_option.
+  Must be a boolean value. Default is False.
+
+  When coverage is enabled VUnit only takes the minimal steps required
+  to make the simulator creates an unique coverage file for the
+  simulation run. The VUnit users must still set :ref:`sim
+  <sim_options>` and :ref:`compile <compile_options>` options to
+  configure the simulator specific coverage options they want. The
+  reason for this to allow the VUnit users maximum control of their
+  coverage settings.
+
+  .. note: Supported by RivieraPRO and Modelsim/Questa simulators.
+
 
 ``pli``
-  A list of PLI files
-  A list of file names
+  A list of PLI file names.
 
 ``ghdl.flags``
    Extra arguments passed to ``ghdl --elab-run`` command *before* executable specific flags. Must be a list of strings.
@@ -770,7 +781,9 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         Run vunit main function and exit
 
-        :param post_run: A function with no arguments to be called after running tests
+        :param post_run: A callback function which is called after
+          running tests. The function must accept a single `results`
+          argument which is an instance of :class:`.Results`
         """
         try:
             all_ok = self._main(post_run)
@@ -817,9 +830,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         if self._args.compile:
             return self._main_compile_only()
 
-        all_ok = self._main_run()
-        if post_run is not None:
-            post_run()
+        all_ok = self._main_run(post_run)
         return all_ok
 
     def _create_simulator_if(self):
@@ -837,9 +848,10 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         if not exists(self._simulator_output_path):
             os.makedirs(self._simulator_output_path)
 
-        return self._simulator_class.from_args(self._simulator_output_path, self._args)
+        return self._simulator_class.from_args(args=self._args,
+                                               output_path=self._simulator_output_path)
 
-    def _main_run(self):
+    def _main_run(self, post_run):
         """
         Main with running tests
         """
@@ -850,18 +862,26 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
 
         start_time = ostools.get_time()
         report = TestReport(printer=self._printer)
+
         try:
             self._run_test(test_list, report)
-            simulator_if.post_process(self._simulator_output_path)
         except KeyboardInterrupt:
             print()
             LOGGER.debug("_main: Caught Ctrl-C shutting down")
         finally:
             del test_list
-            del simulator_if
 
         report.set_real_total_time(ostools.get_time() - start_time)
-        self._post_process(report)
+        report.print_str()
+
+        if post_run is not None:
+            post_run(results=Results(simulator_if))
+
+        del simulator_if
+
+        if self._args.xunit_xml is not None:
+            xml = report.to_junit_xml_str(self._args.xunit_xml_format)
+            ostools.write_file(self._args.xunit_xml, xml)
 
         return report.all_ok()
 
@@ -990,16 +1010,6 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
                             dont_catch_exceptions=self._args.dont_catch_exceptions,
                             no_color=self._args.no_color)
         runner.run(test_cases)
-
-    def _post_process(self, report):
-        """
-        Print the report to stdout and optionally write it to an XML file
-        """
-        report.print_str()
-
-        if self._args.xunit_xml is not None:
-            xml = report.to_junit_xml_str(self._args.xunit_xml_format)
-            ostools.write_file(self._args.xunit_xml, xml)
 
     def add_builtins(self):
         """
@@ -1867,6 +1877,25 @@ class SourceFile(object):
                 self.add_dependency_on(element)
         else:
             raise ValueError(source_file)
+
+
+class Results(object):
+    """
+    Gives access to results after running tests.
+    """
+
+    def __init__(self, simulator_if):
+        self._simulator_if = simulator_if
+
+    def merge_coverage(self, file_name, args=None):
+        """
+        Create a merged coverage report from the individual coverage files
+
+        :param file_name: The resulting coverage file name.
+        :param args: The tool arguments for the merge command. Should be a list of strings.
+        """
+
+        self._simulator_if.merge_coverage(file_name=file_name, args=args)
 
 
 def select_vhdl_standard(vhdl_standard=None):
