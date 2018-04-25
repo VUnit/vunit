@@ -36,6 +36,11 @@ Compilation options allow customization of compilation behavior. Since simulator
 differing options available, generic options may be specified through this interface.
 The following compilation options are known.
 
+``disable_coverage``
+  Disable coverage.
+  Do not add coverage compile flags when running with ``--coverage``. Default is False.
+  Boolean
+
 ``ghdl.flags``
    Extra arguments passed to ``ghdl -a`` command during compilation.
    Must be a list of strings.

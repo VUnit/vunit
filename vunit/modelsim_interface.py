@@ -129,8 +129,9 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
 
         # Add coverage options
         for source_file in project.get_source_files_in_order():
-            source_file.add_compile_option("modelsim.vcom_flags", ["+cover=" + self._coverage])
-            source_file.add_compile_option("modelsim.vlog_flags", ["+cover=" + self._coverage])
+            if not source_file.compile_options.get("disable_coverage", False):
+                source_file.add_compile_option("modelsim.vcom_flags", ["+cover=" + self._coverage])
+                source_file.add_compile_option("modelsim.vlog_flags", ["+cover=" + self._coverage])
 
     def setup_library_mapping(self, project):
         """
