@@ -105,8 +105,7 @@ class SimulatorFactory(object):
         available_simulators = self._detect_available_simulators()
         name_mapping = {simulator_class.name: simulator_class for simulator_class in self.supported_simulators()}
         if not available_simulators:
-            raise RuntimeError("No available simulator detected. "
-                               "Simulator executables must be available in PATH environment variable.")
+            return None
 
         environ_name = "VUNIT_SIMULATOR"
         if environ_name in os.environ:

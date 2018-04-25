@@ -89,6 +89,7 @@ def set_env(**environ):
     :param environ: Environment variables to set
     """
     old_environ = dict(os.environ)
+    os.environ.clear()
     os.environ.update(environ)
     try:
         yield

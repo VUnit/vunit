@@ -62,7 +62,10 @@ class SimulatorInterface(object):
         """
         Return a list of all executables found in PATH
         """
-        path = os.environ['PATH']
+        path = os.environ.get('PATH', None)
+        if path is None:
+            return []
+
         paths = path.split(os.pathsep)
         _, ext = os.path.splitext(executable)
 

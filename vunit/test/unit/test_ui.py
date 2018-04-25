@@ -681,9 +681,30 @@ endmodule
         self.assertRaises(ValueError, lib.test_bench("tb_top").scan_tests_from_file, "missing.sv")
 
     def test_can_list_tests_without_simulator(self):
-        with set_env(PATH=""):
-            ui = self._create_ui("--list")
+        with set_env():
+            ui = self._create_ui_real_sim("--list")
             self._run_main(ui, 0)
+
+    def test_can_list_files_without_simulator(self):
+        with set_env():
+            ui = self._create_ui_real_sim("--files")
+            self._run_main(ui, 0)
+
+    @mock.patch("vunit.ui.LOGGER", autospec=True)
+    def test_compile_without_simulator_fails(self, logger):
+        with set_env():
+            ui = self._create_ui_real_sim("--compile")
+            self._run_main(ui, 1)
+            self.assertEqual(len(logger.error.mock_calls), 1)
+            self.assertTrue("No available simulator detected" in str(logger.error.mock_calls))
+
+    @mock.patch("vunit.ui.LOGGER", autospec=True)
+    def test_simulate_without_simulator_fails(self, logger):
+        with set_env():
+            ui = self._create_ui_real_sim()
+            self._run_main(ui, 1)
+            self.assertEqual(len(logger.error.mock_calls), 1)
+            self.assertTrue("No available simulator detected" in str(logger.error.mock_calls))
 
     def test_set_sim_option_before_adding_file(self):
         """
@@ -701,12 +722,15 @@ endmodule
 
     def _create_ui(self, *args):
         """ Create an instance of the VUnit public interface class """
-        with mock.patch("vunit.ui.SIMULATOR_FACTORY",
-                        new=MockSimulatorFactory()):
-            ui = VUnit.from_argv(argv=["--output-path=%s" % self._output_path,
-                                       "--clean"] + list(args),
-                                 compile_builtins=False)
-        return ui
+        with mock.patch("vunit.ui.SIMULATOR_FACTORY.select_simulator",
+                        new=lambda: MockSimulator):
+            return self._create_ui_real_sim(*args)
+
+    def _create_ui_real_sim(self, *args):
+        """ Create an instance of the VUnit public interface class """
+        return VUnit.from_argv(argv=["--output-path=%s" % self._output_path,
+                                     "--clean"] + list(args),
+                               compile_builtins=False)
 
     def _run_main(self, ui, code=0, post_run=None):
         """
@@ -794,15 +818,6 @@ class ParentalControl(object):
 
     def run(self, code, file_name):   # pylint: disable=unused-argument
         return self._fword_pattern.sub(r'[BEEP]', code)
-
-
-class MockSimulatorFactory(object):
-    """
-    Mock a simulator factory
-    """
-    @staticmethod
-    def select_simulator():
-        return MockSimulator
 
 
 class MockSimulator(SimulatorInterface):

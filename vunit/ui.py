@@ -223,7 +223,8 @@ from vunit.database import PickledDataBase, DataBase
 import vunit.ostools as ostools
 from vunit.vunit_cli import VUnitCLI
 from vunit.simulator_factory import SIMULATOR_FACTORY
-from vunit.simulator_interface import is_string_not_iterable
+from vunit.simulator_interface import (is_string_not_iterable,
+                                       SimulatorInterface)
 from vunit.color_printer import (COLOR_PRINTER,
                                  NO_COLOR_PRINTER)
 from vunit.project import (Project,
@@ -312,17 +313,25 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._check_preprocessor = None
 
         self._simulator_class = SIMULATOR_FACTORY.select_simulator()
-        self._simulator_output_path = join(self._output_path, self._simulator_class.name)
+
+        # Use default simulator options if no simulator was present
+        if self._simulator_class is None:
+            simulator_class = SimulatorInterface
+            self._simulator_output_path = join(self._output_path, "none")
+        else:
+            simulator_class = self._simulator_class
+            self._simulator_output_path = join(self._output_path, simulator_class.name)
+
         self._create_output_path(args.clean)
 
         database = self._create_database()
         self._project = Project(
             database=database,
-            depend_on_package_body=self._simulator_class.package_users_depend_on_bodies)
+            depend_on_package_body=simulator_class.package_users_depend_on_bodies)
 
         self._test_bench_list = TestBenchList(database=database)
 
-        self._builtins = Builtins(self, self._vhdl_standard, self._simulator_class)
+        self._builtins = Builtins(self, self._vhdl_standard, simulator_class)
         if compile_builtins:
             self.add_builtins()
 
@@ -758,6 +767,13 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         Create new simulator instance
         """
+
+        if self._simulator_class is None:
+            LOGGER.error(
+                "No available simulator detected.\n"
+                "Simulator binary folder must be available in PATH environment variable.\n"
+                "Simulator binary folder can also be set the in VUNIT_<SIMULATOR_NAME>_PATH environment variable.\n")
+            exit(1)
 
         if not exists(self._simulator_output_path):
             os.makedirs(self._simulator_output_path)
