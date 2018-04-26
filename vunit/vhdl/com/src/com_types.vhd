@@ -385,10 +385,10 @@ package com_types_pkg is
   alias push_msg_t is push[msg_t, msg_t];
   alias pop_msg_t is pop[msg_t return msg_t];
 
-  procedure push(msg : msg_t; value : integer_array_t);
-  impure function pop(msg : msg_t) return integer_array_t;
-  alias push_integer_array_t is push[msg_t, integer_array_t];
-  alias pop_integer_array_t is pop[msg_t return integer_array_t];
+  procedure push_ref(constant msg : msg_t; value : inout integer_array_t);
+  impure function pop_ref(msg : msg_t) return integer_array_t;
+  alias push_integer_array_t_ref is push_ref[msg_t, integer_array_t];
+  alias pop_integer_array_t_ref is pop_ref[msg_t return integer_array_t];
 
 end package;
 
@@ -837,14 +837,14 @@ package body com_types_pkg is
     return pop(msg.data);
   end;
 
-  procedure push(msg : msg_t; value : integer_array_t) is
+  procedure push_ref(constant msg : msg_t; value : inout integer_array_t) is
   begin
-    push(msg.data, value);
+    push_ref(msg.data, value);
   end;
 
-  impure function pop(msg : msg_t) return integer_array_t is
+  impure function pop_ref(msg : msg_t) return integer_array_t is
   begin
-    return pop(msg.data);
+    return pop_ref(msg.data);
   end;
 
 end package body com_types_pkg;

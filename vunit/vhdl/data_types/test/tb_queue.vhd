@@ -290,8 +290,11 @@ begin
     elsif run("Test push and pop integer_array_t") then
       queue := new_queue;
       integer_array := new_3d(1, 2, 3, 4);
-      push_integer_array_t(queue, integer_array);
-      assert pop_integer_array_t(queue) = integer_array;
+      integer_vector_ptr := integer_array.data;
+      push_integer_array_t_ref(queue, integer_array);
+      assert integer_array.data = null_ptr;
+      integer_array.data := integer_vector_ptr;
+      assert pop_integer_array_t_ref(queue) = integer_array;
 
     elsif run("Test codecs") then
       queue := new_queue;

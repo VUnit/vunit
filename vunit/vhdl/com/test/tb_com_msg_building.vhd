@@ -260,8 +260,11 @@ begin
       elsif run("Test push and pop of integer_array_t") then
         msg := new_msg;
         integer_array := new_3d(1, 2, 3, 4);
-        push_integer_array_t(msg, integer_array);
-        check(pop_integer_array_t(msg) = integer_array);
+        integer_vector_ptr := integer_array.data;
+        push_integer_array_t_ref(msg, integer_array);
+        check(integer_array.data = null_ptr);
+        integer_array.data := integer_vector_ptr;
+        check(pop_integer_array_t_ref(msg) = integer_array);
       elsif run("Test setting and getting msg_type") then
         msg := new_msg;
         check(message_type(msg) = null_msg_type);

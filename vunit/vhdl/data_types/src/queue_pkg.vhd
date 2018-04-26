@@ -149,10 +149,10 @@ package queue_pkg is
   alias push_queue_ref is push[queue_t, queue_t];
   alias pop_queue_ref is pop[queue_t return queue_t];
 
-  procedure push(queue : queue_t; value : integer_array_t);
-  impure function pop(queue : queue_t) return integer_array_t;
-  alias push_integer_array_t is push[queue_t, integer_array_t];
-  alias pop_integer_array_t is pop[queue_t return integer_array_t];
+  procedure push_ref(constant queue : queue_t; value : inout integer_array_t);
+  impure function pop_ref(queue : queue_t) return integer_array_t;
+  alias push_integer_array_t_ref is push_ref[queue_t, integer_array_t];
+  alias pop_integer_array_t_ref is pop_ref[queue_t return integer_array_t];
 
   -- Private functions
   function encode(data : queue_t) return string;

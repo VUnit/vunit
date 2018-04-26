@@ -357,7 +357,7 @@ package body queue_pkg is
     return decode(pop_fix_string(queue, queue_t_code_length));
   end;
 
-  procedure push(queue : queue_t; value : integer_array_t) is
+  procedure push_ref(constant queue : queue_t; value : inout integer_array_t) is
   begin
     push(queue, value.length);
     push(queue, value.width);
@@ -368,9 +368,10 @@ package body queue_pkg is
     push(queue, value.lower_limit);
     push(queue, value.upper_limit);
     push(queue, value.data);
+    value.data := null_ptr;
   end;
 
-  impure function pop(queue : queue_t) return integer_array_t is
+  impure function pop_ref(queue : queue_t) return integer_array_t is
     variable result : integer_array_t;
   begin
     result.length := pop(queue);
