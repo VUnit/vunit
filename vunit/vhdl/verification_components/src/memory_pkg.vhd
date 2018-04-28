@@ -110,16 +110,25 @@ package memory_pkg is
   impure function get_expected_byte(memory : memory_t;
                                     address : natural) return byte_t;
 
-
   -- Check that all expected bytes within address range was written
   -- with correct value
   procedure check_expected_was_written(memory : memory_t;
                                        address : natural;
                                        num_bytes : natural);
 
-  -- Check that all expected bytes with the entire memory was written
+  -- Returns true if all expected bytes within address range was written
+  -- with correct value
+  impure function expected_was_written(memory    : memory_t;
+                                       address   : natural;
+                                       num_bytes : natural) return boolean;
+
+  -- Check that all expected bytes within the entire memory was written
   -- with correct value
   procedure check_expected_was_written(memory : memory_t);
+
+  -- Returns true if all expected bytes within the entire memory was written
+  -- with correct value
+  impure function expected_was_written(memory : memory_t) return boolean;
 
   -----------------------------------------------------
   -- Memory buffer allocation
@@ -151,6 +160,9 @@ package memory_pkg is
 
   -- Check that all expected bytes was written with correct value in buffer
   procedure check_expected_was_written(buf : buffer_t);
+
+  -- Returns true if all expected bytes was written with correct value in buffer
+  impure function expected_was_written(buf : buffer_t) return boolean;
 
   -- Return a string describing the address with name of allocation and
   -- permission settings

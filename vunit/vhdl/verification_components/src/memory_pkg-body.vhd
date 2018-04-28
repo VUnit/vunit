@@ -239,7 +239,6 @@ package body memory_pkg is
   end;
 
   procedure check_expected_was_written(memory : memory_t; address : natural; num_bytes : natural) is
-    variable byte : byte_t;
     variable memory_data : memory_data_t;
   begin
     for addr in address to address + num_bytes - 1 loop
@@ -251,15 +250,40 @@ package body memory_pkg is
     end loop;
   end procedure;
 
+  impure function expected_was_written(memory    : memory_t;
+                                       address   : natural;
+                                       num_bytes : natural) return boolean is
+    variable memory_data : memory_data_t;
+  begin
+    for addr in address to address + num_bytes - 1 loop
+      memory_data := decode(get(memory.p_data, addr));
+      if memory_data.has_exp and memory_data.byte /= memory_data.exp then
+        return false;
+      end if;
+    end loop;
+
+    return true;
+  end;
+
   procedure check_expected_was_written(buf : buffer_t) is
   begin
     check_expected_was_written(buf.p_memory_ref, base_address(buf), num_bytes(buf));
   end procedure;
 
+  impure function expected_was_written(buf : buffer_t) return boolean is
+  begin
+    return expected_was_written(buf.p_memory_ref, base_address(buf), num_bytes(buf));
+  end;
+
   procedure check_expected_was_written(memory : memory_t) is
   begin
     check_expected_was_written(memory, 0, num_bytes(memory));
   end procedure;
+
+  impure function expected_was_written(memory : memory_t) return boolean is
+  begin
+    return expected_was_written(memory, 0, num_bytes(memory));
+  end;
 
   impure function get_permissions(memory : memory_t; address : natural) return permissions_t is
   begin
