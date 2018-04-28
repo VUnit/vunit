@@ -33,6 +33,7 @@ begin
       value <= "10";
 
       mock(logger, error);
+      wait for 1 ns;
       wait_until_idle(net, signal_checker);
       check_only_log(logger, "Unexpected event with value = " & to_string(std_logic_vector'("10")), error);
       unmock(logger);
