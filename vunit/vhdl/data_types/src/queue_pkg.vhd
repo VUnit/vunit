@@ -19,7 +19,7 @@ package queue_pkg is
     p_meta : integer_vector_ptr_t;
     data : string_ptr_t;
   end record;
-
+  type queue_vec_t is array(integer range <>) of queue_t;
   constant null_queue : queue_t := (p_meta => null_ptr, data => null_string_ptr);
 
   impure function new_queue return queue_t;
