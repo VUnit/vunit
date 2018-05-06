@@ -42,11 +42,11 @@ class IndependentSimTestCase(object):
     def name(self):
         return self._name
 
-    def run(self, output_path):
+    def run(self, *args, **kwargs):
         """
         Run the test case using the output_path
         """
-        results = self._run.run(output_path=output_path)
+        results = self._run.run(*args, **kwargs)
         return results[self._test_case] == PASSED
 
 
@@ -78,11 +78,11 @@ class SameSimTestSuite(object):
     def keep_matches(self, test_filter):
         return self._run.keep_matches(test_filter)
 
-    def run(self, output_path):
+    def run(self, *args, **kwargs):
         """
         Run the test suite using output_path
         """
-        results = self._run.run(output_path=output_path)
+        results = self._run.run(*args, **kwargs)
         results = {_full_name(self._name, test_name): result
                    for test_name, result in results.items()}
         return results
@@ -113,7 +113,7 @@ class TestRun(object):
         return [_full_name(self._test_suite_name, test_case)
                 for test_case in self._test_cases]
 
-    def run(self, output_path):
+    def run(self, output_path, read_output):
         """
         Run selected test cases within the test suite
 
@@ -141,7 +141,7 @@ class TestRun(object):
             if status != PASSED:
                 return results
 
-        if not self._config.call_post_check(output_path):
+        if not self._config.call_post_check(output_path, read_output):
             for name in self._test_cases:
                 results[name] = FAILED
 

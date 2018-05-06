@@ -81,9 +81,9 @@ class TestSuiteWrapper(object):
     def keep_matches(self, test_filter):
         return test_filter(self._test_case.name)
 
-    def run(self, output_path):
+    def run(self, *args, **kwargs):
         """
         Run the test suite and return the test results for all test cases
         """
-        test_ok = self._test_case.run(output_path)
+        test_ok = self._test_case.run(*args, **kwargs)
         return {self._test_case.name: PASSED if test_ok else FAILED}

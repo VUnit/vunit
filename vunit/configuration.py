@@ -132,7 +132,7 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
 
         return self.pre_config(**kwargs) is True
 
-    def call_post_check(self, output_path):
+    def call_post_check(self, output_path, read_output):
         """
         Call post_check if available. Setting optional output_path
         """
@@ -141,11 +141,14 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
 
         args = inspect.getargspec(self.post_check).args  # pylint: disable=deprecated-method
 
-        kwargs = {"output_path": output_path}
+        kwargs = {"output_path": lambda: output_path,
+                  "output": read_output}
 
-        for argname in list(kwargs.keys()):
+        for argname, provider in list(kwargs.items()):
             if argname not in args:
                 del kwargs[argname]
+            else:
+                kwargs[argname] = provider()
 
         return self.post_check(**kwargs) is True
 

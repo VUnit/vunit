@@ -66,27 +66,24 @@ class TestConfiguration(unittest.TestCase):
         self.assertEqual(config_tb_path.generics["tb_path"], (tempdir + "/").replace("\\", "/"))
 
     def test_call_post_check_none(self):
-        self.assertEqual(self._call_post_check(None, "output_path"), True)
+        self.assertEqual(self._call_post_check(None, output_path="output_path", read_output=None), True)
 
     def test_call_post_check_false(self):
         def post_check():
             return False
-        self.assertEqual(self._call_post_check(post_check, "output_path"), False)
+        self.assertEqual(self._call_post_check(post_check, output_path="output_path", read_output=None), False)
 
     def test_call_post_check_true(self):
         def post_check():
             return True
-        self.assertEqual(self._call_post_check(post_check, "output_path"), True)
+        self.assertEqual(self._call_post_check(post_check, output_path="output_path", read_output=None), True)
 
     def test_call_post_check_no_return(self):
         def post_check():
             pass
-        self.assertEqual(self._call_post_check(post_check, "output_path"), False)
+        self.assertEqual(self._call_post_check(post_check, output_path="output_path", read_output=None), False)
 
     def test_call_post_check_with_output_path(self):
-
-        class WasHere(Exception):
-            pass
 
         def post_check(output_path):
             """
@@ -95,7 +92,43 @@ class TestConfiguration(unittest.TestCase):
             self.assertEqual(output_path, "output_path")
             raise WasHere
 
-        self.assertRaises(WasHere, self._call_post_check, post_check, "output_path")
+        self.assertRaises(WasHere, self._call_post_check, post_check, output_path="output_path", read_output=None)
+
+    def test_call_post_check_with_no_output(self):
+        def read_output():
+            """
+            Should never be called
+            """
+            assert False
+
+        def post_check():
+            """
+            Pre config with output path
+            """
+            raise WasHere
+
+        self.assertRaises(WasHere,
+                          self._call_post_check, post_check, output_path="output_path", read_output=read_output)
+
+    def test_call_post_check_with_output(self):
+
+        output_string = "123___foo\n\nbar"
+
+        def read_output():
+            """
+            Should never be called
+            """
+            return output_string
+
+        def post_check(output):
+            """
+            Pre config with output path
+            """
+            self.assertEqual(output, output_string)
+            raise WasHere
+
+        self.assertRaises(WasHere,
+                          self._call_post_check, post_check, output_path="output_path", read_output=read_output)
 
     def test_call_pre_config_none(self):
         self.assertEqual(self._call_pre_config(None, "output_path", "simulator_output_path"), True)
@@ -117,9 +150,6 @@ class TestConfiguration(unittest.TestCase):
 
     def test_call_pre_config_with_output_path(self):
 
-        class WasHere(Exception):
-            pass
-
         def pre_config(output_path):
             """
             Pre config with output path
@@ -130,9 +160,6 @@ class TestConfiguration(unittest.TestCase):
         self.assertRaises(WasHere, self._call_pre_config, pre_config, "output_path", "simulator_output_path")
 
     def test_call_pre_config_with_simulator_output_path(self):
-
-        class WasHere(Exception):
-            pass
 
         def pre_config(output_path, simulator_output_path):
             """
@@ -145,9 +172,6 @@ class TestConfiguration(unittest.TestCase):
         self.assertRaises(WasHere, self._call_pre_config, pre_config, "output_path", "simulator_output_path")
 
     def test_call_pre_config_class_method(self):
-
-        class WasHere(Exception):
-            pass
 
         class MyClass(object):
             """
@@ -178,12 +202,12 @@ class TestConfiguration(unittest.TestCase):
             return config.call_pre_config(output_path, simulator_output_path)
 
     @staticmethod
-    def _call_post_check(post_check, output_path):
+    def _call_post_check(post_check, **kwargs):
         """
         Helper method to test call_post_check method
         """
         with _create_config(post_check=post_check) as config:
-            return config.call_post_check(output_path)
+            return config.call_post_check(**kwargs)
 
 
 @contextlib.contextmanager
@@ -196,3 +220,10 @@ def _create_config(**kwargs):
                              file_name=join(tempdir, "file.vhd"))
         design_unit.generic_names = ["runner_cfg"]
         yield Configuration('name', design_unit, **kwargs)
+
+
+class WasHere(Exception):
+    """
+    Exception raised to prove code was executed
+    """
+    pass

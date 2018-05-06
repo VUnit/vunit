@@ -41,9 +41,9 @@ class TestTestRunner(unittest.TestCase):
         test_list.add_test(test_case2)
         test_list.add_test(test_case3)
         runner.run(test_list)
-        test_case1.run.assert_called_once_with(create_output_path(tempdir, "test1"))
-        test_case2.run.assert_called_once_with(create_output_path(tempdir, "test2"))
-        test_case3.run.assert_called_once_with(create_output_path(tempdir, "test3"))
+        self.assertEqual(test_case1.output_path, create_output_path(tempdir, "test1"))
+        self.assertEqual(test_case2.output_path, create_output_path(tempdir, "test2"))
+        self.assertEqual(test_case3.output_path, create_output_path(tempdir, "test3"))
         self.assertEqual(order, ["test1", "test2", "test3"])
         self.assertTrue(report.result_of("test1").passed)
         self.assertTrue(report.result_of("test2").failed)
@@ -66,9 +66,9 @@ class TestTestRunner(unittest.TestCase):
             runner.run(test_list)
         except KeyboardInterrupt:
             pass
-        test_case1.run.assert_called_once_with(create_output_path(tempdir, "test1"))
-        test_case2.run.assert_called_once_with(create_output_path(tempdir, "test2"))
-        self.assertFalse(test_case3.run.called)
+        self.assertEqual(test_case1.output_path, create_output_path(tempdir, "test1"))
+        self.assertEqual(test_case2.output_path, create_output_path(tempdir, "test2"))
+        self.assertEqual(test_case3.called, False)
         self.assertEqual(order, ["test1", "test2"])
         self.assertTrue(report.result_of("test1").passed)
         self.assertTrue(report.result_of("test2").failed)
@@ -85,7 +85,7 @@ class TestTestRunner(unittest.TestCase):
         def side_effect(*args, **kwargs):
             raise KeyError
 
-        test_case.run.side_effect = side_effect
+        test_case.run_side_effect = side_effect
         runner.run(test_list)
         self.assertTrue(report.result_of("test").failed)
 
@@ -107,10 +107,37 @@ class TestTestRunner(unittest.TestCase):
             print(output, end="")
             return True
 
-        test_case.run.side_effect = side_effect
+        test_case.run_side_effect = side_effect
         runner.run(test_list)
         self.assertTrue(report.result_of("test").passed)
         self.assertEqual(report.result_of("test").output, output)
+
+    @with_tempdir
+    def test_can_read_output(self, tempdir):
+        report = TestReport()
+        runner = TestRunner(report, tempdir)
+
+        test_case = self.create_test("test", True)
+        test_list = TestList()
+        test_list.add_test(test_case)
+
+        def side_effect(read_output, **kwargs):  # pylint: disable=unused-argument
+            """
+            Side effect that print output to stdout
+            """
+            print("out1", end="")
+            print("out2", end="")
+            assert read_output() == "out1out2"
+            print("out3", end="")
+            print("out4", end="")
+            assert read_output() == "out1out2out3out4"
+            print("out5", end="")
+            return True
+
+        test_case.run_side_effect = side_effect
+        runner.run(test_list)
+        self.assertTrue(report.result_of("test").passed)
+        self.assertEqual(report.result_of("test").output, "out1out2out3out4out5")
 
     def test_create_output_path_on_linux(self):
         with mock.patch("sys.platform", new="linux"):
@@ -157,8 +184,6 @@ class TestTestRunner(unittest.TestCase):
         Utility function to create a mocked test with name
         that is either passed or failed
         """
-        test_case = mock.Mock(spec_set=TestCaseMockSpec)
-        test_case.configure_mock(name=name)
 
         def run_side_effect(*args, **kwargs):  # pylint: disable=unused-argument
             """
@@ -168,13 +193,29 @@ class TestTestRunner(unittest.TestCase):
                 order.append(name)
             return passed
 
-        test_case.run.side_effect = run_side_effect
+        test_case = TestCaseMock(name=name,
+                                 run_side_effect=run_side_effect)
         return test_case
 
 
-class TestCaseMockSpec(object):  # pylint: disable=no-init
+class TestCaseMock(object):
     """
-    A test case mock specification class
+    A test case mock class
     """
-    name = None
-    run = None
+
+    def __init__(self, name, run_side_effect):
+        self.name = name
+        self.output_path = None
+        self.read_output = None
+        self.called = False
+        self.run_side_effect = run_side_effect
+
+    def run(self, output_path, read_output):
+        """
+        Mock run method that just records the arguments
+        """
+        assert not self.called
+        self.called = True
+        self.output_path = output_path
+        self.read_output = read_output
+        return self.run_side_effect(output_path=output_path, read_output=read_output)

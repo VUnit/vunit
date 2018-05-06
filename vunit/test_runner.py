@@ -186,7 +186,9 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
         try:
             ostools.renew_path(output_path)
-            output_file = wrap(open(output_file_name, "w"), use_color=False)
+            output_file = wrap(open(output_file_name, "a+"), use_color=False)
+            output_file.seek(0)
+            output_file.truncate()
 
             if write_stdout:
                 self._local.output = Tee([self._stdout_ansi, output_file])
@@ -194,7 +196,19 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                 color_output_file = open(color_output_file_name, "w")
                 self._local.output = Tee([color_output_file, output_file])
 
-            results = test_suite.run(output_path)
+            def read_output():
+                """
+                Called to read the contents of the output file on demand
+                """
+                output_file.flush()
+                prev = output_file.tell()
+                output_file.seek(0)
+                contents = output_file.read()
+                output_file.seek(prev)
+                return contents
+
+            results = test_suite.run(output_path=output_path,
+                                     read_output=read_output)
         except KeyboardInterrupt:
             raise
         except:  # pylint: disable=bare-except
