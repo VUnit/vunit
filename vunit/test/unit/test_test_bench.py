@@ -391,9 +391,9 @@ def get_config_of(tests, test_name):
     for test in tests:
         if test.name == test_name:
             try:
-                return test._test_case._config  # pylint: disable=protected-access
+                return test._test_case._run._config  # pylint: disable=protected-access
             except AttributeError:
-                return test._config  # pylint: disable=protected-access
+                return test._run._config  # pylint: disable=protected-access
     raise KeyError(test_name)
 
 

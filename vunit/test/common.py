@@ -14,6 +14,7 @@ import contextlib
 import functools
 import os
 import shutil
+import random
 from vunit.simulator_factory import SIMULATOR_FACTORY
 
 
@@ -101,10 +102,14 @@ def set_env(**environ):
 
 
 @contextlib.contextmanager
-def tempdir(path):
+def create_tempdir(path=None):
     """
     Create a temporary directory that is removed after the unit test
     """
+
+    if path is None:
+        path = os.path.join(os.path.dirname(__file__),
+                            "tempdir_%i" % random.randint(0, 2**64 - 1))
 
     if os.path.exists(path):
         shutil.rmtree(path)
@@ -133,6 +138,7 @@ def with_tempdir(func):
         path_name = os.path.join(os.path.dirname(__file__),
                                  func.__module__ + "." + func.__name__)
 
-        with tempdir(path_name) as path:
-            func(*args, tempdir=path, **kwargs)
+        with create_tempdir(path_name) as path:
+            return func(*args, tempdir=path, **kwargs)
+
     return new_function

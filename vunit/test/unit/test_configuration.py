@@ -12,10 +12,12 @@ Tests the test test_bench module
 
 
 import unittest
+import contextlib
 from os.path import join
 from vunit.configuration import Configuration
 from vunit.test.mock_2or3 import mock
-from vunit.test.common import with_tempdir
+from vunit.test.common import (with_tempdir,
+                               create_tempdir)
 from vunit.test.unit.test_test_bench import Entity
 
 
@@ -24,63 +26,173 @@ class TestConfiguration(unittest.TestCase):
     Test the configuration module
     """
 
-    @with_tempdir
     @mock.patch("vunit.configuration.LOGGER")
-    def test_warning_on_setting_missing_generic(self, mock_logger, tempdir):
-        design_unit = Entity('tb_entity',
-                             file_name=join(tempdir, "file.vhd"))
-        design_unit.generic_names = ["runner_cfg"]
-        config = Configuration('name', design_unit)
+    def test_warning_on_setting_missing_generic(self, mock_logger):
+        with _create_config() as config:
+            config.set_generic("name123", "value123")
+            warning_calls = mock_logger.warning.call_args_list
+            self.assertEqual(len(warning_calls), 1)
+            call_args = warning_calls[0][0]
+            self.assertIn("lib", call_args)
+            self.assertIn("tb_entity", call_args)
+            self.assertIn("name123", call_args)
+            self.assertIn("value123", call_args)
 
-        config.set_generic("name123", "value123")
-        warning_calls = mock_logger.warning.call_args_list
-        self.assertEqual(len(warning_calls), 1)
-        call_args = warning_calls[0][0]
-        self.assertIn("lib", call_args)
-        self.assertIn("tb_entity", call_args)
-        self.assertIn("name123", call_args)
-        self.assertIn("value123", call_args)
+    def test_error_on_setting_unknown_sim_option(self):
+        with _create_config() as config:
+            self.assertRaises(ValueError, config.set_sim_option, "name123", "value123")
 
-    @with_tempdir
-    def test_error_on_setting_unknown_sim_option(self, tempdir):
-        design_unit = Entity('tb_entity',
-                             file_name=join(tempdir, "file.vhd"))
-        design_unit.generic_names = ["runner_cfg"]
-        config = Configuration('name', design_unit)
+    def test_error_on_setting_illegal_value_sim_option(self):
+        with _create_config() as config:
+            self.assertRaises(ValueError, config.set_sim_option, "vhdl_assert_stop_level", "illegal")
 
-        self.assertRaises(ValueError, config.set_sim_option, "name123", "value123")
+    def test_sim_option_is_not_mutated(self):
+        with _create_config() as config:
+            options = ["--foo"]
+            config.set_sim_option("ghdl.sim_flags", options)
+            options[0] = "--bar"
+            self.assertEqual(config.sim_options["ghdl.sim_flags"], ["--foo"])
 
-    @with_tempdir
-    def test_error_on_setting_illegal_value_sim_option(self, tempdir):
-        design_unit = Entity('tb_entity',
-                             file_name=join(tempdir, "file.vhd"))
-        design_unit.generic_names = ["runner_cfg"]
-        config = Configuration('name', design_unit)
-
-        self.assertRaises(ValueError, config.set_sim_option, "vhdl_assert_stop_level", "illegal")
-
-    @with_tempdir
-    def test_sim_option_is_not_mutated(self, tempdir):
-        design_unit = Entity('tb_entity',
-                             file_name=join(tempdir, "file.vhd"))
-        design_unit.generic_names = ["runner_cfg"]
-        config = Configuration('name', design_unit)
-        options = ["--foo"]
-        config.set_sim_option("ghdl.sim_flags", options)
-        options[0] = "--bar"
-        self.assertEqual(config.sim_options["ghdl.sim_flags"], ["--foo"])
+    def test_does_not_add_tb_path_generic(self):
+        with _create_config() as config:
+            self.assertNotIn("tb_path", config.generics)
 
     @with_tempdir
     def test_adds_tb_path_generic(self, tempdir):
-        design_unit = Entity('tb_entity_with_tb_path',
-                             file_name=join(tempdir, "file.vhd"))
-        design_unit.generic_names = ["runner_cfg"]
-        config = Configuration('name', design_unit)
-
         design_unit_tb_path = Entity('tb_entity_without_tb_path',
                                      file_name=join(tempdir, "file.vhd"))
         design_unit_tb_path.generic_names = ["runner_cfg", "tb_path"]
         config_tb_path = Configuration('name', design_unit_tb_path)
-
         self.assertEqual(config_tb_path.generics["tb_path"], (tempdir + "/").replace("\\", "/"))
-        self.assertNotIn("tb_path", config.generics)
+
+    def test_call_post_check_none(self):
+        self.assertEqual(self._call_post_check(None, "output_path"), True)
+
+    def test_call_post_check_false(self):
+        def post_check():
+            return False
+        self.assertEqual(self._call_post_check(post_check, "output_path"), False)
+
+    def test_call_post_check_true(self):
+        def post_check():
+            return True
+        self.assertEqual(self._call_post_check(post_check, "output_path"), True)
+
+    def test_call_post_check_no_return(self):
+        def post_check():
+            pass
+        self.assertEqual(self._call_post_check(post_check, "output_path"), False)
+
+    def test_call_post_check_with_output_path(self):
+
+        class WasHere(Exception):
+            pass
+
+        def post_check(output_path):
+            """
+            Pre config with output path
+            """
+            self.assertEqual(output_path, "output_path")
+            raise WasHere
+
+        self.assertRaises(WasHere, self._call_post_check, post_check, "output_path")
+
+    def test_call_pre_config_none(self):
+        self.assertEqual(self._call_pre_config(None, "output_path", "simulator_output_path"), True)
+
+    def test_call_pre_config_false(self):
+        def pre_config():
+            return False
+        self.assertEqual(self._call_pre_config(pre_config, "output_path", "simulator_output_path"), False)
+
+    def test_call_pre_config_true(self):
+        def pre_config():
+            return True
+        self.assertEqual(self._call_pre_config(pre_config, "output_path", "simulator_output_path"), True)
+
+    def test_call_pre_config_no_return(self):
+        def pre_config():
+            pass
+        self.assertEqual(self._call_pre_config(pre_config, "output_path", "simulator_output_path"), False)
+
+    def test_call_pre_config_with_output_path(self):
+
+        class WasHere(Exception):
+            pass
+
+        def pre_config(output_path):
+            """
+            Pre config with output path
+            """
+            self.assertEqual(output_path, "output_path")
+            raise WasHere
+
+        self.assertRaises(WasHere, self._call_pre_config, pre_config, "output_path", "simulator_output_path")
+
+    def test_call_pre_config_with_simulator_output_path(self):
+
+        class WasHere(Exception):
+            pass
+
+        def pre_config(output_path, simulator_output_path):
+            """
+            Pre config with output path
+            """
+            self.assertEqual(output_path, "output_path")
+            self.assertEqual(simulator_output_path, "simulator_output_path")
+            raise WasHere
+
+        self.assertRaises(WasHere, self._call_pre_config, pre_config, "output_path", "simulator_output_path")
+
+    def test_call_pre_config_class_method(self):
+
+        class WasHere(Exception):
+            pass
+
+        class MyClass(object):
+            """
+            Class to test pre_config method
+            """
+            def __init__(self, value):
+                self.value = value
+
+            def pre_config(self, output_path, simulator_output_path):
+                """
+                Pre config with output path
+                """
+                assert self.value == 2
+                assert output_path == "output_path"
+                assert simulator_output_path == "simulator_output_path"
+                raise WasHere
+
+        self.assertRaises(WasHere,
+                          self._call_pre_config,
+                          MyClass(value=2).pre_config, "output_path", "simulator_output_path")
+
+    @staticmethod
+    def _call_pre_config(pre_config, output_path, simulator_output_path):
+        """
+        Helper method to test call_pre_config method
+        """
+        with _create_config(pre_config=pre_config) as config:
+            return config.call_pre_config(output_path, simulator_output_path)
+
+    @staticmethod
+    def _call_post_check(post_check, output_path):
+        """
+        Helper method to test call_post_check method
+        """
+        with _create_config(post_check=post_check) as config:
+            return config.call_post_check(output_path)
+
+
+@contextlib.contextmanager
+def _create_config(**kwargs):
+    """
+    Helper function to create a config
+    """
+    with create_tempdir() as tempdir:
+        design_unit = Entity('tb_entity',
+                             file_name=join(tempdir, "file.vhd"))
+        design_unit.generic_names = ["runner_cfg"]
+        yield Configuration('name', design_unit, **kwargs)
