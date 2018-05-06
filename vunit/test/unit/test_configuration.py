@@ -12,10 +12,11 @@ Tests the test test_bench module
 
 
 import unittest
-
+from os.path import join
 from vunit.configuration import Configuration
 from vunit.test.mock_2or3 import mock
-from vunit.test.unit.test_test_bench import Entity, out
+from vunit.test.common import with_tempdir
+from vunit.test.unit.test_test_bench import Entity
 
 
 class TestConfiguration(unittest.TestCase):
@@ -23,9 +24,11 @@ class TestConfiguration(unittest.TestCase):
     Test the configuration module
     """
 
+    @with_tempdir
     @mock.patch("vunit.configuration.LOGGER")
-    def test_warning_on_setting_missing_generic(self, mock_logger):
-        design_unit = Entity('tb_entity')
+    def test_warning_on_setting_missing_generic(self, mock_logger, tempdir):
+        design_unit = Entity('tb_entity',
+                             file_name=join(tempdir, "file.vhd"))
         design_unit.generic_names = ["runner_cfg"]
         config = Configuration('name', design_unit)
 
@@ -38,22 +41,28 @@ class TestConfiguration(unittest.TestCase):
         self.assertIn("name123", call_args)
         self.assertIn("value123", call_args)
 
-    def test_error_on_setting_unknown_sim_option(self):
-        design_unit = Entity('tb_entity')
+    @with_tempdir
+    def test_error_on_setting_unknown_sim_option(self, tempdir):
+        design_unit = Entity('tb_entity',
+                             file_name=join(tempdir, "file.vhd"))
         design_unit.generic_names = ["runner_cfg"]
         config = Configuration('name', design_unit)
 
         self.assertRaises(ValueError, config.set_sim_option, "name123", "value123")
 
-    def test_error_on_setting_illegal_value_sim_option(self):
-        design_unit = Entity('tb_entity')
+    @with_tempdir
+    def test_error_on_setting_illegal_value_sim_option(self, tempdir):
+        design_unit = Entity('tb_entity',
+                             file_name=join(tempdir, "file.vhd"))
         design_unit.generic_names = ["runner_cfg"]
         config = Configuration('name', design_unit)
 
         self.assertRaises(ValueError, config.set_sim_option, "vhdl_assert_stop_level", "illegal")
 
-    def test_sim_option_is_not_mutated(self):
-        design_unit = Entity('tb_entity')
+    @with_tempdir
+    def test_sim_option_is_not_mutated(self, tempdir):
+        design_unit = Entity('tb_entity',
+                             file_name=join(tempdir, "file.vhd"))
         design_unit.generic_names = ["runner_cfg"]
         config = Configuration('name', design_unit)
         options = ["--foo"]
@@ -61,14 +70,17 @@ class TestConfiguration(unittest.TestCase):
         options[0] = "--bar"
         self.assertEqual(config.sim_options["ghdl.sim_flags"], ["--foo"])
 
-    def test_adds_tb_path_generic(self):
-        design_unit = Entity('tb_entity_with_tb_path')
+    @with_tempdir
+    def test_adds_tb_path_generic(self, tempdir):
+        design_unit = Entity('tb_entity_with_tb_path',
+                             file_name=join(tempdir, "file.vhd"))
         design_unit.generic_names = ["runner_cfg"]
         config = Configuration('name', design_unit)
 
-        design_unit_tb_path = Entity('tb_entity_without_tb_path')
+        design_unit_tb_path = Entity('tb_entity_without_tb_path',
+                                     file_name=join(tempdir, "file.vhd"))
         design_unit_tb_path.generic_names = ["runner_cfg", "tb_path"]
         config_tb_path = Configuration('name', design_unit_tb_path)
 
-        self.assertEqual(config_tb_path.generics["tb_path"], (out() + "/").replace("\\", "/"))
+        self.assertEqual(config_tb_path.generics["tb_path"], (tempdir + "/").replace("\\", "/"))
         self.assertNotIn("tb_path", config.generics)

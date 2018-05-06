@@ -12,14 +12,14 @@ Test the test runner
 from __future__ import print_function
 
 import unittest
-from os.path import join, dirname, abspath
+from os.path import join, abspath
 
 from vunit.hashing import hash_string
 from vunit.test_runner import TestRunner, create_output_path
 from vunit.test_report import TestReport
 from vunit.test_list import TestList
-from vunit.ostools import renew_path
 from vunit.test.mock_2or3 import mock
+from vunit.test.common import with_tempdir
 
 
 class TestTestRunner(unittest.TestCase):
@@ -27,62 +27,72 @@ class TestTestRunner(unittest.TestCase):
     Test the test runner
     """
 
-    def setUp(self):
-        self._tests = []
-        self.output_path = join(dirname(__file__), "test_runner_out")
-        renew_path(self.output_path)
-
-    def test_runs_testcases_in_order(self):
+    @with_tempdir
+    def test_runs_testcases_in_order(self, tempdir):
         report = TestReport()
-        runner = TestRunner(report, self.output_path)
+        runner = TestRunner(report, tempdir)
 
-        test_case1 = self.create_test("test1", True)
-        test_case2 = self.create_test("test2", False)
-        test_case3 = self.create_test("test3", True)
+        order = []
+        test_case1 = self.create_test("test1", True, order=order)
+        test_case2 = self.create_test("test2", False, order=order)
+        test_case3 = self.create_test("test3", True, order=order)
         test_list = TestList()
         test_list.add_test(test_case1)
         test_list.add_test(test_case2)
+        test_list.add_test(test_case3)
         runner.run(test_list)
-        test_case1.run.assert_called_once_with(create_output_path(self.output_path, "test1"))
-        test_case2.run.assert_called_once_with(create_output_path(self.output_path, "test2"))
-        self.assertFalse(test_case3.run.called)
-        self.assertEqual(self._tests, ["test1", "test2"])
+        test_case1.run.assert_called_once_with(create_output_path(tempdir, "test1"))
+        test_case2.run.assert_called_once_with(create_output_path(tempdir, "test2"))
+        test_case3.run.assert_called_once_with(create_output_path(tempdir, "test3"))
+        self.assertEqual(order, ["test1", "test2", "test3"])
         self.assertTrue(report.result_of("test1").passed)
         self.assertTrue(report.result_of("test2").failed)
+        self.assertTrue(report.result_of("test3").passed)
 
-    def test_fail_fast(self):
+    @with_tempdir
+    def test_fail_fast(self, tempdir):
         report = TestReport()
-        runner = TestRunner(report, self.output_path, fail_fast=True)
+        runner = TestRunner(report, tempdir, fail_fast=True)
 
-        test_case1 = self.create_test("test1", True)
-        test_case2 = self.create_test("test2", False)
+        order = []
+        test_case1 = self.create_test("test1", True, order=order)
+        test_case2 = self.create_test("test2", False, order=order)
+        test_case3 = self.create_test("test3", True, order=order)
         test_list = TestList()
         test_list.add_test(test_case1)
         test_list.add_test(test_case2)
+        test_list.add_test(test_case3)
         try:
             runner.run(test_list)
         except KeyboardInterrupt:
             pass
-        test_case1.run.assert_called_once_with(create_output_path(self.output_path, "test1"))
-        test_case2.run.assert_called_once_with(create_output_path(self.output_path, "test2"))
-        self.assertEqual(self._tests, ["test1", "test2"])
+        test_case1.run.assert_called_once_with(create_output_path(tempdir, "test1"))
+        test_case2.run.assert_called_once_with(create_output_path(tempdir, "test2"))
+        self.assertFalse(test_case3.run.called)
+        self.assertEqual(order, ["test1", "test2"])
         self.assertTrue(report.result_of("test1").passed)
         self.assertTrue(report.result_of("test2").failed)
 
-    def test_handles_python_exeception(self):
+    @with_tempdir
+    def test_handles_python_exeception(self, tempdir):
         report = TestReport()
-        runner = TestRunner(report, self.output_path)
+        runner = TestRunner(report, tempdir)
 
         test_case = self.create_test("test", True)
         test_list = TestList()
         test_list.add_test(test_case)
-        test_case.run.side_effect = KeyError
+
+        def side_effect(*args, **kwargs):
+            raise KeyError
+
+        test_case.run.side_effect = side_effect
         runner.run(test_list)
         self.assertTrue(report.result_of("test").failed)
 
-    def test_collects_output(self):
+    @with_tempdir
+    def test_collects_output(self, tempdir):
         report = TestReport()
-        runner = TestRunner(report, self.output_path)
+        runner = TestRunner(report, tempdir)
 
         test_case = self.create_test("test", True)
         test_list = TestList()
@@ -141,7 +151,8 @@ class TestTestRunner(unittest.TestCase):
                 test_output = create_output_path(output_path, test_name)
                 self.assertEqual(test_output, join(abspath(output_path), hash_string(test_name)))
 
-    def create_test(self, name, passed):
+    @staticmethod
+    def create_test(name, passed, order=None):
         """
         Utility function to create a mocked test with name
         that is either passed or failed
@@ -153,7 +164,8 @@ class TestTestRunner(unittest.TestCase):
             """
             Side effect that registers that is has been run
             """
-            self._tests.append(name)
+            if order is not None:
+                order.append(name)
             return passed
 
         test_case.run.side_effect = run_side_effect

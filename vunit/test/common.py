@@ -11,7 +11,9 @@ Common functions re-used between test cases
 
 from xml.etree import ElementTree
 import contextlib
+import functools
 import os
+import shutil
 from vunit.simulator_factory import SIMULATOR_FACTORY
 
 
@@ -96,3 +98,41 @@ def set_env(**environ):
     finally:
         os.environ.clear()
         os.environ.update(old_environ)
+
+
+@contextlib.contextmanager
+def tempdir(path):
+    """
+    Create a temporary directory that is removed after the unit test
+    """
+
+    if os.path.exists(path):
+        shutil.rmtree(path)
+
+    os.makedirs(path)
+
+    try:
+        yield path
+    finally:
+        shutil.rmtree(path)
+
+
+def with_tempdir(func):
+    """
+    Decorator to provide test function with a temporary path that is
+    removed after calling the function.
+
+    The path is named the same as the function and its parent module
+    """
+    @functools.wraps(func)
+    def new_function(*args, **kwargs):
+        """
+        Wrapper funciton that maintains temporary directory around nested
+        function
+        """
+        path_name = os.path.join(os.path.dirname(__file__),
+                                 func.__module__ + "." + func.__name__)
+
+        with tempdir(path_name) as path:
+            func(*args, tempdir=path, **kwargs)
+    return new_function

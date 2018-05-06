@@ -59,6 +59,8 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         self._dont_catch_exceptions = dont_catch_exceptions
         self._no_color = no_color
 
+        ostools.PROGRAM_STATUS.reset()
+
     @property
     def _is_verbose(self):
         return self._verbosity == self.VERBOSITY_VERBOSE

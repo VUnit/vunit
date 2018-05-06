@@ -12,13 +12,12 @@ Tests the test test_bench module
 
 
 import unittest
-from os.path import join, dirname, exists
-from shutil import rmtree
+from os.path import join
 
 from vunit.test_bench_list import TestBenchList, tb_filter
 from vunit.test.unit.test_test_bench import Entity, Module
-from vunit.ostools import renew_path
 from vunit.test.mock_2or3 import mock
+from vunit.test.common import with_tempdir
 
 
 class TestTestBenchList(unittest.TestCase):
@@ -26,47 +25,47 @@ class TestTestBenchList(unittest.TestCase):
     Tests the test bench
     """
 
-    def setUp(self):
-        self.simulator_if = 'simulator_if'
-        self.output_path = out()
-        renew_path(self.output_path)
-
-    def tearDown(self):
-        if exists(self.output_path):
-            rmtree(self.output_path)
-
     def test_get_test_benches_in_empty_library(self):
         tb_list = TestBenchList()
         self.assertEqual(tb_list.get_test_benches_in_library("lib"), [])
 
-    def test_tb_filter_requires_runner_cfg(self):
-        design_unit = Entity('tb_entity')
+    @with_tempdir
+    def test_tb_filter_requires_runner_cfg(self, tempdir):
+        design_unit = Entity('tb_entity',
+                             file_name=join(tempdir, "file.vhd"))
         design_unit.generic_names = ["runner_cfg"]
         self.assertTrue(tb_filter(design_unit))
 
-        design_unit = Entity('tb_entity')
+        design_unit = Entity('tb_entity',
+                             file_name=join(tempdir, "file.vhd"))
         design_unit.generic_names = []
         self.assertFalse(tb_filter(design_unit))
 
-        design_unit = Module('tb_module')
+        design_unit = Module('tb_module',
+                             file_name=join(tempdir, "file.vhd"))
         design_unit.generic_names = ["runner_cfg"]
         self.assertTrue(tb_filter(design_unit))
 
-        design_unit = Module('tb_module')
+        design_unit = Module('tb_module',
+                             file_name=join(tempdir, "file.vhd"))
         design_unit.generic_names = []
         self.assertFalse(tb_filter(design_unit))
 
-    def test_tb_filter_match_prefix_and_suffix_only(self):
+    @with_tempdir
+    def test_tb_filter_match_prefix_and_suffix_only(self, tempdir):
         """
         Issue #263
         """
         with mock.patch("vunit.test_bench_list.LOGGER", autospec=True) as logger:
-            design_unit = Entity("mul_tbl_scale")
+            design_unit = Entity("mul_tbl_scale",
+                                 file_name=join(tempdir, "file.vhd"))
             self.assertFalse(tb_filter(design_unit))
             self.assertFalse(logger.warning.called)
 
-    def test_tb_filter_warning_on_missing_runner_cfg_when_matching_tb_pattern(self):
-        design_unit = Module('tb_module_not_ok')
+    @with_tempdir
+    def test_tb_filter_warning_on_missing_runner_cfg_when_matching_tb_pattern(self, tempdir):
+        design_unit = Module('tb_module_not_ok',
+                             file_name=join(tempdir, "file.vhd"))
         design_unit.generic_names = []
 
         with mock.patch("vunit.test_bench_list.LOGGER", autospec=True) as logger:
@@ -81,8 +80,10 @@ class TestTestBenchList(unittest.TestCase):
                           'parameter',
                           design_unit.file_name)])
 
-    def test_tb_filter_warning_on_runner_cfg_but_not_matching_tb_pattern(self):
-        design_unit = Entity('entity_ok_but_warning')
+    @with_tempdir
+    def test_tb_filter_warning_on_runner_cfg_but_not_matching_tb_pattern(self, tempdir):
+        design_unit = Entity('entity_ok_but_warning',
+                             file_name=join(tempdir, "file.vhd"))
         design_unit.generic_names = ["runner_cfg"]
 
         with mock.patch("vunit.test_bench_list.LOGGER", autospec=True) as logger:
@@ -96,7 +97,3 @@ class TestTestBenchList(unittest.TestCase):
                           'entity',
                           '^(tb_.*)|(.*_tb)$',
                           design_unit.file_name)])
-
-
-def out(*args):
-    return join(dirname(__file__), "test_bench_list_out", *args)
