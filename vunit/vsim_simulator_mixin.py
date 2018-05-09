@@ -14,6 +14,7 @@ import os
 from os.path import join, dirname, abspath
 from vunit.ostools import (write_file,
                            Process)
+from vunit.test_suites import get_result_file_name
 from vunit.persistent_tcl_shell import PersistentTclShell
 
 
@@ -95,10 +96,10 @@ proc vunit_compile {} {
     if {[catch {close $chan} error_msg]} {
         puts "Re-compile failed"
         puts ${error_msg}
-        return 1
+        return true
     } else {
         puts "Re-compile finished"
-        return 0
+        return false
     }
 }
 
@@ -136,9 +137,28 @@ proc vunit_help {} {
     puts {  - Recompiles the source files}
     puts {  - and re-runs the simulation if the compile was successful}
 }
+
+proc vunit_run {} {
+    if {[catch {_vunit_run} failed_or_err]} {
+        echo $failed_or_err
+        return true;
+    }
+
+    if {![is_test_suite_done]} {
+        echo
+        echo "Test Run Failed!"
+        echo
+        _vunit_run_failure;
+        return true;
+    }
+
+    return false;
+}
+
 """
         tcl += self._create_init_files_after_load(config)
         tcl += self._create_load_function(test_suite_name, config, output_path)
+        tcl += get_is_test_suite_done_tcl(get_result_file_name(join(output_path, "..")))
         tcl += self._create_run_function()
         tcl += self._create_restart_function()
         return tcl
@@ -200,7 +220,7 @@ proc vunit_help {} {
     if {[catch {source ${file_name}} error_msg]} {
         puts "Sourcing ${file_name} failed"
         puts ${error_msg}
-        return 1
+        return true
     }
 """
         tcl = template % (fix_path(abspath(config.tb_path)),
@@ -285,3 +305,27 @@ def fix_path(path):
     Adjust path for TCL usage
     """
     return path.replace("\\", "/").replace(" ", "\\ ")
+
+
+def get_is_test_suite_done_tcl(vunit_result_file):
+    """
+    Returns tcl procedure to detect if simulation was successful or not
+    Simulation is considered successful if the test_suite_done was reached in the results file
+    """
+
+    tcl = """
+proc is_test_suite_done {} {
+    set fd [open "%s" "r"]
+    set contents [read $fd]
+    close $fd
+    set lines [split $contents "\n"]
+    foreach line $lines {
+        if {$line=="test_suite_done"} {
+           return true;
+        }
+    }
+
+    return false;
+}
+""" % (fix_path(vunit_result_file))
+    return tcl

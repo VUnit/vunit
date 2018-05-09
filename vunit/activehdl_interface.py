@@ -16,6 +16,8 @@ import os
 import re
 import logging
 from vunit.ostools import Process, write_file, file_exists, renew_path
+from vunit.test_suites import get_result_file_name
+from vunit.vsim_simulator_mixin import get_is_test_suite_done_tcl
 from vunit.simulator_interface import (SimulatorInterface,
                                        ListOfStringOption,
                                        StringOption)
@@ -223,7 +225,7 @@ proc vunit_load {{}} {{
         vsim {vsim_flags}
     }}]
     if {{${{vsim_failed}}}} {{
-        return 1
+        return true
     }}
 
     global breakassertlevel
@@ -232,12 +234,7 @@ proc vunit_load {{}} {{
     global builtinbreakassertlevel
     set builtinbreakassertlevel $breakassertlevel
 
-    set no_vhdl_test_runner_exit [catch {{examine /run_pkg/runner.exit_without_errors}}]
-    if {{${{no_vhdl_test_runner_exit}}}}  {{
-        echo {{Error: No vunit test runner package used}}
-        return 1
-    }}
-    return 0
+    return false
 }}
 """.format(set_generic_str=set_generic_str,
            vsim_flags=" ".join(vsim_flags),
@@ -252,35 +249,26 @@ proc vunit_load {{}} {{
         """
         return """
 proc vunit_run {} {
-    set has_vhdl_runner [expr ![catch {examine /run_pkg/runner}]]
-
-    if {${has_vhdl_runner}} {
-        set status_boolean "/run_pkg/runner.exit_without_errors"
-        set true_value true
-    } else {
-        echo "No finish mechanism detected"
-        return 1;
-    }
-
     run -all
-    set failed [expr [examine ${status_boolean}]!=${true_value}]
-    if {$failed} {
+    if {![is_test_suite_done]} {
         catch {
             # tb command can fail when error comes from pli
             echo ""
             echo "Stack trace result from 'bt' command"
             bt
         }
+        return true;
     }
-    return $failed
+    return false;
 }
 """
 
-    def _create_common_script(self, config):
+    def _create_common_script(self, config, output_path):
         """
         Create tcl script with functions common to interactive and batch modes
         """
         tcl = ""
+        tcl += get_is_test_suite_done_tcl(get_result_file_name(join(output_path, "..")))
         tcl += self._create_load_function(config)
         tcl += self._create_run_function()
         return tcl
@@ -352,7 +340,7 @@ proc vunit_run {} {
         gui_file_name = join(output_path, "gui.tcl")
 
         write_file(common_file_name,
-                   self._create_common_script(config))
+                   self._create_common_script(config, output_path))
         write_file(gui_file_name,
                    self._create_gui_script(common_file_name, config))
         write_file(batch_file_name,

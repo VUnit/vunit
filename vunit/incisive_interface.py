@@ -317,14 +317,7 @@ define work "{2}/libraries/work"
             else:
                 args += ['-access +r']
                 args += ['-input "@run"']
-                # Try hierarchical path formats for both VHDL and Verilog, but don't throw an error if not found.
-                # args += ['-input "@catch {puts #vunit_pkg::__runner__.exit_without_errors}"']
-                # args += ['-input "@catch {puts #run_pkg.runner.exit_without_errors}"']
-                # NOTE: do not exit with 1 or 2 in case of error, that seems to mean something special to Incisive:
-                args += ['-input "@catch '
-                         '{if {#vunit_pkg::__runner__.exit_without_errors == 1} {exit 0} else {exit 42}}"']
-                args += ['-input "@catch '
-                         '{if {#run_pkg.runner.exit_without_errors == \\"TRUE\\"} {exit 0} else {exit 42}}"']
+
             if config.architecture_name is None:
                 # we have a SystemVerilog toplevel:
                 args += ['-top %s' % join('%s.%s:sv' % (config.library_name, config.entity_name))]

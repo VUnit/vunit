@@ -271,21 +271,12 @@ proc vunit_load {{{{vsim_extra_args ""}}}} {{
     if {{${{vsim_failed}}}} {{
        echo Command 'vsim ${{vsim_extra_args}} {vsim_flags}' failed
        echo Bad flag from vsim_extra_args?
-       return 1
+       return true
     }}
 
     if {{[_vunit_source_init_files_after_load]}} {{
-        return 1
+        return true
     }}
-
-    set no_vhdl_test_runner_exit [catch {{examine -internal {{/run_pkg/runner.exit_without_errors}}}}]
-    set no_verilog_test_runner_exit [catch {{examine -internal {{/vunit_pkg/__runner__}}}}]
-
-    if {{${{no_vhdl_test_runner_exit}} && ${{no_verilog_test_runner_exit}}}}  {{
-        echo {{No vunit test runner package used}}
-        return 1
-    }}
-
 
     global BreakOnAssertion
     set BreakOnAssertion {break_on_assert}
@@ -297,7 +288,7 @@ proc vunit_load {{{{vsim_extra_args ""}}}} {{
     set StdArithNoWarnings {no_warnings}
 
     {coverage_save_cmd}
-    return 0
+    return false
 }}
 """.format(coverage_save_cmd=coverage_save_cmd,
            vsim_flags=" ".join(vsim_flags),
@@ -312,48 +303,25 @@ proc vunit_load {{{{vsim_extra_args ""}}}} {{
         Create the vunit_run function to run the test bench
         """
         return """
+
+proc _vunit_run_failure {} {
+    catch {
+        # tb command can fail when error comes from pli
+        echo "Stack trace result from 'tb' command"
+        echo [tb]
+        echo
+        echo "Surrounding code from 'see' command"
+        echo [see]
+    }
+}
+
 proc _vunit_run {} {
     proc on_break {} {
         resume
     }
     onbreak {on_break}
 
-    set has_vhdl_runner [expr ![catch {examine -internal {/run_pkg/runner.exit_without_errors}}]]
-    set has_verilog_runner [expr ![catch {examine -internal {/vunit_pkg/__runner__}}]]
-
-    if {${has_vhdl_runner}} {
-        set status_boolean {/run_pkg/runner.exit_without_errors}
-        set true_value TRUE
-    } elseif {${has_verilog_runner}} {
-        set status_boolean {/vunit_pkg/__runner__.exit_without_errors}
-        set true_value 1
-    } else {
-        echo "No finish mechanism detected"
-        return 1;
-    }
-
     run -all
-    set failed [expr [examine -radix unsigned -internal ${status_boolean}]!=${true_value}]
-    if {$failed} {
-        catch {
-            # tb command can fail when error comes from pli
-            echo
-            echo "Stack trace result from 'tb' command"
-            echo [tb]
-            echo
-            echo "Surrounding code from 'see' command"
-            echo [see]
-        }
-    }
-    return $failed
-}
-
-proc vunit_run {} {
-    if {[catch {_vunit_run} failed_or_err]} {
-        echo $failed_or_err
-        return 1;
-    }
-    return $failed_or_err;
 }
 
 proc _vunit_sim_restart {} {

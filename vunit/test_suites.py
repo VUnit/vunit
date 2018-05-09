@@ -134,7 +134,7 @@ class TestRun(object):
                 results[name] = PASSED if sim_ok else FAILED
             return results
 
-        results = self._read_test_results(file_name=join(output_path, "vunit_results"))
+        results = self._read_test_results(file_name=get_result_file_name(output_path))
 
         # Do not run post check unless all passed
         for status in results.values():
@@ -260,3 +260,7 @@ def encode_dict_value(value):  # pylint: disable=missing-docstring
 
 def _full_name(test_suite_name, test_case_name):
     return test_suite_name + "." + test_case_name
+
+
+def get_result_file_name(output_path):
+    return join(output_path, "vunit_results")
