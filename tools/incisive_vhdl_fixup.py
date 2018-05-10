@@ -11,20 +11,24 @@ Cadence Incisive
 
 from __future__ import print_function
 
-import sys
 import os
 import re
+
 
 def fix_file(file_name):
     replace_context_with_use_clauses(file_name)
     tee_to_double_writeline(file_name)
 
+
 def tee_to_double_writeline(file_name):
+    """
+    Convert TEE calls to double writeline calls
+    """
+
     with open(file_name, "r") as fptr:
         text = fptr.read()
 
-    text = re.sub(r"^(\s *)TEE\((.*?),(.*?)\)\s *;",
-           """\
+    text = re.sub(r"^(\s *)TEE\((.*?),(.*?)\)\s *;", """\
 -- \\g<0> -- Not supported by Cadence Incisive
 \\1WriteLine(OUTPUT, \\3);
 \\1WriteLine(\\2, \\3);""", text, flags=re.MULTILINE)
@@ -32,12 +36,16 @@ def tee_to_double_writeline(file_name):
     with open(file_name, "w") as fptr:
         fptr.write(text)
 
+
 def replace_context_with_use_clauses(file_name):
+    """
+    Replace VUnit contexts with use clauses
+    """
+
     with open(file_name, "r") as fptr:
         text = fptr.read()
 
-    text = text.replace("context vunit_lib.vunit_context;",
-"""\
+    text = text.replace("context vunit_lib.vunit_context;", """\
 -- context vunit_lib.vunit_context; -- Not supported by Cadence Incisive
 use vunit_lib.lang.all;
 use vunit_lib.string_ops.all;
@@ -51,11 +59,9 @@ use vunit_lib.check_pkg.all;
 use vunit_lib.run_types_pkg.all;
 use vunit_lib.run_special_types_pkg.all;
 use vunit_lib.run_base_pkg.all;
-use vunit_lib.run_pkg.all;"""
-)
+use vunit_lib.run_pkg.all;""")
 
-    text = text.replace("context vunit_lib.com_context;",
-"""\
+    text = text.replace("context vunit_lib.com_context;", """\
 -- context vunit_lib.com_context; -- Not supported by Cadence Incisive
 use vunit_lib.com_pkg.all;
 use vunit_lib.com_types_pkg.all;
@@ -68,8 +74,17 @@ use vunit_lib.com_std_codec_builder_pkg.all;
     with open(file_name, "w") as fptr:
         fptr.write(text)
 
-root = os.path.abspath(os.path.dirname(__file__))
-for base, _, files in os.walk(root):
-    for file_name in files:
-        if file_name.endswith(".vhd"):
-            fix_file(os.path.join(base, file_name))
+
+def main():
+    """
+    Remove incisive incompatabilities from source code
+    """
+    root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    for base, _, files in os.walk(root):
+        for file_name in files:
+            if file_name.endswith(".vhd"):
+                fix_file(os.path.join(base, file_name))
+
+
+if __name__ == "__main__":
+    main()

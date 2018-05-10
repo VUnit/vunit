@@ -13,7 +13,7 @@ import unittest
 from subprocess import check_call
 from os.path import join, dirname
 import sys
-from vunit import ROOT
+from vunit.test.lint.test_pycodestyle import get_files_and_folders
 
 
 class TestPylint(unittest.TestCase):
@@ -23,5 +23,5 @@ class TestPylint(unittest.TestCase):
     @staticmethod
     def test_pylint():
         check_call([sys.executable, "-m", "pylint",
-                    "--rcfile=" + join(dirname(__file__), "pylintrc"),
-                    join(ROOT, "vunit")])
+                    "--rcfile=" + join(dirname(__file__), "pylintrc")]
+                   + get_files_and_folders())

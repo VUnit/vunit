@@ -17,5 +17,6 @@ def main():
 
     run_vivado(join(root, "tcl", "generate_project.tcl"), root, "myproject")
 
+
 if __name__ == "__main__":
     main()
