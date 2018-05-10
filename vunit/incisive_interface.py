@@ -270,6 +270,7 @@ define work "{2}/libraries/work"
         Elaborates and Simulates with entity as top level using generics
         """
 
+        script_path = join(output_path, self.name)
         launch_gui = self._gui is not False and not elaborate_only
 
         if elaborate_only:
@@ -301,7 +302,7 @@ define work "{2}/libraries/work"
             args += config.sim_options.get('incisive.irun_sim_flags', [])
             args += ['-cdslib "%s"' % self._cdslib]
             args += self._hdlvar_args()
-            args += ['-log "%s/irun_%s.log"' % (output_path, step)]
+            args += ['-log "%s/irun_%s.log"' % (script_path, step)]
             if not self._log_level == "debug":
                 args += ['-quiet']
             else:
@@ -325,9 +326,9 @@ define work "{2}/libraries/work"
                 # we have a VHDL toplevel:
                 args += ['-top %s' % join('%s.%s:%s' % (config.library_name, config.entity_name,
                                                         config.architecture_name))]
-            argsfile = "%s/irun_%s.args" % (output_path, step)
+            argsfile = "%s/irun_%s.args" % (script_path, step)
             write_file(argsfile, "\n".join(args))
-            if not run_command([cmd, '-f', relpath(argsfile, output_path)], cwd=output_path, env=self.get_env()):
+            if not run_command([cmd, '-f', relpath(argsfile, script_path)], cwd=script_path, env=self.get_env()):
                 return False
         return True
 

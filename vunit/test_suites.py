@@ -171,7 +171,7 @@ class TestRun(object):
         config.generics["runner_cfg"] = encode_dict(runner_cfg)
 
         return self._simulator_if.simulate(
-            output_path=join(output_path, self._simulator_if.name),
+            output_path=output_path,
             test_suite_name=self._test_suite_name,
             config=config,
             elaborate_only=self._elaborate_only)

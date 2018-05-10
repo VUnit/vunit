@@ -115,6 +115,7 @@ proc vunit_restart {} {
     def _create_common_script(self,
                               test_suite_name,
                               config,
+                              script_path,
                               output_path):
         """
         Create tcl script with functions common to interactive and batch modes
@@ -157,8 +158,8 @@ proc vunit_run {} {
 
 """
         tcl += self._create_init_files_after_load(config)
-        tcl += self._create_load_function(test_suite_name, config, output_path)
-        tcl += get_is_test_suite_done_tcl(get_result_file_name(join(output_path, "..")))
+        tcl += self._create_load_function(test_suite_name, config, script_path)
+        tcl += get_is_test_suite_done_tcl(get_result_file_name(output_path))
         tcl += self._create_run_function()
         tcl += self._create_restart_function()
         return tcl
@@ -279,13 +280,16 @@ proc vunit_run {} {
         """
         Run a test bench
         """
-        common_file_name = join(output_path, "common.do")
-        gui_file_name = join(output_path, "gui.do")
-        batch_file_name = join(output_path, "batch.do")
+        script_path = join(output_path, self.name)
+
+        common_file_name = join(script_path, "common.do")
+        gui_file_name = join(script_path, "gui.do")
+        batch_file_name = join(script_path, "batch.do")
 
         write_file(common_file_name,
                    self._create_common_script(test_suite_name,
                                               config,
+                                              script_path,
                                               output_path))
         write_file(gui_file_name,
                    self._create_gui_script(common_file_name, config))

@@ -263,12 +263,12 @@ proc vunit_run {} {
 }
 """
 
-    def _create_common_script(self, config, output_path):
+    def _create_common_script(self, config, script_path):
         """
         Create tcl script with functions common to interactive and batch modes
         """
         tcl = ""
-        tcl += get_is_test_suite_done_tcl(get_result_file_name(join(output_path, "..")))
+        tcl += get_is_test_suite_done_tcl(get_result_file_name(script_path))
         tcl += self._create_load_function(config)
         tcl += self._create_run_function()
         return tcl
@@ -335,19 +335,20 @@ proc vunit_run {} {
         """
         Run a test bench
         """
-        common_file_name = join(output_path, "common.tcl")
-        batch_file_name = join(output_path, "batch.tcl")
-        gui_file_name = join(output_path, "gui.tcl")
+        script_path = join(output_path, self.name)
+        common_file_name = join(script_path, "common.tcl")
+        batch_file_name = join(script_path, "batch.tcl")
+        gui_file_name = join(script_path, "gui.tcl")
 
         write_file(common_file_name,
-                   self._create_common_script(config, output_path))
+                   self._create_common_script(config, script_path))
         write_file(gui_file_name,
                    self._create_gui_script(common_file_name, config))
         write_file(batch_file_name,
                    self._create_batch_script(common_file_name, elaborate_only))
 
         if self._gui:
-            gui_path = join(output_path, "gui")
+            gui_path = join(script_path, "gui")
             renew_path(gui_path)
             return self._run_batch_file(gui_file_name, gui=True,
                                         cwd=gui_path)

@@ -212,8 +212,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
             del libraries["others"]
         return libraries
 
-    def _create_load_function(self,  # pylint: disable=too-many-arguments
-                              test_suite_name, config, output_path):
+    def _create_load_function(self, test_suite_name, config, output_path):
         """
         Create the vunit_load TCL function that runs the vsim command and loads the design
         """
