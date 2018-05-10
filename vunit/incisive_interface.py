@@ -302,7 +302,7 @@ define work "{2}/libraries/work"
             args += config.sim_options.get('incisive.irun_sim_flags', [])
             args += ['-cdslib "%s"' % self._cdslib]
             args += self._hdlvar_args()
-            args += ['-log "%s/irun_%s.log"' % (script_path, step)]
+            args += ['-log "%s"' % join(script_path, "irun_%s.log" % step)]
             if not self._log_level == "debug":
                 args += ['-quiet']
             else:
