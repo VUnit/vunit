@@ -31,7 +31,7 @@ def create_release_notes():
     """
     Create monolithic release notes file from several input files
     """
-    source_path = join(dirname(__file__))
+    source_path = join(dirname(__file__), "..", "docs")
 
     releases = get_releases(source_path)
     latest_release = releases[0]
