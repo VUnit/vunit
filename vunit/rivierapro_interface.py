@@ -142,9 +142,9 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         Returns the command to compile a VHDL file
         """
-        return ([join(self._prefix, 'vcom'), '-quiet', '-j', dirname(self._sim_cfg_file_name)] +
-                source_file.compile_options.get("rivierapro.vcom_flags", []) +
-                ['-' + source_file.get_vhdl_standard(), '-work', source_file.library.name, source_file.name])
+        return ([join(self._prefix, 'vcom'), '-quiet', '-j', dirname(self._sim_cfg_file_name)]
+                + source_file.compile_options.get("rivierapro.vcom_flags", [])
+                + ['-' + source_file.get_vhdl_standard(), '-work', source_file.library.name, source_file.name])
 
     def compile_verilog_file_command(self, source_file):
         """

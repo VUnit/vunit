@@ -40,8 +40,8 @@ class DependencyGraph(object):
         Add a dependency edge between the start and end node such that
         end node depends on the start node
         """
-        new_dependency = (start not in self._forward or
-                          end not in self._forward[start])
+        new_dependency = (start not in self._forward
+                          or end not in self._forward[start])
 
         if start not in self._forward:
             self._forward[start] = set()

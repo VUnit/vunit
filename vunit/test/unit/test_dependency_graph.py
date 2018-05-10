@@ -152,6 +152,3 @@ class TestDependencyGraph(unittest.TestCase):
             graph.add_node(node)
         for dep in dependencies:
             graph.add_dependency(dep[0], dep[1])
-
-if __name__ == '__main__':
-    unittest.main()

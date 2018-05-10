@@ -105,9 +105,9 @@ class ActiveHDLInterface(SimulatorInterface):
         """
         Returns the command to compile a VHDL file
         """
-        return ([join(self._prefix, 'vcom'), '-quiet', '-j', dirname(self._library_cfg)] +
-                source_file.compile_options.get("activehdl.vcom_flags", []) +
-                ['-' + source_file.get_vhdl_standard(), '-work', source_file.library.name, source_file.name])
+        return ([join(self._prefix, 'vcom'), '-quiet', '-j', dirname(self._library_cfg)]
+                + source_file.compile_options.get("activehdl.vcom_flags", [])
+                + ['-' + source_file.get_vhdl_standard(), '-work', source_file.library.name, source_file.name])
 
     def compile_verilog_file_command(self, source_file):
         """

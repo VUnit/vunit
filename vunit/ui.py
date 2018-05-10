@@ -562,15 +562,15 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                 if source_file.library.name != library_name:
                     continue
 
-            if not (fnmatch(abspath(source_file.name), pattern) or
-                    fnmatch(ostools.simplify_path(source_file.name), pattern)):
+            if not (fnmatch(abspath(source_file.name), pattern)
+                    or fnmatch(ostools.simplify_path(source_file.name), pattern)):
                 continue
 
             results.append(SourceFile(source_file, self._project, self))
 
         check_not_empty(results, allow_empty,
-                        ("Pattern %r did not match any file" % pattern) +
-                        (("within library %s" % library_name) if library_name is not None else ""))
+                        ("Pattern %r did not match any file" % pattern)
+                        + (("within library %s" % library_name) if library_name is not None else ""))
 
         return SourceFileList(results)
 
@@ -1777,6 +1777,6 @@ def check_not_empty(lst, allow_empty, error_msg):
     Returns the list
     """
     if (not allow_empty) and (not lst):
-        raise ValueError(error_msg +
-                         ". Use allow_empty=True to avoid exception.")
+        raise ValueError(error_msg
+                         + ". Use allow_empty=True to avoid exception.")
     return lst

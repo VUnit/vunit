@@ -43,7 +43,7 @@ The test suite is divided into three parts:
    such as simulators.
 
 **vunit/test/lint/**
-   Style checks such as PEP8 and license header verification.
+   Style checks such as pycodestyle and license header verification.
 
 The test suites must pass with both Python 2.7 and Python 3.x as well
 as with all supported simulators.
@@ -66,7 +66,7 @@ following are also required for developers to run the test suite manually:
 `mock <https://pypi.python.org/pypi/mock>`__
    For Python 2.7 only, built into Python 3.x
 
-`pep8 <https://pypi.python.org/pypi/pep8>`__
+`pycodestyle <https://pypi.python.org/pypi/pycodestyle>`__
    Coding style check.
 
 `pylint <https://pypi.python.org/pypi/pylint>`__

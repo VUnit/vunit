@@ -73,6 +73,7 @@ def configure_tb_assert_stop_level(ui):
             test = tb.test("Report %s when VHDL assert stop level = %s" % (report_level, vhdl_assert_stop_level))
             test.set_sim_option("vhdl_assert_stop_level", vhdl_assert_stop_level)
 
+
 configure_tb_with_generic_config(ui)
 configure_tb_same_sim_all_pass(ui)
 configure_tb_set_generic(ui)

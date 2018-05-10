@@ -405,6 +405,7 @@ class TestScheduler(object):
         while not self.is_finished():
             time.sleep(0.05)
 
+
 LEGAL_CHARS = string.printable
 ILLEGAL_CHARS = ' <>"|:*%?\\/#&;()'
 

@@ -21,9 +21,11 @@ class TestPep8(unittest.TestCase):
     """
     @staticmethod
     def test_pep8():
-        check_call([sys.executable, "-m", "pep8",
+        check_call([sys.executable, "-m", "pycodestyle",
                     "--show-source",
                     "--show-pep8",
                     "--max-line-length=120",
-                    "--ignore=E402",
+                    # W503 mutually exclusive with W504
+                    # E722 bare except checked by pylint
+                    "--ignore=E402,W503,E722",
                     join(ROOT, "vunit")])

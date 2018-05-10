@@ -23,8 +23,8 @@ RE_LICENSE_NOTICE = re.compile(
     r"(?P=comment_start) License, v\. 2\.0\. If a copy of the MPL was not distributed with this file," + "\n"
     r"(?P=comment_start) You can obtain one at http://mozilla\.org/MPL/2\.0/\." + "\n"
     r"(?P=comment_start)" + "\n"
-    r"(?P=comment_start) Copyright \(c\) (?P<first_year>20\d\d)(-(?P<last_year>20\d\d))?, " +
-    r"Lars Asplund lars\.anders\.asplund@gmail\.com")
+    r"(?P=comment_start) Copyright \(c\) (?P<first_year>20\d\d)(-(?P<last_year>20\d\d))?, "
+    + r"Lars Asplund lars\.anders\.asplund@gmail\.com")
 
 RE_LOG_DATE = re.compile(r'Date:\s*(?P<year>20\d\d)-\d\d-\d\d')
 

@@ -122,8 +122,8 @@ class SimulatorInterface(object):
                      for name in executables]
 
         for path0 in all_paths[0]:
-            if all([path0 in paths for paths in all_paths] +
-                   [constraint(path0) for constraint in constraints]):
+            if all([path0 in paths for paths in all_paths]
+                   + [constraint(path0) for constraint in constraints]):
                 return path0
         return None
 

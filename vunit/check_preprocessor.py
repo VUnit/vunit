@@ -37,9 +37,9 @@ class CheckPreprocessor(object):
             relation, offset_to_point_before_closing_paranthesis = self._extract_relation(code, match)
             if relation:
                 context_msg_parameter = ', context_msg => %s' % relation.make_context_msg()
-                code = (code[:match.end('parameters') + offset_to_point_before_closing_paranthesis] +
-                        context_msg_parameter +
-                        code[match.end('parameters') + offset_to_point_before_closing_paranthesis:])
+                code = (code[:match.end('parameters') + offset_to_point_before_closing_paranthesis]
+                        + context_msg_parameter
+                        + code[match.end('parameters') + offset_to_point_before_closing_paranthesis:])
 
         return code
 

@@ -142,8 +142,8 @@ end architecture;
         accepted_extensions = VHDL_EXTENSIONS + VERILOG_EXTENSIONS
         allowable_extensions = [ext for ext in accepted_extensions]
         allowable_extensions.extend([ext.upper() for ext in accepted_extensions])
-        allowable_extensions.append(VHDL_EXTENSIONS[0][0] + VHDL_EXTENSIONS[0][1].upper() +
-                                    VHDL_EXTENSIONS[0][2:])  # mixed case
+        allowable_extensions.append(VHDL_EXTENSIONS[0][0] + VHDL_EXTENSIONS[0][1].upper()
+                                    + VHDL_EXTENSIONS[0][2:])  # mixed case
         for idx, ext in enumerate(allowable_extensions):
             file_name = self.create_entity_file(idx, ext)
             ui.add_source_files(file_name, 'lib')
