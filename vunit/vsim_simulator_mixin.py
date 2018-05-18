@@ -62,7 +62,13 @@ class VsimSimulatorMixin(object):
             sys.executable,
             "-u",
             sys.argv[0],
-            "--compile"] + sys.argv[1:]
+            "--compile"]
+
+        # Strip --clean from re-compile command
+        # Leave other arguments intact since users can add custom CLI options
+        recompile_command += [arg for arg in sys.argv[1:]
+                              if arg != "--clean"]
+
         recompile_command_visual = " ".join(recompile_command)
 
         # stderr is intentionally re-directed to stdout so that the tcl's catch
