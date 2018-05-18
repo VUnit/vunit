@@ -815,8 +815,16 @@ class VHDLSourceFile(SourceFile):
         check_vhdl_standard(vhdl_standard)
 
         if not no_parse:
-            design_file = vhdl_parser.parse(self.name)
-            self._add_design_file(design_file)
+
+            try:
+                design_file = vhdl_parser.parse(self.name)
+            except KeyboardInterrupt:
+                raise
+            except:  # pylint: disable=bare-except
+                traceback.print_exc()
+                LOGGER.error("Failed to parse %s", self.name)
+            else:
+                self._add_design_file(design_file)
 
         self._content_hash = file_content_hash(self.name,
                                                encoding=HDL_FILE_ENCODING,
@@ -832,15 +840,9 @@ class VHDLSourceFile(SourceFile):
         """
         Parse VHDL code and adding dependencies and design units
         """
-        try:
-            self.design_units = self._find_design_units(design_file)
-            self.dependencies = self._find_dependencies(design_file)
-            self.depending_components = design_file.component_instantiations
-        except KeyboardInterrupt:
-            raise
-        except:  # pylint: disable=bare-except
-            traceback.print_exc()
-            LOGGER.error("Failed to parse %s", self.name)
+        self.design_units = self._find_design_units(design_file)
+        self.dependencies = self._find_dependencies(design_file)
+        self.depending_components = design_file.component_instantiations
 
         for design_unit in self.design_units:
             if design_unit.is_primary:

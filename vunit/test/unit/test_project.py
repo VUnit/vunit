@@ -110,6 +110,17 @@ end package body;
         self.assert_has_package("file1.vhd", "foo")
         self.assert_has_package_body("file1.vhd", "foo")
 
+    @mock.patch("vunit.project.LOGGER")
+    def test_recovers_from_parse_error(self, logger):
+        self.project.add_library("lib", "work_path")
+        source_file = self.add_source_file("lib", "file.vhd", """\
+entity foo is
+ port (;);
+end entity;
+""")
+        logger.error.assert_called_once_with("Failed to parse %s", "file.vhd")
+        self.assertEqual(source_file.design_units, [])
+
     def test_finds_entity_instantiation_dependencies(self):
         file1, file2, file3 = self.create_dummy_three_file_project()
 
