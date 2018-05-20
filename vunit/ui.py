@@ -447,6 +447,26 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         for test_bench in check_not_empty(test_benches, allow_empty, "No test benches found"):
             test_bench.set_generic(name.lower(), value)
 
+    def set_json_generic(self, name, value, allow_empty=False):
+        """
+        Set a value of stringified JSON generic in all |configurations|
+
+        :param name: The name of the generic
+        :param value: The value of the object to be stringified
+        :param allow_empty: To disable an error when no test benches were found
+
+        :example:
+
+        .. code-block:: python
+
+           prj.set_generic("tb_cfg", json.loads(open(join(root, "cfg.json"), 'r').read()))
+
+        .. note::
+           Only affects test benches added *before* the generic is set.
+        """
+        import json
+        self.set_generic(name, json.dumps(value, separators=(',', ':')), allow_empty)
+
     def set_parameter(self, name, value, allow_empty=False):
         """
         Set value of parameter in all |configurations|
@@ -932,6 +952,12 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         Add osvvm library
         """
         self._builtins.add("osvvm")
+
+    def add_json4vhdl(self):
+        """
+        Add JSON-for-VHDL library
+        """
+        self._builtins.add("json4vhdl")
 
     def get_compile_order(self, source_files=None):
         """

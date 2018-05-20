@@ -106,6 +106,8 @@ def find_licensed_files():
     Return all licensed files
     """
     licensed_files = []
+    osvvm_directory = abspath(join(VHDL_PATH, 'osvvm'))
+    json4vhdl_directory = abspath(join(VHDL_PATH, 'JSON-for-VHDL'))
     for root, _, files in walk(ROOT):
         for file_name in files:
             if 'preprocessed' in root:
@@ -116,8 +118,9 @@ def find_licensed_files():
                 continue
             if join(ROOT, ".tox") in root:
                 continue
-            osvvm_directory = abspath(join(VHDL_PATH, 'osvvm'))
             if is_prefix_of(osvvm_directory, abspath(join(root, file_name))):
+                continue
+            if is_prefix_of(json4vhdl_directory, abspath(join(root, file_name))):
                 continue
             if splitext(file_name)[1] in ('.vhd', '.vhdl', '.py', '.v', '.sv'):
                 licensed_files.append(join(root, file_name))

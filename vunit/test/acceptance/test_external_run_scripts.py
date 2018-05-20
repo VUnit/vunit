@@ -102,6 +102,9 @@ class TestExternalRunScripts(unittest.TestCase):
                      [("passed", "tb_lib.tb_composite_generics.VGA.Test 1"),
                       ("passed", "tb_lib.tb_composite_generics.tiny.Test 1")])
 
+    def test_vhdl_json4vhdl_example_project(self):
+        self.check(join(ROOT, "examples", "vhdl", "json4vhdl", "run.py"))
+
     def test_vhdl_array_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "array", "run.py"))
 
