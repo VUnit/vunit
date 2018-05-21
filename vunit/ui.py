@@ -215,6 +215,7 @@ from __future__ import print_function
 import sys
 import traceback
 import logging
+import json
 import os
 from os.path import exists, abspath, join, basename, splitext
 from glob import glob
@@ -244,6 +245,36 @@ from vunit.builtins import (Builtins,
 from vunit.com import codec_generator
 
 LOGGER = logging.getLogger(__name__)
+
+
+def encode_json(obj):
+    """
+    Convert object to stringified JSON
+
+    :param obj: Object to stringify
+
+    :example:
+
+    .. code-block:: python
+
+       prj.encode_json(generics)
+    """
+    return json.dumps(obj, separators=(',', ':'))
+
+
+def read_json(filename):
+    """
+    Read a JSON file and return an object
+
+    :param filename: The name of the file to read
+
+    :example:
+
+    .. code-block:: python
+
+       generics = prj.read_json(join(root, "src/test/data/data.json"))
+    """
+    return json.loads(open(filename, 'r').read())
 
 
 class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-public-methods
@@ -446,26 +477,6 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         test_benches = self._test_bench_list.get_test_benches()
         for test_bench in check_not_empty(test_benches, allow_empty, "No test benches found"):
             test_bench.set_generic(name.lower(), value)
-
-    def set_json_generic(self, name, value, allow_empty=False):
-        """
-        Set a value of stringified JSON generic in all |configurations|
-
-        :param name: The name of the generic
-        :param value: The value of the object to be stringified
-        :param allow_empty: To disable an error when no test benches were found
-
-        :example:
-
-        .. code-block:: python
-
-           prj.set_generic("tb_cfg", json.loads(open(join(root, "cfg.json"), 'r').read()))
-
-        .. note::
-           Only affects test benches added *before* the generic is set.
-        """
-        import json
-        self.set_generic(name, json.dumps(value, separators=(',', ':')), allow_empty)
 
     def set_parameter(self, name, value, allow_empty=False):
         """

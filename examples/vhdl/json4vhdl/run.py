@@ -5,7 +5,7 @@
 # Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 from os.path import join, dirname
-from vunit import VUnit
+from vunit import VUnit, read_json, encode_json
 
 root = dirname(__file__)
 
@@ -16,8 +16,7 @@ vu.add_json4vhdl()
 lib = vu.add_library("test")
 lib.add_source_files(join(root, "src/test/*.vhd"))
 
-import json
-generics = json.loads(open(join(root, "src/test/data/data.json"), 'r').read())
-vu.set_json_generic("tb_cfg", generics )
+generics = read_json(join(root, "src/test/data/data.json"))
+vu.set_generic("tb_cfg", encode_json(generics))
 
 vu.main()
