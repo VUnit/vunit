@@ -58,7 +58,7 @@ Example
                write_data(self.input_data, join(output_path, "input.csv"))
                return True
 
-           def post_check(output_path):
+           def post_check(self, output_path):
                expected = compute_expected(self.input_data)
                got = read_data(join(output_path, "output.csv"))
                return check_equal(got, expected)
