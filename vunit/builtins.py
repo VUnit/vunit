@@ -160,6 +160,7 @@ in your VUnit Git repository? You have to do this first if installing using setu
             library = self._vunit_obj.add_library(library_name)
 
         library.add_source_files(join(VHDL_PATH, "JSON-for-VHDL", "vhdl", "*.vhdl"))
+        library.add_source_files(join(VHDL_PATH, "json4vhdl", "*.vhd"))
 
     def add_verilog_builtins(self):
         """

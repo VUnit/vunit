@@ -5,11 +5,7 @@
 -- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 library vunit_lib;
 context vunit_lib.vunit_context;
-
-library vunit_lib;
-use vunit_lib.json.T_JSON;
-use vunit_lib.json.jsonLoad;
-use vunit_lib.json.jsonGetString;
+context vunit_lib.json4vhdl_context;
 
 entity tb_json_gens is
   generic (
