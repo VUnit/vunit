@@ -24,12 +24,14 @@ architecture tb of tb_json_gens is
   type tb_img_t is record
     image_width     : positive;
     image_height    : positive;
+    dump_debug_data : boolean;
   end record tb_img_t;
 
   impure function decode(Content : T_JSON) return tb_img_t is
   begin
     return (image_width => positive'value( jsonGetString(Content, "Image/0") ),
-            image_height => positive'value( jsonGetString(Content, "Image/1") ));
+            image_height => positive'value( jsonGetString(Content, "Image/1") ),
+            dump_debug_data => jsonGetBoolean(Content, "dump_debug_data") );
   end function decode;
 
   constant tb_img : tb_img_t := decode(JSONContent);

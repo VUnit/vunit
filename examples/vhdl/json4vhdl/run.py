@@ -16,7 +16,8 @@ vu.add_json4vhdl()
 lib = vu.add_library("test")
 lib.add_source_files(join(root, "src/test/*.vhd"))
 
-generics = read_json(join(root, "src/test/data/data.json"))
-vu.set_generic("tb_cfg", encode_json(generics))
+tb_cfg = read_json(join(root, "src/test/data/data.json"))
+tb_cfg["dump_debug_data"]=False
+vu.set_generic("tb_cfg", encode_json(tb_cfg))
 
 vu.main()
