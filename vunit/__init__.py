@@ -13,7 +13,7 @@ import vunit.version_check
 from vunit.ui import VUnit
 from vunit.vunit_cli import VUnitCLI
 from vunit.about import version, doc
-from vunit.ui import read_json, encode_json
+from vunit.json4vhdl import read_json, encode_json, add_array_lens
 
 # Repository root
 ROOT = abspath(join(dirname(__file__), ".."))

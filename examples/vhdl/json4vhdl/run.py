@@ -5,7 +5,7 @@
 # Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 from os.path import join, dirname
-from vunit import VUnit, read_json, encode_json
+from vunit import VUnit, read_json, encode_json, add_array_lens
 
 root = dirname(__file__)
 
@@ -18,21 +18,6 @@ lib.add_source_files(join(root, "src/test/*.vhd"))
 
 tb_cfg = read_json(join(root, "src/test/data/data.json"))
 tb_cfg["dump_debug_data"]=False
-
-def rec(obj):
-    for k, v in obj.items():
-        if type(v) is list:
-            if type(v[0]) is int:
-                obj[k]=[len(v)]+v
-            else:
-                obj[k]=rec(v)
-    return obj
-
-tb_cfg=rec(tb_cfg)
-
-import json
-print(json.dumps(tb_cfg, indent=4, sort_keys=True))
-
-vu.set_generic("tb_cfg", encode_json(tb_cfg))
+vu.set_generic("tb_cfg", encode_json(add_array_lens(tb_cfg)))
 
 vu.main()

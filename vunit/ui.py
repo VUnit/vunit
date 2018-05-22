@@ -215,7 +215,6 @@ from __future__ import print_function
 import sys
 import traceback
 import logging
-import json
 import os
 from os.path import exists, abspath, join, basename, splitext
 from glob import glob
@@ -245,36 +244,6 @@ from vunit.builtins import (Builtins,
 from vunit.com import codec_generator
 
 LOGGER = logging.getLogger(__name__)
-
-
-def encode_json(obj):
-    """
-    Convert object to stringified JSON
-
-    :param obj: Object to stringify
-
-    :example:
-
-    .. code-block:: python
-
-       prj.encode_json(generics)
-    """
-    return json.dumps(obj, separators=(',', ':'))
-
-
-def read_json(filename):
-    """
-    Read a JSON file and return an object
-
-    :param filename: The name of the file to read
-
-    :example:
-
-    .. code-block:: python
-
-       generics = prj.read_json(join(root, "src/test/data/data.json"))
-    """
-    return json.loads(open(filename, 'r').read())
 
 
 class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-public-methods
