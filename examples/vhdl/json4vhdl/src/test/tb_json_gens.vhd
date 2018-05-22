@@ -6,7 +6,7 @@
 library vunit_lib;
 context vunit_lib.vunit_context;
 library JSON;
-context JSON.json_context;
+context JSON.json_ctx;
 
 entity tb_json_gens is
   generic (
@@ -26,21 +26,24 @@ architecture tb of tb_json_gens is
   constant JSONFileContent : T_JSON := jsonLoad(tb_path & tb_cfg_file);
 
   -- record to be filled by function decode
-  type tb_img_t is record
+  type img_t is record
     image_width     : positive;
     image_height    : positive;
     dump_debug_data : boolean;
-  end record tb_img_t;
+  end record img_t;
 
-  -- function to fill tb_img_t with content extracted from a JSON input
-  impure function decode(Content : T_JSON) return tb_img_t is
+  -- function to fill img_t with content extracted from a JSON input
+  impure function decode(Content : T_JSON) return img_t is
   begin
     return (image_width => positive'value( jsonGetString(Content, "Image/0") ),
             image_height => positive'value( jsonGetString(Content, "Image/1") ),
             dump_debug_data => jsonGetBoolean(Content, "dump_debug_data") );
   end function decode;
 
-  constant tb_img : tb_img_t := decode(JSONContent);
+  constant img : img_t := decode(JSONContent);
+
+  -- get array of integers from JSON content
+  constant img_arr : integer_vector := jsonGetIntegerArray(JSONContent, "Image");
 
 begin
   main: process
@@ -56,7 +59,12 @@ begin
         info("JSONFileContent: " & lf & JSONFileContent.Content);
 
         -- Image dimensions in a record, filled by function decode with data from the stringified generic
-        info("Image: " & integer'image(tb_img.image_width) & ',' & integer'image(tb_img.image_height));
+        info("Image: " & integer'image(img.image_width) & ',' & integer'image(img.image_height));
+
+        -- Integer array, extracted by function decode_array with data from the stringified generic
+        for i in 0 to img_arr'length-1 loop
+          info("Image array [" & integer'image(i) & "]: " & integer'image(img_arr(i)));
+        end loop;
 
         -- Image dimensions as strings, get from the content from the JSON file
         info("Image: " & jsonGetString(JSONFileContent, "Image/0") & ',' & jsonGetString(JSONFileContent, "Image/1"));
