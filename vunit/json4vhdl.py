@@ -39,24 +39,3 @@ def read_json(filename):
        generics = read_json(join(root, "src/test/data/data.json"))
     """
     return json.loads(open(filename, 'r').read())
-
-
-def add_array_lens(obj):
-    """
-    Recursively walk an object and add the length of arrays of integers as the first element of the array
-
-    :param obj: Object to walk through
-
-    :example:
-
-    .. code-block:: python
-
-       generics = add_array_lens(tb_cfg)
-    """
-    for key, val in obj.items():
-        if isinstance(val, list):
-            obj[key] = [len(val)] + val if isinstance(val[0], int) else add_array_lens(val)
-    return obj
-
-
-# print(json.dumps(tb_cfg, indent=4, sort_keys=True))

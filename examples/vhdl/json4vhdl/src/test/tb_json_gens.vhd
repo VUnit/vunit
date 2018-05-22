@@ -5,7 +5,8 @@
 -- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 library vunit_lib;
 context vunit_lib.vunit_context;
-context vunit_lib.json4vhdl_context;
+library JSON;
+context JSON.json_context;
 
 entity tb_json_gens is
   generic (
@@ -34,15 +35,12 @@ architecture tb of tb_json_gens is
   -- function to fill tb_img_t with content extracted from a JSON input
   impure function decode(Content : T_JSON) return tb_img_t is
   begin
-    return (image_width => positive'value( jsonGetString(Content, "Image/1") ),
-            image_height => positive'value( jsonGetString(Content, "Image/2") ),
+    return (image_width => positive'value( jsonGetString(Content, "Image/0") ),
+            image_height => positive'value( jsonGetString(Content, "Image/1") ),
             dump_debug_data => jsonGetBoolean(Content, "dump_debug_data") );
   end function decode;
 
-  constant tb_img  : tb_img_t := decode(JSONContent);
-
-  -- get array of integers from JSON content. The first element in the array must be the length.
-  constant tb_imga : integer_vector := decode_array(JSONContent, "Image");
+  constant tb_img : tb_img_t := decode(JSONContent);
 
 begin
   main: process
@@ -59,11 +57,6 @@ begin
 
         -- Image dimensions in a record, filled by function decode with data from the stringified generic
         info("Image: " & integer'image(tb_img.image_width) & ',' & integer'image(tb_img.image_height));
-
-        -- Integer array, extracted by function decode_array with data from the stringified generic
-        for i in 0 to tb_imga'length-1 loop
-          info("Image array [" & integer'image(i) & "]: " & integer'image(tb_imga(i)));
-        end loop;
 
         -- Image dimensions as strings, get from the content from the JSON file
         info("Image: " & jsonGetString(JSONFileContent, "Image/0") & ',' & jsonGetString(JSONFileContent, "Image/1"));
