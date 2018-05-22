@@ -18,23 +18,31 @@ end entity;
 
 architecture tb of tb_json_gens is
 
+  -- tb_cfg contains stringified content
   constant JSONContent     : T_JSON := jsonLoad(tb_cfg);
+
+  -- tb_cfg is the path of a JSON file
   constant JSONFileContent : T_JSON := jsonLoad(tb_path & tb_cfg_file);
 
+  -- record to be filled by function decode
   type tb_img_t is record
     image_width     : positive;
     image_height    : positive;
     dump_debug_data : boolean;
   end record tb_img_t;
 
+  -- function to fill tb_img_t with content extracted from a JSON input
   impure function decode(Content : T_JSON) return tb_img_t is
   begin
-    return (image_width => positive'value( jsonGetString(Content, "Image/0") ),
-            image_height => positive'value( jsonGetString(Content, "Image/1") ),
+    return (image_width => positive'value( jsonGetString(Content, "Image/1") ),
+            image_height => positive'value( jsonGetString(Content, "Image/2") ),
             dump_debug_data => jsonGetBoolean(Content, "dump_debug_data") );
   end function decode;
 
-  constant tb_img : tb_img_t := decode(JSONContent);
+  constant tb_img  : tb_img_t := decode(JSONContent);
+
+  -- get array of integers from JSON content. The first element in the array must be the length.
+  constant tb_imga : integer_vector := decode_array(JSONContent, "Image");
 
 begin
   main: process
@@ -42,14 +50,25 @@ begin
     test_runner_setup(runner, runner_cfg);
     while test_suite loop
       if run("test") then
+        -- Content extracted from the stringified generic
         info("JSONContent: " & lf & JSONContent.Content);
 
+        -- Full path of the JSON file, and extracted content
         info("tb_path & tb_cfg_file: " & tb_path & tb_cfg_file);
         info("JSONFileContent: " & lf & JSONFileContent.Content);
 
+        -- Image dimensions in a record, filled by function decode with data from the stringified generic
         info("Image: " & integer'image(tb_img.image_width) & ',' & integer'image(tb_img.image_height));
+
+        -- Integer array, extracted by function decode_array with data from the stringified generic
+        for i in 0 to tb_imga'length-1 loop
+          info("Image array [" & integer'image(i) & "]: " & integer'image(tb_imga(i)));
+        end loop;
+
+        -- Image dimensions as strings, get from the content from the JSON file
         info("Image: " & jsonGetString(JSONFileContent, "Image/0") & ',' & jsonGetString(JSONFileContent, "Image/1"));
 
+        -- Some other content, deep in the JSON sources
         info("Platform/ML505/FPGA: " & jsonGetString(JSONContent, "Platform/ML505/FPGA"));
         info("Platform/ML505/FPGA: " & jsonGetString(JSONFileContent, "Platform/ML505/FPGA"));
 
