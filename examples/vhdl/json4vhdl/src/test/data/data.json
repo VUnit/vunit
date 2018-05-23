@@ -1,0 +1,19 @@
+{
+	"Image": [640, 480],
+	"Platform": {
+		"ML505": {
+			"FPGA": "XC5VLX50T-1FF1136"
+		},
+		"KC705": {
+			"FPGA": "XC7K325T-2FFG900C",
+			"IIC": [{
+				"Type": "Switch",
+				"Adr": "0x85",
+				"Devices": [{
+					"Name": "Si570",
+					"Address": "0x3A"
+				}]
+			}]
+		}
+	}
+}

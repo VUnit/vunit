@@ -933,6 +933,12 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         self._builtins.add("osvvm")
 
+    def add_json4vhdl(self):
+        """
+        Add JSON-for-VHDL library
+        """
+        self._builtins.add("json4vhdl")
+
     def get_compile_order(self, source_files=None):
         """
         Get the compile order of all or specific source files and

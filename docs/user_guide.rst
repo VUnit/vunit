@@ -233,3 +233,11 @@ There are many examples demonstrating more specific usage of VUnit listed below:
   Demonstrates the ``com`` message passing package which can be used
   to communicate arbitrary objects between processes.  Further reading
   can be found in the :ref:`com user guide <com_user_guide>`
+
+:vunit_example:`Composite generics <vhdl/composite_generics>`
+  See `Enable Your Simulator to Handle Complex Top-Level Generics <https://vunit.github.io/posts/2017_06_03_enable_your_simulator_to_handle_complex_top_level_generics/post.html>`_
+
+:vunit_example:`JSON-for-VHDL example <vhdl/json4vhdl>`
+  Demonstrates the ``JSON-for-VHDL`` library which can be used to parse JSON content.
+  The content can be read from a file, or passed as a stringified generic.
+  This is an alternative to composite generics, that supports any depth in the content structure.
