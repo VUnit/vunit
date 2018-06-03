@@ -10,6 +10,7 @@ use ieee.std_logic_1164.all;
 use work.logger_pkg.all;
 use work.stream_master_pkg.all;
 use work.stream_slave_pkg.all;
+use work.sync_pkg.all;
 context work.com_context;
 context work.data_types_context;
 
@@ -36,6 +37,7 @@ package axi_stream_pkg is
   impure function data_length(master : axi_stream_slave_t) return natural;
   impure function as_stream(master : axi_stream_master_t) return stream_master_t;
   impure function as_stream(slave : axi_stream_slave_t) return stream_slave_t;
+  impure function as_sync(master : axi_stream_master_t) return sync_handle_t;
 
   constant push_axi_stream_msg : msg_type_t := new_msg_type("push axi stream");
 
@@ -82,6 +84,11 @@ package body axi_stream_pkg is
   impure function as_stream(slave : axi_stream_slave_t) return stream_slave_t is
   begin
     return (p_actor => slave.p_actor);
+  end;
+
+  impure function as_sync(master : axi_stream_master_t) return sync_handle_t is
+  begin
+    return master.p_actor;
   end;
 
   procedure push_axi_stream(signal net : inout network_t;
