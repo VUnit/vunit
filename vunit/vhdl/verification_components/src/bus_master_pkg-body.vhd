@@ -234,6 +234,11 @@ package body bus_master_pkg is
     wait_until_read_equals(net, bus_handle, addr, data, timeout, msg);
   end;
 
+  impure function as_sync(bus_master : bus_master_t) return sync_handle_t is
+  begin
+    return bus_master.p_actor;
+  end;
+
   procedure wait_until_idle(signal net : inout network_t;
                             bus_handle : bus_master_t) is
   begin
