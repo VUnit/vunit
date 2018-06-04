@@ -1,0 +1,2 @@
+- Added the ability to specify actor for AXI stream masters and slaves
+- Added as_sync function to bus masters and AXI stream masters
