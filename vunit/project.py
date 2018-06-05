@@ -120,31 +120,35 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         LOGGER.debug('Adding source file %s to library %s', file_name, library_name)
         library = self._libraries[library_name]
 
-        if file_type == "vhdl":
-            assert include_dirs is None
-            source_file = VHDLSourceFile(
-                file_name,
-                library,
-                vhdl_parser=self._vhdl_parser,
-                database=self._database,
-                vhdl_standard=library.vhdl_standard if vhdl_standard is None else vhdl_standard,
-                no_parse=no_parse)
-            library.add_vhdl_design_units(source_file.design_units)
-        elif file_type in VERILOG_FILE_TYPES:
-            source_file = VerilogSourceFile(file_type,
-                                            file_name,
-                                            library,
-                                            verilog_parser=self._verilog_parser,
-                                            database=self._database,
-                                            include_dirs=include_dirs,
-                                            defines=defines,
-                                            no_parse=no_parse)
-            library.add_verilog_design_units(source_file.design_units)
-        else:
-            raise ValueError(file_type)
+        try:
+            source_file = library.get_source_file(file_name)
+        except KeyError:
+            if file_type == "vhdl":
+                assert include_dirs is None
+                source_file = VHDLSourceFile(
+                    file_name,
+                    library,
+                    vhdl_parser=self._vhdl_parser,
+                    database=self._database,
+                    vhdl_standard=library.vhdl_standard if vhdl_standard is None else vhdl_standard,
+                    no_parse=no_parse)
+                library.add_vhdl_design_units(source_file.design_units)
+            elif file_type in VERILOG_FILE_TYPES:
+                source_file = VerilogSourceFile(file_type,
+                                                file_name,
+                                                library,
+                                                verilog_parser=self._verilog_parser,
+                                                database=self._database,
+                                                include_dirs=include_dirs,
+                                                defines=defines,
+                                                no_parse=no_parse)
+                library.add_verilog_design_units(source_file.design_units)
+            else:
+                raise ValueError(file_type)
 
-        library.add_source_file(source_file)
-        self._source_files_in_order.append(source_file)
+            library.add_source_file(source_file)
+            self._source_files_in_order.append(source_file)
+
         return source_file
 
     def add_manual_dependency(self, source_file, depends_on):
