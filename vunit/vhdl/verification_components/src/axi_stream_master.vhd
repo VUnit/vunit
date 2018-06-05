@@ -20,7 +20,7 @@ entity axi_stream_master is
   port (
     aclk : in std_logic;
     tvalid : out std_logic := '0';
-    tready : in std_logic;
+    tready : in std_logic := '1';
     tdata : out std_logic_vector(data_length(master)-1 downto 0) := (others => '0');
     tlast : out std_logic := '0');
 end entity;

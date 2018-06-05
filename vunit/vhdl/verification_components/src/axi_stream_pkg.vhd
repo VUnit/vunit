@@ -17,63 +17,103 @@ context work.data_types_context;
 package axi_stream_pkg is
 
   type axi_stream_master_t is record
-    p_actor : actor_t;
+    p_actor       : actor_t;
     p_data_length : natural;
-    p_logger : logger_t;
+    p_logger      : logger_t;
   end record;
 
   type axi_stream_slave_t is record
-    p_actor : actor_t;
+    p_actor       : actor_t;
     p_data_length : natural;
-    p_logger : logger_t;
+    p_logger      : logger_t;
+  end record;
+
+  type axi_stream_monitor_t is record
+    p_actor       : actor_t;
+    p_data_length : natural;
+    p_logger      : logger_t;
   end record;
 
   constant axi_stream_logger : logger_t := get_logger("vunit_lib:axi_stream_pkg");
   impure function new_axi_stream_master(data_length : natural;
-                                        logger : logger_t := axi_stream_logger;
-                                        actor : actor_t := null_actor) return axi_stream_master_t;
+                                        logger      : logger_t := axi_stream_logger;
+                                        actor       : actor_t  := null_actor) return axi_stream_master_t;
   impure function new_axi_stream_slave(data_length : natural;
-                                       logger : logger_t := axi_stream_logger;
-                                       actor : actor_t := null_actor) return axi_stream_slave_t;
+                                       logger      : logger_t := axi_stream_logger;
+                                       actor       : actor_t  := null_actor) return axi_stream_slave_t;
+  impure function new_axi_stream_monitor(data_length : natural;
+                                         logger      : logger_t := axi_stream_logger;
+                                         actor       : actor_t) return axi_stream_monitor_t;
   impure function data_length(master : axi_stream_master_t) return natural;
-  impure function data_length(master : axi_stream_slave_t) return natural;
+  impure function data_length(slave : axi_stream_slave_t) return natural;
+  impure function data_length(monitor : axi_stream_monitor_t) return natural;
   impure function as_stream(master : axi_stream_master_t) return stream_master_t;
   impure function as_stream(slave : axi_stream_slave_t) return stream_slave_t;
   impure function as_sync(master : axi_stream_master_t) return sync_handle_t;
 
-  constant push_axi_stream_msg : msg_type_t := new_msg_type("push axi stream");
+  constant push_axi_stream_msg        : msg_type_t := new_msg_type("push axi stream");
+  constant axi_stream_transaction_msg : msg_type_t := new_msg_type("axi stream transaction");
 
   procedure push_axi_stream(signal net : inout network_t;
                             axi_stream : axi_stream_master_t;
-                            tdata : std_logic_vector;
-                            tlast : std_logic := '1');
+                            tdata      : std_logic_vector;
+                            tlast      : std_logic := '1');
+
+  type axi_stream_transaction_t is record
+    tdata : std_logic_vector;
+    tlast : boolean;
+  end record;
+
+  procedure push_axi_stream_transaction(msg : msg_t; axi_stream_transaction : axi_stream_transaction_t);
+  procedure pop_axi_stream_transaction(
+    constant msg : in msg_t;
+    variable axi_stream_transaction : out axi_stream_transaction_t
+  );
+
+  impure function new_axi_stream_transaction_msg(
+    axi_stream_transaction : axi_stream_transaction_t
+  ) return msg_t;
+
+  procedure handle_axi_stream_transaction(
+    variable msg_type        : inout msg_type_t;
+    variable msg             : inout msg_t;
+    variable axi_transaction : out axi_stream_transaction_t);
 
 end package;
 
 package body axi_stream_pkg is
 
   impure function new_axi_stream_master(data_length : natural;
-                                        logger : logger_t := axi_stream_logger;
-                                        actor : actor_t := null_actor) return axi_stream_master_t is
+                                        logger      : logger_t := axi_stream_logger;
+                                        actor       : actor_t := null_actor) return axi_stream_master_t is
     variable p_actor : actor_t;
   begin
     p_actor := actor when actor /= null_actor else new_actor;
 
-    return (p_actor => p_actor,
+    return (p_actor       => p_actor,
             p_data_length => data_length,
-            p_logger => logger);
+            p_logger      => logger);
   end;
 
   impure function new_axi_stream_slave(data_length : natural;
-                                       logger : logger_t := axi_stream_logger;
-                                       actor : actor_t := null_actor) return axi_stream_slave_t is
+                                       logger      : logger_t := axi_stream_logger;
+                                       actor       : actor_t := null_actor) return axi_stream_slave_t is
     variable p_actor : actor_t;
   begin
     p_actor := actor when actor /= null_actor else new_actor;
 
-    return (p_actor => p_actor,
+    return (p_actor       => p_actor,
             p_data_length => data_length,
-            p_logger => logger);
+            p_logger      => logger);
+  end;
+
+  impure function new_axi_stream_monitor(data_length : natural;
+                                         logger      : logger_t := axi_stream_logger;
+                                         actor       : actor_t) return axi_stream_monitor_t is
+  begin
+    return (p_actor       => actor,
+            p_data_length => data_length,
+            p_logger      => logger);
   end;
 
   impure function data_length(master : axi_stream_master_t) return natural is
@@ -81,9 +121,14 @@ package body axi_stream_pkg is
     return master.p_data_length;
   end;
 
-  impure function data_length(master : axi_stream_slave_t) return natural is
+  impure function data_length(slave : axi_stream_slave_t) return natural is
   begin
-    return master.p_data_length;
+    return slave.p_data_length;
+  end;
+
+  impure function data_length(monitor : axi_stream_monitor_t) return natural is
+  begin
+    return monitor.p_data_length;
   end;
 
   impure function as_stream(master : axi_stream_master_t) return stream_master_t is
@@ -103,14 +148,52 @@ package body axi_stream_pkg is
 
   procedure push_axi_stream(signal net : inout network_t;
                             axi_stream : axi_stream_master_t;
-                            tdata : std_logic_vector;
-                            tlast : std_logic := '1') is
-    variable msg : msg_t := new_msg(push_axi_stream_msg);
-    constant normalized_data : std_logic_vector(tdata'length-1 downto 0) := tdata;
+                            tdata      : std_logic_vector;
+                            tlast      : std_logic := '1') is
+    variable msg             : msg_t                                       := new_msg(push_axi_stream_msg);
+    constant normalized_data : std_logic_vector(tdata'length - 1 downto 0) := tdata;
   begin
     push_std_ulogic_vector(msg, normalized_data);
     push_std_ulogic(msg, tlast);
     send(net, axi_stream.p_actor, msg);
+  end;
+
+  procedure push_axi_stream_transaction(msg : msg_t; axi_stream_transaction : axi_stream_transaction_t) is
+  begin
+    push_std_ulogic_vector(msg, axi_stream_transaction.tdata);
+    push_boolean(msg, axi_stream_transaction.tlast);
+  end;
+
+  procedure pop_axi_stream_transaction(
+    constant msg : in msg_t;
+    variable axi_stream_transaction : out axi_stream_transaction_t
+  ) is
+  begin
+    axi_stream_transaction.tdata := pop_std_ulogic_vector(msg);
+    axi_stream_transaction.tlast := pop_boolean(msg);
+  end;
+
+  impure function new_axi_stream_transaction_msg(
+    axi_stream_transaction : axi_stream_transaction_t
+  ) return msg_t is
+    variable msg : msg_t;
+  begin
+    msg := new_msg(axi_stream_transaction_msg);
+    push_axi_stream_transaction(msg, axi_stream_transaction);
+
+    return msg;
+  end;
+
+  procedure handle_axi_stream_transaction(
+    variable msg_type        : inout msg_type_t;
+    variable msg             : inout msg_t;
+    variable axi_transaction : out axi_stream_transaction_t) is
+  begin
+    if msg_type = axi_stream_transaction_msg then
+      handle_message(msg_type);
+
+      pop_axi_stream_transaction(msg, axi_transaction);
+    end if;
   end;
 
 end package body;

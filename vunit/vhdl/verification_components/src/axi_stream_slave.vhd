@@ -29,6 +29,7 @@ begin
   main : process
     variable reply_msg, msg : msg_t;
     variable msg_type : msg_type_t;
+    variable axi_stream_transaction : axi_stream_transaction_t(tdata(tdata'range));
   begin
     receive(net, slave.p_actor, msg);
     msg_type := message_type(msg);
@@ -38,13 +39,8 @@ begin
       wait until (tvalid and tready) = '1' and rising_edge(aclk);
       tready <= '0';
 
-      reply_msg := new_msg;
-      push_std_ulogic_vector(reply_msg, tdata);
-      if tlast = '0' then
-        push_boolean(reply_msg,false);
-      else
-        push_boolean(reply_msg,true);
-      end if;
+      axi_stream_transaction := (tdata, tlast = '1');
+      reply_msg := new_axi_stream_transaction_msg(axi_stream_transaction);
       reply(net, msg, reply_msg);
     else
       unexpected_msg_type(msg_type);
