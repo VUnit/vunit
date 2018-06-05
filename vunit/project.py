@@ -81,8 +81,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         is_external -- Library is assumed to a black-box
         """
         if allow_replacement is False:  # Do nothing if a library is re-added and replacement is disabled
-            lower_name = logical_name.lower()
-            if lower_name in self._lower_library_names_dict:
+            if logical_name in self._lower_library_names_dict:
                 return
 
         self._validate_library_name(logical_name)
