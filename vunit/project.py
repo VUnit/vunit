@@ -116,12 +116,17 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         if not ostools.file_exists(file_name):
             raise ValueError("File %r does not exist" % file_name)
 
-        LOGGER.debug('Adding source file %s to library %s', file_name, library_name)
         library = self._libraries[library_name]
 
         try:
             source_file = library.get_source_file(file_name)
+            current_hash = file_content_hash(file_name, encoding=HDL_FILE_ENCODING,database=self._database)
+            if current_hash != source_file.file_content_hash:
+                raise KeyError
         except KeyError:
+
+            LOGGER.debug('Adding source file %s to library %s', file_name, library_name)
+    
             if file_type == "vhdl":
                 assert include_dirs is None
                 source_file = VHDLSourceFile(
@@ -751,6 +756,10 @@ class SourceFile(object):
         Compute hash of contents and compile options
         """
         return hash_string(self._content_hash + self._compile_options_hash())
+
+    @property
+    def file_content_hash(self):
+        return self._content_hash
 
 
 class VerilogSourceFile(SourceFile):
