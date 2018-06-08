@@ -122,8 +122,8 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
             source_file = library.get_source_file(file_name)
             current_hash = file_content_hash(file_name, encoding=HDL_FILE_ENCODING, database=self._database)
             if current_hash != source_file.file_content_hash:
-                raise KeyError
-        except KeyError:
+                raise ValueError
+        except (KeyError, ValueError):
 
             LOGGER.debug('Adding source file %s to library %s', file_name, library_name)
     
