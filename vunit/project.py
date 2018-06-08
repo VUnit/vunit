@@ -80,29 +80,27 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         allow_replacement -- Allow replacing an existing library
         is_external -- Library is assumed to a black-box
         """
-        if allow_replacement is False:  # Do nothing if a library is re-added and replacement is disabled
-            if logical_name in self._lower_library_names_dict:
-                return
+        if allow_replacement or not self.has_library(logical_name):
+            # if ensures that nothing is done if a library is re-added and replacement is disabled
+            self._validate_library_name(logical_name)
 
-        self._validate_library_name(logical_name)
+            if is_external:
+                if not exists(directory):
+                    raise ValueError("External library %r does not exist" % directory)
 
-        if is_external:
-            if not exists(directory):
-                raise ValueError("External library %r does not exist" % directory)
+                if not isdir(directory):
+                    raise ValueError("External library must be a directory. Got %r" % directory)
 
-            if not isdir(directory):
-                raise ValueError("External library must be a directory. Got %r" % directory)
+            if logical_name not in self._libraries:
+                library = Library(logical_name, directory, vhdl_standard, is_external=is_external)
+                LOGGER.debug('Adding library %s with path %s', logical_name, directory)
+            else:
+                assert allow_replacement
+                library = Library(logical_name, directory, vhdl_standard, is_external=is_external)
+                LOGGER.debug('Replacing library %s with path %s', logical_name, directory)
 
-        if logical_name not in self._libraries:
-            library = Library(logical_name, directory, vhdl_standard, is_external=is_external)
-            LOGGER.debug('Adding library %s with path %s', logical_name, directory)
-        else:
-            assert allow_replacement
-            library = Library(logical_name, directory, vhdl_standard, is_external=is_external)
-            LOGGER.debug('Replacing library %s with path %s', logical_name, directory)
-
-        self._libraries[logical_name] = library
-        self._lower_library_names_dict[logical_name.lower()] = library.name
+            self._libraries[logical_name] = library
+            self._lower_library_names_dict[logical_name.lower()] = library.name
 
     def add_source_file(self,    # pylint: disable=too-many-arguments
                         file_name, library_name, file_type='vhdl', include_dirs=None, defines=None,
