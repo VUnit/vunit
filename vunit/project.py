@@ -80,25 +80,27 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         allow_replacement -- Allow replacing an existing library
         is_external -- Library is assumed to a black-box
         """
-        self._validate_library_name(logical_name)
+        if allow_replacement or not self.has_library(logical_name):
+            # if ensures that nothing is done if a library is re-added and replacement is disabled
+            self._validate_library_name(logical_name)
 
-        if is_external:
-            if not exists(directory):
-                raise ValueError("External library %r does not exist" % directory)
+            if is_external:
+                if not exists(directory):
+                    raise ValueError("External library %r does not exist" % directory)
 
-            if not isdir(directory):
-                raise ValueError("External library must be a directory. Got %r" % directory)
+                if not isdir(directory):
+                    raise ValueError("External library must be a directory. Got %r" % directory)
 
-        if logical_name not in self._libraries:
-            library = Library(logical_name, directory, vhdl_standard, is_external=is_external)
-            LOGGER.debug('Adding library %s with path %s', logical_name, directory)
-        else:
-            assert allow_replacement
-            library = Library(logical_name, directory, vhdl_standard, is_external=is_external)
-            LOGGER.debug('Replacing library %s with path %s', logical_name, directory)
+            if logical_name not in self._libraries:
+                library = Library(logical_name, directory, vhdl_standard, is_external=is_external)
+                LOGGER.debug('Adding library %s with path %s', logical_name, directory)
+            else:
+                assert allow_replacement
+                library = Library(logical_name, directory, vhdl_standard, is_external=is_external)
+                LOGGER.debug('Replacing library %s with path %s', logical_name, directory)
 
-        self._libraries[logical_name] = library
-        self._lower_library_names_dict[logical_name.lower()] = library.name
+            self._libraries[logical_name] = library
+            self._lower_library_names_dict[logical_name.lower()] = library.name
 
     def add_source_file(self,    # pylint: disable=too-many-arguments
                         file_name, library_name, file_type='vhdl', include_dirs=None, defines=None,
@@ -112,34 +114,43 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         if not ostools.file_exists(file_name):
             raise ValueError("File %r does not exist" % file_name)
 
-        LOGGER.debug('Adding source file %s to library %s', file_name, library_name)
         library = self._libraries[library_name]
 
-        if file_type == "vhdl":
-            assert include_dirs is None
-            source_file = VHDLSourceFile(
-                file_name,
-                library,
-                vhdl_parser=self._vhdl_parser,
-                database=self._database,
-                vhdl_standard=library.vhdl_standard if vhdl_standard is None else vhdl_standard,
-                no_parse=no_parse)
-            library.add_vhdl_design_units(source_file.design_units)
-        elif file_type in VERILOG_FILE_TYPES:
-            source_file = VerilogSourceFile(file_type,
-                                            file_name,
-                                            library,
-                                            verilog_parser=self._verilog_parser,
-                                            database=self._database,
-                                            include_dirs=include_dirs,
-                                            defines=defines,
-                                            no_parse=no_parse)
-            library.add_verilog_design_units(source_file.design_units)
-        else:
-            raise ValueError(file_type)
+        try:
+            source_file = library.get_source_file(file_name)
+            current_hash = file_content_hash(file_name, encoding=HDL_FILE_ENCODING, database=self._database)
+            if current_hash != source_file.file_content_hash:
+                raise ValueError
+        except (KeyError, ValueError):
 
-        library.add_source_file(source_file)
-        self._source_files_in_order.append(source_file)
+            LOGGER.debug('Adding source file %s to library %s', file_name, library_name)
+    
+            if file_type == "vhdl":
+                assert include_dirs is None
+                source_file = VHDLSourceFile(
+                    file_name,
+                    library,
+                    vhdl_parser=self._vhdl_parser,
+                    database=self._database,
+                    vhdl_standard=library.vhdl_standard if vhdl_standard is None else vhdl_standard,
+                    no_parse=no_parse)
+                library.add_vhdl_design_units(source_file.design_units)
+            elif file_type in VERILOG_FILE_TYPES:
+                source_file = VerilogSourceFile(file_type,
+                                                file_name,
+                                                library,
+                                                verilog_parser=self._verilog_parser,
+                                                database=self._database,
+                                                include_dirs=include_dirs,
+                                                defines=defines,
+                                                no_parse=no_parse)
+                library.add_verilog_design_units(source_file.design_units)
+            else:
+                raise ValueError(file_type)
+
+            library.add_source_file(source_file)
+            self._source_files_in_order.append(source_file)
+
         return source_file
 
     def add_manual_dependency(self, source_file, depends_on):
@@ -743,6 +754,10 @@ class SourceFile(object):
         Compute hash of contents and compile options
         """
         return hash_string(self._content_hash + self._compile_options_hash())
+
+    @property
+    def file_content_hash(self):
+        return self._content_hash
 
 
 class VerilogSourceFile(SourceFile):
