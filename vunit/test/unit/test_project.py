@@ -488,11 +488,32 @@ end architecture;
         self.assertIn("a2", log_msg)
         self.assertIn("lib.ent", log_msg)
 
-    def test_error_on_duplicate_file(self):
+    @mock.patch("vunit.project.LOGGER")
+    def test_error_on_duplicate_file(self, logger):
         self.project.add_library("lib", "lib_path")
-        file1 = self.add_source_file("lib", "file.vhd", "")
-        self.assertRaises(RuntimeError, self.add_source_file, "lib", "file.vhd", "")
+        file1 = self.add_source_file("lib", "file.vhd", "entity foo is end entity;")
+        self.assertRaises(RuntimeError, self.add_source_file, "lib", "file.vhd", "entity foo is end entity foo;")
+
+        # No extra design unit of file added
+        lib = self.project.get_library("lib")
+        self.assertEqual([ent.name for ent in lib.get_entities()], ["foo"])
+        self.assertEqual(lib.get_source_file("file.vhd"), file1)
         self.assertEqual(self.project.get_source_files_in_order(), [file1])
+        self.assertFalse(logger.warning.called)
+
+    @mock.patch("vunit.project.LOGGER")
+    def test_no_error_on_duplicate_identical_file(self, logger):
+        self.project.add_library("lib", "lib_path")
+        file1 = self.add_source_file("lib", "file.vhd", "entity foo is end entity;")
+        file2 = self.add_source_file("lib", "file.vhd", "entity foo is end entity;")
+        self.assertEqual(id(file1), id(file2))
+
+        # No extra design unit of file added
+        lib = self.project.get_library("lib")
+        self.assertEqual([ent.name for ent in lib.get_entities()], ["foo"])
+        self.assertEqual(lib.get_source_file("file.vhd"), file1)
+        self.assertEqual(self.project.get_source_files_in_order(), [file1])
+        self.assertTrue(logger.warning.called)
 
     def _test_warning_on_duplicate(self, code, message, verilog=False):
         """

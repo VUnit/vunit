@@ -124,7 +124,6 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 database=self._database,
                 vhdl_standard=library.vhdl_standard if vhdl_standard is None else vhdl_standard,
                 no_parse=no_parse)
-            library.add_vhdl_design_units(source_file.design_units)
         elif file_type in VERILOG_FILE_TYPES:
             source_file = VerilogSourceFile(file_type,
                                             file_name,
@@ -134,13 +133,14 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                                             include_dirs=include_dirs,
                                             defines=defines,
                                             no_parse=no_parse)
-            library.add_verilog_design_units(source_file.design_units)
         else:
             raise ValueError(file_type)
 
-        library.add_source_file(source_file)
-        self._source_files_in_order.append(source_file)
-        return source_file
+        old_source_file = library.add_source_file(source_file)
+        if id(source_file) == id(old_source_file):
+            self._source_files_in_order.append(source_file)
+
+        return old_source_file
 
     def add_manual_dependency(self, source_file, depends_on):
         """
@@ -524,11 +524,25 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
     def add_source_file(self, source_file):
         """
         Add source file to library unless it exists
+
+        returns The source file that has added or the old source file
         """
         if source_file.name in self._source_files:
-            raise RuntimeError("%s already added to library %s" % (
-                source_file.name, self.name))
-        self._source_files[source_file.name] = source_file
+            old_source_file = self._source_files[source_file.name]
+            if old_source_file.content_hash != source_file.content_hash:
+                raise RuntimeError("%s already added to library %s" % (
+                    source_file.name, self.name))
+            else:
+                LOGGER.warning("Ignoring duplicate file %s added to library %s due to identical contents",
+                               source_file.name, self.name)
+
+            return old_source_file
+            # Ignore source files already added with identical content hash
+        else:
+            self._source_files[source_file.name] = source_file
+            source_file.add_to_library(self)
+
+            return source_file
 
     def get_source_file(self, file_name):
         """
@@ -691,7 +705,7 @@ class SourceFile(object):
         return self.to_tuple() < other.to_tuple()
 
     def __hash__(self):
-        return hash((self.name, self.library.name))
+        return hash(self.to_tuple())
 
     def __repr__(self):
         return "SourceFile(%s, %s)" % (self.name, self.library.name)
@@ -800,6 +814,13 @@ class VerilogSourceFile(SourceFile):
         except:  # pylint: disable=bare-except
             traceback.print_exc()
             LOGGER.error("Failed to parse %s", self.name)
+
+    def add_to_library(self, library):
+        """
+        Add design units to the library
+        """
+        assert self.library == library
+        library.add_verilog_design_units(self.design_units)
 
 
 class VHDLSourceFile(SourceFile):
@@ -914,6 +935,13 @@ class VHDLSourceFile(SourceFile):
         Compute hash of contents and compile options
         """
         return hash_string(self._content_hash + self._compile_options_hash() + hash_string(self._vhdl_standard))
+
+    def add_to_library(self, library):
+        """
+        Add design units to the library
+        """
+        assert self.library == library
+        library.add_vhdl_design_units(self.design_units)
 
 
 # lower case representation of supported extensions
