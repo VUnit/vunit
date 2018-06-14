@@ -460,9 +460,9 @@ define work "%s/libraries/work"
             simif.compile_project(project)
 
         config = make_config()
-        self.assertTrue(simif.simulate("sim_output_path", "test_suite_name", config))
-        elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
-        simulate_args_file = join('sim_output_path', 'irun_simulate.args')
+        self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
+        elaborate_args_file = join('suite_output_path', simif.name, 'irun_elaborate.args')
+        simulate_args_file = join('suite_output_path', simif.name, 'irun_simulate.args')
         run_command.assert_has_calls([
             mock.call([join('prefix', 'irun'), '-f', basename(elaborate_args_file)],
                       cwd=dirname(elaborate_args_file),
@@ -487,13 +487,11 @@ define work "%s/libraries/work"
              '-work work',
              '-nclibdirname "%s"' % join(self.output_path, "libraries"),
              '-cdslib "%s"' % join(self.output_path, "cds.lib"),
-             '-log "sim_output_path/irun_elaborate.log"',
+             '-log "%s"' % join("suite_output_path", simif.name, "irun_elaborate.log"),
              '-quiet',
              '-reflib "lib_path"',
              '-access +r',
              '-input "@run"',
-             '-input "@catch {if {#vunit_pkg::__runner__.exit_without_errors == 1} {exit 0} else {exit 42}}"',
-             '-input "@catch {if {#run_pkg.runner.exit_without_errors == \\"TRUE\\"} {exit 0} else {exit 42}}"',
              '-top lib.ent:arch'])
 
         self.assertEqual(
@@ -510,13 +508,11 @@ define work "%s/libraries/work"
              '-work work',
              '-nclibdirname "%s"' % join(self.output_path, "libraries"),
              '-cdslib "%s"' % join(self.output_path, "cds.lib"),
-             '-log "sim_output_path/irun_simulate.log"',
+             '-log "%s"' % join("suite_output_path", simif.name, "irun_simulate.log"),
              '-quiet',
              '-reflib "lib_path"',
              '-access +r',
              '-input "@run"',
-             '-input "@catch {if {#vunit_pkg::__runner__.exit_without_errors == 1} {exit 0} else {exit 42}}"',
-             '-input "@catch {if {#run_pkg.runner.exit_without_errors == \\"TRUE\\"} {exit 0} else {exit 42}}"',
              '-top lib.ent:arch'])
 
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
@@ -536,9 +532,9 @@ define work "%s/libraries/work"
             simif.compile_project(project)
 
         config = make_config(verilog=True)
-        self.assertTrue(simif.simulate("sim_output_path", "test_suite_name", config))
-        elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
-        simulate_args_file = join('sim_output_path', 'irun_simulate.args')
+        self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
+        elaborate_args_file = join('suite_output_path', simif.name, 'irun_elaborate.args')
+        simulate_args_file = join('suite_output_path', simif.name, 'irun_simulate.args')
         run_command.assert_has_calls([
             mock.call([join('prefix', 'irun'), '-f', basename(elaborate_args_file)],
                       cwd=dirname(elaborate_args_file),
@@ -563,13 +559,11 @@ define work "%s/libraries/work"
              '-work work',
              '-nclibdirname "%s"' % join(self.output_path, "libraries"),
              '-cdslib "%s"' % join(self.output_path, "cds.lib"),
-             '-log "sim_output_path/irun_elaborate.log"',
+             '-log "%s"' % join("suite_output_path", simif.name, "irun_elaborate.log"),
              '-quiet',
              '-reflib "lib_path"',
              '-access +r',
              '-input "@run"',
-             '-input "@catch {if {#vunit_pkg::__runner__.exit_without_errors == 1} {exit 0} else {exit 42}}"',
-             '-input "@catch {if {#run_pkg.runner.exit_without_errors == \\"TRUE\\"} {exit 0} else {exit 42}}"',
              '-top lib.modulename:sv'])
 
         self.assertEqual(
@@ -586,13 +580,11 @@ define work "%s/libraries/work"
              '-work work',
              '-nclibdirname "%s"' % join(self.output_path, "libraries"),
              '-cdslib "%s"' % join(self.output_path, "cds.lib"),
-             '-log "sim_output_path/irun_simulate.log"',
+             '-log "%s"' % join("suite_output_path", simif.name, "irun_simulate.log"),
              '-quiet',
              '-reflib "lib_path"',
              '-access +r',
              '-input "@run"',
-             '-input "@catch {if {#vunit_pkg::__runner__.exit_without_errors == 1} {exit 0} else {exit 42}}"',
-             '-input "@catch {if {#run_pkg.runner.exit_without_errors == \\"TRUE\\"} {exit 0} else {exit 42}}"',
              '-top lib.modulename:sv'])
 
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
@@ -603,9 +595,9 @@ define work "%s/libraries/work"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
         config = make_config(sim_options={"incisive.irun_sim_flags": ["custom", "flags"]})
-        self.assertTrue(simif.simulate("sim_output_path", "test_suite_name", config))
-        elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
-        simulate_args_file = join('sim_output_path', 'irun_simulate.args')
+        self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
+        elaborate_args_file = join('suite_output_path', simif.name, 'irun_elaborate.args')
+        simulate_args_file = join('suite_output_path', simif.name, 'irun_simulate.args')
         run_command.assert_has_calls([
             mock.call([join('prefix', 'irun'), '-f', basename(elaborate_args_file)],
                       cwd=dirname(elaborate_args_file),
@@ -634,9 +626,9 @@ define work "%s/libraries/work"
                              generics={"genstr": "genval",
                                        "genint": 1,
                                        "genbool": True})
-        self.assertTrue(simif.simulate("sim_output_path", "test_suite_name", config))
-        elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
-        simulate_args_file = join('sim_output_path', 'irun_simulate.args')
+        self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
+        elaborate_args_file = join('suite_output_path', simif.name, 'irun_elaborate.args')
+        simulate_args_file = join('suite_output_path', simif.name, 'irun_simulate.args')
         run_command.assert_has_calls([
             mock.call([join('prefix', 'irun'), '-f', basename(elaborate_args_file)],
                       cwd=dirname(elaborate_args_file),
@@ -661,9 +653,9 @@ define work "%s/libraries/work"
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path,
                                   hdlvar="custom_hdlvar")
         config = make_config()
-        self.assertTrue(simif.simulate("sim_output_path", "test_suite_name", config))
-        elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
-        simulate_args_file = join('sim_output_path', 'irun_simulate.args')
+        self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
+        elaborate_args_file = join('suite_output_path', simif.name, 'irun_elaborate.args')
+        simulate_args_file = join('suite_output_path', simif.name, 'irun_simulate.args')
         run_command.assert_has_calls([
             mock.call([join('prefix', 'irun'), '-f', basename(elaborate_args_file)],
                       cwd=dirname(elaborate_args_file),
@@ -685,8 +677,8 @@ define work "%s/libraries/work"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
         config = make_config(verilog=True)
-        self.assertTrue(simif.simulate("sim_output_path", "test_suite_name", config, elaborate_only=True))
-        elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
+        self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config, elaborate_only=True))
+        elaborate_args_file = join('suite_output_path', simif.name, 'irun_elaborate.args')
         run_command.assert_has_calls([
             mock.call([join('prefix', 'irun'), '-f', basename(elaborate_args_file)],
                       cwd=dirname(elaborate_args_file),
@@ -708,12 +700,10 @@ define work "%s/libraries/work"
              '-work work',
              '-nclibdirname "%s"' % join(self.output_path, "libraries"),
              '-cdslib "%s"' % join(self.output_path, "cds.lib"),
-             '-log "sim_output_path/irun_elaborate.log"',
+             '-log "%s"' % join("suite_output_path", simif.name, "irun_elaborate.log"),
              '-quiet',
              '-access +r',
              '-input "@run"',
-             '-input "@catch {if {#vunit_pkg::__runner__.exit_without_errors == 1} {exit 0} else {exit 42}}"',
-             '-input "@catch {if {#run_pkg.runner.exit_without_errors == \\"TRUE\\"} {exit 0} else {exit 42}}"',
              '-top lib.modulename:sv'])
 
     @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
@@ -724,8 +714,8 @@ define work "%s/libraries/work"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
         config = make_config()
-        self.assertFalse(simif.simulate("sim_output_path", "test_suite_name", config))
-        elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
+        self.assertFalse(simif.simulate("suite_output_path", "test_suite_name", config))
+        elaborate_args_file = join('suite_output_path', simif.name, 'irun_elaborate.args')
         run_command.assert_has_calls([
             mock.call([join('prefix', 'irun'), '-f', basename(elaborate_args_file)],
                       cwd=dirname(elaborate_args_file),
@@ -740,9 +730,9 @@ define work "%s/libraries/work"
         find_cds_root_virtuoso.return_value = None
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
         config = make_config()
-        self.assertFalse(simif.simulate("sim_output_path", "test_suite_name", config))
-        elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
-        simulate_args_file = join('sim_output_path', 'irun_simulate.args')
+        self.assertFalse(simif.simulate("suite_output_path", "test_suite_name", config))
+        elaborate_args_file = join('suite_output_path', simif.name, 'irun_elaborate.args')
+        simulate_args_file = join('suite_output_path', simif.name, 'irun_simulate.args')
         run_command.assert_has_calls([
             mock.call([join('prefix', 'irun'), '-f', basename(elaborate_args_file)],
                       cwd=dirname(elaborate_args_file),
@@ -768,9 +758,9 @@ define work "%s/libraries/work"
         with mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="") as dummy:
             simif.compile_project(project)
         config = make_config()
-        self.assertTrue(simif.simulate("sim_output_path", "test_suite_name", config))
-        elaborate_args_file = join('sim_output_path', 'irun_elaborate.args')
-        simulate_args_file = join('sim_output_path', 'irun_simulate.args')
+        self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
+        elaborate_args_file = join('suite_output_path', simif.name, 'irun_elaborate.args')
+        simulate_args_file = join('suite_output_path', simif.name, 'irun_simulate.args')
         run_command.assert_has_calls([
             mock.call([join('prefix', 'irun'), '-f', basename(elaborate_args_file)],
                       cwd=dirname(elaborate_args_file),
@@ -794,7 +784,7 @@ define work "%s/libraries/work"
              '-work work',
              '-nclibdirname "%s"' % join(self.output_path, "libraries"),
              '-cdslib "%s"' % join(self.output_path, "cds.lib"),
-             '-log "sim_output_path/irun_elaborate.log"',
+             '-log "%s"' % join("suite_output_path", simif.name, "irun_elaborate.log"),
              '-quiet',
              '-reflib "lib_path"',
              '-access +rwc',
@@ -815,7 +805,7 @@ define work "%s/libraries/work"
              '-work work',
              '-nclibdirname "%s"' % join(self.output_path, "libraries"),
              '-cdslib "%s"' % join(self.output_path, "cds.lib"),
-             '-log "sim_output_path/irun_simulate.log"',
+             '-log "%s"' % join("suite_output_path", simif.name, "irun_simulate.log"),
              '-quiet',
              '-reflib "lib_path"',
              '-access +rwc',

@@ -113,7 +113,6 @@ begin
         stb <= '1';
         we <= '1';
         wait until rising_edge(clk) and stall = '0';
-        info(bus_handle.p_logger, "wr req");
         stb <= '0';
         push(acknowledge_queue, request_msg);
         pending_acks := pending_acks +1;
@@ -125,7 +124,6 @@ begin
         received_acks := received_acks +1;
         if pending_acks = received_acks then
           -- End of wb cycle
-          info(bus_handle.p_logger, "finished wb cycle");
           cyc <= '0';
           pending_acks := 0;
           received_acks := 0;
@@ -145,7 +143,6 @@ begin
     variable request_msg, reply_msg, ack_msg : msg_t;
   begin
     wait until ack = '1' and rising_edge(clk);
-    info(bus_handle.p_logger, "ack");
     request_msg := pop(acknowledge_queue);
     -- Reply only on read
     if we = '0' then

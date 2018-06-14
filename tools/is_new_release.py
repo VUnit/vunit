@@ -8,8 +8,10 @@
 Detects when a new release shall be made
 """
 
+from __future__ import print_function
+
 import json
-from urllib.request import urlopen
+from urllib.request import urlopen  # pylint: disable=no-name-in-module, import-error
 import sys
 from os.path import dirname, join, exists
 from subprocess import check_output
@@ -70,6 +72,7 @@ def main():
 
     with open(sys.argv[2], "w") as fptr:
         fptr.write(str(is_new_release(version)))
+
 
 if __name__ == "__main__":
     main()

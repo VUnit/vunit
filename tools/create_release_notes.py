@@ -1,3 +1,15 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
+
+"""
+Create monolithic release notes file from several input files
+"""
+
+from __future__ import print_function
+
 from os.path import join, dirname, basename, splitext, relpath
 from glob import glob
 from subprocess import check_output, CalledProcessError
@@ -5,6 +17,9 @@ import datetime
 
 
 def get_releases(source_path):
+    """
+    Get all releases defined by release note files
+    """
     release_notes = join(source_path, "release_notes")
     releases = []
     for idx, file_name in enumerate(sorted(glob(join(release_notes, "*.rst")), reverse=True)):
@@ -13,13 +28,16 @@ def get_releases(source_path):
 
 
 def create_release_notes():
-    source_path = join(dirname(__file__))
+    """
+    Create monolithic release notes file from several input files
+    """
+    source_path = join(dirname(__file__), "..", "docs")
 
     releases = get_releases(source_path)
     latest_release = releases[0]
 
     def banner(fptr):
-        fptr.write("\n" + ("-"*80) + "\n\n")
+        fptr.write("\n" + ("-" * 80) + "\n\n")
 
     with open(join(source_path, "release_notes.rst"), "w") as fptr:
         fptr.write("""
@@ -46,7 +64,7 @@ For installation instructions read :ref:`this <installing>`.
             if release.is_latest:
                 title += " (latest)"
             fptr.write(title + "\n")
-            fptr.write("-"*len(title) + "\n\n")
+            fptr.write("-" * len(title) + "\n\n")
 
             fptr.write(".. include:: %s\n" % relpath(release.file_name, source_path))
 
@@ -55,18 +73,18 @@ For installation instructions read :ref:`this <installing>`.
 
             if not is_last:
                 fptr.write("\n`Commits since previous release <https://github.com/VUnit/vunit/compare/%s...%s>`__\n"
-                           % (releases[idx+1].tag, release.tag))
+                           % (releases[idx + 1].tag, release.tag))
                 banner(fptr)
 
 
-class Release:
+class Release(object):
     """
     A release object
     """
     def __init__(self, file_name, is_latest):
         self.file_name = file_name
         self.name = splitext(basename(file_name))[0]
-        self.tag = "v"+self.name
+        self.tag = "v" + self.name
         self.is_latest = is_latest
 
         try:

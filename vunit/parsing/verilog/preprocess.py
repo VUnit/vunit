@@ -399,10 +399,10 @@ class Macro(object):
                 for tok in tokens]
 
     def __eq__(self, other):
-        return ((self.name == other.name) and
-                (self.tokens == other.tokens) and
-                (self.args == other.args) and
-                (self.defaults == other.defaults))
+        return ((self.name == other.name)
+                and (self.tokens == other.tokens)
+                and (self.args == other.args)
+                and (self.defaults == other.defaults))
 
     def expand_from_stream(self, token, stream, previous=None):
         """
@@ -468,10 +468,10 @@ class Macro(object):
             elif token.kind is RPAR:
                 par_count += -1
 
-            value_ok = (token.kind == COMMA and
-                        bracket_count == 0 and
-                        brace_count == 0 and
-                        par_count == 0)
+            value_ok = (token.kind == COMMA
+                        and bracket_count == 0
+                        and brace_count == 0
+                        and par_count == 0)
 
             if value_ok:
                 values.append(value)

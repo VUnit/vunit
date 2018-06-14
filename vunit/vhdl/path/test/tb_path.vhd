@@ -22,14 +22,15 @@ begin
     test_runner_setup(runner, runner_cfg);
 
     while test_suite loop
-      if run("Verify that joining a single path returns that path") then
-        check_equal(join("some_path"), "some_path");
-      elsif run("Verify that joining an empty path with a second path returns the second path") then
-        check_equal(join("", "some_path"), "some_path");
-      elsif run("Verify the joining of two paths") then
-        check_equal(join("foo", "bar"), "foo/bar");
-      elsif run("Verify that a separator ending the first path is ignored") then
-        check_equal(join("foo/", "bar"), "foo/bar");
+      if run("Test joining paths") then
+        check_equal(join(""), "");
+        check_equal(join("", "p2"), "p2");
+        check_equal(join("p1"), "p1");
+        check_equal(join("p1", p5 => "p5", p10 => "p10"), "p1/p5/p10");
+        check_equal(join("p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9", "p10"),
+                         "p1/p2/p3/p4/p5/p6/p7/p8/p9/p10");
+      elsif run("Verify that a separator ending a path component is ignored") then
+        check_equal(join("/p1/", "p2/", "p3", "/", "p4"), "/p1/p2/p3/p4");
       end if;
     end loop;
 

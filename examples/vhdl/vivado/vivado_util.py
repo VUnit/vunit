@@ -115,9 +115,11 @@ def compile_standard_libraries(vunit_obj, output_path):
     """
     done_token = join(output_path, "all_done.txt")
 
+    simulator_class = SIMULATOR_FACTORY.select_simulator()
+
     if not exists(done_token):
         print("Compiling standard libraries into %s ..." % abspath(output_path))
-        simname = SIMULATOR_FACTORY.simulator_name
+        simname = simulator_class.name
 
         # Vivado calls rivierapro for riviera
         if simname == "rivierapro":
@@ -125,7 +127,7 @@ def compile_standard_libraries(vunit_obj, output_path):
 
         run_vivado(join(dirname(__file__), "tcl", "compile_standard_libs.tcl"),
                    simname,
-                   SIMULATOR_FACTORY._simulator_class.find_prefix().replace("\\", "/"),
+                   simulator_class.find_prefix().replace("\\", "/"),
                    output_path)
 
     else:

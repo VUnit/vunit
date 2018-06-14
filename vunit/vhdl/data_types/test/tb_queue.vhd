@@ -13,7 +13,8 @@ use ieee.math_complex.all;
 library vunit_lib;
 use vunit_lib.check_pkg.all;
 use vunit_lib.run_pkg.all;
-
+use vunit_lib.integer_vector_ptr_pkg.all;
+use vunit_lib.integer_array_pkg.all;
 use work.queue_pkg.all;
 
 entity tb_queue is
@@ -31,6 +32,8 @@ begin
   main : process
     variable queue, another_queue : queue_t;
     variable bv : bit_vector(0 to 5);
+    variable integer_vector_ptr : integer_vector_ptr_t;
+    variable integer_array : integer_array_t;
   begin
     test_runner_setup(runner, runner_cfg);
     if run("Test default queue is null") then
@@ -277,6 +280,21 @@ begin
       assert pop_time(queue) = -1 fs;
       assert pop_time(queue) = -1 hr;
       assert pop_time(queue) = -1 hr - 1 fs;
+
+    elsif run("Test push and pop integer_vector_ptr_t") then
+      queue := new_queue;
+      integer_vector_ptr := new_integer_vector_ptr;
+      push_integer_vector_ptr_ref(queue, integer_vector_ptr);
+      assert pop_integer_vector_ptr_ref(queue) = integer_vector_ptr;
+
+    elsif run("Test push and pop integer_array_t") then
+      queue := new_queue;
+      integer_array := new_3d(1, 2, 3, 4);
+      integer_vector_ptr := integer_array.data;
+      push_integer_array_t_ref(queue, integer_array);
+      assert integer_array.data = null_ptr;
+      integer_array.data := integer_vector_ptr;
+      assert pop_integer_array_t_ref(queue) = integer_array;
 
     elsif run("Test codecs") then
       queue := new_queue;

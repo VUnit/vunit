@@ -8,8 +8,11 @@
 Test the test suites
 """
 
+from os.path import join
 from unittest import TestCase
-from vunit.test_suites import call_pre_config
+from vunit.test_suites import (TestRun)
+from vunit.test_report import (PASSED, SKIPPED, FAILED)
+from vunit.test.common import create_tempdir
 
 
 class TestTestSuites(TestCase):
@@ -17,74 +20,90 @@ class TestTestSuites(TestCase):
     Test the test suites
     """
 
-    def test_call_pre_config_none(self):
-        self.assertEqual(call_pre_config(None, "output_path", "simulator_output_path"), True)
+    def test_missing_results_fails_all(self):
+        self.assertEqual(
+            self._read_test_results(contents=None,
+                                    expected_test_cases=["test1", "test2"]),
+            {"test1": FAILED, "test2": FAILED})
 
-    def test_call_pre_config_false(self):
-        def pre_config():
-            return False
-        self.assertEqual(call_pre_config(pre_config, "output_path", "simulator_output_path"), False)
+    def test_read_results_all_passed(self):
+        self.assertEqual(
+            self._read_test_results(contents="""\
+test_start:test1
+test_start:test2
+test_suite_done
+""",
+                                    expected_test_cases=["test1", "test2"]),
+            {"test1": PASSED, "test2": PASSED})
 
-    def test_call_pre_config_true(self):
-        def pre_config():
-            return True
-        self.assertEqual(call_pre_config(pre_config, "output_path", "simulator_output_path"), True)
+    def test_read_results_suite_not_done(self):
+        self.assertEqual(
+            self._read_test_results(contents="""\
+test_start:test1
+test_start:test2
+""",
+                                    expected_test_cases=["test1", "test2"]),
+            {"test1": PASSED, "test2": FAILED})
 
-    def test_call_pre_config_no_return(self):
-        def pre_config():
-            pass
-        self.assertEqual(call_pre_config(pre_config, "output_path", "simulator_output_path"), False)
+        self.assertEqual(
+            self._read_test_results(contents="""\
+test_start:test2
+test_start:test1
+""",
+                                    expected_test_cases=["test1", "test2"]),
+            {"test1": FAILED, "test2": PASSED})
 
-    def test_call_pre_config_with_output_path(self):
+    def test_read_results_skipped_test(self):
+        self.assertEqual(
+            self._read_test_results(contents="""\
+test_start:test1
+test_suite_done
+""",
+                                    expected_test_cases=["test1", "test2", "test3"]),
+            {"test1": PASSED, "test2": SKIPPED, "test3": SKIPPED})
 
-        class WasHere(Exception):
-            pass
+    def test_read_results_anonynmous_test_pass(self):
+        self.assertEqual(
+            self._read_test_results(contents="""\
+test_suite_done
+""",
+                                    expected_test_cases=[None]),
+            {None: PASSED})
 
-        def pre_config(output_path):
-            """
-            Pre config with output path
-            """
-            self.assertEqual(output_path, "output_path")
-            raise WasHere
+    def test_read_results_anonynmous_test_fail(self):
+        self.assertEqual(
+            self._read_test_results(contents="""\
+""",
+                                    expected_test_cases=[None]),
+            {None: FAILED})
 
-        self.assertRaises(WasHere, call_pre_config, pre_config, "output_path", "simulator_output_path")
+    def test_read_results_unknown_test(self):
+        try:
+            self._read_test_results(
+                contents="""\
+test_start:test1
+test_start:test3
+test_suite_done""",
+                expected_test_cases=["test1"])
+        except RuntimeError as exc:
+            self.assertIn("unknown test case test3", str(exc))
+        else:
+            assert False, "RuntimeError not raised"
 
-    def test_call_pre_config_with_simulator_output_path(self):
+    @staticmethod
+    def _read_test_results(contents, expected_test_cases):
+        """
+        Helper method to test the read_test_results function
+        """
+        with create_tempdir() as path:
+            file_name = join(path, "vunit_results")
+            if contents is not None:
+                with open(file_name, "w") as fptr:
+                    fptr.write(contents)
 
-        class WasHere(Exception):
-            pass
-
-        def pre_config(output_path, simulator_output_path):
-            """
-            Pre config with output path
-            """
-            self.assertEqual(output_path, "output_path")
-            self.assertEqual(simulator_output_path, "simulator_output_path")
-            raise WasHere
-
-        self.assertRaises(WasHere, call_pre_config, pre_config, "output_path", "simulator_output_path")
-
-    def test_call_pre_config_class_method(self):
-
-        class WasHere(Exception):
-            pass
-
-        class MyClass(object):
-            """
-            Class to test pre_config method
-            """
-            def __init__(self, value):
-                self.value = value
-
-            def pre_config(self, output_path, simulator_output_path):
-                """
-                Pre config with output path
-                """
-                assert self.value == 2
-                assert output_path == "output_path"
-                assert simulator_output_path == "simulator_output_path"
-                raise WasHere
-
-        self.assertRaises(WasHere,
-                          call_pre_config,
-                          MyClass(value=2).pre_config, "output_path", "simulator_output_path")
+            run = TestRun(simulator_if=None,
+                          config=None,
+                          elaborate_only=False,
+                          test_suite_name=None,
+                          test_cases=expected_test_cases)
+            return run._read_test_results(file_name=file_name)  # pylint: disable=protected-access

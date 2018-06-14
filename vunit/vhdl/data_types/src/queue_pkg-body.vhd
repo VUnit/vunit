@@ -356,4 +356,35 @@ package body queue_pkg is
   begin
     return decode(pop_fix_string(queue, queue_t_code_length));
   end;
+
+  procedure push_ref(constant queue : queue_t; value : inout integer_array_t) is
+  begin
+    push(queue, value.length);
+    push(queue, value.width);
+    push(queue, value.height);
+    push(queue, value.depth);
+    push(queue, value.bit_width);
+    push(queue, value.is_signed);
+    push(queue, value.lower_limit);
+    push(queue, value.upper_limit);
+    push(queue, value.data);
+    value.data := null_ptr;
+  end;
+
+  impure function pop_ref(queue : queue_t) return integer_array_t is
+    variable result : integer_array_t;
+  begin
+    result.length := pop(queue);
+    result.width := pop(queue);
+    result.height := pop(queue);
+    result.depth := pop(queue);
+    result.bit_width := pop(queue);
+    result.is_signed := pop(queue);
+    result.lower_limit := pop(queue);
+    result.upper_limit := pop(queue);
+    result.data := pop(queue);
+
+    return result;
+  end;
+
 end package body;

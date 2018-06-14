@@ -146,6 +146,7 @@ package body ansi_pkg is
     end loop;
 
     assert false report "incomplete color escape did not end with 'm'";
+    return msg;
   end;
 
   impure function strip_color(msg : string) return string is

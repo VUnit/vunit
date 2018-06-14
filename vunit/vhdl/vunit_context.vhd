@@ -6,6 +6,8 @@
 
 context vunit_context is
   library vunit_lib;
+  context vunit_lib.data_types_context;
+
   use vunit_lib.string_ops.all;
   use vunit_lib.dictionary.all;
   use vunit_lib.path.all;

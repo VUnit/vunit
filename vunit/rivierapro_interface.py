@@ -113,8 +113,9 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
 
         # Add coverage options
         for source_file in project.get_source_files_in_order():
-            source_file.add_compile_option("rivierapro.vcom_flags", ['-coverage', self._coverage])
-            source_file.add_compile_option("rivierapro.vlog_flags", ['-coverage', self._coverage])
+            if not source_file.compile_options.get("disable_coverage", False):
+                source_file.add_compile_option("rivierapro.vcom_flags", ['-coverage', self._coverage])
+                source_file.add_compile_option("rivierapro.vlog_flags", ['-coverage', self._coverage])
 
     def setup_library_mapping(self, project):
         """
@@ -141,9 +142,9 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         Returns the command to compile a VHDL file
         """
-        return ([join(self._prefix, 'vcom'), '-quiet', '-j', dirname(self._sim_cfg_file_name)] +
-                source_file.compile_options.get("rivierapro.vcom_flags", []) +
-                ['-' + source_file.get_vhdl_standard(), '-work', source_file.library.name, source_file.name])
+        return ([join(self._prefix, 'vcom'), '-quiet', '-j', dirname(self._sim_cfg_file_name)]
+                + source_file.compile_options.get("rivierapro.vcom_flags", [])
+                + ['-' + source_file.get_vhdl_standard(), '-work', source_file.library.name, source_file.name])
 
     def compile_verilog_file_command(self, source_file):
         """
@@ -263,24 +264,17 @@ proc vunit_load {{}} {{
     }}]
 
     if {{${{vsim_failed}}}} {{
-        return 1
+        return true
     }}
 
     if {{[_vunit_source_init_files_after_load]}} {{
-        return 1
-    }}
-
-    set no_vhdl_test_runner_exit [catch {{examine /vunit_lib.run_pkg/runner.exit_without_errors}}]
-    set no_verilog_test_runner_exit [catch {{examine /\\\\package vunit_lib.vunit_pkg\\\\/__runner__}}]
-    if {{${{no_vhdl_test_runner_exit}} && ${{no_verilog_test_runner_exit}}}}  {{
-        echo {{Error: No vunit test runner package used}}
-        return 1
+        return true
     }}
 
     vhdlassert.break {break_level}
     vhdlassert.break -builtin {break_level}
 
-    return 0
+    return false
 }}
 """.format(vsim_flags=" ".join(vsim_flags),
            break_level=config.vhdl_assert_stop_level)
@@ -307,37 +301,21 @@ proc vunit_load {{}} {{
         Create the vunit_run function to run the test bench
         """
         return """
-proc vunit_run {} {
+proc _vunit_run_failure {} {
+    catch {
+        # tb command can fail when error comes from pli
+        echo "Stack trace result from 'bt' command"
+        bt
+    }
+}
+
+proc _vunit_run {} {
     proc on_break {} {
         resume
     }
     onbreak {on_break}
 
-    set has_vhdl_runner [expr ![catch {examine /vunit_lib.run_pkg/runner}]]
-    set has_verilog_runner [expr ![catch {examine /\\\\package vunit_lib.vunit_pkg\\\\/__runner__}]]
-
-    if {${has_vhdl_runner}} {
-        set status_boolean "/vunit_lib.run_pkg/runner.exit_without_errors"
-        set true_value true
-    } elseif {${has_verilog_runner}} {
-        set status_boolean "/\\\\package vunit_lib.vunit_pkg\\\\/__runner__.exit_without_errors"
-        set true_value 1
-    } else {
-        echo "No finish mechanism detected"
-        return 1;
-    }
-
     run -all
-    set failed [expr [examine ${status_boolean}]!=${true_value}]
-    if {$failed} {
-        catch {
-            # tb command can fail when error comes from pli
-            echo ""
-            echo "Stack trace result from 'bt' command"
-            bt
-        }
-    }
-    return $failed
 }
 
 proc _vunit_sim_restart {} {
@@ -367,7 +345,12 @@ proc _vunit_sim_restart {} {
 
         merge_command += " -o {%s}" % merged_coverage_file.replace('\\', '/')
 
-        vcover_cmd = [join(self._prefix, 'vsim'), '-c', '-do', '%s; quit;' % merge_command]
+        merge_script_name = join(self._output_path, "acdb_merge.tcl")
+        with open(merge_script_name, "w") as fptr:
+            fptr.write(merge_command + "\n")
+
+        vcover_cmd = [join(self._prefix, 'vsim'), '-c', '-do',
+                      'source %s; quit;' % merge_script_name.replace('\\', '/')]
 
         print("Merging coverage files into %s..." % merged_coverage_file)
         vcover_merge_process = Process(vcover_cmd,

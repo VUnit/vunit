@@ -26,6 +26,7 @@ def __keyword(kind):
     KEYWORDS[kind] = token_kind
     return token_kind
 
+
 KEYWORDS = {}
 
 PREPROCESSOR = __token("preprocessor")

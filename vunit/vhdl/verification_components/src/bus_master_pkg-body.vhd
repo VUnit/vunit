@@ -9,6 +9,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.queue_pkg.all;
+use work.sync_pkg.all;
 
 package body bus_master_pkg is
 
@@ -26,6 +27,11 @@ package body bus_master_pkg is
             p_address_length => address_length,
             p_byte_length => byte_length,
             p_logger => logger);
+  end;
+
+  function get_logger(bus_handle : bus_master_t) return logger_t is
+  begin
+    return bus_handle.p_logger;
   end;
 
   impure function data_length(bus_handle : bus_master_t) return natural is
@@ -226,6 +232,17 @@ package body bus_master_pkg is
     data      := (others => '-');
     data(idx) := value;
     wait_until_read_equals(net, bus_handle, addr, data, timeout, msg);
+  end;
+
+  impure function as_sync(bus_master : bus_master_t) return sync_handle_t is
+  begin
+    return bus_master.p_actor;
+  end;
+
+  procedure wait_until_idle(signal net : inout network_t;
+                            bus_handle : bus_master_t) is
+  begin
+    wait_until_idle(net, bus_handle.p_actor);
   end;
 
 end package body;

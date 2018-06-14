@@ -102,6 +102,10 @@ def _create_argument_parser(description=None, for_documentation=False):
                         default=False,
                         help='Continue compiling even after errors only skipping files that depend on failed files')
 
+    parser.add_argument('--fail-fast', action='store_true',
+                        default=False,
+                        help='Stop immediately on first failing test')
+
     parser.add_argument('--elaborate', action='store_true',
                         default=False,
                         help='Only elaborate test benches without running')
@@ -165,8 +169,7 @@ def _create_argument_parser(description=None, for_documentation=False):
 
     parser.add_argument('--version', action='version', version=version())
 
-    SIMULATOR_FACTORY.add_arguments(parser,
-                                    for_all_simulators=for_documentation)
+    SIMULATOR_FACTORY.add_arguments(parser)
 
     return parser
 

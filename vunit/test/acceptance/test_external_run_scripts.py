@@ -102,11 +102,17 @@ class TestExternalRunScripts(unittest.TestCase):
                      [("passed", "tb_lib.tb_composite_generics.VGA.Test 1"),
                       ("passed", "tb_lib.tb_composite_generics.tiny.Test 1")])
 
+    def test_vhdl_json4vhdl_example_project(self):
+        self.check(join(ROOT, "examples", "vhdl", "json4vhdl", "run.py"))
+
     def test_vhdl_array_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "array", "run.py"))
 
     def test_vhdl_array_axis_vcs_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "array_axis_vcs", "run.py"))
+
+    def test_vhdl_axi_dma_example_project(self):
+        self.check(join(ROOT, "examples", "vhdl", "axi_dma", "run.py"))
 
     def test_vhdl_user_guide_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "user_guide", "run.py"), exit_code=1)
@@ -119,7 +125,8 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_verilog_user_guide_example_project(self):
         self.check(join(ROOT, "examples", "verilog", "user_guide", "run.py"), exit_code=1)
         check_report(self.report_file,
-                     [("passed", "lib.tb_example.Test that a successful test case passes"),
+                     [("passed", "lib.tb_example_basic.all"),
+                      ("passed", "lib.tb_example.Test that a successful test case passes"),
                       ("failed", "lib.tb_example.Test that a failing test case actually fails"),
                       ("failed", "lib.tb_example.Test that a test case that takes too long time fails with a timeout")])
 

@@ -36,6 +36,11 @@ Compilation options allow customization of compilation behavior. Since simulator
 differing options available, generic options may be specified through this interface.
 The following compilation options are known.
 
+``disable_coverage``
+  Disable coverage.
+  Do not add coverage compile flags when running with ``--coverage``. Default is False.
+  Boolean
+
 ``ghdl.flags``
    Extra arguments passed to ``ghdl -a`` command during compilation.
    Must be a list of strings.
@@ -218,7 +223,8 @@ from vunit.database import PickledDataBase, DataBase
 import vunit.ostools as ostools
 from vunit.vunit_cli import VUnitCLI
 from vunit.simulator_factory import SIMULATOR_FACTORY
-from vunit.simulator_interface import is_string_not_iterable
+from vunit.simulator_interface import (is_string_not_iterable,
+                                       SimulatorInterface)
 from vunit.color_printer import (COLOR_PRINTER,
                                  NO_COLOR_PRINTER)
 from vunit.project import (Project,
@@ -306,18 +312,26 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._location_preprocessor = None
         self._check_preprocessor = None
 
-        self._simulator_factory = SIMULATOR_FACTORY
-        self._simulator_output_path = join(self._output_path, SIMULATOR_FACTORY.simulator_name)
+        self._simulator_class = SIMULATOR_FACTORY.select_simulator()
+
+        # Use default simulator options if no simulator was present
+        if self._simulator_class is None:
+            simulator_class = SimulatorInterface
+            self._simulator_output_path = join(self._output_path, "none")
+        else:
+            simulator_class = self._simulator_class
+            self._simulator_output_path = join(self._output_path, simulator_class.name)
+
         self._create_output_path(args.clean)
 
         database = self._create_database()
         self._project = Project(
             database=database,
-            depend_on_package_body=self._simulator_factory.package_users_depend_on_bodies())
+            depend_on_package_body=simulator_class.package_users_depend_on_bodies)
 
         self._test_bench_list = TestBenchList(database=database)
 
-        self._builtins = Builtins(self, self._vhdl_standard, self._simulator_factory)
+        self._builtins = Builtins(self, self._vhdl_standard, simulator_class)
         if compile_builtins:
             self.add_builtins()
 
@@ -548,15 +562,15 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                 if source_file.library.name != library_name:
                     continue
 
-            if not (fnmatch(abspath(source_file.name), pattern) or
-                    fnmatch(ostools.simplify_path(source_file.name), pattern)):
+            if not (fnmatch(abspath(source_file.name), pattern)
+                    or fnmatch(ostools.simplify_path(source_file.name), pattern)):
                 continue
 
             results.append(SourceFile(source_file, self._project, self))
 
         check_not_empty(results, allow_empty,
-                        ("Pattern %r did not match any file" % pattern) +
-                        (("within library %s" % library_name) if library_name is not None else ""))
+                        ("Pattern %r did not match any file" % pattern)
+                        + (("within library %s" % library_name) if library_name is not None else ""))
 
         return SourceFileList(results)
 
@@ -696,12 +710,14 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         self._check_preprocessor = CheckPreprocessor()
 
-    def main(self):
+    def main(self, post_run=None):
         """
         Run vunit main function and exit
+
+        :param post_run: A function with no arguments to be called after running tests
         """
         try:
-            all_ok = self._main()
+            all_ok = self._main(post_run)
         except KeyboardInterrupt:
             sys.exit(1)
         except CompileError:
@@ -728,7 +744,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         test_list.keep_matches(self._test_filter)
         return test_list
 
-    def _main(self):
+    def _main(self, post_run):
         """
         Base vunit main function without performing exit
         """
@@ -742,10 +758,27 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         elif self._args.compile:
             return self._main_compile_only()
 
-        return self._main_run()
+        all_ok = self._main_run()
+        if post_run is not None:
+            post_run()
+        return all_ok
 
     def _create_simulator_if(self):
-        return self._simulator_factory.create(self._args, self._simulator_output_path)
+        """
+        Create new simulator instance
+        """
+
+        if self._simulator_class is None:
+            LOGGER.error(
+                "No available simulator detected.\n"
+                "Simulator binary folder must be available in PATH environment variable.\n"
+                "Simulator binary folder can also be set the in VUNIT_<SIMULATOR_NAME>_PATH environment variable.\n")
+            exit(1)
+
+        if not exists(self._simulator_output_path):
+            os.makedirs(self._simulator_output_path)
+
+        return self._simulator_class.from_args(self._simulator_output_path, self._args)
 
     def _main_run(self):
         """
@@ -849,6 +882,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
                             join(self._output_path, "test_output"),
                             verbosity=verbosity,
                             num_threads=self._args.num_threads,
+                            fail_fast=self._args.fail_fast,
                             dont_catch_exceptions=self._args.dont_catch_exceptions,
                             no_color=self._args.no_color)
         runner.run(test_cases)
@@ -899,6 +933,12 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         self._builtins.add("osvvm")
 
+    def add_json4vhdl(self):
+        """
+        Add JSON-for-VHDL library
+        """
+        self._builtins.add("json4vhdl")
+
     def get_compile_order(self, source_files=None):
         """
         Get the compile order of all or specific source files and
@@ -917,7 +957,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         :returns: A list of :class:`.SourceFile` objects in compile order.
         """
         if source_files is None:
-            source_files = self.get_source_files()
+            source_files = self.get_source_files(allow_empty=True)
 
         target_files = [source_file._source_file  # pylint: disable=protected-access
                         for source_file in source_files]
@@ -1743,6 +1783,6 @@ def check_not_empty(lst, allow_empty, error_msg):
     Returns the list
     """
     if (not allow_empty) and (not lst):
-        raise ValueError(error_msg +
-                         ". Use allow_empty=True to avoid exception.")
+        raise ValueError(error_msg
+                         + ". Use allow_empty=True to avoid exception.")
     return lst

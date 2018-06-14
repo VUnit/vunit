@@ -10,6 +10,7 @@ use ieee.std_logic_1164.all;
 use work.logger_pkg.all;
 use work.stream_master_pkg.all;
 use work.stream_slave_pkg.all;
+use work.sync_pkg.all;
 context work.com_context;
 context work.data_types_context;
 
@@ -29,13 +30,16 @@ package axi_stream_pkg is
 
   constant axi_stream_logger : logger_t := get_logger("vunit_lib:axi_stream_pkg");
   impure function new_axi_stream_master(data_length : natural;
-                                        logger : logger_t := axi_stream_logger) return axi_stream_master_t;
+                                        logger : logger_t := axi_stream_logger;
+                                        actor : actor_t := null_actor) return axi_stream_master_t;
   impure function new_axi_stream_slave(data_length : natural;
-                                       logger : logger_t := axi_stream_logger) return axi_stream_slave_t;
+                                       logger : logger_t := axi_stream_logger;
+                                       actor : actor_t := null_actor) return axi_stream_slave_t;
   impure function data_length(master : axi_stream_master_t) return natural;
   impure function data_length(master : axi_stream_slave_t) return natural;
   impure function as_stream(master : axi_stream_master_t) return stream_master_t;
   impure function as_stream(slave : axi_stream_slave_t) return stream_slave_t;
+  impure function as_sync(master : axi_stream_master_t) return sync_handle_t;
 
   constant push_axi_stream_msg : msg_type_t := new_msg_type("push axi stream");
 
@@ -49,17 +53,25 @@ end package;
 package body axi_stream_pkg is
 
   impure function new_axi_stream_master(data_length : natural;
-                                        logger : logger_t := axi_stream_logger) return axi_stream_master_t is
+                                        logger : logger_t := axi_stream_logger;
+                                        actor : actor_t := null_actor) return axi_stream_master_t is
+    variable p_actor : actor_t;
   begin
-    return (p_actor => new_actor,
+    p_actor := actor when actor /= null_actor else new_actor;
+
+    return (p_actor => p_actor,
             p_data_length => data_length,
             p_logger => logger);
   end;
 
   impure function new_axi_stream_slave(data_length : natural;
-                                       logger : logger_t := axi_stream_logger) return axi_stream_slave_t is
+                                       logger : logger_t := axi_stream_logger;
+                                       actor : actor_t := null_actor) return axi_stream_slave_t is
+    variable p_actor : actor_t;
   begin
-    return (p_actor => new_actor,
+    p_actor := actor when actor /= null_actor else new_actor;
+
+    return (p_actor => p_actor,
             p_data_length => data_length,
             p_logger => logger);
   end;
@@ -82,6 +94,11 @@ package body axi_stream_pkg is
   impure function as_stream(slave : axi_stream_slave_t) return stream_slave_t is
   begin
     return (p_actor => slave.p_actor);
+  end;
+
+  impure function as_sync(master : axi_stream_master_t) return sync_handle_t is
+  begin
+    return master.p_actor;
   end;
 
   procedure push_axi_stream(signal net : inout network_t;

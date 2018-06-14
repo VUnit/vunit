@@ -55,6 +55,11 @@ class ProgramStatus(object):
         with self._lock:  # pylint: disable=not-context-manager
             self._shutting_down = True
 
+    def reset(self):
+        with self._lock:  # pylint: disable=not-context-manager
+            self._shutting_down = False
+
+
 PROGRAM_STATUS = ProgramStatus()
 
 

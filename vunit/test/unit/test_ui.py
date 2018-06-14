@@ -142,8 +142,8 @@ end architecture;
         accepted_extensions = VHDL_EXTENSIONS + VERILOG_EXTENSIONS
         allowable_extensions = [ext for ext in accepted_extensions]
         allowable_extensions.extend([ext.upper() for ext in accepted_extensions])
-        allowable_extensions.append(VHDL_EXTENSIONS[0][0] + VHDL_EXTENSIONS[0][1].upper() +
-                                    VHDL_EXTENSIONS[0][2:])  # mixed case
+        allowable_extensions.append(VHDL_EXTENSIONS[0][0] + VHDL_EXTENSIONS[0][1].upper()
+                                    + VHDL_EXTENSIONS[0][2:])  # mixed case
         for idx, ext in enumerate(allowable_extensions):
             file_name = self.create_entity_file(idx, ext)
             ui.add_source_files(file_name, 'lib')
@@ -578,6 +578,19 @@ Listed 2 files""".splitlines()))
         self.assertTrue("Found no test benches" in str(logger.warning.mock_calls))
         logger.reset_mock()
 
+    def test_post_run(self):
+        post_run = mock.Mock()
+
+        ui = self._create_ui()
+        self._run_main(ui, post_run=post_run)
+        self.assertTrue(post_run.called)
+
+        for no_run_arg in ['--compile', '--files', '--list']:
+            post_run.reset_mock()
+            ui = self._create_ui(no_run_arg)
+            self._run_main(ui, post_run=post_run)
+            self.assertFalse(post_run.called)
+
     def test_scan_tests_from_other_file(self):
         for tb_type in ["vhdl", "verilog"]:
             for tests_type in ["vhdl", "verilog"]:
@@ -668,9 +681,30 @@ endmodule
         self.assertRaises(ValueError, lib.test_bench("tb_top").scan_tests_from_file, "missing.sv")
 
     def test_can_list_tests_without_simulator(self):
-        with set_env(PATH=""):
-            ui = self._create_ui("--list")
+        with set_env():
+            ui = self._create_ui_real_sim("--list")
             self._run_main(ui, 0)
+
+    def test_can_list_files_without_simulator(self):
+        with set_env():
+            ui = self._create_ui_real_sim("--files")
+            self._run_main(ui, 0)
+
+    @mock.patch("vunit.ui.LOGGER", autospec=True)
+    def test_compile_without_simulator_fails(self, logger):
+        with set_env():
+            ui = self._create_ui_real_sim("--compile")
+            self._run_main(ui, 1)
+            self.assertEqual(len(logger.error.mock_calls), 1)
+            self.assertTrue("No available simulator detected" in str(logger.error.mock_calls))
+
+    @mock.patch("vunit.ui.LOGGER", autospec=True)
+    def test_simulate_without_simulator_fails(self, logger):
+        with set_env():
+            ui = self._create_ui_real_sim()
+            self._run_main(ui, 1)
+            self.assertEqual(len(logger.error.mock_calls), 1)
+            self.assertTrue("No available simulator detected" in str(logger.error.mock_calls))
 
     def test_set_sim_option_before_adding_file(self):
         """
@@ -688,19 +722,22 @@ endmodule
 
     def _create_ui(self, *args):
         """ Create an instance of the VUnit public interface class """
-        with mock.patch("vunit.ui.SIMULATOR_FACTORY",
-                        new=MockSimulatorFactory()):
-            ui = VUnit.from_argv(argv=["--output-path=%s" % self._output_path,
-                                       "--clean"] + list(args),
-                                 compile_builtins=False)
-        return ui
+        with mock.patch("vunit.ui.SIMULATOR_FACTORY.select_simulator",
+                        new=lambda: MockSimulator):
+            return self._create_ui_real_sim(*args)
 
-    def _run_main(self, ui, code=0):
+    def _create_ui_real_sim(self, *args):
+        """ Create an instance of the VUnit public interface class """
+        return VUnit.from_argv(argv=["--output-path=%s" % self._output_path,
+                                     "--clean"] + list(args),
+                               compile_builtins=False)
+
+    def _run_main(self, ui, code=0, post_run=None):
         """
         Run ui.main and expect exit code
         """
         try:
-            ui.main()
+            ui.main(post_run=post_run)
         except SystemExit as exc:
             self.assertEqual(exc.code, code)
 
@@ -783,30 +820,25 @@ class ParentalControl(object):
         return self._fword_pattern.sub(r'[BEEP]', code)
 
 
-class MockSimulatorFactory(object):
+class MockSimulator(SimulatorInterface):
     """
-    Mock a simulator factory
+    Mock of a SimulatorInterface
     """
-    simulator_name = "mocksim"
-
-    def __init__(self):
-        self.mocksim = mock.Mock(spec=SimulatorInterface)
-
-        def compile_side_effect(*args, **kwargs):
-            return True
-
-        def simulate_side_effect(*args, **kwargs):
-            return True
-
-        self.mocksim.compile_project.side_effect = compile_side_effect
-        self.mocksim.simulate.side_effect = simulate_side_effect
+    name = "mock"
 
     @staticmethod
-    def package_users_depend_on_bodies():
-        return False
+    def from_args(*args, **kwargs):
+        return MockSimulator(output_path="", gui=False)
 
-    def create(self, args, simulator_output_path):  # pylint: disable=unused-argument
-        return self.mocksim
+    package_users_depend_on_bodies = False
+
+    @staticmethod
+    def compile_source_file_command(*args, **kwargs):  # pylint: disable=arguments-differ
+        return True
+
+    @staticmethod
+    def simulate(*args, **kwargs):  # pylint: disable=arguments-differ
+        return True
 
 
 def names(lst):

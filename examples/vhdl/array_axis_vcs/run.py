@@ -19,6 +19,6 @@ lib = vu.add_library("lib")
 lib.add_source_files(join(root, "src/*.vhd"))
 lib.add_source_files(join(root, "src/**/*.vhd"))
 
-#vu.set_sim_option('modelsim.init_files.after_load',['runall_addwave.do'])
+# vu.set_sim_option('modelsim.init_files.after_load',['runall_addwave.do'])
 
 vu.main()

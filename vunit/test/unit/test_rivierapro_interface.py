@@ -12,6 +12,7 @@ Test the RivieraPro interface
 import unittest
 from os.path import join, dirname, exists
 import os
+from itertools import product
 from shutil import rmtree
 from vunit.rivierapro_interface import RivieraProInterface
 from vunit.test.mock_2or3 import mock
@@ -207,7 +208,7 @@ class TestRivieraProInterface(unittest.TestCase):
     def test_compile_project_coverage(self, process, check_output):
         library_cfg = join(self.output_path, "library.cfg")
 
-        for file_type in ["vhdl", "verilog"]:
+        for file_type, coverage_off in product(["vhdl", "verilog"], [False, True]):
             check_output.reset_mock()
 
             simif = RivieraProInterface(prefix="prefix",
@@ -223,7 +224,14 @@ class TestRivieraProInterface(unittest.TestCase):
                 file_name = "file.v"
 
             write_file(file_name, "")
-            project.add_source_file(file_name, "lib", file_type=file_type)
+            source_file = project.add_source_file(file_name, "lib", file_type=file_type)
+
+            if coverage_off:
+                covargs = []
+                source_file.set_compile_option("disable_coverage", True)
+            else:
+                covargs = ['-coverage', 'bes']
+
             simif.compile_project(project)
             process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"],
                                     cwd=self.output_path, env=simif.get_env())
@@ -235,25 +243,21 @@ class TestRivieraProInterface(unittest.TestCase):
                     [join('prefix', 'vcom'),
                      '-quiet',
                      '-j',
-                     self.output_path,
-                     '-coverage',
-                     'bes',
-                     '-2008',
-                     '-work',
-                     'lib',
-                     'file.vhd'], env=simif.get_env())
+                     self.output_path] + covargs + [
+                         '-2008',
+                         '-work',
+                         'lib',
+                         'file.vhd'], env=simif.get_env())
             elif file_type == "verilog":
                 check_output.assert_called_once_with(
                     [join('prefix', 'vlog'),
                      '-quiet',
                      '-lc',
-                     library_cfg,
-                     '-coverage',
-                     'bes',
-                     '-work',
-                     'lib',
-                     'file.v',
-                     '-l', 'lib'],
+                     library_cfg] + covargs + [
+                         '-work',
+                         'lib',
+                         'file.v',
+                         '-l', 'lib'],
                     env=simif.get_env())
             else:
                 assert False

@@ -11,6 +11,7 @@ use ieee.numeric_std.all;
 
 use work.queue_pkg.all;
 use work.bus_master_pkg.all;
+use work.sync_pkg.all;
 context work.com_context;
 
 entity ram_master is
@@ -57,6 +58,12 @@ begin
       we <= pop_std_ulogic_vector(request_msg);
       wait until en = '1' and rising_edge(clk);
       en <= '0';
+
+    elsif msg_type = wait_until_idle_msg then
+      while not is_empty(request_queue) loop
+        wait until rising_edge(clk);
+      end loop;
+      handle_wait_until_idle(net, msg_type, request_msg);
     else
       unexpected_msg_type(msg_type);
     end if;

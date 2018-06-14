@@ -107,11 +107,11 @@ class LocationPreprocessor(object):
                 file_name_association = file_name_association if not already_fixed_file_name else ''
                 line_num_association = line_num_association if not already_fixed_line_num else ''
 
-                code = (code[:match.start('args') + closing_paranthesis_start] +
-                        line_num_association +
-                        file_name_association + code[match.start('args') + closing_paranthesis_start:])
+                code = (code[:match.start('args') + closing_paranthesis_start]
+                        + line_num_association
+                        + file_name_association + code[match.start('args') + closing_paranthesis_start:])
             else:
-                code = (code[:match.end('subprogram')] +
-                        '(' + line_num_association[2:] + file_name_association + ')' +
-                        code[match.end('subprogram'):])
+                code = (code[:match.end('subprogram')]
+                        + '(' + line_num_association[2:] + file_name_association + ')'
+                        + code[match.end('subprogram'):])
         return code

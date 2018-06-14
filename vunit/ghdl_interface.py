@@ -211,16 +211,19 @@ class GHDLInterface(SimulatorInterface):
         """
         Simulate with entity as top level using generics
         """
-        if not exists(output_path):
-            os.makedirs(output_path)
 
-        cmd = self._get_sim_command(config, output_path)
+        script_path = join(output_path, self.name)
+
+        if not exists(script_path):
+            os.makedirs(script_path)
+
+        cmd = self._get_sim_command(config, script_path)
 
         if elaborate_only:
             cmd += ["--no-run"]
 
         if self._gtkwave_fmt is not None:
-            data_file_name = join(output_path, "wave.%s" % self._gtkwave_fmt)
+            data_file_name = join(script_path, "wave.%s" % self._gtkwave_fmt)
 
             if exists(data_file_name):
                 os.remove(data_file_name)

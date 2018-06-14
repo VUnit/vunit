@@ -48,6 +48,7 @@ def configure_tb_same_sim_all_pass(self):
     module = ui.library("lib").module("tb_same_sim_all_pass")
     module.add_config('cfg', post_check=post_check)
 
+
 configure_tb_with_parameter_config(ui)
 configure_tb_same_sim_all_pass(ui)
 lib.module("tb_other_file_tests").scan_tests_from_file(join(root, "other_file_tests.sv"))
