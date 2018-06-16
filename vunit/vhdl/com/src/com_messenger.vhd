@@ -653,7 +653,7 @@ package body com_messenger_pkg is
     if copy_msg then
       data := new_queue(queue_pool);
       for i in 0 to length(msg.data) - 1 loop
-        push(data, get(msg.data.data, 1+i));
+        unsafe_push(data, get(msg.data.data, 1+i));
       end loop;
     end if;
 

@@ -480,7 +480,7 @@ package body com_types_pkg is
   begin
     result.data := new_queue(queue_pool);
     for i in 0 to length(msg.data) - 1 loop
-      push(result.data, get(msg.data.data, 1+i));
+      unsafe_push(result.data, get(msg.data.data, 1+i));
     end loop;
 
     return result;
