@@ -473,7 +473,7 @@ package body queue_pkg is
     unsafe_push(queue, value.lower_limit);
     unsafe_push(queue, value.upper_limit);
     unsafe_push(queue, value.data);
-    value.data := null_ptr;
+    value := null_integer_array;
   end;
 
   impure function pop_ref(queue : queue_t) return integer_array_t is

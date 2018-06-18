@@ -38,7 +38,7 @@ begin
     variable sulv : std_ulogic_vector(0 to 5);
     variable boolv : boolean_vector(0 to 1);
     variable integer_vector_ptr : integer_vector_ptr_t;
-    variable integer_array : integer_array_t;
+    variable integer_array, integer_array_copy : integer_array_t;
 
     constant my_msg_type : msg_type_t := new_msg_type("my msg type");
   begin
@@ -260,11 +260,10 @@ begin
       elsif run("Test push and pop of integer_array_t") then
         msg := new_msg;
         integer_array := new_3d(1, 2, 3, 4);
-        integer_vector_ptr := integer_array.data;
+        integer_array_copy := integer_array;
         push_integer_array_t_ref(msg, integer_array);
-        check(integer_array.data = null_ptr);
-        integer_array.data := integer_vector_ptr;
-        check(pop_integer_array_t_ref(msg) = integer_array);
+        check(integer_array = null_integer_array);
+        check(pop_integer_array_t_ref(msg) = integer_array_copy);
       elsif run("Test setting and getting msg_type") then
         msg := new_msg;
         check(message_type(msg) = null_msg_type);

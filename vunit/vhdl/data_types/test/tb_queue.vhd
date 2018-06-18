@@ -35,7 +35,7 @@ begin
     variable bv : bit_vector(0 to 5);
     variable integer_vector_ptr : integer_vector_ptr_t;
     variable string_ptr : string_ptr_t;
-    variable integer_array : integer_array_t;
+    variable integer_array, integer_array_copy: integer_array_t;
   begin
     test_runner_setup(runner, runner_cfg);
     if run("Test default queue is null") then
@@ -312,11 +312,10 @@ begin
     elsif run("Test push and pop integer_array_t") then
       queue := new_queue;
       integer_array := new_3d(1, 2, 3, 4);
-      integer_vector_ptr := integer_array.data;
+      integer_array_copy := integer_array;
       push_integer_array_t_ref(queue, integer_array);
-      assert integer_array.data = null_ptr;
-      integer_array.data := integer_vector_ptr;
-      assert pop_integer_array_t_ref(queue) = integer_array;
+      assert integer_array = null_integer_array;
+      assert pop_integer_array_t_ref(queue) = integer_array_copy;
 
     elsif run("Test codecs") then
       queue := new_queue;
