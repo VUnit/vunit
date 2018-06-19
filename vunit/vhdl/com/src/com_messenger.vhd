@@ -704,6 +704,7 @@ package body com_messenger_pkg is
     check(msg.data /= null_queue, null_message_error);
 
     msg.id     := next_message_id;
+    next_message_id := next_message_id + 1;
     msg.status := ok;
     msg.sender := sender;
 
