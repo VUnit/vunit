@@ -8,6 +8,8 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 use work.logger_pkg.all;
+use work.checker_pkg.all;
+use work.check_pkg.all;
 use work.stream_master_pkg.all;
 use work.stream_slave_pkg.all;
 use work.sync_pkg.all;
@@ -16,31 +18,53 @@ context work.data_types_context;
 
 package axi_stream_pkg is
 
-  type axi_stream_master_t is record
-    p_actor       : actor_t;
-    p_data_length : natural;
-    p_logger      : logger_t;
-  end record;
-
-  type axi_stream_slave_t is record
-    p_actor       : actor_t;
-    p_data_length : natural;
-    p_logger      : logger_t;
-  end record;
-
   type axi_stream_monitor_t is record
     p_actor       : actor_t;
     p_data_length : natural;
     p_logger      : logger_t;
   end record;
 
-  constant axi_stream_logger : logger_t := get_logger("vunit_lib:axi_stream_pkg");
+  constant null_axi_stream_monitor : axi_stream_monitor_t := (
+    p_data_length => natural'high,
+    p_logger      => null_logger,
+    p_actor       => null_actor
+  );
+
+  type axi_stream_master_t is record
+    p_actor       : actor_t;
+    p_data_length : natural;
+    p_logger      : logger_t;
+    p_monitor     : axi_stream_monitor_t;
+  end record;
+
+  type axi_stream_slave_t is record
+    p_actor       : actor_t;
+    p_data_length : natural;
+    p_logger      : logger_t;
+    p_monitor     : axi_stream_monitor_t;
+  end record;
+
+  constant axi_stream_logger  : logger_t  := get_logger("vunit_lib:axi_stream_pkg");
+  constant axi_stream_checker : checker_t := new_checker(axi_stream_logger);
+
   impure function new_axi_stream_master(data_length : natural;
-                                        logger      : logger_t := axi_stream_logger;
-                                        actor       : actor_t  := null_actor) return axi_stream_master_t;
+                                        logger      : logger_t             := axi_stream_logger;
+                                        actor       : actor_t              := null_actor;
+                                        monitor     : axi_stream_monitor_t := null_axi_stream_monitor
+                                       ) return axi_stream_master_t;
+  impure function new_axi_stream_master_with_monitor(data_length : natural;
+                                                     logger      : logger_t := axi_stream_logger;
+                                                     actor       : actor_t
+                                                    ) return axi_stream_master_t;
   impure function new_axi_stream_slave(data_length : natural;
-                                       logger      : logger_t := axi_stream_logger;
-                                       actor       : actor_t  := null_actor) return axi_stream_slave_t;
+                                       logger      : logger_t             := axi_stream_logger;
+                                       actor       : actor_t              := null_actor;
+                                       monitor     : axi_stream_monitor_t := null_axi_stream_monitor
+                                      ) return axi_stream_slave_t;
+  impure function new_axi_stream_slave_with_monitor(data_length : natural;
+                                                    logger      : logger_t := axi_stream_logger;
+                                                    actor       : actor_t
+                                                   ) return axi_stream_slave_t;
   impure function new_axi_stream_monitor(data_length : natural;
                                          logger      : logger_t := axi_stream_logger;
                                          actor       : actor_t) return axi_stream_monitor_t;
@@ -66,7 +90,7 @@ package axi_stream_pkg is
 
   procedure push_axi_stream_transaction(msg : msg_t; axi_stream_transaction : axi_stream_transaction_t);
   procedure pop_axi_stream_transaction(
-    constant msg : in msg_t;
+    constant msg                    : in msg_t;
     variable axi_stream_transaction : out axi_stream_transaction_t
   );
 
@@ -85,31 +109,66 @@ package body axi_stream_pkg is
 
   impure function new_axi_stream_master(data_length : natural;
                                         logger      : logger_t := axi_stream_logger;
-                                        actor       : actor_t := null_actor) return axi_stream_master_t is
+                                        actor       : actor_t := null_actor;
+                                        monitor     : axi_stream_monitor_t := null_axi_stream_monitor
+                                       ) return axi_stream_master_t is
     variable p_actor : actor_t;
   begin
+    check_implication(
+      axi_stream_checker,
+      monitor /= null_axi_stream_monitor,
+      monitor.p_data_length = data_length,
+      "Data length of monitor doesn't match that of the master"
+    );
     p_actor := actor when actor /= null_actor else new_actor;
 
     return (p_actor       => p_actor,
             p_data_length => data_length,
-            p_logger      => logger);
+            p_logger      => logger,
+            p_monitor     => monitor);
+  end;
+
+  impure function new_axi_stream_master_with_monitor(data_length : natural;
+                                                     logger      : logger_t := axi_stream_logger;
+                                                     actor       : actor_t
+                                                    ) return axi_stream_master_t is
+  begin
+    return new_axi_stream_master(data_length, logger, actor, new_axi_stream_monitor(data_length, logger, actor));
   end;
 
   impure function new_axi_stream_slave(data_length : natural;
                                        logger      : logger_t := axi_stream_logger;
-                                       actor       : actor_t := null_actor) return axi_stream_slave_t is
+                                       actor       : actor_t := null_actor;
+                                       monitor     : axi_stream_monitor_t := null_axi_stream_monitor
+                                      ) return axi_stream_slave_t is
     variable p_actor : actor_t;
   begin
+    check_implication(
+      axi_stream_checker,
+      monitor /= null_axi_stream_monitor,
+      monitor.p_data_length = data_length,
+      "Data length of monitor doesn't match that of the master"
+    );
     p_actor := actor when actor /= null_actor else new_actor;
 
     return (p_actor       => p_actor,
             p_data_length => data_length,
-            p_logger      => logger);
+            p_logger      => logger,
+            p_monitor     => monitor);
+  end;
+
+  impure function new_axi_stream_slave_with_monitor(data_length : natural;
+                                                    logger      : logger_t := axi_stream_logger;
+                                                    actor       : actor_t
+                                                   ) return axi_stream_slave_t is
+  begin
+    return new_axi_stream_slave(data_length, logger, actor, new_axi_stream_monitor(data_length, logger, actor));
   end;
 
   impure function new_axi_stream_monitor(data_length : natural;
                                          logger      : logger_t := axi_stream_logger;
-                                         actor       : actor_t) return axi_stream_monitor_t is
+                                         actor       : actor_t
+                                        ) return axi_stream_monitor_t is
   begin
     return (p_actor       => actor,
             p_data_length => data_length,
@@ -165,7 +224,7 @@ package body axi_stream_pkg is
   end;
 
   procedure pop_axi_stream_transaction(
-    constant msg : in msg_t;
+    constant msg                    : in msg_t;
     variable axi_stream_transaction : out axi_stream_transaction_t
   ) is
   begin

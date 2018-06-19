@@ -48,4 +48,18 @@ begin
 
   end process;
 
+  axi_stream_monitor_generate : if slave.p_monitor /= null_axi_stream_monitor generate
+    axi_stream_monitor_inst : entity work.axi_stream_monitor
+      generic map(
+        monitor => slave.p_monitor
+      )
+      port map(
+        aclk   => aclk,
+        tvalid => tvalid,
+        tready => tready,
+        tdata  => tdata,
+        tlast  => tlast
+      );
+  end generate axi_stream_monitor_generate;
+
 end architecture;
