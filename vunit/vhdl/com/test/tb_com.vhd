@@ -17,24 +17,24 @@ use ieee.std_logic_1164.all;
 use std.textio.all;
 
 entity tb_com is
-  generic (
+  generic(
     runner_cfg : string);
 end entity tb_com;
 
 architecture test_fixture of tb_com is
-  signal hello_world_received, start_receiver, start_server,
-    start_server2, start_server3, start_server4, start_server5,
-    start_server6, start_subscribers, start_publishers : boolean := false;
-  signal hello_subscriber_received                     : std_logic_vector(1 to 2) := "ZZ";
-  signal start_limited_inbox, limited_inbox_actor_done : boolean                  := false;
-  signal start_limited_inbox_subscriber                : boolean                  := false;
+  signal hello_world_received, start_receiver, start_server         : boolean                  := false;
+  signal start_server2, start_server3, start_server4, start_server5 : boolean                  := false;
+  signal start_server6, start_subscribers, start_publishers         : boolean                  := false;
+  signal hello_subscriber_received                                  : std_logic_vector(1 to 2) := "ZZ";
+  signal start_limited_inbox, limited_inbox_actor_done              : boolean                  := false;
+  signal start_limited_inbox_subscriber                             : boolean                  := false;
 
   constant com_logger : logger_t := get_logger("vunit_lib:com");
 begin
   test_runner : process
-    variable self, actor, actor2, actor3, actor4, actor5, my_receiver, my_sender : actor_t;
-    variable server, publisher, publisher2, subscriber,
-      subscriber2, subscriber3 : actor_t;
+    variable self, actor, actor2, actor3, actor4                : actor_t;
+    variable actor5, my_receiver, my_sender, server, publisher  : actor_t;
+    variable publisher2, subscriber, subscriber2, subscriber3   : actor_t;
     variable actor_vec                                          : actor_vec_t(0 to 2);
     variable status                                             : com_status_t;
     variable n_actors                                           : natural;
@@ -51,7 +51,12 @@ begin
     variable l                                                  : line;
     variable messenger_state                                    : messenger_state_t;
     variable null_mailbox_state                                 : mailbox_state_t   := (inbox, 0, null);
-    variable null_actor_state                                   : actor_state_t     := (null, false, null_mailbox_state, null_mailbox_state, null, null);
+    variable null_actor_state                                   : actor_state_t     := (null,
+                                                                                        false,
+                                                                                        null_mailbox_state,
+                                                                                        null_mailbox_state,
+                                                                                        null, null
+                                                                                       );
     variable null_messenger_state                               : messenger_state_t := (null, null);
 
   begin
@@ -272,7 +277,7 @@ begin
         check(msg.receiver = my_receiver);
         wait until hello_world_received for 1 ns;
         check(hello_world_received, "Expected ""hello world"" to be received at the server");
-      elsif run("Test that an actor can send a message in response to another message from an a priori unknown actor") then
+      elsif run("Test that an actor can send a reply to a message from an a priori unknown actor") then
         start_server <= true;
         wait for 1 ns;
         server       := find("server");
@@ -348,6 +353,20 @@ begin
         check(msg2.id = 1, "Expected first message id to be 1");
         receive(net, self, msg2);
         check(msg2.id = 2, "Expected first message id to be 2");
+      elsif run("Test that each published message gets an increasing message number") then
+        actor_vec := (others => new_actor);
+        for i in actor_vec'range loop
+          subscribe(actor_vec(i), self);
+        end loop;
+
+        for j in 1 to 3 loop
+          msg := new_msg;
+          publish(net, self, msg);
+          for i in actor_vec'range loop
+            receive(net, actor_vec(i), msg);
+            check_equal(msg.id, j);
+          end loop;
+        end loop;
       elsif run("Test that a limited-inbox receiver can receive as expected without blocking") then
         start_limited_inbox <= true;
         actor               := find("limited inbox");
@@ -439,7 +458,7 @@ begin
         check_log(com_logger, "[6:- - ->  (-)] =>  inbox", trace);
         unmock(com_logger);
       elsif run("Test receiving from several actors") then
-        actor_vec := (others => new_actor);
+        actor_vec        := (others => new_actor);
         for i in 0 to 2 loop
           subscribe(actor_vec(i), find("publisher " & to_string(i)));
         end loop;
@@ -501,7 +520,7 @@ begin
         receive(net, actor3, msg3);
         msg2   := new_msg;
         push_string(msg2, "reply");
-        msg4 := pop_msg_t(msg3);
+        msg4   := pop_msg_t(msg3);
         reply(net, msg4, msg2);
         receive_reply(net, msg, msg3);
         check_equal(pop_string(msg3), "reply");
@@ -702,7 +721,7 @@ begin
         publish(net, self, msg, 8 ns);
         check_log(com_logger, "FULL INBOX ERROR.", failure);
         check_only_log(com_logger,
-                       "[1:- test runner -> limited inbox subscriber (-)] => limited inbox subscriber inbox",
+                       "[2:- test runner -> limited inbox subscriber (-)] => limited inbox subscriber inbox",
                        trace);
         unmock(com_logger);
       elsif run("Test that publishing to subscribers with full inboxes results passes if waiting") then
@@ -972,9 +991,7 @@ begin
       elsif run("Test making a string of mailbox state") then
         actor := new_actor("actor", 17);
         check_equal(get_mailbox_state_string(actor, inbox),
-                    "Mailbox: inbox" & LF &
-                    "  Size: 17" & LF &
-                    "  Messages:");
+                    "Mailbox: inbox" & LF & "  Size: 17" & LF & "  Messages:");
 
         msg           := new_msg(sender => self);
         send(net, actor, msg);
@@ -984,12 +1001,11 @@ begin
         write(l, get_mailbox_state_string(actor, inbox, "  "));
         receive(net, actor, request_msg);
         info(l.all);
-        check_equal(l.all,
-                    "  Mailbox: inbox" & LF &
-                    "    Size: 17" & LF &
-                    "    Messages:" & LF &
-                    "      0. " & to_string(mailbox_state.messages(0)) & LF &
-                    "      1. " & to_string(mailbox_state.messages(1)));
+        check_equal(
+          l.all,
+          "  Mailbox: inbox" & LF & "    Size: 17" & LF & "    Messages:" & LF & "      0. " & --
+          to_string(mailbox_state.messages(0)) & LF & "      1. " & to_string(mailbox_state.messages(1))
+        );
 
       elsif run("Test getting and deallocating actor state") then
         actor       := find("my actor");
@@ -1025,46 +1041,46 @@ begin
         subscribe(actor, actor2, inbound);
         subscribe(self, actor);
         actor_state := get_actor_state(actor);
-        check(actor_state.subscriptions(0) =
-              subscription_t'(subscriber => actor, publisher => actor2, traffic_type => inbound));
-        check(actor_state.subscribers(0) =
-              subscription_t'(subscriber => self, publisher => actor, traffic_type => published));
+        check(actor_state.subscriptions(0) = subscription_t'(subscriber   => actor,
+                                                             publisher    => actor2,
+                                                             traffic_type => inbound
+                                                            )
+        );
+        check(actor_state.subscribers(0) = subscription_t'(subscriber   => self,
+                                                           publisher    => actor,
+                                                           traffic_type => published
+                                                          )
+        );
         deallocate(actor_state);
         check(actor_state = null_actor_state);
 
       elsif run("Test making a string of actor state") then
         actor := find("my actor");
         check_equal(get_actor_state_string(actor),
-                    "Name: my actor" & LF &
-                    "  Is deferred: yes" & LF &
-                    get_mailbox_state_string(actor, inbox, "  ") & LF &
-                    get_mailbox_state_string(actor, outbox, "  ") & LF &
-                    "  Subscriptions:" & LF &
-                    "  Subscribers:");
+                    "Name: my actor" & LF & "  Is deferred: yes" & LF & --
+                    get_mailbox_state_string(actor, inbox, "  ") & LF & --
+                    get_mailbox_state_string(actor, outbox, "  ") & LF & --
+                    "  Subscriptions:" & LF & "  Subscribers:");
 
         actor := new_actor("my actor");
         msg   := new_msg;
         send(net, actor, msg);
 
         check_equal(get_actor_state_string(actor),
-                    "Name: my actor" & LF &
-                    "  Is deferred: no" & LF &
-                    get_mailbox_state_string(actor, inbox, "  ") & LF &
-                    get_mailbox_state_string(actor, outbox, "  ") & LF &
-                    "  Subscriptions:" & LF &
-                    "  Subscribers:");
+                    "Name: my actor" & LF & "  Is deferred: no" & LF & --
+                    get_mailbox_state_string(actor, inbox, "  ") & LF & --
+                    get_mailbox_state_string(actor, outbox, "  ") & LF & --
+                    "  Subscriptions:" & LF & "  Subscribers:");
 
         receive(net, actor, request_msg);
         reply_msg := new_msg;
         reply(net, request_msg, reply_msg);
 
         check_equal(get_actor_state_string(actor),
-                    "Name: my actor" & LF &
-                    "  Is deferred: no" & LF &
-                    get_mailbox_state_string(actor, inbox, "  ") & LF &
-                    get_mailbox_state_string(actor, outbox, "  ") & LF &
-                    "  Subscriptions:" & LF &
-                    "  Subscribers:");
+                    "Name: my actor" & LF & "  Is deferred: no" & LF & --
+                    get_mailbox_state_string(actor, inbox, "  ") & LF & --
+                    get_mailbox_state_string(actor, outbox, "  ") & LF & --
+                    "  Subscriptions:" & LF & "  Subscribers:");
 
         actor2 := new_actor("actor 2");
         subscribe(actor, actor2);
@@ -1074,15 +1090,12 @@ begin
 
         info(get_actor_state_string(actor));
         check_equal(get_actor_state_string(actor),
-                    "Name: my actor" & LF &
-                    "  Is deferred: no" & LF &
-                    get_mailbox_state_string(actor, inbox, "  ") & LF &
-                    get_mailbox_state_string(actor, outbox, "  ") & LF &
-                    "  Subscriptions:" & LF &
-                    "    published traffic from actor 2" & LF &
-                    "    inbound traffic to actor 2" & LF &
-                    "  Subscribers:" & LF &
-                    "    test runner subscribes to outbound traffic" & LF &
+                    "Name: my actor" & LF & "  Is deferred: no" & LF & --
+                    get_mailbox_state_string(actor, inbox, "  ") & LF & --
+                    get_mailbox_state_string(actor, outbox, "  ") & LF & --
+                    "  Subscriptions:" & LF & "    published traffic from actor 2" & LF & --
+                    "    inbound traffic to actor 2" & LF & "  Subscribers:" & LF & --
+                    "    test runner subscribes to outbound traffic" & LF & --
                     "    test runner subscribes to inbound traffic");
 
       elsif run("Test getting messenger and deallocating state") then
@@ -1174,42 +1187,32 @@ begin
       elsif run("Test making a string of messenger state") then
         reset_messenger;
         check_equal(get_messenger_state_string,
-                    "Active actors:" & LF &
-                    "Deferred actors:");
+                    "Active actors:" & LF & "Deferred actors:");
 
         actor := new_actor("actor");
         check_equal(get_messenger_state_string,
-                    "Active actors:" & LF &
-                    get_actor_state_string(actor, "  ") & LF & LF &
-                    "Deferred actors:");
+                    "Active actors:" & LF & get_actor_state_string(actor, "  ") & LF & LF & "Deferred actors:");
 
         actor2 := new_actor("actor 2");
         check_equal(get_messenger_state_string,
-                    "Active actors:" & LF &
-                    get_actor_state_string(actor, "  ") & LF & LF &
-                    get_actor_state_string(actor2, "  ") & LF & LF &
-                    "Deferred actors:");
+                    "Active actors:" & LF & get_actor_state_string(actor, "  ") & LF & LF & --
+                    get_actor_state_string(actor2, "  ") & LF & LF & "Deferred actors:");
 
         actor3 := find("actor 3");
         actor4 := find("actor 4");
         actor5 := new_actor("actor 5");
         check_equal(get_messenger_state_string("  "),
-                    "  Active actors:" & LF &
-                    get_actor_state_string(actor, "    ") & LF & LF &
-                    get_actor_state_string(actor2, "    ") & LF & LF &
-                    get_actor_state_string(actor5, "    ") & LF & LF &
-                    "  Deferred actors:" & LF &
-                    get_actor_state_string(actor3, "    ") & LF & LF &
-                    get_actor_state_string(actor4, "    "));
+                    "  Active actors:" & LF & get_actor_state_string(actor, "    ") & LF & LF & --
+                    get_actor_state_string(actor2, "    ") & LF & LF & get_actor_state_string(actor5, "    ") & --
+                    LF & LF & "  Deferred actors:" & LF & get_actor_state_string(actor3, "    ") & LF & --
+                    LF & get_actor_state_string(actor4, "    "));
 
         destroy(actor);
         destroy(actor2);
         destroy(actor5);
         check_equal(get_messenger_state_string,
-                    "Active actors:" & LF &
-                    "Deferred actors:" & LF &
-                    get_actor_state_string(actor3, "  ") & LF & LF &
-                    get_actor_state_string(actor4, "  "));
+                    "Active actors:" & LF & "Deferred actors:" & LF & get_actor_state_string(actor3, "  ") & --
+                    LF & LF & get_actor_state_string(actor4, "  "));
 
       elsif run("Test trace log") then
         mock(com_logger);
