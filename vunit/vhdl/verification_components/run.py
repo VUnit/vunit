@@ -86,5 +86,16 @@ tb_wishbone_master = lib.test_bench("tb_wishbone_master")
 for test in tb_wishbone_master.get_tests():
     gen_wb_tests(test, [8, 32], [1, 64], [0.3, 1.0], [0.3, 1.0], [0.4, 0.0])
 
+tb_axi_stream_protocol_checker = lib.test_bench("tb_axi_stream_protocol_checker")
+
+for data_length in [0, 8]:
+    for test in tb_axi_stream_protocol_checker.get_tests("*passing*tdata*"):
+        test.add_config(name="data_length=%d" % data_length, generics=dict(data_length=data_length))
+
+test_failing_max_waits = tb_axi_stream_protocol_checker.test(
+    "Test failing check of that tready comes within max_waits after valid")
+for max_waits in [0, 8]:
+    test_failing_max_waits.add_config(name="max_waits=%d" % max_waits, generics=dict(max_waits=max_waits))
+
 
 ui.main()

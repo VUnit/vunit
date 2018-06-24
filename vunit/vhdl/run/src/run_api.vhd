@@ -149,4 +149,7 @@ package run_pkg is
   alias test_runner_cleanup_entry_gate is entry_gate[runner_sync_t];
   alias test_runner_cleanup_exit_gate is exit_gate[runner_sync_t];
 
+  -- Private
+  procedure notify(signal runner : inout runner_sync_t);
+
 end package;

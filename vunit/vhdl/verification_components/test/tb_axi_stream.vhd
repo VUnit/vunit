@@ -21,6 +21,7 @@ end entity;
 
 architecture a of tb_axi_stream is
   signal aclk   : std_logic := '0';
+  signal areset_n   : std_logic := '1';
   signal tvalid : std_logic;
   signal tready : std_logic;
   signal tdata  : std_logic_vector(7 downto 0);
@@ -28,6 +29,13 @@ architecture a of tb_axi_stream is
 
   constant monitor : axi_stream_monitor_t := new_axi_stream_monitor(
     data_length => tdata'length, logger => get_logger("monitor"), actor => new_actor("monitor")
+  );
+
+  constant protocol_checker : axi_stream_protocol_checker_t := new_axi_stream_protocol_checker(
+    data_length => tdata'length,
+    logger => get_logger("protocol_checker"),
+    actor => new_actor("protocol_checker"),
+    max_waits => 8
   );
 
   constant master_axi_stream : axi_stream_master_t := new_axi_stream_master_with_monitor(
@@ -39,6 +47,8 @@ architecture a of tb_axi_stream is
     data_length => tdata'length, logger => get_logger("slave"), actor => new_actor("slave")
   );
   constant slave_stream     : stream_slave_t     := as_stream(slave_axi_stream);
+
+
 
   constant n_monitors : natural := 3;
 
@@ -71,9 +81,10 @@ begin
     show(get_logger("slave"), display_handler, debug);
 
     if run("test single push and pop") then
-      push_stream(net, master_stream, x"77");
-      pop_stream(net, slave_stream, data);
+      push_stream(net, master_stream, x"77", true);
+      pop_stream(net, slave_stream, data, last);
       check_equal(data, std_logic_vector'(x"77"), result("for pop stream data"));
+      check_true(last, result("for pop stream last"));
 
       for i in 1 to n_monitors loop
         get_axi_stream_transaction(axi_stream_transaction);
@@ -82,13 +93,14 @@ begin
           std_logic_vector'(x"77"),
           result("for axi_stream_transaction.tdata")
         );
+        check_true(axi_stream_transaction.tlast, result("for axi_stream_transaction.tlast"));
       end loop;
 
     elsif run("test single push and pop with tlast") then
       push_stream(net, master_stream, x"88", true);
       pop_stream(net, slave_stream, data, last);
       check_equal(data, std_logic_vector'(x"88"), result("for pop stream data"));
-      check(last, result("for pop stream last"));
+      check_true(last, result("for pop stream last"));
 
       for i in 1 to n_monitors loop
         get_axi_stream_transaction(axi_stream_transaction);
@@ -97,14 +109,14 @@ begin
           std_logic_vector'(x"88"),
           result("for axi_stream_transaction.tdata")
         );
-        check(axi_stream_transaction.tlast, result("for axi_stream_transaction.tlast"));
+        check_true(axi_stream_transaction.tlast, result("for axi_stream_transaction.tlast"));
       end loop;
 
     elsif run("test single axi push and pop") then
-      push_axi_stream(net, master_axi_stream, x"99", tlast => '0');
+      push_axi_stream(net, master_axi_stream, x"99", tlast => '1');
       pop_stream(net, slave_stream, data, last);
       check_equal(data, std_logic_vector'(x"99"), result("for pop stream data"));
-      check_false(last, result("for pop stream last"));
+      check_true(last, result("for pop stream last"));
 
       for i in 1 to n_monitors loop
         get_axi_stream_transaction(axi_stream_transaction);
@@ -113,7 +125,7 @@ begin
           std_logic_vector'(x"99"),
           result("for axi_stream_transaction.tdata")
         );
-        check_false(axi_stream_transaction.tlast, result("for axi_stream_transaction.tlast"));
+        check_true(axi_stream_transaction.tlast, result("for axi_stream_transaction.tlast"));
       end loop;
 
     elsif run("test pop before push") then
@@ -123,8 +135,7 @@ begin
       end loop;
 
       for i in 0 to 7 loop
-        push_stream(net, master_stream,
-                    std_logic_vector(to_unsigned(i + 1, data'length)));
+        push_stream(net, master_stream, std_logic_vector(to_unsigned(i + 1, data'length)), true);
       end loop;
 
       for i in 0 to 7 loop
@@ -177,6 +188,17 @@ begin
       tdata  => tdata,
       tlast  => tlast
     );
+
+  axi_stream_protocol_checker_inst: entity work.axi_stream_protocol_checker
+    generic map (
+      protocol_checker => protocol_checker)
+    port map (
+      aclk     => aclk,
+      areset_n => areset_n,
+      tvalid   => tvalid,
+      tready   => tready,
+      tdata    => tdata,
+      tlast    => tlast);
 
   aclk <= not aclk after 5 ns;
 end architecture;
