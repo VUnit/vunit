@@ -407,11 +407,14 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         with open(project_csv_path) as f:
             content = csv.reader(f, delimiter='\n')
             for line in content:
-                lib_and_file = list(map(lambda x: x.strip(),''.join(line).split(',')))
-                lib_name = lib_and_file[0]
-                file_name = lib_and_file[1]
-                library = self.add_library(lib_name) 
-                library.add_source_file(file_name)
+                plain_line = ''.join(line).strip()
+                if plain_line: 
+                    lib_and_file = list(map(lambda x: x.strip(), plain_line.split(',')))
+                    lib_name = lib_and_file[0]
+                    file_name = lib_and_file[1]
+                    print(file_name)
+                    library = self.add_library(lib_name) 
+                    library.add_source_file(file_name)
 
     def add_library(self, library_name, vhdl_standard=None):
         """

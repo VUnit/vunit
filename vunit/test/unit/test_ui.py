@@ -255,6 +255,29 @@ end architecture;
         for file_name in files:
             lib.get_source_file(file_name).name.endswith(file_name)
 
+    def test_csv(self):
+        csv = """
+        lib,  tb_example.vhd
+        lib1, tb_example1.vhd
+        lib2, tb_example2.vhd"""
+
+        libraries = ['lib', 'lib1', 'lib2']
+        files = ['tb_example.vhd', 'tb_example1.vhd', 'tb_example2.vhd']
+        
+        self.create_csv_file('test_csv.csv', csv)
+        for file_name in files:
+            self.create_file(file_name) 
+        
+        ui = self._create_ui()
+        ui.add_csv('test_csv.csv')
+        
+
+        for i in range(len(libraries)):
+            library_name = libraries[i]
+            file_name = files[i]
+            file_name_from_ui = ui.get_source_file(file_name, library_name)
+            self.assertIsNotNone(file_name_from_ui)
+
     def test_add_source_files_errors(self):
         ui = self._create_ui()
         lib = ui.add_library("lib")
@@ -774,6 +797,15 @@ end architecture;
         """
         with open(file_name, "w") as fptr:
             fptr.write(contents)
+    
+    @staticmethod
+    def create_csv_file(file_name, contents=''):
+        """
+        Create a temporary csv description file with given contents
+        """
+        with open(file_name, "w") as fprt:
+            fprt.write(contents)
+
 
     def assertRaisesRegex(self, *args, **kwargs):  # pylint: disable=invalid-name,arguments-differ
         """
