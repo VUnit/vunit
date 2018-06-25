@@ -212,6 +212,7 @@ configuration is only run if there are no named configurations.
 
 from __future__ import print_function
 
+import csv
 import sys
 import traceback
 import logging
@@ -392,6 +393,25 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         self._project.add_library(library_name, abspath(path), vhdl_standard, is_external=True)
         return self.library(library_name)
+
+    def add_csv(self, project_csv_path, vhdl_standard=None):
+        """
+        Add a project configuration, mapping all the libraries and files
+        :param project_csv_path: path to csv project spec
+        :param vhdl_standard: The VHDL standard used to compile file into this library,
+                              if None, the VUNIT_VHDL_STANDARD environment variable is used
+        """
+        if vhdl_standard is None:
+            vhdl_standard = self._vhdl_standard
+        
+        with open(project_csv_path) as f:
+            content = csv.reader(f, delimiter='\n')
+            for line in content:
+                lib_and_file = list(map(lambda x: x.strip(),''.join(line).split(',')))
+                lib_name = lib_and_file[0]
+                file_name = lib_and_file[1]
+                library = self.add_library(lib_name) 
+                library.add_source_file(file_name)
 
     def add_library(self, library_name, vhdl_standard=None):
         """
