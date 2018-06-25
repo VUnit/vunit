@@ -259,7 +259,7 @@ end architecture;
         csv = """
         lib,  tb_example.vhdl  
         lib1 , tb_example1.vhd
-         lib2, tb_example2.vhd
+        lib2, tb_example2.vhd
         lib2,"tb,ex3.vhd"
         """
 

@@ -416,6 +416,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                         libs_and_files[lib_name] += [file_name]
                     else:
                         libs_and_files[lib_name] = [file_name]
+                elif len(row) > 2:
+                    LOGGER.error("More than one library and one file in csv description")
     
             for lib_name in libs_and_files.keys():
                 files = libs_and_files[lib_name]
