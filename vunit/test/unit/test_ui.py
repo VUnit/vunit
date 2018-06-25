@@ -257,12 +257,14 @@ end architecture;
 
     def test_csv(self):
         csv = """
-        lib,  tb_example.vhd
-        lib1, tb_example1.vhd
-        lib2, tb_example2.vhd"""
+        lib,  tb_example.vhdl  
+        lib1 , tb_example1.vhd
+         lib2, tb_example2.vhd
+        lib2,"tb,ex3.vhd"
+        """
 
-        libraries = ['lib', 'lib1', 'lib2']
-        files = ['tb_example.vhd', 'tb_example1.vhd', 'tb_example2.vhd']
+        libraries = ['lib', 'lib1', 'lib2', 'lib2']
+        files = ['tb_example.vhdl', 'tb_example1.vhd', 'tb_example2.vhd', 'tb,ex3.vhd']
         
         self.create_csv_file('test_csv.csv', csv)
         for file_name in files:

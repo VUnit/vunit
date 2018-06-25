@@ -404,17 +404,24 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         if vhdl_standard is None:
             vhdl_standard = self._vhdl_standard
         
-        with open(project_csv_path) as f:
-            content = csv.reader(f, delimiter='\n')
-            for line in content:
-                plain_line = ''.join(line).strip()
-                if plain_line: 
-                    lib_and_file = list(map(lambda x: x.strip(), plain_line.split(',')))
-                    lib_name = lib_and_file[0]
-                    file_name = lib_and_file[1]
-                    library = self.add_library(lib_name) 
-                    library.add_source_file(file_name)
+        libs_and_files = dict()
 
+        with open(project_csv_path) as f:
+            content = csv.reader(f)
+            for row in content:
+                if len(row) == 2: 
+                    lib_name = row[0].strip()
+                    file_name = row[1].strip()
+                    if lib_name in libs_and_files:
+                        libs_and_files[lib_name] += [file_name]
+                    else:
+                        libs_and_files[lib_name] = [file_name]
+    
+            for lib_name in libs_and_files.keys():
+                files = libs_and_files[lib_name]
+                lib = self.add_library(lib_name)
+                lib.add_source_files(files)
+    
     def add_library(self, library_name, vhdl_standard=None):
         """
         Add a library managed by VUnit.
