@@ -412,7 +412,6 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                     lib_and_file = list(map(lambda x: x.strip(), plain_line.split(',')))
                     lib_name = lib_and_file[0]
                     file_name = lib_and_file[1]
-                    print(file_name)
                     library = self.add_library(lib_name) 
                     library.add_source_file(file_name)
 
