@@ -264,20 +264,20 @@ end architecture;
         """
 
         libraries = ['lib', 'lib1', 'lib2', 'lib2']
-        files = ['tb_example.vhdl', 'tb_example1.vhd', 'tb_example2.vhd', 'tb,ex3.vhd']
+        files = ['tb_example.vhdl', 'tb_example1.vhd', 'tb_example2.vhd', ' tb,ex3.vhd']
         
         self.create_csv_file('test_csv.csv', csv)
         for file_name in files:
             self.create_file(file_name) 
         
         ui = self._create_ui()
-        ui.add_csv('test_csv.csv')
+        ui.add_source_files_from_csv('test_csv.csv')
         
 
         for i in range(len(libraries)):
             library_name = libraries[i]
             file_name = files[i]
-            file_name_from_ui = ui.get_source_file(file_name, library_name)
+            file_name_from_ui = ui.add_source_files_from_csv(file_name, library_name)
             self.assertIsNotNone(file_name_from_ui)
 
     def test_add_source_files_errors(self):

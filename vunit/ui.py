@@ -394,19 +394,21 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._project.add_library(library_name, abspath(path), vhdl_standard, is_external=True)
         return self.library(library_name)
 
-    def add_csv(self, project_csv_path, vhdl_standard=None):
+    def add_source_files_from_csv(self, project_csv_path, vhdl_standard=None):
         """
         Add a project configuration, mapping all the libraries and files
-        :param project_csv_path: path to csv project spec
+        :param project_csv_path: path to csv project specification, each line contains the name 
+                                 of the library and the path to one file 'lib_name,filename'
         :param vhdl_standard: The VHDL standard used to compile file into this library,
                               if None, the VUNIT_VHDL_STANDARD environment variable is used
         """
         if vhdl_standard is None:
             vhdl_standard = self._vhdl_standard
-        
+
+        abs_csv_project_path = os.path.abspath(project_csv_path)
         libs_and_files = dict()
 
-        with open(project_csv_path) as f:
+        with open(abs_csv_project_path) as f:
             content = csv.reader(f)
             for row in content:
                 if len(row) == 2: 
@@ -422,7 +424,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             for lib_name in libs_and_files.keys():
                 files = libs_and_files[lib_name]
                 lib = self.add_library(lib_name)
-                lib.add_source_files(files)
+                return lib.add_source_files(files)
     
     def add_library(self, library_name, vhdl_standard=None):
         """
