@@ -295,12 +295,8 @@ end architecture;
         ui = self._create_ui()
 
         source_files = ui.add_source_files_from_csv('test_returns.csv')
-        
-        for i in range(len(source_files)):
-            file_from_source_file = source_files[i]
-            file_from_example = list_of_files[i]
-            self.assertEqual(file_from_source_file.name, file_from_example)
-        
+        self.assertEqual([source_file.name for source_file in source_files],list_of_files)
+                
     def test_add_source_files_errors(self):
         ui = self._create_ui()
         lib = ui.add_library("lib")
