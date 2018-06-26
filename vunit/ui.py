@@ -426,7 +426,10 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                 files = libs_and_files[lib_name]
                 lib = self.add_library(lib_name)
                 list_of_source_files.append(lib.add_source_files(files))
-            return list_of_source_files
+            
+            list_of_source_files_flattened = [val for sublist in list_of_source_files for val in sublist]
+
+            return list_of_source_files_flattened
     
     def add_library(self, library_name, vhdl_standard=None):
         """
