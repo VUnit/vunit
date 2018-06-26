@@ -533,8 +533,8 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
                 raise RuntimeError("%s already added to library %s" % (
                     source_file.name, self.name))
             else:
-                LOGGER.warning("Ignoring duplicate file %s added to library %s due to identical contents",
-                               source_file.name, self.name)
+                LOGGER.info("Ignoring duplicate file %s added to library %s due to identical contents",
+                            source_file.name, self.name)
 
             return old_source_file
             # Ignore source files already added with identical content hash

@@ -513,7 +513,7 @@ end architecture;
         self.assertEqual([ent.name for ent in lib.get_entities()], ["foo"])
         self.assertEqual(lib.get_source_file("file.vhd"), file1)
         self.assertEqual(self.project.get_source_files_in_order(), [file1])
-        self.assertTrue(logger.warning.called)
+        self.assertTrue(logger.info.called)
 
     def _test_warning_on_duplicate(self, code, message, verilog=False):
         """
