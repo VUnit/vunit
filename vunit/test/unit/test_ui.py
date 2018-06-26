@@ -278,7 +278,29 @@ end architecture;
             file_name = files[i]
             file_name_from_ui = ui.add_source_files_from_csv(file_name, library_name)
             self.assertIsNotNone(file_name_from_ui)
+        
+    def test_add_source_files_from_csv_return(self):
+        csv = """
+        lib, tb_example.vhd
+        lib, tb_example1.vhd
+        lib, tb_example2.vhd
+        """ 
 
+        list_of_files =  ['tb_example.vhd', 'tb_example1.vhd', 'tb_example2.vhd']
+        
+        for i in range(len(list_of_files)):
+            self.create_file(list_of_files[i], str(i)) 
+        
+        self.create_csv_file('test_returns.csv', csv)
+        ui = self._create_ui()
+
+        source_files = ui.add_source_files_from_csv('test_returns.csv')
+        
+        for i in range(len(source_files)):
+            file_from_source_file = source_files[i]
+            file_from_example = list_of_files[i]
+            self.assertEqual(file_from_source_file.name, file_from_example)
+        
     def test_add_source_files_errors(self):
         ui = self._create_ui()
         lib = ui.add_library("lib")

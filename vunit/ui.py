@@ -401,6 +401,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                                  of the library and the path to one file 'lib_name,filename'
         :param vhdl_standard: The VHDL standard used to compile file into this library,
                               if None, the VUNIT_VHDL_STANDARD environment variable is used
+        :returns: A list of files (:class `.SourceFileList`) that were added
         """
         if vhdl_standard is None:
             vhdl_standard = self._vhdl_standard
@@ -425,11 +426,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             for lib_name in libs_and_files.keys():
                 files = libs_and_files[lib_name]
                 lib = self.add_library(lib_name)
-                list_of_source_files.append(lib.add_source_files(files))
-            
-            list_of_source_files_flattened = [val for sublist in list_of_source_files for val in sublist]
-
-            return list_of_source_files_flattened
+                list_of_source_files += lib.add_source_files(files)
+            return list_of_source_files
     
     def add_library(self, library_name, vhdl_standard=None):
         """
@@ -1069,7 +1067,6 @@ class Library(object):
         :example:
 
         .. code-block:: python
-
            lib.set_parameter("data_width", 16)
 
         .. note::
