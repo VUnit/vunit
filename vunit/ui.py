@@ -397,7 +397,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
     def add_source_files_from_csv(self, project_csv_path, vhdl_standard=None):
         """
         Add a project configuration, mapping all the libraries and files
-        :param project_csv_path: path to csv project specification, each line contains the name 
+        :param project_csv_path: path to csv project specification, each line contains the name
                                  of the library and the path to one file 'lib_name,filename'
                                  note that all filenames are relative to the parent folder of the
                                  csv file
@@ -410,11 +410,11 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         libs_and_files = dict()
 
-        with open(project_csv_path) as f:
-            content = csv.reader(f)
+        with open(project_csv_path) as csv_path_file:
+            content = csv.reader(csv_path_file)
             for row in content:
                 if len(row) == 2:
-                    lib_name =row[0].strip()
+                    lib_name = row[0].strip()
                     no_normalized_file = row[1].strip()
                     file_name = normpath(join(dirname(project_csv_path), no_normalized_file))
                     if lib_name in libs_and_files:
@@ -423,14 +423,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                         libs_and_files[lib_name] = [file_name]
                 elif len(row) > 2:
                     LOGGER.error("More than one library and one file in csv description")
-    
             list_of_source_files = SourceFileList(list())
-            for lib_name in libs_and_files.keys():
-                files = libs_and_files[lib_name]
+            for lib_name, files in libs_and_files.items():
                 lib = self.add_library(lib_name)
                 list_of_source_files += lib.add_source_files(files)
             return list_of_source_files
-    
+
     def add_library(self, library_name, vhdl_standard=None):
         """
         Add a library managed by VUnit.
