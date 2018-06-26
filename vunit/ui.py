@@ -1069,6 +1069,7 @@ class Library(object):
         :example:
 
         .. code-block:: python
+
            lib.set_parameter("data_width", 16)
 
         .. note::
