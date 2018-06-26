@@ -610,19 +610,19 @@ Listed 2 files""".splitlines()))
         self.create_file(file_name2)
 
         lib1 = ui.add_library("lib")
-        source_file = lib1.add_source_file(file_name)
+        source_file1 = lib1.add_source_file(file_name)
         self.assertEqual([source_file.name for source_file in lib1.get_source_files()],
-                         [source_file.name])
+                         [source_file1.name])
 
         lib2 = ui.add_library("lib", allow_duplicate=True)
         for lib in [lib1, lib2]:
             self.assertEqual([source_file.name for source_file in lib.get_source_files()],
-                             [source_file.name])
+                             [source_file1.name])
 
         source_file2 = lib2.add_source_file(file_name2)
         for lib in [lib1, lib2]:
             self.assertEqual(set([source_file.name for source_file in lib.get_source_files()]),
-                             set([source_file.name, source_file2.name]))
+                             set([source_file1.name, source_file2.name]))
 
     def test_scan_tests_from_other_file(self):
         for tb_type in ["vhdl", "verilog"]:
