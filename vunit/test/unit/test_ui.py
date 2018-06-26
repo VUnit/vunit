@@ -409,7 +409,8 @@ Listed 2 files""".splitlines()))
             """
             ui = self._create_ui()
             with mock.patch.object(ui, "_project", autospec=True) as project:
-                lib = ui.add_library("lib")
+                project.has_library.return_value = True
+                lib = ui.library("lib")
                 action(ui, lib)
                 project.add_source_file.assert_called_once_with(abspath("verilog.v"),
                                                                 "lib",
@@ -435,7 +436,8 @@ Listed 2 files""".splitlines()))
             """
             ui = self._create_ui()
             with mock.patch.object(ui, "_project", autospec=True) as project:
-                lib = ui.add_library("lib")
+                project.has_library.return_value = True
+                lib = ui.library("lib")
                 action(ui, lib)
                 project.add_source_file.assert_called_once_with(abspath("verilog.v"),
                                                                 "lib",
@@ -459,15 +461,17 @@ Listed 2 files""".splitlines()))
 
                 ui = self._create_ui()
                 with mock.patch.object(ui, "_project", autospec=True) as project:
-                    lib = ui.add_library("lib")
+                    project.has_library.return_value = True
 
                     if method == 0:
                         ui.add_source_files(file_name, "lib", no_parse=no_parse)
                     elif method == 1:
                         ui.add_source_file(file_name, "lib", no_parse=no_parse)
                     elif method == 2:
+                        lib = ui.library("lib")
                         lib.add_source_files(file_name, no_parse=no_parse)
                     elif method == 3:
+                        lib = ui.library("lib")
                         lib.add_source_file(file_name, no_parse=no_parse)
 
                     project.add_source_file.assert_called_once_with(abspath("verilog.v"),
@@ -590,6 +594,35 @@ Listed 2 files""".splitlines()))
             ui = self._create_ui(no_run_arg)
             self._run_main(ui, post_run=post_run)
             self.assertFalse(post_run.called)
+
+    def test_error_on_adding_duplicate_library(self):
+        ui = self._create_ui()
+        ui.add_library("lib")
+        self.assertRaises(ValueError, ui.add_library, "lib")
+
+    def test_allow_adding_duplicate_library(self):
+        ui = self._create_ui()
+
+        file_name = "file.vhd"
+        self.create_file(file_name)
+
+        file_name2 = "file2.vhd"
+        self.create_file(file_name2)
+
+        lib1 = ui.add_library("lib")
+        source_file = lib1.add_source_file(file_name)
+        self.assertEqual([source_file.name for source_file in lib1.get_source_files()],
+                         [source_file.name])
+
+        lib2 = ui.add_library("lib", allow_duplicate=True)
+        for lib in [lib1, lib2]:
+            self.assertEqual([source_file.name for source_file in lib.get_source_files()],
+                             [source_file.name])
+
+        source_file2 = lib2.add_source_file(file_name2)
+        for lib in [lib1, lib2]:
+            self.assertEqual(set([source_file.name for source_file in lib.get_source_files()]),
+                             set([source_file.name, source_file2.name]))
 
     def test_scan_tests_from_other_file(self):
         for tb_type in ["vhdl", "verilog"]:

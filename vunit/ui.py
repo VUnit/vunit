@@ -393,13 +393,16 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._project.add_library(library_name, abspath(path), vhdl_standard, is_external=True)
         return self.library(library_name)
 
-    def add_library(self, library_name, vhdl_standard=None):
+    def add_library(self, library_name, vhdl_standard=None, allow_duplicate=False):
         """
         Add a library managed by VUnit.
 
         :param library_name: The name of the library
         :param vhdl_standard: The VHDL standard used to compile files into this library,
                               if None the VUNIT_VHDL_STANDARD environment variable is used
+        :param allow_duplicate: Set to True to allow the same library
+                                to be added multiple times. Subsequent additions will just
+                                return the previously created library.
         :returns: The created :class:`.Library` object
 
         :example:
@@ -411,8 +414,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         if vhdl_standard is None:
             vhdl_standard = self._vhdl_standard
+
         path = join(self._simulator_output_path, "libraries", library_name)
-        self._project.add_library(library_name, abspath(path), vhdl_standard)
+        if not self._project.has_library(library_name):
+            self._project.add_library(library_name, abspath(path), vhdl_standard)
+        elif not allow_duplicate:
+            raise ValueError("Library %s already added. Use allow_duplicate to ignore this error." % library_name)
         return self.library(library_name)
 
     def library(self, library_name):

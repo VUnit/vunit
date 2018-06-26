@@ -602,6 +602,11 @@ end context;
 """,
             "file_copy.vhd: context 'ctx' previously defined in file.vhd")
 
+    def test_error_on_adding_duplicate_library(self):
+        self.project.add_library(logical_name="lib", directory="dir")
+        self.assertRaises(ValueError, self.project.add_library,
+                          logical_name="lib", directory="dir")
+
     def test_warning_on_duplicate_verilog_module(self):
         self.project.add_library("lib", "lib_path")
         self._test_warning_on_duplicate(
