@@ -217,7 +217,7 @@ import sys
 import traceback
 import logging
 import os
-from os.path import exists, abspath, join, basename, splitext
+from os.path import exists, abspath, join, basename, splitext, normpath, dirname
 from glob import glob
 from fnmatch import fnmatch
 from vunit.database import PickledDataBase, DataBase
@@ -405,15 +405,15 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         if vhdl_standard is None:
             vhdl_standard = self._vhdl_standard
 
-        abs_csv_project_path = os.path.abspath(project_csv_path)
         libs_and_files = dict()
 
-        with open(abs_csv_project_path) as f:
+        with open(project_csv_path) as f:
             content = csv.reader(f)
             for row in content:
-                if len(row) == 2: 
-                    lib_name = row[0].strip()
-                    file_name = row[1].strip()
+                if len(row) == 2:
+                    lib_name =row[0].strip()
+                    no_normalized_file = row[1].strip()
+                    file_name = normpath(join(dirname(project_csv_path), no_normalized_file))
                     if lib_name in libs_and_files:
                         libs_and_files[lib_name] += [file_name]
                     else:
@@ -421,10 +421,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                 elif len(row) > 2:
                     LOGGER.error("More than one library and one file in csv description")
     
+            list_of_source_files = list()
             for lib_name in libs_and_files.keys():
                 files = libs_and_files[lib_name]
                 lib = self.add_library(lib_name)
-                return lib.add_source_files(files)
+                list_of_source_files.append(lib.add_source_files(files))
+            return list_of_source_files
     
     def add_library(self, library_name, vhdl_standard=None):
         """

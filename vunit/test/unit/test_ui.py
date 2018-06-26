@@ -255,12 +255,11 @@ end architecture;
         for file_name in files:
             lib.get_source_file(file_name).name.endswith(file_name)
 
-    def test_csv(self):
+    def test_add_source_files_from_csv(self):
         csv = """
         lib,  tb_example.vhdl  
         lib1 , tb_example1.vhd
         lib2, tb_example2.vhd
-        lib2,"tb,ex3.vhd"
         """
 
         libraries = ['lib', 'lib1', 'lib2', 'lib2']
