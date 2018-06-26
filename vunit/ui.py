@@ -397,6 +397,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
     def add_source_files_from_csv(self, project_csv_path, vhdl_standard=None):
         """
         Add a project configuration, mapping all the libraries and files
+
         :param project_csv_path: path to csv project specification, each line contains the name
                                  of the library and the path to one file 'lib_name,filename'
                                  note that all filenames are relative to the parent folder of the
@@ -404,6 +405,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         :param vhdl_standard: The VHDL standard used to compile file into this library,
                               if None, the VUNIT_VHDL_STANDARD environment variable is used
         :returns: A list of files (:class `.SourceFileList`) that were added
+
         """
         if vhdl_standard is None:
             vhdl_standard = self._vhdl_standard
