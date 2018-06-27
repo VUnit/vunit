@@ -815,6 +815,14 @@ endmodule
             method("ghdl.elab_flags", [], allow_empty=True)
             self.assertRaises(ValueError, method, "ghdl.elab_flags", [])
 
+    def test_get_built_in_libraries(self):
+        """
+        Test to get all builtin libraries, Sigasi Integration API
+        """
+        ui = self._create_ui()
+        list_of_built_in_libraries = ui.get_builtins().get_built_in_libraries()
+        self.assertTrue(len(list_of_built_in_libraries) > 1)
+
     def _create_ui(self, *args):
         """ Create an instance of the VUnit public interface class """
         with mock.patch("vunit.ui.SIMULATOR_FACTORY.select_simulator",

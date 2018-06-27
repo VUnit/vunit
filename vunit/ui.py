@@ -1030,6 +1030,9 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         return SourceFileList([SourceFile(source_file, self._project, self)
                                for source_file in source_files])
 
+    def get_builtins(self):
+        return self._builtins
+
 
 class Library(object):
     """
