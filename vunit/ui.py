@@ -415,8 +415,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         with open(project_csv_path) as csv_path_file:
             content = csv.reader(csv_path_file)
+            file_before = None
             for row in content:
-                file_before = None
                 if len(row) == 2:
                     lib_name = row[0].strip()
                     no_normalized_file = row[1].strip()
@@ -424,9 +424,10 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                     lib = self.library(lib_name) if lib_name in libs else self.add_library(lib_name)
                     libs.add(lib_name)
                     file_ = lib.add_source_file(file_name_)
-                    if file_before:
-                        file_before.add_dependency_on(file_)
+                    if file_before is not None:
+                        file_.add_dependency_on(file_before)
                     files.append(file_)
+                    file_before = file_
                 elif len(row) > 2:
                     LOGGER.error("More than one library and one file in csv description")
         return files

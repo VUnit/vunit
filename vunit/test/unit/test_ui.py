@@ -296,6 +296,27 @@ end architecture;
         source_files = ui.add_source_files_from_csv('test_returns.csv')
         self.assertEqual([source_file.name for source_file in source_files], list_of_files)
 
+    def test_add_source_files_from_csv_dependency(self):
+        test_file = 'test_dependency.csv'
+        csv = """
+        lib, tb_example.vhd
+        lib1, tb_example1.vhd
+        lib1, tb_example2.vhd
+        lib, tb_example3.vhd
+        """
+
+        list_of_files = ['tb_example.vhd', 'tb_example1.vhd', 'tb_example2.vhd', 'tb_example3.vhd']
+        for index, file_ in enumerate(list_of_files):
+            self.create_file(file_, str(index))
+
+        self.create_csv_file(test_file, csv)
+        ui = self._create_ui()
+        source_files = ui.add_source_files_from_csv(test_file)
+        last_elem = source_files[-1]
+        list_of_dependencies = ui.get_compile_order([last_elem])
+        list_of_dependencies_names = list(map(lambda x: x.name, list_of_dependencies))
+        self.assertTrue(list_of_files == list_of_dependencies_names)
+
     def test_add_source_files_errors(self):
         ui = self._create_ui()
         lib = ui.add_library("lib")
