@@ -271,7 +271,7 @@ end architecture;
             self.create_file(file_name)
 
         ui = self._create_ui()
-        ui.add_source_files_from_csv('test_csv.csv')
+        ui.add_source_files_from_csv('test_csv.csv', is_in_order=True)
 
         for index, library_name in enumerate(libraries):
             file_name = files[index]
@@ -293,7 +293,7 @@ end architecture;
         self.create_csv_file('test_returns.csv', csv)
         ui = self._create_ui()
 
-        source_files = ui.add_source_files_from_csv('test_returns.csv')
+        source_files = ui.add_source_files_from_csv('test_returns.csv', is_in_order=True)
         self.assertEqual([source_file.name for source_file in source_files], list_of_files)
 
     def test_add_source_files_from_csv_dependency(self):
@@ -311,7 +311,7 @@ end architecture;
 
         self.create_csv_file(test_file, csv)
         ui = self._create_ui()
-        source_files = ui.add_source_files_from_csv(test_file)
+        source_files = ui.add_source_files_from_csv(test_file, is_in_order=True)
         last_elem = source_files[-1]
         list_of_dependencies = ui.get_compile_order([last_elem])
         list_of_dependencies_names = [dependency_file.name for dependency_file in list_of_dependencies]
