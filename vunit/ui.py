@@ -404,7 +404,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                                  csv file
         :param vhdl_standard: The VHDL standard used to compile file into this library,
                               if None, the VUNIT_VHDL_STANDARD environment variable is used
-        :param is_in_order: The csv file contains the list of libraries and files in the 
+        :param is_in_order: The csv file contains the list of libraries and files in the
                             correct compilation order, this overrides the automatic Vunit
                             compilation dependencies
         :returns: A list of files (:class `.SourceFileList`) that were added
