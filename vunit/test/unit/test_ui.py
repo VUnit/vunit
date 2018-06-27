@@ -314,7 +314,7 @@ end architecture;
         source_files = ui.add_source_files_from_csv(test_file)
         last_elem = source_files[-1]
         list_of_dependencies = ui.get_compile_order([last_elem])
-        list_of_dependencies_names = list(map(lambda x: x.name, list_of_dependencies))
+        list_of_dependencies_names = [dependency_file.name for dependency_file in list_of_dependencies]
         self.assertTrue(list_of_files == list_of_dependencies_names)
 
     def test_add_source_files_errors(self):

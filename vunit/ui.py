@@ -394,7 +394,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._project.add_library(library_name, abspath(path), vhdl_standard, is_external=True)
         return self.library(library_name)
 
-    def add_source_files_from_csv(self, project_csv_path, vhdl_standard=None):
+    def add_source_files_from_csv(self, project_csv_path, vhdl_standard=None, is_in_order=True):
         """
         Add a project configuration, mapping all the libraries and files
 
@@ -404,6 +404,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                                  csv file
         :param vhdl_standard: The VHDL standard used to compile file into this library,
                               if None, the VUNIT_VHDL_STANDARD environment variable is used
+        :param is_in_order: The csv file contains the list of libraries and files in the 
+                            correct compilation order, this overrides the automatic Vunit
+                            compilation dependencies
         :returns: A list of files (:class `.SourceFileList`) that were added
 
         """
@@ -414,17 +417,16 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         files = SourceFileList(list())
 
         with open(project_csv_path) as csv_path_file:
-            content = csv.reader(csv_path_file)
             file_before = None
-            for row in content:
+            for row in csv.reader(csv_path_file):
                 if len(row) == 2:
                     lib_name = row[0].strip()
                     no_normalized_file = row[1].strip()
                     file_name_ = normpath(join(dirname(project_csv_path), no_normalized_file))
                     lib = self.library(lib_name) if lib_name in libs else self.add_library(lib_name)
                     libs.add(lib_name)
-                    file_ = lib.add_source_file(file_name_)
-                    if file_before is not None:
+                    file_ = lib.add_source_file(file_name_, no_parse=is_in_order)
+                    if file_before is not None and is_in_order:
                         file_.add_dependency_on(file_before)
                     files.append(file_)
                     file_before = file_
