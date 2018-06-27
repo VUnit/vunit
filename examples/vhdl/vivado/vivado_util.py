@@ -102,7 +102,7 @@ def read_compile_order(file_name):
             unique.add(key)
 
             if is_verilog_header(file_name):
-                include_dirs.add(dirname(file_info.file_name))
+                include_dirs.add(dirname(file_name))
             else:
                 compile_order.append((library_name, file_name))
 
