@@ -260,10 +260,11 @@ end architecture;
         lib,  tb_example.vhdl
         lib1 , tb_example1.vhd
         lib2, tb_example2.vhd
+        lib3,"tb,ex3.vhd"
         """
 
-        libraries = ['lib', 'lib1', 'lib2']
-        files = ['tb_example.vhdl', 'tb_example1.vhd', 'tb_example2.vhd', ' tb,ex3.vhd']
+        libraries = ['lib', 'lib1', 'lib2', 'lib3']
+        files = ['tb_example.vhdl', 'tb_example1.vhd', 'tb_example2.vhd', 'tb,ex3.vhd']
 
         self.create_csv_file('test_csv.csv', csv)
         for file_name in files:
@@ -274,7 +275,7 @@ end architecture;
 
         for index, library_name in enumerate(libraries):
             file_name = files[index]
-            file_name_from_ui = ui.add_source_files_from_csv(file_name, library_name)
+            file_name_from_ui = ui.get_source_file(file_name, library_name)
             self.assertIsNotNone(file_name_from_ui)
 
     def test_add_source_files_from_csv_return(self):

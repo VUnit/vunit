@@ -410,26 +410,26 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         if vhdl_standard is None:
             vhdl_standard = self._vhdl_standard
 
-        libs_and_files = dict()
+        libs = set()
+        files = SourceFileList(list())
 
         with open(project_csv_path) as csv_path_file:
             content = csv.reader(csv_path_file)
             for row in content:
+                file_before = None
                 if len(row) == 2:
                     lib_name = row[0].strip()
                     no_normalized_file = row[1].strip()
-                    file_name = normpath(join(dirname(project_csv_path), no_normalized_file))
-                    if lib_name in libs_and_files:
-                        libs_and_files[lib_name] += [file_name]
-                    else:
-                        libs_and_files[lib_name] = [file_name]
+                    file_name_ = normpath(join(dirname(project_csv_path), no_normalized_file))
+                    lib = self.library(lib_name) if lib_name in libs else self.add_library(lib_name)
+                    libs.add(lib_name)
+                    file_ = lib.add_source_file(file_name_)
+                    if file_before:
+                        file_before.add_dependency_on(file_)
+                    files.append(file_)
                 elif len(row) > 2:
                     LOGGER.error("More than one library and one file in csv description")
-            list_of_source_files = SourceFileList(list())
-            for lib_name, files in libs_and_files.items():
-                lib = self.add_library(lib_name)
-                list_of_source_files += lib.add_source_files(files)
-            return list_of_source_files
+        return files
 
     def add_library(self, library_name, vhdl_standard=None):
         """
