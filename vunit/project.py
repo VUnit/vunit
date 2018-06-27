@@ -53,7 +53,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         self._depend_on_package_body = depend_on_package_body
         self._builtin_libraries = set(["ieee", "std"])
 
-    def _validate_library_name(self, library_name):
+    def _validate_new_library_name(self, library_name):
         """
         Check that the library_name is valid or raise RuntimeError
         """
@@ -61,6 +61,9 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
             LOGGER.error("Cannot add library named work. work is a reference to the current library. "
                          "http://www.sigasi.com/content/work-not-vhdl-library")
             raise RuntimeError("Illegal library name 'work'")
+
+        if library_name in self._libraries:
+            raise ValueError("Library %s already exists" % library_name)
 
         lower_name = library_name.lower()
         if lower_name in self._lower_library_names_dict:
@@ -74,13 +77,12 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         """
         self._builtin_libraries.add(logical_name)
 
-    def add_library(self, logical_name, directory, vhdl_standard='2008', allow_replacement=False, is_external=False):
+    def add_library(self, logical_name, directory, vhdl_standard='2008', is_external=False):
         """
         Add library to project with logical_name located or to be located in directory
-        allow_replacement -- Allow replacing an existing library
         is_external -- Library is assumed to a black-box
         """
-        self._validate_library_name(logical_name)
+        self._validate_new_library_name(logical_name)
 
         if is_external:
             if not exists(directory):
@@ -89,13 +91,8 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
             if not isdir(directory):
                 raise ValueError("External library must be a directory. Got %r" % directory)
 
-        if logical_name not in self._libraries:
-            library = Library(logical_name, directory, vhdl_standard, is_external=is_external)
-            LOGGER.debug('Adding library %s with path %s', logical_name, directory)
-        else:
-            assert allow_replacement
-            library = Library(logical_name, directory, vhdl_standard, is_external=is_external)
-            LOGGER.debug('Replacing library %s with path %s', logical_name, directory)
+        library = Library(logical_name, directory, vhdl_standard, is_external=is_external)
+        LOGGER.debug('Adding library %s with path %s', logical_name, directory)
 
         self._libraries[logical_name] = library
         self._lower_library_names_dict[logical_name.lower()] = library.name
@@ -533,8 +530,8 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
                 raise RuntimeError("%s already added to library %s" % (
                     source_file.name, self.name))
             else:
-                LOGGER.warning("Ignoring duplicate file %s added to library %s due to identical contents",
-                               source_file.name, self.name)
+                LOGGER.info("Ignoring duplicate file %s added to library %s due to identical contents",
+                            source_file.name, self.name)
 
             return old_source_file
             # Ignore source files already added with identical content hash
