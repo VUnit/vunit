@@ -394,7 +394,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._project.add_library(library_name, abspath(path), vhdl_standard, is_external=True)
         return self.library(library_name)
 
-    def add_source_files_from_csv(self, project_csv_path, vhdl_standard=None, is_in_order=True):
+    def add_source_files_from_csv(self, project_csv_path, vhdl_standard=None, is_in_order=False):
         """
         Add a project configuration, mapping all the libraries and files
 
