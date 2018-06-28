@@ -212,11 +212,12 @@ configuration is only run if there are no named configurations.
 
 from __future__ import print_function
 
+import csv
 import sys
 import traceback
 import logging
 import os
-from os.path import exists, abspath, join, basename, splitext
+from os.path import exists, abspath, join, basename, splitext, normpath, dirname
 from glob import glob
 from fnmatch import fnmatch
 from vunit.database import PickledDataBase, DataBase
@@ -392,6 +393,39 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         self._project.add_library(library_name, abspath(path), vhdl_standard, is_external=True)
         return self.library(library_name)
+
+    def add_source_files_from_csv(self, project_csv_path, vhdl_standard=None):
+        """
+        Add a project configuration, mapping all the libraries and files
+
+        :param project_csv_path: path to csv project specification, each line contains the name
+                                 of the library and the path to one file 'lib_name,filename'
+                                 note that all filenames are relative to the parent folder of the
+                                 csv file
+        :param vhdl_standard: The VHDL standard used to compile file into this library,
+                              if None, the VUNIT_VHDL_STANDARD environment variable is used
+        :returns: A list of files (:class `.SourceFileList`) that were added
+
+        """
+        if vhdl_standard is None:
+            vhdl_standard = self._vhdl_standard
+
+        libs = set()
+        files = SourceFileList(list())
+
+        with open(project_csv_path) as csv_path_file:
+            for row in csv.reader(csv_path_file):
+                if len(row) == 2:
+                    lib_name = row[0].strip()
+                    no_normalized_file = row[1].strip()
+                    file_name_ = normpath(join(dirname(project_csv_path), no_normalized_file))
+                    lib = self.library(lib_name) if lib_name in libs else self.add_library(lib_name)
+                    libs.add(lib_name)
+                    file_ = lib.add_source_file(file_name_)
+                    files.append(file_)
+                elif len(row) > 2:
+                    LOGGER.error("More than one library and one file in csv description")
+        return files
 
     def add_library(self, library_name, vhdl_standard=None, allow_duplicate=False):
         """
