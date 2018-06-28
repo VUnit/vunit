@@ -176,6 +176,15 @@ in your VUnit Git repository? You have to do this first if installing using setu
         for path in ("core", "logging", "string_ops", "check", "dictionary", "run", "path"):
             self._add_files(join(VHDL_PATH, path, "src", "*.vhd"))
 
+    def get_built_in_libraries(self):
+        """
+        Get all built in libraries
+        """
+        libraries = self._builtins_adder.get_types()
+        name_of_libraries = set(libraries)
+        name_of_libraries.add(self._vunit_lib.name)
+        return name_of_libraries
+
 
 def osvvm_is_installed():
     """
@@ -232,3 +241,6 @@ class BuiltinsAdder(object):
                 "Optional builtin %r added with arguments %r has already been added with arguments %r"
                 % (name, args, old_args))
         return True
+
+    def get_types(self):
+        return self._types
