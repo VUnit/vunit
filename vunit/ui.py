@@ -1805,7 +1805,7 @@ def select_vhdl_standard(vhdl_standard=None):
     """
     Select VHDL standard either from class initialization or according to environment variable VUNIT_VHDL_STANDARD
     """
-    if vhdl_standard:
+    if vhdl_standard is not None:
         check_vhdl_standard(vhdl_standard, from_str="From class initialization")
     else:
         vhdl_standard = os.environ.get('VUNIT_VHDL_STANDARD', '2008')
