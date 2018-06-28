@@ -425,7 +425,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                     file_name_ = normpath(join(dirname(project_csv_path), no_normalized_file))
                     lib = self.library(lib_name) if lib_name in libs else self.add_library(lib_name)
                     libs.add(lib_name)
-                    file_ = lib.add_source_file(file_name_, no_parse=is_in_order)
+                    file_ = lib.add_source_file(file_name_)
                     if file_before is not None and is_in_order:
                         file_.add_dependency_on(file_before)
                     files.append(file_)
