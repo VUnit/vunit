@@ -259,7 +259,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
     """
 
     @classmethod
-    def from_argv(cls, argv=None, compile_builtins=True):
+    def from_argv(cls, argv=None, compile_builtins=True, vhdl_standard=None):
         """
         Create VUnit instance from command line arguments.
 
@@ -276,10 +276,10 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         """
         args = VUnitCLI().parse_args(argv=argv)
-        return cls.from_args(args, compile_builtins=compile_builtins)
+        return cls.from_args(args, compile_builtins=compile_builtins, vhdl_standard=vhdl_standard)
 
     @classmethod
-    def from_args(cls, args, compile_builtins=True):
+    def from_args(cls, args, compile_builtins=True, vhdl_standard=None):
         """
         Create VUnit instance from args namespace.
         Intended for users who adds custom command line options.
@@ -291,9 +291,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         :returns: A :class:`.VUnit` object instance
         """
 
-        return cls(args, compile_builtins=compile_builtins)
+        return cls(args, compile_builtins=compile_builtins, vhdl_standard=vhdl_standard)
 
-    def __init__(self, args, compile_builtins=True):
+    def __init__(self, args, compile_builtins=True, vhdl_standard=None):
         self._args = args
         self._configure_logging(args.log_level)
         self._output_path = abspath(args.output_path)
@@ -307,7 +307,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             return any(fnmatch(name, pattern) for pattern in args.test_patterns)
 
         self._test_filter = test_filter
-        self._vhdl_standard = select_vhdl_standard()
+        self._vhdl_standard = select_vhdl_standard(vhdl_standard)
 
         self._external_preprocessors = []
         self._location_preprocessor = None
@@ -1801,12 +1801,16 @@ class SourceFile(object):
             raise ValueError(source_file)
 
 
-def select_vhdl_standard():
+def select_vhdl_standard(vhdl_standard=None):
     """
-    Select VHDL standard according to environment variable VUNIT_VHDL_STANDARD
+    Select VHDL standard either from class initialization or according to environment variable VUNIT_VHDL_STANDARD
     """
-    vhdl_standard = os.environ.get('VUNIT_VHDL_STANDARD', '2008')
-    check_vhdl_standard(vhdl_standard, from_str="VUNIT_VHDL_STANDARD environment variable")
+    if vhdl_standard:
+        check_vhdl_standard(vhdl_standard, from_str="From class initialization")
+    else:
+        vhdl_standard = os.environ.get('VUNIT_VHDL_STANDARD', '2008')
+        check_vhdl_standard(vhdl_standard, from_str="VUNIT_VHDL_STANDARD environment variable")
+
     return vhdl_standard
 
 
