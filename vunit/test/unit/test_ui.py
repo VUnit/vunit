@@ -799,7 +799,7 @@ endmodule
         Test to get all VUnit built in libraries, Sigasi Integration
         """
         ui = self._create_ui()
-        list_of_built_in_libraries = ui.get_builtins().get_built_in_libraries()
+        list_of_built_in_libraries = ui.get_built_in_libraries()
         self.assertTrue(len(list_of_built_in_libraries) >= 1)
 
     def _create_ui(self, *args):
