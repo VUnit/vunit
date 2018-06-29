@@ -221,6 +221,23 @@ end architecture;
         self.assertEqual([test.name for test in lib.test_bench("tb_ent2").get_tests()],
                          [])
 
+    def test_get_entities_case_insensitive(self):
+        ui = self._create_ui()
+        lib = ui.add_library("lib")
+        self.create_file('tb_ent.vhd', '''
+entity tb_Ent is
+  generic (runner_cfg : string);
+end entity;
+        ''')
+        lib.add_source_file("tb_ent.vhd")
+        self.assertEqual(lib.test_bench("tb_Ent").name, "tb_ent")
+        self.assertEqual(lib.test_bench("TB_ENT").name, "tb_ent")
+        self.assertEqual(lib.test_bench("tb_ent").name, "tb_ent")
+
+        self.assertEqual(lib.entity("tb_Ent").name, "tb_ent")
+        self.assertEqual(lib.entity("TB_ENT").name, "tb_ent")
+        self.assertEqual(lib.entity("tb_ent").name, "tb_ent")
+
     def test_add_source_files(self):
         files = ["file1.vhd",
                  "file2.vhd",

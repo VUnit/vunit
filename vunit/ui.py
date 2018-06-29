@@ -1265,6 +1265,7 @@ class Library(object):
         :returns: A :class:`.TestBench` object
         :raises: KeyError
         """
+        name = name.lower()
         library = self._project.get_library(self._library_name)
         if not library.has_entity(name):
             raise KeyError(name)
@@ -1293,6 +1294,7 @@ class Library(object):
         :returns: A :class:`.TestBench` object
         :raises: KeyError
         """
+        name = name.lower()
 
         return TestBench(self._test_bench_list.get_test_bench(self._library_name, name), self)
 
