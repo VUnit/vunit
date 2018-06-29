@@ -1024,7 +1024,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
                                for source_file in source_files])
 
     def get_built_in_libraries(self):
-        return self._builtins.get_built_in_libraries()
+        return self._builtins.get_built_in_library_names()
 
 
 class Library(object):

@@ -176,9 +176,11 @@ in your VUnit Git repository? You have to do this first if installing using setu
         for path in ("core", "logging", "string_ops", "check", "dictionary", "run", "path"):
             self._add_files(join(VHDL_PATH, path, "src", "*.vhd"))
 
-    def get_built_in_libraries(self):
+    def get_built_in_library_names(self):
         """
         Get all built in libraries
+
+        returns: A set with all library names that built in with Vunit
         """
         libraries = self._builtins_adder.get_types()
         name_of_libraries = set(libraries)
