@@ -110,7 +110,7 @@ package body axi_statistics_pkg is
   end;
 
   impure function copy(stat : axi_statistics_t) return axi_statistics_t is
-    variable stat2 : axi_statistics_t := new_axi_statistics;
+    constant stat2 : axi_statistics_t := new_axi_statistics;
   begin
     for i in 0 to length(stat.p_count_by_burst_length)-1 loop
       set(stat2.p_count_by_burst_length, i, get(stat.p_count_by_burst_length, i));

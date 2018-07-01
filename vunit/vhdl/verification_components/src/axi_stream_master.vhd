@@ -70,5 +70,18 @@ begin
       );
   end generate axi_stream_monitor_generate;
 
+  axi_stream_protocol_checker_generate : if master.p_protocol_checker /= null_axi_stream_protocol_checker generate
+    axi_stream_protocol_checker_inst: entity work.axi_stream_protocol_checker
+      generic map (
+        protocol_checker => master.p_protocol_checker)
+      port map (
+        aclk     => aclk,
+        areset_n => open,
+        tvalid   => tvalid,
+        tready   => tready,
+        tdata    => tdata,
+        tlast    => tlast,
+        tid      => open);
+  end generate axi_stream_protocol_checker_generate;
 
 end architecture;

@@ -42,7 +42,6 @@ architecture a of wishbone_master is
   constant rd_request_queue : queue_t := new_queue;
   constant wr_request_queue : queue_t := new_queue;
   constant acknowledge_queue : queue_t := new_queue;
-  constant ack_return_queue : queue_t := new_queue;
   constant bus_ack_msg   : msg_type_t := new_msg_type("wb master ack msg");
   constant wb_master_ack_actor : actor_t := new_actor;
 begin
@@ -50,7 +49,6 @@ begin
   main : process
     variable request_msg : msg_t;
     variable msg_type : msg_type_t;
-    variable status : com_status_t;
   begin
       request_msg := null_msg;
       receive(net, bus_handle.p_actor, request_msg);
@@ -69,7 +67,6 @@ begin
   request : process
     variable request_msg : msg_t;
     variable ack_msg : msg_t;
-    variable msg_type : msg_type_t;
     variable pending_acks : natural := 0;
     variable received_acks : natural := 0;
     variable rd_cycle : boolean;

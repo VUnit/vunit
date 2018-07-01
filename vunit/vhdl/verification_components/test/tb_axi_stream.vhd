@@ -20,35 +20,37 @@ entity tb_axi_stream is
 end entity;
 
 architecture a of tb_axi_stream is
-  signal aclk   : std_logic := '0';
-  signal areset_n   : std_logic := '1';
-  signal tvalid : std_logic;
-  signal tready : std_logic;
-  signal tdata  : std_logic_vector(7 downto 0);
-  signal tlast  : std_logic;
+  signal aclk     : std_logic := '0';
+  signal areset_n : std_logic := '1';
+  signal tvalid   : std_logic;
+  signal tready   : std_logic;
+  signal tdata    : std_logic_vector(7 downto 0);
+  signal tlast    : std_logic;
 
   constant monitor : axi_stream_monitor_t := new_axi_stream_monitor(
-    data_length => tdata'length, logger => get_logger("monitor"), actor => new_actor("monitor")
+    data_length      => tdata'length, logger => get_logger("monitor"), actor => new_actor("monitor"),
+    protocol_checker => default_axi_stream_protocol_checker
   );
 
   constant protocol_checker : axi_stream_protocol_checker_t := new_axi_stream_protocol_checker(
     data_length => tdata'length,
-    logger => get_logger("protocol_checker"),
-    actor => new_actor("protocol_checker"),
-    max_waits => 8
+    logger      => get_logger("protocol_checker"),
+    max_waits   => 8
   );
 
-  constant master_axi_stream : axi_stream_master_t := new_axi_stream_master_with_monitor(
-    data_length => tdata'length, logger => get_logger("master"), actor => new_actor("master")
+  constant master_axi_stream : axi_stream_master_t := new_axi_stream_master(
+    data_length      => tdata'length, logger => get_logger("master"), actor => new_actor("master"),
+    monitor          => default_axi_stream_monitor,
+    protocol_checker => default_axi_stream_protocol_checker
   );
   constant master_stream     : stream_master_t     := as_stream(master_axi_stream);
 
-  constant slave_axi_stream : axi_stream_slave_t := new_axi_stream_slave_with_monitor(
-    data_length => tdata'length, logger => get_logger("slave"), actor => new_actor("slave")
+  constant slave_axi_stream : axi_stream_slave_t := new_axi_stream_slave(
+    data_length      => tdata'length, logger => get_logger("slave"), actor => new_actor("slave"),
+    monitor          => default_axi_stream_monitor,
+    protocol_checker => default_axi_stream_protocol_checker
   );
   constant slave_stream     : stream_slave_t     := as_stream(slave_axi_stream);
-
-
 
   constant n_monitors : natural := 3;
 
@@ -189,10 +191,10 @@ begin
       tlast  => tlast
     );
 
-  axi_stream_protocol_checker_inst: entity work.axi_stream_protocol_checker
-    generic map (
+  axi_stream_protocol_checker_inst : entity work.axi_stream_protocol_checker
+    generic map(
       protocol_checker => protocol_checker)
-    port map (
+    port map(
       aclk     => aclk,
       areset_n => areset_n,
       tvalid   => tvalid,

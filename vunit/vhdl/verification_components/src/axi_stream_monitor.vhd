@@ -41,4 +41,18 @@ begin
     publish(net, monitor.p_actor, msg);
   end process;
 
+  axi_stream_protocol_checker_generate : if monitor.p_protocol_checker /= null_axi_stream_protocol_checker generate
+    axi_stream_protocol_checker_inst: entity work.axi_stream_protocol_checker
+      generic map (
+        protocol_checker => monitor.p_protocol_checker)
+      port map (
+        aclk     => aclk,
+        areset_n => open,
+        tvalid   => tvalid,
+        tready   => tready,
+        tdata    => tdata,
+        tlast    => tlast,
+        tid      => open);
+  end generate axi_stream_protocol_checker_generate;
+
 end architecture;

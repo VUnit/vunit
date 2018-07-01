@@ -18,25 +18,25 @@ use work.runner_pkg.all;
 
 entity tb_axi_stream_protocol_checker is
   generic(
-    runner_cfg : string;
+    runner_cfg  : string;
     data_length : natural := 8;
-    max_waits : natural := 16);
+    max_waits   : natural := 16);
 end entity;
 
 architecture a of tb_axi_stream_protocol_checker is
-  signal aclk   : std_logic := '0';
-  signal areset_n   : std_logic := '1';
-  signal tvalid : std_logic := '0';
-  signal tready : std_logic := '0';
-  signal tdata  : std_logic_vector(data_length - 1 downto 0) := (others => '0');
-  signal tlast  : std_logic := '1';
+  signal aclk     : std_logic                                  := '0';
+  signal areset_n : std_logic                                  := '1';
+  signal tvalid   : std_logic                                  := '0';
+  signal tready   : std_logic                                  := '0';
+  signal tdata    : std_logic_vector(data_length - 1 downto 0) := (others => '0');
+  signal tlast    : std_logic                                  := '1';
 
-  constant logger : logger_t := get_logger("protocol_checker");
+  constant logger           : logger_t                      := get_logger("protocol_checker");
   constant protocol_checker : axi_stream_protocol_checker_t := new_axi_stream_protocol_checker(
     data_length => tdata'length, logger => logger, actor => new_actor("protocol_checker"), max_waits => max_waits
   );
-  constant meta_values : std_logic_vector(1 to 5) := "-XWZU";
-  constant valid_values : std_logic_vector(1 to 4) := "01LH";
+  constant meta_values      : std_logic_vector(1 to 5)      := "-XWZU";
+  constant valid_values     : std_logic_vector(1 to 4)      := "01LH";
 
 begin
 
@@ -47,21 +47,21 @@ begin
 
     if run("Test passing check of that tdata remains stable when tvalid is asserted and tready is low") then
       wait until rising_edge(aclk);
-      tdata <= (others => '1');
+      tdata  <= (others => '1');
       tready <= '1';
       wait until rising_edge(aclk);
-      tdata <= (others => '0');
+      tdata  <= (others => '0');
       wait until rising_edge(aclk);
-      tdata <= (others => '1');
+      tdata  <= (others => '1');
       tready <= '0';
       wait until rising_edge(aclk);
-      tdata <= (others => '0');
+      tdata  <= (others => '0');
       wait until rising_edge(aclk);
 
       tvalid <= '1';
-      tdata <= (others => '1');
+      tdata  <= (others => '1');
       wait until rising_edge(aclk);
-      tdata <= (others => 'H');
+      tdata  <= (others => 'H');
       wait until rising_edge(aclk);
       tready <= '1';
       wait until rising_edge(aclk);
@@ -73,9 +73,9 @@ begin
       wait until rising_edge(aclk);
       tvalid <= '1';
       wait until rising_edge(aclk);
-      tdata <= (others => '1');
+      tdata  <= (others => '1');
       wait until rising_edge(aclk);
-      tdata <= (others => '0');
+      tdata  <= (others => '0');
       tready <= '1';
       wait until rising_edge(aclk);
       tready <= '0';
@@ -84,14 +84,13 @@ begin
 
       check_only_log(
         rule_logger,
-        "Stability check failed for tdata while waiting for tready - Got 1111_1111 (255) " &
-        "at 2nd active and enabled clock edge. Expected 0000_0000 (0).",
+        "Stability check failed for tdata while waiting for tready - Got 1111_1111 (255) " & "at 2nd active and enabled clock edge. Expected 0000_0000 (0).",
         error);
 
       wait until rising_edge(aclk);
       tvalid <= '1';
       wait until rising_edge(aclk);
-      tdata <= (others => '1');
+      tdata  <= (others => '1');
       tready <= '1';
       wait until rising_edge(aclk);
       tready <= '0';
@@ -100,8 +99,7 @@ begin
 
       check_only_log(
         rule_logger,
-        "Stability check failed for tdata while waiting for tready - Got 1111_1111 (255) " &
-        "at 2nd active and enabled clock edge. Expected 0000_0000 (0).",
+        "Stability check failed for tdata while waiting for tready - Got 1111_1111 (255) " & "at 2nd active and enabled clock edge. Expected 0000_0000 (0).",
         error);
 
       tvalid <= '1';
@@ -110,7 +108,7 @@ begin
       wait until rising_edge(aclk);
       tready <= '0';
       wait until rising_edge(aclk);
-      tdata <= (others => '0');
+      tdata  <= (others => '0');
       tready <= '1';
       wait until rising_edge(aclk);
       tready <= '0';
@@ -119,33 +117,31 @@ begin
 
       check_log(
         rule_logger,
-        "Stability check passed for tdata while waiting for tready - Got 1111_1111 (255) " &
-        "for 2 active and enabled clock edges.",
+        "Stability check passed for tdata while waiting for tready - Got 1111_1111 (255) " & "for 2 active and enabled clock edges.",
         pass);
       check_only_log(
         rule_logger,
-        "Stability check failed for tdata while waiting for tready - Got 0000_0000 (0) " &
-        "at 2nd active and enabled clock edge. Expected 1111_1111 (255).",
+        "Stability check failed for tdata while waiting for tready - Got 0000_0000 (0) " & "at 2nd active and enabled clock edge. Expected 1111_1111 (255).",
         error);
 
       unmock(rule_logger);
     elsif run("Test passing check of that tlast remains stable when tvalid is asserted and tready is low") then
       wait until rising_edge(aclk);
-      tlast <= '1';
+      tlast  <= '1';
       tready <= '1';
       wait until rising_edge(aclk);
-      tlast <= '0';
+      tlast  <= '0';
       wait until rising_edge(aclk);
-      tlast <= '1';
+      tlast  <= '1';
       tready <= '0';
       wait until rising_edge(aclk);
-      tlast <= '0';
+      tlast  <= '0';
       wait until rising_edge(aclk);
 
       tvalid <= '1';
-      tlast <= '1';
+      tlast  <= '1';
       wait until rising_edge(aclk);
-      tlast <= 'H';
+      tlast  <= 'H';
       wait until rising_edge(aclk);
       tready <= '1';
       wait until rising_edge(aclk);
@@ -157,9 +153,9 @@ begin
       wait until rising_edge(aclk);
       tvalid <= '1';
       wait until rising_edge(aclk);
-      tlast <= '0';
+      tlast  <= '0';
       wait until rising_edge(aclk);
-      tlast <= '1';
+      tlast  <= '1';
       tready <= '1';
       wait until rising_edge(aclk);
       tready <= '0';
@@ -168,15 +164,14 @@ begin
 
       check_only_log(
         rule_logger,
-        "Stability check failed for tlast while waiting for tready - Got 0 " &
-        "at 2nd active and enabled clock edge. Expected 1.",
+        "Stability check failed for tlast while waiting for tready - Got 0 " & "at 2nd active and enabled clock edge. Expected 1.",
         error);
 
       wait until rising_edge(aclk);
       tvalid <= '1';
-      tlast <= '0';
+      tlast  <= '0';
       wait until rising_edge(aclk);
-      tlast <= '1';
+      tlast  <= '1';
       tready <= '1';
       wait until rising_edge(aclk);
       tready <= '0';
@@ -185,18 +180,17 @@ begin
 
       check_only_log(
         rule_logger,
-        "Stability check failed for tlast while waiting for tready - Got 1 " &
-        "at 2nd active and enabled clock edge. Expected 0.",
+        "Stability check failed for tlast while waiting for tready - Got 1 " & "at 2nd active and enabled clock edge. Expected 0.",
         error);
 
       tvalid <= '1';
-      tlast <= '0';
+      tlast  <= '0';
       wait until rising_edge(aclk);
       tready <= '1';
       wait until rising_edge(aclk);
       tready <= '0';
       wait until rising_edge(aclk);
-      tlast <= '1';
+      tlast  <= '1';
       tready <= '1';
       wait until rising_edge(aclk);
       tready <= '0';
@@ -205,13 +199,11 @@ begin
 
       check_log(
         rule_logger,
-        "Stability check passed for tlast while waiting for tready - Got 0 " &
-        "for 2 active and enabled clock edges.",
+        "Stability check passed for tlast while waiting for tready - Got 0 " & "for 2 active and enabled clock edges.",
         pass);
       check_only_log(
         rule_logger,
-        "Stability check failed for tlast while waiting for tready - Got 1 " &
-        "at 2nd active and enabled clock edge. Expected 0.",
+        "Stability check failed for tlast while waiting for tready - Got 1 " & "at 2nd active and enabled clock edge. Expected 0.",
         error);
 
       unmock(rule_logger);
@@ -249,13 +241,11 @@ begin
 
       check_log(
         rule_logger,
-        "Stability check failed for tvalid while waiting for tready - Got 0 " &
-        "at 2nd active and enabled clock edge. Expected 1.",
+        "Stability check failed for tvalid while waiting for tready - Got 0 " & "at 2nd active and enabled clock edge. Expected 1.",
         error);
       check_only_log(
         rule_logger,
-        "Stability check failed for tvalid while waiting for tready - Got 0 " &
-        "at 3rd active and enabled clock edge. Expected 1.",
+        "Stability check failed for tvalid while waiting for tready - Got 0 " & "at 3rd active and enabled clock edge. Expected 1.",
         error);
 
       wait until rising_edge(aclk);
@@ -270,8 +260,7 @@ begin
 
       check_only_log(
         rule_logger,
-        "Stability check failed for tvalid while waiting for tready - Got L " &
-        "at 2nd active and enabled clock edge. Expected 1.",
+        "Stability check failed for tvalid while waiting for tready - Got L " & "at 2nd active and enabled clock edge. Expected 1.",
         error);
 
       unmock(rule_logger);
@@ -301,8 +290,7 @@ begin
 
       check_only_log(
         rule_logger,
-        "Check failed for performance - tready active " & to_string(max_waits + 1) &
-        " clock cycles after tvalid. Expected <= " & to_string(max_waits) & " clock cycles.",
+        "Check failed for performance - tready active " & to_string(max_waits + 1) & " clock cycles after tvalid. Expected <= " & to_string(max_waits) & " clock cycles.",
         warning);
 
       unmock(rule_logger);
@@ -333,8 +321,7 @@ begin
         wait for 1 ns;
         check_only_log(
           rule_logger,
-          "Not unknown check failed for tdata when tvalid is high - Got " &
-          to_nibble_string(std_logic_vector'(tdata'range => meta_values(i))) & ".",
+          "Not unknown check failed for tdata when tvalid is high - Got " & to_nibble_string(std_logic_vector'(tdata'range => meta_values(i))) & ".",
           error);
       end loop;
 
@@ -366,8 +353,7 @@ begin
         wait for 1 ns;
         check_only_log(
           rule_logger,
-          "Not unknown check failed for tlast when tvalid is high - Got " &
-          to_string(meta_values(i)) & ".",
+          "Not unknown check failed for tlast when tvalid is high - Got " & to_string(meta_values(i)) & ".",
           error);
       end loop;
 
@@ -376,13 +362,13 @@ begin
     elsif run("Test passing check of that tvalid must not be unknown unless in reset") then
       wait until rising_edge(aclk);
       areset_n <= '0';
-      tready <= '1';
+      tready   <= '1';
       for i in meta_values'range loop
         tvalid <= meta_values(i);
         wait until rising_edge(aclk);
       end loop;
       areset_n <= '1';
-      tready <= '1';
+      tready   <= '1';
       for i in valid_values'range loop
         tvalid <= valid_values(i);
         wait until rising_edge(aclk);
@@ -398,8 +384,7 @@ begin
         wait for 1 ns;
         check_only_log(
           rule_logger,
-          "Not unknown check failed for tvalid when not in reset - Got " &
-          to_string(meta_values(i)) & ".",
+          "Not unknown check failed for tvalid when not in reset - Got " & to_string(meta_values(i)) & ".",
           error);
       end loop;
 
@@ -408,13 +393,13 @@ begin
     elsif run("Test passing check of that tready must not be unknown unless in reset") then
       wait until rising_edge(aclk);
       areset_n <= '0';
-      tvalid <= '1';
+      tvalid   <= '1';
       for i in meta_values'range loop
         tready <= meta_values(i);
         wait until rising_edge(aclk);
       end loop;
       areset_n <= '1';
-      tvalid <= '1';
+      tvalid   <= '1';
       for i in valid_values'range loop
         tready <= valid_values(i);
         wait until rising_edge(aclk);
@@ -430,8 +415,7 @@ begin
         wait for 1 ns;
         check_only_log(
           rule_logger,
-          "Not unknown check failed for tready when not in reset - Got " &
-          to_string(meta_values(i)) & ".",
+          "Not unknown check failed for tready when not in reset - Got " & to_string(meta_values(i)) & ".",
           error);
       end loop;
 
@@ -440,7 +424,7 @@ begin
     elsif run("Test passing check of that all packets are complete when the simulation ends") then
       wait until rising_edge(aclk);
       tvalid <= '1';
-      tlast <= '0';
+      tlast  <= '0';
       tready <= '1';
       wait until rising_edge(aclk);
       tready <= '0';
@@ -450,7 +434,7 @@ begin
       tvalid <= '0';
       wait until rising_edge(aclk);
       tvalid <= '1';
-      tlast <= '1';
+      tlast  <= '1';
       tready <= '1';
       wait until rising_edge(aclk);
 
@@ -460,17 +444,17 @@ begin
 
       wait until rising_edge(aclk);
       tvalid <= '1';
-      tlast <= '0';
+      tlast  <= '0';
       tready <= '1';
       wait until rising_edge(aclk);
-      tlast <= '0';
+      tlast  <= '0';
       wait until rising_edge(aclk);
 
       set_phase(runner_state, test_runner_cleanup);
       notify(runner);
       entry_gate(runner);
 
-      check_only_log(rule_logger, "Packet incomplete.", error);
+      check_only_log(rule_logger, "Check failed for packet completion.", error);
 
       unmock(rule_logger);
 
@@ -486,12 +470,12 @@ begin
       protocol_checker => protocol_checker
     )
     port map(
-      aclk   => aclk,
+      aclk     => aclk,
       areset_n => areset_n,
-      tvalid => tvalid,
-      tready => tready,
-      tdata  => tdata,
-      tlast  => tlast
+      tvalid   => tvalid,
+      tready   => tready,
+      tdata    => tdata,
+      tlast    => tlast
     );
 
   aclk <= not aclk after 5 ns;

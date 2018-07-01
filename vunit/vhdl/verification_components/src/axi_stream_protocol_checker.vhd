@@ -23,7 +23,8 @@ entity axi_stream_protocol_checker is
     tvalid   : in std_logic;
     tready   : in std_logic := '1';
     tdata    : in std_logic_vector(data_length(protocol_checker) - 1 downto 0);
-    tlast    : in std_logic := '1'
+    tlast    : in std_logic := '1';
+    tid      : in std_logic_vector := ""
     );
 end entity;
 
@@ -38,12 +39,10 @@ architecture a of axi_stream_protocol_checker is
   constant rule8_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 8");
   constant rule9_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 9");
 
-  -- tid is yet to be supported but is kept internally to prepare some checks
-  -- that will depend on it once supported
-  constant tid : std_logic_vector(-1 downto 0) := x"";
-
   signal enable_rule1_check, enable_rule2_check, handshake_is_not_x : std_logic;
 begin
+  check_equal(tid'length, 0, result("for tid'length. tid is not supported"));
+
   handshake_is_not_x <= '1' when not is_x(tvalid) and not is_x(tready) else '0';
 
   -- AXI4STREAM_ERRM_TDATA_STABLE TDATA remains stable when TVALID is asserted,
@@ -78,8 +77,8 @@ begin
     end loop;
     check(rule4_checker,
           n_clock_cycles <= protocol_checker.p_max_waits,
-          "Check failed for performance - tready active " & to_string(n_clock_cycles) &
-          " clock cycles after tvalid. Expected <= " & to_string(protocol_checker.p_max_waits) & " clock cycles.",
+          result("for performance - tready active " & to_string(n_clock_cycles) &
+          " clock cycles after tvalid. Expected <= " & to_string(protocol_checker.p_max_waits) & " clock cycles."),
           level => warning);
   end process;
 
@@ -126,7 +125,7 @@ begin
       wait_until(runner, test_runner_cleanup);
 
       if tid'length = 0 then
-        check(rule9_checker, get(active_streams, 0) = 0, "Packet incomplete.");
+        check(rule9_checker, get(active_streams, 0) = 0, result("for packet completion."));
       else
         for i in 0 to 2 * tid'length - 1 loop
           if get(active_streams, i) /= 0 then
@@ -139,7 +138,10 @@ begin
         end loop;
 
         if incomplete_streams /= null then
-          check_failed(rule9_checker, "Packet incomplete for the following streams: " & incomplete_streams.all & ".");
+          check_failed(rule9_checker, result("for packet completion for the following streams: " &
+            incomplete_streams.all & "."));
+        else
+          check_passed(rule9_checker, result("for packet completion."));
         end if;
       end if;
 
