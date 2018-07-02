@@ -183,7 +183,7 @@ in your VUnit Git repository? You have to do this first if installing using setu
         returns: A set with all library names that built in with Vunit
         """
         libraries = self._builtins_adder.get_types()
-        new_libraries = {k: v for k,v in libraries.items() if v[1] == tuple()}
+        new_libraries = {k: v for k, v in libraries.items() if v[1] == tuple()}
         name_of_libraries = set(new_libraries)
         name_of_libraries.add(self._vunit_lib.name)
         return name_of_libraries
