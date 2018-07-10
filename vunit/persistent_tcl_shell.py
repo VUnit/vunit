@@ -50,7 +50,7 @@ class PersistentTclShell(object):
         except Process.NonZeroExitCode:
             # Print output if background vsim process startup failed
             LOGGER.error("Failed to start re-usable background process")
-            print(consumer.output)
+            LOGGER.error(consumer.output)
             raise
         return process
 
