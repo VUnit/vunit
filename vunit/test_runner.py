@@ -21,7 +21,7 @@ import logging
 import string
 from contextlib import contextmanager
 import vunit.ostools as ostools
-from vunit.test_report import PASSED, FAILED
+from vunit.test_report import PASSED, FAILED, SKIPPED
 from vunit.hashing import hash_string
 LOGGER = logging.getLogger(__name__)
 
@@ -210,6 +210,9 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             results = test_suite.run(output_path=output_path,
                                      read_output=read_output)
         except KeyboardInterrupt:
+            for name in test_suite.test_cases:
+                results[name] = SKIPPED
+            self._add_results(test_suite, results, start_time, num_tests, output_file_name)
             raise
         except:  # pylint: disable=bare-except
             if self._dont_catch_exceptions:
