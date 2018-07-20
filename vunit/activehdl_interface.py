@@ -95,7 +95,8 @@ class ActiveHDLInterface(SimulatorInterface):
         """
         if source_file.is_vhdl:
             return self.compile_vhdl_file_command(source_file)
-        elif source_file.is_any_verilog:
+
+        if source_file.is_any_verilog:
             return self.compile_verilog_file_command(source_file)
 
         LOGGER.error("Unknown file type: %s", source_file.file_type)

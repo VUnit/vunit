@@ -199,7 +199,7 @@ def describe_location(location, first=True):
     for lineno, line in enumerate(contents.splitlines()):
         lstart = count
         lend = lstart + len(line)
-        if lstart <= start and start <= lend:
+        if lstart <= start <= lend:
             retval += "%s %s line %i:\n" % (prefix, simplify_path(file_name), lineno + 1)
             retval += line + "\n"
             retval += (" " * (start - lstart)) + ("~" * (min(lend - 1, end) - start + 1))

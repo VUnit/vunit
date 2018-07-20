@@ -20,7 +20,7 @@ import time
 import logging
 import string
 from contextlib import contextmanager
-import vunit.ostools as ostools
+from vunit import ostools
 from vunit.test_report import PASSED, FAILED
 from vunit.hashing import hash_string
 LOGGER = logging.getLogger(__name__)
@@ -210,7 +210,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             results = test_suite.run(output_path=output_path,
                                      read_output=read_output)
         except KeyboardInterrupt:
-            raise
+            raise KeyboardInterrupt
         except:  # pylint: disable=bare-except
             if self._dont_catch_exceptions:
                 raise
@@ -384,8 +384,8 @@ class TestScheduler(object):
                 idx = self._idx
                 self._idx += 1
                 return self._tests[idx]
-            else:
-                raise StopIteration
+
+            raise StopIteration
 
     def test_done(self):
         """

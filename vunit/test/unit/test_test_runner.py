@@ -82,7 +82,7 @@ class TestTestRunner(unittest.TestCase):
         test_list = TestList()
         test_list.add_test(test_case)
 
-        def side_effect(*args, **kwargs):
+        def side_effect(*args, **kwargs):  # pylint: disable=unused-argument
             raise KeyError
 
         test_case.run_side_effect = side_effect

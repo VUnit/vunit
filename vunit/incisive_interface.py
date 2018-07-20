@@ -152,7 +152,8 @@ define work "{2}/libraries/work"
         """
         if source_file.is_vhdl:
             return self.compile_vhdl_file_command(source_file)
-        elif source_file.is_any_verilog:
+
+        if source_file.is_any_verilog:
             return self.compile_verilog_file_command(source_file)
 
         raise CompileError
@@ -164,10 +165,13 @@ define work "{2}/libraries/work"
         """
         if vhdl_standard == "2002":
             return "-v200x -extv200x"
-        elif vhdl_standard == "2008":
+
+        if vhdl_standard == "2008":
             return "-v200x -extv200x"
-        elif vhdl_standard == "93":
+
+        if vhdl_standard == "93":
             return "-v93"
+
         raise ValueError("Invalid VHDL standard %s" % vhdl_standard)
 
     def compile_vhdl_file_command(self, source_file):

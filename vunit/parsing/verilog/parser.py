@@ -253,9 +253,9 @@ def _parse_block_label(stream):
         if token.kind != COLON:
             # Is not block label
             return
-        else:
-            stream.pop()
-            stream.expect(IDENTIFIER)
+
+        stream.pop()
+        stream.expect(IDENTIFIER)
 
     except EOFException:
         return
