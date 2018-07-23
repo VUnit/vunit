@@ -49,7 +49,8 @@ begin
     variable wr_request_msg : msg_t;
     variable rd_request_msg : msg_t;
   begin
-    wait until (write xor read) = '1' and waitrequest = '0' and rising_edge(clk);
+    wait until (write or read) = '1' and waitrequest = '0' and rising_edge(clk);
+	check_false(write = '1' and read = '1');
     if write = '1' then
       wr_request_msg := new_msg(slave_write_msg, avalon_slave.p_actor);
       -- For write, address and data are passed to ack proc
