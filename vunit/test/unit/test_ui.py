@@ -221,6 +221,23 @@ end architecture;
         self.assertEqual([test.name for test in lib.test_bench("tb_ent2").get_tests()],
                          [])
 
+    def test_get_entities_case_insensitive(self):
+        ui = self._create_ui()
+        lib = ui.add_library("lib")
+        self.create_file('tb_ent.vhd', '''
+entity tb_Ent is
+  generic (runner_cfg : string);
+end entity;
+        ''')
+        lib.add_source_file("tb_ent.vhd")
+        self.assertEqual(lib.test_bench("tb_Ent").name, "tb_ent")
+        self.assertEqual(lib.test_bench("TB_ENT").name, "tb_ent")
+        self.assertEqual(lib.test_bench("tb_ent").name, "tb_ent")
+
+        self.assertEqual(lib.entity("tb_Ent").name, "tb_ent")
+        self.assertEqual(lib.entity("TB_ENT").name, "tb_ent")
+        self.assertEqual(lib.entity("tb_ent").name, "tb_ent")
+
     def test_add_source_files(self):
         files = ["file1.vhd",
                  "file2.vhd",
@@ -254,6 +271,47 @@ end architecture;
         lib.add_source_files(iter(["file*.vhd", "foo_file.vhd"]))
         for file_name in files:
             lib.get_source_file(file_name).name.endswith(file_name)
+
+    def test_add_source_files_from_csv(self):
+        csv = """
+        lib,  tb_example.vhdl
+        lib1 , tb_example1.vhd
+        lib2, tb_example2.vhd
+        lib3,"tb,ex3.vhd"
+        """
+
+        libraries = ['lib', 'lib1', 'lib2', 'lib3']
+        files = ['tb_example.vhdl', 'tb_example1.vhd', 'tb_example2.vhd', 'tb,ex3.vhd']
+
+        self.create_csv_file('test_csv.csv', csv)
+        for file_name in files:
+            self.create_file(file_name)
+
+        ui = self._create_ui()
+        ui.add_source_files_from_csv('test_csv.csv')
+
+        for index, library_name in enumerate(libraries):
+            file_name = files[index]
+            file_name_from_ui = ui.get_source_file(file_name, library_name)
+            self.assertIsNotNone(file_name_from_ui)
+
+    def test_add_source_files_from_csv_return(self):
+        csv = """
+        lib, tb_example.vhd
+        lib, tb_example1.vhd
+        lib, tb_example2.vhd
+        """
+
+        list_of_files = ['tb_example.vhd', 'tb_example1.vhd', 'tb_example2.vhd']
+
+        for index, file_ in enumerate(list_of_files):
+            self.create_file(file_, str(index))
+
+        self.create_csv_file('test_returns.csv', csv)
+        ui = self._create_ui()
+
+        source_files = ui.add_source_files_from_csv('test_returns.csv')
+        self.assertEqual([source_file.name for source_file in source_files], list_of_files)
 
     def test_add_source_files_errors(self):
         ui = self._create_ui()
@@ -409,7 +467,8 @@ Listed 2 files""".splitlines()))
             """
             ui = self._create_ui()
             with mock.patch.object(ui, "_project", autospec=True) as project:
-                lib = ui.add_library("lib")
+                project.has_library.return_value = True
+                lib = ui.library("lib")
                 action(ui, lib)
                 project.add_source_file.assert_called_once_with(abspath("verilog.v"),
                                                                 "lib",
@@ -435,7 +494,8 @@ Listed 2 files""".splitlines()))
             """
             ui = self._create_ui()
             with mock.patch.object(ui, "_project", autospec=True) as project:
-                lib = ui.add_library("lib")
+                project.has_library.return_value = True
+                lib = ui.library("lib")
                 action(ui, lib)
                 project.add_source_file.assert_called_once_with(abspath("verilog.v"),
                                                                 "lib",
@@ -459,15 +519,17 @@ Listed 2 files""".splitlines()))
 
                 ui = self._create_ui()
                 with mock.patch.object(ui, "_project", autospec=True) as project:
-                    lib = ui.add_library("lib")
+                    project.has_library.return_value = True
 
                     if method == 0:
                         ui.add_source_files(file_name, "lib", no_parse=no_parse)
                     elif method == 1:
                         ui.add_source_file(file_name, "lib", no_parse=no_parse)
                     elif method == 2:
+                        lib = ui.library("lib")
                         lib.add_source_files(file_name, no_parse=no_parse)
                     elif method == 3:
+                        lib = ui.library("lib")
                         lib.add_source_file(file_name, no_parse=no_parse)
 
                     project.add_source_file.assert_called_once_with(abspath("verilog.v"),
@@ -590,6 +652,35 @@ Listed 2 files""".splitlines()))
             ui = self._create_ui(no_run_arg)
             self._run_main(ui, post_run=post_run)
             self.assertFalse(post_run.called)
+
+    def test_error_on_adding_duplicate_library(self):
+        ui = self._create_ui()
+        ui.add_library("lib")
+        self.assertRaises(ValueError, ui.add_library, "lib")
+
+    def test_allow_adding_duplicate_library(self):
+        ui = self._create_ui()
+
+        file_name = "file.vhd"
+        self.create_file(file_name)
+
+        file_name2 = "file2.vhd"
+        self.create_file(file_name2)
+
+        lib1 = ui.add_library("lib")
+        source_file1 = lib1.add_source_file(file_name)
+        self.assertEqual([source_file.name for source_file in lib1.get_source_files()],
+                         [source_file1.name])
+
+        lib2 = ui.add_library("lib", allow_duplicate=True)
+        for lib in [lib1, lib2]:
+            self.assertEqual([source_file.name for source_file in lib.get_source_files()],
+                             [source_file1.name])
+
+        source_file2 = lib2.add_source_file(file_name2)
+        for lib in [lib1, lib2]:
+            self.assertEqual({source_file.name for source_file in lib.get_source_files()},
+                             {source_file1.name, source_file2.name})
 
     def test_scan_tests_from_other_file(self):
         for tb_type in ["vhdl", "verilog"]:
@@ -775,6 +866,14 @@ end architecture;
         with open(file_name, "w") as fptr:
             fptr.write(contents)
 
+    @staticmethod
+    def create_csv_file(file_name, contents=''):
+        """
+        Create a temporary csv description file with given contents
+        """
+        with open(file_name, "w") as fprt:
+            fprt.write(contents)
+
     def assertRaisesRegex(self, *args, **kwargs):  # pylint: disable=invalid-name,arguments-differ
         """
         Python 2/3 compatability
@@ -827,17 +926,17 @@ class MockSimulator(SimulatorInterface):
     name = "mock"
 
     @staticmethod
-    def from_args(*args, **kwargs):
+    def from_args(output_path, args):  # pylint: disable=unused-argument
         return MockSimulator(output_path="", gui=False)
 
     package_users_depend_on_bodies = False
 
     @staticmethod
-    def compile_source_file_command(*args, **kwargs):  # pylint: disable=arguments-differ
+    def compile_source_file_command(source_file):  # pylint: disable=unused-argument
         return True
 
     @staticmethod
-    def simulate(*args, **kwargs):  # pylint: disable=arguments-differ
+    def simulate(output_path, test_suite_name, config, elaborate_only):  # pylint: disable=unused-argument
         return True
 
 

@@ -521,7 +521,7 @@ package body com_types_pkg is
   end;
 
   impure function pop(queue : queue_t) return msg_t is
-    variable ret_val : msg_t := new_msg;
+    variable ret_val : msg_t;
   begin
     ret_val.id          := pop(queue);
     ret_val.status      := com_status_t'val(integer'(pop(queue)));

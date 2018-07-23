@@ -38,7 +38,7 @@ class VerilogTokenizer(object):
             return Token(token.kind, '', token.location)
 
         def ignore_value(token):  # pylint: disable=unused-argument
-            return None
+            pass
 
         def add(kind, regex, func=None):
             self._tokenizer.add(kind, regex, func)

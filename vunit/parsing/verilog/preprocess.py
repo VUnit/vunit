@@ -154,8 +154,10 @@ class VerilogPreprocessor(object):
             """
             if if_token.value in ("ifdef", "elsif"):
                 return arg.value in defines
-            elif if_token.value == "ifndef":
+
+            if if_token.value == "ifndef":
                 return arg.value not in defines
+
             raise ValueError("Invalid if token %r" % if_token.value)
 
         result = []

@@ -11,7 +11,7 @@ Wrapper arround mock to handle Python 3.x and 2.7
 
 try:
     # Python 3.x (builtin)
-    import unittest.mock as mock  # pylint: disable=import-error, no-name-in-module, unused-import
+    from unittest import mock  # pylint: disable=import-error, no-name-in-module, unused-import
 except ImportError:
     # Python 2.7 (needs separate install)
-    import mock as mock  # pylint: disable=import-error, unused-import
+    import mock  # pylint: disable=import-error, unused-import

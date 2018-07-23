@@ -15,7 +15,7 @@ from os import walk
 import re
 from vunit import ROOT
 from vunit.builtins import VHDL_PATH
-import vunit.ostools as ostools
+from vunit import ostools
 from vunit.about import license_text
 
 RE_LICENSE_NOTICE = re.compile(
