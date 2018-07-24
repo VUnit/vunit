@@ -5,8 +5,6 @@
 -- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 -- Author Slawomir Siluk slaweksiluk@gazeta.pl
 -- Wishbome Master BFM for pipelined block transfers
--- TODO:
---  * Random strobe?
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -18,9 +16,13 @@ use work.com_types_pkg.all;
 use work.logger_pkg.all;
 use work.check_pkg.all;
 
+library osvvm;
+use osvvm.RandomPkg.all;
+
 entity wishbone_master is
   generic (
-    bus_handle : bus_master_t
+    bus_handle : bus_master_t;
+    strobe_high_probability : real range 0.0 to 1.0 := 1.0
     );
   port (
     clk   : in std_logic;
@@ -72,7 +74,10 @@ begin
     variable received_acks : natural := 0;
     variable rd_cycle : boolean;
     variable wr_cycle : boolean;
+    variable rnd : RandomPType;
   begin
+    rnd.InitSeed(rnd'instance_name);
+    report rnd'instance_name;
     cyc <= '0';
     stb <= '0';
     wait until rising_edge(clk);
@@ -81,8 +86,13 @@ begin
       if not is_empty(rd_request_queue) and not wr_cycle then
         request_msg := pop(rd_request_queue);
         rd_cycle := true;
-        adr <= pop_std_ulogic_vector(request_msg);
         cyc <= '1';
+        while rnd.Uniform(0.0, 1.0) > strobe_high_probability loop
+          wait until rising_edge(clk);
+        end loop;
+        adr <= pop_std_ulogic_vector(request_msg);
+        -- TODO why sel is not passed in msg for reading (present for writing)?
+        --sel <= pop_std_ulogic_vector(request_msg);
         stb <= '1';
         we <= '0';
         wait until rising_edge(clk) and stall = '0';
@@ -93,10 +103,13 @@ begin
       elsif not is_empty(wr_request_queue) and not rd_cycle then
         request_msg := pop(wr_request_queue);
         wr_cycle := true;
+        cyc <= '1';
+        while rnd.Uniform(0.0, 1.0) > strobe_high_probability loop
+          wait until rising_edge(clk);
+        end loop;
         adr <= pop_std_ulogic_vector(request_msg);
         dat_o <= pop_std_ulogic_vector(request_msg);
         sel <= pop_std_ulogic_vector(request_msg);
-        cyc <= '1';
         stb <= '1';
         we <= '1';
         wait until rising_edge(clk) and stall = '0';
