@@ -50,6 +50,7 @@ begin
     variable request_msg : msg_t;
     variable msg_type : msg_type_t;
     variable rnd : RandomPType;
+    variable msgs : natural;
   begin
     rnd.InitSeed(rnd'instance_name);
     write <= '0';
@@ -57,32 +58,37 @@ begin
     wait until rising_edge(clk);
     loop
       request_msg := null_msg;
-      receive(net, bus_handle.p_actor, request_msg);
-      msg_type := message_type(request_msg);
-      if msg_type = bus_read_msg then
-        while rnd.Uniform(0.0, 1.0) > read_high_probability loop
-          wait until rising_edge(clk);
-        end loop;
-        address <= pop_std_ulogic_vector(request_msg);
-        byteenable(byteenable'range) <= (others => '1');
-        read <= '1';
-        wait until rising_edge(clk) and waitrequest = '0';
-        read <= '0';
-        push(acknowledge_queue, request_msg);
+      msgs := num_of_messages(bus_handle.p_actor);
+      if (msgs > 0) then
+        receive(net, bus_handle.p_actor, request_msg);
+        msg_type := message_type(request_msg);
+        if msg_type = bus_read_msg then
+          while rnd.Uniform(0.0, 1.0) > read_high_probability loop
+            wait until rising_edge(clk);
+          end loop;
+          address <= pop_std_ulogic_vector(request_msg);
+          byteenable(byteenable'range) <= (others => '1');
+          read <= '1';
+          wait until rising_edge(clk) and waitrequest = '0';
+          read <= '0';
+          push(acknowledge_queue, request_msg);
 
-      elsif msg_type = bus_write_msg then
-        while rnd.Uniform(0.0, 1.0) > write_high_probability loop
-          wait until rising_edge(clk);
-        end loop;
-        address <= pop_std_ulogic_vector(request_msg);
-        writedata <= pop_std_ulogic_vector(request_msg);
-        byteenable <= pop_std_ulogic_vector(request_msg);
-        write <= '1';
-        wait until rising_edge(clk) and waitrequest = '0';
-        write <= '0';
+        elsif msg_type = bus_write_msg then
+          while rnd.Uniform(0.0, 1.0) > write_high_probability loop
+            wait until rising_edge(clk);
+          end loop;
+          address <= pop_std_ulogic_vector(request_msg);
+          writedata <= pop_std_ulogic_vector(request_msg);
+          byteenable <= pop_std_ulogic_vector(request_msg);
+          write <= '1';
+          wait until rising_edge(clk) and waitrequest = '0';
+          write <= '0';
 
+        else
+          unexpected_msg_type(msg_type);
+        end if;
       else
-        unexpected_msg_type(msg_type);
+        wait until rising_edge(clk);
       end if;
     end loop;
   end process;
