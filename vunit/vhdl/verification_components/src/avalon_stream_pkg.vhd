@@ -1,0 +1,99 @@
+-- This Source Code Form is subject to the terms of the Mozilla Public
+-- License, v. 2.0. If a copy of the MPL was not distributed with this file,
+-- You can obtain one at http://mozilla.org/MPL/2.0/.
+--
+-- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+use work.logger_pkg.all;
+use work.stream_master_pkg.all;
+use work.stream_slave_pkg.all;
+context work.com_context;
+context work.data_types_context;
+
+package avalon_stream_pkg is
+
+  type avalon_source_t is record
+    valid_high_probability : real range 0.0 to 1.0;
+    p_actor : actor_t;
+    p_data_length : natural;
+    p_logger : logger_t;
+  end record;
+
+  type avalon_sink_t is record
+    ready_high_probability : real range 0.0 to 1.0;
+    -- Private
+    p_actor : actor_t;
+    p_data_length : natural;
+    p_logger : logger_t;
+  end record;
+
+  constant avalon_stream_logger : logger_t := get_logger("vunit_lib:avalon_stream_pkg");
+  impure function new_avalon_source(data_length : natural;
+                                        valid_high_probability : real := 1.0;
+                                        logger : logger_t := avalon_stream_logger;
+                                        actor : actor_t := null_actor) return avalon_source_t;
+  impure function new_avalon_sink(data_length : natural;
+                                       ready_high_probability : real := 1.0;
+                                       logger : logger_t := avalon_stream_logger;
+                                       actor : actor_t := null_actor) return avalon_sink_t;
+  impure function data_length(source : avalon_source_t) return natural;
+  impure function data_length(source : avalon_sink_t) return natural;
+  impure function as_stream(source : avalon_source_t) return stream_master_t;
+  impure function as_stream(sink : avalon_sink_t) return stream_slave_t;
+
+end package;
+
+package body avalon_stream_pkg is
+
+  impure function new_avalon_source(data_length : natural;
+                                        valid_high_probability : real := 1.0;
+                                        logger : logger_t := avalon_stream_logger;
+                                        actor : actor_t := null_actor) return avalon_source_t is
+    variable p_actor : actor_t;
+  begin
+    p_actor := actor when actor /= null_actor else new_actor;
+
+    return (valid_high_probability => valid_high_probability,
+            p_actor => p_actor,
+            p_data_length => data_length,
+            p_logger => logger);
+  end;
+
+  impure function new_avalon_sink(data_length : natural;
+                                       ready_high_probability : real := 1.0;
+                                       logger : logger_t := avalon_stream_logger;
+                                       actor : actor_t := null_actor) return avalon_sink_t is
+    variable p_actor : actor_t;
+  begin
+    p_actor := actor when actor /= null_actor else new_actor;
+
+    return (ready_high_probability => ready_high_probability,
+            p_actor => p_actor,
+            p_data_length => data_length,
+            p_logger => logger);
+  end;
+
+  impure function data_length(source : avalon_source_t) return natural is
+  begin
+    return source.p_data_length;
+  end;
+
+  impure function data_length(source : avalon_sink_t) return natural is
+  begin
+    return source.p_data_length;
+  end;
+
+  impure function as_stream(source : avalon_source_t) return stream_master_t is
+  begin
+    return (p_actor => source.p_actor);
+  end;
+
+  impure function as_stream(sink : avalon_sink_t) return stream_slave_t is
+  begin
+    return (p_actor => sink.p_actor);
+  end;
+
+end package body;
