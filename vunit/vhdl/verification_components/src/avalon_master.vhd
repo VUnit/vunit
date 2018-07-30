@@ -5,7 +5,6 @@
 -- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 -- Author Slawomir Siluk slaweksiluk@gazeta.pl
 -- Avalon Memory Mapped Master BFM
--- TODO:
 -- - support burstcount > 1
 
 library ieee;
@@ -23,7 +22,9 @@ use osvvm.RandomPkg.all;
 
 entity avalon_master is
   generic (
-    bus_handle : bus_master_t;
+    bus_handle          : bus_master_t;
+    use_readdatavalid   : boolean := true;
+    fixed_read_latency  : natural := 1;  -- (bus cycles).  This parameter is ignored when use_readdatavalid is true
     write_high_probability : real range 0.0 to 1.0 := 1.0;
     read_high_probability : real range 0.0 to 1.0 := 1.0
   );
@@ -96,7 +97,18 @@ begin
   read_capture : process
     variable request_msg, reply_msg : msg_t;
   begin
-    wait until readdatavalid = '1' and rising_edge(clk);
+    if use_readdatavalid then
+        wait until readdatavalid = '1' and rising_edge(clk);
+    else
+        -- Non-pipelined case: waits for slave to de-assert waitrequest and sample data after fixed_read_latency cycles.
+        wait until rising_edge(clk) and waitrequest = '0' and read = '1';
+        if fixed_read_latency > 0 then
+            for i in 0 to fixed_read_latency - 1 loop
+                wait until rising_edge(clk);
+            end loop;
+        end if;
+              
+    end if;
     request_msg := pop(acknowledge_queue);
     reply_msg := new_msg(sender => av_master_read_actor);
     push_std_ulogic_vector(reply_msg, readdata);
