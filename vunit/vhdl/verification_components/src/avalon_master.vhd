@@ -107,7 +107,6 @@ begin
                 wait until rising_edge(clk);
             end loop;
         end if;
-              
     end if;
     request_msg := pop(acknowledge_queue);
     reply_msg := new_msg(sender => av_master_read_actor);
