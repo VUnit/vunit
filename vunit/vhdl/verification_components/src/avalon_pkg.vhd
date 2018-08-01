@@ -45,7 +45,7 @@ package body avalon_pkg is
     return avalon_slave_t is
   begin
     return (p_actor => new_actor(name),
-            p_ack_actor => new_actor(name&"_ack"),
+            p_ack_actor => new_actor(name&" read-ack"),
             p_memory => to_vc_interface(memory, logger),
             p_logger => logger,
             readdatavalid_high_probability => readdatavalid_high_probability,

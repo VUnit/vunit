@@ -12,6 +12,7 @@ use ieee.std_logic_1164.all;
 use work.logger_pkg.all;
 context work.com_context;
 use work.sync_pkg.all;
+use work.queue_pkg.all;
 
 package bus_master_pkg is
 
@@ -70,6 +71,16 @@ package bus_master_pkg is
                       constant data : std_logic_vector;
                       -- default byte enable is all bytes
                       constant byte_enable : std_logic_vector := "");
+  procedure write_bus(signal net : inout network_t;
+                      constant bus_handle : bus_master_t;
+                      constant address : std_logic_vector;
+                      constant burstsize : positive;
+                      constant burstdata : queue_t);
+  procedure write_bus(signal net : inout network_t;
+                      constant bus_handle : bus_master_t;
+                      constant address : natural;
+                      constant burstsize : positive;
+                      constant burstdata : queue_t);
 
   -- Non blocking: Read the bus returning a reference to the future reply
   procedure read_bus(signal net : inout network_t;
@@ -80,11 +91,25 @@ package bus_master_pkg is
                      constant bus_handle : bus_master_t;
                      constant address : natural;
                      variable reference : inout bus_reference_t);
+  procedure read_bus(signal net : inout network_t;
+                      constant bus_handle : bus_master_t;
+                      constant address : std_logic_vector;
+                      constant burstsize : positive;
+                      variable reference : inout bus_reference_t);
+  procedure read_bus(signal net : inout network_t;
+                      constant bus_handle : bus_master_t;
+                      constant address : natural;
+                      constant burstsize : positive;
+                      variable reference : inout bus_reference_t);
 
   -- Blocking: Await read bus reply data
   procedure await_read_bus_reply(signal net : inout network_t;
                                  variable reference : inout bus_reference_t;
                                  variable data : inout std_logic_vector);
+  procedure await_read_bus_reply(signal net : inout network_t;
+                                 constant bus_handle : bus_master_t;
+                                 constant burstdata : queue_t;
+                                 variable reference : inout bus_reference_t);
 
   -- Blocking: Read bus and check result against expected data
   procedure check_bus(signal net : inout network_t;
@@ -107,6 +132,16 @@ package bus_master_pkg is
                      constant bus_handle : bus_master_t;
                      constant address : natural;
                      variable data : inout std_logic_vector);
+  procedure read_bus(signal net : inout network_t;
+                      constant bus_handle : bus_master_t;
+                      constant address : std_logic_vector;
+                      constant burstsize : positive;
+                      constant burstdata : queue_t);
+  procedure read_bus(signal net : inout network_t;
+                      constant bus_handle : bus_master_t;
+                      constant address : natural;
+                      constant burstsize : positive;
+                      constant burstdata : queue_t);
 
   -- Blocking: Wait until a read from address equals the value using
   -- std_match If timeout is reached error with msg
@@ -139,4 +174,6 @@ package bus_master_pkg is
   -- Message type definitions, used by VC-instances
   constant bus_write_msg : msg_type_t := new_msg_type("write bus");
   constant bus_read_msg : msg_type_t := new_msg_type("read bus");
+  constant bus_burst_write_msg : msg_type_t := new_msg_type("burst write bus");
+  constant bus_burst_read_msg : msg_type_t := new_msg_type("burst read bus");
 end package;

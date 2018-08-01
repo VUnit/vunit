@@ -6,8 +6,7 @@
 -- Author Slawomir Siluk slaweksiluk@gazeta.pl
 --
 -- Avalon memory mapped slave wrapper for Vunit memory VC
--- TODO:
--- - support burstcount > 1
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -40,58 +39,64 @@ end entity;
 
 architecture a of avalon_slave is
 
-  constant slave_write_msg  : msg_type_t := new_msg_type("avmm slave write");
   constant slave_read_msg   : msg_type_t := new_msg_type("avmm slave read");
 
 begin
 
-  request : process
-    variable wr_request_msg : msg_t;
-    variable rd_request_msg : msg_t;
+  write_handler : process
+    variable pending_writes : positive := 1;
+    variable addr : natural;
   begin
-    wait until (write or read) = '1' and waitrequest = '0' and rising_edge(clk);
-	check_false(write = '1' and read = '1');
-    if write = '1' then
-      wr_request_msg := new_msg(slave_write_msg, avalon_slave.p_actor);
-      -- For write, address and data are passed to ack proc
-      push_integer(wr_request_msg, to_integer(unsigned(address)));
-      push_std_ulogic_vector(wr_request_msg, writedata);
-      send(net, avalon_slave.p_ack_actor, wr_request_msg);
-    elsif read = '1' then
-      rd_request_msg := new_msg(slave_read_msg, avalon_slave.p_actor);
-      -- For read, only address is passed to ack proc
-      push_integer(rd_request_msg, to_integer(unsigned(address)));
-      send(net, avalon_slave.p_ack_actor, rd_request_msg);
-    end if;
+    loop
+      wait until write = '1' and waitrequest = '0' and rising_edge(clk);
+      -- Burst write in progress
+      if pending_writes > 1 then
+        addr := addr + byteenable'length;
+        pending_writes := pending_writes -1;
+        write_word(avalon_slave.p_memory, addr, writedata);
+      -- Burst start or single burst
+      else
+        addr := to_integer(unsigned(address));
+        pending_writes := to_integer(unsigned(burstcount));
+        write_word(avalon_slave.p_memory, addr, writedata);
+      end if;
+    end loop;
   end process;
 
-  acknowledge : process
+  read_request : process
+    variable rd_request_msg : msg_t;
+  begin
+    wait until read = '1' and waitrequest = '0' and rising_edge(clk);
+    rd_request_msg := new_msg(slave_read_msg, avalon_slave.p_actor);
+    -- For read, only address is passed to ack proc
+    push_integer(rd_request_msg, to_integer(unsigned(burstcount)));
+    push_integer(rd_request_msg, to_integer(unsigned(address)));
+    send(net, avalon_slave.p_ack_actor, rd_request_msg);
+  end process;
+
+  read_handler : process
     variable request_msg : msg_t;
     variable msg_type : msg_type_t;
-    variable data : std_logic_vector(writedata'range);
-    variable addr : natural;
+    variable baseaddr : natural;
+    variable burst : positive;
     variable rnd : RandomPType;
   begin
     readdatavalid <= '0';
     receive(net, avalon_slave.p_ack_actor, request_msg);
     msg_type := message_type(request_msg);
 
-    if msg_type = slave_write_msg then
-      addr := pop_integer(request_msg);
-      data := pop_std_ulogic_vector(request_msg);
-      write_word(avalon_slave.p_memory, addr, data);
-
-    elsif msg_type = slave_read_msg then
-      data := (others => '0');
-      addr := pop_integer(request_msg);
-      data := read_word(avalon_slave.p_memory, addr, byteenable'length);
-      while rnd.Uniform(0.0, 1.0) > avalon_slave.readdatavalid_high_probability loop
+    if msg_type = slave_read_msg then
+      burst := pop_integer(request_msg);
+      baseaddr := pop_integer(request_msg);
+      for i in 0 to burst-1 loop
+        while rnd.Uniform(0.0, 1.0) > avalon_slave.readdatavalid_high_probability loop
+          wait until rising_edge(clk);
+        end loop;
+        readdata <= read_word(avalon_slave.p_memory, baseaddr + byteenable'length*i, byteenable'length);
+        readdatavalid <= '1';
         wait until rising_edge(clk);
+        readdatavalid <= '0';
       end loop;
-      readdata <= data;
-      readdatavalid <= '1';
-      wait until rising_edge(clk);
-      readdatavalid <= '0';
 
     else
       unexpected_msg_type(msg_type);

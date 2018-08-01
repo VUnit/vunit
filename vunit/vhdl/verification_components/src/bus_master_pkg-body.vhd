@@ -10,6 +10,8 @@ use ieee.numeric_std.all;
 
 use work.queue_pkg.all;
 use work.sync_pkg.all;
+use work.queue_pkg.all;
+use work.check_pkg.all;
 
 package body bus_master_pkg is
 
@@ -96,6 +98,34 @@ package body bus_master_pkg is
     write_bus(net, bus_handle, to_address(bus_handle, address), data, byte_enable);
   end;
 
+  procedure write_bus(signal net : inout network_t;
+                      constant bus_handle : bus_master_t;
+                      constant address : std_logic_vector;
+                      constant burstsize : positive;
+                      constant burstdata : queue_t) is
+    variable request_msg : msg_t := new_msg(bus_burst_write_msg);
+    variable full_address : std_logic_vector(bus_handle.p_address_length-1 downto 0) := (others => '0');
+    variable full_data : std_logic_vector(bus_handle.p_data_length-1 downto 0) := (others => '0');
+  begin
+    full_address(address'length-1 downto 0) := address;
+    push_std_ulogic_vector(request_msg, full_address);
+    push_integer(request_msg, burstsize);
+    for i in 0 to burstsize-1 loop
+      full_data(bus_handle.p_data_length-1 downto 0) := pop(burstdata);
+      push_std_ulogic_vector(request_msg, full_data);
+    end loop;
+    send(net, bus_handle.p_actor, request_msg);
+  end procedure;
+
+  procedure write_bus(signal net : inout network_t;
+                      constant bus_handle : bus_master_t;
+                      constant address : natural;
+                      constant burstsize : positive;
+                      constant burstdata : queue_t) is
+  begin
+    write_bus(net, bus_handle, to_address(bus_handle, address), burstsize, burstdata);
+  end procedure;
+
   procedure check_bus(signal net : inout network_t;
                       constant bus_handle : bus_master_t;
                       constant address : std_logic_vector;
@@ -158,6 +188,30 @@ package body bus_master_pkg is
     read_bus(net, bus_handle, to_address(bus_handle, address), reference);
   end;
 
+  procedure read_bus(signal net : inout network_t;
+                      constant bus_handle : bus_master_t;
+                      constant address : std_logic_vector;
+                      constant burstsize : positive;
+                      variable reference : inout bus_reference_t) is
+    variable full_address : std_logic_vector(bus_handle.p_address_length-1 downto 0) := (others => '0');
+    alias request_msg : msg_t is reference;
+  begin
+    request_msg := new_msg(bus_burst_read_msg);
+    full_address(address'length-1 downto 0) := address;
+    push_std_ulogic_vector(request_msg, full_address);
+    push_integer(request_msg, burstsize);
+    send(net, bus_handle.p_actor, request_msg);
+  end procedure;
+
+  procedure read_bus(signal net : inout network_t;
+                      constant bus_handle : bus_master_t;
+                      constant address : natural;
+                      constant burstsize : positive;
+                      variable reference : inout bus_reference_t) is
+  begin
+    read_bus(net, bus_handle, to_address(bus_handle, address), burstsize, reference);
+  end procedure;
+
   -- Await read bus reply
   procedure await_read_bus_reply(signal net : inout network_t;
                                  variable reference : inout bus_reference_t;
@@ -167,6 +221,25 @@ package body bus_master_pkg is
   begin
     receive_reply(net, request_msg, reply_msg);
     data := pop_std_ulogic_vector(reply_msg)(data'range);
+    delete(request_msg);
+    delete(reply_msg);
+  end procedure;
+
+  procedure await_read_bus_reply(signal net : inout network_t;
+                                 constant bus_handle : bus_master_t;
+                                 constant burstdata : queue_t;
+                                 variable reference : inout bus_reference_t) is
+    variable reply_msg : msg_t;
+    alias request_msg : msg_t is reference;
+    variable data : std_logic_vector(bus_handle.p_data_length-1 downto 0);
+    variable burstsize : positive;
+  begin
+    receive_reply(net, request_msg, reply_msg);
+    burstsize := pop_integer(reply_msg);
+    for i in 0 to burstsize-1 loop
+      data := pop_std_ulogic_vector(reply_msg)(data'range);
+      push(burstdata, data);
+    end loop;
     delete(request_msg);
     delete(reply_msg);
   end procedure;
@@ -190,6 +263,26 @@ package body bus_master_pkg is
   begin
     read_bus(net, bus_handle, to_address(bus_handle, address), data);
   end;
+
+  procedure read_bus(signal net : inout network_t;
+                      constant bus_handle : bus_master_t;
+                      constant address : std_logic_vector;
+                      constant burstsize : positive;
+                      constant burstdata : queue_t) is
+    variable reference : bus_reference_t;
+  begin
+    read_bus(net, bus_handle, address, burstsize, reference);
+    await_read_bus_reply(net, bus_handle, burstdata, reference);
+  end procedure;
+
+  procedure read_bus(signal net : inout network_t;
+                      constant bus_handle : bus_master_t;
+                      constant address : natural;
+                      constant burstsize : positive;
+                      constant burstdata : queue_t) is
+  begin
+    read_bus(net, bus_handle, to_address(bus_handle, address), burstsize, burstdata);
+  end procedure;
 
   procedure wait_until_read_equals(
     signal net : inout network_t;

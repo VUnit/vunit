@@ -30,19 +30,21 @@ architecture a of tb_avalon_master is
   type tb_cfg_t is record
     data_width : positive;
     addr_width : positive;
-    burstcount : std_logic_vector(0 downto 0);
+    burst_width : positive;
     write_prob : real;
     read_prob : real;
     waitrequest_prob : real;
     readdatavalid_prob : real;
     transfers : positive;
+    rndburst_max : positive;
   end record tb_cfg_t;
 
   impure function decode(encoded_tb_cfg : string) return tb_cfg_t is
   begin
     return (data_width => 32,
             addr_width => 32,
-            burstcount => "1",
+            burst_width => 8,
+            rndburst_max => 3,
             write_prob => real'value(get(encoded_tb_cfg, "write_prob")),
             read_prob => real'value(get(encoded_tb_cfg, "read_prob")),
             waitrequest_prob => real'value(get(encoded_tb_cfg, "waitrequest_prob")),
@@ -58,7 +60,7 @@ architecture a of tb_avalon_master is
   signal writedata  : std_logic_vector(tb_cfg.data_width-1 downto 0);
   signal readdata  : std_logic_vector(tb_cfg.data_width-1 downto 0);
   signal byteenable   : std_logic_vector(tb_cfg.data_width/8 -1 downto 0);
-  signal burstcount : std_logic_vector(tb_cfg.burstcount'range);
+  signal burstcount : std_logic_vector(tb_cfg.burst_width -1 downto 0);
   signal write   : std_logic := '0';
   signal read   : std_logic := '0';
   signal readdatavalid : std_logic := '0';
@@ -66,27 +68,52 @@ architecture a of tb_avalon_master is
 
   constant master_logger : logger_t := get_logger("master");
   constant tb_logger : logger_t := get_logger("tb");
+  constant master_actor : actor_t := new_actor("Avalon-MM Master");
   constant bus_handle : bus_master_t := new_bus(data_length => tb_cfg.data_width,
-      address_length => tb_cfg.addr_width, logger => master_logger);
+      address_length => tb_cfg.addr_width, logger => master_logger,
+      actor => master_actor);
 
   constant memory : memory_t := new_memory;
   constant buf : buffer_t := allocate(memory, tb_cfg.transfers * byteenable'length);
   constant avalon_slave : avalon_slave_t := new_avalon_slave(
     memory => memory,
     readdatavalid_high_probability => tb_cfg.readdatavalid_prob,
-    waitrequest_high_probability => tb_cfg.waitrequest_prob
+    waitrequest_high_probability => tb_cfg.waitrequest_prob,
+    name => "Avalon-MM Slave"
   );
+
+  procedure gen_rndburst(
+    variable rnd : inout RandomPType;
+    variable rndburst : inout positive;
+    variable transfers : inout natural
+  ) is
+  begin
+    rndburst := rnd.RandInt(1, tb_cfg.rndburst_max);
+    if transfers >= rndburst then
+      transfers := transfers - rndburst;
+    else
+      rndburst := transfers;
+      transfers := 0;
+    end if;
+  end procedure;
 
 begin
 
   main_stim : process
     variable tmp : std_logic_vector(writedata'range);
     variable value : std_logic_vector(writedata'range) := (others => '1');
-    variable bus_rd_ref1 : bus_reference_t;
-    variable bus_rd_ref2 : bus_reference_t;
+    variable burst_rd_ref : bus_reference_t;
     type bus_reference_arr_t is array (0 to tb_cfg.transfers-1) of bus_reference_t;
     variable rd_ref : bus_reference_arr_t;
+    constant data_queue : queue_t := new_queue;
+    constant rd_ref_queue : queue_t := new_queue;
+    variable rnd : RandomPType;
+    variable transfers : natural;
+    variable rndburst : positive;
+    variable i : natural;
+    variable addr : natural range 0 to tb_cfg.transfers*byteenable'length;
   begin
+    rnd.InitSeed(rnd'instance_name);
     test_runner_setup(runner, runner_cfg);
     set_format(display_handler, verbose, true);
     show(tb_logger, display_handler, verbose);
@@ -136,6 +163,84 @@ begin
         await_read_bus_reply(net, rd_ref(i), tmp);
         check_equal(tmp, std_logic_vector(to_unsigned(i, readdata'length)), "read data");
       end loop;
+
+
+    elsif run("burst wr and burst rd non-blocking") then
+      info(tb_logger, "Writing...");
+      for i in 0 to tb_cfg.transfers -1 loop
+        push(data_queue, std_logic_vector(to_unsigned(i, writedata'length)));
+      end loop;
+      write_bus(net, bus_handle, 0, tb_cfg.transfers, data_queue);
+      check_true(is_empty(data_queue), "wr queue not flushed by master");
+
+      info(tb_logger, "Reading...");
+      read_bus(net, bus_handle, 0, tb_cfg.transfers, burst_rd_ref);
+      info(tb_logger, "Get reads by references...");
+      await_read_bus_reply(net, bus_handle, data_queue, burst_rd_ref);
+
+      info(tb_logger, "Compare...");
+      for i in 0 to tb_cfg.transfers-1 loop
+        tmp := pop(data_queue);
+        check_equal(tmp, std_logic_vector(to_unsigned(i, readdata'length)), "read data");
+      end loop;
+      check_true(is_empty(data_queue), "rd queue not flushed by master");
+
+
+    elsif run("burst wr and burst rd blocking") then
+      info(tb_logger, "Writing...");
+      for i in 0 to tb_cfg.transfers -1 loop
+        push(data_queue, std_logic_vector(to_unsigned(i, writedata'length)));
+      end loop;
+      write_bus(net, bus_handle, 0, tb_cfg.transfers, data_queue);
+      check_true(is_empty(data_queue), "wr queue not flushed by master");
+
+      info(tb_logger, "Reading...");
+      read_bus(net, bus_handle, 0, tb_cfg.transfers, data_queue);
+
+      info(tb_logger, "Compare...");
+      for i in 0 to tb_cfg.transfers-1 loop
+        tmp := pop(data_queue);
+        check_equal(tmp, std_logic_vector(to_unsigned(i, readdata'length)), "read data");
+      end loop;
+      check_true(is_empty(data_queue), "rd queue not flushed by master");
+
+
+    elsif run("random burstcount") then
+      for i in 0 to tb_cfg.transfers -1 loop
+        push(data_queue, std_logic_vector(to_unsigned(i, writedata'length)));
+      end loop;
+
+      info(tb_logger, "Writing...");
+      transfers := tb_cfg.transfers;
+      addr := 0;
+      while transfers > 0 loop
+        gen_rndburst(rnd, rndburst, transfers);
+        write_bus(net, bus_handle, addr, rndburst, data_queue);
+        addr := addr + rndburst * byteenable'length;
+      end loop;
+      check_true(is_empty(data_queue), "wr queue not flushed by master");
+
+      info(tb_logger, "Reading...");
+      transfers := tb_cfg.transfers;
+      addr := 0;
+      while transfers > 0 loop
+        gen_rndburst(rnd, rndburst, transfers);
+        read_bus(net, bus_handle, addr, rndburst, burst_rd_ref);
+        push(rd_ref_queue, burst_rd_ref);
+        addr := addr + rndburst * byteenable'length;
+      end loop;
+
+      info(tb_logger, "Get reads by references and compre...");
+      while not is_empty(rd_ref_queue) loop
+        burst_rd_ref := pop(rd_ref_queue);
+        await_read_bus_reply(net, bus_handle, data_queue, burst_rd_ref);
+        while not is_empty(data_queue) loop
+          tmp := pop(data_queue);
+          check_equal(tmp, std_logic_vector(to_unsigned(i, readdata'length)), "read data");
+          i := i + 1;
+        end loop;
+      end loop;
+
 
     end if;
 

@@ -26,6 +26,7 @@ architecture a of tb_avalon_slave is
   type tb_cfg_t is record
     data_width : positive;
     address_width : positive;
+    burstcount_width : positive;
     num_cycles : positive;
     readdatavalid_prob : real;
     waitrequest_prob : real;
@@ -35,6 +36,7 @@ architecture a of tb_avalon_slave is
   begin
     return (data_width => positive'value(get(encoded_tb_cfg, "data_width")),
             address_width => 32,
+            burstcount_width => 8,
             num_cycles => positive'value(get(encoded_tb_cfg, "num_cycles")),
             readdatavalid_prob => real'value(get(encoded_tb_cfg, "readdatavalid_prob")),
             waitrequest_prob => real'value(get(encoded_tb_cfg, "waitrequest_prob")));
@@ -47,6 +49,7 @@ architecture a of tb_avalon_slave is
   signal writedata  : std_logic_vector(tb_cfg.data_width-1 downto 0) := (others => '0');
   signal readdata  : std_logic_vector(tb_cfg.data_width-1 downto 0) := (others => '0');
   signal byteenable : std_logic_vector(tb_cfg.data_width/8 -1 downto 0) := (others => '1');
+  signal burstcount : std_logic_vector(tb_cfg.burstcount_width -1 downto 0) := (others => '0');
   signal write   : std_logic := '0';
   signal read  : std_logic := '0';
   signal waitrequest    : std_logic := '0';
@@ -77,6 +80,7 @@ begin
     show(tb_logger, display_handler, verbose);
     show(default_logger, display_handler, verbose);
     show(com_logger, display_handler, verbose);
+    burstcount <= std_logic_vector(to_unsigned(1, burstcount'length));
     wait until rising_edge(clk);
 
 
@@ -98,6 +102,37 @@ begin
         address <= std_logic_vector(to_unsigned(i*(byteenable'length), address'length));
         wait until rising_edge(clk) and waitrequest = '0';
       end loop;
+      read <= '0';
+
+      wait until rising_edge(clk) and rd_ack_cnt = tb_cfg.num_cycles-1;
+
+    elsif run("burst wr block rd block") then
+      info(tb_logger, "Writing...");
+      address <= (others => 'U');
+      burstcount(0) <= '1';
+
+      for i in 0 to tb_cfg.num_cycles-1 loop
+        if i = 0 then
+          address <= std_logic_vector(to_unsigned(0, address'length));
+          burstcount <= std_logic_vector(to_unsigned(tb_cfg.num_cycles, burstcount'length));
+        end if;
+        write <= '1';
+        writedata <= std_logic_vector(to_unsigned(i, writedata'length));
+        wait until rising_edge(clk) and waitrequest = '0';
+      end loop;
+      write <= '0';
+      address <= (others => 'U');
+      burstcount <= (others => 'U');
+      writedata <= (others => 'U');
+
+      wait until rising_edge(clk);
+
+      info(tb_logger, "Reading...");
+      wait until rising_edge(clk);
+      read <= '1';
+      burstcount <= std_logic_vector(to_unsigned(tb_cfg.num_cycles, burstcount'length));
+      address <= std_logic_vector(to_unsigned(0, address'length));
+      wait until rising_edge(clk) and waitrequest = '0';
       read <= '0';
 
       wait until rising_edge(clk) and rd_ack_cnt = tb_cfg.num_cycles-1;
@@ -125,7 +160,7 @@ begin
       clk   => clk,
       address   => address,
       byteenable => byteenable,
-      burstcount => "1",
+      burstcount => burstcount,
       write => write,
       writedata => writedata,
       read => read,
