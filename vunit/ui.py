@@ -851,11 +851,10 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         Main function when only listing test cases
         """
-        test_list = self._create_tests(simulator_if=None)
-        for test_suite in test_list:
-            for name in test_suite.test_cases:
-                print(name)
-        print("Listed %i tests" % test_list.num_tests())
+        test_list = self.get_all_test_cases()
+        for test_case_name in test_list:
+            print(test_case_name)
+        print("Listed %i tests" % len(test_list))
         return True
 
     def _main_list_files_only(self):
@@ -1022,6 +1021,19 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
             implementation_dependencies=True)
         return SourceFileList([SourceFile(source_file, self._project, self)
                                for source_file in source_files])
+
+    def get_all_test_cases(self):
+        """
+        Get all the test cases, different from get_tests because it returns the 'all' case
+
+        :returns: A list of test cases names
+        """
+        test_cases = []
+        test_list = self._create_tests(simulator_if=None)
+        for test_suite in test_list:
+            for name in test_suite.test_cases:
+                test_cases.append(name)
+        return test_cases
 
 
 class Library(object):
