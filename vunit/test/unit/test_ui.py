@@ -848,8 +848,10 @@ endmodule
         script_location = join(ROOT, 'examples', 'vhdl', 'user_guide', 'run.py')
         raw_output = check_output(['python', script_location, '-f'], universal_newlines=True)
         output = raw_output.split('\n')
-        report = output[0].split(',')
-        self.assertTrue(len(report) == 2)
+        output = output[:-2]
+        lib_and_file = list(map(lambda x: x.split(','), output))
+        check_format = list(filter(lambda x: len(x) != 2, lib_and_file))
+        self.assertTrue(len(check_format) == 0)
 
     def _create_ui(self, *args):
         """ Create an instance of the VUnit public interface class """
