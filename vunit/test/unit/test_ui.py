@@ -848,9 +848,8 @@ endmodule
         raw_output = check_output(['python', script_location, '-f'], universal_newlines=True)
         output = raw_output.split('\n')
         output = output[:-2]
-        lib_and_file = list(map(lambda x: x.split(','), output))
-        check_format = list(filter(lambda x: len(x) != 2, lib_and_file))
-        self.assertTrue(len(check_format) == 0)
+        tuple_format = [test_case for test_case in output if len(test_case.split(',')) != 2]
+        self.assertTrue(len(tuple_format) == 0)
 
     def _create_ui(self, *args):
         """ Create an instance of the VUnit public interface class """
