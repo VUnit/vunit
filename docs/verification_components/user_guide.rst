@@ -17,6 +17,7 @@ benefit from using per-verified models of an AXI-bus instead of
 re-implementing it yourself.
 
 Included verification components (VCs):
+
 - Avalon Memory-Mapped master
 - Avalon Memory-Mapped slave
 - Avalon Streaming sink
