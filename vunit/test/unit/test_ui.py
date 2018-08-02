@@ -820,15 +820,14 @@ endmodule
         lib.add_source_files(join(project_location, '*.vhd'))
         ui.add_builtins()
         list_of_files = names(ui.get_compile_order())
-        list_of_files = list(map(lambda x: os.path.split(x)[1], list_of_files))
-
+        list_of_files = [os.path.split(test_case)[1] for test_case in list_of_files] 
+        
         script_location = join(project_location, 'run.py')
         report_raw = check_output(['python', script_location, '-f'], universal_newlines=True)
-        report = list(map(lambda x: x.strip(), report_raw.split('\n')))
-        report = report[:-2]
-        report = list(map(lambda x: (x.split(','))[1], report))
-        last_segments = list(map(lambda x: os.path.split(x)[1], report))
-        self.assertSetEqual(set(last_segments), set(list_of_files))
+        actual_report = [test_case.strip() for test_case in report_raw.split('\n')]
+        actual_report = actual_report[:-2]
+        actual_report = [os.path.split(test_case)[1] for test_case in actual_report]
+        self.assertSetEqual(set(actual_report), set(list_of_files))
 
     def test_sigasi_integration_list_test_cases(self):
         project_location = join(ROOT, 'examples', 'vhdl', 'user_guide')
