@@ -14,7 +14,6 @@ import unittest
 from string import Template
 import os
 from os.path import join, dirname, basename, exists, abspath
-from pathlib import Path
 import re
 from re import MULTILINE
 from shutil import rmtree
@@ -821,14 +820,14 @@ endmodule
         lib.add_source_files(join(project_location, '*.vhd'))
         ui.add_builtins()
         list_of_files = names(ui.get_compile_order())
-        list_of_files = list(map(lambda x: Path(x).parts[-1], list_of_files))
+        list_of_files = list(map(lambda x: os.path.split(x)[1], list_of_files))
 
         script_location = join(project_location, 'run.py')
         report_raw = check_output(['python', script_location, '-f'], universal_newlines=True)
         report = list(map(lambda x: x.strip(), report_raw.split('\n')))
         report = report[:-2]
         report = list(map(lambda x: (x.split(','))[1], report))
-        last_segments = list(map(lambda x: Path(x).parts[-1], report))
+        last_segments = list(map(lambda x: os.path.split(x)[1], report))
         self.assertSetEqual(set(last_segments), set(list_of_files))
 
     def test_sigasi_integration_list_test_cases(self):
