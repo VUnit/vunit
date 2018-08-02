@@ -820,8 +820,8 @@ endmodule
         lib.add_source_files(join(project_location, '*.vhd'))
         ui.add_builtins()
         list_of_files = names(ui.get_compile_order())
-        list_of_files = [os.path.split(test_case)[1] for test_case in list_of_files] 
-        
+        list_of_files = [os.path.split(test_case)[1] for test_case in list_of_files]
+
         script_location = join(project_location, 'run.py')
         report_raw = check_output(['python', script_location, '-f'], universal_newlines=True)
         actual_report = [test_case.strip() for test_case in report_raw.split('\n')]
