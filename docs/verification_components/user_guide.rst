@@ -26,6 +26,8 @@ Included verification components (VCs):
 - AXI read slave
 - AXI write slave
 - AXI stream master
+- AXI stream monitor
+- AXI stream protocol checker
 - AXI stream slave
 - RAM master
 - Wishbone master

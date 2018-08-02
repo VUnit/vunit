@@ -36,6 +36,9 @@ package axi_stream_pkg is
     p_max_waits   => 0
   );
 
+  -- The default protocol checker is used to specify that the checker
+  -- configuration is defined by the parent component into which the checker is
+  -- instantiated.
   constant default_axi_stream_protocol_checker : axi_stream_protocol_checker_t := (
     p_type        => default_component,
     p_actor       => null_actor,
@@ -60,6 +63,9 @@ package axi_stream_pkg is
     p_protocol_checker => null_axi_stream_protocol_checker
   );
 
+  -- The default monitor is used to specify that the monitor
+  -- configuration is defined by the parent component into which the monitor is
+  -- instantiated.
   constant default_axi_stream_monitor : axi_stream_monitor_t := (
     p_type             => default_component,
     p_actor            => null_actor,
