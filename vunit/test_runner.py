@@ -20,7 +20,7 @@ import time
 import logging
 import string
 from contextlib import contextmanager
-import vunit.ostools as ostools
+from vunit import ostools
 from vunit.test_report import PASSED, FAILED, SKIPPED
 from vunit.hashing import hash_string
 LOGGER = logging.getLogger(__name__)
@@ -167,6 +167,11 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                 if test_suite is not None:
                     scheduler.test_done()
 
+    def _add_skipped_tests(self, test_suite, results, start_time, num_tests, output_file_name):
+        for name in test_suite.test_cases:
+            results[name] = SKIPPED
+        self._add_results(test_suite, results, start_time, num_tests, output_file_name)
+
     def _run_test_suite(self,
                         test_suite,
                         write_stdout,
@@ -210,10 +215,8 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             results = test_suite.run(output_path=output_path,
                                      read_output=read_output)
         except KeyboardInterrupt:
-            for name in test_suite.test_cases:
-                results[name] = SKIPPED
-            self._add_results(test_suite, results, start_time, num_tests, output_file_name)
-            raise
+            self._add_skipped_tests(test_suite, results, start_time, num_tests, output_file_name)
+            raise KeyboardInterrupt
         except:  # pylint: disable=bare-except
             if self._dont_catch_exceptions:
                 raise
