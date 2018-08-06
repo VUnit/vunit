@@ -679,8 +679,8 @@ Listed 2 files""".splitlines()))
 
         source_file2 = lib2.add_source_file(file_name2)
         for lib in [lib1, lib2]:
-            self.assertEqual(set([source_file.name for source_file in lib.get_source_files()]),
-                             set([source_file1.name, source_file2.name]))
+            self.assertEqual({source_file.name for source_file in lib.get_source_files()},
+                             {source_file1.name, source_file2.name})
 
     def test_scan_tests_from_other_file(self):
         for tb_type in ["vhdl", "verilog"]:
@@ -926,17 +926,17 @@ class MockSimulator(SimulatorInterface):
     name = "mock"
 
     @staticmethod
-    def from_args(*args, **kwargs):
+    def from_args(output_path, args):  # pylint: disable=unused-argument
         return MockSimulator(output_path="", gui=False)
 
     package_users_depend_on_bodies = False
 
     @staticmethod
-    def compile_source_file_command(*args, **kwargs):  # pylint: disable=arguments-differ
+    def compile_source_file_command(source_file):  # pylint: disable=unused-argument
         return True
 
     @staticmethod
-    def simulate(*args, **kwargs):  # pylint: disable=arguments-differ
+    def simulate(output_path, test_suite_name, config, elaborate_only):  # pylint: disable=unused-argument
         return True
 
 

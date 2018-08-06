@@ -18,14 +18,20 @@ re-implementing it yourself.
 
 Included verification components (VCs):
 
+- Avalon Memory-Mapped master
+- Avalon Memory-Mapped slave
+- Avalon Streaming sink
+- Avalon Streaming source
 - AXI-Lite master
 - AXI read slave
 - AXI write slave
-- Wishbone master
-- Wishbone slave
 - AXI stream master
+- AXI stream monitor
+- AXI stream protocol checker
 - AXI stream slave
 - RAM master
+- Wishbone master
+- Wishbone slave
 - UART master
 - UART slave
 

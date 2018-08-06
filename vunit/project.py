@@ -26,7 +26,7 @@ from vunit.parsing.encodings import HDL_FILE_ENCODING
 from vunit.exceptions import CompileError
 from vunit.simulator_factory import SIMULATOR_FACTORY
 from vunit.design_unit import DesignUnit, VHDLDesignUnit, Entity, Module
-import vunit.ostools as ostools
+from vunit import ostools
 LOGGER = logging.getLogger(__name__)
 
 
@@ -807,7 +807,7 @@ class VerilogSourceFile(SourceFile):
                 self.module_dependencies.append(instance_name)
 
         except KeyboardInterrupt:
-            raise
+            raise KeyboardInterrupt
         except:  # pylint: disable=bare-except
             traceback.print_exc()
             LOGGER.error("Failed to parse %s", self.name)
@@ -837,7 +837,7 @@ class VHDLSourceFile(SourceFile):
             try:
                 design_file = vhdl_parser.parse(self.name)
             except KeyboardInterrupt:
-                raise
+                raise KeyboardInterrupt
             except:  # pylint: disable=bare-except
                 traceback.print_exc()
                 LOGGER.error("Failed to parse %s", self.name)
@@ -956,12 +956,14 @@ def file_type_of(file_name):
     _, ext = splitext(file_name)
     if ext.lower() in VHDL_EXTENSIONS:
         return "vhdl"
-    elif ext.lower() in VERILOG_EXTENSIONS:
+
+    if ext.lower() in VERILOG_EXTENSIONS:
         return "verilog"
-    elif ext.lower() in SYSTEM_VERILOG_EXTENSIONS:
+
+    if ext.lower() in SYSTEM_VERILOG_EXTENSIONS:
         return "systemverilog"
-    else:
-        raise RuntimeError("Unknown file ending '%s' of %s" % (ext, file_name))
+
+    raise RuntimeError("Unknown file ending '%s' of %s" % (ext, file_name))
 
 
 def check_vhdl_standard(vhdl_standard, from_str=None):

@@ -72,13 +72,16 @@ Compile passed
             """
             if source_file == file1:
                 return ["command1"]
-            elif source_file == file2:
+
+            if source_file == file2:
                 return ["command2"]
-            elif source_file == file3:
+
+            if source_file == file3:
                 return ["command3"]
+
             raise AssertionError
 
-        def check_output_side_effect(command, **kwargs):  # pylint: disable=missing-docstring
+        def check_output_side_effect(command, env=None):  # pylint: disable=missing-docstring, unused-argument
             if command == ["command1"]:
                 raise subprocess.CalledProcessError(returncode=-1, cmd=command, output="bad stuff")
 
@@ -117,7 +120,7 @@ Compile failed
 
         with mock.patch("vunit.simulator_interface.check_output", autospec=True) as check_output:
 
-            def check_output_side_effect(command, **kwargs):  # pylint: disable=missing-docstring
+            def check_output_side_effect(command, env=None):  # pylint: disable=missing-docstring, unused-argument
                 raise subprocess.CalledProcessError(returncode=-1, cmd=command, output="bad stuff")
 
             check_output.side_effect = check_output_side_effect
@@ -145,7 +148,7 @@ Compile failed
         with mock.patch("vunit.simulator_interface.check_output", autospec=True) as check_output:
             check_output.return_value = ""
 
-            def raise_compile_error(*args, **kwargs):
+            def raise_compile_error(source_file):  # pylint: disable=unused-argument
                 raise CompileError
 
             simif.compile_source_file_command.side_effect = raise_compile_error
@@ -273,5 +276,5 @@ class MockPrinter(object):
     def __init__(self):
         self.output = ""
 
-    def write(self, text, **kwargs):
+    def write(self, text, output_file=None, fg=None, bg=None):  # pylint: disable=unused-argument
         self.output += text

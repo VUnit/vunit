@@ -98,7 +98,6 @@ class SimulatorInterface(object):
         """
         Find simulator toolchain prefix from PATH environment variable
         """
-        return None
 
     @classmethod
     def is_available(cls):
@@ -132,7 +131,6 @@ class SimulatorInterface(object):
         """
         Returns simulator name when OSVVM coverage API is supported, None otherwise.
         """
-        return None
 
     @classmethod
     def supports_vhdl_package_generics(cls):
@@ -257,9 +255,8 @@ class SimulatorInterface(object):
     @staticmethod
     def get_env():
         """
-        Allows inheriting classes to overload this to modify environment variables
+        Allows inheriting classes to overload this to modify environment variables. Return None for default environment
         """
-        return None  # Default environment
 
 
 def isfile(file_name):

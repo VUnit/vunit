@@ -125,7 +125,6 @@ begin
 
     variable resp_burst, input_burst, burst : axi_burst_t;
     variable address, aligned_address : integer;
-    variable idx : integer;
     variable beats : natural := 0;
     variable input_data : burst_data_t;
     constant input_data_queue : queue_t := new_queue;

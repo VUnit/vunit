@@ -36,7 +36,10 @@ load-plugins=
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
 #disable=
-disable=too-few-public-methods, locally-disabled, redefined-variable-type, duplicate-code, file-ignored
+disable=too-few-public-methods, locally-disabled, redefined-variable-type, duplicate-code, file-ignored,
+  useless-object-inheritance,
+# Failed to suppress this locally in ostools.py
+  subprocess-popen-preexec-fn
 
 [REPORTS]
 

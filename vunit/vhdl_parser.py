@@ -765,7 +765,8 @@ class VHDLArrayType(object):
             for char in ranges:
                 if char == ',' and level == 0:
                     return ranges[:index], ranges[index + 1:]
-                elif char == '(':
+
+                if char == '(':
                     level += 1
                 elif char == ')':
                     level -= 1
@@ -784,16 +785,17 @@ class VHDLArrayType(object):
         if unconstrained_range is not None:
             range_type = unconstrained_range.group('range_type')
             return VHDLRange(range_type)
-        else:
-            constrained_range = cls._constrained_range_re.match(the_range)
-            range_attribute = cls._range_attribute_range_re.match(the_range)
-            if constrained_range is not None:
-                range_left = constrained_range.group('range_left')
-                range_right = constrained_range.group('range_right')
-                return VHDLRange(None, range_left, range_right)
-            elif range_attribute is not None:
-                range_attribute = range_attribute.group('range_attribute')
-                return VHDLRange(attribute=range_attribute)
+
+        constrained_range = cls._constrained_range_re.match(the_range)
+        range_attribute = cls._range_attribute_range_re.match(the_range)
+        if constrained_range is not None:
+            range_left = constrained_range.group('range_left')
+            range_right = constrained_range.group('range_right')
+            return VHDLRange(None, range_left, range_right)
+
+        if range_attribute is not None:
+            range_attribute = range_attribute.group('range_attribute')
+            return VHDLRange(attribute=range_attribute)
 
         return VHDLRange()
 

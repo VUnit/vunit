@@ -390,8 +390,8 @@ class TestScheduler(object):
                 idx = self._idx
                 self._idx += 1
                 return self._tests[idx]
-            else:
-                raise StopIteration
+
+            raise StopIteration
 
     def test_done(self):
         """

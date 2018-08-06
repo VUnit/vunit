@@ -15,6 +15,7 @@ use vunit_lib.checker_pkg.all;
 use vunit_lib.check_pkg.all;
 use vunit_lib.run_types_pkg.all;
 use vunit_lib.run_pkg.all;
+use vunit_lib.runner_pkg.all;
 use work.test_support.all;
 use ieee.numeric_std.all;
 entity tb_check is
@@ -36,7 +37,7 @@ architecture test_fixture of tb_check is
 begin
   clock: process is
   begin
-    while runner.phase < test_runner_exit loop
+    while get_phase(runner_state) < test_runner_exit loop
       clk <= '1', '0' after 5 ns;
       wait for 10 ns;
     end loop;
