@@ -8,11 +8,6 @@
 -- TODO:
 -- * wb sel
 -- * err and rty responses
--- * Memory:
---    - variable memory size (currenlty 1024Bytes)
---    - variable address range
---    - consider passing memory object to slave instead of
---      create it locally
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -116,6 +111,6 @@ begin
     else
       stall <= '0';
     end if;
-    wait until rising_edge(clk) and cyc = '1';
+    wait until rising_edge(clk);
   end process;
 end architecture;

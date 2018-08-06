@@ -29,6 +29,7 @@ begin
   main : process
     variable reply_msg, msg : msg_t;
     variable msg_type : msg_type_t;
+    variable axi_stream_transaction : axi_stream_transaction_t(tdata(tdata'range));
   begin
     receive(net, slave.p_actor, msg);
     msg_type := message_type(msg);
@@ -38,18 +39,41 @@ begin
       wait until (tvalid and tready) = '1' and rising_edge(aclk);
       tready <= '0';
 
-      reply_msg := new_msg;
-      push_std_ulogic_vector(reply_msg, tdata);
-      if tlast = '0' then
-        push_boolean(reply_msg,false);
-      else
-        push_boolean(reply_msg,true);
-      end if;
+      axi_stream_transaction := (tdata, tlast = '1');
+      reply_msg := new_axi_stream_transaction_msg(axi_stream_transaction);
       reply(net, msg, reply_msg);
     else
       unexpected_msg_type(msg_type);
     end if;
 
   end process;
+
+  axi_stream_monitor_generate : if slave.p_monitor /= null_axi_stream_monitor generate
+    axi_stream_monitor_inst : entity work.axi_stream_monitor
+      generic map(
+        monitor => slave.p_monitor
+      )
+      port map(
+        aclk   => aclk,
+        tvalid => tvalid,
+        tready => tready,
+        tdata  => tdata,
+        tlast  => tlast
+      );
+  end generate axi_stream_monitor_generate;
+
+  axi_stream_protocol_checker_generate : if slave.p_protocol_checker /= null_axi_stream_protocol_checker generate
+    axi_stream_protocol_checker_inst: entity work.axi_stream_protocol_checker
+      generic map (
+        protocol_checker => slave.p_protocol_checker)
+      port map (
+        aclk     => aclk,
+        areset_n => open,
+        tvalid   => tvalid,
+        tready   => tready,
+        tdata    => tdata,
+        tlast    => tlast,
+        tid      => open);
+  end generate axi_stream_protocol_checker_generate;
 
 end architecture;

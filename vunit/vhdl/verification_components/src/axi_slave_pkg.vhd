@@ -275,7 +275,6 @@ package body axi_slave_pkg is
                            variable stat  : inout axi_statistics_t;
                            clear : boolean := false) is
     variable request_msg, reply_msg : msg_t;
-    variable ack : boolean;
   begin
     deallocate(stat);
     request_msg := new_msg(axi_slave_get_statistics_msg);

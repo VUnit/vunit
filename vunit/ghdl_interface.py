@@ -158,10 +158,13 @@ class GHDLInterface(SimulatorInterface):
         """
         if vhdl_standard == "2002":
             return "02"
-        elif vhdl_standard == "2008":
+
+        if vhdl_standard == "2008":
             return "08"
-        elif vhdl_standard == "93":
+
+        if vhdl_standard == "93":
             return "93"
+
         raise ValueError("Invalid VHDL standard %s" % vhdl_standard)
 
     def compile_vhdl_file_command(self, source_file):

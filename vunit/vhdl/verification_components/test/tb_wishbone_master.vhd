@@ -31,6 +31,7 @@ architecture a of tb_wishbone_master is
     dat_width : positive;
     adr_width : positive;
     num_cycles : positive;
+    strobe_prob : real;
     ack_prob : real;
     stall_prob : real;
   end record tb_cfg_t;
@@ -40,6 +41,7 @@ architecture a of tb_wishbone_master is
     return (dat_width => positive'value(get(encoded_tb_cfg, "dat_width")),
             adr_width => positive'value(get(encoded_tb_cfg, "adr_width")),
             num_cycles => positive'value(get(encoded_tb_cfg, "num_cycles")),
+            strobe_prob => real'value(get(encoded_tb_cfg, "strobe_prob")),
             ack_prob => real'value(get(encoded_tb_cfg, "ack_prob")),
             stall_prob => real'value(get(encoded_tb_cfg, "stall_prob")));
   end function decode;
@@ -64,7 +66,11 @@ architecture a of tb_wishbone_master is
 
   constant memory : memory_t := new_memory;
   constant buf : buffer_t := allocate(memory, tb_cfg.num_cycles * sel'length);
-  constant wishbone_slave : wishbone_slave_t := new_wishbone_slave(memory => memory);
+  constant wishbone_slave : wishbone_slave_t := new_wishbone_slave(
+    memory => memory,
+    ack_high_probability => tb_cfg.ack_prob,
+    stall_high_probability => tb_cfg.stall_prob
+  );
 
 begin
 
@@ -149,7 +155,8 @@ begin
 
   dut : entity work.wishbone_master
     generic map (
-      bus_handle => bus_handle)
+      bus_handle => bus_handle,
+      strobe_high_probability => tb_cfg.strobe_prob)
     port map (
       clk   => clk,
       adr   => adr,

@@ -213,7 +213,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             for name in test_suite.test_cases:
                 results[name] = SKIPPED
             self._add_results(test_suite, results, start_time, num_tests, output_file_name)
-            raise
+            raise KeyboardInterrupt
         except:  # pylint: disable=bare-except
             if self._dont_catch_exceptions:
                 raise
@@ -387,8 +387,8 @@ class TestScheduler(object):
                 idx = self._idx
                 self._idx += 1
                 return self._tests[idx]
-            else:
-                raise StopIteration
+
+            raise StopIteration
 
     def test_done(self):
         """

@@ -155,7 +155,7 @@ package body memory_pkg is
   impure function check_write_data(memory : memory_t;
                                    address : natural;
                                    byte : byte_t) return boolean is
-    variable memory_data : memory_data_t := decode(get(memory.p_data, address));
+    constant memory_data : memory_data_t := decode(get(memory.p_data, address));
   begin
     if memory_data.has_exp and byte /= memory_data.exp then
       failure(memory.p_logger, "Writing to " & describe_address(memory, address) &
@@ -393,7 +393,7 @@ package body memory_pkg is
   end;
 
   impure function describe_address(memory : memory_t; address : natural) return string is
-    variable buf : buffer_t := address_to_allocation(memory, address);
+    constant buf : buffer_t := address_to_allocation(memory, address);
 
     impure function describe_buffer return string is
     begin

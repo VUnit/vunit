@@ -10,7 +10,7 @@ Contains different kinds of test suites
 
 
 from os.path import join
-import vunit.ostools as ostools
+from vunit import ostools
 from vunit.test_report import (PASSED, SKIPPED, FAILED)
 
 

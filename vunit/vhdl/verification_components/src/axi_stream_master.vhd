@@ -20,7 +20,7 @@ entity axi_stream_master is
   port (
     aclk : in std_logic;
     tvalid : out std_logic := '0';
-    tready : in std_logic;
+    tready : in std_logic := '1';
     tdata : out std_logic_vector(data_length(master)-1 downto 0) := (others => '0');
     tlast : out std_logic := '0');
 end entity;
@@ -55,5 +55,33 @@ begin
       unexpected_msg_type(msg_type);
     end if;
   end process;
+
+  axi_stream_monitor_generate : if master.p_monitor /= null_axi_stream_monitor generate
+    axi_stream_monitor_inst : entity work.axi_stream_monitor
+      generic map(
+        monitor => master.p_monitor
+      )
+      port map(
+        aclk   => aclk,
+        tvalid => tvalid,
+        tready => tready,
+        tdata  => tdata,
+        tlast  => tlast
+      );
+  end generate axi_stream_monitor_generate;
+
+  axi_stream_protocol_checker_generate : if master.p_protocol_checker /= null_axi_stream_protocol_checker generate
+    axi_stream_protocol_checker_inst: entity work.axi_stream_protocol_checker
+      generic map (
+        protocol_checker => master.p_protocol_checker)
+      port map (
+        aclk     => aclk,
+        areset_n => open,
+        tvalid   => tvalid,
+        tready   => tready,
+        tdata    => tdata,
+        tlast    => tlast,
+        tid      => open);
+  end generate axi_stream_protocol_checker_generate;
 
 end architecture;

@@ -221,7 +221,7 @@ from os.path import exists, abspath, join, basename, splitext, normpath, dirname
 from glob import glob
 from fnmatch import fnmatch
 from vunit.database import PickledDataBase, DataBase
-import vunit.ostools as ostools
+from vunit import ostools
 from vunit.vunit_cli import VUnitCLI
 from vunit.simulator_factory import SIMULATOR_FACTORY
 from vunit.simulator_interface import (is_string_not_iterable,
@@ -352,7 +352,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             database = DataBase(project_database_file_name)
             create_new = (key not in database) or (database[key] != version)
         except KeyboardInterrupt:
-            raise
+            raise KeyboardInterrupt
         except:  # pylint: disable=bare-except
             traceback.print_exc()
             create_new = True
@@ -793,10 +793,10 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         if self._args.list:
             return self._main_list_only()
 
-        elif self._args.files:
+        if self._args.files:
             return self._main_list_files_only()
 
-        elif self._args.compile:
+        if self._args.compile:
             return self._main_compile_only()
 
         all_ok = self._main_run()

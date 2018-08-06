@@ -30,7 +30,7 @@ begin
     variable data  : std_logic_vector(data_length(bus_handle)-1 downto 0);
     constant blen : natural := byte_length(bus_handle);
   begin
-    loop
+    while true loop
       receive(net, bus_handle.p_actor, request_msg);
       msg_type := message_type(request_msg);
 
