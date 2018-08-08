@@ -34,6 +34,8 @@ begin
     receive(net, slave.p_actor, msg);
     msg_type := message_type(msg);
 
+    handle_sync_message(net, msg_type, msg);
+
     if msg_type = stream_pop_msg then
       tready <= '1';
       wait until (tvalid and tready) = '1' and rising_edge(aclk);

@@ -14,6 +14,7 @@ context work.data_types_context;
 use work.axi_stream_pkg.all;
 use work.stream_master_pkg.all;
 use work.stream_slave_pkg.all;
+use work.sync_pkg.all;
 
 entity tb_axi_stream is
   generic(runner_cfg : string);
@@ -44,6 +45,7 @@ architecture a of tb_axi_stream is
     protocol_checker => default_axi_stream_protocol_checker
   );
   constant master_stream     : stream_master_t     := as_stream(master_axi_stream);
+  constant master_sync       : sync_handle_t       := as_sync(master_axi_stream);
 
   constant slave_axi_stream : axi_stream_slave_t := new_axi_stream_slave(
     data_length      => tdata'length, logger => get_logger("slave"), actor => new_actor("slave"),
@@ -51,6 +53,7 @@ architecture a of tb_axi_stream is
     protocol_checker => default_axi_stream_protocol_checker
   );
   constant slave_stream     : stream_slave_t     := as_stream(slave_axi_stream);
+  constant slave_sync       : sync_handle_t      := as_sync(slave_axi_stream);
 
   constant n_monitors : natural := 3;
 
@@ -65,6 +68,7 @@ begin
     variable msg                    : msg_t;
     variable msg_type               : msg_type_t;
     variable axi_stream_transaction : axi_stream_transaction_t(tdata(tdata'range));
+    variable timestamp              : time := 0 ns;
 
     procedure get_axi_stream_transaction(variable axi_stream_transaction : out axi_stream_transaction_t) is
     begin
@@ -125,6 +129,46 @@ begin
         check_equal(
           axi_stream_transaction.tdata,
           std_logic_vector'(x"99"),
+          result("for axi_stream_transaction.tdata")
+        );
+        check_true(axi_stream_transaction.tlast, result("for axi_stream_transaction.tlast"));
+      end loop;
+
+    elsif run("test single stalled push and pop") then
+      wait until rising_edge(aclk);
+      wait_for_time(net, master_sync, 30 ns);
+      timestamp := now;
+      push_stream(net, master_stream, x"77", true);
+      pop_stream(net, slave_stream, data, last);
+      check_equal(data, std_logic_vector'(x"77"), result("for pop stream data"));
+      check_true(last, result("for pop stream last"));
+      check_equal(now - 10 ns, timestamp + 30 ns, result("for push wait time"));
+
+      for i in 1 to n_monitors loop
+        get_axi_stream_transaction(axi_stream_transaction);
+        check_equal(
+          axi_stream_transaction.tdata,
+          std_logic_vector'(x"77"),
+          result("for axi_stream_transaction.tdata")
+        );
+        check_true(axi_stream_transaction.tlast, result("for axi_stream_transaction.tlast"));
+      end loop;
+
+    elsif run("test single push and stalled pop") then
+      wait until rising_edge(aclk);
+      wait_for_time(net, slave_sync, 30 ns);
+      timestamp := now;
+      push_stream(net, master_stream, x"77", true);
+      pop_stream(net, slave_stream, data, last);
+      check_equal(data, std_logic_vector'(x"77"), result("for pop stream data"));
+      check_true(last, result("for pop stream last"));
+      check_equal(now - 10 ns, timestamp + 30 ns, result("for push wait time"));
+
+      for i in 1 to n_monitors loop
+        get_axi_stream_transaction(axi_stream_transaction);
+        check_equal(
+          axi_stream_transaction.tdata,
+          std_logic_vector'(x"77"),
           result("for axi_stream_transaction.tdata")
         );
         check_true(axi_stream_transaction.tlast, result("for axi_stream_transaction.tlast"));
