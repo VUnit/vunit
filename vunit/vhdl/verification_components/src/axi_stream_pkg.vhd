@@ -127,6 +127,7 @@ package axi_stream_pkg is
   impure function as_stream(master : axi_stream_master_t) return stream_master_t;
   impure function as_stream(slave : axi_stream_slave_t) return stream_slave_t;
   impure function as_sync(master : axi_stream_master_t) return sync_handle_t;
+  impure function as_sync(slave : axi_stream_slave_t) return sync_handle_t;
 
   constant push_axi_stream_msg        : msg_type_t := new_msg_type("push axi stream");
   constant axi_stream_transaction_msg : msg_type_t := new_msg_type("axi stream transaction");
@@ -309,6 +310,11 @@ package body axi_stream_pkg is
   impure function as_sync(master : axi_stream_master_t) return sync_handle_t is
   begin
     return master.p_actor;
+  end;
+
+  impure function as_sync(slave : axi_stream_slave_t) return sync_handle_t is
+  begin
+    return slave.p_actor;
   end;
 
   procedure push_axi_stream(signal net : inout network_t;
