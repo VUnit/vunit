@@ -18,8 +18,7 @@ import logging
 from vunit.ostools import Process, file_exists
 from vunit.simulator_interface import (SimulatorInterface,
                                        ListOfStringOption,
-                                       StringOption,
-                                       check_output)
+                                       StringOption)
 from vunit.exceptions import CompileError
 from vunit.vsim_simulator_mixin import (VsimSimulatorMixin,
                                         fix_path)
@@ -209,10 +208,12 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         Get mapped libraries by running vlist on the working directory
         """
-        text = check_output(join(self._prefix, 'vlist'), cwd=dirname(self._sim_cfg_file_name))
+        lines = []
+        proc = Process([join(self._prefix, 'vlist')], cwd=dirname(self._sim_cfg_file_name))
+        proc.consume_output(callback=lambda line: lines.append(line))
 
         libraries = {}
-        for line in text.splitlines():
+        for line in lines:
             match = self._library_re.match(line)
             if match is None:
                 continue

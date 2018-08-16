@@ -282,14 +282,13 @@ def run_command(command, cwd=None, env=None):
     return False
 
 
-def check_output(command, env=None, cwd=None):
+def check_output(command, env=None):
     """
     Wrapper arround subprocess.check_output
     """
     try:
         output = subprocess.check_output(command,
                                          env=env,
-                                         cwd=cwd,
                                          stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as err:
         err.output = err.output.decode("utf-8")
