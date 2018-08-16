@@ -108,8 +108,10 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         Add builtin (global) libraries and coverage flags
         """
-        mapped_libraries = self._get_mapped_libraries()
-        for library_name in mapped_libraries:
+        built_in_libraries = self._get_mapped_libraries(self._builtin_library_cfg)
+
+        for library_name in built_in_libraries:
+            # A user might shadow a built in library with their own version
             if not project.has_library(library_name):
                 project.add_builtin_library(library_name)
 
@@ -126,7 +128,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         Setup library mapping
         """
-        mapped_libraries = self._get_mapped_libraries()
+        mapped_libraries = self._get_mapped_libraries(self._sim_cfg_file_name)
         for library in project.get_libraries():
             self._libraries.append(library)
             self.create_library(library.name, library.directory, mapped_libraries)
@@ -200,16 +202,20 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
             return
 
         with open(self._sim_cfg_file_name, "w") as ofile:
-            ofile.write('$INCLUDE = "%s"\n' % join(self._prefix, "..", "vlib", "library.cfg"))
+            ofile.write('$INCLUDE = "%s"\n' % self._builtin_library_cfg)
+
+    @property
+    def _builtin_library_cfg(self):
+        return join(self._prefix, "..", "vlib", "library.cfg")
 
     _library_re = re.compile(r'([a-zA-Z_0-9]+)\s=\s(.*)')
 
-    def _get_mapped_libraries(self):
+    def _get_mapped_libraries(self, library_cfg_file):
         """
         Get mapped libraries by running vlist on the working directory
         """
         lines = []
-        proc = Process([join(self._prefix, 'vlist')], cwd=dirname(self._sim_cfg_file_name))
+        proc = Process([join(self._prefix, 'vlist')], cwd=dirname(library_cfg_file))
         proc.consume_output(callback=lines.append)
 
         libraries = {}
@@ -219,7 +225,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
                 continue
             key = match.group(1)
             value = match.group(2)
-            libraries[key] = abspath(join(dirname(self._sim_cfg_file_name), dirname(value)))
+            libraries[key] = abspath(join(dirname(library_cfg_file), dirname(value)))
         return libraries
 
     def _create_load_function(self,
