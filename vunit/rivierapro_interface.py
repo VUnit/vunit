@@ -209,7 +209,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         Get mapped libraries by running vlist on the working directory
         """
-        text = check_output("vlist", cwd=dirname(self._sim_cfg_file_name))
+        text = check_output(join(self._prefix, 'vlist'), cwd=dirname(self._sim_cfg_file_name))
 
         libraries = {}
         for line in text.splitlines():
