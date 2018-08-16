@@ -107,8 +107,13 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
 
     def add_simulator_specific(self, project):
         """
-        Add coverage flags
+        Add builtin (global) libraries and coverage flags
         """
+        mapped_libraries = self._get_mapped_libraries()
+        for library_name in mapped_libraries:
+            if not project.has_library(library_name):
+                project.add_builtin_library(library_name)
+
         if self._coverage is None:
             return
 
