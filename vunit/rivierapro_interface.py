@@ -210,7 +210,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         lines = []
         proc = Process([join(self._prefix, 'vlist')], cwd=dirname(self._sim_cfg_file_name))
-        proc.consume_output(callback=lambda line: lines.append(line))
+        proc.consume_output(callback=lines.append)
 
         libraries = {}
         for line in lines:
