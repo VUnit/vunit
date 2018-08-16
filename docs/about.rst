@@ -144,7 +144,8 @@ Founders
 
 Notable contributors
 ********************
-- `Colin Marquardt <https://github.com/cmarqu>`_ (Cadence Incisive support)
+- `Colin Marquardt <https://github.com/cmarqu>`_: Cadence Incisive support
+- `Sławomir Siluk <https://github.com/slaweksiluk>`_: Verification Components such as Avalon and Wishbone
 
 
 License
