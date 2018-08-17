@@ -32,11 +32,15 @@ architecture a of tb_avalon_stream is
   signal clk   : std_logic := '0';
   signal valid : std_logic;
   signal ready : std_logic;
+  signal sop   : std_logic;
+  signal eop   : std_logic;
   signal data  : std_logic_vector(data_length(avalon_source_stream)-1 downto 0);
 begin
 
   main : process
     variable tmp : std_logic_vector(data'range);
+    variable is_sop : boolean;
+    variable is_eop : boolean;
   begin
     test_runner_setup(runner, runner_cfg);
     set_format(display_handler, verbose, true);
@@ -72,6 +76,15 @@ begin
         check_equal(tmp, std_logic_vector(to_unsigned(i, 8)), "pop stream data"&natural'image(i));
       end loop;
 
+    elsif run("test sop and eop") then
+      for i in 0 to 7 loop
+        push_stream(net, master_stream, std_logic_vector(to_unsigned(i, 8)), i = 0, i = 7);
+        pop_stream(net, slave_stream, tmp, is_sop, is_eop);
+        check_equal(tmp, std_logic_vector(to_unsigned(i, 8)), "pop stream data"&natural'image(i));
+        check_equal(is_sop, i = 0, "pop stream sop");
+        check_equal(is_eop, i = 7, "pop stream eop");
+      end loop;
+    
     end if;
     wait until rising_edge(clk);
     test_runner_cleanup(runner);
@@ -85,6 +98,8 @@ begin
       clk   => clk,
       valid => valid,
       ready => ready,
+      sop   => sop,
+      eop   => eop,
       data  => data
     );
 
@@ -95,6 +110,8 @@ begin
       clk   => clk,
       valid => valid,
       ready => ready,
+      sop   => sop,
+      eop   => eop,
       data  => data
     );
 

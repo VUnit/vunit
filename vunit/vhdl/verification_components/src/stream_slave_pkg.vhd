@@ -25,6 +25,12 @@ package stream_slave_pkg is
   procedure pop_stream(signal net : inout network_t;
                        stream : stream_slave_t;
                        variable data : out std_logic_vector;
+                       variable first : out boolean;
+                       variable last : out boolean);
+                       
+  procedure pop_stream(signal net : inout network_t;
+                       stream : stream_slave_t;
+                       variable data : out std_logic_vector;
                        variable last : out boolean);
 
   procedure pop_stream(signal net : inout network_t;
@@ -40,6 +46,12 @@ package stream_slave_pkg is
   procedure await_pop_stream_reply(signal net : inout network_t;
                                    variable reference : inout stream_reference_t;
                                    variable data : out std_logic_vector;
+                                   variable first : out boolean;
+                                   variable last : out boolean);
+                                   
+  procedure await_pop_stream_reply(signal net : inout network_t;
+                                   variable reference : inout stream_reference_t;
+                                   variable data : out std_logic_vector;
                                    variable last : out boolean);
 
   procedure await_pop_stream_reply(signal net : inout network_t;
@@ -50,6 +62,7 @@ package stream_slave_pkg is
   procedure check_stream(signal net : inout network_t;
                          stream : stream_slave_t;
                          expected : std_logic_vector;
+                         first : boolean := false;
                          last : boolean := false;
                          msg : string := "");
 
