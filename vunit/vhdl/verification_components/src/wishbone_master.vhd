@@ -15,6 +15,7 @@ context work.com_context;
 use work.com_types_pkg.all;
 use work.logger_pkg.all;
 use work.check_pkg.all;
+use work.log_levels_pkg.all;
 use work.sync_pkg.all;
 
 library osvvm;
@@ -124,7 +125,7 @@ begin
       if end_cycle'event then
         pending := pending-1;
       end if;
-      assert pending >= 0 report "Pending transactions became negative" severity failure;
+      check_true(pending >= 0, "Pending transactions became negative - internal error", failure);
 
       if pending > 0 then
         cyc <= '1';
