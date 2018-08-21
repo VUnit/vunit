@@ -113,11 +113,6 @@ begin
             std_logic_vector(to_unsigned(i, dat_i'length)));
       end loop;
 
-      for i in 1 to tb_cfg.num_cycles loop
-        wait until ack = '1' and rising_edge(clk);
-      end loop;
-      wait until rising_edge(clk);
-
       info(tb_logger, "Reading...");
       for i in 0 to tb_cfg.num_cycles-1 loop
         read_bus(net, bus_handle, i*(sel'length), tmp);
@@ -130,9 +125,6 @@ begin
         write_bus(net, bus_handle, i*(sel'length),
             std_logic_vector(to_unsigned(i, dat_i'length)));
       end loop;
-
-      -- Sleeping is needed to avoid wr and rd cycles coalescing
-      wait until rising_edge(clk);
 
       info(tb_logger, "Reading...");
       for i in 0 to tb_cfg.num_cycles-1 loop
