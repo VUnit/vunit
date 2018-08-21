@@ -36,11 +36,12 @@ begin
     variable reply_msg, msg : msg_t;
     variable msg_type : msg_type_t;
     variable rnd : RandomPType;
+    variable avalon_stream_transaction : avalon_stream_transaction_t(data(data'range));
   begin
     receive(net, sink.p_actor, msg);
     msg_type := message_type(msg);
 
-    if msg_type = stream_pop_msg then
+    if msg_type = stream_pop_msg or msg_type = avalon_stream_transaction_msg then
       -- Loop till got valid data
       loop
         while rnd.Uniform(0.0, 1.0) > sink.ready_high_probability loop
@@ -50,7 +51,12 @@ begin
         wait until ready = '1' and rising_edge(clk);
         if valid = '1' then
           reply_msg := new_msg;
-          push_std_ulogic_vector(reply_msg, data);
+          if msg_type = avalon_stream_transaction_msg then
+            avalon_stream_transaction.data := data;
+            push_avalon_stream_transaction(reply_msg, avalon_stream_transaction);
+          else
+            push_std_ulogic_vector(reply_msg, data);
+          end if;
           reply(net, msg, reply_msg);
           ready <= '0';
           exit;
