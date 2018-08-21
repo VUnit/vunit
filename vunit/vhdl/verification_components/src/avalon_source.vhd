@@ -35,18 +35,24 @@ begin
     variable msg : msg_t;
     variable msg_type : msg_type_t;
     variable rnd : RandomPType;
+    variable avalon_stream_transaction : avalon_stream_transaction_t(data(data'range));
   begin
     receive(net, source.p_actor, msg);
     msg_type := message_type(msg);
 
     handle_sync_message(net, msg_type, msg);
 
-    if msg_type = stream_push_msg then
+    if msg_type = stream_push_msg or msg_type = avalon_stream_transaction_msg then
       while rnd.Uniform(0.0, 1.0) > source.valid_high_probability loop
         wait until rising_edge(clk);
       end loop;
       valid <= '1';
-      data <= pop_std_ulogic_vector(msg);
+      if msg_type = avalon_stream_transaction_msg then
+        pop_avalon_stream_transaction(msg, avalon_stream_transaction);
+        data <= avalon_stream_transaction.data;
+      else
+        data <= pop_std_ulogic_vector(msg);
+      end if;
       wait until (valid and ready) = '1' and rising_edge(clk);
       valid <= '0';
     else
