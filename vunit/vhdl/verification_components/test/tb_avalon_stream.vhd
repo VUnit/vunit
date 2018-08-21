@@ -36,7 +36,11 @@ architecture a of tb_avalon_stream is
 begin
 
   main : process
-    variable tmp : std_logic_vector(data'range);
+    variable tmp                           : std_logic_vector(data'range);
+    variable msg                           : msg_t;
+    variable msg_type                      : msg_type_t;
+    variable avalon_stream_transaction     : avalon_stream_transaction_t(data(data'range));
+    variable avalon_stream_transaction_tmp : avalon_stream_transaction_t(data(data'range));
   begin
     test_runner_setup(runner, runner_cfg);
     set_format(display_handler, verbose, true);
@@ -72,6 +76,36 @@ begin
         check_equal(tmp, std_logic_vector(to_unsigned(i, 8)), "pop stream data"&natural'image(i));
       end loop;
 
+    elsif run("test single transaction push and pop") then
+      avalon_stream_transaction.data := x"ab";
+      msg := new_avalon_stream_transaction_msg(avalon_stream_transaction);
+      msg_type := message_type(msg);
+      handle_avalon_stream_transaction(message_type(msg), msg, avalon_stream_transaction_tmp);
+      check_equal(avalon_stream_transaction_tmp.data, avalon_stream_transaction.data, "pop stream transaction data");
+    
+    elsif run("test double transaction push and pop") then
+      avalon_stream_transaction.data := x"a5";
+      msg := new_avalon_stream_transaction_msg(avalon_stream_transaction);
+      msg_type := message_type(msg);
+      handle_avalon_stream_transaction(message_type(msg), msg, avalon_stream_transaction_tmp);
+      check_equal(avalon_stream_transaction_tmp.data, avalon_stream_transaction.data, "pop stream transaction data");
+
+      avalon_stream_transaction.data := x"9e";
+      msg := new_avalon_stream_transaction_msg(avalon_stream_transaction);
+      msg_type := message_type(msg);
+      handle_avalon_stream_transaction(message_type(msg), msg, avalon_stream_transaction_tmp);
+      check_equal(avalon_stream_transaction_tmp.data, avalon_stream_transaction.data, "pop stream transaction data");
+
+    elsif run("test transaction push delay pop") then
+      avalon_stream_transaction.data := x"f1";
+      msg := new_avalon_stream_transaction_msg(avalon_stream_transaction);
+      msg_type := message_type(msg);
+      wait until rising_edge(clk);
+      wait until rising_edge(clk);
+      wait until rising_edge(clk);
+      handle_avalon_stream_transaction(message_type(msg), msg, avalon_stream_transaction_tmp);
+      check_equal(avalon_stream_transaction_tmp.data, avalon_stream_transaction.data, "pop stream transaction data");
+      
     end if;
     wait until rising_edge(clk);
     test_runner_cleanup(runner);
