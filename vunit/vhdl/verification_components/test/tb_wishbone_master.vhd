@@ -76,6 +76,7 @@ begin
 
   main_stim : process
     variable tmp : std_logic_vector(dat_i'range);
+    variable chk_time : time;
     variable value : std_logic_vector(dat_i'range) := (others => '1');
     variable bus_rd_ref1 : bus_reference_t;
     variable bus_rd_ref2 : bus_reference_t;
@@ -136,6 +137,25 @@ begin
         await_read_bus_reply(net, rd_ref(i), tmp);
         check_equal(tmp, std_logic_vector(to_unsigned(i, dat_i'length)), "read data");
       end loop;
+
+    elsif run ("wait for idle") then
+      for i in 0 to 5 loop
+        chk_time := now;
+        read_bus(net, bus_handle, 0, bus_rd_ref1);
+        write_bus(net, bus_handle, 0, value);
+        read_bus(net, bus_handle, 0, bus_rd_ref2);
+        check_equal(chk_time, now, "tb concept broken, command issueing takes time");
+        wait_until_idle(net, bus_handle);
+        check_equal(cyc, '0', "bus not idle");
+        info(tb_logger, "Waited for " & to_string(now-chk_time));
+        chk_time := now;
+        await_read_bus_reply(net, bus_rd_ref1, tmp);
+        await_read_bus_reply(net, bus_rd_ref2, tmp);
+        check_equal(chk_time, now, "reading was not done");
+        check_equal(tmp, value, "read value incorrect");
+        wait for 20 ns;
+      end loop;
+
     end if;
 
     info(tb_logger, "Done, quit...");

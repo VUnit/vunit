@@ -98,6 +98,9 @@ begin
         request_msg := null_msg;
 
       elsif msg_type = wait_until_idle_msg then
+        if cycle then
+          wait until not cycle;
+        end if;
         handle_wait_until_idle(net, msg_type, request_msg);
 
       else
