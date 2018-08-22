@@ -21,6 +21,21 @@ package body stream_slave_pkg is
   procedure await_pop_stream_reply(signal net : inout network_t;
                                    variable reference : inout stream_reference_t;
                                    variable data : out std_logic_vector;
+                                   variable first : out boolean;
+                                   variable last : out boolean) is
+    variable reply_msg : msg_t;
+  begin
+    receive_reply(net, reference, reply_msg);
+    data := pop_std_ulogic_vector(reply_msg);
+    first := pop_boolean(reply_msg);
+    last := pop_boolean(reply_msg);
+    delete(reference);
+    delete(reply_msg);
+  end;
+
+  procedure await_pop_stream_reply(signal net : inout network_t;
+                                   variable reference : inout stream_reference_t;
+                                   variable data : out std_logic_vector;
                                    variable last : out boolean) is
     variable reply_msg : msg_t;
   begin
@@ -45,6 +60,17 @@ package body stream_slave_pkg is
   procedure pop_stream(signal net : inout network_t;
                        stream : stream_slave_t;
                        variable data : out std_logic_vector;
+                       variable first : out boolean;
+                       variable last : out boolean) is
+    variable reference : stream_reference_t;
+  begin
+    pop_stream(net, stream, reference);
+    await_pop_stream_reply(net, reference, data, first, last);
+  end;
+
+  procedure pop_stream(signal net : inout network_t;
+                       stream : stream_slave_t;
+                       variable data : out std_logic_vector;
                        variable last : out boolean) is
     variable reference : stream_reference_t;
   begin
@@ -64,13 +90,16 @@ package body stream_slave_pkg is
   procedure check_stream(signal net : inout network_t;
                          stream : stream_slave_t;
                          expected : std_logic_vector;
+                         first : boolean := false;
                          last : boolean := false;
                          msg : string := "") is
     variable got_data : std_logic_vector(expected'range);
+    variable got_first : boolean;
     variable got_last : boolean;
   begin
     pop_stream(net, stream, got_data, got_last);
     check_equal(got_data, expected, msg);
+    check_equal(got_first, last, msg);
     check_equal(got_last, last, msg);
   end procedure;
 end package body;

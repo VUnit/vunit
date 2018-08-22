@@ -22,6 +22,7 @@ package stream_master_pkg is
   procedure push_stream(signal net : inout network_t;
                         stream : stream_master_t;
                         data : std_logic_vector;
+                        first : boolean := false;
                         last : boolean := false);
 
   -- Message type definitions used by VC implementing stream master VCI
