@@ -22,6 +22,7 @@ entity axi_stream_master is
     tvalid : out std_logic := '0';
     tready : in std_logic := '1';
     tdata : out std_logic_vector(data_length(master)-1 downto 0) := (others => '0');
+    tuser : out std_logic_vector(user_length(master)-1 downto 0) := (others => '0');
     tlast : out std_logic := '0');
 end entity;
 
@@ -40,8 +41,10 @@ begin
       tvalid <= '1';
       tdata <= pop_std_ulogic_vector(msg);
       if msg_type = push_axi_stream_msg then
+        tuser <= pop_std_ulogic_vector(msg);
         tlast <= pop_std_ulogic(msg);
       else
+        tuser <= (others => '0');
         if pop_boolean(msg) then
           tlast <= '1';
         else
@@ -66,6 +69,7 @@ begin
         tvalid => tvalid,
         tready => tready,
         tdata  => tdata,
+        tuser  => tuser,
         tlast  => tlast
       );
   end generate axi_stream_monitor_generate;
@@ -80,6 +84,7 @@ begin
         tvalid   => tvalid,
         tready   => tready,
         tdata    => tdata,
+        tuser    => tuser,
         tlast    => tlast,
         tid      => open);
   end generate axi_stream_protocol_checker_generate;

@@ -26,21 +26,24 @@ architecture a of tb_axi_stream is
   signal tvalid   : std_logic;
   signal tready   : std_logic;
   signal tdata    : std_logic_vector(7 downto 0);
+  signal tuser    : std_logic_vector(1 downto 0);
   signal tlast    : std_logic;
 
   constant monitor : axi_stream_monitor_t := new_axi_stream_monitor(
-    data_length      => tdata'length, logger => get_logger("monitor"), actor => new_actor("monitor"),
+    data_length      => tdata'length, user_length => tuser'length,
+    logger           => get_logger("monitor"), actor => new_actor("monitor"),
     protocol_checker => default_axi_stream_protocol_checker
   );
 
   constant protocol_checker : axi_stream_protocol_checker_t := new_axi_stream_protocol_checker(
-    data_length => tdata'length,
+    data_length => tdata'length, user_length => tuser'length,
     logger      => get_logger("protocol_checker"),
     max_waits   => 8
   );
 
   constant master_axi_stream : axi_stream_master_t := new_axi_stream_master(
-    data_length      => tdata'length, logger => get_logger("master"), actor => new_actor("master"),
+    data_length      => tdata'length, user_length => tuser'length,
+    logger           => get_logger("master"), actor => new_actor("master"),
     monitor          => default_axi_stream_monitor,
     protocol_checker => default_axi_stream_protocol_checker
   );
@@ -48,7 +51,8 @@ architecture a of tb_axi_stream is
   constant master_sync       : sync_handle_t       := as_sync(master_axi_stream);
 
   constant slave_axi_stream : axi_stream_slave_t := new_axi_stream_slave(
-    data_length      => tdata'length, logger => get_logger("slave"), actor => new_actor("slave"),
+    data_length      => tdata'length, user_length => tuser'length,
+    logger           => get_logger("slave"), actor => new_actor("slave"),
     monitor          => default_axi_stream_monitor,
     protocol_checker => default_axi_stream_protocol_checker
   );
@@ -62,12 +66,13 @@ begin
   main : process
     constant subscriber             : actor_t := new_actor("main");
     variable data                   : std_logic_vector(tdata'range);
+    variable user                   : std_logic_vector(tuser'range);
     variable last                   : boolean;
     variable reference_queue        : queue_t := new_queue;
     variable reference              : stream_reference_t;
     variable msg                    : msg_t;
     variable msg_type               : msg_type_t;
-    variable axi_stream_transaction : axi_stream_transaction_t(tdata(tdata'range));
+    variable axi_stream_transaction : axi_stream_transaction_t(tdata(tdata'range), tuser(tuser'range));
     variable timestamp              : time := 0 ns;
 
     procedure get_axi_stream_transaction(variable axi_stream_transaction : out axi_stream_transaction_t) is
@@ -119,9 +124,10 @@ begin
       end loop;
 
     elsif run("test single axi push and pop") then
-      push_axi_stream(net, master_axi_stream, x"99", tlast => '1');
+      push_axi_stream(net, master_axi_stream, x"99", "11", tlast => '1');
       pop_stream(net, slave_stream, data, last);
       check_equal(data, std_logic_vector'(x"99"), result("for pop stream data"));
+      check_equal(user, std_logic_vector'("11"), result("for pop stream user"));
       check_true(last, result("for pop stream last"));
 
       for i in 1 to n_monitors loop
@@ -130,6 +136,11 @@ begin
           axi_stream_transaction.tdata,
           std_logic_vector'(x"99"),
           result("for axi_stream_transaction.tdata")
+        );
+        check_equal(
+          axi_stream_transaction.tuser,
+          std_logic_vector'("11"),
+          result("for axi_stream_transaction.tuser")
         );
         check_true(axi_stream_transaction.tlast, result("for axi_stream_transaction.tlast"));
       end loop;
@@ -211,6 +222,7 @@ begin
       tvalid => tvalid,
       tready => tready,
       tdata  => tdata,
+      tuser  => tuser,
       tlast  => tlast);
 
   axi_stream_slave_inst : entity work.axi_stream_slave
@@ -221,6 +233,7 @@ begin
       tvalid => tvalid,
       tready => tready,
       tdata  => tdata,
+      tuser  => tuser,
       tlast  => tlast);
 
   axi_stream_monitor_inst : entity work.axi_stream_monitor
@@ -232,6 +245,7 @@ begin
       tvalid => tvalid,
       tready => tready,
       tdata  => tdata,
+      tuser  => tuser,
       tlast  => tlast
     );
 
@@ -244,6 +258,7 @@ begin
       tvalid   => tvalid,
       tready   => tready,
       tdata    => tdata,
+      tuser    => tuser,
       tlast    => tlast);
 
   aclk <= not aclk after 5 ns;

@@ -20,6 +20,7 @@ entity tb_axi_stream_protocol_checker is
   generic(
     runner_cfg  : string;
     data_length : natural := 8;
+    user_length : natural := 1;
     max_waits   : natural := 16);
 end entity;
 
@@ -29,11 +30,13 @@ architecture a of tb_axi_stream_protocol_checker is
   signal tvalid   : std_logic                                  := '0';
   signal tready   : std_logic                                  := '0';
   signal tdata    : std_logic_vector(data_length - 1 downto 0) := (others => '0');
+  signal tuser    : std_logic_vector(user_length - 1 downto 0) := (others => '0');
   signal tlast    : std_logic                                  := '1';
 
   constant logger           : logger_t                      := get_logger("protocol_checker");
   constant protocol_checker : axi_stream_protocol_checker_t := new_axi_stream_protocol_checker(
-    data_length => tdata'length, logger => logger, actor => new_actor("protocol_checker"), max_waits => max_waits
+    data_length => tdata'length, user_length => tuser'length,
+    logger => logger, actor => new_actor("protocol_checker"), max_waits => max_waits
   );
   constant meta_values      : std_logic_vector(1 to 5)      := "-XWZU";
   constant valid_values     : std_logic_vector(1 to 4)      := "01LH";
@@ -457,6 +460,115 @@ begin
       check_only_log(rule_logger, "Check failed for packet completion.", error);
 
       unmock(rule_logger);
+    elsif run("Test passing check of that tuser remains stable when tvalid is asserted and tready is low") then
+      wait until rising_edge(aclk);
+      tuser  <= (others => '1');
+      tready <= '1';
+      wait until rising_edge(aclk);
+      tuser  <= (others => '0');
+      wait until rising_edge(aclk);
+      tuser  <= (others => '1');
+      tready <= '0';
+      wait until rising_edge(aclk);
+      tuser  <= (others => '0');
+      wait until rising_edge(aclk);
+
+      tvalid <= '1';
+      tuser  <= (others => '1');
+      wait until rising_edge(aclk);
+      tuser  <= (others => 'H');
+      wait until rising_edge(aclk);
+      tready <= '1';
+      wait until rising_edge(aclk);
+      tvalid <= '0';
+    elsif run("Test failing check of that tuser remains stable when tvalid is asserted and tready is low") then
+      rule_logger := get_logger(get_name(logger) & ":rule 11");
+      mock(rule_logger);
+
+      wait until rising_edge(aclk);
+      tvalid <= '1';
+      wait until rising_edge(aclk);
+      tuser  <= (others => '1');
+      wait until rising_edge(aclk);
+      tuser  <= (others => '0');
+      tready <= '1';
+      wait until rising_edge(aclk);
+      tready <= '0';
+      tvalid <= '0';
+      wait until rising_edge(aclk);
+
+      check_only_log(
+        rule_logger,
+        "Stability check failed for tuser while waiting for tready.",
+        error);
+
+      wait until rising_edge(aclk);
+      tvalid <= '1';
+      wait until rising_edge(aclk);
+      tuser  <= (others => '1');
+      tready <= '1';
+      wait until rising_edge(aclk);
+      tready <= '0';
+      tvalid <= '0';
+      wait until rising_edge(aclk);
+
+      check_only_log(
+        rule_logger,
+        "Stability check failed for tuser while waiting for tready.",
+        error);
+
+      tvalid <= '1';
+      wait until rising_edge(aclk);
+      tready <= '1';
+      wait until rising_edge(aclk);
+      tready <= '0';
+      wait until rising_edge(aclk);
+      tuser  <= (others => '0');
+      tready <= '1';
+      wait until rising_edge(aclk);
+      tready <= '0';
+      tvalid <= '0';
+      wait until rising_edge(aclk);
+
+      check_log(
+        rule_logger,
+        "Stability check passed for tuser while waiting for tready.",
+        pass);
+      check_only_log(
+        rule_logger,
+        "Stability check failed for tuser while waiting for tready.",
+        error);
+
+      unmock(rule_logger);
+    elsif run("Test passing check of that tuser must not be unknown unless in reset") then
+      wait until rising_edge(aclk);
+      areset_n <= '0';
+      for i in meta_values'range loop
+        tuser <= (others => meta_values(i));
+        wait until rising_edge(aclk);
+      end loop;
+      areset_n <= '1';
+      for i in valid_values'range loop
+        tuser <= (others => valid_values(i));
+        wait until rising_edge(aclk);
+      end loop;
+
+    elsif run("Test failing check of that tuser must not be unknown unless in reset") then
+      rule_logger := get_logger(get_name(logger) & ":rule 10");
+      mock(rule_logger);
+
+      wait until rising_edge(aclk);
+      for i in meta_values'range loop
+        tuser <= (others => meta_values(i));
+        wait until rising_edge(aclk);
+        wait for 1 ns;
+        check_only_log(
+          rule_logger,
+          "Not unknown check failed for tuser when not in reset - Got " & to_nibble_string(std_logic_vector'(tuser'range => meta_values(i))) & ".",
+          error);
+      end loop;
+
+      unmock(rule_logger);
 
     end if;
 
@@ -475,8 +587,9 @@ begin
       tvalid   => tvalid,
       tready   => tready,
       tdata    => tdata,
+      tuser    => tuser,
       tlast    => tlast
-    );
+      );
 
   aclk <= not aclk after 5 ns;
 end architecture;

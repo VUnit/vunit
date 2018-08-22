@@ -21,6 +21,7 @@ entity axi_stream_slave is
     tvalid : in std_logic;
     tready : out std_logic := '0';
     tdata : in std_logic_vector(data_length(slave)-1 downto 0);
+    tuser : in std_logic_vector(user_length(slave)-1 downto 0);
     tlast : in std_logic := '1');
 end entity;
 
@@ -29,7 +30,7 @@ begin
   main : process
     variable reply_msg, msg : msg_t;
     variable msg_type : msg_type_t;
-    variable axi_stream_transaction : axi_stream_transaction_t(tdata(tdata'range));
+    variable axi_stream_transaction : axi_stream_transaction_t(tdata(tdata'range), tuser(tuser'range));
   begin
     receive(net, slave.p_actor, msg);
     msg_type := message_type(msg);
@@ -41,7 +42,7 @@ begin
       wait until (tvalid and tready) = '1' and rising_edge(aclk);
       tready <= '0';
 
-      axi_stream_transaction := (tdata, tlast = '1');
+      axi_stream_transaction := (tdata, tuser, tlast = '1');
       reply_msg := new_axi_stream_transaction_msg(axi_stream_transaction);
       reply(net, msg, reply_msg);
     else
@@ -60,6 +61,7 @@ begin
         tvalid => tvalid,
         tready => tready,
         tdata  => tdata,
+        tuser  => tuser,
         tlast  => tlast
       );
   end generate axi_stream_monitor_generate;
@@ -74,6 +76,7 @@ begin
         tvalid   => tvalid,
         tready   => tready,
         tdata    => tdata,
+        tuser    => tuser,
         tlast    => tlast,
         tid      => open);
   end generate axi_stream_protocol_checker_generate;

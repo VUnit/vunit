@@ -19,6 +19,7 @@ entity axi_stream_monitor is
     tvalid : in std_logic;
     tready : in std_logic := '1';
     tdata : in std_logic_vector(data_length(monitor) - 1 downto 0);
+    tuser : in std_logic_vector(user_length(monitor) - 1 downto 0);
     tlast : in std_logic := '1'
     );
 end entity;
@@ -27,7 +28,7 @@ architecture a of axi_stream_monitor is
 begin
   main : process
     variable msg : msg_t;
-    variable axi_stream_transaction : axi_stream_transaction_t(tdata(tdata'range));
+    variable axi_stream_transaction : axi_stream_transaction_t(tdata(tdata'range), tuser(tuser'range));
   begin
     wait until (tvalid and tready) = '1' and rising_edge(aclk);
 
@@ -36,7 +37,7 @@ begin
         ", tlast: " & to_string(tlast));
     end if;
 
-    axi_stream_transaction := (tdata, tlast = '1');
+    axi_stream_transaction := (tdata, tuser, tlast = '1');
     msg := new_axi_stream_transaction_msg(axi_stream_transaction);
     publish(net, monitor.p_actor, msg);
   end process;
@@ -51,6 +52,7 @@ begin
         tvalid   => tvalid,
         tready   => tready,
         tdata    => tdata,
+        tuser    => tuser,
         tlast    => tlast,
         tid      => open);
   end generate axi_stream_protocol_checker_generate;

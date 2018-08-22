@@ -23,6 +23,7 @@ entity axi_stream_protocol_checker is
     tvalid   : in std_logic;
     tready   : in std_logic := '1';
     tdata    : in std_logic_vector(data_length(protocol_checker) - 1 downto 0);
+    tuser    : in std_logic_vector(user_length(protocol_checker) - 1 downto 0);
     tlast    : in std_logic := '1';
     tid      : in std_logic_vector := ""
     );
@@ -38,8 +39,11 @@ architecture a of axi_stream_protocol_checker is
   constant rule7_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 7");
   constant rule8_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 8");
   constant rule9_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 9");
+  constant rule10_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 10");
+  constant rule11_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 11");
 
   signal enable_rule1_check, enable_rule2_check, handshake_is_not_x : std_logic;
+  signal enable_rule11_check : std_logic;
 begin
   check_equal(tid'length, 0, result("for tid'length. tid is not supported"));
 
@@ -150,4 +154,17 @@ begin
     end process;
   end block;
 
+  -- AXI4STREAM_ERRM_TUSER_X A value of X on TUSER is not permitted when not in reset
+  -- is HIGH
+  check_not_unknown(rule10_checker, aclk, areset_n, tdata, result("for tuser when areset_n is high"));
+
+  -- AXI4STREAM_ERRM_TUSER_STABLE TUSER payload signals must remain constant while TVALID is asserted,
+  -- and TREADY is de-asserted
+  enable_rule11_check <= '1' when (handshake_is_not_x = '1') and not is_x(tuser) else '0';
+  check_stable(
+    rule11_checker, aclk, enable_rule11_check, tvalid, tready, tuser,
+    result("for tuser while waiting for tready"));
+
+  -- AXI4STREAM_ERRM_TUSER_TIEOFF TUSER must be stable while USER_WIDTH has been set to zero
+  -- cannot be checked, vector has negative range
 end architecture;
