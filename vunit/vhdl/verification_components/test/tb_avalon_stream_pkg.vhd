@@ -38,20 +38,20 @@ begin
       avalon_stream_transaction.data := x"ab";
       msg := new_avalon_stream_transaction_msg(avalon_stream_transaction);
       msg_type := message_type(msg);
-      handle_avalon_stream_transaction(message_type(msg), msg, avalon_stream_transaction_tmp);
+      handle_avalon_stream_transaction(msg_type, msg, avalon_stream_transaction_tmp);
       check_equal(avalon_stream_transaction_tmp.data, avalon_stream_transaction.data, "pop stream transaction data");
 
     elsif run("test double transaction push and pop") then
       avalon_stream_transaction.data := x"a5";
       msg := new_avalon_stream_transaction_msg(avalon_stream_transaction);
       msg_type := message_type(msg);
-      handle_avalon_stream_transaction(message_type(msg), msg, avalon_stream_transaction_tmp);
+      handle_avalon_stream_transaction(msg_type, msg, avalon_stream_transaction_tmp);
       check_equal(avalon_stream_transaction_tmp.data, avalon_stream_transaction.data, "pop stream transaction data");
 
       avalon_stream_transaction.data := x"9e";
       msg := new_avalon_stream_transaction_msg(avalon_stream_transaction);
       msg_type := message_type(msg);
-      handle_avalon_stream_transaction(message_type(msg), msg, avalon_stream_transaction_tmp);
+      handle_avalon_stream_transaction(msg_type, msg, avalon_stream_transaction_tmp);
       check_equal(avalon_stream_transaction_tmp.data, avalon_stream_transaction.data, "pop stream transaction data");
 
     elsif run("test transaction push delay pop") then
@@ -61,7 +61,7 @@ begin
       wait until rising_edge(clk);
       wait until rising_edge(clk);
       wait until rising_edge(clk);
-      handle_avalon_stream_transaction(message_type(msg), msg, avalon_stream_transaction_tmp);
+      handle_avalon_stream_transaction(msg_type, msg, avalon_stream_transaction_tmp);
       check_equal(avalon_stream_transaction_tmp.data, avalon_stream_transaction.data, "pop stream transaction data");
 
     end if;
