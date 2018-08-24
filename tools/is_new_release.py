@@ -2,14 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2017, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Detects when a new release shall be made
 """
 
+from __future__ import print_function
+
 import json
-from urllib.request import urlopen
+from urllib.request import urlopen  # pylint: disable=no-name-in-module, import-error
 import sys
 from os.path import dirname, join, exists
 from subprocess import check_output
@@ -70,6 +72,7 @@ def main():
 
     with open(sys.argv[2], "w") as fptr:
         fptr.write(str(is_new_release(version)))
+
 
 if __name__ == "__main__":
     main()

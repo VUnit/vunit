@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2017, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Functions to add builtin VHDL code to a project for compilation
@@ -20,11 +20,11 @@ class Builtins(object):
     """
     Manage VUnit builtins and their dependencies
     """
-    def __init__(self, vunit_obj, vhdl_standard, simulator_factory):
+    def __init__(self, vunit_obj, vhdl_standard, simulator_class):
         self._vunit_obj = vunit_obj
         self._vunit_lib = vunit_obj.add_library("vunit_lib")
         self._vhdl_standard = vhdl_standard
-        self._simulator_factory = simulator_factory
+        self._simulator_class = simulator_class
         self._builtins_adder = BuiltinsAdder()
 
         def add(name, deps=tuple()):
@@ -35,6 +35,7 @@ class Builtins(object):
         add("verification_components", ["com", "osvvm"])
         add("osvvm")
         add("random", ["osvvm"])
+        add("json4vhdl")
 
     def add(self, name, args=None):
         self._builtins_adder.add(name, args)
@@ -43,7 +44,7 @@ class Builtins(object):
         """
         Add files with naming convention to indicate which standard is supported
         """
-        supports_context = self._simulator_factory.supports_vhdl_2008_contexts() and self._vhdl_standard == "2008"
+        supports_context = self._simulator_class.supports_vhdl_2008_contexts() and self._vhdl_standard == "2008"
 
         tags = {
             "93": ("93",),
@@ -119,8 +120,8 @@ class Builtins(object):
         except KeyError:
             library = self._vunit_obj.add_library(library_name)
 
-        simulator_coverage_api = self._simulator_factory.get_osvvm_coverage_api()
-        supports_vhdl_package_generics = self._simulator_factory.supports_vhdl_package_generics()
+        simulator_coverage_api = self._simulator_class.get_osvvm_coverage_api()
+        supports_vhdl_package_generics = self._simulator_class.supports_vhdl_package_generics()
 
         if not osvvm_is_installed():
             raise RuntimeError("""
@@ -146,6 +147,19 @@ in your VUnit Git repository? You have to do this first if installing using setu
                 continue
 
             library.add_source_files(file_name, preprocessors=[])
+
+    def _add_json4vhdl(self):
+        """
+        Add JSON-for-VHDL library
+        """
+        library_name = "JSON"
+
+        try:
+            library = self._vunit_obj.library(library_name)
+        except KeyError:
+            library = self._vunit_obj.add_library(library_name)
+
+        library.add_source_files(join(VHDL_PATH, "JSON-for-VHDL", "vhdl", "*.vhdl"))
 
     def add_verilog_builtins(self):
         """

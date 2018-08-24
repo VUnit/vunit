@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Functionality to compute a dependency graph
@@ -40,8 +40,8 @@ class DependencyGraph(object):
         Add a dependency edge between the start and end node such that
         end node depends on the start node
         """
-        new_dependency = (start not in self._forward or
-                          end not in self._forward[start])
+        new_dependency = (start not in self._forward
+                          or end not in self._forward[start])
 
         if start not in self._forward:
             self._forward[start] = set()

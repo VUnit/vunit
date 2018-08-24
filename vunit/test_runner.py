@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2017, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Provided functionality to run a suite of test in a robust way
@@ -19,8 +19,9 @@ import sys
 import time
 import logging
 import string
-import vunit.ostools as ostools
-from vunit.test_report import PASSED, FAILED
+from contextlib import contextmanager
+from vunit import ostools
+from vunit.test_report import PASSED, FAILED, SKIPPED
 from vunit.hashing import hash_string
 LOGGER = logging.getLogger(__name__)
 
@@ -38,9 +39,12 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                  report, output_path,
                  verbosity=VERBOSITY_NORMAL,
                  num_threads=1,
+                 fail_fast=False,
                  dont_catch_exceptions=False,
                  no_color=False):
         self._lock = threading.Lock()
+        self._fail_fast = fail_fast
+        self._abort = False
         self._local = threading.local()
         self._report = report
         self._output_path = output_path
@@ -54,6 +58,8 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         self._stderr = sys.stderr
         self._dont_catch_exceptions = dont_catch_exceptions
         self._no_color = no_color
+
+        ostools.PROGRAM_STATUS.reset()
 
     @property
     def _is_verbose(self):
@@ -136,7 +142,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                 output_path = create_output_path(self._output_path, test_suite.name)
                 output_file_name = join(output_path, "output.txt")
 
-                with self._lock:  # pylint: disable=not-context-manager
+                with self._stdout_lock():
                     for test_name in test_suite.test_cases:
                         print("Starting %s" % test_name)
                     print("Output file: %s" % relpath(output_file_name))
@@ -161,6 +167,11 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                 if test_suite is not None:
                     scheduler.test_done()
 
+    def _add_skipped_tests(self, test_suite, results, start_time, num_tests, output_file_name):
+        for name in test_suite.test_cases:
+            results[name] = SKIPPED
+        self._add_results(test_suite, results, start_time, num_tests, output_file_name)
+
     def _run_test_suite(self,
                         test_suite,
                         write_stdout,
@@ -180,7 +191,9 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
         try:
             ostools.renew_path(output_path)
-            output_file = wrap(open(output_file_name, "w"), use_color=False)
+            output_file = wrap(open(output_file_name, "a+"), use_color=False)
+            output_file.seek(0)
+            output_file.truncate()
 
             if write_stdout:
                 self._local.output = Tee([self._stdout_ansi, output_file])
@@ -188,14 +201,27 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                 color_output_file = open(color_output_file_name, "w")
                 self._local.output = Tee([color_output_file, output_file])
 
-            results = test_suite.run(output_path)
+            def read_output():
+                """
+                Called to read the contents of the output file on demand
+                """
+                output_file.flush()
+                prev = output_file.tell()
+                output_file.seek(0)
+                contents = output_file.read()
+                output_file.seek(prev)
+                return contents
+
+            results = test_suite.run(output_path=output_path,
+                                     read_output=read_output)
         except KeyboardInterrupt:
-            raise
+            self._add_skipped_tests(test_suite, results, start_time, num_tests, output_file_name)
+            raise KeyboardInterrupt
         except:  # pylint: disable=bare-except
             if self._dont_catch_exceptions:
                 raise
 
-            with self._lock:
+            with self._stdout_lock():
                 traceback.print_exc()
         finally:
             self._local.output = self._stdout
@@ -209,11 +235,15 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
         any_not_passed = any(value != PASSED for value in results.values())
 
-        with self._lock:  # pylint: disable=not-context-manager
+        with self._stdout_lock():
+
             if (color_output_file is not None) and (any_not_passed or self._is_verbose) and not self._is_quiet:
                 self._print_output(color_output_file_name)
 
             self._add_results(test_suite, results, start_time, num_tests, output_file_name)
+
+            if self._fail_fast and any_not_passed:
+                self._abort = True
 
     def _create_test_mapping_file(self, test_suites):
         """
@@ -272,6 +302,17 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         for test_name in test_suite.test_cases:
             results[test_name] = FAILED
         return results
+
+    @contextmanager
+    def _stdout_lock(self):
+        """
+        Enter this lock when printing to stdout
+        Ensures no additional output is printed during abort
+        """
+        with self._lock:  # pylint: disable=not-context-manager
+            if self._abort:
+                raise KeyboardInterrupt
+            yield
 
 
 class Tee(object):
@@ -349,8 +390,8 @@ class TestScheduler(object):
                 idx = self._idx
                 self._idx += 1
                 return self._tests[idx]
-            else:
-                raise StopIteration
+
+            raise StopIteration
 
     def test_done(self):
         """
@@ -369,6 +410,7 @@ class TestScheduler(object):
         """
         while not self.is_finished():
             time.sleep(0.05)
+
 
 LEGAL_CHARS = string.printable
 ILLEGAL_CHARS = ' <>"|:*%?\\/#&;()'

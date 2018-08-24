@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2016-2018, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test the ModelSim interface
@@ -134,29 +134,38 @@ class TestModelSimInterface(unittest.TestCase):
     @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)
     def test_compile_project_vhdl_coverage(self, process, check_output):
-        write_file("modelsim.ini", """
+        for coverage_off in [False, True]:
+            check_output.reset_mock()
+
+            write_file("modelsim.ini", """
 [Library]
                    """)
-        modelsim_ini = join(self.output_path, "modelsim.ini")
-        simif = ModelSimInterface(prefix="prefix",
-                                  output_path=self.output_path,
-                                  coverage="best",
-                                  persistent=False)
-        project = Project()
-        project.add_library("lib", "lib_path")
-        write_file("file.vhd", "")
-        project.add_source_file("file.vhd", "lib", file_type="vhdl")
-        simif.compile_project(project)
-        process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
-        check_output.assert_called_once_with([join('prefix', 'vcom'),
-                                              '-quiet',
-                                              '-modelsimini',
-                                              modelsim_ini,
-                                              '+cover=best',
-                                              '-2008',
-                                              '-work',
-                                              'lib',
-                                              'file.vhd'], env=simif.get_env())
+            modelsim_ini = join(self.output_path, "modelsim.ini")
+            simif = ModelSimInterface(prefix="prefix",
+                                      output_path=self.output_path,
+                                      coverage="best",
+                                      persistent=False)
+            project = Project()
+            project.add_library("lib", "lib_path")
+            write_file("file.vhd", "")
+            source_file = project.add_source_file("file.vhd", "lib", file_type="vhdl")
+
+            if coverage_off:
+                source_file.set_compile_option("disable_coverage", True)
+                covargs = []
+            else:
+                covargs = ['+cover=best']
+
+            simif.compile_project(project)
+            process.assert_called_once_with([join("prefix", "vlib"), "-unix", "lib_path"], env=simif.get_env())
+            check_output.assert_called_once_with([join('prefix', 'vcom'),
+                                                  '-quiet',
+                                                  '-modelsimini',
+                                                  modelsim_ini] + covargs + [
+                                                      '-2008',
+                                                      '-work',
+                                                      'lib',
+                                                      'file.vhd'], env=simif.get_env())
 
     @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
     @mock.patch("vunit.modelsim_interface.Process", autospec=True)

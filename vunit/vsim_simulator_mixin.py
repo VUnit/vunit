@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2016-2017, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Shared simulation logic between vsim based simulators such as ModelSim
@@ -14,6 +14,7 @@ import os
 from os.path import join, dirname, abspath
 from vunit.ostools import (write_file,
                            Process)
+from vunit.test_suites import get_result_file_name
 from vunit.persistent_tcl_shell import PersistentTclShell
 
 
@@ -61,7 +62,13 @@ class VsimSimulatorMixin(object):
             sys.executable,
             "-u",
             sys.argv[0],
-            "--compile"] + sys.argv[1:]
+            "--compile"]
+
+        # Strip --clean from re-compile command
+        # Leave other arguments intact since users can add custom CLI options
+        recompile_command += [arg for arg in sys.argv[1:]
+                              if arg != "--clean"]
+
         recompile_command_visual = " ".join(recompile_command)
 
         # stderr is intentionally re-directed to stdout so that the tcl's catch
@@ -95,10 +102,10 @@ proc vunit_compile {} {
     if {[catch {close $chan} error_msg]} {
         puts "Re-compile failed"
         puts ${error_msg}
-        return 1
+        return true
     } else {
         puts "Re-compile finished"
-        return 0
+        return false
     }
 }
 
@@ -114,6 +121,7 @@ proc vunit_restart {} {
     def _create_common_script(self,
                               test_suite_name,
                               config,
+                              script_path,
                               output_path):
         """
         Create tcl script with functions common to interactive and batch modes
@@ -136,9 +144,28 @@ proc vunit_help {} {
     puts {  - Recompiles the source files}
     puts {  - and re-runs the simulation if the compile was successful}
 }
+
+proc vunit_run {} {
+    if {[catch {_vunit_run} failed_or_err]} {
+        echo $failed_or_err
+        return true;
+    }
+
+    if {![is_test_suite_done]} {
+        echo
+        echo "Test Run Failed!"
+        echo
+        _vunit_run_failure;
+        return true;
+    }
+
+    return false;
+}
+
 """
         tcl += self._create_init_files_after_load(config)
-        tcl += self._create_load_function(test_suite_name, config, output_path)
+        tcl += self._create_load_function(test_suite_name, config, script_path)
+        tcl += get_is_test_suite_done_tcl(get_result_file_name(output_path))
         tcl += self._create_run_function()
         tcl += self._create_restart_function()
         return tcl
@@ -200,7 +227,7 @@ proc vunit_help {} {
     if {[catch {source ${file_name}} error_msg]} {
         puts "Sourcing ${file_name} failed"
         puts ${error_msg}
-        return 1
+        return true
     }
 """
         tcl = template % (fix_path(abspath(config.tb_path)),
@@ -259,13 +286,16 @@ proc vunit_help {} {
         """
         Run a test bench
         """
-        common_file_name = join(output_path, "common.do")
-        gui_file_name = join(output_path, "gui.do")
-        batch_file_name = join(output_path, "batch.do")
+        script_path = join(output_path, self.name)
+
+        common_file_name = join(script_path, "common.do")
+        gui_file_name = join(script_path, "gui.do")
+        batch_file_name = join(script_path, "batch.do")
 
         write_file(common_file_name,
                    self._create_common_script(test_suite_name,
                                               config,
+                                              script_path,
                                               output_path))
         write_file(gui_file_name,
                    self._create_gui_script(common_file_name, config))
@@ -274,7 +304,8 @@ proc vunit_help {} {
 
         if self._gui:
             return self._run_batch_file(gui_file_name, gui=True)
-        elif self._persistent_shell is not None:
+
+        if self._persistent_shell is not None:
             return self._run_persistent(common_file_name, load_only=elaborate_only)
 
         return self._run_batch_file(batch_file_name)
@@ -285,3 +316,27 @@ def fix_path(path):
     Adjust path for TCL usage
     """
     return path.replace("\\", "/").replace(" ", "\\ ")
+
+
+def get_is_test_suite_done_tcl(vunit_result_file):
+    """
+    Returns tcl procedure to detect if simulation was successful or not
+    Simulation is considered successful if the test_suite_done was reached in the results file
+    """
+
+    tcl = """
+proc is_test_suite_done {} {
+    set fd [open "%s" "r"]
+    set contents [read $fd]
+    close $fd
+    set lines [split $contents "\n"]
+    foreach line $lines {
+        if {$line=="test_suite_done"} {
+           return true;
+        }
+    }
+
+    return false;
+}
+""" % (fix_path(vunit_result_file))
+    return tcl

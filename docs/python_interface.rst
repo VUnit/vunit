@@ -26,10 +26,12 @@ There are two hooks to run user defined Python code.
              a :ref:`special generic/parameter <special_generics>`.
 
 :post_check: A ``post_check`` is called after a passing simulation of
-             the test case. The function must accept an
-             ``output_path`` string which is the filesystem path to
-             the directory where test outputs are stored.  The
-             function must return ``True`` or the test will fail.
+             the test case. The function may accept an ``output_path``
+             string which is the filesystem path to the directory
+             where test outputs are stored. The function may accept an
+             ``output`` string which full standard output from the
+             test containing the simulator transcript. The function
+             must return ``True`` or the test will fail.
 
              The use case is to automatically check output data files
              that is written by the test case during simulation. The test
@@ -56,7 +58,7 @@ Example
                write_data(self.input_data, join(output_path, "input.csv"))
                return True
 
-           def post_check(output_path):
+           def post_check(self, output_path):
                expected = compute_expected(self.input_data)
                got = read_data(join(output_path, "output.csv"))
                return check_equal(got, expected)

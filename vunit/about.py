@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2018, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Provides documentation and version information
@@ -47,6 +47,12 @@ often" approach through automation.
 
 **Read more on our** `Website <https://vunit.github.io>`__
 
+Contributing
+============
+Contributing in the form of code, feedback, ideas or bug reports are
+welcome. Read our `contribution guide
+<https://vunit.github.io/contributing.html>`__ to get started.
+
 License
 =======
 """ + license_text()
@@ -62,7 +68,7 @@ def version():
     return '%i.%i.%i' % (VERSION[0], VERSION[1], VERSION[2])
 
 
-VERSION = (3, 0, 2)
+VERSION = (3, 7, 0)
 
 # DO NOT TOUCH: Only set to False by PyPI deployment script
 PRE_RELEASE = True

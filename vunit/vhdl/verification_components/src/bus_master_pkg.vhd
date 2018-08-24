@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2017, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 -- Defines bus master verification component interface
 
@@ -11,6 +11,7 @@ use ieee.std_logic_1164.all;
 
 use work.logger_pkg.all;
 context work.com_context;
+use work.sync_pkg.all;
 
 package bus_master_pkg is
 
@@ -34,7 +35,11 @@ package bus_master_pkg is
   impure function new_bus(data_length : natural;
                           address_length : natural;
                           byte_length : natural := 8;
-                          logger : logger_t := bus_logger) return bus_master_t;
+                          logger : logger_t := bus_logger;
+                          actor : actor_t := null_actor) return bus_master_t;
+
+  -- Return the logger used by the bus master
+  function get_logger(bus_handle : bus_master_t) return logger_t;
 
   -- Return the length of the data on this bus
   impure function data_length(bus_handle : bus_master_t) return natural;
@@ -124,6 +129,12 @@ package bus_master_pkg is
     timeout      : delay_length := delay_length'high;
     msg    : string       := "");
 
+  -- Convert a bus master to a sync handle
+  impure function as_sync(bus_master : bus_master_t) return sync_handle_t;
+
+  -- Wait until all operations scheduled before this command has finished
+  procedure wait_until_idle(signal net : inout network_t;
+                            bus_handle : bus_master_t);
 
   -- Message type definitions, used by VC-instances
   constant bus_write_msg : msg_type_t := new_msg_type("write bus");

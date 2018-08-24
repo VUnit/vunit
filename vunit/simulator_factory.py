@@ -2,13 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2017, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Create simulator instances
 """
 
-from os.path import exists
 import os
 from vunit.modelsim_interface import ModelSimInterface
 from vunit.activehdl_interface import ActiveHDLInterface
@@ -40,7 +39,8 @@ class SimulatorFactory(object):
         """
         Return all supported compile options
         """
-        result = {}
+        result = dict((opt.name, opt) for opt in
+                      [BooleanOption("disable_coverage")])
         for sim_class in self.supported_simulators():
             for opt in sim_class.compile_options:
                 assert hasattr(opt, "name")
@@ -97,18 +97,17 @@ class SimulatorFactory(object):
         self.check_compile_option_name(name)
         self._compile_options[name].validate(value)
 
-    def _select_simulator(self):
+    def select_simulator(self):
         """
         Select simulator class, either from VUNIT_SIMULATOR environment variable
         or the first available
         """
-        environ_name = "VUNIT_SIMULATOR"
-
-        available_simulators = self.available_simulators()
+        available_simulators = self._detect_available_simulators()
         name_mapping = {simulator_class.name: simulator_class for simulator_class in self.supported_simulators()}
         if not available_simulators:
             return None
 
+        environ_name = "VUNIT_SIMULATOR"
         if environ_name in os.environ:
             simulator_name = os.environ[environ_name]
             if simulator_name not in name_mapping:
@@ -122,100 +121,34 @@ class SimulatorFactory(object):
 
         return simulator_class
 
-    def add_arguments(self, parser, for_all_simulators=False):
+    def add_arguments(self, parser):
         """
         Add command line arguments to parser
         """
 
-        if for_all_simulators or (self.has_simulator and self._simulator_class.supports_gui_flag):
-            parser.add_argument('-g', '--gui',
-                                action="store_true",
-                                default=False,
-                                help=("Open test case(s) in simulator gui with top level pre loaded"))
+        parser.add_argument('-g', '--gui',
+                            action="store_true",
+                            default=False,
+                            help=("Open test case(s) in simulator gui with top level pre loaded"))
 
-        if for_all_simulators:
-            for sim in self.supported_simulators():
-                sim.add_arguments(parser)
-        elif self._simulator_class is not None:
-            self._simulator_class.add_arguments(parser)
+        for sim in self.supported_simulators():
+            sim.add_arguments(parser)
 
     def __init__(self):
-        self._available_simulators = [simulator_class
-                                      for simulator_class in self.supported_simulators()
-                                      if simulator_class.is_available()]
-        self._simulator_class = self._select_simulator()
         self._compile_options = self._extract_compile_options()
         self._sim_options = self._extract_sim_options()
 
-    def available_simulators(self):
+    def _detect_available_simulators(self):
         """
-        Return a list of available simulators
+        Detect available simulators and return a list
         """
-        return self._available_simulators
-
-    def package_users_depend_on_bodies(self):
-        """
-        Returns True when package users also depend on package bodies
-        """
-        if self._simulator_class is not None:
-            return self._simulator_class.package_users_depend_on_bodies
-
-        return False
-
-    def supports_vhdl_2008_contexts(self):
-        """
-        Returns True when this simulator supports VHDL 2008 contexts
-        """
-        if self._simulator_class is not None:
-            return self._simulator_class.supports_vhdl_2008_contexts()
-
-        return True
-
-    def get_osvvm_coverage_api(self):
-        """
-        Returns simulator name when OSVVM coverage API is supported, None otherwise.
-        """
-        if self._simulator_class is not None:
-            return self._simulator_class.get_osvvm_coverage_api()
-
-        return None
-
-    def supports_vhdl_package_generics(self):
-        """
-        Returns True when this simulator supports VHDL package generics
-        """
-        if self._simulator_class is not None:
-            return self._simulator_class.supports_vhdl_package_generics()
-
-        return False
+        return [simulator_class
+                for simulator_class in self.supported_simulators()
+                if simulator_class.is_available()]
 
     @property
     def has_simulator(self):
-        return self._simulator_class is not None
-
-    @property
-    def simulator_name(self):
-        """
-        Return the name of the selected simulator or none
-        """
-        if self._simulator_class is None:
-            return "none"
-
-        return self._simulator_class.name
-
-    def create(self, args, simulator_output_path):
-        """
-        Create new simulator instance
-        """
-
-        if not self.has_simulator:
-            raise RuntimeError("No available simulator detected. "
-                               "Simulator executables must be available in PATH environment variable.")
-
-        if not exists(simulator_output_path):
-            os.makedirs(simulator_output_path)
-
-        return self._simulator_class.from_args(simulator_output_path, args)
+        return bool(self._detect_available_simulators())
 
 
 SIMULATOR_FACTORY = SimulatorFactory()

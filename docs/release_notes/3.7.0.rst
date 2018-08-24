@@ -1,0 +1,8 @@
+- Fixed lint issues from new pylint version.
+- Log output of failed vsim startup to stderr (#354)
+- Allow case-insensitive lookup of entities. Closes #346
+- Added vhdl_standard attribute at class initialization (#350)
+- Adding csv mapping support for files and libraries (#349)
+- Fix broken vivado example wrt verilog headers. #344
+- Allow adding duplicate libraries. #341
+- Make adding duplicate file INFO instead of WARNING. #341

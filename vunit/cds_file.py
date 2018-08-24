@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Handles Cadence Incisive .cds files
@@ -50,7 +50,7 @@ class CDSFile(dict):
         """
         Write cds file to file named 'file_name'
         """
-        contents = "\n".join(self._other_lines +
-                             ['define %s "%s"' % item
-                              for item in sorted(self.items())]) + "\n"
+        contents = "\n".join(self._other_lines
+                             + ['define %s "%s"' % item
+                                for item in sorted(self.items())]) + "\n"
         write_file(file_name, contents)

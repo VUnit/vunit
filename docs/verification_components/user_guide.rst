@@ -18,12 +18,20 @@ re-implementing it yourself.
 
 Included verification components (VCs):
 
+- Avalon Memory-Mapped master
+- Avalon Memory-Mapped slave
+- Avalon Streaming sink
+- Avalon Streaming source
 - AXI-Lite master
 - AXI read slave
 - AXI write slave
 - AXI stream master
+- AXI stream monitor
+- AXI stream protocol checker
 - AXI stream slave
 - RAM master
+- Wishbone master
+- Wishbone slave
 - UART master
 - UART slave
 
@@ -56,9 +64,10 @@ Included verification component interfaces (VCIs):
 
 Neither a VC or a VCI there is the :ref:`memory model <memory_model>`
 which is a model of a memory space such as the DRAM address space in a
-computer system. The AXI slave VCs make transactions against the
-memory model which provides access permissions, expected data settings
-as well as the actual buffer for reading and writing data.
+computer system. The memory mapped slave VCs such as AXI and Wishbone
+make transactions against the memory model which provides access
+permissions, expected data settings as well as the actual buffer for
+reading and writing data.
 
 .. toctree::
    :maxdepth: 1

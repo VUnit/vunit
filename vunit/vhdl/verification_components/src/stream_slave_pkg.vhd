@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2017, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 -- Stream slave verification component interface
 
@@ -26,7 +26,7 @@ package stream_slave_pkg is
                        stream : stream_slave_t;
                        variable data : out std_logic_vector;
                        variable last : out boolean);
-                       
+
   procedure pop_stream(signal net : inout network_t;
                        stream : stream_slave_t;
                        variable data : out std_logic_vector);
@@ -41,7 +41,7 @@ package stream_slave_pkg is
                                    variable reference : inout stream_reference_t;
                                    variable data : out std_logic_vector;
                                    variable last : out boolean);
-                                   
+
   procedure await_pop_stream_reply(signal net : inout network_t;
                                    variable reference : inout stream_reference_t;
                                    variable data : out std_logic_vector);

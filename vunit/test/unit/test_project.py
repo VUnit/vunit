@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2017, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 # pylint: disable=too-many-lines
 
@@ -109,6 +109,17 @@ end package body;
 """)
         self.assert_has_package("file1.vhd", "foo")
         self.assert_has_package_body("file1.vhd", "foo")
+
+    @mock.patch("vunit.project.LOGGER")
+    def test_recovers_from_parse_error(self, logger):
+        self.project.add_library("lib", "work_path")
+        source_file = self.add_source_file("lib", "file.vhd", """\
+entity foo is
+ port (;);
+end entity;
+""")
+        logger.error.assert_called_once_with("Failed to parse %s", "file.vhd")
+        self.assertEqual(source_file.design_units, [])
 
     def test_finds_entity_instantiation_dependencies(self):
         file1, file2, file3 = self.create_dummy_three_file_project()
@@ -477,11 +488,32 @@ end architecture;
         self.assertIn("a2", log_msg)
         self.assertIn("lib.ent", log_msg)
 
-    def test_error_on_duplicate_file(self):
+    @mock.patch("vunit.project.LOGGER")
+    def test_error_on_duplicate_file(self, logger):
         self.project.add_library("lib", "lib_path")
-        file1 = self.add_source_file("lib", "file.vhd", "")
-        self.assertRaises(RuntimeError, self.add_source_file, "lib", "file.vhd", "")
+        file1 = self.add_source_file("lib", "file.vhd", "entity foo is end entity;")
+        self.assertRaises(RuntimeError, self.add_source_file, "lib", "file.vhd", "entity foo is end entity foo;")
+
+        # No extra design unit of file added
+        lib = self.project.get_library("lib")
+        self.assertEqual([ent.name for ent in lib.get_entities()], ["foo"])
+        self.assertEqual(lib.get_source_file("file.vhd"), file1)
         self.assertEqual(self.project.get_source_files_in_order(), [file1])
+        self.assertFalse(logger.warning.called)
+
+    @mock.patch("vunit.project.LOGGER")
+    def test_no_error_on_duplicate_identical_file(self, logger):
+        self.project.add_library("lib", "lib_path")
+        file1 = self.add_source_file("lib", "file.vhd", "entity foo is end entity;")
+        file2 = self.add_source_file("lib", "file.vhd", "entity foo is end entity;")
+        self.assertEqual(id(file1), id(file2))
+
+        # No extra design unit of file added
+        lib = self.project.get_library("lib")
+        self.assertEqual([ent.name for ent in lib.get_entities()], ["foo"])
+        self.assertEqual(lib.get_source_file("file.vhd"), file1)
+        self.assertEqual(self.project.get_source_files_in_order(), [file1])
+        self.assertTrue(logger.info.called)
 
     def _test_warning_on_duplicate(self, code, message, verilog=False):
         """
@@ -569,6 +601,11 @@ context ctx is
 end context;
 """,
             "file_copy.vhd: context 'ctx' previously defined in file.vhd")
+
+    def test_error_on_adding_duplicate_library(self):
+        self.project.add_library(logical_name="lib", directory="dir")
+        self.assertRaises(ValueError, self.project.add_library,
+                          logical_name="lib", directory="dir")
 
     def test_warning_on_duplicate_verilog_module(self):
         self.project.add_library("lib", "lib_path")
@@ -663,6 +700,24 @@ endpackage
         self.assertEqual(file1.get_compile_option("ghdl.flags"), ["--foo", "--bar"])
         file1.set_compile_option("ghdl.flags", ["--xyz"])
         self.assertEqual(file1.get_compile_option("ghdl.flags"), ["--xyz"])
+
+    def test_add_compile_option_does_not_mutate_argument(self):
+        self.project.add_library("lib", "lib_path")
+        file1 = self.add_source_file("lib", "file.vhd", "")
+        options = ["--foo"]
+        file1.add_compile_option("ghdl.flags", options)
+        options[0] = "--xyz"
+        self.assertEqual(file1.get_compile_option("ghdl.flags"), ["--foo"])
+        file1.add_compile_option("ghdl.flags", ["--bar"])
+        self.assertEqual(options, ["--xyz"])
+
+    def test_set_compile_option_does_not_mutate_argument(self):
+        self.project.add_library("lib", "lib_path")
+        file1 = self.add_source_file("lib", "file.vhd", "")
+        options = ["--foo"]
+        file1.set_compile_option("ghdl.flags", options)
+        options[0] = "--xyz"
+        self.assertEqual(file1.get_compile_option("ghdl.flags"), ["--foo"])
 
     def test_compile_option_validation(self):
         self.project.add_library("lib", "lib_path")

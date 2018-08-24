@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2018, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 # pylint: disable=unused-wildcard-import
 # pylint: disable=wildcard-import
@@ -38,7 +38,7 @@ class VerilogTokenizer(object):
             return Token(token.kind, '', token.location)
 
         def ignore_value(token):  # pylint: disable=unused-argument
-            return None
+            pass
 
         def add(kind, regex, func=None):
             self._tokenizer.add(kind, regex, func)

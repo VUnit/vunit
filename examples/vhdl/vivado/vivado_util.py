@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2018, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 from subprocess import check_call
 import os
@@ -102,7 +102,7 @@ def read_compile_order(file_name):
             unique.add(key)
 
             if is_verilog_header(file_name):
-                include_dirs.add(dirname(file_info.file_name))
+                include_dirs.add(dirname(file_name))
             else:
                 compile_order.append((library_name, file_name))
 
@@ -115,9 +115,11 @@ def compile_standard_libraries(vunit_obj, output_path):
     """
     done_token = join(output_path, "all_done.txt")
 
+    simulator_class = SIMULATOR_FACTORY.select_simulator()
+
     if not exists(done_token):
         print("Compiling standard libraries into %s ..." % abspath(output_path))
-        simname = SIMULATOR_FACTORY.simulator_name
+        simname = simulator_class.name
 
         # Vivado calls rivierapro for riviera
         if simname == "rivierapro":
@@ -125,7 +127,7 @@ def compile_standard_libraries(vunit_obj, output_path):
 
         run_vivado(join(dirname(__file__), "tcl", "compile_standard_libs.tcl"),
                    simname,
-                   SIMULATOR_FACTORY._simulator_class.find_prefix().replace("\\", "/"),
+                   simulator_class.find_prefix().replace("\\", "/"),
                    output_path)
 
     else:

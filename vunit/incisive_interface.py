@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2016-2017, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Interface for the Cadence Incisive simulator
@@ -152,7 +152,8 @@ define work "{2}/libraries/work"
         """
         if source_file.is_vhdl:
             return self.compile_vhdl_file_command(source_file)
-        elif source_file.is_any_verilog:
+
+        if source_file.is_any_verilog:
             return self.compile_verilog_file_command(source_file)
 
         raise CompileError
@@ -164,10 +165,13 @@ define work "{2}/libraries/work"
         """
         if vhdl_standard == "2002":
             return "-v200x -extv200x"
-        elif vhdl_standard == "2008":
+
+        if vhdl_standard == "2008":
             return "-v200x -extv200x"
-        elif vhdl_standard == "93":
+
+        if vhdl_standard == "93":
             return "-v93"
+
         raise ValueError("Invalid VHDL standard %s" % vhdl_standard)
 
     def compile_vhdl_file_command(self, source_file):
@@ -270,6 +274,7 @@ define work "{2}/libraries/work"
         Elaborates and Simulates with entity as top level using generics
         """
 
+        script_path = join(output_path, self.name)
         launch_gui = self._gui is not False and not elaborate_only
 
         if elaborate_only:
@@ -301,7 +306,7 @@ define work "{2}/libraries/work"
             args += config.sim_options.get('incisive.irun_sim_flags', [])
             args += ['-cdslib "%s"' % self._cdslib]
             args += self._hdlvar_args()
-            args += ['-log "%s/irun_%s.log"' % (output_path, step)]
+            args += ['-log "%s"' % join(script_path, "irun_%s.log" % step)]
             if not self._log_level == "debug":
                 args += ['-quiet']
             else:
@@ -317,14 +322,7 @@ define work "{2}/libraries/work"
             else:
                 args += ['-access +r']
                 args += ['-input "@run"']
-                # Try hierarchical path formats for both VHDL and Verilog, but don't throw an error if not found.
-                # args += ['-input "@catch {puts #vunit_pkg::__runner__.exit_without_errors}"']
-                # args += ['-input "@catch {puts #run_pkg.runner.exit_without_errors}"']
-                # NOTE: do not exit with 1 or 2 in case of error, that seems to mean something special to Incisive:
-                args += ['-input "@catch '
-                         '{if {#vunit_pkg::__runner__.exit_without_errors == 1} {exit 0} else {exit 42}}"']
-                args += ['-input "@catch '
-                         '{if {#run_pkg.runner.exit_without_errors == \\"TRUE\\"} {exit 0} else {exit 42}}"']
+
             if config.architecture_name is None:
                 # we have a SystemVerilog toplevel:
                 args += ['-top %s' % join('%s.%s:sv' % (config.library_name, config.entity_name))]
@@ -332,9 +330,9 @@ define work "{2}/libraries/work"
                 # we have a VHDL toplevel:
                 args += ['-top %s' % join('%s.%s:%s' % (config.library_name, config.entity_name,
                                                         config.architecture_name))]
-            argsfile = "%s/irun_%s.args" % (output_path, step)
+            argsfile = "%s/irun_%s.args" % (script_path, step)
             write_file(argsfile, "\n".join(args))
-            if not run_command([cmd, '-f', relpath(argsfile, output_path)], cwd=output_path, env=self.get_env()):
+            if not run_command([cmd, '-f', relpath(argsfile, script_path)], cwd=script_path, env=self.get_env()):
                 return False
         return True
 

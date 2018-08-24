@@ -177,6 +177,7 @@ class VHDLArchitecture(object):
             entity_id = arch.group('entity_id')
             yield VHDLArchitecture(identifier, entity_id)
 
+
 PACKAGE_INSTANCE_PATTERN = (
     r'\bpackage\s+(?P<new_name>[a-zA-Z]\w*)\s+is\s+new\s+(?P<lib>[a-zA-Z]\w*)\.(?P<name>[a-zA-Z]\w*)')
 
@@ -764,7 +765,8 @@ class VHDLArrayType(object):
             for char in ranges:
                 if char == ',' and level == 0:
                     return ranges[:index], ranges[index + 1:]
-                elif char == '(':
+
+                if char == '(':
                     level += 1
                 elif char == ')':
                     level -= 1
@@ -783,16 +785,17 @@ class VHDLArrayType(object):
         if unconstrained_range is not None:
             range_type = unconstrained_range.group('range_type')
             return VHDLRange(range_type)
-        else:
-            constrained_range = cls._constrained_range_re.match(the_range)
-            range_attribute = cls._range_attribute_range_re.match(the_range)
-            if constrained_range is not None:
-                range_left = constrained_range.group('range_left')
-                range_right = constrained_range.group('range_right')
-                return VHDLRange(None, range_left, range_right)
-            elif range_attribute is not None:
-                range_attribute = range_attribute.group('range_attribute')
-                return VHDLRange(attribute=range_attribute)
+
+        constrained_range = cls._constrained_range_re.match(the_range)
+        range_attribute = cls._range_attribute_range_re.match(the_range)
+        if constrained_range is not None:
+            range_left = constrained_range.group('range_left')
+            range_right = constrained_range.group('range_right')
+            return VHDLRange(None, range_left, range_right)
+
+        if range_attribute is not None:
+            range_attribute = range_attribute.group('range_attribute')
+            return VHDLRange(attribute=range_attribute)
 
         return VHDLRange()
 
@@ -925,10 +928,10 @@ class VHDLReference(object):
         """
         Find entity, use, context and configuration references within the code
         """
-        return (cls._find_uses(code) +
-                cls._find_entity_references(code) +
-                cls._find_configuration_references(code) +
-                cls._find_package_instance_references(code))
+        return (cls._find_uses(code)
+                + cls._find_entity_references(code)
+                + cls._find_configuration_references(code)
+                + cls._find_package_instance_references(code))
 
     def __init__(self, reference_type, library, design_unit, name_within=None):
         assert reference_type in self._reference_types
@@ -947,10 +950,10 @@ class VHDLReference(object):
             self.name_within)
 
     def __eq__(self, other):
-        return (self.reference_type == other.reference_type and
-                self.library == other.library and
-                self.design_unit == other.design_unit and
-                self.name_within == other.name_within)
+        return (self.reference_type == other.reference_type
+                and self.library == other.library
+                and self.design_unit == other.design_unit
+                and self.name_within == other.name_within)
 
     def copy(self):
         return VHDLReference(self.reference_type,

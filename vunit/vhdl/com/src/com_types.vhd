@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2015-2018, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -17,6 +17,7 @@ use ieee.float_pkg.all;
 use std.textio.all;
 
 use work.integer_vector_ptr_pkg.all;
+use work.integer_array_pkg.all;
 use work.string_ptr_pkg.all;
 use work.logger_pkg.all;
 use work.queue_pkg.all;
@@ -384,6 +385,11 @@ package com_types_pkg is
   alias push_msg_t is push[msg_t, msg_t];
   alias pop_msg_t is pop[msg_t return msg_t];
 
+  procedure push_ref(constant msg : msg_t; value : inout integer_array_t);
+  impure function pop_ref(msg : msg_t) return integer_array_t;
+  alias push_integer_array_t_ref is push_ref[msg_t, integer_array_t];
+  alias pop_integer_array_t_ref is pop_ref[msg_t return integer_array_t];
+
 end package;
 
 package body com_types_pkg is
@@ -474,7 +480,7 @@ package body com_types_pkg is
   begin
     result.data := new_queue(queue_pool);
     for i in 0 to length(msg.data) - 1 loop
-      push(result.data, get(msg.data.data, 1+i));
+      unsafe_push(result.data, get(msg.data.data, 1+i));
     end loop;
 
     return result;
@@ -515,7 +521,7 @@ package body com_types_pkg is
   end;
 
   impure function pop(queue : queue_t) return msg_t is
-    variable ret_val : msg_t := new_msg;
+    variable ret_val : msg_t;
   begin
     ret_val.id          := pop(queue);
     ret_val.status      := com_status_t'val(integer'(pop(queue)));
@@ -829,6 +835,16 @@ package body com_types_pkg is
   impure function pop(msg : msg_t) return msg_t is
   begin
     return pop(msg.data);
+  end;
+
+  procedure push_ref(constant msg : msg_t; value : inout integer_array_t) is
+  begin
+    push_ref(msg.data, value);
+  end;
+
+  impure function pop_ref(msg : msg_t) return integer_array_t is
+  begin
+    return pop_ref(msg.data);
   end;
 
 end package body com_types_pkg;

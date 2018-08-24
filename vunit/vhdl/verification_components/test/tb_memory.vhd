@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2017, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -306,23 +306,26 @@ begin
       check_only_log(memory_logger, "Reading from empty memory", failure);
       unmock(memory_logger);
 
-    elsif run("Test check expected was written") then
+    elsif run("Test that expected data was written") then
       memory := new_memory;
       buf := allocate(memory, 3);
       set_expected_byte(memory, 0, 77);
       set_expected_byte(memory, 2, 66);
 
       mock(memory_logger);
+      check_false(expected_was_written(buf));
       check_expected_was_written(buf);
       check_log(memory_logger, "The " & describe_address(memory, 0) & " was never written with expected byte 77", failure);
       check_only_log(memory_logger, "The " & describe_address(memory, 2) & " was never written with expected byte 66", failure);
 
       write_byte(memory, 0, 77);
+      check_false(expected_was_written(buf));
       check_expected_was_written(buf);
       check_only_log(memory_logger, "The " & describe_address(memory, 2) & " was never written with expected byte 66", failure);
       unmock(memory_logger);
 
       write_byte(memory, 2, 66);
+      check(expected_was_written(buf));
       check_expected_was_written(buf);
       unmock(memory_logger);
 

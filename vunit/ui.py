@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2017, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 # pylint: disable=too-many-lines
 
@@ -35,6 +35,11 @@ Compilation Options
 Compilation options allow customization of compilation behavior. Since simulators have
 differing options available, generic options may be specified through this interface.
 The following compilation options are known.
+
+``disable_coverage``
+  Disable coverage.
+  Do not add coverage compile flags when running with ``--coverage``. Default is False.
+  Boolean
 
 ``ghdl.flags``
    Extra arguments passed to ``ghdl -a`` command during compilation.
@@ -207,18 +212,20 @@ configuration is only run if there are no named configurations.
 
 from __future__ import print_function
 
+import csv
 import sys
 import traceback
 import logging
 import os
-from os.path import exists, abspath, join, basename, splitext
+from os.path import exists, abspath, join, basename, splitext, normpath, dirname
 from glob import glob
 from fnmatch import fnmatch
 from vunit.database import PickledDataBase, DataBase
-import vunit.ostools as ostools
+from vunit import ostools
 from vunit.vunit_cli import VUnitCLI
 from vunit.simulator_factory import SIMULATOR_FACTORY
-from vunit.simulator_interface import is_string_not_iterable
+from vunit.simulator_interface import (is_string_not_iterable,
+                                       SimulatorInterface)
 from vunit.color_printer import (COLOR_PRINTER,
                                  NO_COLOR_PRINTER)
 from vunit.project import (Project,
@@ -252,7 +259,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
     """
 
     @classmethod
-    def from_argv(cls, argv=None, compile_builtins=True):
+    def from_argv(cls, argv=None, compile_builtins=True, vhdl_standard=None):
         """
         Create VUnit instance from command line arguments.
 
@@ -269,10 +276,10 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         """
         args = VUnitCLI().parse_args(argv=argv)
-        return cls.from_args(args, compile_builtins=compile_builtins)
+        return cls.from_args(args, compile_builtins=compile_builtins, vhdl_standard=vhdl_standard)
 
     @classmethod
-    def from_args(cls, args, compile_builtins=True):
+    def from_args(cls, args, compile_builtins=True, vhdl_standard=None):
         """
         Create VUnit instance from args namespace.
         Intended for users who adds custom command line options.
@@ -284,9 +291,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         :returns: A :class:`.VUnit` object instance
         """
 
-        return cls(args, compile_builtins=compile_builtins)
+        return cls(args, compile_builtins=compile_builtins, vhdl_standard=vhdl_standard)
 
-    def __init__(self, args, compile_builtins=True):
+    def __init__(self, args, compile_builtins=True, vhdl_standard=None):
         self._args = args
         self._configure_logging(args.log_level)
         self._output_path = abspath(args.output_path)
@@ -300,24 +307,32 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             return any(fnmatch(name, pattern) for pattern in args.test_patterns)
 
         self._test_filter = test_filter
-        self._vhdl_standard = select_vhdl_standard()
+        self._vhdl_standard = select_vhdl_standard(vhdl_standard)
 
         self._external_preprocessors = []
         self._location_preprocessor = None
         self._check_preprocessor = None
 
-        self._simulator_factory = SIMULATOR_FACTORY
-        self._simulator_output_path = join(self._output_path, SIMULATOR_FACTORY.simulator_name)
+        self._simulator_class = SIMULATOR_FACTORY.select_simulator()
+
+        # Use default simulator options if no simulator was present
+        if self._simulator_class is None:
+            simulator_class = SimulatorInterface
+            self._simulator_output_path = join(self._output_path, "none")
+        else:
+            simulator_class = self._simulator_class
+            self._simulator_output_path = join(self._output_path, simulator_class.name)
+
         self._create_output_path(args.clean)
 
         database = self._create_database()
         self._project = Project(
             database=database,
-            depend_on_package_body=self._simulator_factory.package_users_depend_on_bodies())
+            depend_on_package_body=simulator_class.package_users_depend_on_bodies)
 
         self._test_bench_list = TestBenchList(database=database)
 
-        self._builtins = Builtins(self, self._vhdl_standard, self._simulator_factory)
+        self._builtins = Builtins(self, self._vhdl_standard, simulator_class)
         if compile_builtins:
             self.add_builtins()
 
@@ -337,7 +352,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             database = DataBase(project_database_file_name)
             create_new = (key not in database) or (database[key] != version)
         except KeyboardInterrupt:
-            raise
+            raise KeyboardInterrupt
         except:  # pylint: disable=bare-except
             traceback.print_exc()
             create_new = True
@@ -379,13 +394,49 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._project.add_library(library_name, abspath(path), vhdl_standard, is_external=True)
         return self.library(library_name)
 
-    def add_library(self, library_name, vhdl_standard=None):
+    def add_source_files_from_csv(self, project_csv_path, vhdl_standard=None):
+        """
+        Add a project configuration, mapping all the libraries and files
+
+        :param project_csv_path: path to csv project specification, each line contains the name
+                                 of the library and the path to one file 'lib_name,filename'
+                                 note that all filenames are relative to the parent folder of the
+                                 csv file
+        :param vhdl_standard: The VHDL standard used to compile file into this library,
+                              if None, the VUNIT_VHDL_STANDARD environment variable is used
+        :returns: A list of files (:class `.SourceFileList`) that were added
+
+        """
+        if vhdl_standard is None:
+            vhdl_standard = self._vhdl_standard
+
+        libs = set()
+        files = SourceFileList(list())
+
+        with open(project_csv_path) as csv_path_file:
+            for row in csv.reader(csv_path_file):
+                if len(row) == 2:
+                    lib_name = row[0].strip()
+                    no_normalized_file = row[1].strip()
+                    file_name_ = normpath(join(dirname(project_csv_path), no_normalized_file))
+                    lib = self.library(lib_name) if lib_name in libs else self.add_library(lib_name)
+                    libs.add(lib_name)
+                    file_ = lib.add_source_file(file_name_)
+                    files.append(file_)
+                elif len(row) > 2:
+                    LOGGER.error("More than one library and one file in csv description")
+        return files
+
+    def add_library(self, library_name, vhdl_standard=None, allow_duplicate=False):
         """
         Add a library managed by VUnit.
 
         :param library_name: The name of the library
         :param vhdl_standard: The VHDL standard used to compile files into this library,
                               if None the VUNIT_VHDL_STANDARD environment variable is used
+        :param allow_duplicate: Set to True to allow the same library
+                                to be added multiple times. Subsequent additions will just
+                                return the previously created library.
         :returns: The created :class:`.Library` object
 
         :example:
@@ -397,8 +448,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         if vhdl_standard is None:
             vhdl_standard = self._vhdl_standard
+
         path = join(self._simulator_output_path, "libraries", library_name)
-        self._project.add_library(library_name, abspath(path), vhdl_standard)
+        if not self._project.has_library(library_name):
+            self._project.add_library(library_name, abspath(path), vhdl_standard)
+        elif not allow_duplicate:
+            raise ValueError("Library %s already added. Use allow_duplicate to ignore this error." % library_name)
         return self.library(library_name)
 
     def library(self, library_name):
@@ -548,15 +603,15 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                 if source_file.library.name != library_name:
                     continue
 
-            if not (fnmatch(abspath(source_file.name), pattern) or
-                    fnmatch(ostools.simplify_path(source_file.name), pattern)):
+            if not (fnmatch(abspath(source_file.name), pattern)
+                    or fnmatch(ostools.simplify_path(source_file.name), pattern)):
                 continue
 
             results.append(SourceFile(source_file, self._project, self))
 
         check_not_empty(results, allow_empty,
-                        ("Pattern %r did not match any file" % pattern) +
-                        (("within library %s" % library_name) if library_name is not None else ""))
+                        ("Pattern %r did not match any file" % pattern)
+                        + (("within library %s" % library_name) if library_name is not None else ""))
 
         return SourceFileList(results)
 
@@ -696,12 +751,14 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         self._check_preprocessor = CheckPreprocessor()
 
-    def main(self):
+    def main(self, post_run=None):
         """
         Run vunit main function and exit
+
+        :param post_run: A function with no arguments to be called after running tests
         """
         try:
-            all_ok = self._main()
+            all_ok = self._main(post_run)
         except KeyboardInterrupt:
             sys.exit(1)
         except CompileError:
@@ -728,7 +785,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         test_list.keep_matches(self._test_filter)
         return test_list
 
-    def _main(self):
+    def _main(self, post_run):
         """
         Base vunit main function without performing exit
         """
@@ -736,16 +793,33 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         if self._args.list:
             return self._main_list_only()
 
-        elif self._args.files:
+        if self._args.files:
             return self._main_list_files_only()
 
-        elif self._args.compile:
+        if self._args.compile:
             return self._main_compile_only()
 
-        return self._main_run()
+        all_ok = self._main_run()
+        if post_run is not None:
+            post_run()
+        return all_ok
 
     def _create_simulator_if(self):
-        return self._simulator_factory.create(self._args, self._simulator_output_path)
+        """
+        Create new simulator instance
+        """
+
+        if self._simulator_class is None:
+            LOGGER.error(
+                "No available simulator detected.\n"
+                "Simulator binary folder must be available in PATH environment variable.\n"
+                "Simulator binary folder can also be set the in VUNIT_<SIMULATOR_NAME>_PATH environment variable.\n")
+            exit(1)
+
+        if not exists(self._simulator_output_path):
+            os.makedirs(self._simulator_output_path)
+
+        return self._simulator_class.from_args(self._simulator_output_path, self._args)
 
     def _main_run(self):
         """
@@ -849,6 +923,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
                             join(self._output_path, "test_output"),
                             verbosity=verbosity,
                             num_threads=self._args.num_threads,
+                            fail_fast=self._args.fail_fast,
                             dont_catch_exceptions=self._args.dont_catch_exceptions,
                             no_color=self._args.no_color)
         runner.run(test_cases)
@@ -899,6 +974,12 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         self._builtins.add("osvvm")
 
+    def add_json4vhdl(self):
+        """
+        Add JSON-for-VHDL library
+        """
+        self._builtins.add("json4vhdl")
+
     def get_compile_order(self, source_files=None):
         """
         Get the compile order of all or specific source files and
@@ -917,7 +998,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         :returns: A list of :class:`.SourceFile` objects in compile order.
         """
         if source_files is None:
-            source_files = self.get_source_files()
+            source_files = self.get_source_files(allow_empty=True)
 
         target_files = [source_file._source_file  # pylint: disable=protected-access
                         for source_file in source_files]
@@ -1184,6 +1265,7 @@ class Library(object):
         :returns: A :class:`.TestBench` object
         :raises: KeyError
         """
+        name = name.lower()
         library = self._project.get_library(self._library_name)
         if not library.has_entity(name):
             raise KeyError(name)
@@ -1212,6 +1294,7 @@ class Library(object):
         :returns: A :class:`.TestBench` object
         :raises: KeyError
         """
+        name = name.lower()
 
         return TestBench(self._test_bench_list.get_test_bench(self._library_name, name), self)
 
@@ -1720,12 +1803,16 @@ class SourceFile(object):
             raise ValueError(source_file)
 
 
-def select_vhdl_standard():
+def select_vhdl_standard(vhdl_standard=None):
     """
-    Select VHDL standard according to environment variable VUNIT_VHDL_STANDARD
+    Select VHDL standard either from class initialization or according to environment variable VUNIT_VHDL_STANDARD
     """
-    vhdl_standard = os.environ.get('VUNIT_VHDL_STANDARD', '2008')
-    check_vhdl_standard(vhdl_standard, from_str="VUNIT_VHDL_STANDARD environment variable")
+    if vhdl_standard is not None:
+        check_vhdl_standard(vhdl_standard, from_str="From class initialization")
+    else:
+        vhdl_standard = os.environ.get('VUNIT_VHDL_STANDARD', '2008')
+        check_vhdl_standard(vhdl_standard, from_str="VUNIT_VHDL_STANDARD environment variable")
+
     return vhdl_standard
 
 
@@ -1743,6 +1830,6 @@ def check_not_empty(lst, allow_empty, error_msg):
     Returns the list
     """
     if (not allow_empty) and (not lst):
-        raise ValueError(error_msg +
-                         ". Use allow_empty=True to avoid exception.")
+        raise ValueError(error_msg
+                         + ". Use allow_empty=True to avoid exception.")
     return lst

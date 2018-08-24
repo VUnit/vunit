@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2017-2018, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -30,7 +30,7 @@ begin
     variable data  : std_logic_vector(data_length(bus_handle)-1 downto 0);
     constant blen : natural := byte_length(bus_handle);
   begin
-    loop
+    while true loop
       receive(net, bus_handle.p_actor, request_msg);
       msg_type := message_type(request_msg);
 

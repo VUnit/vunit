@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2017, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 # pylint: disable=too-many-public-methods
 
 """
@@ -142,8 +142,8 @@ end architecture;
         accepted_extensions = VHDL_EXTENSIONS + VERILOG_EXTENSIONS
         allowable_extensions = [ext for ext in accepted_extensions]
         allowable_extensions.extend([ext.upper() for ext in accepted_extensions])
-        allowable_extensions.append(VHDL_EXTENSIONS[0][0] + VHDL_EXTENSIONS[0][1].upper() +
-                                    VHDL_EXTENSIONS[0][2:])  # mixed case
+        allowable_extensions.append(VHDL_EXTENSIONS[0][0] + VHDL_EXTENSIONS[0][1].upper()
+                                    + VHDL_EXTENSIONS[0][2:])  # mixed case
         for idx, ext in enumerate(allowable_extensions):
             file_name = self.create_entity_file(idx, ext)
             ui.add_source_files(file_name, 'lib')
@@ -221,6 +221,23 @@ end architecture;
         self.assertEqual([test.name for test in lib.test_bench("tb_ent2").get_tests()],
                          [])
 
+    def test_get_entities_case_insensitive(self):
+        ui = self._create_ui()
+        lib = ui.add_library("lib")
+        self.create_file('tb_ent.vhd', '''
+entity tb_Ent is
+  generic (runner_cfg : string);
+end entity;
+        ''')
+        lib.add_source_file("tb_ent.vhd")
+        self.assertEqual(lib.test_bench("tb_Ent").name, "tb_ent")
+        self.assertEqual(lib.test_bench("TB_ENT").name, "tb_ent")
+        self.assertEqual(lib.test_bench("tb_ent").name, "tb_ent")
+
+        self.assertEqual(lib.entity("tb_Ent").name, "tb_ent")
+        self.assertEqual(lib.entity("TB_ENT").name, "tb_ent")
+        self.assertEqual(lib.entity("tb_ent").name, "tb_ent")
+
     def test_add_source_files(self):
         files = ["file1.vhd",
                  "file2.vhd",
@@ -254,6 +271,47 @@ end architecture;
         lib.add_source_files(iter(["file*.vhd", "foo_file.vhd"]))
         for file_name in files:
             lib.get_source_file(file_name).name.endswith(file_name)
+
+    def test_add_source_files_from_csv(self):
+        csv = """
+        lib,  tb_example.vhdl
+        lib1 , tb_example1.vhd
+        lib2, tb_example2.vhd
+        lib3,"tb,ex3.vhd"
+        """
+
+        libraries = ['lib', 'lib1', 'lib2', 'lib3']
+        files = ['tb_example.vhdl', 'tb_example1.vhd', 'tb_example2.vhd', 'tb,ex3.vhd']
+
+        self.create_csv_file('test_csv.csv', csv)
+        for file_name in files:
+            self.create_file(file_name)
+
+        ui = self._create_ui()
+        ui.add_source_files_from_csv('test_csv.csv')
+
+        for index, library_name in enumerate(libraries):
+            file_name = files[index]
+            file_name_from_ui = ui.get_source_file(file_name, library_name)
+            self.assertIsNotNone(file_name_from_ui)
+
+    def test_add_source_files_from_csv_return(self):
+        csv = """
+        lib, tb_example.vhd
+        lib, tb_example1.vhd
+        lib, tb_example2.vhd
+        """
+
+        list_of_files = ['tb_example.vhd', 'tb_example1.vhd', 'tb_example2.vhd']
+
+        for index, file_ in enumerate(list_of_files):
+            self.create_file(file_, str(index))
+
+        self.create_csv_file('test_returns.csv', csv)
+        ui = self._create_ui()
+
+        source_files = ui.add_source_files_from_csv('test_returns.csv')
+        self.assertEqual([source_file.name for source_file in source_files], list_of_files)
 
     def test_add_source_files_errors(self):
         ui = self._create_ui()
@@ -409,7 +467,8 @@ Listed 2 files""".splitlines()))
             """
             ui = self._create_ui()
             with mock.patch.object(ui, "_project", autospec=True) as project:
-                lib = ui.add_library("lib")
+                project.has_library.return_value = True
+                lib = ui.library("lib")
                 action(ui, lib)
                 project.add_source_file.assert_called_once_with(abspath("verilog.v"),
                                                                 "lib",
@@ -435,7 +494,8 @@ Listed 2 files""".splitlines()))
             """
             ui = self._create_ui()
             with mock.patch.object(ui, "_project", autospec=True) as project:
-                lib = ui.add_library("lib")
+                project.has_library.return_value = True
+                lib = ui.library("lib")
                 action(ui, lib)
                 project.add_source_file.assert_called_once_with(abspath("verilog.v"),
                                                                 "lib",
@@ -459,15 +519,17 @@ Listed 2 files""".splitlines()))
 
                 ui = self._create_ui()
                 with mock.patch.object(ui, "_project", autospec=True) as project:
-                    lib = ui.add_library("lib")
+                    project.has_library.return_value = True
 
                     if method == 0:
                         ui.add_source_files(file_name, "lib", no_parse=no_parse)
                     elif method == 1:
                         ui.add_source_file(file_name, "lib", no_parse=no_parse)
                     elif method == 2:
+                        lib = ui.library("lib")
                         lib.add_source_files(file_name, no_parse=no_parse)
                     elif method == 3:
+                        lib = ui.library("lib")
                         lib.add_source_file(file_name, no_parse=no_parse)
 
                     project.add_source_file.assert_called_once_with(abspath("verilog.v"),
@@ -578,6 +640,48 @@ Listed 2 files""".splitlines()))
         self.assertTrue("Found no test benches" in str(logger.warning.mock_calls))
         logger.reset_mock()
 
+    def test_post_run(self):
+        post_run = mock.Mock()
+
+        ui = self._create_ui()
+        self._run_main(ui, post_run=post_run)
+        self.assertTrue(post_run.called)
+
+        for no_run_arg in ['--compile', '--files', '--list']:
+            post_run.reset_mock()
+            ui = self._create_ui(no_run_arg)
+            self._run_main(ui, post_run=post_run)
+            self.assertFalse(post_run.called)
+
+    def test_error_on_adding_duplicate_library(self):
+        ui = self._create_ui()
+        ui.add_library("lib")
+        self.assertRaises(ValueError, ui.add_library, "lib")
+
+    def test_allow_adding_duplicate_library(self):
+        ui = self._create_ui()
+
+        file_name = "file.vhd"
+        self.create_file(file_name)
+
+        file_name2 = "file2.vhd"
+        self.create_file(file_name2)
+
+        lib1 = ui.add_library("lib")
+        source_file1 = lib1.add_source_file(file_name)
+        self.assertEqual([source_file.name for source_file in lib1.get_source_files()],
+                         [source_file1.name])
+
+        lib2 = ui.add_library("lib", allow_duplicate=True)
+        for lib in [lib1, lib2]:
+            self.assertEqual([source_file.name for source_file in lib.get_source_files()],
+                             [source_file1.name])
+
+        source_file2 = lib2.add_source_file(file_name2)
+        for lib in [lib1, lib2]:
+            self.assertEqual({source_file.name for source_file in lib.get_source_files()},
+                             {source_file1.name, source_file2.name})
+
     def test_scan_tests_from_other_file(self):
         for tb_type in ["vhdl", "verilog"]:
             for tests_type in ["vhdl", "verilog"]:
@@ -668,9 +772,30 @@ endmodule
         self.assertRaises(ValueError, lib.test_bench("tb_top").scan_tests_from_file, "missing.sv")
 
     def test_can_list_tests_without_simulator(self):
-        with set_env(PATH=""):
-            ui = self._create_ui("--list")
+        with set_env():
+            ui = self._create_ui_real_sim("--list")
             self._run_main(ui, 0)
+
+    def test_can_list_files_without_simulator(self):
+        with set_env():
+            ui = self._create_ui_real_sim("--files")
+            self._run_main(ui, 0)
+
+    @mock.patch("vunit.ui.LOGGER", autospec=True)
+    def test_compile_without_simulator_fails(self, logger):
+        with set_env():
+            ui = self._create_ui_real_sim("--compile")
+            self._run_main(ui, 1)
+            self.assertEqual(len(logger.error.mock_calls), 1)
+            self.assertTrue("No available simulator detected" in str(logger.error.mock_calls))
+
+    @mock.patch("vunit.ui.LOGGER", autospec=True)
+    def test_simulate_without_simulator_fails(self, logger):
+        with set_env():
+            ui = self._create_ui_real_sim()
+            self._run_main(ui, 1)
+            self.assertEqual(len(logger.error.mock_calls), 1)
+            self.assertTrue("No available simulator detected" in str(logger.error.mock_calls))
 
     def test_set_sim_option_before_adding_file(self):
         """
@@ -688,19 +813,22 @@ endmodule
 
     def _create_ui(self, *args):
         """ Create an instance of the VUnit public interface class """
-        with mock.patch("vunit.ui.SIMULATOR_FACTORY",
-                        new=MockSimulatorFactory()):
-            ui = VUnit.from_argv(argv=["--output-path=%s" % self._output_path,
-                                       "--clean"] + list(args),
-                                 compile_builtins=False)
-        return ui
+        with mock.patch("vunit.ui.SIMULATOR_FACTORY.select_simulator",
+                        new=lambda: MockSimulator):
+            return self._create_ui_real_sim(*args)
 
-    def _run_main(self, ui, code=0):
+    def _create_ui_real_sim(self, *args):
+        """ Create an instance of the VUnit public interface class """
+        return VUnit.from_argv(argv=["--output-path=%s" % self._output_path,
+                                     "--clean"] + list(args),
+                               compile_builtins=False)
+
+    def _run_main(self, ui, code=0, post_run=None):
         """
         Run ui.main and expect exit code
         """
         try:
-            ui.main()
+            ui.main(post_run=post_run)
         except SystemExit as exc:
             self.assertEqual(exc.code, code)
 
@@ -737,6 +865,14 @@ end architecture;
         """
         with open(file_name, "w") as fptr:
             fptr.write(contents)
+
+    @staticmethod
+    def create_csv_file(file_name, contents=''):
+        """
+        Create a temporary csv description file with given contents
+        """
+        with open(file_name, "w") as fprt:
+            fprt.write(contents)
 
     def assertRaisesRegex(self, *args, **kwargs):  # pylint: disable=invalid-name,arguments-differ
         """
@@ -783,30 +919,25 @@ class ParentalControl(object):
         return self._fword_pattern.sub(r'[BEEP]', code)
 
 
-class MockSimulatorFactory(object):
+class MockSimulator(SimulatorInterface):
     """
-    Mock a simulator factory
+    Mock of a SimulatorInterface
     """
-    simulator_name = "mocksim"
-
-    def __init__(self):
-        self.mocksim = mock.Mock(spec=SimulatorInterface)
-
-        def compile_side_effect(*args, **kwargs):
-            return True
-
-        def simulate_side_effect(*args, **kwargs):
-            return True
-
-        self.mocksim.compile_project.side_effect = compile_side_effect
-        self.mocksim.simulate.side_effect = simulate_side_effect
+    name = "mock"
 
     @staticmethod
-    def package_users_depend_on_bodies():
-        return False
+    def from_args(output_path, args):  # pylint: disable=unused-argument
+        return MockSimulator(output_path="", gui=False)
 
-    def create(self, args, simulator_output_path):  # pylint: disable=unused-argument
-        return self.mocksim
+    package_users_depend_on_bodies = False
+
+    @staticmethod
+    def compile_source_file_command(source_file):  # pylint: disable=unused-argument
+        return True
+
+    @staticmethod
+    def simulate(output_path, test_suite_name, config, elaborate_only):  # pylint: disable=unused-argument
+        return True
 
 
 def names(lst):

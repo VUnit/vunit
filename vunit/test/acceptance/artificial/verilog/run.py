@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2018, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 from os.path import join, dirname
 from vunit.verilog import VUnit
@@ -47,6 +47,7 @@ def configure_tb_same_sim_all_pass(self):
             return fptr.read() == "Test 3 was here"
     module = ui.library("lib").module("tb_same_sim_all_pass")
     module.add_config('cfg', post_check=post_check)
+
 
 configure_tb_with_parameter_config(ui)
 configure_tb_same_sim_all_pass(ui)

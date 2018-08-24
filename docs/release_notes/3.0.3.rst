@@ -1,0 +1,6 @@
+- Add ``check_equal`` for real with ``max_diff``
+- Improve ``com`` library performance
+- Added support for message forwarding
+- Improve axi stream verification components
+- Add wishbone verification component
+- Protect against unexpected mutation of compile and sim options

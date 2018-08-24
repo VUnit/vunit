@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2017-2018, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -18,16 +18,17 @@ entity axi_stream_master is
   generic (
     master : axi_stream_master_t);
   port (
-    aclk : in std_logic;
-    tvalid : out std_logic := '0';
-    tready : in std_logic;
-    tdata : out std_logic_vector(data_length(master)-1 downto 0) := (others => '0');
-    tlast : out std_logic := '0';
-    tkeep : out std_logic_vector(data_length(master)/8-1 downto 0) := (others => '0');
-    tstrb : out std_logic_vector(data_length(master)/8-1 downto 0) := (others => '0');
-    tid : out std_logic_vector(id_length(master)-1 downto 0) := (others => '0');
-    tdest : out std_logic_vector(dest_length(master)-1 downto 0) := (others => '0');
-    tuser : out std_logic_vector(user_length(master)-1 downto 0) := (others => '0'));
+    aclk   : in std_logic;
+    tvalid : out std_logic                                          := '0';
+    tready : in std_logic                                           := '1';
+    tdata  : out std_logic_vector(data_length(master)-1 downto 0)   := (others => '0');
+    tlast  : out std_logic                                          := '0';
+    tkeep  : out std_logic_vector(data_length(master)/8-1 downto 0) := (others => '0');
+    tstrb  : out std_logic_vector(data_length(master)/8-1 downto 0) := (others => '0');
+    tid    : out std_logic_vector(id_length(master)-1 downto 0)     := (others => '0');
+    tdest  : out std_logic_vector(dest_length(master)-1 downto 0)   := (others => '0');
+    tuser  : out std_logic_vector(user_length(master)-1 downto 0)   := (others => '0')
+    );
 end entity;
 
 architecture a of axi_stream_master is
@@ -70,5 +71,43 @@ begin
       unexpected_msg_type(msg_type);
     end if;
   end process;
+
+  axi_stream_monitor_generate : if master.p_monitor /= null_axi_stream_monitor generate
+    axi_stream_monitor_inst : entity work.axi_stream_monitor
+      generic map(
+        monitor => master.p_monitor
+      )
+      port map(
+        aclk   => aclk,
+        tvalid => tvalid,
+        tready => tready,
+        tdata  => tdata,
+        tlast  => tlast,
+        tkeep  => tkeep,
+        tstrb  => tstrb,
+        tid    => tid,
+        tdest  => tdest,
+        tuser  => tuser
+      );
+  end generate axi_stream_monitor_generate;
+
+  axi_stream_protocol_checker_generate : if master.p_protocol_checker /= null_axi_stream_protocol_checker generate
+    axi_stream_protocol_checker_inst: entity work.axi_stream_protocol_checker
+      generic map (
+        protocol_checker => master.p_protocol_checker)
+      port map (
+        aclk     => aclk,
+        areset_n => open,
+        tvalid   => tvalid,
+        tready   => tready,
+        tdata    => tdata,
+        tlast    => tlast,
+        tkeep    => tkeep,
+        tstrb    => tstrb,
+        tid      => tid,
+        tdest    => tdest,
+        tuser    => tuser
+      );
+  end generate axi_stream_protocol_checker_generate;
 
 end architecture;

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2018, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 # pylint: disable=unused-wildcard-import
 # pylint: disable=wildcard-import
@@ -154,8 +154,10 @@ class VerilogPreprocessor(object):
             """
             if if_token.value in ("ifdef", "elsif"):
                 return arg.value in defines
-            elif if_token.value == "ifndef":
+
+            if if_token.value == "ifndef":
                 return arg.value not in defines
+
             raise ValueError("Invalid if token %r" % if_token.value)
 
         result = []
@@ -399,10 +401,10 @@ class Macro(object):
                 for tok in tokens]
 
     def __eq__(self, other):
-        return ((self.name == other.name) and
-                (self.tokens == other.tokens) and
-                (self.args == other.args) and
-                (self.defaults == other.defaults))
+        return ((self.name == other.name)
+                and (self.tokens == other.tokens)
+                and (self.args == other.args)
+                and (self.defaults == other.defaults))
 
     def expand_from_stream(self, token, stream, previous=None):
         """
@@ -468,10 +470,10 @@ class Macro(object):
             elif token.kind is RPAR:
                 par_count += -1
 
-            value_ok = (token.kind == COMMA and
-                        bracket_count == 0 and
-                        brace_count == 0 and
-                        par_count == 0)
+            value_ok = (token.kind == COMMA
+                        and bracket_count == 0
+                        and brace_count == 0
+                        and par_count == 0)
 
             if value_ok:
                 values.append(value)

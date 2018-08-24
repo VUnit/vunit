@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2017, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 -- Model of a memory address space
 
@@ -110,16 +110,25 @@ package memory_pkg is
   impure function get_expected_byte(memory : memory_t;
                                     address : natural) return byte_t;
 
-
   -- Check that all expected bytes within address range was written
   -- with correct value
   procedure check_expected_was_written(memory : memory_t;
                                        address : natural;
                                        num_bytes : natural);
 
-  -- Check that all expected bytes with the entire memory was written
+  -- Returns true if all expected bytes within address range was written
+  -- with correct value
+  impure function expected_was_written(memory    : memory_t;
+                                       address   : natural;
+                                       num_bytes : natural) return boolean;
+
+  -- Check that all expected bytes within the entire memory was written
   -- with correct value
   procedure check_expected_was_written(memory : memory_t);
+
+  -- Returns true if all expected bytes within the entire memory was written
+  -- with correct value
+  impure function expected_was_written(memory : memory_t) return boolean;
 
   -----------------------------------------------------
   -- Memory buffer allocation
@@ -152,6 +161,9 @@ package memory_pkg is
   -- Check that all expected bytes was written with correct value in buffer
   procedure check_expected_was_written(buf : buffer_t);
 
+  -- Returns true if all expected bytes was written with correct value in buffer
+  impure function expected_was_written(buf : buffer_t) return boolean;
+
   -- Return a string describing the address with name of allocation and
   -- permission settings
   impure function describe_address(memory : memory_t;
@@ -164,5 +176,20 @@ package memory_pkg is
 
                                   -- Override logger, null_logger means no override
                                   logger : logger_t := null_logger) return memory_t;
+
+  -- Only perform checks related to address
+  -- Check for access permissions and address out of range
+  impure function check_address(memory : memory_t; address : natural;
+                                reading : boolean;
+                                check_permissions : boolean := false) return boolean;
+
+  -- Only perform checks related to write_byte data without performing the write
+  -- Does not check address
+  impure function check_write_data(memory : memory_t;
+                                   address : natural;
+                                   byte : byte_t) return boolean;
+
+  -- Perform write of one byte without running any address or data checks
+  procedure write_byte_unchecked(memory : memory_t; address : natural; byte : byte_t);
 
 end package;

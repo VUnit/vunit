@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2016-2018, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -15,6 +15,7 @@ use vunit_lib.checker_pkg.all;
 use vunit_lib.check_pkg.all;
 use vunit_lib.run_types_pkg.all;
 use vunit_lib.run_pkg.all;
+use vunit_lib.runner_pkg.all;
 use work.test_support.all;
 use ieee.numeric_std.all;
 entity tb_check is
@@ -36,7 +37,7 @@ architecture test_fixture of tb_check is
 begin
   clock: process is
   begin
-    while runner.phase < test_runner_exit loop
+    while get_phase(runner_state) < test_runner_exit loop
       clk <= '1', '0' after 5 ns;
       wait for 10 ns;
     end loop;

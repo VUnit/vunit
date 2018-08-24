@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2017, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Generic simulator interface
@@ -62,7 +62,10 @@ class SimulatorInterface(object):
         """
         Return a list of all executables found in PATH
         """
-        path = os.environ['PATH']
+        path = os.environ.get('PATH', None)
+        if path is None:
+            return []
+
         paths = path.split(os.pathsep)
         _, ext = os.path.splitext(executable)
 
@@ -95,7 +98,6 @@ class SimulatorInterface(object):
         """
         Find simulator toolchain prefix from PATH environment variable
         """
-        return None
 
     @classmethod
     def is_available(cls):
@@ -119,8 +121,8 @@ class SimulatorInterface(object):
                      for name in executables]
 
         for path0 in all_paths[0]:
-            if all([path0 in paths for paths in all_paths] +
-                   [constraint(path0) for constraint in constraints]):
+            if all([path0 in paths for paths in all_paths]
+                   + [constraint(path0) for constraint in constraints]):
                 return path0
         return None
 
@@ -129,7 +131,6 @@ class SimulatorInterface(object):
         """
         Returns simulator name when OSVVM coverage API is supported, None otherwise.
         """
-        return None
 
     @classmethod
     def supports_vhdl_package_generics(cls):
@@ -254,9 +255,8 @@ class SimulatorInterface(object):
     @staticmethod
     def get_env():
         """
-        Allows inheriting classes to overload this to modify environment variables
+        Allows inheriting classes to overload this to modify environment variables. Return None for default environment
         """
-        return None  # Default environment
 
 
 def isfile(file_name):

@@ -5,7 +5,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2017-2018, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.com_types_pkg.all;
 use work.com_support_pkg.all;
@@ -653,7 +653,7 @@ package body com_messenger_pkg is
     if copy_msg then
       data := new_queue(queue_pool);
       for i in 0 to length(msg.data) - 1 loop
-        push(data, get(msg.data.data, 1+i));
+        unsafe_push(data, get(msg.data.data, 1+i));
       end loop;
     end if;
 
@@ -704,6 +704,7 @@ package body com_messenger_pkg is
     check(msg.data /= null_queue, null_message_error);
 
     msg.id     := next_message_id;
+    next_message_id := next_message_id + 1;
     msg.status := ok;
     msg.sender := sender;
 

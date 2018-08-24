@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2017-2018, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -48,7 +48,8 @@ architecture a of tb_axi_lite_master is
   signal bready  : std_logic;
   signal bresp   : std_logic_vector(1 downto 0);
 
-  constant bus_handle : bus_master_t := new_bus(data_length => wdata'length, address_length => awaddr'length);
+  constant bus_handle : bus_master_t := new_bus(data_length => wdata'length,
+                                                address_length => awaddr'length);
 
   signal start, done : boolean := false;
 begin
@@ -63,7 +64,11 @@ begin
     wait for 0 ns;
 
     if run("Test single write") then
+      mock(get_logger(bus_handle), debug);
       write_bus(net, bus_handle, x"01234567", x"1122");
+      wait_until_idle(net, bus_handle);
+      check_only_log(get_logger(bus_handle), "Wrote 0x1122 to address 0x01234567", debug);
+      unmock(get_logger(bus_handle));
 
     elsif run("Test single write with byte enable") then
       write_bus(net, bus_handle, x"01234567", x"1122", byte_enable => "10");
@@ -72,8 +77,11 @@ begin
       write_bus(net, bus_handle, x"01234567", x"1122");
 
     elsif run("Test single read") then
+      mock(get_logger(bus_handle), debug);
       read_bus(net, bus_handle, x"01234567", tmp);
       check_equal(tmp, std_logic_vector'(x"5566"), "read data");
+      check_only_log(get_logger(bus_handle), "Read 0x5566 from address 0x01234567", debug);
+      unmock(get_logger(bus_handle));
 
     elsif run("Test read not okay") then
       read_bus(net, bus_handle, x"01234567", tmp);
@@ -156,7 +164,7 @@ begin
 
       bvalid <= '1';
       bresp <= axi_resp_slverr;
-      mock(bus_logger);
+      mock(bus_logger, failure);
       wait until (bready and bvalid) = '1' and rising_edge(clk);
       bvalid <= '0';
       wait until mock_queue_length > 0 for 0 ns;
@@ -187,7 +195,7 @@ begin
       rvalid <= '1';
       rresp <= axi_resp_decerr;
       rdata <= x"5566";
-      mock(bus_logger);
+      mock(bus_logger, failure);
       wait until (rready and rvalid) = '1' and rising_edge(clk);
       rvalid <= '0';
       wait until mock_queue_length > 0 for 0 ns;

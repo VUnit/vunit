@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at http://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2015-2018, Lars Asplund lars.anders.asplund@gmail.com
+// Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 package vunit_pkg;
 
@@ -133,6 +133,7 @@ class test_runner;
    endfunction
 
    function void cleanup();
+      $fwrite(trace_fd, "test_suite_done\n");
       exit_without_errors = 1;
       $stop(0);
    endfunction
@@ -153,9 +154,15 @@ class test_runner;
                      break;
                   end
                end
-               if (!found) begin
-                  $error("Found no \"%s\" test case", test_cases_to_run[j]);
+
+               if (test_cases_found.size() == 0 && test_cases_to_run[0] == "") begin
+                  // A test suite without explicit test cases
                   cleanup();
+                  return 0;
+               end
+               else if (!found) begin
+                  $error("Found no \"%s\" test case", test_cases_to_run[j]);
+                  $stop(1);
                   return 0;
                end
             end
@@ -170,7 +177,6 @@ class test_runner;
             phase = test_suite_cleanup;
          end
       end else if (phase == test_suite_cleanup) begin
-         $fwrite(trace_fd, "test_suite_done\n");
          cleanup();
          return 0;
       end else begin

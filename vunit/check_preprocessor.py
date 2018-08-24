@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2017, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Preprocessing of check functions
@@ -37,9 +37,9 @@ class CheckPreprocessor(object):
             relation, offset_to_point_before_closing_paranthesis = self._extract_relation(code, match)
             if relation:
                 context_msg_parameter = ', context_msg => %s' % relation.make_context_msg()
-                code = (code[:match.end('parameters') + offset_to_point_before_closing_paranthesis] +
-                        context_msg_parameter +
-                        code[match.end('parameters') + offset_to_point_before_closing_paranthesis:])
+                code = (code[:match.end('parameters') + offset_to_point_before_closing_paranthesis]
+                        + context_msg_parameter
+                        + code[match.end('parameters') + offset_to_point_before_closing_paranthesis:])
 
         return code
 

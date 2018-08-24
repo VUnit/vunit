@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2016-2018, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 A persistent TCL shell to avoid startup overhead in TCL-based simulators
@@ -50,7 +50,7 @@ class PersistentTclShell(object):
         except Process.NonZeroExitCode:
             # Print output if background vsim process startup failed
             LOGGER.error("Failed to start re-usable background process")
-            print(consumer.output)
+            LOGGER.error(consumer.output)
             raise
         return process
 

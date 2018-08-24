@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2018, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 A general tokenizer
@@ -199,7 +199,7 @@ def describe_location(location, first=True):
     for lineno, line in enumerate(contents.splitlines()):
         lstart = count
         lend = lstart + len(line)
-        if lstart <= start and start <= lend:
+        if lstart <= start <= lend:
             retval += "%s %s line %i:\n" % (prefix, simplify_path(file_name), lineno + 1)
             retval += line + "\n"
             retval += (" " * (start - lstart)) + ("~" * (min(lend - 1, end) - start + 1))

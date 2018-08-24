@@ -2,14 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2017, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Contains Configuration class which contains configuration of a test run
 """
 
 import logging
+import inspect
 from os.path import dirname
+from copy import copy
 from vunit.simulator_factory import SIMULATOR_FACTORY
 
 
@@ -98,7 +100,7 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         Set sim option
         """
         SIMULATOR_FACTORY.check_sim_option(name, value)
-        self.sim_options[name] = value
+        self.sim_options[name] = copy(value)
 
     @property
     def vhdl_assert_stop_level(self):
@@ -111,6 +113,44 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
             level = "error"
 
         return level
+
+    def call_pre_config(self, output_path, simulator_output_path):
+        """
+        Call pre_config if available. Setting optional output_path
+        """
+        if self.pre_config is None:
+            return True
+
+        args = inspect.getargspec(self.pre_config).args  # pylint: disable=deprecated-method
+
+        kwargs = {"output_path": output_path,
+                  "simulator_output_path": simulator_output_path}
+
+        for argname in list(kwargs.keys()):
+            if argname not in args:
+                del kwargs[argname]
+
+        return self.pre_config(**kwargs) is True
+
+    def call_post_check(self, output_path, read_output):
+        """
+        Call post_check if available. Setting optional output_path
+        """
+        if self.post_check is None:
+            return True
+
+        args = inspect.getargspec(self.post_check).args  # pylint: disable=deprecated-method
+
+        kwargs = {"output_path": lambda: output_path,
+                  "output": read_output}
+
+        for argname, provider in list(kwargs.items()):
+            if argname not in args:
+                del kwargs[argname]
+            else:
+                kwargs[argname] = provider()
+
+        return self.post_check(**kwargs) is True
 
 
 class ConfigurationVisitor(object):

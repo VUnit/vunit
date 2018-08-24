@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2018, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 from os.path import join, dirname
 from string import Template
@@ -301,16 +301,16 @@ def dual_format(base_type, got_or_expected):
         expected_or_got = 'got'
 
     if base_type in ['unsigned', 'signed', 'std_logic_vector']:
-        return ('to_nibble_string(%s) & " (" & ' % got_or_expected +
-                "to_integer_string(%s) & " % got_or_expected + '")"')
+        return ('to_nibble_string(%s) & " (" & ' % got_or_expected
+                + "to_integer_string(%s) & " % got_or_expected + '")"')
     elif base_type == 'integer':
-        return ('to_string(%s) & " (" & ' % got_or_expected +
-                "to_nibble_string(to_sufficient_signed(%s, %s'length)) & " % (got_or_expected, expected_or_got) +
-                '")"')
+        return ('to_string(%s) & " (" & ' % got_or_expected
+                + "to_nibble_string(to_sufficient_signed(%s, %s'length)) & " % (got_or_expected, expected_or_got)
+                + '")"')
     else:
-        return ('to_string(%s) & " (" & ' % got_or_expected +
-                "to_nibble_string(to_sufficient_unsigned(%s, %s'length)) & " % (got_or_expected, expected_or_got) +
-                '")"')
+        return ('to_string(%s) & " (" & ' % got_or_expected
+                + "to_nibble_string(to_sufficient_unsigned(%s, %s'length)) & " % (got_or_expected, expected_or_got)
+                + '")"')
 
 
 def generate_impl():
@@ -335,7 +335,7 @@ def generate_test():
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2015-2018, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -404,6 +404,7 @@ def main():
 
     with open(join(dirname(__file__), "..", "test", "tb_check_match.vhd"), "wb") as fptr:
         fptr.write(generate_test().encode())
+
 
 if __name__ == "__main__":
     main()

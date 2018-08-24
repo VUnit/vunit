@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2017, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 use std.textio.all;
 
@@ -146,6 +146,7 @@ package body ansi_pkg is
     end loop;
 
     assert false report "incomplete color escape did not end with 'm'";
+    return msg;
   end;
 
   impure function strip_color(msg : string) return string is

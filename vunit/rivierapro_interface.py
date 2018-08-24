@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2017, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Interface towards Aldec Riviera Pro
@@ -106,21 +106,29 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
 
     def add_simulator_specific(self, project):
         """
-        Add coverage flags
+        Add builtin (global) libraries and coverage flags
         """
+        built_in_libraries = self._get_mapped_libraries(self._builtin_library_cfg)
+
+        for library_name in built_in_libraries:
+            # A user might shadow a built in library with their own version
+            if not project.has_library(library_name):
+                project.add_builtin_library(library_name)
+
         if self._coverage is None:
             return
 
         # Add coverage options
         for source_file in project.get_source_files_in_order():
-            source_file.add_compile_option("rivierapro.vcom_flags", ['-coverage', self._coverage])
-            source_file.add_compile_option("rivierapro.vlog_flags", ['-coverage', self._coverage])
+            if not source_file.compile_options.get("disable_coverage", False):
+                source_file.add_compile_option("rivierapro.vcom_flags", ['-coverage', self._coverage])
+                source_file.add_compile_option("rivierapro.vlog_flags", ['-coverage', self._coverage])
 
     def setup_library_mapping(self, project):
         """
         Setup library mapping
         """
-        mapped_libraries = self._get_mapped_libraries()
+        mapped_libraries = self._get_mapped_libraries(self._sim_cfg_file_name)
         for library in project.get_libraries():
             self._libraries.append(library)
             self.create_library(library.name, library.directory, mapped_libraries)
@@ -131,7 +139,8 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         if source_file.is_vhdl:
             return self.compile_vhdl_file_command(source_file)
-        elif source_file.is_any_verilog:
+
+        if source_file.is_any_verilog:
             return self.compile_verilog_file_command(source_file)
 
         LOGGER.error("Unknown file type: %s", source_file.file_type)
@@ -141,9 +150,9 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         Returns the command to compile a VHDL file
         """
-        return ([join(self._prefix, 'vcom'), '-quiet', '-j', dirname(self._sim_cfg_file_name)] +
-                source_file.compile_options.get("rivierapro.vcom_flags", []) +
-                ['-' + source_file.get_vhdl_standard(), '-work', source_file.library.name, source_file.name])
+        return ([join(self._prefix, 'vcom'), '-quiet', '-j', dirname(self._sim_cfg_file_name)]
+                + source_file.compile_options.get("rivierapro.vcom_flags", [])
+                + ['-' + source_file.get_vhdl_standard(), '-work', source_file.library.name, source_file.name])
 
     def compile_verilog_file_command(self, source_file):
         """
@@ -193,25 +202,30 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
             return
 
         with open(self._sim_cfg_file_name, "w") as ofile:
-            ofile.write('$INCLUDE = "%s"\n' % join(self._prefix, "..", "vlib", "library.cfg"))
+            ofile.write('$INCLUDE = "%s"\n' % self._builtin_library_cfg)
 
-    _library_re = re.compile(r'([a-zA-Z_0-9]+)\s=\s"(.*)"')
+    @property
+    def _builtin_library_cfg(self):
+        return join(self._prefix, "..", "vlib", "library.cfg")
 
-    def _get_mapped_libraries(self):
+    _library_re = re.compile(r'([a-zA-Z_0-9]+)\s=\s(.*)')
+
+    def _get_mapped_libraries(self, library_cfg_file):
         """
-        Get mapped libraries from library.cfg file
+        Get mapped libraries by running vlist on the working directory
         """
-        with open(self._sim_cfg_file_name, "r") as fptr:
-            text = fptr.read()
+        lines = []
+        proc = Process([join(self._prefix, 'vlist')], cwd=dirname(library_cfg_file))
+        proc.consume_output(callback=lines.append)
 
         libraries = {}
-        for line in text.splitlines():
+        for line in lines:
             match = self._library_re.match(line)
             if match is None:
                 continue
             key = match.group(1)
             value = match.group(2)
-            libraries[key] = abspath(join(dirname(self._sim_cfg_file_name), dirname(value)))
+            libraries[key] = abspath(join(dirname(library_cfg_file), dirname(value)))
         return libraries
 
     def _create_load_function(self,
@@ -263,24 +277,17 @@ proc vunit_load {{}} {{
     }}]
 
     if {{${{vsim_failed}}}} {{
-        return 1
+        return true
     }}
 
     if {{[_vunit_source_init_files_after_load]}} {{
-        return 1
-    }}
-
-    set no_vhdl_test_runner_exit [catch {{examine /vunit_lib.run_pkg/runner.exit_without_errors}}]
-    set no_verilog_test_runner_exit [catch {{examine /\\\\package vunit_lib.vunit_pkg\\\\/__runner__}}]
-    if {{${{no_vhdl_test_runner_exit}} && ${{no_verilog_test_runner_exit}}}}  {{
-        echo {{Error: No vunit test runner package used}}
-        return 1
+        return true
     }}
 
     vhdlassert.break {break_level}
     vhdlassert.break -builtin {break_level}
 
-    return 0
+    return false
 }}
 """.format(vsim_flags=" ".join(vsim_flags),
            break_level=config.vhdl_assert_stop_level)
@@ -307,37 +314,21 @@ proc vunit_load {{}} {{
         Create the vunit_run function to run the test bench
         """
         return """
-proc vunit_run {} {
+proc _vunit_run_failure {} {
+    catch {
+        # tb command can fail when error comes from pli
+        echo "Stack trace result from 'bt' command"
+        bt
+    }
+}
+
+proc _vunit_run {} {
     proc on_break {} {
         resume
     }
     onbreak {on_break}
 
-    set has_vhdl_runner [expr ![catch {examine /vunit_lib.run_pkg/runner}]]
-    set has_verilog_runner [expr ![catch {examine /\\\\package vunit_lib.vunit_pkg\\\\/__runner__}]]
-
-    if {${has_vhdl_runner}} {
-        set status_boolean "/vunit_lib.run_pkg/runner.exit_without_errors"
-        set true_value true
-    } elseif {${has_verilog_runner}} {
-        set status_boolean "/\\\\package vunit_lib.vunit_pkg\\\\/__runner__.exit_without_errors"
-        set true_value 1
-    } else {
-        echo "No finish mechanism detected"
-        return 1;
-    }
-
     run -all
-    set failed [expr [examine ${status_boolean}]!=${true_value}]
-    if {$failed} {
-        catch {
-            # tb command can fail when error comes from pli
-            echo ""
-            echo "Stack trace result from 'bt' command"
-            bt
-        }
-    }
-    return $failed
 }
 
 proc _vunit_sim_restart {} {
@@ -367,7 +358,12 @@ proc _vunit_sim_restart {} {
 
         merge_command += " -o {%s}" % merged_coverage_file.replace('\\', '/')
 
-        vcover_cmd = [join(self._prefix, 'vsim'), '-c', '-do', '%s; quit;' % merge_command]
+        merge_script_name = join(self._output_path, "acdb_merge.tcl")
+        with open(merge_script_name, "w") as fptr:
+            fptr.write(merge_command + "\n")
+
+        vcover_cmd = [join(self._prefix, 'vsim'), '-c', '-do',
+                      'source %s; quit;' % merge_script_name.replace('\\', '/')]
 
         print("Merging coverage files into %s..." % merged_coverage_file)
         vcover_merge_process = Process(vcover_cmd,

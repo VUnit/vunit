@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2017-2018, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 
 library ieee;
@@ -11,6 +11,7 @@ use ieee.numeric_std.all;
 
 use work.queue_pkg.all;
 use work.bus_master_pkg.all;
+use work.sync_pkg.all;
 context work.com_context;
 
 entity ram_master is
@@ -57,6 +58,12 @@ begin
       we <= pop_std_ulogic_vector(request_msg);
       wait until en = '1' and rising_edge(clk);
       en <= '0';
+
+    elsif msg_type = wait_until_idle_msg then
+      while not is_empty(request_queue) loop
+        wait until rising_edge(clk);
+      end loop;
+      handle_wait_until_idle(net, msg_type, request_msg);
     else
       unexpected_msg_type(msg_type);
     end if;

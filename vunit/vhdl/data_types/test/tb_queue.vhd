@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2017-2018, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -13,7 +13,9 @@ use ieee.math_complex.all;
 library vunit_lib;
 use vunit_lib.check_pkg.all;
 use vunit_lib.run_pkg.all;
-
+use vunit_lib.integer_vector_ptr_pkg.all;
+use vunit_lib.string_ptr_pkg.all;
+use vunit_lib.integer_array_pkg.all;
 use work.queue_pkg.all;
 
 entity tb_queue is
@@ -31,6 +33,9 @@ begin
   main : process
     variable queue, another_queue : queue_t;
     variable bv : bit_vector(0 to 5);
+    variable integer_vector_ptr : integer_vector_ptr_t;
+    variable string_ptr : string_ptr_t;
+    variable integer_array, integer_array_copy: integer_array_t;
   begin
     test_runner_setup(runner, runner_cfg);
     if run("Test default queue is null") then
@@ -52,12 +57,12 @@ begin
       check_equal(length(queue), 0, "Empty queue length");
 
       push_integer(queue, 11);
-      check_equal(length(queue), 4, "Length");
+      check_equal(length(queue), 5, "Length");
       push_integer(queue, 22);
-      check_equal(length(queue), 8, "Length");
+      check_equal(length(queue), 10, "Length");
 
       check_equal(pop_integer(queue), 11, "data");
-      check_equal(length(queue), 4, "Length");
+      check_equal(length(queue), 5, "Length");
       check_equal(pop_integer(queue), 22, "data");
       check_equal(length(queue), 0, "Length");
 
@@ -66,31 +71,45 @@ begin
       push_integer(queue, integer'high);
       check_equal(pop_integer(queue), integer'high, "data");
 
+    elsif run("Test push and pop byte") then
+      queue := new_queue;
+      push_byte(queue, 11);
+      push_byte(queue, 22);
+      check_equal(pop_byte(queue), 11, "data");
+      check_equal(pop_byte(queue), 22, "data");
+
+    elsif run("Test push and pop boolean") then
+      queue := new_queue;
+      push_boolean(queue, false);
+      push_boolean(queue, true);
+      check_false(pop_boolean(queue), "data");
+      check_true(pop_boolean(queue), "data");
+
     elsif run("Test push and pop character") then
       queue := new_queue;
       assert queue /= null_queue report "Expected non null queue";
       check_equal(length(queue), 0, "Empty queue length");
 
       push_character(queue, '1');
-      check_equal(length(queue), 1, "Length");
-      push_character(queue, '2');
       check_equal(length(queue), 2, "Length");
+      push_character(queue, '2');
+      check_equal(length(queue), 4, "Length");
 
       assert pop_character(queue) = '1';
-      check_equal(length(queue), 1, "Length");
+      check_equal(length(queue), 2, "Length");
       assert pop_character(queue) = '2';
       check_equal(length(queue), 0, "Length");
 
     elsif run("Test flush queue") then
       queue := new_queue;
       push_character(queue, '1');
-      check_equal(length(queue), 1, "Length");
-      push_character(queue, '2');
       check_equal(length(queue), 2, "Length");
+      push_character(queue, '2');
+      check_equal(length(queue), 4, "Length");
       flush(queue);
       check_equal(length(queue), 0, "Length");
 
-    elsif run("Test push and pop queue") then
+    elsif run("Test push and pop queue_t") then
       queue := new_queue;
       another_queue := new_queue;
       push(another_queue, 22);
@@ -277,6 +296,26 @@ begin
       assert pop_time(queue) = -1 fs;
       assert pop_time(queue) = -1 hr;
       assert pop_time(queue) = -1 hr - 1 fs;
+
+    elsif run("Test push and pop integer_vector_ptr_t") then
+      queue := new_queue;
+      integer_vector_ptr := new_integer_vector_ptr;
+      push_integer_vector_ptr_ref(queue, integer_vector_ptr);
+      assert pop_integer_vector_ptr_ref(queue) = integer_vector_ptr;
+
+    elsif run("Test push and pop string_ptr_t") then
+      queue := new_queue;
+      string_ptr := new_string_ptr;
+      push_string_ptr_ref(queue, string_ptr);
+      assert pop_string_ptr_ref(queue) = string_ptr;
+
+    elsif run("Test push and pop integer_array_t") then
+      queue := new_queue;
+      integer_array := new_3d(1, 2, 3, 4);
+      integer_array_copy := integer_array;
+      push_integer_array_t_ref(queue, integer_array);
+      assert integer_array = null_integer_array;
+      assert pop_integer_array_t_ref(queue) = integer_array_copy;
 
     elsif run("Test codecs") then
       queue := new_queue;

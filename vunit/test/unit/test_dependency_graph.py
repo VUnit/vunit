@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2016, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test the DependencyGraph
@@ -152,6 +152,3 @@ class TestDependencyGraph(unittest.TestCase):
             graph.add_node(node)
         for dep in dependencies:
             graph.add_dependency(dep[0], dep[1])
-
-if __name__ == '__main__':
-    unittest.main()

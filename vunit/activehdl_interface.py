@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2017, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Interface towards Aldec Active HDL
@@ -16,6 +16,8 @@ import os
 import re
 import logging
 from vunit.ostools import Process, write_file, file_exists, renew_path
+from vunit.test_suites import get_result_file_name
+from vunit.vsim_simulator_mixin import get_is_test_suite_done_tcl
 from vunit.simulator_interface import (SimulatorInterface,
                                        ListOfStringOption,
                                        StringOption)
@@ -93,7 +95,8 @@ class ActiveHDLInterface(SimulatorInterface):
         """
         if source_file.is_vhdl:
             return self.compile_vhdl_file_command(source_file)
-        elif source_file.is_any_verilog:
+
+        if source_file.is_any_verilog:
             return self.compile_verilog_file_command(source_file)
 
         LOGGER.error("Unknown file type: %s", source_file.file_type)
@@ -103,9 +106,9 @@ class ActiveHDLInterface(SimulatorInterface):
         """
         Returns the command to compile a VHDL file
         """
-        return ([join(self._prefix, 'vcom'), '-quiet', '-j', dirname(self._library_cfg)] +
-                source_file.compile_options.get("activehdl.vcom_flags", []) +
-                ['-' + source_file.get_vhdl_standard(), '-work', source_file.library.name, source_file.name])
+        return ([join(self._prefix, 'vcom'), '-quiet', '-j', dirname(self._library_cfg)]
+                + source_file.compile_options.get("activehdl.vcom_flags", [])
+                + ['-' + source_file.get_vhdl_standard(), '-work', source_file.library.name, source_file.name])
 
     def compile_verilog_file_command(self, source_file):
         """
@@ -223,7 +226,7 @@ proc vunit_load {{}} {{
         vsim {vsim_flags}
     }}]
     if {{${{vsim_failed}}}} {{
-        return 1
+        return true
     }}
 
     global breakassertlevel
@@ -232,12 +235,7 @@ proc vunit_load {{}} {{
     global builtinbreakassertlevel
     set builtinbreakassertlevel $breakassertlevel
 
-    set no_vhdl_test_runner_exit [catch {{examine /run_pkg/runner.exit_without_errors}}]
-    if {{${{no_vhdl_test_runner_exit}}}}  {{
-        echo {{Error: No vunit test runner package used}}
-        return 1
-    }}
-    return 0
+    return false
 }}
 """.format(set_generic_str=set_generic_str,
            vsim_flags=" ".join(vsim_flags),
@@ -252,35 +250,26 @@ proc vunit_load {{}} {{
         """
         return """
 proc vunit_run {} {
-    set has_vhdl_runner [expr ![catch {examine /run_pkg/runner}]]
-
-    if {${has_vhdl_runner}} {
-        set status_boolean "/run_pkg/runner.exit_without_errors"
-        set true_value true
-    } else {
-        echo "No finish mechanism detected"
-        return 1;
-    }
-
     run -all
-    set failed [expr [examine ${status_boolean}]!=${true_value}]
-    if {$failed} {
+    if {![is_test_suite_done]} {
         catch {
             # tb command can fail when error comes from pli
             echo ""
             echo "Stack trace result from 'bt' command"
             bt
         }
+        return true;
     }
-    return $failed
+    return false;
 }
 """
 
-    def _create_common_script(self, config):
+    def _create_common_script(self, config, script_path):
         """
         Create tcl script with functions common to interactive and batch modes
         """
         tcl = ""
+        tcl += get_is_test_suite_done_tcl(get_result_file_name(script_path))
         tcl += self._create_load_function(config)
         tcl += self._create_run_function()
         return tcl
@@ -347,19 +336,20 @@ proc vunit_run {} {
         """
         Run a test bench
         """
-        common_file_name = join(output_path, "common.tcl")
-        batch_file_name = join(output_path, "batch.tcl")
-        gui_file_name = join(output_path, "gui.tcl")
+        script_path = join(output_path, self.name)
+        common_file_name = join(script_path, "common.tcl")
+        batch_file_name = join(script_path, "batch.tcl")
+        gui_file_name = join(script_path, "gui.tcl")
 
         write_file(common_file_name,
-                   self._create_common_script(config))
+                   self._create_common_script(config, script_path))
         write_file(gui_file_name,
                    self._create_gui_script(common_file_name, config))
         write_file(batch_file_name,
                    self._create_batch_script(common_file_name, elaborate_only))
 
         if self._gui:
-            gui_path = join(output_path, "gui")
+            gui_path = join(script_path, "gui")
             renew_path(gui_path)
             return self._run_batch_file(gui_file_name, gui=True,
                                         cwd=gui_path)

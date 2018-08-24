@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2017, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 from os.path import join, dirname
 from vunit import VUnit
@@ -50,7 +50,7 @@ def configure_tb_same_sim_all_pass(ui):
 
 def configure_tb_set_generic(ui):
     tb = ui.library("lib").entity("tb_set_generic")
-    is_ghdl = ui._simulator_factory.simulator_name == "ghdl"
+    is_ghdl = ui._simulator_class.name == "ghdl"
     tb.set_generic("is_ghdl", is_ghdl)
     tb.set_generic("true_boolean", True)
     tb.set_generic("false_boolean", False)
@@ -72,6 +72,7 @@ def configure_tb_assert_stop_level(ui):
         for report_level in ["warning", "error", "failure"]:
             test = tb.test("Report %s when VHDL assert stop level = %s" % (report_level, vhdl_assert_stop_level))
             test.set_sim_option("vhdl_assert_stop_level", vhdl_assert_stop_level)
+
 
 configure_tb_with_generic_config(ui)
 configure_tb_same_sim_all_pass(ui)

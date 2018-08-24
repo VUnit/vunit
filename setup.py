@@ -2,32 +2,38 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015-2018, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+PyPI setup script
+"""
+
+import os
+from logging import warning
 from setuptools import setup
 from vunit.about import version, doc
 from vunit.builtins import osvvm_is_installed
-import os
-from logging import warning
+
 
 def find_all_files(directory, endings=None):
     """
     Recursively find all files within directory
     """
     result = []
-    for root, dirnames, filenames in os.walk(directory):
+    for root, _, filenames in os.walk(directory):
         for filename in filenames:
             ending = os.path.splitext(filename)[-1]
             if endings is None or ending in endings:
                 result.append(os.path.join(root, filename))
     return result
 
-data_files = []
-data_files += find_all_files(os.path.join('vunit'), endings=[".tcl"])
-data_files += find_all_files(os.path.join('vunit', 'vhdl'))
-data_files += find_all_files(os.path.join('vunit', 'verilog'),
+
+DATA_FILES = []
+DATA_FILES += find_all_files(os.path.join('vunit'), endings=[".tcl"])
+DATA_FILES += find_all_files(os.path.join('vunit', 'vhdl'))
+DATA_FILES += find_all_files(os.path.join('vunit', 'verilog'),
                              endings=[".v", ".sv", ".svh"])
-data_files = [os.path.relpath(file_name, 'vunit') for file_name in data_files]
+DATA_FILES = [os.path.relpath(file_name, 'vunit') for file_name in DATA_FILES]
 
 setup(
     name='vunit_hdl',
@@ -40,7 +46,7 @@ setup(
               'vunit.test.lint',
               'vunit.test.unit',
               'vunit.test.acceptance'],
-    package_data={'vunit': data_files},
+    package_data={'vunit': DATA_FILES},
     zip_safe=False,
     url='https://github.com/VUnit/vunit',
     classifiers=['Development Status :: 5 - Production/Stable',
@@ -64,7 +70,7 @@ setup(
     long_description=doc())
 
 if not osvvm_is_installed():
-         warning("""
+    warning("""
 Found no OSVVM VHDL files. If you're installing from a Git repository and plan to use VUnit's integration
 of OSVVM you should run
 

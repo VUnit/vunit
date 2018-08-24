@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2017, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Functionality to represent and operate on a HDL code project
@@ -26,7 +26,7 @@ from vunit.parsing.encodings import HDL_FILE_ENCODING
 from vunit.exceptions import CompileError
 from vunit.simulator_factory import SIMULATOR_FACTORY
 from vunit.design_unit import DesignUnit, VHDLDesignUnit, Entity, Module
-import vunit.ostools as ostools
+from vunit import ostools
 LOGGER = logging.getLogger(__name__)
 
 
@@ -53,7 +53,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         self._depend_on_package_body = depend_on_package_body
         self._builtin_libraries = set(["ieee", "std"])
 
-    def _validate_library_name(self, library_name):
+    def _validate_new_library_name(self, library_name):
         """
         Check that the library_name is valid or raise RuntimeError
         """
@@ -61,6 +61,9 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
             LOGGER.error("Cannot add library named work. work is a reference to the current library. "
                          "http://www.sigasi.com/content/work-not-vhdl-library")
             raise RuntimeError("Illegal library name 'work'")
+
+        if library_name in self._libraries:
+            raise ValueError("Library %s already exists" % library_name)
 
         lower_name = library_name.lower()
         if lower_name in self._lower_library_names_dict:
@@ -74,13 +77,12 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         """
         self._builtin_libraries.add(logical_name)
 
-    def add_library(self, logical_name, directory, vhdl_standard='2008', allow_replacement=False, is_external=False):
+    def add_library(self, logical_name, directory, vhdl_standard='2008', is_external=False):
         """
         Add library to project with logical_name located or to be located in directory
-        allow_replacement -- Allow replacing an existing library
         is_external -- Library is assumed to a black-box
         """
-        self._validate_library_name(logical_name)
+        self._validate_new_library_name(logical_name)
 
         if is_external:
             if not exists(directory):
@@ -89,13 +91,8 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
             if not isdir(directory):
                 raise ValueError("External library must be a directory. Got %r" % directory)
 
-        if logical_name not in self._libraries:
-            library = Library(logical_name, directory, vhdl_standard, is_external=is_external)
-            LOGGER.debug('Adding library %s with path %s', logical_name, directory)
-        else:
-            assert allow_replacement
-            library = Library(logical_name, directory, vhdl_standard, is_external=is_external)
-            LOGGER.debug('Replacing library %s with path %s', logical_name, directory)
+        library = Library(logical_name, directory, vhdl_standard, is_external=is_external)
+        LOGGER.debug('Adding library %s with path %s', logical_name, directory)
 
         self._libraries[logical_name] = library
         self._lower_library_names_dict[logical_name.lower()] = library.name
@@ -124,7 +121,6 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 database=self._database,
                 vhdl_standard=library.vhdl_standard if vhdl_standard is None else vhdl_standard,
                 no_parse=no_parse)
-            library.add_vhdl_design_units(source_file.design_units)
         elif file_type in VERILOG_FILE_TYPES:
             source_file = VerilogSourceFile(file_type,
                                             file_name,
@@ -134,13 +130,14 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                                             include_dirs=include_dirs,
                                             defines=defines,
                                             no_parse=no_parse)
-            library.add_verilog_design_units(source_file.design_units)
         else:
             raise ValueError(file_type)
 
-        library.add_source_file(source_file)
-        self._source_files_in_order.append(source_file)
-        return source_file
+        old_source_file = library.add_source_file(source_file)
+        if id(source_file) == id(old_source_file):
+            self._source_files_in_order.append(source_file)
+
+        return old_source_file
 
     def add_manual_dependency(self, source_file, depends_on):
         """
@@ -524,11 +521,25 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
     def add_source_file(self, source_file):
         """
         Add source file to library unless it exists
+
+        returns The source file that has added or the old source file
         """
         if source_file.name in self._source_files:
-            raise RuntimeError("%s already added to library %s" % (
-                source_file.name, self.name))
-        self._source_files[source_file.name] = source_file
+            old_source_file = self._source_files[source_file.name]
+            if old_source_file.content_hash != source_file.content_hash:
+                raise RuntimeError("%s already added to library %s" % (
+                    source_file.name, self.name))
+            else:
+                LOGGER.info("Ignoring duplicate file %s added to library %s due to identical contents",
+                            source_file.name, self.name)
+
+            return old_source_file
+            # Ignore source files already added with identical content hash
+        else:
+            self._source_files[source_file.name] = source_file
+            source_file.add_to_library(self)
+
+            return source_file
 
     def get_source_file(self, file_name):
         """
@@ -691,7 +702,7 @@ class SourceFile(object):
         return self.to_tuple() < other.to_tuple()
 
     def __hash__(self):
-        return hash((self.name, self.library.name))
+        return hash(self.to_tuple())
 
     def __repr__(self):
         return "SourceFile(%s, %s)" % (self.name, self.library.name)
@@ -701,7 +712,7 @@ class SourceFile(object):
         Set compile option
         """
         SIMULATOR_FACTORY.check_compile_option(name, value)
-        self._compile_options[name] = value
+        self._compile_options[name] = copy(value)
 
     def add_compile_option(self, name, value):
         """
@@ -710,7 +721,7 @@ class SourceFile(object):
         SIMULATOR_FACTORY.check_compile_option(name, value)
 
         if name not in self._compile_options:
-            self._compile_options[name] = value
+            self._compile_options[name] = copy(value)
         else:
             self._compile_options[name] += value
 
@@ -776,10 +787,10 @@ class VerilogSourceFile(SourceFile):
         try:
             design_file = parser.parse(self.name, include_dirs, self.defines)
             for included_file_name in design_file.included_files:
-                self._content_hash = hash_string(self._content_hash +
-                                                 file_content_hash(included_file_name,
-                                                                   encoding=HDL_FILE_ENCODING,
-                                                                   database=database))
+                self._content_hash = hash_string(self._content_hash
+                                                 + file_content_hash(included_file_name,
+                                                                     encoding=HDL_FILE_ENCODING,
+                                                                     database=database))
             for module in design_file.modules:
                 self.design_units.append(Module(module.name, self, module.parameters))
 
@@ -796,10 +807,17 @@ class VerilogSourceFile(SourceFile):
                 self.module_dependencies.append(instance_name)
 
         except KeyboardInterrupt:
-            raise
+            raise KeyboardInterrupt
         except:  # pylint: disable=bare-except
             traceback.print_exc()
             LOGGER.error("Failed to parse %s", self.name)
+
+    def add_to_library(self, library):
+        """
+        Add design units to the library
+        """
+        assert self.library == library
+        library.add_verilog_design_units(self.design_units)
 
 
 class VHDLSourceFile(SourceFile):
@@ -815,8 +833,16 @@ class VHDLSourceFile(SourceFile):
         check_vhdl_standard(vhdl_standard)
 
         if not no_parse:
-            design_file = vhdl_parser.parse(self.name)
-            self._add_design_file(design_file)
+
+            try:
+                design_file = vhdl_parser.parse(self.name)
+            except KeyboardInterrupt:
+                raise KeyboardInterrupt
+            except:  # pylint: disable=bare-except
+                traceback.print_exc()
+                LOGGER.error("Failed to parse %s", self.name)
+            else:
+                self._add_design_file(design_file)
 
         self._content_hash = file_content_hash(self.name,
                                                encoding=HDL_FILE_ENCODING,
@@ -832,15 +858,9 @@ class VHDLSourceFile(SourceFile):
         """
         Parse VHDL code and adding dependencies and design units
         """
-        try:
-            self.design_units = self._find_design_units(design_file)
-            self.dependencies = self._find_dependencies(design_file)
-            self.depending_components = design_file.component_instantiations
-        except KeyboardInterrupt:
-            raise
-        except:  # pylint: disable=bare-except
-            traceback.print_exc()
-            LOGGER.error("Failed to parse %s", self.name)
+        self.design_units = self._find_design_units(design_file)
+        self.dependencies = self._find_dependencies(design_file)
+        self.depending_components = design_file.component_instantiations
 
         for design_unit in self.design_units:
             if design_unit.is_primary:
@@ -913,6 +933,13 @@ class VHDLSourceFile(SourceFile):
         """
         return hash_string(self._content_hash + self._compile_options_hash() + hash_string(self._vhdl_standard))
 
+    def add_to_library(self, library):
+        """
+        Add design units to the library
+        """
+        assert self.library == library
+        library.add_vhdl_design_units(self.design_units)
+
 
 # lower case representation of supported extensions
 VHDL_EXTENSIONS = (".vhd", ".vhdl", ".vho")
@@ -929,12 +956,14 @@ def file_type_of(file_name):
     _, ext = splitext(file_name)
     if ext.lower() in VHDL_EXTENSIONS:
         return "vhdl"
-    elif ext.lower() in VERILOG_EXTENSIONS:
+
+    if ext.lower() in VERILOG_EXTENSIONS:
         return "verilog"
-    elif ext.lower() in SYSTEM_VERILOG_EXTENSIONS:
+
+    if ext.lower() in SYSTEM_VERILOG_EXTENSIONS:
         return "systemverilog"
-    else:
-        raise RuntimeError("Unknown file ending '%s' of %s" % (ext, file_name))
+
+    raise RuntimeError("Unknown file ending '%s' of %s" % (ext, file_name))
 
 
 def check_vhdl_standard(vhdl_standard, from_str=None):

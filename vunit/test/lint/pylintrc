@@ -36,7 +36,10 @@ load-plugins=
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
 #disable=
-disable=too-few-public-methods, locally-disabled, redefined-variable-type, duplicate-code, file-ignored
+disable=too-few-public-methods, locally-disabled, redefined-variable-type, duplicate-code, file-ignored,
+  useless-object-inheritance,
+# Failed to suppress this locally in ostools.py
+  subprocess-popen-preexec-fn
 
 [REPORTS]
 
@@ -228,7 +231,7 @@ max-args=6
 
 # Argument names that match this expression will be ignored. Default to name
 # with leading underscore
-ignored-argument-names=_.*
+ignored-argument-names=_.*|kwargs|args
 
 # Maximum number of locals for function / method body
 max-locals=15
