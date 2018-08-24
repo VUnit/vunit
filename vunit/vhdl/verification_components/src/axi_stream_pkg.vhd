@@ -212,9 +212,16 @@ package axi_stream_pkg is
       variable tuser : out std_logic_vector
     );
 
+  procedure pop_axi_stream(
+      signal net : inout network_t;
+      axi_stream : axi_stream_slave_t;
+      variable tdata : out std_logic_vector;
+      variable tlast : out std_logic
+    );
+
   -- Non-blocking: pop a value from the axi stream to be read in the future
   procedure pop_axi_stream(signal net : inout network_t;
-                           stream : axi_stream_slave_t;
+                           axi_stream : axi_stream_slave_t;
                            variable reference : inout axi_stream_reference_t);
 
   -- Blocking: Wait for reply to non-blocking pop
@@ -230,10 +237,17 @@ package axi_stream_pkg is
       variable tuser     : out std_logic_vector
     );
 
+  procedure await_pop_axi_stream_reply(
+      signal net : inout network_t;
+      variable reference : inout axi_stream_reference_t;
+      variable tdata     : out std_logic_vector;
+      variable tlast     : out std_logic
+    );
+
   -- Blocking: read axi stream and check result against expected value
   procedure check_axi_stream(
       signal net : inout network_t;
-      stream   : axi_stream_slave_t;
+      axi_stream   : axi_stream_slave_t;
       expected : std_logic_vector;
       tlast    : std_logic        := '1';
       tkeep    : std_logic_vector := "";
@@ -380,12 +394,15 @@ package body axi_stream_pkg is
 
   impure function new_axi_stream_monitor(
       data_length      : natural;
+      id_length        : natural  := 0;
+      dest_length      : natural  := 0;
+      user_length      : natural  := 0;
       logger           : logger_t := axi_stream_logger;
       actor            : actor_t;
       protocol_checker : axi_stream_protocol_checker_t := null_axi_stream_protocol_checker
     ) return axi_stream_monitor_t is
     constant p_protocol_checker : axi_stream_protocol_checker_t := get_valid_protocol_checker(
-      data_length, logger, actor, protocol_checker, "monitor"
+      data_length, id_length, dest_length, user_length, logger, actor, protocol_checker, "monitor"
     );
   begin
     return (
@@ -401,6 +418,9 @@ package body axi_stream_pkg is
 
   impure function new_axi_stream_protocol_checker(
       data_length : natural;
+      id_length   : natural  := 0;
+      dest_length : natural  := 0;
+      user_length : natural  := 0;
       logger      : logger_t := axi_stream_logger;
       actor       : actor_t  := null_actor;
       max_waits   : natural  := 16
@@ -553,11 +573,11 @@ package body axi_stream_pkg is
   end;
 
   procedure pop_axi_stream(signal net : inout network_t;
-                           stream : axi_stream_slave_t;
+                           axi_stream : axi_stream_slave_t;
                            variable reference : inout axi_stream_reference_t) is
   begin
     reference := new_msg(pop_axi_stream_msg);
-    send(net, stream.p_actor, reference);
+    send(net, axi_stream.p_actor, reference);
   end;
 
   procedure await_pop_axi_stream_reply(
@@ -575,7 +595,11 @@ package body axi_stream_pkg is
   begin
     receive_reply(net, reference, reply_msg);
     tdata := pop_std_ulogic_vector(reply_msg);
-    tlast := pop_std_ulogic(reply_msg);
+    if pop_boolean(reply_msg) then
+      tlast := '1';
+    else
+      tlast := '0';
+    end if;
     tkeep := pop_std_ulogic_vector(reply_msg);
     tstrb := pop_std_ulogic_vector(reply_msg);
     tid   := pop_std_ulogic_vector(reply_msg);
@@ -585,9 +609,28 @@ package body axi_stream_pkg is
     delete(reply_msg);
   end;
 
+  procedure await_pop_axi_stream_reply(
+      signal net : inout network_t;
+      variable reference : inout axi_stream_reference_t;
+      variable tdata     : out std_logic_vector;
+      variable tlast     : out std_logic
+    ) is
+    variable reply_msg : msg_t;
+  begin
+    receive_reply(net, reference, reply_msg);
+    tdata := pop_std_ulogic_vector(reply_msg);
+    if pop_boolean(reply_msg) then
+      tlast := '1';
+    else
+      tlast := '0';
+    end if;
+    delete(reference);
+    delete(reply_msg);
+  end;
+
   procedure pop_axi_stream(
       signal net : inout network_t;
-      stream : axi_stream_slave_t;
+      axi_stream : axi_stream_slave_t;
       variable tdata : out std_logic_vector;
       variable tlast : out std_logic;
       variable tkeep : out std_logic_vector;
@@ -598,13 +641,25 @@ package body axi_stream_pkg is
     ) is
     variable reference : axi_stream_reference_t;
   begin
-    pop_axi_stream(net, stream, reference);
+    pop_axi_stream(net, axi_stream, reference);
     await_pop_axi_stream_reply(net, reference, tdata, tlast, tkeep, tstrb, tid, tdest, tuser);
   end;
 
-  procedure check_stream(
+  procedure pop_axi_stream(
       signal net : inout network_t;
-      stream   : axi_stream_slave_t;
+      axi_stream : axi_stream_slave_t;
+      variable tdata : out std_logic_vector;
+      variable tlast : out std_logic
+    ) is
+    variable reference : axi_stream_reference_t;
+  begin
+    pop_axi_stream(net, axi_stream, reference);
+    await_pop_axi_stream_reply(net, reference, tdata, tlast);
+  end;
+
+  procedure check_axi_stream(
+      signal net : inout network_t;
+      axi_stream   : axi_stream_slave_t;
       expected : std_logic_vector;
       tlast    : std_logic        := '1';
       tkeep    : std_logic_vector := "";
@@ -622,7 +677,7 @@ package body axi_stream_pkg is
     variable got_tdest : std_logic_vector(tdest'range);
     variable got_tuser : std_logic_vector(tuser'range);
   begin
-    pop_axi_stream(net, stream, got_tdata, got_tlast, got_tkeep, got_tstrb, got_tid, got_tdest, got_tuser);
+    pop_axi_stream(net, axi_stream, got_tdata, got_tlast, got_tkeep, got_tstrb, got_tid, got_tdest, got_tuser);
     check_equal(got_tdata, expected, msg);
     check_equal(got_tlast, tlast, msg);
     check_equal(got_tkeep, tkeep, msg);

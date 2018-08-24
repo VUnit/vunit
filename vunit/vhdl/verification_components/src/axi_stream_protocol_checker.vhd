@@ -26,7 +26,7 @@ entity axi_stream_protocol_checker is
     tlast    : in std_logic                                                    := '1';
     tkeep    : in std_logic_vector(data_length(protocol_checker)/8-1 downto 0) := (others => '0');
     tstrb    : in std_logic_vector(data_length(protocol_checker)/8-1 downto 0) := (others => '0');
-    tid      : in std_logic_vector(id_length(protocol_checker)-1 downto 0)     := "";
+    tid      : in std_logic_vector(id_length(protocol_checker)-1 downto 0)     := (others => '0');
     tdest    : in std_logic_vector(dest_length(protocol_checker)-1 downto 0)   := (others => '0');
     tuser    : in std_logic_vector(user_length(protocol_checker)-1 downto 0)   := (others => '0')
     );
@@ -45,8 +45,6 @@ architecture a of axi_stream_protocol_checker is
 
   signal enable_rule1_check, enable_rule2_check, handshake_is_not_x : std_logic;
 begin
-  check_equal(tid'length, 0, result("for tid'length. tid is not supported"));
-
   handshake_is_not_x <= '1' when not is_x(tvalid) and not is_x(tready) else '0';
 
   -- AXI4STREAM_ERRM_TDATA_STABLE TDATA remains stable when TVALID is asserted,

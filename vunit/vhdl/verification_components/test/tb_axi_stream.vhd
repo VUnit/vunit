@@ -49,7 +49,6 @@ architecture a of tb_axi_stream is
     max_waits   => 8
   );
 
-
   constant n_monitors : natural := 3;
 
   signal aclk     : std_logic := '0';
@@ -77,11 +76,18 @@ begin
     variable dest      : std_logic_vector(tdest'range);
     variable user      : std_logic_vector(tuser'range);
 
+    variable axi_stream_transaction : axi_stream_transaction_t(
+      tdata(tdata'range),
+      tkeep(tkeep'range),
+      tstrb(tstrb'range),
+      tid(tid'range),
+      tdest(tdest'range),
+      tuser(tuser'range)
+    );
     variable reference_queue : queue_t := new_queue;
     variable reference : stream_reference_t;
     variable msg                    : msg_t;
     variable msg_type               : msg_type_t;
-    variable axi_stream_transaction : axi_stream_transaction_t(tdata(tdata'range));
     variable timestamp              : time := 0 ns;
 
     procedure get_axi_stream_transaction(variable axi_stream_transaction : out axi_stream_transaction_t) is
@@ -139,6 +145,12 @@ begin
       check_equal(data, std_logic_vector'(x"99"), result("pop stream data"));
       check_equal(last_bool, true, result("pop stream last"));
 
+    elsif run("test single push and axi pop") then
+      push_stream(net, master_stream, x"AA", last => true);
+      pop_axi_stream(net, slave_axi_stream, data, last);
+      check_equal(data, std_logic_vector'(x"AA"), result("pop stream data"));
+      check_equal(last, '1', result("pop stream last"));
+
     elsif run("test single axi push and axi pop") then
       push_axi_stream(net, master_axi_stream, x"99", tlast => '1', tkeep => "1", tstrb => "1", tid => x"11", tdest => x"22", tuser => x"33" );
       pop_axi_stream(net, slave_axi_stream, data, last, keep, strb, id, dest, user);
@@ -154,11 +166,11 @@ begin
         get_axi_stream_transaction(axi_stream_transaction);
         check_equal(axi_stream_transaction.tdata, std_logic_vector'(x"99"), result("for axi_stream_transaction.tdata"));
         check_true(axi_stream_transaction.tlast, result("for axi_stream_transaction.tlast"));
-        check_equal(axi_stream_transaction.keep, std_logic_vector'("1"), result("pop stream keep"));
-        check_equal(axi_stream_transaction.strb, std_logic_vector'("1"), result("pop stream strb"));
-        check_equal(axi_stream_transaction.id, std_logic_vector'(x"11"), result("pop stream id"));
-        check_equal(axi_stream_transaction.dest, std_logic_vector'(x"22"), result("pop stream dest"));
-        check_equal(axi_stream_transaction.user, std_logic_vector'(x"33"), result("pop stream user"));
+        check_equal(axi_stream_transaction.tkeep, std_logic_vector'("1"), result("pop stream keep"));
+        check_equal(axi_stream_transaction.tstrb, std_logic_vector'("1"), result("pop stream strb"));
+        check_equal(axi_stream_transaction.tid, std_logic_vector'(x"11"), result("pop stream id"));
+        check_equal(axi_stream_transaction.tdest, std_logic_vector'(x"22"), result("pop stream dest"));
+        check_equal(axi_stream_transaction.tuser, std_logic_vector'(x"33"), result("pop stream user"));
       end loop;
 
     elsif run("test single stalled push and pop") then
