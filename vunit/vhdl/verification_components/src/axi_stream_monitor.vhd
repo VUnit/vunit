@@ -15,29 +15,48 @@ entity axi_stream_monitor is
   generic (
     monitor : axi_stream_monitor_t);
   port (
-    aclk : in std_logic;
+    aclk   : in std_logic;
     tvalid : in std_logic;
     tready : in std_logic := '1';
-    tdata : in std_logic_vector(data_length(monitor) - 1 downto 0);
-    tuser : in std_logic_vector(user_length(monitor) - 1 downto 0);
-    tlast : in std_logic := '1'
-    );
+    tdata  : in std_logic_vector(data_length(monitor) - 1 downto 0);
+    tlast  : in std_logic := '1';
+    tkeep  : in std_logic_vector(data_length(monitor)/8-1 downto 0) := (others => '0');
+    tstrb  : in std_logic_vector(data_length(monitor)/8-1 downto 0) := (others => '0');
+    tid    : in std_logic_vector(id_length(monitor)-1 downto 0) := (others => '0');
+    tdest  : in std_logic_vector(dest_length(monitor)-1 downto 0) := (others => '0');
+    tuser  : in std_logic_vector(user_length(monitor)-1 downto 0) := (others => '0')
+  );
 end entity;
 
 architecture a of axi_stream_monitor is
 begin
   main : process
     variable msg : msg_t;
-    variable axi_stream_transaction : axi_stream_transaction_t(tdata(tdata'range), tuser(tuser'range));
+    variable axi_stream_transaction : axi_stream_transaction_t(
+      tdata(tdata'range),
+      tkeep(tkeep'range),
+      tstrb(tstrb'range),
+      tid(tid'range),
+      tdest(tdest'range),
+      tuser(tuser'range)
+    );
   begin
     wait until (tvalid and tready) = '1' and rising_edge(aclk);
 
     if is_visible(monitor.p_logger, debug) then
-      debug(monitor.p_logger, "tdata: " & to_nibble_string(tdata) & " (" & to_integer_string(tdata) & ")" &
-        ", tlast: " & to_string(tlast));
+      debug(monitor.p_logger, "tdata: " & to_nibble_string(tdata) & " (" & to_integer_string(tdata) & ")" & ", tlast: " & to_string(tlast));
     end if;
 
-    axi_stream_transaction := (tdata, tuser, tlast = '1');
+    axi_stream_transaction := (
+      tdata => tdata,
+      tlast => tlast = '1',
+      tkeep => tkeep,
+      tstrb => tstrb,
+      tid   => tid,
+      tdest => tdest,
+      tuser => tuser
+    );
+
     msg := new_axi_stream_transaction_msg(axi_stream_transaction);
     publish(net, monitor.p_actor, msg);
   end process;
@@ -52,9 +71,13 @@ begin
         tvalid   => tvalid,
         tready   => tready,
         tdata    => tdata,
-        tuser    => tuser,
         tlast    => tlast,
-        tid      => open);
+        tkeep    => tkeep,
+        tstrb    => tstrb,
+        tid      => tid,
+        tdest    => tdest,
+        tuser    => tuser
+      );
   end generate axi_stream_protocol_checker_generate;
 
 end architecture;

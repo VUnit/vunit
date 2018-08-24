@@ -18,12 +18,17 @@ entity axi_stream_master is
   generic (
     master : axi_stream_master_t);
   port (
-    aclk : in std_logic;
-    tvalid : out std_logic := '0';
-    tready : in std_logic := '1';
-    tdata : out std_logic_vector(data_length(master)-1 downto 0) := (others => '0');
-    tuser : out std_logic_vector(user_length(master)-1 downto 0) := (others => '0');
-    tlast : out std_logic := '0');
+    aclk   : in std_logic;
+    tvalid : out std_logic                                          := '0';
+    tready : in std_logic                                           := '1';
+    tdata  : out std_logic_vector(data_length(master)-1 downto 0)   := (others => '0');
+    tlast  : out std_logic                                          := '0';
+    tkeep  : out std_logic_vector(data_length(master)/8-1 downto 0) := (others => '0');
+    tstrb  : out std_logic_vector(data_length(master)/8-1 downto 0) := (others => '0');
+    tid    : out std_logic_vector(id_length(master)-1 downto 0)     := (others => '0');
+    tdest  : out std_logic_vector(dest_length(master)-1 downto 0)   := (others => '0');
+    tuser  : out std_logic_vector(user_length(master)-1 downto 0)   := (others => '0')
+    );
 end entity;
 
 architecture a of axi_stream_master is
@@ -41,15 +46,23 @@ begin
       tvalid <= '1';
       tdata <= pop_std_ulogic_vector(msg);
       if msg_type = push_axi_stream_msg then
-        tuser <= pop_std_ulogic_vector(msg);
         tlast <= pop_std_ulogic(msg);
+        tkeep <= pop_std_ulogic_vector(msg);
+        tstrb <= pop_std_ulogic_vector(msg);
+        tid <= pop_std_ulogic_vector(msg);
+        tdest <= pop_std_ulogic_vector(msg);
+        tuser <= pop_std_ulogic_vector(msg);
       else
-        tuser <= (others => '0');
         if pop_boolean(msg) then
           tlast <= '1';
         else
           tlast <= '0';
         end if;
+        tkeep <= (others => '1');
+        tstrb <= (others => '1');
+        tid <= (others => '0');
+        tdest <= (others => '0');
+        tuser <= (others => '0');
       end if;
       wait until (tvalid and tready) = '1' and rising_edge(aclk);
       tvalid <= '0';
@@ -69,8 +82,12 @@ begin
         tvalid => tvalid,
         tready => tready,
         tdata  => tdata,
-        tuser  => tuser,
-        tlast  => tlast
+        tlast  => tlast,
+        tkeep  => tkeep,
+        tstrb  => tstrb,
+        tid    => tid,
+        tdest  => tdest,
+        tuser  => tuser
       );
   end generate axi_stream_monitor_generate;
 
@@ -84,9 +101,13 @@ begin
         tvalid   => tvalid,
         tready   => tready,
         tdata    => tdata,
-        tuser    => tuser,
         tlast    => tlast,
-        tid      => open);
+        tkeep    => tkeep,
+        tstrb    => tstrb,
+        tid      => tid,
+        tdest    => tdest,
+        tuser    => tuser
+      );
   end generate axi_stream_protocol_checker_generate;
 
 end architecture;
