@@ -44,6 +44,27 @@ package avalon_stream_pkg is
   impure function as_stream(source : avalon_source_t) return stream_master_t;
   impure function as_stream(sink : avalon_sink_t) return stream_slave_t;
 
+  constant avalon_stream_transaction_msg : msg_type_t := new_msg_type("avalon stream transaction");
+
+  type avalon_stream_transaction_t is record
+    data : std_logic_vector;
+  end record;
+
+  procedure push_avalon_stream_transaction(msg : msg_t; avalon_stream_transaction : avalon_stream_transaction_t);
+  procedure pop_avalon_stream_transaction(
+    constant msg : in msg_t;
+    variable avalon_stream_transaction : out avalon_stream_transaction_t
+  );
+
+  impure function new_avalon_stream_transaction_msg(
+    avalon_stream_transaction : avalon_stream_transaction_t
+  ) return msg_t;
+
+  procedure handle_avalon_stream_transaction(
+    variable msg_type : inout msg_type_t;
+    variable msg : inout msg_t;
+    variable avalon_transaction : out avalon_stream_transaction_t
+  );
 end package;
 
 package body avalon_stream_pkg is
@@ -94,6 +115,41 @@ package body avalon_stream_pkg is
   impure function as_stream(sink : avalon_sink_t) return stream_slave_t is
   begin
     return (p_actor => sink.p_actor);
+  end;
+
+  procedure push_avalon_stream_transaction(msg: msg_t; avalon_stream_transaction : avalon_stream_transaction_t) is
+  begin
+    push_std_ulogic_vector(msg, avalon_stream_transaction.data);
+  end;
+
+  procedure pop_avalon_stream_transaction(
+    constant msg : in msg_t;
+    variable avalon_stream_transaction : out avalon_stream_transaction_t) is
+  begin
+    avalon_stream_transaction.data := pop_std_ulogic_vector(msg);
+  end;
+
+  impure function new_avalon_stream_transaction_msg(
+    avalon_stream_transaction : avalon_stream_transaction_t
+  ) return msg_t is
+    variable msg : msg_t;
+  begin
+    msg := new_msg(avalon_stream_transaction_msg);
+    push_avalon_stream_transaction(msg, avalon_stream_transaction);
+
+    return msg;
+  end;
+
+  procedure handle_avalon_stream_transaction(
+    variable msg_type : inout msg_type_t;
+    variable msg : inout msg_t;
+    variable avalon_transaction : out avalon_stream_transaction_t) is
+  begin
+    if msg_type = avalon_stream_transaction_msg then
+      handle_message(msg_type);
+
+      pop_avalon_stream_transaction(msg, avalon_transaction);
+    end if;
   end;
 
 end package body;

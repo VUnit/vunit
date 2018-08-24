@@ -36,7 +36,11 @@ architecture a of tb_avalon_stream is
 begin
 
   main : process
-    variable tmp : std_logic_vector(data'range);
+    variable tmp                           : std_logic_vector(data'range);
+    variable msg                           : msg_t;
+    variable msg_type                      : msg_type_t;
+    variable avalon_stream_transaction     : avalon_stream_transaction_t(data(data'range));
+    variable avalon_stream_transaction_tmp : avalon_stream_transaction_t(data(data'range));
   begin
     test_runner_setup(runner, runner_cfg);
     set_format(display_handler, verbose, true);
