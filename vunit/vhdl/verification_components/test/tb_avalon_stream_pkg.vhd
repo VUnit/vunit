@@ -64,6 +64,19 @@ begin
       handle_avalon_stream_transaction(msg_type, msg, avalon_stream_transaction_tmp);
       check_equal(avalon_stream_transaction_tmp.data, avalon_stream_transaction.data, "pop stream transaction data");
 
+    elsif run("test sop and eop") then
+      for i in 0 to 7 loop
+        avalon_stream_transaction.data := std_logic_vector(to_unsigned(i, 8));
+        avalon_stream_transaction.sop  := (i = 0);
+        avalon_stream_transaction.eop  := (i = 7);
+        msg := new_avalon_stream_transaction_msg(avalon_stream_transaction);
+        msg_type := message_type(msg);
+        handle_avalon_stream_transaction(msg_type, msg, avalon_stream_transaction_tmp);
+        check_equal(avalon_stream_transaction_tmp.data, std_logic_vector(to_unsigned(i, 8)), "pop stream data"&natural'image(i));
+        check_equal(avalon_stream_transaction_tmp.sop, i = 0, "pop stream sop");
+        check_equal(avalon_stream_transaction_tmp.eop, i = 7, "pop stream eop");
+      end loop;
+
     end if;
     wait until rising_edge(clk);
     test_runner_cleanup(runner);

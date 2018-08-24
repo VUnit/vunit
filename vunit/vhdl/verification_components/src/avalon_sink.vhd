@@ -23,10 +23,12 @@ entity avalon_sink is
   generic (
     sink : avalon_sink_t);
   port (
-    clk : in std_logic;
+    clk   : in std_logic;
     ready : out std_logic := '0';
     valid : in std_logic;
-    data : in std_logic_vector(data_length(sink)-1 downto 0)
+    sop   : in std_logic;
+    eop   : in std_logic;
+    data  : in std_logic_vector(data_length(sink)-1 downto 0)
   );
 end entity;
 
@@ -53,6 +55,16 @@ begin
           reply_msg := new_msg;
           if msg_type = avalon_stream_transaction_msg then
             avalon_stream_transaction.data := data;
+            if sop = '1' then
+                avalon_stream_transaction.sop := true;
+            else
+                avalon_stream_transaction.sop := false;
+            end if;
+            if eop = '1' then
+                avalon_stream_transaction.eop := true;
+            else
+                avalon_stream_transaction.eop := false;
+            end if;
             push_avalon_stream_transaction(reply_msg, avalon_stream_transaction);
           else
             push_std_ulogic_vector(reply_msg, data);

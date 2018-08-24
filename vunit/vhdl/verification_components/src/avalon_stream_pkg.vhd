@@ -48,6 +48,8 @@ package avalon_stream_pkg is
 
   type avalon_stream_transaction_t is record
     data : std_logic_vector;
+    sop  : boolean;
+    eop  : boolean;
   end record;
 
   procedure push_avalon_stream_transaction(msg : msg_t; avalon_stream_transaction : avalon_stream_transaction_t);
@@ -120,6 +122,8 @@ package body avalon_stream_pkg is
   procedure push_avalon_stream_transaction(msg: msg_t; avalon_stream_transaction : avalon_stream_transaction_t) is
   begin
     push_std_ulogic_vector(msg, avalon_stream_transaction.data);
+    push_boolean(msg, avalon_stream_transaction.sop);
+    push_boolean(msg, avalon_stream_transaction.eop);
   end;
 
   procedure pop_avalon_stream_transaction(
@@ -127,6 +131,8 @@ package body avalon_stream_pkg is
     variable avalon_stream_transaction : out avalon_stream_transaction_t) is
   begin
     avalon_stream_transaction.data := pop_std_ulogic_vector(msg);
+    avalon_stream_transaction.sop  := pop_boolean(msg);
+    avalon_stream_transaction.eop  := pop_boolean(msg);
   end;
 
   impure function new_avalon_stream_transaction_msg(

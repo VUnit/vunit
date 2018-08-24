@@ -32,15 +32,13 @@ architecture a of tb_avalon_stream is
   signal clk   : std_logic := '0';
   signal valid : std_logic;
   signal ready : std_logic;
+  signal sop   : std_logic;
+  signal eop   : std_logic;
   signal data  : std_logic_vector(data_length(avalon_source_stream)-1 downto 0);
 begin
 
   main : process
     variable tmp                           : std_logic_vector(data'range);
-    variable msg                           : msg_t;
-    variable msg_type                      : msg_type_t;
-    variable avalon_stream_transaction     : avalon_stream_transaction_t(data(data'range));
-    variable avalon_stream_transaction_tmp : avalon_stream_transaction_t(data(data'range));
   begin
     test_runner_setup(runner, runner_cfg);
     set_format(display_handler, verbose, true);
@@ -89,6 +87,8 @@ begin
       clk   => clk,
       valid => valid,
       ready => ready,
+      sop   => sop,
+      eop   => eop,
       data  => data
     );
 
@@ -99,6 +99,8 @@ begin
       clk   => clk,
       valid => valid,
       ready => ready,
+      sop   => sop,
+      eop   => eop,
       data  => data
     );
 

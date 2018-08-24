@@ -22,10 +22,12 @@ entity avalon_source is
   generic (
     source : avalon_source_t);
   port (
-    clk : in std_logic;
-    valid : out std_logic := '0';
+    clk   : in std_logic;
     ready : in std_logic;
-    data : out std_logic_vector(data_length(source)-1 downto 0) := (others => '0')
+    valid : out std_logic := '0';
+    sop   : out std_logic := '0';
+    eop   : out std_logic := '0';
+    data  : out std_logic_vector(data_length(source)-1 downto 0) := (others => '0')
   );
 end entity;
 
@@ -50,11 +52,25 @@ begin
       if msg_type = avalon_stream_transaction_msg then
         pop_avalon_stream_transaction(msg, avalon_stream_transaction);
         data <= avalon_stream_transaction.data;
+        if avalon_stream_transaction.sop then
+          sop <= '1';
+        else
+          sop <= '0';
+        end if;
+        if avalon_stream_transaction.eop then
+          eop <= '1';
+        else
+          eop <= '0';
+        end if;
       else
         data <= pop_std_ulogic_vector(msg);
+        sop <= '0';
+        eop <= '0';
       end if;
       wait until (valid and ready) = '1' and rising_edge(clk);
       valid <= '0';
+      sop   <= '0';
+      eop   <= '0';
     else
       unexpected_msg_type(msg_type);
     end if;
