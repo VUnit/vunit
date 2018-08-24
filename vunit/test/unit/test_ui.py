@@ -17,6 +17,8 @@ from os.path import join, dirname, basename, exists, abspath
 import re
 from re import MULTILINE
 from shutil import rmtree
+from subprocess import check_output
+from vunit import ROOT
 from vunit.ui import VUnit
 from vunit.project import VHDL_EXTENSIONS, VERILOG_EXTENSIONS
 from vunit.test.mock_2or3 import mock
@@ -810,6 +812,43 @@ endmodule
         for method in (lib.set_compile_option, lib.add_compile_option, ui.set_compile_option, ui.add_compile_option):
             method("ghdl.elab_flags", [], allow_empty=True)
             self.assertRaises(ValueError, method, "ghdl.elab_flags", [])
+
+    def test_sigasi_integration_list_files(self):
+        project_location = join(ROOT, 'examples', 'vhdl', 'user_guide')
+        ui = self._create_ui('--files')
+        lib = ui.add_library('lib')
+        lib.add_source_files(join(project_location, '*.vhd'))
+        ui.add_builtins()
+        list_of_files = names(ui.get_compile_order())
+        list_of_files = [os.path.split(test_case)[1] for test_case in list_of_files]
+
+        script_location = join(project_location, 'run.py')
+        report_raw = check_output(['python', script_location, '-f'], universal_newlines=True)
+        actual_report = [test_case.strip() for test_case in report_raw.split('\n')]
+        actual_report = actual_report[:-2]
+        actual_report = [os.path.split(test_case)[1] for test_case in actual_report]
+        self.assertSetEqual(set(actual_report), set(list_of_files))
+
+    def test_sigasi_integration_list_test_cases(self):
+        project_location = join(ROOT, 'examples', 'vhdl', 'user_guide')
+        ui = self._create_ui('--list')
+        lib = ui.add_library('lib')
+        lib.add_source_files(join(project_location, '*.vhd'))
+        ui.add_builtins()
+        test_cases = ui.get_all_test_cases()
+
+        script_location = join(project_location, 'run.py')
+        report_raw = check_output(['python', script_location, '-l'], universal_newlines=True)
+        report = (report_raw.split('\n'))[:-2]
+        self.assertListEqual(test_cases, report)
+
+    def test_sigasi_integration_list_files_format(self):
+        script_location = join(ROOT, 'examples', 'vhdl', 'user_guide', 'run.py')
+        raw_output = check_output(['python', script_location, '-f'], universal_newlines=True)
+        output = raw_output.split('\n')
+        output = output[:-2]
+        tuple_format = [test_case for test_case in output if len(test_case.split(',')) != 2]
+        self.assertTrue(len(tuple_format) == 0)
 
     def _create_ui(self, *args):
         """ Create an instance of the VUnit public interface class """
