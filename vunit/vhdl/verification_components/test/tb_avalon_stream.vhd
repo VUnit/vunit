@@ -38,7 +38,11 @@ architecture a of tb_avalon_stream is
 begin
 
   main : process
-    variable tmp                           : std_logic_vector(data'range);
+    variable tmp     : std_logic_vector(data'range);
+    variable is_sop  : std_logic;
+    variable is_eop  : std_logic;
+    variable sop_tmp : std_logic;
+    variable eop_tmp : std_logic;
   begin
     test_runner_setup(runner, runner_cfg);
     set_format(display_handler, verbose, true);
@@ -72,6 +76,25 @@ begin
         push_stream(net, master_stream, std_logic_vector(to_unsigned(i, 8)));
         pop_stream(net, slave_stream, tmp);
         check_equal(tmp, std_logic_vector(to_unsigned(i, 8)), "pop stream data"&natural'image(i));
+      end loop;
+
+    elsif run("test sop and eop") then
+      for i in 0 to 7 loop
+        if i = 0 then
+          is_sop := '1';
+          is_eop := '0';
+        elsif i = 7 then
+          is_sop := '0';
+          is_eop := '1';
+        else
+          is_sop := '0';
+          is_eop := '0';
+        end if;
+        push_avalon_stream(net, avalon_source_stream, std_logic_vector(to_unsigned(i, 8)), is_sop, is_eop);
+        pop_avalon_stream(net, avalon_sink_stream, tmp, sop_tmp, eop_tmp);
+        check_equal(tmp, std_logic_vector(to_unsigned(i, 8)), "pop stream data"&natural'image(i));
+        check_equal(sop_tmp, is_sop, "pop stream sop");
+        check_equal(eop_tmp, is_eop, "pop stream eop");
       end loop;
 
     end if;

@@ -64,7 +64,7 @@ begin
       handle_avalon_stream_transaction(msg_type, msg, avalon_stream_transaction_tmp);
       check_equal(avalon_stream_transaction_tmp.data, avalon_stream_transaction.data, "pop stream transaction data");
 
-    elsif run("test sop and eop") then
+    elsif run("test transaction sop and eop") then
       for i in 0 to 7 loop
         avalon_stream_transaction.data := std_logic_vector(to_unsigned(i, 8));
         avalon_stream_transaction.sop  := (i = 0);
