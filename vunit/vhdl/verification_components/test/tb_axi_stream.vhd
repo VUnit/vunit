@@ -109,6 +109,8 @@ begin
     show(get_logger("master"), display_handler, debug);
     show(get_logger("slave"), display_handler, debug);
 
+    wait for 20 ns;
+
     if run("test single push and pop") then
       push_stream(net, master_stream, x"77", true);
       pop_stream(net, slave_stream, data, last_bool);

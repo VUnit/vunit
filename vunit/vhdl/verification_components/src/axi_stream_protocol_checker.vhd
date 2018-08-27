@@ -65,6 +65,10 @@ architecture a of axi_stream_protocol_checker is
   signal enable_rule14_check : std_logic;
   signal enable_rule15_check : std_logic;
   signal rule20_check_value : std_logic;
+
+  signal areset_n_d  : std_logic := '0';
+  signal areset_rose : std_logic;
+  signal not_tvalid  : std_logic;
 begin
   handshake_is_not_x <= '1' when not is_x(tvalid) and not is_x(tready) else '0';
 
@@ -241,6 +245,17 @@ begin
     check_true(rule21_checker, tid'length + tdest'length <= 24, result("for tid width and tdest width together must be less than 25"));
     wait;
   end process;
+
+  -- AXI4STREAM_ERRM_TVALID_RESET TVALID is LOW for the first cycle after ARESETn goes HIGH
+  process (aclk) is
+  begin
+    if rising_edge(aclk) then
+      areset_n_d <= areset_n;
+    end if;
+  end process;
+  areset_rose <= areset_n and not areset_n_d;
+  not_tvalid   <= not tvalid;
+  check_implication(rule22_checker, aclk, areset_n, areset_rose, not_tvalid, result("for tvalid de-asserted after reset release"));
 
   -- for * being DATA, KEEP, STRB, ID, DEST or USER
   -- AXI4STREAM_ERRM_T*_TIEOFF T* must be stable while *_WIDTH has been set to zero
