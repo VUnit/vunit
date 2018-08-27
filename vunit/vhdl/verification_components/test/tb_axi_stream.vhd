@@ -90,6 +90,8 @@ begin
     variable msg_type               : msg_type_t;
     variable timestamp              : time := 0 ns;
 
+    variable mocklogger : logger_t;
+
     procedure get_axi_stream_transaction(variable axi_stream_transaction : out axi_stream_transaction_t) is
     begin
       receive(net, subscriber, msg);
@@ -237,6 +239,27 @@ begin
           );
         end loop;
       end loop;
+
+    elsif run("test passing check") then
+      push_axi_stream(net, master_axi_stream, x"12", tlast => '1', tkeep => "1", tstrb => "1", tid => x"23", tdest => x"34", tuser => x"45");
+      check_axi_stream(net, slave_axi_stream, x"12", '1', "1", "1", x"23", x"34", x"45", "checking axi stream");
+
+    elsif run("test failing check") then
+      mocklogger := get_logger("check");
+      mock(mocklogger);
+
+      push_axi_stream(net, master_axi_stream, x"11", tlast => '0', tkeep => "0", tstrb => "0", tid => x"22", tdest => x"33", tuser => x"44");
+      check_axi_stream(net, slave_axi_stream, x"12", '1', "1", "1", x"23", x"34", x"45", "checking axi stream");
+      check_log(mocklogger, "checking axi stream - Got 0001_0001 (17). Expected 0001_0010 (18).", error);
+      check_log(mocklogger, "checking axi stream - Got 0. Expected 1.", error);
+      check_log(mocklogger, "checking axi stream - Got 0 (0). Expected 1 (1).", error);
+      check_log(mocklogger, "checking axi stream - Got 0 (0). Expected 1 (1).", error);
+      check_log(mocklogger, "checking axi stream - Got 0010_0010 (34). Expected 0010_0011 (35).", error);
+      check_log(mocklogger, "checking axi stream - Got 0011_0011 (51). Expected 0011_0100 (52).", error);
+      check_log(mocklogger, "checking axi stream - Got 0100_0100 (68). Expected 0100_0101 (69).", error);
+
+      unmock(mocklogger);
+
     end if;
     test_runner_cleanup(runner);
   end process;
