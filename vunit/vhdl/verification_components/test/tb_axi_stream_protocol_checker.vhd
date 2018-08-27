@@ -515,7 +515,8 @@ begin
       tvalid <= '1';
       tready <= '1';
       for b in tstrb'range loop
-        tkeep <= (b => '1', others => '0');
+        tkeep <= (others => '0');
+        tkeep(b) <= '1';
         tstrb <= (others => '0');
         wait until rising_edge(aclk);
         tstrb(b) <= '1';
@@ -530,7 +531,8 @@ begin
       tvalid <= '1';
       tready <= '1';
       for b in tstrb'range loop
-        tkeep <= (b => '0', others => '1');
+        tkeep <= (others => '1');
+        tkeep(b) <= '0';
         tstrb <= (others => '0');
         wait until rising_edge(aclk);
         tstrb(b) <= '1';
