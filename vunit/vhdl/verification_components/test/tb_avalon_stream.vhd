@@ -32,15 +32,17 @@ architecture a of tb_avalon_stream is
   signal clk   : std_logic := '0';
   signal valid : std_logic;
   signal ready : std_logic;
+  signal sop   : std_logic;
+  signal eop   : std_logic;
   signal data  : std_logic_vector(data_length(avalon_source_stream)-1 downto 0);
 begin
 
   main : process
-    variable tmp                           : std_logic_vector(data'range);
-    variable msg                           : msg_t;
-    variable msg_type                      : msg_type_t;
-    variable avalon_stream_transaction     : avalon_stream_transaction_t(data(data'range));
-    variable avalon_stream_transaction_tmp : avalon_stream_transaction_t(data(data'range));
+    variable tmp     : std_logic_vector(data'range);
+    variable is_sop  : std_logic;
+    variable is_eop  : std_logic;
+    variable sop_tmp : std_logic;
+    variable eop_tmp : std_logic;
   begin
     test_runner_setup(runner, runner_cfg);
     set_format(display_handler, verbose, true);
@@ -76,6 +78,25 @@ begin
         check_equal(tmp, std_logic_vector(to_unsigned(i, 8)), "pop stream data"&natural'image(i));
       end loop;
 
+    elsif run("test sop and eop") then
+      for i in 0 to 7 loop
+        if i = 0 then
+          is_sop := '1';
+          is_eop := '0';
+        elsif i = 7 then
+          is_sop := '0';
+          is_eop := '1';
+        else
+          is_sop := '0';
+          is_eop := '0';
+        end if;
+        push_avalon_stream(net, avalon_source_stream, std_logic_vector(to_unsigned(i, 8)), is_sop, is_eop);
+        pop_avalon_stream(net, avalon_sink_stream, tmp, sop_tmp, eop_tmp);
+        check_equal(tmp, std_logic_vector(to_unsigned(i, 8)), "pop stream data"&natural'image(i));
+        check_equal(sop_tmp, is_sop, "pop stream sop");
+        check_equal(eop_tmp, is_eop, "pop stream eop");
+      end loop;
+
     end if;
     wait until rising_edge(clk);
     test_runner_cleanup(runner);
@@ -89,6 +110,8 @@ begin
       clk   => clk,
       valid => valid,
       ready => ready,
+      sop   => sop,
+      eop   => eop,
       data  => data
     );
 
@@ -99,6 +122,8 @@ begin
       clk   => clk,
       valid => valid,
       ready => ready,
+      sop   => sop,
+      eop   => eop,
       data  => data
     );
 

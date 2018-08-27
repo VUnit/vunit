@@ -44,10 +44,26 @@ package avalon_stream_pkg is
   impure function as_stream(source : avalon_source_t) return stream_master_t;
   impure function as_stream(sink : avalon_sink_t) return stream_slave_t;
 
+  constant push_avalon_stream_msg        : msg_type_t := new_msg_type("push avalon stream");
+  constant pop_avalon_stream_msg        : msg_type_t := new_msg_type("pop avalon stream");
   constant avalon_stream_transaction_msg : msg_type_t := new_msg_type("avalon stream transaction");
+
+  procedure push_avalon_stream(signal net : inout network_t;
+                               avalon_source : avalon_source_t;
+                               data : std_logic_vector;
+                               sop : std_logic := '0';
+                               eop : std_logic := '0');
+
+  procedure pop_avalon_stream(signal net : inout network_t;
+                              avalon_sink : avalon_sink_t;
+                              variable data : inout std_logic_vector;
+                              variable sop  : inout std_logic;
+                              variable eop  : inout std_logic);
 
   type avalon_stream_transaction_t is record
     data : std_logic_vector;
+    sop  : boolean;
+    eop  : boolean;
   end record;
 
   procedure push_avalon_stream_transaction(msg : msg_t; avalon_stream_transaction : avalon_stream_transaction_t);
@@ -115,11 +131,63 @@ package body avalon_stream_pkg is
   impure function as_stream(sink : avalon_sink_t) return stream_slave_t is
   begin
     return (p_actor => sink.p_actor);
+end;
+
+  procedure push_avalon_stream(signal net : inout network_t;
+                               avalon_source : avalon_source_t;
+                               data : std_logic_vector;
+                               sop : std_logic := '0';
+                               eop : std_logic := '0') is
+    variable msg : msg_t := new_msg(push_avalon_stream_msg);
+    variable avalon_stream_transaction : avalon_stream_transaction_t(data(data'length - 1 downto 0));
+  begin
+    avalon_stream_transaction.data := data;
+    if sop = '1' then
+        avalon_stream_transaction.sop := true;
+    else
+        avalon_stream_transaction.sop := false;
+    end if;
+    if eop = '1' then
+        avalon_stream_transaction.eop := true;
+    else
+        avalon_stream_transaction.eop := false;
+    end if;
+    push_avalon_stream_transaction(msg, avalon_stream_transaction);
+    send(net, avalon_source.p_actor, msg);
+  end;
+
+  procedure pop_avalon_stream(signal net : inout network_t;
+                              avalon_sink : avalon_sink_t;
+                              variable data : inout std_logic_vector;
+                              variable sop  : inout std_logic;
+                              variable eop  : inout std_logic) is
+    variable reference : msg_t := new_msg(pop_avalon_stream_msg);
+    variable reply_msg : msg_t;
+    variable avalon_stream_transaction : avalon_stream_transaction_t(data(data'length - 1 downto 0));
+begin
+    send(net, avalon_sink.p_actor, reference);
+    receive_reply(net, reference, reply_msg);
+    pop_avalon_stream_transaction(reply_msg, avalon_stream_transaction);
+    data := avalon_stream_transaction.data;
+    if avalon_stream_transaction.sop then
+      sop := '1';
+    else
+      sop := '0';
+    end if;
+    if avalon_stream_transaction.eop then
+      eop := '1';
+    else
+      eop := '0';
+    end if;
+    delete(reference);
+    delete(reply_msg);
   end;
 
   procedure push_avalon_stream_transaction(msg: msg_t; avalon_stream_transaction : avalon_stream_transaction_t) is
   begin
     push_std_ulogic_vector(msg, avalon_stream_transaction.data);
+    push_boolean(msg, avalon_stream_transaction.sop);
+    push_boolean(msg, avalon_stream_transaction.eop);
   end;
 
   procedure pop_avalon_stream_transaction(
@@ -127,6 +195,8 @@ package body avalon_stream_pkg is
     variable avalon_stream_transaction : out avalon_stream_transaction_t) is
   begin
     avalon_stream_transaction.data := pop_std_ulogic_vector(msg);
+    avalon_stream_transaction.sop  := pop_boolean(msg);
+    avalon_stream_transaction.eop  := pop_boolean(msg);
   end;
 
   impure function new_avalon_stream_transaction_msg(
