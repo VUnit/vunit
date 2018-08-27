@@ -80,7 +80,7 @@ begin
     end;
 
     procedure fail_stable_test (
-      signal d : out std_logic_vector; 
+      signal d : out std_logic_vector;
       constant rname : string; constant sname : string;
       constant szero : string; constant sone : string;
       constant vzero : std_logic := '0'; constant vone : std_logic := '1'
