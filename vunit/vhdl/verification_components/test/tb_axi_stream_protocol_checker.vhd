@@ -359,6 +359,7 @@ begin
 
     elsif run("Test failing check of that tvalid must not be unknown unless in reset") then
       wait until rising_edge(aclk);
+      wait for 1 ns;
       rule_logger := get_logger(get_name(logger) & ":rule 7");
       mock(rule_logger);
 
@@ -581,6 +582,7 @@ begin
       areset_n <= '1';
       tvalid   <= '1';
       wait until rising_edge(aclk);
+      wait for 1 ns;
       check_only_log(
           rule_logger,
           "Implication check failed for tvalid de-asserted after reset release",
