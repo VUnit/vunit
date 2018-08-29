@@ -132,7 +132,8 @@ Elapsed time was 3.0 seconds
 """)
         self.assertTrue(report.all_ok())
 
-    def assert_has_test(self, root, name, time, status, output=None):  # pylint: disable=too-many-arguments
+    def assert_has_test(self, root, name, time, status,  # pylint: disable=too-many-arguments
+                        output=None, fmt='jenkins'):  # pylint: disable=too-many-arguments
         """
         Assert that junit report xml tree contains a test
         """
@@ -154,7 +155,10 @@ Elapsed time was 3.0 seconds
                 else:
                     assert False
 
-                self.assertEqual(test.find("system-out").text, output)
+                if status == 'failed' and fmt == 'bamboo':
+                    self.assertEqual(test.find("failure").text, output)
+                else:
+                    self.assertEqual(test.find("system-out").text, output)
                 break
         else:
             assert False
@@ -187,6 +191,15 @@ Elapsed time was 3.0 seconds
         self.assert_has_test(root, "failed_test0", time="11.1", status="failed")
         self.assert_has_test(root, "passed_test", time="2.0", status="passed")
         self.assert_has_test(root, "failed_test1", time="3.0", status="failed")
+
+    def test_junit_report_with_some_failed_tests_bamboo_fmt(self):
+        report = self._report_with_some_failed_tests()
+        root = ElementTree.fromstring(report.to_junit_xml_str(xunit_xml_format='bamboo'))
+        self.assertEqual(root.tag, "testsuite")
+        self.assertEqual(len(root.findall("*")), 3)
+        self.assert_has_test(root, "failed_test0", time="11.1", status="failed", fmt='bamboo')
+        self.assert_has_test(root, "passed_test", time="2.0", status="passed", fmt='bamboo')
+        self.assert_has_test(root, "failed_test1", time="3.0", status="failed", fmt='bamboo')
 
     def test_junit_report_with_some_skipped_tests(self):
         report = self._report_with_some_skipped_tests()

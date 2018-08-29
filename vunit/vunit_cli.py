@@ -122,6 +122,14 @@ def _create_argument_parser(description=None, for_documentation=False):
                         default=None,
                         help='Xunit test report .xml file')
 
+    parser.add_argument('--xunit-xml-format',
+                        choices=['jenkins', 'bamboo'],
+                        default='jenkins',
+                        help=('Only valid with --xunit-xml argument. '
+                              'Defines where in the XML file the simulator output is stored on a failure. '
+                              '"jenkins" = Output stored in <system-out>, '
+                              '"bamboo" = Output stored in <failure>.'))
+
     parser.add_argument('--exit-0',
                         default=False,
                         action="store_true",

@@ -181,7 +181,7 @@ class TestReport(object):
 
         return passed, failures, skipped
 
-    def to_junit_xml_str(self):
+    def to_junit_xml_str(self, xunit_xml_format='jenkins'):
         """
         Convert test report to a junit xml string
         """
@@ -196,7 +196,7 @@ class TestReport(object):
         root.attrib["hostname"] = socket.gethostname()
 
         for result in self._test_results_in_order():
-            root.append(result.to_xml())
+            root.append(result.to_xml(xunit_xml_format))
 
         if version_info >= (3, 0):
             # Python 3.x
@@ -286,7 +286,7 @@ class TestResult(object):
 
         printer.write("%s (%.1f seconds)\n" % (self.name + (" " * my_padding), self.time))
 
-    def to_xml(self):
+    def to_xml(self, xunit_xml_format):
         """
         Convert the test result to ElementTree XML object
         """
@@ -298,12 +298,21 @@ class TestResult(object):
         else:
             test.attrib["name"] = self.name
         test.attrib["time"] = "%.1f" % self.time
+
+        # By default the output is stored in system-out
+        system_out = ElementTree.SubElement(test, "system-out")
+        system_out.text = self.output
+
         if self.failed:
             failure = ElementTree.SubElement(test, "failure")
             failure.attrib["message"] = "Failed"
+
+            # Store output under <failure> if the 'bamboo' format is specified
+            if xunit_xml_format == 'bamboo':
+                failure.text = system_out.text
+                system_out.text = ''
+
         elif self.skipped:
             skipped = ElementTree.SubElement(test, "skipped")
             skipped.attrib["message"] = "Skipped"
-        system_out = ElementTree.SubElement(test, "system-out")
-        system_out.text = self.output
         return test
