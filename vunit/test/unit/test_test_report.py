@@ -161,7 +161,7 @@ Elapsed time was 3.0 seconds
 
     def test_junit_report_with_all_passed_tests(self):
         report = self._report_with_all_passed_tests()
-        root = ElementTree.fromstring(report.to_junit_xml_str())
+        root = ElementTree.fromstring(report.to_junit_xml_str(xunit_xml_format='jenkins'))
         self.assertEqual(root.tag, "testsuite")
         self.assertEqual(len(root.findall("*")), 2)
         self.assert_has_test(root, "passed_test0", time="1.0", status="passed")
@@ -171,7 +171,7 @@ Elapsed time was 3.0 seconds
         report = self._report_with_all_passed_tests()
         os.remove(self.output_file_name)
         fail_output = "Failed to read output file: %s" % self.output_file_name
-        root = ElementTree.fromstring(report.to_junit_xml_str())
+        root = ElementTree.fromstring(report.to_junit_xml_str(xunit_xml_format='jenkins'))
         self.assertEqual(root.tag, "testsuite")
         self.assertEqual(len(root.findall("*")), 2)
         self.assert_has_test(root, "passed_test0", time="1.0", status="passed",
@@ -181,7 +181,7 @@ Elapsed time was 3.0 seconds
 
     def test_junit_report_with_some_failed_tests(self):
         report = self._report_with_some_failed_tests()
-        root = ElementTree.fromstring(report.to_junit_xml_str())
+        root = ElementTree.fromstring(report.to_junit_xml_str(xunit_xml_format='jenkins'))
         self.assertEqual(root.tag, "testsuite")
         self.assertEqual(len(root.findall("*")), 3)
         self.assert_has_test(root, "failed_test0", time="11.1", status="failed")
@@ -190,7 +190,7 @@ Elapsed time was 3.0 seconds
 
     def test_junit_report_with_some_skipped_tests(self):
         report = self._report_with_some_skipped_tests()
-        root = ElementTree.fromstring(report.to_junit_xml_str())
+        root = ElementTree.fromstring(report.to_junit_xml_str(xunit_xml_format='jenkins'))
         self.assertEqual(root.tag, "testsuite")
         self.assertEqual(len(root.findall("*")), 3)
         self.assert_has_test(root, "skipped_test", time="0.0", status="skipped")
@@ -207,7 +207,7 @@ Elapsed time was 3.0 seconds
                           output_file_name=self.output_file_name)
         report.add_result("lib.entity.config.test", PASSED, time=1.0,
                           output_file_name=self.output_file_name)
-        root = ElementTree.fromstring(report.to_junit_xml_str())
+        root = ElementTree.fromstring(report.to_junit_xml_str(xunit_xml_format='jenkins'))
         names = set((elem.attrib.get("classname", None), elem.attrib.get("name", None))
                     for elem in root.findall("testcase"))
         self.assertEqual(names, set([(None, "test"),

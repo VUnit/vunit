@@ -935,7 +935,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         report.print_str()
 
         if self._args.xunit_xml is not None:
-            xml = report.to_junit_xml_str()
+            xml = report.to_junit_xml_str(self._args.xunit_xml_format)
             ostools.write_file(self._args.xunit_xml, xml)
 
     def add_builtins(self):
