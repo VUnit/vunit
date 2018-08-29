@@ -181,7 +181,7 @@ class TestReport(object):
 
         return passed, failures, skipped
 
-    def to_junit_xml_str(self, xunit_xml_format):
+    def to_junit_xml_str(self, xunit_xml_format='jenkins'):
         """
         Convert test report to a junit xml string
         """
