@@ -132,7 +132,7 @@ Elapsed time was 3.0 seconds
 """)
         self.assertTrue(report.all_ok())
 
-    def assert_has_test(self, root, name, time, status, output=None, format='jenkins'):  # pylint: disable=too-many-arguments
+    def assert_has_test(self, root, name, time, status, output=None, fmt='jenkins'):  # pylint: disable=too-many-arguments
         """
         Assert that junit report xml tree contains a test
         """
@@ -154,7 +154,7 @@ Elapsed time was 3.0 seconds
                 else:
                     assert False
 
-                if status == 'failed' and format == 'bamboo':
+                if status == 'failed' and fmt == 'bamboo':
                     self.assertEqual(test.find("failure").text, output)
                 else:
                     self.assertEqual(test.find("system-out").text, output)
