@@ -298,13 +298,12 @@ class TestResult(object):
         else:
             test.attrib["name"] = self.name
         test.attrib["time"] = "%.1f" % self.time
-        system_out = ElementTree.SubElement(test, "system-out")
-        system_out.text = self.output
         if self.failed:
             failure = ElementTree.SubElement(test, "failure")
             failure.attrib["message"] = "Failed"
-            failure.text = system_out.text
         elif self.skipped:
             skipped = ElementTree.SubElement(test, "skipped")
             skipped.attrib["message"] = "Skipped"
+        system_out = ElementTree.SubElement(test, "system-out")
+        system_out.text = self.output
         return test
