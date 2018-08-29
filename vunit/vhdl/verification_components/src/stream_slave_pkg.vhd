@@ -18,6 +18,9 @@ package stream_slave_pkg is
     p_actor : actor_t;
   end record;
 
+  -- Create a new stream slave object
+  impure function new_stream_slave return stream_slave_t;
+
   -- Reference to future stream result
   alias stream_reference_t is msg_t;
 

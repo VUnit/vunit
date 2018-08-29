@@ -18,6 +18,9 @@ package stream_master_pkg is
     p_actor : actor_t;
   end record;
 
+  -- Create a new stream master object
+  impure function new_stream_master return stream_master_t;
+
   -- Push a data value to the stream
   procedure push_stream(signal net : inout network_t;
                         stream : stream_master_t;
