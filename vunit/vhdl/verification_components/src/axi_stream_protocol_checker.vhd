@@ -23,8 +23,12 @@ entity axi_stream_protocol_checker is
     tvalid   : in std_logic;
     tready   : in std_logic := '1';
     tdata    : in std_logic_vector(data_length(protocol_checker) - 1 downto 0);
-    tlast    : in std_logic := '1';
-    tid      : in std_logic_vector := ""
+    tlast    : in std_logic                                                    := '1';
+    tkeep    : in std_logic_vector(data_length(protocol_checker)/8-1 downto 0) := (others => '0');
+    tstrb    : in std_logic_vector(data_length(protocol_checker)/8-1 downto 0) := (others => '0');
+    tid      : in std_logic_vector(id_length(protocol_checker)-1 downto 0)     := (others => '0');
+    tdest    : in std_logic_vector(dest_length(protocol_checker)-1 downto 0)   := (others => '0');
+    tuser    : in std_logic_vector(user_length(protocol_checker)-1 downto 0)   := (others => '0')
     );
 end entity;
 
@@ -38,11 +42,34 @@ architecture a of axi_stream_protocol_checker is
   constant rule7_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 7");
   constant rule8_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 8");
   constant rule9_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 9");
+  constant rule10_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 10");
+  constant rule11_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 11");
+  constant rule12_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 12");
+  constant rule13_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 13");
+  constant rule14_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 14");
+  constant rule15_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 15");
+  constant rule16_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 16");
+  constant rule17_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 17");
+  constant rule18_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 18");
+  constant rule19_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 19");
+  constant rule20_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 20");
+  constant rule21_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 21");
+  constant rule22_checker : checker_t := new_checker(get_name(protocol_checker.p_logger) & ":rule 22");
 
-  signal enable_rule1_check, enable_rule2_check, handshake_is_not_x : std_logic;
+  signal handshake_is_not_x : std_logic;
+  signal enable_rule1_check : std_logic;
+  signal enable_rule2_check : std_logic;
+  signal enable_rule11_check : std_logic;
+  signal enable_rule12_check : std_logic;
+  signal enable_rule13_check : std_logic;
+  signal enable_rule14_check : std_logic;
+  signal enable_rule15_check : std_logic;
+  signal rule20_check_value : std_logic;
+
+  signal areset_n_d  : std_logic := '0';
+  signal areset_rose : std_logic;
+  signal not_tvalid  : std_logic;
 begin
-  check_equal(tid'length, 0, result("for tid'length. tid is not supported"));
-
   handshake_is_not_x <= '1' when not is_x(tvalid) and not is_x(tready) else '0';
 
   -- AXI4STREAM_ERRM_TDATA_STABLE TDATA remains stable when TVALID is asserted,
@@ -150,4 +177,87 @@ begin
     end process;
   end block;
 
+  -- AXI4STREAM_ERRM_TUSER_X A value of X on TUSER is not permitted when not in reset
+  -- is HIGH
+  check_not_unknown(rule10_checker, aclk, areset_n, tuser, result("for tuser when areset_n is high"));
+
+  -- AXI4STREAM_ERRM_TUSER_STABLE TUSER payload signals must remain constant while TVALID is asserted,
+  -- and TREADY is de-asserted
+  enable_rule11_check <= '1' when (handshake_is_not_x = '1') and not is_x(tuser) else '0';
+  check_stable(
+    rule11_checker, aclk, enable_rule11_check, tvalid, tready, tuser,
+    result("for tuser while waiting for tready"));
+
+  -- AXI4STREAM_ERRM_TID_STABLE TID remains stable when TVALID is asserted,
+  -- and TREADY is LOW
+  enable_rule12_check <= '1' when (handshake_is_not_x = '1') and not is_x(tid) else '0';
+  check_stable(
+    rule12_checker, aclk, enable_rule12_check, tvalid, tready, tid,
+    result("for tid while waiting for tready"));
+
+  -- AXI4STREAM_ERRM_TDEST_STABLE TDEST remains stable when TVALID is asserted,
+  -- and TREADY is LOW
+  enable_rule13_check <= '1' when (handshake_is_not_x = '1') and not is_x(tdest) else '0';
+  check_stable(
+    rule13_checker, aclk, enable_rule13_check, tvalid, tready, tdest,
+    result("for tdest while waiting for tready"));
+
+  -- AXI4STREAM_ERRM_TSTRB_STABLE TSTRB remains stable when TVALID is asserted,
+  -- and TREADY is LOW
+  enable_rule14_check <= '1' when (handshake_is_not_x = '1') and not is_x(tstrb) else '0';
+  check_stable(
+    rule14_checker, aclk, enable_rule14_check, tvalid, tready, tstrb,
+    result("for tstrb while waiting for tready"));
+
+  -- AXI4STREAM_ERRM_TKEEP_STABLE TKEEP remains stable when TVALID is asserted,
+  -- and TREADY is LOW
+  enable_rule15_check <= '1' when (handshake_is_not_x = '1') and not is_x(tkeep) else '0';
+  check_stable(
+    rule15_checker, aclk, enable_rule15_check, tvalid, tready, tkeep,
+    result("for tkeep while waiting for tready"));
+
+  -- AXI4STREAM_ERRM_TID_X A value of X on TID is not permitted when TVALID
+  -- is HIGH
+  check_not_unknown(rule16_checker, aclk, tvalid, tid, result("for tid when tvalid is high"));
+
+  -- AXI4STREAM_ERRM_TDEST_X A value of X on TDEST is not permitted when TVALID
+  -- is HIGH
+  check_not_unknown(rule17_checker, aclk, tvalid, tdest, result("for tdest when tvalid is high"));
+
+  -- AXI4STREAM_ERRM_TSTRB_X A value of X on TSTRB is not permitted when TVALID
+  -- is HIGH
+  check_not_unknown(rule18_checker, aclk, tvalid, tstrb, result("for tstrb when tvalid is high"));
+
+  -- AXI4STREAM_ERRM_TKEEP_X A value of X on TKEEP is not permitted when TVALID
+  -- is HIGH
+  check_not_unknown(rule19_checker, aclk, tvalid, tkeep, result("for tkeep when tvalid is high"));
+
+  -- AXI4STREAM_ERRM_TKEEP_TSTRB If TKEEP is de-asserted, then TSTRB must also be de-asserted
+  -- eschmidscs: Binding this to tvalid. ARM does not include that, but makes more sense this way?
+  rule20_check_value <= not(or(((not tkeep) and tstrb)));
+  check_true(rule20_checker, aclk, tvalid, rule20_check_value, result("for tstrb de-asserted when tkeep de-asserted"));
+
+  -- AXI4STREAM_AUXM_TID_TDTEST_WIDTH  The value of ID_WIDTH + DEST_WIDTH must not exceed 24
+  -- eschmidscs: Must wait a short while to allow testing of the rule.
+  process
+  begin
+    wait for 1 ps;
+    check_true(rule21_checker, tid'length + tdest'length <= 24, result("for tid width and tdest width together must be less than 25"));
+    wait;
+  end process;
+
+  -- AXI4STREAM_ERRM_TVALID_RESET TVALID is LOW for the first cycle after ARESETn goes HIGH
+  process (aclk) is
+  begin
+    if rising_edge(aclk) then
+      areset_n_d <= areset_n;
+    end if;
+  end process;
+  areset_rose <= areset_n and not areset_n_d;
+  not_tvalid   <= not tvalid;
+  check_implication(rule22_checker, aclk, areset_n, areset_rose, not_tvalid, result("for tvalid de-asserted after reset release"));
+
+  -- for * being DATA, KEEP, STRB, ID, DEST or USER
+  -- AXI4STREAM_ERRM_T*_TIEOFF T* must be stable while *_WIDTH has been set to zero
+  -- cannot be checked, vector has negative range
 end architecture;
