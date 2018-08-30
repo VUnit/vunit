@@ -246,6 +246,10 @@ begin
       push_axi_stream(net, master_axi_stream, x"12", tlast => '1', tkeep => "1", tstrb => "1", tid => x"23", tdest => x"34", tuser => x"45");
       check_axi_stream(net, slave_axi_stream, x"12", '1', "1", "1", x"23", x"34", x"45", "checking axi stream");
 
+    elsif run("test passing reduced check") then
+      push_axi_stream(net, master_axi_stream, x"12", tlast => '1', tkeep => "1", tstrb => "1", tid => x"23", tdest => x"34", tuser => x"45");
+      check_axi_stream(net, slave_axi_stream, x"12", '1', msg => "reduced checking axi stream");
+
     elsif run("test failing check") then
       mocklogger := get_logger("check");
       mock(mocklogger);
