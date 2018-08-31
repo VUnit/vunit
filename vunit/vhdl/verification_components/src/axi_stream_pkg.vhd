@@ -669,22 +669,32 @@ package body axi_stream_pkg is
       tuser    : std_logic_vector := "";
       msg      : string           := ""
     ) is
-    variable got_tdata : std_logic_vector(expected'range);
+    variable got_tdata : std_logic_vector(data_length(axi_stream)-1 downto 0);
     variable got_tlast : std_logic;
-    variable got_tkeep : std_logic_vector(tkeep'range);
-    variable got_tstrb : std_logic_vector(tstrb'range);
-    variable got_tid   : std_logic_vector(tid'range);
-    variable got_tdest : std_logic_vector(tdest'range);
-    variable got_tuser : std_logic_vector(tuser'range);
+    variable got_tkeep : std_logic_vector(data_length(axi_stream)/8-1 downto 0);
+    variable got_tstrb : std_logic_vector(data_length(axi_stream)/8-1 downto 0);
+    variable got_tid   : std_logic_vector(id_length(axi_stream)-1 downto 0);
+    variable got_tdest : std_logic_vector(dest_length(axi_stream)-1 downto 0);
+    variable got_tuser : std_logic_vector(user_length(axi_stream)-1 downto 0);
   begin
     pop_axi_stream(net, axi_stream, got_tdata, got_tlast, got_tkeep, got_tstrb, got_tid, got_tdest, got_tuser);
     check_equal(got_tdata, expected, msg);
     check_equal(got_tlast, tlast, msg);
-    check_equal(got_tkeep, tkeep, msg);
-    check_equal(got_tstrb, tstrb, msg);
-    check_equal(got_tid, tid, msg);
-    check_equal(got_tdest, tdest, msg);
-    check_equal(got_tuser, tuser, msg);
+    if tkeep'length > 0 then
+      check_equal(got_tkeep, tkeep, msg);
+    end if;
+    if tstrb'length > 0 then
+      check_equal(got_tstrb, tstrb, msg);
+    end if;
+    if tid'length > 0 then
+      check_equal(got_tid, tid, msg);
+    end if;
+    if tdest'length > 0 then
+      check_equal(got_tdest, tdest, msg);
+    end if;
+    if tuser'length > 0 then
+      check_equal(got_tuser, tuser, msg);
+    end if;
   end procedure;
 
   procedure push_axi_stream_transaction(msg : msg_t; axi_stream_transaction : axi_stream_transaction_t) is
