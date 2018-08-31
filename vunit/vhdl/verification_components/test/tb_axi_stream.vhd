@@ -62,6 +62,14 @@ architecture a of tb_axi_stream is
   signal tid      : std_logic_vector(id_length(slave_axi_stream)-1 downto 0);
   signal tdest    : std_logic_vector(dest_length(slave_axi_stream)-1 downto 0);
   signal tuser    : std_logic_vector(user_length(slave_axi_stream)-1 downto 0);
+
+  signal not_valid      : std_logic;
+  signal not_valid_data : std_logic;
+  signal not_valid_keep : std_logic;
+  signal not_valid_strb : std_logic;
+  signal not_valid_id   : std_logic;
+  signal not_valid_dest : std_logic;
+  signal not_valid_user : std_logic;
 begin
 
   main : process
@@ -285,6 +293,21 @@ begin
       tid    => tid,
       tuser  => tuser,
       tdest  => tdest);
+
+ not_valid <= not tvalid;
+
+ not_valid_data <= '1' when tdata = std_logic_vector'("XXXXXXXX") else '0';
+ check_true(aclk, not_valid, not_valid_data, "Invalid data not X");
+ not_valid_keep <= '1' when tkeep = std_logic_vector'("X") else '0';
+ check_true(aclk, not_valid, not_valid_keep, "Invalid keep not X");
+ not_valid_strb <= '1' when tstrb = std_logic_vector'("X") else '0';
+ check_true(aclk, not_valid, not_valid_strb, "Invalid strb not X");
+ not_valid_id   <= '1' when tid   = std_logic_vector'("XXXXXXXX") else '0';
+ check_true(aclk, not_valid, not_valid_id,   "Invalid id not X");
+ not_valid_dest <= '1' when tdest = std_logic_vector'("XXXXXXXX") else '0';
+ check_true(aclk, not_valid, not_valid_dest, "Invalid dest not X");
+ not_valid_user <= '1' when tuser = std_logic_vector'("00000000") else '0';
+ check_true(aclk, not_valid, not_valid_user, "Invalid user not 0");
 
   axi_stream_slave_inst : entity work.axi_stream_slave
     generic map(
