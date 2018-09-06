@@ -18,36 +18,43 @@ class IndependentSimTestCase(object):
     """
     A test case to be run in an independent simulation
     """
-    def __init__(self, test_case, config, simulator_if, elaborate_only=False):
+    def __init__(self, test, config, simulator_if, elaborate_only=False):
         self._name = "%s.%s" % (config.library_name, config.design_unit_name)
 
         if not config.is_default:
             self._name += "." + config.name
 
-        if test_case is not None:
-            self._name += "." + test_case
+        if test.is_explicit:
+            self._name += "." + test.name
         elif config.is_default:
             # JUnit XML test reports wants three dotted name hierarchies
             self._name += ".all"
 
-        self._test_case = test_case
+        self._test = test
 
         self._run = TestRun(simulator_if=simulator_if,
                             config=config,
                             elaborate_only=elaborate_only,
                             test_suite_name=self._name,
-                            test_cases=[test_case])
+                            test_cases=[test.name])
 
     @property
     def name(self):
         return self._name
+
+    @property
+    def location(self):
+        """
+        Returns the location of the test (file_name, lineno)
+        """
+        return (self._test.file_name, self._test.lineno)
 
     def run(self, *args, **kwargs):
         """
         Run the test case using the output_path
         """
         results = self._run.run(*args, **kwargs)
-        return results[self._test_case] == PASSED
+        return results[self._test.name] == PASSED
 
 
 class SameSimTestSuite(object):
@@ -55,28 +62,44 @@ class SameSimTestSuite(object):
     A test suite where multiple test cases are run within the same simulation
     """
 
-    def __init__(self, test_cases, config, simulator_if, elaborate_only=False):
+    def __init__(self, tests, config, simulator_if, elaborate_only=False):
         self._name = "%s.%s" % (config.library_name, config.design_unit_name)
 
         if not config.is_default:
             self._name += "." + config.name
 
+        self._tests = tests
         self._run = TestRun(simulator_if=simulator_if,
                             config=config,
                             elaborate_only=elaborate_only,
                             test_suite_name=self._name,
-                            test_cases=test_cases)
+                            test_cases=[test.name for test in tests])
 
     @property
-    def test_cases(self):
-        return self._run.test_cases
+    def test_names(self):
+        return [_full_name(self._name, test.name)
+                for test in self._tests]
+
+    @property
+    def test_locations(self):
+        """
+        Returns a dictionary mapping full test name to location (file_name, lineno)
+        """
+        return {_full_name(self._name, test.name): (test.file_name, test.lineno)
+                for test in self._tests}
 
     @property
     def name(self):
         return self._name
 
     def keep_matches(self, test_filter):
-        return self._run.keep_matches(test_filter)
+        """
+        Keep tests which pattern return False if no remaining tests
+        """
+        self._tests = [test for test in self._tests
+                       if test_filter(_full_name(self.name, test.name))]
+        self._run.set_test_cases([test.name for test in self._tests])
+        return len(self._tests) > 0
 
     def run(self, *args, **kwargs):
         """
@@ -100,18 +123,8 @@ class TestRun(object):
         self._test_suite_name = test_suite_name
         self._test_cases = test_cases
 
-    def keep_matches(self, test_filter):
-        """
-        Keep tests which pattern return False if no remaining tests
-        """
-        self._test_cases = [name for name in self._test_cases
-                            if test_filter(_full_name(self._test_suite_name, name))]
-        return len(self._test_cases) > 0
-
-    @property
-    def test_cases(self):
-        return [_full_name(self._test_suite_name, test_case)
-                for test_case in self._test_cases]
+    def set_test_cases(self, test_cases):
+        self._test_cases = test_cases
 
     def run(self, output_path, read_output):
         """

@@ -974,8 +974,17 @@ class VHDLReference(object):
 VHDL_REMOVE_COMMENT_RE = re.compile(r'--[^\n]*')
 
 
+def _comment_repl(match):
+    """
+    Replace comment with equal amount of whitespace to make
+    lexical position unaffected
+    """
+    text = match.group(0)
+    return " " * len(text)
+
+
 def remove_comments(code):
     """
     Return the code with comments removed
     """
-    return VHDL_REMOVE_COMMENT_RE.sub('', code)
+    return VHDL_REMOVE_COMMENT_RE.sub(_comment_repl, code)

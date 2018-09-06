@@ -14,10 +14,15 @@ Tests the test test_bench module
 import unittest
 from os.path import join
 
-from vunit.test_bench import TestBench
+from vunit.test_bench import (TestBench,
+                              _remove_verilog_comments,
+                              _find_tests,
+                              _get_line_offsets,
+                              _lookup_lineno)
 from vunit.ostools import write_file
 from vunit.test.mock_2or3 import mock
-from vunit.test.common import with_tempdir
+from vunit.test.common import (with_tempdir,
+                               get_vhdl_test_bench)
 
 
 class TestTestBench(unittest.TestCase):
@@ -138,33 +143,6 @@ if my_protected_variable.run("Test 10")
                                "lib.tb_module.Test 3",
                                "lib.tb_module.Test 7",
                                "lib.tb_module.Test 8"])
-
-    @with_tempdir
-    @mock.patch("vunit.test_bench.LOGGER")
-    def test_duplicate_tests_cause_error(self, mock_logger, tempdir):
-        design_unit = Entity('tb_entity',
-                             file_name=join(tempdir, "file.vhd"),
-                             contents='''\
-if run("Test_1")
---if run("Test_1")
-if run("Test_3")
-if run("Test_2")
-if run("Test_3")
-if run("Test_3")
-if run("Test_2")
-''')
-        design_unit.generic_names = ["runner_cfg"]
-        self.assertRaises(RuntimeError, TestBench, design_unit)
-
-        error_calls = mock_logger.error.call_args_list
-        self.assertEqual(len(error_calls), 2)
-        call0_args = error_calls[0][0]
-        self.assertIn("Test_3", call0_args)
-        self.assertIn(design_unit.file_name, call0_args)
-
-        call1_args = error_calls[1][0]
-        self.assertIn("Test_2", call1_args)
-        self.assertIn(design_unit.file_name, call1_args)
 
     @with_tempdir
     def test_keyerror_on_non_existent_test(self, tempdir):
@@ -354,12 +332,176 @@ if run("Test 2")
                          {"name": "value"})
 
     @with_tempdir
+    def test_locations(self, tempdir):
+        file_name = join(tempdir, "file.vhd")
+
+        for same_sim in [True, False]:
+            contents = get_vhdl_test_bench("tb_entity",
+                                           tests=["Test 1", "Test 2"],
+                                           same_sim=same_sim)
+
+            design_unit = Entity('tb_entity',
+                                 file_name=file_name,
+                                 contents=contents)
+            design_unit.generic_names = ["runner_cfg", "name"]
+            test_bench = TestBench(design_unit)
+            test_suites = self.create_tests(test_bench)
+
+            if same_sim:
+                self.assertEqual(len(test_suites), 1)
+            else:
+                self.assertEqual(len(test_suites), 2)
+
+            self.assertEqual(set(item
+                                 for test_suite in test_suites
+                                 for item in test_suite.test_locations.items()),
+                             set([("lib.tb_entity.Test 1", (file_name, 13)),
+                                  ("lib.tb_entity.Test 2", (file_name, 14))]))
+
+    @with_tempdir
     def test_fail_on_unknown_sim_option(self, tempdir):
         design_unit = Entity('tb_entity',
                              file_name=join(tempdir, "file.vhd"))
         design_unit.generic_names = ["runner_cfg"]
         test_bench = TestBench(design_unit)
         self.assertRaises(ValueError, test_bench.set_sim_option, "unknown", "value")
+
+    def test_remove_verilog_comments(self):
+        self.assertEqual(_remove_verilog_comments("a\n// foo \nb"),
+                         "a\n       \nb")
+        self.assertEqual(_remove_verilog_comments("a\n/* foo\n \n */ \nb"),
+                         "a\n      \n \n    \nb")
+
+    def test_get_line_offsets(self):
+        self.assertEqual(_get_line_offsets(""), [])
+        self.assertEqual(_get_line_offsets("1"), [0])
+        self.assertEqual(_get_line_offsets("12\n3"), [0, 3])
+        self.assertEqual(_get_line_offsets("12\n3\n"), [0, 3])
+        self.assertEqual(_get_line_offsets("12\n3\n4"), [0, 3, 5])
+
+    def test_lookup_lineno(self):
+        offsets = _get_line_offsets("12\n3\n4")
+        self.assertEqual(_lookup_lineno(0, offsets), 1)
+        self.assertEqual(_lookup_lineno(1, offsets), 1)
+        self.assertEqual(_lookup_lineno(2, offsets), 1)
+        self.assertEqual(_lookup_lineno(3, offsets), 2)
+        self.assertEqual(_lookup_lineno(4, offsets), 2)
+        self.assertEqual(_lookup_lineno(5, offsets), 3)
+
+    def test_find_explicit_tests_vhdl(self):
+        test1, test2 = _find_tests("""\
+        -- if run("No test")
+        if run("Test 1")
+        if run("Test 2")
+        """, file_name="file_name.vhd")
+
+        self.assertEqual(test1.name, "Test 1")
+        self.assertEqual(test1.file_name, "file_name.vhd")
+        self.assertEqual(test1.lineno, 2)
+
+        self.assertEqual(test2.name, "Test 2")
+        self.assertEqual(test2.file_name, "file_name.vhd")
+        self.assertEqual(test2.lineno, 3)
+
+    def test_find_explicit_tests_verilog(self):
+        test1, test2 = _find_tests("""\
+        /* `TEST_CASE("No test")
+
+        */
+        // `TEST_CASE("No test")
+        `TEST_CASE("Test 1")
+        `TEST_CASE("Test 2")
+        """, file_name="file_name.sv")
+
+        self.assertEqual(test1.name, "Test 1")
+        self.assertEqual(test1.file_name, "file_name.sv")
+        self.assertEqual(test1.lineno, 5)
+
+        self.assertEqual(test2.name, "Test 2")
+        self.assertEqual(test2.file_name, "file_name.sv")
+        self.assertEqual(test2.lineno, 6)
+
+    def test_find_implicit_test_vhdl(self):
+        with mock.patch("vunit.test_bench.LOGGER") as logger:
+            test, = _find_tests("""\
+
+            test_runner_setup(
+            """, file_name="file_name.vhd")
+            self.assertEqual(test.name, None)
+            self.assertEqual(test.file_name, "file_name.vhd")
+            self.assertEqual(test.lineno, 2)
+            assert not logger.warning.called
+
+        with mock.patch("vunit.test_bench.LOGGER") as logger:
+            test, = _find_tests("""\
+
+            test_runner_setup
+            """, file_name="file_name.vhd")
+            self.assertEqual(test.name, None)
+            self.assertEqual(test.file_name, "file_name.vhd")
+            self.assertEqual(test.lineno, 1)
+            assert logger.warning.called
+
+        with mock.patch("vunit.test_bench.LOGGER") as logger:
+            test, = _find_tests("""\
+
+            """, file_name="file_name.vhd")
+            self.assertEqual(test.name, None)
+            self.assertEqual(test.file_name, "file_name.vhd")
+            self.assertEqual(test.lineno, 1)
+            assert logger.warning.called
+
+    def test_find_implicit_test_verilog(self):
+        with mock.patch("vunit.test_bench.LOGGER") as logger:
+            test, = _find_tests("""\
+
+            `TEST_SUITE""", file_name="file_name.sv")
+            self.assertEqual(test.name, None)
+            self.assertEqual(test.file_name, "file_name.sv")
+            self.assertEqual(test.lineno, 2)
+            assert not logger.warning.called
+
+        with mock.patch("vunit.test_bench.LOGGER") as logger:
+            test, = _find_tests("""\
+            TEST_SUITE
+            """, file_name="file_name.sv")
+            self.assertEqual(test.name, None)
+            self.assertEqual(test.file_name, "file_name.sv")
+            self.assertEqual(test.lineno, 1)
+            assert logger.warning.called
+
+        with mock.patch("vunit.test_bench.LOGGER") as logger:
+            test, = _find_tests("""\
+            """, file_name="file_name.sv")
+            self.assertEqual(test.name, None)
+            self.assertEqual(test.file_name, "file_name.sv")
+            self.assertEqual(test.lineno, 1)
+            assert logger.warning.called
+
+    @mock.patch("vunit.test_bench.LOGGER")
+    def test_duplicate_tests_cause_error(self, mock_logger):
+        file_name = "file.vhd"
+        self.assertRaises(RuntimeError, _find_tests, '''\
+if run("Test_1")
+--if run("Test_1")
+if run("Test_3")
+if run("Test_2")
+if run("Test_3")
+if run("Test_3")
+if run("Test_2")
+        ''', file_name=file_name)
+
+        error_calls = mock_logger.error.call_args_list
+        self.assertEqual(len(error_calls), 3)
+
+        msg = error_calls[0][0][0] % error_calls[0][0][1:]
+        self.assertEqual(msg, 'Duplicate test "Test_3" in %s line 5 previously defined on line 3' % file_name)
+
+        msg = error_calls[1][0][0] % error_calls[1][0][1:]
+        self.assertEqual(msg, 'Duplicate test "Test_3" in %s line 6 previously defined on line 3' % file_name)
+
+        msg = error_calls[2][0][0] % error_calls[2][0][1:]
+        self.assertEqual(msg, 'Duplicate test "Test_2" in %s line 7 previously defined on line 4' % file_name)
 
     def assert_has_tests(self, test_list, tests):
         """
@@ -372,9 +514,10 @@ if run("Test 2")
             if isinstance(test2, tuple):
                 name, test_cases = test2
                 self.assertEqual(test1.name, name)
-                self.assertEqual(test1.test_cases, list(test_cases))
+                self.assertEqual(test1.test_names, list(test_cases))
             else:
                 self.assertEqual(test1.name, test2)
+                self.assertEqual(test1.test_names, [test2])
 
     @staticmethod
     def create_tests(test_bench):

@@ -35,22 +35,24 @@ class TestList(object):
         self._test_suites = [test for test in self._test_suites
                              if test.keep_matches(test_filter)]
 
+    @property
     def num_tests(self):
         """
         Return the number of tests within
         """
         num_tests = 0
         for test_suite in self:
-            num_tests += len(test_suite.test_cases)
+            num_tests += len(test_suite.test_names)
         return num_tests
 
+    @property
     def test_names(self):
         """
         Return the names of all tests
         """
         names = []
         for test_suite in self:
-            names += test_suite.test_cases
+            names += test_suite.test_names
         return names
 
     def __iter__(self):
@@ -71,12 +73,16 @@ class TestSuiteWrapper(object):
         self._test_case = test_case
 
     @property
-    def test_cases(self):
+    def test_names(self):
         return [self._test_case.name]
 
     @property
     def name(self):
         return self._test_case.name
+
+    @property
+    def test_locations(self):
+        return {self.name: self._test_case.location}
 
     def keep_matches(self, test_filter):
         return test_filter(self._test_case.name)

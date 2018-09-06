@@ -16,7 +16,8 @@ from vunit.vhdl_parser import (VHDLDesignFile,
                                VHDLEnumerationType,
                                VHDLArrayType,
                                VHDLReference,
-                               VHDLRecordType)
+                               VHDLRecordType,
+                               remove_comments)
 
 
 class TestVHDLParser(TestCase):  # pylint: disable=too-many-public-methods
@@ -438,6 +439,10 @@ record
         self.assertEqual(records['foo'][0].subtype_indication.type_mark, 'std_logic_vector')
         self.assertEqual(records['foo'][0].subtype_indication.constraint, '(7 downto 0)')
         self.assertTrue(records['foo'][0].subtype_indication.array_type)
+
+    def test_remove_comments(self):
+        self.assertEqual(remove_comments("a\n-- foo  \nb"),
+                         "a\n        \nb")
 
     def parse_single_entity(self, code):
         """
