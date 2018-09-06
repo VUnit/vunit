@@ -273,3 +273,81 @@ Further info:
    * `Announcing Docker Enterprise Edition <https://blog.docker.com/2017/03/docker-enterprise-edition/>`_
    * `Introducing Moby Project: a new open-source project to advance the software containerization movement <https://blog.docker.com/2017/04/introducing-the-moby-project/>`_
 * If you don't want or cannot install docker, you can still use it online. `Play with Docker <https://play-with-docker.com>`_ (PWD) *"is a Docker playground which allows users to run Docker commands in a matter of seconds. It gives the experience of having a free Alpine Linux Virtual Machine in browser, where you can build and run Docker containers and even create clusters"*.
+
+
+.. _json_export:
+
+JSON Export
+-----------
+VUnit supports exporting project information through the ``--export-json`` command
+line argument. A JSON file is written containing the list of all files
+added to the project as well as a list of all tests. Each test has a
+mapping to its source code location.
+
+The feature can be used for IDE-integration where the IDE can know the
+path to all files, the library mapping of files and the source code
+location of all tests.
+
+The JSON export file has three top level values:
+
+  - ``export_format_version``: The `semantic <https://semver.org/>`_ version of the format
+  - ``files``: List of project files. Each file item has ``file_name`` and ``library_name``.
+  - ``tests``: List of tests. Each test has ``location``
+    information. The ``location`` contains the file name as well as
+    the offset and length in characters of the symbol that defines the
+    test.
+
+.. code-block:: json
+   :caption: Example JSON export file (file names are always absolute but the example has been simplified)
+
+   {
+       "export_format_version": {
+           "major": 1,
+           "minor": 0,
+           "patch": 0
+       },
+       "files": [
+           {
+               "library_name": "lib",
+               "file_name": "tb_example_many.vhd"
+           },
+           {
+               "library_name": "lib",
+               "file_name": "tb_example.vhd"
+           }
+       ],
+       "tests": [
+           {
+               "attributes": {},
+               "location": {
+                   "file_name": "tb_example_many.vhd",
+                   "length": 9,
+                   "offset": 556
+               },
+               "name": "lib.tb_example_many.test_pass"
+           },
+           {
+               "attributes": {},
+               "location": {
+                   "file_name": "tb_example_many.vhd",
+                   "length": 9,
+                   "offset": 624
+               },
+               "name": "lib.tb_example_many.test_fail"
+           },
+           {
+               "attributes": {".attr"},
+               "location": {
+                   "file_name": "tb_example.vhd",
+                   "length": 18,
+                   "offset": 465
+               },
+               "name": "lib.tb_example.all"
+           }
+       ]
+   }
+
+
+.. note:: Several tests may map to the same source code location if
+          the user created multiple :ref:`configurations
+          <configurations>` of the same basic tests.

@@ -48,6 +48,7 @@ Main Features
 -  :doc:`Logging framework <./logging/user_guide>` supporting display and file output, different log
    levels, visibility settings of levels and design hierarchy, output formatting
    and multiple loggers. Supports machine readable output formats that for example can be read by a spreadsheet.
+-  Requirements trace-ability through :ref:`JSON Export <json_export>` and :ref:`test attributes <attributes>`.
 -  Optional location preprocessor that traces log and check calls back to file
    and line number.
 -  Outputs JUnit report files for better `Jenkins`_ :ref:`integration <continuous_integration>`.

@@ -8,6 +8,48 @@ The Python interface of VUnit is exposed through the :class:`VUnit
 
 .. automodule:: vunit.ui
 
+
+.. _attributes:
+
+Attributes
+----------
+The user may set custom attributes on test cases via comments. The
+attributes can for example be used to achieve requirements
+trace-ability. The attributes are exported in the :ref:`JSON Export
+<json_export>`. All user defined attributes must start with a dot
+(``.``) as non-dot attributes are reserved for built-in attributes.
+
+Example
+<<<<<<<
+.. code-block:: vhdl
+   :caption: VHDL Example
+
+   if run("Test 1") then
+       -- vunit: .requirement-117
+   end if;
+
+
+.. code-block:: verilog
+   :caption: SystemVerilog Example
+
+   `TEST_SUITE begin
+       `TEST_CASE("Test 1") begin
+           // vunit: .requirement-117
+        end
+    end
+
+.. code-block:: json
+   :caption: JSON Export has attributes attached to each test. The
+             attributes all have null value to be forward compatible a future
+             where user attributes can have values.
+
+    {
+       "attributes": {
+            ".requirement-117": null
+       }
+    }
+
+
 .. _pre_and_post_hooks:
 
 Pre and post simulation hooks

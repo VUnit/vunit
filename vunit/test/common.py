@@ -146,12 +146,16 @@ def with_tempdir(func):
 
 def get_vhdl_test_bench(test_bench_name,
                         tests=None,
-                        same_sim=False):
+                        same_sim=False,
+                        test_attributes=None):
     """
     Create a valid VUnit test bench
 
     returns a string
     """
+
+    if test_attributes is None:
+        test_attributes = {}
 
     tests_contents = ""
     if tests is None:
@@ -166,6 +170,10 @@ def get_vhdl_test_bench(test_bench_name,
                 tests_contents += "    elsif "
 
             tests_contents += 'run("%s") then\n' % test_name
+
+            if test_name in test_attributes:
+                for attr_name in test_attributes[test_name]:
+                    tests_contents += "-- vunit: %s\n" % attr_name
 
             if idx == last_idx:
                 tests_contents += '    endif;\n'
@@ -201,11 +209,13 @@ end architecture;
 def create_vhdl_test_bench_file(test_bench_name,
                                 file_name,
                                 tests=None,
-                                same_sim=False):
+                                same_sim=False,
+                                test_attributes=None):
     """
     Create a valid VUnit test bench and writes it to file_name
     """
     with open(file_name, "w") as fptr:
         fptr.write(get_vhdl_test_bench(test_bench_name=test_bench_name,
                                        tests=tests,
-                                       same_sim=same_sim))
+                                       same_sim=same_sim,
+                                       test_attributes=test_attributes))

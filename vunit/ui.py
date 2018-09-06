@@ -216,6 +216,7 @@ import csv
 import sys
 import traceback
 import logging
+import json
 import os
 from os.path import exists, abspath, join, basename, splitext, normpath, dirname
 from glob import glob
@@ -797,6 +798,9 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         Base vunit main function without performing exit
         """
 
+        if self._args.export_json is not None:
+            return self._main_export_json(self._args.export_json)
+
         if self._args.list:
             return self._main_list_only()
 
@@ -862,6 +866,52 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         for test_name in test_list.test_names:
             print(test_name)
         print("Listed %i tests" % test_list.num_tests)
+        return True
+
+    def _main_export_json(self, json_file_name):
+        """
+        Main function when exporting to JSON
+        """
+
+        file_objects = self.get_compile_order()
+        files = []
+        for source_file in file_objects:
+            files.append(dict(file_name=abspath(source_file.name),
+                              library_name=source_file.library.name))
+
+        tests = []
+        for test_suite in self._create_tests(simulator_if=None):
+            test_information = test_suite.test_information
+            for name in test_suite.test_names:
+                info = test_information[name]
+
+                attributes = {}
+                for attr in info.attributes:
+                    attributes[attr.name] = attr.value
+
+                tests.append(dict(name=name,
+                                  location=dict(file_name=info.location.file_name,
+                                                offset=info.location.offset,
+                                                length=info.location.length),
+                                  attributes=attributes))
+
+        json_data = dict(
+            # The semantic version (https://semver.org/) of the JSON export data format
+            export_format_version=dict(major=1, minor=0, patch=0),
+
+            # The set of files added to the project
+            files=files,
+
+            # The list of all tests
+            tests=tests)
+
+        with open(json_file_name, "w") as fptr:
+            json.dump(json_data,
+                      fptr,
+                      sort_keys=True,
+                      indent=4,
+                      separators=(',', ': '))
+
         return True
 
     def _main_list_files_only(self):

@@ -22,6 +22,7 @@ from vunit.test_bench import (TestBench,
                               _find_attributes,
                               _find_tests_and_attributes,
                               Test,
+                              FileLocation,
                               Attribute,
                               LegacyAttribute)
 from vunit.ostools import write_file
@@ -401,8 +402,8 @@ if run("Test 2")
             self.assertEqual(set(item
                                  for test_suite in test_suites
                                  for item in test_suite.test_information.items()),
-                             set([("lib.tb_entity.Test 1", Test("Test 1", file_name, 14)),
-                                  ("lib.tb_entity.Test 2", Test("Test 2", file_name, 15))]))
+                             set([("lib.tb_entity.Test 1", Test("Test 1", _file_location(file_name, 'Test 1'))),
+                                  ("lib.tb_entity.Test 2", Test("Test 2", _file_location(file_name, 'Test 2')))]))
 
     @with_tempdir
     def test_fail_on_unknown_sim_option(self, tempdir):
@@ -442,12 +443,12 @@ if run("Test 2")
         """, file_name="file_name.vhd")
 
         self.assertEqual(test1.name, "Test 1")
-        self.assertEqual(test1.file_name, "file_name.vhd")
-        self.assertEqual(test1.lineno, 2)
+        self.assertEqual(test1.location.file_name, "file_name.vhd")
+        self.assertEqual(test1.location.lineno, 2)
 
         self.assertEqual(test2.name, "Test 2")
-        self.assertEqual(test2.file_name, "file_name.vhd")
-        self.assertEqual(test2.lineno, 3)
+        self.assertEqual(test2.location.file_name, "file_name.vhd")
+        self.assertEqual(test2.location.lineno, 3)
 
     def test_find_explicit_tests_verilog(self):
         test1, test2 = _find_tests("""\
@@ -460,12 +461,12 @@ if run("Test 2")
         """, file_name="file_name.sv")
 
         self.assertEqual(test1.name, "Test 1")
-        self.assertEqual(test1.file_name, "file_name.sv")
-        self.assertEqual(test1.lineno, 5)
+        self.assertEqual(test1.location.file_name, "file_name.sv")
+        self.assertEqual(test1.location.lineno, 5)
 
         self.assertEqual(test2.name, "Test 2")
-        self.assertEqual(test2.file_name, "file_name.sv")
-        self.assertEqual(test2.lineno, 6)
+        self.assertEqual(test2.location.file_name, "file_name.sv")
+        self.assertEqual(test2.location.lineno, 6)
 
     def test_find_implicit_test_vhdl(self):
         with mock.patch("vunit.test_bench.LOGGER") as logger:
@@ -474,8 +475,8 @@ if run("Test 2")
             test_runner_setup(
             """, file_name="file_name.vhd")
             self.assertEqual(test.name, None)
-            self.assertEqual(test.file_name, "file_name.vhd")
-            self.assertEqual(test.lineno, 2)
+            self.assertEqual(test.location.file_name, "file_name.vhd")
+            self.assertEqual(test.location.lineno, 2)
             assert not logger.warning.called
 
         with mock.patch("vunit.test_bench.LOGGER") as logger:
@@ -484,8 +485,8 @@ if run("Test 2")
             test_runner_setup
             """, file_name="file_name.vhd")
             self.assertEqual(test.name, None)
-            self.assertEqual(test.file_name, "file_name.vhd")
-            self.assertEqual(test.lineno, 1)
+            self.assertEqual(test.location.file_name, "file_name.vhd")
+            self.assertEqual(test.location.lineno, 1)
             assert logger.warning.called
 
         with mock.patch("vunit.test_bench.LOGGER") as logger:
@@ -493,8 +494,8 @@ if run("Test 2")
 
             """, file_name="file_name.vhd")
             self.assertEqual(test.name, None)
-            self.assertEqual(test.file_name, "file_name.vhd")
-            self.assertEqual(test.lineno, 1)
+            self.assertEqual(test.location.file_name, "file_name.vhd")
+            self.assertEqual(test.location.lineno, 1)
             assert logger.warning.called
 
     def test_find_implicit_test_verilog(self):
@@ -503,8 +504,8 @@ if run("Test 2")
 
             `TEST_SUITE""", file_name="file_name.sv")
             self.assertEqual(test.name, None)
-            self.assertEqual(test.file_name, "file_name.sv")
-            self.assertEqual(test.lineno, 2)
+            self.assertEqual(test.location.file_name, "file_name.sv")
+            self.assertEqual(test.location.lineno, 2)
             assert not logger.warning.called
 
         with mock.patch("vunit.test_bench.LOGGER") as logger:
@@ -512,16 +513,16 @@ if run("Test 2")
             TEST_SUITE
             """, file_name="file_name.sv")
             self.assertEqual(test.name, None)
-            self.assertEqual(test.file_name, "file_name.sv")
-            self.assertEqual(test.lineno, 1)
+            self.assertEqual(test.location.file_name, "file_name.sv")
+            self.assertEqual(test.location.lineno, 1)
             assert logger.warning.called
 
         with mock.patch("vunit.test_bench.LOGGER") as logger:
             test, = _find_tests("""\
             """, file_name="file_name.sv")
             self.assertEqual(test.name, None)
-            self.assertEqual(test.file_name, "file_name.sv")
-            self.assertEqual(test.lineno, 1)
+            self.assertEqual(test.location.file_name, "file_name.sv")
+            self.assertEqual(test.location.lineno, 1)
             assert logger.warning.called
 
     @mock.patch("vunit.test_bench.LOGGER")
@@ -550,22 +551,28 @@ if run("Test_2")
         self.assertEqual(msg, 'Duplicate test "Test_2" in %s line 7 previously defined on line 4' % file_name)
 
     def test_find_attributes(self):
-        attributes = _find_attributes("""
+        code = """
 // vunit: run_all_in_same_sim
 // vunit:fail_on_warning
-        """, file_name="file.vhd")
+        """
 
-        self.assertEqual(attributes, [Attribute("run_all_in_same_sim", None, 2),
-                                      Attribute("fail_on_warning", None, 3)])
+        attributes = _find_attributes(code, file_name="file.vhd")
+        self.assertEqual(attributes, [Attribute("run_all_in_same_sim", None,
+                                                _code_file_location(code, 'run_all_in_same_sim', "file.vhd")),
+                                      Attribute("fail_on_warning", None,
+                                                _code_file_location(code, 'fail_on_warning', "file.vhd"))])
 
     def test_find_user_attributes(self):
-        attributes = _find_attributes("""
+        code = """
 // vunit: .foo
 // vunit: .foo-bar
-        """, file_name="file.vhd")
+        """
+        attributes = _find_attributes(code, file_name="file.vhd")
 
-        self.assertEqual(attributes, [Attribute(".foo", None, 2),
-                                      Attribute(".foo-bar", None, 3)])
+        self.assertEqual(attributes, [Attribute(".foo", None,
+                                                _code_file_location(code, ".foo", "file.vhd")),
+                                      Attribute(".foo-bar", None,
+                                                _code_file_location(code, ".foo-bar", "file.vhd"))])
 
     def test_invalid_attributes(self):
         try:
@@ -580,13 +587,16 @@ if run("Test_2")
             assert False, "RuntimeError not raised"
 
     def test_find_legacy_pragma(self):
-        attributes = _find_attributes("""
+        code = """
 // vunit_pragma run_all_in_same_sim
 // vunit_pragma fail_on_warning
-        """, file_name="file.vhd")
+        """
+        attributes = _find_attributes(code, file_name="file.vhd")
 
-        self.assertEqual(attributes, [LegacyAttribute("run_all_in_same_sim", None, 2),
-                                      LegacyAttribute("fail_on_warning", None, 3)])
+        self.assertEqual(attributes, [LegacyAttribute("run_all_in_same_sim", None,
+                                                      _code_file_location(code, 'run_all_in_same_sim', "file.vhd")),
+                                      LegacyAttribute("fail_on_warning", None,
+                                                      _code_file_location(code, 'fail_on_warning', "file.vhd"))])
 
     def test_associate_tests_and_attributes(self):
         (test1, test2), attributes = _find_tests_and_attributes("""\
@@ -598,19 +608,17 @@ if run("Test_2")
 // vunit: .arg2b
         """, file_name="file.vhd")
 
-        self.assertEqual(attributes, [Attribute(".arg0", None, 1)])
+        self.assertEqual([attr.name for attr in attributes], [".arg0"])
 
         self.assertEqual(test1.name, "test1")
-        self.assertEqual(test1.file_name, "file.vhd")
-        self.assertEqual(test1.lineno, 2)
-        self.assertEqual(test1.attributes, [Attribute(".arg1", None, 3),
-                                            Attribute(".arg1b", None, 4)])
+        self.assertEqual(test1.location.file_name, "file.vhd")
+        self.assertEqual(test1.location.lineno, 2)
+        self.assertEqual([attr.name for attr in test1.attributes], [".arg1", ".arg1b"])
 
         self.assertEqual(test2.name, "test2")
-        self.assertEqual(test2.file_name, "file.vhd")
-        self.assertEqual(test2.lineno, 5)
-        self.assertEqual(test2.attributes, [Attribute(".arg2", None, 5),
-                                            Attribute(".arg2b", None, 6)])
+        self.assertEqual(test2.location.file_name, "file.vhd")
+        self.assertEqual(test2.location.lineno, 5)
+        self.assertEqual([attr.name for attr in test2.attributes], [".arg2", ".arg2b"])
 
     def test_duplicate_attributes_ok(self):
         (test1, test2), attributes = _find_tests_and_attributes("""\
@@ -621,17 +629,17 @@ if run("Test_2")
 // vunit: .arg0
         """, file_name="file.vhd")
 
-        self.assertEqual(attributes, [Attribute(".arg0", None, 1)])
+        self.assertEqual([attr.name for attr in attributes], [".arg0"])
 
         self.assertEqual(test1.name, "test1")
-        self.assertEqual(test1.file_name, "file.vhd")
-        self.assertEqual(test1.lineno, 2)
-        self.assertEqual(test1.attributes, [Attribute(".arg0", None, 3)])
+        self.assertEqual(test1.location.file_name, "file.vhd")
+        self.assertEqual(test1.location.lineno, 2)
+        self.assertEqual([attr.name for attr in test1.attributes], [".arg0"])
 
         self.assertEqual(test2.name, "test2")
-        self.assertEqual(test2.file_name, "file.vhd")
-        self.assertEqual(test2.lineno, 4)
-        self.assertEqual(test2.attributes, [Attribute(".arg0", None, 5)])
+        self.assertEqual(test2.location.file_name, "file.vhd")
+        self.assertEqual(test2.location.lineno, 4)
+        self.assertEqual([attr.name for attr in test2.attributes], [".arg0"])
 
     def test_duplicate_test_attributes_not_ok(self):
         try:
@@ -660,18 +668,21 @@ if run("Test_2")
             assert False, "RuntimeError not raised"
 
     def test_does_not_associate_tests_and_legacy_attributes(self):
-        (test1,), attributes = _find_tests_and_attributes("""\
+        code = """\
         if run("test1")
 // vunit_pragma run_all_in_same_sim
 // vunit_pragma fail_on_warning
-        """, file_name="file.vhd")
+        """
+        (test1,), attributes = _find_tests_and_attributes(code, file_name="file.vhd")
 
-        self.assertEqual(attributes, [LegacyAttribute("run_all_in_same_sim", None, 2),
-                                      LegacyAttribute("fail_on_warning", None, 3)])
+        self.assertEqual(attributes, [LegacyAttribute("run_all_in_same_sim", None,
+                                                      _code_file_location(code, "run_all_in_same_sim", "file.vhd")),
+                                      LegacyAttribute("fail_on_warning", None,
+                                                      _code_file_location(code, "fail_on_warning", "file.vhd"))])
 
         self.assertEqual(test1.name, "test1")
-        self.assertEqual(test1.file_name, "file.vhd")
-        self.assertEqual(test1.lineno, 1)
+        self.assertEqual(test1.location.file_name, "file.vhd")
+        self.assertEqual(test1.location.lineno, 1)
         self.assertEqual(test1.attributes, [])
 
     def assert_has_tests(self, test_list, tests):
@@ -760,3 +771,24 @@ class Entity(object):  # pylint: disable=too-many-instance-attributes
 
         if self._add_architecture_callback is not None:
             self._add_architecture_callback()
+
+
+def _code_file_location(code, string, file_name=None):
+    """
+    Create a FileLocation by finding the string within the code
+    """
+    offset = code.find(string)
+    return FileLocation(file_name=file_name,
+                        offset=offset,
+                        length=len(string),
+                        lineno=1 + sum((1 for char in code[:offset] if char == '\n')))
+
+
+def _file_location(file_name, string):
+    """
+    Create a FileLocation by finding the string within file_name
+    """
+
+    with open(file_name, "r") as fptr:
+        code = fptr.read()
+        return _code_file_location(code, string, file_name)

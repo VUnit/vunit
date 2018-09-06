@@ -3,7 +3,8 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 # Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
-# pylint: disable=too-many-public-methods
+#
+# pylint: disable=too-many-public-methods, too-many-lines
 
 """
 Acceptance test of the VUnit public interface class
@@ -14,13 +15,16 @@ import unittest
 from string import Template
 import os
 from os.path import join, dirname, basename, exists, abspath
+import json
 import re
 from re import MULTILINE
 from shutil import rmtree
 from vunit.ui import VUnit
 from vunit.project import VHDL_EXTENSIONS, VERILOG_EXTENSIONS
 from vunit.test.mock_2or3 import mock
-from vunit.test.common import set_env
+from vunit.test.common import (set_env,
+                               with_tempdir,
+                               create_vhdl_test_bench_file)
 from vunit.ostools import renew_path
 from vunit.builtins import add_verilog_include_dir
 from vunit.simulator_interface import SimulatorInterface
@@ -403,6 +407,56 @@ end entity;
 lib2, ent0.vhd
 lib1, ent0.vhd
 Listed 2 files""".splitlines()))
+
+    @with_tempdir
+    def test_export_json(self, tempdir):
+        json_file = join(tempdir, "export.json")
+
+        ui = self._create_ui("--export-json", json_file)
+        lib1 = ui.add_library("lib1")
+        lib2 = ui.add_library("lib2")
+
+        file_name1 = join(tempdir, "tb_foo.vhd")
+        create_vhdl_test_bench_file("tb_foo", file_name1)
+        lib1.add_source_file(file_name1)
+
+        file_name2 = join(tempdir, "tb_bar.vhd")
+        create_vhdl_test_bench_file("tb_bar", file_name2,
+                                    tests=["Test one", "Test two"],
+                                    test_attributes={"Test one": [".attr0"]})
+        lib2.add_source_file(file_name2)
+
+        self._run_main(ui)
+
+        with open(json_file, "r") as fptr:
+            data = json.load(fptr)
+
+        # Check known keys
+        self.assertEqual(set(data.keys()),
+                         set(["export_format_version",
+                              "files",
+                              "tests"]))
+
+        # Check that export format is semantic version with integer values
+        self.assertEqual(set(data["export_format_version"].keys()),
+                         set(("major", "minor", "patch")))
+        assert all(isinstance(value, int)
+                   for value in data["export_format_version"].values())
+
+        # Check the contents of the files section
+        self.assertEqual(set((item["library_name"], item["file_name"])
+                             for item in data["files"]),
+                         set([("lib1", abspath(file_name1)),
+                              ("lib2", abspath(file_name2))]))
+
+        # Check the contents of the tests section
+        self.assertEqual({item["name"]: (item["location"], item["attributes"]) for item in data["tests"]},
+                         {"lib1.tb_foo.all": ({"file_name": file_name1, "offset": 180, "length": 18},
+                                              {}),
+                          "lib2.tb_bar.Test one": ({"file_name": file_name2, "offset": 235, "length": 8},
+                                                   {".attr0": None}),
+                          "lib2.tb_bar.Test two": ({"file_name": file_name2, "offset": 283, "length": 8},
+                                                   {})})
 
     def test_library_attributes(self):
         ui = self._create_ui()
