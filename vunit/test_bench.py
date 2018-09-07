@@ -12,6 +12,7 @@ import logging
 from os.path import basename
 import re
 import bisect
+import collections
 from collections import OrderedDict
 from vunit.ostools import file_exists
 from vunit.cached import cached
@@ -165,28 +166,40 @@ class TestBench(ConfigurationVisitor):
 
     def scan_tests_from_file(self, file_name):
         """
-        Scan file for test cases and pragmas
+        Scan file for test cases and attributes
         """
         if not file_exists(file_name):
             raise ValueError("File %r does not exist" % file_name)
 
         def parse(content):
             """
-            Parse pragmas and test case names
+            Parse attributes and test case names
             """
-            pragmas = _find_pragmas(content, file_name)
-            tests = _find_tests(content, file_name)
-            return pragmas, tests
+            tests, attributes = _find_tests_and_attributes(content, file_name)
+            return tests, attributes
 
-        pragmas, tests = cached("test_bench.parse",
-                                parse,
-                                file_name,
-                                encoding=HDL_FILE_ENCODING,
-                                database=self._database)
+        tests, attributes = cached("test_bench.parse",
+                                   parse,
+                                   file_name,
+                                   encoding=HDL_FILE_ENCODING,
+                                   database=self._database)
+
+        for attr in attributes:
+            if _is_user_attribute(attr.name):
+                raise RuntimeError("File global attributes are not yet supported: %s in %s line %i"
+                                   % (attr.name, file_name, attr.lineno))
+
+        for test in tests:
+            for attr in test.attributes:
+                if attr.name in _VALID_ATTRIBUTES:
+                    raise RuntimeError("Attribute %s is global and cannot be associated with test %s: %s line %i"
+                                       % (attr.name, test.name, file_name, attr.lineno))
+
+        attribute_names = [attr.name for attr in attributes]
 
         default_config = Configuration(DEFAULT_NAME, self.design_unit)
 
-        if "fail_on_warning" in pragmas:
+        if "fail_on_warning" in attribute_names:
             default_config.set_sim_option("vhdl_assert_stop_level", "warning")
 
         self._configs = OrderedDict({default_config.name: default_config})
@@ -201,7 +214,7 @@ class TestBench(ConfigurationVisitor):
             assert len(tests) == 1
             self._implicit_test = tests[0]
 
-        self._individual_tests = "run_all_in_same_sim" not in pragmas and len(explicit_tests) > 0
+        self._individual_tests = "run_all_in_same_sim" not in attribute_names and len(explicit_tests) > 0
         self._test_cases = [TestConfigurationVisitor(test,
                                                      self.design_unit,
                                                      self._individual_tests,
@@ -225,6 +238,7 @@ class Test(object):
         self._name = name
         self._file_name = file_name
         self._lineno = lineno
+        self._attributes = []
 
     @property
     def name(self):
@@ -241,6 +255,25 @@ class Test(object):
     @property
     def is_explicit(self):
         return self._name is not None
+
+    def add_attribute(self, attr):
+        self._attributes.append(attr)
+
+    @property
+    def attributes(self):
+        return list(self._attributes)
+
+    def _to_tuple(self):
+        return (self._name,
+                self._file_name,
+                self._lineno,
+                tuple(self._attributes))
+
+    def __eq__(self, other):
+        return self._to_tuple() == other._to_tuple()  # pylint: disable=protected-access
+
+    def __hash__(self):
+        return hash(self._to_tuple())
 
 
 class TestConfigurationVisitor(ConfigurationVisitor):
@@ -352,15 +385,17 @@ def _check_duplicate_tests(tests):
         raise RuntimeError('Duplicate tests where found')
 
 
-def _find_tests(code, file_name):
+def _find_tests(code, file_name, line_offsets=None):
     """
     Finds all tests within a file including implicit tests where there
     is only a test suite
 
     returns a list to Test objects
     """
+    if line_offsets is None:
+        line_offsets = _get_line_offsets(code)
+
     is_verilog = file_type_of(file_name) in VERILOG_FILE_TYPES
-    line_offsets = _get_line_offsets(code)
 
     if is_verilog:
         code = _remove_verilog_comments(code)
@@ -395,25 +430,130 @@ def _find_tests(code, file_name):
     return tests
 
 
-_RE_PRAGMA = re.compile(r'vunit_pragma\s+([a-zA-Z0-9_]+)', re.IGNORECASE)
-_VALID_PRAGMAS = ["run_all_in_same_sim", "fail_on_warning"]
-
-
-def _find_pragmas(code, file_name):
+def _check_duplicates(attrs, file_name, test_name=None):
     """
-    Return a list of all vunit pragmas parsed from the code
+    Check for duplicate attributes, if test_name is None it is a file global attribute
+    """
+    previous = {}
+    for attr in attrs:
+        if attr.name in previous:
+
+            if test_name is None:
+                loc = "%s line %i" % (file_name, attr.lineno)
+            else:
+                loc = "test %s in %s line %i" % (test_name, file_name, attr.lineno)
+
+            raise RuntimeError("Duplicate attribute %s of %s, previously defined on line %i"
+                               % (attr.name, loc, previous[attr.name].lineno))
+        else:
+            previous[attr.name] = attr
+
+
+def _find_tests_and_attributes(content, file_name):
+    """
+    Parse attributes and test case names
+
+    Attributes are associated with a single test case by being located
+    after the test case definition.
+
+    Attributes are associated with file by being located above all
+    test cases.
+
+    NOTE: The legacy vunit_pragma is always associated with the entire file due to legacy reasons
+
+    Returns the tests and global attributes. The tests have been annotated with attributes.
+    """
+    line_offsets = _get_line_offsets(content)
+    attributes = _find_attributes(content, file_name, line_offsets)
+    tests = _find_tests(content, file_name, line_offsets)
+
+    tests = sorted(tests, key=lambda test: test.lineno)
+    linenos = [test.lineno for test in tests]
+
+    def associate(attr):
+        """
+        Associate attribute with test case
+        """
+        idx = bisect.bisect_right(linenos, attr.lineno)
+        if idx == 0:
+            return None
+        return tests[idx - 1]
+
+    global_attributes = []
+    for attr in attributes:
+        if isinstance(attr, LegacyAttribute):
+            global_attributes.append(attr)
+        else:
+            test = associate(attr)
+
+            if test:
+                test.add_attribute(attr)
+            else:
+                global_attributes.append(attr)
+
+    for test in tests:
+        _check_duplicates(test.attributes, file_name, test_name=test.name)
+
+    _check_duplicates(global_attributes, file_name)
+
+    return tests, global_attributes
+
+
+_RE_ATTR_NAME = r"[a-zA-Z0-9_\-]+"
+_RE_ATTRIBUTE = re.compile(r'vunit:\s*(?P<name>\.?' + _RE_ATTR_NAME + r')',
+                           re.IGNORECASE)
+_RE_PRAGMA_LEGACY = re.compile(r'vunit_pragma\s+(?P<name>' + _RE_ATTR_NAME + ')', re.IGNORECASE)
+_VALID_ATTRIBUTES = ["run_all_in_same_sim", "fail_on_warning"]
+
+
+def _is_user_attribute(name):
+    return name.startswith(".")
+
+
+def _find_attributes(code, file_name, line_offsets=None):
+    """
+    Return a list of all vunit attributes parsed from the code
+
+    Attributes are either built-in:
+    // -- vunit: run_all_in_same_sim
+
+    or user defined:
+    // -- vunit: .foo
 
     @TODO only look inside comments
     """
-    pragmas = []
-    for match in _RE_PRAGMA.finditer(code):
-        pragma = match.group(1)
-        if pragma not in _VALID_PRAGMAS:
-            LOGGER.warning("Invalid pragma '%s' in %s",
-                           pragma,
-                           file_name)
-        pragmas.append(pragma)
-    return pragmas
+    if line_offsets is None:
+        line_offsets = _get_line_offsets(code)
+
+    attributes = []
+
+    def _find(attr_class, regex):
+        """
+        Helper method to create attributes from regex
+        """
+        for match in regex.finditer(code):
+            groups = match.groupdict(default=None)
+            name = groups['name']
+            lineno = _lookup_lineno(match.start('name'), line_offsets)
+
+            if not _is_user_attribute(name) and name not in _VALID_ATTRIBUTES:
+                raise RuntimeError(
+                    "Invalid attribute '%s' in %s line %i" % (
+                        name,
+                        file_name,
+                        lineno))
+
+            attributes.append(attr_class(name, value=None, lineno=lineno))
+
+    _find(LegacyAttribute, _RE_PRAGMA_LEGACY)
+    _find(Attribute, _RE_ATTRIBUTE)
+
+    return attributes
+
+
+# Add value field to be forwards compatible with having attribute values
+Attribute = collections.namedtuple("Attribute", ["name", "value", "lineno"])
+LegacyAttribute = collections.namedtuple("LegacyAttribute", ["name", "value", "lineno"])
 
 
 VERILOG_REMOVE_COMMENT_RE = re.compile(r'(//[^\n]*)|(/\*.*?\*/)',

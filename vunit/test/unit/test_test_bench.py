@@ -18,7 +18,12 @@ from vunit.test_bench import (TestBench,
                               _remove_verilog_comments,
                               _find_tests,
                               _get_line_offsets,
-                              _lookup_lineno)
+                              _lookup_lineno,
+                              _find_attributes,
+                              _find_tests_and_attributes,
+                              Test,
+                              Attribute,
+                              LegacyAttribute)
 from vunit.ostools import write_file
 from vunit.test.mock_2or3 import mock
 from vunit.test.common import (with_tempdir,
@@ -221,11 +226,11 @@ if run("Test_2")
         self.assert_has_tests(tests, ["lib.tb_entity.config"])
 
     @with_tempdir
-    def test_that_pragma_run_in_same_simulation_works(self, tempdir):
+    def test_that_run_in_same_simulation_attribute_works(self, tempdir):
         design_unit = Entity('tb_entity',
                              file_name=join(tempdir, "file.vhd"),
                              contents='''\
--- vunit_pragma run_all_in_same_sim
+-- vunit: run_all_in_same_sim
 if run("Test_1")
 if run("Test_2")
 --if run("Test_3")
@@ -300,9 +305,9 @@ if run("test 2")
         design_unit = Entity('tb_entity',
                              file_name=join(tempdir, "file.vhd"),
                              contents='''\
+-- vunit: run_all_in_same_sim
 if run("Test 1")
 if run("Test 2")
--- vunit_pragma run_all_in_same_sim
 ''')
         design_unit.generic_names = ["runner_cfg", "name"]
         test_bench = TestBench(design_unit)
@@ -316,9 +321,9 @@ if run("Test 2")
         design_unit = Entity('tb_entity',
                              file_name=join(tempdir, "file.vhd"),
                              contents='''\
+-- vunit: run_all_in_same_sim
 if run("Test 1")
 if run("Test 2")
--- vunit_pragma run_all_in_same_sim
 ''')
         design_unit.generic_names = ["runner_cfg", "name"]
         test_bench = TestBench(design_unit)
@@ -332,7 +337,48 @@ if run("Test 2")
                          {"name": "value"})
 
     @with_tempdir
-    def test_locations(self, tempdir):
+    def test_global_user_attributes_not_supported_yet(self, tempdir):
+        design_unit = Entity('tb_entity',
+                             file_name=join(tempdir, "file.vhd"),
+                             contents='''\
+-- vunit: .attr0
+if run("Test 1")
+if run("Test 2")
+''')
+        design_unit.generic_names = ["runner_cfg"]
+
+        try:
+            TestBench(design_unit)
+        except RuntimeError as exc:
+            self.assertEqual(str(exc),
+                             "File global attributes are not yet supported: .attr0 in %s line 1"
+                             % join(tempdir, "file.vhd"))
+        else:
+            assert False, "RuntimeError not raised"
+
+    @with_tempdir
+    def test_error_on_global_attributes_on_tests(self, tempdir):
+        design_unit = Entity('tb_entity',
+                             file_name=join(tempdir, "file.vhd"),
+                             contents='''\
+if run("Test 1")
+-- vunit: run_all_in_same_sim
+if run("Test 2")
+''')
+        design_unit.generic_names = ["runner_cfg"]
+
+        try:
+            TestBench(design_unit)
+        except RuntimeError as exc:
+            self.assertEqual(
+                str(exc),
+                "Attribute run_all_in_same_sim is global and cannot be associated with test Test 1: %s line 2"
+                % join(tempdir, "file.vhd"))
+        else:
+            assert False, "RuntimeError not raised"
+
+    @with_tempdir
+    def test_test_information(self, tempdir):
         file_name = join(tempdir, "file.vhd")
 
         for same_sim in [True, False]:
@@ -354,9 +400,9 @@ if run("Test 2")
 
             self.assertEqual(set(item
                                  for test_suite in test_suites
-                                 for item in test_suite.test_locations.items()),
-                             set([("lib.tb_entity.Test 1", (file_name, 13)),
-                                  ("lib.tb_entity.Test 2", (file_name, 14))]))
+                                 for item in test_suite.test_information.items()),
+                             set([("lib.tb_entity.Test 1", Test("Test 1", file_name, 14)),
+                                  ("lib.tb_entity.Test 2", Test("Test 2", file_name, 15))]))
 
     @with_tempdir
     def test_fail_on_unknown_sim_option(self, tempdir):
@@ -502,6 +548,131 @@ if run("Test_2")
 
         msg = error_calls[2][0][0] % error_calls[2][0][1:]
         self.assertEqual(msg, 'Duplicate test "Test_2" in %s line 7 previously defined on line 4' % file_name)
+
+    def test_find_attributes(self):
+        attributes = _find_attributes("""
+// vunit: run_all_in_same_sim
+// vunit:fail_on_warning
+        """, file_name="file.vhd")
+
+        self.assertEqual(attributes, [Attribute("run_all_in_same_sim", None, 2),
+                                      Attribute("fail_on_warning", None, 3)])
+
+    def test_find_user_attributes(self):
+        attributes = _find_attributes("""
+// vunit: .foo
+// vunit: .foo-bar
+        """, file_name="file.vhd")
+
+        self.assertEqual(attributes, [Attribute(".foo", None, 2),
+                                      Attribute(".foo-bar", None, 3)])
+
+    def test_invalid_attributes(self):
+        try:
+            _find_attributes("""\
+
+
+// vunit: invalid
+            """, file_name="file.vhd")
+        except RuntimeError as exc:
+            self.assertEqual(str(exc), "Invalid attribute 'invalid' in file.vhd line 3")
+        else:
+            assert False, "RuntimeError not raised"
+
+    def test_find_legacy_pragma(self):
+        attributes = _find_attributes("""
+// vunit_pragma run_all_in_same_sim
+// vunit_pragma fail_on_warning
+        """, file_name="file.vhd")
+
+        self.assertEqual(attributes, [LegacyAttribute("run_all_in_same_sim", None, 2),
+                                      LegacyAttribute("fail_on_warning", None, 3)])
+
+    def test_associate_tests_and_attributes(self):
+        (test1, test2), attributes = _find_tests_and_attributes("""\
+// vunit: .arg0
+        if run("test1")
+// vunit: .arg1
+// vunit: .arg1b
+        if run("test2") // vunit: .arg2
+// vunit: .arg2b
+        """, file_name="file.vhd")
+
+        self.assertEqual(attributes, [Attribute(".arg0", None, 1)])
+
+        self.assertEqual(test1.name, "test1")
+        self.assertEqual(test1.file_name, "file.vhd")
+        self.assertEqual(test1.lineno, 2)
+        self.assertEqual(test1.attributes, [Attribute(".arg1", None, 3),
+                                            Attribute(".arg1b", None, 4)])
+
+        self.assertEqual(test2.name, "test2")
+        self.assertEqual(test2.file_name, "file.vhd")
+        self.assertEqual(test2.lineno, 5)
+        self.assertEqual(test2.attributes, [Attribute(".arg2", None, 5),
+                                            Attribute(".arg2b", None, 6)])
+
+    def test_duplicate_attributes_ok(self):
+        (test1, test2), attributes = _find_tests_and_attributes("""\
+// vunit: .arg0
+        if run("test1")
+// vunit: .arg0
+        if run("test2")
+// vunit: .arg0
+        """, file_name="file.vhd")
+
+        self.assertEqual(attributes, [Attribute(".arg0", None, 1)])
+
+        self.assertEqual(test1.name, "test1")
+        self.assertEqual(test1.file_name, "file.vhd")
+        self.assertEqual(test1.lineno, 2)
+        self.assertEqual(test1.attributes, [Attribute(".arg0", None, 3)])
+
+        self.assertEqual(test2.name, "test2")
+        self.assertEqual(test2.file_name, "file.vhd")
+        self.assertEqual(test2.lineno, 4)
+        self.assertEqual(test2.attributes, [Attribute(".arg0", None, 5)])
+
+    def test_duplicate_test_attributes_not_ok(self):
+        try:
+            _find_tests_and_attributes("""\
+        if run("test1")
+// vunit: .arg0
+// vunit: .arg0
+        """, file_name="file.vhd")
+        except RuntimeError as exc:
+            self.assertEqual(str(exc),
+                             "Duplicate attribute .arg0 of test test1 in file.vhd line 3, previously defined on line 2")
+        else:
+            assert False, "RuntimeError not raised"
+
+    def test_duplicate_global_attributes_not_ok(self):
+        try:
+            _find_tests_and_attributes("""\
+// vunit: .arg0
+// vunit: .arg0
+        if run("test1")
+        """, file_name="file.vhd")
+        except RuntimeError as exc:
+            self.assertEqual(str(exc),
+                             "Duplicate attribute .arg0 of file.vhd line 2, previously defined on line 1")
+        else:
+            assert False, "RuntimeError not raised"
+
+    def test_does_not_associate_tests_and_legacy_attributes(self):
+        (test1,), attributes = _find_tests_and_attributes("""\
+        if run("test1")
+// vunit_pragma run_all_in_same_sim
+// vunit_pragma fail_on_warning
+        """, file_name="file.vhd")
+
+        self.assertEqual(attributes, [LegacyAttribute("run_all_in_same_sim", None, 2),
+                                      LegacyAttribute("fail_on_warning", None, 3)])
+
+        self.assertEqual(test1.name, "test1")
+        self.assertEqual(test1.file_name, "file.vhd")
+        self.assertEqual(test1.lineno, 1)
+        self.assertEqual(test1.attributes, [])
 
     def assert_has_tests(self, test_list, tests):
         """

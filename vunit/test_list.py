@@ -81,8 +81,8 @@ class TestSuiteWrapper(object):
         return self._test_case.name
 
     @property
-    def test_locations(self):
-        return {self.name: self._test_case.location}
+    def test_information(self):
+        return {self.name: self._test_case.test_information}
 
     def keep_matches(self, test_filter):
         return test_filter(self._test_case.name)

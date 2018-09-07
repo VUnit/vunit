@@ -4,6 +4,9 @@
 --
 -- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
+-- This attribute should be ignored when VHDL assert stop level is used
+-- vunit: fail_on_warning
+
 library vunit_lib;
 context vunit_lib.vunit_context;
 
@@ -40,5 +43,3 @@ begin
     wait;
   end process;
 end architecture;
--- This pragma should be ignored when VHDL assert stop level is used
--- vunit_pragma fail_on_warning

@@ -6,6 +6,8 @@
 --
 -- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
+-- vunit: run_all_in_same_sim
+
 library ieee;
 use ieee.std_logic_1164.all;
 library vunit_lib;
@@ -294,5 +296,3 @@ begin
   test_runner_watchdog(runner, 2 us);
 
 end test_fixture;
-
--- vunit_pragma run_all_in_same_sim

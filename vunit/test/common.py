@@ -170,7 +170,12 @@ def get_vhdl_test_bench(test_bench_name,
             if idx == last_idx:
                 tests_contents += '    endif;\n'
 
-    contents = """\
+    if same_sim:
+        contents = "-- vunit: run_all_in_same_sim\n"
+    else:
+        contents = "\n"
+
+    contents += """\
 library vunit_lib;
 context vunit_lib.vunit_context;
 
@@ -189,9 +194,6 @@ begin
 end architecture;
 """.format(test_bench_name=test_bench_name,
            tests_contents=tests_contents)
-
-    if same_sim:
-        contents += "-- vunit_pragma run_all_in_same_sim\n"
 
     return contents
 

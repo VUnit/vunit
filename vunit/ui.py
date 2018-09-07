@@ -91,7 +91,7 @@ The following simulation options are known.
 ``vhdl_assert_stop_level``
   Will stop a VHDL simulation for asserts on the provided severity level or higher.
   Valid values are ``"warning"``, ``"error"``, and ``"failure"``. This option takes
-  precedence over the fail_on_warning pragma.
+  precedence over the fail_on_warning attribute.
 
 ``disable_ieee_warnings``
   Disable ieee warnings
@@ -195,7 +195,7 @@ common for the entire test bench depending on the situation.  For test
 benches without test such as `tb_example` in the User Guide the
 configuration is common for the entire test bench. For test benches
 containing tests such as `tb_example_many` the configuration is done
-for each test case. If the ``run_all_in_same_sim`` pragma has been used
+for each test case. If the ``run_all_in_same_sim`` attribute has been used
 configuration is performed at the test bench level even if there are
 individual test within since they must run in the same simulation.
 
@@ -346,7 +346,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         project_database_file_name = join(self._output_path, "project_database")
         create_new = False
         key = b"version"
-        version = str((8, sys.version)).encode()
+        version = str((9, sys.version)).encode()
         database = None
         try:
             database = DataBase(project_database_file_name)

@@ -4,6 +4,7 @@
 //
 // Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
+// vunit: fail_on_warning
 
 `include "vunit_defines.svh"
 
@@ -14,5 +15,3 @@ module tb_fail_on_warning;
       end
    end;
 endmodule
-
-// vunit_pragma fail_on_warning

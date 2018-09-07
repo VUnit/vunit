@@ -4,6 +4,8 @@
 --
 -- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
+-- vunit: fail_on_warning
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -35,5 +37,3 @@ begin
     wait;
   end process;
 end architecture;
-
--- vunit_pragma fail_on_warning

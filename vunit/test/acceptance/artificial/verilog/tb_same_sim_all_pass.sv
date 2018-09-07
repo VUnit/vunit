@@ -4,6 +4,7 @@
 //
 // Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
+// vunit: run_all_in_same_sim
 
 `include "vunit_defines.svh"
 
@@ -40,5 +41,3 @@ module tb_same_sim_all_pass;
 
    `WATCHDOG(1ns);
 endmodule
-
-// vunit_pragma run_all_in_same_sim

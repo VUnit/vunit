@@ -5,6 +5,10 @@
 -- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 -- @TODO add explicit check of csv string data
+
+-- vunit: fail_on_warning
+-- vunit: run_all_in_same_sim
+
 use std.textio.all;
 
 library vunit_lib;
@@ -377,6 +381,3 @@ begin
     wait;
   end process;
 end architecture;
-
--- vunit_pragma fail_on_warning
--- vunit_pragma run_all_in_same_sim

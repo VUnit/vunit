@@ -6,6 +6,8 @@
 --
 -- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
+-- vunit: run_all_in_same_sim
+
 library vunit_lib;
 context vunit_lib.vunit_context;
 use vunit_lib.queue_pkg.all;
@@ -130,5 +132,3 @@ begin
 
   test_runner_watchdog(runner, 100 ms);
 end test_fixture;
-
--- vunit_pragma run_all_in_same_sim

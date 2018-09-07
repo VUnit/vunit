@@ -4,6 +4,8 @@
 --
 -- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
+-- vunit: run_all_in_same_sim
+
 library vunit_lib;
 context vunit_lib.vunit_context;
 
@@ -36,5 +38,3 @@ begin
     wait;
   end process;
 end architecture;
-
--- vunit_pragma run_all_in_same_sim

@@ -4,6 +4,8 @@
 --
 -- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
+-- vunit: run_all_in_same_sim
+
 use work.axi_pkg.all;
 context work.vunit_context;
 context work.vc_context;
@@ -83,5 +85,3 @@ begin
     test_runner_cleanup(runner);
   end process;
 end;
-
--- vunit_pragma run_all_in_same_sim

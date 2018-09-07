@@ -6,6 +6,8 @@
 --
 -- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
+-- vunit: run_all_in_same_sim
+
 library vunit_lib;
 use vunit_lib.run_pkg.all;
 use vunit_lib.string_ops.all;
@@ -56,5 +58,3 @@ begin
   test_runner_watchdog(runner, 2 us);
 
 end;
-
--- vunit_pragma run_all_in_same_sim

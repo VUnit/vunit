@@ -345,9 +345,11 @@ good reasons for this
 Possible drawbacks to this approach are that test cases have to be independent and the overhead
 of starting a new simulation for each test case (this is typically less than one second per test case). If that
 is the case you can force all test cases of a testbench to be run in the same simulation. This is done by adding
-the ``run_all_in_same_sim`` pragma.
+the ``run_all_in_same_sim`` attribute.
 
 .. code-block:: vhdl
+
+    -- vunit: run_all_in_same_sim
 
     library vunit_lib;
     context vunit_lib.vunit_context;
@@ -373,7 +375,6 @@ the ``run_all_in_same_sim`` pragma.
         test_runner_cleanup(runner);
       end process;
     end architecture;
-    -- vunit_pragma run_all_in_same_sim
 
 The VUnit Watchdog
 ------------------
