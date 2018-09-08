@@ -42,10 +42,7 @@ architecture tb of tb_axis_loop is
   -- AXI4Stream Verification Components
 
   constant master_axi_stream : axi_stream_master_t := new_axi_stream_master(data_length => data_width);
-  constant master_stream : stream_master_t := as_stream(master_axi_stream);
-
   constant slave_axi_stream : axi_stream_slave_t := new_axi_stream_slave(data_length => data_width);
-  constant slave_stream : stream_slave_t := as_stream(slave_axi_stream);
 
   -- Signals to/from the UUT from/to the verification components
 
@@ -112,7 +109,7 @@ begin
 
   save: process
     variable o : std_logic_vector(31 downto 0);
-    variable last : boolean:=false;
+    variable last : std_logic:='0';
   begin
     wait until start and rising_edge(clk);
     saved <= false;
@@ -124,8 +121,8 @@ begin
 
     for y in 0 to m_O.height-1 loop
       for x in 0 to m_O.width-1 loop
-        pop_stream(net, slave_stream, o, last);
-        if (x = m_O.width-1) and (last=false) then
+        pop_axi_stream(net, slave_axi_stream, tdata => o, tlast => last);
+        if (x = m_O.width-1) and (last='0') then
           error("Something went wrong. Last misaligned!");
         end if;
         m_O.set(x,y,to_integer(signed(o)));
