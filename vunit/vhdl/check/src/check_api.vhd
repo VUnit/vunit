@@ -391,6 +391,60 @@ package check_pkg is
     constant allow_restart     : in boolean     := false;
     constant line_num          : in natural     := 0;
     constant file_name         : in string      := "");
+    
+  procedure check_stable(
+    constant checker           : in checker_t;
+    signal clock               : in std_logic;
+    signal en                  : in std_logic;
+    signal start_event         : in std_logic;
+    signal end_event           : in std_logic;
+    signal expr                : in unsigned;
+    constant msg               : in string      := check_result_tag;
+    constant level             : in log_level_t := null_log_level;
+    constant active_clock_edge : in edge_t      := rising_edge;
+    constant allow_restart     : in boolean     := false;
+    constant line_num          : in natural     := 0;
+    constant file_name         : in string      := "");
+
+  procedure check_stable(
+    signal clock               : in std_logic;
+    signal en                  : in std_logic;
+    signal start_event         : in std_logic;
+    signal end_event           : in std_logic;
+    signal expr                : in unsigned;
+    constant msg               : in string      := check_result_tag;
+    constant level             : in log_level_t := null_log_level;
+    constant active_clock_edge : in edge_t      := rising_edge;
+    constant allow_restart     : in boolean     := false;
+    constant line_num          : in natural     := 0;
+    constant file_name         : in string      := "");
+    
+  procedure check_stable(
+    constant checker           : in checker_t;
+    signal clock               : in std_logic;
+    signal en                  : in std_logic;
+    signal start_event         : in std_logic;
+    signal end_event           : in std_logic;
+    signal expr                : in signed;
+    constant msg               : in string      := check_result_tag;
+    constant level             : in log_level_t := null_log_level;
+    constant active_clock_edge : in edge_t      := rising_edge;
+    constant allow_restart     : in boolean     := false;
+    constant line_num          : in natural     := 0;
+    constant file_name         : in string      := "");
+
+  procedure check_stable(
+    signal clock               : in std_logic;
+    signal en                  : in std_logic;
+    signal start_event         : in std_logic;
+    signal end_event           : in std_logic;
+    signal expr                : in signed;
+    constant msg               : in string      := check_result_tag;
+    constant level             : in log_level_t := null_log_level;
+    constant active_clock_edge : in edge_t      := rising_edge;
+    constant allow_restart     : in boolean     := false;
+    constant line_num          : in natural     := 0;
+    constant file_name         : in string      := "");
 
   procedure check_stable(
     constant checker           : in checker_t;
