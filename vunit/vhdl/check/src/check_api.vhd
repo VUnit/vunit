@@ -391,7 +391,7 @@ package check_pkg is
     constant allow_restart     : in boolean     := false;
     constant line_num          : in natural     := 0;
     constant file_name         : in string      := "");
-    
+
   procedure check_stable(
     constant checker           : in checker_t;
     signal clock               : in std_logic;
@@ -418,7 +418,7 @@ package check_pkg is
     constant allow_restart     : in boolean     := false;
     constant line_num          : in natural     := 0;
     constant file_name         : in string      := "");
-    
+
   procedure check_stable(
     constant checker           : in checker_t;
     signal clock               : in std_logic;
