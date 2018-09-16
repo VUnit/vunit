@@ -100,11 +100,8 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
 
     def _create_modelsim_ini(self):
         """
-        Create the modelsim.ini file if it does not exist
+        Create the modelsim.ini file
         """
-        if file_exists(self._sim_cfg_file_name):
-            return
-
         parent = dirname(self._sim_cfg_file_name)
         if not file_exists(parent):
             os.makedirs(parent)
