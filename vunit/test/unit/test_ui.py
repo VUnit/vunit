@@ -135,6 +135,36 @@ end architecture;
                 report='log("Here I am!"); -- VUnitfier preprocessor: Report turned off, keeping original code.')
             self.assertEqual(fread.read(), expectd)
 
+    @mock.patch("vunit.ui.LOGGER.error", autospec=True)
+    def test_recovers_from_preprocessing_error(self, logger):
+        ui = self._create_ui()
+        ui.add_library('lib')
+        ui.enable_location_preprocessing()
+        ui.enable_check_preprocessing()
+
+        source_with_error = Template("""
+library vunit_lib;
+context vunit_lib.vunit_context;
+
+entity $entity is
+end entity;
+
+architecture arch of $entity is
+begin
+    log("Hello World";
+    check_relation(1 /= 2);
+    report "Here I am!";
+end architecture;
+""")
+        file_name = join(self.tmp_path, "ent1.vhd")
+        contents = source_with_error.substitute(entity="ent1")
+        self.create_file(file_name, contents)
+
+        ui.add_source_file(file_name, 'lib')
+        logger.assert_called_once_with("Failed to preprocess %s", file_name)
+        pp_file = join(self._preprocessed_path, 'lib', basename(file_name))
+        self.assertFalse(exists(pp_file))
+
     def test_supported_source_file_suffixes(self):
         """Test adding a supported filetype, of any case, is accepted."""
         ui = self._create_ui()

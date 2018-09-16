@@ -696,21 +696,28 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         if not preprocessors:
             return file_name
 
-        code = ostools.read_file(file_name, encoding=HDL_FILE_ENCODING)
-        for preprocessor in preprocessors:
-            code = preprocessor.run(code, basename(file_name))
+        try:
+            code = ostools.read_file(file_name, encoding=HDL_FILE_ENCODING)
+            for preprocessor in preprocessors:
+                code = preprocessor.run(code, basename(file_name))
+        except KeyboardInterrupt:
+            raise KeyboardInterrupt
+        except:  # pylint: disable=bare-except
+            traceback.print_exc()
+            LOGGER.error("Failed to preprocess %s", file_name)
+            return file_name
+        else:
+            pp_file_name = join(self._preprocessed_path, library_name, basename(file_name))
 
-        pp_file_name = join(self._preprocessed_path, library_name, basename(file_name))
+            idx = 1
+            while ostools.file_exists(pp_file_name):
+                LOGGER.debug("Preprocessed file exists '%s', adding prefix", pp_file_name)
+                pp_file_name = join(self._preprocessed_path,
+                                    library_name, "%i_%s" % (idx, basename(file_name)))
+                idx += 1
 
-        idx = 1
-        while ostools.file_exists(pp_file_name):
-            LOGGER.debug("Preprocessed file exists '%s', adding prefix", pp_file_name)
-            pp_file_name = join(self._preprocessed_path,
-                                library_name, "%i_%s" % (idx, basename(file_name)))
-            idx += 1
-
-        ostools.write_file(pp_file_name, code, encoding=HDL_FILE_ENCODING)
-        return pp_file_name
+            ostools.write_file(pp_file_name, code, encoding=HDL_FILE_ENCODING)
+            return pp_file_name
 
     def add_preprocessor(self, preprocessor):
         """
