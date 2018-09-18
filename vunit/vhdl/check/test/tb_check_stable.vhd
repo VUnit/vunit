@@ -76,6 +76,7 @@ architecture test_fixture of tb_check_stable is
   signal check_stable_en_1, check_stable_en_2, check_stable_en_3, check_stable_en_4 : std_logic := '1';
   signal check_stable_en_5, check_stable_en_6, check_stable_en_7, check_stable_en_8 : std_logic := '1';
   signal check_stable_en_9, check_stable_en_10, check_stable_en_11                  : std_logic := '1';
+  signal check_stable_en_12, check_stable_en_13                                     : std_logic := '1';
 
   signal en, start_event, end_event, expr : std_logic := '1';
 
