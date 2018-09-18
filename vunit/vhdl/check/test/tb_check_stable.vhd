@@ -27,7 +27,7 @@ architecture test_fixture of tb_check_stable is
   signal clk : std_logic := '0';
 
   signal check_stable_in_1, check_stable_in_2, check_stable_in_3,
-    check_stable_in_8, check_stable_in_10, check_stable_in_12, 
+    check_stable_in_8, check_stable_in_10, check_stable_in_12,
     check_stable_in_13 : std_logic_vector(1 to 5) := "00000";
   alias check_stable_start_event_1  : std_logic is check_stable_in_1(1);
   alias check_stable_end_event_1    : std_logic is check_stable_in_1(2);
@@ -555,7 +555,7 @@ begin
         wait until rising_edge(clk);
         wait for 1 ns;
         verify_passed_checks(stat, 3);
-        verify_failed_checks(stat, 0);1
+        verify_failed_checks(stat, 0);
 
       elsif run("Test concurrent checker with unsigned input should pass unstable window if not enabled") then
         wait until rising_edge(clk);
