@@ -74,12 +74,12 @@ package bus_master_pkg is
   procedure write_bus(signal net : inout network_t;
                       constant bus_handle : bus_master_t;
                       constant address : std_logic_vector;
-                      constant burstsize : positive;
+                      constant burst_length : positive;
                       constant burstdata : queue_t);
   procedure write_bus(signal net : inout network_t;
                       constant bus_handle : bus_master_t;
                       constant address : natural;
-                      constant burstsize : positive;
+                      constant burst_length : positive;
                       constant burstdata : queue_t);
 
   -- Non blocking: Read the bus returning a reference to the future reply
@@ -94,12 +94,12 @@ package bus_master_pkg is
   procedure read_bus(signal net : inout network_t;
                       constant bus_handle : bus_master_t;
                       constant address : std_logic_vector;
-                      constant burstsize : positive;
+                      constant burst_length : positive;
                       variable reference : inout bus_reference_t);
   procedure read_bus(signal net : inout network_t;
                       constant bus_handle : bus_master_t;
                       constant address : natural;
-                      constant burstsize : positive;
+                      constant burst_length : positive;
                       variable reference : inout bus_reference_t);
 
   -- Blocking: Await read bus reply data
@@ -135,12 +135,12 @@ package bus_master_pkg is
   procedure read_bus(signal net : inout network_t;
                       constant bus_handle : bus_master_t;
                       constant address : std_logic_vector;
-                      constant burstsize : positive;
+                      constant burst_length : positive;
                       constant burstdata : queue_t);
   procedure read_bus(signal net : inout network_t;
                       constant bus_handle : bus_master_t;
                       constant address : natural;
-                      constant burstsize : positive;
+                      constant burst_length : positive;
                       constant burstdata : queue_t);
 
   -- Blocking: Wait until a read from address equals the value using
