@@ -8,6 +8,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 library vunit_lib;
 use vunit_lib.run_types_pkg.all;
 use vunit_lib.run_pkg.all;
