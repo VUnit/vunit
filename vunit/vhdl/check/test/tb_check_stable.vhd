@@ -27,7 +27,8 @@ architecture test_fixture of tb_check_stable is
   signal clk : std_logic := '0';
 
   signal check_stable_in_1, check_stable_in_2, check_stable_in_3,
-    check_stable_in_8, check_stable_in_10 : std_logic_vector(1 to 5) := "00000";
+    check_stable_in_8, check_stable_in_10, check_stable_in_12, 
+    check_stable_in_13 : std_logic_vector(1 to 5) := "00000";
   alias check_stable_start_event_1  : std_logic is check_stable_in_1(1);
   alias check_stable_end_event_1    : std_logic is check_stable_in_1(2);
   alias check_stable_expr_1         : std_logic_vector(2 downto 0) is check_stable_in_1(3 to 5);
@@ -43,6 +44,12 @@ architecture test_fixture of tb_check_stable is
   alias check_stable_start_event_10 : std_logic is check_stable_in_10(1);
   alias check_stable_end_event_10   : std_logic is check_stable_in_10(2);
   alias check_stable_expr_10        : std_logic_vector(2 downto 0) is check_stable_in_10(3 to 5);
+  alias check_stable_start_event_12 : std_logic is check_stable_in_12(1);
+  alias check_stable_end_event_12   : std_logic is check_stable_in_12(2);
+  alias check_stable_expr_12        : unsigned(2 downto 0) is unsigned(check_stable_in_12(3 to 5));
+  alias check_stable_start_event_13 : std_logic is check_stable_in_13(1);
+  alias check_stable_end_event_13   : std_logic is check_stable_in_13(2);
+  alias check_stable_expr_13        : signed(2 downto 0) is signed(check_stable_in_13(3 to 5));
 
   signal check_stable_start_event_4 : std_logic                := '0';
   signal check_stable_end_event_4   : std_logic                := '0';
@@ -159,6 +166,16 @@ begin
                                  check_stable_end_event_11,
                                  check_stable_expr_11,
                                  allow_restart => true);
+  check_stable_12 : check_stable(clk,
+                              check_stable_en_12,
+                              check_stable_start_event_12,
+                              check_stable_end_event_12,
+                              check_stable_expr_12);
+  check_stable_13 : check_stable(clk,
+                              check_stable_en_13,
+                              check_stable_start_event_13,
+                              check_stable_end_event_13,
+                              check_stable_expr_13);
 
   check_stable_runner : process
     variable stat       : checker_stat_t;
@@ -513,6 +530,8 @@ begin
         test_concurrent_std_logic_check(clk, check_stable_in_5, default_checker);
         test_concurrent_std_logic_check(clk, check_stable_in_6, my_checker6, error, false);
         test_concurrent_std_logic_check(clk, check_stable_in_7, my_checker7, info);
+        test_concurrent_std_logic_vector_check(clk, check_stable_in_12, default_checker);
+        test_concurrent_std_logic_vector_check(clk, check_stable_in_13, default_checker);
 
       elsif run("Test concurrent checker with std_logic_vector input should pass unstable window if not enabled") then
         wait until rising_edge(clk);
@@ -533,6 +552,54 @@ begin
         apply_sequence("00.111;01.101", clk, check_stable_in_1);
         check_stable_en_1 <= '1';
         apply_sequence("01.101;00.101", clk, check_stable_in_1);
+        wait until rising_edge(clk);
+        wait for 1 ns;
+        verify_passed_checks(stat, 3);
+        verify_failed_checks(stat, 0);1
+
+      elsif run("Test concurrent checker with unsigned input should pass unstable window if not enabled") then
+        wait until rising_edge(clk);
+        wait for 1 ns;
+        get_checker_stat(stat);
+        apply_sequence("00.101;10.101;00.111", clk, check_stable_in_12);
+        check_stable_en_12 <= '0';
+        apply_sequence("00.111;01.101", clk, check_stable_in_12);
+        check_stable_en_12 <= '1';
+        apply_sequence("01.101;00.101", clk, check_stable_in_12);
+        apply_sequence("00.101;10.101;00.111", clk, check_stable_in_12);
+        check_stable_en_12 <= 'L';
+        apply_sequence("00.111;01.101", clk, check_stable_in_12);
+        check_stable_en_12 <= 'H';
+        apply_sequence("01.101;00.101", clk, check_stable_in_12);
+        apply_sequence("00.101;10.101;00.111", clk, check_stable_in_12);
+        check_stable_en_12 <= 'X';
+        apply_sequence("00.111;01.101", clk, check_stable_in_12);
+        check_stable_en_12 <= '1';
+        apply_sequence("01.101;00.101", clk, check_stable_in_12);
+        wait until rising_edge(clk);
+        wait for 1 ns;
+        verify_passed_checks(stat, 3);
+        verify_failed_checks(stat, 0);
+
+      elsif run("Test concurrent checker with signed input should pass unstable window if not enabled") then
+        wait until rising_edge(clk);
+        wait for 1 ns;
+        get_checker_stat(stat);
+        apply_sequence("00.101;10.101;00.111", clk, check_stable_in_13);
+        check_stable_en_13 <= '0';
+        apply_sequence("00.111;01.101", clk, check_stable_in_13);
+        check_stable_en_13 <= '1';
+        apply_sequence("01.101;00.101", clk, check_stable_in_13);
+        apply_sequence("00.101;10.101;00.111", clk, check_stable_in_13);
+        check_stable_en_13 <= 'L';
+        apply_sequence("00.111;01.101", clk, check_stable_in_13);
+        check_stable_en_13 <= 'H';
+        apply_sequence("01.101;00.101", clk, check_stable_in_13);
+        apply_sequence("00.101;10.101;00.111", clk, check_stable_in_13);
+        check_stable_en_13 <= 'X';
+        apply_sequence("00.111;01.101", clk, check_stable_in_13);
+        check_stable_en_13 <= '1';
+        apply_sequence("01.101;00.101", clk, check_stable_in_13);
         wait until rising_edge(clk);
         wait for 1 ns;
         verify_passed_checks(stat, 3);
