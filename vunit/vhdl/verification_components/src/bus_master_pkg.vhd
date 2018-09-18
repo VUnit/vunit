@@ -71,6 +71,10 @@ package bus_master_pkg is
                       constant data : std_logic_vector;
                       -- default byte enable is all bytes
                       constant byte_enable : std_logic_vector := "");
+  -- Procedures for burst bus write: Caller is responsible for allocation and
+  -- deallocation of burstdata queue. Procedure cunsumes burst_length data words
+  -- from burstdata queue. If burstdata queue has less data words, all data
+  -- words are consumed and pop from empty queue error is raised.
   procedure write_bus(signal net : inout network_t;
                       constant bus_handle : bus_master_t;
                       constant address : std_logic_vector;
@@ -106,6 +110,9 @@ package bus_master_pkg is
   procedure await_read_bus_reply(signal net : inout network_t;
                                  variable reference : inout bus_reference_t;
                                  variable data : inout std_logic_vector);
+  -- Procedure for burst read reply: Caller is responsible for allocation and
+  -- deallocation of burstdata queue. Procedure pushes burst_length data words
+  -- into burstdata queue.
   procedure await_read_bus_reply(signal net : inout network_t;
                                  constant bus_handle : bus_master_t;
                                  constant burstdata : queue_t;
@@ -132,6 +139,9 @@ package bus_master_pkg is
                      constant bus_handle : bus_master_t;
                      constant address : natural;
                      variable data : inout std_logic_vector);
+  -- Procedure for burst bus read: Caller is responsible for allocation and
+  -- deallocation of burstdata queue. Procedure pushes burst_length data words
+  -- into burstdata queue.
   procedure read_bus(signal net : inout network_t;
                       constant bus_handle : bus_master_t;
                       constant address : std_logic_vector;
