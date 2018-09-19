@@ -103,6 +103,8 @@ begin
     variable tmp : std_logic_vector(writedata'range);
     variable value : std_logic_vector(writedata'range) := (others => '1');
     variable burst_rd_ref : bus_reference_t;
+    variable bus_rd_ref1 : bus_reference_t;
+    variable bus_rd_ref2 : bus_reference_t;
     type bus_reference_arr_t is array (0 to tb_cfg.transfers-1) of bus_reference_t;
     variable rd_ref : bus_reference_arr_t;
     constant data_queue : queue_t := new_queue;
@@ -241,6 +243,41 @@ begin
         end loop;
       end loop;
 
+    elsif run("wait until idle") then
+      wait_until_idle(net, bus_handle);
+      write_bus(net, bus_handle, 0, value);
+      value := std_logic_vector(to_unsigned(456, value'length));
+      write_bus(net, bus_handle, 0, value);
+      read_bus(net, bus_handle, 4, bus_rd_ref1);
+      read_bus(net, bus_handle, 0, bus_rd_ref2);
+      wait_until_idle(net, bus_handle);
+      await_read_bus_reply(net, bus_rd_ref1, tmp);
+      await_read_bus_reply(net, bus_rd_ref2, tmp);
+      check_equal(tmp, value, "invalid data");
+      wait_until_idle(net, bus_handle);
+      write_bus(net, bus_handle, 0, value);
+      wait_until_idle(net, bus_handle);
+
+      -- Wait till idle during bursts
+      for i in 1 to tb_cfg.transfers loop
+        push(data_queue, std_logic_vector(to_unsigned(i, writedata'length)));
+      end loop;
+      write_bus(net, bus_handle, 0, tb_cfg.transfers, data_queue);
+      wait_until_idle(net, bus_handle);
+      wait until rising_edge(clk);
+      check_equal(write, '0', "unexpected write after wail till idle");
+
+      read_bus(net, bus_handle, 0, tb_cfg.transfers, data_queue);
+      wait_until_idle(net, bus_handle);
+      wait until rising_edge(clk);
+      check_equal(readdatavalid, '0', "unexpected readdatavalid after wail till idle");
+
+      read_bus(net, bus_handle, 0, tb_cfg.transfers, burst_rd_ref);
+      wait_until_idle(net, bus_handle);
+      wait until rising_edge(clk);
+      check_equal(readdatavalid, '0', "unexpected readdatavalid after wail till idle");
+      await_read_bus_reply(net, bus_handle, data_queue, burst_rd_ref);
+      wait_until_idle(net, bus_handle);
 
     end if;
 

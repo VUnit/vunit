@@ -17,6 +17,7 @@ context work.com_context;
 use work.com_types_pkg.all;
 use work.logger_pkg.all;
 use work.check_pkg.all;
+use work.sync_pkg.all;
 
 library osvvm;
 use osvvm.RandomPkg.all;
@@ -49,6 +50,7 @@ architecture a of avalon_master is
   constant acknowledge_queue : queue_t := new_queue;
   constant burst_acknowledge_queue : queue_t := new_queue;
   constant burstlen_queue : queue_t := new_queue;
+  signal burst_read_flag : boolean := false;
 begin
 
   main : process
@@ -125,6 +127,10 @@ begin
             burstcount(burstcount'range) <= (others => 'U');
           end loop;
 
+        elsif msg_type = wait_until_idle_msg then
+          wait until not burst_read_flag and is_empty(burst_acknowledge_queue) and rising_edge(clk);
+          handle_wait_until_idle(net, msg_type, request_msg);
+
         else
           unexpected_msg_type(msg_type);
         end if;
@@ -160,6 +166,7 @@ begin
     variable burst : positive;
   begin
     wait until readdatavalid = '1' and not is_empty(burst_acknowledge_queue) and rising_edge(clk);
+    burst_read_flag <= true;
     request_msg := pop(burst_acknowledge_queue);
     burst := pop(burstlen_queue);
     reply_msg := new_msg(sender => avmm_burst_rd_actor);
@@ -172,6 +179,7 @@ begin
     end loop;
     reply(net, request_msg, reply_msg);
     delete(request_msg);
+    burst_read_flag <= false;
   end process;
 
 end architecture;
