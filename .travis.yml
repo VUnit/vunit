@@ -38,8 +38,9 @@ matrix:
         packages:
         - gnat
     before_script:
-    - git clone --depth 1 https://github.com/tgingold/ghdl.git ghdl
+    - git clone https://github.com/tgingold/ghdl.git ghdl
     - cd ghdl
+    - git reset --hard 358f0a800e3b3836e96606ff444df80964f31909
     - mkdir build-mcode
     - cd build-mcode
     - ../configure --prefix=../../install-ghdl-mcode/
