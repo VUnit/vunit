@@ -40,8 +40,8 @@ Example
 
 .. code-block:: json
    :caption: JSON Export has attributes attached to each test. The
-             attributes all have null value to be forward compatible a future
-             where user attributes can have values.
+             attributes all have null value to be forward compatible
+             in a future where user attributes can have values.
 
     {
        "attributes": {
