@@ -43,6 +43,10 @@ class IndependentSimTestCase(object):
         return self._name
 
     @property
+    def attribute_names(self):
+        return self._test.attribute_names
+
+    @property
     def test_information(self):
         """
         Returns the test information
@@ -97,7 +101,8 @@ class SameSimTestSuite(object):
         Keep tests which pattern return False if no remaining tests
         """
         self._tests = [test for test in self._tests
-                       if test_filter(_full_name(self.name, test.name))]
+                       if test_filter(name=_full_name(self.name, test.name),
+                                      attribute_names=test.attribute_names)]
         self._run.set_test_cases([test.name for test in self._tests])
         return len(self._tests) > 0
 

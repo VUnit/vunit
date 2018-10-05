@@ -304,8 +304,15 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         else:
             self._printer = COLOR_PRINTER
 
-        def test_filter(name):
-            return any(fnmatch(name, pattern) for pattern in args.test_patterns)
+        def test_filter(name, attribute_names):
+            keep = any(fnmatch(name, pattern) for pattern in args.test_patterns)
+
+            if args.with_attributes is not None:
+                keep = keep and set(args.with_attributes).issubset(attribute_names)
+
+            if args.without_attributes is not None:
+                keep = keep and set(args.without_attributes).isdisjoint(attribute_names)
+            return keep
 
         self._test_filter = test_filter
         self._vhdl_standard = select_vhdl_standard(vhdl_standard)

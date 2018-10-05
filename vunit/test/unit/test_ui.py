@@ -409,6 +409,79 @@ lib1, ent0.vhd
 Listed 2 files""".splitlines()))
 
     @with_tempdir
+    def test_filtering_tests(self, tempdir):
+        def setup(ui):
+            lib = ui.add_library("lib")
+            file_name = join(tempdir, "tb_filter.vhd")
+            create_vhdl_test_bench_file("tb_filter", file_name,
+                                        tests=["Test 1", "Test 2", "Test 3"],
+                                        test_attributes={
+                                            "Test 1": [".attr0"],
+                                            "Test 2": [".attr0", ".attr1"],
+                                            "Test 3": [".attr1"]
+                                        })
+            lib.add_source_file(file_name)
+
+        def check_stdout(ui, expected):
+            with mock.patch("sys.stdout", autospec=True) as stdout:
+                self._run_main(ui)
+            text = "".join([call[1][0] for call in stdout.write.mock_calls])
+            # @TODO not always in the same order in Python3 due to dependency graph
+            print(text)
+            self.assertEqual(set(text.splitlines()),
+                             set(expected.splitlines()))
+
+        ui = self._create_ui("--list", "*Test 1")
+        setup(ui)
+        check_stdout(ui, "lib.tb_filter.Test 1\nListed 1 tests")
+
+        ui = self._create_ui("--list", "*Test*")
+        setup(ui)
+        check_stdout(ui,
+                     "lib.tb_filter.Test 1\n"
+                     "lib.tb_filter.Test 2\n"
+                     "lib.tb_filter.Test 3\n"
+                     "Listed 3 tests")
+
+        ui = self._create_ui("--list", "*2*")
+        setup(ui)
+        check_stdout(ui,
+                     "lib.tb_filter.Test 2\n"
+                     "Listed 1 tests")
+
+        ui = self._create_ui("--list", "--with-attribute=.attr0")
+        setup(ui)
+        check_stdout(ui,
+                     "lib.tb_filter.Test 1\n"
+                     "lib.tb_filter.Test 2\n"
+                     "Listed 2 tests")
+
+        ui = self._create_ui("--list", "--with-attributes", ".attr0", ".attr1")
+        setup(ui)
+        check_stdout(ui,
+                     "lib.tb_filter.Test 2\n"
+                     "Listed 1 tests")
+
+        ui = self._create_ui("--list", "--without-attributes", ".attr0")
+        setup(ui)
+        check_stdout(ui,
+                     "lib.tb_filter.Test 3\n"
+                     "Listed 1 tests")
+
+        ui = self._create_ui("--list", "--without-attributes", ".attr0", ".attr1")
+        setup(ui)
+        check_stdout(ui,
+                     "Listed 0 tests")
+
+        ui = self._create_ui("--list",
+                             "--with-attributes", ".attr0",
+                             "--without-attributes", ".attr1")
+        setup(ui)
+        check_stdout(ui,
+                     "lib.tb_filter.Test 1\n"
+                     "Listed 1 tests")
+
+    @with_tempdir
     def test_export_json(self, tempdir):
         json_file = join(tempdir, "export.json")
 

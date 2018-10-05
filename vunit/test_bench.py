@@ -304,6 +304,10 @@ class Test(object):
     def attributes(self):
         return list(self._attributes)
 
+    @property
+    def attribute_names(self):
+        return set((attr.name for attr in self._attributes))
+
     def _to_tuple(self):
         return (self._name,
                 self._location,
