@@ -83,8 +83,10 @@ Operating systems
 Python
 ******
 
--  Python 2.7
 -  Python 3.4 or higher
+-  Python 2.7
+
+   -  VUnit support for Python 2.7 will end in 1 Jan 2020 when it reaches end of life.
 
 Simulators
 **********
