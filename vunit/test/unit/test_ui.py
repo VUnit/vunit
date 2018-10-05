@@ -411,6 +411,7 @@ Listed 2 files""".splitlines()))
     @with_tempdir
     def test_filtering_tests(self, tempdir):
         def setup(ui):
+            " Setup the project "
             lib = ui.add_library("lib")
             file_name = join(tempdir, "tb_filter.vhd")
             create_vhdl_test_bench_file("tb_filter", file_name,
@@ -423,6 +424,7 @@ Listed 2 files""".splitlines()))
             lib.add_source_file(file_name)
 
         def check_stdout(ui, expected):
+            " Check that stdout matches expected "
             with mock.patch("sys.stdout", autospec=True) as stdout:
                 self._run_main(ui)
             text = "".join([call[1][0] for call in stdout.write.mock_calls])
