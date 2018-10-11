@@ -16,12 +16,8 @@ context ieee.ieee_std_context;
 
 library vunit_lib;
 context vunit_lib.vunit_context;
-context vunit_lib.com_context;
-context vunit_lib.data_types_context;
+context vunit_lib.vc_context;
 use vunit_lib.array_pkg.all;
-use vunit_lib.axi_stream_pkg.all;
-use vunit_lib.stream_master_pkg.all;
-use vunit_lib.stream_slave_pkg.all;
 
 entity tb_axis_loop is
   generic (
