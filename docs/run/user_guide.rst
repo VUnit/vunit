@@ -395,6 +395,11 @@ proceeding. To avoid this VUnit provides a watchdog which will timeout and fail 
             wait;
           elsif run("Test to_string for boolean") then
             check_equal(to_string(true), "true");
+          elsif run("Test that needs longer timeout") then
+            -- It is also possible to set/re-set the timeout
+            -- When test cases need separate timeout settings
+            set_timeout(runner, 2 ms);
+            wait for 1 ms;
           end if;
         end loop;
 
@@ -426,8 +431,9 @@ Note that the problem with the first test case doesn't prevent the second from r
     pass (P=1 S=0 F=1 T=2) lib.tb_with_watchdog.Test to_string for boolean (0.3 seconds)
 
     ==== Summary ===========================================================
-    pass lib.tb_with_watchdog.Test to_string for boolean (0.3 seconds)
-    fail lib.tb_with_watchdog.Test that stalls           (0.3 seconds)
+    pass lib.tb_with_watchdog.Test to_string for boolean     (0.3 seconds)
+    pass lib.tb_with_watchdog.Test that needs longer timeout (0.3 seconds)
+    fail lib.tb_with_watchdog.Test that stalls               (0.3 seconds)
     ========================================================================
     pass 1 of 2
     fail 1 of 2

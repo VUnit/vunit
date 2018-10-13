@@ -16,7 +16,8 @@ use ieee.std_logic_1164.all;
 
 package run_pkg is
   signal runner : runner_sync_t := (runner_event_idx => idle_runner,
-                                    runner_exit_status_idx => runner_exit_with_errors);
+                                    runner_exit_status_idx => runner_exit_with_errors,
+                                    runner_timeout_update_idx => idle_runner);
 
   constant runner_state : runner_t := new_runner;
 
@@ -73,9 +74,15 @@ package run_pkg is
 
   alias in_test_case is test_case[return boolean];
 
+  -- Set watchdog timeout dynamically relative to current time
+  -- Overrides time argument to test_runner_watchdog procedure
+  procedure set_timeout(signal runner : inout runner_sync_t;
+                        constant timeout : in time);
+
   procedure test_runner_watchdog (
     signal runner                    : inout runner_sync_t;
-    constant timeout                 : in    time);
+    constant timeout                 : in    time;
+    constant do_runner_cleanup : boolean := true);
 
   procedure lock_entry (
     signal runner : inout runner_sync_t;
@@ -150,6 +157,7 @@ package run_pkg is
   alias test_runner_cleanup_exit_gate is exit_gate[runner_sync_t];
 
   -- Private
-  procedure notify(signal runner : inout runner_sync_t);
+  procedure notify(signal runner : inout runner_sync_t;
+                   idx : natural := runner_event_idx);
 
 end package;

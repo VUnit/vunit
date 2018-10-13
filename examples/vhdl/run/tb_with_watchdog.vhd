@@ -22,11 +22,16 @@ begin
         wait;
       elsif run("Test to_string for boolean") then
         check_equal(to_string(true), "true");
+      elsif run("Test that needs longer timeout") then
+        -- It is also possible to set/re-set the timeout
+        -- When test cases need separate timeout settings
+        set_timeout(runner, 2 ms);
+        wait for 1 ms;
       end if;
     end loop;
 
     test_runner_cleanup(runner);
   end process;
 
-  test_runner_watchdog(runner, 10 ms);
+  test_runner_watchdog(runner, 1 ns);
 end architecture;

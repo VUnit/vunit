@@ -117,6 +117,9 @@ package runner_pkg is
 
   impure function get_cfg(runner : runner_t) return string;
 
+  procedure set_timeout(runner : runner_t; timeout : time);
+  impure function get_timeout(runner : runner_t) return time;
+
   -- Private procedures only use for VUnit internal testing
   procedure p_disable_simulation_exit(runner : runner_t);
   impure function p_simulation_exit_is_disabled(runner : runner_t) return boolean;
@@ -143,7 +146,8 @@ package body runner_pkg is
   constant disable_simulation_exit_idx : natural := 16;
   constant entry_locks_idx : natural := 17;
   constant exit_locks_idx : natural := 18;
-  constant runner_length : natural := 19;
+  constant timeout_idx : natural := 19;
+  constant runner_length : natural := 20;
 
   function to_integer(value : boolean) return natural is
   begin
@@ -196,6 +200,7 @@ package body runner_pkg is
     set(runner.p_data, disable_simulation_exit_idx, to_integer(false));
     set(runner.p_data, entry_locks_idx, to_integer(integer_vector_ptr_t'(new_integer_vector_ptr(n_legal_phases))));
     set(runner.p_data, exit_locks_idx, to_integer(integer_vector_ptr_t'(new_integer_vector_ptr(n_legal_phases))));
+    set(runner.p_data, timeout_idx, to_integer(new_string_ptr(str_pool, "0 ns")));
   end;
 
   procedure set_active_python_runner(runner : runner_t; value : boolean) is
@@ -519,6 +524,24 @@ package body runner_pkg is
   impure function p_simulation_exit_is_disabled(runner : runner_t) return boolean is
   begin
     return get(runner.p_data, disable_simulation_exit_idx) = to_integer(true);
+  end;
+
+  procedure set_timeout(runner : runner_t; timeout : time) is
+    constant new_value : string := time'image(timeout);
+    variable timeout_ptr : string_ptr_t := to_string_ptr(get(runner.p_data, timeout_idx));
+  begin
+    if timeout_ptr = null_string_ptr then
+      timeout_ptr := new_string_ptr(str_pool, new_value);
+    else
+      reallocate(timeout_ptr, new_value);
+    end if;
+    set(runner.p_data, timeout_idx, to_integer(timeout_ptr));
+  end;
+
+  impure function get_timeout(runner : runner_t) return time is
+    constant timeout_ptr : string_ptr_t := to_string_ptr(get(runner.p_data, timeout_idx));
+  begin
+    return time'value(to_string(timeout_ptr));
   end;
 
 end package body;

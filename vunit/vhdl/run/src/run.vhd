@@ -17,12 +17,13 @@ use work.core_pkg;
 use std.textio.all;
 
 package body run_pkg is
-  procedure notify(signal runner : inout runner_sync_t) is
+  procedure notify(signal runner : inout runner_sync_t;
+                   idx : natural := runner_event_idx) is
   begin
-    if runner(runner_event_idx) /= runner_event then
-      runner(runner_event_idx) <= runner_event;
-      wait until runner(runner_event_idx) = runner_event;
-      runner(runner_event_idx) <= idle_runner;
+    if runner(idx) /= runner_event then
+      runner(idx) <= runner_event;
+      wait until runner(idx) = runner_event;
+      runner(idx) <= idle_runner;
     end if;
   end procedure notify;
 
@@ -275,14 +276,38 @@ package body run_pkg is
     return get_running_test_case(runner_state);
   end;
 
+  procedure set_timeout(signal runner : inout runner_sync_t;
+                        constant timeout : in time) is
+  begin
+    set_timeout(runner_state, timeout);
+    notify(runner, runner_timeout_update_idx);
+  end;
+
   procedure test_runner_watchdog (
     signal runner                    : inout runner_sync_t;
-    constant timeout                 : in    time) is
+    constant timeout                 : in    time;
+    constant do_runner_cleanup : boolean := true) is
+
+    variable current_timeout : time := timeout;
   begin
-    wait until runner(runner_exit_status_idx) = runner_exit_without_errors for timeout;
+
+    loop
+      wait until (runner(runner_exit_status_idx) = runner_exit_without_errors or
+                  runner(runner_timeout_update_idx) = runner_event) for current_timeout;
+
+      if runner(runner_timeout_update_idx) = runner_event then
+        debug(runner_trace_logger, "Update watchdog timeout " & time'image(current_timeout) & ".");
+        current_timeout := get_timeout(runner_state);
+      else
+        exit;
+      end if;
+    end loop;
+
     if not (runner(runner_exit_status_idx) = runner_exit_without_errors) then
-      error(runner_trace_logger, "Test runner timeout after " & time'image(timeout) & ".");
-      test_runner_cleanup(runner);
+      error(runner_trace_logger, "Test runner timeout after " & time'image(current_timeout) & ".");
+      if do_runner_cleanup then
+        test_runner_cleanup(runner);
+      end if;
     end if;
   end;
 
