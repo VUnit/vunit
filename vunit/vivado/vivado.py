@@ -81,7 +81,7 @@ def _read_compile_order(file_name):
             else:
                 compile_order.append((library_name, file_name))
 
-    return compile_order, libraries, list(include_dirs)
+    return compile_order, libraries, list(sorted(include_dirs))
 
 
 def run_vivado(tcl_file_name, tcl_args=None, cwd=None, vivado_path=None):

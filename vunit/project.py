@@ -777,7 +777,7 @@ class VerilogSourceFile(SourceFile):
         for path in self.include_dirs:
             self._content_hash = hash_string(self._content_hash + hash_string(path))
 
-        for key, value in self.defines.items():
+        for key, value in sorted(self.defines.items()):
             self._content_hash = hash_string(self._content_hash + hash_string(key))
             self._content_hash = hash_string(self._content_hash + hash_string(value))
 
@@ -795,6 +795,7 @@ class VerilogSourceFile(SourceFile):
                                                  + file_content_hash(included_file_name,
                                                                      encoding=HDL_FILE_ENCODING,
                                                                      database=database))
+
             for module in design_file.modules:
                 self.design_units.append(Module(module.name, self, module.parameters))
 
