@@ -64,7 +64,7 @@ class VerilogPreprocessor(object):
 
         return result
 
-    def preprocessor(self,  # pylint: disable=too-many-arguments
+    def preprocessor(self,  # pylint: disable=too-many-arguments,too-many-branches
                      token, stream, defines, include_paths, included_files):
         """
         Handle preprocessor token
@@ -103,6 +103,17 @@ class VerilogPreprocessor(object):
             # Ignore directive and arguments
             stream.skip_until(NEWLINE)
 
+        elif token.value == "pragma":
+            stream.skip_while(WHITESPACE)
+            pp_token = stream.pop()
+
+            if pp_token.value == "protect":
+                stream.skip_while(WHITESPACE)
+                token = stream.pop()
+
+                if token.value == "begin_protected":
+                    self._skip_protected_region(stream)
+
         elif token.value in defines:
             return self.expand_macro(token, stream, defines, include_paths, included_files)
         else:
@@ -111,6 +122,29 @@ class VerilogPreprocessor(object):
                 token.location)
 
         return []
+
+    @staticmethod
+    def _skip_protected_region(stream):
+        """
+        Skip a protected region
+`pragma protect begin_protected
+Skipped
+`pragma protect end_protected
+        """
+        while not stream.eof:
+            stream.skip_while(WHITESPACE)
+            token = stream.pop()
+
+            if token.kind == PREPROCESSOR and token.value == "pragma":
+                stream.skip_while(WHITESPACE)
+                token = stream.pop()
+
+                if token.value == "protect":
+                    stream.skip_while(WHITESPACE)
+                    token = stream.pop()
+
+                    if token.value == "end_protected":
+                        return
 
     def expand_macro(self,  # pylint: disable=too-many-arguments
                      macro_token, stream, defines, include_paths, included_files):

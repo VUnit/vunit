@@ -750,9 +750,15 @@ keep''')
         result.assert_has_tokens(" keep")
         result.assert_no_log()
 
-    def test_ignores_unconnected_drive(self):
-        result = self.preprocess('`unconnected_drive pull1\nkeep')
-        result.assert_has_tokens("\nkeep")
+    def test_ignores_protected_region(self):
+        result = self.preprocess("""\
+keep_before
+`pragma protect begin_protected
+ASDADSJAKSJDKSAJDISA
+`pragma protect end_protected
+keep_end""")
+
+        result.assert_has_tokens("keep_before\n\nkeep_end")
         result.assert_no_log()
 
     def preprocess(self, code, file_name="fn.v", include_paths=None):
