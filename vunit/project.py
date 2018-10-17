@@ -249,12 +249,16 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         Find dependencies from instantiation of verilog modules
         """
         for module_name in source_file.module_dependencies:
-            for library in self._libraries.values():
-                try:
-                    design_unit = library.modules[module_name]
-                    yield design_unit.source_file
-                except KeyError:
-                    pass
+            if module_name in source_file.library.modules:
+                design_unit = source_file.library.modules[module_name]
+                yield design_unit.source_file
+            else:
+                for library in self._libraries.values():
+                    try:
+                        design_unit = library.modules[module_name]
+                        yield design_unit.source_file
+                    except KeyError:
+                        pass
 
     @staticmethod
     def _find_component_design_unit_dependencies(source_file):

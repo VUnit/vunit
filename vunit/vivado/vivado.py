@@ -25,26 +25,15 @@ def add_from_compile_order_file(vunit_obj, compile_order_file):
         vunit_obj.add_library(library_name, vhdl_standard="93")
 
     # Add all source files to VUnit
-    previous_source = None
     source_files = []
     for library_name, file_name in compile_order:
         is_verilog = file_name.endswith(".v") or file_name.endswith(".vp")
 
         source_file = vunit_obj.library(library_name).add_source_file(
             file_name,
-
-            # Top level IP files are put in xil_defaultlib and can be scanned for dependencies by VUnit
-            # Files in other libraries are typically encrypted and are not parsed
-            no_parse=library_name != "xil_defaultlib",
             include_dirs=include_dirs if is_verilog else None)
 
         source_files.append(source_file)
-
-        # Create linear dependency on Vivado IP files to match extracted compile order
-        if previous_source is not None:
-            source_file.add_dependency_on(previous_source)
-
-        previous_source = source_file
 
     return source_files
 
