@@ -4,7 +4,7 @@
 #
 # Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
-from vivado_util import run_vivado
+from vunit.vivado import run_vivado
 from os.path import join, dirname, exists, normpath
 from shutil import rmtree
 
@@ -15,7 +15,8 @@ def main():
     if exists(join(root, project_name)):
         rmtree(join(root, project_name))
 
-    run_vivado(join(root, "tcl", "generate_project.tcl"), root, "myproject")
+    run_vivado(join(root, "tcl", "generate_project.tcl"),
+               tcl_args=[root, "myproject"])
 
 
 if __name__ == "__main__":
