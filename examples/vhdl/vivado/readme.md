@@ -16,7 +16,7 @@ The example demonstrates two key tasks to automate simulation with Vivado:
 2. Generate the behavioral simulation files for all IP:s (XCI-files) within a
    project and add them to the VUnit project.
 
-Tested with Vivado 2016.4 and RivieraPro on a Windows 10 machine.
+Tested with Vivado 2018.1 and RivieraPro on a Windows 10 machine.
 Should work on Linux or with Modelsim as well, if it does not let us know.
 
 ## Outputs
