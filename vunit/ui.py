@@ -1290,16 +1290,19 @@ class Library(object):
             include_dirs = include_dirs if include_dirs is not None else []
             include_dirs = add_verilog_include_dir(include_dirs)
 
-        file_name = self._parent._preprocess(  # pylint: disable=protected-access
+        new_file_name = self._parent._preprocess(  # pylint: disable=protected-access
             self._library_name, abspath(file_name), preprocessors)
 
-        source_file = self._project.add_source_file(file_name,
+        source_file = self._project.add_source_file(new_file_name,
                                                     self._library_name,
                                                     file_type=file_type,
                                                     include_dirs=include_dirs,
                                                     defines=defines,
                                                     vhdl_standard=vhdl_standard,
                                                     no_parse=no_parse)
+        # To get correct tb_path generic
+        source_file.original_name = file_name
+
         self._test_bench_list.add_from_source_file(source_file)
 
         return SourceFile(source_file,

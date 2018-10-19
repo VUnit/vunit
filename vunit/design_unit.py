@@ -25,6 +25,10 @@ class DesignUnit(object):
         return self.source_file.name
 
     @property
+    def original_file_name(self):
+        return self.source_file.original_name
+
+    @property
     def library_name(self):
         return self.source_file.library.name
 

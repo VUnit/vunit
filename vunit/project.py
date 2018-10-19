@@ -681,6 +681,9 @@ class SourceFile(object):
         self._content_hash = None
         self._compile_options = {}
 
+        # The file name before preprocessing
+        self.original_name = name
+
     @property
     def is_vhdl(self):
         return self.file_type == "vhdl"

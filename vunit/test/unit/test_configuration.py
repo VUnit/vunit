@@ -61,9 +61,11 @@ class TestConfiguration(unittest.TestCase):
     def test_adds_tb_path_generic(self, tempdir):
         design_unit_tb_path = Entity('tb_entity_without_tb_path',
                                      file_name=join(tempdir, "file.vhd"))
+        tb_path = join(tempdir, "other_path")
+        design_unit_tb_path.original_file_name = join(tb_path, "original_file.vhd")
         design_unit_tb_path.generic_names = ["runner_cfg", "tb_path"]
         config_tb_path = Configuration('name', design_unit_tb_path)
-        self.assertEqual(config_tb_path.generics["tb_path"], (tempdir + "/").replace("\\", "/"))
+        self.assertEqual(config_tb_path.generics["tb_path"], (tb_path + "/").replace("\\", "/"))
 
     def test_call_post_check_none(self):
         self.assertEqual(self._call_post_check(None, output_path="output_path", read_output=None), True)

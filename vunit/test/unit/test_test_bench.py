@@ -733,6 +733,7 @@ class Module(object):
         self.is_module = True
         self.generic_names = []
         self.file_name = file_name
+        self.original_file_name = file_name
         write_file(file_name, contents)
 
 
@@ -752,6 +753,7 @@ class Entity(object):  # pylint: disable=too-many-instance-attributes
 
         self.generic_names = []
         self.file_name = file_name
+        self.original_file_name = file_name
         write_file(file_name, contents)
         self._add_architecture_callback = None
 
