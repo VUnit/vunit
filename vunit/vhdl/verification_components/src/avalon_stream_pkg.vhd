@@ -8,8 +8,8 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 use work.logger_pkg.all;
-use work.stream_master_pkg.all;
-use work.stream_slave_pkg.all;
+use work.stream_pkg.all;
+use work.stream_pkg.all;
 context work.com_context;
 context work.data_types_context;
 

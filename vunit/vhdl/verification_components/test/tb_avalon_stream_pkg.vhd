@@ -13,8 +13,8 @@ context work.vunit_context;
 context work.com_context;
 context work.data_types_context;
 use work.avalon_stream_pkg.all;
-use work.stream_master_pkg.all;
-use work.stream_slave_pkg.all;
+use work.stream_pkg.all;
+use work.stream_pkg.all;
 
 entity tb_avalon_stream_pkg is
   generic (runner_cfg : string);

@@ -15,8 +15,7 @@ context vc_context is
   use vunit_lib.axi_stream_pkg.all;
   use vunit_lib.memory_pkg.all;
   use vunit_lib.memory_utils_pkg.all;
-  use vunit_lib.stream_master_pkg.all;
-  use vunit_lib.stream_slave_pkg.all;
+  use vunit_lib.stream_pkg.all;
   use vunit_lib.sync_pkg.all;
   use vunit_lib.uart_pkg.all;
   use vunit_lib.wishbone_pkg.all;
