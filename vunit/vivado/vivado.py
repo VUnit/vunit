@@ -26,14 +26,34 @@ def add_from_compile_order_file(vunit_obj, compile_order_file):
 
     # Add all source files to VUnit
     source_files = []
+
+    no_dependency_scan = []
+    with_dependency_scan = []
     for library_name, file_name in compile_order:
         is_verilog = file_name.endswith(".v") or file_name.endswith(".vp")
 
+        # Use VUnit dependency scanning for everything in xil_defaultlib
+        scan_dependencies = library_name == "xil_defaultlib"
         source_file = vunit_obj.library(library_name).add_source_file(
             file_name,
+            no_parse=not scan_dependencies,
             include_dirs=include_dirs if is_verilog else None)
 
+        if scan_dependencies:
+            with_dependency_scan.append(source_file)
+        else:
+            no_dependency_scan.append(source_file)
+
         source_files.append(source_file)
+
+    # Use hardcoded dependency for everthing outside of xil_defaultlib
+    for idx in range(1, len(no_dependency_scan)):
+        no_dependency_scan[idx].add_dependency_on(no_dependency_scan[idx - 1])
+
+    # Add dependency of last item in non-dependency scanned files to the each scanned file
+    if no_dependency_scan:
+        for source_file in with_dependency_scan:
+            source_file.add_dependency_on(no_dependency_scan[-1])
 
     return source_files
 
