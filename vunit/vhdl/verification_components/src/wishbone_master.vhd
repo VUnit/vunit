@@ -74,7 +74,6 @@ begin
           wait until rising_edge(clk);
         end if;
 
-        push(acknowledge_queue, request_msg);
         start_cycle <= not start_cycle;
         cycle_type := msg_type;
 
@@ -95,7 +94,7 @@ begin
         wait until rising_edge(clk) and stall = '0';
         stb <= '0';
 
-        request_msg := null_msg;
+        push(acknowledge_queue, request_msg);
 
       elsif msg_type = wait_until_idle_msg then
         if cycle then

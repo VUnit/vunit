@@ -354,8 +354,8 @@ begin
         receive(net, self, msg2);
         check(msg2.id = 2, "Expected first message id to be 2");
       elsif run("Test that each published message gets an increasing message number") then
-        actor_vec := (others => new_actor);
         for i in actor_vec'range loop
+          actor_vec(i) := new_actor;
           subscribe(actor_vec(i), self);
         end loop;
 
@@ -458,8 +458,8 @@ begin
         check_log(com_logger, "[6:- - ->  (-)] =>  inbox", trace);
         unmock(com_logger);
       elsif run("Test receiving from several actors") then
-        actor_vec        := (others => new_actor);
         for i in 0 to 2 loop
+          actor_vec(i) := new_actor;
           subscribe(actor_vec(i), find("publisher " & to_string(i)));
         end loop;
         start_publishers <= true;

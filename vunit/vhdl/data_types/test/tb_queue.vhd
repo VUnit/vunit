@@ -31,10 +31,10 @@ architecture a of tb_queue is
   constant descending_sulv : std_ulogic_vector(9 downto 1) := "000111UUU";
 begin
   main : process
-    variable queue, another_queue : queue_t;
+    variable queue, another_queue, queue_copy : queue_t;
     variable bv : bit_vector(0 to 5);
-    variable integer_vector_ptr : integer_vector_ptr_t;
-    variable string_ptr : string_ptr_t;
+    variable integer_vector_ptr, integer_vector_ptr_copy : integer_vector_ptr_t;
+    variable string_ptr, string_ptr_copy : string_ptr_t;
     variable integer_array, integer_array_copy: integer_array_t;
   begin
     test_runner_setup(runner, runner_cfg);
@@ -113,8 +113,10 @@ begin
       queue := new_queue;
       another_queue := new_queue;
       push(another_queue, 22);
+      queue_copy := another_queue;
       push_queue_ref(queue, another_queue);
-      assert pop_queue_ref(queue) = another_queue report "Queue should come back";
+      assert another_queue = null_queue report "Ownership was transfered";
+      assert pop_queue_ref(queue) = queue_copy report "Queue should come back";
 
     elsif run("Test push and pop string") then
       queue := new_queue;
@@ -300,14 +302,18 @@ begin
     elsif run("Test push and pop integer_vector_ptr_t") then
       queue := new_queue;
       integer_vector_ptr := new_integer_vector_ptr;
+      integer_vector_ptr_copy := integer_vector_ptr;
       push_integer_vector_ptr_ref(queue, integer_vector_ptr);
-      assert pop_integer_vector_ptr_ref(queue) = integer_vector_ptr;
+      assert integer_vector_ptr = null_ptr report "Ownership was transfered";
+      assert pop_integer_vector_ptr_ref(queue) = integer_vector_ptr_copy;
 
     elsif run("Test push and pop string_ptr_t") then
       queue := new_queue;
       string_ptr := new_string_ptr;
+      string_ptr_copy := string_ptr;
       push_string_ptr_ref(queue, string_ptr);
-      assert pop_string_ptr_ref(queue) = string_ptr;
+      assert string_ptr = null_string_ptr report "Ownership was transfered";
+      assert pop_string_ptr_ref(queue) = string_ptr_copy;
 
     elsif run("Test push and pop integer_array_t") then
       queue := new_queue;

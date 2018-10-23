@@ -57,7 +57,7 @@ architecture a of axi_write_slave is
     data : integer_vector_ptr_t;
   end record;
 
-  procedure push_burst_data(queue : queue_t; burst_data : burst_data_t) is
+  procedure push_burst_data(queue : queue_t; variable burst_data : inout burst_data_t) is
   begin
      push_integer(queue, burst_data.length);
      push_integer_vector_ptr_ref(queue, burst_data.address);

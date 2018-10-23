@@ -226,7 +226,8 @@ package com_types_pkg is
   impure function is_empty(msg : msg_t) return boolean;
 
   -- Push message into a queue.
-  procedure push(queue : queue_t; value : msg_t);
+  -- The message is set to null to avoid duplicate ownership
+  procedure push(queue : queue_t; variable value : inout msg_t);
 
   -- Pop a message from a queue.
   impure function pop(queue : queue_t) return msg_t;
@@ -330,17 +331,20 @@ package com_types_pkg is
   alias push_time is push[msg_t, time];
   alias pop_time is pop[msg_t return time];
 
-  procedure push(msg      : msg_t; value : integer_vector_ptr_t);
+  -- The value is set to null to avoid duplicate ownership
+  procedure push(msg      : msg_t; variable value : inout integer_vector_ptr_t);
   impure function pop(msg : msg_t) return integer_vector_ptr_t;
   alias push_integer_vector_ptr_ref is push[msg_t, integer_vector_ptr_t];
   alias pop_integer_vector_ptr_ref is pop[msg_t return integer_vector_ptr_t];
 
-  procedure push(msg      : msg_t; value : string_ptr_t);
+  -- The value is set to null to avoid duplicate ownership
+  procedure push(msg      : msg_t; variable value : inout string_ptr_t);
   impure function pop(msg : msg_t) return string_ptr_t;
   alias push_string_ptr_ref is push[msg_t, string_ptr_t];
   alias pop_string_ptr_ref is pop[msg_t return string_ptr_t];
 
-  procedure push(msg      : msg_t; value : queue_t);
+  -- The value is set to null to avoid duplicate ownership
+  procedure push(msg      : msg_t; variable value : inout queue_t);
   impure function pop(msg : msg_t) return queue_t;
   alias push_queue_ref is push[msg_t, queue_t];
   alias pop_queue_ref is pop[msg_t return queue_t];
@@ -380,7 +384,7 @@ package com_types_pkg is
   alias push_float is push[msg_t, float];
   alias pop_float is pop[msg_t return float];
 
-  procedure push(msg      : msg_t; value : msg_t);
+  procedure push(msg      : msg_t; variable value : inout msg_t);
   impure function pop(msg : msg_t) return msg_t;
   alias push_msg_t is push[msg_t, msg_t];
   alias pop_msg_t is pop[msg_t return msg_t];
@@ -510,7 +514,7 @@ package body com_types_pkg is
     return length(msg.data) = 0;
   end;
 
-  procedure push(queue : queue_t; value : msg_t) is
+  procedure push(queue : queue_t; variable value : inout msg_t) is
   begin
     push(queue, value.id);
     push(queue, com_status_t'pos(value.status));
@@ -518,6 +522,7 @@ package body com_types_pkg is
     push(queue, value.receiver.id);
     push(queue, value.request_id);
     push_queue_ref(queue, value.data);
+    value := null_msg;
   end;
 
   impure function pop(queue : queue_t) return msg_t is
@@ -727,7 +732,7 @@ package body com_types_pkg is
     return pop(msg.data);
   end;
 
-  procedure push(msg : msg_t; value : integer_vector_ptr_t) is
+  procedure push(msg : msg_t; variable value : inout integer_vector_ptr_t) is
   begin
     push(msg.data, value);
   end;
@@ -737,7 +742,7 @@ package body com_types_pkg is
     return pop(msg.data);
   end;
 
-  procedure push(msg : msg_t; value : string_ptr_t) is
+  procedure push(msg : msg_t; variable value : inout string_ptr_t) is
   begin
     push(msg.data, value);
   end;
@@ -747,7 +752,7 @@ package body com_types_pkg is
     return pop(msg.data);
   end;
 
-  procedure push(msg : msg_t; value : queue_t) is
+  procedure push(msg : msg_t; variable value : inout queue_t) is
   begin
     push(msg.data, value);
   end;
@@ -827,7 +832,7 @@ package body com_types_pkg is
     return pop(msg.data);
   end;
 
-  procedure push(msg      : msg_t; value : msg_t) is
+  procedure push(msg      : msg_t; variable value : inout msg_t) is
   begin
     push(msg.data, value);
   end;

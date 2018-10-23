@@ -33,11 +33,11 @@ begin
   test_runner : process
     variable actor     : actor_t;
     variable msg, msg2 : msg_t;
-    variable queue     : queue_t;
+    variable queue, queue_copy : queue_t;
     variable bv : bit_vector(0 to 5);
     variable sulv : std_ulogic_vector(0 to 5);
     variable boolv : boolean_vector(0 to 1);
-    variable integer_vector_ptr : integer_vector_ptr_t;
+    variable integer_vector_ptr, integer_vector_ptr_copy : integer_vector_ptr_t;
     variable integer_array, integer_array_copy : integer_array_t;
 
     constant my_msg_type : msg_type_t := new_msg_type("my msg type");
@@ -96,8 +96,10 @@ begin
         msg   := new_msg;
         queue := new_queue;
         push(queue, 22);
+        queue_copy := queue;
         push_queue_ref(msg, queue);
-        assert pop_queue_ref(msg) = queue report "Queue should come back";
+        assert queue = null_queue report "Ownership was transfered";
+        assert pop_queue_ref(msg) = queue_copy report "Queue should come back";
       elsif run("Test push and pop string") then
         msg := new_msg;
         push_string(msg, "hello world");
@@ -255,8 +257,10 @@ begin
       elsif run("Test push and pop of integer_vector_ptr_t") then
         msg := new_msg;
         integer_vector_ptr := new_integer_vector_ptr;
+        integer_vector_ptr_copy := integer_vector_ptr;
         push_integer_vector_ptr_ref(msg, integer_vector_ptr);
-        check(pop_integer_vector_ptr_ref(msg) = integer_vector_ptr);
+        assert integer_vector_ptr = null_ptr report "Ownership was transfered";
+        check(pop_integer_vector_ptr_ref(msg) = integer_vector_ptr_copy);
       elsif run("Test push and pop of integer_array_t") then
         msg := new_msg;
         integer_array := new_3d(1, 2, 3, 4);

@@ -128,17 +128,17 @@ package queue_pkg is
   alias push_time is push[queue_t, time];
   alias pop_time is pop[queue_t return time];
 
-  procedure push(queue : queue_t; value : integer_vector_ptr_t);
+  procedure push(queue : queue_t; variable value : inout integer_vector_ptr_t);
   impure function pop(queue : queue_t) return integer_vector_ptr_t;
   alias push_integer_vector_ptr_ref is push[queue_t, integer_vector_ptr_t];
   alias pop_integer_vector_ptr_ref is pop[queue_t return integer_vector_ptr_t];
 
-  procedure push(queue : queue_t; value : string_ptr_t);
+  procedure push(queue : queue_t; variable value : inout string_ptr_t);
   impure function pop(queue : queue_t) return string_ptr_t;
   alias push_string_ptr_ref is push[queue_t, string_ptr_t];
   alias pop_string_ptr_ref is pop[queue_t return string_ptr_t];
 
-  procedure push(queue : queue_t; value : queue_t);
+  procedure push(queue : queue_t; variable value : inout queue_t);
   impure function pop(queue : queue_t) return queue_t;
   alias push_queue_ref is push[queue_t, queue_t];
   alias pop_queue_ref is pop[queue_t return queue_t];
