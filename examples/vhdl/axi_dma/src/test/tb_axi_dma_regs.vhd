@@ -60,28 +60,28 @@ begin
 
     if run("Test source address") then
       src_addr := rnd.RandSlv(src_addr'length);
-      expect(net, src_address_checker, src_addr, now + 2 * clk_period);
+      expect(net, src_address_checker, src_addr, now + 3 * clk_period);
       write_bus(net, axil_bus, src_address_reg_addr, src_addr);
       wait_until_idle(net, axil_bus);
       wait_until_idle(net, src_address_checker);
 
     elsif run("Test destination address") then
       dst_addr := rnd.RandSlv(dst_addr'length);
-      expect(net, dst_address_checker, dst_addr, now + 2 * clk_period);
+      expect(net, dst_address_checker, dst_addr, now + 3 * clk_period);
       write_bus(net, axil_bus, dst_address_reg_addr, dst_addr);
       wait_until_idle(net, axil_bus);
       wait_until_idle(net, dst_address_checker);
 
     elsif run("Test num bytes") then
       nbytes := rnd.RandSlv(nbytes'length);
-      expect(net, num_bytes_checker, nbytes, now + 2 * clk_period);
+      expect(net, num_bytes_checker, nbytes, now + 3 * clk_period);
       write_bus(net, axil_bus, num_bytes_reg_addr, nbytes);
       wait_until_idle(net, axil_bus);
       wait_until_idle(net, num_bytes_checker);
 
     elsif run("Test start transfer command") then
-      expect(net, start_transfer_checker, "1", now + 2 * clk_period);
-      expect(net, start_transfer_checker, "0", now + 3 * clk_period);
+      expect(net, start_transfer_checker, "1", now + 3 * clk_period);
+      expect(net, start_transfer_checker, "0", now + 4 * clk_period);
       write_bus(net, axil_bus, command_reg_addr, start_transfer_command);
       wait_until_idle(net, axil_bus);
       wait_until_idle(net, start_transfer_checker);
