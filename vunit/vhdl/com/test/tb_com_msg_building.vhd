@@ -32,7 +32,7 @@ architecture test_fixture of tb_com_msg_building is
 begin
   test_runner : process
     variable actor     : actor_t;
-    variable msg, msg2 : msg_t;
+    variable msg, msg2, msg2_copy : msg_t;
     variable queue, queue_copy : queue_t;
     variable bv : bit_vector(0 to 5);
     variable sulv : std_ulogic_vector(0 to 5);
@@ -268,6 +268,13 @@ begin
         push_integer_array_t_ref(msg, integer_array);
         check(integer_array = null_integer_array);
         check(pop_integer_array_t_ref(msg) = integer_array_copy);
+      elsif run("Test push and pop of msg_t") then
+        msg := new_msg;
+        msg2 := new_msg;
+        msg2_copy := msg2;
+        push(msg, msg2);
+        assert msg2 = null_msg report "Ownership was transfered";
+        check(pop(msg) = msg2_copy);
       elsif run("Test setting and getting msg_type") then
         msg := new_msg;
         check(message_type(msg) = null_msg_type);

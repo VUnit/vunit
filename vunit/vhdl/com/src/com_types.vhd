@@ -51,7 +51,7 @@ package com_types_pkg is
   type actor_t is record
     id : natural;
   end record actor_t;
-  type actor_vec_t is array(integer range <>) of actor_t;
+  type actor_vec_t is array (integer range <>) of actor_t;
   constant null_actor : actor_t := (id => 0);
 
   -- Mailboxes owned by an actor
@@ -82,13 +82,13 @@ package com_types_pkg is
 
   -- Deprecated message type
   type message_t is record
-    id         : message_id_t;
-    msg_type   : msg_type_t;
-    status     : com_status_t;
-    sender     : actor_t;
-    receiver   : actor_t;
+    id : message_id_t;
+    msg_type : msg_type_t;
+    status : com_status_t;
+    sender : actor_t;
+    receiver : actor_t;
     request_id : message_id_t;
-    payload    : line;
+    payload : line;
   end record message_t;
   type message_ptr_t is access message_t;
 
@@ -96,16 +96,16 @@ package com_types_pkg is
   -- referenced directly by the user.
   subtype msg_data_t is queue_t;
   type msg_t is record
-    id         : message_id_t;
-    msg_type   : msg_type_t;
-    status     : com_status_t;
-    sender     : actor_t;
-    receiver   : actor_t;
+    id : message_id_t;
+    msg_type : msg_type_t;
+    status : com_status_t;
+    sender : actor_t;
+    receiver : actor_t;
 
     -- ID for the request message if this is a reply
     request_id : message_id_t;
 
-    data       : msg_data_t;
+    data : msg_data_t;
   end record msg_t;
   type msg_vec_t is array (natural range <>) of msg_t;
   type msg_vec_ptr_t is access msg_vec_t;
@@ -127,8 +127,8 @@ package com_types_pkg is
   type subscription_traffic_type_t is (published, outbound, inbound);
 
   type subscription_t is record
-    subscriber   : actor_t;
-    publisher    : actor_t;
+    subscriber : actor_t;
+    publisher : actor_t;
     traffic_type : subscription_traffic_type_t;
   end record subscription_t;
   type subscription_vec_t is array (natural range <>) of subscription_t;
@@ -137,7 +137,7 @@ package com_types_pkg is
   -- Deprecated
   type receipt_t is record
     status : com_status_t;
-    id     : message_id_t;
+    id : message_id_t;
   end record receipt_t;
 
   -- An event type representing the network over which actors communicate. An event in
@@ -146,26 +146,26 @@ package com_types_pkg is
   -- connected to different networks but there's only one global messenger.
   subtype network_t is std_logic;
   constant network_event : std_logic := '1';
-  constant idle_network  : std_logic := 'Z';
+  constant idle_network : std_logic := 'Z';
 
   -- Default value for timeout parameters. ModelSim can't handle time'high
   constant max_timeout : time := 1 hr;
 
   -- Captures the state of a mailbox
   type mailbox_state_t is record
-    id       : mailbox_id_t;
-    size     : natural;
+    id : mailbox_id_t;
+    size : natural;
     messages : msg_vec_ptr_t;
   end record mailbox_state_t;
 
   -- Captures the state of an actor
   type actor_state_t is record
-    name               : line;
-    is_deferred        : boolean;
-    inbox              : mailbox_state_t;
-    outbox             : mailbox_state_t;
-    subscriptions      : subscription_vec_ptr_t;
-    subscribers        : subscription_vec_ptr_t;
+    name : line;
+    is_deferred : boolean;
+    inbox : mailbox_state_t;
+    outbox : mailbox_state_t;
+    subscriptions : subscription_vec_ptr_t;
+    subscribers : subscription_vec_ptr_t;
   end record actor_state_t;
   type actor_state_vec_t is array (natural range <>) of actor_state_t;
   type actor_state_vec_ptr_t is access actor_state_vec_t;
@@ -183,16 +183,16 @@ package com_types_pkg is
   -- Handling of message types
   -----------------------------------------------------------------------------
   impure function new_msg_type(name : string) return msg_type_t;
-  impure function name( msg_type : msg_type_t) return string;
+  impure function name(msg_type : msg_type_t) return string;
 
   procedure unexpected_msg_type(msg_type : msg_type_t;
-                                    logger : logger_t := com_logger);
+                                logger : logger_t := com_logger);
 
   procedure push_msg_type(msg : msg_t; msg_type : msg_type_t; logger : logger_t := com_logger);
   alias push is push_msg_type [msg_t, msg_type_t, logger_t];
 
   impure function pop_msg_type(msg : msg_t;
-                                   logger : logger_t := com_logger) return msg_type_t;
+                               logger : logger_t := com_logger) return msg_type_t;
   alias pop is pop_msg_type [msg_t, logger_t return msg_type_t];
 
   procedure handle_message(variable msg_type : inout msg_type_t);
@@ -204,14 +204,14 @@ package com_types_pkg is
 
   -- Create a new empty message. The message has an optional type and can anonymous
   -- or signed with the sending actor
-  impure function new_msg (
+  impure function new_msg(
     msg_type : msg_type_t := null_msg_type;
     sender : actor_t := null_actor) return msg_t;
 
   impure function copy(msg : msg_t) return msg_t;
 
   -- Delete message. Memory allocated by the message is deallocated.
-  procedure delete (msg : inout msg_t);
+  procedure delete(msg : inout msg_t);
 
   -- Return sending actor of message if defined, null_actor otherwise
   function sender(msg : msg_t) return actor_t;
@@ -236,155 +236,155 @@ package com_types_pkg is
   -- Subprograms for pushing/popping data to/from a message. Data is popped
   -- from a message in the same order they were pushed (FIFO)
   -----------------------------------------------------------------------------
-  procedure push(msg      : msg_t; value : integer);
+  procedure push(msg : msg_t; value : integer);
   impure function pop(msg : msg_t) return integer;
   alias push_integer is push[msg_t, integer];
   alias pop_integer is pop[msg_t return integer];
 
-  procedure push(msg      : msg_t; value : character);
+  procedure push(msg : msg_t; value : character);
   impure function pop(msg : msg_t) return character;
   alias push_character is push[msg_t, character];
   alias pop_character is pop[msg_t return character];
 
-  procedure push(msg      : msg_t; value : boolean);
+  procedure push(msg : msg_t; value : boolean);
   impure function pop(msg : msg_t) return boolean;
   alias push_boolean is push[msg_t, boolean];
   alias pop_boolean is pop[msg_t return boolean];
 
-  procedure push(msg      : msg_t; value : real);
+  procedure push(msg : msg_t; value : real);
   impure function pop(msg : msg_t) return real;
   alias push_real is push[msg_t, real];
   alias pop_real is pop[msg_t return real];
 
-  procedure push(msg      : msg_t; value : bit);
+  procedure push(msg : msg_t; value : bit);
   impure function pop(msg : msg_t) return bit;
   alias push_bit is push[msg_t, bit];
   alias pop_bit is pop[msg_t return bit];
 
-  procedure push(msg      : msg_t; value : std_ulogic);
+  procedure push(msg : msg_t; value : std_ulogic);
   impure function pop(msg : msg_t) return std_ulogic;
   alias push_std_ulogic is push[msg_t, std_ulogic];
   alias pop_std_ulogic is pop[msg_t return std_ulogic];
 
-  procedure push(msg      : msg_t; value : severity_level);
+  procedure push(msg : msg_t; value : severity_level);
   impure function pop(msg : msg_t) return severity_level;
   alias push_severity_level is push[msg_t, severity_level];
   alias pop_severity_level is pop[msg_t return severity_level];
 
-  procedure push(msg      : msg_t; value : file_open_status);
+  procedure push(msg : msg_t; value : file_open_status);
   impure function pop(msg : msg_t) return file_open_status;
   alias push_file_open_status is push[msg_t, file_open_status];
   alias pop_file_open_status is pop[msg_t return file_open_status];
 
-  procedure push(msg      : msg_t; value : file_open_kind);
+  procedure push(msg : msg_t; value : file_open_kind);
   impure function pop(msg : msg_t) return file_open_kind;
   alias push_file_open_kind is push[msg_t, file_open_kind];
   alias pop_file_open_kind is pop[msg_t return file_open_kind];
 
-  procedure push(msg      : msg_t; value : bit_vector);
+  procedure push(msg : msg_t; value : bit_vector);
   impure function pop(msg : msg_t) return bit_vector;
   alias push_bit_vector is push[msg_t, bit_vector];
   alias pop_bit_vector is pop[msg_t return bit_vector];
 
-  procedure push(msg      : msg_t; value : std_ulogic_vector);
+  procedure push(msg : msg_t; value : std_ulogic_vector);
   impure function pop(msg : msg_t) return std_ulogic_vector;
   alias push_std_ulogic_vector is push[msg_t, std_ulogic_vector];
   alias pop_std_ulogic_vector is pop[msg_t return std_ulogic_vector];
 
-  procedure push(msg      : msg_t; value : complex);
+  procedure push(msg : msg_t; value : complex);
   impure function pop(msg : msg_t) return complex;
   alias push_complex is push[msg_t, complex];
   alias pop_complex is pop[msg_t return complex];
 
-  procedure push(msg      : msg_t; value : complex_polar);
+  procedure push(msg : msg_t; value : complex_polar);
   impure function pop(msg : msg_t) return complex_polar;
   alias push_complex_polar is push[msg_t, complex_polar];
   alias pop_complex_polar is pop[msg_t return complex_polar];
 
-  procedure push(msg      : msg_t; value : ieee.numeric_bit.unsigned);
+  procedure push(msg : msg_t; value : ieee.numeric_bit.unsigned);
   impure function pop(msg : msg_t) return ieee.numeric_bit.unsigned;
   alias push_numeric_bit_unsigned is push[msg_t, ieee.numeric_bit.unsigned];
   alias pop_numeric_bit_unsigned is pop[msg_t return ieee.numeric_bit.unsigned];
 
-  procedure push(msg      : msg_t; value : ieee.numeric_bit.signed);
+  procedure push(msg : msg_t; value : ieee.numeric_bit.signed);
   impure function pop(msg : msg_t) return ieee.numeric_bit.signed;
   alias push_numeric_bit_signed is push[msg_t, ieee.numeric_bit.signed];
   alias pop_numeric_bit_signed is pop[msg_t return ieee.numeric_bit.signed];
 
-  procedure push(msg      : msg_t; value : ieee.numeric_std.unsigned);
+  procedure push(msg : msg_t; value : ieee.numeric_std.unsigned);
   impure function pop(msg : msg_t) return ieee.numeric_std.unsigned;
   alias push_numeric_std_unsigned is push[msg_t, ieee.numeric_std.unsigned];
   alias pop_numeric_std_unsigned is pop[msg_t return ieee.numeric_std.unsigned];
 
-  procedure push(msg      : msg_t; value : ieee.numeric_std.signed);
+  procedure push(msg : msg_t; value : ieee.numeric_std.signed);
   impure function pop(msg : msg_t) return ieee.numeric_std.signed;
   alias push_numeric_std_signed is push[msg_t, ieee.numeric_std.signed];
   alias pop_numeric_std_signed is pop[msg_t return ieee.numeric_std.signed];
 
-  procedure push(msg      : msg_t; value : string);
+  procedure push(msg : msg_t; value : string);
   impure function pop(msg : msg_t) return string;
   alias push_string is push[msg_t, string];
   alias pop_string is pop[msg_t return string];
 
-  procedure push(msg      : msg_t; value : time);
+  procedure push(msg : msg_t; value : time);
   impure function pop(msg : msg_t) return time;
   alias push_time is push[msg_t, time];
   alias pop_time is pop[msg_t return time];
 
   -- The value is set to null to avoid duplicate ownership
-  procedure push(msg      : msg_t; variable value : inout integer_vector_ptr_t);
+  procedure push(msg : msg_t; variable value : inout integer_vector_ptr_t);
   impure function pop(msg : msg_t) return integer_vector_ptr_t;
   alias push_integer_vector_ptr_ref is push[msg_t, integer_vector_ptr_t];
   alias pop_integer_vector_ptr_ref is pop[msg_t return integer_vector_ptr_t];
 
   -- The value is set to null to avoid duplicate ownership
-  procedure push(msg      : msg_t; variable value : inout string_ptr_t);
+  procedure push(msg : msg_t; variable value : inout string_ptr_t);
   impure function pop(msg : msg_t) return string_ptr_t;
   alias push_string_ptr_ref is push[msg_t, string_ptr_t];
   alias pop_string_ptr_ref is pop[msg_t return string_ptr_t];
 
   -- The value is set to null to avoid duplicate ownership
-  procedure push(msg      : msg_t; variable value : inout queue_t);
+  procedure push(msg : msg_t; variable value : inout queue_t);
   impure function pop(msg : msg_t) return queue_t;
   alias push_queue_ref is push[msg_t, queue_t];
   alias pop_queue_ref is pop[msg_t return queue_t];
 
-  procedure push(msg      : msg_t; value : boolean_vector);
+  procedure push(msg : msg_t; value : boolean_vector);
   impure function pop(msg : msg_t) return boolean_vector;
   alias push_boolean_vector is push[msg_t, boolean_vector];
   alias pop_boolean_vector is pop[msg_t return boolean_vector];
 
-  procedure push(msg      : msg_t; value : integer_vector);
+  procedure push(msg : msg_t; value : integer_vector);
   impure function pop(msg : msg_t) return integer_vector;
   alias push_integer_vector is push[msg_t, integer_vector];
   alias pop_integer_vector is pop[msg_t return integer_vector];
 
-  procedure push(msg      : msg_t; value : real_vector);
+  procedure push(msg : msg_t; value : real_vector);
   impure function pop(msg : msg_t) return real_vector;
   alias push_real_vector is push[msg_t, real_vector];
   alias pop_real_vector is pop[msg_t return real_vector];
 
-  procedure push(msg      : msg_t; value : time_vector);
+  procedure push(msg : msg_t; value : time_vector);
   impure function pop(msg : msg_t) return time_vector;
   alias push_time_vector is push[msg_t, time_vector];
   alias pop_time_vector is pop[msg_t return time_vector];
 
-  procedure push(msg      : msg_t; value : ufixed);
+  procedure push(msg : msg_t; value : ufixed);
   impure function pop(msg : msg_t) return ufixed;
   alias push_ufixed is push[msg_t, ufixed];
   alias pop_ufixed is pop[msg_t return ufixed];
 
-  procedure push(msg      : msg_t; value : sfixed);
+  procedure push(msg : msg_t; value : sfixed);
   impure function pop(msg : msg_t) return sfixed;
   alias push_sfixed is push[msg_t, sfixed];
   alias pop_sfixed is pop[msg_t return sfixed];
 
-  procedure push(msg      : msg_t; value : float);
+  procedure push(msg : msg_t; value : float);
   impure function pop(msg : msg_t) return float;
   alias push_float is push[msg_t, float];
   alias pop_float is pop[msg_t return float];
 
-  procedure push(msg      : msg_t; variable value : inout msg_t);
+  procedure push(msg : msg_t; variable value : inout msg_t);
   impure function pop(msg : msg_t) return msg_t;
   alias push_msg_t is push[msg_t, msg_t];
   alias pop_msg_t is pop[msg_t return msg_t];
@@ -405,12 +405,12 @@ package body com_types_pkg is
   impure function new_msg_type(name : string) return msg_type_t is
     constant code : integer := length(p_msg_types.p_name_ptrs);
   begin
-    resize(p_msg_types.p_name_ptrs, code+1);
+    resize(p_msg_types.p_name_ptrs, code + 1);
     set(p_msg_types.p_name_ptrs, code, to_integer(new_string_ptr(name)));
     return (p_code => code);
   end function;
 
-  impure function name( msg_type : msg_type_t) return string is
+  impure function name(msg_type : msg_type_t) return string is
   begin
     return to_string(to_string_ptr(get(p_msg_types.p_name_ptrs, msg_type.p_code)));
   end;
@@ -433,7 +433,7 @@ package body com_types_pkg is
   end;
 
   procedure unexpected_msg_type(msg_type : msg_type_t;
-                                    logger : logger_t := com_logger) is
+                                logger : logger_t := com_logger) is
     constant code : integer := msg_type.p_code;
   begin
     if is_already_handled(msg_type) then
@@ -462,18 +462,18 @@ package body com_types_pkg is
   -----------------------------------------------------------------------------
   -- Message related subprograms
   -----------------------------------------------------------------------------
-  impure function new_msg (
+  impure function new_msg(
     msg_type : msg_type_t := null_msg_type;
     sender : actor_t := null_actor) return msg_t is
     variable msg : msg_t;
   begin
     msg.sender := sender;
-    msg.data   := new_queue(queue_pool);
+    msg.data := new_queue(queue_pool);
     msg.msg_type := msg_type;
     return msg;
   end;
 
-  procedure delete (msg : inout msg_t) is
+  procedure delete(msg : inout msg_t) is
   begin
     recycle(queue_pool, msg.data);
     msg := null_msg;
@@ -484,7 +484,7 @@ package body com_types_pkg is
   begin
     result.data := new_queue(queue_pool);
     for i in 0 to length(msg.data) - 1 loop
-      unsafe_push(result.data, get(msg.data.data, 1+i));
+      unsafe_push(result.data, get(msg.data.data, 1 + i));
     end loop;
 
     return result;
@@ -517,6 +517,7 @@ package body com_types_pkg is
   procedure push(queue : queue_t; variable value : inout msg_t) is
   begin
     push(queue, value.id);
+    push(queue, value.msg_type.p_code);
     push(queue, com_status_t'pos(value.status));
     push(queue, value.sender.id);
     push(queue, value.receiver.id);
@@ -528,12 +529,13 @@ package body com_types_pkg is
   impure function pop(queue : queue_t) return msg_t is
     variable ret_val : msg_t;
   begin
-    ret_val.id          := pop(queue);
-    ret_val.status      := com_status_t'val(integer'(pop(queue)));
-    ret_val.sender.id   := pop(queue);
+    ret_val.id := pop(queue);
+    ret_val.msg_type := (p_code => pop(queue));
+    ret_val.status := com_status_t'val(integer'(pop(queue)));
+    ret_val.sender.id := pop(queue);
     ret_val.receiver.id := pop(queue);
-    ret_val.request_id  := pop(queue);
-    ret_val.data        := pop_queue_ref(queue);
+    ret_val.request_id := pop(queue);
+    ret_val.data := pop_queue_ref(queue);
 
     return ret_val;
   end;
@@ -832,7 +834,7 @@ package body com_types_pkg is
     return pop(msg.data);
   end;
 
-  procedure push(msg      : msg_t; variable value : inout msg_t) is
+  procedure push(msg : msg_t; variable value : inout msg_t) is
   begin
     push(msg.data, value);
   end;
