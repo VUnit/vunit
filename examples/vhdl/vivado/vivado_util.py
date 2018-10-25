@@ -76,7 +76,7 @@ def add_project_ip(vunit_obj, project_file, output_path, vivado_path=None, clean
 
     compile_order_file = join(output_path, "compile_order.txt")
 
-    if not clean not exists(compile_order_file):
+    if clean or not exists(compile_order_file):
         create_compile_order_file(project_file, compile_order_file, vivado_path=vivado_path)
     else:
         print("Vivado project Compile order already exists, re-using: %s" % abspath(compile_order_file))
