@@ -13,6 +13,7 @@ use work.integer_vector_ptr_pool_pkg.all;
 use work.run_types_pkg.all;
 use work.logger_pkg.all;
 use work.string_ops.all;
+use work.codec_pkg.all;
 
 package runner_pkg is
   constant runner_trace_logger : logger_t := get_logger("runner");
@@ -200,7 +201,7 @@ package body runner_pkg is
     set(runner.p_data, disable_simulation_exit_idx, to_integer(false));
     set(runner.p_data, entry_locks_idx, to_integer(integer_vector_ptr_t'(new_integer_vector_ptr(n_legal_phases))));
     set(runner.p_data, exit_locks_idx, to_integer(integer_vector_ptr_t'(new_integer_vector_ptr(n_legal_phases))));
-    set(runner.p_data, timeout_idx, to_integer(new_string_ptr(str_pool, "0 ns")));
+    set(runner.p_data, timeout_idx, to_integer(new_string_ptr(str_pool, encode(0 ns))));
   end;
 
   procedure set_active_python_runner(runner : runner_t; value : boolean) is
@@ -527,7 +528,7 @@ package body runner_pkg is
   end;
 
   procedure set_timeout(runner : runner_t; timeout : time) is
-    constant new_value : string := time'image(timeout);
+    constant new_value : string := encode(timeout);
     variable timeout_ptr : string_ptr_t := to_string_ptr(get(runner.p_data, timeout_idx));
   begin
     if timeout_ptr = null_string_ptr then
@@ -541,7 +542,7 @@ package body runner_pkg is
   impure function get_timeout(runner : runner_t) return time is
     constant timeout_ptr : string_ptr_t := to_string_ptr(get(runner.p_data, timeout_idx));
   begin
-    return time'value(to_string(timeout_ptr));
+    return decode(to_string(timeout_ptr));
   end;
 
 end package body;
