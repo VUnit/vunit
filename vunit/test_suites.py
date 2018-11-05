@@ -145,6 +145,9 @@ class TestRun(object):
                                             self._simulator_if.output_path):
             return results
 
+        # Ensure result file exists
+        ostools.write_file(get_result_file_name(output_path), "")
+
         sim_ok = self._simulate(output_path)
 
         if self._elaborate_only:
