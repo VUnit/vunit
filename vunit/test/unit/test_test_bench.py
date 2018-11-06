@@ -198,6 +198,40 @@ if run("Test_2")
                                "lib.tb_entity.Test_2"])
 
     @with_tempdir
+    def test_scan_tests_from_file_location_unix(self, tempdir):
+        design_unit = Entity('tb_entity',
+                             file_name=join(tempdir, "file.vhd"))
+        design_unit.generic_names = ["runner_cfg"]
+        test_bench = TestBench(design_unit)
+
+        file_name = join(tempdir, "file.vhd")
+        code = 'foo \n bar \n if run("Test_1")'
+        write_file(file_name, code)
+        test_bench.scan_tests_from_file(file_name)
+        tests = self.create_tests(test_bench)
+        test_info = tests[0].test_information
+        location = test_info['lib.tb_entity.Test_1'].location
+        assert location.offset == code.find("Test_1")
+        assert location.length == len("Test_1")
+
+    @with_tempdir
+    def test_scan_tests_from_file_location_dos(self, tempdir):
+        design_unit = Entity('tb_entity',
+                             file_name=join(tempdir, "file.vhd"))
+        design_unit.generic_names = ["runner_cfg"]
+        test_bench = TestBench(design_unit)
+
+        file_name = join(tempdir, "file.vhd")
+        code = 'foo \r\n bar \r\n if run("Test_1")'
+        write_file(file_name, code)
+        test_bench.scan_tests_from_file(file_name)
+        tests = self.create_tests(test_bench)
+        test_info = tests[0].test_information
+        location = test_info['lib.tb_entity.Test_1'].location
+        assert location.offset == code.find("Test_1")
+        assert location.length == len("Test_1")
+
+    @with_tempdir
     def test_scan_tests_from_missing_file(self, tempdir):
         design_unit = Entity('tb_entity',
                              file_name=join(tempdir, "file.vhd"))

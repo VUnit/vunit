@@ -281,15 +281,15 @@ class AsynchronousFileReader(threading.Thread):
         return not self.is_alive() and self._queue.empty()
 
 
-def read_file(file_name, encoding="utf-8"):
+def read_file(file_name, encoding="utf-8", newline=None):
     """ To stub during testing """
     try:
-        with io.open(file_name, "r", encoding=encoding) as file_to_read:
+        with io.open(file_name, "r", encoding=encoding, newline=newline) as file_to_read:
             data = file_to_read.read()
     except UnicodeDecodeError:
         LOGGER.warning("Could not decode file %s using encoding %s, ignoring encoding errors",
                        file_name, encoding)
-        with io.open(file_name, "r", encoding=encoding, errors="ignore") as file_to_read:
+        with io.open(file_name, "r", encoding=encoding, errors="ignore", newline=newline) as file_to_read:
             data = file_to_read.read()
 
     return data

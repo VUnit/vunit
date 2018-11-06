@@ -182,7 +182,8 @@ class TestBench(ConfigurationVisitor):
                                    parse,
                                    file_name,
                                    encoding=HDL_FILE_ENCODING,
-                                   database=self._database)
+                                   database=self._database,
+                                   newline='')
 
         for attr in attributes:
             if _is_user_attribute(attr.name):

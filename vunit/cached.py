@@ -13,24 +13,24 @@ from vunit.hashing import hash_string
 from vunit.ostools import read_file
 
 
-def cached(key, function, file_name, encoding, database=None):
+def cached(key, function, file_name, encoding, database=None, newline=None):
     """
     Call function with file content if an update is needed
     """
 
     if database is None:
         # Without a database just return the function of the contents
-        content = read_file(file_name, encoding=encoding)
+        content = read_file(file_name, encoding=encoding, newline=newline)
         return function(content)
 
-    function_key = ("%s(%s)" % (key, file_name)).encode()
-    content, content_hash = _file_content_hash(file_name, encoding, database)
+    function_key = ("%s(%s, newline=%s)" % (key, file_name, newline)).encode()
+    content, content_hash = _file_content_hash(file_name, encoding, database, newline=newline)
 
     if function_key not in database:
         # We do not have a cached version of this computation
         # recompute and update database
         if content is None:
-            content = read_file(file_name, encoding=encoding)
+            content = read_file(file_name, encoding=encoding, newline=newline)
         result = function(content)
         database[function_key] = content_hash, result
         return result
@@ -41,7 +41,7 @@ def cached(key, function, file_name, encoding, database=None):
 
     # Content hash differs, recompute and update database
     if content is None:
-        content = read_file(file_name, encoding=encoding)
+        content = read_file(file_name, encoding=encoding, newline=newline)
     result = function(content)
     database[function_key] = content_hash, result
     return result
@@ -58,7 +58,7 @@ def file_content_hash(file_name, encoding, database=None):
     return content_hash
 
 
-def _file_content_hash(file_name, encoding, database=None):
+def _file_content_hash(file_name, encoding, database=None, newline=None):
     """
     Returns the file content as well as the hash of the content
 
@@ -68,13 +68,13 @@ def _file_content_hash(file_name, encoding, database=None):
     """
 
     if database is None:
-        content = read_file(file_name, encoding=encoding)
+        content = read_file(file_name, encoding=encoding, newline=newline)
         return content, hash_string(content)
 
-    key = ("cached._file_content_hash(%s)" % file_name).encode()
+    key = ("cached._file_content_hash(%s, newline=%s)" % (file_name, newline)).encode()
 
     if key not in database:
-        content = read_file(file_name, encoding=encoding)
+        content = read_file(file_name, encoding=encoding, newline=newline)
         content_hash = hash_string(content)
         timestamp = os.path.getmtime(file_name)
         database[key] = timestamp, content_hash
@@ -83,7 +83,7 @@ def _file_content_hash(file_name, encoding, database=None):
     timestamp = os.path.getmtime(file_name)
     last_timestamp, last_content_hash = database[key]
     if timestamp != last_timestamp:
-        content = read_file(file_name, encoding=encoding)
+        content = read_file(file_name, encoding=encoding, newline=newline)
         content_hash = hash_string(content)
         database[key] = timestamp, content_hash
         return content, content_hash
