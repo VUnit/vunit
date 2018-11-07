@@ -23,8 +23,8 @@ begin
     end procedure;
   begin
     test_runner_setup(runner, runner_cfg);
-    check_has_suffix(tb_path, "acceptance/artificial/vhdl/");
-    check_has_suffix(vunit_lib.run_pkg.tb_path(runner_cfg), "acceptance/artificial/vhdl/");
+    check_has_suffix(tb_path, "/vunit/test/acceptance/artificial/vhdl/");
+    check_has_suffix(vunit_lib.run_pkg.tb_path(runner_cfg), "/vunit/test/acceptance/artificial/vhdl/");
     test_runner_cleanup(runner);
     wait;
   end process;

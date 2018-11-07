@@ -1295,6 +1295,7 @@ class Library(object):
            library.add_source_file("file.vhd")
 
         """
+        file_name = abspath(file_name)
 
         if file_type is None:
             file_type = file_type_of(file_name)
@@ -1306,7 +1307,7 @@ class Library(object):
             include_dirs = add_verilog_include_dir(include_dirs)
 
         new_file_name = self._parent._preprocess(  # pylint: disable=protected-access
-            self._library_name, abspath(file_name), preprocessors)
+            self._library_name, file_name, preprocessors)
 
         source_file = self._project.add_source_file(new_file_name,
                                                     self._library_name,
