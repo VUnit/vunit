@@ -214,7 +214,7 @@ def create_vhdl_test_bench_file(test_bench_name,
     """
     Create a valid VUnit test bench and writes it to file_name
     """
-    with open(file_name, "w") as fptr:
+    with open(file_name, "w", newline='') as fptr:
         fptr.write(get_vhdl_test_bench(test_bench_name=test_bench_name,
                                        tests=tests,
                                        same_sim=same_sim,
