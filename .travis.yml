@@ -17,6 +17,8 @@ matrix:
     python: '3.5'
   - env: BUILD_NAME=py36-unit
     python: '3.6'
+  - env: BUILD_NAME=py36-unit
+    python: '3.6'
 
   - env: BUILD_NAME=py27-lint
     python: '2.7'
@@ -50,6 +52,27 @@ matrix:
 
   # Python 3.6 with ghdl llvm
   - env: BUILD_NAME=py36-acceptance-ghdl
+    python: '3.6'
+    os: linux
+    sudo: required
+    dist: trusty
+    before_install:
+    - sudo apt-get update -qq
+    - sudo apt-get install -y gnat-4.8 zlib1g-dev
+    - sudo apt-get install -y llvm-3.5-dev llvm-3.5-tools libedit-dev
+    before_script:
+    - git clone --depth 1 https://github.com/tgingold/ghdl.git ghdl
+    - cd ghdl
+    - mkdir build-llvm
+    - cd build-llvm
+    - ../configure --prefix=../../install-ghdl-llvm/ --with-llvm-config=llvm-config-3.5
+    - make
+    - make install
+    - cd ../../
+    - export PATH=$PATH:install-ghdl-llvm/bin/
+
+  # Python 3.6 with ghdl llvm
+  - env: BUILD_NAME=py36-vcomponents-ghdl
     python: '3.6'
     os: linux
     sudo: required

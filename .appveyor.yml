@@ -34,6 +34,9 @@ environment:
     - BUILD_NAME: py36-acceptance-ghdl
       PYTHON: "C:\\Python36"
 
+    - BUILD_NAME: py36-vcomponents-ghdl
+      PYTHON: "C:\\Python36"
+
 install:
   - "git submodule update --init --recursive"
   - "%PYTHON%\\python.exe -m pip install tox"
