@@ -231,13 +231,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
 
         vsim_flags = ["-dataset {%s}" % fix_path(join(output_path, "dataset.asdb")),
                       pli_str,
-                      set_generic_str,
-                      "-lib",
-                      config.library_name,
-                      config.entity_name]
-
-        if config.architecture_name is not None:
-            vsim_flags.append(config.architecture_name)
+                      set_generic_str]
 
         if config.sim_options.get("enable_coverage", False):
             coverage_file_path = join(output_path, "coverage.acdb")
@@ -248,6 +242,15 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
 
         if config.sim_options.get("disable_ieee_warnings", False):
             vsim_flags.append("-ieee_nowarn")
+
+        # Add the the testbench top-level unit last as coverage is
+        # only collected for the top-level unit specified last
+        vsim_flags += ["-lib",
+                       config.library_name,
+                       config.entity_name]
+
+        if config.architecture_name is not None:
+            vsim_flags.append(config.architecture_name)
 
         tcl = """
 proc vunit_load {{}} {{
