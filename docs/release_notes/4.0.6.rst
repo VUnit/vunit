@@ -1,0 +1,1 @@
+- Fix a problem where sometimes multiple Ctrl-C where required to abort execution. :vunit_issue:`408`
