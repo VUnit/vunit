@@ -159,6 +159,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             except KeyboardInterrupt:
                 # Only main thread should handle KeyboardInterrupt
                 if is_main:
+                    LOGGER.debug("MainWorkerThread: Caught Ctrl-C shutting down")
                     raise
                 else:
                     return

@@ -88,7 +88,10 @@ class PersistentTclShell(object):
             self._processes = {}
 
     def __del__(self):
-        self.teardown()
+        try:
+            self.teardown()
+        except KeyboardInterrupt:
+            LOGGER.debug("PersistentTclShell.__del__: Ignoring KeyboardInterrupt")
 
 
 def output_consumer(line):

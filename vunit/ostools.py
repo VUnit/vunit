@@ -53,6 +53,7 @@ class ProgramStatus(object):
 
     def shutdown(self):
         with self._lock:  # pylint: disable=not-context-manager
+            LOGGER.debug("ProgramStatus.shutdown")
             self._shutting_down = True
 
     def reset(self):
@@ -187,29 +188,25 @@ class Process(object):
         @raises Process.NonZeroExitCode when the process does not exit with code zero
         """
 
-        try:
-            if callback is not None:
-                while not self._reader.eof():
-                    line = self._queue.get()
-                    if line is None:
-                        break
+        def default_callback(*args, **kwargs):
+            pass
 
-                    if callback(line) is not None:
-                        return
-            else:
-                while (not self._reader.eof()) and (self._queue.get() is not None):
-                    pass
+        if not callback:
+            callback = default_callback
 
-            retcode = None
-            while retcode is None:
-                retcode = self.wait()
-                if retcode != 0:
-                    raise Process.NonZeroExitCode
+        while not self._reader.eof():
+            line = self._queue.get()
+            if line is None:
+                break
 
-        except:
-            self.terminate()
-            raise
-        self.terminate()
+            if callback(line) is not None:
+                return
+
+        retcode = None
+        while retcode is None:
+            retcode = self.wait()
+            if retcode != 0:
+                raise Process.NonZeroExitCode
 
     def terminate(self):
         """
@@ -240,7 +237,10 @@ class Process(object):
         self._process.stdin.close()
 
     def __del__(self):
-        self.terminate()
+        try:
+            self.terminate()
+        except KeyboardInterrupt:
+            LOGGER.debug("Process.__del__: Ignoring KeyboardInterrupt")
 
 
 class AsynchronousFileReader(threading.Thread):
