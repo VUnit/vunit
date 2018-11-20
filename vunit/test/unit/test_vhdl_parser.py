@@ -75,7 +75,7 @@ end entity;
 entity ent is
   generic (
         const : string := "a;a";
-        const2 : string := ";";
+        const2 : string := ";a""a;a";
         const3 : string := ": a b c :"
     );
 end entity;
@@ -88,7 +88,7 @@ end entity;
         self.assertEqual(entity.generics[0].init_value, '"a;a"')
         self.assertEqual(entity.generics[1].identifier, 'const2')
         self.assertEqual(entity.generics[1].subtype_indication.type_mark, 'string')
-        self.assertEqual(entity.generics[1].init_value, '";"')
+        self.assertEqual(entity.generics[1].init_value, '";a""a;a"')
         self.assertEqual(entity.generics[2].identifier, 'const3')
         self.assertEqual(entity.generics[2].subtype_indication.type_mark, 'string')
         self.assertEqual(entity.generics[2].init_value, '": a b c :"')

@@ -4,6 +4,8 @@
 #
 # Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
+# pylint: disable=too-many-lines
+
 """
 VHDL parsing functionality
 """
@@ -406,11 +408,22 @@ class VHDLEntity(object):
         result = []
         count = 0
         split = []
-        escape = False
         quouted = False
-        for char in string:
-            if not escape and char == '"':
-                quouted = not quouted
+        escaped = False
+
+        for idx, char in enumerate(string):
+            if idx + 1 < len(string):
+                next_char = string[idx + 1]
+            else:
+                next_char = None
+
+            if char == '"' and not escaped:
+                if next_char == '"':
+                    escaped = True
+                else:
+                    quouted = not quouted
+            else:
+                escaped = False
 
             if char in '(':
                 count += 1
@@ -422,8 +435,6 @@ class VHDLEntity(object):
                 split = []
             else:
                 split.append(char)
-
-            escape = char == '\\'
 
         if split:
             result.append("".join(split))
