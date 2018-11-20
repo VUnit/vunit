@@ -70,6 +70,29 @@ end entity;
         self.assertEqual(entity.generics[0].identifier, 'type_g')
         self.assertEqual(entity.generics[0].subtype_indication.type_mark, 'integer')
 
+    def test_parsing_entity_with_string_semicolon_colon(self):
+        entity = self.parse_single_entity("""\
+entity ent is
+  generic (
+        const : string := "a;a";
+        const2 : string := ";";
+        const3 : string := ": a b c :"
+    );
+end entity;
+""")
+        self.assertEqual(entity.identifier, "ent")
+        self.assertEqual(entity.ports, [])
+        self.assertEqual(len(entity.generics), 3)
+        self.assertEqual(entity.generics[0].identifier, 'const')
+        self.assertEqual(entity.generics[0].subtype_indication.type_mark, 'string')
+        self.assertEqual(entity.generics[0].init_value, '"a;a"')
+        self.assertEqual(entity.generics[1].identifier, 'const2')
+        self.assertEqual(entity.generics[1].subtype_indication.type_mark, 'string')
+        self.assertEqual(entity.generics[1].init_value, '";"')
+        self.assertEqual(entity.generics[2].identifier, 'const3')
+        self.assertEqual(entity.generics[2].subtype_indication.type_mark, 'string')
+        self.assertEqual(entity.generics[2].init_value, '": a b c :"')
+
     def test_parsing_entity_with_function_generic(self):
         entity = self.parse_single_entity("""\
 entity ent is

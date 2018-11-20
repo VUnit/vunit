@@ -401,26 +401,32 @@ class VHDLEntity(object):
     @staticmethod
     def _split_not_in_par(string, sep):
         """
-        Split string at all occurences of sep but not inside of a parenthesis
+        Split string at all occurences of sep but not inside of a parenthesis or quoute
         """
         result = []
         count = 0
         split = []
+        escape = False
+        quouted = False
         for char in string:
-            if char == '(':
+            if not escape and char == '"':
+                quouted = not quouted
+
+            if char in '(':
                 count += 1
-            elif char == ')':
+            elif char in ')':
                 count -= 1
 
-            if char == sep and count == 0:
+            if char == sep and count == 0 and not quouted:
                 result.append("".join(split))
                 split = []
             else:
                 split.append(char)
 
+            escape = char == '\\'
+
         if split:
             result.append("".join(split))
-
         return result
 
     _package_generic_re = re.compile(r"\s*package\s+", re.MULTILINE | re.IGNORECASE)
