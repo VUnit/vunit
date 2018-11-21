@@ -14,6 +14,7 @@ use work.sync_pkg.all;
 use work.axi_pkg.all;
 use work.axi_slave_pkg.all;
 use work.axi_slave_private_pkg.all;
+use work.axi_lite_master_pkg.all;
 context work.com_context;
 context work.vunit_context;
 
@@ -57,9 +58,7 @@ begin
     receive(net, bus_handle.p_actor, request_msg);
     msg_type := message_type(request_msg);
 
-    if msg_type = bus_read_msg then
-      push(message_queue, request_msg);
-    elsif msg_type = bus_write_msg then
+    if is_read(msg_type) or is_write(msg_type) then
       push(message_queue, request_msg);
     elsif msg_type = wait_until_idle_msg then
       wait until ((bvalid and bready) = '1' or (rvalid and rready) = '1') and is_empty(message_queue) and rising_edge(aclk);
@@ -74,14 +73,16 @@ begin
     variable request_msg : msg_t;
     variable msg_type : msg_type_t;
     variable w_done, aw_done : boolean;
+    variable expected_resp : axi_resp_t;
   begin
     wait until rising_edge(aclk) and not is_empty(message_queue);
 
     request_msg := pop(message_queue);
     msg_type := message_type(request_msg);
 
-    if msg_type = bus_read_msg then
+    if is_read(msg_type) then
       araddr <= pop_std_ulogic_vector(request_msg);
+      expected_resp := pop_std_ulogic_vector(request_msg) when is_axi_lite_msg(msg_type) else axi_resp_okay;
       push(reply_queue, request_msg);
 
       arvalid <= '1';
@@ -91,7 +92,7 @@ begin
       rready <= '1';
       wait until (rvalid and rready) = '1' and rising_edge(aclk);
       rready <= '0';
-      check_axi_resp(bus_handle, rresp, axi_resp_okay, "rresp");
+      check_axi_resp(bus_handle, rresp, expected_resp, "rresp");
 
       if is_visible(bus_handle.p_logger, debug) then
         debug(bus_handle.p_logger,
@@ -99,10 +100,11 @@ begin
                 " from address 0x" & to_hstring(araddr));
       end if;
 
-    elsif msg_type = bus_write_msg then
+    elsif is_write(msg_type) then
       awaddr <= pop_std_ulogic_vector(request_msg);
       wdata <= pop_std_ulogic_vector(request_msg);
       wstrb <= pop_std_ulogic_vector(request_msg);
+      expected_resp := pop_std_ulogic_vector(request_msg) when is_axi_lite_msg(msg_type) else axi_resp_okay;
       delete(request_msg);
 
       wvalid <= '1';
@@ -127,7 +129,7 @@ begin
       bready <= '1';
       wait until (bvalid and bready) = '1' and rising_edge(aclk);
       bready <= '0';
-      check_axi_resp(bus_handle, bresp, axi_resp_okay, "bresp");
+      check_axi_resp(bus_handle, bresp, expected_resp, "bresp");
 
       if is_visible(bus_handle.p_logger, debug) then
         debug(bus_handle.p_logger,

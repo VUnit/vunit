@@ -14,6 +14,7 @@ context work.com_context;
 
 use work.axi_pkg.all;
 use work.bus_master_pkg.all;
+use work.axi_lite_master_pkg.all;
 
 library osvvm;
 use osvvm.RandomPkg.all;
@@ -76,6 +77,12 @@ begin
     elsif run("Test write not okay") then
       write_bus(net, bus_handle, x"01234567", x"1122");
 
+    elsif run("Test write with axi resp") then
+      write_axi_lite(net, bus_handle, x"01234567", x"1122", axi_resp_slverr);
+
+    elsif run("Test write with wrong axi resp") then
+      write_axi_lite(net, bus_handle, x"01234567", x"1122", axi_resp_decerr);
+
     elsif run("Test single read") then
       mock(get_logger(bus_handle), debug);
       read_bus(net, bus_handle, x"01234567", tmp);
@@ -86,6 +93,12 @@ begin
     elsif run("Test read not okay") then
       read_bus(net, bus_handle, x"01234567", tmp);
 
+    elsif run("Test read with axi resp") then
+      read_axi_lite(net, bus_handle, x"01234567", axi_resp_slverr, tmp);
+
+    elsif run("Test read with wrong axi resp") then
+      read_axi_lite(net, bus_handle, x"01234567", axi_resp_exokay, tmp);
+
     elsif run("Test random") then
       for i in 0 to num_random_tests-1 loop
         if rnd.RandInt(0, 1) = 0 then
@@ -93,6 +106,17 @@ begin
           check_equal(tmp, rnd.RandSlv(rdata'length), "read data");
         else
           write_bus(net, bus_handle, rnd.RandSlv(awaddr'length), rnd.RandSlv(wdata'length));
+        end if;
+      end loop;
+
+    elsif run("Test random axi resp") then
+      for i in 0 to num_random_tests-1 loop
+        if rnd.RandInt(0, 1) = 0 then
+          read_axi_lite(net, bus_handle, rnd.RandSlv(araddr'length), rnd.RandSlv(axi_resp_t'length), tmp);
+          check_equal(tmp, rnd.RandSlv(rdata'length), "read data");
+        else
+          write_axi_lite(net, bus_handle, rnd.RandSlv(awaddr'length), rnd.RandSlv(wdata'length),
+                         rnd.RandSlv(axi_resp_t'length));
         end if;
       end loop;
     end if;
@@ -173,6 +197,48 @@ begin
 
       done <= true;
 
+    elsif enabled("Test write with axi resp") then
+      awready <= '1';
+      wait until (awready and awvalid) = '1' and rising_edge(clk);
+      awready <= '0';
+      check_equal(awaddr, std_logic_vector'(x"01234567"), "awaddr");
+
+      wready <= '1';
+      wait until (wready and wvalid) = '1' and rising_edge(clk);
+      wready <= '0';
+      check_equal(wdata, std_logic_vector'(x"1122"), "wdata");
+      check_equal(wstrb, std_logic_vector'("11"), "wstrb");
+
+      bvalid <= '1';
+      bresp <= axi_resp_slverr;
+      wait until (bready and bvalid) = '1' and rising_edge(clk);
+      bvalid <= '0';
+
+      done <= true;
+
+    elsif enabled("Test write with wrong axi resp") then
+      awready <= '1';
+      wait until (awready and awvalid) = '1' and rising_edge(clk);
+      awready <= '0';
+      check_equal(awaddr, std_logic_vector'(x"01234567"), "awaddr");
+
+      wready <= '1';
+      wait until (wready and wvalid) = '1' and rising_edge(clk);
+      wready <= '0';
+      check_equal(wdata, std_logic_vector'(x"1122"), "wdata");
+      check_equal(wstrb, std_logic_vector'("11"), "wstrb");
+
+      bvalid <= '1';
+      bresp <= axi_resp_exokay;
+      mock(bus_logger, failure);
+      wait until (bready and bvalid) = '1' and rising_edge(clk);
+      bvalid <= '0';
+      wait until mock_queue_length > 0 for 0 ns;
+      check_only_log(bus_logger, "bresp - Got AXI response EXOKAY(01) expected DECERR(11)", failure);
+      unmock(bus_logger);
+
+      done <= true;
+
     elsif enabled("Test single read") then
       arready <= '1';
       wait until (arready and arvalid) = '1' and rising_edge(clk);
@@ -204,6 +270,38 @@ begin
 
       done <= true;
 
+    elsif enabled("Test read with axi resp") then
+      arready <= '1';
+      wait until (arready and arvalid) = '1' and rising_edge(clk);
+      arready <= '0';
+      check_equal(araddr, std_logic_vector'(x"01234567"), "araddr");
+
+      rvalid <= '1';
+      rresp <= axi_resp_slverr;
+      rdata <= x"0000";
+      wait until (rready and rvalid) = '1' and rising_edge(clk);
+      rvalid <= '0';
+
+      done <= true;
+
+    elsif enabled("Test read with wrong axi resp") then
+      arready <= '1';
+      wait until (arready and arvalid) = '1' and rising_edge(clk);
+      arready <= '0';
+      check_equal(araddr, std_logic_vector'(x"01234567"), "araddr");
+
+      rvalid <= '1';
+      rresp <= axi_resp_decerr;
+      rdata <= x"0000";
+      mock(bus_logger, failure);
+      wait until (rready and rvalid) = '1' and rising_edge(clk);
+      rvalid <= '0';
+      wait until mock_queue_length > 0 for 0 ns;
+      check_only_log(bus_logger, "rresp - Got AXI response DECERR(11) expected EXOKAY(01)", failure);
+      unmock(bus_logger);
+
+      done <= true;
+
     elsif enabled("Test random") then
       for i in 0 to num_random_tests-1 loop
         if rnd.RandInt(0, 1) = 0 then
@@ -231,6 +329,39 @@ begin
 
           bvalid <= '1';
           bresp <= axi_resp_okay;
+          wait until (bready and bvalid) = '1' and rising_edge(clk);
+          bvalid <= '0';
+        end if;
+      end loop;
+      done <= true;
+
+    elsif enabled("Test random axi resp") then
+      for i in 0 to num_random_tests-1 loop
+        if rnd.RandInt(0, 1) = 0 then
+          arready <= '1';
+          wait until (arready and arvalid) = '1' and rising_edge(clk);
+          arready <= '0';
+          check_equal(araddr, rnd.RandSlv(araddr'length), "araddr");
+
+          rvalid <= '1';
+          rresp <= rnd.RandSlv(axi_resp_t'length);
+          rdata <= rnd.RandSlv(rdata'length);
+          wait until (rready and rvalid) = '1' and rising_edge(clk);
+          rvalid <= '0';
+        else
+          awready <= '1';
+          wait until (awready and awvalid) = '1' and rising_edge(clk);
+          awready <= '0';
+          check_equal(awaddr, rnd.RandSlv(awaddr'length), "awaddr");
+
+          wready <= '1';
+          wait until (wready and wvalid) = '1' and rising_edge(clk);
+          wready <= '0';
+          check_equal(wdata, rnd.RandSlv(wdata'length), "wdata");
+          check_equal(wstrb, std_logic_vector'("11"), "wstrb");
+
+          bvalid <= '1';
+          bresp <= rnd.RandSlv(axi_resp_t'length);
           wait until (bready and bvalid) = '1' and rising_edge(clk);
           bvalid <= '0';
         end if;
