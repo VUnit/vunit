@@ -17,12 +17,12 @@ use work.log_deprecated_pkg.all;
 use work.core_pkg.all;
 use work.test_support_pkg.all;
 
-entity tb_deprecated is
+entity tb_log_deprecated is
   generic (
     runner_cfg : string);
 end entity;
 
-architecture a of tb_deprecated is
+architecture a of tb_log_deprecated is
 begin
   test_runner : process
     variable my_logger, my_logger2, uninitialized_logger : logger_t;
