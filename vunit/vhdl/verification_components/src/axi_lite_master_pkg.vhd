@@ -24,7 +24,7 @@ package axi_lite_master_pkg is
                            constant bus_handle : bus_master_t;
                            constant address : std_logic_vector;
                            constant data : std_logic_vector;
-                           constant expected_rresp : axi_resp_t := axi_resp_okay;
+                           constant expected_bresp : axi_resp_t := axi_resp_okay;
                            -- default byte enable is all bytes
                            constant byte_enable : std_logic_vector := "");
 
@@ -62,7 +62,7 @@ package body axi_lite_master_pkg is
                            constant bus_handle : bus_master_t;
                            constant address : std_logic_vector;
                            constant data : std_logic_vector;
-                           constant expected_rresp : axi_resp_t := axi_resp_okay;
+                           constant expected_bresp : axi_resp_t := axi_resp_okay;
                            -- default byte enable is all bytes
                            constant byte_enable : std_logic_vector := "") is
     variable request_msg : msg_t := new_msg(axi_lite_write_msg);
@@ -83,7 +83,7 @@ package body axi_lite_master_pkg is
     end if;
     push_std_ulogic_vector(request_msg, full_byte_enable);
 
-    push_std_ulogic_vector(request_msg, expected_rresp);
+    push_std_ulogic_vector(request_msg, expected_bresp);
 
     send(net, bus_handle.p_actor, request_msg);
   end procedure;
