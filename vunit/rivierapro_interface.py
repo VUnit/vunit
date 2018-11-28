@@ -327,8 +327,9 @@ proc _vunit_sim_restart {} {
         Merge coverage from all test cases,
         """
 
-        # Teardown to ensure acdb file was written.
-        self._persistent_shell.teardown()
+        if self._persistent_shell is not None:
+            # Teardown to ensure acdb file was written.
+            self._persistent_shell.teardown()
 
         merge_command = "acdb merge"
 
