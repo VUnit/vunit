@@ -13,4 +13,3 @@ class CompileError(Exception):
     """
     An error occured when compiling a HDL file
     """
-    pass

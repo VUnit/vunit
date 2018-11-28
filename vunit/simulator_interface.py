@@ -48,7 +48,6 @@ class SimulatorInterface(object):
         """
         Add command line arguments
         """
-        pass
 
     @staticmethod
     def supports_vhdl_2008_contexts():
@@ -149,7 +148,6 @@ class SimulatorInterface(object):
         """
         Hook for the simulator interface to add simulator specific things to the project
         """
-        pass
 
     def compile_project(self, project, printer=NO_COLOR_PRINTER, continue_on_error=False):
         """
@@ -163,13 +161,11 @@ class SimulatorInterface(object):
         """
         Simulate
         """
-        pass
 
     def setup_library_mapping(self, project):
         """
         Implemented by specific simulators
         """
-        pass
 
     def __compile_source_file(self, source_file, printer):
         """

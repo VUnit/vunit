@@ -213,7 +213,6 @@ class EOFException(Exception):
     """
     End of file
     """
-    pass
 
 
 class LocationException(Exception):

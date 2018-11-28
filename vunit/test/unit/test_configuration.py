@@ -228,4 +228,3 @@ class WasHere(Exception):
     """
     Exception raised to prove code was executed
     """
-    pass
