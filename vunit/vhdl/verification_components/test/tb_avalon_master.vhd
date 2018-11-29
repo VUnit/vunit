@@ -172,13 +172,13 @@ begin
       for i in 0 to tb_cfg.transfers -1 loop
         push(data_queue, std_logic_vector(to_unsigned(i, writedata'length)));
       end loop;
-      write_bus(net, bus_handle, 0, tb_cfg.transfers, data_queue);
+      burst_write_bus(net, bus_handle, 0, tb_cfg.transfers, data_queue);
       check_true(is_empty(data_queue), "wr queue not flushed by master");
 
       info(tb_logger, "Reading...");
-      read_bus(net, bus_handle, 0, tb_cfg.transfers, burst_rd_ref);
+      burst_read_bus(net, bus_handle, 0, tb_cfg.transfers, burst_rd_ref);
       info(tb_logger, "Get reads by references...");
-      await_read_bus_reply(net, bus_handle, data_queue, burst_rd_ref);
+      await_burst_read_bus_reply(net, bus_handle, data_queue, burst_rd_ref);
 
       info(tb_logger, "Compare...");
       for i in 0 to tb_cfg.transfers-1 loop
@@ -193,11 +193,11 @@ begin
       for i in 0 to tb_cfg.transfers -1 loop
         push(data_queue, std_logic_vector(to_unsigned(i, writedata'length)));
       end loop;
-      write_bus(net, bus_handle, 0, tb_cfg.transfers, data_queue);
+      burst_write_bus(net, bus_handle, 0, tb_cfg.transfers, data_queue);
       check_true(is_empty(data_queue), "wr queue not flushed by master");
 
       info(tb_logger, "Reading...");
-      read_bus(net, bus_handle, 0, tb_cfg.transfers, data_queue);
+      burst_read_bus(net, bus_handle, 0, tb_cfg.transfers, data_queue);
 
       info(tb_logger, "Compare...");
       for i in 0 to tb_cfg.transfers-1 loop
@@ -217,7 +217,7 @@ begin
       addr := 0;
       while transfers > 0 loop
         gen_rndburst(rnd, rndburst, transfers);
-        write_bus(net, bus_handle, addr, rndburst, data_queue);
+        burst_write_bus(net, bus_handle, addr, rndburst, data_queue);
         addr := addr + rndburst * byteenable'length;
       end loop;
       check_true(is_empty(data_queue), "wr queue not flushed by master");
@@ -227,7 +227,7 @@ begin
       addr := 0;
       while transfers > 0 loop
         gen_rndburst(rnd, rndburst, transfers);
-        read_bus(net, bus_handle, addr, rndburst, burst_rd_ref);
+        burst_read_bus(net, bus_handle, addr, rndburst, burst_rd_ref);
         push(rd_ref_queue, burst_rd_ref);
         addr := addr + rndburst * byteenable'length;
       end loop;
@@ -235,7 +235,7 @@ begin
       info(tb_logger, "Get reads by references and compre...");
       while not is_empty(rd_ref_queue) loop
         burst_rd_ref := pop(rd_ref_queue);
-        await_read_bus_reply(net, bus_handle, data_queue, burst_rd_ref);
+        await_burst_read_bus_reply(net, bus_handle, data_queue, burst_rd_ref);
         while not is_empty(data_queue) loop
           tmp := pop(data_queue);
           check_equal(tmp, std_logic_vector(to_unsigned(i, readdata'length)), "read data");
@@ -262,21 +262,21 @@ begin
       for i in 1 to tb_cfg.transfers loop
         push(data_queue, std_logic_vector(to_unsigned(i, writedata'length)));
       end loop;
-      write_bus(net, bus_handle, 0, tb_cfg.transfers, data_queue);
+      burst_write_bus(net, bus_handle, 0, tb_cfg.transfers, data_queue);
       wait_until_idle(net, bus_handle);
       wait until rising_edge(clk);
       check_equal(write, '0', "unexpected write after wail till idle");
 
-      read_bus(net, bus_handle, 0, tb_cfg.transfers, data_queue);
+      burst_read_bus(net, bus_handle, 0, tb_cfg.transfers, data_queue);
       wait_until_idle(net, bus_handle);
       wait until rising_edge(clk);
       check_equal(readdatavalid, '0', "unexpected readdatavalid after wail till idle");
 
-      read_bus(net, bus_handle, 0, tb_cfg.transfers, burst_rd_ref);
+      burst_read_bus(net, bus_handle, 0, tb_cfg.transfers, burst_rd_ref);
       wait_until_idle(net, bus_handle);
       wait until rising_edge(clk);
       check_equal(readdatavalid, '0', "unexpected readdatavalid after wail till idle");
-      await_read_bus_reply(net, bus_handle, data_queue, burst_rd_ref);
+      await_burst_read_bus_reply(net, bus_handle, data_queue, burst_rd_ref);
       wait_until_idle(net, bus_handle);
 
     end if;
