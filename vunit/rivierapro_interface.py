@@ -257,6 +257,9 @@ proc vunit_load {{}} {{
     # Make the variable 'aldec' visible; otherwise, the Matlab interface
     # is broken because vsim does not find the library aldec_matlab_cosim.
     global aldec
+    # Make the variable 'LICENSE_QUEUE' visible (if set); otherwise vsim
+    # will not wait for simulation licenses.
+    global LICENSE_QUEUE
 
     set vsim_failed [catch {{
         eval vsim {{{vsim_flags}}}
