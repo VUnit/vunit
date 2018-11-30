@@ -72,7 +72,7 @@ for test in tb_avalon_master.get_tests():
     if test.name == "wr single rd single":
         gen_avalon_master_tests(test, [1], [1.0], [0.0], [1.0], [1.0])
     else:
-        gen_avalon_master_tests(test, [16], [1.0, 0.3], [0.0, 0.7], [1.0, 0.3], [1.0, 0.3])
+        gen_avalon_master_tests(test, [64], [1.0, 0.3], [0.0, 0.7], [1.0, 0.3], [1.0, 0.3])
 
 tb_wishbone_slave = lib.test_bench("tb_wishbone_slave")
 
