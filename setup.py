@@ -43,6 +43,7 @@ setup(
               'vunit.test',
               'vunit.parsing',
               'vunit.parsing.verilog',
+              'vunit.vivado',
               'vunit.test.lint',
               'vunit.test.unit',
               'vunit.test.acceptance'],
