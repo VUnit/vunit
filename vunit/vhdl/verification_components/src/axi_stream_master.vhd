@@ -74,7 +74,7 @@ begin
     wait until rising_edge(aclk) and not is_empty(message_queue);
 
     while not is_empty(message_queue) loop
-      
+
       msg := pop(message_queue);
       msg_type := message_type(msg);
 
