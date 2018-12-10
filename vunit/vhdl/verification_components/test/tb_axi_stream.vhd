@@ -282,7 +282,7 @@ begin
 
       push_axi_stream(net, master_axi_stream, x"11", tlast => '0', tkeep => "0", tstrb => "0", tid => x"22", tdest => x"33", tuser => x"44");
       -- Delay mocking the logger to prevent 'invalid checks' from failing the checks below
-      wait until rising_edge (aclk);
+      wait until rising_edge (aclk) and tvalid = '1';
 
       mocklogger := get_logger("check");
       mock(mocklogger);
