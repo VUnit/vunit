@@ -193,8 +193,7 @@ begin
       pop_stream(net, slave_stream, data, last_bool);
       check_equal(data, std_logic_vector'(x"77"), result("for pop stream data"));
       check_true(last_bool, result("for pop stream last"));
-      check_equal(now - 10 ns, timestamp + 30 ns, result("for push wait time"));
-
+      check_equal(now - 10 ns, timestamp + 50 ns, result("for push wait time"));  -- two extra cycles inserted by alignment
       for i in 1 to n_monitors loop
         get_axi_stream_transaction(axi_stream_transaction);
         check_equal(
@@ -225,6 +224,25 @@ begin
         check_true(axi_stream_transaction.tlast, result("for axi_stream_transaction.tlast"));
       end loop;
 
+    elsif run("test single stalled push and pop with non-multiple of clock period") then
+      wait until rising_edge(aclk);
+      wait_for_time(net, master_sync, 29 ns);
+      timestamp := now;
+      push_stream(net, master_stream, x"77", true);
+      pop_stream(net, slave_stream, data, last_bool);
+      check_equal(data, std_logic_vector'(x"77"), result("for pop stream data"));
+      check_true(last_bool, result("for pop stream last"));
+      check_equal(now - 10 ns, timestamp + 40 ns, result("for push wait time"));  -- Aligned to clock edge again
+      for i in 1 to n_monitors loop
+        get_axi_stream_transaction(axi_stream_transaction);
+        check_equal(
+          axi_stream_transaction.tdata,
+          std_logic_vector'(x"77"),
+          result("for axi_stream_transaction.tdata")
+        );
+        check_true(axi_stream_transaction.tlast, result("for axi_stream_transaction.tlast"));
+      end loop;
+
     elsif run("test pop before push") then
       for i in 0 to 7 loop
         pop_stream(net, slave_stream, reference);
@@ -234,6 +252,8 @@ begin
       for i in 0 to 7 loop
         push_stream(net, master_stream, std_logic_vector(to_unsigned(i + 1, data'length)), true);
       end loop;
+
+      wait_until_idle(net, master_sync); -- wait until all transfers are done before checking them
 
       for i in 0 to 7 loop
         reference := pop(reference_queue);
@@ -259,10 +279,14 @@ begin
       check_axi_stream(net, slave_axi_stream, x"12", '1', msg => "reduced checking axi stream");
 
     elsif run("test failing check") then
+
+      push_axi_stream(net, master_axi_stream, x"11", tlast => '0', tkeep => "0", tstrb => "0", tid => x"22", tdest => x"33", tuser => x"44");
+      -- Delay mocking the logger to prevent 'invalid checks' from failing the checks below
+      wait until rising_edge (aclk);
+
       mocklogger := get_logger("check");
       mock(mocklogger);
 
-      push_axi_stream(net, master_axi_stream, x"11", tlast => '0', tkeep => "0", tstrb => "0", tid => x"22", tdest => x"33", tuser => x"44");
       check_axi_stream(net, slave_axi_stream, x"12", '1', "1", "1", x"23", x"34", x"45", "checking axi stream");
       check_log(mocklogger, "checking axi stream - Got 0001_0001 (17). Expected 0001_0010 (18).", error);
       check_log(mocklogger, "checking axi stream - Got 0. Expected 1.", error);

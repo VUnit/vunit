@@ -36,8 +36,28 @@ entity axi_stream_master is
 end entity;
 
 architecture a of axi_stream_master is
+   constant message_queue : queue_t := new_queue;
 begin
   main : process
+    variable request_msg : msg_t;
+    variable msg_type    : msg_type_t;
+  begin
+    receive(net, master.p_actor, request_msg);
+    msg_type := message_type(request_msg);
+
+    if msg_type = stream_push_msg or msg_type = push_axi_stream_msg then
+      push(message_queue, request_msg);
+    elsif msg_type = wait_for_time_msg then
+      push(message_queue, request_msg);
+    elsif msg_type = wait_until_idle_msg then
+      wait until tvalid = '0' and is_empty(message_queue) and rising_edge(aclk);
+      handle_wait_until_idle(net, msg_type, request_msg);
+    else
+      unexpected_msg_type(msg_type);
+    end if;
+  end process;
+
+  bus_process : process
     variable msg : msg_t;
     variable msg_type : msg_type_t;
   begin
@@ -50,39 +70,49 @@ begin
       tuser <= (others => drive_invalid_val_user);
     end if;
 
-    receive(net, master.p_actor, msg);
-    msg_type := message_type(msg);
+    -- Wait for messages to arrive on the queue, posted by the process above
+    wait until rising_edge(aclk) and not is_empty(message_queue);
 
-    handle_sync_message(net, msg_type, msg);
+    while not is_empty(message_queue) loop
+      
+      msg := pop(message_queue);
+      msg_type := message_type(msg);
 
-    if msg_type = stream_push_msg or msg_type = push_axi_stream_msg then
-      tvalid <= '1';
-      tdata <= pop_std_ulogic_vector(msg);
-      if msg_type = push_axi_stream_msg then
-        tlast <= pop_std_ulogic(msg);
-        tkeep <= pop_std_ulogic_vector(msg);
-        tstrb <= pop_std_ulogic_vector(msg);
-        tid <= pop_std_ulogic_vector(msg);
-        tdest <= pop_std_ulogic_vector(msg);
-        tuser <= pop_std_ulogic_vector(msg);
-      else
-        if pop_boolean(msg) then
-          tlast <= '1';
+      if msg_type = wait_for_time_msg then
+        handle_sync_message(net, msg_type, msg);
+        -- Re-align with the clock when a wait for time message was handled, because this breaks edge alignment.
+        wait until rising_edge(aclk);
+      elsif msg_type = stream_push_msg or msg_type = push_axi_stream_msg then
+        tvalid <= '1';
+        tdata <= pop_std_ulogic_vector(msg);
+        if msg_type = push_axi_stream_msg then
+          tlast <= pop_std_ulogic(msg);
+          tkeep <= pop_std_ulogic_vector(msg);
+          tstrb <= pop_std_ulogic_vector(msg);
+          tid <= pop_std_ulogic_vector(msg);
+          tdest <= pop_std_ulogic_vector(msg);
+          tuser <= pop_std_ulogic_vector(msg);
         else
-          tlast <= '0';
+          if pop_boolean(msg) then
+            tlast <= '1';
+          else
+            tlast <= '0';
+          end if;
+          tkeep <= (others => '1');
+          tstrb <= (others => '1');
+          tid   <= (others => '0');
+          tdest <= (others => '0');
+          tuser <= (others => '0');
         end if;
-        tkeep <= (others => '1');
-        tstrb <= (others => '1');
-        tid <= (others => '0');
-        tdest <= (others => '0');
-        tuser <= (others => '0');
+        wait until (tvalid and tready) = '1' and rising_edge(aclk);
+        tvalid <= '0';
+        tlast <= '0';
+      else
+        unexpected_msg_type(msg_type);
       end if;
-      wait until (tvalid and tready) = '1' and rising_edge(aclk);
-      tvalid <= '0';
-      tlast <= '0';
-    else
-      unexpected_msg_type(msg_type);
-    end if;
+
+    end loop;
+
   end process;
 
   axi_stream_monitor_generate : if master.p_monitor /= null_axi_stream_monitor generate
