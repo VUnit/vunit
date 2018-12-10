@@ -111,6 +111,7 @@ begin
         unexpected_msg_type(msg_type);
       end if;
 
+      delete(msg);
     end loop;
 
   end process;
