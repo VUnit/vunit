@@ -184,6 +184,7 @@ package axi_stream_pkg is
   constant push_axi_stream_msg : msg_type_t := new_msg_type("push axi stream");
   constant pop_axi_stream_msg : msg_type_t := new_msg_type("pop axi stream");
   constant axi_stream_transaction_msg : msg_type_t := new_msg_type("axi stream transaction");
+  constant axi_stream_reset_msg : msg_type_t := new_msg_type("axi stream reset");
 
   alias axi_stream_reference_t is msg_t;
 
@@ -282,6 +283,12 @@ package axi_stream_pkg is
     variable msg_type        : inout msg_type_t;
     variable msg             : inout msg_t;
     variable axi_transaction : out axi_stream_transaction_t);
+
+  procedure axi_stream_reset(
+    signal net       : inout network_t;
+    axi_stream       : axi_stream_master_t;
+    number_of_cycles : positive := 1
+  );
 
 end package;
 
@@ -742,6 +749,16 @@ package body axi_stream_pkg is
 
       pop_axi_stream_transaction(msg, axi_transaction);
     end if;
+  end;
+
+  procedure axi_stream_reset(
+    signal net       : inout network_t;
+    axi_stream       : axi_stream_master_t;
+    number_of_cycles : positive := 1        ) is
+    variable msg : msg_t := new_msg(axi_stream_reset_msg);
+  begin
+    push(msg, number_of_cycles);
+    send(net, axi_stream.p_actor, msg);
   end;
 
 end package body;

@@ -51,17 +51,20 @@ architecture a of tb_axi_stream is
 
   constant n_monitors : natural := 3;
 
-  signal aclk     : std_logic := '0';
-  signal areset_n : std_logic := '1';
-  signal tvalid   : std_logic;
-  signal tready   : std_logic;
-  signal tdata    : std_logic_vector(data_length(slave_axi_stream)-1 downto 0);
-  signal tlast    : std_logic;
-  signal tkeep    : std_logic_vector(data_length(slave_axi_stream)/8-1 downto 0);
-  signal tstrb    : std_logic_vector(data_length(slave_axi_stream)/8-1 downto 0);
-  signal tid      : std_logic_vector(id_length(slave_axi_stream)-1 downto 0);
-  signal tdest    : std_logic_vector(dest_length(slave_axi_stream)-1 downto 0);
-  signal tuser    : std_logic_vector(user_length(slave_axi_stream)-1 downto 0);
+  signal aclk          : std_logic := '0';
+  signal areset_n      : std_logic := '1';
+  signal areset_out_n  : std_logic := '1';
+  signal areset_sel    : std_logic := '0';
+  signal areset_ext_n  : std_logic := '1';
+  signal tvalid        : std_logic;
+  signal tready        : std_logic;
+  signal tdata         : std_logic_vector(data_length(slave_axi_stream)-1 downto 0);
+  signal tlast         : std_logic;
+  signal tkeep         : std_logic_vector(data_length(slave_axi_stream)/8-1 downto 0);
+  signal tstrb         : std_logic_vector(data_length(slave_axi_stream)/8-1 downto 0);
+  signal tid           : std_logic_vector(id_length(slave_axi_stream)-1 downto 0);
+  signal tdest         : std_logic_vector(dest_length(slave_axi_stream)-1 downto 0);
+  signal tuser         : std_logic_vector(user_length(slave_axi_stream)-1 downto 0);
 
   signal not_valid      : std_logic;
   signal not_valid_data : std_logic;
@@ -134,6 +137,23 @@ begin
         );
         check_true(axi_stream_transaction.tlast, result("for axi_stream_transaction.tlast"));
       end loop;
+    elsif run("test resets") then
+      areset_sel   <= '0';
+      wait until rising_edge(aclk);
+      areset_ext_n <= '0';
+      wait until rising_edge(aclk);
+      check_equal(tvalid, '0', result("for valid check while in reset"));
+      areset_ext_n <= '1';
+      wait until rising_edge(aclk);
+      areset_sel   <= '1';
+      wait until rising_edge(aclk);
+      areset_ext_n <= '0';
+      wait until rising_edge(aclk);
+      axi_stream_reset(net, master_axi_stream, 3);
+      timestamp := now;
+      wait_until_idle(net, master_sync);
+      check_equal(now - 10 ns, timestamp + 30 ns, result("for reset time"));
+      check_equal(tvalid, '0', result("for valid check while in reset"));
 
     elsif run("test single push and pop with tlast") then
       push_stream(net, master_stream, x"88", true);
@@ -307,46 +327,51 @@ begin
     generic map(
       master => master_axi_stream)
     port map(
-      aclk   => aclk,
-      tvalid => tvalid,
-      tready => tready,
-      tdata  => tdata,
-      tlast  => tlast,
-      tkeep  => tkeep,
-      tstrb  => tstrb,
-      tid    => tid,
-      tuser  => tuser,
-      tdest  => tdest);
+      aclk         => aclk,
+      areset_in_n  => areset_n,
+      areset_out_n => areset_out_n,
+      tvalid       => tvalid,
+      tready       => tready,
+      tdata        => tdata,
+      tlast        => tlast,
+      tkeep        => tkeep,
+      tstrb        => tstrb,
+      tid          => tid,
+      tuser        => tuser,
+      tdest        => tdest);
 
- not_valid <= not tvalid;
+  areset_n  <= areset_out_n when areset_sel = '1' else areset_ext_n;
 
- not_valid_data <= '1' when tdata = std_logic_vector'("XXXXXXXX") else '0';
- check_true(aclk, not_valid, not_valid_data, "Invalid data not X");
- not_valid_keep <= '1' when tkeep = std_logic_vector'("X") else '0';
- check_true(aclk, not_valid, not_valid_keep, "Invalid keep not X");
- not_valid_strb <= '1' when tstrb = std_logic_vector'("X") else '0';
- check_true(aclk, not_valid, not_valid_strb, "Invalid strb not X");
- not_valid_id   <= '1' when tid   = std_logic_vector'("XXXXXXXX") else '0';
- check_true(aclk, not_valid, not_valid_id,   "Invalid id not X");
- not_valid_dest <= '1' when tdest = std_logic_vector'("XXXXXXXX") else '0';
- check_true(aclk, not_valid, not_valid_dest, "Invalid dest not X");
- not_valid_user <= '1' when tuser = std_logic_vector'("00000000") else '0';
- check_true(aclk, not_valid, not_valid_user, "Invalid user not 0");
+  not_valid <= not tvalid;
+
+  not_valid_data <= '1' when tdata = std_logic_vector'("XXXXXXXX") else '0';
+  check_true(aclk, not_valid, not_valid_data, "Invalid data not X");
+  not_valid_keep <= '1' when tkeep = std_logic_vector'("X") else '0';
+  check_true(aclk, not_valid, not_valid_keep, "Invalid keep not X");
+  not_valid_strb <= '1' when tstrb = std_logic_vector'("X") else '0';
+  check_true(aclk, not_valid, not_valid_strb, "Invalid strb not X");
+  not_valid_id   <= '1' when tid   = std_logic_vector'("XXXXXXXX") else '0';
+  check_true(aclk, not_valid, not_valid_id,   "Invalid id not X");
+  not_valid_dest <= '1' when tdest = std_logic_vector'("XXXXXXXX") else '0';
+  check_true(aclk, not_valid, not_valid_dest, "Invalid dest not X");
+  not_valid_user <= '1' when tuser = std_logic_vector'("00000000") else '0';
+  check_true(aclk, not_valid, not_valid_user, "Invalid user not 0");
 
   axi_stream_slave_inst : entity work.axi_stream_slave
     generic map(
       slave => slave_axi_stream)
     port map(
-      aclk   => aclk,
-      tvalid => tvalid,
-      tready => tready,
-      tdata  => tdata,
-      tlast  => tlast,
-      tkeep  => tkeep,
-      tstrb  => tstrb,
-      tid    => tid,
-      tuser  => tuser,
-      tdest  => tdest);
+      aclk     => aclk,
+      areset_n => areset_n,
+      tvalid   => tvalid,
+      tready   => tready,
+      tdata    => tdata,
+      tlast    => tlast,
+      tkeep    => tkeep,
+      tstrb    => tstrb,
+      tid      => tid,
+      tuser    => tuser,
+      tdest    => tdest);
 
   axi_stream_monitor_inst : entity work.axi_stream_monitor
     generic map(

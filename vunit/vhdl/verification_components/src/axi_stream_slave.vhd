@@ -17,16 +17,17 @@ entity axi_stream_slave is
   generic (
     slave : axi_stream_slave_t);
   port (
-    aclk   : in std_logic;
-    tvalid : in std_logic;
-    tready : out std_logic := '0';
-    tdata  : in std_logic_vector(data_length(slave)-1 downto 0);
-    tlast  : in std_logic                                         := '1';
-    tkeep  : in std_logic_vector(data_length(slave)/8-1 downto 0) := (others => '0');
-    tstrb  : in std_logic_vector(data_length(slave)/8-1 downto 0) := (others => '0');
-    tid    : in std_logic_vector(id_length(slave)-1 downto 0)     := (others => '0');
-    tdest  : in std_logic_vector(dest_length(slave)-1 downto 0)   := (others => '0');
-    tuser  : in std_logic_vector(user_length(slave)-1 downto 0)   := (others => '0')
+    aclk     : in std_logic;
+    areset_n : in std_logic  := '1';
+    tvalid   : in std_logic;
+    tready   : out std_logic := '0';
+    tdata    : in std_logic_vector(data_length(slave)-1 downto 0);
+    tlast    : in std_logic                                         := '1';
+    tkeep    : in std_logic_vector(data_length(slave)/8-1 downto 0) := (others => '0');
+    tstrb    : in std_logic_vector(data_length(slave)/8-1 downto 0) := (others => '0');
+    tid      : in std_logic_vector(id_length(slave)-1 downto 0)     := (others => '0');
+    tdest    : in std_logic_vector(dest_length(slave)-1 downto 0)   := (others => '0');
+    tuser    : in std_logic_vector(user_length(slave)-1 downto 0)   := (others => '0')
  );
 end entity;
 
@@ -98,7 +99,7 @@ begin
         protocol_checker => slave.p_protocol_checker)
       port map (
         aclk     => aclk,
-        areset_n => open,
+        areset_n => areset_n,
         tvalid   => tvalid,
         tready   => tready,
         tdata    => tdata,
