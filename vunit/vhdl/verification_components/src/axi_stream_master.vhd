@@ -23,8 +23,7 @@ entity axi_stream_master is
   );
   port (
     aclk         : in  std_logic;
-    areset_in_n  : in  std_logic                                          := '1';
-    areset_out_n : out std_logic                                          := '1';
+    areset_n     : in  std_logic                                          := '1';
     tvalid       : out std_logic                                          := '0';
     tready       : in  std_logic                                          := '1';
     tdata        : out std_logic_vector(data_length(master)-1 downto 0)   := (others => '0');
@@ -53,8 +52,6 @@ begin
 
     if msg_type = stream_push_msg or msg_type = push_axi_stream_msg then
       push(message_queue, request_msg);
-    elsif msg_type = axi_stream_reset_msg then
-      push(message_queue, request_msg);
     elsif msg_type = wait_for_time_msg then
       push(message_queue, request_msg);
     elsif msg_type = wait_until_idle_msg then
@@ -80,9 +77,9 @@ begin
     end if;
 
     -- Wait for messages to arrive on the queue, posted by the process above
-    wait until rising_edge(aclk) and (not is_empty(message_queue) or areset_in_n = '0');
+    wait until rising_edge(aclk) and (not is_empty(message_queue) or areset_n = '0');
 
-    if (areset_in_n = '0') then
+    if (areset_n = '0') then
       tvalid <= '0';
     else
       while not is_empty(message_queue) loop
@@ -93,14 +90,6 @@ begin
           handle_sync_message(net, msg_type, msg);
           -- Re-align with the clock when a wait for time message was handled, because this breaks edge alignment.
           wait until rising_edge(aclk);
-        elsif msg_type = axi_stream_reset_msg then
-          reset_cycles := pop(msg);
-          areset_out_n <= '0';
-          tvalid       <= '0';
-          for I in 0 to reset_cycles - 1 loop
-            wait until rising_edge(aclk);
-          end loop;
-          areset_out_n <= '1';
 
         elsif msg_type = stream_push_msg or msg_type = push_axi_stream_msg then
           tvalid <= '1';
@@ -124,7 +113,7 @@ begin
             tdest <= (others => '0');
             tuser <= (others => '0');
           end if;
-          wait until ((tvalid and tready) = '1' or areset_in_n = '0') and rising_edge(aclk);
+          wait until ((tvalid and tready) = '1' or areset_n = '0') and rising_edge(aclk);
           tvalid <= '0';
           tlast <= '0';
         else
@@ -165,7 +154,7 @@ begin
         protocol_checker => master.p_protocol_checker)
       port map (
         aclk     => aclk,
-        areset_n => areset_in_n,
+        areset_n => areset_n,
         tvalid   => tvalid,
         tready   => tready,
         tdata    => tdata,
