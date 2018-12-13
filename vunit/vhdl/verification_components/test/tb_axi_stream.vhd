@@ -134,6 +134,13 @@ begin
         );
         check_true(axi_stream_transaction.tlast, result("for axi_stream_transaction.tlast"));
       end loop;
+    elsif run("test reset") then
+      wait until rising_edge(aclk);
+      areset_n <= '0';
+      wait until rising_edge(aclk);
+      check_equal(tvalid, '0', result("for valid low check while in reset"));
+      areset_n <= '1';
+      wait until rising_edge(aclk);
 
     elsif run("test single push and pop with tlast") then
       push_stream(net, master_stream, x"88", true);
@@ -307,16 +314,17 @@ begin
     generic map(
       master => master_axi_stream)
     port map(
-      aclk   => aclk,
-      tvalid => tvalid,
-      tready => tready,
-      tdata  => tdata,
-      tlast  => tlast,
-      tkeep  => tkeep,
-      tstrb  => tstrb,
-      tid    => tid,
-      tuser  => tuser,
-      tdest  => tdest);
+      aclk     => aclk,
+      areset_n => areset_n,
+      tvalid   => tvalid,
+      tready   => tready,
+      tdata    => tdata,
+      tlast    => tlast,
+      tkeep    => tkeep,
+      tstrb    => tstrb,
+      tid      => tid,
+      tuser    => tuser,
+      tdest    => tdest);
 
  not_valid <= not tvalid;
 
@@ -337,16 +345,17 @@ begin
     generic map(
       slave => slave_axi_stream)
     port map(
-      aclk   => aclk,
-      tvalid => tvalid,
-      tready => tready,
-      tdata  => tdata,
-      tlast  => tlast,
-      tkeep  => tkeep,
-      tstrb  => tstrb,
-      tid    => tid,
-      tuser  => tuser,
-      tdest  => tdest);
+      aclk     => aclk,
+      areset_n => areset_n,
+      tvalid   => tvalid,
+      tready   => tready,
+      tdata    => tdata,
+      tlast    => tlast,
+      tkeep    => tkeep,
+      tstrb    => tstrb,
+      tid      => tid,
+      tuser    => tuser,
+      tdest    => tdest);
 
   axi_stream_monitor_inst : entity work.axi_stream_monitor
     generic map(
