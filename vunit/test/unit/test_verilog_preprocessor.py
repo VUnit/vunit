@@ -97,6 +97,18 @@ class TestVerilogPreprocessor(TestCase):
 `foo(hello hey)""")
         result.assert_has_tokens("hello hey 123")
 
+    def test_preprocess_substitute_define_with_space_before_arg(self):
+        result = self.preprocess("""\
+`define foo(arg) arg
+`foo (hello)""")
+        result.assert_has_tokens("hello")
+
+    def test_preprocess_substitute_define_no_args(self):
+        result = self.preprocess("""\
+`define foo bar
+`foo (hello)""")
+        result.assert_has_tokens("bar (hello)")
+
     def test_preprocess_substitute_define_with_multile_args(self):
         result = self.preprocess("""\
 `define foo(arg1, arg2)arg1,arg2

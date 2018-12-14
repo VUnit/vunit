@@ -478,6 +478,9 @@ class Macro(object):
         Parse the actual values of macro call such as
         1 2 in `macro(1, 2)
         """
+
+        stream.skip_while(WHITESPACE)
+
         token = stream.pop()
         if token.kind != LPAR:
             raise LocationException.warning("Bad `define argument list",
