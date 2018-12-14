@@ -1,0 +1,2 @@
+- Parsing Verilog package references. :vunit_issue:`119`
+- Added ``scan_tests_from_file`` public method. :vunit_issue:`121`.

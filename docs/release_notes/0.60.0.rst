@@ -1,0 +1,3 @@
+- Better error messages when there are circular dependencies.
+- Added ``defines`` argument to add_source_file(s) :vunit_issue:`126`
+- Made ``--files`` deterministic with Python 3 :vunit_issue:`116`

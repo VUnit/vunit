@@ -2,20 +2,19 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
 context vunit_lib.vunit_context;
 
 entity tb_with_checks is
   generic (
-    runner_cfg : runner_cfg_t);
+    runner_cfg : string);
 end entity;
 
 architecture vunit_test_bench of tb_with_checks is
 begin
   test_runner : process
-    variable stat : checker_stat_t := (0, 0, 0);
     variable pass : boolean;
   begin
     test_runner_setup(runner, runner_cfg);
@@ -29,12 +28,10 @@ begin
         check(false, "Should pass");
       elsif run("Test non-stopping failing check") then
         wait for 10 ns;
-        check(false, "Should fail", level => warning);
+        set_stop_level(failure);
+        check(false, "Should fail");
       end if;
     end loop;
-
-    get_checker_stat(stat);
-    info("Result:" & LF & to_string(stat));
 
     test_runner_cleanup(runner);
     wait;

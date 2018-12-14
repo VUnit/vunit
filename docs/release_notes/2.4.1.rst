@@ -1,0 +1,1 @@
+- SystemVerilog: Fix WATCHDOG macro with local timescale set :vunit_issue:`299`.

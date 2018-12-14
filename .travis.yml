@@ -1,0 +1,140 @@
+language: python
+
+install:
+  - git fetch --unshallow --tags
+  - pip install tox
+
+script:
+- tox -e $BUILD_NAME
+
+matrix:
+  include:
+  - env: BUILD_NAME=py27-unit
+    python: '2.7'
+  - env: BUILD_NAME=py34-unit
+    python: '3.4'
+  - env: BUILD_NAME=py35-unit
+    python: '3.5'
+  - env: BUILD_NAME=py36-unit
+    python: '3.6'
+  - env: BUILD_NAME=py36-unit
+    python: '3.6'
+
+  - env: BUILD_NAME=py27-lint
+    python: '2.7'
+  - env: BUILD_NAME=py36-lint
+    python: '3.6'
+
+  - env: BUILD_NAME=py27-docs
+    python: '2.7'
+  - env: BUILD_NAME=py36-docs
+    python: '3.6'
+
+  # Python 2.7 with ghdl mcode
+  - env: BUILD_NAME=py27-acceptance-ghdl
+    python: '2.7'
+    os: linux
+    sudo: false
+    addons:
+      apt:
+        packages:
+        - gnat
+    before_script:
+    - git clone --depth 1 https://github.com/tgingold/ghdl.git ghdl
+    - cd ghdl
+    - mkdir build-mcode
+    - cd build-mcode
+    - ../configure --prefix=../../install-ghdl-mcode/
+    - make
+    - make install
+    - cd ../../
+    - export PATH=$PATH:install-ghdl-mcode/bin/
+
+  # Python 3.6 with ghdl llvm
+  - env: BUILD_NAME=py36-acceptance-ghdl
+    python: '3.6'
+    os: linux
+    sudo: required
+    dist: trusty
+    before_install:
+    - sudo apt-get update -qq
+    - sudo apt-get install -y gnat-4.8 zlib1g-dev
+    - sudo apt-get install -y llvm-3.5-dev llvm-3.5-tools libedit-dev
+    before_script:
+    - git clone --depth 1 https://github.com/tgingold/ghdl.git ghdl
+    - cd ghdl
+    - mkdir build-llvm
+    - cd build-llvm
+    - ../configure --prefix=../../install-ghdl-llvm/ --with-llvm-config=llvm-config-3.5
+    - make
+    - make install
+    - cd ../../
+    - export PATH=$PATH:install-ghdl-llvm/bin/
+
+  # Python 3.6 with ghdl llvm
+  - env: BUILD_NAME=py36-vcomponents-ghdl
+    python: '3.6'
+    os: linux
+    sudo: required
+    dist: trusty
+    before_install:
+    - sudo apt-get update -qq
+    - sudo apt-get install -y gnat-4.8 zlib1g-dev
+    - sudo apt-get install -y llvm-3.5-dev llvm-3.5-tools libedit-dev
+    before_script:
+    - git clone --depth 1 https://github.com/tgingold/ghdl.git ghdl
+    - cd ghdl
+    - mkdir build-llvm
+    - cd build-llvm
+    - ../configure --prefix=../../install-ghdl-llvm/ --with-llvm-config=llvm-config-3.5
+    - make
+    - make install
+    - cd ../../
+    - export PATH=$PATH:install-ghdl-llvm/bin/
+
+  # Deploy to GitHub pages
+  - stage: deploy
+    python: '3.6'
+    script:
+      - tox -e py36-docs
+      - touch .tox/py36-docs/tmp/docsbuild/.nojekyll
+    deploy:
+      edge:
+        branch: v1.8.47
+      provider: pages
+      repo: VUnit/VUnit.github.io
+      target_branch: master
+      local_dir: .tox/py36-docs/tmp/docsbuild/
+      # This environment variable is set to an OAuth token in travis vunit settings
+      github_token: $GITHUB_PAGES_TOKEN
+      skip_cleanup: true
+      on:
+        branch: master
+
+  # Deploy to PyPI whenever the package version has changed
+  # When a package version has not changed a new upload will not be triggered
+  - stage: deploy
+    python: '3.6'
+    script:
+      - sed -i "s/PRE_RELEASE = True/PRE_RELEASE = False/" vunit/about.py
+      - python tools/is_new_release.py release_name is_new_release
+      - export IS_NEW_RELEASE=`cat is_new_release`
+      - export RELEASE_NAME=`cat release_name`
+
+    deploy:
+      provider: pypi
+      distributions: sdist
+      skip_cleanup: true
+      skip_upload_docs: true
+      user: $PYPI_USER
+      password: $PYPI_PASSWORD
+      on:
+        branch: master
+        condition: $IS_NEW_RELEASE = True
+
+    # Create release tag after successful deployment
+    after_deploy:
+      - git config --global user.email "builds@travis-ci.com"
+      - git config --global user.name "Travis CI"
+      - git tag "v${RELEASE_NAME}" -a -m "Generated tag from TravisCI for release ${RELEASE_NAME}"
+      - git push -q https://$GITHUB_PAGES_TOKEN@github.com/VUnit/vunit/ --tags >/dev/null 2>&1

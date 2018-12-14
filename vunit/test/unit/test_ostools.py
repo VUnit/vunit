@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test the os-dependent functionality wrappers
@@ -10,10 +10,10 @@ Test the os-dependent functionality wrappers
 
 
 from unittest import TestCase
-from vunit.ostools import Process
 from shutil import rmtree
-from os import makedirs
 from os.path import exists, dirname, join, abspath
+import sys
+from vunit.ostools import Process, renew_path
 
 
 class TestOSTools(TestCase):
@@ -23,9 +23,7 @@ class TestOSTools(TestCase):
 
     def setUp(self):
         self.tmp_dir = join(dirname(__file__), "test_ostools_tmp")
-        if exists(self.tmp_dir):
-            rmtree(self.tmp_dir)
-        makedirs(self.tmp_dir)
+        renew_path(self.tmp_dir)
 
     def tearDown(self):
         if exists(self.tmp_dir):
@@ -49,7 +47,7 @@ stdout.write("bar\n")
 """)
 
         output = []
-        process = Process(["python", python_script])
+        process = Process([sys.executable, python_script])
         process.consume_output(output.append)
         self.assertEqual(output, ["foo", "bar"])
 
@@ -59,7 +57,7 @@ from sys import stdout
 stdout.write("error\n")
 exit(1)
 """)
-        process = Process(["python", python_script])
+        process = Process([sys.executable, python_script])
         output = []
         self.assertRaises(Process.NonZeroExitCode,
                           process.consume_output, output.append)
@@ -70,7 +68,7 @@ exit(1)
 from sys import stderr
 stderr.write("error\n")
 """)
-        process = Process(["python", python_script])
+        process = Process([sys.executable, python_script])
         output = []
         process.consume_output(output.append)
         self.assertEqual(output, ["error"])
@@ -84,7 +82,14 @@ stdout.flush()
 sleep(1000)
 """)
 
-        process = Process(["python", python_script])
+        process = Process([sys.executable, python_script])
         message = process.next_line()
         process.terminate()
         self.assertEqual(message, "message")
+
+    def test_non_utf8_in_output(self):
+        python_script = join(dirname(__file__), "non_utf8_printer.py")
+        output = []
+        process = Process([sys.executable, python_script])
+        process.consume_output(output.append)
+        self.assertEqual(output, ["ac"])

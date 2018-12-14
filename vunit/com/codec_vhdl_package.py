@@ -2,13 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Module containing the CodecVHDLPackage class.
 """
 from string import Template
 from vunit.vhdl_parser import VHDLPackage
+from vunit.vhdl_parser import remove_comments
 from vunit.com.codec_vhdl_enumeration_type import CodecVHDLEnumerationType
 from vunit.com.codec_vhdl_array_type import CodecVHDLArrayType
 from vunit.com.codec_vhdl_record_type import CodecVHDLRecordType
@@ -18,14 +19,12 @@ class CodecVHDLPackage(VHDLPackage):
     """Class derived from VHDLPackage to provide codec generator functionality for the data types definied
     in the package."""
 
-    def __init__(self, identifier, constant_declarations,  # pylint: disable=too-many-arguments
+    def __init__(self, identifier,
                  enumeration_types, record_types, array_types):
         super(CodecVHDLPackage, self).__init__(identifier,
-                                               constant_declarations,
                                                enumeration_types,
                                                record_types,
                                                array_types)
-        self._debug = False
         self._template = None
 
     @classmethod
@@ -33,14 +32,14 @@ class CodecVHDLPackage(VHDLPackage):
         """
         Return a new VHDLPackage instance for a single package found within the code
         """
+        code = remove_comments(code).lower()
         # Extract identifier
         identifier = cls._package_start_re.match(code).group('id')
-        constant_declarations = cls._find_constant_declarations(code)
         enumeration_types = [e for e in CodecVHDLEnumerationType.find(code)]
         record_types = [r for r in CodecVHDLRecordType.find(code)]
         array_types = [a for a in CodecVHDLArrayType.find(code)]
 
-        return cls(identifier, constant_declarations, enumeration_types, record_types, array_types)
+        return cls(identifier, enumeration_types, record_types, array_types)
 
     @classmethod
     def find_named_package(cls, code, name):
@@ -52,14 +51,10 @@ class CodecVHDLPackage(VHDLPackage):
 
         return None
 
-    def generate_codecs_and_support_functions(self, debug=False):
+    def generate_codecs_and_support_functions(self):
         """Generate codecs and communication support functions for the data types defined in self."""
 
-        self._debug = debug
-        if not debug:
-            self._template = PackageStdCodecTemplate()
-        else:
-            self._template = PackageDebugCodecTemplate()
+        self._template = PackageCodecTemplate()
 
         declarations = ''
         definitions = ''
@@ -109,7 +104,7 @@ class CodecVHDLPackage(VHDLPackage):
         declarations = ''
         definitions = ''
         for record in self.record_types:
-            new_declarations, new_definitions = record.generate_codecs_and_support_functions(self._debug)
+            new_declarations, new_definitions = record.generate_codecs_and_support_functions()
             declarations += new_declarations
             definitions += new_definitions
         return declarations, definitions
@@ -120,7 +115,7 @@ class CodecVHDLPackage(VHDLPackage):
         declarations = ''
         definitions = ''
         for array in self.array_types:
-            new_declarations, new_definitions = array.generate_codecs_and_support_functions(self._debug)
+            new_declarations, new_definitions = array.generate_codecs_and_support_functions()
             declarations += new_declarations
             definitions += new_definitions
 
@@ -143,7 +138,7 @@ class CodecVHDLPackage(VHDLPackage):
                         raise RuntimeError('Different msg_type enumerations may not have the same literals')
                     else:
                         msg_type_enumeration_literals.append(literal)
-        if len(msg_type_enumeration_literals) > 0:
+        if msg_type_enumeration_literals:
             all_msg_types_enumeration_type = CodecVHDLEnumerationType(self.identifier + '_msg_type_t',
                                                                       msg_type_enumeration_literals)
         else:
@@ -168,13 +163,13 @@ class CodecVHDLPackage(VHDLPackage):
             else:
                 offset = 0
 
-            new_declarations, new_definitions = enum.generate_codecs_and_support_functions(offset, self._debug)
+            new_declarations, new_definitions = enum.generate_codecs_and_support_functions(offset)
             declarations += new_declarations
             definitions += new_definitions
 
         return declarations, definitions
 
-    def _generate_msg_type_encoders(self):
+    def _generate_msg_type_encoders(self):  # pylint: disable=too-many-locals
         """Generate message type encoders for records with the initial element = msg_type. An encoder is
         generated for each value of the enumeration data type for msg_type. For example, if the record
         has two message types, read and write, and two other fields, addr and data, then two encoders,
@@ -192,35 +187,43 @@ class CodecVHDLPackage(VHDLPackage):
 
         for record in msg_type_record_types:
             msg_type_values = enumeration_types.get(record.elements[0].subtype_indication.type_mark)
-            if msg_type_values is not None:
-                for value in msg_type_values:
-                    parameter_list = []
-                    encoding_list = []
-                    for element in record.elements:
-                        for identifier in element.identifier_list:
-                            if identifier != 'msg_type':
-                                parameter_list.append('    constant %s : %s' % (identifier,
-                                                                                element.subtype_indication.code))
-                                encoding_list.append('encode(%s)' % identifier)
-                            else:
-                                encoding_list.append("encode(%s'(%s))" % (element.subtype_indication.code, value))
-                    if parameter_list == []:
-                        parameter_part = ''
-                    else:
-                        parameter_part = ' (\n' + ';\n'.join(parameter_list) + ')'
-                    if self._debug:
-                        encodings = ', '.join(encoding_list)
-                    else:
-                        encodings = ' & '.join(encoding_list)
 
-                    declarations += \
-                        self._template.msg_type_record_codec_declaration.substitute(name=value,
-                                                                                    parameter_part=parameter_part)
-                    definitions += \
-                        self._template.msg_type_record_codec_definition.substitute(name=value,
-                                                                                   parameter_part=parameter_part,
-                                                                                   num_of_encodings=len(encoding_list),
-                                                                                   encodings=encodings)
+            if msg_type_values is None:
+                continue
+
+            for value in msg_type_values:
+                parameter_list = []
+                parameter_type_list = []
+                encoding_list = []
+                for element in record.elements:
+                    for identifier in element.identifier_list:
+                        if identifier != 'msg_type':
+                            parameter_list.append('    constant %s : %s' % (identifier,
+                                                                            element.subtype_indication.code))
+                            parameter_type_list.append(element.subtype_indication.type_mark)
+                            encoding_list.append('encode(%s)' % identifier)
+                        else:
+                            encoding_list.append("encode(%s'(%s))" % (element.subtype_indication.code, value))
+
+                if parameter_list == []:
+                    parameter_part = ''
+                    alias_signature = value + '[return string];'
+                else:
+                    parameter_part = ' (\n' + ';\n'.join(parameter_list) + ')'
+                    alias_signature = value + '[' + ', '.join(parameter_type_list) + ' return string];'
+
+                encodings = ' & '.join(encoding_list)
+
+                declarations += \
+                    self._template.msg_type_record_codec_declaration.substitute(name=value,
+                                                                                parameter_part=parameter_part,
+                                                                                alias_signature=alias_signature,
+                                                                                alias_name=value + '_msg')
+                definitions += \
+                    self._template.msg_type_record_codec_definition.substitute(name=value,
+                                                                               parameter_part=parameter_part,
+                                                                               num_of_encodings=len(encoding_list),
+                                                                               encodings=encodings)
 
         return declarations, definitions
 
@@ -253,11 +256,12 @@ class CodecVHDLPackage(VHDLPackage):
 
 
 class PackageCodecTemplate(object):
-    """This class contains package templates common to both standard and debug codecs."""
+    """This class contains package codec templates."""
 
     msg_type_record_codec_declaration = Template("""\
   function $name$parameter_part
     return string;
+  alias $alias_name is $alias_signature
 
 """)
 
@@ -278,10 +282,6 @@ class PackageCodecTemplate(object):
     return $type;
 
 """)
-
-
-class PackageStdCodecTemplate(PackageCodecTemplate):
-    """This class contains standard package codec templates."""
 
     msg_type_record_codec_definition = Template("""\
   function $name$parameter_part
@@ -308,38 +308,6 @@ class PackageStdCodecTemplate(PackageCodecTemplate):
     return $type is
   begin
     return decode(code);
-  end;
-
-""")
-
-
-class PackageDebugCodecTemplate(PackageCodecTemplate):
-    """This class contains debug package codec templates."""
-
-    msg_type_record_codec_definition = Template("""\
-  function $name$parameter_part
-    return string is
-  begin
-    return create_group($num_of_encodings, $encodings);
-  end function $name;
-
-""")
-
-    get_specific_msg_type_definition = Template("""\
-  function get_$type (
-    constant code : string)
-    return $type is
-  begin
-    return decode(get_first_element(code));
-  end;
-
-""")
-    get_msg_type_definition = Template("""\
-  function get_msg_type (
-    constant code : string)
-    return $type is
-  begin
-    return decode(get_first_element(code));
   end;
 
 """)

@@ -1,0 +1,4 @@
+module dut(vout);
+ output wreal vout;
+ assign vout = 3.0;
+endmodule

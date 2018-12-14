@@ -1,0 +1,2 @@
+- Adds ``include_dirs`` argument also to ``Library`` add_source_file(s)
+- Ignores more builtin Verilog preprocessor directives.

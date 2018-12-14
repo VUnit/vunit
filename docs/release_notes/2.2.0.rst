@@ -1,0 +1,8 @@
+- Add support for tokenizing verilog multi line strings. :vunit_issue:`278`
+- Added support for restarting window in check_stable
+- Added support for num_cks=0 in check_next.
+- Error on adding duplicate source files. :vunit_issue:`274`
+- Update Vivado example.
+- Add support for non-system-verilog verilog files. :vunit_issue:`268`
+- Add dependency scanning of the use of an instantiated package. :vunit_issue:`233`
+- Add human readable test output paths. :vunit_issue:`211`

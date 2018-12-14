@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Interface for GHDL simulator
@@ -10,64 +10,89 @@ Interface for GHDL simulator
 
 from __future__ import print_function
 import logging
-LOGGER = logging.getLogger(__name__)
-
-from vunit.ostools import Process
-from vunit.exceptions import CompileError
-
 from os.path import exists, join
 import os
-from distutils.spawn import find_executable
 import subprocess
 import shlex
 from sys import stdout  # To avoid output catched in non-verbose mode
+from vunit.ostools import Process
+from vunit.simulator_interface import (SimulatorInterface,
+                                       ListOfStringOption)
+from vunit.exceptions import CompileError
+LOGGER = logging.getLogger(__name__)
 
 
-class GHDLInterface:
+class GHDLInterface(SimulatorInterface):
     """
     Interface for GHDL simulator
     """
 
     name = "ghdl"
+    executable = os.environ.get("GHDL", "ghdl")
+    supports_gui_flag = True
+    supports_colors_in_gui = True
+
+    compile_options = [
+        ListOfStringOption("ghdl.flags"),
+    ]
+
+    sim_options = [
+        ListOfStringOption("ghdl.sim_flags"),
+        ListOfStringOption("ghdl.elab_flags"),
+    ]
 
     @staticmethod
     def add_arguments(parser):
         """
         Add command line arguments
         """
-        has_gtkwave = find_executable('gtkwave')
-        if not has_gtkwave:
-            return
         group = parser.add_argument_group("ghdl",
                                           description="GHDL specific flags")
-        group.add_argument("--gtkwave", choices=["vcd", "ghw"],
+        group.add_argument("--gtkwave-fmt", choices=["vcd", "ghw"],
                            default=None,
-                           help="Save .vcd or .ghw and open in gtkwave")
+                           help="Save .vcd or .ghw to open in gtkwave")
         group.add_argument("--gtkwave-args",
                            default="",
                            help="Arguments to pass to gtkwave")
 
     @classmethod
-    def from_args(cls, output_path, args):
-        return cls(gtkwave=args.gtkwave,
-                   gtkwave_args=args.gtkwave_args)
-
-    @staticmethod
-    def is_available():
+    def from_args(cls, args, output_path, **kwargs):
         """
-        Return True if GHDL is installed
+        Create instance from args namespace
         """
-        return find_executable('ghdl') is not None
+        prefix = cls.find_prefix()
+        return cls(output_path=output_path,
+                   prefix=prefix,
+                   gui=args.gui,
+                   gtkwave_fmt=args.gtkwave_fmt,
+                   gtkwave_args=args.gtkwave_args,
+                   backend=cls.determine_backend(prefix))
 
-    def __init__(self, gtkwave=None, gtkwave_args=""):
-        self._libraries = {}
-        self._vhdl_standard = None
-        self._gtkwave = gtkwave
+    @classmethod
+    def find_prefix_from_path(cls):
+        """
+        Find first valid ghdl toolchain prefix
+        """
+        return cls.find_toolchain([cls.executable])
+
+    def __init__(self,  # pylint: disable=too-many-arguments
+                 output_path, prefix, gui=False, gtkwave_fmt=None, gtkwave_args="", backend="llvm"):
+        SimulatorInterface.__init__(self, output_path, gui)
+        self._prefix = prefix
+        self._project = None
+
+        if gui and (not self.find_executable('gtkwave')):
+            raise RuntimeError(
+                "Cannot find the gtkwave executable in the PATH environment variable. GUI not possible")
+
+        self._gui = gui
+        self._gtkwave_fmt = "ghw" if gui and gtkwave_fmt is None else gtkwave_fmt
         self._gtkwave_args = gtkwave_args
-        self._backend = self.determine_backend()
+        self._backend = backend
+        self._vhdl_standard = None
 
-    @staticmethod
-    def determine_backend():
+    @classmethod
+    def determine_backend(cls, prefix):
         """
         Determine the GHDL backend
         """
@@ -76,10 +101,10 @@ class GHDLInterface:
             "llvm code generator": "llvm",
             "GCC back-end code generator": "gcc"
         }
-        output = subprocess.check_output(["ghdl", "--version"]).decode()
+        output = subprocess.check_output([join(prefix, cls.executable), "--version"]).decode()
         for name, backend in mapping.items():
             if name in output:
-                LOGGER.info("Detected GHDL %s", name)
+                LOGGER.debug("Detected GHDL %s", name)
                 return backend
 
         LOGGER.error("Could not detect known LLVM backend by parsing 'ghdl --version'")
@@ -95,113 +120,132 @@ class GHDLInterface:
         """
         return self._backend in ("llvm", "gcc")
 
-    def compile_project(self, project, vhdl_standard):
+    def setup_library_mapping(self, project):
         """
-        Compile project using vhdl_standard
+        Setup library mapping
         """
-        self._libraries = {}
-        self._vhdl_standard = vhdl_standard
+        self._project = project
         for library in project.get_libraries():
             if not exists(library.directory):
                 os.makedirs(library.directory)
-            self._libraries[library.name] = library.directory
 
-        for source_file in project.get_files_in_compile_order():
-            print('Compiling ' + source_file.name + ' ...')
+        vhdl_standards = set(source_file.get_vhdl_standard()
+                             for source_file in project.get_source_files_in_order()
+                             if source_file.is_vhdl)
 
-            if source_file.file_type == 'vhdl':
-                success = self.compile_vhdl_file(source_file.name, source_file.library.name,
-                                                 source_file.library.directory, vhdl_standard)
-            elif source_file.file_type == 'verilog':
-                raise RuntimeError("Unkown file type: " + source_file.file_type)
+        if not vhdl_standards:
+            self._vhdl_standard = '2008'
+        elif len(vhdl_standards) != 1:
+            raise RuntimeError("GHDL cannot handle mixed VHDL standards, found %r" % list(vhdl_standards))
+        else:
+            self._vhdl_standard = list(vhdl_standards)[0]
 
-            if not success:
-                raise CompileError("Failed to compile '%s'" % source_file.name)
-            project.update(source_file)
+    def compile_source_file_command(self, source_file):
+        """
+        Returns the command to compile a single source_file
+        """
+        if source_file.is_vhdl:
+            return self.compile_vhdl_file_command(source_file)
 
-    def _std_str(self):
+        LOGGER.error("Unknown file type: %s", source_file.file_type)
+        raise CompileError
+
+    @staticmethod
+    def _std_str(vhdl_standard):
         """
         Convert standard to format of GHDL command line flag
         """
-        if self._vhdl_standard == "2002":
+        if vhdl_standard == "2002":
             return "02"
-        elif self._vhdl_standard == "2008":
+
+        if vhdl_standard == "2008":
             return "08"
-        elif self._vhdl_standard == "93":
+
+        if vhdl_standard == "93":
             return "93"
-        else:
-            assert False
 
-    def compile_vhdl_file(self, source_file_name, library_name, library_path, vhdl_standard):
-        """
-        Compile a vhdl file
-        """
-        try:
-            cmd = ['ghdl', '-a', '--workdir=%s' % library_path,
-                   '--work=%s' % library_name,
-                   '--std=%s' % self._std_str()]
-            for library_name, library_path in self._libraries.items():
-                cmd += ["-P%s" % library_path]
-            cmd += [source_file_name]
-            proc = Process(cmd)
-            proc.consume_output()
-        except Process.NonZeroExitCode:
-            return False
-        return True
+        raise ValueError("Invalid VHDL standard %s" % vhdl_standard)
 
-    def simulate(self,  # pylint: disable=too-many-arguments, too-many-locals
-                 output_path, library_name, entity_name, architecture_name, config):
+    def compile_vhdl_file_command(self, source_file):
+        """
+        Returns the command to compile a vhdl file
+        """
+        cmd = [join(self._prefix, self.executable), '-a', '--workdir=%s' % source_file.library.directory,
+               '--work=%s' % source_file.library.name,
+               '--std=%s' % self._std_str(source_file.get_vhdl_standard())]
+        for library in self._project.get_libraries():
+            cmd += ["-P%s" % library.directory]
+        cmd += source_file.compile_options.get("ghdl.flags", [])
+        cmd += [source_file.name]
+        return cmd
+
+    def _get_sim_command(self, config, output_path):
+        """
+        Return GHDL simulation command
+        """
+        cmd = [join(self._prefix, self.executable)]
+        cmd += ['--elab-run']
+        cmd += ['--std=%s' % self._std_str(self._vhdl_standard)]
+        cmd += ['--work=%s' % config.library_name]
+        cmd += ['--workdir=%s' % self._project.get_library(config.library_name).directory]
+        cmd += ['-P%s' % lib.directory for lib in self._project.get_libraries()]
+
+        if self._has_output_flag():
+            cmd += ['-o', join(output_path, "%s-%s" % (config.entity_name,
+                                                       config.architecture_name))]
+        cmd += config.sim_options.get("ghdl.elab_flags", [])
+        cmd += [config.entity_name, config.architecture_name]
+        cmd += config.sim_options.get("ghdl.sim_flags", [])
+
+        for name, value in config.generics.items():
+            cmd += ['-g%s=%s' % (name, value)]
+
+        cmd += ['--assert-level=%s' % config.vhdl_assert_stop_level]
+
+        if config.sim_options.get("disable_ieee_warnings", False):
+            cmd += ["--ieee-asserts=disable"]
+        return cmd
+
+    def simulate(self,  # pylint: disable=too-many-locals
+                 output_path,
+                 test_suite_name,
+                 config, elaborate_only):
         """
         Simulate with entity as top level using generics
         """
-        assert config.pli == []
 
-        ghdl_output_path = join(output_path, self.name)
-        data_file_name = join(ghdl_output_path, "wave.%s" % self._gtkwave)
-        if not exists(ghdl_output_path):
-            os.makedirs(ghdl_output_path)
+        script_path = join(output_path, self.name)
 
-        launch_gtkwave = self._gtkwave is not None and not config.elaborate_only
+        if not exists(script_path):
+            os.makedirs(script_path)
+
+        cmd = self._get_sim_command(config, script_path)
+
+        if elaborate_only:
+            cmd += ["--no-run"]
+
+        if self._gtkwave_fmt is not None:
+            data_file_name = join(script_path, "wave.%s" % self._gtkwave_fmt)
+
+            if exists(data_file_name):
+                os.remove(data_file_name)
+
+            if self._gtkwave_fmt == "ghw":
+                cmd += ['--wave=%s' % data_file_name]
+            elif self._gtkwave_fmt == "vcd":
+                cmd += ['--vcd=%s' % data_file_name]
+
+        else:
+            data_file_name = None
 
         status = True
         try:
-            cmd = []
-            cmd += ['--elab-run']
-            cmd += ['--std=%s' % self._std_str()]
-            cmd += ['--work=%s' % library_name]
-            cmd += ['--workdir=%s' % self._libraries[library_name]]
-            cmd += ['-P%s' % path for path in self._libraries.values()]
-
-            if self._backend == "llvm":
-                cmd += ['-o', join(ghdl_output_path, "%s-%s" % (entity_name, architecture_name))]
-
-            cmd += [entity_name, architecture_name]
-
-            for name, value in config.generics.items():
-                cmd += ['-g%s=%s' % (name, value)]
-
-            cmd += ['--assert-level=%s' % ("warning" if config.fail_on_warning else "error")]
-
-            if config.disable_ieee_warnings:
-                cmd += ["--ieee-asserts=disable"]
-
-            if config.elaborate_only:
-                cmd += ["--no-run"]
-
-            if launch_gtkwave:
-                if exists(data_file_name):
-                    os.remove(data_file_name)
-                if self._gtkwave == "ghw":
-                    cmd += ['--wave=%s' % data_file_name]
-                elif self._gtkwave == "vcd":
-                    cmd += ['--vcd=%s' % data_file_name]
-
-            proc = Process(['ghdl'] + cmd)
+            proc = Process(cmd)
             proc.consume_output()
         except Process.NonZeroExitCode:
             status = False
 
-        if launch_gtkwave:
+        if self._gui and not elaborate_only:
             cmd = ["gtkwave"] + shlex.split(self._gtkwave_args) + [data_file_name]
             stdout.write("%s\n" % " ".join(cmd))
             subprocess.call(cmd)

@@ -2,24 +2,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Module containing the CodecVHDLEnumerationType class.
 """
 from string import Template
 from vunit.vhdl_parser import VHDLEnumerationType
-from vunit.com.codec_datatype_template import DatatypeStdCodecTemplate, DatatypeDebugCodecTemplate
+from vunit.com.codec_datatype_template import DatatypeCodecTemplate
 
 
 class CodecVHDLEnumerationType(VHDLEnumerationType):
     """Class derived from VHDLEnumerationType to provide codec generator functionality for the enumerated type."""
-    def generate_codecs_and_support_functions(self, offset=0, debug=False):
+    def generate_codecs_and_support_functions(self, offset=0):
         """Generate codecs and communication support functions for the enumerated type."""
-        if not debug:
-            template = EnumerationStdCodecTemplate()
-        else:
-            template = EnumerationDebugCodecTemplate()
+
+        template = EnumerationCodecTemplate()
 
         declarations = ''
         definitions = ''
@@ -35,8 +33,8 @@ class CodecVHDLEnumerationType(VHDLEnumerationType):
         return declarations, definitions
 
 
-class EnumerationCodecTemplate(object):
-    """This class contains enumeration templates common to both standard and debug codecs."""
+class EnumerationCodecTemplate(DatatypeCodecTemplate):
+    """This class contains enumeration codec templates."""
 
     enumeration_to_string_definitions = Template("""\
   function to_string (
@@ -47,10 +45,6 @@ class EnumerationCodecTemplate(object):
   end function to_string;
 
 """)
-
-
-class EnumerationStdCodecTemplate(DatatypeStdCodecTemplate, EnumerationCodecTemplate):
-    """This class contains standard enumeration codec templates."""
 
     enumeration_codec_definitions = Template("""\
   function encode (
@@ -82,35 +76,24 @@ class EnumerationStdCodecTemplate(DatatypeStdCodecTemplate, EnumerationCodecTemp
     return ret_val;
   end function decode;
 
-""")
-
-
-class EnumerationDebugCodecTemplate(DatatypeDebugCodecTemplate, EnumerationCodecTemplate):
-    """This class contains debug enumeration codec templates."""
-
-    enumeration_codec_definitions = Template("""\
-  function encode (
-    constant data : $type)
-    return string is
+  procedure push(queue : queue_t; value : $type) is
   begin
-    return to_string(data);
-  end function encode;
+    push_fix_string(queue, encode(value));
+  end;
 
-  function decode (
-    constant code : string)
-    return $type is
+  impure function pop(queue : queue_t) return $type is
   begin
-    return $type'value(code);
-  end function decode;
+    return decode(pop_fix_string(queue, 1));
+  end;
 
-""")
-
-    enumeration_to_string_definitions = Template("""\
-  function to_string (
-    constant data : $type)
-    return string is
+  procedure push(msg : msg_t; value : $type) is
   begin
-    return $type'image(data);
-  end function to_string;
+    push(msg.data, value);
+  end;
+
+  impure function pop(msg : msg_t) return $type is
+  begin
+    return pop(msg.data);
+  end;
 
 """)

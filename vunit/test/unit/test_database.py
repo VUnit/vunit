@@ -2,17 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test the database related classes
 """
 
 import unittest
+from os.path import join
 from vunit.database import DataBase, PickledDataBase
-from os import makedirs
-from os.path import join, dirname, exists
-from shutil import rmtree
+from vunit.test.common import with_tempdir
 
 
 class TestDataBase(unittest.TestCase):
@@ -25,17 +24,15 @@ class TestDataBase(unittest.TestCase):
     value1 = b"value1"
     value2 = b"value2"
 
-    def setUp(self):
-        self.output_path = join(dirname(__file__), "test_database_out")
-        if exists(self.output_path):
-            rmtree(self.output_path)
-        makedirs(self.output_path)
+    @staticmethod
+    def create_database(tempdir, new=False):
+        return DataBase(join(tempdir, "database"), new=new)
 
-    def create_database(self, new=False):
-        return DataBase(join(self.output_path, "database"), new=new)
-
-    def test_add_items(self):
-        database = self.create_database()
+    def _test_add_items(self, tempdir):
+        """
+        Re-usable test case
+        """
+        database = self.create_database(tempdir)
 
         self.assertTrue(self.key1 not in database)
         self.assertTrue(self.key2 not in database)
@@ -51,24 +48,32 @@ class TestDataBase(unittest.TestCase):
         self.assertEqual(database[self.key1], self.value1)
         self.assertEqual(database[self.key2], self.value2)
 
-    def test_is_persistent(self):
-        self.test_add_items()
-        database = self.create_database()
+    @with_tempdir
+    def test_add_items(self, tempdir):
+        self._test_add_items(tempdir)
+
+    @with_tempdir
+    def test_is_persistent(self, tempdir):
+        self._test_add_items(tempdir)
+        database = self.create_database(tempdir)
         self.assertEqual(database[self.key1], self.value1)
         self.assertEqual(database[self.key2], self.value2)
 
-    def test_new_database_is_created(self):
-        self.test_add_items()
-        database = self.create_database(new=True)
+    @with_tempdir
+    def test_new_database_is_created(self, tempdir):
+        self._test_add_items(tempdir)
+        database = self.create_database(tempdir, new=True)
         self.assertTrue(self.key1 not in database)
         self.assertTrue(self.key2 not in database)
 
-    def test_missing_key_raises_keyerror(self):
-        database = self.create_database()
+    @with_tempdir
+    def test_missing_key_raises_keyerror(self, tempdir):
+        database = self.create_database(tempdir)
         self.assertRaises(KeyError, lambda: database[self.key1])
 
-    def test_can_overwrite_key(self):
-        database = self.create_database()
+    @with_tempdir
+    def test_can_overwrite_key(self, tempdir):
+        database = self.create_database(tempdir)
 
         database[self.key1] = self.value1
         database[self.key2] = self.value2
@@ -94,5 +99,6 @@ class TestPickedDataBase(TestDataBase):
     value1 = (1, "foo", set([1, 2, 3]))
     value2 = (3, 4, 5, ("foo", "bar"))
 
-    def create_database(self, new=False):
-        return PickledDataBase(TestDataBase.create_database(self, new))
+    @staticmethod
+    def create_database(tempdir, new=False):
+        return PickledDataBase(TestDataBase.create_database(tempdir, new))

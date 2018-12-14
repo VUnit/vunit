@@ -1,0 +1,5 @@
+- Add ``{rivierapro, modelsim}_init_files.after_load``
+  sim_options. They allow setting a list of DO/TCL files to be
+  executed during ``vunit_load`` after the top level has been loaded
+  using the ``vsim`` command.
+- Add input validation to sim and compile options

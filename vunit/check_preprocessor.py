@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Preprocessing of check functions
@@ -36,17 +36,17 @@ class CheckPreprocessor(object):
         for match in check_relation_calls:
             relation, offset_to_point_before_closing_paranthesis = self._extract_relation(code, match)
             if relation:
-                auto_msg_parameter = ', auto_msg => %s' % relation.make_error_msg()
-                code = (code[:match.end('parameters') + offset_to_point_before_closing_paranthesis] +
-                        auto_msg_parameter +
-                        code[match.end('parameters') + offset_to_point_before_closing_paranthesis:])
+                context_msg_parameter = ', context_msg => %s' % relation.make_context_msg()
+                code = (code[:match.end('parameters') + offset_to_point_before_closing_paranthesis]
+                        + context_msg_parameter
+                        + code[match.end('parameters') + offset_to_point_before_closing_paranthesis:])
 
         return code
 
     def _extract_relation(self, code, check):
         # pylint: disable=missing-docstring
         def end_of_parameter(token):
-            return ((token.value == ',') and (token.level == 1)) or (token.level == 0)
+            return token.value == ',' if token.level == 1 else token.level == 0
         parameter_tokens = []
         index = 1
         relation = None
@@ -206,8 +206,8 @@ class Relation(object):
         self._operand = operand
         self._right = right
 
-    def make_error_msg(self):
-        return ('"Relation %s %s %s failed! Left is " & to_string(%s) & ". Right is " & to_string(%s) & "."'
+    def make_context_msg(self):
+        return ('"Expected %s %s %s. Left is " & to_string(%s) & ". Right is " & to_string(%s) & "."'
                 % (self._left.replace('"', '""'),
                    self._operand,
                    self._right.replace('"', '""'),

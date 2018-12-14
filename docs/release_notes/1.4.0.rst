@@ -1,0 +1,4 @@
+- Removed bug when compiling Verilog with Active-HDL
+- Updated array package
+- Added support for simulation init script
+- Added support for setting VHDL asserts stop level from run script

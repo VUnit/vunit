@@ -2,64 +2,41 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
+
+# pylint: disable=too-many-lines
 
 """
 VHDL parsing functionality
 """
 
 import re
-from vunit.hashing import hash_string
 from os.path import abspath
 import logging
+from vunit.cached import cached
+from vunit.parsing.encodings import HDL_FILE_ENCODING
 LOGGER = logging.getLogger(__name__)
 
 
 class VHDLParser(object):
     """
-    Parses a single VHDL file
+    Parse a single VHDL file, caching the result to a database if available
     """
 
-    def __init__(self):
-        pass
-
-    @staticmethod
-    def parse(code, file_name, content_hash=None):  # pylint: disable=unused-argument
-        """
-        Parse the VHDL code and return a VHDLDesignFile parse result
-        """
-        return VHDLDesignFile.parse(code)
-
-
-class CachedVHDLParser(object):
-    """
-    Parse a single VHDL file, caching the result to a database
-    """
-
-    def __init__(self, database):
+    def __init__(self, database=None):
         self._database = database
 
-    def parse(self, code, file_name, content_hash=None):
+    def parse(self, file_name):
         """
         Parse the VHDL code and return a VHDLDesignFile parse result
         parse result is re-used if content hash found in database
         """
         file_name = abspath(file_name)
-
-        if content_hash is None:
-            content_hash = "sha1:" + hash_string(code)
-        key = ("CachedVHDLParser.parse(%s)" % file_name).encode()
-
-        if key in self._database:
-            design_file, old_content_hash = self._database[key]
-            if content_hash == old_content_hash:
-                LOGGER.debug("Re-using cached VHDL parse results for %s with content_hash=%s",
-                             file_name, content_hash)
-                return design_file
-
-        design_file = VHDLDesignFile.parse(code)
-        self._database[key] = design_file, content_hash
-        return design_file
+        return cached("CachedVHDLParser.parse",
+                      VHDLDesignFile.parse,
+                      file_name,
+                      encoding=HDL_FILE_ENCODING,
+                      database=self._database)
 
 
 class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes
@@ -121,8 +98,7 @@ class VHDLPackageBody(object):
         self.identifier = identifier
 
     _package_body_pattern = re.compile(r"""
-        (^|\A)                         # Beginning of line or start of string
-        \s*                            # Potential whitespaces
+        \b                             # Word boundary
         package                        # package keyword
         \s+                            # At least one whitespace
         body                           # body keyword
@@ -151,8 +127,7 @@ class VHDLConfiguration(object):
         self.entity = entity
 
     _configuration_re = re.compile(r"""
-        (^|\A)                # Beginning of line or start of string
-        \s*                   # Potential whitespaces
+        \b                    # Word boundary
         configuration         # configuration keyword
         \s+                   # At least one whitespace
         (?P<id>[a-zA-Z][\w]*) # An identifier
@@ -182,8 +157,7 @@ class VHDLArchitecture(object):
         self.entity = entity
 
     _architecture_re = re.compile(r"""
-        (^|\A)                # Beginning of line or start of string
-        \s*                   # Potential whitespaces
+        \b                    # Word boundary
         architecture          # architecture keyword
         \s+                   # At least one whitespace
         (?P<id>[a-zA-Z][\w]*) # An identifier
@@ -206,21 +180,23 @@ class VHDLArchitecture(object):
             yield VHDLArchitecture(identifier, entity_id)
 
 
+PACKAGE_INSTANCE_PATTERN = (
+    r'\bpackage\s+(?P<new_name>[a-zA-Z]\w*)\s+is\s+new\s+(?P<lib>[a-zA-Z]\w*)\.(?P<name>[a-zA-Z]\w*)')
+
+
 class VHDLPackage(object):
     """
     Representation of a VHDL package
     """
-    def __init__(self, identifier, constant_declarations,  # pylint: disable=too-many-arguments
+    def __init__(self, identifier,
                  enumeration_types, record_types, array_types):
         self.identifier = identifier
-        self.constant_declarations = constant_declarations
         self.enumeration_types = enumeration_types
         self.record_types = record_types
         self.array_types = array_types
 
     _package_start_re = re.compile(r"""
-        (^|\A)                # Beginning of line or start of string
-        \s*                   # Potential whitespaces
+        \b                    # Word boundary
         package               # package keyword
         \s+                   # At least one whitespace
         (?P<id>[a-zA-Z][\w]*) # An identifier
@@ -229,15 +205,14 @@ class VHDLPackage(object):
         """, re.MULTILINE | re.IGNORECASE | re.VERBOSE)
 
     @classmethod
-    def find(cls, code):
+    def _find_normal_packages(cls, code):
         """
         Iterate over new instances of VHDLPackage for all packages within the code
         """
         for package in cls._package_start_re.finditer(code):
             identifier = package.group('id')
             package_end = re.compile(r"""
-                (^|\A)                        # Beginning of line or start of string
-                [\s]*                         # Potential whitespaces
+                \b                            # Word boundary
                 end                           # end keyword
                 (\s+package)?                 # Optional package keyword
                 (\s+""" + identifier + r""")? # Optional identifier
@@ -249,6 +224,29 @@ class VHDLPackage(object):
             if match:
                 yield cls.parse(sub_code[:match.end()])
 
+    _package_instance_re = re.compile("^" + PACKAGE_INSTANCE_PATTERN,
+                                      re.MULTILINE | re.IGNORECASE)
+
+    @classmethod
+    def _find_package_instances(cls, code):
+        """
+        Find global package instances.
+        Use indentation heuristic to filter out nested package instances.
+        """
+        references = []
+        for match in cls._package_instance_re.finditer(code):
+            references.append(cls(match.group("new_name"), [], [], []))
+        return references
+
+    @classmethod
+    def find(cls, code):
+        """
+        Find normal and global generic package instances
+        """
+        result = list(cls._find_normal_packages(code))
+        result += list(cls._find_package_instances(code))
+        return result
+
     @classmethod
     def parse(cls, code):
         """
@@ -256,34 +254,11 @@ class VHDLPackage(object):
         """
         # Extract identifier
         identifier = cls._package_start_re.match(code).group('id')
-        constant_declarations = cls._find_constant_declarations(code)
         enumeration_types = [e for e in VHDLEnumerationType.find(code)]
         record_types = [r for r in VHDLRecordType.find(code)]
         array_types = [a for a in VHDLArrayType.find(code)]
 
-        return cls(identifier, constant_declarations, enumeration_types, record_types, array_types)
-
-    @classmethod
-    def _find_constant_declarations(cls, code):
-        """
-        Append all constant declarations found within the code to constant_declarations list
-        """
-        re_flags = re.MULTILINE | re.IGNORECASE | re.VERBOSE
-        constant_start = re.compile(r"""
-            ^                             # Beginning of line
-            [\s]*                         # Potential whitespaces
-            constant                      # constant keyword
-            \s+                           # At least one whitespace
-            (?P<id>[a-zA-Z][\w]*)         # An identifier
-            [\s]*                         # Potential whitespaces
-            :                             # Colon
-            """, re_flags)
-
-        constant_declarations = []
-        for constant in constant_start.finditer(code):
-            sub_code = code[constant.start():].strip().splitlines()[0].strip()
-            constant_declarations.append(VHDLConstantDeclaration.parse(sub_code))
-        return constant_declarations
+        return cls(identifier, enumeration_types, record_types, array_types)
 
 
 class VHDLEntity(object):
@@ -321,8 +296,7 @@ class VHDLEntity(object):
                                                mode=mode))
 
     _entity_start_re = re.compile(r"""
-        (^|\A)                # Beginning of line or start of string
-        \s*                   # Potential whitespaces
+        \b                    # Word boundary
         entity                # entity keyword
         \s+                   # At least one whitespace
         (?P<id>[a-zA-Z][\w]*) # An identifier
@@ -338,10 +312,8 @@ class VHDLEntity(object):
         for entity in cls._entity_start_re.finditer(code):
             identifier = entity.group('id')
             sub_code = code[entity.start():]
-
             entity_end_re = re.compile(r"""
-                (^|\A)                        # Beginning of line or start of string
-                [\s]*                         # Potential whitespaces
+                \b                            # Word boundary
                 end                           # end keyword
                 [\s]*                         # Potential whitespaces
                 (entity)?                     # Optional entity keyword
@@ -363,8 +335,7 @@ class VHDLEntity(object):
         # Extract identifier
         re_flags = re.MULTILINE | re.IGNORECASE | re.VERBOSE
         entity_start = re.compile(r"""
-            \A                    # Start of string
-            \s*                   # Potential whitespaces
+            \b                    # Word boundary
             entity                # entity keyword
             \s+                   # At least one whitespace
             (?P<id>[a-zA-Z][\w]*) # An identifier
@@ -385,11 +356,10 @@ class VHDLEntity(object):
         """
         re_flags = re.MULTILINE | re.IGNORECASE | re.VERBOSE
         generic_clause_start = re.compile(r"""
-            ^                             # Beginning of line
-            [\s]*                         # Potential whitespaces
-            generic                       # generic keyword
-            [\s]*                         # Potential whitespaces
-            \(                             # Opening parenthesis
+            \b                          # Word boundary
+            generic                     # generic keyword
+            [\s]*                       # Potential whitespaces
+            \(                          # Opening parenthesis
             """, re_flags)
         match = generic_clause_start.search(code)
         if match:
@@ -430,6 +400,50 @@ class VHDLEntity(object):
                     code[match.start(): match.end() + closing_pos + match_semicolon.end()])
         return []
 
+    @staticmethod
+    def _split_not_in_par(string, sep):
+        """
+        Split string at all occurences of sep but not inside of a parenthesis or quoute
+        """
+        result = []
+        count = 0
+        split = []
+        quouted = False
+        escaped = False
+
+        for idx, char in enumerate(string):
+            if idx + 1 < len(string):
+                next_char = string[idx + 1]
+            else:
+                next_char = None
+
+            if char == '"' and not escaped:
+                if next_char == '"':
+                    escaped = True
+                else:
+                    quouted = not quouted
+            else:
+                escaped = False
+
+            if char in '(':
+                count += 1
+            elif char in ')':
+                count -= 1
+
+            if char == sep and count == 0 and not quouted:
+                result.append("".join(split))
+                split = []
+            else:
+                split.append(char)
+
+        if split:
+            result.append("".join(split))
+        return result
+
+    _package_generic_re = re.compile(r"\s*package\s+", re.MULTILINE | re.IGNORECASE)
+    _type_generic_re = re.compile(r"\s*type\s+", re.MULTILINE | re.IGNORECASE)
+    _function_generic_re = re.compile(r"\s*(impure\s+)?(function|procedure)\s+", re.MULTILINE | re.IGNORECASE)
+
     @classmethod
     def _parse_generic_clause(cls, code):
         """
@@ -439,11 +453,24 @@ class VHDLEntity(object):
         generic_list_string = code[code.find('(') + 1: code.rfind(')')]
 
         # Split the interface elements
-        interface_elements = generic_list_string.split(';')
+        interface_elements = cls._split_not_in_par(generic_list_string, ';')
 
         generic_list = []
         # Add interface elements to the generic list
         for interface_element in interface_elements:
+
+            if cls._package_generic_re.match(interface_element) is not None:
+                # Ignore package generics
+                continue
+
+            if cls._type_generic_re.match(interface_element) is not None:
+                # Ignore type generics
+                continue
+
+            if cls._function_generic_re.match(interface_element) is not None:
+                # Ignore function generics
+                continue
+
             generic_list.append(VHDLInterfaceElement.parse(interface_element))
 
         return generic_list
@@ -475,9 +502,8 @@ class VHDLContext(object):
         self.identifier = identifier
 
     _context_start_re = re.compile(r"""
-        (^|\A)                # Beginning of line or start of string
-        \s*                   # Potential whitespaces
-        context                # context keyword
+        \b                    # Word boundary
+        context               # context keyword
         \s+                   # At least one whitespace
         (?P<id>[a-zA-Z][\w]*) # An identifier
         \s+                   # At least one whitespace
@@ -522,54 +548,11 @@ class VHDLSubtypeIndication(object):
         type_mark = subtype_indication_declaration.group('type_mark')
         constraint = subtype_indication_declaration.group('constraint')
 
-        if type_mark == 'std_logic_vector':
-            array_type = True
-        else:
-            array_type = False
+        array_type = type_mark == 'std_logic_vector'
         return cls(code, type_mark, constraint, array_type)
 
     def __str__(self):
         return self.code
-
-
-class VHDLConstantDeclaration(object):
-    """
-    Represents a constant declaration
-    """
-    def __init__(self, identifier, subtype_indication, expression):
-        self.identifier = identifier
-        self.subtype_indication = subtype_indication
-        self.expression = expression
-
-    @classmethod
-    def parse(cls, code):
-        """
-        Returns a new instance from parsing the code
-        """
-        # Extract identifier
-        re_flags = re.MULTILINE | re.IGNORECASE | re.VERBOSE
-        constant_start = re.compile(r"""
-            ^                             # Beginning of line
-            [\s]*                         # Potential whitespaces
-            constant                      # constant keyword
-            \s+                           # At least one whitespace
-            (?P<id>[a-zA-Z][\w]*)         # An identifier
-            [\s]*                         # Potential whitespaces
-            :                             # Colon
-            """, re_flags)
-        constant_declaration = constant_start.match(code)
-        identifier = constant_declaration.group('id')
-
-        # Extract subtype indication
-        sub_code = code[constant_declaration.end():]
-        expression_start = sub_code.find(':=')
-        subtype_indication = VHDLSubtypeIndication.parse(sub_code[:expression_start].strip())
-
-        # Extract expression
-        sub_code = sub_code[expression_start + 2:]
-        expression_end = sub_code.find(';')
-        expression = sub_code[: expression_end].strip()
-        return cls(identifier, subtype_indication, expression)
 
 
 class VHDLInterfaceElement(object):
@@ -628,10 +611,7 @@ class VHDLInterfaceElement(object):
         """
         Return True if the code is a mode keyword
         """
-        if code in ('in', 'out', 'inout', 'buffer', 'linkage'):
-            return True
-        else:
-            return False
+        return code in ('in', 'out', 'inout', 'buffer', 'linkage')
 
     def __str__(self):
         code = self.identifier + " : "
@@ -654,8 +634,7 @@ class VHDLEnumerationType(object):
         self.literals = literals
 
     _enum_declaration_re = re.compile(r"""
-        (^|\A)                      # Beginning of line or start of string
-        \s*
+        \b                    # Word boundary
         type
         \s+
         (?P<id>[a-zA-Z][\w]*)       # An identifier
@@ -668,6 +647,9 @@ class VHDLEnumerationType(object):
 
     @classmethod
     def find(cls, code):
+        """
+        Find enumeration types in the code
+        """
         for enum_type in cls._enum_declaration_re.finditer(code):
             identifier = enum_type.group('id')
             literals = [e.strip() for e in enum_type.group('literals').split(',')]
@@ -688,8 +670,7 @@ class VHDLRecordType(object):
         self.elements = elements
 
     _record_declaration_re = re.compile(r"""
-        (^|\A)                      # Beginning of line or start of string
-        \s*
+        \b                    # Word boundary
         type
         \s+
         (?P<id>[a-zA-Z][\w]*)       # An identifier
@@ -701,6 +682,9 @@ class VHDLRecordType(object):
 
     @classmethod
     def find(cls, code):
+        """
+        Find all record types in the code
+        """
         for record_type in cls._record_declaration_re.finditer(code):
             identifier = record_type.group('id')
             elements = record_type.group('elements').split(';')
@@ -763,8 +747,7 @@ class VHDLArrayType(object):
         \s+range\s+<>\s*""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
 
     _array_declaration_re = re.compile(r"""
-        (^|\A)
-        \s*
+        \b                    # Word boundary
         type
         \s+
         (?P<id>[a-zA-Z][\w]*)
@@ -772,7 +755,7 @@ class VHDLArrayType(object):
         is
         \s+
         array
-        \s+\(
+        \s*\(
         (?P<ranges>.*?)
         \)\s+of\s+
         (?P<subtype_indication>.*?)\s*;""", re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL)
@@ -799,7 +782,8 @@ class VHDLArrayType(object):
             for char in ranges:
                 if char == ',' and level == 0:
                     return ranges[:index], ranges[index + 1:]
-                elif char == '(':
+
+                if char == '(':
                     level += 1
                 elif char == ')':
                     level -= 1
@@ -818,16 +802,17 @@ class VHDLArrayType(object):
         if unconstrained_range is not None:
             range_type = unconstrained_range.group('range_type')
             return VHDLRange(range_type)
-        else:
-            constrained_range = cls._constrained_range_re.match(the_range)
-            range_attribute = cls._range_attribute_range_re.match(the_range)
-            if constrained_range is not None:
-                range_left = constrained_range.group('range_left')
-                range_right = constrained_range.group('range_right')
-                return VHDLRange(None, range_left, range_right)
-            elif range_attribute is not None:
-                range_attribute = range_attribute.group('range_attribute')
-                return VHDLRange(attribute=range_attribute)
+
+        constrained_range = cls._constrained_range_re.match(the_range)
+        range_attribute = cls._range_attribute_range_re.match(the_range)
+        if constrained_range is not None:
+            range_left = constrained_range.group('range_left')
+            range_right = constrained_range.group('range_right')
+            return VHDLRange(None, range_left, range_right)
+
+        if range_attribute is not None:
+            range_attribute = range_attribute.group('range_attribute')
+            return VHDLRange(attribute=range_attribute)
 
         return VHDLRange()
 
@@ -859,14 +844,13 @@ class VHDLReference(object):
     """
     Reference to design unit
     """
-    _reference_types = ("use",
+    _reference_types = ("package",
                         "context",
                         "entity",
                         "configuration")
 
     _uses_re = re.compile(r"""
-            (^|\A)                         # Beginning of line or start of string
-            \s*                            # Potential whitespaces
+            \b                             # Word boundary
             (?P<use_type>use|context)      # use or context keyword
             \s+                            # At least one whitespace
             (?P<id>[a-zA-Z][\w]*(\.[a-zA-Z][\w]*){1,2})
@@ -904,7 +888,7 @@ class VHDLReference(object):
 
                 names_within = uses[2:] if len(uses) > 2 else (None,)
                 for name_within in names_within:
-                    ref = cls(reference_type=match.group("use_type"),
+                    ref = cls(reference_type="package" if match.group("use_type") == "use" else "context",
                               library=uses[0],
                               design_unit=uses[1],
                               name_within=name_within)
@@ -913,7 +897,7 @@ class VHDLReference(object):
         return references
 
     _entity_reference_re = re.compile(
-        r'(^|\A|\s)\s*entity\s+(?P<lib>[a-zA-Z]\w*)\.(?P<ent>[a-zA-Z]\w*)(\((?P<arch>[a-zA-Z]\w*)\))?',
+        r'\bentity\s+(?P<lib>[a-zA-Z]\w*)\.(?P<ent>[a-zA-Z]\w*)\s*(\((?P<arch>[a-zA-Z]\w*)\))?',
         re.MULTILINE | re.IGNORECASE)
 
     @classmethod
@@ -930,7 +914,7 @@ class VHDLReference(object):
         return references
 
     _configuration_reference_re = re.compile(
-        r'(^|\A|\s)\s*configuration\s+(?P<lib>[a-zA-Z]\w*)\.(?P<cfg>[a-zA-Z]\w*)',
+        r'\bconfiguration\s+(?P<lib>[a-zA-Z]\w*)\.(?P<cfg>[a-zA-Z]\w*)',
         re.MULTILINE | re.IGNORECASE)
 
     @classmethod
@@ -943,14 +927,28 @@ class VHDLReference(object):
             references.append(cls('configuration', match.group("lib"), match.group("cfg")))
         return references
 
+    _package_instance_re = re.compile(PACKAGE_INSTANCE_PATTERN,
+                                      re.MULTILINE | re.IGNORECASE)
+
+    @classmethod
+    def _find_package_instance_references(cls, code):
+        """
+        Finds all reference causes by package instantiation
+        """
+        references = []
+        for match in cls._package_instance_re.finditer(code):
+            references.append(cls('package', match.group("lib"), match.group("name")))
+        return references
+
     @classmethod
     def find(cls, code):
         """
         Find entity, use, context and configuration references within the code
         """
-        return (cls._find_uses(code) +
-                cls._find_entity_references(code) +
-                cls._find_configuration_references(code))
+        return (cls._find_uses(code)
+                + cls._find_entity_references(code)
+                + cls._find_configuration_references(code)
+                + cls._find_package_instance_references(code))
 
     def __init__(self, reference_type, library, design_unit, name_within=None):
         assert reference_type in self._reference_types
@@ -969,10 +967,10 @@ class VHDLReference(object):
             self.name_within)
 
     def __eq__(self, other):
-        return (self.reference_type == other.reference_type and
-                self.library == other.library and
-                self.design_unit == other.design_unit and
-                self.name_within == other.name_within)
+        return (self.reference_type == other.reference_type
+                and self.library == other.library
+                and self.design_unit == other.design_unit
+                and self.name_within == other.name_within)
 
     def copy(self):
         return VHDLReference(self.reference_type,
@@ -983,18 +981,27 @@ class VHDLReference(object):
     def is_entity_reference(self):
         return self.reference_type == 'entity'
 
+    def is_package_reference(self):
+        return self.reference_type == 'package'
+
     def reference_all_names_within(self):
         return self.name_within == "all"
+
+
+VHDL_REMOVE_COMMENT_RE = re.compile(r'--[^\n]*')
+
+
+def _comment_repl(match):
+    """
+    Replace comment with equal amount of whitespace to make
+    lexical position unaffected
+    """
+    text = match.group(0)
+    return " " * len(text)
 
 
 def remove_comments(code):
     """
     Return the code with comments removed
     """
-    new_code = ''
-    lines = code.split('\n')
-    for line in lines:
-        line_wo_comments = line.split('--')[0] + '\n'
-        new_code = new_code + line_wo_comments
-
-    return new_code
+    return VHDL_REMOVE_COMMENT_RE.sub(_comment_repl, code)

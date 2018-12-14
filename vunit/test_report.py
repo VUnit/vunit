@@ -2,17 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Provide test reporting functionality
 """
 
 
-from vunit.color_printer import COLOR_PRINTER
 from xml.etree import ElementTree
 from sys import version_info
 import os
+import socket
+import re
+from vunit.color_printer import COLOR_PRINTER
+from vunit.ostools import read_file
 
 
 class TestReport(object):
@@ -23,6 +26,20 @@ class TestReport(object):
         self._test_results = {}
         self._test_names_in_order = []
         self._printer = printer
+        self._real_total_time = 0.0
+        self._expected_num_tests = 0
+
+    def set_real_total_time(self, real_total_time):
+        """
+        Set the real total execution time
+        """
+        self._real_total_time = real_total_time
+
+    def set_expected_num_tests(self, expected_num_tests):
+        """
+        Set the number of tests that we expect to run
+        """
+        self._expected_num_tests = expected_num_tests
 
     def num_tests(self):
         """
@@ -57,7 +74,7 @@ class TestReport(object):
         total number of passed, failed and skipped tests
         """
         result = self._last_test_result()
-        passed, failed, _ = self._split()
+        passed, failed, skipped = self._split()
         if result.passed:
             self._printer.write("pass", fg='gi')
         elif result.failed:
@@ -66,11 +83,17 @@ class TestReport(object):
             self._printer.write("skip", fg='rgi')
         else:
             assert False
-        self._printer.write(" (P=%i F=%i T=%i) %s\n" %
-                            (len(passed),
-                             len(failed),
-                             total_tests,
-                             result.name))
+
+        args = []
+        args.append("P=%i" % len(passed))
+        args.append("S=%i" % len(skipped))
+        args.append("F=%i" % len(failed))
+        args.append("T=%i" % total_tests)
+
+        self._printer.write(" (%s) %s (%.1f seconds)\n" %
+                            (" ".join(args),
+                             result.name,
+                             result.time))
 
     def all_ok(self):
         """
@@ -90,28 +113,56 @@ class TestReport(object):
         """
 
         passed, failures, skipped = self._split()
+        all_tests = passed + skipped + failures
 
-        for test_result in passed + skipped + failures:
-            test_result.print_status(self._printer)
+        if not all_tests:
+            self._printer.write("No tests were run!", fg="rgi")
+            self._printer.write("\n")
+            return
 
-        self._printer.write("\n")
+        prefix = "==== Summary "
+        max_len = max(len(test.name) for test in all_tests)
+        self._printer.write("%s%s\n" % (prefix, "=" * (max(max_len - len(prefix) + 25, 0))))
+        for test_result in all_tests:
+            test_result.print_status(self._printer, padding=max_len)
+
+        self._printer.write("%s\n" % ("=" * (max(max_len + 25, 0))))
         n_failed = len(failures)
         n_skipped = len(skipped)
         n_passed = len(passed)
-        total = n_failed + n_passed + n_skipped
-        total_time = sum((result.time for result in self._test_results.values()))
+        total = len(all_tests)
 
-        self._printer.write("Total time %.1f seconds\n" % total_time)
-        self._printer.write("%i of %i passed\n" % (n_passed, total))
+        self._printer.write("pass", fg='gi')
+        self._printer.write(" %i of %i\n" % (n_passed, total))
 
         if n_skipped > 0:
-            self._printer.write("%i of %i skipped\n" % (n_skipped, total))
+            self._printer.write("skip", fg='rgi')
+            self._printer.write(" %i of %i\n" % (n_skipped, total))
 
         if n_failed > 0:
-            self._printer.write("%i of %i failed\n" % (n_failed, total))
-            self._printer.write("Some failed!\n", fg='ri')
+            self._printer.write("fail", fg='ri')
+            self._printer.write(" %i of %i\n" % (n_failed, total))
+        self._printer.write("%s\n" % ("=" * (max(max_len + 25, 0))))
+
+        total_time = sum((result.time for result in self._test_results.values()))
+        self._printer.write("Total time was %.1f seconds\n" % total_time)
+        self._printer.write("Elapsed time was %.1f seconds\n" % self._real_total_time)
+
+        self._printer.write("%s\n" % ("=" * (max(max_len + 25, 0))))
+
+        if n_failed > 0:
+            self._printer.write("Some failed!", fg='ri')
+        elif n_skipped > 0:
+            self._printer.write("Some skipped!", fg='rgxi')
         else:
-            self._printer.write("All passed!\n", fg='gi')
+            self._printer.write("All passed!", fg='gi')
+        self._printer.write("\n")
+
+        assert len(all_tests) <= self._expected_num_tests
+        if len(all_tests) < self._expected_num_tests:
+            self._printer.write("WARNING: Test execution aborted after running %d out of %d tests"
+                                % (len(all_tests), self._expected_num_tests), fg='rgi')
+            self._printer.write("\n")
 
     def _split(self):
         """
@@ -130,7 +181,7 @@ class TestReport(object):
 
         return passed, failures, skipped
 
-    def to_junit_xml_str(self):
+    def to_junit_xml_str(self, xunit_xml_format='jenkins'):
         """
         Convert test report to a junit xml string
         """
@@ -142,9 +193,10 @@ class TestReport(object):
         root.attrib["failures"] = str(len(failures))
         root.attrib["skipped"] = str(len(skipped))
         root.attrib["tests"] = str(len(self._test_results))
+        root.attrib["hostname"] = socket.gethostname()
 
         for result in self._test_results_in_order():
-            root.append(result.to_xml())
+            root.append(result.to_xml(xunit_xml_format))
 
         if version_info >= (3, 0):
             # Python 3.x
@@ -200,10 +252,9 @@ class TestResult(object):
         file_exists = os.path.isfile(self._output_file_name)
         is_readable = os.access(self._output_file_name, os.R_OK)
         if file_exists and is_readable:
-            with open(self._output_file_name, "r") as fread:
-                return fread.read()
-        else:
-            return "Failed to read output file: %s" % self._output_file_name
+            return read_file(self._output_file_name)
+
+        return "Failed to read output file: %s" % self._output_file_name
 
     @property
     def passed(self):
@@ -217,7 +268,7 @@ class TestResult(object):
     def failed(self):
         return self._status == FAILED
 
-    def print_status(self, printer):
+    def print_status(self, printer, padding=0):
         """
         Print the status and runtime of this test result
         """
@@ -231,21 +282,37 @@ class TestResult(object):
             printer.write("skip", fg='rgi')
             printer.write(" ")
 
-        printer.write("%s after %.1f seconds\n" % (self.name, self.time))
+        my_padding = max(padding - len(self.name), 0)
 
-    def to_xml(self):
+        printer.write("%s (%.1f seconds)\n" % (self.name + (" " * my_padding), self.time))
+
+    def to_xml(self, xunit_xml_format):
         """
         Convert the test result to ElementTree XML object
         """
         test = ElementTree.Element("testcase")
-        test.attrib["name"] = self.name
+        match = re.search(r"(.+)\.([^.]+)$", self.name)
+        if match:
+            test.attrib["classname"] = match.group(1)
+            test.attrib["name"] = match.group(2)
+        else:
+            test.attrib["name"] = self.name
         test.attrib["time"] = "%.1f" % self.time
+
+        # By default the output is stored in system-out
+        system_out = ElementTree.SubElement(test, "system-out")
+        system_out.text = self.output
+
         if self.failed:
             failure = ElementTree.SubElement(test, "failure")
             failure.attrib["message"] = "Failed"
+
+            # Store output under <failure> if the 'bamboo' format is specified
+            if xunit_xml_format == 'bamboo':
+                failure.text = system_out.text
+                system_out.text = ''
+
         elif self.skipped:
             skipped = ElementTree.SubElement(test, "skipped")
             skipped.attrib["message"] = "Skipped"
-        system_out = ElementTree.SubElement(test, "system-out")
-        system_out.text = self.output
         return test

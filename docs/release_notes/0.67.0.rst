@@ -1,0 +1,16 @@
+- A number of minor enhancements and bug fixes
+- Added vunit_restart TCL procedure to ModelSim
+- Print out remaining number of tests when pressing ctrl-c
+- Updated OSVVM and made it a git submodule. Run
+
+.. code-block:: console
+
+   git submodule update --init --recursive
+
+after updating an existing Git repository or
+
+.. code-block:: console
+
+   git clone --recursive https://github.com/VUnit/vunit.git
+
+when creating a new clone to get the OSVVM subdirectory of VUnit populated. Doesn't affect installations made from PyPi

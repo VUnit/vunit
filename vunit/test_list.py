@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Functionality to handle lists of test suites and filtering of them
@@ -35,11 +35,34 @@ class TestList(object):
         self._test_suites = [test for test in self._test_suites
                              if test.keep_matches(test_filter)]
 
+    @property
+    def num_tests(self):
+        """
+        Return the number of tests within
+        """
+        num_tests = 0
+        for test_suite in self:
+            num_tests += len(test_suite.test_names)
+        return num_tests
+
+    @property
+    def test_names(self):
+        """
+        Return the names of all tests
+        """
+        names = []
+        for test_suite in self:
+            names += test_suite.test_names
+        return names
+
     def __iter__(self):
         return iter(self._test_suites)
 
     def __len__(self):
         return len(self._test_suites)
+
+    def __getitem__(self, idx):
+        return self._test_suites[idx]
 
 
 class TestSuiteWrapper(object):
@@ -50,19 +73,24 @@ class TestSuiteWrapper(object):
         self._test_case = test_case
 
     @property
-    def test_cases(self):
+    def test_names(self):
         return [self._test_case.name]
 
     @property
     def name(self):
         return self._test_case.name
 
-    def keep_matches(self, test_filter):
-        return test_filter(self._test_case.name)
+    @property
+    def test_information(self):
+        return {self.name: self._test_case.test_information}
 
-    def run(self, output_path):
+    def keep_matches(self, test_filter):
+        return test_filter(name=self._test_case.name,
+                           attribute_names=self._test_case.attribute_names)
+
+    def run(self, *args, **kwargs):
         """
         Run the test suite and return the test results for all test cases
         """
-        test_ok = self._test_case.run(output_path)
+        test_ok = self._test_case.run(*args, **kwargs)
         return {self._test_case.name: PASSED if test_ok else FAILED}

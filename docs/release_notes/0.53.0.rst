@@ -1,0 +1,3 @@
+- ``add_source_files`` accepts a list of files
+- Added ``-f/--files`` command line flag to list all files in compile order
+- Verilog parser improvements in robustness and error messages.

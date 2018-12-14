@@ -1,0 +1,8 @@
+- Fixed lint issues from new pylint version.
+- Log output of failed vsim startup to stderr. :vunit_issue:`354`
+- Allow case-insensitive lookup of entities. :vunit_issue:`#346`
+- Added vhdl_standard attribute at class initialization. :vunit_issue:`#350`
+- Adding csv mapping support for files and libraries. :vunit_issue:`349`
+- Fix broken vivado example wrt verilog headers. :vunit_issue:`344`
+- Allow adding duplicate libraries. :vunit_issue:`341`
+- Make adding duplicate file INFO instead of WARNING. :vunit_issue:`341`

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 A simple file based database
@@ -10,10 +10,10 @@ A simple file based database
 
 from os.path import join, exists
 import os
-from shutil import rmtree
 import pickle
 import io
 import struct
+from vunit.ostools import renew_path
 
 
 class DataBase(object):
@@ -37,15 +37,14 @@ class DataBase(object):
         """
         self._path = path
 
-        if new and exists(path):
-            rmtree(path)
-
-        if not exists(path):
+        if new:
+            renew_path(path)
+        elif not exists(path):
             os.makedirs(path)
 
         # Map keys to nodes indexes
         self._keys_to_nodes = self._discover_nodes()
-        if len(self._keys_to_nodes) == 0:
+        if not self._keys_to_nodes:
             self._next_node = 0
         else:
             self._next_node = max(self._keys_to_nodes.values()) + 1
@@ -89,6 +88,9 @@ class DataBase(object):
 
     @staticmethod
     def _write_node(file_name, key, value):
+        """
+        Write node to file
+        """
         with io.open(file_name, "wb") as fptr:
             fptr.write(struct.pack("I", len(key)))
             fptr.write(key)

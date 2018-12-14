@@ -2,17 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Test the test report functionality
 """
 
 from unittest import TestCase
-from vunit.test_report import TestReport, PASSED, SKIPPED, FAILED
 from xml.etree import ElementTree
 from os.path import join, dirname
 import os
+from vunit.test_report import TestReport, PASSED, SKIPPED, FAILED
 
 
 class TestTestReport(TestCase):
@@ -39,14 +39,41 @@ class TestTestReport(TestCase):
 
     def test_report_with_all_passed_tests(self):
         report = self._report_with_all_passed_tests()
+        report.set_real_total_time(1.0)
         self.assertEqual(self.report_to_str(report), """\
-{gi}pass{x} passed_test0 after 1.0 seconds
-{gi}pass{x} passed_test1 after 2.0 seconds
+==== Summary ========================
+{gi}pass{x} passed_test0 (1.0 seconds)
+{gi}pass{x} passed_test1 (2.0 seconds)
+=====================================
+{gi}pass{x} 2 of 2
+=====================================
+Total time was 3.0 seconds
+Elapsed time was 1.0 seconds
+=====================================
+{gi}All passed!{x}
+""")
+        self.assertTrue(report.all_ok())
+        self.assertTrue(report.result_of("passed_test0").passed)
+        self.assertTrue(report.result_of("passed_test1").passed)
+        self.assertRaises(KeyError,
+                          report.result_of, "invalid_test")
 
-Total time 3.0 seconds
-2 of 2 passed
-{gi}All passed!
-{x}""")
+    def test_report_with_missing_tests(self):
+        report = self._report_with_missing_tests()
+        report.set_real_total_time(1.0)
+        self.assertEqual(self.report_to_str(report), """\
+==== Summary ========================
+{gi}pass{x} passed_test0 (1.0 seconds)
+{gi}pass{x} passed_test1 (2.0 seconds)
+=====================================
+{gi}pass{x} 2 of 2
+=====================================
+Total time was 3.0 seconds
+Elapsed time was 1.0 seconds
+=====================================
+{gi}All passed!{x}
+{rgi}WARNING: Test execution aborted after running 2 out of 3 tests{x}
+""")
         self.assertTrue(report.all_ok())
         self.assertTrue(report.result_of("passed_test0").passed)
         self.assertTrue(report.result_of("passed_test1").passed)
@@ -55,16 +82,21 @@ Total time 3.0 seconds
 
     def test_report_with_failed_tests(self):
         report = self._report_with_some_failed_tests()
+        report.set_real_total_time(12.0)
         self.assertEqual(self.report_to_str(report), """\
-{gi}pass{x} passed_test after 2.0 seconds
-{ri}fail{x} failed_test0 after 11.1 seconds
-{ri}fail{x} failed_test1 after 3.0 seconds
-
-Total time 16.1 seconds
-1 of 3 passed
-2 of 3 failed
-{ri}Some failed!
-{x}""")
+==== Summary ========================
+{gi}pass{x} passed_test  (2.0 seconds)
+{ri}fail{x} failed_test0 (11.1 seconds)
+{ri}fail{x} failed_test1 (3.0 seconds)
+=====================================
+{gi}pass{x} 1 of 3
+{ri}fail{x} 2 of 3
+=====================================
+Total time was 16.1 seconds
+Elapsed time was 12.0 seconds
+=====================================
+{ri}Some failed!{x}
+""")
         self.assertFalse(report.all_ok())
         self.assertTrue(report.result_of("passed_test").passed)
         self.assertTrue(report.result_of("failed_test0").failed)
@@ -72,23 +104,36 @@ Total time 16.1 seconds
 
     def test_report_with_skipped_tests(self):
         report = self._report_with_some_skipped_tests()
+        report.set_real_total_time(3.0)
         self.assertEqual(self.report_to_str(report), """\
-{gi}pass{x} passed_test after 1.0 seconds
-{rgi}skip{x} skipped_test after 0.0 seconds
-{ri}fail{x} failed_test after 3.0 seconds
-
-Total time 4.0 seconds
-1 of 3 passed
-1 of 3 skipped
-1 of 3 failed
-{ri}Some failed!
-{x}""")
+==== Summary ========================
+{gi}pass{x} passed_test  (1.0 seconds)
+{rgi}skip{x} skipped_test (0.0 seconds)
+{ri}fail{x} failed_test  (3.0 seconds)
+=====================================
+{gi}pass{x} 1 of 3
+{rgi}skip{x} 1 of 3
+{ri}fail{x} 1 of 3
+=====================================
+Total time was 4.0 seconds
+Elapsed time was 3.0 seconds
+=====================================
+{ri}Some failed!{x}
+""")
         self.assertFalse(report.all_ok())
         self.assertTrue(report.result_of("passed_test").passed)
         self.assertTrue(report.result_of("skipped_test").skipped)
         self.assertTrue(report.result_of("failed_test").failed)
 
-    def assert_has_test(self, root, name, time, status, output=None):  # pylint: disable=too-many-arguments
+    def test_report_with_no_tests(self):
+        report = self._new_report()
+        self.assertEqual(self.report_to_str(report), """\
+{rgi}No tests were run!{x}
+""")
+        self.assertTrue(report.all_ok())
+
+    def assert_has_test(self, root, name, time, status,  # pylint: disable=too-many-arguments
+                        output=None, fmt='jenkins'):  # pylint: disable=too-many-arguments
         """
         Assert that junit report xml tree contains a test
         """
@@ -110,7 +155,10 @@ Total time 4.0 seconds
                 else:
                     assert False
 
-                self.assertEqual(test.find("system-out").text, output)
+                if status == 'failed' and fmt == 'bamboo':
+                    self.assertEqual(test.find("failure").text, output)
+                else:
+                    self.assertEqual(test.find("system-out").text, output)
                 break
         else:
             assert False
@@ -144,6 +192,15 @@ Total time 4.0 seconds
         self.assert_has_test(root, "passed_test", time="2.0", status="passed")
         self.assert_has_test(root, "failed_test1", time="3.0", status="failed")
 
+    def test_junit_report_with_some_failed_tests_bamboo_fmt(self):
+        report = self._report_with_some_failed_tests()
+        root = ElementTree.fromstring(report.to_junit_xml_str(xunit_xml_format='bamboo'))
+        self.assertEqual(root.tag, "testsuite")
+        self.assertEqual(len(root.findall("*")), 3)
+        self.assert_has_test(root, "failed_test0", time="11.1", status="failed", fmt='bamboo')
+        self.assert_has_test(root, "passed_test", time="2.0", status="passed", fmt='bamboo')
+        self.assert_has_test(root, "failed_test1", time="3.0", status="failed", fmt='bamboo')
+
     def test_junit_report_with_some_skipped_tests(self):
         report = self._report_with_some_skipped_tests()
         root = ElementTree.fromstring(report.to_junit_xml_str())
@@ -153,6 +210,24 @@ Total time 4.0 seconds
         self.assert_has_test(root, "passed_test", time="1.0", status="passed")
         self.assert_has_test(root, "failed_test", time="3.0", status="failed")
 
+    def test_junit_report_with_testcase_classname(self):
+        report = self._new_report()
+        report.add_result("test", PASSED, time=1.0,
+                          output_file_name=self.output_file_name)
+        report.add_result("lib.entity", PASSED, time=1.0,
+                          output_file_name=self.output_file_name)
+        report.add_result("lib.entity.test", PASSED, time=1.0,
+                          output_file_name=self.output_file_name)
+        report.add_result("lib.entity.config.test", PASSED, time=1.0,
+                          output_file_name=self.output_file_name)
+        root = ElementTree.fromstring(report.to_junit_xml_str())
+        names = set((elem.attrib.get("classname", None), elem.attrib.get("name", None))
+                    for elem in root.findall("testcase"))
+        self.assertEqual(names, set([(None, "test"),
+                                     ("lib", "entity"),
+                                     ("lib.entity", "test"),
+                                     ("lib.entity.config", "test")]))
+
     def _report_with_all_passed_tests(self):
         " @returns A report with all passed tests "
         report = self._new_report()
@@ -160,6 +235,17 @@ Total time 4.0 seconds
                           output_file_name=self.output_file_name)
         report.add_result("passed_test1", PASSED, time=2.0,
                           output_file_name=self.output_file_name)
+        report.set_expected_num_tests(2)
+        return report
+
+    def _report_with_missing_tests(self):
+        " @returns A report with all passed tests "
+        report = self._new_report()
+        report.add_result("passed_test0", PASSED, time=1.0,
+                          output_file_name=self.output_file_name)
+        report.add_result("passed_test1", PASSED, time=2.0,
+                          output_file_name=self.output_file_name)
+        report.set_expected_num_tests(3)
         return report
 
     def _report_with_some_failed_tests(self):
@@ -171,6 +257,7 @@ Total time 4.0 seconds
                           output_file_name=self.output_file_name)
         report.add_result("failed_test1", FAILED, time=3.0,
                           output_file_name=self.output_file_name)
+        report.set_expected_num_tests(3)
         return report
 
     def _report_with_some_skipped_tests(self):
@@ -182,6 +269,7 @@ Total time 4.0 seconds
                           output_file_name=self.output_file_name)
         report.add_result("failed_test", FAILED, time=3.0,
                           output_file_name=self.output_file_name)
+        report.set_expected_num_tests(3)
         return report
 
     def _new_report(self):

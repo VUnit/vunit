@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2015, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Interface towards Mentor Graphics ModelSim
@@ -11,13 +11,11 @@ Interface towards Mentor Graphics ModelSim
 
 from __future__ import print_function
 
-from vunit.ostools import Process, write_file, file_exists
-from os.path import join, dirname, abspath
+import logging
+import sys
+import io
 import os
-import subprocess
-
-from vunit.exceptions import CompileError
-from distutils.spawn import find_executable
+from os.path import join, dirname, abspath
 try:
     # Python 3
     from configparser import RawConfigParser
@@ -25,11 +23,18 @@ except ImportError:
     # Python 2
     from ConfigParser import RawConfigParser  # pylint: disable=import-error
 
-import logging
+from vunit.ostools import Process, file_exists
+from vunit.simulator_interface import (SimulatorInterface,
+                                       ListOfStringOption,
+                                       StringOption)
+from vunit.exceptions import CompileError
+from vunit.vsim_simulator_mixin import (VsimSimulatorMixin,
+                                        fix_path)
+
 LOGGER = logging.getLogger(__name__)
 
 
-class ModelSimInterface(object):
+class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disable=too-many-instance-attributes
     """
     Mentor Graphics ModelSim interface
 
@@ -37,137 +42,131 @@ class ModelSimInterface(object):
     re-using the same vsim process to avoid startup-overhead (persistent=True)
     """
     name = "modelsim"
+    supports_gui_flag = True
+    package_users_depend_on_bodies = False
 
-    @staticmethod
-    def add_arguments(parser):
-        """
-        Add command line arguments
-        """
-        group = parser.add_argument_group("modelsim",
-                                          description="ModelSim specific flags")
-        group.add_argument('--gui', choices=["load", "run"],
-                           default=None,
-                           help=("Open test case(s) in simulator gui. "
-                                 "'load' only loads the test case and gives the user control. "
-                                 "'run' loads and runs the test case while recursively "
-                                 "logging all variables and signals"))
-        group.add_argument("--new-vsim",
-                           action="store_true",
-                           default=False,
-                           help="Do not re-use the same vsim process for running different test cases (slower)")
+    compile_options = [
+        ListOfStringOption("modelsim.vcom_flags"),
+        ListOfStringOption("modelsim.vlog_flags"),
+    ]
+
+    sim_options = [
+        ListOfStringOption("modelsim.vsim_flags"),
+        ListOfStringOption("modelsim.vsim_flags.gui"),
+        ListOfStringOption("modelsim.init_files.after_load"),
+        StringOption("modelsim.init_file.gui"),
+    ]
 
     @classmethod
-    def from_args(cls, output_path, args):
+    def from_args(cls, args, output_path, **kwargs):
         """
         Create new instance from command line arguments object
         """
-        persistent = (not args.new_vsim) and args.gui is None
-        return cls(join(output_path, "modelsim.ini"),
+        persistent = not (args.unique_sim or args.gui)
+
+        return cls(prefix=cls.find_prefix(),
+                   output_path=output_path,
                    persistent=persistent,
-                   gui_mode=args.gui)
+                   gui=args.gui)
 
-    @staticmethod
-    def is_available():
+    @classmethod
+    def find_prefix_from_path(cls):
         """
-        Return True if ModelSim is installed
+        Find first valid modelsim toolchain prefix
         """
-        return find_executable('vsim') is not None
+        def has_modelsim_ini(path):
+            return os.path.isfile(join(path, "..", "modelsim.ini"))
 
-    def __init__(self, modelsim_ini="modelsim.ini", persistent=False, gui_mode=None):
-        self._modelsim_ini = abspath(modelsim_ini)
+        return cls.find_toolchain(["vsim"],
+                                  constraints=[has_modelsim_ini])
 
-        # Workarround for Microsemi 10.3a which does not
-        # respect MODELSIM environment variable when set within .do script
-        # Microsemi bug reference id: dvt64978
-        # Also a problem with ALTERA STARTER EDITION 10.3c
-        os.environ["MODELSIM"] = self._modelsim_ini
+    @classmethod
+    def supports_vhdl_package_generics(cls):
+        """
+        Returns True when this simulator supports VHDL package generics
+        """
+        return True
 
-        self._vsim_process = None
-        self._persistent = persistent
-        self._gui_mode = gui_mode
-        assert gui_mode in (None, "run", "load")
-        assert not (persistent and (gui_mode is not None))
+    def __init__(self, prefix, output_path, persistent=False, gui=False):
+        SimulatorInterface.__init__(self, output_path, gui)
+        VsimSimulatorMixin.__init__(self, prefix, persistent,
+                                    sim_cfg_file_name=join(output_path, "modelsim.ini"))
+        self._libraries = []
+        self._coverage_files = set()
+        assert not (persistent and gui)
         self._create_modelsim_ini()
-
-    def __del__(self):
-        if self._vsim_process is not None:
-            del self._vsim_process
-
-    def _create_vsim_process(self):
-        """
-        Create the vsim process
-        """
-
-        self._vsim_process = Process(["vsim", "-c",
-                                      "-l", join(dirname(self._modelsim_ini), "transcript")])
-        self._vsim_process.write("#VUNIT_RETURN\n")
-        self._vsim_process.consume_output(silent_output_consumer)
 
     def _create_modelsim_ini(self):
         """
-        Create the modelsim.ini file if it does not exist
+        Create the modelsim.ini file
         """
-        if file_exists(self._modelsim_ini):
-            return
-        cwd = join(dirname(self._modelsim_ini))
-        try:
-            env = os.environ.copy()
-            del env["MODELSIM"]
-            output = subprocess.check_output(['vmap', '-c'], cwd=cwd, stderr=subprocess.PIPE, env=env)
-        except subprocess.CalledProcessError as exc:
-            LOGGER.error("Failed to create %s by running 'vmap -c' in %s exit code was %i",
-                         self._modelsim_ini, cwd, exc.returncode)
-            print("== Output of 'vmap -c' " + ("=" * 60))
-            print(exc.output)
-            print("=======================" + ("=" * 60))
-            raise
+        parent = dirname(self._sim_cfg_file_name)
+        if not file_exists(parent):
+            os.makedirs(parent)
 
-    def compile_project(self, project, vhdl_standard):
+        original_modelsim_ini = os.environ.get("VUNIT_MODELSIM_INI",
+                                               join(self._prefix, "..", "modelsim.ini"))
+        with open(original_modelsim_ini, 'rb') as fread:
+            with open(self._sim_cfg_file_name, 'wb') as fwrite:
+                fwrite.write(fread.read())
+
+    def add_simulator_specific(self, project):
         """
-        Compile the project using vhdl_standard
+        Add libraries from modelsim.ini file and add coverage flags
+        """
+        mapped_libraries = self._get_mapped_libraries()
+        for library_name in mapped_libraries:
+            if not project.has_library(library_name):
+                project.add_builtin_library(library_name)
+
+    def setup_library_mapping(self, project):
+        """
+        Setup library mapping
         """
         mapped_libraries = self._get_mapped_libraries()
 
         for library in project.get_libraries():
+            self._libraries.append(library)
             self.create_library(library.name, library.directory, mapped_libraries)
 
-        for source_file in project.get_files_in_compile_order():
-            print('Compiling ' + source_file.name + ' ...')
-
-            if source_file.file_type == 'vhdl':
-                success = self.compile_vhdl_file(source_file.name, source_file.library.name, vhdl_standard)
-            elif source_file.file_type == 'verilog':
-                success = self.compile_verilog_file(source_file.name, source_file.library.name)
-            else:
-                raise RuntimeError("Unkown file type: " + source_file.file_type)
-
-            if not success:
-                raise CompileError("Failed to compile '%s'" % source_file.name)
-            project.update(source_file)
-
-    def compile_vhdl_file(self, source_file_name, library_name, vhdl_standard):
+    def compile_source_file_command(self, source_file):
         """
-        Compiles a vhdl file into a specific library using a specfic vhdl_standard
+        Returns the command to compile a single source file
         """
-        try:
-            proc = Process(['vcom', '-quiet', '-modelsimini', self._modelsim_ini,
-                            '-' + vhdl_standard, '-work', library_name, source_file_name])
-            proc.consume_output()
-        except Process.NonZeroExitCode:
-            return False
-        return True
+        if source_file.is_vhdl:
+            return self.compile_vhdl_file_command(source_file)
 
-    def compile_verilog_file(self, source_file_name, library_name):
+        if source_file.is_any_verilog:
+            return self.compile_verilog_file_command(source_file)
+
+        LOGGER.error("Unknown file type: %s", source_file.file_type)
+        raise CompileError
+
+    def compile_vhdl_file_command(self, source_file):
         """
-        Compiles a verilog file into a specific library
+        Returns the command to compile a vhdl file
         """
-        try:
-            proc = Process(['vlog', '-sv', '-quiet', '-modelsimini', self._modelsim_ini,
-                            '-work', library_name, source_file_name])
-            proc.consume_output()
-        except Process.NonZeroExitCode:
-            return False
-        return True
+        return ([join(self._prefix, 'vcom'), '-quiet', '-modelsimini', self._sim_cfg_file_name]
+                + source_file.compile_options.get("modelsim.vcom_flags", [])
+                + ['-' + source_file.get_vhdl_standard(), '-work', source_file.library.name, source_file.name])
+
+    def compile_verilog_file_command(self, source_file):
+        """
+        Returns the command to compile a verilog file
+        """
+        args = [join(self._prefix, 'vlog'), '-quiet', '-modelsimini', self._sim_cfg_file_name]
+        if source_file.is_system_verilog:
+            args += ["-sv"]
+        args += source_file.compile_options.get("modelsim.vlog_flags", [])
+        args += ['-work', source_file.library.name, source_file.name]
+
+        for library in self._libraries:
+            args += ["-L", library.name]
+        for include_dir in source_file.include_dirs:
+            args += ["+incdir+%s" % include_dir]
+        for key, value in source_file.defines.items():
+            args += ["+define+%s=%s" % (key, value)]
+        return args
 
     def create_library(self, library_name, path, mapped_libraries=None):
         """
@@ -175,363 +174,235 @@ class ModelSimInterface(object):
         """
         mapped_libraries = mapped_libraries if mapped_libraries is not None else {}
 
-        if not file_exists(dirname(path)):
-            os.makedirs(dirname(path))
+        if not file_exists(dirname(abspath(path))):
+            os.makedirs(dirname(abspath(path)))
 
         if not file_exists(path):
-            proc = Process(['vlib', '-unix', path])
+            proc = Process([join(self._prefix, 'vlib'), '-unix', path],
+                           env=self.get_env())
             proc.consume_output(callback=None)
 
         if library_name in mapped_libraries and mapped_libraries[library_name] == path:
             return
 
-        proc = Process(['vmap', '-modelsimini', self._modelsim_ini, library_name, path])
-        proc.consume_output(callback=None)
+        cfg = parse_modelsimini(self._sim_cfg_file_name)
+        cfg.set("Library", library_name, path)
+        write_modelsimini(cfg, self._sim_cfg_file_name)
 
     def _get_mapped_libraries(self):
         """
         Get mapped libraries from modelsim.ini file
         """
-        cfg = RawConfigParser()
-        cfg.read(self._modelsim_ini)
+        cfg = parse_modelsimini(self._sim_cfg_file_name)
         libraries = dict(cfg.items("Library"))
         if "others" in libraries:
             del libraries["others"]
         return libraries
 
-    def _create_load_function(self,  # pylint: disable=too-many-arguments
-                              library_name, entity_name, architecture_name,
-                              config, output_path):
+    def _create_load_function(self, test_suite_name, config, output_path):
         """
         Create the vunit_load TCL function that runs the vsim command and loads the design
         """
-        set_generic_str = "\n    ".join(('set vunit_generic_%s {%s}' % (name, value)
-                                         for name, value in config.generics.items()))
-        set_generic_name_str = " ".join(('-g%s="${vunit_generic_%s}"' % (name, name) for name in config.generics))
-        pli_str = " ".join("-pli {%s}" % fix_path(name) for name in config.pli)
-        architecture_suffix = "(%s)" % architecture_name
+
+        set_generic_str = " ".join(('-g/%s/%s=%s' % (config.entity_name,
+                                                     name,
+                                                     encode_generic_value(value))
+                                    for name, value in config.generics.items()))
+        pli_str = " ".join("-pli {%s}" % fix_path(name) for name in config.sim_options.get('pli', []))
+
+        if config.architecture_name is None:
+            architecture_suffix = ""
+        else:
+            architecture_suffix = "(%s)" % config.architecture_name
+
+        if config.sim_options.get("enable_coverage", False):
+            coverage_file = join(output_path, "coverage.ucdb")
+            self._coverage_files.add(coverage_file)
+            coverage_save_cmd = (
+                "coverage save -onexit -testname {%s} -assert -directive -cvg -codeAll {%s}"
+                % (test_suite_name, fix_path(coverage_file)))
+            coverage_args = "-coverage"
+        else:
+            coverage_save_cmd = ""
+            coverage_args = ""
 
         vsim_flags = ["-wlf {%s}" % fix_path(join(output_path, "vsim.wlf")),
                       "-quiet",
                       "-t ps",
+                      # for correct handling of verilog fatal/finish
+                      "-onfinish stop",
                       pli_str,
-                      set_generic_name_str,
-                      library_name + "." + entity_name + architecture_suffix,
+                      set_generic_str,
+                      config.library_name + "." + config.entity_name + architecture_suffix,
+                      coverage_args,
                       self._vsim_extra_args(config)]
 
         # There is a known bug in modelsim that prevents the -modelsimini flag from accepting
         # a space in the path even with escaping, see issue #36
-        if " " not in self._modelsim_ini:
-            vsim_flags.insert(0, "-modelsimini %s" % fix_path(self._modelsim_ini))
+        if " " not in self._sim_cfg_file_name:
+            vsim_flags.insert(0, "-modelsimini %s" % fix_path(self._sim_cfg_file_name))
+
+        for library in self._libraries:
+            vsim_flags += ["-L", library.name]
+
+        vhdl_assert_stop_level_mapping = dict(warning=1, error=2, failure=3)
 
         tcl = """
 proc vunit_load {{{{vsim_extra_args ""}}}} {{
-    {set_generic_str}
     set vsim_failed [catch {{
-        vsim ${{vsim_extra_args}} {vsim_flags}
+        eval vsim ${{vsim_extra_args}} {{{vsim_flags}}}
     }}]
+
     if {{${{vsim_failed}}}} {{
        echo Command 'vsim ${{vsim_extra_args}} {vsim_flags}' failed
        echo Bad flag from vsim_extra_args?
-       return 1
+       return true
     }}
-    set no_finished_signal [catch {{examine -internal {{/vunit_finished}}}}]
-    set no_test_runner_exit [catch {{examine -internal {{/run_base_pkg/runner.exit_simulation}}}}]
 
-    if {{${{no_finished_signal}} && ${{no_test_runner_exit}}}}  {{
-        echo {{Error: Found none of either simulation shutdown mechanisms}}
-        echo {{Error: 1) No vunit_finished signal on test bench top level}}
-        echo {{Error: 2) No vunit test runner package used}}
-        return 1
+    if {{[_vunit_source_init_files_after_load]}} {{
+        return true
     }}
-    return 0
+
+    global BreakOnAssertion
+    set BreakOnAssertion {break_on_assert}
+
+    global NumericStdNoWarnings
+    set NumericStdNoWarnings {no_warnings}
+
+    global StdArithNoWarnings
+    set StdArithNoWarnings {no_warnings}
+
+    {coverage_save_cmd}
+    return false
 }}
-""".format(set_generic_str=set_generic_str,
-           vsim_flags=" ".join(vsim_flags))
+""".format(coverage_save_cmd=coverage_save_cmd,
+           vsim_flags=" ".join(vsim_flags),
+           break_on_assert=vhdl_assert_stop_level_mapping[config.vhdl_assert_stop_level],
+           no_warnings=1 if config.sim_options.get("disable_ieee_warnings", False) else 0)
 
         return tcl
 
     @staticmethod
-    def _create_run_function(fail_on_warning=False, disable_ieee_warnings=False):
+    def _create_run_function():
         """
         Create the vunit_run function to run the test bench
         """
-        if disable_ieee_warnings:
-            no_warnings = 1
-        else:
-            no_warnings = 0
         return """
-proc vunit_run {} {
-    global BreakOnAssertion
-    set BreakOnAssertion %i
 
-    global NumericStdNoWarnings
-    set NumericStdNoWarnings %i
+proc _vunit_run_failure {} {
+    catch {
+        # tb command can fail when error comes from pli
+        echo "Stack trace result from 'tb' command"
+        echo [tb]
+        echo
+        echo "Surrounding code from 'see' command"
+        echo [see]
+    }
+}
 
-    global StdArithNoWarnings
-    set StdArithNoWarnings %i
-
+proc _vunit_run {} {
     proc on_break {} {
         resume
     }
     onbreak {on_break}
 
-    set no_finished_signal [catch {examine -internal {/vunit_finished}}]
-
-    if {${no_finished_signal}} {
-        set exit_boolean {/run_base_pkg/runner.exit_simulation}
-        set status_boolean {/run_base_pkg/runner.exit_without_errors}
-    } {
-        set exit_boolean {/vunit_finished}
-        set status_boolean {/vunit_finished}
-    }
-
-    when -fast "${exit_boolean} = TRUE" {
-        echo "Finished"
-        stop
-        resume
-    }
-
     run -all
-    set failed [expr [examine -internal ${status_boolean}]!=TRUE]
-    if {$failed} {
-        catch {
-            # tb command can fail when error comes from pli
-            echo
-            echo "Stack trace result from 'tb' command"
-            echo [tb]
-            echo
-            echo "Surrounding code from 'see' command"
-            echo [see]
-        }
-    }
-    return $failed
 }
-""" % (1 if fail_on_warning else 2, no_warnings, no_warnings)
+
+proc _vunit_sim_restart {} {
+    restart -f
+}
+"""
 
     def _vsim_extra_args(self, config):
         """
         Determine vsim_extra_args
         """
-        vsim_extra_args = ""
-        vsim_extra_args = config.options.get("vsim_extra_args",
-                                             vsim_extra_args)
-
-        if self._gui_mode is not None:
-            vsim_extra_args = config.options.get("vsim_extra_args.gui",
+        vsim_extra_args = []
+        vsim_extra_args = config.sim_options.get("modelsim.vsim_flags",
                                                  vsim_extra_args)
 
-        return vsim_extra_args
+        if self._gui:
+            vsim_extra_args = config.sim_options.get("modelsim.vsim_flags.gui",
+                                                     vsim_extra_args)
 
-    def _create_common_script(self,   # pylint: disable=too-many-arguments
-                              library_name, entity_name, architecture_name,
-                              config,
-                              output_path):
-        """
-        Create tcl script with functions common to interactive and batch modes
-        """
-        tcl = """
-proc vunit_help {} {
-    echo {List of VUnit modelsim commands:}
-    echo {vunit_help}
-    echo {  - Prints this help}
-    echo {vunit_load [vsim_extra_args]}
-    echo {  - Load design with correct generics for the test}
-    echo {  - Optional first argument are passed as extra flags to vsim}
-    echo {vunit_run}
-    echo {  - Run test, must do vunit_load first}
-}
-"""
-        tcl += self._create_load_function(library_name, entity_name, architecture_name,
-                                          config, output_path)
-        tcl += self._create_run_function(config.fail_on_warning,
-                                         config.disable_ieee_warnings)
-        return tcl
+        return " ".join(vsim_extra_args)
 
-    @staticmethod
-    def _create_batch_script(common_file_name, load_only=False):
+    def merge_coverage(self, file_name, args=None):
         """
-        Create tcl script to run in batch mode
+        Merge coverage from all test cases
         """
-        batch_do = "do " + fix_path(common_file_name) + "\n"
-        batch_do += "quietly set failed [vunit_load]\n"
-        batch_do += "if {$failed} {quit -f -code 1}\n"
-        if not load_only:
-            batch_do += "quietly set failed [vunit_run]\n"
-            batch_do += "if {$failed} {quit -f -code 1}\n"
-        batch_do += "quit -f -code 0\n"
-        return batch_do
+        # Teardown to ensure ucdb file was written.
+        self._persistent_shell.teardown()
 
-    @staticmethod
-    def _create_gui_load_script(common_file_name):
-        """
-        Create the user facing script which loads common functions and prints a help message
-        """
-        tcl = """
-do %s
-if {![vunit_load]} {
-  vunit_help
-}
-""" % fix_path(common_file_name)
-        return tcl
+        if args is None:
+            args = []
 
-    @staticmethod
-    def _create_gui_run_script(common_file_name):
-        """
-        Create the user facing script which loads common functions and prints a help message
-        """
-        tcl = """\
-do %s
-# Do not exclude variables from log
-if {![vunit_load -vhdlvariablelogging]} {
-  quietly set WildcardFilter [lsearch -not -all -inline $WildcardFilter Process]
-  quietly set WildcardFilter [lsearch -not -all -inline $WildcardFilter Variable]
-  quietly set WildcardFilter [lsearch -not -all -inline $WildcardFilter Constant]
-  quietly set WildcardFilter [lsearch -not -all -inline $WildcardFilter Generic]
-  log -recursive /*"
-  quietly set WildcardFilter default
-  vunit_run
-}
-""" % fix_path(common_file_name)
-        return tcl
+        vcover_cmd = [join(self._prefix, 'vcover'), 'merge'] + args + [file_name]
 
-    @staticmethod
-    def _run_batch_file(batch_file_name, gui=False):
-        """
-        Run a test bench in batch by invoking a new vsim process from the command line
-        """
-        try:
-            args = ['vsim', '-quiet',
-                    "-l", join(dirname(batch_file_name), "transcript"),
-                    '-do', "do %s" % fix_path(batch_file_name)]
-
-            if gui:
-                args.append('-gui')
+        for coverage_file in self._coverage_files:
+            if file_exists(coverage_file):
+                vcover_cmd.append(coverage_file)
             else:
-                args.append('-c')
+                LOGGER.warning("Missing coverage file: %s", coverage_file)
 
-            proc = Process(args)
-            proc.consume_output()
-        except Process.NonZeroExitCode:
-            return False
-        return True
+        print("Merging coverage files into %s..." % file_name)
+        vcover_merge_process = Process(vcover_cmd,
+                                       env=self.get_env())
+        vcover_merge_process.consume_output()
+        print("Done merging coverage files")
 
-    def _send_command(self, cmd):
+    @staticmethod
+    def get_env():
         """
-        Send a command to the persistent vsim process
+        Remove MODELSIM environment variable
         """
-        if self._vsim_process is None:
-            self._create_vsim_process()
-
-        self._vsim_process.write("%s\n" % cmd)
-        self._vsim_process.next_line()
-        self._vsim_process.write("#VUNIT_RETURN\n")
-        self._vsim_process.consume_output(output_consumer)
-
-    def _read_var(self, varname):
-        """
-        Read a TCL variable from the persistent vsim process
-        """
-        if self._vsim_process is None:
-            self._create_vsim_process()
-
-        self._vsim_process.write("echo $%s #VUNIT_READVAR\n" % varname)
-        self._vsim_process.next_line()
-        self._vsim_process.write("#VUNIT_RETURN\n")
-        consumer = ReadVarOutputConsumer()
-        self._vsim_process.consume_output(consumer)
-        return consumer.var
-
-    def _run_persistent(self, common_file_name, load_only=False):
-        """
-        Run a test bench using the persistent vsim process
-        """
-        try:
-            self._send_command("quit -sim")
-            self._send_command("do " + fix_path(common_file_name))
-            self._send_command("quietly set failed [vunit_load]")
-            if self._read_var("failed") == '1':
-                return False
-
-            if not load_only:
-                self._send_command("quietly set failed [vunit_run]")
-                if self._read_var("failed") == '1':
-                    return False
-
-            return True
-        except Process.NonZeroExitCode:
-            self._create_vsim_process()
-            return False
-
-    def simulate(self, output_path,  # pylint: disable=too-many-arguments
-                 library_name, entity_name, architecture_name, config):
-        """
-        Run a test bench
-        """
-        msim_output_path = abspath(join(output_path, "msim"))
-        common_file_name = join(msim_output_path, "common.do")
-        gui_load_file_name = join(msim_output_path, "gui_load.do")
-        gui_run_file_name = join(msim_output_path, "gui_run.do")
-        batch_file_name = join(msim_output_path, "batch.do")
-
-        write_file(common_file_name,
-                   self._create_common_script(library_name,
-                                              entity_name,
-                                              architecture_name,
-                                              config,
-                                              output_path=msim_output_path))
-        write_file(gui_load_file_name,
-                   self._create_gui_load_script(common_file_name))
-        write_file(gui_run_file_name,
-                   self._create_gui_run_script(common_file_name))
-        write_file(batch_file_name,
-                   self._create_batch_script(common_file_name, config.elaborate_only))
-
-        if self._gui_mode == "load":
-            return self._run_batch_file(gui_load_file_name, gui=True)
-        elif self._gui_mode == "run":
-            return self._run_batch_file(gui_run_file_name, gui=True)
-        elif self._persistent:
-            return self._run_persistent(common_file_name, config.elaborate_only)
-        else:
-            return self._run_batch_file(batch_file_name)
+        remove = ("MODELSIM",)
+        env = os.environ.copy()
+        for key in remove:
+            if key in env.keys():
+                del env[key]
+        return env
 
 
-def output_consumer(line):
+def encode_generic_value(value):
     """
-    Consume output until reaching #VUNIT_RETURN
+    Ensure values with space in them are quoted
     """
-    if line.endswith("#VUNIT_RETURN"):
-        return True
+    s_value = str(value)
+    if " " in s_value:
+        return '{"%s"}' % s_value
+    if "," in s_value:
+        return '"%s"' % s_value
+    return s_value
 
-    print(line)
 
-
-def silent_output_consumer(line):
+def parse_modelsimini(file_name):
     """
-    Consume output until reaching #VUNIT_RETURN, silent
+    Parse a modelsim.ini file
+    :returns: A RawConfigParser object
     """
-    if line.endswith("#VUNIT_RETURN"):
-        return True
+    cfg = RawConfigParser()
+    if sys.version_info.major == 2:
+        # For Python 2 read modelsim.ini as binary file since ConfigParser
+        # does not support unicode
+        with io.open(file_name, "rb") as fptr:
+            cfg.readfp(fptr)  # pylint: disable=deprecated-method
+    else:
+        with io.open(file_name, "r", encoding="utf-8") as fptr:
+            cfg.read_file(fptr)
+    return cfg
 
 
-class ReadVarOutputConsumer(object):
+def write_modelsimini(cfg, file_name):
     """
-    Consume output from modelsim and print with indentation
+    Writes a modelsim.ini file
     """
-    def __init__(self):
-        self.var = None
-
-    def __call__(self, line):
-        line = line.strip()
-        if line.endswith("#VUNIT_RETURN"):
-            return True
-
-        if line.endswith("#VUNIT_READVAR"):
-            self.var = line.split("#VUNIT_READVAR")[0][1:].strip()
-            return
-
-
-def fix_path(path):
-    """ Modelsim does not like backslash """
-    return path.replace("\\", "/").replace(" ", "\\ ")
+    if sys.version_info.major == 2:
+        # For Python 2 write modelsim.ini as binary file since ConfigParser
+        # does not support unicode
+        with io.open(file_name, "wb") as optr:
+            cfg.write(optr)
+    else:
+        with io.open(file_name, "w", encoding="utf-8") as optr:
+            cfg.write(optr)
