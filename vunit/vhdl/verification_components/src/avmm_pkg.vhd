@@ -421,7 +421,7 @@ is
       master_avmm => master_avmm,
       ref_readdata => ref_readdata
     );
-  end procedure check_avmm_s2m_msg;  
+  end procedure check_avmm_s2m_msg;
 
   procedure check_avmm_s2m_msg
   (
