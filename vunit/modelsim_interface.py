@@ -332,8 +332,9 @@ proc _vunit_sim_restart {} {
         """
         Merge coverage from all test cases
         """
-        # Teardown to ensure ucdb file was written.
-        self._persistent_shell.teardown()
+        if self._persistent_shell is not None:
+            # Teardown to ensure ucdb file was written.
+            self._persistent_shell.teardown()
 
         if args is None:
             args = []
