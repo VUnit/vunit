@@ -89,13 +89,13 @@ def _create_argument_parser(description=None, for_documentation=False):
                         help='Tests to run')
 
     parser.add_argument("--with-attributes",
-                        nargs='*',
                         default=None,
+                        action="append",
                         help="Only select tests with these attributes set")
 
     parser.add_argument("--without-attributes",
-                        nargs='*',
                         default=None,
+                        action="append",
                         help="Only select tests without these attributes set")
 
     parser.add_argument('-l', '--list', action='store_true',
