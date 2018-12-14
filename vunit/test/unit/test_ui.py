@@ -458,7 +458,7 @@ Listed 2 files""".splitlines()))
                      "lib.tb_filter.Test 2\n"
                      "Listed 2 tests")
 
-        ui = self._create_ui("--list", "--with-attributes", ".attr0", ".attr1")
+        ui = self._create_ui("--list", "--with-attributes", ".attr0", "--with-attributes", ".attr1")
         setup(ui)
         check_stdout(ui,
                      "lib.tb_filter.Test 2\n"
@@ -470,7 +470,7 @@ Listed 2 files""".splitlines()))
                      "lib.tb_filter.Test 3\n"
                      "Listed 1 tests")
 
-        ui = self._create_ui("--list", "--without-attributes", ".attr0", ".attr1")
+        ui = self._create_ui("--list", "--without-attributes", ".attr0", "--without-attributes", ".attr1")
         setup(ui)
         check_stdout(ui,
                      "Listed 0 tests")
