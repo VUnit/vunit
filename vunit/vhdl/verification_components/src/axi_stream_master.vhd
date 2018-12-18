@@ -38,14 +38,15 @@ end entity;
 
 architecture a of axi_stream_master is
 
-   signal notify_bus_process_done : std_logic := '0';
-   constant message_queue         : queue_t   := new_queue;
+  constant notify_request_msg      : msg_type_t := new_msg_type("notify request");
+  constant message_queue           : queue_t    := new_queue;
+  signal   notify_bus_process_done : std_logic  := '0';
 
 begin
 
   main : process
     variable request_msg : msg_t;
-    variable dummy_msg   : msg_t;
+    variable notify_msg  : msg_t;
     variable msg_type    : msg_type_t;
   begin
     receive(net, master.p_actor, request_msg);
@@ -56,9 +57,8 @@ begin
     elsif msg_type = wait_for_time_msg then
       push(message_queue, request_msg);
     elsif msg_type = wait_until_idle_msg then
-      dummy_msg := request_msg;
-      push(message_queue, dummy_msg);  -- Push a copy onto the queue, to always have a notify even if the queue happened
-                                       --  to be just empty at this moment
+      notify_msg := new_msg(notify_request_msg);
+      push(message_queue, notify_msg);
       wait on notify_bus_process_done until is_empty(message_queue);
       handle_wait_until_idle(net, msg_type, request_msg);
     else
@@ -93,7 +93,7 @@ begin
           handle_sync_message(net, msg_type, msg);
           -- Re-align with the clock when a wait for time message was handled, because this breaks edge alignment.
           wait until rising_edge(aclk);
-        elsif msg_type = wait_until_idle_msg then
+        elsif msg_type = notify_request_msg then
           -- Ignore this message, but expect it
         elsif msg_type = stream_push_msg or msg_type = push_axi_stream_msg then
           tvalid <= '1';
