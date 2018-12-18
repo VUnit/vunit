@@ -32,8 +32,32 @@ entity axi_stream_slave is
 end entity;
 
 architecture a of axi_stream_slave is
+
+  signal notify_bus_process_done : std_logic := '0';
+  constant message_queue         : queue_t   := new_queue;
+
 begin
+
   main : process
+    variable request_msg : msg_t;
+    variable msg_type    : msg_type_t;
+  begin
+    receive(net, slave.p_actor, request_msg);
+    msg_type := message_type(request_msg);
+
+    if msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg then
+      push(message_queue, request_msg);
+    elsif msg_type = wait_for_time_msg then
+      push(message_queue, request_msg);
+    elsif msg_type = wait_until_idle_msg then
+      wait on notify_bus_process_done until is_empty(message_queue);
+      handle_wait_until_idle(net, msg_type, request_msg);
+    else
+      unexpected_msg_type(msg_type);
+    end if;
+  end process;
+
+  bus_process : process
     variable reply_msg, msg : msg_t;
     variable msg_type : msg_type_t;
     variable axi_stream_transaction : axi_stream_transaction_t(
@@ -45,32 +69,41 @@ begin
       tuser(tuser'range)
     );
   begin
-    receive(net, slave.p_actor, msg);
-    msg_type := message_type(msg);
+      -- Wait for messages to arrive on the queue, posted by the process above
+    wait until rising_edge(aclk) and (not is_empty(message_queue));
 
-    handle_sync_message(net, msg_type, msg);
+    while not is_empty(message_queue) loop
+      msg := pop(message_queue);
+      msg_type := message_type(msg);
 
-    if msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg then
-      tready <= '1';
-      wait until (tvalid and tready) = '1' and rising_edge(aclk);
-      tready <= '0';
+      if msg_type = wait_for_time_msg then
+        handle_sync_message(net, msg_type, msg);
+        wait until rising_edge(aclk);
+      elsif msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg then
+        tready <= '1';
+        wait until (tvalid and tready) = '1' and rising_edge(aclk);
+        tready <= '0';
 
-      axi_stream_transaction := (
-        tdata => tdata,
-        tlast => tlast = '1',
-        tkeep => tkeep,
-        tstrb => tstrb,
-        tid   => tid,
-        tdest => tdest,
-        tuser => tuser
-      );
+        axi_stream_transaction := (
+          tdata => tdata,
+          tlast => tlast = '1',
+          tkeep => tkeep,
+          tstrb => tstrb,
+          tid   => tid,
+          tdest => tdest,
+          tuser => tuser
+        );
 
-      reply_msg := new_axi_stream_transaction_msg(axi_stream_transaction);
-      reply(net, msg, reply_msg);
+        reply_msg := new_axi_stream_transaction_msg(axi_stream_transaction);
+        reply(net, msg, reply_msg);
+      else
+        unexpected_msg_type(msg_type);
+      end if;
+    end loop;
 
-    else
-      unexpected_msg_type(msg_type);
-    end if;
+    notify_bus_process_done <= '1';
+    wait until notify_bus_process_done = '1';
+    notify_bus_process_done <= '0';
 
   end process;
 

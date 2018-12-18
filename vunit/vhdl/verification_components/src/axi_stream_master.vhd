@@ -65,7 +65,6 @@ begin
   bus_process : process
     variable msg : msg_t;
     variable msg_type : msg_type_t;
-    variable reset_cycles : positive := 1;
   begin
     if drive_invalid then
       tdata <= (others => drive_invalid_val);
