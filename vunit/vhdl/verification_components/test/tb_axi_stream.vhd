@@ -219,7 +219,27 @@ begin
       pop_stream(net, slave_stream, data, last_bool);
       check_equal(data, std_logic_vector'(x"77"), result("for pop stream data"));
       check_true(last_bool, result("for pop stream last"));
-      check_equal(now - 10 ns, timestamp + 30 ns, result("for push wait time"));
+      check_equal(now - 10 ns, timestamp + 50 ns, result("for push wait time"));
+
+      for i in 1 to n_monitors loop
+        get_axi_stream_transaction(axi_stream_transaction);
+        check_equal(
+          axi_stream_transaction.tdata,
+          std_logic_vector'(x"77"),
+          result("for axi_stream_transaction.tdata")
+        );
+        check_true(axi_stream_transaction.tlast, result("for axi_stream_transaction.tlast"));
+      end loop;
+
+    elsif run("test single push and stalled pop with non-multiple of clock period") then
+      wait until rising_edge(aclk);
+      wait_for_time(net, slave_sync, 29 ns);
+      timestamp := now;
+      push_stream(net, master_stream, x"77", true);
+      pop_stream(net, slave_stream, data, last_bool);
+      check_equal(data, std_logic_vector'(x"77"), result("for pop stream data"));
+      check_true(last_bool, result("for pop stream last"));
+      check_equal(now - 10 ns, timestamp + 40 ns, result("for push wait time"));
 
       for i in 1 to n_monitors loop
         get_axi_stream_transaction(axi_stream_transaction);
@@ -261,6 +281,7 @@ begin
       end loop;
 
       wait_until_idle(net, master_sync); -- wait until all transfers are done before checking them
+      wait_until_idle(net, slave_sync);
 
       for i in 0 to 7 loop
         reference := pop(reference_queue);
