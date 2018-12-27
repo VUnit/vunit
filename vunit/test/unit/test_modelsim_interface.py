@@ -191,7 +191,7 @@ class TestModelSimInterface(unittest.TestCase):
 
     def test_copies_modelsim_ini_file_from_install(self):
         modelsim_ini = join(self.output_path, "modelsim.ini")
-        installed_modelsim_ini = join(self.prefix_path, "../modelsim.ini")
+        installed_modelsim_ini = join(self.prefix_path, "..", "modelsim.ini")
         user_modelsim_ini = join(self.test_path, "my_modelsim.ini")
 
         with open(installed_modelsim_ini, "w") as fptr:
@@ -208,7 +208,7 @@ class TestModelSimInterface(unittest.TestCase):
 
     def test_copies_modelsim_ini_file_from_user(self):
         modelsim_ini = join(self.output_path, "modelsim.ini")
-        installed_modelsim_ini = join(self.prefix_path, "../modelsim.ini")
+        installed_modelsim_ini = join(self.prefix_path, "..", "modelsim.ini")
         user_modelsim_ini = join(self.test_path, "my_modelsim.ini")
 
         with open(installed_modelsim_ini, "w") as fptr:
@@ -227,7 +227,7 @@ class TestModelSimInterface(unittest.TestCase):
 
     def test_overwrites_modelsim_ini_file_from_install(self):
         modelsim_ini = join(self.output_path, "modelsim.ini")
-        installed_modelsim_ini = join(self.prefix_path, "../modelsim.ini")
+        installed_modelsim_ini = join(self.prefix_path, "..", "modelsim.ini")
         user_modelsim_ini = join(self.test_path, "my_modelsim.ini")
 
         with open(modelsim_ini, "w") as fptr:
@@ -247,7 +247,7 @@ class TestModelSimInterface(unittest.TestCase):
 
     def test_overwrites_modelsim_ini_file_from_user(self):
         modelsim_ini = join(self.output_path, "modelsim.ini")
-        installed_modelsim_ini = join(self.prefix_path, "../modelsim.ini")
+        installed_modelsim_ini = join(self.prefix_path, "..", "modelsim.ini")
         user_modelsim_ini = join(self.test_path, "my_modelsim.ini")
 
         with open(modelsim_ini, "w") as fptr:
@@ -270,11 +270,11 @@ class TestModelSimInterface(unittest.TestCase):
     def setUp(self):
         self.test_path = join(dirname(__file__), "test_modelsim_out")
         self.output_path = join(self.test_path, "modelsim")
-        self.prefix_path = join(self.test_path, "prefix/bin")
+        self.prefix_path = join(self.test_path, "prefix", "bin")
         renew_path(self.test_path)
         renew_path(self.output_path)
         renew_path(self.prefix_path)
-        installed_modelsim_ini = join(self.prefix_path, "../modelsim.ini")
+        installed_modelsim_ini = join(self.prefix_path, "..", "modelsim.ini")
         write_file(installed_modelsim_ini, "[Library]")
         self.project = Project()
         self.cwd = os.getcwd()
