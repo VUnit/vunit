@@ -910,8 +910,8 @@ package body com_messenger_pkg is
         mailbox.first_envelope := envelope.next_envelope;
       end if;
 
-      if mailbox.first_envelope = null then
-        mailbox.last_envelope := null;
+      if envelope.next_envelope = null then
+        mailbox.last_envelope := previous_envelope;
       end if;
 
       deallocate_envelope(envelope);
