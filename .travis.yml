@@ -99,8 +99,6 @@ matrix:
       - tox -e py36-docs
       - touch .tox/py36-docs/tmp/docsbuild/.nojekyll
     deploy:
-      edge:
-        branch: v1.8.47
       provider: pages
       repo: VUnit/VUnit.github.io
       target_branch: master
