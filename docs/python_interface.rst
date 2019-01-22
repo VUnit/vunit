@@ -13,11 +13,15 @@ The Python interface of VUnit is exposed through the :class:`VUnit
 
 Attributes
 ----------
-The user may set custom attributes on test cases via comments. The
-attributes can for example be used to achieve requirements
-trace-ability. The attributes are exported in the :ref:`JSON Export
-<json_export>`. All user defined attributes must start with a dot
-(``.``) as non-dot attributes are reserved for built-in attributes.
+The user may set custom attributes on test cases via comments or via the
+``set_attribute`` method. The attributes can for example be used to achieve
+requirements trace-ability. The attributes are exported in the
+:ref:`JSON Export <json_export>`. All user defined attributes must start
+with a dot (``.``) as non-dot attributes are reserved for built-in
+attributes.
+
+Attributes set via the python interface will effectively overwrite the value
+of a user attribute set via code comments.
 
 Example
 <<<<<<<
@@ -38,10 +42,19 @@ Example
         end
     end
 
+
+.. code-block:: python
+   :caption: Python Example
+
+   my_test.set_attribute(".requirement-117", None)
+
+
 .. code-block:: json
    :caption: JSON Export has attributes attached to each test. The
-             attributes all have null value to be forward compatible
-             in a future where user attributes can have values.
+             attributes added via comments all have null value to be
+             forward compatible in a future where user attributes can
+             have values. Attributes set via python can have basic type
+             values.
 
     {
        "attributes": {

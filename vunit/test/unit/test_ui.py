@@ -415,13 +415,15 @@ Listed 2 files""".splitlines()))
             lib = ui.add_library("lib")
             file_name = join(tempdir, "tb_filter.vhd")
             create_vhdl_test_bench_file("tb_filter", file_name,
-                                        tests=["Test 1", "Test 2", "Test 3"],
+                                        tests=["Test 1", "Test 2", "Test 3", "Test 4"],
                                         test_attributes={
                                             "Test 1": [".attr0"],
                                             "Test 2": [".attr0", ".attr1"],
-                                            "Test 3": [".attr1"]
+                                            "Test 3": [".attr1"],
+                                            "Test 4": []
                                         })
             lib.add_source_file(file_name)
+            lib.test_bench("tb_filter").test("Test 4").set_attribute(".attr2", None)
 
         def check_stdout(ui, expected):
             " Check that stdout matches expected "
@@ -443,7 +445,8 @@ Listed 2 files""".splitlines()))
                      "lib.tb_filter.Test 1\n"
                      "lib.tb_filter.Test 2\n"
                      "lib.tb_filter.Test 3\n"
-                     "Listed 3 tests")
+                     "lib.tb_filter.Test 4\n"
+                     "Listed 4 tests")
 
         ui = self._create_ui("--list", "*2*")
         setup(ui)
@@ -458,6 +461,12 @@ Listed 2 files""".splitlines()))
                      "lib.tb_filter.Test 2\n"
                      "Listed 2 tests")
 
+        ui = self._create_ui("--list", "--with-attribute=.attr2")
+        setup(ui)
+        check_stdout(ui,
+                     "lib.tb_filter.Test 4\n"
+                     "Listed 1 tests")
+
         ui = self._create_ui("--list", "--with-attributes", ".attr0", "--with-attributes", ".attr1")
         setup(ui)
         check_stdout(ui,
@@ -468,12 +477,14 @@ Listed 2 files""".splitlines()))
         setup(ui)
         check_stdout(ui,
                      "lib.tb_filter.Test 3\n"
-                     "Listed 1 tests")
+                     "lib.tb_filter.Test 4\n"
+                     "Listed 2 tests")
 
         ui = self._create_ui("--list", "--without-attributes", ".attr0", "--without-attributes", ".attr1")
         setup(ui)
         check_stdout(ui,
-                     "Listed 0 tests")
+                     "lib.tb_filter.Test 4\n"
+                     "Listed 1 tests")
 
         ui = self._create_ui("--list",
                              "--with-attributes", ".attr0",
@@ -500,6 +511,7 @@ Listed 2 files""".splitlines()))
                                     tests=["Test one", "Test two"],
                                     test_attributes={"Test one": [".attr0"]})
         lib2.add_source_file(file_name2)
+        lib2.test_bench("tb_bar").set_attribute(".attr1", "bar")
 
         self._run_main(ui)
 
@@ -529,9 +541,9 @@ Listed 2 files""".splitlines()))
                          {"lib1.tb_foo.all": ({"file_name": file_name1, "offset": 180, "length": 18},
                                               {}),
                           "lib2.tb_bar.Test one": ({"file_name": file_name2, "offset": 235, "length": 8},
-                                                   {".attr0": None}),
+                                                   {".attr0": None, ".attr1": "bar"}),
                           "lib2.tb_bar.Test two": ({"file_name": file_name2, "offset": 283, "length": 8},
-                                                   {})})
+                                                   {".attr1": "bar"})})
 
     def test_library_attributes(self):
         ui = self._create_ui()

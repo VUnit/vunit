@@ -81,12 +81,18 @@ class TestSuiteWrapper(object):
         return self._test_case.name
 
     @property
+    def test_configuration(self):
+        return {self.name: self._test_case.test_configuration}
+
+    @property
     def test_information(self):
         return {self.name: self._test_case.test_information}
 
     def keep_matches(self, test_filter):
+        attributes = self._test_case.attribute_names.copy()
+        attributes.update(set(self._test_case.test_configuration.attributes.keys()))
         return test_filter(name=self._test_case.name,
-                           attribute_names=self._test_case.attribute_names)
+                           attribute_names=attributes)
 
     def run(self, *args, **kwargs):
         """

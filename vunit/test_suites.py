@@ -30,6 +30,8 @@ class IndependentSimTestCase(object):
             # JUnit XML test reports wants three dotted name hierarchies
             self._name += ".all"
 
+        self._configuration = config
+
         self._test = test
 
         self._run = TestRun(simulator_if=simulator_if,
@@ -45,6 +47,10 @@ class IndependentSimTestCase(object):
     @property
     def attribute_names(self):
         return self._test.attribute_names
+
+    @property
+    def test_configuration(self):
+        return self._configuration
 
     @property
     def test_information(self):
@@ -71,6 +77,8 @@ class SameSimTestSuite(object):
 
         if not config.is_default:
             self._name += "." + config.name
+
+        self._configuration = config
 
         self._tests = tests
         self._run = TestRun(simulator_if=simulator_if,
@@ -100,9 +108,15 @@ class SameSimTestSuite(object):
         """
         Keep tests which pattern return False if no remaining tests
         """
+        def _merge_attributes(attribute_names, attributes):
+            merged_attributes = attribute_names.copy()
+            merged_attributes.update(set(attributes.keys()))
+            return merged_attributes
+
         self._tests = [test for test in self._tests
                        if test_filter(name=_full_name(self.name, test.name),
-                                      attribute_names=test.attribute_names)]
+                                      attribute_names=_merge_attributes(test.attribute_names,
+                                                                        self._configuration.attributes))]
         self._run.set_test_cases([test.name for test in self._tests])
         return len(self._tests) > 0
 

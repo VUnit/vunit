@@ -14,7 +14,8 @@ Tests the test test_bench module
 import unittest
 import contextlib
 from os.path import join
-from vunit.configuration import Configuration
+from vunit.configuration import (Configuration,
+                                 AttributeException)
 from vunit.test.mock_2or3 import mock
 from vunit.test.common import (with_tempdir,
                                create_tempdir)
@@ -66,6 +67,18 @@ class TestConfiguration(unittest.TestCase):
         design_unit_tb_path.generic_names = ["runner_cfg", "tb_path"]
         config_tb_path = Configuration('name', design_unit_tb_path)
         self.assertEqual(config_tb_path.generics["tb_path"], (tb_path + "/").replace("\\", "/"))
+
+    def test_constructor_adds_no_attributes(self):
+        with _create_config() as config:
+            self.assertEqual({}, config.attributes)
+
+    def test_constructor_adds_supplied_attributes(self):
+        with _create_config(attributes={"foo": "bar"}) as config:
+            self.assertEqual({"foo": "bar"}, config.attributes)
+
+    def test_set_attribute_must_start_with_dot(self):
+        with _create_config() as config:
+            self.assertRaises(AttributeException, config.set_attribute, "foo", "bar")
 
     def test_call_post_check_none(self):
         self.assertEqual(self._call_post_check(None, output_path="output_path", read_output=None), True)
