@@ -205,6 +205,8 @@ In VUnit Python API the name ``configuration`` is used to denote the
 user controllable configuration of one test run such as
 generic/parameter settings, simulation options as well as the
 pre_config and post_check :ref:`callback functions <pre_and_post_hooks>`.
+User :ref:`attributes <attributes>` can also be added as a part of a
+configuration.
 
 Configurations can either be unique for each test case or must be
 common for the entire test bench depending on the situation.  For test
@@ -490,6 +492,27 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         if not self._project.has_library(library_name):
             raise KeyError(library_name)
         return Library(library_name, self, self._project, self._test_bench_list)
+
+    def set_attribute(self, name, value, allow_empty=False):
+        """
+        Set a value of attribute in all |configurations|
+
+        :param name: The name of the attribute
+        :param value: The value of the attribute
+        :param allow_empty: To disable an error when no test benches were found
+
+        :example:
+
+        .. code-block:: python
+
+           prj.set_attribute(".foo", "bar")
+
+        .. note::
+           Only affects test benches added *before* the attribute is set.
+        """
+        test_benches = self._test_bench_list.get_test_benches()
+        for test_bench in check_not_empty(test_benches, allow_empty, "No test benches found"):
+            test_bench.set_attribute(name, value)
 
     def set_generic(self, name, value, allow_empty=False):
         """
@@ -900,7 +923,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         print("Listed %i tests" % test_list.num_tests)
         return True
 
-    def _main_export_json(self, json_file_name):
+    def _main_export_json(self, json_file_name):  # pylint: disable=too-many-locals
         """
         Main function when exporting to JSON
         """
@@ -914,12 +937,16 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         tests = []
         for test_suite in self._create_tests(simulator_if=None):
             test_information = test_suite.test_information
+            test_configuration = test_suite.test_configuration
             for name in test_suite.test_names:
                 info = test_information[name]
+                config = test_configuration[name]
 
                 attributes = {}
                 for attr in info.attributes:
                     attributes[attr.name] = attr.value
+
+                attributes.update(config.attributes)
 
                 tests.append(dict(name=name,
                                   location=dict(file_name=info.location.file_name,
@@ -1423,6 +1450,22 @@ class TestBench(object):
         """
         return self._library
 
+    def set_attribute(self, name, value):
+        """
+        Set a value of attribute within all |configurations| of this test bench or test cases within it
+
+        :param name: The name of the attribute
+        :param value: The value of the atrribute
+
+        :example:
+
+        .. code-block:: python
+
+           test_bench.set_attribute(".foo", "bar")
+
+        """
+        self._test_bench.set_attribute(name, value)
+
     def set_generic(self, name, value):
         """
         Set a value of generic within all |configurations| of this test bench or test cases within it
@@ -1490,7 +1533,8 @@ class TestBench(object):
         self._test_bench.set_post_check(value)
 
     def add_config(self,  # pylint: disable=too-many-arguments
-                   name, generics=None, parameters=None, pre_config=None, post_check=None, sim_options=None):
+                   name, generics=None, parameters=None, pre_config=None, post_check=None, sim_options=None,
+                   attributes=None):
         """
         Add a configuration of this test bench or to all test cases within it by copying the default configuration.
 
@@ -1503,6 +1547,7 @@ class TestBench(object):
         :param pre_config: A :ref:`callback function <pre_and_post_hooks>` to be called before test execution.
         :param post_check: A :ref:`callback function <pre_and_post_hooks>` to be called after test execution.
         :param sim_options: A `dict` containing the sim_options to be set in addition to the default configuration
+        :param attributes: A `dict` containing the attributes to be set in addition to the default configuration
 
         :example:
 
@@ -1532,11 +1577,13 @@ class TestBench(object):
         generics = lower_generics(generics)
         parameters = {} if parameters is None else parameters
         generics.update(parameters)
+        attributes = {} if attributes is None else attributes
         self._test_bench.add_config(name=name,
                                     generics=generics,
                                     pre_config=pre_config,
                                     post_check=post_check,
-                                    sim_options=sim_options)
+                                    sim_options=sim_options,
+                                    attributes=attributes)
 
     def test(self, name):
         """
@@ -1632,7 +1679,8 @@ class Test(object):
         return self._test_case.name
 
     def add_config(self,  # pylint: disable=too-many-arguments
-                   name, generics=None, parameters=None, pre_config=None, post_check=None, sim_options=None):
+                   name, generics=None, parameters=None, pre_config=None, post_check=None, sim_options=None,
+                   attributes=None):
         """
         Add a configuration to this test copying the default configuration.
 
@@ -1645,6 +1693,7 @@ class Test(object):
         :param pre_config: A :ref:`callback function <pre_and_post_hooks>` to be called before test execution.
         :param post_check: A :ref:`callback function <pre_and_post_hooks>` to be called after test execution.
         :param sim_options: A `dict` containing the sim_options to be set in addition to the default configuration.
+        :param attributes: A `dict` containing the attributes to be set in addition to the default configuration.
 
         :example:
 
@@ -1673,11 +1722,29 @@ class Test(object):
         generics = lower_generics(generics)
         parameters = {} if parameters is None else parameters
         generics.update(parameters)
+        attributes = {} if attributes is None else attributes
         self._test_case.add_config(name=name,
                                    generics=generics,
                                    pre_config=pre_config,
                                    post_check=post_check,
-                                   sim_options=sim_options)
+                                   sim_options=sim_options,
+                                   attributes=attributes)
+
+    def set_attribute(self, name, value):
+        """
+        Set a value of attribute within all |configurations| of this test
+
+        :param name: The name of the attribute
+        :param value: The value of the attribute
+
+        :example:
+
+        .. code-block:: python
+
+           test.set_attribute(".foo", "bar")
+
+        """
+        self._test_case.set_attribute(name, value)
 
     def set_generic(self, name, value):
         """

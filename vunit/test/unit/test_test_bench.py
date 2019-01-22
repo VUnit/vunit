@@ -25,6 +25,7 @@ from vunit.test_bench import (TestBench,
                               FileLocation,
                               Attribute,
                               LegacyAttribute)
+from vunit.configuration import AttributeException
 from vunit.ostools import write_file
 from vunit.test.mock_2or3 import mock
 from vunit.test.common import (with_tempdir,
@@ -288,7 +289,11 @@ if run("Test_2")
                               generics=dict(value=1,
                                             global_value="local value"))
         test_bench.add_config(name="value=2",
-                              generics=dict(value=2))
+                              generics=dict(value=2),
+                              attributes={".foo": "bar"})
+
+        self.assertRaises(AttributeException, test_bench.add_config, name="c3",
+                          attributes={"foo", "bar"})
 
         tests = self.create_tests(test_bench)
         self.assert_has_tests(tests, ["lib.tb_entity.value=1",
@@ -296,8 +301,12 @@ if run("Test_2")
 
         self.assertEqual(get_config_of(tests, "lib.tb_entity.value=1").generics,
                          {"value": 1, "global_value": "local value"})
+        self.assertEqual(get_config_of(tests, "lib.tb_entity.value=1").attributes,
+                         {})
         self.assertEqual(get_config_of(tests, "lib.tb_entity.value=2").generics,
                          {"value": 2, "global_value": "global value"})
+        self.assertEqual(get_config_of(tests, "lib.tb_entity.value=2").attributes,
+                         {".foo": "bar"})
 
     @with_tempdir
     def test_test_case_add_config(self, tempdir):
@@ -318,7 +327,11 @@ if run("test 2")
                                            global_value="local value"))
         test_case.add_config(name="c2",
                              generics=dict(value=2),
-                             sim_options=dict(disable_ieee_warnings=False))
+                             sim_options=dict(disable_ieee_warnings=False),
+                             attributes={".foo": "bar"})
+
+        self.assertRaises(AttributeException, test_case.add_config, name="c3",
+                          attributes={"foo", "bar"})
 
         tests = self.create_tests(test_bench)
         self.assert_has_tests(tests, ["lib.tb_entity.test 1",
@@ -330,8 +343,12 @@ if run("test 2")
         config_c2_test2 = get_config_of(tests, "lib.tb_entity.c2.test 2")
         self.assertEqual(config_test1.generics,
                          {"global_value": "global value"})
+        self.assertEqual(config_c1_test2.attributes,
+                         {})
         self.assertEqual(config_c1_test2.generics,
                          {"value": 1, "global_value": "local value"})
+        self.assertEqual(config_c2_test2.attributes,
+                         {".foo": "bar"})
         self.assertEqual(config_c2_test2.generics,
                          {"value": 2, "global_value": "global value"})
 

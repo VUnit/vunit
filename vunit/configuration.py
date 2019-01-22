@@ -21,6 +21,10 @@ LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = None
 
 
+class AttributeException(Exception):
+    pass
+
+
 class Configuration(object):  # pylint: disable=too-many-instance-attributes
     """
     Represents a configuration of a test bench
@@ -31,11 +35,13 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
                  generics=None,
                  sim_options=None,
                  pre_config=None,
-                 post_check=None):
+                 post_check=None,
+                 attributes=None):
         self.name = name
         self._design_unit = design_unit
         self.generics = {} if generics is None else generics
         self.sim_options = {} if sim_options is None else sim_options
+        self.attributes = {} if attributes is None else attributes
 
         self.tb_path = dirname(design_unit.original_file_name)
 
@@ -52,7 +58,8 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
                              generics=self.generics.copy(),
                              sim_options=self.sim_options.copy(),
                              pre_config=self.pre_config,
-                             post_check=self.post_check)
+                             post_check=self.post_check,
+                             attributes=self.attributes.copy())
 
     @property
     def is_default(self):
@@ -80,6 +87,15 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
             return next(iter(self._design_unit.architecture_names))
 
         return None
+
+    def set_attribute(self, name, value):
+        """
+        Set attribute
+        """
+        if name.startswith("."):
+            self.attributes[name] = value
+        else:
+            raise AttributeException
 
     def set_generic(self, name, value):
         """
@@ -165,6 +181,15 @@ class ConfigurationVisitor(object):
     def get_configuration_dicts():
         raise NotImplementedError
 
+    def set_attribute(self, name, value):
+        """
+        Set attribute
+        """
+        self._check_enabled()
+        for configs in self.get_configuration_dicts():
+            for config in configs.values():
+                config.set_attribute(name, value)
+
     def set_generic(self, name, value):
         """
         Set generic
@@ -201,7 +226,8 @@ class ConfigurationVisitor(object):
             for config in configs.values():
                 config.post_check = value
 
-    def add_config(self, name, generics=None, pre_config=None, post_check=None, sim_options=None):
+    def add_config(self, name,  # pylint: disable=too-many-arguments
+                   generics=None, pre_config=None, post_check=None, sim_options=None, attributes=None):
         """
         Add a configuration copying unset fields from the default configuration:
         """
@@ -229,5 +255,11 @@ class ConfigurationVisitor(object):
 
             if sim_options is not None:
                 config.sim_options.update(sim_options)
+
+            if attributes is not None:
+                for attribute in attributes:
+                    if not attribute.startswith("."):
+                        raise AttributeException
+                config.attributes.update(attributes)
 
             configs[config.name] = config
