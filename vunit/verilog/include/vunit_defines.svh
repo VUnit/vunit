@@ -53,3 +53,93 @@
              full_msg = {"CHECK_EQUAL failed! Got ",`"got`", "=",  got_str, " expected ", expected_str, ". ", msg}; \
              $error(full_msg); \
           end
+`define CHECK_GREATER(got,expected,msg=__none__) \
+        assert ((got) > (expected)) else \
+          begin \
+             string __none__; \
+             string got_str; \
+             string expected_str; \
+             string full_msg; \
+             int index; \
+             got_str = "";\
+             expected_str ="";\
+             $swrite(got_str, got); \
+             $swrite(expected_str, expected); \
+               for (int i=0; i<got_str.len(); i++) begin \
+                  if (got_str[i] != " ") begin \
+                     got_str = got_str.substr(i, got_str.len()-1); \
+                     break; \
+                  end \
+               end \
+               for (int i=0; i<expected_str.len(); i++) begin \
+                  if (expected_str[i] != " ") begin \
+                     expected_str = expected_str.substr(i, expected_str.len()-1); \
+                     break; \
+                  end \
+               end \
+             full_msg = {"CHECK_GREATER failed! Got ",`"got`", "=",  got_str, " expected greater than", expected_str, ". ", msg}; \
+             $error(full_msg); \
+          end
+`define CHECK_LESS(got,expected,msg=__none__) \
+        assert ((got) < (expected)) else \
+          begin \
+             string __none__; \
+             string got_str; \
+             string expected_str; \
+             string full_msg; \
+             int index; \
+             got_str = "";\
+             expected_str ="";\
+             $swrite(got_str, got); \
+             $swrite(expected_str, expected); \
+               for (int i=0; i<got_str.len(); i++) begin \
+                  if (got_str[i] != " ") begin \
+                     got_str = got_str.substr(i, got_str.len()-1); \
+                     break; \
+                  end \
+               end \
+               for (int i=0; i<expected_str.len(); i++) begin \
+                  if (expected_str[i] != " ") begin \
+                     expected_str = expected_str.substr(i, expected_str.len()-1); \
+                     break; \
+                  end \
+               end \
+             full_msg = {"CHECK_LESS failed! Got ",`"got`", "=",  got_str, " expected less than ", expected_str, ". ", msg}; \
+             $error(full_msg); \
+          end
+`define CHECK_EQUAL_VARIANCE(got,expected,variance,msg=__none__) \
+        assert (((got) < ((expected) + (variance))) && ((got) > ((expected) - (variance)))) else \
+          begin \
+             string __none__; \
+             string got_str; \
+             string expected_str; \
+			 string variance_str; \
+             string full_msg; \
+             int index; \
+             got_str = "";\
+			 variance_str = "";\
+             expected_str ="";\
+             $swrite(got_str, got); \
+			 $swrite(variance_str, variance); \
+             $swrite(expected_str, expected); \
+               for (int i=0; i<got_str.len(); i++) begin \
+                  if (got_str[i] != " ") begin \
+                     got_str = got_str.substr(i, got_str.len()-1); \
+                     break; \
+                  end \
+               end \
+			   for (int i=0; i<variance_str.len(); i++) begin \
+                  if (variance_str[i] != " ") begin \
+                     variance_str = variance_str.substr(i, variance_str.len()-1); \
+                     break; \
+                  end \
+               end \
+               for (int i=0; i<expected_str.len(); i++) begin \
+                  if (expected_str[i] != " ") begin \
+                     expected_str = expected_str.substr(i, expected_str.len()-1); \
+                     break; \
+                  end \
+               end \
+             full_msg = {"CHECK_EQUAL_VARIANCE failed! Got ",`"got`", "=",  got_str, " expected ", expected_str, ", +-", variance_str, ". ", msg}; \
+             $error(full_msg); \
+          end
