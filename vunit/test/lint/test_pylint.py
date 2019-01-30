@@ -24,4 +24,4 @@ class TestPylint(unittest.TestCase):
     def test_pylint():
         check_call([sys.executable, "-m", "pylint",
                     "--rcfile=" + join(dirname(__file__), "pylintrc")]
-                   + get_files_and_folders())
+                    + get_files_and_folders())
