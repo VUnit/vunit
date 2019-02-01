@@ -26,6 +26,7 @@
 
 `define TEST_CASE_SETUP if (__runner__.is_test_case_setup())
 `define TEST_CASE_CLEANUP if (__runner__.is_test_case_cleanup())
+`define __ERROR_FUNC(msg) $error(msg)
 `define CREATE_MSG(full_msg,func_name,got,expected,msg=__none) \
 	string __none__; \
 	string got_str; \
@@ -53,25 +54,25 @@
         assert ((got) === (expected)) else \
           begin \
 			 `CREATE_MSG(full_msg, "CHECK_EQUAL", got, expected, msg); \
-             $error(full_msg); \
+             `__ERROR_FUNC(full_msg); \
           end
 `define CHECK_NOT_EQUAL(got,expected,msg=__none__) \
         assert ((got) !== (expected)) else \
           begin \
              `CREATE_MSG(full_msg, "CHECK_NOT_EQUAL", got, expected, msg); \
-             $error(full_msg); \
+             `__ERROR_FUNC(full_msg); \
           end
 `define CHECK_GREATER(got,expected,msg=__none__) \
         assert ((got) > (expected)) else \
           begin \
              `CREATE_MSG(full_msg, "CHECK_GREATER", got, expected, msg); \
-             $error(full_msg); \
+             `__ERROR_FUNC(full_msg); \
           end
 `define CHECK_LESS(got,expected,msg=__none__) \
         assert ((got) < (expected)) else \
           begin \
              `CREATE_MSG(full_msg, "CHECK_LESS", got, expected, msg); \
-             $error(full_msg); \
+             `__ERROR_FUNC(full_msg); \
           end
 `define CHECK_EQUAL_VARIANCE(got,expected,variance,msg=__none__) \
         assert (((got) < ((expected) + (variance))) && ((got) > ((expected) - (variance)))) else \
@@ -107,5 +108,5 @@
                   end \
                end \
              full_msg = {"CHECK_EQUAL_VARIANCE failed! Got ",`"got`", "=",  got_str, " expected ", expected_str, ", +-", variance_str, ". ", msg}; \
-             $error(full_msg); \
+             `__ERROR_FUNC(full_msg); \
           end
