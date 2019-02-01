@@ -49,7 +49,7 @@
 			break; \
 		end \
 	end \
-	full_msg = {func_name, " failed! Got ",`"got`", "=",  got_str, " expected ", expected_str, ". ", msg}; 
+	full_msg = {func_name, " failed! Got ", got_str, " expected ", expected_str, ". ", msg}; 
 `define CHECK_EQUAL(got,expected,msg=__none__) \
         assert ((got) === (expected)) else \
           begin \
@@ -107,6 +107,6 @@
                      break; \
                   end \
                end \
-             full_msg = {"CHECK_EQUAL_VARIANCE failed! Got ",`"got`", "=",  got_str, " expected ", expected_str, ", +-", variance_str, ". ", msg}; \
+             full_msg = {"CHECK_EQUAL_VARIANCE failed! Got ", got_str, " expected ", expected_str, ", +-", variance_str, ". ", msg}; \
              `__ERROR_FUNC(full_msg); \
           end
