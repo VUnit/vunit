@@ -30,22 +30,19 @@ module check_tb;
 	string test_output;
 	string test_expected;
 	string err_msg;
-	
 	function bit check_string_empty(string str);
-		if (str.compare("") !== 1) 
+		if (str.len() == 0)
 			return 1;
 		else
 			return 0;
 	endfunction
-	
 	function void check_macro_output(string actual, string expected);
-		assert ( actual.compare(expected) == 0) else	
+		assert ( actual.compare(expected) == 0) else
 			begin
 				$sformat(err_msg, "CHECK_EQUAL_ERROR: Failure message not as expected.\n RECV: |%f|\n  EXP: |%f|\n", actual, expected);
 				$error(err_msg);
 			end;
 	endfunction;
-
 	`TEST_SUITE begin
 		`TEST_SUITE_SETUP begin
 			case_data1 = new();
@@ -72,11 +69,10 @@ module check_tb;
 			`CHECK_EQUAL_VARIANCE(case_greater, case_data1.data_int, 2);
 			assert(check_string_empty(test_output) == 1);
 		end
-		`TEST_CASE("CHECK_EQUAL failure message") begin
+		`TEST_CASE("CHECK_EQUAL failure message integer") begin
 			// Check printouts for correct error messages
 			for (int x = 0; x < `MAX_TESTS; x++) begin
 				case_data1.make_random();
-				case_greater = case_data1.data_int+1;
 				`CHECK_EQUAL(case_data1.data_int, case_greater, "This test should fail.");
 				$sformat(test_expected, "CHECK_EQUAL failed! Got %d expected %d. This test should fail.", case_data1.data_int, case_greater);
 				check_macro_output(test_output, test_expected);
@@ -87,7 +83,8 @@ module check_tb;
 				test_output = "";
 			end
 		end
-		`TEST_CASE("CHECK_NOT_EQUAL failure message") begin
+		`TEST_CASE("CHECK_NOT_EQUAL failure message integer") begin
+			// Check printouts for correct error messages
 			for (int x = 0; x < `MAX_TESTS; x++) begin
 				case_data1.make_random();
 				case_greater = case_data1.data_int+1;
@@ -101,7 +98,8 @@ module check_tb;
 				test_output = "";
 			end
 		end
-		`TEST_CASE("CHECK_GREATER failure message") begin
+		`TEST_CASE("CHECK_GREATER failure message integer") begin
+			// Check printouts for correct error messages
 			for (int x = 0; x < `MAX_TESTS; x++) begin
 				case_data1.make_random();
 				`CHECK_GREATER(case_data1.data_int, case_data1.data_int, "This test should fail.");
@@ -114,7 +112,8 @@ module check_tb;
 				test_output = "";
 			end
 		end
-		`TEST_CASE("CHECK_LESS failure message") begin
+		`TEST_CASE("CHECK_LESS failure message integer") begin
+			// Check printouts for correct error messages
 			for (int x = 0; x < `MAX_TESTS; x++) begin
 				case_data1.make_random();
 				`CHECK_LESS(case_data1.data_int, case_data1.data_int, "This test should fail.");
@@ -127,7 +126,8 @@ module check_tb;
 				test_output = "";
 			end
 		end
-		`TEST_CASE("CHECK_EQUAL_VARIANCE failure message") begin
+		`TEST_CASE("CHECK_EQUAL_VARIANCE failure message integer") begin
+			// Check printouts for correct error messages
 			integer rand_int1, rand_int2;
 			for (int x = 0; x < `MAX_TESTS; x++) begin
 				rand_int1 = $random();
@@ -141,6 +141,6 @@ module check_tb;
 				check_macro_output(test_output, test_expected);
 				test_output = "";
 			end
-		end 
+		end
 	end
 endmodule
