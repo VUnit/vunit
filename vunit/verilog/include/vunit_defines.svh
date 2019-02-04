@@ -29,27 +29,8 @@
 `define __ERROR_FUNC(msg) $error(msg)
 `define CREATE_MSG(full_msg,func_name,got,expected,msg=__none) \
 	string __none__; \
-	string got_str; \
-	string expected_str; \
 	string full_msg; \
-	int index; \
-	got_str = "";\
-	expected_str ="";\
-	$swrite(got_str, got); \
-	$swrite(expected_str, expected); \
-	for (int i=0; i<got_str.len(); i++) begin \
-		if (got_str[i] != " ") begin \
-			got_str = got_str.substr(i, got_str.len()-1); \
-			break; \
-		end \
-	end \
-	for (int i=0; i<expected_str.len(); i++) begin \
-		if (expected_str[i] != " ") begin \
-			expected_str = expected_str.substr(i, expected_str.len()-1); \
-			break; \
-		end \
-	end \
-	full_msg = {func_name, " failed! Got ", got_str, " expected ", expected_str, ". ", msg}; 
+	$sformat(full_msg, "%s failed! Got %d expected %d. %s", func_name, got, expected, msg); 
 `define CHECK_EQUAL(got,expected,msg=__none__) \
         assert ((got) === (expected)) else \
           begin \
@@ -78,35 +59,7 @@
         assert (((got) < ((expected) + (variance))) && ((got) > ((expected) - (variance)))) else \
           begin \
              string __none__; \
-             string got_str; \
-             string expected_str; \
-			 string variance_str; \
              string full_msg; \
-             int index; \
-             got_str = "";\
-			 variance_str = "";\
-             expected_str ="";\
-             $swrite(got_str, got); \
-			 $swrite(variance_str, variance); \
-             $swrite(expected_str, expected); \
-               for (int i=0; i<got_str.len(); i++) begin \
-                  if (got_str[i] != " ") begin \
-                     got_str = got_str.substr(i, got_str.len()-1); \
-                     break; \
-                  end \
-               end \
-			   for (int i=0; i<variance_str.len(); i++) begin \
-                  if (variance_str[i] != " ") begin \
-                     variance_str = variance_str.substr(i, variance_str.len()-1); \
-                     break; \
-                  end \
-               end \
-               for (int i=0; i<expected_str.len(); i++) begin \
-                  if (expected_str[i] != " ") begin \
-                     expected_str = expected_str.substr(i, expected_str.len()-1); \
-                     break; \
-                  end \
-               end \
-             full_msg = {"CHECK_EQUAL_VARIANCE failed! Got ", got_str, " expected ", expected_str, ", +-", variance_str, ". ", msg}; \
+             $sformat(full_msg, "CHECK_EQUAL_VARIANCE failed! Got %d expected %d +- %d. %s", got, expected, variance, msg); \
              `__ERROR_FUNC(full_msg); \
           end
