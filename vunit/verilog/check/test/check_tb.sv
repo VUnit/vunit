@@ -8,6 +8,7 @@
 `include "vunit_defines.svh"
 `define __ERROR_FUNC(err_msg) $sformat(test_output, "%s", err_msg);
 `define MAX_TESTS 512
+`define TEST_VARIANCE 5
 
 module check_tb;
 
@@ -25,8 +26,9 @@ module check_tb;
 			data_time = time'($random());
 		endfunction
 	endclass
-	test_data case_data1;
-	integer case_greater, case_less;
+	test_data tc_data1;
+	test_data tc_data2;
+	integer tc_greater, tc_less;
 	string test_output;
 	string test_expected;
 	string err_msg;
@@ -45,101 +47,204 @@ module check_tb;
 	endfunction;
 	`TEST_SUITE begin
 		`TEST_SUITE_SETUP begin
-			case_data1 = new();
-			case_data1.make_random();
-			case_greater = case_data1.data_int+1;
-			case_less = case_data1.data_int-1;
+			string str;
+			tc_data1 = new();
+			tc_data2 = new();
+			tc_data1.make_random();
+			tc_greater = tc_data1.data_int+1;
+			tc_less = tc_data1.data_int-1;
 			test_output = "";
 		end
 		`TEST_CASE("Check Macros Are Visible") begin
-			// if(!case_data1.randomize())
+			// if(!tc_data1.randomize())
 			//	$error("Randomization failed");
 			// Since $error is overriden by a macro, we need to explicitly check
 			// test output. The test_output string is only empty if the test passes.
-			`CHECK_EQUAL(case_data1.data_int, case_data1.data_int);
+			`CHECK_EQUAL(tc_data1.data_int, tc_data1.data_int);
 			assert(check_string_empty(test_output) == 1);
-			`CHECK_NOT_EQUAL(case_data1.data_int, case_greater);
+			`CHECK_NOT_EQUAL(tc_data1.data_int, tc_greater);
 			assert(check_string_empty(test_output) == 1);
-			`CHECK_GREATER(case_greater, case_data1.data_int);
+			`CHECK_GREATER(tc_greater, tc_data1.data_int);
 			assert(check_string_empty(test_output) == 1);
-			`CHECK_LESS(case_less, case_data1.data_int);
+			`CHECK_LESS(tc_less, tc_data1.data_int);
 			assert(check_string_empty(test_output) == 1);
-			`CHECK_EQUAL_VARIANCE(case_less, case_data1.data_int, 2);
+			`CHECK_EQUAL_VARIANCE(tc_less, tc_data1.data_int, 2);
 			assert(check_string_empty(test_output) == 1);
-			`CHECK_EQUAL_VARIANCE(case_greater, case_data1.data_int, 2);
+			`CHECK_EQUAL_VARIANCE(tc_greater, tc_data1.data_int, 2);
 			assert(check_string_empty(test_output) == 1);
 		end
-		`TEST_CASE("CHECK_EQUAL failure message integer") begin
-			// Check printouts for correct error messages
-			for (int x = 0; x < `MAX_TESTS; x++) begin
-				case_data1.make_random();
-				`CHECK_EQUAL(case_data1.data_int, case_greater, "This test should fail.");
-				$sformat(test_expected, "CHECK_EQUAL failed! Got %d expected %d. This test should fail.", case_data1.data_int, case_greater);
-				check_macro_output(test_output, test_expected);
-				test_output = "";
-				`CHECK_EQUAL(case_data1.data_int, case_greater);
-				$sformat(test_expected, "CHECK_EQUAL failed! Got %d expected %d. ", case_data1.data_int, case_greater);
-				check_macro_output(test_output, test_expected);
-				test_output = "";
-			end
+		`TEST_CASE("CREATE_MSG output w message") begin
+			`CREATE_MSG(full_msg, "CHECK_EQUAL", tc_data1.data_int, tc_greater, "This test should fail.");
+			$sformat(test_expected, "CHECK_EQUAL failed! Got %d expected %d. This test should fail.", tc_data1.data_int, tc_greater);
+			check_macro_output(full_msg, test_expected);
 		end
-		`TEST_CASE("CHECK_NOT_EQUAL failure message integer") begin
-			// Check printouts for correct error messages
-			for (int x = 0; x < `MAX_TESTS; x++) begin
-				case_data1.make_random();
-				case_greater = case_data1.data_int+1;
-				`CHECK_NOT_EQUAL(case_data1.data_int, case_data1.data_int, "This test should fail.");
-				$sformat(test_expected, "CHECK_NOT_EQUAL failed! Got %d expected %d. This test should fail.", case_data1.data_int, case_data1.data_int);
-				check_macro_output(test_output, test_expected);
-				test_output = "";
-				`CHECK_NOT_EQUAL(case_data1.data_int, case_data1.data_int);
-				$sformat(test_expected, "CHECK_NOT_EQUAL failed! Got %d expected %d. ", case_data1.data_int, case_data1.data_int);
-				check_macro_output(test_output, test_expected);
-				test_output = "";
-			end
-		end
-		`TEST_CASE("CHECK_GREATER failure message integer") begin
-			// Check printouts for correct error messages
-			for (int x = 0; x < `MAX_TESTS; x++) begin
-				case_data1.make_random();
-				`CHECK_GREATER(case_data1.data_int, case_data1.data_int, "This test should fail.");
-				$sformat(test_expected, "CHECK_GREATER failed! Got %d expected %d. This test should fail.", case_data1.data_int, case_data1.data_int);
-				check_macro_output(test_output, test_expected);
-				test_output = "";
-				`CHECK_GREATER(case_data1.data_int, case_data1.data_int);
-				$sformat(test_expected, "CHECK_GREATER failed! Got %d expected %d. ", case_data1.data_int, case_data1.data_int);
-				check_macro_output(test_output, test_expected);
-				test_output = "";
-			end
-		end
-		`TEST_CASE("CHECK_LESS failure message integer") begin
-			// Check printouts for correct error messages
-			for (int x = 0; x < `MAX_TESTS; x++) begin
-				case_data1.make_random();
-				`CHECK_LESS(case_data1.data_int, case_data1.data_int, "This test should fail.");
-				$sformat(test_expected, "CHECK_LESS failed! Got %d expected %d. This test should fail.", case_data1.data_int, case_data1.data_int);
-				check_macro_output(test_output, test_expected);
-				test_output = "";
-				`CHECK_LESS(case_data1.data_int, case_data1.data_int);
-				$sformat(test_expected, "CHECK_LESS failed! Got %d expected %d. ", case_data1.data_int, case_data1.data_int);
-				check_macro_output(test_output, test_expected);
-				test_output = "";
-			end
+		`TEST_CASE("CREATE_MSG output wo message") begin
+			`CREATE_MSG(full_msg, "CHECK_EQUAL", tc_data1.data_int, tc_greater);
+			$sformat(test_expected, "CHECK_EQUAL failed! Got %d expected %d. ", tc_data1.data_int, tc_greater);
+			check_macro_output(full_msg, test_expected);
 		end
 		`TEST_CASE("CHECK_EQUAL_VARIANCE failure message integer") begin
 			// Check printouts for correct error messages
 			integer rand_int1, rand_int2;
+			rand_int1 = $random();
+			rand_int2 = rand_int1 + 15;
+			`CHECK_EQUAL_VARIANCE(rand_int1, rand_int2, 5, "This test should fail.");
+			$sformat(test_expected, "CHECK_EQUAL_VARIANCE failed! Got %d expected %d +- %d. This test should fail.", rand_int1, rand_int2, 5);
+			check_macro_output(test_output, test_expected);
+			test_output = "";
+			`CHECK_EQUAL_VARIANCE(rand_int1, rand_int2, 5);
+			$sformat(test_expected, "CHECK_EQUAL_VARIANCE failed! Got %d expected %d +- %d. ", rand_int1, rand_int2, 5);
+			check_macro_output(test_output, test_expected);
+			test_output = "";
+		end
+		`TEST_CASE("CHECK_EQUAL Int Random Tests") begin
 			for (int x = 0; x < `MAX_TESTS; x++) begin
-				rand_int1 = $random();
-				rand_int2 = rand_int1 + 15;
-				`CHECK_EQUAL_VARIANCE(rand_int1, rand_int2, 5, "This test should fail.");
-				$sformat(test_expected, "CHECK_EQUAL_VARIANCE failed! Got %d expected %d +- %d. This test should fail.", rand_int1, rand_int2, 5);
-				check_macro_output(test_output, test_expected);
-				test_output = "";
-				`CHECK_EQUAL_VARIANCE(rand_int1, rand_int2, 5);
-				$sformat(test_expected, "CHECK_EQUAL_VARIANCE failed! Got %d expected %d +- %d. ", rand_int1, rand_int2, 5);
-				check_macro_output(test_output, test_expected);
-				test_output = "";
+				tc_data1.make_random();
+				tc_data2.make_random();
+				`CHECK_EQUAL(tc_data1.data_int, tc_data2.data_int);
+				if (tc_data1.data_int == tc_data2.data_int) begin
+					assert(check_string_empty(test_output) == 1);
+				end
+				else begin
+					$sformat(test_expected, "CHECK_EQUAL failed! Got %d expected %d. ", tc_data1.data_int, tc_data2.data_int);
+					check_macro_output(test_output, test_expected);
+					test_output = "";
+				end
+			end
+		end
+		`TEST_CASE("CHECK_NOT_EQUAL Int Random Tests") begin
+			for (int x = 0; x < `MAX_TESTS; x++) begin
+				tc_data1.make_random();
+				tc_data2.make_random();
+				`CHECK_NOT_EQUAL(tc_data1.data_int, tc_data2.data_int);
+				if (tc_data1.data_int !== tc_data2.data_int) begin
+					assert(check_string_empty(test_output) == 1);
+				end
+				else begin
+					$sformat(test_expected, "CHECK_NOT_EQUAL failed! Got %d expected %d. ", tc_data1.data_int, tc_data2.data_int);
+					check_macro_output(test_output, test_expected);
+					test_output = "";
+				end
+			end
+		end
+		`TEST_CASE("CHECK_GREATER Int Random Tests") begin
+			for (int x = 0; x < `MAX_TESTS; x++) begin
+				tc_data1.make_random();
+				tc_data2.make_random();
+				`CHECK_GREATER(tc_data1.data_int, tc_data2.data_int);
+				if (tc_data1.data_int > tc_data2.data_int) begin
+					assert(check_string_empty(test_output) == 1);
+				end
+				else begin
+					$sformat(test_expected, "CHECK_GREATER failed! Got %d expected %d. ", tc_data1.data_int, tc_data2.data_int);
+					check_macro_output(test_output, test_expected);
+					test_output = "";
+				end
+			end
+		end
+		`TEST_CASE("CHECK_LESS Int Random Tests") begin
+			for (int x = 0; x < `MAX_TESTS; x++) begin
+				tc_data1.make_random();
+				tc_data2.make_random();
+				`CHECK_LESS(tc_data1.data_int, tc_data2.data_int);
+				if (tc_data1.data_int < tc_data2.data_int) begin
+					assert(check_string_empty(test_output) == 1);
+				end
+				else begin
+					$sformat(test_expected, "CHECK_LESS failed! Got %d expected %d. ", tc_data1.data_int, tc_data2.data_int);
+					check_macro_output(test_output, test_expected);
+					test_output = "";
+				end
+			end
+		end
+		`TEST_CASE("CHECK_EQUAL_VARIANCE Int Random Tests") begin
+			for (int x = 0; x < `MAX_TESTS; x++) begin
+				tc_data1.make_random();
+				tc_data2.make_random();
+				`CHECK_EQUAL_VARIANCE(tc_data1.data_int, tc_data2.data_int, `TEST_VARIANCE);
+				if ((tc_data1.data_int > tc_data2.data_int - `TEST_VARIANCE) && (tc_data1.data_int < tc_data2.data_int + `TEST_VARIANCE)) begin
+					assert(check_string_empty(test_output) == 1);
+				end
+				else begin
+					$sformat(test_expected, "CHECK_EQUAL_VARIANCE failed! Got %d expected %d +- %d. ", tc_data1.data_int, tc_data2.data_int, `TEST_VARIANCE);
+					check_macro_output(test_output, test_expected);
+					test_output = "";
+				end
+			end
+		end
+		`TEST_CASE("CHECK_EQUAL Time Random Tests") begin
+			for (time x = 0; x < `MAX_TESTS; x++) begin
+				tc_data1.make_random();
+				tc_data2.make_random();
+				`CHECK_EQUAL(tc_data1.data_time, tc_data2.data_time);
+				if (tc_data1.data_time == tc_data2.data_time) begin
+					assert(check_string_empty(test_output) == 1);
+				end
+				else begin
+					$sformat(test_expected, "CHECK_EQUAL failed! Got %d expected %d. ", tc_data1.data_time, tc_data2.data_time);
+					check_macro_output(test_output, test_expected);
+					test_output = "";
+				end
+			end
+		end
+		`TEST_CASE("CHECK_NOT_EQUAL Time Random Tests") begin
+			for (time x = 0; x < `MAX_TESTS; x++) begin
+				tc_data1.make_random();
+				tc_data2.make_random();
+				`CHECK_NOT_EQUAL(tc_data1.data_time, tc_data2.data_time);
+				if (tc_data1.data_time !== tc_data2.data_time) begin
+					assert(check_string_empty(test_output) == 1);
+				end
+				else begin
+					$sformat(test_expected, "CHECK_NOT_EQUAL failed! Got %d expected %d. ", tc_data1.data_time, tc_data2.data_time);
+					check_macro_output(test_output, test_expected);
+					test_output = "";
+				end
+			end
+		end
+		`TEST_CASE("CHECK_GREATER Time Random Tests") begin
+			for (int x = 0; x < `MAX_TESTS; x++) begin
+				tc_data1.make_random();
+				tc_data2.make_random();
+				`CHECK_GREATER(tc_data1.data_time, tc_data2.data_time);
+				if (tc_data1.data_time > tc_data2.data_time) begin
+					assert(check_string_empty(test_output) == 1);
+				end
+				else begin
+					$sformat(test_expected, "CHECK_GREATER failed! Got %d expected %d. ", tc_data1.data_time, tc_data2.data_time);
+					check_macro_output(test_output, test_expected);
+					test_output = "";
+				end
+			end
+		end
+		`TEST_CASE("CHECK_LESS Time Random Tests") begin
+			for (int x = 0; x < `MAX_TESTS; x++) begin
+				tc_data1.make_random();
+				tc_data2.make_random();
+				`CHECK_LESS(tc_data1.data_time, tc_data2.data_time);
+				if (tc_data1.data_time < tc_data2.data_time) begin
+					assert(check_string_empty(test_output) == 1);
+				end
+				else begin
+					$sformat(test_expected, "CHECK_LESS failed! Got %d expected %d. ", tc_data1.data_time, tc_data2.data_time);
+					check_macro_output(test_output, test_expected);
+					test_output = "";
+				end
+			end
+		end
+		`TEST_CASE("CHECK_EQUAL_VARIANCE Time Random Tests") begin
+			for (int x = 0; x < `MAX_TESTS; x++) begin
+				tc_data1.make_random();
+				tc_data2.make_random();
+				`CHECK_EQUAL_VARIANCE(tc_data1.data_time, tc_data2.data_time, `TEST_VARIANCE);
+				if ((tc_data1.data_time > tc_data2.data_time - `TEST_VARIANCE) && (tc_data1.data_time < tc_data2.data_time + `TEST_VARIANCE)) begin
+					assert(check_string_empty(test_output) == 1);
+				end
+				else begin
+					$sformat(test_expected, "CHECK_EQUAL_VARIANCE failed! Got %d expected %d +- %d. ", tc_data1.data_time, tc_data2.data_time, `TEST_VARIANCE);
+					check_macro_output(test_output, test_expected);
+					test_output = "";
+				end
 			end
 		end
 	end

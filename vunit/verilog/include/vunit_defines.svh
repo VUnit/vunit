@@ -27,7 +27,7 @@
 `define TEST_CASE_SETUP if (__runner__.is_test_case_setup())
 `define TEST_CASE_CLEANUP if (__runner__.is_test_case_cleanup())
 `define __ERROR_FUNC(msg) $error(msg)
-`define CREATE_MSG(full_msg,func_name,got,expected,msg=__none) \
+`define CREATE_MSG(full_msg,func_name,got,expected,msg=__none__) \
 	string __none__; \
 	string full_msg; \
 	$sformat(full_msg, "%s failed! Got %d expected %d. %s", func_name, got, expected, msg); 
