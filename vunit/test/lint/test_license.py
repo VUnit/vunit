@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 License header sanity check
@@ -30,7 +30,7 @@ RE_LICENSE_NOTICE = re.compile(
 RE_LOG_DATE = re.compile(r'Date:\s*(?P<year>20\d\d)-\d\d-\d\d')
 
 FIRST_YEAR = 2014
-LAST_YEAR = 2018
+LAST_YEAR = 2019
 
 
 class TestLicense(unittest.TestCase):
