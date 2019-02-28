@@ -292,10 +292,9 @@ The JSON export file has three top level values:
 
   - ``export_format_version``: The `semantic <https://semver.org/>`_ version of the format
   - ``files``: List of project files. Each file item has ``file_name`` and ``library_name``.
-  - ``tests``: List of tests. Each test has ``location``
-    information. The ``location`` contains the file name as well as
-    the offset and length in characters of the symbol that defines the
-    test.
+  - ``tests``: List of tests. Each test has ``attributes``, ``location`` and ``name``
+    information. Attributes is the list of test attributes. The ``location`` contains the file name as well as
+    the offset and length in characters of the symbol that defines the test. ``name`` is the name of the test.
 
 .. code-block:: json
    :caption: Example JSON export file (file names are always absolute but the example has been simplified)
@@ -336,7 +335,9 @@ The JSON export file has three top level values:
                "name": "lib.tb_example_many.test_fail"
            },
            {
-               "attributes": {".attr"},
+               "attributes": {
+                   ".attr": null
+               },
                "location": {
                    "file_name": "tb_example.vhd",
                    "length": 18,
