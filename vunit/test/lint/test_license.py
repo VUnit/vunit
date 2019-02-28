@@ -10,6 +10,7 @@ License header sanity check
 from __future__ import print_function
 
 import unittest
+from warnings import simplefilter, catch_warnings
 from os.path import join, splitext, abspath, commonprefix
 from os import walk
 import re
@@ -47,8 +48,10 @@ class TestLicense(unittest.TestCase):
                 self._check_no_trailing_whitespace(code, file_name)
 
     def test_that_license_file_matches_vunit_license_text(self):
-        with open(join(ROOT, 'LICENSE.txt'), "rU") as lic:
-            self.assertEqual(lic.read(), license_text())
+        with catch_warnings():
+            simplefilter("ignore", category=DeprecationWarning)
+            with open(join(ROOT, 'LICENSE.txt'), "rU") as lic:
+                self.assertEqual(lic.read(), license_text())
 
     def _check_license(self, code, file_name):
         """

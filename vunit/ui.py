@@ -627,12 +627,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         if len(files) > 1:
             raise ValueError("Found file named '%s' in multiple-libraries, "
                              "add explicit library_name." % file_name)
-        elif not files:
+        if not files:
             if library_name is None:
                 raise ValueError("Found no file named '%s'" % file_name)
-            else:
-                raise ValueError("Found no file named '%s' in library '%s'"
-                                 % (file_name, library_name))
+
+            raise ValueError("Found no file named '%s' in library '%s'"
+                             % (file_name, library_name))
         return files[0]
 
     def get_source_files(self, pattern="*", library_name=None, allow_empty=False):

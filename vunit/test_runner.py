@@ -161,8 +161,8 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                 if is_main:
                     LOGGER.debug("MainWorkerThread: Caught Ctrl-C shutting down")
                     raise
-                else:
-                    return
+
+                return
 
             finally:
                 if test_suite is not None:

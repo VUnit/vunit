@@ -89,7 +89,7 @@ class TestBench(ConfigurationVisitor):
                 raise RuntimeError("Test bench '%s' has no architecture."
                                    % design_unit.name)
 
-            elif len(design_unit.architecture_names) > 1:
+            if len(design_unit.architecture_names) > 1:
                 raise RuntimeError("Test bench not allowed to have multiple architectures. "
                                    "Entity %s has %s"
                                    % (design_unit.name,
@@ -492,8 +492,8 @@ def _check_duplicates(attrs, file_name, test_name=None):
 
             raise RuntimeError("Duplicate attribute %s of %s, previously defined on line %i"
                                % (attr.name, loc, previous[attr.name].location.lineno))
-        else:
-            previous[attr.name] = attr
+
+        previous[attr.name] = attr
 
 
 def _find_tests_and_attributes(content, file_name):
