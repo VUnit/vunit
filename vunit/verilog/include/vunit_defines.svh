@@ -27,32 +27,42 @@
 `define TEST_CASE_SETUP if (__runner__.is_test_case_setup())
 `define TEST_CASE_CLEANUP if (__runner__.is_test_case_cleanup())
 `define __ERROR_FUNC(msg) $error(msg)
-`define CREATE_MSG(full_msg,func_name,got,expected,msg=__none__) \
+`define CREATE_ARG_STRING(arg, arg_str) \
+	$swrite(arg_str, arg); \
+	for (int i=0; i<arg_str.len(); i++) begin \
+		if (arg_str[i] != " ") begin \
+			arg_str = arg_str.substr(i, arg_str.len()-1); \
+		break; \
+		end \
+	end 
+`define CREATE_MSG(full_msg,func_name,got,expected,prefix,msg=__none__) \
 	string __none__; \
 	string full_msg; \
-	$sformat(full_msg, "%s failed! Got %0d expected %0d. %s", func_name, got, expected, msg); 
+	string got_str; \
+	`CREATE_ARG_STRING(got, got_str); \
+	$sformat(full_msg, "%s failed! Got %s%s%0d expected %s%0d. %s", func_name, got_str, prefix, got, prefix, expected, msg); 
 `define CHECK_EQUAL(got,expected,msg=__none__) \
         assert ((got) === (expected)) else \
           begin \
-			 `CREATE_MSG(full_msg, "CHECK_EQUAL", got, expected, msg); \
+			 `CREATE_MSG(full_msg, "CHECK_EQUAL", got, expected, "=", msg); \
              `__ERROR_FUNC(full_msg); \
           end
 `define CHECK_NOT_EQUAL(got,expected,msg=__none__) \
         assert ((got) !== (expected)) else \
           begin \
-             `CREATE_MSG(full_msg, "CHECK_NOT_EQUAL", got, expected, msg); \
+             `CREATE_MSG(full_msg, "CHECK_NOT_EQUAL", got, expected, "!=", msg); \
              `__ERROR_FUNC(full_msg); \
           end
 `define CHECK_GREATER(got,expected,msg=__none__) \
         assert ((got) > (expected)) else \
           begin \
-             `CREATE_MSG(full_msg, "CHECK_GREATER", got, expected, msg); \
+             `CREATE_MSG(full_msg, "CHECK_GREATER", got, expected, ">", msg); \
              `__ERROR_FUNC(full_msg); \
           end
 `define CHECK_LESS(got,expected,msg=__none__) \
         assert ((got) < (expected)) else \
           begin \
-             `CREATE_MSG(full_msg, "CHECK_LESS", got, expected, msg); \
+             `CREATE_MSG(full_msg, "CHECK_LESS", got, expected, "<", msg); \
              `__ERROR_FUNC(full_msg); \
           end
 `define CHECK_EQUAL_VARIANCE(got,expected,variance,msg=__none__) \
@@ -60,6 +70,8 @@
           begin \
              string __none__; \
              string full_msg; \
-             $sformat(full_msg, "CHECK_EQUAL_VARIANCE failed! Got %0d expected %0d +- %0d. %s", got, expected, variance, msg); \
+			 string got_str; \
+			 `CREATE_ARG_STRING(got, got_str); \
+             $sformat(full_msg, "CHECK_EQUAL_VARIANCE failed! Got %s=%0d expected %0d +- %0d. %s", got_str, got, expected, variance, msg); \
              `__ERROR_FUNC(full_msg); \
           end
