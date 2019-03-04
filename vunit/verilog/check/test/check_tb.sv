@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at http://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
+// Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
 `timescale 10ns / 10ns
 `include "vunit_defines.svh"
@@ -56,8 +56,6 @@ module check_tb;
 			test_output = "";
 		end
 		`TEST_CASE("Check Macros Are Visible") begin
-			// if(!tc_data1.randomize())
-			//	$error("Randomization failed");
 			// Since $error is overriden by a macro, we need to explicitly check
 			// test output. The test_output string is only empty if the test passes.
 			`CHECK_EQUAL(tc_data1.data_int, tc_data1.data_int);
@@ -81,6 +79,11 @@ module check_tb;
 		`TEST_CASE("CREATE_MSG output wo message") begin
 			`CREATE_MSG(full_msg, "CHECK_EQUAL", tc_data1.data_int, tc_greater);
 			$sformat(test_expected, "CHECK_EQUAL failed! Got %d expected %d. ", tc_data1.data_int, tc_greater);
+			check_macro_output(full_msg, test_expected);
+		end
+		`TEST_CASE("Test that there are no extra spaces") begin
+			`CREATE_MSG(full_msg, "CHECK_EQUAL", 17, 21, "This test should fail.");
+			$sformat(test_expected, "CHECK_EQUAL failed! Got 17 expected 21. This test should fail.");
 			check_macro_output(full_msg, test_expected);
 		end
 		`TEST_CASE("CHECK_EQUAL_VARIANCE failure message integer") begin
