@@ -30,7 +30,7 @@
 `define CREATE_MSG(full_msg,func_name,got,expected,msg=__none__) \
 	string __none__; \
 	string full_msg; \
-	$sformat(full_msg, "%s failed! Got %d expected %d. %s", func_name, got, expected, msg); 
+	$sformat(full_msg, "%s failed! Got %0d expected %0d. %s", func_name, got, expected, msg); 
 `define CHECK_EQUAL(got,expected,msg=__none__) \
         assert ((got) === (expected)) else \
           begin \
@@ -60,6 +60,6 @@
           begin \
              string __none__; \
              string full_msg; \
-             $sformat(full_msg, "CHECK_EQUAL_VARIANCE failed! Got %d expected %d +- %d. %s", got, expected, variance, msg); \
+             $sformat(full_msg, "CHECK_EQUAL_VARIANCE failed! Got %0d expected %0d +- %0d. %s", got, expected, variance, msg); \
              `__ERROR_FUNC(full_msg); \
           end
