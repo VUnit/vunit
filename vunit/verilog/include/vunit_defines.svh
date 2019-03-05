@@ -37,10 +37,15 @@
 	end 
 `define CREATE_MSG(full_msg,func_name,got,expected,prefix,msg=__none__) \
 	string __none__; \
-	string full_msg; \
 	string got_str; \
+	string expected_str; \
+	string full_msg; \
+	int index; \
+	got_str = "";\
+	expected_str ="";\
 	`CREATE_ARG_STRING(got, got_str); \
-	$sformat(full_msg, "%s failed! Got %s%s%0d expected %s%0d. %s", func_name, got_str, prefix, got, prefix, expected, msg); 
+	`CREATE_ARG_STRING(expected, expected_str); \
+	full_msg = {func_name, " failed! Got ",`"got`", "=",  got_str, " expected ", prefix, expected_str, ". ", msg}; 
 `define CHECK_EQUAL(got,expected,msg=__none__) \
         assert ((got) === (expected)) else \
           begin \
@@ -68,10 +73,18 @@
 `define CHECK_EQUAL_VARIANCE(got,expected,variance,msg=__none__) \
         assert (((got) < ((expected) + (variance))) && ((got) > ((expected) - (variance)))) else \
           begin \
-             string __none__; \
-             string full_msg; \
-			 string got_str; \
-			 `CREATE_ARG_STRING(got, got_str); \
-             $sformat(full_msg, "CHECK_EQUAL_VARIANCE failed! Got %s=%0d expected %0d +- %0d. %s", got_str, got, expected, variance, msg); \
+			string __none__; \
+			string got_str; \
+			string expected_str; \
+			string variance_str; \
+			string full_msg; \
+			int index; \
+			got_str = "";\
+			expected_str ="";\
+			variance_str="";\
+			`CREATE_ARG_STRING(got, got_str); \
+			`CREATE_ARG_STRING(expected, expected_str); \
+			`CREATE_ARG_STRING(variance, variance_str); \
+             full_msg = {"CHECK_EQUAL_VARIANCE failed! Got ",`"got`", "=",  got_str, " expected =", expected_str, ", +-", variance_str, ". ", msg}; \
              `__ERROR_FUNC(full_msg); \
           end
