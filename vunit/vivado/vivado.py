@@ -14,7 +14,7 @@ from os import makedirs
 from os.path import abspath, join, dirname, exists, basename
 
 
-def add_from_compile_order_file(vunit_obj, compile_order_file):
+def add_from_compile_order_file(vunit_obj, compile_order_file, dependency_scan_defaultlib=True):
     """
     Add Vivado IP:s from a compile order file
     """
@@ -32,8 +32,9 @@ def add_from_compile_order_file(vunit_obj, compile_order_file):
     for library_name, file_name in compile_order:
         is_verilog = file_name.endswith(".v") or file_name.endswith(".vp")
 
-        # Use VUnit dependency scanning for everything in xil_defaultlib
-        scan_dependencies = library_name == "xil_defaultlib"
+        # Optionally use VUnit dependency scanning for everything in xil_defaultlib, which
+        # typically contains unencrypted top levels that instantiate encrypted implementations.
+        scan_dependencies = dependency_scan_defaultlib and library_name == "xil_defaultlib"
         source_file = vunit_obj.library(library_name).add_source_file(
             file_name,
             no_parse=not scan_dependencies,
