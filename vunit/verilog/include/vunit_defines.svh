@@ -49,7 +49,7 @@
 `define CHECK_EQUAL(got,expected,msg=__none__) \
         assert ((got) === (expected)) else \
           begin \
-          `CREATE_MSG(full_msg, "CHECK_EQUAL", got, expected, "=", msg); \
+          `CREATE_MSG(full_msg, "CHECK_EQUAL", got, expected, "", msg); \
              `__ERROR_FUNC(full_msg); \
           end
 `define CHECK_NOT_EQUAL(got,expected,msg=__none__) \
@@ -85,6 +85,6 @@
          `CREATE_ARG_STRING(got, got_str); \
          `CREATE_ARG_STRING(expected, expected_str); \
          `CREATE_ARG_STRING(variance, variance_str); \
-             full_msg = {"CHECK_EQUAL_VARIANCE failed! Got ",`"got`", "=",  got_str, " expected =", expected_str, ", +-", variance_str, ". ", msg}; \
+             full_msg = {"CHECK_EQUAL_VARIANCE failed! Got ",`"got`", "=",  got_str, " expected ", expected_str, " +-", variance_str, ". ", msg}; \
              `__ERROR_FUNC(full_msg); \
           end

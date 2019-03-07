@@ -82,8 +82,8 @@ module check_tb;
          check_macro_output(full_msg, test_expected);
       end
       `TEST_CASE("Test that there are no extra spaces") begin
-         `CREATE_MSG(full_msg, "CHECK_EQUAL", 17, 21, "=", "This test should fail.");
-         $sformat(test_expected, "CHECK_EQUAL failed! Got 17=17 expected =21. This test should fail.");
+         `CREATE_MSG(full_msg, "CHECK_EQUAL", 17, 21, "", "This test should fail.");
+         $sformat(test_expected, "CHECK_EQUAL failed! Got 17=17 expected 21. This test should fail.");
          check_macro_output(full_msg, test_expected);
       end
       `TEST_CASE("CHECK_EQUAL_VARIANCE failure message integer") begin
@@ -92,11 +92,11 @@ module check_tb;
          rand_int1 = $random();
          rand_int2 = rand_int1 + 15;
          `CHECK_EQUAL_VARIANCE(rand_int1, rand_int2, 5, "This test should fail.");
-         $sformat(test_expected, "CHECK_EQUAL_VARIANCE failed! Got rand_int1=%0d expected =%0d, +-%0d. This test should fail.", rand_int1, rand_int2, 5);
+         $sformat(test_expected, "CHECK_EQUAL_VARIANCE failed! Got rand_int1=%0d expected %0d +-%0d. This test should fail.", rand_int1, rand_int2, 5);
          check_macro_output(test_output, test_expected);
          test_output = "";
          `CHECK_EQUAL_VARIANCE(rand_int1, rand_int2, 5);
-         $sformat(test_expected, "CHECK_EQUAL_VARIANCE failed! Got rand_int1=%0d expected =%0d, +-%0d. ", rand_int1, rand_int2, 5);
+         $sformat(test_expected, "CHECK_EQUAL_VARIANCE failed! Got rand_int1=%0d expected %0d +-%0d. ", rand_int1, rand_int2, 5);
          check_macro_output(test_output, test_expected);
          test_output = "";
       end
@@ -110,7 +110,7 @@ module check_tb;
                assert(check_string_empty(test_output) == 1);
             end
             else begin
-               $sformat(test_expected, "CHECK_EQUAL failed! Got tc_data1.data_int=%0d expected =%0d. ", tc_data1.data_int, tc_data2.data_int);
+               $sformat(test_expected, "CHECK_EQUAL failed! Got tc_data1.data_int=%0d expected %0d. ", tc_data1.data_int, tc_data2.data_int);
                check_macro_output(test_output, test_expected);
                test_output = "";
             end
@@ -167,7 +167,7 @@ module check_tb;
                assert(check_string_empty(test_output) == 1);
             end
             else begin
-               $sformat(test_expected, "CHECK_EQUAL_VARIANCE failed! Got tc_data1.data_int=%0d expected =%0d, +-%0d. ", tc_data1.data_int, tc_data2.data_int, `TEST_VARIANCE);
+               $sformat(test_expected, "CHECK_EQUAL_VARIANCE failed! Got tc_data1.data_int=%0d expected %0d +-%0d. ", tc_data1.data_int, tc_data2.data_int, `TEST_VARIANCE);
                check_macro_output(test_output, test_expected);
                test_output = "";
             end
@@ -183,7 +183,7 @@ module check_tb;
                assert(check_string_empty(test_output) == 1);
             end
             else begin
-               $sformat(test_expected, "CHECK_EQUAL failed! Got tc_data1.data_time=%0d expected =%0d. ", tc_data1.data_time, tc_data2.data_time);
+               $sformat(test_expected, "CHECK_EQUAL failed! Got tc_data1.data_time=%0d expected %0d. ", tc_data1.data_time, tc_data2.data_time);
                check_macro_output(test_output, test_expected);
                test_output = "";
             end
@@ -241,7 +241,7 @@ module check_tb;
                assert(check_string_empty(test_output) == 1);
             end
             else begin
-               $sformat(test_expected, "CHECK_EQUAL_VARIANCE failed! Got tc_data1.data_time=%0d expected =%0d, +-%0d. ", tc_data1.data_time, tc_data2.data_time, `TEST_VARIANCE);
+               $sformat(test_expected, "CHECK_EQUAL_VARIANCE failed! Got tc_data1.data_time=%0d expected %0d +-%0d. ", tc_data1.data_time, tc_data2.data_time, `TEST_VARIANCE);
                check_macro_output(test_output, test_expected);
                test_output = "";
             end
