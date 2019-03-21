@@ -252,10 +252,9 @@ class GHDLInterface(SimulatorInterface):
 
             init_file = config.sim_options.get(self.name + ".init_file.gui", None)
             if init_file is not None:
-                cmd += ["--script", "\"{}\"".format(abspath(init_file))] 
+                cmd += ["--script", "\"{}\"".format(abspath(init_file))]
 
             stdout.write("%s\n" % " ".join(cmd))
             subprocess.call(cmd)
 
         return status
-
