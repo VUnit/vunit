@@ -40,7 +40,7 @@ class GHDLInterface(SimulatorInterface):
     sim_options = [
         ListOfStringOption("ghdl.sim_flags"),
         ListOfStringOption("ghdl.elab_flags"),
-        StringOption("ghdl.init_file.gui"),
+        StringOption("ghdl.gtkwave_script.gui"),
     ]
 
     @staticmethod
@@ -250,7 +250,7 @@ class GHDLInterface(SimulatorInterface):
         if self._gui and not elaborate_only:
             cmd = ["gtkwave"] + shlex.split(self._gtkwave_args) + [data_file_name]
 
-            init_file = config.sim_options.get(self.name + ".init_file.gui", None)
+            init_file = config.sim_options.get(self.name + ".gtkwave_script.gui", None)
             if init_file is not None:
                 cmd += ["--script", "\"{}\"".format(abspath(init_file))]
 
