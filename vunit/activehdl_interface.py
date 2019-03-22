@@ -305,7 +305,6 @@ proc vunit_run {} {
         vcover_merge_process.consume_output()
         print("Done merging coverage files")
 
-
     def _create_common_script(self, config, output_path):
         """
         Create tcl script with functions common to interactive and batch modes
