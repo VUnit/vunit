@@ -17,8 +17,7 @@ import re
 import logging
 from vunit.ostools import Process, write_file, file_exists, renew_path
 from vunit.test_suites import get_result_file_name
-from vunit.vsim_simulator_mixin import (VsimSimulatorMixin,
-                                        get_is_test_suite_done_tcl,
+from vunit.vsim_simulator_mixin import (get_is_test_suite_done_tcl,
                                         fix_path)
 from vunit.simulator_interface import (SimulatorInterface,
                                        ListOfStringOption,
@@ -28,7 +27,7 @@ from vunit.exceptions import CompileError
 LOGGER = logging.getLogger(__name__)
 
 
-class ActiveHDLInterface(VsimSimulatorMixin, SimulatorInterface):
+class ActiveHDLInterface(SimulatorInterface):
     """
     Active HDL interface
     """
@@ -74,10 +73,8 @@ class ActiveHDLInterface(VsimSimulatorMixin, SimulatorInterface):
 
         return False
 
-    def __init__(self, prefix, output_path, persistent=False, gui=False):
+    def __init__(self, prefix, output_path, gui=False):
         SimulatorInterface.__init__(self, output_path, gui)
-        VsimSimulatorMixin.__init__(self, prefix, persistent,
-                                    sim_cfg_file_name=join(output_path, "library.cfg"))
         self._library_cfg = join(output_path, "library.cfg")
         self._prefix = prefix
         self._create_library_cfg()
@@ -282,29 +279,25 @@ proc vunit_run {} {
         Merge coverage from all test cases,
         """
 
-        if self._persistent_shell is not None:
-            # Teardown to ensure acdb file was written.
-            self._persistent_shell.teardown()
-
-        merge_command = "onerror {quit -code 1}\n";
+        merge_command = "onerror {quit -code 1}\n"
         merge_command += "acdb merge"
 
         for coverage_file in self._coverage_files:
             if file_exists(coverage_file):
-                merge_command += " -i {%s}" % coverage_file.replace('\\', '/')
+                merge_command += " -i {%s}" % fix_path(coverage_file)
             else:
                 LOGGER.warning("Missing coverage file: %s", coverage_file)
 
         if args is not None:
             merge_command += " " + " ".join("{%s}" % arg for arg in args)
 
-        merge_command += " -o {%s}" % file_name.replace('\\', '/') + "\n"
+        merge_command += " -o {%s}" % fix_path(file_name) + "\n"
 
         merge_script_name = join(self._output_path, "acdb_merge.tcl")
         with open(merge_script_name, "w") as fptr:
             fptr.write(merge_command + "\n")
 
-        vcover_cmd = [join(self._prefix, 'vsimsa'),'-tcl', '%s' % merge_script_name.replace('\\', '/')]
+        vcover_cmd = [join(self._prefix, 'vsimsa'), '-tcl', '%s' % fix_path(merge_script_name)]
 
         print("Merging coverage files into %s..." % file_name)
         vcover_merge_process = Process(vcover_cmd,
@@ -423,8 +416,3 @@ class VersionConsumer(object):
             self.major = int(match.group('major'))
             self.minor = int(match.group('minor'))
         return True
-
-
-def fix_path(path):
-    """ Remove backslash """
-    return path.replace("\\", "/")
