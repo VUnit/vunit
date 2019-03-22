@@ -17,7 +17,8 @@ import re
 import logging
 from vunit.ostools import Process, write_file, file_exists, renew_path
 from vunit.test_suites import get_result_file_name
-from vunit.vsim_simulator_mixin import get_is_test_suite_done_tcl
+from vunit.vsim_simulator_mixin import (get_is_test_suite_done_tcl,
+                                        fix_path)
 from vunit.simulator_interface import (SimulatorInterface,
                                        ListOfStringOption,
                                        StringOption)
@@ -78,6 +79,7 @@ class ActiveHDLInterface(SimulatorInterface):
         self._prefix = prefix
         self._create_library_cfg()
         self._libraries = []
+        self._coverage_files = set()
 
     def setup_library_mapping(self, project):
         """
@@ -191,7 +193,7 @@ class ActiveHDLInterface(SimulatorInterface):
 
         return " ".join(vsim_extra_args)
 
-    def _create_load_function(self, config):
+    def _create_load_function(self, config, output_path):
         """
         Create the vunit_load TCL function that runs the vsim command and loads the design
         """
@@ -212,10 +214,18 @@ class ActiveHDLInterface(SimulatorInterface):
         if config.architecture_name is not None:
             vsim_flags.append(config.architecture_name)
 
+        if config.sim_options.get("enable_coverage", False):
+            coverage_file_path = join(output_path, "coverage.acdb")
+            self._coverage_files.add(coverage_file_path)
+            vsim_flags += ["-acdb_file {%s}" % fix_path(coverage_file_path)]
+
         vsim_flags += [self._vsim_extra_args(config)]
 
         if config.sim_options.get("disable_ieee_warnings", False):
             vsim_flags.append("-ieee_nowarn")
+
+        # Add the the testbench top-level unit last as coverage is
+        # only collected for the top-level unit specified last
 
         vhdl_assert_stop_level_mapping = dict(warning=1, error=2, failure=3)
 
@@ -264,13 +274,44 @@ proc vunit_run {} {
 }
 """
 
+    def merge_coverage(self, file_name, args=None):
+        """
+        Merge coverage from all test cases,
+        """
+
+        merge_command = "onerror {quit -code 1}\n"
+        merge_command += "acdb merge"
+
+        for coverage_file in self._coverage_files:
+            if file_exists(coverage_file):
+                merge_command += " -i {%s}" % fix_path(coverage_file)
+            else:
+                LOGGER.warning("Missing coverage file: %s", coverage_file)
+
+        if args is not None:
+            merge_command += " " + " ".join("{%s}" % arg for arg in args)
+
+        merge_command += " -o {%s}" % fix_path(file_name) + "\n"
+
+        merge_script_name = join(self._output_path, "acdb_merge.tcl")
+        with open(merge_script_name, "w") as fptr:
+            fptr.write(merge_command + "\n")
+
+        vcover_cmd = [join(self._prefix, 'vsimsa'), '-tcl', '%s' % fix_path(merge_script_name)]
+
+        print("Merging coverage files into %s..." % file_name)
+        vcover_merge_process = Process(vcover_cmd,
+                                       env=self.get_env())
+        vcover_merge_process.consume_output()
+        print("Done merging coverage files")
+
     def _create_common_script(self, config, output_path):
         """
         Create tcl script with functions common to interactive and batch modes
         """
         tcl = ""
         tcl += get_is_test_suite_done_tcl(get_result_file_name(output_path))
-        tcl += self._create_load_function(config)
+        tcl += self._create_load_function(config, output_path)
         tcl += self._create_run_function()
         return tcl
 
@@ -374,8 +415,3 @@ class VersionConsumer(object):
             self.major = int(match.group('major'))
             self.minor = int(match.group('minor'))
         return True
-
-
-def fix_path(path):
-    """ Remove backslash """
-    return path.replace("\\", "/")
