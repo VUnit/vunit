@@ -10,14 +10,15 @@ Interface for GHDL simulator
 
 from __future__ import print_function
 import logging
-from os.path import exists, join
+from os.path import exists, join, abspath
 import os
 import subprocess
 import shlex
 from sys import stdout  # To avoid output catched in non-verbose mode
 from vunit.ostools import Process
 from vunit.simulator_interface import (SimulatorInterface,
-                                       ListOfStringOption)
+                                       ListOfStringOption,
+                                       StringOption)
 from vunit.exceptions import CompileError
 LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +40,7 @@ class GHDLInterface(SimulatorInterface):
     sim_options = [
         ListOfStringOption("ghdl.sim_flags"),
         ListOfStringOption("ghdl.elab_flags"),
+        StringOption("ghdl.gtkwave_script.gui"),
     ]
 
     @staticmethod
@@ -247,6 +249,11 @@ class GHDLInterface(SimulatorInterface):
 
         if self._gui and not elaborate_only:
             cmd = ["gtkwave"] + shlex.split(self._gtkwave_args) + [data_file_name]
+
+            init_file = config.sim_options.get(self.name + ".gtkwave_script.gui", None)
+            if init_file is not None:
+                cmd += ["--script", "\"{}\"".format(abspath(init_file))]
+
             stdout.write("%s\n" % " ".join(cmd))
             subprocess.call(cmd)
 
