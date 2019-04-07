@@ -6,10 +6,15 @@
 
 package types_pkg is
   subtype byte_t is integer range 0 to 255;
+  type storage_mode_t is (internal, extfnc, extacc);
 
   type string_access_t is access string;
   type string_access_vector_t is array (natural range <>) of string_access_t;
   type string_access_vector_access_t is access string_access_vector_t;
+
+  type extstring_access_t is access string(1 to integer'high);
+  type extstring_access_vector_t is array (natural range <>) of extstring_access_t;
+  type extstring_access_vector_access_t is access extstring_access_vector_t;
 
   type integer_vector_t is array (natural range <>) of integer;
   type integer_vector_access_t is access integer_vector_t;

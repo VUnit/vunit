@@ -11,11 +11,13 @@
 --
 
 use work.types_pkg.all;
+use work.external_string_pkg.all;
+
 use work.codec_pkg.all;
 use work.codec_builder_pkg.all;
 
 package string_ptr_pkg is
-  subtype index_t is integer range -1 to integer'high;
+
   type string_ptr_t is record
     ref : index_t;
   end record;
@@ -23,8 +25,11 @@ package string_ptr_pkg is
 
   alias  ptr_t  is string_ptr_t;
   alias  val_t  is character;
+  alias  vec_t  is string;
   alias  vav_t  is string_access_vector_t;
+  alias evav_t  is extstring_access_vector_t;
   alias  vava_t is string_access_vector_access_t;
+  alias evava_t is extstring_access_vector_access_t;
 
   function to_integer (
     value : ptr_t
@@ -36,12 +41,20 @@ package string_ptr_pkg is
 
   impure function new_string_ptr (
     length : natural := 0;
+    mode   : storage_mode_t := internal;
+    eid    : index_t := -1;
     value  : val_t   := val_t'low
   ) return ptr_t;
 
   impure function new_string_ptr (
-    value : string
+    value : string;
+    mode  : storage_mode_t := internal;
+    eid   : index_t := -1
   ) return ptr_t;
+
+  impure function is_external (
+    ptr : ptr_t
+  ) return boolean;
 
   procedure deallocate (
     ptr : ptr_t
@@ -53,13 +66,13 @@ package string_ptr_pkg is
 
   procedure set (
     ptr   : ptr_t;
-    index : natural;
+    index : positive;
     value : val_t
   );
 
   impure function get (
     ptr   : ptr_t;
-    index : natural
+    index : positive
   ) return val_t;
 
   procedure reallocate (
@@ -70,14 +83,14 @@ package string_ptr_pkg is
 
   procedure reallocate (
     ptr   : ptr_t;
-    value : string
+    value : vec_t
   );
 
   procedure resize (
     ptr    : ptr_t;
     length : natural;
     drop   : natural := 0;
-    value  : val_t := val_t'low
+    value  : val_t   := val_t'low
   );
 
   impure function to_string (

@@ -118,7 +118,7 @@ The following simulation options are known.
   A list of PLI file names.
 
 ``ghdl.flags``
-   Extra arguments passed to ``ghdl --elab-run`` command *before* executable specific flags. Must be a list of strings.
+   Extra arguments passed to ``ghdl --elab-run`` command *before* executable specific flags.
    Must be a list of strings.
 
 ``incisive.irun_sim_flags``
@@ -324,7 +324,11 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         """
         args = VUnitCLI().parse_args(argv=argv)
-        return cls.from_args(args, compile_builtins=compile_builtins, vhdl_standard=vhdl_standard)
+        return cls.from_args(
+            args,
+            compile_builtins=compile_builtins,
+            vhdl_standard=vhdl_standard
+        )
 
     @classmethod
     def from_args(cls, args, compile_builtins=True, vhdl_standard=None):
@@ -339,9 +343,13 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         :param vhdl_standard: The VHDL standard used to compile files,
                               if None the VUNIT_VHDL_STANDARD environment variable is used
         :returns: A :class:`.VUnit` object instance
-        """
 
-        return cls(args, compile_builtins=compile_builtins, vhdl_standard=vhdl_standard)
+        """
+        return cls(
+            args,
+            compile_builtins=compile_builtins,
+            vhdl_standard=vhdl_standard
+        )
 
     def __init__(self, args, compile_builtins=True, vhdl_standard=None):
         self._args = args
@@ -1095,11 +1103,14 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
                             no_color=self._args.no_color)
         runner.run(test_cases)
 
-    def add_builtins(self):
+    def add_builtins(self, external=None):
         """
         Add vunit VHDL builtin libraries
+
+        :param external: struct to select whether to enable external models for 'string'. Allowed values are:
+                         None, {'string': False}, {'string': True} or {'string': ['path/to/custom/file']}.
         """
-        self._builtins.add_vhdl_builtins()
+        self._builtins.add_vhdl_builtins(external=external)
 
     def add_com(self):
         """

@@ -16,7 +16,7 @@ class VUnit(VUnitVHDL):
     VUnit Verilog interface
     """
 
-    def add_builtins(self):  # pylint: disable=arguments-differ
+    def add_builtins(self, external=None):  # pylint: disable=arguments-differ
         """
         Add vunit Verilog builtin libraries
         """

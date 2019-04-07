@@ -6,10 +6,10 @@
 
 context data_types_context is
   library vunit_lib;
+  use vunit_lib.types_pkg.all;
   use vunit_lib.integer_vector_ptr_pkg.all;
   use vunit_lib.integer_vector_ptr_pool_pkg.all;
   use vunit_lib.integer_array_pkg.all;
-  use vunit_lib.string_ptr_pkg.all;
   use vunit_lib.queue_pkg.all;
   use vunit_lib.queue_pool_pkg.all;
   use vunit_lib.string_ptr_pkg.all;

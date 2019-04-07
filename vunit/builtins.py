@@ -12,6 +12,7 @@ Functions to add builtin VHDL code to a project for compilation
 from os.path import join, abspath, dirname, basename
 from glob import glob
 from vunit.vhdl_standard import VHDL
+from vunit.test.common import simulator_check
 
 VHDL_PATH = abspath(join(dirname(__file__), "vhdl"))
 VERILOG_PATH = abspath(join(dirname(__file__), "verilog"))
@@ -67,11 +68,47 @@ class Builtins(object):
 
             self._vunit_lib.add_source_file(file_name)
 
-    def _add_data_types(self):
+    def _add_data_types(self, external=None):
         """
-        Add data types packages
+        Add data types packages (sources corresponding to VHPIDIRECT arrays, or their placeholders)
+
+        :param external: struct to select whether to enable external models for 'string'. Allowed values are:
+                         None, {'string': False}, {'string': True} or {'string': ['path/to/custom/file']}.
         """
         self._add_files(join(VHDL_PATH, "data_types", "src", "*.vhd"))
+
+        use_ext = {'string': False}
+        files = {'string': None}
+
+        if external:
+            for ind, val in external.items():
+                if isinstance(val, bool):
+                    use_ext[ind] = val
+                else:
+                    use_ext[ind] = True
+                    files[ind] = val
+
+        for ind in use_ext:
+            if use_ext[ind] and simulator_check(lambda simclass: not simclass.supports_vhpi()):
+                raise RuntimeError("the selected simulator does not support VHPI; must use non-VHPI packages...")
+
+        ext_path = join(VHDL_PATH, "data_types", "src", "external")
+
+        def default_pkg(cond, type_str):
+            """
+            Return name of VHDL file with default VHPIDIRECT foreign declarations.
+            """
+            return join(ext_path, 'external_' + type_str + '-' + ('' if cond else 'no') + 'vhpi.vhd')
+
+        if not files['string']:
+            files['string'] = [
+                default_pkg(use_ext['string'], 'string'),
+                join(ext_path, "external_string-body.vhd")
+            ]
+
+        for ind in files:
+            for name in files[ind]:
+                self._add_files(name)
 
     def _add_array_util(self):
         """
@@ -166,11 +203,14 @@ in your VUnit Git repository? You have to do this first if installing using setu
         """
         self._vunit_lib.add_source_files(join(VERILOG_PATH, "vunit_pkg.sv"))
 
-    def add_vhdl_builtins(self):
+    def add_vhdl_builtins(self, external=None):
         """
         Add vunit VHDL builtin libraries
+
+        :param external: struct to select whether to enable external models for 'string'. Allowed values are:
+                         None, {'string': False}, {'string': True} or {'string': ['path/to/custom/file']}.
         """
-        self._add_data_types()
+        self._add_data_types(external=external)
         self._add_files(join(VHDL_PATH, "*.vhd"))
         for path in ("core", "logging", "string_ops", "check", "dictionary", "run", "path"):
             self._add_files(join(VHDL_PATH, path, "src", "*.vhd"))
