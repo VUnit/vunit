@@ -93,6 +93,12 @@ class GHDLInterface(SimulatorInterface):
         self._backend = backend
         self._vhdl_standard = None
 
+    def get_vhdl_standard(self):
+        """
+        Return VHDL standard version
+        """
+        return self._vhdl_standard
+
     @classmethod
     def determine_backend(cls, prefix):
         """
