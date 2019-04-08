@@ -173,7 +173,7 @@ class TestRun(object):
 
         # Do not run post check unless all passed
         for name in results:
-            if not sim_ok:
+            if self._simulator_if._vhdl_standard == "2008" and not sim_ok:
                 results[name] = FAILED
             if results[name] == PASSED:
                 continue
