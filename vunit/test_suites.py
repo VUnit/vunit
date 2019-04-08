@@ -171,11 +171,10 @@ class TestRun(object):
 
         results = self._read_test_results(file_name=get_result_file_name(output_path))
 
-        try:
-            if self._simulator_if.get_vhdl_standard() == "2008" and not sim_ok:
-                return dict(map((lambda name: (name, FAILED)), results))
-        except:
-            pass
+        if hasattr(self._simulator_if, 'get_vhdl_standard') and \
+           self._simulator_if.get_vhdl_standard() == "2008" and \
+           not sim_ok:
+            return dict(map((lambda name: (name, FAILED)), results))
 
         # Do not run post check unless all passed
         for status in results.values():
