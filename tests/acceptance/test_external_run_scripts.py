@@ -158,6 +158,10 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_vhdl_array_axis_vcs_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "array_axis_vcs", "run.py"))
 
+    @unittest.skipIf(
+        simulator_check(lambda simclass: not simclass.supports_vhpi()),
+        "This simulator/backend does not support interfacing with external C code"
+    )
     def test_vhdl_axi_dma_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "axi_dma", "run.py"))
 

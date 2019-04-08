@@ -30,7 +30,7 @@ architecture tb of tb_axi_dma is
                                               address_length => 32,
                                               logger => get_logger("axil_bus"));
 
-  constant memory : memory_t := new_memory;
+  constant memory : memory_t := new_memory(2097152, extfnc);
   constant axi_rd_slave : axi_slave_t := new_axi_slave(memory => memory,
                                                        logger => get_logger("axi_rd_slave"));
 
