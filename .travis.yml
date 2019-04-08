@@ -34,16 +34,14 @@ matrix:
   - env: BUILD_NAME=py27-acceptance-ghdl
     python: '2.7'
     os: linux
-    sudo: false
     addons:
       apt:
         packages:
         - gnat
     before_script:
-    - git clone --depth 1 https://github.com/tgingold/ghdl.git ghdl
-    - cd ghdl
-    - mkdir build-mcode
-    - cd build-mcode
+    - mkdir -p ghdl/build-mcode
+    - curl -fsSL https://codeload.github.com/ghdl/ghdl/tar.gz/master | tar xzf - -C ghdl --strip-components=1
+    - cd ghdl/build-mcode
     - ../configure --prefix=../../install-ghdl-mcode/
     - make
     - make install
@@ -51,20 +49,19 @@ matrix:
     - export PATH=$PATH:install-ghdl-mcode/bin/
 
   # Python 3.6 with ghdl llvm
-  - env: BUILD_NAME=py36-acceptance-ghdl
+  - &py36
+    env: BUILD_NAME=py36-acceptance-ghdl
     python: '3.6'
     os: linux
-    sudo: required
     dist: trusty
     before_install:
     - sudo apt-get update -qq
     - sudo apt-get install -y gnat-4.8 zlib1g-dev
     - sudo apt-get install -y llvm-3.5-dev llvm-3.5-tools libedit-dev
     before_script:
-    - git clone --depth 1 https://github.com/tgingold/ghdl.git ghdl
-    - cd ghdl
-    - mkdir build-llvm
-    - cd build-llvm
+    - mkdir -p ghdl/build-llvm
+    - curl -fsSL https://codeload.github.com/ghdl/ghdl/tar.gz/master | tar xzf - -C ghdl --strip-components=1
+    - cd ghdl/build-llvm
     - ../configure --prefix=../../install-ghdl-llvm/ --with-llvm-config=llvm-config-3.5
     - make
     - make install
@@ -72,25 +69,8 @@ matrix:
     - export PATH=$PATH:install-ghdl-llvm/bin/
 
   # Python 3.6 with ghdl llvm
-  - env: BUILD_NAME=py36-vcomponents-ghdl
-    python: '3.6'
-    os: linux
-    sudo: required
-    dist: trusty
-    before_install:
-    - sudo apt-get update -qq
-    - sudo apt-get install -y gnat-4.8 zlib1g-dev
-    - sudo apt-get install -y llvm-3.5-dev llvm-3.5-tools libedit-dev
-    before_script:
-    - git clone --depth 1 https://github.com/tgingold/ghdl.git ghdl
-    - cd ghdl
-    - mkdir build-llvm
-    - cd build-llvm
-    - ../configure --prefix=../../install-ghdl-llvm/ --with-llvm-config=llvm-config-3.5
-    - make
-    - make install
-    - cd ../../
-    - export PATH=$PATH:install-ghdl-llvm/bin/
+  - <<: *py36
+    env: BUILD_NAME=py36-vcomponents-ghdl
 
   # Deploy to GitHub pages
   - stage: deploy
