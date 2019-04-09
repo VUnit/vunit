@@ -174,7 +174,7 @@ class TestRun(object):
         if hasattr(self._simulator_if, 'get_vhdl_standard') and \
            self._simulator_if.get_vhdl_standard() == "2008" and \
            not sim_ok:
-            return dict((name, FAILED) for name in results)
+            return dict((name, FAILED) if name is PASSED else (name, results[name]) for name in results)
 
         # Do not run post check unless all passed
         for status in results.values():
