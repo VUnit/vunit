@@ -138,7 +138,8 @@ class SimulatorInterface(object):
         """
         return False
 
-    def has_valid_exit_code(self):
+    @staticmethod
+    def has_valid_exit_code():
         """
         Return if the simulation should fail with nonzero exit codes
         """
