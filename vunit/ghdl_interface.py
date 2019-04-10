@@ -93,11 +93,11 @@ class GHDLInterface(SimulatorInterface):
         self._backend = backend
         self._vhdl_standard = None
 
-    def get_vhdl_standard(self):
+    def has_valid_exit_code(self):
         """
-        Return VHDL standard version
+        Return if the simulation should fail with nonzero exit codes
         """
-        return self._vhdl_standard
+        return self._vhdl_standard == "2008"
 
     @classmethod
     def determine_backend(cls, prefix):
