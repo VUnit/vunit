@@ -171,14 +171,19 @@ class TestRun(object):
 
         results = self._read_test_results(file_name=get_result_file_name(output_path))
 
-        # Do not run post check unless all passed
+        # If any test failed, return results
         for status in results.values():
-            if status != PASSED:
+            if status == FAILED:
                 return results
 
         # Force fail if all tests pass in the presence of non-zero exit code
         if self._simulator_if.has_valid_exit_code() and not sim_ok:
             return dict((name, FAILED) if results[name] is PASSED else (name, results[name]) for name in results)
+
+        # Do not run post check unless all passed
+        for status in results.values():
+            if status != PASSED:
+                return results
 
         if not self._config.call_post_check(output_path, read_output):
             for name in self._test_cases:
