@@ -13,6 +13,7 @@ from unittest import TestCase
 from vunit.test_suites import (TestRun)
 from vunit.test_report import (PASSED, SKIPPED, FAILED)
 from vunit.test.common import create_tempdir
+from vunit.simulator_interface import SimulatorInterface
 
 
 class TestTestSuites(TestCase):
@@ -107,3 +108,38 @@ test_suite_done""",
                           test_suite_name=None,
                           test_cases=expected_test_cases)
             return run._read_test_results(file_name=file_name)  # pylint: disable=protected-access
+
+    def test_exit_code(self):
+        self.assertEqual(self._test_exit_code(True), False)
+        self.assertEqual(self._test_exit_code(False), False)
+        self.assertEqual(self._test_exit_code(True, True), False)
+        self.assertEqual(self._test_exit_code(False, True), True)
+
+    @staticmethod
+    def _test_exit_code(sim_ok=True, with_has_valid_func=False):
+        """
+        Helper method to test the check_results function
+        """
+        with create_tempdir() as path:
+            file_name = join(path, "vunit_results")
+            with open(file_name, "w") as fptr:
+                fptr.write("""\
+test_start:test1
+test_suite_done
+""")
+            sim_if = SimulatorInterface
+            if with_has_valid_func:
+                @staticmethod
+                def func():
+                    return True
+                sim_if.has_valid_exit_code = func
+
+            run = TestRun(simulator_if=sim_if,
+                          config=None,
+                          elaborate_only=False,
+                          test_suite_name=None,
+                          test_cases=["test1"])
+
+            results = run._read_test_results(file_name=file_name)  # pylint: disable=protected-access
+            done, _ = run._check_results(results, sim_ok)  # pylint: disable=protected-access
+            return done
