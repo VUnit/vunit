@@ -199,13 +199,18 @@ class ConfigurationVisitor(object):
             for config in configs.values():
                 config.set_generic(name, value)
 
-    def set_sim_option(self, name, value):
+    def set_sim_option(self, name, value, overwrite=True):
         """
         Set sim option
+
+        :param overwrite: To overwrite the option or append to the existing value
         """
         self._check_enabled()
         for configs in self.get_configuration_dicts():
             for config in configs.values():
+                if not overwrite:
+                    config.set_sim_option(name, config.sim_options.get(name, []) + value)
+                    continue
                 config.set_sim_option(name, value)
 
     def set_pre_config(self, value):
