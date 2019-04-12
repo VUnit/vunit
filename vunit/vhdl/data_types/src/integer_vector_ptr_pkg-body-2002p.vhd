@@ -5,11 +5,17 @@
 -- Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
 package body integer_vector_ptr_pkg is
- type integer_vector_ptr_storage_t is protected
-    impure function new_integer_vector_ptr (
+  type prot_storage_t is protected
+    impure function new_vector (
       length : natural := 0;
-      value  : val_t := 0
+      mode   : storage_mode_t := internal;
+      eid    : index_t := -1;
+      value  : val_t   := 0
     ) return natural;
+
+    impure function is_external (
+      ref : natural
+    ) return boolean;
 
     procedure deallocate (
       ref : natural
@@ -40,99 +46,234 @@ package body integer_vector_ptr_pkg is
       ref    : natural;
       length : natural;
       drop   : natural := 0;
-      value  : val_t := 0
+      value  : val_t   := 0
     );
   end protected;
 
-  type integer_vector_ptr_storage_t is protected body
-    variable current_index : integer := 0;
-    variable ptrs : vava_t := null;
+  type prot_storage_t is protected body
+    type storage_t is record
+      id     : integer;
+      mode   : storage_mode_t;
+      length : integer;
+    end record;
+    constant null_storage : storage_t := (integer'low, internal, integer'low);
 
-    impure function new_integer_vector_ptr (
-      length : natural := 0;
-      value  : val_t := 0
-    ) return natural is
-      variable old_ptrs : vava_t;
-      variable retval : ptr_t := (ref => current_index);
+    type storage_vector_t is array (natural range <>) of storage_t;
+    type storage_vector_access_t is access storage_vector_t;
+
+    type ptr_storage is record
+      idx   : natural;
+      ptr   : natural;
+      eptr  : natural;
+      idxs  : storage_vector_access_t;
+      ptrs  : vava_t;
+      eptrs : evava_t;
+    end record;
+
+    variable st : ptr_storage := (0, 0, 0, null, null, null);
+
+    procedure reallocate_ptrs (
+      acc    : inout vava_t;
+      length : integer
+    ) is
+      variable old : vava_t := acc;
     begin
-      if ptrs = null then
-        ptrs := new vav_t'(0 => null);
-      elsif ptrs'length <= current_index then
-        -- Reallocate ptr pointers to larger ptr
-        -- Use more size to trade size for speed
-        old_ptrs := ptrs;
-        ptrs := new vav_t'(0 to ptrs'length + 2**16 => null);
-        for i in old_ptrs'range loop
-          ptrs(i) := old_ptrs(i);
-        end loop;
-        deallocate(old_ptrs);
+      if old = null then
+        acc := new vav_t'(0 => null);
+      elsif old'length <= length then
+        -- Reallocate ptr pointers to larger ptr; use more size to trade size for speed
+        acc := new vav_t'(0 to acc'length + 2**16 => null);
+        for i in old'range loop acc(i) := old(i); end loop;
+        deallocate(old);
       end if;
-      ptrs(current_index) := new integer_vector_t'(0 to length-1 => value);
-      current_index := current_index + 1;
-      return retval.ref;
+    end;
+
+    procedure reallocate_eptrs (
+      acc    : inout evava_t;
+      length : integer
+    ) is
+      variable old : evava_t := acc;
+    begin
+      if old = null then
+        acc := new evav_t'(0 => null);
+      elsif old'length <= length then
+        acc := new evav_t'(0 to acc'length + 2**16 => null);
+        for i in old'range loop acc(i) := old(i); end loop;
+        deallocate(old);
+      end if;
+    end;
+
+    procedure reallocate_idxs (
+      acc    : inout storage_vector_access_t;
+      length : integer
+    ) is
+      variable old : storage_vector_access_t := acc;
+    begin
+      if old = null then
+        acc := new storage_vector_t(0 to 0);
+      elsif old'length <= length then
+        acc := new storage_vector_t(0 to acc'length + 2**16);
+        for i in old'range loop acc(i) := old(i); end loop;
+        deallocate(old);
+      end if;
+    end;
+
+    impure function new_vector (
+      length : natural := 0;
+      mode   : storage_mode_t := internal;
+      eid    : index_t := -1;
+      value  : val_t   := 0
+    ) return natural is begin
+      reallocate_idxs(st.idxs, st.idx);
+      if mode = internal then
+        assert eid = -1 report "mode internal: id/=-1 not supported" severity error;
+      else
+        assert eid /= -1 report "mode external: id must be natural" severity error;
+      end if;
+      case mode is
+        when internal =>
+          st.idxs(st.idx) := (
+            id     => st.ptr,
+            mode   => internal,
+            length => 0
+          );
+          reallocate_ptrs(st.ptrs, st.ptr);
+          st.ptrs(st.ptr) := new vec_t'(0 to length-1 => value);
+          st.ptr := st.ptr + 1;
+        when extacc =>
+          st.idxs(st.idx) := (
+            id     => st.eptr,
+            mode   => extacc,
+            length => length
+          );
+          reallocate_eptrs(st.eptrs, st.eptr);
+          st.eptrs(st.eptr) := get_ptr(eid);
+          st.eptr := st.eptr + 1;
+        when extfnc =>
+          st.idxs(st.idx) := (
+            id     => eid,
+            mode   => extfnc,
+            length => length
+          );
+      end case;
+      st.idx := st.idx + 1;
+      return st.idx-1;
+    end;
+
+    impure function is_external (
+      ref : natural
+    ) return boolean is begin
+      return st.idxs(ref).mode /= internal;
+    end;
+
+    -- @TODO Remove check_external when all the functions/procedures are implemented
+    procedure check_external (
+      ref : natural;
+      s   : string
+    ) is begin
+      assert not is_external(ref) report s & " not implemented for external model" severity error;
     end;
 
     procedure deallocate (
       ref : natural
-    ) is begin
-      deallocate(ptrs(ref));
-      ptrs(ref) := null;
+    ) is
+      variable s : storage_t := st.idxs(ref);
+    begin
+      -- @TODO Implement deallocate for external models
+      check_external(ref, "deallocate");
+      deallocate(st.ptrs(s.id));
+      st.ptrs(s.id) := null;
     end;
 
     impure function length (
       ref : natural
-    ) return integer is begin
-      return ptrs(ref)'length;
+    ) return integer is
+      variable s : storage_t := st.idxs(ref);
+    begin
+      case s.mode is
+        when internal => return st.ptrs(s.id)'length;
+        when others   => return abs(s.length);
+      end case;
     end;
 
     procedure set (
       ref   : natural;
       index : natural;
       value : val_t
-    ) is begin
-      ptrs(ref)(index) := value;
+    ) is
+      variable s : storage_t := st.idxs(ref);
+    begin
+      case s.mode is
+        when extfnc   => write_integer(s.id, index, value);
+        when extacc   => st.eptrs(s.id)(index) := value;
+        when internal => st.ptrs(s.id)(index)  := value;
+      end case;
     end;
 
     impure function get (
       ref   : natural;
       index : natural
-    ) return val_t is begin
-      return ptrs(ref)(index);
+    ) return val_t is
+      variable s : storage_t := st.idxs(ref);
+    begin
+      case s.mode is
+        when extfnc   => return read_integer(s.id, index);
+        when extacc   => return st.eptrs(s.id)(index);
+        when internal => return st.ptrs(s.id)(index);
+      end case;
     end;
 
     procedure reallocate (
       ref    : natural;
       length : natural;
       value  : val_t := 0
-    ) is begin
-      deallocate(ptrs(ref));
-      ptrs(ref) := new integer_vector_t'(0 to length - 1 => value);
+    ) is
+      variable s : storage_t := st.idxs(ref);
+    begin
+      case s.mode is
+        when extfnc  =>
+          -- @FIXME The reallocation request is just ignored. What should we do here?
+          --check_external(ptr, "reallocate");
+        when extacc   =>
+          -- @TODO Implement reallocate for external models (through access)
+          check_external(ref, "reallocate");
+        when internal =>
+          deallocate(st.ptrs(s.id));
+          st.ptrs(s.id) := new vec_t'(0 to length - 1 => value);
+      end case;
     end;
 
     procedure resize (
       ref    : natural;
       length : natural;
       drop   : natural := 0;
-      value  : val_t := 0
+      value  : val_t   := 0
     ) is
-      variable old_ptr, new_ptr : integer_vector_access_t;
+      variable oldp, newp : integer_vector_access_t;
       variable min_len : natural := length;
+      variable s : storage_t := st.idxs(ref);
     begin
-      new_ptr := new integer_vector_t'(0 to length - 1 => value);
-      old_ptr := ptrs(ref);
-      if min_len > old_ptr'length - drop then
-        min_len := old_ptr'length - drop;
-      end if;
-      for i in 0 to min_len-1 loop
-        new_ptr(i) := old_ptr(drop + i);
-      end loop;
-      ptrs(ref) := new_ptr;
-      deallocate(old_ptr);
+      case s.mode is
+        when internal =>
+          newp := new vec_t'(0 to length-1 => value);
+          oldp := st.ptrs(s.id);
+          if min_len > oldp'length - drop then
+            min_len := oldp'length - drop;
+          end if;
+          for i in 0 to min_len-1 loop
+            newp(i) := oldp(drop + i);
+          end loop;
+          st.ptrs(s.id) := newp;
+          deallocate(oldp);
+        when others =>
+          -- @TODO Implement resize for external models
+          check_external(ref, "resize");
+      end case;
     end;
 
   end protected body;
 
-  shared variable integer_vector_ptr_storage : integer_vector_ptr_storage_t;
+  shared variable vec_ptr_storage : prot_storage_t;
 
   function to_integer (
     value : ptr_t
@@ -149,21 +290,34 @@ package body integer_vector_ptr_pkg is
 
   impure function new_integer_vector_ptr (
     length : natural := 0;
-    value  : val_t := 0
+    mode   : storage_mode_t := internal;
+    eid    : index_t := -1;
+    value  : val_t   := 0
   ) return ptr_t is begin
-    return (ref => integer_vector_ptr_storage.new_integer_vector_ptr(length, value));
+    return (ref => vec_ptr_storage.new_vector(
+      length => length,
+      mode   => mode,
+      value  => value,
+      eid    => eid
+    ));
+  end;
+
+  impure function is_external (
+    ptr : ptr_t
+  ) return boolean is begin
+    return vec_ptr_storage.is_external(ptr.ref);
   end;
 
   procedure deallocate (
     ptr : ptr_t
   ) is begin
-    integer_vector_ptr_storage.deallocate(ptr.ref);
+    vec_ptr_storage.deallocate(ptr.ref);
   end;
 
   impure function length (
     ptr : ptr_t
   ) return integer is begin
-    return integer_vector_ptr_storage.length(ptr.ref);
+    return vec_ptr_storage.length(ptr.ref);
   end;
 
   procedure set (
@@ -171,14 +325,14 @@ package body integer_vector_ptr_pkg is
     index : natural;
     value : val_t
   ) is begin
-    integer_vector_ptr_storage.set(ptr.ref, index, value);
+    vec_ptr_storage.set(ptr.ref, index, value);
   end;
 
   impure function get (
     ptr   : ptr_t;
     index : natural
   ) return val_t is begin
-    return integer_vector_ptr_storage.get(ptr.ref, index);
+    return vec_ptr_storage.get(ptr.ref, index);
   end;
 
   procedure reallocate (
@@ -186,16 +340,16 @@ package body integer_vector_ptr_pkg is
     length : natural;
     value  : val_t := 0
   ) is begin
-    integer_vector_ptr_storage.reallocate(ptr.ref, length, value);
+    vec_ptr_storage.reallocate(ptr.ref, length, value);
   end;
 
   procedure resize (
-    ptr    : ptr_t;
+    ptr   : ptr_t;
     length : natural;
     drop   : natural := 0;
-    value  : val_t := 0
+    value  : val_t   := 0
   ) is begin
-    integer_vector_ptr_storage.resize(ptr.ref, length, drop, value);
+    vec_ptr_storage.resize(ptr.ref, length, drop, value);
   end;
 
   function encode (
