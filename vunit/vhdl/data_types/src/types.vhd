@@ -29,5 +29,9 @@ package types_pkg is
   type integer_vector_access_t is access integer_vector_t;
   type integer_vector_access_vector_t is array (natural range <>) of integer_vector_access_t;
   type integer_vector_access_vector_access_t is access integer_vector_access_vector_t;
+
+  type extintvec_access_t is access integer_vector_t(0 to integer'high);
+  type extintvec_access_vector_t is array (natural range <>) of extintvec_access_t;
+  type extintvec_access_vector_access_t is access extintvec_access_vector_t;
 end package;
 
