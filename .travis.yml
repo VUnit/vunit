@@ -7,6 +7,11 @@ install:
 script:
 - tox -e $BUILD_NAME
 
+stages:
+  - test
+  - name: deploy
+    if: repo = VUnit/vunit
+
 matrix:
   include:
   - env: BUILD_NAME=py27-unit
