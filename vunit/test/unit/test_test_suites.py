@@ -110,13 +110,16 @@ test_suite_done""",
             return run._read_test_results(file_name=file_name)  # pylint: disable=protected-access
 
     def test_exit_code(self):
+        """
+        Test that results are overwritten when all are PASSED but the exit code is nonzero
+        """
         self.assertEqual(self._test_exit_code(True), False)
         self.assertEqual(self._test_exit_code(False), False)
         self.assertEqual(self._test_exit_code(True, True), False)
         self.assertEqual(self._test_exit_code(False, True), True)
 
     @staticmethod
-    def _test_exit_code(sim_ok=True, with_has_valid_func=False):
+    def _test_exit_code(sim_ok=True, has_valid_exit_code=False):
         """
         Helper method to test the check_results function
         """
@@ -128,11 +131,10 @@ test_start:test1
 test_suite_done
 """)
             sim_if = SimulatorInterface
-            if with_has_valid_func:
-                @staticmethod
-                def func():
-                    return True
-                sim_if.has_valid_exit_code = func
+            @staticmethod
+            def func():
+                return has_valid_exit_code
+            sim_if.has_valid_exit_code = func
 
             run = TestRun(simulator_if=sim_if,
                           config=None,
