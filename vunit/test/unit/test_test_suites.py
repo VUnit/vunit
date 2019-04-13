@@ -22,77 +22,53 @@ class TestTestSuites(TestCase):
     """
 
     def test_missing_results_fails_all(self):
-        self.assertEqual(
-            self._read_test_results(contents=None,
-                                    expected_test_cases=["test1", "test2"]),
-            {"test1": FAILED, "test2": FAILED})
+        self._read_test_results( {"test1": FAILED, "test2": FAILED}, None)
 
     def test_read_results_all_passed(self):
-        self.assertEqual(
-            self._read_test_results(contents="""\
+        self._read_test_results( {"test1": PASSED, "test2": PASSED}, """\
 test_start:test1
 test_start:test2
 test_suite_done
-""",
-                                    expected_test_cases=["test1", "test2"]),
-            {"test1": PASSED, "test2": PASSED})
+""")
 
     def test_read_results_suite_not_done(self):
-        self.assertEqual(
-            self._read_test_results(contents="""\
+        self._read_test_results( {"test1": PASSED, "test2": FAILED}, """\
 test_start:test1
 test_start:test2
-""",
-                                    expected_test_cases=["test1", "test2"]),
-            {"test1": PASSED, "test2": FAILED})
+""")
 
-        self.assertEqual(
-            self._read_test_results(contents="""\
+        self._read_test_results( {"test1": FAILED, "test2": PASSED}, """\
 test_start:test2
 test_start:test1
-""",
-                                    expected_test_cases=["test1", "test2"]),
-            {"test1": FAILED, "test2": PASSED})
+""")
 
     def test_read_results_skipped_test(self):
-        self.assertEqual(
-            self._read_test_results(contents="""\
+        self._read_test_results( {"test1": PASSED, "test2": SKIPPED, "test3": SKIPPED}, """\
 test_start:test1
 test_suite_done
-""",
-                                    expected_test_cases=["test1", "test2", "test3"]),
-            {"test1": PASSED, "test2": SKIPPED, "test3": SKIPPED})
+""")
 
     def test_read_results_anonynmous_test_pass(self):
-        self.assertEqual(
-            self._read_test_results(contents="""\
+        self._read_test_results( {None: PASSED}, """\
 test_suite_done
-""",
-                                    expected_test_cases=[None]),
-            {None: PASSED})
+""")
 
     def test_read_results_anonynmous_test_fail(self):
-        self.assertEqual(
-            self._read_test_results(contents="""\
-""",
-                                    expected_test_cases=[None]),
-            {None: FAILED})
+        self._read_test_results( {None: FAILED}, """\
+""")
 
     def test_read_results_unknown_test(self):
         try:
-            self._read_test_results(
-                contents="""\
+            self._read_test_results( ["test1"], """\
 test_start:test1
 test_start:test3
-test_suite_done""",
-                expected_test_cases=["test1"])
+test_suite_done""", False)
         except RuntimeError as exc:
             self.assertIn("unknown test case test3", str(exc))
         else:
             assert False, "RuntimeError not raised"
 
-    @staticmethod
-    def _read_test_results(contents, expected_test_cases):
+    def _read_test_results(self, expected, contents, do_assert=True):
         """
         Helper method to test the read_test_results function
         """
@@ -106,8 +82,11 @@ test_suite_done""",
                           config=None,
                           elaborate_only=False,
                           test_suite_name=None,
-                          test_cases=expected_test_cases)
-            return run._read_test_results(file_name=file_name)  # pylint: disable=protected-access
+                          test_cases=expected)
+            results = run._read_test_results(file_name=file_name) # pylint: disable=protected-access
+            if do_assert:
+              self.assertEqual(results, expected)
+            return results
 
     def test_exit_code(self):
         """
