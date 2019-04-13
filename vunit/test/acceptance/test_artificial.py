@@ -117,14 +117,6 @@ class TestVunitArtificial(unittest.TestCase):
             ("failed", "lib.tb_same_sim_some_fail.Test 2"),
             ("skipped", "lib.tb_same_sim_some_fail.Test 3")])
 
-        self.check(run_file,
-                   exit_code=1,
-                   clean=False,
-                   args=["*same_sim_all_pass_nonzero*Test 1*", "*same_sim_all_pass_nonzero*Test 2*"])
-        check_report(self.report_file, [
-            ("failed", "lib.tb_same_sim_all_pass_nonzero.Test 1"),
-            ("failed", "lib.tb_same_sim_all_pass_nonzero.Test 2")])
-
     @unittest.skipUnless(simulator_is("modelsim"), "Only modelsim supports verilog")
     def test_artificial_verilog(self):
         self.check(self.artificial_run_verilog,
@@ -208,9 +200,6 @@ EXPECTED_REPORT = (
     ("passed", "lib.tb_same_sim_some_fail.Test 1"),
     ("failed", "lib.tb_same_sim_some_fail.Test 2"),
     ("skipped", "lib.tb_same_sim_some_fail.Test 3"),
-
-    ("failed", "lib.tb_same_sim_all_pass_nonzero.Test 1"),
-    ("failed", "lib.tb_same_sim_all_pass_nonzero.Test 2"),
 
     ("passed", "lib.tb_with_checks.Test passing check"),
     ("failed", "lib.tb_with_checks.Test failing check"),
