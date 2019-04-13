@@ -564,13 +564,14 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         for test_bench in check_not_empty(test_benches, allow_empty, "No test benches found"):
             test_bench.set_generic(name, value)
 
-    def set_sim_option(self, name, value, allow_empty=False):
+    def set_sim_option(self, name, value, allow_empty=False, overwrite=True):
         """
         Set simulation option in all |configurations|
 
         :param name: |simulation_options|
         :param value: The value of the simulation option
         :param allow_empty: To disable an error when no test benches were found
+        :param overwrite: To overwrite the option or append to the existing value
 
         :example:
 
@@ -583,7 +584,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         test_benches = self._test_bench_list.get_test_benches()
         for test_bench in check_not_empty(test_benches, allow_empty, "No test benches found"):
-            test_bench.set_sim_option(name, value)
+            test_bench.set_sim_option(name, value, overwrite)
 
     def set_compile_option(self, name, value, allow_empty=False):
         """
@@ -1194,13 +1195,14 @@ class Library(object):
         for test_bench in self.get_test_benches(allow_empty=allow_empty):
             test_bench.set_generic(name, value)
 
-    def set_sim_option(self, name, value, allow_empty=False):
+    def set_sim_option(self, name, value, allow_empty=False, overwrite=True):
         """
-        Set simlation option within all |configurations| of test benches and tests this library
+        Set simulation option within all |configurations| of test benches and tests this library
 
         :param name: |simulation_options|
         :param value: The value of the simulation option
         :param allow_empty: To disable an error when no test benches were found
+        :param overwrite: To overwrite the option or append to the existing value
 
         :example:
 
@@ -1212,7 +1214,7 @@ class Library(object):
            Only affects test benches added *before* the option is set.
         """
         for test_bench in self.get_test_benches(allow_empty=allow_empty):
-            test_bench.set_sim_option(name, value)
+            test_bench.set_sim_option(name, value, overwrite)
 
     def set_compile_option(self, name, value, allow_empty=False):
         """
@@ -1506,12 +1508,13 @@ class TestBench(object):
         """
         self._test_bench.set_generic(name, value)
 
-    def set_sim_option(self, name, value):
+    def set_sim_option(self, name, value, overwrite=True):
         """
         Set simulation option within all |configurations| of this test bench or test cases within it
 
         :param name: |simulation_options|
         :param value: The value of the simulation option
+        :param overwrite: To overwrite the option or append to the existing value
 
         :example:
 
@@ -1520,7 +1523,7 @@ class TestBench(object):
            test_bench.set_sim_option("ghdl.flags", ["--no-vital-checks"])
 
         """
-        self._test_bench.set_sim_option(name, value)
+        self._test_bench.set_sim_option(name, value, overwrite)
 
     def set_pre_config(self, value):
         """
@@ -1786,12 +1789,13 @@ class Test(object):
         """
         self._test_case.set_generic(name, value)
 
-    def set_sim_option(self, name, value):
+    def set_sim_option(self, name, value, overwrite=True):
         """
         Set simulation option within all |configurations| of this test
 
         :param name: |simulation_options|
         :param value: The value of the simulation option
+        :param overwrite: To overwrite the option or append to the existing value
 
         :example:
 
@@ -1800,7 +1804,7 @@ class Test(object):
            test.set_sim_option("ghdl.flags", ["--no-vital-checks"])
 
         """
-        self._test_case.set_sim_option(name, value)
+        self._test_case.set_sim_option(name, value, overwrite)
 
     def set_pre_config(self, value):
         """
