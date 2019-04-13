@@ -90,25 +90,45 @@ test_suite_done""", False)
 
     def test_exit_code(self):
         """
-        Test that results are overwritten when all are PASSED but the exit code is nonzero
+        Test that results are overwritten when none is FAILED but the exit code is nonzero
         """
-        self.assertEqual(self._test_exit_code(True), False)
-        self.assertEqual(self._test_exit_code(False), False)
-        self.assertEqual(self._test_exit_code(True, True), False)
-        self.assertEqual(self._test_exit_code(False, True), True)
 
-    @staticmethod
-    def _test_exit_code(sim_ok=True, has_valid_exit_code=False):
+        def test(contents, results, expected=None, werechecked=[True, True, True, True]):
+            self._test_exit_code(contents, results, True,  False, werechecked[0])
+            self._test_exit_code(contents, results, False, False, werechecked[1])
+            self._test_exit_code(contents, results, True,  True,  werechecked[2])
+            r = results
+            if expected is not None:
+                r = expected
+            self._test_exit_code(contents, r, False, True, werechecked[3])
+
+        test("""\ntest_start:test1\ntest_suite_done\n""",
+            {"test1": PASSED},
+            {"test1": FAILED},
+            [False, False, False, True]
+        )
+
+        test("""\ntest_start:test1\ntest_suite_done\n""",
+            {"test1": PASSED, "test2": SKIPPED},
+            {"test1": FAILED, "test2": SKIPPED},
+            [False, False, False, True]
+        )
+
+        test("""\ntest_start:test1\n""", {"test1": FAILED, "test2": SKIPPED} )
+        contents = """\ntest_start:test1\ntest_start:test2\n"""
+        test(contents, {"test1": PASSED, "test2": FAILED})
+        test(contents, {"test1": PASSED, "test2": FAILED, "test3": SKIPPED})
+
+    def _test_exit_code(self, contents, expected, sim_ok=True, has_valid_exit_code=False, waschecked=False):
         """
         Helper method to test the check_results function
         """
         with create_tempdir() as path:
             file_name = join(path, "vunit_results")
-            with open(file_name, "w") as fptr:
-                fptr.write("""\
-test_start:test1
-test_suite_done
-""")
+            if contents is not None:
+                with open(file_name, "w") as fptr:
+                    fptr.write(contents)
+
             sim_if = SimulatorInterface
             @staticmethod
             def func():
@@ -119,8 +139,10 @@ test_suite_done
                           config=None,
                           elaborate_only=False,
                           test_suite_name=None,
-                          test_cases=["test1"])
+                          test_cases=expected)
 
             results = run._read_test_results(file_name=file_name)  # pylint: disable=protected-access
-            done, _ = run._check_results(results, sim_ok)  # pylint: disable=protected-access
+            done, results = run._check_results(results, sim_ok)  # pylint: disable=protected-access
+            self.assertEqual(results, expected)
+            self.assertEqual(done, waschecked)
             return done
