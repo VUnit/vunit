@@ -22,44 +22,44 @@ class TestTestSuites(TestCase):
     """
 
     def test_missing_results_fails_all(self):
-        self._read_test_results( {"test1": FAILED, "test2": FAILED}, None)
+        self._read_test_results({"test1": FAILED, "test2": FAILED}, None)
 
     def test_read_results_all_passed(self):
-        self._read_test_results( {"test1": PASSED, "test2": PASSED}, """\
+        self._read_test_results({"test1": PASSED, "test2": PASSED}, """\
 test_start:test1
 test_start:test2
 test_suite_done
 """)
 
     def test_read_results_suite_not_done(self):
-        self._read_test_results( {"test1": PASSED, "test2": FAILED}, """\
+        self._read_test_results({"test1": PASSED, "test2": FAILED}, """\
 test_start:test1
 test_start:test2
 """)
 
-        self._read_test_results( {"test1": FAILED, "test2": PASSED}, """\
+        self._read_test_results({"test1": FAILED, "test2": PASSED}, """\
 test_start:test2
 test_start:test1
 """)
 
     def test_read_results_skipped_test(self):
-        self._read_test_results( {"test1": PASSED, "test2": SKIPPED, "test3": SKIPPED}, """\
+        self._read_test_results({"test1": PASSED, "test2": SKIPPED, "test3": SKIPPED}, """\
 test_start:test1
 test_suite_done
 """)
 
     def test_read_results_anonynmous_test_pass(self):
-        self._read_test_results( {None: PASSED}, """\
+        self._read_test_results({None: PASSED}, """\
 test_suite_done
 """)
 
     def test_read_results_anonynmous_test_fail(self):
-        self._read_test_results( {None: FAILED}, """\
+        self._read_test_results({None: FAILED}, """\
 """)
 
     def test_read_results_unknown_test(self):
         try:
-            self._read_test_results( ["test1"], """\
+            self._read_test_results(["test1"], """\
 test_start:test1
 test_start:test3
 test_suite_done""", False)
@@ -83,9 +83,9 @@ test_suite_done""", False)
                           elaborate_only=False,
                           test_suite_name=None,
                           test_cases=expected)
-            results = run._read_test_results(file_name=file_name) # pylint: disable=protected-access
+            results = run._read_test_results(file_name=file_name)  # pylint: disable=protected-access
             if do_assert:
-              self.assertEqual(results, expected)
+                self.assertEqual(results, expected)
             return results
 
     def test_exit_code(self):
@@ -93,28 +93,35 @@ test_suite_done""", False)
         Test that results are overwritten when none is FAILED but the exit code is nonzero
         """
 
-        def test(contents, results, expected=None, werechecked=[True, True, True, True]):
-            self._test_exit_code(contents, results, True,  False, werechecked[0])
+        def test(contents, results, expected=None, werechecked=None):
+            """
+            Test the four combinations of 'sim_ok' and 'has_valid_exit_code'
+            """
+            if werechecked is None:
+                werechecked = [True, True, True, True]
+            self._test_exit_code(contents, results, True, False, werechecked[0])
             self._test_exit_code(contents, results, False, False, werechecked[1])
-            self._test_exit_code(contents, results, True,  True,  werechecked[2])
-            r = results
+            self._test_exit_code(contents, results, True, True, werechecked[2])
+            val = results
             if expected is not None:
-                r = expected
-            self._test_exit_code(contents, r, False, True, werechecked[3])
+                val = expected
+            self._test_exit_code(contents, val, False, True, werechecked[3])
 
-        test("""\ntest_start:test1\ntest_suite_done\n""",
+        test(
+            """\ntest_start:test1\ntest_suite_done\n""",
             {"test1": PASSED},
             {"test1": FAILED},
             [False, False, False, True]
         )
 
-        test("""\ntest_start:test1\ntest_suite_done\n""",
+        test(
+            """\ntest_start:test1\ntest_suite_done\n""",
             {"test1": PASSED, "test2": SKIPPED},
             {"test1": FAILED, "test2": SKIPPED},
             [False, False, False, True]
         )
 
-        test("""\ntest_start:test1\n""", {"test1": FAILED, "test2": SKIPPED} )
+        test("""\ntest_start:test1\n""", {"test1": FAILED, "test2": SKIPPED})
         contents = """\ntest_start:test1\ntest_start:test2\n"""
         test(contents, {"test1": PASSED, "test2": FAILED})
         test(contents, {"test1": PASSED, "test2": FAILED, "test3": SKIPPED})
