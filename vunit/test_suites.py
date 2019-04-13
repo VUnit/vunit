@@ -194,11 +194,6 @@ class TestRun(object):
         if self._simulator_if.has_valid_exit_code() and not sim_ok:
             return True, dict((name, FAILED) if results[name] is PASSED else (name, results[name]) for name in results)
 
-        # Do not run post check unless all passed
-        for status in results.values():
-            if status != PASSED:
-                return True, results
-
         return False, results
 
     def _simulate(self, output_path):
