@@ -163,12 +163,12 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         config = Configuration("name", design_unit, sim_options={"ghdl.elab_e": True})
 
         simif = GHDLInterface(prefix="prefix", output_path="")
-        simif._vhdl_standard = "2008"
-        simif._project = Project()
-        simif._project.add_library("lib", "lib_path")
+        simif._vhdl_standard = "2008"  # pylint: disable=protected-access
+        simif._project = Project()  # pylint: disable=protected-access
+        simif._project.add_library("lib", "lib_path")  # pylint: disable=protected-access
 
         self.assertEqual(
-            simif._get_command(config, "output_path/ghdl", True),
+            simif._get_command(config, "output_path/ghdl", True),  # pylint: disable=protected-access
             [
                 join("prefix", 'ghdl'),
                 '-e',
