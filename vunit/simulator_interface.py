@@ -138,6 +138,13 @@ class SimulatorInterface(object):
         """
         return False
 
+    @staticmethod
+    def has_valid_exit_code():
+        """
+        Return if the simulation should fail with nonzero exit codes
+        """
+        return False
+
     def merge_coverage(self, file_name, args):  # pylint: disable=unused-argument, no-self-use
         """
         Hook for simulator interface to creating coverage reports

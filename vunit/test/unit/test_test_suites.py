@@ -13,6 +13,7 @@ from unittest import TestCase
 from vunit.test_suites import (TestRun)
 from vunit.test_report import (PASSED, SKIPPED, FAILED)
 from vunit.test.common import create_tempdir
+from vunit.simulator_interface import SimulatorInterface
 
 
 class TestTestSuites(TestCase):
@@ -21,77 +22,53 @@ class TestTestSuites(TestCase):
     """
 
     def test_missing_results_fails_all(self):
-        self.assertEqual(
-            self._read_test_results(contents=None,
-                                    expected_test_cases=["test1", "test2"]),
-            {"test1": FAILED, "test2": FAILED})
+        self._read_test_results({"test1": FAILED, "test2": FAILED}, None)
 
     def test_read_results_all_passed(self):
-        self.assertEqual(
-            self._read_test_results(contents="""\
+        self._read_test_results({"test1": PASSED, "test2": PASSED}, """\
 test_start:test1
 test_start:test2
 test_suite_done
-""",
-                                    expected_test_cases=["test1", "test2"]),
-            {"test1": PASSED, "test2": PASSED})
+""")
 
     def test_read_results_suite_not_done(self):
-        self.assertEqual(
-            self._read_test_results(contents="""\
+        self._read_test_results({"test1": PASSED, "test2": FAILED}, """\
 test_start:test1
 test_start:test2
-""",
-                                    expected_test_cases=["test1", "test2"]),
-            {"test1": PASSED, "test2": FAILED})
+""")
 
-        self.assertEqual(
-            self._read_test_results(contents="""\
+        self._read_test_results({"test1": FAILED, "test2": PASSED}, """\
 test_start:test2
 test_start:test1
-""",
-                                    expected_test_cases=["test1", "test2"]),
-            {"test1": FAILED, "test2": PASSED})
+""")
 
     def test_read_results_skipped_test(self):
-        self.assertEqual(
-            self._read_test_results(contents="""\
+        self._read_test_results({"test1": PASSED, "test2": SKIPPED, "test3": SKIPPED}, """\
 test_start:test1
 test_suite_done
-""",
-                                    expected_test_cases=["test1", "test2", "test3"]),
-            {"test1": PASSED, "test2": SKIPPED, "test3": SKIPPED})
+""")
 
     def test_read_results_anonynmous_test_pass(self):
-        self.assertEqual(
-            self._read_test_results(contents="""\
+        self._read_test_results({None: PASSED}, """\
 test_suite_done
-""",
-                                    expected_test_cases=[None]),
-            {None: PASSED})
+""")
 
     def test_read_results_anonynmous_test_fail(self):
-        self.assertEqual(
-            self._read_test_results(contents="""\
-""",
-                                    expected_test_cases=[None]),
-            {None: FAILED})
+        self._read_test_results({None: FAILED}, """\
+""")
 
     def test_read_results_unknown_test(self):
         try:
-            self._read_test_results(
-                contents="""\
+            self._read_test_results(["test1"], """\
 test_start:test1
 test_start:test3
-test_suite_done""",
-                expected_test_cases=["test1"])
+test_suite_done""")
         except RuntimeError as exc:
             self.assertIn("unknown test case test3", str(exc))
         else:
             assert False, "RuntimeError not raised"
 
-    @staticmethod
-    def _read_test_results(contents, expected_test_cases):
+    def _read_test_results(self, expected, contents):
         """
         Helper method to test the read_test_results function
         """
@@ -105,5 +82,73 @@ test_suite_done""",
                           config=None,
                           elaborate_only=False,
                           test_suite_name=None,
-                          test_cases=expected_test_cases)
-            return run._read_test_results(file_name=file_name)  # pylint: disable=protected-access
+                          test_cases=expected)
+            results = run._read_test_results(file_name=file_name)  # pylint: disable=protected-access
+            self.assertEqual(results, expected)
+            return results
+
+    def test_exit_code(self):
+        """
+        Test that results are overwritten when none is FAILED but the exit code is nonzero
+        """
+
+        def test(contents, results, expected=None, werechecked=None):
+            """
+            Test the four combinations of 'sim_ok' and 'has_valid_exit_code'
+            """
+            if werechecked is None:
+                werechecked = [True, True, True, True]
+            self._test_exit_code(contents, results, True, False, werechecked[0])
+            self._test_exit_code(contents, results, False, False, werechecked[1])
+            self._test_exit_code(contents, results, True, True, werechecked[2])
+            val = results
+            if expected is not None:
+                val = expected
+            self._test_exit_code(contents, val, False, True, werechecked[3])
+
+        test(
+            """\ntest_start:test1\ntest_suite_done\n""",
+            {"test1": PASSED},
+            {"test1": FAILED},
+            [False, False, False, True]
+        )
+
+        test(
+            """\ntest_start:test1\ntest_suite_done\n""",
+            {"test1": PASSED, "test2": SKIPPED},
+            {"test1": FAILED, "test2": SKIPPED},
+            [False, False, False, True]
+        )
+
+        test("""\ntest_start:test1\n""", {"test1": FAILED, "test2": SKIPPED})
+        contents = """\ntest_start:test1\ntest_start:test2\n"""
+        test(contents, {"test1": PASSED, "test2": FAILED})
+        test(contents, {"test1": PASSED, "test2": FAILED, "test3": SKIPPED})
+
+    def _test_exit_code(self, contents, expected, sim_ok=True, has_valid_exit_code=False, waschecked=False):
+        """
+        Helper method to test the check_results function
+        """
+        with create_tempdir() as path:
+            file_name = join(path, "vunit_results")
+            if contents is not None:
+                with open(file_name, "w") as fptr:
+                    fptr.write(contents)
+
+            sim_if = SimulatorInterface
+            @staticmethod
+            def func():
+                return has_valid_exit_code
+            sim_if.has_valid_exit_code = func
+
+            run = TestRun(simulator_if=sim_if,
+                          config=None,
+                          elaborate_only=False,
+                          test_suite_name=None,
+                          test_cases=expected)
+
+            results = run._read_test_results(file_name=file_name)  # pylint: disable=protected-access
+            self.assertEqual(
+                run._check_results(results, sim_ok),  # pylint: disable=protected-access
+                (waschecked, expected)
+            )
