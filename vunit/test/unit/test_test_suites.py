@@ -62,13 +62,13 @@ test_suite_done
             self._read_test_results(["test1"], """\
 test_start:test1
 test_start:test3
-test_suite_done""", False)
+test_suite_done""")
         except RuntimeError as exc:
             self.assertIn("unknown test case test3", str(exc))
         else:
             assert False, "RuntimeError not raised"
 
-    def _read_test_results(self, expected, contents, do_assert=True):
+    def _read_test_results(self, expected, contents):
         """
         Helper method to test the read_test_results function
         """
@@ -84,8 +84,7 @@ test_suite_done""", False)
                           test_suite_name=None,
                           test_cases=expected)
             results = run._read_test_results(file_name=file_name)  # pylint: disable=protected-access
-            if do_assert:
-                self.assertEqual(results, expected)
+            self.assertEqual(results, expected)
             return results
 
     def test_exit_code(self):
@@ -149,7 +148,7 @@ test_suite_done""", False)
                           test_cases=expected)
 
             results = run._read_test_results(file_name=file_name)  # pylint: disable=protected-access
-            done, results = run._check_results(results, sim_ok)  # pylint: disable=protected-access
-            self.assertEqual(results, expected)
-            self.assertEqual(done, waschecked)
-            return done
+            self.assertEqual(
+                run._check_results(results, sim_ok),  # pylint: disable=protected-access
+                (waschecked, expected)
+            )
