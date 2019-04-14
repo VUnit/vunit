@@ -8,7 +8,6 @@
 Test the GHDL interface
 """
 
-
 import unittest
 from os.path import join, dirname, exists
 import os
@@ -18,6 +17,8 @@ from vunit.test.mock_2or3 import mock
 from vunit.project import Project
 from vunit.ostools import renew_path, write_file
 from vunit.exceptions import CompileError
+from vunit.test.unit.test_test_bench import Entity
+from vunit.configuration import Configuration
 
 
 class TestGHDLInterface(unittest.TestCase):
@@ -154,32 +155,31 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
             [join("prefix", 'ghdl'), '-a', '--workdir=lib_path', '--work=lib', '--std=08',
              '-Plib_path', 'custom', 'flags', 'file.vhd'], env=simif.get_env())
 
-    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
-    def test_elaborate_e_project(self, check_output):  # pylint: disable=no-self-use
-        simif = GHDLInterface(prefix="prefix", output_path="")
-        write_file("file.vhd", "")
-
-        from vunit.test.unit.test_test_bench import Entity
-        from vunit.configuration import Configuration
-
+    def test_elaborate_e_project(self):
         design_unit = Entity('tb_entity', file_name=join("tempdir", "file.vhd"))
         design_unit.original_file_name = join("tempdir", "other_path", "original_file.vhd")
         design_unit.generic_names = ["runner_cfg", "tb_path"]
 
         config = Configuration("name", design_unit, sim_options={"ghdl.elab_e": True})
+
+        simif = GHDLInterface(prefix="prefix", output_path="")
         simif._vhdl_standard = "2008"
         simif._project = Project()
         simif._project.add_library("lib", "lib_path")
 
-        simif.simulate(
-            output_path="output_path",
-            test_suite_name="test_suite_name",
-            config=config,
-            elaborate_only=True
+        self.assertEqual(
+            simif._get_command(config, "output_path/ghdl", True),
+            [
+                join("prefix", 'ghdl'),
+                '-e',
+                '--std=08',
+                '--work=lib',
+                '--workdir=lib_path',
+                '-Plib_path',
+                '-o', 'output_path/ghdl/tb_entity-arch',
+                'tb_entity', 'arch'
+            ]
         )
-        check_output.assert_called_once_with(
-            [join("prefix", 'ghdl'), '-e', '--std=08', '--work=lib', '--workdir=lib_path',
-             '-Plib_path',  '-o', 'output_path/ghdl/tb_entity-arch', 'tb_entity', 'arch'], env=simif.get_env())
 
     def test_compile_project_verilog_error(self):
         simif = GHDLInterface(prefix="prefix", output_path="")
