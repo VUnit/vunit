@@ -164,7 +164,7 @@ class TestRun(object):
 
         sim_ok = self._simulate(output_path)
 
-        if self._elaborate_only or self._config.sim_options.get("ghdl.elab_e", False):
+        if self._elaborate_only:
             status = PASSED if sim_ok else FAILED
             return dict((name, status) for name in self._test_cases)
 

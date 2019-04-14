@@ -233,11 +233,11 @@ class GHDLInterface(SimulatorInterface):
         if not exists(script_path):
             os.makedirs(script_path)
 
-        ghdl_e = config.sim_options.get("ghdl.elab_e", False)
+        ghdl_e = elaborate_only and config.sim_options.get("ghdl.elab_e", False)
 
         cmd = self._get_command(config, script_path, ghdl_e)
 
-        if elaborate_only:
+        if elaborate_only and not ghdl_e:
             cmd += ["--no-run"]
 
         if self._gtkwave_fmt is not None and not ghdl_e:
@@ -261,7 +261,7 @@ class GHDLInterface(SimulatorInterface):
         except Process.NonZeroExitCode:
             status = False
 
-        if self._gui and not elaborate_only and not ghdl_e:
+        if self._gui and not elaborate_only:
             cmd = ["gtkwave"] + shlex.split(self._gtkwave_args) + [data_file_name]
 
             init_file = config.sim_options.get(self.name + ".gtkwave_script.gui", None)
