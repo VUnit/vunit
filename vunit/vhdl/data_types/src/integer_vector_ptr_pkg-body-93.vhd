@@ -58,7 +58,6 @@ package body integer_vector_ptr_pkg is
   end function;
 
   procedure reallocate(ptr : integer_vector_ptr_t; length : natural; value : integer := 0) is
-    variable old_ptr, new_ptr : integer_vector_access_t;
   begin
     deallocate(ptrs(ptr.index));
     ptrs(ptr.index) := new integer_vector'(0 to length - 1 => value);
