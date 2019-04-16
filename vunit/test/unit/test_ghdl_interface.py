@@ -168,15 +168,15 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         simif._project.add_library("lib", "lib_path")  # pylint: disable=protected-access
 
         self.assertEqual(
-            simif._get_command(config, "output_path/ghdl", True),  # pylint: disable=protected-access
+            simif._get_command(config, join('output_path', 'ghdl'), True),  # pylint: disable=protected-access
             [
-                join("prefix", 'ghdl'),
+                join('prefix', 'ghdl'),
                 '-e',
                 '--std=08',
                 '--work=lib',
                 '--workdir=lib_path',
                 '-Plib_path',
-                '-o', 'output_path/ghdl/tb_entity-arch',
+                '-o', join('output_path', 'ghdl', 'tb_entity-arch'),
                 'tb_entity', 'arch'
             ]
         )
