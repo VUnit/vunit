@@ -165,9 +165,8 @@ class TestRun(object):
         sim_ok = self._simulate(output_path)
 
         if self._elaborate_only:
-            for name in self._test_cases:
-                results[name] = PASSED if sim_ok else FAILED
-            return results
+            status = PASSED if sim_ok else FAILED
+            return dict((name, status) for name in self._test_cases)
 
         results = self._read_test_results(file_name=get_result_file_name(output_path))
 

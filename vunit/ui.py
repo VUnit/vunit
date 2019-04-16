@@ -191,6 +191,10 @@ The following simulation options are known.
    Extra simulation flags passed to ``ghdl --elab-run``.
    Must be a list of strings.
 
+``ghdl.elab_e``
+   With ``--elaborate``, execute ``ghdl -e`` instead of ``ghdl --elab-run --no-run``.
+   Must be a boolean.
+
 ``ghdl.gtkwave_script.gui``
    A user defined TCL-file that is sourced after the design has been loaded in the GUI.
    For example this can be used to configure the waveform viewer. Must be a string.

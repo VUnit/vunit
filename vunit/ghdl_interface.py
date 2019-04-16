@@ -18,7 +18,8 @@ from sys import stdout  # To avoid output catched in non-verbose mode
 from vunit.ostools import Process
 from vunit.simulator_interface import (SimulatorInterface,
                                        ListOfStringOption,
-                                       StringOption)
+                                       StringOption,
+                                       BooleanOption)
 from vunit.exceptions import CompileError
 LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ class GHDLInterface(SimulatorInterface):
         ListOfStringOption("ghdl.sim_flags"),
         ListOfStringOption("ghdl.elab_flags"),
         StringOption("ghdl.gtkwave_script.gui"),
+        BooleanOption("ghdl.elab_e")
     ]
 
     @staticmethod
@@ -187,31 +189,35 @@ class GHDLInterface(SimulatorInterface):
         cmd += [source_file.name]
         return cmd
 
-    def _get_sim_command(self, config, output_path):
+    def _get_command(self, config, output_path, ghdl_e):
         """
         Return GHDL simulation command
         """
         cmd = [join(self._prefix, self.executable)]
-        cmd += ['--elab-run']
+
+        if ghdl_e:
+            cmd += ['-e']
+        else:
+            cmd += ['--elab-run']
+
         cmd += ['--std=%s' % self._std_str(self._vhdl_standard)]
         cmd += ['--work=%s' % config.library_name]
         cmd += ['--workdir=%s' % self._project.get_library(config.library_name).directory]
         cmd += ['-P%s' % lib.directory for lib in self._project.get_libraries()]
-
         if self._has_output_flag():
             cmd += ['-o', join(output_path, "%s-%s" % (config.entity_name,
                                                        config.architecture_name))]
         cmd += config.sim_options.get("ghdl.elab_flags", [])
         cmd += [config.entity_name, config.architecture_name]
-        cmd += config.sim_options.get("ghdl.sim_flags", [])
 
-        for name, value in config.generics.items():
-            cmd += ['-g%s=%s' % (name, value)]
+        if not ghdl_e:
+            cmd += config.sim_options.get("ghdl.sim_flags", [])
+            for name, value in config.generics.items():
+                cmd += ['-g%s=%s' % (name, value)]
+            cmd += ['--assert-level=%s' % config.vhdl_assert_stop_level]
+            if config.sim_options.get("disable_ieee_warnings", False):
+                cmd += ["--ieee-asserts=disable"]
 
-        cmd += ['--assert-level=%s' % config.vhdl_assert_stop_level]
-
-        if config.sim_options.get("disable_ieee_warnings", False):
-            cmd += ["--ieee-asserts=disable"]
         return cmd
 
     def simulate(self,  # pylint: disable=too-many-locals
@@ -227,12 +233,14 @@ class GHDLInterface(SimulatorInterface):
         if not exists(script_path):
             os.makedirs(script_path)
 
-        cmd = self._get_sim_command(config, script_path)
+        ghdl_e = elaborate_only and config.sim_options.get("ghdl.elab_e", False)
 
-        if elaborate_only:
+        cmd = self._get_command(config, script_path, ghdl_e)
+
+        if elaborate_only and not ghdl_e:
             cmd += ["--no-run"]
 
-        if self._gtkwave_fmt is not None:
+        if self._gtkwave_fmt is not None and not ghdl_e:
             data_file_name = join(script_path, "wave.%s" % self._gtkwave_fmt)
 
             if exists(data_file_name):

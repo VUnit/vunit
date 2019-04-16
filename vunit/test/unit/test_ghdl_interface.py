@@ -8,7 +8,6 @@
 Test the GHDL interface
 """
 
-
 import unittest
 from os.path import join, dirname, exists
 import os
@@ -18,6 +17,8 @@ from vunit.test.mock_2or3 import mock
 from vunit.project import Project
 from vunit.ostools import renew_path, write_file
 from vunit.exceptions import CompileError
+from vunit.test.unit.test_test_bench import Entity
+from vunit.configuration import Configuration
 
 
 class TestGHDLInterface(unittest.TestCase):
@@ -153,6 +154,32 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         check_output.assert_called_once_with(
             [join("prefix", 'ghdl'), '-a', '--workdir=lib_path', '--work=lib', '--std=08',
              '-Plib_path', 'custom', 'flags', 'file.vhd'], env=simif.get_env())
+
+    def test_elaborate_e_project(self):
+        design_unit = Entity('tb_entity', file_name=join("tempdir", "file.vhd"))
+        design_unit.original_file_name = join("tempdir", "other_path", "original_file.vhd")
+        design_unit.generic_names = ["runner_cfg", "tb_path"]
+
+        config = Configuration("name", design_unit, sim_options={"ghdl.elab_e": True})
+
+        simif = GHDLInterface(prefix="prefix", output_path="")
+        simif._vhdl_standard = "2008"  # pylint: disable=protected-access
+        simif._project = Project()  # pylint: disable=protected-access
+        simif._project.add_library("lib", "lib_path")  # pylint: disable=protected-access
+
+        self.assertEqual(
+            simif._get_command(config, join('output_path', 'ghdl'), True),  # pylint: disable=protected-access
+            [
+                join('prefix', 'ghdl'),
+                '-e',
+                '--std=08',
+                '--work=lib',
+                '--workdir=lib_path',
+                '-Plib_path',
+                '-o', join('output_path', 'ghdl', 'tb_entity-arch'),
+                'tb_entity', 'arch'
+            ]
+        )
 
     def test_compile_project_verilog_error(self):
         simif = GHDLInterface(prefix="prefix", output_path="")
