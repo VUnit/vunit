@@ -32,6 +32,16 @@ def simulator_is(*names):
     return SIMULATOR_FACTORY.select_simulator().name in names
 
 
+def simulator_check(func):
+    """
+    Check some method of the selected simulator
+    """
+    simif = SIMULATOR_FACTORY.select_simulator()
+    if simif is None:
+        return False
+    return func(simif)
+
+
 def check_report(report_file, tests=None):
     """
     Check an XML report_file for the exact occurrence of specific test results
