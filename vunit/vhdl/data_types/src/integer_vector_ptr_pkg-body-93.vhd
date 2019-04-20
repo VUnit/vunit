@@ -13,7 +13,11 @@ package body integer_vector_ptr_pkg is
   shared variable current_index : integer := 0;
   shared variable ptrs : integer_vector_access_vector_access_t := null;
 
-  impure function new_integer_vector_ptr(length : natural := 0; value : integer := 0) return integer_vector_ptr_t is
+  impure function
+  new_integer_vector_ptr(
+    length : natural := 0;
+    value  : integer := 0
+  ) return integer_vector_ptr_t is
     variable old_ptrs : integer_vector_access_vector_access_t;
     variable retval : integer_vector_ptr_t := (index => current_index);
   begin
@@ -34,36 +38,57 @@ package body integer_vector_ptr_pkg is
     ptrs(current_index) := new integer_vector'(0 to length-1 => value);
     current_index := current_index + 1;
     return retval;
-  end function;
+  end;
 
-  procedure deallocate(ptr : integer_vector_ptr_t) is
-  begin
+  procedure
+  deallocate(
+    ptr : integer_vector_ptr_t
+  ) is begin
     deallocate(ptrs(ptr.index));
     ptrs(ptr.index) := null;
-  end procedure;
+  end;
 
-  impure function length(ptr : integer_vector_ptr_t) return integer is
-  begin
+  impure function
+  length(
+    ptr : integer_vector_ptr_t
+  ) return integer is begin
     return ptrs(ptr.index)'length;
-  end function;
+  end;
 
-  procedure set(ptr : integer_vector_ptr_t; index : integer; value : integer) is
-  begin
+  procedure
+  set(
+    ptr   : integer_vector_ptr_t;
+    index : integer;
+    value : integer
+  ) is begin
     ptrs(ptr.index)(index) := value;
-  end procedure;
+  end;
 
-  impure function get(ptr : integer_vector_ptr_t; index : integer) return integer is
-  begin
+  impure function
+  get(
+    ptr   : integer_vector_ptr_t;
+    index : integer
+  ) return integer is begin
     return ptrs(ptr.index)(index);
-  end function;
+  end;
 
-  procedure reallocate(ptr : integer_vector_ptr_t; length : natural; value : integer := 0) is
-  begin
+  procedure
+  reallocate(
+    ptr    : integer_vector_ptr_t;
+    length : natural;
+    value  : integer := 0
+  ) is begin
     deallocate(ptrs(ptr.index));
     ptrs(ptr.index) := new integer_vector'(0 to length - 1 => value);
-  end procedure;
+  end;
 
-  procedure resize(ptr : integer_vector_ptr_t; length : natural; drop : natural := 0; value : integer := 0) is
+  procedure
+  resize(
+    ptr    : integer_vector_ptr_t;
+    length : natural;
+    drop   : natural := 0;
+    value  : integer := 0
+  ) is
     variable old_ptr, new_ptr : integer_vector_access_t;
     variable min_length : natural := length;
   begin
@@ -80,38 +105,47 @@ package body integer_vector_ptr_pkg is
 
     ptrs(ptr.index) := new_ptr;
     deallocate(old_ptr);
-  end procedure;
+  end;
 
-  function to_integer(value : integer_vector_ptr_t) return integer is
-  begin
+  function
+  to_integer(
+    value : integer_vector_ptr_t
+  ) return integer is begin
     return value.index;
-  end function;
+  end;
 
-  impure function to_integer_vector_ptr(value : integer) return integer_vector_ptr_t is
-  begin
+  impure function
+  to_integer_vector_ptr(
+    value : integer
+  ) return integer_vector_ptr_t is begin
     -- @TODO maybe assert that the index is valid
     return (index => value);
-  end function;
+  end;
 
-  function encode(data : integer_vector_ptr_t) return string is
-  begin
+  function
+  encode(
+    data : integer_vector_ptr_t
+  ) return string is begin
     return encode(data.index);
   end;
 
-  function decode(code : string) return integer_vector_ptr_t is
+  function
+  decode(
+    code : string
+  ) return integer_vector_ptr_t is
     variable ret_val : integer_vector_ptr_t;
-    variable index : positive := code'left;
+    variable index   : positive := code'left;
   begin
     decode(code, index, ret_val);
-
     return ret_val;
   end;
 
-  procedure decode (
-    constant code : string;
-    variable index : inout positive;
-    variable result : out integer_vector_ptr_t) is
-  begin
+  procedure
+  decode(
+    constant code   : string;
+    variable index  : inout positive;
+    variable result : out integer_vector_ptr_t
+  ) is begin
     decode(code, index, result.index);
   end;
 

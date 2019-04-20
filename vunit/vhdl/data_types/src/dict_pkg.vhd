@@ -18,14 +18,43 @@ package dict_pkg is
   end record;
   constant null_dict : dict_t := (others => null_ptr);
 
-  impure function new_dict return dict_t;
-  procedure deallocate(variable dict : inout dict_t);
+  impure function
+  new_dict
+  return dict_t;
 
-  procedure set(dict : dict_t; key, value : string);
-  impure function get(dict : dict_t; key : string) return string;
-  impure function has_key(dict : dict_t; key : string) return boolean;
-  impure function num_keys(dict : dict_t) return natural;
-  procedure remove(dict : dict_t; key : string);
+  procedure
+  deallocate(
+    variable dict : inout dict_t
+  );
+
+  procedure
+  set(
+    dict       : dict_t;
+    key, value : string
+  );
+
+  impure function
+  get(
+    dict : dict_t;
+    key  : string
+  ) return string;
+
+  impure function
+  has_key(
+    dict : dict_t;
+    key  : string
+  ) return boolean;
+
+  impure function
+  num_keys(
+    dict : dict_t
+  ) return natural;
+
+  procedure
+  remove(
+    dict : dict_t;
+    key  : string
+  );
 end package;
 
 package body dict_pkg is
@@ -37,7 +66,9 @@ package body dict_pkg is
 
   constant new_bucket_size : natural := 1;
 
-  impure function new_dict return dict_t is
+  impure function
+  new_dict
+  return dict_t is
     variable dict : dict_t;
     variable tmp : integer_vector_ptr_t;
     constant num_buckets : natural := 1;
@@ -60,9 +91,12 @@ package body dict_pkg is
       set(dict.p_bucket_values, i, to_integer(tmp));
     end loop;
     return dict;
-  end function;
+  end;
 
-  procedure deallocate(variable dict : inout dict_t) is
+  procedure
+  deallocate(
+    variable dict : inout dict_t
+  ) is
     constant num_buckets : natural := length(dict.p_bucket_lengths);
 
     variable bucket_values : integer_vector_ptr_t;
@@ -97,16 +131,24 @@ package body dict_pkg is
   end;
 
   -- DJB2 hash
-  impure function hash(str : string) return natural is
+  impure function
+  hash(
+    str : string
+  ) return natural is
     variable value : natural := 5381;
   begin
     for i in str'range loop
       value := (33*value + character'pos(str(i))) mod 2**(31-6);
     end loop;
     return value;
-  end function;
+  end;
 
-  impure function get_value_ptr(dict : dict_t; key_hash : natural; key : string) return string_ptr_t is
+  impure function
+  get_value_ptr(
+    dict     : dict_t;
+    key_hash : natural;
+    key      : string
+  ) return string_ptr_t is
     constant num_buckets : natural := length(dict.p_bucket_lengths);
     constant bucket_idx : natural := key_hash mod num_buckets;
 
@@ -123,7 +165,13 @@ package body dict_pkg is
     return null_string_ptr;
   end;
 
-  procedure remove(dict : dict_t; bucket_idx : natural; i : natural; deallocate_item : boolean := true) is
+  procedure
+  remove(
+    dict            : dict_t;
+    bucket_idx      : natural;
+    i               : natural;
+    deallocate_item : boolean := true
+  ) is
     constant bucket_length : natural := get(dict.p_bucket_lengths, bucket_idx);
     constant bucket_values : integer_vector_ptr_t := to_integer_vector_ptr(get(dict.p_bucket_values, bucket_idx));
     constant bucket_keys : integer_vector_ptr_t := to_integer_vector_ptr(get(dict.p_bucket_keys, bucket_idx));
@@ -145,7 +193,12 @@ package body dict_pkg is
     set(dict.p_meta, meta_num_keys, num_keys(dict)-1);
   end;
 
-  procedure remove(dict : dict_t; key_hash : natural; key : string) is
+  procedure
+  remove(
+    dict     : dict_t;
+    key_hash : natural;
+    key      : string
+  ) is
     constant num_buckets : natural := length(dict.p_bucket_lengths);
     constant bucket_idx : natural := key_hash mod num_buckets;
 
@@ -160,9 +213,18 @@ package body dict_pkg is
     end loop;
   end;
 
-  procedure insert_new(dict : dict_t; key_hash : natural; key, value : string_ptr_t);
+  procedure
+  insert_new(
+    dict       : dict_t;
+    key_hash   : natural;
+    key, value : string_ptr_t
+  );
 
-  procedure relocate_items(dict : dict_t; old_num_buckets : natural) is
+  procedure
+  relocate_items(
+    dict : dict_t;
+    old_num_buckets : natural
+  ) is
     constant num_buckets : natural := length(dict.p_bucket_lengths);
     variable bucket_values : integer_vector_ptr_t;
     variable bucket_keys : integer_vector_ptr_t;
@@ -199,7 +261,11 @@ package body dict_pkg is
     end loop;
   end;
 
-  procedure resize(dict : dict_t; num_buckets : natural) is
+  procedure
+  resize(
+    dict : dict_t;
+    num_buckets : natural
+  ) is
     constant old_num_buckets : natural := length(dict.p_bucket_lengths);
   begin
     resize(dict.p_bucket_lengths, num_buckets);
@@ -216,7 +282,11 @@ package body dict_pkg is
     relocate_items(dict, old_num_buckets);
   end;
 
-  procedure set(dict : dict_t; key, value : string) is
+  procedure
+  set(
+    dict : dict_t;
+    key, value : string
+  ) is
     constant key_hash : natural := hash(key);
     constant old_value_ptr : string_ptr_t := get_value_ptr(dict, key_hash, key);
   begin
@@ -228,7 +298,12 @@ package body dict_pkg is
     end if;
   end;
 
-  procedure insert_new(dict : dict_t; key_hash : natural; key, value : string_ptr_t) is
+  procedure
+  insert_new(
+    dict       : dict_t;
+    key_hash   : natural;
+    key, value : string_ptr_t
+  ) is
     constant num_buckets : natural := length(dict.p_bucket_lengths);
     constant bucket_idx : natural := key_hash mod num_buckets;
 
@@ -258,9 +333,13 @@ package body dict_pkg is
     -- Create new value storage
     set(bucket_keys, bucket_length, to_integer(key));
     set(bucket_values, bucket_length, to_integer(value));
-  end procedure;
+  end;
 
-  impure function get(dict : dict_t; key : string) return string is
+  impure function
+  get(
+    dict : dict_t;
+    key  : string
+  ) return string is
     constant key_hash : natural := hash(key);
     constant value_ptr : string_ptr_t := get_value_ptr(dict, key_hash, key);
   begin
@@ -268,20 +347,30 @@ package body dict_pkg is
     return to_string(value_ptr);
   end;
 
-  impure function has_key(dict : dict_t; key : string) return boolean is
+  impure function
+  has_key(
+    dict : dict_t;
+    key  : string
+  ) return boolean is
     constant key_hash : natural := hash(key);
   begin
     return get_value_ptr(dict, key_hash, key) /= null_string_ptr;
   end;
 
-  procedure remove(dict : dict_t; key : string) is
+  procedure
+  remove(
+    dict : dict_t;
+    key  : string
+  ) is
     constant key_hash : natural := hash(key);
   begin
     remove(dict, key_hash, key);
   end;
 
-  impure function num_keys(dict : dict_t) return natural is
-  begin
+  impure function
+  num_keys(
+    dict : dict_t
+  ) return natural is begin
     return get(dict.p_meta, meta_num_keys);
   end;
 
