@@ -57,7 +57,8 @@ class SimulatorFactory(object):
                       [VHDLAssertLevelOption(),
                        BooleanOption("disable_ieee_warnings"),
                        BooleanOption("enable_coverage"),
-                       ListOfStringOption("pli")])
+                       ListOfStringOption("pli"),
+                       ListOfStringOption("objects")])
 
         for sim_class in self.supported_simulators():
             for opt in sim_class.sim_options:

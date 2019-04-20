@@ -568,6 +568,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         for test_bench in check_not_empty(test_benches, allow_empty, "No test benches found"):
             test_bench.set_generic(name, value)
 
+    def set_objects(self, files, overwrite=True):
+        """
+        Set list of pre-built objects to be linked
+        """
+        self.set_sim_option("objects", files, overwrite=overwrite)
+
     def set_sim_option(self, name, value, allow_empty=False, overwrite=True):
         """
         Set simulation option in all |configurations|
@@ -1199,6 +1205,12 @@ class Library(object):
         for test_bench in self.get_test_benches(allow_empty=allow_empty):
             test_bench.set_generic(name, value)
 
+    def set_objects(self, files, allow_empty=False, overwrite=True):
+        """
+        Set list of pre-built objects to be linked
+        """
+        self.set_sim_option("objects", files, allow_empty=allow_empty, overwrite=overwrite)
+
     def set_sim_option(self, name, value, allow_empty=False, overwrite=True):
         """
         Set simulation option within all |configurations| of test benches and tests this library
@@ -1512,6 +1524,12 @@ class TestBench(object):
         """
         self._test_bench.set_generic(name, value)
 
+    def set_objects(self, files, overwrite=True):
+        """
+        Set list of pre-built objects to be linked
+        """
+        self.set_sim_option("objects", files, overwrite)
+
     def set_sim_option(self, name, value, overwrite=True):
         """
         Set simulation option within all |configurations| of this test bench or test cases within it
@@ -1792,6 +1810,12 @@ class Test(object):
 
         """
         self._test_case.set_generic(name, value)
+
+    def set_objects(self, files, overwrite=True):
+        """
+        Set list of pre-built objects to be linked
+        """
+        self.set_sim_option("objects", files, overwrite)
 
     def set_sim_option(self, name, value, overwrite=True):
         """

@@ -111,6 +111,12 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         else:
             self.generics[name] = value
 
+    def set_objects(self, files):
+        """
+        Set list of pre-built objects to be linked
+        """
+        self.set_sim_option("objects", files)
+
     def set_sim_option(self, name, value):
         """
         Set sim option
@@ -198,6 +204,12 @@ class ConfigurationVisitor(object):
         for configs in self.get_configuration_dicts():
             for config in configs.values():
                 config.set_generic(name, value)
+
+    def set_objects(self, files, overwrite=True):
+        """
+        Set list of pre-built objects to be linked
+        """
+        self.set_sim_option("objects", files, overwrite)
 
     def set_sim_option(self, name, value, overwrite=True):
         """

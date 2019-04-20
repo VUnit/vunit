@@ -129,7 +129,7 @@ class GHDLInterface(SimulatorInterface):
         """
         Return if the simulator supports VHPI
         """
-        return cls.determine_backend(cls.find_prefix_from_path()) == "mcode"
+        return cls.determine_backend(cls.find_prefix_from_path()) != "mcode"
 
     def _has_output_flag(self):
         """
@@ -215,6 +215,10 @@ class GHDLInterface(SimulatorInterface):
             cmd += ['-o', join(output_path, "%s-%s" % (config.entity_name,
                                                        config.architecture_name))]
         cmd += config.sim_options.get("ghdl.elab_flags", [])
+        objs = config.sim_options.get("objects", [])
+        if objs:
+            cmd += ["-Wl," + " ".join(objs)]
+
         cmd += [config.entity_name, config.architecture_name]
 
         if not ghdl_e:
