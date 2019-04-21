@@ -13,6 +13,7 @@ import os
 import logging
 import subprocess
 import shlex
+from json import dump
 from sys import stdout  # To avoid output catched in non-verbose mode
 from warnings import warn
 from ..exceptions import CompileError
@@ -277,6 +278,13 @@ class GHDLInterface(SimulatorInterface):
             cmd += sim
             if elaborate_only:
                 cmd += ["--no-run"]
+        else:
+            try:
+                os.makedirs(output_path, mode=0o777)
+            except OSError:
+                pass
+            with open(join(output_path, "args.json"), "w") as fname:
+                dump({"build": cmd, "sim": sim}, fname)
 
         return cmd
 
