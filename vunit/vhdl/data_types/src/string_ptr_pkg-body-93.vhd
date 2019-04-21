@@ -5,10 +5,6 @@
 -- Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
 package body string_ptr_pkg is
-  type string_access_t is access string;
-  type string_access_vector_t is array (natural range <>) of string_access_t;
-  type string_access_vector_access_t is access string_access_vector_t;
-
   shared variable current_index : integer := 0;
   shared variable ptrs : vava_t := null;
 

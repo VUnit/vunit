@@ -5,11 +5,6 @@
 -- Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
 package body integer_vector_ptr_pkg is
-  type integer_vector_t is array (natural range <>) of integer;
-  type integer_vector_access_t is access integer_vector_t;
-  type integer_vector_access_vector_t is array (natural range <>) of integer_vector_access_t;
-  type integer_vector_access_vector_access_t is access integer_vector_access_vector_t;
-
  type integer_vector_ptr_storage_t is protected
     impure function
     new_integer_vector_ptr(
@@ -82,7 +77,7 @@ package body integer_vector_ptr_pkg is
         deallocate(old_ptrs);
       end if;
 
-      ptrs(current_index) := new integer_vector'(0 to length-1 => value);
+      ptrs(current_index) := new integer_vector_t'(0 to length-1 => value);
       current_index := current_index + 1;
       return retval;
     end;
@@ -126,7 +121,7 @@ package body integer_vector_ptr_pkg is
       value  : val_t := 0
     ) is begin
       deallocate(ptrs(ptr.index));
-      ptrs(ptr.index) := new integer_vector'(0 to length - 1 => value);
+      ptrs(ptr.index) := new integer_vector_t'(0 to length - 1 => value);
     end;
 
     procedure
@@ -139,7 +134,7 @@ package body integer_vector_ptr_pkg is
       variable old_ptr, new_ptr : integer_vector_access_t;
       variable min_length : natural := length;
     begin
-      new_ptr := new integer_vector'(0 to length - 1 => value);
+      new_ptr := new integer_vector_t'(0 to length - 1 => value);
       old_ptr := ptrs(ptr.index);
       if min_length > old_ptr'length - drop then
         min_length := old_ptr'length - drop;

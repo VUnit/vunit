@@ -10,6 +10,8 @@
 -- into a singleton datastructure of string access types.
 --
 
+use work.string_pkg.all;
+
 use work.codec_pkg.all;
 use work.codec_builder_pkg.all;
 
