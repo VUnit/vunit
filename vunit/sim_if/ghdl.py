@@ -217,7 +217,7 @@ class GHDLInterface(SimulatorInterface):
         cmd += [source_file.name]
         return cmd
 
-    def _get_command(self, config, output_path, ghdl_e):
+    def _get_command(self, config, output_path, elaborate_only, ghdl_e, wave_file):
         """
         Return GHDL simulation command
         """
@@ -234,24 +234,32 @@ class GHDLInterface(SimulatorInterface):
             "--workdir=%s" % self._project.get_library(config.library_name).directory
         ]
         cmd += ["-P%s" % lib.directory for lib in self._project.get_libraries()]
+
+        bin_path = join(
+            output_path, "%s-%s" % (config.entity_name, config.architecture_name)
+        )
         if self._has_output_flag():
-            cmd += [
-                "-o",
-                join(
-                    output_path,
-                    "%s-%s" % (config.entity_name, config.architecture_name),
-                ),
-            ]
+            cmd += ["-o", bin_path]
         cmd += config.sim_options.get("ghdl.elab_flags", [])
         cmd += [config.entity_name, config.architecture_name]
 
+        sim = config.sim_options.get("ghdl.sim_flags", [])
+        for name, value in config.generics.items():
+            sim += ["-g%s=%s" % (name, value)]
+        sim += ["--assert-level=%s" % config.vhdl_assert_stop_level]
+        if config.sim_options.get("disable_ieee_warnings", False):
+            sim += ["--ieee-asserts=disable"]
+
+        if wave_file:
+            if self._gtkwave_fmt == "ghw":
+                sim += ["--wave=%s" % wave_file]
+            elif self._gtkwave_fmt == "vcd":
+                sim += ["--vcd=%s" % wave_file]
+
         if not ghdl_e:
-            cmd += config.sim_options.get("ghdl.sim_flags", [])
-            for name, value in config.generics.items():
-                cmd += ["-g%s=%s" % (name, value)]
-            cmd += ["--assert-level=%s" % config.vhdl_assert_stop_level]
-            if config.sim_options.get("disable_ieee_warnings", False):
-                cmd += ["--ieee-asserts=disable"]
+            cmd += sim
+            if elaborate_only:
+                cmd += ["--no-run"]
 
         return cmd
 
@@ -269,24 +277,16 @@ class GHDLInterface(SimulatorInterface):
 
         ghdl_e = elaborate_only and config.sim_options.get("ghdl.elab_e", False)
 
-        cmd = self._get_command(config, script_path, ghdl_e)
-
-        if elaborate_only and not ghdl_e:
-            cmd += ["--no-run"]
-
-        if self._gtkwave_fmt is not None and not ghdl_e:
+        if self._gtkwave_fmt is not None:
             data_file_name = join(script_path, "wave.%s" % self._gtkwave_fmt)
-
             if exists(data_file_name):
                 os.remove(data_file_name)
-
-            if self._gtkwave_fmt == "ghw":
-                cmd += ["--wave=%s" % data_file_name]
-            elif self._gtkwave_fmt == "vcd":
-                cmd += ["--vcd=%s" % data_file_name]
-
         else:
             data_file_name = None
+
+        cmd = self._get_command(
+            config, script_path, elaborate_only, ghdl_e, data_file_name
+        )
 
         status = True
         try:
