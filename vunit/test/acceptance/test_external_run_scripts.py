@@ -16,7 +16,7 @@ from subprocess import call
 import sys
 from vunit import ROOT
 from vunit.builtins import VHDL_PATH
-from vunit.test.common import has_simulator, check_report, simulator_is
+from vunit.test.common import has_simulator, check_report, simulator_is, simulator_check
 
 
 def simulator_supports_verilog():
@@ -116,6 +116,13 @@ class TestExternalRunScripts(unittest.TestCase):
 
     def test_vhdl_axi_dma_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "axi_dma", "run.py"))
+
+    @unittest.skipIf(
+        simulator_check(lambda simclass: not simclass.supports_vhpi()),
+        "This simulator/backend does not support interfacing with external C code"
+    )
+    def test_vhdl_external_buffer_project(self):
+        self.check(join(ROOT, "examples", "vhdl", "external_buffer", "run.py"))
 
     def test_vhdl_user_guide_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "user_guide", "run.py"), exit_code=1)
