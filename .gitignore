@@ -1,4 +1,12 @@
 **/vunit_out
 *.pyc
+*.bak
+*.o
+*.so
+*.egg-info
+.vscode
+.devcontainer
+docs/_build
 docs/examples.rst
 docs/release_notes.rst
+vunit/test/acceptance/*_out
