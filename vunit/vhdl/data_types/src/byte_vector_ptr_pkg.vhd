@@ -17,7 +17,6 @@ package byte_vector_ptr_pkg is
 
   alias val_t is byte_t;
 
-  alias storage_mode_t is work.string_ptr_pkg.storage_mode_t;
   alias byte_vector_ptr_t is string_ptr_t;
   alias null_byte_vector_ptr is null_string_ptr;
 
@@ -30,7 +29,7 @@ package byte_vector_ptr_pkg is
   impure function new_byte_vector_ptr (
     length : natural := 0;
     mode   : storage_mode_t := internal;
-    id     : integer := 0;
+    eid    : index_t := -1;
     value  : val_t   := 0
   ) return ptr_t;
 
@@ -63,10 +62,10 @@ package body byte_vector_ptr_pkg is
   impure function new_byte_vector_ptr (
     length : natural := 0;
     mode   : storage_mode_t := internal;
-    id     : integer := 0;
+    eid    : index_t := -1;
     value  : val_t   := 0
   ) return ptr_t is begin
-    return work.string_ptr_pkg.new_string_ptr(length, mode, id, character'val(value));
+    return work.string_ptr_pkg.new_string_ptr(length, mode, eid, character'val(value));
   end;
 
   procedure set (
