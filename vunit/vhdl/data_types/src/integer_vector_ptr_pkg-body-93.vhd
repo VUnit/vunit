@@ -14,7 +14,6 @@ package body integer_vector_ptr_pkg is
     value  : val_t := 0
   ) return ptr_t is
     variable old_ptrs : vava_t;
-    variable retval : ptr_t := (index => current_index);
   begin
 
     if ptrs = null then
@@ -32,22 +31,22 @@ package body integer_vector_ptr_pkg is
 
     ptrs(current_index) := new integer_vector_t'(0 to length-1 => value);
     current_index := current_index + 1;
-    return retval;
+    return (ref => current_index-1);
   end;
 
   procedure
   deallocate(
     ptr : ptr_t
   ) is begin
-    deallocate(ptrs(ptr.index));
-    ptrs(ptr.index) := null;
+    deallocate(ptrs(ptr.ref));
+    ptrs(ptr.ref) := null;
   end;
 
   impure function
   length(
     ptr : ptr_t
   ) return integer is begin
-    return ptrs(ptr.index)'length;
+    return ptrs(ptr.ref)'length;
   end;
 
   procedure
@@ -56,7 +55,7 @@ package body integer_vector_ptr_pkg is
     index : integer;
     value : val_t
   ) is begin
-    ptrs(ptr.index)(index) := value;
+    ptrs(ptr.ref)(index) := value;
   end;
 
   impure function
@@ -64,7 +63,7 @@ package body integer_vector_ptr_pkg is
     ptr   : ptr_t;
     index : integer
   ) return val_t is begin
-    return ptrs(ptr.index)(index);
+    return ptrs(ptr.ref)(index);
   end;
 
   procedure
@@ -73,8 +72,8 @@ package body integer_vector_ptr_pkg is
     length : natural;
     value  : val_t := 0
   ) is begin
-    deallocate(ptrs(ptr.index));
-    ptrs(ptr.index) := new integer_vector_t'(0 to length - 1 => value);
+    deallocate(ptrs(ptr.ref));
+    ptrs(ptr.ref) := new integer_vector_t'(0 to length - 1 => value);
   end;
 
   procedure
@@ -88,14 +87,14 @@ package body integer_vector_ptr_pkg is
     variable min_length : natural := length;
   begin
     new_ptr := new integer_vector_t'(0 to length - 1 => value);
-    old_ptr := ptrs(ptr.index);
+    old_ptr := ptrs(ptr.ref);
     if min_length > old_ptr'length - drop then
       min_length := old_ptr'length - drop;
     end if;
     for i in 0 to min_length-1 loop
       new_ptr(i) := old_ptr(drop + i);
     end loop;
-    ptrs(ptr.index) := new_ptr;
+    ptrs(ptr.ref) := new_ptr;
     deallocate(old_ptr);
   end;
 
@@ -103,22 +102,22 @@ package body integer_vector_ptr_pkg is
   to_integer(
     value : ptr_t
   ) return integer is begin
-    return value.index;
+    return value.ref;
   end;
 
   impure function
   to_integer_vector_ptr(
     value : integer
   ) return ptr_t is begin
-    -- @TODO maybe assert that the index is valid
-    return (index => value);
+    -- @TODO maybe assert that the ref is valid
+    return (ref => value);
   end;
 
   function
   encode(
     data : ptr_t
   ) return string is begin
-    return encode(data.index);
+    return encode(data.ref);
   end;
 
   function
@@ -138,7 +137,7 @@ package body integer_vector_ptr_pkg is
     variable index  : inout positive;
     variable result : out ptr_t
   ) is begin
-    decode(code, index, result.index);
+    decode(code, index, result.ref);
   end;
 
 end package body;

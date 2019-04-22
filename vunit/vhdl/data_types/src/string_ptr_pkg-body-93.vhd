@@ -13,7 +13,7 @@ package body string_ptr_pkg is
     length : natural := 0
   ) return ptr_t is
     variable old_ptrs : vava_t;
-    variable retval : ptr_t := (index => current_index);
+    variable retval : ptr_t := (ref => current_index);
   begin
     if ptrs = null then
       ptrs := new vav_t'(0 => null);
@@ -36,15 +36,15 @@ package body string_ptr_pkg is
   deallocate(
     ptr : ptr_t
   ) is begin
-    deallocate(ptrs(ptr.index));
-    ptrs(ptr.index) := null;
+    deallocate(ptrs(ptr.ref));
+    ptrs(ptr.ref) := null;
   end;
 
   impure function
   length(
     ptr : ptr_t
   ) return integer is begin
-    return ptrs(ptr.index)'length;
+    return ptrs(ptr.ref)'length;
   end;
 
   procedure
@@ -53,7 +53,7 @@ package body string_ptr_pkg is
     index : integer;
     value : val_t
   ) is begin
-    ptrs(ptr.index)(index) := value;
+    ptrs(ptr.ref)(index) := value;
   end;
 
   impure function
@@ -61,7 +61,7 @@ package body string_ptr_pkg is
     ptr   : ptr_t;
     index : integer
   ) return val_t is begin
-    return ptrs(ptr.index)(index);
+    return ptrs(ptr.ref)(index);
   end;
 
   procedure
@@ -71,8 +71,8 @@ package body string_ptr_pkg is
   ) is
     variable old_ptr, new_ptr : string_access_t;
   begin
-    deallocate(ptrs(ptr.index));
-    ptrs(ptr.index) := new string'(1 to length => val_t'low);
+    deallocate(ptrs(ptr.ref));
+    ptrs(ptr.ref) := new string'(1 to length => val_t'low);
   end;
 
   procedure
@@ -83,8 +83,8 @@ package body string_ptr_pkg is
     variable old_ptr, new_ptr : string_access_t;
     variable n_value : string(1 to value'length) := value;
   begin
-    deallocate(ptrs(ptr.index));
-    ptrs(ptr.index) := new string'(n_value);
+    deallocate(ptrs(ptr.ref));
+    ptrs(ptr.ref) := new string'(n_value);
   end;
 
   procedure
@@ -97,7 +97,7 @@ package body string_ptr_pkg is
     variable min_length : natural := length;
   begin
     new_ptr := new string'(1 to length => val_t'low);
-    old_ptr := ptrs(ptr.index);
+    old_ptr := ptrs(ptr.ref);
 
     if min_length > old_ptr'length - drop then
       min_length := old_ptr'length - drop;
@@ -107,7 +107,7 @@ package body string_ptr_pkg is
       new_ptr(i) := old_ptr(drop + i);
     end loop;
 
-    ptrs(ptr.index) := new_ptr;
+    ptrs(ptr.ref) := new_ptr;
     deallocate(old_ptr);
   end;
 
@@ -115,22 +115,22 @@ package body string_ptr_pkg is
   to_string(
     ptr : ptr_t
   ) return string is begin
-    return ptrs(ptr.index).all;
+    return ptrs(ptr.ref).all;
   end;
 
   function
   to_integer(
     value : ptr_t
   ) return integer is begin
-    return value.index;
+    return value.ref;
   end;
 
   impure function
   to_string_ptr(
     value : integer
   ) return ptr_t is begin
-    -- @TODO maybe assert that the index is valid
-    return (index => value);
+    -- @TODO maybe assert that the ref is valid
+    return (ref => value);
   end;
 
   impure function
@@ -150,7 +150,7 @@ package body string_ptr_pkg is
   encode(
     data : ptr_t
   ) return string is begin
-    return encode(data.index);
+    return encode(data.ref);
   end;
 
   function
@@ -170,7 +170,7 @@ package body string_ptr_pkg is
     variable index  : inout positive;
     variable result : out ptr_t
   ) is begin
-    decode(code, index, result.index);
+    decode(code, index, result.ref);
   end;
 
 end package body;

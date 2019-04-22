@@ -66,7 +66,7 @@ package body string_ptr_pkg is
     impure function
     new_string_ptr(
       length : natural := 0
-    ) return ptr_t is
+    ) return natural is
       variable old_ptrs : string_access_vector_access_t;
     begin
       if ptrs = null then
@@ -180,22 +180,22 @@ package body string_ptr_pkg is
   to_integer(
     value : ptr_t
   ) return integer is begin
-    return value.index;
+    return value.ref;
   end;
 
   impure function
   to_string_ptr(
     value : integer
   ) return ptr_t is begin
-    -- @TODO maybe assert that the index is valid
-    return (index => value);
+    -- @TODO maybe assert that the ref is valid
+    return (ref => value);
   end;
 
   impure function
   new_string_ptr(
     length : natural := 0
   ) return ptr_t is begin
-    return (index => string_ptr_storage.new_string_ptr(length));
+    return (ref => string_ptr_storage.new_string_ptr(length));
   end;
 
   impure function
@@ -216,14 +216,14 @@ package body string_ptr_pkg is
     ptr : ptr_t
   ) is
   begin
-    string_ptr_storage.deallocate(ptr.index);
+    string_ptr_storage.deallocate(ptr.ref);
   end;
 
   impure function
   length(
     ptr : ptr_t
   ) return integer is begin
-    return string_ptr_storage.length(ptr.index);
+    return string_ptr_storage.length(ptr.ref);
   end;
 
   procedure
@@ -232,7 +232,7 @@ package body string_ptr_pkg is
     index : integer;
     value : val_t
   ) is begin
-    string_ptr_storage.set(ptr.index, index, value);
+    string_ptr_storage.set(ptr.ref, index, value);
   end;
 
   impure function
@@ -240,7 +240,7 @@ package body string_ptr_pkg is
     ptr : ptr_t;
     index : integer
   ) return val_t is begin
-    return string_ptr_storage.get(ptr.index, index);
+    return string_ptr_storage.get(ptr.ref, index);
   end;
 
   procedure
@@ -248,12 +248,12 @@ package body string_ptr_pkg is
     ptr : ptr_t;
     length : natural
   ) is begin
-    string_ptr_storage.reallocate(ptr.index, length);
+    string_ptr_storage.reallocate(ptr.ref, length);
   end;
 
   procedure reallocate(ptr : ptr_t; value : string) is
   begin
-    string_ptr_storage.reallocate(ptr.index, value);
+    string_ptr_storage.reallocate(ptr.ref, value);
   end;
 
   procedure
@@ -262,21 +262,21 @@ package body string_ptr_pkg is
     length : natural;
     drop   : natural := 0
   ) is begin
-    string_ptr_storage.resize(ptr.index, length, drop);
+    string_ptr_storage.resize(ptr.ref, length, drop);
   end;
 
   impure function
   to_string(
     ptr : ptr_t
   ) return string is begin
-    return string_ptr_storage.to_string(ptr.index);
+    return string_ptr_storage.to_string(ptr.ref);
   end;
 
   function
   encode(
     data : ptr_t
   ) return string is begin
-    return encode(data.index);
+    return encode(data.ref);
   end;
 
   function
@@ -296,7 +296,7 @@ package body string_ptr_pkg is
     variable index : inout positive;
     variable result : out ptr_t
   ) is begin
-    decode(code, index, result.index);
+    decode(code, index, result.ref);
   end;
 
 end package body;

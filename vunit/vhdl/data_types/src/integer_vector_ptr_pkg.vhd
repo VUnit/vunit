@@ -19,9 +19,9 @@ use work.codec_builder_pkg.all;
 package integer_vector_ptr_pkg is
   subtype index_t is integer range -1 to integer'high;
   type integer_vector_ptr_t is record
-    index : index_t;
+    ref : index_t;
   end record;
-  constant null_ptr : integer_vector_ptr_t := (index => -1);
+  constant null_ptr : integer_vector_ptr_t := (ref => -1);
 
   alias  ptr_t  is integer_vector_ptr_t;
   alias  val_t  is integer;
