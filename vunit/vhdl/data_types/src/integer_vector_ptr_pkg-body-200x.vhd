@@ -10,41 +10,41 @@ package body integer_vector_ptr_pkg is
     new_integer_vector_ptr(
       length : natural := 0;
       value  : val_t := 0
-    ) return ptr_t;
+    ) return natural;
 
     procedure
     deallocate(
-      ptr : ptr_t
+      ref : natural
     );
 
     impure function
     length(
-      ptr : ptr_t
+      ref : natural
     ) return integer;
 
     procedure
     set(
-      ptr   : ptr_t;
+      ref   : natural;
       index : integer;
       value : val_t
     );
 
     impure function
     get(
-      ptr   : ptr_t;
+      ref   : natural;
       index : integer
     ) return val_t;
 
     procedure
     reallocate(
-      ptr    : ptr_t;
+      ref    : natural;
       length : natural;
       value  : val_t := 0
     );
 
     procedure
     resize(
-      ptr    : ptr_t;
+      ref    : natural;
       length : natural;
       drop   : natural := 0;
       value  : val_t := 0
@@ -59,7 +59,7 @@ package body integer_vector_ptr_pkg is
     new_integer_vector_ptr(
       length : natural := 0;
       value  : val_t := 0
-    ) return ptr_t is
+    ) return natural is
       variable old_ptrs : vava_t;
       variable retval : ptr_t := (index => current_index);
     begin
@@ -79,54 +79,54 @@ package body integer_vector_ptr_pkg is
 
       ptrs(current_index) := new integer_vector_t'(0 to length-1 => value);
       current_index := current_index + 1;
-      return retval;
+      return retval.index;
     end;
 
     procedure
     deallocate(
-      ptr : ptr_t
+      ref : natural
     ) is begin
-      deallocate(ptrs(ptr.index));
-      ptrs(ptr.index) := null;
+      deallocate(ptrs(ref));
+      ptrs(ref) := null;
     end;
 
     impure function
     length(
-      ptr : ptr_t
+      ref : natural
     ) return integer is begin
-      return ptrs(ptr.index)'length;
+      return ptrs(ref)'length;
     end;
 
     procedure
     set(
-      ptr   : ptr_t;
+      ref   : natural;
       index : integer;
       value : val_t
     ) is begin
-      ptrs(ptr.index)(index) := value;
+      ptrs(ref)(index) := value;
     end;
 
     impure function
     get(
-      ptr   : ptr_t;
+      ref   : natural;
       index : integer
     ) return val_t is begin
-      return ptrs(ptr.index)(index);
+      return ptrs(ref)(index);
     end;
 
     procedure
     reallocate(
-      ptr    : ptr_t;
+      ref    : natural;
       length : natural;
       value  : val_t := 0
     ) is begin
-      deallocate(ptrs(ptr.index));
-      ptrs(ptr.index) := new integer_vector_t'(0 to length - 1 => value);
+      deallocate(ptrs(ref));
+      ptrs(ref) := new integer_vector_t'(0 to length - 1 => value);
     end;
 
     procedure
     resize(
-      ptr    : ptr_t;
+      ref    : natural;
       length : natural;
       drop   : natural := 0;
       value  : val_t := 0
@@ -135,14 +135,14 @@ package body integer_vector_ptr_pkg is
       variable min_length : natural := length;
     begin
       new_ptr := new integer_vector_t'(0 to length - 1 => value);
-      old_ptr := ptrs(ptr.index);
+      old_ptr := ptrs(ref);
       if min_length > old_ptr'length - drop then
         min_length := old_ptr'length - drop;
       end if;
       for i in 0 to min_length-1 loop
         new_ptr(i) := old_ptr(drop + i);
       end loop;
-      ptrs(ptr.index) := new_ptr;
+      ptrs(ref) := new_ptr;
       deallocate(old_ptr);
     end;
 
@@ -170,21 +170,21 @@ package body integer_vector_ptr_pkg is
     length : natural := 0;
     value  : val_t := 0
   ) return ptr_t is begin
-    return integer_vector_ptr_storage.new_integer_vector_ptr(length, value);
+    return (index => integer_vector_ptr_storage.new_integer_vector_ptr(length, value));
   end;
 
   procedure
   deallocate(
     ptr : ptr_t
   ) is begin
-    integer_vector_ptr_storage.deallocate(ptr);
+    integer_vector_ptr_storage.deallocate(ptr.index);
   end;
 
   impure function
   length(
     ptr : ptr_t
   ) return integer is begin
-    return integer_vector_ptr_storage.length(ptr);
+    return integer_vector_ptr_storage.length(ptr.index);
   end;
 
   procedure
@@ -193,7 +193,7 @@ package body integer_vector_ptr_pkg is
     index : integer;
     value : val_t
   ) is begin
-    integer_vector_ptr_storage.set(ptr, index, value);
+    integer_vector_ptr_storage.set(ptr.index, index, value);
   end;
 
   impure function
@@ -201,7 +201,7 @@ package body integer_vector_ptr_pkg is
     ptr   : ptr_t;
     index : integer
   ) return val_t is begin
-    return integer_vector_ptr_storage.get(ptr, index);
+    return integer_vector_ptr_storage.get(ptr.index, index);
   end;
 
   procedure
@@ -210,7 +210,7 @@ package body integer_vector_ptr_pkg is
     length : natural;
     value  : val_t := 0
   ) is begin
-    integer_vector_ptr_storage.reallocate(ptr, length, value);
+    integer_vector_ptr_storage.reallocate(ptr.index, length, value);
   end;
 
   procedure
@@ -220,7 +220,7 @@ package body integer_vector_ptr_pkg is
     drop   : natural := 0;
     value  : val_t := 0
   ) is begin
-    integer_vector_ptr_storage.resize(ptr, length, drop, value);
+    integer_vector_ptr_storage.resize(ptr.index, length, drop, value);
   end;
 
   function
