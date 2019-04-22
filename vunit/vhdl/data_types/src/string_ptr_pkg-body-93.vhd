@@ -10,35 +10,35 @@ package body string_ptr_pkg is
   type string_access_vector_access_t is access string_access_vector_t;
 
   shared variable current_index : integer := 0;
-  shared variable ptrs : string_access_vector_access_t := null;
+  shared variable ptrs : vava_t := null;
 
   impure function
   new_string_ptr(
     length : natural := 0
-  ) return string_ptr_t is
-    variable old_ptrs : string_access_vector_access_t;
-    variable retval : string_ptr_t := (index => current_index);
+  ) return ptr_t is
+    variable old_ptrs : vava_t;
+    variable retval : ptr_t := (index => current_index);
   begin
     if ptrs = null then
-      ptrs := new string_access_vector_t'(0 => null);
+      ptrs := new vav_t'(0 => null);
     elsif ptrs'length <= current_index then
       -- Reallocate ptr pointers to larger ptr
       -- Use more size to trade size for speed
       old_ptrs := ptrs;
-      ptrs := new string_access_vector_t'(0 to ptrs'length + 2**16 => null);
+      ptrs := new vav_t'(0 to ptrs'length + 2**16 => null);
       for i in old_ptrs'range loop
         ptrs(i) := old_ptrs(i);
       end loop;
       deallocate(old_ptrs);
     end if;
-    ptrs(current_index) := new string'(1 to length => character'low);
+    ptrs(current_index) := new string'(1 to length => val_t'low);
     current_index := current_index + 1;
     return retval;
   end;
 
   procedure
   deallocate(
-    ptr : string_ptr_t
+    ptr : ptr_t
   ) is begin
     deallocate(ptrs(ptr.index));
     ptrs(ptr.index) := null;
@@ -46,42 +46,42 @@ package body string_ptr_pkg is
 
   impure function
   length(
-    ptr : string_ptr_t
+    ptr : ptr_t
   ) return integer is begin
     return ptrs(ptr.index)'length;
   end;
 
   procedure
   set(
-    ptr   : string_ptr_t;
+    ptr   : ptr_t;
     index : integer;
-    value : character
+    value : val_t
   ) is begin
     ptrs(ptr.index)(index) := value;
   end;
 
   impure function
   get(
-    ptr   : string_ptr_t;
+    ptr   : ptr_t;
     index : integer
-  ) return character is begin
+  ) return val_t is begin
     return ptrs(ptr.index)(index);
   end;
 
   procedure
   reallocate(
-    ptr    : string_ptr_t;
+    ptr    : ptr_t;
     length : natural
   ) is
     variable old_ptr, new_ptr : string_access_t;
   begin
     deallocate(ptrs(ptr.index));
-    ptrs(ptr.index) := new string'(1 to length => character'low);
+    ptrs(ptr.index) := new string'(1 to length => val_t'low);
   end;
 
   procedure
   reallocate(
-    ptr   : string_ptr_t;
+    ptr   : ptr_t;
     value : string
   ) is
     variable old_ptr, new_ptr : string_access_t;
@@ -93,14 +93,14 @@ package body string_ptr_pkg is
 
   procedure
   resize(
-    ptr    : string_ptr_t;
+    ptr    : ptr_t;
     length : natural;
     drop   : natural := 0
   ) is
     variable old_ptr, new_ptr : string_access_t;
     variable min_length : natural := length;
   begin
-    new_ptr := new string'(1 to length => character'low);
+    new_ptr := new string'(1 to length => val_t'low);
     old_ptr := ptrs(ptr.index);
 
     if min_length > old_ptr'length - drop then
@@ -117,14 +117,14 @@ package body string_ptr_pkg is
 
   impure function
   to_string(
-    ptr : string_ptr_t
+    ptr : ptr_t
   ) return string is begin
     return ptrs(ptr.index).all;
   end;
 
   function
   to_integer(
-    value : string_ptr_t
+    value : ptr_t
   ) return integer is begin
     return value.index;
   end;
@@ -132,7 +132,7 @@ package body string_ptr_pkg is
   impure function
   to_string_ptr(
     value : integer
-  ) return string_ptr_t is begin
+  ) return ptr_t is begin
     -- @TODO maybe assert that the index is valid
     return (index => value);
   end;
@@ -140,8 +140,8 @@ package body string_ptr_pkg is
   impure function
   new_string_ptr(
     value : string
-  ) return string_ptr_t is
-    variable result : string_ptr_t := new_string_ptr(value'length);
+  ) return ptr_t is
+    variable result : ptr_t := new_string_ptr(value'length);
     variable n_value : string(1 to value'length) := value;
   begin
     for i in 1 to n_value'length loop
@@ -152,7 +152,7 @@ package body string_ptr_pkg is
 
   function
   encode(
-    data : string_ptr_t
+    data : ptr_t
   ) return string is begin
     return encode(data.index);
   end;
@@ -160,8 +160,8 @@ package body string_ptr_pkg is
   function
   decode(
     code : string
-  ) return string_ptr_t is
-    variable ret_val : string_ptr_t;
+  ) return ptr_t is
+    variable ret_val : ptr_t;
     variable index   : positive := code'left;
   begin
     decode(code, index, ret_val);
@@ -172,7 +172,7 @@ package body string_ptr_pkg is
   decode(
     constant code   : string;
     variable index  : inout positive;
-    variable result : out string_ptr_t
+    variable result : out ptr_t
   ) is begin
     decode(code, index, result.index);
   end;

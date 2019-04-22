@@ -21,79 +21,85 @@ package integer_vector_ptr_pkg is
   end record;
   constant null_ptr : integer_vector_ptr_t := (index => -1);
 
+  alias  ptr_t  is integer_vector_ptr_t;
+  alias  val_t  is integer;
+  alias  vec_t  is integer_vector_t;
+  alias  vav_t  is integer_vector_access_vector_t;
+  alias  vava_t is integer_vector_access_vector_access_t;
+
   function
   to_integer(
-    value : integer_vector_ptr_t
+    value : ptr_t
   ) return integer;
 
   impure function
   to_integer_vector_ptr(
-    value : integer
-  ) return integer_vector_ptr_t;
+    value : val_t
+  ) return ptr_t;
 
   impure function
   new_integer_vector_ptr(
     length : natural := 0;
-    value  : integer := 0
-  ) return integer_vector_ptr_t;
+    value  : val_t := 0
+  ) return ptr_t;
 
   procedure
   deallocate(
-    ptr : integer_vector_ptr_t
+    ptr : ptr_t
   );
 
   impure function
   length(
-    ptr : integer_vector_ptr_t
+    ptr : ptr_t
   ) return integer;
 
   procedure
   set(
-    ptr   : integer_vector_ptr_t;
+    ptr   : ptr_t;
     index : integer;
-    value : integer
+    value : val_t
   );
 
   impure function
   get(
-    ptr   : integer_vector_ptr_t;
+    ptr   : ptr_t;
     index : integer
-  ) return integer;
+  ) return val_t;
 
   procedure
   reallocate(
-    ptr    : integer_vector_ptr_t;
+    ptr    : ptr_t;
     length : natural;
-    value  : integer := 0
+    value  : val_t := 0
   );
 
   procedure
   resize(
-    ptr    : integer_vector_ptr_t;
+    ptr    : ptr_t;
     length : natural;
     drop   : natural := 0;
-    value  : integer := 0
+    value  : val_t := 0
   );
 
   function
   encode(
-    data : integer_vector_ptr_t
+    data : ptr_t
   ) return string;
 
   function
   decode(
     code : string
-  ) return integer_vector_ptr_t;
+  ) return ptr_t;
 
   procedure
   decode(
     constant code   : string;
     variable index  : inout positive;
-    variable result : out integer_vector_ptr_t
+    variable result : out ptr_t
   );
 
-  alias encode_integer_vector_ptr_t is encode[integer_vector_ptr_t return string];
-  alias decode_integer_vector_ptr_t is decode[string return integer_vector_ptr_t];
+  alias encode_integer_vector_ptr_t is encode[ptr_t return string];
+  alias decode_integer_vector_ptr_t is decode[string return ptr_t];
 
   constant integer_vector_ptr_t_code_length : positive := integer_code_length;
 

@@ -20,6 +20,11 @@ package string_ptr_pkg is
   end record;
   constant null_string_ptr : string_ptr_t := (index => -1);
 
+  alias  ptr_t  is string_ptr_t;
+  alias  val_t  is character;
+  alias  vav_t  is string_access_vector_t;
+  alias  vava_t is string_access_vector_access_t;
+
   function
   to_integer(
     value : string_ptr_t

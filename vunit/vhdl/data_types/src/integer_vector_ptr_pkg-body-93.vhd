@@ -5,30 +5,30 @@
 -- Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
 package body integer_vector_ptr_pkg is
-  type integer_vector is array (natural range <>) of integer;
-  type integer_vector_access_t is access integer_vector;
+  type integer_vector_t is array (natural range <>) of integer;
+  type integer_vector_access_t is access integer_vector_t;
   type integer_vector_access_vector_t is array (natural range <>) of integer_vector_access_t;
   type integer_vector_access_vector_access_t is access integer_vector_access_vector_t;
 
   shared variable current_index : integer := 0;
-  shared variable ptrs : integer_vector_access_vector_access_t := null;
+  shared variable ptrs : vava_t := null;
 
   impure function
   new_integer_vector_ptr(
     length : natural := 0;
-    value  : integer := 0
-  ) return integer_vector_ptr_t is
-    variable old_ptrs : integer_vector_access_vector_access_t;
-    variable retval : integer_vector_ptr_t := (index => current_index);
+    value  : val_t := 0
+  ) return ptr_t is
+    variable old_ptrs : vava_t;
+    variable retval : ptr_t := (index => current_index);
   begin
 
     if ptrs = null then
-      ptrs := new integer_vector_access_vector_t'(0 => null);
+      ptrs := new vav_t'(0 => null);
     elsif ptrs'length <= current_index then
       -- Reallocate ptr pointers to larger ptr
       -- Use more size to trade size for speed
       old_ptrs := ptrs;
-      ptrs := new integer_vector_access_vector_t'(0 to ptrs'length + 2**16 => null);
+      ptrs := new vav_t'(0 to ptrs'length + 2**16 => null);
       for i in old_ptrs'range loop
         ptrs(i) := old_ptrs(i);
       end loop;
@@ -42,7 +42,7 @@ package body integer_vector_ptr_pkg is
 
   procedure
   deallocate(
-    ptr : integer_vector_ptr_t
+    ptr : ptr_t
   ) is begin
     deallocate(ptrs(ptr.index));
     ptrs(ptr.index) := null;
@@ -50,33 +50,33 @@ package body integer_vector_ptr_pkg is
 
   impure function
   length(
-    ptr : integer_vector_ptr_t
+    ptr : ptr_t
   ) return integer is begin
     return ptrs(ptr.index)'length;
   end;
 
   procedure
   set(
-    ptr   : integer_vector_ptr_t;
+    ptr   : ptr_t;
     index : integer;
-    value : integer
+    value : val_t
   ) is begin
     ptrs(ptr.index)(index) := value;
   end;
 
   impure function
   get(
-    ptr   : integer_vector_ptr_t;
+    ptr   : ptr_t;
     index : integer
-  ) return integer is begin
+  ) return val_t is begin
     return ptrs(ptr.index)(index);
   end;
 
   procedure
   reallocate(
-    ptr    : integer_vector_ptr_t;
+    ptr    : ptr_t;
     length : natural;
-    value  : integer := 0
+    value  : val_t := 0
   ) is begin
     deallocate(ptrs(ptr.index));
     ptrs(ptr.index) := new integer_vector'(0 to length - 1 => value);
@@ -84,32 +84,29 @@ package body integer_vector_ptr_pkg is
 
   procedure
   resize(
-    ptr    : integer_vector_ptr_t;
+    ptr    : ptr_t;
     length : natural;
     drop   : natural := 0;
-    value  : integer := 0
+    value  : val_t := 0
   ) is
     variable old_ptr, new_ptr : integer_vector_access_t;
     variable min_length : natural := length;
   begin
     new_ptr := new integer_vector'(0 to length - 1 => value);
     old_ptr := ptrs(ptr.index);
-
     if min_length > old_ptr'length - drop then
       min_length := old_ptr'length - drop;
     end if;
-
     for i in 0 to min_length-1 loop
       new_ptr(i) := old_ptr(drop + i);
     end loop;
-
     ptrs(ptr.index) := new_ptr;
     deallocate(old_ptr);
   end;
 
   function
   to_integer(
-    value : integer_vector_ptr_t
+    value : ptr_t
   ) return integer is begin
     return value.index;
   end;
@@ -117,14 +114,14 @@ package body integer_vector_ptr_pkg is
   impure function
   to_integer_vector_ptr(
     value : integer
-  ) return integer_vector_ptr_t is begin
+  ) return ptr_t is begin
     -- @TODO maybe assert that the index is valid
     return (index => value);
   end;
 
   function
   encode(
-    data : integer_vector_ptr_t
+    data : ptr_t
   ) return string is begin
     return encode(data.index);
   end;
@@ -132,8 +129,8 @@ package body integer_vector_ptr_pkg is
   function
   decode(
     code : string
-  ) return integer_vector_ptr_t is
-    variable ret_val : integer_vector_ptr_t;
+  ) return ptr_t is
+    variable ret_val : ptr_t;
     variable index   : positive := code'left;
   begin
     decode(code, index, ret_val);
@@ -144,7 +141,7 @@ package body integer_vector_ptr_pkg is
   decode(
     constant code   : string;
     variable index  : inout positive;
-    variable result : out integer_vector_ptr_t
+    variable result : out ptr_t
   ) is begin
     decode(code, index, result.index);
   end;
