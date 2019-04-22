@@ -41,8 +41,8 @@ package integer_vector_ptr_pkg is
 
   impure function
   new_integer_vector_ptr(
-    length : natural := 0;
-    value  : val_t := 0
+    len   : natural := 0;
+    value : val_t := 0
   ) return ptr_t;
 
   procedure
@@ -70,17 +70,17 @@ package integer_vector_ptr_pkg is
 
   procedure
   reallocate(
-    ptr    : ptr_t;
-    length : natural;
-    value  : val_t := 0
+    ptr   : ptr_t;
+    len   : natural;
+    value : val_t := 0
   );
 
   procedure
   resize(
-    ptr    : ptr_t;
-    length : natural;
-    drop   : natural := 0;
-    value  : val_t := 0
+    ptr   : ptr_t;
+    len   : natural;
+    drop  : natural := 0;
+    value : val_t := 0
   );
 
   function
