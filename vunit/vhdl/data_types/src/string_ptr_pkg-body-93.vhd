@@ -50,7 +50,7 @@ package body string_ptr_pkg is
   procedure
   set(
     ptr   : ptr_t;
-    index : integer;
+    index : natural;
     value : val_t
   ) is begin
     ptrs(ptr.ref)(index) := value;
@@ -59,7 +59,7 @@ package body string_ptr_pkg is
   impure function
   get(
     ptr   : ptr_t;
-    index : integer
+    index : natural
   ) return val_t is begin
     return ptrs(ptr.ref)(index);
   end;

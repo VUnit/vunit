@@ -25,14 +25,14 @@ package body integer_vector_ptr_pkg is
     procedure
     set(
       ref   : natural;
-      index : integer;
+      index : natural;
       value : val_t
     );
 
     impure function
     get(
       ref   : natural;
-      index : integer
+      index : natural
     ) return val_t;
 
     procedure
@@ -100,7 +100,7 @@ package body integer_vector_ptr_pkg is
     procedure
     set(
       ref   : natural;
-      index : integer;
+      index : natural;
       value : val_t
     ) is begin
       ptrs(ref)(index) := value;
@@ -109,7 +109,7 @@ package body integer_vector_ptr_pkg is
     impure function
     get(
       ref   : natural;
-      index : integer
+      index : natural
     ) return val_t is begin
       return ptrs(ref)(index);
     end;
@@ -190,7 +190,7 @@ package body integer_vector_ptr_pkg is
   procedure
   set(
     ptr   : ptr_t;
-    index : integer;
+    index : natural;
     value : val_t
   ) is begin
     integer_vector_ptr_storage.set(ptr.ref, index, value);
@@ -199,7 +199,7 @@ package body integer_vector_ptr_pkg is
   impure function
   get(
     ptr   : ptr_t;
-    index : integer
+    index : natural
   ) return val_t is begin
     return integer_vector_ptr_storage.get(ptr.ref, index);
   end;

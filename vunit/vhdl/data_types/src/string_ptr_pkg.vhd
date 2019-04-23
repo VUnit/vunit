@@ -60,14 +60,14 @@ package string_ptr_pkg is
   procedure
   set(
     ptr   : string_ptr_t;
-    index : integer;
+    index : natural;
     value : character
   );
 
   impure function
   get(
     ptr   : string_ptr_t;
-    index : integer
+    index : natural
   ) return character;
 
   procedure

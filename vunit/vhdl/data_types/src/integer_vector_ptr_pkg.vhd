@@ -58,14 +58,14 @@ package integer_vector_ptr_pkg is
   procedure
   set(
     ptr   : ptr_t;
-    index : integer;
+    index : natural;
     value : val_t
   );
 
   impure function
   get(
     ptr   : ptr_t;
-    index : integer
+    index : natural
   ) return val_t;
 
   procedure
