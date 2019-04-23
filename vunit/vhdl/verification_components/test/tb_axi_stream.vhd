@@ -335,7 +335,7 @@ begin
         if i = 14 then
           last := '1';
         end if;
-        push_axi_stream(net, master_axi_stream, 
+        push_axi_stream(net, master_axi_stream,
                         tdata => std_logic_vector(to_unsigned(i, 8)),
                         tlast => last,
                         tkeep => "1",
@@ -371,7 +371,7 @@ begin
       wait until rising_edge(aclk);
       timestamp := now;
 
-      push_axi_stream(net, master_axi_stream, 
+      push_axi_stream(net, master_axi_stream,
                       tdata => std_logic_vector(to_unsigned(3, 8)),
                       tlast => '1',
                       tkeep => "0",
