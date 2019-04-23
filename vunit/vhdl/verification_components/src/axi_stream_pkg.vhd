@@ -183,6 +183,7 @@ package axi_stream_pkg is
 
   constant push_axi_stream_msg : msg_type_t := new_msg_type("push axi stream");
   constant pop_axi_stream_msg : msg_type_t := new_msg_type("pop axi stream");
+  constant check_axi_stream_msg : msg_type_t := new_msg_type("check axi stream");
   constant axi_stream_transaction_msg : msg_type_t := new_msg_type("axi stream transaction");
 
   alias axi_stream_reference_t is msg_t;
@@ -255,7 +256,8 @@ package axi_stream_pkg is
       tid      : std_logic_vector := "";
       tdest    : std_logic_vector := "";
       tuser    : std_logic_vector := "";
-      msg      : string           := ""
+      msg      : string           := "";
+      blocking : boolean          := true
     );
 
   type axi_stream_transaction_t is record
@@ -667,7 +669,8 @@ package body axi_stream_pkg is
       tid      : std_logic_vector := "";
       tdest    : std_logic_vector := "";
       tuser    : std_logic_vector := "";
-      msg      : string           := ""
+      msg      : string           := "";
+      blocking : boolean          := true
     ) is
     variable got_tdata : std_logic_vector(data_length(axi_stream)-1 downto 0);
     variable got_tlast : std_logic;
@@ -676,24 +679,49 @@ package body axi_stream_pkg is
     variable got_tid   : std_logic_vector(id_length(axi_stream)-1 downto 0);
     variable got_tdest : std_logic_vector(dest_length(axi_stream)-1 downto 0);
     variable got_tuser : std_logic_vector(user_length(axi_stream)-1 downto 0);
+    variable check_msg : msg_t := new_msg(check_axi_stream_msg);
+    variable normalized_data : std_logic_vector(data_length(axi_stream)-1 downto 0) := (others => '0');
+    variable normalized_keep : std_logic_vector(data_length(axi_stream)/8-1 downto 0) := (others => '0');
+    variable normalized_strb : std_logic_vector(data_length(axi_stream)/8-1 downto 0) := (others => '0');
+    variable normalized_id   : std_logic_vector(id_length(axi_stream)-1 downto 0) := (others => '0');
+    variable normalized_dest : std_logic_vector(dest_length(axi_stream)-1 downto 0) := (others => '0');
+    variable normalized_user : std_logic_vector(user_length(axi_stream)-1 downto 0) := (others => '0');
   begin
-    pop_axi_stream(net, axi_stream, got_tdata, got_tlast, got_tkeep, got_tstrb, got_tid, got_tdest, got_tuser);
-    check_equal(got_tdata, expected, "TDATA mismatch, " & msg);
-    check_equal(got_tlast, tlast, "TLAST mismatch, " & msg);
-    if tkeep'length > 0 then
-      check_equal(got_tkeep, tkeep, "TKEEP mismatch, " & msg);
-    end if;
-    if tstrb'length > 0 then
-      check_equal(got_tstrb, tstrb, "TSTRB mismatch, " & msg);
-    end if;
-    if tid'length > 0 then
-      check_equal(got_tid, tid, "TID mismatch, " & msg);
-    end if;
-    if tdest'length > 0 then
-      check_equal(got_tdest, tdest, "TDEST mismatch, " & msg);
-    end if;
-    if tuser'length > 0 then
-      check_equal(got_tuser, tuser, "TUSER mismatch, " & msg);
+    if blocking then
+      pop_axi_stream(net, axi_stream, got_tdata, got_tlast, got_tkeep, got_tstrb, got_tid, got_tdest, got_tuser);
+      check_equal(got_tdata, expected, "TDATA mismatch, " & msg);
+      check_equal(got_tlast, tlast, "TLAST mismatch, " & msg);
+      if tkeep'length > 0 then
+        check_equal(got_tkeep, tkeep, "TKEEP mismatch, " & msg);
+      end if;
+      if tstrb'length > 0 then
+        check_equal(got_tstrb, tstrb, "TSTRB mismatch, " & msg);
+      end if;
+      if tid'length > 0 then
+        check_equal(got_tid, tid, "TID mismatch, " & msg);
+      end if;
+      if tdest'length > 0 then
+        check_equal(got_tdest, tdest, "TDEST mismatch, " & msg);
+      end if;
+      if tuser'length > 0 then
+        check_equal(got_tuser, tuser, "TUSER mismatch, " & msg);
+      end if;
+    else
+      push_string(check_msg, msg);
+      normalized_data(expected'length-1 downto 0) := expected;
+      push_std_ulogic_vector(check_msg, normalized_data);
+      push_std_ulogic(check_msg, tlast);
+      normalized_keep(tkeep'length-1 downto 0) := tkeep;
+      push_std_ulogic_vector(check_msg, normalized_keep);
+      normalized_strb(tstrb'length-1 downto 0) := tstrb;
+      push_std_ulogic_vector(check_msg, normalized_strb);
+      normalized_id(tid'length-1 downto 0) := tid;
+      push_std_ulogic_vector(check_msg, normalized_id);
+      normalized_dest(tdest'length-1 downto 0) := tdest;
+      push_std_ulogic_vector(check_msg, normalized_dest);
+      normalized_user(tuser'length-1 downto 0) := tuser;
+      push_std_ulogic_vector(check_msg, normalized_user);
+      send(net, axi_stream.p_actor, check_msg);
     end if;
   end procedure;
 

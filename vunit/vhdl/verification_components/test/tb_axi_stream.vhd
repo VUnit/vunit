@@ -326,6 +326,91 @@ begin
 
       unmock(mocklogger);
 
+    elsif run("test back-to-back passing check") then
+      wait until rising_edge(aclk);
+      timestamp := now;
+
+      last := '0';
+      for i in 3 to 14 loop
+        if i = 14 then
+          last := '1';
+        end if;
+        push_axi_stream(net, master_axi_stream, 
+                        tdata => std_logic_vector(to_unsigned(i, 8)),
+                        tlast => last,
+                        tkeep => "1",
+                        tstrb => "1",
+                        tid => std_logic_vector(to_unsigned(42, 8)),
+                        tdest => std_logic_vector(to_unsigned(i+1, 8)),
+                        tuser => std_logic_vector(to_unsigned(i*2, 8)));
+      end loop;
+
+      last := '0';
+      for i in 3 to 14 loop
+        if i = 14 then
+          last := '1';
+        end if;
+        check_axi_stream(net, slave_axi_stream,
+                         expected => std_logic_vector(to_unsigned(i, 8)),
+                         tlast => last,
+                         tkeep => "1",
+                         tstrb => "1",
+                         tid => std_logic_vector(to_unsigned(42, 8)),
+                         tdest => std_logic_vector(to_unsigned(i+1, 8)),
+                         tuser => std_logic_vector(to_unsigned(i*2, 8)),
+                         msg  => "check blocking",
+                         blocking  => false);
+      end loop;
+
+      check_equal(now, timestamp, result(" setting up transaction stalled"));
+
+      wait_until_idle(net, as_sync(slave_axi_stream));
+      check_equal(now, timestamp + (12+1)*10 ns, " transaction time incorrect");
+
+    elsif run("test back-to-back failing check") then
+      wait until rising_edge(aclk);
+      timestamp := now;
+
+      push_axi_stream(net, master_axi_stream, 
+                      tdata => std_logic_vector(to_unsigned(3, 8)),
+                      tlast => '1',
+                      tkeep => "0",
+                      tstrb => "0",
+                      tid => std_logic_vector(to_unsigned(42, 8)),
+                      tdest => std_logic_vector(to_unsigned(4, 8)),
+                      tuser => std_logic_vector(to_unsigned(7, 8)));
+
+      check_axi_stream(net, slave_axi_stream,
+                       expected => std_logic_vector(to_unsigned(6, 8)),
+                       tlast => '0',
+                       tkeep => "1",
+                       tstrb => "1",
+                       tid => std_logic_vector(to_unsigned(44, 8)),
+                       tdest => std_logic_vector(to_unsigned(5, 8)),
+                       tuser => std_logic_vector(to_unsigned(8, 8)),
+                       msg => "check non-blocking",
+                       blocking  => false);
+
+      check_equal(now, timestamp, result(" setting up transaction stalled"));
+
+      wait until rising_edge(aclk);
+      mocklogger := get_logger("check");
+      mock(mocklogger);
+
+      wait until rising_edge(aclk) and tvalid = '1';
+
+      check_log(mocklogger, "TDATA mismatch, check non-blocking - Got 0000_0011 (3). Expected 0000_0110 (6).", error);
+      check_log(mocklogger, "TLAST mismatch, check non-blocking - Got 1. Expected 0.", error);
+      check_log(mocklogger, "TKEEP mismatch, check non-blocking - Got 0 (0). Expected 1 (1).", error);
+      check_log(mocklogger, "TSTRB mismatch, check non-blocking - Got 0 (0). Expected 1 (1).", error);
+      check_log(mocklogger, "TID mismatch, check non-blocking - Got 0010_1010 (42). Expected 0010_1100 (44).", error);
+      check_log(mocklogger, "TDEST mismatch, check non-blocking - Got 0000_0100 (4). Expected 0000_0101 (5).", error);
+      check_log(mocklogger, "TUSER mismatch, check non-blocking - Got 0000_0111 (7). Expected 0000_1000 (8).", error);
+
+      unmock(mocklogger);
+
+      check_equal(now, timestamp + 20 ns, " transaction time incorrect");
+
     end if;
     test_runner_cleanup(runner);
   end process;
