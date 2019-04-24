@@ -12,6 +12,7 @@ context work.com_context;
 use work.stream_slave_pkg.all;
 use work.axi_stream_pkg.all;
 use work.sync_pkg.all;
+use work.string_ptr_pkg.all;
 
 entity axi_stream_slave is
   generic (
@@ -49,6 +50,8 @@ begin
 
     if msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg then
       push(message_queue, request_msg);
+    elsif msg_type = check_axi_stream_msg then
+      push(message_queue, request_msg);
     elsif msg_type = wait_for_time_msg then
       push(message_queue, request_msg);
     elsif msg_type = wait_until_idle_msg then
@@ -64,6 +67,7 @@ begin
   bus_process : process
     variable reply_msg, msg : msg_t;
     variable msg_type : msg_type_t;
+    variable report_msg : string_ptr_t;
     variable axi_stream_transaction : axi_stream_transaction_t(
       tdata(tdata'range),
       tkeep(tkeep'range),
@@ -102,6 +106,29 @@ begin
 
         reply_msg := new_axi_stream_transaction_msg(axi_stream_transaction);
         reply(net, msg, reply_msg);
+      elsif msg_type = check_axi_stream_msg then
+        tready <= '1';
+        wait until (tvalid and tready) = '1' and rising_edge(aclk);
+        tready <= '0';
+
+        report_msg := new_string_ptr(pop_string(msg));
+        check_equal(tdata, pop_std_ulogic_vector(msg), "TDATA mismatch, " & to_string(report_msg));
+        check_equal(tlast, pop_std_ulogic(msg), "TLAST mismatch, " & to_string(report_msg));
+        if tkeep'length > 0 then
+          check_equal(tkeep, pop_std_ulogic_vector(msg), "TKEEP mismatch, " & to_string(report_msg));
+        end if;
+        if tstrb'length > 0 then
+          check_equal(tstrb, pop_std_ulogic_vector(msg), "TSTRB mismatch, " & to_string(report_msg));
+        end if;
+        if tid'length > 0 then
+          check_equal(tid, pop_std_ulogic_vector(msg), "TID mismatch, " & to_string(report_msg));
+        end if;
+        if tdest'length > 0 then
+          check_equal(tdest, pop_std_ulogic_vector(msg), "TDEST mismatch, " & to_string(report_msg));
+        end if;
+        if tuser'length > 0 then
+          check_equal(tuser, pop_std_ulogic_vector(msg), "TUSER mismatch, " & to_string(report_msg));
+        end if;
       else
         unexpected_msg_type(msg_type);
       end if;
