@@ -124,6 +124,13 @@ class GHDLInterface(SimulatorInterface):
         print("=============================" + ("=" * 60))
         raise AssertionError("No known GHDL back-end could be detected from running 'ghdl --version'")
 
+    @classmethod
+    def supports_vhpi(cls):
+        """
+        Return if the simulator supports VHPI
+        """
+        return cls.determine_backend(cls.find_prefix_from_path()) != "mcode"
+
     def _has_output_flag(self):
         """
         Returns if backend supports output flag

@@ -17,7 +17,7 @@ from vunit.exceptions import CompileError
 from vunit.color_printer import NO_COLOR_PRINTER
 
 
-class SimulatorInterface(object):
+class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
     """
     Generic simulator interface
     """
@@ -142,6 +142,13 @@ class SimulatorInterface(object):
     def has_valid_exit_code():
         """
         Return if the simulation should fail with nonzero exit codes
+        """
+        return False
+
+    @staticmethod
+    def supports_vhpi():
+        """
+        Return if the simulator supports VHPI
         """
         return False
 
