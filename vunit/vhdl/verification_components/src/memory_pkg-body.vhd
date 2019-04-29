@@ -20,8 +20,13 @@ package body memory_pkg is
     perm : permissions_t;
   end record;
 
-  impure function new_memory(logger : logger_t := memory_logger;
-                             endian : endianness_t := little_endian) return memory_t is
+  impure function new_memory (
+    len    : natural := 0;
+    mode   : storage_mode_t := internal;
+    id     : integer := 0;
+    logger : logger_t := memory_logger;
+    endian : endianness_t := little_endian
+  ) return memory_t is
     constant p_meta : integer_vector_ptr_t := new_integer_vector_ptr(num_meta);
   begin
     set(p_meta, num_bytes_idx, 0);
@@ -31,6 +36,7 @@ package body memory_pkg is
             p_default_endian => endian,
             p_check_permissions => false,
             p_data => new_integer_vector_ptr(0),
+            p_bytes => new_byte_vector_ptr(len, mode, id),
             p_buffers => new_integer_vector_ptr(0),
             p_logger => logger);
   end;
@@ -179,22 +185,22 @@ package body memory_pkg is
     end function;
 
   begin
-    if length(memory.p_data) = 0 then
-      failure(memory.p_logger, verb & " empty memory");
-      return false;
-    elsif address >= length(memory.p_data) then
-      failure(memory.p_logger, verb & " address " & to_string(address) & " out of range 0 to " & to_string(length(memory.p_data)-1));
-      return false;
-    elsif check_permissions and get_permissions(memory, address) = no_access then
-      failure(memory.p_logger, verb & " " & describe_address(memory, address) & " without permission (no_access)");
-      return false;
-    elsif check_permissions and reading and get_permissions(memory, address) = write_only then
-      failure(memory.p_logger, verb & " " & describe_address(memory, address) & " without permission (write_only)");
-      return false;
-    elsif check_permissions and not reading and get_permissions(memory, address) = read_only then
-      failure(memory.p_logger, verb & " " & describe_address(memory, address) & " without permission (read_only)");
-      return false;
-    end if;
+--    if length(memory.p_data) = 0 then
+--      failure(memory.p_logger, verb & " empty memory");
+--      return false;
+--    elsif address >= length(memory.p_data) then
+--      failure(memory.p_logger, verb & " address " & to_string(address) & " out of range 0 to " & to_string(length(memory.p_data)-1));
+--      return false;
+--    elsif check_permissions and get_permissions(memory, address) = no_access then
+--      failure(memory.p_logger, verb & " " & describe_address(memory, address) & " without permission (no_access)");
+--      return false;
+--    elsif check_permissions and reading and get_permissions(memory, address) = write_only then
+--      failure(memory.p_logger, verb & " " & describe_address(memory, address) & " without permission (write_only)");
+--      return false;
+--    elsif check_permissions and not reading and get_permissions(memory, address) = read_only then
+--      failure(memory.p_logger, verb & " " & describe_address(memory, address) & " without permission (read_only)");
+--      return false;
+--    end if;
     return true;
   end;
 
@@ -218,6 +224,9 @@ package body memory_pkg is
     variable old : memory_data_t;
   begin
     old := decode(get(memory.p_data, address));
+    if is_external(memory.p_bytes) then
+      work.byte_vector_ptr_pkg.set(memory.p_bytes, address, byte);
+    end if;
     set(memory.p_data, address, encode((byte => byte, exp => old.exp, has_exp => old.has_exp, perm => old.perm)));
   end;
 
@@ -226,7 +235,6 @@ package body memory_pkg is
     if not check_address(memory, address, false, memory.p_check_permissions) then
       return;
     end if;
-
     if not check_write_data(memory, address, byte) then
       return;
     end if;
@@ -235,7 +243,11 @@ package body memory_pkg is
 
   impure function read_byte(memory : memory_t; address : natural) return byte_t is
   begin
-    return get(memory, address, true, memory.p_check_permissions).byte;
+    if is_external(memory.p_bytes) then
+      return work.byte_vector_ptr_pkg.get(memory.p_bytes, address);
+    else
+      return get(memory, address, true, memory.p_check_permissions).byte;
+    end if;
   end;
 
   procedure check_expected_was_written(memory : memory_t; address : natural; num_bytes : natural) is
