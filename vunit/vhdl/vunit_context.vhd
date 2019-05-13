@@ -23,4 +23,5 @@ context vunit_context is
   use vunit_lib.run_types_pkg.all;
   use vunit_lib.run_pkg.all;
   use vunit_lib.run_deprecated_pkg.all;
+  use vunit_lib.clk_pkg.all;
 end context;
