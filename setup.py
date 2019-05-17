@@ -65,6 +65,9 @@ setup(
     install_requires=[
         "colorama",
     ],
+    requires=[
+        "colorama",
+    ],
     author='Lars Asplund',
     author_email='lars.anders.asplund@gmail.com',
     description="VUnit is an open source unit testing framework for VHDL/SystemVerilog.",
