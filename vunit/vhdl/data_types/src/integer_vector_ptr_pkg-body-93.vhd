@@ -8,14 +8,12 @@ package body integer_vector_ptr_pkg is
   shared variable current_index : integer := 0;
   shared variable ptrs : vava_t := null;
 
-  impure function
-  new_integer_vector_ptr(
+  impure function new_integer_vector_ptr (
     len   : natural := 0;
     value : val_t   := 0
   ) return ptr_t is
     variable old_ptrs : vava_t;
   begin
-
     if ptrs = null then
       ptrs := new vav_t'(0 => null);
     elsif ptrs'length <= current_index then
@@ -28,29 +26,25 @@ package body integer_vector_ptr_pkg is
       end loop;
       deallocate(old_ptrs);
     end if;
-
     ptrs(current_index) := new integer_vector_t'(0 to len-1 => value);
     current_index := current_index + 1;
     return (ref => current_index-1);
   end;
 
-  procedure
-  deallocate(
+  procedure deallocate (
     ptr : ptr_t
   ) is begin
     deallocate(ptrs(ptr.ref));
     ptrs(ptr.ref) := null;
   end;
 
-  impure function
-  length(
+  impure function length (
     ptr : ptr_t
   ) return integer is begin
     return ptrs(ptr.ref)'length;
   end;
 
-  procedure
-  set(
+  procedure set (
     ptr   : ptr_t;
     index : natural;
     value : val_t
@@ -58,16 +52,14 @@ package body integer_vector_ptr_pkg is
     ptrs(ptr.ref)(index) := value;
   end;
 
-  impure function
-  get(
+  impure function get (
     ptr   : ptr_t;
     index : natural
   ) return val_t is begin
     return ptrs(ptr.ref)(index);
   end;
 
-  procedure
-  reallocate(
+  procedure reallocate (
     ptr   : ptr_t;
     len   : natural;
     value : val_t := 0
@@ -76,8 +68,7 @@ package body integer_vector_ptr_pkg is
     ptrs(ptr.ref) := new integer_vector_t'(0 to len - 1 => value);
   end;
 
-  procedure
-  resize(
+  procedure resize (
     ptr   : ptr_t;
     len   : natural;
     drop  : natural := 0;
@@ -98,30 +89,26 @@ package body integer_vector_ptr_pkg is
     deallocate(old_ptr);
   end;
 
-  function
-  to_integer(
+  function to_integer (
     value : ptr_t
   ) return integer is begin
     return value.ref;
   end;
 
-  impure function
-  to_integer_vector_ptr(
+  impure function to_integer_vector_ptr (
     value : integer
   ) return ptr_t is begin
     -- @TODO maybe assert that the ref is valid
     return (ref => value);
   end;
 
-  function
-  encode(
+  function encode (
     data : ptr_t
   ) return string is begin
     return encode(data.ref);
   end;
 
-  function
-  decode(
+  function decode (
     code : string
   ) return ptr_t is
     variable ret_val : ptr_t;
@@ -131,8 +118,7 @@ package body integer_vector_ptr_pkg is
     return ret_val;
   end;
 
-  procedure
-  decode(
+  procedure decode (
     constant code   : string;
     variable index  : inout positive;
     variable result : out ptr_t

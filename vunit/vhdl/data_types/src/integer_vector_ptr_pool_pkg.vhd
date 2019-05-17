@@ -16,31 +16,27 @@ package integer_vector_ptr_pool_pkg is
   end record;
   constant null_integer_vector_ptr_pool : integer_vector_ptr_pool_t := (others => null_queue);
 
-  impure function
-  new_integer_vector_ptr_pool
+  impure function new_integer_vector_ptr_pool
   return integer_vector_ptr_pool_t;
 
-  impure function
-  new_integer_vector_ptr(
+  impure function new_integer_vector_ptr (
     pool       : integer_vector_ptr_pool_t;
     min_length : natural := 0
   ) return integer_vector_ptr_t;
 
-  procedure
-  recycle(
-    pool : integer_vector_ptr_pool_t;
+  procedure recycle (
+    pool         : integer_vector_ptr_pool_t;
     variable ptr : inout integer_vector_ptr_t
   );
 end package;
 
 package body integer_vector_ptr_pool_pkg is
-  impure function
-  new_integer_vector_ptr_pool return integer_vector_ptr_pool_t is begin
+  impure function new_integer_vector_ptr_pool
+  return integer_vector_ptr_pool_t is begin
     return (ptrs => new_queue);
   end;
 
-  impure function
-  new_integer_vector_ptr(
+  impure function new_integer_vector_ptr (
     pool       : integer_vector_ptr_pool_t;
     min_length : natural := 0
   ) return integer_vector_ptr_t is
@@ -59,9 +55,8 @@ package body integer_vector_ptr_pool_pkg is
     return ptr;
   end;
 
-  procedure
-  recycle(
-    pool : integer_vector_ptr_pool_t;
+  procedure recycle (
+    pool         : integer_vector_ptr_pool_t;
     variable ptr : inout integer_vector_ptr_t
   ) is begin
     if ptr = null_ptr then

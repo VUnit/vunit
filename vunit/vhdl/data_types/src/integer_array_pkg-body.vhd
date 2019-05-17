@@ -9,9 +9,8 @@ use std.textio.all;
 package body integer_array_pkg is
   type binary_file_t is file of character;
 
-  procedure
-  read_byte(
-    file fread : binary_file_t;
+  procedure read_byte (
+    file fread      : binary_file_t;
     variable result : out integer
   ) is
     variable chr : character;
@@ -21,20 +20,18 @@ package body integer_array_pkg is
     result := character'pos(chr);
   end;
 
-  procedure
-  write_byte(
+  procedure write_byte (
     file fwrite : binary_file_t;
-    value : natural range 0 to 255
+    value       : natural range 0 to 255
   ) is begin
     write(fwrite, character'val(value));
   end;
 
-  procedure
-  read_integer(
-    file fread : binary_file_t;
+  procedure read_integer (
+    file fread      : binary_file_t;
     variable result : out integer;
-    bytes_per_word : natural range 1 to 4 := 4;
-    is_signed : boolean := true
+    bytes_per_word  : natural range 1 to 4 := 4;
+    is_signed       : boolean := true
   ) is
     variable tmp, byte : integer;
   begin
@@ -49,8 +46,7 @@ package body integer_array_pkg is
     result := tmp;
   end;
 
-  procedure
-  write_integer(
+  procedure write_integer (
     file fwrite    : binary_file_t;
     value          : integer;
     bytes_per_word : natural range 1 to 4 := 4;
@@ -66,78 +62,67 @@ package body integer_array_pkg is
     end loop;
   end;
 
-  impure function
-  length(
+  impure function length (
     arr : integer_array_t
   ) return integer is begin
     return arr.length;
   end;
 
-  impure function
-  width(
+  impure function width (
     arr : integer_array_t
   ) return integer is begin
     return arr.width;
   end;
 
-  impure function
-  height(
+  impure function height (
     arr : integer_array_t
   ) return integer is begin
     return arr.height;
   end;
 
-  impure function
-  depth(
+  impure function depth (
     arr : integer_array_t
   ) return integer is begin
     return arr.depth;
   end;
 
-  impure function
-  bit_width(
+  impure function bit_width (
     arr : integer_array_t
   ) return integer is begin
     return arr.bit_width;
   end;
 
-  impure function
-  is_signed(
+  impure function is_signed (
     arr : integer_array_t
   ) return boolean is begin
     return arr.is_signed;
   end;
 
-  impure function
-  bytes_per_word(
+  impure function bytes_per_word (
     arr : integer_array_t
   ) return integer is begin
     return (arr.bit_width + 7)/8;
   end;
 
-  impure function
-  lower_limit(
+  impure function lower_limit (
     arr : integer_array_t
   ) return integer is begin
     return arr.lower_limit;
   end;
 
-  impure function
-  upper_limit(
+  impure function upper_limit (
     arr : integer_array_t
   ) return integer is begin
     return arr.upper_limit;
   end;
 
-  procedure
-  validate_data(
+  procedure validate_data (
     arr : integer_array_t
   ) is begin
     assert arr.data /= null_ptr report "Data is not allocated";
   end;
 
-  procedure
-  validate_bounds(
+  procedure validate_bounds (
     name       : string;
     val, bound : integer
   ) is begin
@@ -147,8 +132,7 @@ package body integer_array_pkg is
               "0 <= " & name  &" < " & integer'image(bound));
   end;
 
-  procedure
-  validate_value(
+  procedure validate_value (
     arr   : integer_array_t;
     value : integer
   ) is begin
@@ -160,10 +144,9 @@ package body integer_array_pkg is
               integer'image(arr.upper_limit));
   end;
 
-  procedure
-  realloc(
+  procedure realloc (
     variable arr : inout integer_array_t;
-    new_length : integer
+    new_length   : integer
   ) is begin
     if arr.data = null_ptr then
       -- Array was empty
@@ -173,29 +156,25 @@ package body integer_array_pkg is
       -- Add extra length to avoid excessive reallocation when appending
       resize(arr.data, new_length + length(arr.data));
     end if;
-
     arr.length := new_length;
   end;
 
-  procedure
-  reshape(
+  procedure reshape (
     variable arr : inout integer_array_t;
-    length : integer
+    length       : integer
   ) is begin
     reshape(arr, length, 1, 1);
   end;
 
-  procedure
-  reshape(
+  procedure reshape (
     variable arr  : inout integer_array_t;
     width, height : integer
   ) is begin
     reshape(arr, width, height, 1);
   end;
 
-  procedure
-  reshape(
-    variable arr : inout integer_array_t;
+  procedure reshape (
+    variable arr         : inout integer_array_t;
     width, height, depth : integer
   ) is begin
     arr.width := width;
@@ -204,17 +183,15 @@ package body integer_array_pkg is
     realloc(arr, width*height*depth);
   end;
 
-  procedure
-  append(
+  procedure append (
     variable arr : inout integer_array_t;
-    value : integer
+    value        : integer
   ) is begin
     reshape(arr, arr.length+1);
     set(arr, arr.length-1, value);
   end;
 
-  impure function
-  get(
+  impure function get (
     arr : integer_array_t;
     idx : integer
   ) return integer is begin
@@ -223,8 +200,7 @@ package body integer_array_pkg is
     return get(arr.data, idx);
   end;
 
-  impure function
-  get(
+  impure function get (
     arr  : integer_array_t;
     x, y : integer
   ) return integer is begin
@@ -234,8 +210,7 @@ package body integer_array_pkg is
     return get(arr.data, y*arr.width + x);
   end;
 
-  impure function
-  get(
+  impure function get (
     arr   : integer_array_t;
     x,y,z : integer
   ) return integer is begin
@@ -246,8 +221,7 @@ package body integer_array_pkg is
     return get(arr.data, (y*arr.width + x)*arr.depth + z);
   end;
 
-  procedure
-  set(
+  procedure set (
     arr   : integer_array_t;
     idx   : integer;
     value : integer
@@ -258,8 +232,7 @@ package body integer_array_pkg is
     set(arr.data, idx, value);
   end;
 
-  procedure
-  set(
+  procedure set (
     arr   : integer_array_t;
     x,y   : integer;
     value : integer
@@ -271,8 +244,7 @@ package body integer_array_pkg is
     set(arr.data, y*arr.width + x, value);
   end;
 
-  procedure
-  set(
+  procedure set (
     arr   : integer_array_t;
     x,y,z : integer;
     value : integer
@@ -285,17 +257,15 @@ package body integer_array_pkg is
     set(arr.data, (y*arr.width + x)*arr.depth + z, value);
   end;
 
-  procedure
-  set_word_size(
+  procedure set_word_size (
     variable arr : inout integer_array_t;
-    bit_width : natural := 32;
-    is_signed : boolean := true
+    bit_width    : natural := 32;
+    is_signed    : boolean := true
   ) is begin
     assert (1 <= bit_width and bit_width < 32) or (bit_width = 32 and is_signed)
       report "Unsupported combination of bit_width and is_signed";
     arr.bit_width := bit_width;
     arr.is_signed := is_signed;
-
     if arr.is_signed then
       if arr.bit_width = 32 then
         -- avoid overflow warning
@@ -315,8 +285,7 @@ package body integer_array_pkg is
     end if;
   end;
 
-  impure function
-  new_1d(
+  impure function new_1d (
     length    : integer := 0;
     bit_width : natural := 32;
     is_signed : boolean := true
@@ -328,8 +297,7 @@ package body integer_array_pkg is
                   is_signed => is_signed);
   end;
 
-  impure function
-  new_2d(
+  impure function new_2d (
     width     : integer := 0;
     height    : integer := 0;
     bit_width : natural := 32;
@@ -342,8 +310,7 @@ package body integer_array_pkg is
                   is_signed => is_signed);
   end;
 
-  impure function
-  new_3d(
+  impure function new_3d (
     width     : integer := 0;
     height    : integer := 0;
     depth     : integer := 0;
@@ -353,23 +320,19 @@ package body integer_array_pkg is
     variable arr : integer_array_t := null_integer_array;
   begin
     set_word_size(arr, bit_width, is_signed);
-
     arr.length := width * height * depth;
     arr.width := width;
     arr.height := height;
     arr.depth := depth;
-
     if arr.length > 0 then
       arr.data := new_integer_vector_ptr(arr.length);
     else
       arr.data := null_ptr;
     end if;
-
     return arr;
   end;
 
-  impure function
-  copy(
+  impure function copy (
     arr : integer_array_t
   ) return integer_array_t is
     variable arr_copy : integer_array_t;
@@ -382,8 +345,7 @@ package body integer_array_pkg is
     return arr_copy;
   end;
 
-  procedure
-  deallocate(
+  procedure deallocate (
     variable arr : inout integer_array_t
   ) is begin
     if arr.data /= null_ptr then
@@ -392,15 +354,13 @@ package body integer_array_pkg is
     arr := null_integer_array;
   end;
 
-  impure function
-  is_null(
+  impure function is_null (
     arr : integer_array_t
   ) return boolean is begin
     return arr = null_integer_array;
   end;
 
-  procedure
-  save_csv(
+  procedure save_csv (
     arr       : integer_array_t;
     file_name : string
   ) is
@@ -422,8 +382,7 @@ package body integer_array_pkg is
     file_close(fwrite);
   end;
 
-  impure function
-  load_csv(
+  impure function load_csv (
     file_name : string;
     bit_width : natural := 32;
     is_signed : boolean := true
@@ -458,8 +417,7 @@ package body integer_array_pkg is
     return arr;
   end;
 
-  procedure
-  save_raw(
+  procedure save_raw (
     arr       : integer_array_t;
     file_name : string
   ) is
@@ -475,8 +433,7 @@ package body integer_array_pkg is
     file_close(fwrite);
   end;
 
-  impure function
-  load_raw(
+  impure function load_raw (
     file_name : string;
     bit_width : natural := 32;
     is_signed : boolean := true

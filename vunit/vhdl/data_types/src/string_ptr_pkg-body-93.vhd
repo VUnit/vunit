@@ -8,8 +8,7 @@ package body string_ptr_pkg is
   shared variable current_index : integer := 0;
   shared variable ptrs : vava_t := null;
 
-  impure function
-  new_string_ptr(
+  impure function new_string_ptr (
     length : natural := 0
   ) return ptr_t is
     variable old_ptrs : vava_t;
@@ -32,23 +31,20 @@ package body string_ptr_pkg is
     return retval;
   end;
 
-  procedure
-  deallocate(
+  procedure deallocate (
     ptr : ptr_t
   ) is begin
     deallocate(ptrs(ptr.ref));
     ptrs(ptr.ref) := null;
   end;
 
-  impure function
-  length(
+  impure function length (
     ptr : ptr_t
   ) return integer is begin
     return ptrs(ptr.ref)'length;
   end;
 
-  procedure
-  set(
+  procedure set (
     ptr   : ptr_t;
     index : natural;
     value : val_t
@@ -56,16 +52,14 @@ package body string_ptr_pkg is
     ptrs(ptr.ref)(index) := value;
   end;
 
-  impure function
-  get(
+  impure function get (
     ptr   : ptr_t;
     index : natural
   ) return val_t is begin
     return ptrs(ptr.ref)(index);
   end;
 
-  procedure
-  reallocate(
+  procedure reallocate (
     ptr    : ptr_t;
     length : natural
   ) is
@@ -75,8 +69,7 @@ package body string_ptr_pkg is
     ptrs(ptr.ref) := new string'(1 to length => val_t'low);
   end;
 
-  procedure
-  reallocate(
+  procedure reallocate (
     ptr   : ptr_t;
     value : string
   ) is
@@ -87,8 +80,7 @@ package body string_ptr_pkg is
     ptrs(ptr.ref) := new string'(n_value);
   end;
 
-  procedure
-  resize(
+  procedure resize (
     ptr    : ptr_t;
     length : natural;
     drop   : natural := 0
@@ -98,43 +90,36 @@ package body string_ptr_pkg is
   begin
     new_ptr := new string'(1 to length => val_t'low);
     old_ptr := ptrs(ptr.ref);
-
     if min_length > old_ptr'length - drop then
       min_length := old_ptr'length - drop;
     end if;
-
     for i in 1 to min_length loop
       new_ptr(i) := old_ptr(drop + i);
     end loop;
-
     ptrs(ptr.ref) := new_ptr;
     deallocate(old_ptr);
   end;
 
-  impure function
-  to_string(
+  impure function to_string (
     ptr : ptr_t
   ) return string is begin
     return ptrs(ptr.ref).all;
   end;
 
-  function
-  to_integer(
+  function to_integer (
     value : ptr_t
   ) return integer is begin
     return value.ref;
   end;
 
-  impure function
-  to_string_ptr(
+  impure function to_string_ptr (
     value : integer
   ) return ptr_t is begin
     -- @TODO maybe assert that the ref is valid
     return (ref => value);
   end;
 
-  impure function
-  new_string_ptr(
+  impure function new_string_ptr (
     value : string
   ) return ptr_t is
     variable result : ptr_t := new_string_ptr(value'length);
@@ -146,15 +131,13 @@ package body string_ptr_pkg is
     return result;
   end;
 
-  function
-  encode(
+  function encode (
     data : ptr_t
   ) return string is begin
     return encode(data.ref);
   end;
 
-  function
-  decode(
+  function decode (
     code : string
   ) return ptr_t is
     variable ret_val : ptr_t;
@@ -164,8 +147,7 @@ package body string_ptr_pkg is
     return ret_val;
   end;
 
-  procedure
-  decode(
+  procedure decode (
     constant code   : string;
     variable index  : inout positive;
     variable result : out ptr_t

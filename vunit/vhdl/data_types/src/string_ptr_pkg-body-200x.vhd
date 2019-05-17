@@ -6,55 +6,46 @@
 
 package body string_ptr_pkg is
   type string_ptr_storage_t is protected
-    impure function
-    new_string_ptr(
+    impure function new_string_ptr (
       length : natural := 0
     ) return natural;
 
-    procedure
-    deallocate(
+    procedure deallocate (
       ref : natural
     );
 
-    impure function
-    length(
+    impure function length (
       ref : natural
     ) return integer;
 
-    procedure
-    set(
+    procedure set (
       ref   : natural;
       index : natural;
       value : val_t
     );
 
-    impure function
-    get(
+    impure function get (
       ref   : natural;
       index : natural
     ) return val_t;
 
-    procedure
-    reallocate(
+    procedure reallocate (
       ref    : natural;
       length : natural
     );
 
-    procedure
-    reallocate(
+    procedure reallocate (
       ref   : natural;
       value : string
     );
 
-    procedure
-    resize(
+    procedure resize (
       ref    : natural;
       length : natural;
       drop   : natural := 0
     );
 
-    impure function
-    to_string(
+    impure function to_string (
       ref : natural
     ) return string;
   end protected;
@@ -63,8 +54,7 @@ package body string_ptr_pkg is
     variable current_index : integer := 0;
     variable ptrs : vava_t := null;
 
-    impure function
-    new_string_ptr(
+    impure function new_string_ptr (
       length : natural := 0
     ) return natural is
       variable old_ptrs : string_access_vector_access_t;
@@ -86,23 +76,20 @@ package body string_ptr_pkg is
       return current_index-1;
     end;
 
-    procedure
-    deallocate(
+    procedure deallocate (
       ref : natural
     ) is begin
       deallocate(ptrs(ref));
       ptrs(ref) := null;
     end;
 
-    impure function
-    length(
+    impure function length (
       ref : natural
     ) return integer is begin
       return ptrs(ref)'length;
     end;
 
-    procedure
-    set(
+    procedure set (
       ref   : natural;
       index : natural;
       value : val_t
@@ -110,16 +97,14 @@ package body string_ptr_pkg is
       ptrs(ref)(index) := value;
     end;
 
-    impure function
-    get(
+    impure function get (
       ref   : natural;
       index : natural
     ) return val_t is begin
       return ptrs(ref)(index);
     end;
 
-    procedure
-    reallocate(
+    procedure reallocate (
       ref    : natural;
       length : natural
     ) is
@@ -129,8 +114,7 @@ package body string_ptr_pkg is
       ptrs(ref) := new string'(1 to length => val_t'low);
     end;
 
-    procedure
-    reallocate(
+    procedure reallocate (
       ref   : natural;
       value : string
     ) is
@@ -141,8 +125,7 @@ package body string_ptr_pkg is
       ptrs(ref) := new string'(n_value);
     end;
 
-    procedure
-    resize(
+    procedure resize (
       ref    : natural;
       length : natural;
       drop   : natural := 0
@@ -152,21 +135,17 @@ package body string_ptr_pkg is
     begin
       new_ptr := new string'(1 to length => val_t'low);
       old_ptr := ptrs(ref);
-
       if min_length > old_ptr'length - drop then
         min_length := old_ptr'length - drop;
       end if;
-
       for i in 1 to min_length loop
         new_ptr(i) := old_ptr(drop + i);
       end loop;
-
       ptrs(ref) := new_ptr;
       deallocate(old_ptr);
     end;
 
-    impure function
-    to_string(
+    impure function to_string (
       ref : natural
     ) return string is begin
       return ptrs(ref).all;
@@ -176,30 +155,26 @@ package body string_ptr_pkg is
 
   shared variable string_ptr_storage : string_ptr_storage_t;
 
-  function
-  to_integer(
+  function to_integer (
     value : ptr_t
   ) return integer is begin
     return value.ref;
   end;
 
-  impure function
-  to_string_ptr(
+  impure function to_string_ptr (
     value : integer
   ) return ptr_t is begin
     -- @TODO maybe assert that the ref is valid
     return (ref => value);
   end;
 
-  impure function
-  new_string_ptr(
+  impure function new_string_ptr (
     length : natural := 0
   ) return ptr_t is begin
     return (ref => string_ptr_storage.new_string_ptr(length));
   end;
 
-  impure function
-  new_string_ptr(
+  impure function new_string_ptr (
     value : string
   ) return ptr_t is
     variable result : ptr_t := new_string_ptr(value'length);
@@ -211,23 +186,20 @@ package body string_ptr_pkg is
     return result;
   end;
 
-  procedure
-  deallocate(
+  procedure deallocate (
     ptr : ptr_t
   ) is
   begin
     string_ptr_storage.deallocate(ptr.ref);
   end;
 
-  impure function
-  length(
+  impure function length (
     ptr : ptr_t
   ) return integer is begin
     return string_ptr_storage.length(ptr.ref);
   end;
 
-  procedure
-  set(
+  procedure set (
     ptr   : ptr_t;
     index : natural;
     value : val_t
@@ -235,29 +207,28 @@ package body string_ptr_pkg is
     string_ptr_storage.set(ptr.ref, index, value);
   end;
 
-  impure function
-  get(
+  impure function get (
     ptr : ptr_t;
     index : natural
   ) return val_t is begin
     return string_ptr_storage.get(ptr.ref, index);
   end;
 
-  procedure
-  reallocate(
+  procedure reallocate (
     ptr : ptr_t;
     length : natural
   ) is begin
     string_ptr_storage.reallocate(ptr.ref, length);
   end;
 
-  procedure reallocate(ptr : ptr_t; value : string) is
-  begin
+  procedure reallocate (
+    ptr   : ptr_t;
+    value : string
+  ) is begin
     string_ptr_storage.reallocate(ptr.ref, value);
   end;
 
-  procedure
-  resize(
+  procedure resize (
     ptr    : ptr_t;
     length : natural;
     drop   : natural := 0
@@ -265,22 +236,19 @@ package body string_ptr_pkg is
     string_ptr_storage.resize(ptr.ref, length, drop);
   end;
 
-  impure function
-  to_string(
+  impure function to_string (
     ptr : ptr_t
   ) return string is begin
     return string_ptr_storage.to_string(ptr.ref);
   end;
 
-  function
-  encode(
+  function encode (
     data : ptr_t
   ) return string is begin
     return encode(data.ref);
   end;
 
-  function
-  decode(
+  function decode (
     code : string
   ) return ptr_t is
     variable ret_val : ptr_t;
@@ -290,8 +258,7 @@ package body string_ptr_pkg is
     return ret_val;
   end;
 
-  procedure
-  decode(
+  procedure decode (
     constant code : string;
     variable index : inout positive;
     variable result : out ptr_t

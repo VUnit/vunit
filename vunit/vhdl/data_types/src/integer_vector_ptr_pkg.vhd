@@ -29,72 +29,60 @@ package integer_vector_ptr_pkg is
   alias  vav_t  is integer_vector_access_vector_t;
   alias  vava_t is integer_vector_access_vector_access_t;
 
-  function
-  to_integer(
+  function to_integer (
     value : ptr_t
   ) return integer;
 
-  impure function
-  to_integer_vector_ptr(
+  impure function to_integer_vector_ptr (
     value : val_t
   ) return ptr_t;
 
-  impure function
-  new_integer_vector_ptr(
+  impure function new_integer_vector_ptr (
     len   : natural := 0;
     value : val_t := 0
   ) return ptr_t;
 
-  procedure
-  deallocate(
+  procedure deallocate (
     ptr : ptr_t
   );
 
-  impure function
-  length(
+  impure function length (
     ptr : ptr_t
   ) return integer;
 
-  procedure
-  set(
+  procedure set (
     ptr   : ptr_t;
     index : natural;
     value : val_t
   );
 
-  impure function
-  get(
+  impure function get (
     ptr   : ptr_t;
     index : natural
   ) return val_t;
 
-  procedure
-  reallocate(
+  procedure reallocate (
     ptr   : ptr_t;
     len   : natural;
     value : val_t := 0
   );
 
-  procedure
-  resize(
+  procedure resize (
     ptr   : ptr_t;
     len   : natural;
     drop  : natural := 0;
     value : val_t := 0
   );
 
-  function
-  encode(
+  function encode (
     data : ptr_t
   ) return string;
 
-  function
-  decode(
+  function decode (
     code : string
   ) return ptr_t;
 
-  procedure
-  decode(
+  procedure decode (
     constant code   : string;
     variable index  : inout positive;
     variable result : out ptr_t

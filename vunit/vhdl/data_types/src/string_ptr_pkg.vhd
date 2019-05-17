@@ -27,85 +27,70 @@ package string_ptr_pkg is
   alias  vav_t  is string_access_vector_t;
   alias  vava_t is string_access_vector_access_t;
 
-  function
-  to_integer(
+  function to_integer (
     value : string_ptr_t
   ) return integer;
 
-  impure function
-  to_string_ptr(
+  impure function to_string_ptr (
     value : integer
   ) return string_ptr_t;
 
-  impure function
-  new_string_ptr(
+  impure function new_string_ptr (
     length : natural := 0
   ) return string_ptr_t;
 
-  impure function
-  new_string_ptr(
+  impure function new_string_ptr (
     value : string
   ) return string_ptr_t;
 
-  procedure
-  deallocate(
+  procedure deallocate (
     ptr : string_ptr_t
   );
 
-  impure function
-  length(
+  impure function length (
     ptr : string_ptr_t
   ) return integer;
 
-  procedure
-  set(
+  procedure set (
     ptr   : string_ptr_t;
     index : natural;
     value : character
   );
 
-  impure function
-  get(
+  impure function get (
     ptr   : string_ptr_t;
     index : natural
   ) return character;
 
-  procedure
-  reallocate(
+  procedure reallocate (
     ptr    : string_ptr_t;
     length : natural
   );
 
-  procedure
-  reallocate(
+  procedure reallocate (
     ptr   : string_ptr_t;
     value : string
   );
 
-  procedure
-  resize(
+  procedure resize (
     ptr    : string_ptr_t;
     length : natural;
     drop   : natural := 0
   );
 
-  impure function
-  to_string(
+  impure function to_string (
     ptr : string_ptr_t
   ) return string;
 
-  function
-  encode(
+  function encode (
     data : string_ptr_t
   ) return string;
 
-  function
-  decode(
+  function decode (
     code : string
   ) return string_ptr_t;
 
-  procedure
-  decode(
+  procedure decode (
     constant code   : string;
     variable index  : inout positive;
     variable result : out string_ptr_t
