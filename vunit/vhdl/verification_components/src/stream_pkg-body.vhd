@@ -24,9 +24,20 @@ package body stream_pkg is
     return (p_actor => new_actor);
   end;
 
-  procedure push(msg : msg_t; transaction : stream_transaction_t) is
+  function new_stream_transaction(data : std_logic_vector;
+                                  last : boolean := false)
+                                  return stream_transaction_t is
+    variable transaction : stream_transaction_t(data(data'range));
   begin
-    push_std_ulogic_vector(msg, transaction.data);
+    transaction.data := data;
+    transaction.last := last;
+    return transaction;
+  end;
+
+  procedure push(msg : msg_t; transaction : stream_transaction_t) is
+    variable normalized_data : std_logic_vector(transaction.data'length - 1 downto 0) := transaction.data;
+  begin
+    push_std_ulogic_vector(msg, normalized_data);
     push_boolean(msg, transaction.last);
   end;
 
@@ -255,20 +266,11 @@ package body stream_pkg is
   procedure reply_stream(signal net : inout network_t;
                          variable msg : inout msg_t;
                          data : std_ulogic_vector;
-                         last : boolean) is
+                         last : boolean := false) is
     variable transaction : stream_transaction_t(data(data'range));
   begin
     transaction.data := data;
     transaction.last := last;
-    reply_stream(net, msg, transaction);
-  end;
-
-  procedure reply_stream(signal net : inout network_t;
-                         variable msg : inout msg_t;
-                         data : std_ulogic_vector) is
-    variable transaction : stream_transaction_t(data(data'range));
-  begin
-    transaction.data := data;
     reply_stream(net, msg, transaction);
   end;
 

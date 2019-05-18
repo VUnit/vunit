@@ -36,6 +36,11 @@ package stream_pkg is
     last : boolean;
   end record;
 
+  -- Create a new stream transaction
+  function new_stream_transaction(data : std_logic_vector;
+                                  last : boolean := false)
+                                  return stream_transaction_t;
+
   -- Push a stream transaction into a message
   procedure push(msg : msg_t; transaction : stream_transaction_t);
 
@@ -159,11 +164,7 @@ package stream_pkg is
   procedure reply_stream(signal net : inout network_t;
                          variable msg : inout msg_t;
                          data : std_ulogic_vector;
-                         last : boolean);
-
-  procedure reply_stream(signal net : inout network_t;
-                         variable msg : inout msg_t;
-                         data : std_ulogic_vector);
+                         last : boolean := false);
 
 end package;
 
