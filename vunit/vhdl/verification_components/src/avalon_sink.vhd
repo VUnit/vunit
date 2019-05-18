@@ -39,6 +39,7 @@ begin
     variable msg_type : msg_type_t;
     variable rnd : RandomPType;
     variable avalon_stream_transaction : avalon_stream_transaction_t(data(data'range));
+    variable stream_transaction : stream_transaction_t(data(data'range));
   begin
     receive(net, sink.p_actor, msg);
     msg_type := message_type(msg);
@@ -67,7 +68,9 @@ begin
             end if;
             push_avalon_stream_transaction(reply_msg, avalon_stream_transaction);
           else
-            push_std_ulogic_vector(reply_msg, data);
+            stream_transaction.data := data;
+            stream_transaction.last := false;
+            push_stream_transaction(reply_msg, stream_transaction);
           end if;
           reply(net, msg, reply_msg);
           ready <= '0';
