@@ -19,7 +19,8 @@ entity uart_master is
   generic (
     uart : uart_master_t);
   port (
-    tx : out std_logic := uart.p_idle_state);
+    tx : out std_logic := uart.p_idle_state;
+    force_parity_error : in std_logic := '0');
 end entity;
 
 architecture a of uart_master is
@@ -35,14 +36,22 @@ begin
       begin
         tx <= value;
         wait for time_per_bit;
-      end procedure;
+    end procedure;
 
+	  variable parity_bit : std_logic := '0';
     begin
       debug("Sending " & to_string(data));
       send_bit(not uart.p_idle_state);
       for i in 0 to data'length-1 loop
         send_bit(data(i));
       end loop;
+      if uart.p_parity_enabled then
+      	parity_bit := xor(data & uart.p_parity_type);
+      	if force_parity_error = '1' then
+      		parity_bit := not parity_bit;
+      	end if;
+      	send_bit(parity_bit);
+      end if;
       send_bit(uart.p_idle_state);
     end procedure;
 

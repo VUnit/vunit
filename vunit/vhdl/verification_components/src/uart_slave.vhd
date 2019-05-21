@@ -18,7 +18,8 @@ entity uart_slave is
   generic (
     uart : uart_slave_t);
   port (
-    rx : in std_logic);
+    rx : in std_logic;
+    parity_error : out std_logic := '0');
 end entity;
 
 architecture a of uart_slave is
@@ -55,10 +56,12 @@ begin
   recv : process
     procedure uart_recv(variable data : out std_logic_vector;
                         signal rx : in std_logic;
-                        baud_rate : integer) is
+                        baud_rate : integer;
+                        signal parity_error : out std_logic) is
       constant time_per_bit : time := (10**9 / baud_rate) * 1 ns;
       constant time_per_half_bit : time := (10**9 / (2*baud_rate)) * 1 ns;
-    begin
+  begin
+  	  parity_error <= '0';
       wait for time_per_half_bit; -- middle of start bit
       assert rx = not uart.p_idle_state;
       wait for time_per_bit; -- skip start bit
@@ -68,13 +71,20 @@ begin
         wait for time_per_bit;
       end loop;
 
+      if uart.p_parity_enabled then
+      	if xor(data & rx) /= uart.p_parity_type then
+      		parity_error <= '1';
+      	end if;
+      	wait for time_per_bit;
+      end if;
+
       assert rx = uart.p_idle_state;
     end procedure;
 
     variable data : std_logic_vector(uart.p_data_length-1 downto 0);
   begin
     wait on rx until rx = not uart.p_idle_state;
-    uart_recv(data, rx, baud_rate);
+    uart_recv(data, rx, baud_rate, parity_error);
     push_std_ulogic_vector(data_queue, data);
     local_event <= '1';
     wait for 0 ns;
