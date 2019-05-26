@@ -65,6 +65,12 @@ setup(
     install_requires=[
         "colorama",
     ],
+    requires=[
+        "colorama",
+    ],
+    license=[
+        "Mozilla Public License 2.0 (MPL 2.0)",
+    ],
     author='Lars Asplund',
     author_email='lars.anders.asplund@gmail.com',
     description="VUnit is an open source unit testing framework for VHDL/SystemVerilog.",
