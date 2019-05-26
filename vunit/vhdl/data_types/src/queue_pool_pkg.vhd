@@ -17,32 +17,46 @@ package queue_pool_pkg is
     index_pool => null_integer_vector_ptr_pool,
     data_pool => null_string_ptr_pool);
 
-  impure function new_queue_pool return queue_pool_t;
-  impure function new_queue(pool : queue_pool_t) return queue_t;
-  procedure recycle(pool : queue_pool_t; variable queue : inout queue_t);
+  impure function new_queue_pool
+  return queue_pool_t;
 
+  impure function new_queue (
+    pool : queue_pool_t
+  ) return queue_t;
+
+  procedure recycle (
+    pool : queue_pool_t;
+    variable queue : inout queue_t
+  );
 end package;
 
 package body queue_pool_pkg is
-  impure function new_queue_pool return queue_pool_t is
-  begin
-    return (index_pool => new_integer_vector_ptr_pool,
-            data_pool => new_string_ptr_pool);
+  impure function new_queue_pool
+  return queue_pool_t is begin
+    return (
+      index_pool => new_integer_vector_ptr_pool,
+      data_pool  => new_string_ptr_pool
+    );
   end;
 
-  impure function new_queue(pool : queue_pool_t) return queue_t is
+  impure function new_queue (
+    pool : queue_pool_t
+  ) return queue_t is
     variable queue : queue_t;
   begin
-    queue := (p_meta => new_integer_vector_ptr(pool.index_pool, 2),
-              data => new_string_ptr(pool.data_pool, 0));
+    queue := (
+      p_meta => new_integer_vector_ptr(pool.index_pool, 2),
+      data => new_string_ptr(pool.data_pool, 0)
+    );
     flush(queue);
     return queue;
   end;
 
-  procedure recycle(pool : queue_pool_t; variable queue : inout queue_t) is
-  begin
+  procedure recycle (
+    pool : queue_pool_t;
+    variable queue : inout queue_t
+  ) is begin
     recycle(pool.index_pool, queue.p_meta);
     recycle(pool.data_pool, queue.data);
   end;
-
 end package body;

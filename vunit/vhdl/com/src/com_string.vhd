@@ -217,7 +217,7 @@ package body com_string_pkg is
     constant data : integer_vector_ptr_t)
     return string is
   begin
-    return create_group(1, to_string(data.index));
+    return create_group(1, to_string(data.ref));
   end;
 
   function to_string (

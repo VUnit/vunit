@@ -11,33 +11,86 @@
 -- into a singleton datastructure of integer vector access types.
 --
 
+use work.integer_vector_pkg.all;
+
 use work.codec_pkg.all;
 use work.codec_builder_pkg.all;
 
 package integer_vector_ptr_pkg is
   subtype index_t is integer range -1 to integer'high;
   type integer_vector_ptr_t is record
-    index : index_t;
+    ref : index_t;
   end record;
-  constant null_ptr : integer_vector_ptr_t := (index => -1);
+  constant null_ptr : integer_vector_ptr_t := (ref => -1);
 
-  function to_integer(value : integer_vector_ptr_t) return integer;
-  impure function to_integer_vector_ptr(value : integer) return integer_vector_ptr_t;
-  impure function new_integer_vector_ptr(length : natural := 0; value : integer := 0) return integer_vector_ptr_t;
-  procedure deallocate(ptr : integer_vector_ptr_t);
-  impure function length(ptr : integer_vector_ptr_t) return integer;
-  procedure set(ptr : integer_vector_ptr_t; index : integer; value : integer);
-  impure function get(ptr : integer_vector_ptr_t; index : integer) return integer;
-  procedure reallocate(ptr : integer_vector_ptr_t; length : natural; value : integer := 0);
-  procedure resize(ptr : integer_vector_ptr_t; length : natural; drop : natural := 0; value : integer := 0);
-  constant integer_vector_ptr_t_code_length : positive := integer_code_length;
-  function encode(data : integer_vector_ptr_t) return string;
-  function decode(code : string) return integer_vector_ptr_t;
-  procedure decode(
+  alias  ptr_t  is integer_vector_ptr_t;
+  alias  val_t  is integer;
+  alias  vec_t  is integer_vector_t;
+  alias  vav_t  is integer_vector_access_vector_t;
+  alias  vava_t is integer_vector_access_vector_access_t;
+
+  function to_integer (
+    value : ptr_t
+  ) return integer;
+
+  impure function to_integer_vector_ptr (
+    value : val_t
+  ) return ptr_t;
+
+  impure function new_integer_vector_ptr (
+    len   : natural := 0;
+    value : val_t := 0
+  ) return ptr_t;
+
+  procedure deallocate (
+    ptr : ptr_t
+  );
+
+  impure function length (
+    ptr : ptr_t
+  ) return integer;
+
+  procedure set (
+    ptr   : ptr_t;
+    index : natural;
+    value : val_t
+  );
+
+  impure function get (
+    ptr   : ptr_t;
+    index : natural
+  ) return val_t;
+
+  procedure reallocate (
+    ptr   : ptr_t;
+    len   : natural;
+    value : val_t := 0
+  );
+
+  procedure resize (
+    ptr   : ptr_t;
+    len   : natural;
+    drop  : natural := 0;
+    value : val_t := 0
+  );
+
+  function encode (
+    data : ptr_t
+  ) return string;
+
+  function decode (
+    code : string
+  ) return ptr_t;
+
+  procedure decode (
     constant code   : string;
-    variable index : inout positive;
-    variable result : out integer_vector_ptr_t);
-  alias encode_integer_vector_ptr_t is encode[integer_vector_ptr_t return string];
-  alias decode_integer_vector_ptr_t is decode[string return integer_vector_ptr_t];
+    variable index  : inout positive;
+    variable result : out ptr_t
+  );
+
+  alias encode_integer_vector_ptr_t is encode[ptr_t return string];
+  alias decode_integer_vector_ptr_t is decode[string return ptr_t];
+
+  constant integer_vector_ptr_t_code_length : positive := integer_code_length;
 
 end package;
