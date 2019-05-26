@@ -1,0 +1,16 @@
+VHPIDIRECT {
+  global:
+main;
+oct_main;
+ghdl_main;
+read_char;
+write_char;
+read_integer;
+write_integer;
+set_string_ptr;
+get_string_ptr;
+set_intvec_ptr;
+get_intvec_ptr;
+  local:
+	*;
+};
