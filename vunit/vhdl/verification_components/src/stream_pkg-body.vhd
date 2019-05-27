@@ -14,6 +14,7 @@ context work.com_context;
 use work.sync_pkg.all;
 
 package body stream_pkg is
+
   impure function new_stream_master return stream_master_t is
   begin
     return (p_actor => new_actor);
@@ -35,9 +36,8 @@ package body stream_pkg is
   end;
 
   procedure push(msg : msg_t; transaction : stream_transaction_t) is
-    variable normalized_data : std_logic_vector(transaction.data'length - 1 downto 0) := transaction.data;
   begin
-    push_std_ulogic_vector(msg, normalized_data);
+    push_std_ulogic_vector(msg, transaction.data);
     push_boolean(msg, transaction.last);
   end;
 

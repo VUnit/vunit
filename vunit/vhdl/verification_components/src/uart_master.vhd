@@ -30,6 +30,7 @@ begin
                         signal tx : out std_logic;
                         baud_rate  : integer) is
       constant time_per_bit : time := (10**9 / baud_rate) * 1 ns;
+      variable normalized_data : std_logic_vector(data'length - 1 downto 0) := data;
 
       procedure send_bit(value : std_logic) is
       begin
@@ -38,10 +39,10 @@ begin
       end procedure;
 
     begin
-      debug("Sending " & to_string(data));
+      debug("Sending " & to_string(normalized_data));
       send_bit(not uart.p_idle_state);
-      for i in 0 to data'length-1 loop
-        send_bit(data(i));
+      for i in 0 to normalized_data'length - 1 loop
+        send_bit(normalized_data(i));
       end loop;
       send_bit(uart.p_idle_state);
     end procedure;

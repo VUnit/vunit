@@ -137,7 +137,7 @@ package stream_pkg is
                     stream : stream_slave_t;
                     variable msg : out msg_t);
 
-  -- Receive a value pushed to a stream with syncing
+  -- Receive a value pushed to a stream while also handling sync messages
   procedure receive_stream(signal net : inout network_t;
                            stream : stream_master_t;
                            variable transaction : out stream_transaction_t);
@@ -151,7 +151,7 @@ package stream_pkg is
                            stream : stream_master_t;
                            variable data : out std_ulogic_vector);
 
-  -- Receive a stream pop request with syncing
+  -- Receive a stream pop request while also handling sync messages
   procedure receive_stream(signal net : inout network_t;
                            stream : stream_slave_t;
                            variable msg : out msg_t);
