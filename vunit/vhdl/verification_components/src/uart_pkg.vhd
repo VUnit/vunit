@@ -19,6 +19,8 @@ package uart_pkg is
     p_actor : actor_t;
     p_baud_rate : natural;
     p_idle_state : std_logic;
+    p_parity_enabled : boolean;
+    p_parity_type : std_logic;
   end record;
 
   type uart_slave_t is record
@@ -26,6 +28,8 @@ package uart_pkg is
     p_baud_rate : natural;
     p_idle_state : std_logic;
     p_data_length : positive;
+    p_parity_enabled : boolean;
+    p_parity_type : std_logic;
   end record;
 
   -- Set the baud rate [bits/s]
@@ -37,19 +41,32 @@ package uart_pkg is
                           uart_slave : uart_slave_t;
                           baud_rate : natural);
 
+  constant uart_parity_odd : std_logic := '1';
+  constant uart_parity_even : std_logic := '0';
+
   constant default_baud_rate : natural := 115200;
   constant default_idle_state : std_logic := '1';
   constant default_data_length : positive := 8;
+  constant default_parity_enabled : boolean := false;
+  constant default_parity_type : std_logic := uart_parity_odd;
+
   impure function new_uart_master(initial_baud_rate : natural := default_baud_rate;
-                                  idle_state : std_logic := default_idle_state) return uart_master_t;
+                                  idle_state : std_logic := default_idle_state;
+                                  parity_enabled : boolean := default_parity_enabled;
+                                  parity_type : std_logic := default_parity_type) return uart_master_t;
   impure function new_uart_slave(initial_baud_rate : natural := default_baud_rate;
                                  idle_state : std_logic := default_idle_state;
-                                 data_length : positive := default_data_length) return uart_slave_t;
+                                 data_length : positive := default_data_length;
+                                 parity_enabled : boolean := default_parity_enabled;
+                                 parity_type : std_logic := default_parity_type) return uart_slave_t;
 
   impure function as_stream(uart_master : uart_master_t) return stream_master_t;
   impure function as_stream(uart_slave : uart_slave_t) return stream_slave_t;
   impure function as_sync(uart_master : uart_master_t) return sync_handle_t;
   impure function as_sync(uart_slave : uart_slave_t) return sync_handle_t;
+
+  impure function get_datawidth(uart_master : uart_master_t) return integer;
+  impure function get_datawidth(uart_slave : uart_slave_t) return integer;
 
   constant uart_set_baud_rate_msg : msg_type_t := new_msg_type("uart set baud rate");
 end package;
@@ -57,21 +74,29 @@ end package;
 package body uart_pkg is
 
   impure function new_uart_master(initial_baud_rate : natural := default_baud_rate;
-                                  idle_state : std_logic := default_idle_state) return uart_master_t is
-  begin
-    return (p_actor => new_actor,
-            p_baud_rate => initial_baud_rate,
-            p_idle_state => idle_state);
-  end;
-
-  impure function new_uart_slave(initial_baud_rate : natural := default_baud_rate;
-                                 idle_state : std_logic := default_idle_state;
-                                 data_length : positive := default_data_length) return uart_slave_t is
+                                  idle_state : std_logic := default_idle_state;
+                                  parity_enabled : boolean := default_parity_enabled;
+                                  parity_type : std_logic := default_parity_type) return uart_master_t is
   begin
     return (p_actor => new_actor,
             p_baud_rate => initial_baud_rate,
             p_idle_state => idle_state,
-            p_data_length => data_length);
+            p_parity_enabled => parity_enabled,
+            p_parity_type => parity_type);
+  end;
+
+  impure function new_uart_slave(initial_baud_rate : natural := default_baud_rate;
+                                 idle_state : std_logic := default_idle_state;
+                                 data_length : positive := default_data_length;
+                                 parity_enabled : boolean := default_parity_enabled;
+                                 parity_type : std_logic := default_parity_type) return uart_slave_t is
+  begin
+    return (p_actor => new_actor,
+            p_baud_rate => initial_baud_rate,
+            p_idle_state => idle_state,
+            p_data_length => data_length,
+            p_parity_enabled => parity_enabled,
+            p_parity_type => parity_type);
   end;
 
   impure function as_stream(uart_master : uart_master_t) return stream_master_t is
@@ -92,6 +117,24 @@ package body uart_pkg is
   impure function as_sync(uart_slave : uart_slave_t) return sync_handle_t is
   begin
     return uart_slave.p_actor;
+  end;
+
+  impure function get_datawidth(uart_master : uart_master_t) return integer is
+  begin
+	if uart_master.p_parity_enabled then
+		return 11;
+	else
+		return 10;
+	end if;
+  end;
+
+  impure function get_datawidth(uart_slave : uart_slave_t) return integer is
+  begin
+	if uart_slave.p_parity_enabled then
+		return 11;
+	else
+		return 10;
+	end if;
   end;
 
   procedure set_baud_rate(signal net : inout network_t;

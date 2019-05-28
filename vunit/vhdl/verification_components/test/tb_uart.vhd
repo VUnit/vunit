@@ -23,11 +23,34 @@ end entity;
 architecture a of tb_uart is
   constant master_uart : uart_master_t := new_uart_master;
   constant master_stream : stream_master_t := as_stream(master_uart);
-
   constant slave_uart : uart_slave_t := new_uart_slave(data_length => 8);
   constant slave_stream : stream_slave_t := as_stream(slave_uart);
 
   signal chan : std_logic;
+  signal chan_err : std_logic;
+  signal chan_force_err : std_logic;
+
+  constant master_uart_even_parity : uart_master_t := new_uart_master(parity_enabled => true,
+  																	  parity_type => uart_parity_even);
+  constant master_stream_even_parity : stream_master_t := as_stream(master_uart_even_parity);
+  constant slave_uart_even_parity : uart_slave_t := new_uart_slave(data_length => 8, parity_enabled => true,
+  																   parity_type => uart_parity_even);
+  constant slave_stream_even_parity : stream_slave_t := as_stream(slave_uart_even_parity);
+
+  signal chan_even : std_logic;
+  signal chan_even_err : std_logic;
+  signal chan_even_force_err : std_logic;
+
+  constant master_uart_odd_parity : uart_master_t := new_uart_master(parity_enabled => true,
+  																	 parity_type => uart_parity_odd);
+  constant master_stream_odd_parity : stream_master_t := as_stream(master_uart_odd_parity);
+  constant slave_uart_odd_parity : uart_slave_t := new_uart_slave(data_length => 8, parity_enabled => true,
+  																  parity_type => uart_parity_odd);
+  constant slave_stream_odd_parity : stream_slave_t := as_stream(slave_uart_odd_parity);
+
+  signal chan_odd : std_logic;
+  signal chan_odd_err : std_logic;
+  signal chan_odd_force_err : std_logic;
 begin
 
   main : process
@@ -35,32 +58,44 @@ begin
     variable reference_queue : queue_t := new_queue;
     variable reference : stream_reference_t;
 
-    procedure test_baud_rate(baud_rate : natural) is
+    procedure test_baud_rate(baud_rate : natural; uart_master : uart_master_t; stream_master : stream_master_t;
+    	                     uart_slave : uart_slave_t; stream_slave : stream_slave_t) is
       variable start : time;
       variable got, expected : time;
+      variable datawidth : integer := get_datawidth(uart_master);
     begin
-      set_baud_rate(net, master_uart, baud_rate);
-      set_baud_rate(net, slave_uart, baud_rate);
+      set_baud_rate(net, uart_master, baud_rate);
+      set_baud_rate(net, uart_slave, baud_rate);
 
       start := now;
-      push_stream(net, master_stream, x"77");
-      check_stream(net, slave_stream, x"77");
+      push_stream(net, stream_master, x"77");
+      check_stream(net, stream_slave, x"77");
 
-      wait_until_idle(net, as_sync(master_uart));
+      wait_until_idle(net, as_sync(uart_master));
 
       got := now - start;
-      expected := (10 * (1 sec)) / (baud_rate);
+      expected := (datawidth * (1 sec)) / (baud_rate);
 
       check(abs (got - expected) <= 10 ns,
             "Unexpected baud rate got " & to_string(got) & " expected " & to_string(expected));
     end;
   begin
-    test_runner_setup(runner, runner_cfg);
+  	test_runner_setup(runner, runner_cfg);
+  	chan_force_err <= '0';
+  	chan_even_force_err <= '0';
+  	chan_odd_force_err <= '0';
 
     if run("test single push and pop") then
       push_stream(net, master_stream, x"77");
       pop_stream(net, slave_stream, data);
       check_equal(data, std_logic_vector'(x"77"), "pop stream data");
+      check_equal(chan_err, '0', "no parity error");
+
+      chan_force_err <= '1';
+      push_stream(net, master_stream, x"ab");
+      pop_stream(net, slave_stream, data);
+      check_equal(data, std_logic_vector'(x"ab"), "pop stream data");
+      check_equal(chan_err, '0', "no parity error");
 
     elsif run("test pop before push") then
       for i in 0 to 7 loop
@@ -77,28 +112,89 @@ begin
         reference := pop(reference_queue);
         await_pop_stream_reply(net, reference, data);
         check_equal(data, to_unsigned(i+1, data'length));
+        check_equal(chan_err, '0', "no parity error");
       end loop;
 
+	elsif run("test even parity") then
+	  push_stream(net, master_stream_even_parity, x"77");
+      pop_stream(net, slave_stream_even_parity, data);
+      check_equal(data, std_logic_vector'(x"77"), "pop stream data");
+      check_equal(chan_even_err, '0', "no parity error");
+
+      chan_even_force_err <= '1';
+      push_stream(net, master_stream_even_parity, x"ab");
+      pop_stream(net, slave_stream_even_parity, data);
+      check_equal(data, std_logic_vector'(x"ab"), "pop stream data");
+      check_equal(chan_even_err, '1', "no parity error");
+
+	elsif run("test odd parity") then
+	  push_stream(net, master_stream_odd_parity, x"77");
+      pop_stream(net, slave_stream_odd_parity, data);
+      check_equal(data, std_logic_vector'(x"77"), "pop stream data");
+      check_equal(chan_odd_err, '0', "no parity error");
+
+      chan_odd_force_err <= '1';
+      push_stream(net, master_stream_odd_parity, x"ab");
+      pop_stream(net, slave_stream_odd_parity, data);
+      check_equal(data, std_logic_vector'(x"ab"), "pop stream data");
+      check_equal(chan_odd_err, '1', "no parity error");
+
     elsif run("test baud rate") then
-      test_baud_rate(2000);
-      test_baud_rate(7000);
-      test_baud_rate(200000);
+      test_baud_rate(2000, master_uart, master_stream, slave_uart, slave_stream);
+      test_baud_rate(7000, master_uart, master_stream, slave_uart, slave_stream);
+      test_baud_rate(200000, master_uart, master_stream, slave_uart, slave_stream);
+      test_baud_rate(2000, master_uart_even_parity, master_stream_even_parity, slave_uart_even_parity, slave_stream_even_parity);
+      test_baud_rate(7000, master_uart_even_parity, master_stream_even_parity, slave_uart_even_parity, slave_stream_even_parity);
+      test_baud_rate(200000, master_uart_even_parity, master_stream_even_parity, slave_uart_even_parity, slave_stream_even_parity);
+      test_baud_rate(2000, master_uart_odd_parity, master_stream_odd_parity, slave_uart_odd_parity, slave_stream_odd_parity);
+      test_baud_rate(7000, master_uart_odd_parity, master_stream_odd_parity, slave_uart_odd_parity, slave_stream_odd_parity);
+      test_baud_rate(200000, master_uart_odd_parity, master_stream_odd_parity, slave_uart_odd_parity, slave_stream_odd_parity);
     end if;
 
     test_runner_cleanup(runner);
   end process;
-  test_runner_watchdog(runner, 20 ms);
+  test_runner_watchdog(runner, 100 ms);
 
   uart_master_inst: entity work.uart_master
     generic map (
       uart => master_uart)
     port map (
-      tx => chan);
+      tx => chan,
+      force_parity_error => chan_force_err);
 
   uart_slave_inst: entity work.uart_slave
     generic map (
       uart => slave_uart)
     port map (
-      rx => chan);
+      rx => chan,
+      parity_error => chan_err);
+
+   uart_master_even_inst: entity work.uart_master
+    generic map (
+      uart => master_uart_even_parity)
+    port map (
+      tx => chan_even,
+      force_parity_error => chan_even_force_err);
+
+  uart_slave_even_inst: entity work.uart_slave
+    generic map (
+      uart => slave_uart_even_parity)
+    port map (
+      rx => chan_even,
+      parity_error => chan_even_err);
+
+   uart_master_odd_inst: entity work.uart_master
+    generic map (
+      uart => master_uart_odd_parity)
+    port map (
+      tx => chan_odd,
+      force_parity_error => chan_odd_force_err);
+
+  uart_slave_odd_inst: entity work.uart_slave
+    generic map (
+      uart => slave_uart_odd_parity)
+    port map (
+      rx => chan_odd,
+      parity_error => chan_odd_err);
 
 end architecture;
