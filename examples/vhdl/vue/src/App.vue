@@ -21,6 +21,10 @@
         </div>
       </div>
     </section>
+
+    <external_buffer
+      v-if="loaded && (name=='external_buffer')"
+      :data.sync="data"/>
   </div>
 </template>
 
@@ -38,10 +42,13 @@ Vue.use(Buefy);
 
 import NavBar from "@/components/NavBar.vue";
 
+import external_buffer from "@/cases/external_buffer.vue";
+
 export default {
   name: 'app',
   components: {
-    NavBar
+    NavBar,
+    external_buffer
   },
   data() {
     return {
