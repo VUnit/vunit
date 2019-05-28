@@ -16,7 +16,9 @@ if len(argv) != 2:
     print("A single argument is required and supported!")
     exit(1)
 
-with open(join(dirname(__file__), "vunit_out", "cosim", '%s.json' % argv[1])) as json_file:
+with open(
+    join(dirname(__file__), "vunit_out", "cosim", "%s.json" % argv[1])
+) as json_file:
     args = load(json_file)
     if "integer" not in argv[1]:
         new_buf = byte_buf
@@ -30,7 +32,7 @@ xargs = enc_args(args)
 print("\nREGULAR EXECUTION")
 ghdl = dlopen(args[0])
 try:
-    ghdl.main(len(xargs)-1, xargs)
+    ghdl.main(len(xargs) - 1, xargs)
 # FIXME With VHDL 93, the execution is Aborted and Python exits here
 except SystemExit as exc:
     if exc.code != 0:
@@ -42,17 +44,26 @@ ghdl = dlopen(args[0])
 
 data = [111, 122, 133, 144, 155]
 
+# Two pointers/buffers are to be allocated
+buf = [[] for c in range(2)]
+
 # Allocate and initialize shared data buffer
-buf = new_buf(data + [0 for x in range(2*len(data))])
+buf[1] = new_buf(data + [0 for x in range(2 * len(data))])
 
-ghdl.set_string_ptr(0, buf)
+# Fill 'params' vector
+buf[0] = int_buf(
+    [-(2 ** 31) + 10, -(2 ** 31), 3, 0, len(data)]  # clk_step  # update  # block_length
+)
 
-for i, v in enumerate(read_buf(buf)):
+for x, v in enumerate(buf):
+    ghdl.set_string_ptr(x, v)
+
+for i, v in enumerate(read_buf(buf[1])):
     print("py " + str(i) + ": " + str(v))
 
-ghdl.ghdl_main(len(xargs)-1, xargs)
+ghdl.ghdl_main(len(xargs) - 1, xargs)
 
-for i, v in enumerate(read_buf(buf)):
+for i, v in enumerate(read_buf(buf[1])):
     print("py " + str(i) + ": " + str(v))
 
 dlclose(ghdl)
