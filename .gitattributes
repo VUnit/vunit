@@ -1,0 +1,29 @@
+* text=auto
+
+*.css text
+*.csv text
+*.do text
+*.gitattributes text
+*.gitignore text
+*.gitmodules text
+*.gtkw text
+*.html text
+*.ini text
+*.json text
+*.md text
+*.py text
+*.rst text
+*.sh text
+*.sv text
+*.svg text
+*.svh text
+*.tcl text
+*.txt text
+*.vams text
+*.vhd text
+*.yml text
+
+*.gif binary
+*.ico binary
+*.jpeg binary
+*.png binary
