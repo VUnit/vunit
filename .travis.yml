@@ -22,8 +22,6 @@ matrix:
     python: '3.5'
   - env: BUILD_NAME=py36-unit
     python: '3.6'
-  - env: BUILD_NAME=py36-unit
-    python: '3.6'
 
   - env: BUILD_NAME=py27-lint
     python: '2.7'
