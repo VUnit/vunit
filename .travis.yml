@@ -9,11 +9,15 @@ script:
 
 stages:
   - test
-  - name: deploy
-    if: repo = VUnit/vunit
+  - deploy
 
 matrix:
   include:
+  - env: BUILD_NAME=py27-lint
+    python: '2.7'
+  - env: BUILD_NAME=py36-lint
+    python: '3.6'
+
   - env: BUILD_NAME=py27-unit
     python: '2.7'
   - env: BUILD_NAME=py34-unit
@@ -21,16 +25,6 @@ matrix:
   - env: BUILD_NAME=py35-unit
     python: '3.5'
   - env: BUILD_NAME=py36-unit
-    python: '3.6'
-
-  - env: BUILD_NAME=py27-lint
-    python: '2.7'
-  - env: BUILD_NAME=py36-lint
-    python: '3.6'
-
-  - env: BUILD_NAME=py27-docs
-    python: '2.7'
-  - env: BUILD_NAME=py36-docs
     python: '3.6'
 
   # Python 2.7 with ghdl mcode
@@ -71,16 +65,14 @@ matrix:
     - cd ../../
     - export PATH=$PATH:install-ghdl-llvm/bin/
 
-  # Python 3.6 with ghdl llvm
   - <<: *py36
     env: BUILD_NAME=py36-vcomponents-ghdl
 
-  # Deploy to GitHub pages
-  - stage: deploy
+  - env: BUILD_NAME=py27-docs
+    python: '2.7'
+  - env: BUILD_NAME=py36-docs
     python: '3.6'
-    script:
-      - tox -e py36-docs
-      - touch .tox/py36-docs/tmp/docsbuild/.nojekyll
+    after_script: touch .tox/py36-docs/tmp/docsbuild/.nojekyll
     deploy:
       provider: pages
       repo: VUnit/VUnit.github.io
@@ -90,18 +82,16 @@ matrix:
       github_token: $GITHUB_PAGES_TOKEN
       skip_cleanup: true
       on:
+        repo: VUnit/vunit
         branch: master
+        tags: true
 
   # Deploy to PyPI whenever the package version has changed
   # When a package version has not changed a new upload will not be triggered
   - stage: deploy
     python: '3.6'
-    script:
-      - sed -i "s/PRE_RELEASE = True/PRE_RELEASE = False/" vunit/about.py
-      - python tools/is_new_release.py release_name is_new_release
-      - export IS_NEW_RELEASE=`cat is_new_release`
-      - export RELEASE_NAME=`cat release_name`
-
+    if: tag IS present
+    script: python tools/new_release.py 'check'
     deploy:
       provider: pypi
       distributions: sdist
@@ -110,12 +100,5 @@ matrix:
       user: $PYPI_USER
       password: $PYPI_PASSWORD
       on:
+        repo: VUnit/vunit
         branch: master
-        condition: $IS_NEW_RELEASE = True
-
-    # Create release tag after successful deployment
-    after_deploy:
-      - git config --global user.email "builds@travis-ci.com"
-      - git config --global user.name "Travis CI"
-      - git tag "v${RELEASE_NAME}" -a -m "Generated tag from TravisCI for release ${RELEASE_NAME}"
-      - git push -q https://$GITHUB_PAGES_TOKEN@github.com/VUnit/vunit/ --tags >/dev/null 2>&1
