@@ -14,5 +14,6 @@ context data_types_context is
   use vunit_lib.queue_pool_pkg.all;
   use vunit_lib.string_ptr_pkg.all;
   use vunit_lib.string_ptr_pool_pkg.all;
+  use vunit_lib.byte_vector_ptr_pkg.all;
   use vunit_lib.dict_pkg.all;
 end context;

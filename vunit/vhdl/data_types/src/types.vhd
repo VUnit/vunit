@@ -16,8 +16,17 @@ package types_pkg is
   type extstring_access_vector_t is array (natural range <>) of extstring_access_t;
   type extstring_access_vector_access_t is access extstring_access_vector_t;
 
+  alias byte_vector_access_t is string_access_t;
+  alias byte_vector_access_vector_t is string_access_vector_t;
+  alias byte_vector_access_vector_access_t is string_access_vector_access_t;
+
+  alias extbytevec_access_t is extstring_access_t;
+  alias extbytevec_access_vector_t is extstring_access_vector_t;
+  alias extbytevec_access_vector_access_t is extstring_access_vector_access_t;
+
   type integer_vector_t is array (natural range <>) of integer;
   type integer_vector_access_t is access integer_vector_t;
   type integer_vector_access_vector_t is array (natural range <>) of integer_vector_access_t;
   type integer_vector_access_vector_access_t is access integer_vector_access_vector_t;
 end package;
+
