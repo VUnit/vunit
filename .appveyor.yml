@@ -40,6 +40,7 @@ environment:
 install:
   - "git submodule update --init --recursive"
   - "%PYTHON%\\python.exe -m pip install -U pip"
+  - "%PYTHON%\\python.exe -m pip install -U virtualenv"  
   - "%PYTHON%\\python.exe -m pip install tox"
   - "curl -fsSL -o ghdl.zip https://github.com/tgingold/ghdl/releases/download/v0.35/ghdl-0.35-mingw32-mcode.zip"
   - "7z x ghdl.zip -o../ghdl -y"
@@ -48,4 +49,4 @@ install:
 build: off
 
 test_script:
-  - "%PYTHON%\\python.exe -m tox -r -e %BUILD_NAME%"
+  - "%PYTHON%\\python.exe -m tox -e %BUILD_NAME%"
