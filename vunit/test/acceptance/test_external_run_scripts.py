@@ -33,9 +33,6 @@ class TestExternalRunScripts(unittest.TestCase):
     Verify that example projects run correctly
     """
 
-    def test_vhdl_uart_example_project(self):
-        self.check(join(ROOT, "examples", "vhdl", "uart", "run.py"))
-
     @unittest.skipUnless(simulator_supports_verilog(), "Verilog")
     def test_verilog_uart_example_project(self):
         self.check(join(ROOT, "examples", "verilog", "uart", "run.py"))
