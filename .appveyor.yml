@@ -48,4 +48,4 @@ install:
 build: off
 
 test_script:
-  - "%PYTHON%\\python.exe -m tox -e %BUILD_NAME%"
+  - "%PYTHON%\\python.exe -m tox -r -e %BUILD_NAME%"
