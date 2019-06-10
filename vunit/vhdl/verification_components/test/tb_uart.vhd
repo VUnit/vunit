@@ -14,7 +14,6 @@ context work.data_types_context;
 use work.uart_pkg.all;
 use work.sync_pkg.all;
 use work.stream_pkg.all;
-use work.stream_pkg.all;
 
 entity tb_uart is
   generic (runner_cfg : string);

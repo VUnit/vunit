@@ -13,7 +13,6 @@ context work.com_context;
 context work.data_types_context;
 use work.axi_stream_pkg.all;
 use work.stream_pkg.all;
-use work.stream_pkg.all;
 use work.runner_pkg.all;
 
 entity tb_axi_stream_protocol_checker is

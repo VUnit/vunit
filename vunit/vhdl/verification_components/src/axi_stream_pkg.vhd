@@ -11,7 +11,6 @@ use work.logger_pkg.all;
 use work.checker_pkg.all;
 use work.check_pkg.all;
 use work.stream_pkg.all;
-use work.stream_pkg.all;
 use work.sync_pkg.all;
 context work.vunit_context;
 context work.com_context;

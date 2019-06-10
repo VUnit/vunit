@@ -14,7 +14,6 @@ context work.com_context;
 context work.data_types_context;
 use work.avalon_stream_pkg.all;
 use work.stream_pkg.all;
-use work.stream_pkg.all;
 
 entity tb_avalon_stream is
   generic (runner_cfg : string);
