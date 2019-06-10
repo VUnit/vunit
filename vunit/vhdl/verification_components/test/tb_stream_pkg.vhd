@@ -18,7 +18,7 @@ begin
     test_runner_setup(runner, runner_cfg);
 
     while test_suite loop
-      if run("") then
+      if run("empty") then
 
       end if;
     end loop;
