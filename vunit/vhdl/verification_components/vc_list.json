@@ -1,0 +1,10 @@
+{
+    "AXI": {
+        "path": "vc_axi",
+        "remote": "https://github.com/VUnit/vc_axi"
+    },
+    "UART": {
+        "path": "vc_uart",
+        "remote": "https://github.com/VUnit/vc_uart"
+    }
+}
