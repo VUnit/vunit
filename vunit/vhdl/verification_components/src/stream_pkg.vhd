@@ -12,7 +12,7 @@ use ieee.std_logic_1164.all;
 context work.vunit_context;
 context work.com_context;
 
-package stream_master_pkg is
+package stream_pkg is
 
   -- Stream master handle
   type stream_master_t is record
@@ -32,8 +32,6 @@ package stream_master_pkg is
 
   -- Message type definitions used by VC implementing stream master VCI
   constant stream_push_msg : msg_type_t := new_msg_type("stream push");
-
-  -- Message type definitions used by VC implementing stream slave VCI
   constant stream_pop_msg : msg_type_t := new_msg_type("stream pop");
 
   -- Reference to future stream result

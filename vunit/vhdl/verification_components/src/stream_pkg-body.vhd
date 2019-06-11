@@ -10,9 +10,14 @@ use ieee.std_logic_1164.all;
 context work.vunit_context;
 context work.com_context;
 
-package body stream_master_pkg is
+package body stream_pkg is
 
   impure function new_stream_master return stream_master_t is
+  begin
+    return (p_actor => new_actor);
+  end;
+
+  impure function new_stream_slave return stream_slave_t is
   begin
     return (p_actor => new_actor);
   end;
@@ -27,11 +32,6 @@ package body stream_master_pkg is
     push_std_ulogic_vector(msg, normalized_data);
     push_boolean(msg, last);
     send(net, stream.p_actor, msg);
-  end;
-
-  impure function new_stream_slave return stream_slave_t is
-  begin
-    return (p_actor => new_actor);
   end;
 
   procedure pop_stream(signal net : inout network_t;
