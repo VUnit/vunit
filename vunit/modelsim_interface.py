@@ -347,7 +347,6 @@ proc _vunit_sim_restart {} {
                     fptr.write(str(coverage_file) + "\n")
                 else:
                     LOGGER.warning("Missing coverage file: %s", coverage_file)
-        fptr.close()
 
         print("Merging coverage files into %s..." % file_name)
         vcover_merge_process = Process(vcover_cmd,
