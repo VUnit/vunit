@@ -123,7 +123,7 @@ package body logger_pkg is
 
     if log_level_filter = null_ptr then
       -- Only show valid log levels by default
-      log_level_filter := new_integer_vector_ptr(len => n_log_levels, value => log_level_invisible);
+      log_level_filter := new_integer_vector_ptr(length => n_log_levels, value => log_level_invisible);
       for log_level in log_level_t'low to log_level_t'high loop
         if is_valid(log_level) then
           set(log_level_filter, log_level_t'pos(log_level), log_level_visible);

@@ -29,7 +29,7 @@ end package;
 
 package body file_pkg is
 
-  constant next_id : integer_vector_ptr_t := new_integer_vector_ptr(len => 1, value => 0);
+  constant next_id : integer_vector_ptr_t := new_integer_vector_ptr(length => 1, value => 0);
 
   constant id_idx : natural := 0;
   constant open_idx : natural := 1;
@@ -153,7 +153,7 @@ package body file_pkg is
       id := get(next_id, 0);
       set(next_id, 0, id + 1);
 
-      file_id.p_data := new_integer_vector_ptr(len => file_id_length);
+      file_id.p_data := new_integer_vector_ptr(length => file_id_length);
       set(file_id.p_data, id_idx, id);
       set(file_id.p_data, name_idx, to_integer(new_string_ptr(file_name)));
     else
