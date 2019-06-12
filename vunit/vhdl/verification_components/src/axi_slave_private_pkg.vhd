@@ -142,7 +142,7 @@ package body axi_slave_private_pkg is
       p_axi_slave_type := axi_slave_type;
       p_data_size := data'length/8;
       p_max_id := max_id;
-      p_id_indexes := new_integer_vector_ptr(len => max_id+1, value => 0);
+      p_id_indexes := new_integer_vector_ptr(length => max_id+1, value => 0);
       p_burst_queue_max_length := axi_slave.p_initial_address_fifo_depth;
       p_burst_queue := new_queue;
       p_burst_queue_length := 0;

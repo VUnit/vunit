@@ -38,8 +38,8 @@ package integer_vector_ptr_pkg is
   ) return ptr_t;
 
   impure function new_integer_vector_ptr (
-    len   : natural := 0;
-    value : val_t := 0
+    length : natural := 0;
+    value  : val_t := 0
   ) return ptr_t;
 
   procedure deallocate (
@@ -62,16 +62,16 @@ package integer_vector_ptr_pkg is
   ) return val_t;
 
   procedure reallocate (
-    ptr   : ptr_t;
-    len   : natural;
-    value : val_t := 0
+    ptr    : ptr_t;
+    length : natural;
+    value  : val_t := 0
   );
 
   procedure resize (
-    ptr   : ptr_t;
-    len   : natural;
-    drop  : natural := 0;
-    value : val_t := 0
+    ptr    : ptr_t;
+    length : natural;
+    drop   : natural := 0;
+    value  : val_t := 0
   );
 
   function encode (
