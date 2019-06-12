@@ -339,13 +339,14 @@ proc _vunit_sim_restart {} {
         if args is None:
             args = []
 
-        vcover_cmd = [join(self._prefix, 'vcover'), 'merge'] + args + [file_name]
-
-        for coverage_file in self._coverage_files:
-            if file_exists(coverage_file):
-                vcover_cmd.append(coverage_file)
-            else:
-                LOGGER.warning("Missing coverage file: %s", coverage_file)
+        coverage_files = join(self._output_path, 'coverage_files.txt')
+        vcover_cmd = [join(self._prefix, 'vcover'), 'merge', '-inputs'] + [coverage_files] + args + [file_name]
+        with open(coverage_files, "w") as fptr:
+            for coverage_file in self._coverage_files:
+                if file_exists(coverage_file):
+                    fptr.write(str(coverage_file) + "\n")
+                else:
+                    LOGGER.warning("Missing coverage file: %s", coverage_file)
 
         print("Merging coverage files into %s..." % file_name)
         vcover_merge_process = Process(vcover_cmd,
