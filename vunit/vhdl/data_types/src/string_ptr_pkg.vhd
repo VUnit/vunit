@@ -28,76 +28,76 @@ package string_ptr_pkg is
   alias  vava_t is string_access_vector_access_t;
 
   function to_integer (
-    value : string_ptr_t
+    value : ptr_t
   ) return integer;
 
   impure function to_string_ptr (
     value : integer
-  ) return string_ptr_t;
+  ) return ptr_t;
 
   impure function new_string_ptr (
     length : natural := 0
-  ) return string_ptr_t;
+  ) return ptr_t;
 
   impure function new_string_ptr (
     value : string
-  ) return string_ptr_t;
+  ) return ptr_t;
 
   procedure deallocate (
-    ptr : string_ptr_t
+    ptr : ptr_t
   );
 
   impure function length (
-    ptr : string_ptr_t
+    ptr : ptr_t
   ) return integer;
 
   procedure set (
-    ptr   : string_ptr_t;
+    ptr   : ptr_t;
     index : natural;
-    value : character
+    value : val_t
   );
 
   impure function get (
-    ptr   : string_ptr_t;
+    ptr   : ptr_t;
     index : natural
-  ) return character;
+  ) return val_t;
 
   procedure reallocate (
-    ptr    : string_ptr_t;
+    ptr    : ptr_t;
     length : natural
   );
 
   procedure reallocate (
-    ptr   : string_ptr_t;
+    ptr   : ptr_t;
     value : string
   );
 
   procedure resize (
-    ptr    : string_ptr_t;
+    ptr    : ptr_t;
     length : natural;
     drop   : natural := 0
   );
 
   impure function to_string (
-    ptr : string_ptr_t
+    ptr : ptr_t
   ) return string;
 
   function encode (
-    data : string_ptr_t
+    data : ptr_t
   ) return string;
 
   function decode (
     code : string
-  ) return string_ptr_t;
+  ) return ptr_t;
 
   procedure decode (
     constant code   : string;
     variable index  : inout positive;
-    variable result : out string_ptr_t
+    variable result : out ptr_t
   );
 
-  alias encode_string_ptr_t is encode[string_ptr_t return string];
-  alias decode_string_ptr_t is decode[string return string_ptr_t];
+  alias encode_ptr_t is encode[ptr_t return string];
+  alias decode_ptr_t is decode[string return ptr_t];
 
   constant string_ptr_t_code_length : positive := integer_code_length;
 

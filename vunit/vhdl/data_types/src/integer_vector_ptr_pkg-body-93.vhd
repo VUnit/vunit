@@ -96,7 +96,7 @@ package body integer_vector_ptr_pkg is
   end;
 
   impure function to_integer_vector_ptr (
-    value : integer
+    value : val_t
   ) return ptr_t is begin
     -- @TODO maybe assert that the ref is valid
     return (ref => value);
