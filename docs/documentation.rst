@@ -7,5 +7,6 @@ Documentation
    cli
    python_interface
    vhdl_libraries
+   examples
 
 * :ref:`genindex`

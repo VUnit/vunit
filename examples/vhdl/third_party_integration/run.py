@@ -12,4 +12,6 @@ ui = VUnit.from_argv()
 
 lib = ui.add_library("lib")
 lib.add_source_files(join(root, 'test', '*.vhd'))
-ui.main()
+
+if __name__ == '__main__':
+    ui.main()

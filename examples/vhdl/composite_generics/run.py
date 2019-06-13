@@ -4,6 +4,13 @@
 #
 # Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Composite generics
+------------------
+
+See `Enable Your Simulator to Handle Complex Top-Level Generics <https://vunit.github.io/posts/2017_06_03_enable_your_simulator_to_handle_complex_top_level_generics/post.html>`_.
+"""
+
 from os.path import join, dirname
 from vunit import VUnit
 
@@ -26,4 +33,5 @@ test_1.add_config(name='VGA', generics=dict(encoded_tb_cfg=encode(vga_tb_cfg)))
 tiny_tb_cfg = dict(image_width=4, image_height=3, dump_debug_data=True)
 test_1.add_config(name='tiny', generics=dict(encoded_tb_cfg=encode(tiny_tb_cfg)))
 
-prj.main()
+if __name__ == '__main__':
+    prj.main()

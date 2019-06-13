@@ -4,6 +4,15 @@
 #
 # Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Generating tests
+----------------
+
+Demonstrates generating multiple test runs of the same test bench
+with different generic values. Also demonstrates use of ``output_path`` generic
+to create test bench output files in location specified by VUnit python runner.
+"""
+
 from os.path import join, dirname
 from itertools import product
 from vunit import VUnit
@@ -72,4 +81,5 @@ for test in tb_generated.get_tests():
         # Run all other tests with signed/unsigned and data width in range [1,5[
         generate_tests(test, [False, True], range(1, 5))
 
-ui.main()
+if __name__ == '__main__':
+    ui.main()

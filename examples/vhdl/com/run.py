@@ -4,6 +4,15 @@
 #
 # Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Communication library
+---------------------
+
+Demonstrates the ``com`` message passing package which can be used
+to communicate arbitrary objects between processes.  Further reading
+can be found in the :ref:`com user guide <com_user_guide>`.
+"""
+
 from os.path import join, dirname
 from vunit import VUnit
 
@@ -18,4 +27,5 @@ lib.add_source_files(join(dirname(__file__), 'src', '*.vhd'))
 tb_lib = prj.add_library('tb_lib')
 tb_lib.add_source_files(join(dirname(__file__), 'test', '*.vhd'))
 
-prj.main()
+if __name__ == '__main__':
+    prj.main()

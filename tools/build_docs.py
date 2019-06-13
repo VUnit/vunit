@@ -12,6 +12,7 @@ from subprocess import check_call
 from os.path import join, dirname
 import sys
 from create_release_notes import create_release_notes
+from docs_utils import examples
 
 
 def main():
@@ -19,6 +20,7 @@ def main():
     Build documentation/website
     """
     create_release_notes()
+    examples()
     check_call([sys.executable, "-m", "sphinx",
                 "-T", "-E", "-W", "-a", "-n", "-b", "html",
                 join(dirname(__file__), "..", "docs"), sys.argv[1]])

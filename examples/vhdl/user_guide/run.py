@@ -4,6 +4,14 @@
 #
 # Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+VHDL User Guide
+---------------
+
+The most minimal VUnit VHDL project covering the basics of the
+:ref:`User Guide <user_guide>`.
+"""
+
 from os.path import join, dirname
 from vunit import VUnit
 
@@ -12,4 +20,6 @@ root = dirname(__file__)
 ui = VUnit.from_argv()
 lib = ui.add_library("lib")
 lib.add_source_files(join(root, "*.vhd"))
-ui.main()
+
+if __name__ == '__main__':
+    ui.main()

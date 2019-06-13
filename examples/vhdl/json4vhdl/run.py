@@ -4,6 +4,15 @@
 #
 # Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+JSON-for-VHDL
+-------------
+
+Demonstrates the ``JSON-for-VHDL`` library which can be used to parse JSON content.
+The content can be read from a file, or passed as a stringified generic.
+This is an alternative to composite generics, that supports any depth in the content structure.
+"""
+
 from os.path import join, dirname
 from vunit import VUnit, read_json, encode_json
 
@@ -20,4 +29,5 @@ tb_cfg = read_json(join(root, "src/test/data/data.json"))
 tb_cfg["dump_debug_data"]=False
 vu.set_generic("tb_cfg", encode_json(tb_cfg))
 
-vu.main()
+if __name__ == '__main__':
+    vu.main()

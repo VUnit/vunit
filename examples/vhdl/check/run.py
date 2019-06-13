@@ -4,6 +4,13 @@
 #
 # Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Check
+-----
+
+Demonstrates the VUnit check library.
+"""
+
 from os.path import join, dirname
 from vunit import VUnit
 
@@ -20,4 +27,5 @@ ui.enable_check_preprocessing()
 lib = ui.add_library("lib")
 lib.add_source_files(join(dirname(__file__), "tb_example.vhd"))
 
-ui.main()
+if __name__ == '__main__':
+    ui.main()
