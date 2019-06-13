@@ -4,6 +4,14 @@
 #
 # Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Vivado IP
+---------
+
+Demonstrates compiling and performing behavioral simulation of
+Vivado IPs with VUnit.
+"""
+
 from os.path import join, dirname
 from vunit import VUnit
 from vivado_util import add_vivado_ip
@@ -19,8 +27,9 @@ lib.add_source_files(join(src_path, "*.vhd"))
 tb_lib = ui.add_library("tb_lib")
 tb_lib.add_source_files(join(src_path, "test", "*.vhd"))
 
-add_vivado_ip(ui,
-              output_path=join(root, "vivado_libs"),
-              project_file=join(root, "myproject", "myproject.xpr"))
+if __name__ == '__main__':
+    add_vivado_ip(ui,
+                  output_path=join(root, "vivado_libs"),
+                  project_file=join(root, "myproject", "myproject.xpr"))
 
-ui.main()
+    ui.main()

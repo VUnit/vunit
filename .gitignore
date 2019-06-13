@@ -1,2 +1,4 @@
 **/vunit_out
 *.pyc
+docs/examples.rst
+docs/release_notes.rst

@@ -4,6 +4,15 @@
 #
 # Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+Array
+-----
+
+Demonstrates the ``array_t`` data type of ``array_pkg.vhd`` which
+can be used to handle dynamically sized 1D, 2D and 3D data as well
+as storing and loading it from csv and raw files.
+"""
+
 from os.path import join, dirname
 from vunit import VUnit
 
@@ -15,4 +24,6 @@ ui.add_array_util()
 lib = ui.add_library("lib")
 lib.add_source_files(join(root, "src", "*.vhd"))
 lib.add_source_files(join(root, "src", "test", "*.vhd"))
-ui.main()
+
+if __name__ == '__main__':
+    ui.main()

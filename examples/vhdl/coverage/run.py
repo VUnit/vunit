@@ -22,4 +22,5 @@ lib.set_sim_option("enable_coverage", True)
 def post_run(results):
     results.merge_coverage(file_name="coverage_data")
 
-ui.main(post_run=post_run)
+if __name__ == '__main__':
+    ui.main(post_run=post_run)

@@ -4,6 +4,14 @@
 #
 # Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
+"""
+SystemVerilog UART
+------------------
+
+A more realistic test bench of an UART to show VUnit SystemVerilog
+usage on a typical module.
+"""
+
 from os.path import join, dirname
 from vunit.verilog import VUnit
 
@@ -17,4 +25,5 @@ uart_lib.add_source_files(join(src_path, "*.sv"))
 tb_uart_lib = ui.add_library("tb_uart_lib")
 tb_uart_lib.add_source_files(join(src_path, "test", "*.sv"))
 
-ui.main()
+if __name__ == '__main__':
+    ui.main()
