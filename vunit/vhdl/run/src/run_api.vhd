@@ -87,35 +87,35 @@ package run_pkg is
   procedure lock_entry (
     signal runner : inout runner_sync_t;
     constant phase : in runner_legal_phase_t;
-    constant me : in string := "";
+    constant logger : in logger_t := runner_trace_logger;
     constant line_num  : in natural := 0;
     constant file_name : in string := "");
 
   procedure unlock_entry (
     signal runner : inout runner_sync_t;
     constant phase : in runner_legal_phase_t;
-    constant me : in string := "";
+    constant logger : in logger_t := runner_trace_logger;
     constant line_num  : in natural := 0;
     constant file_name : in string := "");
 
   procedure lock_exit (
     signal runner : inout runner_sync_t;
     constant phase : in runner_legal_phase_t;
-    constant me : in string := "";
+    constant logger : in logger_t := runner_trace_logger;
     constant line_num  : in natural := 0;
     constant file_name : in string := "");
 
   procedure unlock_exit (
     signal runner : inout runner_sync_t;
     constant phase : in runner_legal_phase_t;
-    constant me : in string := "";
+    constant logger : in logger_t := runner_trace_logger;
     constant line_num  : in natural := 0;
     constant file_name : in string := "");
 
   procedure wait_until (
     signal runner : in runner_sync_t;
     constant phase : in runner_legal_phase_t;
-    constant me : in string := "";
+    constant logger : in logger_t := runner_trace_logger;
     constant line_num  : in natural := 0;
     constant file_name : in string := "");
 

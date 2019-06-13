@@ -359,62 +359,62 @@ package body run_pkg is
   procedure lock_entry (
     signal runner : inout runner_sync_t;
     constant phase : in runner_legal_phase_t;
-    constant me : in string := "";
+    constant logger : in logger_t := runner_trace_logger;
     constant line_num  : in natural := 0;
     constant file_name : in string := "") is
   begin
     lock_entry(runner_state, phase);
-    log(runner_trace_logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase entry gate.", trace, line_num, file_name);
+    log(logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase entry gate.", trace, line_num, file_name);
     notify(runner);
   end;
 
   procedure unlock_entry (
     signal runner : inout runner_sync_t;
     constant phase : in runner_legal_phase_t;
-    constant me : in string := "";
+    constant logger : in logger_t := runner_trace_logger;
     constant line_num  : in natural := 0;
     constant file_name : in string := "") is
   begin
     unlock_entry(runner_state, phase);
-    log(runner_trace_logger, "Unlocked " & replace(runner_phase_t'image(phase), "_", " ") & " phase entry gate.", trace, line_num, file_name);
+    log(logger, "Unlocked " & replace(runner_phase_t'image(phase), "_", " ") & " phase entry gate.", trace, line_num, file_name);
     notify(runner);
   end;
 
   procedure lock_exit (
     signal runner : inout runner_sync_t;
     constant phase : in runner_legal_phase_t;
-    constant me : in string := "";
+    constant logger : in logger_t := runner_trace_logger;
     constant line_num  : in natural := 0;
     constant file_name : in string := "") is
   begin
     lock_exit(runner_state, phase);
-    log(runner_trace_logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase exit gate.", trace, line_num, file_name);
+    log(logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase exit gate.", trace, line_num, file_name);
     notify(runner);
   end;
 
   procedure unlock_exit (
     signal runner : inout runner_sync_t;
     constant phase : in runner_legal_phase_t;
-    constant me : in string := "";
+    constant logger : in logger_t := runner_trace_logger;
     constant line_num  : in natural := 0;
     constant file_name : in string := "") is
   begin
     unlock_exit(runner_state, phase);
-    log(runner_trace_logger, "Unlocked " & replace(runner_phase_t'image(phase), "_", " ") & " phase exit gate.", trace, line_num, file_name);
+    log(logger, "Unlocked " & replace(runner_phase_t'image(phase), "_", " ") & " phase exit gate.", trace, line_num, file_name);
     notify(runner);
   end;
 
   procedure wait_until (
     signal runner : in runner_sync_t;
     constant phase : in runner_legal_phase_t;
-    constant me : in string := "";
+    constant logger : in logger_t := runner_trace_logger;
     constant line_num  : in natural := 0;
     constant file_name : in string := "") is
   begin
     if get_phase(runner_state) /= phase then
-      log(runner_trace_logger, "Waiting for phase = " & replace(runner_phase_t'image(phase), "_", " ") & ".", trace, line_num, file_name);
+      log(logger, "Waiting for phase = " & replace(runner_phase_t'image(phase), "_", " ") & ".", trace, line_num, file_name);
       wait on runner until get_phase(runner_state) = phase;
-      log(runner_trace_logger, "Waking up. Phase is " & replace(runner_phase_t'image(phase), "_", " ") & ".", trace, line_num, file_name);
+      log(logger, "Waking up. Phase is " & replace(runner_phase_t'image(phase), "_", " ") & ".", trace, line_num, file_name);
     end if;
   end;
 
