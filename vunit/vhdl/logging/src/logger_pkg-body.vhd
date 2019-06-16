@@ -811,8 +811,9 @@ package body logger_pkg is
   begin
     set(p_mock_queue_length, 0, get(p_mock_queue_length, 0) - 1);
 
+	-- Replace substring with whitespace
     if find(got_msg, substr) = 0 then
-		found_str := (SUBSTR_PREFIX'range => SUBSTR_PREFIX, others => ' ');
+		found_str(SUBSTR_PREFIX'length to found_str'high) := (others => ' ');
     end if;
 
     return make_string(got_logger_name, found_str, got_level, got_log_time, got_line_num, got_file_name, check_time);
