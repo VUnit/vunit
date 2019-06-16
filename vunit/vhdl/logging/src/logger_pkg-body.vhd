@@ -845,26 +845,34 @@ package body logger_pkg is
       end if;
     end;
 
-	procedure check_log_when_not_empty_with_substring is
+	procedure check_log_when_not_empty_with_substr is
       constant got_item : string := pop_log_item_with_substring(log_time /= no_time_check, msg);
     begin
       if expected_item_with_substr /= got_item then
-        core_failure("log item mismatch:" & LF & LF & "Got:" & LF & got_item & LF & LF & "expected:" & LF & expected_item & LF);
+        core_failure("log item mismatch:" & LF & LF & "Got:" & LF & got_item & LF & LF & "expected:" & LF & expected_item_with_substr & LF);
       end if;
     end;
 
   begin
-    if length(mock_queue) > 0 then
 
-      if msg_is_substr then
-        check_log_when_not_empty_with_substring;
+    if msg_is_substr then
+
+      if length(mock_queue) > 0 then
+        check_log_when_not_empty_with_substr;
       else
-        check_log_when_not_empty;
+        core_failure("log item mismatch - Got no log item " & LF & LF & "expected:" & LF & expected_item_with_substr & LF);
       end if;
 
     else
-      core_failure("log item mismatch - Got no log item " & LF & LF & "expected" & LF & expected_item & LF);
+
+      if length(mock_queue) > 0 then
+        check_log_when_not_empty;
+      else
+        core_failure("log item mismatch - Got no log item " & LF & LF & "expected:" & LF & expected_item & LF);
+      end if;
+
     end if;
+
   end;
 
   procedure check_only_log(logger : logger_t;
