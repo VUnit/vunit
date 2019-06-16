@@ -810,11 +810,11 @@ package body logger_pkg is
 	variable found_str : string(1 to SUBSTR_PREFIX'length + substr'length) := SUBSTR_PREFIX & substr;
   begin
     set(p_mock_queue_length, 0, get(p_mock_queue_length, 0) - 1);
-    
+
     if find(got_msg, substr) = 0 then
 		found_str := (SUBSTR_PREFIX'range => SUBSTR_PREFIX, others => ' ');
     end if;
-    
+
     return make_string(got_logger_name, found_str, got_level, got_log_time, got_line_num, got_file_name, check_time);
   end;
 
@@ -827,11 +827,11 @@ package body logger_pkg is
                       msg_is_substr : boolean := false) is
 
 	constant SUBSTR_PREFIX : string := "Substring: ";
-                      
+
     constant expected_item : string := make_string(get_full_name(logger),
                                                    msg, log_level, log_time, line_num, file_name,
                                                    log_time /= no_time_check);
-                                                   
+
     constant expected_item_with_substr : string := make_string(get_full_name(logger),
                                                                SUBSTR_PREFIX & msg, log_level, log_time, line_num, file_name,
                                                                log_time /= no_time_check);
@@ -843,23 +843,23 @@ package body logger_pkg is
         core_failure("log item mismatch:" & LF & LF & "Got:" & LF & got_item & LF & LF & "expected:" & LF & expected_item & LF);
       end if;
     end;
-    
+
 	procedure check_log_when_not_empty_with_substring is
       constant got_item : string := pop_log_item_with_substring(log_time /= no_time_check, msg);
     begin
       if expected_item_with_substr /= got_item then
         core_failure("log item mismatch:" & LF & LF & "Got:" & LF & got_item & LF & LF & "expected:" & LF & expected_item & LF);
       end if;
-    end;   
-    
+    end;
+
   begin
     if length(mock_queue) > 0 then
-    
+
       if msg_is_substr then
         check_log_when_not_empty_with_substring;
       else
         check_log_when_not_empty;
-      end if;    
+      end if;
 
     else
       core_failure("log item mismatch - Got no log item " & LF & LF & "expected" & LF & expected_item & LF);
