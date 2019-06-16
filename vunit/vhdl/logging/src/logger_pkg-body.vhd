@@ -798,7 +798,7 @@ package body logger_pkg is
     set(p_mock_queue_length, 0, get(p_mock_queue_length, 0) - 1);
     return make_string(got_logger_name, got_msg, got_level, got_log_time, got_line_num, got_file_name, check_time);
   end;
-  
+
   impure function pop_log_item_with_substring(check_time : boolean; substr : string) return string is
     constant SUBSTR_PREFIX : string := "Substring: ";
     constant got_logger_name : string := pop_string(mock_queue);
