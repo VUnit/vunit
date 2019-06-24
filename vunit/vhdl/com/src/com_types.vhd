@@ -148,9 +148,6 @@ package com_types_pkg is
   constant network_event : std_logic := '1';
   constant idle_network : std_logic := 'Z';
 
-  -- Default value for timeout parameters. ModelSim can't handle time'high
-  constant max_timeout : time := 1 hr;
-
   -- Captures the state of a mailbox
   type mailbox_state_t is record
     id : mailbox_id_t;

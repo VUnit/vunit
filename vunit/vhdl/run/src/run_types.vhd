@@ -16,6 +16,9 @@ package run_types_pkg is
   constant max_locked_time : time := 1 ms;
   constant max_n_test_cases : natural := 1024;
 
+  -- Default value for timeout parameters. ModelSim can't handle time'high
+  constant max_timeout : time := 1 hr;
+
   -- Deprecated
   constant max_locked_time_c : time := max_locked_time;
   constant max_n_test_cases_c : natural := max_n_test_cases;
@@ -42,7 +45,7 @@ package run_types_pkg is
   constant runner_timeout_idx : natural := 3;
 
   constant runner_event : std_logic := '1';
-  constant idle_runner  : std_logic := 'Z';
+  constant idle_runner : std_logic := 'Z';
 
   constant runner_exit_with_errors : std_logic := 'Z';
   constant runner_exit_without_errors : std_logic := '1';

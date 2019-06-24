@@ -12,4 +12,13 @@ ui = VUnit.from_argv()
 
 lib = ui.add_library("tb_run_lib")
 lib.add_source_files(join(root, 'test', '*.vhd'))
+
+tb_watchdog = lib.test_bench("tb_watchdog")
+for use_boolean_test_signal in [False, True]:
+    for test in tb_watchdog.get_tests():
+        if test.name not in ["Test wait_for", "Test wait_until"] and "wait_" in test.name:
+            test.add_config(name="with boolean signal" if use_boolean_test_signal else "with other signal",
+                            generics=dict(use_boolean_test_signal=use_boolean_test_signal))
+
+ui.set_compile_option("rivierapro.vcom_flags", ["-dbg"])
 ui.main()
