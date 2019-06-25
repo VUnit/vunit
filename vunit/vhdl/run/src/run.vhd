@@ -304,11 +304,20 @@ package body run_pkg is
     end loop;
 
     if not (runner(runner_exit_status_idx) = runner_exit_without_errors) then
+      notify(runner, runner_timeout_idx);
+      wait until runner(runner_timeout_idx) = idle_runner;
       error(runner_trace_logger, "Test runner timeout after " & time'image(current_timeout) & ".");
       if do_runner_cleanup then
         test_runner_cleanup(runner);
       end if;
     end if;
+  end;
+
+  function timeout_notification (
+    signal runner : runner_sync_t
+  ) return boolean is
+  begin
+    return runner(runner_timeout_idx) = runner_event;
   end;
 
   impure function test_suite_error (

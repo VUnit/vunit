@@ -17,7 +17,8 @@ use ieee.std_logic_1164.all;
 package run_pkg is
   signal runner : runner_sync_t := (runner_event_idx => idle_runner,
                                     runner_exit_status_idx => runner_exit_with_errors,
-                                    runner_timeout_update_idx => idle_runner);
+                                    runner_timeout_update_idx => idle_runner,
+                                    runner_timeout_idx => idle_runner);
 
   constant runner_state : runner_t := new_runner;
 
@@ -83,6 +84,10 @@ package run_pkg is
     signal runner                    : inout runner_sync_t;
     constant timeout                 : in    time;
     constant do_runner_cleanup : boolean := true);
+
+  function timeout_notification (
+    signal runner : runner_sync_t
+  ) return boolean;
 
   procedure lock_entry (
     signal runner : inout runner_sync_t;
