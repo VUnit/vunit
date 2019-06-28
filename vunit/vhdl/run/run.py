@@ -7,9 +7,24 @@
 from pathlib import Path
 from vunit import VUnit
 
-ROOT = Path(__file__).parent
+root = Path(__file__).parent
 
-UI = VUnit.from_argv()
-UI.add_library("tb_run_lib").add_source_files(ROOT / "test" / "*.vhd")
+ui = VUnit.from_argv()
 
-UI.main()
+lib = ui.add_library("tb_run_lib")
+lib.add_source_files(root / "test" / "tb_run.vhd")
+lib.add_source_files(root / "test" / "run_tests.vhd")
+lib.add_source_files(root / "test" / "tb_watchdog.vhd")
+ui.enable_location_preprocessing()
+lib.add_source_files(root / "test" / "tb_wait_pkg.vhd")
+
+tb_wait_pkg = lib.test_bench("tb_wait_pkg")
+for use_boolean_test_signal in [False, True]:
+    for test in tb_wait_pkg.get_tests():
+        if test.name not in ["Test wait_for", "Test wait_until"] and "wait_" in test.name:
+            test.add_config(
+                name="with boolean signal" if use_boolean_test_signal else "with other signal",
+                generics=dict(use_boolean_test_signal=use_boolean_test_signal),
+            )
+
+ui.main()

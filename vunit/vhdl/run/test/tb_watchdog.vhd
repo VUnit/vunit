@@ -15,7 +15,7 @@ use vunit_lib.run_pkg.all;
 use vunit_lib.runner_pkg.all;
 
 entity tb_watchdog is
-  generic (
+  generic(
     runner_cfg : string);
 end entity;
 
@@ -28,7 +28,7 @@ begin
     if run("test watchdog no timeout") then
       wait for 1 ns;
 
-    elsif run("Test watchdog timeout") then
+    elsif run("test watchdog timeout") then
       mock(runner_trace_logger, error);
       wait until timeout_notification(runner);
       check_equal(now, 2 ns);

@@ -82,7 +82,6 @@ class TestExternalRunScripts(TestCase):
         check_report(
             self.report_file,
             [
-                ("passed", "lib.tb_with_watchdog.Test to_string for boolean"),
                 ("passed", "lib.tb_with_watchdog.Test that needs longer timeout"),
                 ("passed", "lib.tb_standalone.Test to_string for boolean"),
                 ("passed", "lib.tb_with_test_cases.Test to_string for integer"),
@@ -98,6 +97,10 @@ class TestExternalRunScripts(TestCase):
                 (
                     "failed",
                     "lib.tb_with_watchdog.Test that stalling processes can inform why they caused a timeout",
+                ),
+                (
+                    "failed",
+                    "lib.tb_with_watchdog.Test timing out with a wait procedure",
                 ),
                 (
                     "failed",

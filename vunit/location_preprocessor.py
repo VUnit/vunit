@@ -69,6 +69,9 @@ class LocationPreprocessor(object):
             "lock_exit",
             "unlock_entry",
             "unlock_exit",
+            "wait_on",
+            "wait_until",
+            "wait_for",
         ]
         self._subprograms_without_arguments = []
 
