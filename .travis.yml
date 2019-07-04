@@ -66,7 +66,6 @@ matrix:
       on:
         repo: VUnit/vunit
         branch: master
-        tags: true
 
   # Deploy to PyPI whenever the package version has changed
   # When a package version has not changed a new upload will not be triggered
