@@ -3,7 +3,6 @@
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
 -- Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
-
 --
 -- The purpose of this package is to provide an integer vector access type (pointer)
 -- that can itself be used in arrays and returned from functions unlike a
@@ -17,24 +16,29 @@ use work.codec_pkg.all;
 use work.codec_builder_pkg.all;
 
 package integer_vector_ptr_pkg is
+
   subtype index_t is integer range -1 to integer'high;
+
   type integer_vector_ptr_t is record
     ref : index_t;
   end record;
-  constant null_ptr : integer_vector_ptr_t := (ref => -1);
 
-  alias  ptr_t  is integer_vector_ptr_t;
-  alias  val_t  is integer;
-  alias  vec_t  is integer_vector_t;
-  alias  vav_t  is integer_vector_access_vector_t;
-  alias  vava_t is integer_vector_access_vector_access_t;
+  constant null_integer_vector_ptr : integer_vector_ptr_t := (ref => -1);
+  alias null_ptr is null_integer_vector_ptr;
+
+  alias ptr_t  is integer_vector_ptr_t;
+  alias val_t  is integer;
+  alias vec_t  is integer_vector_t;
+  alias va_t   is integer_vector_access_t;
+  alias vav_t  is integer_vector_access_vector_t;
+  alias vava_t is integer_vector_access_vector_access_t;
 
   function to_integer (
     value : ptr_t
   ) return integer;
 
   impure function to_integer_vector_ptr (
-    value : val_t
+    value : integer
   ) return ptr_t;
 
   impure function new_integer_vector_ptr (
@@ -70,7 +74,7 @@ package integer_vector_ptr_pkg is
   procedure resize (
     ptr    : ptr_t;
     length : natural;
-    drop   : natural := 0;
+    rotate : natural := 0;
     value  : val_t := 0
   );
 
@@ -94,3 +98,4 @@ package integer_vector_ptr_pkg is
   constant integer_vector_ptr_t_code_length : positive := integer_code_length;
 
 end package;
+

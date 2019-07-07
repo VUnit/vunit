@@ -82,18 +82,6 @@ begin
         assert get(ptr, 1) = a_random_value report
           "Checking that shrunk ptr still contain old value";
 
-      elsif run("test_resize_with_drop") then
-
-        ptr := new_string_ptr(8);
-        for i in 1 to 8 loop
-          set(ptr, i, character'val(i));
-        end loop;
-        resize(ptr, 4, drop => 4);
-
-        for i in 1 to 4 loop
-          assert get(ptr, i) = character'val(4+i);
-        end loop;
-
       elsif run("test_from_and_to_integer") then
         ptr := new_string_ptr(2);
         assert to_string_ptr(to_integer(ptr)) = ptr;
