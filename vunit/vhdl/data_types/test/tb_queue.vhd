@@ -57,12 +57,12 @@ begin
       check_equal(length(queue), 0, "Empty queue length");
 
       push_integer(queue, 11);
-      check_equal(length(queue), 5, "Length");
+      check_equal(length(queue), 1, "Length");
       push_integer(queue, 22);
-      check_equal(length(queue), 10, "Length");
+      check_equal(length(queue), 2, "Length");
 
       check_equal(pop_integer(queue), 11, "data");
-      check_equal(length(queue), 5, "Length");
+      check_equal(length(queue), 1, "Length");
       check_equal(pop_integer(queue), 22, "data");
       check_equal(length(queue), 0, "Length");
 
@@ -91,21 +91,21 @@ begin
       check_equal(length(queue), 0, "Empty queue length");
 
       push_character(queue, '1');
-      check_equal(length(queue), 2, "Length");
+      check_equal(length(queue), 1, "Length");
       push_character(queue, '2');
-      check_equal(length(queue), 4, "Length");
+      check_equal(length(queue), 2, "Length");
 
       assert pop_character(queue) = '1';
-      check_equal(length(queue), 2, "Length");
+      check_equal(length(queue), 1, "Length");
       assert pop_character(queue) = '2';
       check_equal(length(queue), 0, "Length");
 
     elsif run("Test flush queue") then
       queue := new_queue;
       push_character(queue, '1');
-      check_equal(length(queue), 2, "Length");
+      check_equal(length(queue), 1, "Length");
       push_character(queue, '2');
-      check_equal(length(queue), 4, "Length");
+      check_equal(length(queue), 2, "Length");
       flush(queue);
       check_equal(length(queue), 0, "Length");
 

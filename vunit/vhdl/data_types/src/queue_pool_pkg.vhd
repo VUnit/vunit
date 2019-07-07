@@ -9,13 +9,15 @@ use work.string_ptr_pool_pkg.all;
 use work.queue_pkg.all;
 
 package queue_pool_pkg is
+
   type queue_pool_t is record
     index_pool : integer_vector_ptr_pool_t;
-    data_pool : string_ptr_pool_t;
+    data_pool : integer_vector_ptr_pool_t;
   end record;
+
   constant null_queue_pool : queue_pool_t := (
     index_pool => null_integer_vector_ptr_pool,
-    data_pool => null_string_ptr_pool);
+    data_pool => null_integer_vector_ptr_pool);
 
   impure function new_queue_pool
   return queue_pool_t;
@@ -28,14 +30,16 @@ package queue_pool_pkg is
     pool : queue_pool_t;
     variable queue : inout queue_t
   );
+
 end package;
 
 package body queue_pool_pkg is
+
   impure function new_queue_pool
   return queue_pool_t is begin
     return (
       index_pool => new_integer_vector_ptr_pool,
-      data_pool  => new_string_ptr_pool
+      data_pool  => new_integer_vector_ptr_pool
     );
   end;
 
@@ -45,8 +49,8 @@ package body queue_pool_pkg is
     variable queue : queue_t;
   begin
     queue := (
-      p_meta => new_integer_vector_ptr(pool.index_pool, 2),
-      data => new_string_ptr(pool.data_pool, 0)
+      p_meta => new_integer_vector_ptr(pool.index_pool, 3),
+      data => new_integer_vector_ptr(pool.data_pool, 256)
     );
     flush(queue);
     return queue;
@@ -59,4 +63,6 @@ package body queue_pool_pkg is
     recycle(pool.index_pool, queue.p_meta);
     recycle(pool.data_pool, queue.data);
   end;
+
 end package body;
+

@@ -10,9 +10,9 @@ use ieee.float_pkg.all;
 
 use work.queue_pkg.all;
 use work.codec_2008_pkg.all;
-use work.codec_builder_2008_pkg.all;
 
 package queue_2008_pkg is
+
   procedure push (
     queue : queue_t;
     value : boolean_vector
@@ -96,111 +96,129 @@ package queue_2008_pkg is
 
   alias push_float is push[queue_t, float];
   alias pop_float is pop[queue_t return float];
+
 end package;
 
 package body queue_2008_pkg is
+
   procedure push (
     queue : queue_t;
     value : boolean_vector
   ) is begin
-    push_type(queue, vhdl_boolean_vector);
-    push_variable_string(queue, encode(value));
+    push_item(queue, encode(vhdl_boolean_vector) & encode(value));
   end;
 
   impure function pop (
     queue : queue_t
-  ) return boolean_vector is begin
-    check_type(queue, vhdl_boolean_vector);
-    return decode(pop_variable_string(queue));
+  ) return boolean_vector is
+    constant str : string := pop_item(queue);
+    constant typ : queue_item_type_t := decode(str(1));
+  begin
+    check_type(typ, vhdl_boolean_vector);
+    return decode(str(2 to str'right));
   end;
 
   procedure push (
     queue : queue_t;
     value : integer_vector
   ) is begin
-    push_type(queue, vhdl_integer_vector);
-    push_variable_string(queue, encode(value));
+    push_item(queue, encode(vhdl_integer_vector) & encode(value));
   end;
 
   impure function pop (
     queue : queue_t
-  ) return integer_vector is begin
-    check_type(queue, vhdl_integer_vector);
-    return decode(pop_variable_string(queue));
+  ) return integer_vector is
+    constant str : string := pop_item(queue);
+    constant typ : queue_item_type_t := decode(str(1));
+  begin
+    check_type(typ, vhdl_integer_vector);
+    return decode(str(2 to str'right));
   end;
 
   procedure push (
     queue : queue_t;
     value : real_vector
   ) is begin
-    push_type(queue, vhdl_real_vector);
-    push_variable_string(queue, encode(value));
+    push_item(queue, encode(vhdl_real_vector) & encode(value));
   end;
 
   impure function pop (
     queue : queue_t
-  ) return real_vector is begin
-    check_type(queue, vhdl_real_vector);
-    return decode(pop_variable_string(queue));
+  ) return real_vector is
+    constant str : string := pop_item(queue);
+    constant typ : queue_item_type_t := decode(str(1));
+  begin
+    check_type(typ, vhdl_real_vector);
+    return decode(str(2 to str'right));
   end;
 
   procedure push (
     queue : queue_t;
     value : time_vector
   ) is begin
-    push_type(queue, vhdl_time_vector);
-    push_variable_string(queue, encode(value));
+    push_item(queue, encode(vhdl_time_vector) & encode(value));
   end;
 
   impure function pop (
     queue : queue_t
-  ) return time_vector is begin
-    check_type(queue, vhdl_time_vector);
-    return decode(pop_variable_string(queue));
+  ) return time_vector is
+    constant str : string := pop_item(queue);
+    constant typ : queue_item_type_t := decode(str(1));
+  begin
+    check_type(typ, vhdl_time_vector);
+    return decode(str(2 to str'right));
   end;
 
   procedure push (
     queue : queue_t;
     value : ufixed
   ) is begin
-    push_type(queue, ieee_ufixed);
-    push_variable_string(queue, encode(value));
+    push_item(queue, encode(ieee_ufixed) & encode(value));
   end;
 
   impure function pop (
     queue : queue_t
-  ) return ufixed is begin
-    check_type(queue, ieee_ufixed);
-    return decode(pop_variable_string(queue));
+  ) return ufixed is
+    constant str : string := pop_item(queue);
+    constant typ : queue_item_type_t := decode(str(1));
+  begin
+    check_type(typ, ieee_ufixed);
+    return decode(str(2 to str'right));
   end;
 
   procedure push (
     queue : queue_t;
     value : sfixed
   ) is begin
-    push_type(queue, ieee_sfixed);
-    push_variable_string(queue, encode(value));
+    push_item(queue, encode(ieee_sfixed) & encode(value));
   end;
 
   impure function pop (
     queue : queue_t
-  ) return sfixed is begin
-    check_type(queue, ieee_sfixed);
-    return decode(pop_variable_string(queue));
+  ) return sfixed is
+    constant str : string := pop_item(queue);
+    constant typ : queue_item_type_t := decode(str(1));
+  begin
+    check_type(typ, ieee_sfixed);
+    return decode(str(2 to str'right));
   end;
 
   procedure push (
     queue : queue_t;
     value : float
   ) is begin
-    push_type(queue, ieee_float);
-    push_variable_string(queue, encode(value));
+    push_item(queue, encode(ieee_float) & encode(value));
   end;
 
   impure function pop (
     queue : queue_t
-  ) return float is begin
-    check_type(queue, ieee_float);
-    return decode(pop_variable_string(queue));
+  ) return float is
+    constant str : string := pop_item(queue);
+    constant typ : queue_item_type_t := decode(str(1));
+  begin
+    check_type(typ, ieee_float);
+    return decode(str(2 to str'right));
   end;
+
 end package body;
+
