@@ -451,9 +451,10 @@ package body codec_pkg is
   function get_range (
     constant code : string)
     return range_t is
-    constant range_left         : integer := decode(code(1 to 4));
-    constant range_right        : integer := decode(code(5 to 8));
-    constant is_ascending       : boolean := decode(code(9 to 9));
+    constant left               : positive := code'left;
+    constant range_left         : integer := decode(code(left to left + 3));
+    constant range_right        : integer := decode(code(left + 4 to left + 7));
+    constant is_ascending       : boolean := decode(code(left + 8 to left + 8));
     constant ret_val_ascending  : range_t(range_left to range_right) := (others => '0');
     constant ret_val_descending : range_t(range_left downto range_right) := (others => '0');
   begin
