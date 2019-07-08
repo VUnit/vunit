@@ -17,7 +17,7 @@ package com_common_pkg is
 
   procedure notify (signal net : inout network_t);
 
-  impure function no_error_status (status : com_status_t; old_api : boolean := false) return boolean;
+  impure function no_error_status (status : com_status_t) return boolean;
 end package com_common_pkg;
 
 package body com_common_pkg is
@@ -30,9 +30,9 @@ package body com_common_pkg is
     end if;
   end procedure notify;
 
-  impure function no_error_status (status : com_status_t; old_api : boolean := false) return boolean is
+  impure function no_error_status (status : com_status_t) return boolean is
   begin
-    return (status = ok) or ((status = timeout) and messenger.timeout_is_allowed and old_api);
+    return status = ok;
   end;
 
 end package body com_common_pkg;

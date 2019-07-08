@@ -13,7 +13,6 @@ context work.vunit_context;
 
 use work.queue_pkg.all;
 use work.queue_2008_pkg.all;
-use work.queue_pool_pkg.all;
 use work.integer_vector_ptr_pkg.all;
 use work.string_ptr_pkg.all;
 use work.codec_pkg.all;
@@ -233,7 +232,6 @@ package body com_pkg is
     variable status       : com_status_t;
     variable source_actor : actor_t;
     variable mailbox      : mailbox_id_t;
-    variable message      : message_ptr_t;
   begin
     delete(reply_msg);
 
@@ -252,7 +250,7 @@ package body com_pkg is
     wait_on_subscribers(sender, (published, outbound), timeout);
     messenger.publish(sender, msg, (published, outbound));
     notify(net);
-    recycle(queue_pool, msg.data);
+    deallocate(msg.data);
   end;
 
   impure function peek_message(
@@ -266,8 +264,7 @@ package body com_pkg is
       return msg;
     end if;
 
-    msg      := messenger.get_all_but_payload(actor, position, mailbox_id);
-    msg.data := decode(messenger.get_payload(actor, position, mailbox_id));
+    msg      := messenger.get_message(actor, position, mailbox_id);
 
     return msg;
   end;
@@ -374,8 +371,7 @@ package body com_pkg is
   begin
     started_with_full_mailbox := messenger.is_full(actor, mailbox_id);
 
-    msg      := messenger.get_all_but_payload(actor, position, mailbox_id);
-    msg.data := decode(messenger.get_payload(actor, position, mailbox_id));
+    msg      := messenger.get_message(actor, position, mailbox_id);
     messenger.delete_envelope(actor, position, mailbox_id);
 
     if started_with_full_mailbox then
@@ -681,19 +677,6 @@ package body com_pkg is
     end if;
 
     return l.all;
-  end;
-
-  -----------------------------------------------------------------------------
-  -- Misc
-  -----------------------------------------------------------------------------
-  procedure allow_timeout is
-  begin
-    messenger.allow_timeout;
-  end;
-
-  procedure allow_deprecated is
-  begin
-    messenger.allow_deprecated;
   end;
 
 end package body com_pkg;

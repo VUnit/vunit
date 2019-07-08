@@ -22,7 +22,6 @@ use work.string_ptr_pkg.all;
 use work.logger_pkg.all;
 use work.queue_pkg.all;
 use work.queue_2008_pkg.all;
-use work.queue_pool_pkg.all;
 
 package com_types_pkg is
 
@@ -80,18 +79,6 @@ package com_types_pkg is
   subtype message_id_t is natural;
   constant no_message_id : message_id_t := 0;
 
-  -- Deprecated message type
-  type message_t is record
-    id : message_id_t;
-    msg_type : msg_type_t;
-    status : com_status_t;
-    sender : actor_t;
-    receiver : actor_t;
-    request_id : message_id_t;
-    payload : line;
-  end record message_t;
-  type message_ptr_t is access message_t;
-
   -- Message type. All fields of the record are private and should not be
   -- referenced directly by the user.
   subtype msg_data_t is queue_t;
@@ -134,12 +121,6 @@ package com_types_pkg is
   type subscription_vec_t is array (natural range <>) of subscription_t;
   type subscription_vec_ptr_t is access subscription_vec_t;
 
-  -- Deprecated
-  type receipt_t is record
-    status : com_status_t;
-    id : message_id_t;
-  end record receipt_t;
-
   -- An event type representing the network over which actors communicate. An event in
   -- the network notifies connected actors which can determine the cause of the
   -- event by consulting the com messenger (com_messenger.vhd). Actors can be
@@ -177,7 +158,6 @@ package com_types_pkg is
   end record messenger_state_t;
 
   constant com_logger : logger_t := get_logger("vunit_lib:com");
-  constant queue_pool : queue_pool_t := new_queue_pool;
 
   -----------------------------------------------------------------------------
   -- Handling of message types
@@ -389,10 +369,10 @@ package com_types_pkg is
   alias push_msg_t is push[msg_t, msg_t];
   alias pop_msg_t is pop[msg_t return msg_t];
 
-  procedure push_ref(constant msg : msg_t; value : inout integer_array_t);
-  impure function pop_ref(msg : msg_t) return integer_array_t;
-  alias push_integer_array_t_ref is push_ref[msg_t, integer_array_t];
-  alias pop_integer_array_t_ref is pop_ref[msg_t return integer_array_t];
+  procedure push(msg : msg_t; value : inout integer_array_t);
+  impure function pop(msg : msg_t) return integer_array_t;
+  alias push_integer_array_t_ref is push[msg_t, integer_array_t];
+  alias pop_integer_array_t_ref is pop[msg_t return integer_array_t];
 
 end package;
 
@@ -468,25 +448,21 @@ package body com_types_pkg is
     variable msg : msg_t;
   begin
     msg.sender := sender;
-    msg.data := new_queue(queue_pool);
+    msg.data := new_queue;
     msg.msg_type := msg_type;
     return msg;
   end;
 
   procedure delete(msg : inout msg_t) is
   begin
-    recycle(queue_pool, msg.data);
+    deallocate(msg.data);
     msg := null_msg;
   end procedure delete;
 
   impure function copy(msg : msg_t) return msg_t is
     variable result : msg_t := msg;
   begin
-    result.data := new_queue(queue_pool);
-    for i in 0 to length(msg.data) - 1 loop
-      unsafe_push(result.data, get(msg.data.data, 1 + i));
-    end loop;
-
+    result.data := copy(msg.data);
     return result;
   end;
 
@@ -510,8 +486,7 @@ package body com_types_pkg is
     if msg.data = null_queue then
       return true;
     end if;
-
-    return length(msg.data) = 0;
+    return is_empty(msg.data);
   end;
 
   procedure push(queue : queue_t; variable value : inout msg_t) is
@@ -844,14 +819,14 @@ package body com_types_pkg is
     return pop(msg.data);
   end;
 
-  procedure push_ref(constant msg : msg_t; value : inout integer_array_t) is
+  procedure push(msg : msg_t; value : inout integer_array_t) is
   begin
-    push_ref(msg.data, value);
+    push(msg.data, value);
   end;
 
-  impure function pop_ref(msg : msg_t) return integer_array_t is
+  impure function pop(msg : msg_t) return integer_array_t is
   begin
-    return pop_ref(msg.data);
+    return pop(msg.data);
   end;
 
 end package body com_types_pkg;

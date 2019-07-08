@@ -44,7 +44,6 @@ begin
     variable request_msg, request_msg2, request_msg3, reply_msg : msg_t;
     variable peeked_msg1, peeked_msg2                           : msg_t;
     variable msg_vec_ptr                                        : msg_vec_ptr_t;
-    variable deprecated_message                                 : message_ptr_t;
     variable subscription_vec_ptr                               : subscription_vec_ptr_t;
     variable actor_state                                        : actor_state_t;
     variable mailbox_state                                      : mailbox_state_t;
@@ -1248,12 +1247,6 @@ begin
 
         unmock(com_logger);
 
-      -- Deprecated APIs
-      elsif run("Test that use of deprecated API leads to an error") then
-        mock(com_logger);
-        deprecated_message := compose("hello world");
-        check_only_log(com_logger, "DEPRECATED INTERFACE ERROR. compose()", failure);
-        unmock(com_logger);
       end if;
     end loop;
 
