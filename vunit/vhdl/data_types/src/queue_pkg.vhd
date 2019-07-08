@@ -77,6 +77,10 @@ package queue_pkg is
     queue : queue_t
   ) return queue_t;
 
+  procedure deallocate (
+    queue : inout queue_t
+  );
+
   function encode (
     item_type : queue_item_type_t
   ) return character;

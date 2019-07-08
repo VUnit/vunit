@@ -23,10 +23,14 @@ package body queue_pkg is
   impure function length (
     queue : queue_t
   ) return natural is
-    constant head : integer := get(queue.p_meta, head_idx);
-    constant tail : integer := get(queue.p_meta, tail_idx);
-    constant wrap : integer := get(queue.p_meta, wrap_idx);
+    variable head : natural;
+    variable tail : natural;
+    variable wrap : natural;
   begin
+    assert queue /= null_queue report "Null queue has no length";
+    head := get(queue.p_meta, head_idx);
+    tail := get(queue.p_meta, tail_idx);
+    wrap := get(queue.p_meta, wrap_idx);
     if wrap = 0 then
       return head - tail;
     else
@@ -37,12 +41,14 @@ package body queue_pkg is
   impure function is_empty (
     queue : queue_t
   ) return boolean is begin
+    assert queue /= null_queue report "Null queue has no length";
     return length(queue) = 0;
   end;
 
   impure function is_full (
     queue : queue_t
   ) return boolean is begin
+    assert queue /= null_queue report "Null queue has no length";
     return length(queue) = length(queue.data);
   end;
 
@@ -67,12 +73,16 @@ package body queue_pkg is
     queue : queue_t;
     value : string_ptr_t
   ) is
-    variable head : integer  := get(queue.p_meta, head_idx);
-    variable tail : integer  := get(queue.p_meta, tail_idx);
-    variable wrap : integer  := get(queue.p_meta, wrap_idx);
-    variable size : positive := length(queue.data);
+    variable head : natural;
+    variable tail : natural;
+    variable wrap : natural;
+    variable size : positive;
   begin
     assert queue /= null_queue report "Push to null queue";
+    head := get(queue.p_meta, head_idx);
+    tail := get(queue.p_meta, tail_idx);
+    wrap := get(queue.p_meta, wrap_idx);
+    size := length(queue.data);
     if is_full(queue) then
       resize(queue.data, 2 * size, rotate => tail);
       tail := 0;
@@ -99,13 +109,16 @@ package body queue_pkg is
   impure function unsafe_pop (
     queue : queue_t
   ) return string_ptr_t is
-    constant size : positive := length(queue.data);
-    variable tail : integer  := get(queue.p_meta, tail_idx);
-    variable wrap : integer  := get(queue.p_meta, wrap_idx);
+    variable size : positive;
+    variable tail : natural;
+    variable wrap : natural;
     variable data : string_ptr_t;
   begin
     assert queue /= null_queue report "Pop from null queue";
     assert length(queue) > 0 report "Pop from empty queue";
+    size := length(queue.data);
+    tail := get(queue.p_meta, tail_idx);
+    wrap := get(queue.p_meta, wrap_idx);
     data := to_string_ptr(get(queue.data, tail));
     tail := tail + 1;
     if tail >= size then
@@ -124,18 +137,31 @@ package body queue_pkg is
   impure function copy (
     queue : queue_t
   ) return queue_t is
-    constant tail   : positive := get(queue.p_meta, tail_idx);
-    constant size   : positive := length(queue.data);
     constant result : queue_t := new_queue;
+    variable tail   : natural;
+    variable size   : positive;
     variable idx    : natural;
     variable ptr    : string_ptr_t;
   begin
+    assert queue /= null_queue report "Copy null queue";
+    tail := get(queue.p_meta, tail_idx);
+    size := length(queue.data);
     for i in 0 to length(queue) - 1 loop
       idx := (tail + i) mod size;
       ptr := to_string_ptr(get(queue.data, idx));
       unsafe_push(result, new_string_ptr(to_string(ptr)));
     end loop;
     return result;
+  end;
+
+  procedure deallocate (
+    queue : inout queue_t
+  ) is begin
+    if queue /= null_queue then
+      deallocate(queue.p_meta);
+      deallocate(queue.data);
+      queue := null_queue;
+    end if;
   end;
 
   function encode (
