@@ -40,7 +40,7 @@ def examples():
             if isdir(loc):
                 egs_fptr.write(_get_eg_doc(
                     loc,
-                    'https://github.com/VUnit/vunit//tree/master/examples/' + item
+                    'https://github.com/VUnit/vunit/tree/master/examples/%s/%s' % (subdir, item)
                 ))
 
 
