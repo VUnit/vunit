@@ -35,10 +35,10 @@ package integer_vector_ptr_pkg is
 
   function to_integer (
     value : ptr_t
-  ) return integer;
+  ) return index_t;
 
   impure function to_integer_vector_ptr (
-    value : integer
+    value : index_t
   ) return ptr_t;
 
   impure function new_integer_vector_ptr (
@@ -52,7 +52,7 @@ package integer_vector_ptr_pkg is
 
   impure function length (
     ptr : ptr_t
-  ) return integer;
+  ) return natural;
 
   procedure set (
     ptr   : ptr_t;
@@ -74,8 +74,9 @@ package integer_vector_ptr_pkg is
   procedure resize (
     ptr    : ptr_t;
     length : natural;
-    rotate : natural := 0;
-    value  : val_t := 0
+    drop   : natural := 0;
+    value  : val_t := 0;
+    rotate : natural := 0
   );
 
   function encode (

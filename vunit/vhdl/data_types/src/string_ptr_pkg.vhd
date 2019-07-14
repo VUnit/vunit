@@ -34,10 +34,10 @@ package string_ptr_pkg is
 
   function to_integer (
     value : ptr_t
-  ) return integer;
+  ) return index_t;
 
   impure function to_string_ptr (
-    value : integer
+    value : index_t
   ) return ptr_t;
 
   impure function new_string_ptr (
@@ -54,17 +54,17 @@ package string_ptr_pkg is
 
   impure function length (
     ptr : ptr_t
-  ) return integer;
+  ) return natural;
 
   procedure set (
     ptr   : ptr_t;
-    index : natural;
+    index : positive;
     value : val_t
   );
 
   impure function get (
     ptr   : ptr_t;
-    index : natural
+    index : positive
   ) return val_t;
 
   procedure reallocate (
@@ -79,7 +79,9 @@ package string_ptr_pkg is
 
   procedure resize (
     ptr    : ptr_t;
-    length : natural
+    length : natural;
+    drop   : natural := 0;
+    rotate : natural := 0
   );
 
   impure function to_string (

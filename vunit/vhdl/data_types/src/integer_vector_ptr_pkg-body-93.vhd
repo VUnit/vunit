@@ -60,21 +60,32 @@ package body integer_vector_ptr_pkg is
     return (ref => ref);
   end;
 
+  procedure check_valid (
+    ref : index_t
+  ) is begin
+    assert 0 <= ref and ref < storage_index report "invalid pointer";
+    assert storage(ref) /= null report "unallocated pointer";
+  end;
+
   procedure deallocate (
     ptr : ptr_t
   ) is begin
-    if stack_index >= stack'length then
-      reallocate_stack(stack'length + 2**16);
+    if ptr.ref > 0 then
+      check_valid(ptr.ref);
+      if stack_index >= stack'length then
+        reallocate_stack(stack'length + 2**16);
+      end if;
+      stack(stack_index) := ptr.ref;
+      stack_index := stack_index + 1;
+      deallocate(storage(ptr.ref));
+      storage(ptr.ref) := null;
     end if;
-    stack(stack_index) := ptr.ref;
-    stack_index := stack_index + 1;
-    deallocate(storage(ptr.ref));
-    storage(ptr.ref) := null;
   end;
 
   impure function length (
     ptr : ptr_t
-  ) return integer is begin
+  ) return natural is begin
+    check_valid(ptr.ref);
     return storage(ptr.ref)'length;
   end;
 
@@ -83,6 +94,7 @@ package body integer_vector_ptr_pkg is
     index : natural;
     value : val_t
   ) is begin
+    check_valid(ptr.ref);
     storage(ptr.ref)(index) := value;
   end;
 
@@ -90,6 +102,7 @@ package body integer_vector_ptr_pkg is
     ptr   : ptr_t;
     index : natural
   ) return val_t is begin
+    check_valid(ptr.ref);
     return storage(ptr.ref)(index);
   end;
 
@@ -98,6 +111,7 @@ package body integer_vector_ptr_pkg is
     length : natural;
     value  : val_t := 0
   ) is begin
+    check_valid(ptr.ref);
     deallocate(storage(ptr.ref));
     storage(ptr.ref) := new vec_t'(0 to length - 1 => value);
   end;
@@ -105,18 +119,25 @@ package body integer_vector_ptr_pkg is
   procedure resize (
     ptr    : ptr_t;
     length : natural;
-    rotate : natural := 0;
-    value  : val_t := 0
+    drop   : natural := 0;
+    value  : val_t := 0;
+    rotate : natural := 0
   ) is
-    variable old_ptr : va_t := storage(ptr.ref);
+    variable old_ptr : va_t;
     variable new_ptr : va_t := new vec_t'(0 to length - 1 => value);
-    variable min_length : natural := old_ptr'length;
+    variable min_length : natural;
+    variable index : natural;
   begin
-    if length < old_ptr'length then
+    check_valid(ptr.ref);
+    assert drop = 0 or rotate = 0 report "can't combine drop and rotate";
+    old_ptr := storage(ptr.ref);
+    min_length := old_ptr'length - drop;
+    if length < min_length then
       min_length := length;
     end if;
     for i in 0 to min_length - 1 loop
-      new_ptr(i) := old_ptr((rotate + i) mod old_ptr'length);
+      index := (drop + rotate + i) mod old_ptr'length;
+      new_ptr(i) := old_ptr(index);
     end loop;
     storage(ptr.ref) := new_ptr;
     deallocate(old_ptr);
@@ -124,14 +145,16 @@ package body integer_vector_ptr_pkg is
 
   function to_integer (
     value : ptr_t
-  ) return integer is begin
+  ) return index_t is begin
     return value.ref;
   end;
 
   impure function to_integer_vector_ptr (
-    value : val_t
+    value : index_t
   ) return ptr_t is begin
-    -- @TODO maybe assert that the ref is valid
+    if value >= 0 then
+      check_valid(value);
+    end if;
     return (ref => value);
   end;
 

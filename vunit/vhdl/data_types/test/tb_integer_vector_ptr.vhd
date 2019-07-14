@@ -77,6 +77,17 @@ begin
         check_equal(get(ptr, 0), a_random_value,
                     "Checking that shrunk ptr still contain old value");
 
+      elsif run("test_resize_with_drop") then
+        ptr := new_integer_vector_ptr(8);
+        for i in 0 to 7 loop
+          set(ptr, i, i);
+        end loop;
+        resize(ptr, 4, drop => 4);
+
+        for i in 0 to 3 loop
+          check_equal(get(ptr, i), 4+i);
+        end loop;
+
       elsif run("test_resize_with_rotate") then
         ptr := new_integer_vector_ptr(8);
         for i in 0 to 7 loop
