@@ -63,7 +63,10 @@ package body queue_pkg is
     set(queue.p_meta, wrap_idx, 0);
     for i in 0 to length(queue.data) - 1 loop
       ref := get(queue.data, i);
-      deallocate(to_string_ptr(ref));
+      if ref >= 0 then
+        deallocate(to_string_ptr(ref));
+        set(queue.data, i, -1);
+      end if;
     end loop;
   end;
 
@@ -118,6 +121,7 @@ package body queue_pkg is
     tail := get(queue.p_meta, tail_idx);
     wrap := get(queue.p_meta, wrap_idx);
     data := to_string_ptr(get(queue.data, tail));
+    set(queue.data, tail, -1);
     tail := tail + 1;
     if tail >= size then
       tail := tail mod size;
@@ -156,6 +160,7 @@ package body queue_pkg is
     queue : inout queue_t
   ) is begin
     if queue /= null_queue then
+      flush(queue);
       deallocate(queue.p_meta);
       deallocate(queue.data);
       queue := null_queue;
