@@ -63,9 +63,7 @@ package body queue_pkg is
     set(queue.p_meta, wrap_idx, 0);
     for i in 0 to length(queue.data) - 1 loop
       ref := get(queue.data, i);
-      if ref > -1 then
-        deallocate(to_string_ptr(ref));
-      end if;
+      deallocate(to_string_ptr(ref));
     end loop;
   end;
 
