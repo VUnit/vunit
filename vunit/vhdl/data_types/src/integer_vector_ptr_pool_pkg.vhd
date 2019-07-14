@@ -21,7 +21,8 @@ package integer_vector_ptr_pool_pkg is
 
   impure function new_integer_vector_ptr (
     pool       : integer_vector_ptr_pool_t;
-    min_length : natural := 0
+    min_length : natural := 0;
+    value      : integer := 0
   ) return integer_vector_ptr_t;
 
   procedure recycle (
@@ -38,7 +39,8 @@ package body integer_vector_ptr_pool_pkg is
 
   impure function new_integer_vector_ptr (
     pool       : integer_vector_ptr_pool_t;
-    min_length : natural := 0
+    min_length : natural := 0;
+    value      : integer := 0
   ) return integer_vector_ptr_t is
     variable ptr : integer_vector_ptr_t;
   begin
@@ -46,11 +48,15 @@ package body integer_vector_ptr_pool_pkg is
       -- Reuse
       ptr := pop_integer_vector_ptr_ref(pool.ptrs);
       if length(ptr) < min_length then
-        reallocate(ptr, min_length);
+        reallocate(ptr, min_length, value);
+      else
+        for i in 0 to length(ptr) - 1 loop
+          set(ptr, i, value);
+        end loop;
       end if;
     else
       -- Allocate new
-      ptr := new_integer_vector_ptr(min_length);
+      ptr := new_integer_vector_ptr(min_length, value);
     end if;
     return ptr;
   end;

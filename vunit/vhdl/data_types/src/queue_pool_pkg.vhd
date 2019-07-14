@@ -50,7 +50,7 @@ package body queue_pool_pkg is
   begin
     queue := (
       p_meta => new_integer_vector_ptr(pool.index_pool, 3),
-      data => new_integer_vector_ptr(pool.data_pool, 256)
+      data => new_integer_vector_ptr(pool.data_pool, 256, -1)
     );
     flush(queue);
     return queue;
