@@ -288,6 +288,13 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
        from vunit import VUnit
     """
+    _instance = None
+    _initialized = False
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(VUnit, cls).__new__(cls)
+        
+        return cls._instance
 
     @classmethod
     def from_argv(cls, argv=None, compile_builtins=True, vhdl_standard=None):
@@ -325,6 +332,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         return cls(args, compile_builtins=compile_builtins, vhdl_standard=vhdl_standard)
 
     def __init__(self, args, compile_builtins=True, vhdl_standard=None):
+        if self._initialized != False:
+            return
+
         self._args = args
         self._configure_logging(args.log_level)
         self._output_path = abspath(args.output_path)
@@ -373,6 +383,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._builtins = Builtins(self, self._vhdl_standard, simulator_class)
         if compile_builtins:
             self.add_builtins()
+
+        self._initialized = True
 
     def _create_database(self):
         """
