@@ -11,7 +11,10 @@ root = dirname(__file__)
 ui = VUnit.from_argv()
 
 lib = ui.add_library("tb_run_lib")
-lib.add_source_files(join(root, 'test', '*.vhd'))
+lib.add_source_files(join(root, 'test', 'tb_run.vhd'))
+lib.add_source_files(join(root, 'test', 'run_tests.vhd'))
+ui.enable_location_preprocessing()
+lib.add_source_files(join(root, 'test', 'tb_watchdog.vhd'))
 
 tb_watchdog = lib.test_bench("tb_watchdog")
 for use_boolean_test_signal in [False, True]:

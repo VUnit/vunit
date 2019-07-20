@@ -96,21 +96,29 @@ package run_pkg is
     signal source : in boolean;
     signal condition : in boolean;
     constant timeout : in delay_length := max_timeout;
-    constant logger : in logger_t := default_logger);
+    constant logger : in logger_t := default_logger;
+    constant line_num : in natural     := 0;
+    constant file_name : in string      := "");
 
   procedure wait_on(
     signal source : in boolean;
     constant timeout : in delay_length := max_timeout;
-    constant logger : in logger_t := default_logger);
+    constant logger : in logger_t := default_logger;
+    constant line_num : in natural     := 0;
+    constant file_name : in string      := "");
 
   procedure wait_for(
     constant timeout : in delay_length := max_timeout;
-    constant logger : in logger_t := default_logger);
+    constant logger : in logger_t := default_logger;
+    constant line_num : in natural     := 0;
+    constant file_name : in string      := "");
 
   procedure wait_until(
     signal condition : in boolean;
     constant timeout : in delay_length := max_timeout;
-    constant logger : in logger_t := default_logger);
+    constant logger : in logger_t := default_logger;
+    constant line_num : in natural     := 0;
+    constant file_name : in string      := "");
 
   procedure lock_entry(
     signal runner : inout runner_sync_t;

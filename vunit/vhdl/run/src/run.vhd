@@ -354,7 +354,9 @@ package body run_pkg is
     signal source : in boolean;
     signal condition : in boolean;
     constant timeout : in delay_length := max_timeout;
-    constant logger : in logger_t := default_logger) is
+    constant logger : in logger_t := default_logger;
+    constant line_num : in natural     := 0;
+    constant file_name : in string      := "") is
     variable remaining_timeout : time := timeout;
     variable do_exit : boolean;
   begin
@@ -365,11 +367,13 @@ package body run_pkg is
       if condition then
         info(logger, "Test runner timeout while blocking on wait_on." & LF &
              "Condition is true." &
-             local_timeout_msg(remaining_timeout, timeout));
+             local_timeout_msg(remaining_timeout, timeout),
+             line_num => line_num, file_name => file_name);
       else
         info(logger, "Test runner timeout while blocking on wait_on." & LF &
              "Condition is false." &
-             local_timeout_msg(remaining_timeout, timeout));
+             local_timeout_msg(remaining_timeout, timeout),
+             line_num => line_num, file_name => file_name);
       end if;
     end loop;
   end;
@@ -377,7 +381,9 @@ package body run_pkg is
   procedure wait_on(
     signal source : in boolean;
     constant timeout : in delay_length := max_timeout;
-    constant logger : in logger_t := default_logger) is
+    constant logger : in logger_t := default_logger;
+    constant line_num : in natural     := 0;
+    constant file_name : in string      := "") is
     variable remaining_timeout : delay_length := timeout;
     variable do_exit : boolean;
   begin
@@ -385,14 +391,18 @@ package body run_pkg is
       wait_no_msg(source, vunit_true_boolean_signal, remaining_timeout, do_exit);
       exit when do_exit;
 
-      info(logger, "Test runner timeout while blocking on wait_on." & local_timeout_msg(remaining_timeout, timeout));
+      info(logger, "Test runner timeout while blocking on wait_on." &
+           local_timeout_msg(remaining_timeout,timeout),
+           line_num => line_num, file_name => file_name);
     end loop;
   end;
 
   procedure wait_until(
     signal condition : in boolean;
     constant timeout : in delay_length := max_timeout;
-    constant logger : in logger_t := default_logger) is
+    constant logger : in logger_t := default_logger;
+    constant line_num : in natural     := 0;
+    constant file_name : in string      := "") is
     variable remaining_timeout : delay_length := timeout;
     variable do_exit : boolean;
   begin
@@ -400,13 +410,17 @@ package body run_pkg is
       wait_no_msg(condition, condition, remaining_timeout, do_exit);
       exit when do_exit;
 
-      info(logger, "Test runner timeout while blocking on wait_until." & local_timeout_msg(remaining_timeout, timeout));
+      info(logger, "Test runner timeout while blocking on wait_until." &
+           local_timeout_msg(remaining_timeout, timeout),
+           line_num => line_num, file_name => file_name);
     end loop;
   end;
 
   procedure wait_for(
     constant timeout : in delay_length := max_timeout;
-    constant logger : in logger_t := default_logger) is
+    constant logger : in logger_t := default_logger;
+    constant line_num : in natural     := 0;
+    constant file_name : in string      := "") is
     variable remaining_timeout : delay_length := timeout;
     variable do_exit : boolean;
   begin
@@ -414,7 +428,9 @@ package body run_pkg is
       wait_no_msg(vunit_true_boolean_signal, vunit_true_boolean_signal, remaining_timeout, do_exit);
       exit when do_exit;
 
-      info(logger, "Test runner timeout while blocking on wait_for." & local_timeout_msg(remaining_timeout, timeout));
+      info(logger, "Test runner timeout while blocking on wait_for." &
+           local_timeout_msg(remaining_timeout, timeout),
+           line_num => line_num, file_name => file_name);
     end loop;
   end;
 

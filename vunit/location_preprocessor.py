@@ -30,7 +30,8 @@ class LocationPreprocessor(object):
             'check_failed', 'check_true', 'check_false', 'check_implication',
             'check_stable', 'check_equal', 'check_not_unknown', 'check_zero_one_hot',
             'check_one_hot', 'check_next', 'check_sequence', 'check_relation',
-            'lock_entry', 'lock_exit', 'unlock_entry', 'unlock_exit']
+            'lock_entry', 'lock_exit', 'unlock_entry', 'unlock_exit', 'wait_on',
+            'wait_until', 'wait_for']
         self._subprograms_without_arguments = []
 
     def add_subprogram(self, subprogram):
