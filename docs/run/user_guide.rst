@@ -379,68 +379,110 @@ the ``run_all_in_same_sim`` attribute.
 The VUnit Watchdog
 ------------------
 
-Sometimes your design has a bug causing a test case to stall indefinitely, maybe preventing a nightly test run from
+Sometimes your design has a bug causing a test case to stall for a long time, maybe preventing a nightly test run from
 proceeding. To avoid this VUnit provides a watchdog which will timeout and fail a test case after a specified time.
+This is shown in the first test case below. The second test case shows how the timeout value can be dynamically modified.
+It's also possible to get a notification when the watchdog is about to time out. This will enable you to create logs to
+identify which part of the design that is stalling. This is shown in the third test case. To simplify this design
+pattern VUnit provides a number of wait procedures as shown in the fourth test case. A complete listing and
+documentation of these wait procedures can be found in :ref:`wait_pkg <wait_pkg>`.
 
 .. code-block:: vhdl
 
     architecture tb of tb_with_watchdog is
+      signal done : boolean := false;
+      constant a_long_time : time := 2 ns;
     begin
+      test_runner_watchdog(runner, 1 ns);
+
+      done <= true after a_long_time;
+      
       test_runner : process
+        constant logger : logger_t := get_logger(test_runner'path_name);
       begin
         test_runner_setup(runner, runner_cfg);
-
+    
         while test_suite loop
           if run("Test that stalls") then
-            wait;
-          elsif run("Test to_string for boolean") then
-            check_equal(to_string(true), "true");
-          elsif run("Test that needs longer timeout") then
+            wait until done;
+
+	  elsif run("Test that needs longer timeout") then
             -- It is also possible to set/re-set the timeout
             -- When test cases need separate timeout settings
             set_timeout(runner, 2 ms);
             wait for 1 ms;
-          end if;
-        end loop;
+    
+          elsif run("Test that stalling processes can inform why they caused a timeout") then
+            -- Instead of just waiting for done also act on a timeout notification
+            wait until done or timeout_notification(runner);
+    
+            -- Inform that you were still waiting for something to happen when the timeout
+            -- occured. This will help identifying who to blame for the timeout
+            if not done then
+              info(logger, "Still waiting for done signal");
+              wait;
+            end if;
 
+          elsif run("Test timing out with a wait procedure") then
+            wait_until(done, logger => logger);
+	  end if;
+	  
+        end loop;
+    
         test_runner_cleanup(runner);
       end process;
 
-      test_runner_watchdog(runner, 10 ms);
     end architecture;
-
+    
 Note that the problem with the first test case doesn't prevent the second from running.
 
 .. code-block:: console
 
     > python run.py *watchdog*
+    
     Starting lib.tb_with_watchdog.Test that stalls
-      10000000000000 fs - runner -   ERROR - Test runner timeout after 10000000000000 fs.
-    D:\Programming\github\vunit\vunit\vhdl\core\src\core_pkg.vhd:84:7:@10ms:(report failure): Stop simulation on log level error
-    C:\ghdl\dev\bin\ghdl.exe:error: report failed
-      from: vunit_lib.core_pkg.core_failure at core_pkg.vhd:84
-      from: vunit_lib.logger_pkg.count_log at logger_pkg-body.vhd:563
-      from: vunit_lib.logger_pkg.log at logger_pkg-body.vhd:711
-      from: vunit_lib.logger_pkg.error at logger_pkg-body.vhd:752
-      from: vunit_lib.run_pkg.test_runner_watchdog at run.vhd:368
-      from: process lib.tb_with_watchdog(tb).P0 at tb_with_watchdog.vhd:25
-    C:\ghdl\dev\bin\ghdl.exe:error: simulation failed
-    fail (P=0 S=0 F=1 T=2) lib.tb_with_watchdog.Test that stalls (0.3 seconds)
+    Output file: vunit_out\test_output\lib.tb_with_watchdog.Test_that_stalls_7f50c5908f9e9f9df5075e065f984eef1c2f7b2b\output.txt
+             1000000 fs - runner                       -   ERROR - Test runner timeout after 1000000 fs.
+    D:\github\vunit\vunit\vhdl\core\src\core_pkg.vhd:84:7:@1ns:(report failure): Stop simulation on log level error
+    D:\github\vunit\examples\vhdl\run\vunit_out\test_output\lib.tb_with_watchdog.Test_that_stalls_7f50c5908f9e9f9df5075e065f984eef1c2f7b2b\ghdl\tb_with_watchdog-tb:error: report failed
+    D:\github\vunit\examples\vhdl\run\vunit_out\test_output\lib.tb_with_watchdog.Test_that_stalls_7f50c5908f9e9f9df5075e065f984eef1c2f7b2b\ghdl\tb_with_watchdog-tb:error: simulation failed
+    fail (P=0 S=0 F=1 T=4) lib.tb_with_watchdog.Test that stalls (0.6 seconds)
+    
+    Starting lib.tb_with_watchdog.Test that needs longer timeout
+    Output file: vunit_out\test_output\lib.tb_with_watchdog.Test_that_needs_longer_timeout_5494104827c61d0022a75acbab4c0c6de9e29643\output.txt
+    pass (P=1 S=0 F=1 T=4) lib.tb_with_watchdog.Test that needs longer timeout (0.6 seconds)
+    
+    Starting lib.tb_with_watchdog.Test that stalling processes can inform why they caused a timeout
+    Output file: vunit_out\test_output\lib.tb_with_watchdog.Test_that_stalling_processes_can_inform_why_6ba460aabb401d0f361e83a852d9cd6842c83baa\output.txt
+             1000000 fs - tb_with_watchdog:test_runner -    INFO - Still waiting for done signal
+             1000000 fs - runner                       -   ERROR - Test runner timeout after 1000000 fs.
+    D:\github\vunit\vunit\vhdl\core\src\core_pkg.vhd:84:7:@1ns:(report failure): Stop simulation on log level error
+    D:\github\vunit\examples\vhdl\run\vunit_out\test_output\lib.tb_with_watchdog.Test_that_stalling_processes_can_inform_why_6ba460aabb401d0f361e83a852d9cd6842c83baa\ghdl\tb_with_watchdog-tb:error: report failed
+    D:\github\vunit\examples\vhdl\run\vunit_out\test_output\lib.tb_with_watchdog.Test_that_stalling_processes_can_inform_why_6ba460aabb401d0f361e83a852d9cd6842c83baa\ghdl\tb_with_watchdog-tb:error: simulation failed
+    fail (P=1 S=0 F=2 T=4) lib.tb_with_watchdog.Test that stalling processes can inform why they caused a timeout (0.6 seconds)
 
-    Starting lib.tb_with_watchdog.Test to_string for boolean
-    pass (P=1 S=0 F=1 T=2) lib.tb_with_watchdog.Test to_string for boolean (0.3 seconds)
+    Starting lib.tb_with_watchdog.Test timing out with a wait procedure
+    Output file: vunit_out\test_output\lib.tb_with_watchdog.Test_timing_out_with_a_wait_procedure_c79a829a66048f92920fd8a1db7550cce8be1ca0\output.txt
+             1000000 fs - tb_with_watchdog:test_runner -    INFO - Test runner timeout while blocking on wait_until.
+             1000000 fs - runner                       -   ERROR - Test runner timeout after 1000000 fs.
+    D:\github\vunit\vunit\vhdl\core\src\core_pkg.vhd:84:7:@1ns:(report failure): Stop simulation on log level error
+    D:\github\vunit\examples\vhdl\run\vunit_out\test_output\lib.tb_with_watchdog.Test_timing_out_with_a_wait_procedure_c79a829a66048f92920fd8a1db7550cce8be1ca0\ghdl\tb_with_watchdog-tb:error: report failed
+    D:\github\vunit\examples\vhdl\run\vunit_out\test_output\lib.tb_with_watchdog.Test_timing_out_with_a_wait_procedure_c79a829a66048f92920fd8a1db7550cce8be1ca0\ghdl\tb_with_watchdog-tb:error: simulation failed
+    fail (P=1 S=0 F=3 T=4) lib.tb_with_watchdog.Test timing out with a wait procedure (0.6 seconds)    
 
-    ==== Summary ===========================================================
-    pass lib.tb_with_watchdog.Test to_string for boolean     (0.3 seconds)
-    pass lib.tb_with_watchdog.Test that needs longer timeout (0.3 seconds)
-    fail lib.tb_with_watchdog.Test that stalls               (0.3 seconds)
-    ========================================================================
-    pass 1 of 2
-    fail 1 of 2
-    ========================================================================
-    Total time was 0.5 seconds
-    Elapsed time was 0.5 seconds
-    ========================================================================
+    ==== Summary ==================================================================================================
+    pass lib.tb_with_watchdog.Test that needs longer timeout                                    (0.6 seconds)
+    fail lib.tb_with_watchdog.Test that stalls                                                  (0.6 seconds)
+    fail lib.tb_with_watchdog.Test that stalling processes can inform why they caused a timeout (0.6 seconds)
+    fail lib.tb_with_watchdog.Test timing out with a wait procedure                             (0.6 seconds)
+    ===============================================================================================================
+    pass 1 of 4
+    fail 3 of 4
+    ===============================================================================================================
+    Total time was 2.4 seconds
+    Elapsed time was 2.4 seconds
+    ===============================================================================================================
+    Some failed!		
 
 
 What Makes a Test Fail?
@@ -685,3 +727,10 @@ Note On Undocumented Features
 
 VR contains a number of features not documented in this guide. These features are under evaluation and will be
 documented or removed when that evaluation has completed.
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   wait_pkg
+

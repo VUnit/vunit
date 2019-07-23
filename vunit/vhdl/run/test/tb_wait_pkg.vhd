@@ -30,11 +30,14 @@ begin
   test_boolean <= false, false after 500 ps, true after 1000 ps, true after 1400 ps, false after 1500 ps;
   test_vector  <= "00", "00"   after 500 ps, "11" after 1000 ps, "11" after 1400 ps, "00" after 1500 ps;
 
-  select_test_signal : if use_boolean_test_signal generate
+  select_boolean_test_signal: if use_boolean_test_signal generate
     test_signal <= test_boolean;
-  elsif not use_boolean_test_signal generate
+  end generate;
+
+  select_bit_vector_test_signal: if not use_boolean_test_signal generate
     test_signal <= test_vector'stable;
   end generate;
+
   condition <= false, sub_condition after 1200 ps;
 
   main : process
@@ -73,7 +76,7 @@ begin
       check_log(default_logger, "Test runner timeout while blocking on wait_on." & LF &
                 "Condition is false." & LF &
                 time'image(1 ns) & " out of " & time'image(3 ns) & " remaining on local timeout.", info,
-                2 ns, 71, "tb_wait_pkg.vhd");
+                2 ns, 74, "tb_wait_pkg.vhd");
       check_log(runner_trace_logger, "Test runner timeout after " & time'image(2 ns) & ".", error);
       unmock(runner_trace_logger);
       unmock(default_logger);
@@ -86,7 +89,7 @@ begin
       check_log(default_logger, "Test runner timeout while blocking on wait_on." & LF &
                 "Condition is true." & LF &
                 time'image(1 ns) & " out of " & time'image(3 ns) & " remaining on local timeout.", info,
-                2 ns, 84, "tb_wait_pkg.vhd");
+                2 ns, 87, "tb_wait_pkg.vhd");
       check_log(runner_trace_logger, "Test runner timeout after " & time'image(2 ns) & ".", error);
       unmock(runner_trace_logger);
       unmock(default_logger);
@@ -100,7 +103,7 @@ begin
       check_log(my_logger, "Test runner timeout while blocking on wait_on." & LF &
                 "Condition is false." & LF &
                 time'image(1 ns) & " out of " & time'image(3 ns) & " remaining on local timeout.", info,
-                2 ns, 98, "tb_wait_pkg.vhd");
+                2 ns, 101, "tb_wait_pkg.vhd");
       check_log(runner_trace_logger, "Test runner timeout after " & time'image(2 ns) & ".", error);
       unmock(runner_trace_logger);
       unmock(my_logger);
@@ -118,7 +121,7 @@ begin
       check_equal(now - t_start, 2500 ps);
       check_log(my_logger, "Test runner timeout while blocking on wait_on." & LF &
                 time'image(500 ps) & " out of " & time'image(1 ns) & " remaining on local timeout.", info,
-                2 ns, 117, "tb_wait_pkg.vhd");
+                2 ns, 120, "tb_wait_pkg.vhd");
       check_log(runner_trace_logger, "Test runner timeout after " & time'image(2 ns) & ".", error);
       unmock(runner_trace_logger);
       unmock(my_logger);
@@ -132,7 +135,7 @@ begin
       check_equal(now - t_start, 2500 ps);
       check_log(my_logger, "Test runner timeout while blocking on wait_for." & LF &
                 time'image(500 ps) & " out of " & time'image(1500 ps) & " remaining on local timeout.", info,
-                2 ns, 131, "tb_wait_pkg.vhd");
+                2 ns, 134, "tb_wait_pkg.vhd");
       check_log(runner_trace_logger, "Test runner timeout after " & time'image(2 ns) & ".", error);
       unmock(runner_trace_logger);
       unmock(my_logger);
@@ -149,7 +152,7 @@ begin
       check_equal(now - t_start, 2200 ps);
       check_log(my_logger, "Test runner timeout while blocking on wait_until." & LF &
                 time'image(200 ps) & " out of " & time'image(1 ns) & " remaining on local timeout.", info,
-                2 ns, 148, "tb_wait_pkg.vhd");
+                2 ns, 151, "tb_wait_pkg.vhd");
       check_log(runner_trace_logger, "Test runner timeout after " & time'image(2 ns) & ".", error);
       unmock(runner_trace_logger);
       unmock(my_logger);
@@ -161,7 +164,7 @@ begin
       wait_until(condition);
       check_equal(now - t_start, max_timeout);
       check_log(default_logger, "Test runner timeout while blocking on wait_until.", info,
-                2 ns, 161, "tb_wait_pkg.vhd");
+                2 ns, 164, "tb_wait_pkg.vhd");
       check_log(runner_trace_logger, "Test runner timeout after " & time'image(2 ns) & ".", error);
       unmock(runner_trace_logger);
       unmock(default_logger);
