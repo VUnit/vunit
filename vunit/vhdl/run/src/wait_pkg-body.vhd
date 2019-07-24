@@ -10,7 +10,6 @@
 use work.run_pkg.all;
 
 package body wait_pkg is
-
   procedure wait_no_msg(
     signal source    : in    boolean;
     signal condition : in    boolean;
@@ -123,6 +122,78 @@ package body wait_pkg is
            local_timeout_msg(remaining_timeout, timeout),
            line_num => line_num, file_name => file_name);
     end loop;
+  end;
+
+  procedure sense(
+    signal event : inout boolean;
+    signal s1, s2 : in boolean) is
+  begin
+    wait on s1, s2;
+    event <= not event;
+  end;
+
+  procedure sense(
+    signal event : inout boolean;
+    signal s1, s2, s3 : in boolean) is
+  begin
+    wait on s1, s2, s3;
+    event <= not event;
+  end;
+
+  procedure sense(
+    signal event : inout boolean;
+    signal s1, s2, s3, s4 : in boolean) is
+  begin
+    wait on s1, s2, s3, s4;
+    event <= not event;
+  end;
+
+  procedure sense(
+    signal event : inout boolean;
+    signal s1, s2, s3, s4, s5 : in boolean) is
+  begin
+    wait on s1, s2, s3, s4, s5;
+    event <= not event;
+  end;
+
+  procedure sense(
+    signal event : inout boolean;
+    signal s1, s2, s3, s4, s5, s6 : in boolean) is
+  begin
+    wait on s1, s2, s3, s4, s5, s6;
+    event <= not event;
+  end;
+
+  procedure sense(
+    signal event : inout boolean;
+    signal s1, s2, s3, s4, s5, s6, s7 : in boolean) is
+  begin
+    wait on s1, s2, s3, s4, s5, s6, s7;
+    event <= not event;
+  end;
+
+  procedure sense(
+    signal event : inout boolean;
+    signal s1, s2, s3, s4, s5, s6, s7, s8 : in boolean) is
+  begin
+    wait on s1, s2, s3, s4, s5, s6, s7, s8;
+    event <= not event;
+  end;
+
+  procedure sense(
+    signal event : inout boolean;
+    signal s1, s2, s3, s4, s5, s6, s7, s8, s9 : in boolean) is
+  begin
+    wait on s1, s2, s3, s4, s5, s6, s7, s8, s9;
+    event <= not event;
+  end;
+
+  procedure sense(
+    signal event : inout boolean;
+    signal s1, s2, s3, s4, s5, s6, s7, s8, s9, s10 : in boolean) is
+  begin
+    wait on s1, s2, s3, s4, s5, s6, s7, s8, s9, s10;
+    event <= not event;
   end;
 
 end package body;
