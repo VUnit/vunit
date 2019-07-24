@@ -4,27 +4,57 @@
 --
 -- Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
--- This package provides wait procedures that will produce a log entry if they
--- are waiting when the test runner watchdog times out. All procedures are
--- supported by the location preprocessing feature.
+-- This package provides wait procedures that will produce a timeout message
+-- log entry if they are waiting when the test runner watchdog times out.
+-- All procedures are supported by the location preprocessing feature.
 
 use work.logger_pkg.all;
 use work.run_types_pkg.all;
 
 package wait_pkg is
+  -- Represents the timeout message produced when no user message is given. The
+  -- default message provides the status of the wait procedure:
+  --
+  -- * State of the condition signal if given
+  -- * Time remaining on the timeout if specified
+  --
+  -- For example:
+  --
+  -- 2000 ps - default    -    INFO - Test runner timeout while blocking on wait_on.
+  --                                  Condition is false.
+  --                                  1000 ps out of 3000 ps remaining on local timeout.
+  constant default_timeout_msg_tag : string := "@$}";
 
-  -- Equivalent to:
+  -- Creates a user defined timeout message consisting of the wait procedure
+  -- status and the msg parameter. For example:
+  --
+  -- 2000 ps - default    -    INFO - Test runner timeout while blocking on wait_on.
+  --                                  Waiting on checker completion.
+  --                                  Condition is false.
+  --                                  1000 ps out of 3000 ps remaining on local timeout.
+  function timeout_msg(
+    msg : string := "") return string;
+
+  -- This wait_on procedure is equivalent to:
   --
   -- wait on source until condition for timeout;
   --
-  -- The log entry will be done to the logger specified by the parameter with the same name.
+  -- The timeout message is:
+  --
+  -- * The wait procedure status by default
+  -- * The wait procedure status and a user message if the timeout_msg function
+  --   is used
+  -- * The msg string otherwise (no status)
+  --
+  -- The timeout message log entry will be done to the logger specified by the parameter with the same name.
   --
   -- For non-boolean source signals the stable attribute can be used.
   --
-  -- wait on source'stable until condition for timeout;
+  -- wait_on(source'stable, condition, timeout);
   --
   -- source'stable is a boolean signal that is true when the source signal has been stable for more
-  -- than 0 ns, i.e. it will have a delta pulse when there is an event in the source signal.
+  -- than 0 ns, i.e. it will have a delta-sized false pulse when there is an event in the source signal.
+  -- This pulse is the event that will trigger the wait procedure.
   --
   -- To wait on several signals you need to declare an extra boolean event
   -- signal and then call the concurrent sense procedure with your source
@@ -43,84 +73,84 @@ package wait_pkg is
   --   wait_on(event, timeout);
   -- end loop;
   --
-  -- sense and wait_on without a condition signal is declared below
-  --
+  -- sense and wait_on without a condition signal are described below
   procedure wait_on(
     signal source      : in boolean;
     signal condition   : in boolean;
     constant timeout   : in delay_length := max_timeout;
     constant logger    : in logger_t     := default_logger;
+    constant msg       : in string       := default_timeout_msg_tag;
     constant line_num  : in natural      := 0;
     constant file_name : in string       := "");
 
   -- Equivalent to:
   --
   -- wait on source for timeout;
-  --
   procedure wait_on(
     signal source      : in boolean;
     constant timeout   : in delay_length := max_timeout;
     constant logger    : in logger_t     := default_logger;
+    constant msg       : in string       := default_timeout_msg_tag;
     constant line_num  : in natural      := 0;
     constant file_name : in string       := "");
 
   -- Equivalent to:
   --
   -- wait for timeout;
-  --
   procedure wait_for(
     constant timeout   : in delay_length := max_timeout;
     constant logger    : in logger_t     := default_logger;
+    constant msg       : in string       := default_timeout_msg_tag;
     constant line_num  : in natural      := 0;
     constant file_name : in string       := "");
 
   -- Equivalent to:
   --
   -- wait until condition for timeout;
-  --
   procedure wait_until(
     signal condition   : in boolean;
     constant timeout   : in delay_length := max_timeout;
     constant logger    : in logger_t     := default_logger;
+    constant msg       : in string       := default_timeout_msg_tag;
     constant line_num  : in natural      := 0;
     constant file_name : in string       := "");
 
   -- sense toggles the event signal whenever there is an event in any of the
   -- signals sx.
   procedure sense(
-    signal event : inout boolean;
-    signal s1, s2 : in boolean);
+    signal event  : inout boolean;
+    signal s1, s2 : in    boolean);
 
   procedure sense(
-    signal event : inout boolean;
-    signal s1, s2, s3 : in boolean);
+    signal event      : inout boolean;
+    signal s1, s2, s3 : in    boolean);
 
   procedure sense(
-    signal event : inout boolean;
-    signal s1, s2, s3, s4 : in boolean);
+    signal event          : inout boolean;
+    signal s1, s2, s3, s4 : in    boolean);
 
   procedure sense(
-    signal event : inout boolean;
-    signal s1, s2, s3, s4, s5 : in boolean);
+    signal event              : inout boolean;
+    signal s1, s2, s3, s4, s5 : in    boolean);
 
   procedure sense(
-    signal event : inout boolean;
-    signal s1, s2, s3, s4, s5, s6 : in boolean);
+    signal event                  : inout boolean;
+    signal s1, s2, s3, s4, s5, s6 : in    boolean);
 
   procedure sense(
-    signal event : inout boolean;
-    signal s1, s2, s3, s4, s5, s6, s7 : in boolean);
+    signal event                      : inout boolean;
+    signal s1, s2, s3, s4, s5, s6, s7 : in    boolean);
 
   procedure sense(
-    signal event : inout boolean;
-    signal s1, s2, s3, s4, s5, s6, s7, s8 : in boolean);
+    signal event                          : inout boolean;
+    signal s1, s2, s3, s4, s5, s6, s7, s8 : in    boolean);
 
   procedure sense(
-    signal event : inout boolean;
-    signal s1, s2, s3, s4, s5, s6, s7, s8, s9 : in boolean);
+    signal event                              : inout boolean;
+    signal s1, s2, s3, s4, s5, s6, s7, s8, s9 : in    boolean);
 
   procedure sense(
-    signal event : inout boolean;
-    signal s1, s2, s3, s4, s5, s6, s7, s8, s9, s10 : in boolean);
+    signal event                                   : inout boolean;
+    signal s1, s2, s3, s4, s5, s6, s7, s8, s9, s10 : in    boolean);
 
 end package;

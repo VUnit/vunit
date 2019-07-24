@@ -139,6 +139,32 @@ begin
       end loop;
       check_equal(now - t_start, 1200 ps);
 
+    elsif run("Test wait_on with custom message") then
+      mock(runner_trace_logger, error);
+      mock(default_logger, info);
+      sub_condition <= false;
+      wait_on(test_signal, condition, 3 ns, msg => "Waiting on test_signal.");
+      check_equal(now - t_start, 3 ns);
+      check_log(default_logger, "Waiting on test_signal.", info, 2 ns, 146, "tb_wait_pkg.vhd");
+      check_log(runner_trace_logger, "Test runner timeout after " & time'image(2 ns) & ".", error);
+      unmock(runner_trace_logger);
+      unmock(default_logger);
+
+    elsif run("Test wait_on with decorated custom message") then
+      mock(runner_trace_logger, error);
+      mock(default_logger, info);
+      sub_condition <= false;
+      wait_on(test_signal, condition, 3 ns, msg => timeout_msg("Waiting on test_signal."));
+      check_equal(now - t_start, 3 ns);
+      check_log(default_logger, "Test runner timeout while blocking on wait_on." & LF &
+                "Waiting on test_signal." & LF &
+                "Condition is false." & LF &
+                time'image(1 ns) & " out of " & time'image(3 ns) & " remaining on local timeout.", info,
+                2 ns, 157, "tb_wait_pkg.vhd");
+      check_log(runner_trace_logger, "Test runner timeout after " & time'image(2 ns) & ".", error);
+      unmock(runner_trace_logger);
+      unmock(default_logger);
+
     elsif run("Test wait_for") then
       mock(runner_trace_logger, error);
       mock(my_logger, info);
@@ -148,7 +174,7 @@ begin
       check_equal(now - t_start, 2500 ps);
       check_log(my_logger, "Test runner timeout while blocking on wait_for." & LF &
                 time'image(500 ps) & " out of " & time'image(1500 ps) & " remaining on local timeout.", info,
-                2 ns, 147, "tb_wait_pkg.vhd");
+                2 ns, 173, "tb_wait_pkg.vhd");
       check_log(runner_trace_logger, "Test runner timeout after " & time'image(2 ns) & ".", error);
       unmock(runner_trace_logger);
       unmock(my_logger);
@@ -165,7 +191,7 @@ begin
       check_equal(now - t_start, 2200 ps);
       check_log(my_logger, "Test runner timeout while blocking on wait_until." & LF &
                 time'image(200 ps) & " out of " & time'image(1 ns) & " remaining on local timeout.", info,
-                2 ns, 164, "tb_wait_pkg.vhd");
+                2 ns, 190, "tb_wait_pkg.vhd");
       check_log(runner_trace_logger, "Test runner timeout after " & time'image(2 ns) & ".", error);
       unmock(runner_trace_logger);
       unmock(my_logger);
@@ -177,7 +203,7 @@ begin
       wait_until(condition);
       check_equal(now - t_start, max_timeout);
       check_log(default_logger, "Test runner timeout while blocking on wait_until.", info,
-                2 ns, 177, "tb_wait_pkg.vhd");
+                2 ns, 203, "tb_wait_pkg.vhd");
       check_log(runner_trace_logger, "Test runner timeout after " & time'image(2 ns) & ".", error);
       unmock(runner_trace_logger);
       unmock(default_logger);
