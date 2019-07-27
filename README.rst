@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/vunit/vunit.svg?branch=master)](https://travis-ci.org/vunit/vunit)
+
+
 What is VUnit?
 ==============
 
