@@ -5,11 +5,10 @@
 # Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
 """
-SystemVerilog User Guide
+SystemVerilog parameterized example
 ------------------------
 
-The most minimal VUnit SystemVerilog project covering the basics of
-the :ref:`User Guide <user_guide>`.
+The VUnit SystemVerilog project parameterized Test Example.
 """
 
 from os.path import join, dirname
