@@ -50,7 +50,7 @@ module tb_param_example;
          $display("Set NUMBER is %0d",NUMBER);
          $display("------------------------------");
       end
-      
+
       `TEST_CASE_CLEANUP begin
          // This section will run after the end of a test case. In
          // many cases this section will not be needed.
