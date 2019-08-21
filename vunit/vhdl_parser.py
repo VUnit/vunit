@@ -988,7 +988,7 @@ class VHDLReference(object):
         return self.name_within == "all"
 
 
-VHDL_REMOVE_COMMENT_RE = re.compile(r'^([^\"\-]*(?:\"[^\"]*\"[^\"\-]*)*)--.*')
+VHDL_REMOVE_COMMENT_RE = re.compile(r'^([^\"\-]*(?:\"(?:\"\"|[^\"])*\"[^\"\-]*)*)--.*', re.MULTILINE)
 
 
 def _comment_repl(match):
