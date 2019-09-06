@@ -12,7 +12,6 @@
 Verilog preprocessing
 """
 
-from __future__ import print_function
 from vunit.parsing.tokenizer import Tokenizer, Token
 from vunit.parsing.verilog.tokens import *
 

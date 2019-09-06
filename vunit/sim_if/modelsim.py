@@ -8,8 +8,6 @@
 Interface towards Mentor Graphics ModelSim
 """
 
-from __future__ import print_function
-
 from os.path import join, dirname, abspath
 import os
 import logging

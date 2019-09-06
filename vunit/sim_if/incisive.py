@@ -8,8 +8,6 @@
 Interface for the Cadence Incisive simulator
 """
 
-from __future__ import print_function
-
 from os.path import join, dirname, abspath, relpath
 import os
 import subprocess

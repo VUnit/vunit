@@ -8,8 +8,6 @@
 Create monolithic release notes file from several input files
 """
 
-from __future__ import print_function
-
 from os.path import join, dirname, basename, splitext, relpath
 from glob import glob
 from subprocess import check_output, CalledProcessError

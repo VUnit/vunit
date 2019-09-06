@@ -10,7 +10,6 @@
 Acceptance test of the VUnit public interface class
 """
 
-from __future__ import print_function
 import unittest
 from string import Template
 import os

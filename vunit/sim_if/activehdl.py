@@ -8,9 +8,7 @@
 Interface towards Aldec Active HDL
 """
 
-from __future__ import print_function
 from functools import total_ordering
-
 from os.path import join, dirname, abspath
 import os
 import re

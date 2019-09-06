@@ -8,7 +8,6 @@
 Check that the Python version used is supported by VUnit
 """
 
-from __future__ import print_function
 import sys
 
 

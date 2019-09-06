@@ -8,8 +8,6 @@
 Provided functionality to run a suite of test in a robust way
 """
 
-from __future__ import print_function
-
 import os
 from os.path import join, exists, abspath, basename, relpath
 import traceback

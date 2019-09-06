@@ -8,7 +8,6 @@
 A persistent TCL shell to avoid startup overhead in TCL-based simulators
 """
 
-from __future__ import print_function
 import threading
 import logging
 from vunit.ostools import Process

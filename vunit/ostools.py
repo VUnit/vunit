@@ -10,8 +10,6 @@ stubbed for testing
 """
 
 
-from __future__ import print_function
-
 import time
 import subprocess
 import threading
@@ -254,11 +252,7 @@ class AsynchronousFileReader(threading.Thread):
     def __init__(self, fd, queue, encoding="utf-8"):
         threading.Thread.__init__(self)
 
-        # If Python 3 change encoding of TextIOWrapper to utf-8 ignoring decode errors
-        if isinstance(fd, io.TextIOWrapper):
-            fd = io.TextIOWrapper(fd.buffer, encoding=encoding, errors="ignore")
-
-        self._fd = fd
+        self._fd = io.TextIOWrapper(fd.buffer, encoding=encoding, errors="ignore")
         self._queue = queue
         self._encoding = encoding
 

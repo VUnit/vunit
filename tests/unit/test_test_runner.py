@@ -8,8 +8,6 @@
 Test the test runner
 """
 
-from __future__ import print_function
-
 import unittest
 from os.path import join, abspath
 
