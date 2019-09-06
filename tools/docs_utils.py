@@ -8,9 +8,11 @@
 Helper functions to generate examples.rst from docstrings in run.py files
 """
 
+from __future__ import print_function
+
 import sys
 import inspect
-from os.path import join, dirname, isdir
+from os.path import basename, dirname, isdir, isfile, join
 from os import listdir
 
 
@@ -38,16 +40,23 @@ def examples():
         for item in listdir(join(eg_path, subdir)):
             loc = join(eg_path, subdir, item)
             if isdir(loc):
-                egs_fptr.write(_get_eg_doc(
+                _data = _get_eg_doc(
                     loc,
                     'https://github.com/VUnit/vunit/tree/master/examples/%s/%s' % (subdir, item)
-                ))
+                )
+                if _data:
+                    egs_fptr.write(_data)
 
 
 def _get_eg_doc(location, ref):
     """
     Reads the docstring from a run.py file and rewrites the title to make it a ref
     """
+    if not isfile(join(location, 'run.py')):
+        print("Example subdir '" + basename(location) + "' does not contain a 'run.py' file. Skipping...")
+        return None
+
+    print("Extracting docs from '" + basename(location) + "'...")
     sys.path.append(location)
     import run  # pylint: disable=import-error
     vc_doc = inspect.getdoc(run)
