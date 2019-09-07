@@ -6,8 +6,6 @@ environment:
 
     # For Python versions available on Appveyor, see
     # http://www.appveyor.com/docs/installed-software#python
-    # The list here is complete (excluding Python 2.6, which
-    # isn't covered by this document) at the time of writing.
 
     - BUILD_NAME: py27-unit
       PYTHON: "C:\\Python27"
@@ -17,25 +15,26 @@ environment:
       PYTHON: "C:\\Python35"
     - BUILD_NAME: py36-unit
       PYTHON: "C:\\Python36"
+    - BUILD_NAME: py37-unit
+      PYTHON: "C:\\Python37"
 
     - BUILD_NAME: py27-lint
       PYTHON: "C:\\Python27"
-    - BUILD_NAME: py36-lint
-      PYTHON: "C:\\Python36"
+    - BUILD_NAME: py37-lint
+      PYTHON: "C:\\Python37"
 
     - BUILD_NAME: py27-docs
       PYTHON: "C:\\Python27"
-    - BUILD_NAME: py36-docs
-      PYTHON: "C:\\Python36"
+    - BUILD_NAME: py37-docs
+      PYTHON: "C:\\Python37"
 
     - BUILD_NAME: py27-acceptance-ghdl
       PYTHON: "C:\\Python27"
+    - BUILD_NAME: py37-acceptance-ghdl
+      PYTHON: "C:\\Python37"
 
-    - BUILD_NAME: py36-acceptance-ghdl
-      PYTHON: "C:\\Python36"
-
-    - BUILD_NAME: py36-vcomponents-ghdl
-      PYTHON: "C:\\Python36"
+    - BUILD_NAME: py37-vcomponents-ghdl
+      PYTHON: "C:\\Python37"
 
 install:
   - "git submodule update --init --recursive"
