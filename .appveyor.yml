@@ -40,11 +40,13 @@ environment:
 install:
   - "git submodule update --init --recursive"
   - "%PYTHON%\\python.exe -m pip install -U pip"
-  - "%PYTHON%\\python.exe -m pip install -U virtualenv"  
+  - "%PYTHON%\\python.exe -m pip install -U virtualenv"
   - "%PYTHON%\\python.exe -m pip install tox"
-  - "curl -fsSL -o ghdl.zip https://github.com/tgingold/ghdl/releases/download/v0.35/ghdl-0.35-mingw32-mcode.zip"
+  - "curl -fsSL -o ghdl.zip https://github.com/ghdl/ghdl/releases/download/v0.36/ghdl-0.36-mingw32-mcode.zip"
   - "7z x ghdl.zip -o../ghdl -y"
-  - "set PATH=%PATH%;../ghdl/GHDL/v0.35-mingw32-mcode/bin"
+  - "mv ../ghdl/GHDL/0.36-mingw32-mcode/ ../ghdl-v0.36"
+  - "rm -rf ../ghdl ghdl.zip"
+  - "set PATH=%PATH%;../ghdl-v0.36/bin"
 
 build: off
 
