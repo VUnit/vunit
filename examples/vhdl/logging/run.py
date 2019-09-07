@@ -14,9 +14,9 @@ Demonstrates VUnit's support for logging.
 from os.path import join, dirname
 from vunit import VUnit
 
-ui = VUnit.from_argv()
-lib = ui.add_library("lib")
-lib.add_source_files(join(dirname(__file__), "*.vhd"))
-
 if __name__ == '__main__':
+    ui = VUnit.from_argv()
+    lib = ui.add_library("lib")
+    lib.add_source_files(join(dirname(__file__), "*.vhd"))
+
     ui.main()

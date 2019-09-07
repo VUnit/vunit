@@ -14,24 +14,24 @@ See `Enable Your Simulator to Handle Complex Top-Level Generics <https://vunit.g
 from os.path import join, dirname
 from vunit import VUnit
 
-prj = VUnit.from_argv()
-
-tb_lib = prj.add_library('tb_lib')
-tb_lib.add_source_files(join(dirname(__file__), 'test', '*.vhd'))
-
-testbench = tb_lib.test_bench("tb_composite_generics")
-test_1 = testbench.test("Test 1")
-
-
-def encode(tb_cfg):
-    return ", ".join(["%s:%s" % (key, str(tb_cfg[key])) for key in tb_cfg])
-
-
-vga_tb_cfg = dict(image_width=640, image_height=480, dump_debug_data=False)
-test_1.add_config(name='VGA', generics=dict(encoded_tb_cfg=encode(vga_tb_cfg)))
-
-tiny_tb_cfg = dict(image_width=4, image_height=3, dump_debug_data=True)
-test_1.add_config(name='tiny', generics=dict(encoded_tb_cfg=encode(tiny_tb_cfg)))
-
 if __name__ == '__main__':
+    prj = VUnit.from_argv()
+
+    tb_lib = prj.add_library('tb_lib')
+    tb_lib.add_source_files(join(dirname(__file__), 'test', '*.vhd'))
+
+    testbench = tb_lib.test_bench("tb_composite_generics")
+    test_1 = testbench.test("Test 1")
+
+
+    def encode(tb_cfg):
+        return ", ".join(["%s:%s" % (key, str(tb_cfg[key])) for key in tb_cfg])
+
+
+    vga_tb_cfg = dict(image_width=640, image_height=480, dump_debug_data=False)
+    test_1.add_config(name='VGA', generics=dict(encoded_tb_cfg=encode(vga_tb_cfg)))
+
+    tiny_tb_cfg = dict(image_width=4, image_height=3, dump_debug_data=True)
+    test_1.add_config(name='tiny', generics=dict(encoded_tb_cfg=encode(tiny_tb_cfg)))
+
     prj.main()

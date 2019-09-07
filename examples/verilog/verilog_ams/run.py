@@ -9,10 +9,10 @@ from vunit.verilog import VUnit
 
 root = dirname(__file__)
 
-ui = VUnit.from_argv()
-lib = ui.add_library("lib")
-lib.add_source_files(join(root, "*.sv"))
-lib.add_source_files(join(root, "*.vams")).set_compile_option("modelsim.vlog_flags", ["-ams"])
-
 if __name__ == '__main__':
+    ui = VUnit.from_argv()
+    lib = ui.add_library("lib")
+    lib.add_source_files(join(root, "*.sv"))
+    lib.add_source_files(join(root, "*.vams")).set_compile_option("modelsim.vlog_flags", ["-ams"])
+
     ui.main()

@@ -18,12 +18,12 @@ from vunit import VUnit
 
 root = dirname(__file__)
 
-ui = VUnit.from_argv()
-ui.add_osvvm()
-ui.add_array_util()
-lib = ui.add_library("lib")
-lib.add_source_files(join(root, "src", "*.vhd"))
-lib.add_source_files(join(root, "src", "test", "*.vhd"))
-
 if __name__ == '__main__':
+    ui = VUnit.from_argv()
+    ui.add_osvvm()
+    ui.add_array_util()
+    lib = ui.add_library("lib")
+    lib.add_source_files(join(root, "src", "*.vhd"))
+    lib.add_source_files(join(root, "src", "test", "*.vhd"))
+
     ui.main()

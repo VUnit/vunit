@@ -15,15 +15,16 @@ usage on a typical module.
 from os.path import join, dirname
 from vunit.verilog import VUnit
 
-ui = VUnit.from_argv()
-
-src_path = join(dirname(__file__), "src")
-
-uart_lib = ui.add_library("uart_lib")
-uart_lib.add_source_files(join(src_path, "*.sv"))
-
-tb_uart_lib = ui.add_library("tb_uart_lib")
-tb_uart_lib.add_source_files(join(src_path, "test", "*.sv"))
 
 if __name__ == '__main__':
+    ui = VUnit.from_argv()
+
+    src_path = join(dirname(__file__), "src")
+
+    uart_lib = ui.add_library("uart_lib")
+    uart_lib.add_source_files(join(src_path, "*.sv"))
+
+    tb_uart_lib = ui.add_library("tb_uart_lib")
+    tb_uart_lib.add_source_files(join(src_path, "test", "*.sv"))
+
     ui.main()
