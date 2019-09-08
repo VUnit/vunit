@@ -982,6 +982,6 @@ def check_vhdl_standard(vhdl_standard, from_str=None):
     else:
         from_str += " "
 
-    valid_standards = ('93', '2002', '2008')
+    valid_standards = ('93', '2002', '2008', '2019')
     if vhdl_standard not in valid_standards:
         raise ValueError("Unknown VHDL standard '%s' %snot one of %r" % (vhdl_standard, from_str, valid_standards))

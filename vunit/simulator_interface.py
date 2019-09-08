@@ -50,9 +50,9 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         """
 
     @staticmethod
-    def supports_vhdl_2008_contexts():
+    def supports_vhdl_contexts():
         """
-        Returns True when this simulator supports VHDL 2008 contexts
+        Returns True when this simulator supports VHDL contexts
         """
         return True
 
@@ -348,6 +348,7 @@ class ListOfStringOption(Option):
     """
     Must be a list of strings
     """
+
     def validate(self, value):
         def fail():
             raise ValueError("Option %r must be a list of strings. Got %r"

@@ -26,13 +26,13 @@ class TestActiveHDLInterface(unittest.TestCase):
 
     @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
     @mock.patch("vunit.activehdl_interface.Process", autospec=True)
-    def test_compile_project_vhdl(self, process, check_output):
+    def test_compile_project_vhdl_2008(self, process, check_output):
         simif = ActiveHDLInterface(prefix="prefix",
                                    output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.vhd", "")
-        project.add_source_file("file.vhd", "lib", file_type="vhdl")
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="2008")
         simif.compile_project(project)
         process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"],
                                 cwd=self.output_path,
@@ -46,6 +46,60 @@ class TestActiveHDLInterface(unittest.TestCase):
              '-j',
              self.output_path,
              '-2008',
+             '-work',
+             'lib',
+             'file.vhd'],
+            env=simif.get_env())
+
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
+    @mock.patch("vunit.activehdl_interface.Process", autospec=True)
+    def test_compile_project_vhdl_2002(self, process, check_output):
+        simif = ActiveHDLInterface(prefix="prefix",
+                                   output_path=self.output_path)
+        project = Project()
+        project.add_library("lib", "lib_path")
+        write_file("file.vhd", "")
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="2002")
+        simif.compile_project(project)
+        process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"],
+                                cwd=self.output_path,
+                                env=simif.get_env())
+        process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"],
+                                   cwd=self.output_path,
+                                   env=simif.get_env())
+        check_output.assert_called_once_with(
+            [join('prefix', 'vcom'),
+             '-quiet',
+             '-j',
+             self.output_path,
+             '-2002',
+             '-work',
+             'lib',
+             'file.vhd'],
+            env=simif.get_env())
+
+    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
+    @mock.patch("vunit.activehdl_interface.Process", autospec=True)
+    def test_compile_project_vhdl_93(self, process, check_output):
+        simif = ActiveHDLInterface(prefix="prefix",
+                                   output_path=self.output_path)
+        project = Project()
+        project.add_library("lib", "lib_path")
+        write_file("file.vhd", "")
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="93")
+        simif.compile_project(project)
+        process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"],
+                                cwd=self.output_path,
+                                env=simif.get_env())
+        process.assert_called_with([join("prefix", "vmap"), "lib", "lib_path"],
+                                   cwd=self.output_path,
+                                   env=simif.get_env())
+        check_output.assert_called_once_with(
+            [join('prefix', 'vcom'),
+             '-quiet',
+             '-j',
+             self.output_path,
+             '-93',
              '-work',
              'lib',
              'file.vhd'],

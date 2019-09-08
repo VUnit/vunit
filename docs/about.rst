@@ -70,6 +70,7 @@ Languages
 -  VHDL-93
 -  VHDL-2002
 -  VHDL-2008
+-  VHDL-2019
 -  Verilog
 -  SystemVerilog (Support is experimental)
 

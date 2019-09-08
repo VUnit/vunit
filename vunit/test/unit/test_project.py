@@ -1349,7 +1349,7 @@ end architecture;
     def test_add_source_file_has_vhdl_standard(self):
         write_file("file.vhd", "")
 
-        for std in ('93', '2002', '2008'):
+        for std in ('93', '2002', '2008', '2019'):
             project = Project()
             project.add_library("lib", "lib_path")
             source_file = project.add_source_file("file.vhd",

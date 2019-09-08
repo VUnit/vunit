@@ -43,6 +43,7 @@ class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes
     """
     Contains VHDL objects found within a file
     """
+
     def __init__(self,  # pylint: disable=too-many-arguments
                  entities=None,
                  packages=None,
@@ -93,6 +94,7 @@ class VHDLPackageBody(object):
     """
     Representation of a VHDL package body
     """
+
     def __init__(self, identifier):
         self.identifier = identifier
 
@@ -121,6 +123,7 @@ class VHDLConfiguration(object):
     """
     A configuratio declaration
     """
+
     def __init__(self, identifier, entity):
         self.identifier = identifier
         self.entity = entity
@@ -151,6 +154,7 @@ class VHDLArchitecture(object):
     """
     Representation of a VHDL architecture
     """
+
     def __init__(self, identifier, entity):
         self.identifier = identifier
         self.entity = entity
@@ -187,6 +191,7 @@ class VHDLPackage(object):
     """
     Representation of a VHDL package
     """
+
     def __init__(self, identifier,
                  enumeration_types, record_types, array_types):
         self.identifier = identifier
@@ -264,6 +269,7 @@ class VHDLEntity(object):
     """
     Represents a VHDL Entity
     """
+
     def __init__(self, identifier, generics=None, ports=None):
         self.identifier = identifier
 
@@ -495,8 +501,9 @@ class VHDLEntity(object):
 
 class VHDLContext(object):
     """
-    Represents a VHDL 2008 context
+    Represents a VHDL context
     """
+
     def __init__(self, identifier):
         self.identifier = identifier
 
@@ -523,6 +530,7 @@ class VHDLSubtypeIndication(object):
     """
     Represents a VHDL subtype indication
     """
+
     def __init__(self, code, type_mark, constraint, array_type):
         self.code = code
         self.type_mark = type_mark
@@ -558,6 +566,7 @@ class VHDLInterfaceElement(object):
     """
     Represents a VHDL interface element
     """
+
     def __init__(self, identifier, subtype_indication, mode=None, init_value=None):
         self.identifier = identifier
         self.mode = mode
@@ -628,6 +637,7 @@ class VHDLInterfaceElement(object):
 
 class VHDLEnumerationType(object):
     """Represents a VHDL enumeration type"""
+
     def __init__(self, identifier, literals):
         self.identifier = identifier
         self.literals = literals
@@ -657,6 +667,7 @@ class VHDLEnumerationType(object):
 
 class VHDLElementDeclaration(object):
     """Represents a VHDL element declaration"""
+
     def __init__(self, identifier_list, subtype_indication):
         self.identifier_list = identifier_list
         self.subtype_indication = subtype_indication
@@ -664,6 +675,7 @@ class VHDLElementDeclaration(object):
 
 class VHDLRecordType(object):
     """Represents a VHDL record type"""
+
     def __init__(self, identifier, elements):
         self.identifier = identifier
         self.elements = elements
@@ -699,6 +711,7 @@ class VHDLRecordType(object):
 
 class VHDLRange(object):
     """Represents a VHDL Range"""
+
     def __init__(self, range_type=None, left=None, right=None, attribute=None):
         self.range_type = range_type
         self.left = left
@@ -708,6 +721,7 @@ class VHDLRange(object):
 
 class VHDLArrayType(object):
     """Represents a VHDL array type"""
+
     def __init__(self, identifier, subtype_indication, range1, range2):
         self.identifier = identifier
         self.subtype_indication = subtype_indication

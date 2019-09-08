@@ -9,10 +9,10 @@ use ieee.fixed_pkg.all;
 use ieee.float_pkg.all;
 
 use work.queue_pkg.all;
-use work.codec_2008_pkg.all;
-use work.codec_builder_2008_pkg.all;
+use work.codec_2008p_pkg.all;
+use work.codec_builder_2008p_pkg.all;
 
-package queue_2008_pkg is
+package queue_2008p_pkg is
   procedure push (
     queue : queue_t;
     value : boolean_vector
@@ -98,7 +98,7 @@ package queue_2008_pkg is
   alias pop_float is pop[queue_t return float];
 end package;
 
-package body queue_2008_pkg is
+package body queue_2008p_pkg is
   procedure push (
     queue : queue_t;
     value : boolean_vector

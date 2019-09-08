@@ -50,7 +50,7 @@ library vunit_lib;
 use vunit_lib.string_ops.all;
 context vunit_lib.com_context;
 use vunit_lib.queue_pkg.all;
-use vunit_lib.queue_2008_pkg.all;
+use vunit_lib.queue_2008p_pkg.all;
 
 use std.textio.all;
 

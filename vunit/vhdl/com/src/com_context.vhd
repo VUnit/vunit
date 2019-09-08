@@ -9,10 +9,10 @@ context com_context is
   use vunit_lib.com_pkg.all;
   use vunit_lib.com_types_pkg.all;
   use vunit_lib.codec_pkg.all;
-  use vunit_lib.codec_2008_pkg.all;
+  use vunit_lib.codec_2008p_pkg.all;
   use vunit_lib.com_string_pkg.all;
   use vunit_lib.codec_builder_pkg.all;
-  use vunit_lib.codec_builder_2008_pkg.all;
+  use vunit_lib.codec_builder_2008p_pkg.all;
   use vunit_lib.com_debug_codec_builder_pkg.all;
   use vunit_lib.com_deprecated_pkg.all;
   use vunit_lib.com_common_pkg.all;

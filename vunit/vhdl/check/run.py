@@ -26,7 +26,7 @@ logging_tb_lib = ui.add_library('logging_tb_lib')
 logging_tb_lib.add_source_files(join(ROOT, "vunit", "vhdl", "logging", "test", "test_support_pkg.vhd"))
 
 for file_name in glob(join(ROOT, "vunit", "vhdl", "check", "test", "tb_*.vhd")):
-    if ui.vhdl_standard != '2008' and file_name.endswith("2008.vhd"):
+    if ui.vhdl_standard not in ['2008', '2019'] and file_name.endswith("2008p.vhd"):
         continue
 
     if basename(file_name).startswith("tb_check_relation"):

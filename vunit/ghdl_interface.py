@@ -99,7 +99,7 @@ class GHDLInterface(SimulatorInterface):
         """
         Return if the simulation should fail with nonzero exit codes
         """
-        return self._vhdl_standard == "2008"
+        return self._vhdl_standard in ["2008", "2019"]
 
     @classmethod
     def determine_backend(cls, prefix):

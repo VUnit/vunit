@@ -75,7 +75,7 @@ class IncisiveInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         return cls.find_toolchain(['irun'])
 
     @staticmethod
-    def supports_vhdl_2008_contexts():
+    def supports_vhdl_contexts():
         """
         Returns True when this simulator supports VHDL 2008 contexts
         """
