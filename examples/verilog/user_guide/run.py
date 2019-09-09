@@ -17,9 +17,8 @@ from vunit.verilog import VUnit
 
 root = dirname(__file__)
 
-if __name__ == '__main__':
-    ui = VUnit.from_argv()
-    lib = ui.add_library("lib")
-    lib.add_source_files(join(root, "*.sv"))
+vu = VUnit.from_argv()
+lib = vu.add_library("lib")
+lib.add_source_files(join(root, "*.sv"))
 
-    ui.main()
+vu.main()

@@ -17,20 +17,17 @@ from vunit import VUnit
 from vivado_util import add_vivado_ip
 
 root = dirname(__file__)
+src_path = join(root, "src")
 
-if __name__ == '__main__':
-    ui = VUnit.from_argv()
+vu = VUnit.from_argv()
 
-    src_path = join(root, "src")
+vu.add_library("lib").add_source_files(join(src_path, "*.vhd"))
+vu.add_library("tb_lib").add_source_files(join(src_path, "test", "*.vhd"))
 
-    lib = ui.add_library("lib")
-    lib.add_source_files(join(src_path, "*.vhd"))
+add_vivado_ip(
+    vu,
+    output_path=join(root, "vivado_libs"),
+    project_file=join(root, "myproject", "myproject.xpr")
+)
 
-    tb_lib = ui.add_library("tb_lib")
-    tb_lib.add_source_files(join(src_path, "test", "*.vhd"))
-
-    add_vivado_ip(ui,
-                  output_path=join(root, "vivado_libs"),
-                  project_file=join(root, "myproject", "myproject.xpr"))
-
-    ui.main()
+vu.main()

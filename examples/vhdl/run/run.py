@@ -16,11 +16,11 @@ from vunit import VUnit
 
 root = dirname(__file__)
 
-if __name__ == '__main__':
-    ui = VUnit.from_argv()
-    lib = ui.add_library("lib")
-    lib.add_source_files(join(root, "*.vhd"))
-    tb_with_lower_level_control = lib.entity("tb_with_lower_level_control")
-    tb_with_lower_level_control.scan_tests_from_file(join(root, "test_control.vhd"))
+vu = VUnit.from_argv()
 
-    ui.main()
+lib = vu.add_library("lib")
+lib.add_source_files(join(root, "*.vhd"))
+tb_with_lower_level_control = lib.entity("tb_with_lower_level_control")
+tb_with_lower_level_control.scan_tests_from_file(join(root, "test_control.vhd"))
+
+vu.main()

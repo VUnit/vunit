@@ -7,12 +7,6 @@
 from os.path import join, dirname
 from vunit import VUnit
 
-root = dirname(__file__)
-
-if __name__ == '__main__':
-    ui = VUnit.from_argv()
-
-    lib = ui.add_library("lib")
-    lib.add_source_files(join(root, 'test', '*.vhd'))
-
-    ui.main()
+vu = VUnit.from_argv()
+vu.add_library("lib").add_source_files(join(dirname(__file__), 'test', '*.vhd'))
+vu.main()

@@ -54,32 +54,33 @@ def generate_tests(obj, signs, data_widths):
         config_name = "data_width=%i,sign=%s" % (data_width, sign)
 
         # Add the configuration with a post check function to verify the output
-        obj.add_config(name=config_name,
-                       generics=dict(
-                           data_width=data_width,
-                           sign=sign),
-                       post_check=make_post_check(data_width, sign))
+        obj.add_config(
+            name=config_name,
+            generics=dict(
+                data_width=data_width,
+                sign=sign),
+            post_check=make_post_check(data_width, sign)
+        )
 
 
 test_path = join(dirname(__file__), "test")
 
-if __name__ == '__main__':
-    ui = VUnit.from_argv()
-    lib = ui.add_library("lib")
-    lib.add_source_files(join(test_path, "*.vhd"))
+vu = VUnit.from_argv()
+lib = vu.add_library("lib")
+lib.add_source_files(join(test_path, "*.vhd"))
 
-    tb_generated = lib.test_bench("tb_generated")
+tb_generated = lib.test_bench("tb_generated")
 
-    # Just set a generic for all configurations within the test bench
-    tb_generated.set_generic("message", "set-for-entity")
+# Just set a generic for all configurations within the test bench
+tb_generated.set_generic("message", "set-for-entity")
 
-    for test in tb_generated.get_tests():
-        if test.name == "Test 2":
-            # Test 2 should only be run with signed width of 16
-            generate_tests(test, [True], [16])
-            test.set_generic("message", "set-for-test")
-        else:
-            # Run all other tests with signed/unsigned and data width in range [1,5[
-            generate_tests(test, [False, True], range(1, 5))
+for test in tb_generated.get_tests():
+    if test.name == "Test 2":
+        # Test 2 should only be run with signed width of 16
+        generate_tests(test, [True], [16])
+        test.set_generic("message", "set-for-test")
+    else:
+        # Run all other tests with signed/unsigned and data width in range [1,5[
+        generate_tests(test, [False, True], range(1, 5))
 
-    ui.main()
+vu.main()

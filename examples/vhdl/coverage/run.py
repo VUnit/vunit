@@ -7,20 +7,20 @@
 from os.path import join, dirname
 from vunit import VUnit
 
-root = dirname(__file__)
 
-if __name__ == '__main__':
-    ui = VUnit.from_argv()
-    lib = ui.add_library("lib")
-    lib.add_source_files(join(root, "*.vhd"))
+def post_run(results):
+    results.merge_coverage(file_name="coverage_data")
 
-    lib.set_compile_option("rivierapro.vcom_flags", ["-coverage", "bs"])
-    lib.set_compile_option("rivierapro.vlog_flags", ["-coverage", "bs"])
-    lib.set_compile_option("modelsim.vcom_flags", ["+cover=bs"])
-    lib.set_compile_option("modelsim.vlog_flags", ["+cover=bs"])
-    lib.set_sim_option("enable_coverage", True)
 
-    def post_run(results):
-        results.merge_coverage(file_name="coverage_data")
+vu = VUnit.from_argv()
 
-    ui.main(post_run=post_run)
+lib = vu.add_library("lib")
+lib.add_source_files(join(dirname(__file__), "*.vhd"))
+
+lib.set_compile_option("rivierapro.vcom_flags", ["-coverage", "bs"])
+lib.set_compile_option("rivierapro.vlog_flags", ["-coverage", "bs"])
+lib.set_compile_option("modelsim.vcom_flags", ["+cover=bs"])
+lib.set_compile_option("modelsim.vlog_flags", ["+cover=bs"])
+lib.set_sim_option("enable_coverage", True)
+
+vu.main(post_run=post_run)
