@@ -1,0 +1,44 @@
+name: 'images'
+
+on:
+  push:
+    paths:
+      - '.github/workflows/images.yml'
+      - '.github/images.sh'
+  schedule:
+    - cron: '0 0 * * 5'
+
+env:
+  DOCKER_BUILDKIT: '1'
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        task: [
+          { tag: llvm,    pyver: 3, tgt: llvm,  pkg: llvm-7 },
+          { tag: mcode,   pyver: 3, tgt: mcode, pkg: mcode  },
+          { tag: mcode-2, pyver: 2, tgt: mcode, pkg: mcode  },
+        ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Run job
+      env:
+        TAG:   ${{ matrix.task.tag }}
+        PYVER: ${{ matrix.task.pyver }}
+        TGT:   ${{ matrix.task.tgt }}
+        PKG:   ${{ matrix.task.pkg }}
+      run: |
+        ./.github/images.sh
+    - name: Deploy to hub.docker.com
+      env:
+        DOCKER_USER: ${{ secrets.DOCKER_USER }}
+        DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
+        TAG: ${{ matrix.task.tag }}
+      run: |
+        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+        docker push vunit/dev:$TAG
+        docker logout
