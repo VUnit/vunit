@@ -15,17 +15,13 @@ typical module.
 from os.path import join, dirname
 from vunit import VUnit
 
-if __name__ == '__main__':
-    ui = VUnit.from_argv()
-    ui.add_osvvm()
-    ui.add_verification_components()
+vu = VUnit.from_argv()
+vu.add_osvvm()
+vu.add_verification_components()
 
-    src_path = join(dirname(__file__), "src")
+src_path = join(dirname(__file__), "src")
 
-    uart_lib = ui.add_library("uart_lib")
-    uart_lib.add_source_files(join(src_path, "*.vhd"))
+vu.add_library("uart_lib").add_source_files(join(src_path, "*.vhd"))
+vu.add_library("tb_uart_lib").add_source_files(join(src_path, "test", "*.vhd"))
 
-    tb_uart_lib = ui.add_library("tb_uart_lib")
-    tb_uart_lib.add_source_files(join(src_path, "test", "*.vhd"))
-
-    ui.main()
+vu.main()

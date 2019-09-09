@@ -21,19 +21,19 @@ in subsection :ref:`Stream <stream_vci>` and in
 from os.path import join, dirname
 from vunit import VUnit
 
-root = dirname(__file__)
+vu = VUnit.from_argv()
 
-if __name__ == '__main__':
-    vu = VUnit.from_argv()
+vu.add_osvvm()
+vu.add_array_util()
+vu.add_verification_components()
 
-    vu.add_osvvm()
-    vu.add_array_util()
-    vu.add_verification_components()
+src_path = join(dirname(__file__), "src")
 
-    lib = vu.add_library("lib")
-    lib.add_source_files(join(root, "src/*.vhd"))
-    lib.add_source_files(join(root, "src/**/*.vhd"))
+vu.add_library("lib").add_source_files([
+    join(src_path, "*.vhd"),
+    join(src_path, "**", "*.vhd")
+])
 
-    # vu.set_sim_option('modelsim.init_files.after_load',['runall_addwave.do'])
+# vu.set_sim_option('modelsim.init_files.after_load',['runall_addwave.do'])
 
-    vu.main()
+vu.main()

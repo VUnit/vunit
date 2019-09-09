@@ -16,16 +16,12 @@ can be found in the :ref:`com user guide <com_user_guide>`.
 from os.path import join, dirname
 from vunit import VUnit
 
-if __name__ == '__main__':
-    prj = VUnit.from_argv()
-    prj.add_com()
-    prj.add_verification_components()
-    prj.add_osvvm()
+vu = VUnit.from_argv()
+vu.add_com()
+vu.add_verification_components()
+vu.add_osvvm()
 
-    lib = prj.add_library('lib')
-    lib.add_source_files(join(dirname(__file__), 'src', '*.vhd'))
+vu.add_library('lib').add_source_files(join(dirname(__file__), 'src', '*.vhd'))
+vu.add_library('tb_lib').add_source_files(join(dirname(__file__), 'test', '*.vhd'))
 
-    tb_lib = prj.add_library('tb_lib')
-    tb_lib.add_source_files(join(dirname(__file__), 'test', '*.vhd'))
-
-    prj.main()
+vu.main()

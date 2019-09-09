@@ -18,15 +18,15 @@ via AXI-lite.
 from os.path import join, dirname
 from vunit import VUnit
 
-if __name__ == '__main__':
-    ui = VUnit.from_argv()
-    ui.add_osvvm()
-    ui.add_verification_components()
+vu = VUnit.from_argv()
+vu.add_osvvm()
+vu.add_verification_components()
 
-    src_path = join(dirname(__file__), "src")
+src_path = join(dirname(__file__), "src")
 
-    axi_dma_lib = ui.add_library("axi_dma_lib")
-    axi_dma_lib.add_source_files(join(src_path, "*.vhd"))
-    axi_dma_lib.add_source_files(join(src_path, "test", "*.vhd"))
+vu.add_library("axi_dma_lib").add_source_files([
+    join(src_path, "*.vhd"),
+    join(src_path, "test", "*.vhd")
+])
 
-    ui.main()
+vu.main()
