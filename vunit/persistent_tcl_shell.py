@@ -73,6 +73,11 @@ class PersistentTclShell(object):
         process.consume_output(consumer)
         return consumer.var
 
+    def read_bool(self, varname):
+        result = self.read_var(varname)
+        assert result in ("true", "false")
+        return result == "true"
+
     def teardown(self):
         """
         Teardown all active processes before shutdown

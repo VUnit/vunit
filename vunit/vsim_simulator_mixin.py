@@ -270,13 +270,13 @@ proc vunit_run {} {
         try:
             self._persistent_shell.execute('source "%s"' % fix_path(common_file_name))
             self._persistent_shell.execute("set failed [vunit_load]")
-            if self._persistent_shell.read_var("failed") == '1':
+            if self._persistent_shell.read_bool("failed"):
                 return False
 
             run_ok = True
             if not load_only:
                 self._persistent_shell.execute("set failed [vunit_run]")
-                run_ok = self._persistent_shell.read_var("failed") != '1'
+                run_ok = not self._persistent_shell.read_bool("failed")
             self._persistent_shell.execute("quit -sim")
             return run_ok
         except Process.NonZeroExitCode:
