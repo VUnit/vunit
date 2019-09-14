@@ -8,6 +8,7 @@
 Provides capability to print in color to the terminal in both Windows and Linux.
 """
 
+import os
 import sys
 import ctypes
 from ctypes import Structure, c_short, c_ushort, byref
@@ -196,7 +197,11 @@ class NoColorPrinter(object):
 
 
 NO_COLOR_PRINTER = NoColorPrinter()
-if IS_WINDOWS_SYSTEM:
+
+# On MSYS/MINGW shells (https://www.msys2.org/) with Python installed through pacman, IS_WINDOWS_SYSTEM is true.
+# However, regular Linux color strings are supported/required, instead of 'native' windows color format.
+# Environment variable MSYSTEM is checked, which should contain 'msys'|'mingw32'|'mingw64' or be unset/empty.
+if IS_WINDOWS_SYSTEM and ('MSYSTEM' not in os.environ):
     COLOR_PRINTER = Win32ColorPrinter()
 else:
     COLOR_PRINTER = LinuxColorPrinter()
