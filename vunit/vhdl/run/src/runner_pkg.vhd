@@ -7,9 +7,7 @@
 -- Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.string_ptr_pkg.all;
-use work.string_ptr_pool_pkg.all;
 use work.integer_vector_ptr_pkg.all;
-use work.integer_vector_ptr_pool_pkg.all;
 use work.run_types_pkg.all;
 use work.logger_pkg.all;
 use work.string_ops.all;
@@ -159,11 +157,8 @@ package body runner_pkg is
     end if;
   end;
 
-  constant str_pool : string_ptr_pool_t := new_string_ptr_pool;
-  constant int_pool : integer_vector_ptr_pool_t := new_integer_vector_ptr_pool;
-
   impure function new_runner return runner_t is
-    variable runner : runner_t := (p_data => new_integer_vector_ptr(int_pool, runner_length));
+    variable runner : runner_t := (p_data => new_integer_vector_ptr(runner_length));
   begin
     runner_init(runner);
     return runner;
@@ -196,12 +191,12 @@ package body runner_pkg is
     set(runner.p_data, test_case_iteration_idx, 0);
     set(runner.p_data, test_case_exit_after_error_idx, to_integer(false));
     set(runner.p_data, test_suite_exit_after_error_idx, to_integer(false));
-    set(runner.p_data, runner_cfg_idx, to_integer(new_string_ptr(str_pool, runner_cfg_default)));
+    set(runner.p_data, runner_cfg_idx, to_integer(new_string_ptr(runner_cfg_default)));
 
     set(runner.p_data, disable_simulation_exit_idx, to_integer(false));
     set(runner.p_data, entry_locks_idx, to_integer(integer_vector_ptr_t'(new_integer_vector_ptr(n_legal_phases))));
     set(runner.p_data, exit_locks_idx, to_integer(integer_vector_ptr_t'(new_integer_vector_ptr(n_legal_phases))));
-    set(runner.p_data, timeout_idx, to_integer(new_string_ptr(str_pool, encode(0 ns))));
+    set(runner.p_data, timeout_idx, to_integer(new_string_ptr(encode(0 ns))));
   end;
 
   procedure set_active_python_runner(runner : runner_t; value : boolean) is
@@ -287,7 +282,7 @@ package body runner_pkg is
     test_case_name := to_string_ptr(get(test_case_names, index-1));
 
     if test_case_name = null_string_ptr then
-      test_case_name := new_string_ptr(str_pool, new_name);
+      test_case_name := new_string_ptr(new_name);
     else
       reallocate(test_case_name, new_name);
     end if;
@@ -369,7 +364,7 @@ package body runner_pkg is
     run_test_case := to_string_ptr(get(run_test_cases, index-1));
 
     if run_test_case = null_string_ptr then
-      run_test_case := new_string_ptr(str_pool, new_name);
+      run_test_case := new_string_ptr(new_name);
     else
       reallocate(run_test_case, new_name);
     end if;
@@ -399,7 +394,7 @@ package body runner_pkg is
     variable running_test_case : string_ptr_t := to_string_ptr(get(runner.p_data, running_test_case_idx));
   begin
     if running_test_case = null_string_ptr then
-      running_test_case := new_string_ptr(str_pool, new_name);
+      running_test_case := new_string_ptr(new_name);
     else
       reallocate(running_test_case, new_name);
     end if;
@@ -504,7 +499,7 @@ package body runner_pkg is
     variable runner_cfg : string_ptr_t := to_string_ptr(get(runner.p_data, runner_cfg_idx));
   begin
     if runner_cfg = null_string_ptr then
-      runner_cfg := new_string_ptr(str_pool, new_value);
+      runner_cfg := new_string_ptr(new_value);
     else
       reallocate(runner_cfg, new_value);
     end if;
@@ -532,7 +527,7 @@ package body runner_pkg is
     variable timeout_ptr : string_ptr_t := to_string_ptr(get(runner.p_data, timeout_idx));
   begin
     if timeout_ptr = null_string_ptr then
-      timeout_ptr := new_string_ptr(str_pool, new_value);
+      timeout_ptr := new_string_ptr(new_value);
     else
       reallocate(timeout_ptr, new_value);
     end if;

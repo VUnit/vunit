@@ -5,7 +5,6 @@
 -- Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.axi_pkg.all;
-use work.integer_vector_ptr_pool_pkg.all;
 use work.integer_vector_ptr_pkg.all;
 
 package axi_statistics_pkg is
@@ -41,13 +40,11 @@ end package;
 
 
 package body axi_statistics_pkg is
-  constant ptr_pool : integer_vector_ptr_pool_t := new_integer_vector_ptr_pool;
 
   impure function new_axi_statistics return axi_statistics_t is
     variable stat : axi_statistics_t;
   begin
-    stat := (p_count_by_burst_length => new_integer_vector_ptr(ptr_pool,
-                                                               min_length => max_axi4_burst_length + 1));
+    stat := (p_count_by_burst_length => new_integer_vector_ptr(length => max_axi4_burst_length + 1));
     clear(stat);
     return stat;
   end;
@@ -121,7 +118,7 @@ package body axi_statistics_pkg is
   procedure deallocate(variable stat : inout axi_statistics_t) is
   begin
     if stat /= null_axi_statistics then
-      recycle(ptr_pool, stat.p_count_by_burst_length);
+      deallocate(stat.p_count_by_burst_length);
       stat := null_axi_statistics;
     end if;
   end;

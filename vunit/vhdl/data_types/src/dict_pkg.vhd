@@ -5,9 +5,7 @@
 -- Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
 use work.string_ptr_pkg.all;
-use work.string_ptr_pool_pkg.all;
 use work.integer_vector_ptr_pkg.all;
-use work.integer_vector_ptr_pool_pkg.all;
 
 package dict_pkg is
   type dict_t is record
@@ -51,8 +49,6 @@ package dict_pkg is
 end package;
 
 package body dict_pkg is
-  constant int_pool : integer_vector_ptr_pool_t := new_integer_vector_ptr_pool;
-  constant str_pool : string_ptr_pool_t := new_string_ptr_pool;
   constant meta_num_keys : natural := 0;
   constant meta_length : natural := meta_num_keys+1;
   constant new_bucket_size : natural := 1;
@@ -63,17 +59,17 @@ package body dict_pkg is
     variable tmp : integer_vector_ptr_t;
     constant num_buckets : natural := 1;
   begin
-    dict := (p_meta => new_integer_vector_ptr(int_pool, meta_length),
-             p_bucket_lengths => new_integer_vector_ptr(int_pool, num_buckets),
-             p_bucket_keys => new_integer_vector_ptr(int_pool, num_buckets),
-             p_bucket_values => new_integer_vector_ptr(int_pool, num_buckets));
+    dict := (p_meta => new_integer_vector_ptr(meta_length),
+             p_bucket_lengths => new_integer_vector_ptr(num_buckets),
+             p_bucket_keys => new_integer_vector_ptr(num_buckets),
+             p_bucket_values => new_integer_vector_ptr(num_buckets));
     set(dict.p_meta, meta_num_keys, 0);
     for i in 0 to length(dict.p_bucket_lengths)-1 loop
       -- Zero items in bucket
       set(dict.p_bucket_lengths, i, 0);
-      tmp := new_integer_vector_ptr(int_pool, new_bucket_size);
+      tmp := new_integer_vector_ptr(new_bucket_size);
       set(dict.p_bucket_keys, i, to_integer(tmp));
-      tmp := new_integer_vector_ptr(int_pool, new_bucket_size);
+      tmp := new_integer_vector_ptr(new_bucket_size);
       set(dict.p_bucket_values, i, to_integer(tmp));
     end loop;
     return dict;
@@ -100,16 +96,20 @@ package body dict_pkg is
       for idx in 0 to bucket_length-1 loop
         key := to_string_ptr(get(bucket_keys, idx));
         value := to_string_ptr(get(bucket_values, idx));
-        recycle(str_pool, key);
-        recycle(str_pool, value);
+        deallocate(key);
+        deallocate(value);
       end loop;
-      recycle(int_pool, bucket_values);
-      recycle(int_pool, bucket_keys);
+      deallocate(bucket_values);
+      deallocate(bucket_keys);
     end loop;
-    recycle(int_pool, dict.p_meta);
-    recycle(int_pool, dict.p_bucket_lengths);
-    recycle(int_pool, dict.p_bucket_values);
-    recycle(int_pool, dict.p_bucket_keys);
+    deallocate(dict.p_meta);
+    deallocate(dict.p_bucket_lengths);
+    deallocate(dict.p_bucket_values);
+    deallocate(dict.p_bucket_keys);
+    dict.p_meta           := null_ptr;
+    dict.p_bucket_lengths := null_ptr;
+    dict.p_bucket_values  := null_ptr;
+    dict.p_bucket_keys    := null_ptr;
   end;
 
   -- DJB2 hash
@@ -157,8 +157,8 @@ package body dict_pkg is
     if deallocate_item then
       key := to_string_ptr(get(bucket_keys, i));
       value := to_string_ptr(get(bucket_values, i));
-      recycle(str_pool, key);
-      recycle(str_pool, value);
+      deallocate(key);
+      deallocate(value);
     end if;
     set(bucket_keys, i, get(bucket_keys, bucket_length-1));
     set(bucket_values, i, get(bucket_values, bucket_length-1));
@@ -241,8 +241,8 @@ package body dict_pkg is
 
     -- Create new buckets
     for i in old_num_buckets to num_buckets-1 loop
-      set(dict.p_bucket_keys, i, to_integer(new_integer_vector_ptr(int_pool, new_bucket_size)));
-      set(dict.p_bucket_values, i, to_integer(new_integer_vector_ptr(int_pool, new_bucket_size)));
+      set(dict.p_bucket_keys, i, to_integer(new_integer_vector_ptr(new_bucket_size)));
+      set(dict.p_bucket_values, i, to_integer(new_integer_vector_ptr(new_bucket_size)));
       set(dict.p_bucket_lengths, i, 0);
     end loop;
 
@@ -260,7 +260,7 @@ package body dict_pkg is
       -- Reuse existing value storage
       reallocate(old_value_ptr, value);
     else
-      insert_new(dict, key_hash, new_string_ptr(str_pool, key), new_string_ptr(str_pool, value));
+      insert_new(dict, key_hash, new_string_ptr(key), new_string_ptr(value));
     end if;
   end;
 

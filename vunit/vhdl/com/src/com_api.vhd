@@ -267,15 +267,4 @@ package com_pkg is
   -- Return string representation of the messenger state
   impure function get_messenger_state_string(indent : string := "") return string;
 
-  -----------------------------------------------------------------------------
-  -- Misc
-  -----------------------------------------------------------------------------
-
-  -- Allow deprecated APIs
-  procedure allow_deprecated;
-
-  -- Allow timeout in deprecated functionality. If not allowed timeouts will
-  -- cause a runtime error.
-  procedure allow_timeout;
-
 end package;

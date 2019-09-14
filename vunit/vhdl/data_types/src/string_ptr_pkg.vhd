@@ -16,23 +16,28 @@ use work.codec_pkg.all;
 use work.codec_builder_pkg.all;
 
 package string_ptr_pkg is
+
   subtype index_t is integer range -1 to integer'high;
+
   type string_ptr_t is record
     ref : index_t;
   end record;
+
   constant null_string_ptr : string_ptr_t := (ref => -1);
 
-  alias  ptr_t  is string_ptr_t;
-  alias  val_t  is character;
-  alias  vav_t  is string_access_vector_t;
-  alias  vava_t is string_access_vector_access_t;
+  alias ptr_t  is string_ptr_t;
+  alias val_t  is character;
+  alias vec_t  is string;
+  alias va_t   is string_access_t;
+  alias vav_t  is string_access_vector_t;
+  alias vava_t is string_access_vector_access_t;
 
   function to_integer (
     value : ptr_t
-  ) return integer;
+  ) return index_t;
 
   impure function to_string_ptr (
-    value : integer
+    value : index_t
   ) return ptr_t;
 
   impure function new_string_ptr (
@@ -40,7 +45,7 @@ package string_ptr_pkg is
   ) return ptr_t;
 
   impure function new_string_ptr (
-    value : string
+    value : vec_t
   ) return ptr_t;
 
   procedure deallocate (
@@ -49,17 +54,17 @@ package string_ptr_pkg is
 
   impure function length (
     ptr : ptr_t
-  ) return integer;
+  ) return natural;
 
   procedure set (
     ptr   : ptr_t;
-    index : natural;
+    index : positive;
     value : val_t
   );
 
   impure function get (
     ptr   : ptr_t;
-    index : natural
+    index : positive
   ) return val_t;
 
   procedure reallocate (
@@ -69,13 +74,14 @@ package string_ptr_pkg is
 
   procedure reallocate (
     ptr   : ptr_t;
-    value : string
+    value : vec_t
   );
 
   procedure resize (
     ptr    : ptr_t;
     length : natural;
-    drop   : natural := 0
+    drop   : natural := 0;
+    rotate : natural := 0
   );
 
   impure function to_string (
@@ -96,9 +102,10 @@ package string_ptr_pkg is
     variable result : out ptr_t
   );
 
-  alias encode_ptr_t is encode[ptr_t return string];
-  alias decode_ptr_t is decode[string return ptr_t];
+  alias encode_string_ptr_t is encode[ptr_t return string];
+  alias decode_string_ptr_t is decode[string return ptr_t];
 
   constant string_ptr_t_code_length : positive := integer_code_length;
 
 end package;
+

@@ -5,145 +5,215 @@
 -- Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
 package body integer_vector_ptr_pkg is
+
  type integer_vector_ptr_storage_t is protected
-    impure function new_integer_vector_ptr (
+
+    impure function new_ptr (
       length : natural := 0;
       value  : val_t := 0
     ) return natural;
 
+    procedure check_valid (
+      ref : index_t
+    );
+
     procedure deallocate (
-      ref : natural
+      ref : index_t
+    );
+
+    procedure reallocate_storage (
+      length : positive
+    );
+
+    procedure reallocate_stack (
+      length : positive
     );
 
     impure function length (
-      ref : natural
-    ) return integer;
+      ref : index_t
+    ) return natural;
 
     procedure set (
-      ref   : natural;
+      ref   : index_t;
       index : natural;
       value : val_t
     );
 
     impure function get (
-      ref   : natural;
+      ref   : index_t;
       index : natural
     ) return val_t;
 
     procedure reallocate (
-      ref    : natural;
+      ref    : index_t;
       length : natural;
       value  : val_t := 0
     );
 
     procedure resize (
-      ref    : natural;
+      ref    : index_t;
       length : natural;
       drop   : natural := 0;
-      value  : val_t := 0
+      value  : val_t := 0;
+      rotate : natural := 0
     );
   end protected;
 
   type integer_vector_ptr_storage_t is protected body
-    variable current_index : integer := 0;
-    variable ptrs : vava_t := null;
 
-    impure function new_integer_vector_ptr (
+    -- Pointer storage
+    variable storage : vava_t := new vav_t'(0 to 2**16 - 1 => null);
+    variable storage_index : natural := 0;
+
+    -- Stack of unused storage indices
+    variable stack : integer_vector_access_t := new integer_vector_t'(0 to 2**16 - 1 => -1);
+    variable stack_index : natural := 0;
+
+    impure function new_ptr (
       length : natural := 0;
       value  : val_t := 0
     ) return natural is
-      variable old_ptrs : vava_t;
-      variable retval : ptr_t := (ref => current_index);
+      variable ref : index_t;
     begin
-      if ptrs = null then
-        ptrs := new vav_t'(0 => null);
-      elsif ptrs'length <= current_index then
-        -- Reallocate ptr pointers to larger ptr
-        -- Use more size to trade size for speed
-        old_ptrs := ptrs;
-        ptrs := new vav_t'(0 to ptrs'length + 2**16 => null);
-        for i in old_ptrs'range loop
-          ptrs(i) := old_ptrs(i);
-        end loop;
-        deallocate(old_ptrs);
+      if stack_index > 0 then
+        stack_index := stack_index - 1;
+        ref := stack(stack_index);
+      else
+        if storage_index >= storage'length then
+          reallocate_storage(storage'length + 2**16);
+        end if;
+        ref := storage_index;
+        storage_index := storage_index + 1;
       end if;
-      ptrs(current_index) := new integer_vector_t'(0 to length-1 => value);
-      current_index := current_index + 1;
-      return retval.ref;
+      storage(ref) := new vec_t'(0 to length - 1 => value);
+      return ref;
+    end;
+
+    procedure check_valid (
+      ref : index_t
+    ) is begin
+      assert 0 <= ref and ref < storage_index report "invalid pointer";
+      assert storage(ref) /= null report "unallocated pointer";
     end;
 
     procedure deallocate (
-      ref : natural
+      ref : index_t
     ) is begin
-      deallocate(ptrs(ref));
-      ptrs(ref) := null;
+      if ref >= 0 then
+        check_valid(ref);
+        if stack_index >= stack'length then
+          reallocate_stack(stack'length + 2**16);
+        end if;
+        stack(stack_index) := ref;
+        stack_index := stack_index + 1;
+        deallocate(storage(ref));
+        storage(ref) := null;
+      end if;
+    end;
+
+    procedure reallocate_storage (
+      length : positive
+    ) is
+      variable old_storage : vava_t;
+    begin
+      old_storage := storage;
+      storage := new vav_t'(0 to length - 1 => null);
+      for i in old_storage'range loop
+        storage(i) := old_storage(i);
+      end loop;
+      deallocate(old_storage);
+    end;
+
+    procedure reallocate_stack (
+      length : positive
+    ) is
+      variable old_stack : integer_vector_access_t;
+    begin
+      old_stack := stack;
+      stack := new integer_vector_t'(0 to length - 1 => -1);
+      for i in old_stack'range loop
+        stack(i) := old_stack(i);
+      end loop;
+      deallocate(old_stack);
     end;
 
     impure function length (
-      ref : natural
-    ) return integer is begin
-      return ptrs(ref)'length;
+      ref : index_t
+    ) return natural is begin
+      check_valid(ref);
+      return storage(ref)'length;
     end;
 
     procedure set (
-      ref   : natural;
+      ref   : index_t;
       index : natural;
       value : val_t
     ) is begin
-      ptrs(ref)(index) := value;
+      check_valid(ref);
+      storage(ref)(index) := value;
     end;
 
     impure function get (
-      ref   : natural;
+      ref   : index_t;
       index : natural
     ) return val_t is begin
-      return ptrs(ref)(index);
+      check_valid(ref);
+      return storage(ref)(index);
     end;
 
     procedure reallocate (
-      ref    : natural;
+      ref    : index_t;
       length : natural;
       value  : val_t := 0
     ) is begin
-      deallocate(ptrs(ref));
-      ptrs(ref) := new integer_vector_t'(0 to length - 1 => value);
+      check_valid(ref);
+      deallocate(storage(ref));
+      storage(ref) := new vec_t'(0 to length - 1 => value);
     end;
 
     procedure resize (
-      ref    : natural;
+      ref    : index_t;
       length : natural;
       drop   : natural := 0;
-      value  : val_t := 0
+      value  : val_t := 0;
+      rotate : natural := 0
     ) is
-      variable old_ptr, new_ptr : integer_vector_access_t;
-      variable min_len : natural := length;
+      variable old_ptr : va_t;
+      variable new_ptr : va_t := new vec_t'(0 to length - 1 => value);
+      variable min_length : natural;
+      variable index : natural;
     begin
-      new_ptr := new integer_vector_t'(0 to length - 1 => value);
-      old_ptr := ptrs(ref);
-      if min_len > old_ptr'length - drop then
-        min_len := old_ptr'length - drop;
+      check_valid(ref);
+      assert drop = 0 or rotate = 0 report "can't combine drop and rotate";
+      old_ptr := storage(ref);
+      min_length := old_ptr'length - drop;
+      if length < min_length then
+        min_length := length;
       end if;
-      for i in 0 to min_len-1 loop
-        new_ptr(i) := old_ptr(drop + i);
+      for i in 0 to min_length - 1 loop
+        index := (drop + rotate + i) mod old_ptr'length;
+        new_ptr(i) := old_ptr(index);
       end loop;
-      ptrs(ref) := new_ptr;
+      storage(ref) := new_ptr;
       deallocate(old_ptr);
     end;
 
   end protected body;
 
-  shared variable integer_vector_ptr_storage : integer_vector_ptr_storage_t;
+  shared variable ptr_storage : integer_vector_ptr_storage_t;
 
   function to_integer (
     value : ptr_t
-  ) return integer is begin
+  ) return index_t is begin
     return value.ref;
   end;
 
   impure function to_integer_vector_ptr (
-    value : val_t
+    value : index_t
   ) return ptr_t is begin
-    -- @TODO maybe assert that the ref is valid
+    if value >= 0 then
+      ptr_storage.check_valid(value);
+    end if;
     return (ref => value);
   end;
 
@@ -151,19 +221,19 @@ package body integer_vector_ptr_pkg is
     length : natural := 0;
     value  : val_t := 0
   ) return ptr_t is begin
-    return (ref => integer_vector_ptr_storage.new_integer_vector_ptr(length, value));
+    return (ref => ptr_storage.new_ptr(length, value));
   end;
 
   procedure deallocate (
     ptr : ptr_t
   ) is begin
-    integer_vector_ptr_storage.deallocate(ptr.ref);
+    ptr_storage.deallocate(ptr.ref);
   end;
 
   impure function length (
     ptr : ptr_t
-  ) return integer is begin
-    return integer_vector_ptr_storage.length(ptr.ref);
+  ) return natural is begin
+    return ptr_storage.length(ptr.ref);
   end;
 
   procedure set (
@@ -171,14 +241,14 @@ package body integer_vector_ptr_pkg is
     index : natural;
     value : val_t
   ) is begin
-    integer_vector_ptr_storage.set(ptr.ref, index, value);
+    ptr_storage.set(ptr.ref, index, value);
   end;
 
   impure function get (
     ptr   : ptr_t;
     index : natural
   ) return val_t is begin
-    return integer_vector_ptr_storage.get(ptr.ref, index);
+    return ptr_storage.get(ptr.ref, index);
   end;
 
   procedure reallocate (
@@ -186,16 +256,17 @@ package body integer_vector_ptr_pkg is
     length : natural;
     value  : val_t := 0
   ) is begin
-    integer_vector_ptr_storage.reallocate(ptr.ref, length, value);
+    ptr_storage.reallocate(ptr.ref, length, value);
   end;
 
   procedure resize (
     ptr    : ptr_t;
     length : natural;
     drop   : natural := 0;
-    value  : val_t := 0
+    value  : val_t := 0;
+    rotate : natural := 0
   ) is begin
-    integer_vector_ptr_storage.resize(ptr.ref, length, drop, value);
+    ptr_storage.resize(ptr.ref, length, drop, value, rotate);
   end;
 
   function encode (
@@ -223,3 +294,4 @@ package body integer_vector_ptr_pkg is
   end;
 
 end package body;
+

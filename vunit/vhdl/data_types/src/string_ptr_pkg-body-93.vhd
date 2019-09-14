@@ -4,131 +4,181 @@
 --
 -- Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
+use work.integer_vector_pkg.all;
+
 package body string_ptr_pkg is
-  shared variable current_index : integer := 0;
-  shared variable ptrs : vava_t := null;
+
+  -- Pointer storage
+  shared variable storage : vava_t := new vav_t'(0 to 2**16 - 1 => null);
+  shared variable storage_index : natural := 0;
+
+  -- Stack of unused storage indices
+  shared variable stack : integer_vector_access_t := new integer_vector_t'(0 to 2**16 - 1 => -1);
+  shared variable stack_index : natural := 0;
+
+  procedure reallocate_storage (
+    length : positive
+  ) is
+    variable old_storage : vava_t;
+  begin
+    old_storage := storage;
+    storage := new vav_t'(0 to length - 1 => null);
+    for i in old_storage'range loop
+      storage(i) := old_storage(i);
+    end loop;
+    deallocate(old_storage);
+  end;
+
+  procedure reallocate_stack (
+    length : positive
+  ) is
+    variable old_stack : integer_vector_access_t;
+  begin
+    old_stack := stack;
+    stack := new integer_vector_t'(0 to length - 1 => -1);
+    for i in old_stack'range loop
+      stack(i) := old_stack(i);
+    end loop;
+    deallocate(old_stack);
+  end;
 
   impure function new_string_ptr (
     length : natural := 0
   ) return ptr_t is
-    variable old_ptrs : vava_t;
-    variable retval : ptr_t := (ref => current_index);
+    constant value : vec_t(1 to length) := (others => val_t'low);
   begin
-    if ptrs = null then
-      ptrs := new vav_t'(0 => null);
-    elsif ptrs'length <= current_index then
-      -- Reallocate ptr pointers to larger ptr
-      -- Use more size to trade size for speed
-      old_ptrs := ptrs;
-      ptrs := new vav_t'(0 to ptrs'length + 2**16 => null);
-      for i in old_ptrs'range loop
-        ptrs(i) := old_ptrs(i);
-      end loop;
-      deallocate(old_ptrs);
+    return new_string_ptr(value);
+  end;
+
+  impure function new_string_ptr (
+    value : vec_t
+  ) return ptr_t is
+    variable ref : index_t;
+  begin
+    if stack_index > 0 then
+      stack_index := stack_index - 1;
+      ref := stack(stack_index);
+    else
+      if storage_index >= storage'length then
+        reallocate_storage(storage'length + 2**16);
+      end if;
+      ref := storage_index;
+      storage_index := storage_index + 1;
     end if;
-    ptrs(current_index) := new string'(1 to length => val_t'low);
-    current_index := current_index + 1;
-    return retval;
+    storage(ref) := new vec_t'(value);
+    return (ref => ref);
+  end;
+
+  procedure check_valid (
+    ref : index_t
+  ) is begin
+    assert 0 <= ref and ref < storage_index report "invalid pointer";
+    assert storage(ref) /= null report "unallocated pointer";
   end;
 
   procedure deallocate (
     ptr : ptr_t
   ) is begin
-    deallocate(ptrs(ptr.ref));
-    ptrs(ptr.ref) := null;
+    if ptr.ref > 0 then
+      check_valid(ptr.ref);
+      if stack_index >= stack'length then
+        reallocate_stack(stack'length + 2**16);
+      end if;
+      stack(stack_index) := ptr.ref;
+      stack_index := stack_index + 1;
+      deallocate(storage(ptr.ref));
+      storage(ptr.ref) := null;
+    end if;
   end;
 
   impure function length (
     ptr : ptr_t
-  ) return integer is begin
-    return ptrs(ptr.ref)'length;
+  ) return natural is begin
+    check_valid(ptr.ref);
+    return storage(ptr.ref)'length;
   end;
 
   procedure set (
     ptr   : ptr_t;
-    index : natural;
+    index : positive;
     value : val_t
   ) is begin
-    ptrs(ptr.ref)(index) := value;
+    check_valid(ptr.ref);
+    storage(ptr.ref)(index) := value;
   end;
 
   impure function get (
     ptr   : ptr_t;
-    index : natural
+    index : positive
   ) return val_t is begin
-    return ptrs(ptr.ref)(index);
+    check_valid(ptr.ref);
+    return storage(ptr.ref)(index);
   end;
 
   procedure reallocate (
     ptr    : ptr_t;
     length : natural
   ) is
-    variable old_ptr, new_ptr : string_access_t;
+    variable value : vec_t(1 to length) := (others => val_t'low);
   begin
-    deallocate(ptrs(ptr.ref));
-    ptrs(ptr.ref) := new string'(1 to length => val_t'low);
+    reallocate(ptr, value);
   end;
 
   procedure reallocate (
     ptr   : ptr_t;
-    value : string
-  ) is
-    variable old_ptr, new_ptr : string_access_t;
-    variable n_value : string(1 to value'length) := value;
-  begin
-    deallocate(ptrs(ptr.ref));
-    ptrs(ptr.ref) := new string'(n_value);
+    value : vec_t
+  ) is begin
+    check_valid(ptr.ref);
+    deallocate(storage(ptr.ref));
+    storage(ptr.ref) := new vec_t'(value);
   end;
 
   procedure resize (
     ptr    : ptr_t;
     length : natural;
-    drop   : natural := 0
+    drop   : natural := 0;
+    rotate : natural := 0
   ) is
-    variable old_ptr, new_ptr : string_access_t;
-    variable min_length : natural := length;
+    variable old_ptr : va_t;
+    variable new_ptr : va_t := new vec_t'(1 to length => val_t'low);
+    variable min_length : natural;
+    variable index : natural;
   begin
-    new_ptr := new string'(1 to length => val_t'low);
-    old_ptr := ptrs(ptr.ref);
-    if min_length > old_ptr'length - drop then
-      min_length := old_ptr'length - drop;
+    check_valid(ptr.ref);
+    assert drop = 0 or rotate = 0 report "can't combine drop and rotate";
+    old_ptr := storage(ptr.ref);
+    min_length := old_ptr'length - drop;
+    if length < min_length then
+      min_length := length;
     end if;
-    for i in 1 to min_length loop
-      new_ptr(i) := old_ptr(drop + i);
+    for i in 0 to min_length - 1 loop
+      index := (drop + rotate + i) mod old_ptr'length;
+      new_ptr(i + 1) := old_ptr(index + 1);
     end loop;
-    ptrs(ptr.ref) := new_ptr;
+    storage(ptr.ref) := new_ptr;
     deallocate(old_ptr);
   end;
 
   impure function to_string (
     ptr : ptr_t
   ) return string is begin
-    return ptrs(ptr.ref).all;
+    check_valid(ptr.ref);
+    return storage(ptr.ref).all;
   end;
 
   function to_integer (
     value : ptr_t
-  ) return integer is begin
+  ) return index_t is begin
     return value.ref;
   end;
 
   impure function to_string_ptr (
-    value : integer
+    value : index_t
   ) return ptr_t is begin
-    -- @TODO maybe assert that the ref is valid
+    if value >= 0 then
+      check_valid(value);
+    end if;
     return (ref => value);
-  end;
-
-  impure function new_string_ptr (
-    value : string
-  ) return ptr_t is
-    variable result : ptr_t := new_string_ptr(value'length);
-    variable n_value : string(1 to value'length) := value;
-  begin
-    for i in 1 to n_value'length loop
-      set(result, i, n_value(i));
-    end loop;
-    return result;
   end;
 
   function encode (
@@ -156,3 +206,4 @@ package body string_ptr_pkg is
   end;
 
 end package body;
+

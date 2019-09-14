@@ -14,7 +14,6 @@ use work.axi_slave_private_pkg.all;
 use work.queue_pkg.all;
 use work.memory_pkg.all;
 use work.integer_vector_ptr_pkg.all;
-use work.integer_vector_ptr_pool_pkg.all;
 context work.com_context;
 
 entity axi_write_slave is
@@ -49,7 +48,6 @@ architecture a of axi_write_slave is
   signal initialized : boolean := false;
 
   constant data_vector_length : natural := max_axi4_burst_length * wdata'length;
-  constant data_pool : integer_vector_ptr_pool_t := new_integer_vector_ptr_pool;
 
   type burst_data_t is record
     length : natural;
@@ -76,14 +74,16 @@ architecture a of axi_write_slave is
   impure function new_burst_data return burst_data_t is
   begin
     return (length => 0,
-            address => new_integer_vector_ptr(data_pool, min_length => data_vector_length),
-            data => new_integer_vector_ptr(data_pool, min_length => data_vector_length));
+            address => new_integer_vector_ptr(length => data_vector_length),
+            data => new_integer_vector_ptr(length => data_vector_length));
   end;
 
-  procedure recycle(variable burst_data : inout burst_data_t) is
+  procedure deallocate(variable burst_data : inout burst_data_t) is
   begin
-    recycle(data_pool, burst_data.address);
-    recycle(data_pool, burst_data.data);
+    deallocate(burst_data.address);
+    deallocate(burst_data.data);
+    burst_data.address := null_ptr;
+    burst_data.data := null_ptr;
   end;
 
 begin
@@ -120,7 +120,7 @@ begin
       for i in 0 to burst_data.length-1 loop
         write_byte_unchecked(axi_slave.p_memory, get(burst_data.address, i), get(burst_data.data, i));
       end loop;
-      recycle(burst_data);
+      deallocate(burst_data);
     end;
 
     variable resp_burst, input_burst, burst : axi_burst_t;
