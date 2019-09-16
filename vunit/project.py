@@ -796,12 +796,6 @@ class VerilogSourceFile(SourceFile):
         if self._parse:
             try:
                 design_file = self._parser.parse(self.name, self._include_dirs, self.defines)
-                for included_file_name in design_file.included_files:
-                    self._content_hash = hash_string(self._content_hash
-                                                     + file_content_hash(included_file_name,
-                                                                         encoding=HDL_FILE_ENCODING,
-                                                                         database=self._database))
-
                 for module in design_file.modules:
                     self.design_units.append(Module(module.name, self, module.parameters))
 
