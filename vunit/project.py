@@ -539,6 +539,7 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
 
             return old_source_file
 
+        source_file.parse()
         self._source_files[source_file.name] = source_file
         source_file.add_to_library(self)
 
@@ -783,41 +784,44 @@ class VerilogSourceFile(SourceFile):
             self._content_hash = hash_string(self._content_hash + hash_string(key))
             self._content_hash = hash_string(self._content_hash + hash_string(value))
 
-        if not no_parse:
-            self.parse(verilog_parser, database, include_dirs)
+        self._database = database
+        self._include_dirs = include_dirs
+        self._parser = verilog_parser
+        self._parse = not no_parse
 
-    def parse(self, parser, database, include_dirs):
+    def parse(self):
         """
         Parse Verilog code and adding dependencies and design units
         """
-        try:
-            design_file = parser.parse(self.name, include_dirs, self.defines)
-            for included_file_name in design_file.included_files:
-                self._content_hash = hash_string(self._content_hash
-                                                 + file_content_hash(included_file_name,
-                                                                     encoding=HDL_FILE_ENCODING,
-                                                                     database=database))
+        if self._parse:
+            try:
+                design_file = self._parser.parse(self.name, self._include_dirs, self.defines)
+                for included_file_name in design_file.included_files:
+                    self._content_hash = hash_string(self._content_hash
+                                                     + file_content_hash(included_file_name,
+                                                                         encoding=HDL_FILE_ENCODING,
+                                                                         database=self._database))
 
-            for module in design_file.modules:
-                self.design_units.append(Module(module.name, self, module.parameters))
+                for module in design_file.modules:
+                    self.design_units.append(Module(module.name, self, module.parameters))
 
-            for package in design_file.packages:
-                self.design_units.append(DesignUnit(package.name, self, "package"))
+                for package in design_file.packages:
+                    self.design_units.append(DesignUnit(package.name, self, "package"))
 
-            for package_name in design_file.imports:
-                self.package_dependencies.append(package_name)
+                for package_name in design_file.imports:
+                    self.package_dependencies.append(package_name)
 
-            for package_name in design_file.package_references:
-                self.package_dependencies.append(package_name)
+                for package_name in design_file.package_references:
+                    self.package_dependencies.append(package_name)
 
-            for instance_name in design_file.instances:
-                self.module_dependencies.append(instance_name)
+                for instance_name in design_file.instances:
+                    self.module_dependencies.append(instance_name)
 
-        except KeyboardInterrupt:
-            raise KeyboardInterrupt
-        except:  # pylint: disable=bare-except
-            traceback.print_exc()
-            LOGGER.error("Failed to parse %s", self.name)
+            except KeyboardInterrupt:
+                raise KeyboardInterrupt
+            except:  # pylint: disable=bare-except
+                traceback.print_exc()
+                LOGGER.error("Failed to parse %s", self.name)
 
     def add_to_library(self, library):
         """
@@ -837,12 +841,18 @@ class VHDLSourceFile(SourceFile):
         self.dependencies = []
         self.depending_components = []
         self._vhdl_standard = vhdl_standard
+        self._parser = vhdl_parser
+        self._parse = not no_parse
         check_vhdl_standard(vhdl_standard)
 
-        if not no_parse:
+        self._content_hash = file_content_hash(self.name,
+                                               encoding=HDL_FILE_ENCODING,
+                                               database=database)
 
+    def parse(self):
+        if self._parse:
             try:
-                design_file = vhdl_parser.parse(self.name)
+                design_file = self._parser.parse(self.name)
             except KeyboardInterrupt:
                 raise KeyboardInterrupt
             except:  # pylint: disable=bare-except
@@ -851,9 +861,6 @@ class VHDLSourceFile(SourceFile):
             else:
                 self._add_design_file(design_file)
 
-        self._content_hash = file_content_hash(self.name,
-                                               encoding=HDL_FILE_ENCODING,
-                                               database=database)
 
     def get_vhdl_standard(self):
         """
