@@ -530,7 +530,7 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
         """
         if source_file.name in self._source_files:
             old_source_file = self._source_files[source_file.name]
-            if old_source_file.content_hash != source_file.content_hash:
+            if old_source_file.file_hash != source_file.file_hash:
                 raise RuntimeError("%s already added to library %s" % (
                     source_file.name, self.name))
 
@@ -539,6 +539,7 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
 
             return old_source_file
 
+        source_file.parse()
         self._source_files[source_file.name] = source_file
         source_file.add_to_library(self)
 
@@ -667,7 +668,7 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
         return hash(self.name)
 
 
-class SourceFile(object):
+class SourceFile(object):  # pylint: disable=too-many-instance-attributes
     """
     Represents a generic source file
     """
@@ -679,7 +680,8 @@ class SourceFile(object):
         self.design_units = []
         self._content_hash = None
         self._compile_options = {}
-
+        content = ostools.read_file(name, encoding=HDL_FILE_ENCODING)
+        self.file_hash = hash_string(content)
         # The file name before preprocessing
         self.original_name = name
 
@@ -766,6 +768,7 @@ class VerilogSourceFile(SourceFile):
     """
     Represents a Verilog source file
     """
+
     def __init__(self,  # pylint: disable=too-many-arguments
                  file_type, name, library, verilog_parser, database, include_dirs=None, defines=None, no_parse=False):
         SourceFile.__init__(self, name, library, file_type)
@@ -783,41 +786,41 @@ class VerilogSourceFile(SourceFile):
             self._content_hash = hash_string(self._content_hash + hash_string(key))
             self._content_hash = hash_string(self._content_hash + hash_string(value))
 
-        if not no_parse:
-            self.parse(verilog_parser, database, include_dirs)
+        self._database = database
+        self._parser = None if no_parse else verilog_parser
 
-    def parse(self, parser, database, include_dirs):
+    def parse(self):
         """
         Parse Verilog code and adding dependencies and design units
         """
-        try:
-            design_file = parser.parse(self.name, include_dirs, self.defines)
-            for included_file_name in design_file.included_files:
-                self._content_hash = hash_string(self._content_hash
-                                                 + file_content_hash(included_file_name,
-                                                                     encoding=HDL_FILE_ENCODING,
-                                                                     database=database))
+        if self._parser:
+            try:
+                design_file = self._parser.parse(self.name, self.include_dirs, self.defines)
+                for included_file_name in design_file.included_files:
+                    self._content_hash = hash_string(self._content_hash
+                                                     + file_content_hash(included_file_name,
+                                                                         encoding=HDL_FILE_ENCODING,
+                                                                         database=self._database))
+                for module in design_file.modules:
+                    self.design_units.append(Module(module.name, self, module.parameters))
 
-            for module in design_file.modules:
-                self.design_units.append(Module(module.name, self, module.parameters))
+                for package in design_file.packages:
+                    self.design_units.append(DesignUnit(package.name, self, "package"))
 
-            for package in design_file.packages:
-                self.design_units.append(DesignUnit(package.name, self, "package"))
+                for package_name in design_file.imports:
+                    self.package_dependencies.append(package_name)
 
-            for package_name in design_file.imports:
-                self.package_dependencies.append(package_name)
+                for package_name in design_file.package_references:
+                    self.package_dependencies.append(package_name)
 
-            for package_name in design_file.package_references:
-                self.package_dependencies.append(package_name)
+                for instance_name in design_file.instances:
+                    self.module_dependencies.append(instance_name)
 
-            for instance_name in design_file.instances:
-                self.module_dependencies.append(instance_name)
-
-        except KeyboardInterrupt:
-            raise KeyboardInterrupt
-        except:  # pylint: disable=bare-except
-            traceback.print_exc()
-            LOGGER.error("Failed to parse %s", self.name)
+            except KeyboardInterrupt:
+                raise KeyboardInterrupt
+            except:  # pylint: disable=bare-except
+                traceback.print_exc()
+                LOGGER.error("Failed to parse %s", self.name)
 
     def add_to_library(self, library):
         """
@@ -837,12 +840,20 @@ class VHDLSourceFile(SourceFile):
         self.dependencies = []
         self.depending_components = []
         self._vhdl_standard = vhdl_standard
+        self._parser = None if no_parse else vhdl_parser
         check_vhdl_standard(vhdl_standard)
 
-        if not no_parse:
+        self._content_hash = file_content_hash(self.name,
+                                               encoding=HDL_FILE_ENCODING,
+                                               database=database)
 
+    def parse(self):
+        """
+        Parse VHDL File
+        """
+        if self._parser:
             try:
-                design_file = vhdl_parser.parse(self.name)
+                design_file = self._parser.parse(self.name)
             except KeyboardInterrupt:
                 raise KeyboardInterrupt
             except:  # pylint: disable=bare-except
@@ -850,10 +861,6 @@ class VHDLSourceFile(SourceFile):
                 LOGGER.error("Failed to parse %s", self.name)
             else:
                 self._add_design_file(design_file)
-
-        self._content_hash = file_content_hash(self.name,
-                                               encoding=HDL_FILE_ENCODING,
-                                               database=database)
 
     def get_vhdl_standard(self):
         """

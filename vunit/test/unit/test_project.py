@@ -1378,6 +1378,7 @@ end architecture;
                                                   "lib",
                                                   file_type=file_type_of(file_name),
                                                   no_parse=no_parse)
+            source_file.parse()
             self.assertEqual(len(source_file.design_units), int(not no_parse))
 
     def test_add_source_file_has_no_parse_verilog(self):
