@@ -72,7 +72,6 @@ class Builtins(object):
         """
         Add data types packages
         """
-        self._add_files(join(VHDL_PATH, "data_types", "src", "types", "*.vhd"))
         self._add_files(join(VHDL_PATH, "data_types", "src", "*.vhd"))
 
     def _add_array_util(self):
