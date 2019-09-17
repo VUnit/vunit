@@ -9,7 +9,8 @@ package body string_ptr_pkg is
   shared variable ptrs : vava_t := null;
 
   impure function new_string_ptr (
-    length : natural := 0
+    length : natural := 0;
+    value  : val_t   := val_t'low
   ) return ptr_t is
     variable old_ptrs : vava_t;
     variable retval : ptr_t := (ref => current_index);
@@ -26,7 +27,7 @@ package body string_ptr_pkg is
       end loop;
       deallocate(old_ptrs);
     end if;
-    ptrs(current_index) := new string'(1 to length => val_t'low);
+    ptrs(current_index) := new string'(1 to length => value);
     current_index := current_index + 1;
     return retval;
   end;
@@ -61,12 +62,13 @@ package body string_ptr_pkg is
 
   procedure reallocate (
     ptr    : ptr_t;
-    length : natural
+    length : natural;
+    value  : val_t := val_t'low
   ) is
     variable old_ptr, new_ptr : string_access_t;
   begin
     deallocate(ptrs(ptr.ref));
-    ptrs(ptr.ref) := new string'(1 to length => val_t'low);
+    ptrs(ptr.ref) := new string'(1 to length => value);
   end;
 
   procedure reallocate (
@@ -83,12 +85,13 @@ package body string_ptr_pkg is
   procedure resize (
     ptr    : ptr_t;
     length : natural;
-    drop   : natural := 0
+    drop   : natural := 0;
+    value  : val_t   := val_t'low
   ) is
     variable old_ptr, new_ptr : string_access_t;
     variable min_length : natural := length;
   begin
-    new_ptr := new string'(1 to length => val_t'low);
+    new_ptr := new string'(1 to length => value);
     old_ptr := ptrs(ptr.ref);
     if min_length > old_ptr'length - drop then
       min_length := old_ptr'length - drop;

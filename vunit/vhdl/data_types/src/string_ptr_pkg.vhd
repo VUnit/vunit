@@ -36,7 +36,8 @@ package string_ptr_pkg is
   ) return ptr_t;
 
   impure function new_string_ptr (
-    length : natural := 0
+    length : natural := 0;
+    value  : val_t   := val_t'low
   ) return ptr_t;
 
   impure function new_string_ptr (
@@ -64,7 +65,8 @@ package string_ptr_pkg is
 
   procedure reallocate (
     ptr    : ptr_t;
-    length : natural
+    length : natural;
+    value  : val_t := val_t'low
   );
 
   procedure reallocate (
@@ -75,7 +77,8 @@ package string_ptr_pkg is
   procedure resize (
     ptr    : ptr_t;
     length : natural;
-    drop   : natural := 0
+    drop   : natural := 0;
+    value  : val_t := val_t'low
   );
 
   impure function to_string (
