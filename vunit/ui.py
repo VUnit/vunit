@@ -296,6 +296,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         :param argv: Use explicit argv instead of actual command line argument
         :param compile_builtins: Do not compile builtins. Used for VUnit internal testing.
+        :param vhdl_standard: The VHDL standard used to compile files,
+                              if None the VUNIT_VHDL_STANDARD environment variable is used
         :returns: A :class:`.VUnit` object instance
 
         :example:
@@ -319,6 +321,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         :param args: The parsed argument namespace object
         :param compile_builtins: Do not compile builtins. Used for VUnit internal testing.
+        :param vhdl_standard: The VHDL standard used to compile files,
+                              if None the VUNIT_VHDL_STANDARD environment variable is used
         :returns: A :class:`.VUnit` object instance
         """
 
@@ -415,7 +419,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         :param library_name: The name of the external library
         :param path: The path to the external library directory
-        :param vhdl_standard: The VHDL standard used to compile files into this library,
+        :param vhdl_standard: The VHDL standard used to compile files,
                               if None the VUNIT_VHDL_STANDARD environment variable is used
         :returns: The created :class:`.Library` object
 
@@ -440,7 +444,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                                  of the library and the path to one file 'lib_name,filename'
                                  note that all filenames are relative to the parent folder of the
                                  csv file
-        :param vhdl_standard: The VHDL standard used to compile file into this library,
+        :param vhdl_standard: The VHDL standard used to compile files,
                               if None, the VUNIT_VHDL_STANDARD environment variable is used
         :returns: A list of files (:class `.SourceFileList`) that were added
 
@@ -470,7 +474,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         Add a library managed by VUnit.
 
         :param library_name: The name of the library
-        :param vhdl_standard: The VHDL standard used to compile files into this library,
+        :param vhdl_standard: The VHDL standard used to compile files,
                               if None the VUNIT_VHDL_STANDARD environment variable is used
         :param allow_duplicate: Set to True to allow the same library
                                 to be added multiple times. Subsequent additions will just
@@ -686,7 +690,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         :param include_dirs: A list of include directories
         :param defines: A dictionary containing Verilog defines to be set
         :param allow_empty: To disable an error if no files matched the pattern
-        :param vhdl_standard: The VHDL standard used to compile these files,
+        :param vhdl_standard: The VHDL standard used to compile files,
                               if None VUNIT_VHDL_STANDARD environment variable is used
         :param no_parse: Do not parse file(s) for dependency or test scanning purposes
         :param file_type: The type of the file; ``"vhdl"``, ``"verilog"``  or ``"systemverilog"``.
@@ -1285,7 +1289,7 @@ class Library(object):
         :param include_dirs: A list of include directories
         :param defines: A dictionary containing Verilog defines to be set
         :param allow_empty: To disable an error if no files matched the pattern
-        :param vhdl_standard: The VHDL standard used to compile these files, if None library default is used
+        :param vhdl_standard: The VHDL standard used to compile files, if None library default is used
         :param no_parse: Do not parse file(s) for dependency or test scanning purposes
         :param file_type: The type of the file; ``"vhdl"``, ``"verilog"``  or ``"systemverilog"``.
                           Auto-detected by default when set to ``None``.
