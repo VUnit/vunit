@@ -117,17 +117,17 @@ there"''',
 
     def test_tokenizes_keywords(self):
         self.check("module",
-                   [MODULE(value='')])
+                   [MODULE(value='module')])
         self.check("endmodule",
-                   [ENDMODULE(value='')])
+                   [ENDMODULE(value='endmodule')])
         self.check("package",
-                   [PACKAGE(value='')])
+                   [PACKAGE(value='package')])
         self.check("endpackage",
-                   [ENDPACKAGE(value='')])
+                   [ENDPACKAGE(value='endpackage')])
         self.check("parameter",
-                   [PARAMETER(value='')])
+                   [PARAMETER(value='parameter')])
         self.check("import",
-                   [IMPORT(value='')])
+                   [IMPORT(value='import')])
 
     def test_has_location_information(self):
         self.check("`define foo", [
