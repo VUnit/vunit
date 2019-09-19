@@ -45,7 +45,7 @@ class VerilogTokenizer(object):
 
         def replace_keywords(token):  # pylint: disable=missing-docstring
             if token.value in KEYWORDS:
-                return Token(KEYWORDS[token.value], '', token.location)
+                return Token(KEYWORDS[token.value], token.value, token.location)
 
             return token
 

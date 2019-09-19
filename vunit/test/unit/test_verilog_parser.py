@@ -55,6 +55,22 @@ endmodule
         self.assertEqual(modules[1].name, "true2")
         self.assertEqual(modules[2].name, "true3")
 
+    def test_parse_module_with_keyword_name(self):
+        """
+        We relax the requirement and allow keywords since standards may be mixed.
+        A future enhancement could be to tokenize with awareness of the verilog standard
+        """
+        modules = self.parse("""\
+module global;
+endmodule
+
+module soft;
+endmodule
+""").modules
+        self.assertEqual(len(modules), 2)
+        self.assertEqual(modules[0].name, "global")
+        self.assertEqual(modules[1].name, "soft")
+
     def test_parse_parameter_without_type(self):
         modules = self.parse("""\
 module foo;
