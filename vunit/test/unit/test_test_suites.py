@@ -136,9 +136,11 @@ test_suite_done""")
                     fptr.write(contents)
 
             sim_if = SimulatorInterface
+
             @staticmethod
             def func():
                 return has_valid_exit_code
+
             sim_if.has_valid_exit_code = func
 
             run = TestRun(simulator_if=sim_if,
