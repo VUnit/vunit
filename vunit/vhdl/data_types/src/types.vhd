@@ -4,13 +4,11 @@
 --
 -- Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
-package string_pkg is
+package types_pkg is
   type string_access_t is access string;
   type string_access_vector_t is array (natural range <>) of string_access_t;
   type string_access_vector_access_t is access string_access_vector_t;
-end package;
 
-package integer_vector_pkg is
   type integer_vector_t is array (natural range <>) of integer;
   type integer_vector_access_t is access integer_vector_t;
   type integer_vector_access_vector_t is array (natural range <>) of integer_vector_access_t;
