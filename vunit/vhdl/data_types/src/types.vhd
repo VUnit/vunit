@@ -5,6 +5,8 @@
 -- Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
 package types_pkg is
+  subtype byte_t is integer range 0 to 255;
+
   type string_access_t is access string;
   type string_access_vector_t is array (natural range <>) of string_access_t;
   type string_access_vector_access_t is access string_access_vector_t;

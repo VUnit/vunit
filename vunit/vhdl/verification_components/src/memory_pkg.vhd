@@ -9,11 +9,14 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.integer_vector_ptr_pkg.all;
+use work.types_pkg.all;
 use work.string_ptr_pkg.all;
+use work.integer_vector_ptr_pkg.all;
 use work.logger_pkg.all;
 
 package memory_pkg is
+
+  alias byte_t is byte_t;
 
   type endianness_arg_t is (little_endian,
                             big_endian,
@@ -51,7 +54,6 @@ package memory_pkg is
   -----------------------------------------------------
   -- Memory data read and write functions
   -----------------------------------------------------
-  subtype byte_t is integer range 0 to 255;
   procedure write_byte(memory : memory_t;
                        address : natural;
                        byte : byte_t);
