@@ -11,8 +11,7 @@
 -- into a singleton datastructure of integer vector access types.
 --
 
-use work.integer_vector_pkg.all;
-
+use work.types_pkg.all;
 use work.codec_pkg.all;
 use work.codec_builder_pkg.all;
 
