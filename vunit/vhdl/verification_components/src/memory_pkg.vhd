@@ -16,8 +16,6 @@ use work.logger_pkg.all;
 
 package memory_pkg is
 
-  alias byte_t is byte_t;
-
   type endianness_arg_t is (little_endian,
                             big_endian,
                             default_endian);
