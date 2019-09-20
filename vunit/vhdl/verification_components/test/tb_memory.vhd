@@ -10,6 +10,7 @@ use ieee.std_logic_1164.all;
 library vunit_lib;
 context vunit_lib.vunit_context;
 
+use work.types_pkg.byte_t;
 use work.memory_pkg.all;
 use work.string_ptr_pkg.all;
 use work.random_pkg.all;
