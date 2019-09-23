@@ -34,7 +34,7 @@ class TestBenchList(object):
             if design_unit.is_entity or design_unit.is_module:
                 if tb_filter is None or tb_filter(design_unit):
                     if design_unit.is_module or design_unit.is_entity:
-                        self._add_test_bench(TestBench(design_unit, self._database))
+                        self._add_test_bench(TestBench(design_unit, self._database, source_file))
 
     def _add_test_bench(self, test_bench):
         """
