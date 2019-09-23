@@ -370,34 +370,36 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 timestamps[source_file] = ostools.get_modification_time(hash_file_name)
         return timestamps
 
-    def get_files_in_compile_order(self, incremental=True, dependency_graph=None):
+    def get_files_in_compile_order(self, incremental=True, dependency_graph=None, files=None):
         """
         Get a list of all files in compile order
-        incremental -- Only return files that need recompile if True
+        :param incremental: -- Only return files that need recompile if True
         """
         if dependency_graph is None:
             dependency_graph = self.create_dependency_graph()
 
-        all_files = self.get_source_files_in_order()
-        timestamps = self._get_compile_timestamps(all_files)
-        files = []
-        for source_file in all_files:
+        if files is None:
+            files = self.get_source_files_in_order()
+
+        files_to_process = self._get_files_to_recompile(files, dependency_graph, incremental)
+
+        affected_files = self._get_affected_files(files_to_process, dependency_graph.get_dependent)
+        compile_order = self._get_compile_order(dependency_graph)
+        return _get_sorted_files(affected_files, compile_order)
+
+    def _get_files_to_recompile(self, files, dependency_graph, incremental):
+        """
+        Analyse a given set of SourceFile according to the compile timestamps
+        and return the set that has to be recompiled.
+        param: files: a list of type SourceFile
+        param: dependency_graph: The DependencyGraph object to be used
+        """
+        timestamps = self._get_compile_timestamps(files)
+        result_list = []
+        for source_file in files:
             if (not incremental) or self._needs_recompile(dependency_graph, source_file, timestamps):
-                files.append(source_file)
-
-        # Get files that are affected by recompiling the modified files
-        try:
-            affected_files = dependency_graph.get_dependent(files)
-            compile_order = dependency_graph.toposort()
-        except CircularDependencyException as exc:
-            self._handle_circular_dependency(exc)
-            raise CompileError
-
-        def comparison_key(source_file):
-            return compile_order.index(source_file)
-
-        retval = sorted(affected_files, key=comparison_key)
-        return retval
+                result_list.append(source_file)
+        return result_list
 
     def get_dependencies_in_compile_order(self, target_files=None, implementation_dependencies=False):
         """
@@ -405,24 +407,37 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         target files.
         :param target_files: A list of SourceFiles
         """
-
         if target_files is None:
             target_files = self.get_source_files_in_order()
-
         dependency_graph = self.create_dependency_graph(implementation_dependencies)
+        affected_files = self._get_affected_files(set(target_files), dependency_graph.get_dependencies)
+        compile_order = self._get_compile_order(dependency_graph)
+        return _get_sorted_files(affected_files, compile_order)
 
+    def _get_affected_files(self, target_files, get_depend_func):
+        """
+        Get affected files given a  list of type SourceFile, if the list is None
+        all files are taken into account
+        :param target_files: An initial list of type SourceFile
+        :param get_depend_func: One of either [get_dependent, get_dependencies, get_direct_dependencies]
+        of an object dependency_graph of type DependencyGraph
+        """
         try:
-            affected_files = dependency_graph.get_dependencies(set(target_files))
-            compile_order = dependency_graph.toposort()
+            return get_depend_func(target_files)
         except CircularDependencyException as exc:
             self._handle_circular_dependency(exc)
             raise CompileError
 
-        def comparison_key(source_file):
-            return compile_order.index(source_file)
-
-        sorted_files = sorted(affected_files, key=comparison_key)
-        return sorted_files
+    def _get_compile_order(self, dependency_graph):
+        """
+        Returns a sorted list of type SourceFile using the given dependency graph
+        param: dependency_graph: The DependencyGraph object
+        """
+        try:
+            return dependency_graph.toposort()
+        except CircularDependencyException as exc:
+            self._handle_circular_dependency(exc)
+            raise CompileError
 
     def get_source_files_in_order(self):
         """
@@ -491,6 +506,16 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         new_content_hash = source_file.content_hash
         ostools.write_file(self._hash_file_name_of(source_file), new_content_hash)
         LOGGER.debug('Wrote %s content_hash=%s', source_file.name, new_content_hash)
+
+def _get_sorted_files(files, compile_order):
+    """
+    Returns a sorted list of type SourceFile given a list of SourceFiles in compile order
+    param: files: List of type SourceFile
+    param: compile_order: List of type SourceFile in compile order
+    """
+    def comparison_key(source_file):
+        return compile_order.index(source_file)
+    return sorted(files, key=comparison_key)
 
 
 class Library(object):  # pylint: disable=too-many-instance-attributes
