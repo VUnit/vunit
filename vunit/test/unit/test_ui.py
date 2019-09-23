@@ -20,7 +20,7 @@ import re
 from re import MULTILINE
 from shutil import rmtree
 from vunit.ui import VUnit
-from vunit.project import VHDL_EXTENSIONS, VERILOG_EXTENSIONS
+from vunit.source_file import VHDL_EXTENSIONS, VERILOG_EXTENSIONS
 from vunit.test.mock_2or3 import mock
 from vunit.test.common import (set_env,
                                with_tempdir,
