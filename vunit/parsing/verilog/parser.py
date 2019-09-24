@@ -78,8 +78,10 @@ class VerilogParser(object):
         """
         Store parse result into back into cache
         """
-        new_included_files = [(short_name, full_name, self._content_hash(full_name))
-                              for short_name, full_name in included_files]
+        new_included_files = []
+        for short_name, full_name in included_files:
+            new_included_files.append((short_name, full_name, self._content_hash(full_name)))
+
         key = self._key(file_name)
         self._database[key] = self._content_hash(file_name), new_included_files, defines, result
         return result
@@ -235,10 +237,8 @@ class VerilogDesignFile(object):
 
             if token.kind == HASH:
                 results.append(modulename)
-                continue
             elif token.kind == IDENTIFIER:
                 results.append(modulename)
-                continue
 
         return results
 

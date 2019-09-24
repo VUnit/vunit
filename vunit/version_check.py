@@ -28,4 +28,4 @@ if not version_is_ok():
     print("VUnit supports versions:")
     print(" - Python 2.7")
     print(" - Python 3.4 or higher")
-    exit(1)
+    sys.exit(1)

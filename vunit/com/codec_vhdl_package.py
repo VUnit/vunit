@@ -35,9 +35,9 @@ class CodecVHDLPackage(VHDLPackage):
         code = remove_comments(code).lower()
         # Extract identifier
         identifier = cls._package_start_re.match(code).group('id')
-        enumeration_types = [e for e in CodecVHDLEnumerationType.find(code)]
-        record_types = [r for r in CodecVHDLRecordType.find(code)]
-        array_types = [a for a in CodecVHDLArrayType.find(code)]
+        enumeration_types = list(CodecVHDLEnumerationType.find(code))
+        record_types = list(CodecVHDLRecordType.find(code))
+        array_types = list(CodecVHDLArrayType.find(code))
 
         return cls(identifier, enumeration_types, record_types, array_types)
 

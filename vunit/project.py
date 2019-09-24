@@ -428,7 +428,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         """
         Get a list of source files in the order they were added to the project
         """
-        return [source_file for source_file in self._source_files_in_order]
+        return list(self._source_files_in_order)
 
     def get_libraries(self):
         return self._libraries.values()

@@ -888,7 +888,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
                 "No available simulator detected.\n"
                 "Simulator binary folder must be available in PATH environment variable.\n"
                 "Simulator binary folder can also be set the in VUNIT_<SIMULATOR_NAME>_PATH environment variable.\n")
-            exit(1)
+            sys.exit(1)
 
         if not exists(self._simulator_output_path):
             os.makedirs(self._simulator_output_path)

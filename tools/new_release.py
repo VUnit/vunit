@@ -31,7 +31,7 @@ def get_local_version():
     release_note = join(dirname(__file__), "..", "docs", "release_notes", ver + ".rst")
     if not exists(release_note):
         print("Not releasing version %s since release note %s does not exist" % (ver, release_note))
-        exit(1)
+        sys.exit(1)
 
     return ver
 
@@ -47,7 +47,7 @@ def tag_release(ver):
     if check_tag(ver):
         print("Not tagging release version %s since tag v%s already exists"
               % (ver, ver))
-        exit(1)
+        sys.exit(1)
 
     print("Tagging new release version: %s" % ver)
 
@@ -65,18 +65,18 @@ def check_release(ver):
     if not check_tag(ver):
         print("Not releasing version %s since tag v%s does not exist"
               % (ver, ver))
-        exit(1)
+        sys.exit(1)
 
     if ver.endswith("rc0"):
         print("Not releasing version %s since it ends with rc0" % ver)
-        exit(1)
+        sys.exit(1)
 
     with urlopen('https://pypi.python.org/pypi/vunit_hdl/json') as fptr:
         info = json.load(fptr)
 
     if ver in info["releases"].keys():
         print("Version %s has already been released" % ver)
-        exit(1)
+        sys.exit(1)
 
     check_output([
         'sed',

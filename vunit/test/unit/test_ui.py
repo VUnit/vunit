@@ -174,7 +174,7 @@ end architecture;
         ui = self._create_ui()
         ui.add_library('lib')
         accepted_extensions = VHDL_EXTENSIONS + VERILOG_EXTENSIONS
-        allowable_extensions = [ext for ext in accepted_extensions]
+        allowable_extensions = list(accepted_extensions)
         allowable_extensions.extend([ext.upper() for ext in accepted_extensions])
         allowable_extensions.append(VHDL_EXTENSIONS[0][0] + VHDL_EXTENSIONS[0][1].upper()
                                     + VHDL_EXTENSIONS[0][2:])  # mixed case

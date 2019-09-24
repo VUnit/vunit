@@ -297,7 +297,7 @@ def check_output(command, env=None):
     Wrapper arround subprocess.check_output
     """
     try:
-        output = subprocess.check_output(command,
+        output = subprocess.check_output(command,  # pylint: disable=unexpected-keyword-arg
                                          env=env,
                                          stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as err:

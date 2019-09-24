@@ -86,8 +86,7 @@ class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes
         """
         Return the component name of all component instantiations found within the code
         """
-        matches = cls._component_re.findall(code)
-        return [comp_name for comp_name in matches]
+        return list(cls._component_re.findall(code))
 
 
 class VHDLPackageBody(object):
@@ -254,9 +253,9 @@ class VHDLPackage(object):
         """
         # Extract identifier
         identifier = cls._package_start_re.match(code).group('id')
-        enumeration_types = [e for e in VHDLEnumerationType.find(code)]
-        record_types = [r for r in VHDLRecordType.find(code)]
-        array_types = [a for a in VHDLArrayType.find(code)]
+        enumeration_types = list(VHDLEnumerationType.find(code))
+        record_types = list(VHDLRecordType.find(code))
+        array_types = list(VHDLArrayType.find(code))
 
         return cls(identifier, enumeration_types, record_types, array_types)
 
