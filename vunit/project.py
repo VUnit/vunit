@@ -382,12 +382,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         files_to_recompile = self._get_files_to_recompile(files, dependency_graph, incremental)
         # Get files that are affected by recompiling the modified files
         affected_files = self._get_affected_files(files_to_recompile, dependency_graph.get_dependent)
-
-        try:
-            compile_order = dependency_graph.toposort()
-        except CircularDependencyException as exc:
-            self._handle_circular_dependency(exc)
-            raise CompileError
+        compile_order = self._get_compile_order(dependency_graph)
 
         def comparison_key(source_file):
             return compile_order.index(source_file)
@@ -421,12 +416,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
 
         dependency_graph = self.create_dependency_graph(implementation_dependencies)
         affected_files = self._get_affected_files(set(target_files), dependency_graph.get_dependencies)
-
-        try:
-            compile_order = dependency_graph.toposort()
-        except CircularDependencyException as exc:
-            self._handle_circular_dependency(exc)
-            raise CompileError
+        compile_order = self._get_compile_order(dependency_graph)
 
         def comparison_key(source_file):
             return compile_order.index(source_file)
@@ -444,6 +434,17 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         """
         try:
             return get_depend_func(target_files)
+        except CircularDependencyException as exc:
+            self._handle_circular_dependency(exc)
+            raise CompileError
+
+    def _get_compile_order(self, dependency_graph):
+        """
+        Returns a sorted list of type SourceFile using the given dependency graph
+        param: dependency_graph: The DependencyGraph object
+        """
+        try:
+            return dependency_graph.toposort()
         except CircularDependencyException as exc:
             self._handle_circular_dependency(exc)
             raise CompileError
