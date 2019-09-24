@@ -368,6 +368,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         """
         Get a list of all files in compile order
         param: incremental: Only return files that need recompile if True
+        param: files: provide a list of files that shall be sorted, if None all files are used
         """
         if dependency_graph is None:
             dependency_graph = self.create_dependency_graph()
