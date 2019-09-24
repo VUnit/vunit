@@ -453,8 +453,12 @@ if run("Test 2")
             self.assertEqual(set(item
                                  for test_suite in test_suites
                                  for item in test_suite.test_information.items()),
-                             set([("lib.tb_entity.Test 1", Test("Test 1", _file_location(file_name, 'Test 1'))),
-                                  ("lib.tb_entity.Test 2", Test("Test 2", _file_location(file_name, 'Test 2')))]))
+                             set([("lib.tb_entity.Test 1", Test("Test 1",
+                                                                _file_location(file_name, 'Test 1'),
+                                                                file_name)),
+                                  ("lib.tb_entity.Test 2", Test("Test 2",
+                                                                _file_location(file_name, 'Test 2'),
+                                                                file_name))]))
 
     @with_tempdir
     def test_fail_on_unknown_sim_option(self, tempdir):
