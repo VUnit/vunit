@@ -381,8 +381,9 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         files = self.get_source_files_in_order()
         files_to_recompile = self._get_files_to_recompile(files, dependency_graph, incremental)
         # Get files that are affected by recompiling the modified files
+        affected_files = self._get_affected_files(files_to_recompile, dependency_graph.get_dependent)
+
         try:
-            affected_files = dependency_graph.get_dependent(files_to_recompile)
             compile_order = dependency_graph.toposort()
         except CircularDependencyException as exc:
             self._handle_circular_dependency(exc)
@@ -419,9 +420,9 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
             target_files = self.get_source_files_in_order()
 
         dependency_graph = self.create_dependency_graph(implementation_dependencies)
+        affected_files = self._get_affected_files(set(target_files), dependency_graph.get_dependencies)
 
         try:
-            affected_files = dependency_graph.get_dependencies(set(target_files))
             compile_order = dependency_graph.toposort()
         except CircularDependencyException as exc:
             self._handle_circular_dependency(exc)
@@ -432,6 +433,20 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
 
         sorted_files = sorted(affected_files, key=comparison_key)
         return sorted_files
+
+    def _get_affected_files(self, target_files, get_depend_func):
+        """
+        Get affected files given a  list of type SourceFile, if the list is None
+        all files are taken into account
+        :param target_files: An initial list of type SourceFile
+        :param get_depend_func: One of either [get_dependent, get_dependencies, get_direct_dependencies]
+        of an object dependency_graph of type DependencyGraph
+        """
+        try:
+            return get_depend_func(target_files)
+        except CircularDependencyException as exc:
+            self._handle_circular_dependency(exc)
+            raise CompileError
 
     def get_source_files_in_order(self):
         """
