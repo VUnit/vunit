@@ -109,14 +109,8 @@ class ActiveHDLInterface(SimulatorInterface):
         """
         Convert standard to format of Active-HDL command line flag
         """
-        if vhdl_standard == "2008":
-            return "-2008"
-
-        if vhdl_standard == "2002":
-            return "-2002"
-
-        if vhdl_standard == "93":
-            return "-93"
+        if vhdl_standard in ["93", "2002", "2008"]:
+            return "-%s" % vhdl_standard
 
         raise ValueError("Invalid VHDL standard %s" % vhdl_standard)
 
