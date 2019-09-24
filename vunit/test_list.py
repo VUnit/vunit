@@ -73,6 +73,10 @@ class TestSuiteWrapper(object):
         self._test_case = test_case
 
     @property
+    def file_name(self):
+        return self._test_case.file_name
+
+    @property
     def test_names(self):
         return [self._test_case.name]
 
