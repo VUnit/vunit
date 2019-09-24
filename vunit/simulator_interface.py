@@ -163,13 +163,14 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         Hook for the simulator interface to add simulator specific things to the project
         """
 
-    def compile_project(self, project, printer=NO_COLOR_PRINTER, continue_on_error=False):
+    def compile_project(self, project, printer=NO_COLOR_PRINTER, continue_on_error=False, target_files=None):
         """
         Compile the project
+        param: target_files: Given a list of SourceFiles only these and dependent files are compiled
         """
         self.add_simulator_specific(project)
         self.setup_library_mapping(project)
-        self.compile_source_files(project, printer, continue_on_error)
+        self.compile_source_files(project, printer, continue_on_error, target_files=target_files)
 
     def simulate(self, output_path, test_suite_name, config, elaborate_only):
         """
@@ -214,13 +215,19 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
 
         return True
 
-    def compile_source_files(self, project, printer=NO_COLOR_PRINTER, continue_on_error=False):
+    def compile_source_files(self, project, printer=NO_COLOR_PRINTER, continue_on_error=False, target_files=None):
         """
         Use compile_source_file_command to compile all source_files
+        param: target_files: Given a list of SourceFiles only these and dependent files are compiled
         """
         dependency_graph = project.create_dependency_graph()
         failures = []
-        source_files = project.get_files_in_compile_order(dependency_graph=dependency_graph)
+
+        if target_files is None:
+            source_files = project.get_files_in_compile_order(dependency_graph=dependency_graph)
+        else:
+            source_files = project.get_minimal_file_set_in_compile_order(target_files)
+
         source_files_to_skip = set()
 
         max_library_name = 0
