@@ -370,7 +370,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 timestamps[source_file] = ostools.get_modification_time(hash_file_name)
         return timestamps
 
-    def get_files_in_compile_order(self, incremental=True, dependency_graph=None):
+    def get_files_in_compile_order(self, incremental=True, dependency_graph=None, files=None):
         """
         Get a list of all files in compile order
         param: incremental: Only return files that need recompile if True
@@ -378,7 +378,9 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         if dependency_graph is None:
             dependency_graph = self.create_dependency_graph()
 
-        files = self.get_source_files_in_order()
+        if files is None:
+            files = self.get_source_files_in_order()
+
         files_to_recompile = self._get_files_to_recompile(files, dependency_graph, incremental)
         # Get files that are affected by recompiling the modified files
         affected_files = self._get_affected_files(files_to_recompile, dependency_graph.get_dependent)
