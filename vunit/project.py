@@ -373,21 +373,16 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
     def get_files_in_compile_order(self, incremental=True, dependency_graph=None):
         """
         Get a list of all files in compile order
-        incremental -- Only return files that need recompile if True
+        param: incremental: Only return files that need recompile if True
         """
         if dependency_graph is None:
             dependency_graph = self.create_dependency_graph()
 
-        all_files = self.get_source_files_in_order()
-        timestamps = self._get_compile_timestamps(all_files)
-        files = []
-        for source_file in all_files:
-            if (not incremental) or self._needs_recompile(dependency_graph, source_file, timestamps):
-                files.append(source_file)
-
+        files = self.get_source_files_in_order()
+        files_to_recompile = self._get_files_to_recompile(files, dependency_graph, incremental)
         # Get files that are affected by recompiling the modified files
         try:
-            affected_files = dependency_graph.get_dependent(files)
+            affected_files = dependency_graph.get_dependent(files_to_recompile)
             compile_order = dependency_graph.toposort()
         except CircularDependencyException as exc:
             self._handle_circular_dependency(exc)
@@ -398,6 +393,20 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
 
         retval = sorted(affected_files, key=comparison_key)
         return retval
+
+    def _get_files_to_recompile(self, files, dependency_graph, incremental):
+        """
+        Analyse a given set of SourceFile according to the compile timestamps
+        and return the set that has to be recompiled.
+        param: files: a list of type SourceFile
+        param: dependency_graph: The DependencyGraph object to be used
+        """
+        timestamps = self._get_compile_timestamps(files)
+        result_list = []
+        for source_file in files:
+            if (not incremental) or self._needs_recompile(dependency_graph, source_file, timestamps):
+                result_list.append(source_file)
+        return result_list
 
     def get_dependencies_in_compile_order(self, target_files=None, implementation_dependencies=False):
         """
