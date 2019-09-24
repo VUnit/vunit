@@ -383,12 +383,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         # Get files that are affected by recompiling the modified files
         affected_files = self._get_affected_files(files_to_recompile, dependency_graph.get_dependent)
         compile_order = self._get_compile_order(dependency_graph)
-
-        def comparison_key(source_file):
-            return compile_order.index(source_file)
-
-        retval = sorted(affected_files, key=comparison_key)
-        return retval
+        return _get_sorted_files(affected_files, compile_order)
 
     def _get_files_to_recompile(self, files, dependency_graph, incremental):
         """
@@ -417,12 +412,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         dependency_graph = self.create_dependency_graph(implementation_dependencies)
         affected_files = self._get_affected_files(set(target_files), dependency_graph.get_dependencies)
         compile_order = self._get_compile_order(dependency_graph)
-
-        def comparison_key(source_file):
-            return compile_order.index(source_file)
-
-        sorted_files = sorted(affected_files, key=comparison_key)
-        return sorted_files
+        return _get_sorted_files(affected_files, compile_order)
 
     def _get_affected_files(self, target_files, get_depend_func):
         """
@@ -516,6 +506,17 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         new_content_hash = source_file.content_hash
         ostools.write_file(self._hash_file_name_of(source_file), new_content_hash)
         LOGGER.debug('Wrote %s content_hash=%s', source_file.name, new_content_hash)
+
+
+def _get_sorted_files(files, compile_order):
+    """
+    Returns a sorted list of type SourceFile given a list of SourceFiles in compile order
+    param: files: List of type SourceFile
+    param: compile_order: List of type SourceFile in compile order
+    """
+    def comparison_key(source_file):
+        return compile_order.index(source_file)
+    return sorted(files, key=comparison_key)
 
 
 class Library(object):  # pylint: disable=too-many-instance-attributes
