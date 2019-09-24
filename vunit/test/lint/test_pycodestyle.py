@@ -33,7 +33,7 @@ class TestPycodestyle(unittest.TestCase):
                 "--max-line-length=120",
                 # W503 mutually exclusive with W504
                 # E722 bare except checked by pylint
-                "--ignore=E402,W503,E722",
+                "--ignore=E402,W503,E722,E501,E203",
             ]
             + get_files_and_folders()
         )
