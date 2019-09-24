@@ -1035,7 +1035,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         # get test benches
         if self._args.minimal:
             test_list = self._create_tests(simulator_if)
-            tb_file_names = set([test_suite.file_name for test_suite in test_list])
+            tb_file_names = {test_suite.file_name for test_suite in test_list}
             target_files = [self.get_source_file(file_name).project_source_file for file_name in tb_file_names]
         else:
             target_files = None
