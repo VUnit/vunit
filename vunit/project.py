@@ -377,10 +377,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
             files = self.get_source_files_in_order()
 
         files_to_recompile = self._get_files_to_recompile(files, dependency_graph, incremental)
-        # Get files that are affected by recompiling the modified files
-        affected_files = self._get_affected_files(files_to_recompile, dependency_graph.get_dependent)
-        compile_order = self._get_compile_order(dependency_graph)
-        return _get_sorted_files(affected_files, compile_order)
+        return self._get_affected_files_in_compile_order(files_to_recompile, dependency_graph.get_dependent)
 
     def _get_files_to_recompile(self, files, dependency_graph, incremental):
         """
@@ -407,8 +404,16 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
             target_files = self.get_source_files_in_order()
 
         dependency_graph = self.create_dependency_graph(implementation_dependencies)
-        affected_files = self._get_affected_files(set(target_files), dependency_graph.get_dependencies)
-        compile_order = self._get_compile_order(dependency_graph)
+        return self._get_affected_files_in_compile_order(set(target_files), dependency_graph.get_dependencies)
+
+    def _get_affected_files_in_compile_order(self, target_files, get_depend_func):
+        """
+        Returns the affected files in compile order given a list of target files and a dependencie function
+        :param target_files: The files to compile
+        :param get_depend_func: one of DependencyGraph [get_dependencies, get_dependent, get_direct_dependencies]
+        """
+        affected_files = self._get_affected_files(target_files, get_depend_func)
+        compile_order = self._get_compile_order(get_depend_func.__self__)
         return _get_sorted_files(affected_files, compile_order)
 
     def _get_affected_files(self, target_files, get_depend_func):
