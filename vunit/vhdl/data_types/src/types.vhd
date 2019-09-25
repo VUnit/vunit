@@ -5,6 +5,7 @@
 -- Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
 package types_pkg is
+  subtype index_t is integer range -1 to integer'high;
   subtype byte_t is integer range 0 to 255;
   type storage_mode_t is (internal, extfnc, extacc);
 
