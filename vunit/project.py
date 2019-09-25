@@ -373,10 +373,8 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         if dependency_graph is None:
             dependency_graph = self.create_dependency_graph()
 
-        if files is None:
-            files = self.get_source_files_in_order()
-
-        files_to_recompile = self._get_files_to_recompile(files, dependency_graph, incremental)
+        files_to_recompile = self._get_files_to_recompile(files or self.get_source_files_in_order(),
+                                                          dependency_graph, incremental)
         return self._get_affected_files_in_compile_order(files_to_recompile, dependency_graph.get_dependent)
 
     def _get_files_to_recompile(self, files, dependency_graph, incremental):
