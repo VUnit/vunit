@@ -413,8 +413,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         :param get_depend_func: one of DependencyGraph [get_dependencies, get_dependent, get_direct_dependencies]
         """
         affected_files = self._get_affected_files(target_files, get_depend_func)
-        compile_order = self._get_compile_order(get_depend_func.__self__)
-        return _get_sorted_files(affected_files, compile_order)
+        return self._get_compile_order(affected_files, get_depend_func.__self__)
 
     def _get_affected_files(self, target_files, get_depend_func):
         """
@@ -430,16 +429,21 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
             self._handle_circular_dependency(exc)
             raise CompileError
 
-    def _get_compile_order(self, dependency_graph):
+    def _get_compile_order(self, files, dependency_graph):
         """
         Returns a sorted list of type SourceFile using the given dependency graph
         param: dependency_graph: The DependencyGraph object
         """
         try:
-            return dependency_graph.toposort()
+            compile_order = dependency_graph.toposort()
         except CircularDependencyException as exc:
             self._handle_circular_dependency(exc)
             raise CompileError
+
+        def comparison_key(source_file):
+            return compile_order.index(source_file)
+
+        return sorted(files, key=comparison_key)
 
     def get_source_files_in_order(self):
         """
@@ -508,17 +512,6 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         new_content_hash = source_file.content_hash
         ostools.write_file(self._hash_file_name_of(source_file), new_content_hash)
         LOGGER.debug('Wrote %s content_hash=%s', source_file.name, new_content_hash)
-
-
-def _get_sorted_files(files, compile_order):
-    """
-    Returns a sorted list of type SourceFile given a list of SourceFiles in compile order
-    param: files: List of type SourceFile
-    param: compile_order: List of type SourceFile in compile order
-    """
-    def comparison_key(source_file):
-        return compile_order.index(source_file)
-    return sorted(files, key=comparison_key)
 
 
 class Library(object):  # pylint: disable=too-many-instance-attributes
