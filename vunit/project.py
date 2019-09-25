@@ -311,11 +311,11 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                     add_dependency(dependency, source_file)
 
         dependency_graph = DependencyGraph()
-        for source_file in self.get_source_files_in_order():
+        for source_file in self._source_files_in_order:
             dependency_graph.add_node(source_file)
 
         vhdl_files = [source_file
-                      for source_file in self.get_source_files_in_order()
+                      for source_file in self._source_files_in_order
                       if source_file.file_type == 'vhdl']
 
         depend_on_package_bodies = self._depend_on_package_body or implementation_dependencies
@@ -327,7 +327,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         add_dependencies(self._find_primary_secondary_design_unit_dependencies, vhdl_files)
 
         verilog_files = [source_file
-                         for source_file in self.get_source_files_in_order()
+                         for source_file in self._source_files_in_order
                          if source_file.file_type in VERILOG_FILE_TYPES]
 
         add_dependencies(self._find_verilog_package_dependencies, verilog_files)
@@ -401,7 +401,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         """
 
         if target_files is None:
-            target_files = self.get_source_files_in_order()
+            target_files = self._source_files_in_order
 
         dependency_graph = self.create_dependency_graph(implementation_dependencies)
         return self._get_affected_files_in_compile_order(set(target_files), dependency_graph.get_dependencies)

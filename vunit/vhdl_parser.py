@@ -72,7 +72,7 @@ class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes
                    packages=list(VHDLPackage.find(code)),
                    package_bodies=list(VHDLPackageBody.find(code)),
                    contexts=list(VHDLContext.find(code)),
-                   component_instantiations=list(cls._find_component_instantiations(code)),
+                   component_instantiations=list(cls._component_re.findall(code)),
                    configurations=list(VHDLConfiguration.find(code)),
                    references=list(VHDLReference.find(code)))
 
@@ -80,13 +80,6 @@ class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes
         r"[a-zA-Z]\w*\s*\:\s*(?:component)?\s*(?:(?:[a-zA-Z]\w*)\.)?([a-zA-Z]\w*)\s*"
         r"(?:generic|port) map\s*\([\s\w\=\>\,\.\)\(\+\-\'\"]*\);",
         re.IGNORECASE)
-
-    @classmethod
-    def _find_component_instantiations(cls, code):
-        """
-        Return the component name of all component instantiations found within the code
-        """
-        return list(cls._component_re.findall(code))
 
 
 class VHDLPackageBody(object):
@@ -251,13 +244,12 @@ class VHDLPackage(object):
         """
         Return a new VHDLPackage instance for a single package found within the code
         """
-        # Extract identifier
-        identifier = cls._package_start_re.match(code).group('id')
-        enumeration_types = list(VHDLEnumerationType.find(code))
-        record_types = list(VHDLRecordType.find(code))
-        array_types = list(VHDLArrayType.find(code))
-
-        return cls(identifier, enumeration_types, record_types, array_types)
+        return cls(
+            cls._package_start_re.match(code).group('id'),
+            list(VHDLEnumerationType.find(code)),
+            list(VHDLRecordType.find(code)),
+            list(VHDLArrayType.find(code))
+        )
 
 
 class VHDLEntity(object):
