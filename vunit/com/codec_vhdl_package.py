@@ -33,13 +33,12 @@ class CodecVHDLPackage(VHDLPackage):
         Return a new VHDLPackage instance for a single package found within the code
         """
         code = remove_comments(code).lower()
-        # Extract identifier
-        identifier = cls._package_start_re.match(code).group('id')
-        enumeration_types = list(CodecVHDLEnumerationType.find(code))
-        record_types = list(CodecVHDLRecordType.find(code))
-        array_types = list(CodecVHDLArrayType.find(code))
-
-        return cls(identifier, enumeration_types, record_types, array_types)
+        return cls(
+            cls._package_start_re.match(code).group('id'),
+            list(CodecVHDLEnumerationType.find(code)),
+            list(CodecVHDLRecordType.find(code)),
+            list(CodecVHDLArrayType.find(code))
+        )
 
     @classmethod
     def find_named_package(cls, code, name):
