@@ -259,11 +259,8 @@ from vunit.simulator_interface import (is_string_not_iterable,
                                        SimulatorInterface)
 from vunit.color_printer import (COLOR_PRINTER,
                                  NO_COLOR_PRINTER)
-from vunit.project import (Project,
-                           file_type_of,
-                           FILE_TYPES,
-                           VERILOG_FILE_TYPES,
-                           check_vhdl_standard)
+from vunit.project import Project
+from vunit.source_file import (file_type_of, FILE_TYPES, VERILOG_FILE_TYPES, check_vhdl_standard)
 from vunit.test_runner import TestRunner
 from vunit.test_report import TestReport
 from vunit.test_bench_list import TestBenchList
