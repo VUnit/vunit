@@ -26,6 +26,7 @@ from vunit.parsing.encodings import HDL_FILE_ENCODING
 from vunit.exceptions import CompileError
 from vunit.simulator_factory import SIMULATOR_FACTORY
 from vunit.design_unit import DesignUnit, VHDLDesignUnit, Entity, Module
+from vunit.vhdl_standard import VHDL
 from vunit import ostools
 LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +78,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         """
         self._builtin_libraries.add(logical_name)
 
-    def add_library(self, logical_name, directory, vhdl_standard='2008', is_external=False):
+    def add_library(self, logical_name, directory, vhdl_standard=VHDL.STD_2008, is_external=False):
         """
         Add library to project with logical_name located or to be located in directory
         is_external -- Library is assumed to a black-box
@@ -837,7 +838,6 @@ class VHDLSourceFile(SourceFile):
         self.dependencies = []
         self.depending_components = []
         self._vhdl_standard = vhdl_standard
-        check_vhdl_standard(vhdl_standard)
 
         if not no_parse:
 
@@ -938,7 +938,7 @@ class VHDLSourceFile(SourceFile):
         """
         Compute hash of contents and compile options
         """
-        return hash_string(self._content_hash + self._compile_options_hash() + hash_string(self._vhdl_standard))
+        return hash_string(self._content_hash + self._compile_options_hash() + hash_string(str(self._vhdl_standard)))
 
     def add_to_library(self, library):
         """
@@ -971,17 +971,3 @@ def file_type_of(file_name):
         return "systemverilog"
 
     raise RuntimeError("Unknown file ending '%s' of %s" % (ext, file_name))
-
-
-def check_vhdl_standard(vhdl_standard, from_str=None):
-    """
-    Check the VHDL standard selected is recognized
-    """
-    if from_str is None:
-        from_str = ""
-    else:
-        from_str += " "
-
-    valid_standards = ('93', '2002', '2008', '2019')
-    if vhdl_standard not in valid_standards:
-        raise ValueError("Unknown VHDL standard '%s' %snot one of %r" % (vhdl_standard, from_str, valid_standards))

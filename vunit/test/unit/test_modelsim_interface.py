@@ -18,6 +18,7 @@ from vunit.test.mock_2or3 import mock
 from vunit.test.common import set_env
 from vunit.project import Project
 from vunit.ostools import renew_path, write_file
+from vunit.vhdl_standard import VHDL
 
 
 class TestModelSimInterface(unittest.TestCase):
@@ -34,7 +35,7 @@ class TestModelSimInterface(unittest.TestCase):
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.vhd", "")
-        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="2008")
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2008"))
         simif.compile_project(project)
         process_args = [join(self.prefix_path, "vlib"), "-unix", "lib_path"]
         process.assert_called_once_with(process_args, env=simif.get_env())
@@ -52,7 +53,7 @@ class TestModelSimInterface(unittest.TestCase):
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.vhd", "")
-        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="2002")
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2002"))
         simif.compile_project(project)
         process_args = [join(self.prefix_path, "vlib"), "-unix", "lib_path"]
         process.assert_called_once_with(process_args, env=simif.get_env())
@@ -70,7 +71,7 @@ class TestModelSimInterface(unittest.TestCase):
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.vhd", "")
-        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="93")
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("93"))
         simif.compile_project(project)
         process_args = [join(self.prefix_path, "vlib"), "-unix", "lib_path"]
         process.assert_called_once_with(process_args, env=simif.get_env())

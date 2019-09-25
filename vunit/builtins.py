@@ -11,6 +11,7 @@ Functions to add builtin VHDL code to a project for compilation
 
 from os.path import join, abspath, dirname, basename
 from glob import glob
+from vunit.vhdl_standard import VHDL
 
 VHDL_PATH = abspath(join(dirname(__file__), "vhdl"))
 VERILOG_PATH = abspath(join(dirname(__file__), "verilog"))
@@ -45,23 +46,18 @@ class Builtins(object):
         """
         Add files with naming convention to indicate which standard is supported
         """
-        supports_context = self._simulator_class.supports_vhdl_contexts() and self._vhdl_standard in ["2008", "2019"]
-
-        tags = {
-            "93": ("93",),
-            "2002": ("2002",),
-            "2008": ("2008",),
-            "2019": ("2019",),
-            "2002p": ("2002", "2008", "2019",),
-            "2008p": ("2008", "2019",),
-        }
+        supports_context = self._simulator_class.supports_vhdl_contexts() and self._vhdl_standard.supports_context
 
         for file_name in glob(pattern):
+            base_file_name = basename(file_name)
 
             standards = set()
-            for tag, applicable_standards in tags.items():
-                if tag in basename(file_name):
-                    standards.update(applicable_standards)
+            for standard in VHDL.STANDARDS:
+                standard_name = str(standard)
+                if standard_name + "p" in base_file_name:
+                    standards.update(standard.and_later)
+                elif standard_name in base_file_name:
+                    standards.add(standard)
 
             if standards and self._vhdl_standard not in standards:
                 continue
@@ -81,8 +77,8 @@ class Builtins(object):
         """
         Add array utility
         """
-        if self._vhdl_standard not in ["2008", "2019"]:
-            raise RuntimeError("Array util only supports vhdl 2008 and 2019")
+        if not self._vhdl_standard >= VHDL.STD_2008:
+            raise RuntimeError("Array util only supports vhdl 2008 and later")
 
         self._vunit_lib.add_source_files(join(VHDL_PATH, "array", "src", "*.vhd"))
 
@@ -90,8 +86,8 @@ class Builtins(object):
         """
         Add random pkg
         """
-        if self._vhdl_standard not in ["2008", "2019"]:
-            raise RuntimeError("Random only supports vhdl 2008 and 2019")
+        if not self._vhdl_standard >= VHDL.STD_2008:
+            raise RuntimeError("Random only supports vhdl 2008 and later")
 
         self._vunit_lib.add_source_files(join(VHDL_PATH, "random", "src", "*.vhd"))
 
@@ -99,8 +95,8 @@ class Builtins(object):
         """
         Add com library
         """
-        if self._vhdl_standard not in ["2008", "2019"]:
-            raise RuntimeError("Communication package only supports vhdl 2008 and 2019")
+        if not self._vhdl_standard >= VHDL.STD_2008:
+            raise RuntimeError("Communication package only supports vhdl 2008 and later")
 
         self._add_files(join(VHDL_PATH, "com", "src", "*.vhd"))
 
@@ -108,8 +104,8 @@ class Builtins(object):
         """
         Add verification component library
         """
-        if self._vhdl_standard not in ["2008", "2019"]:
-            raise RuntimeError("Verification component library only supports vhdl 2008 and 2019")
+        if not self._vhdl_standard >= VHDL.STD_2008:
+            raise RuntimeError("Verification component library only supports vhdl 2008 and later")
         self._add_files(join(VHDL_PATH, "verification_components", "src", "*.vhd"))
 
     def _add_osvvm(self):

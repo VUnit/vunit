@@ -19,6 +19,7 @@ from vunit.ostools import Process, file_exists
 from vunit.simulator_interface import (SimulatorInterface,
                                        ListOfStringOption,
                                        StringOption)
+from vunit.vhdl_standard import VHDL
 from vunit.exceptions import CompileError
 from vunit.vsim_simulator_mixin import (VsimSimulatorMixin,
                                         fix_path)
@@ -140,13 +141,9 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         Convert standard to format of Riviera-PRO command line flag
         """
-        if vhdl_standard == "2019":
+        if vhdl_standard == VHDL.STD_2019:
             return "-2018"
-
-        if vhdl_standard in ["93", "2002", "2008"]:
-            return "-%s" % vhdl_standard
-
-        raise ValueError("Invalid VHDL standard %s" % vhdl_standard)
+        return "-%s" % vhdl_standard
 
     def compile_vhdl_file_command(self, source_file):
         """

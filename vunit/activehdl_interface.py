@@ -17,6 +17,7 @@ import re
 import logging
 from vunit.ostools import Process, write_file, file_exists, renew_path
 from vunit.test_suites import get_result_file_name
+from vunit.vhdl_standard import VHDL
 from vunit.vsim_simulator_mixin import (get_is_test_suite_done_tcl,
                                         fix_path)
 from vunit.simulator_interface import (SimulatorInterface,
@@ -109,7 +110,7 @@ class ActiveHDLInterface(SimulatorInterface):
         """
         Convert standard to format of Active-HDL command line flag
         """
-        if vhdl_standard in ["93", "2002", "2008"]:
+        if vhdl_standard <= VHDL.STD_2008:
             return "-%s" % vhdl_standard
 
         raise ValueError("Invalid VHDL standard %s" % vhdl_standard)

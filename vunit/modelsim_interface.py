@@ -30,6 +30,7 @@ from vunit.simulator_interface import (SimulatorInterface,
 from vunit.exceptions import CompileError
 from vunit.vsim_simulator_mixin import (VsimSimulatorMixin,
                                         fix_path)
+from vunit.vhdl_standard import VHDL
 
 LOGGER = logging.getLogger(__name__)
 
@@ -147,7 +148,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         """
         Convert standard to format of Modelsim command line flag
         """
-        if vhdl_standard in ["93", "2002", "2008"]:
+        if vhdl_standard <= VHDL.STD_2008:
             return "-%s" % vhdl_standard
 
         raise ValueError("Invalid VHDL standard %s" % vhdl_standard)

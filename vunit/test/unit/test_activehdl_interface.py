@@ -17,6 +17,7 @@ from vunit.activehdl_interface import ActiveHDLInterface
 from vunit.test.mock_2or3 import mock
 from vunit.project import Project
 from vunit.ostools import renew_path, write_file
+from vunit.vhdl_standard import VHDL
 
 
 class TestActiveHDLInterface(unittest.TestCase):
@@ -32,7 +33,7 @@ class TestActiveHDLInterface(unittest.TestCase):
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.vhd", "")
-        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="2008")
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2008"))
         simif.compile_project(project)
         process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"],
                                 cwd=self.output_path,
@@ -59,7 +60,7 @@ class TestActiveHDLInterface(unittest.TestCase):
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.vhd", "")
-        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="2002")
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2002"))
         simif.compile_project(project)
         process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"],
                                 cwd=self.output_path,
@@ -86,7 +87,7 @@ class TestActiveHDLInterface(unittest.TestCase):
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.vhd", "")
-        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="93")
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("93"))
         simif.compile_project(project)
         process.assert_any_call([join("prefix", "vlib"), "lib", "lib_path"],
                                 cwd=self.output_path,

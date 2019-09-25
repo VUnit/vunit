@@ -16,6 +16,7 @@ import subprocess
 import shlex
 from sys import stdout  # To avoid output catched in non-verbose mode
 from vunit.ostools import Process
+from vunit.vhdl_standard import VHDL
 from vunit.simulator_interface import (SimulatorInterface,
                                        ListOfStringOption,
                                        StringOption,
@@ -99,7 +100,7 @@ class GHDLInterface(SimulatorInterface):
         """
         Return if the simulation should fail with nonzero exit codes
         """
-        return self._vhdl_standard in ["2008", "2019"]
+        return self._vhdl_standard >= VHDL.STD_2008
 
     @classmethod
     def determine_backend(cls, prefix):
@@ -151,7 +152,7 @@ class GHDLInterface(SimulatorInterface):
                              if source_file.is_vhdl)
 
         if not vhdl_standards:
-            self._vhdl_standard = '2008'
+            self._vhdl_standard = VHDL.STD_2008
         elif len(vhdl_standards) != 1:
             raise RuntimeError("GHDL cannot handle mixed VHDL standards, found %r" % list(vhdl_standards))
         else:
@@ -172,13 +173,13 @@ class GHDLInterface(SimulatorInterface):
         """
         Convert standard to format of GHDL command line flag
         """
-        if vhdl_standard == "2002":
+        if vhdl_standard == VHDL.STD_2002:
             return "02"
 
-        if vhdl_standard == "2008":
+        if vhdl_standard == VHDL.STD_2008:
             return "08"
 
-        if vhdl_standard == "93":
+        if vhdl_standard == VHDL.STD_1993:
             return "93"
 
         raise ValueError("Invalid VHDL standard %s" % vhdl_standard)
