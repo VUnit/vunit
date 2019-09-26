@@ -996,7 +996,7 @@ def _comment_repl(match):
     Replace comment with equal amount of whitespace to make
     lexical position unaffected
     """
-    return match.group(1) + " "*len(match.group(2))
+    return match.group(1) + (" " * len(match.group(2)))
 
 
 def remove_comments(code):
