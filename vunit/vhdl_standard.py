@@ -32,11 +32,11 @@ class VHDLStandard(object):
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            return self._standard == other._standard
+            return self._standard == other._standard  # pylint: disable=protected-access
         return False
 
     def __lt__(self, other):
-        return int(self._standard) < int(other._standard)
+        return int(self._standard) < int(other._standard)  # pylint: disable=protected-access
 
     def __str__(self):
         if self == VHDL.STD_1993:
