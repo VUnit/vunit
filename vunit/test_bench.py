@@ -20,7 +20,7 @@ from vunit.test_list import TestList
 from vunit.vhdl_parser import remove_comments as remove_vhdl_comments
 from vunit.test_suites import IndependentSimTestCase, SameSimTestSuite
 from vunit.parsing.encodings import HDL_FILE_ENCODING
-from vunit.project import file_type_of, VERILOG_FILE_TYPES
+from vunit.source_file import file_type_of, VERILOG_FILE_TYPES
 from vunit.configuration import Configuration, ConfigurationVisitor, DEFAULT_NAME
 
 

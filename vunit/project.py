@@ -9,25 +9,19 @@
 """
 Functionality to represent and operate on a HDL code project
 """
-
-
-from os.path import join, basename, dirname, splitext, isdir, exists
-from copy import copy
-import traceback
+from os.path import join, basename, dirname, isdir, exists
 import logging
 from collections import OrderedDict
 from vunit.hashing import hash_string
 from vunit.dependency_graph import (DependencyGraph,
                                     CircularDependencyException)
-from vunit.vhdl_parser import VHDLParser, VHDLReference
-from vunit.cached import file_content_hash
+from vunit.vhdl_parser import VHDLParser
 from vunit.parsing.verilog.parser import VerilogParser
-from vunit.parsing.encodings import HDL_FILE_ENCODING
 from vunit.exceptions import CompileError
-from vunit.simulator_factory import SIMULATOR_FACTORY
-from vunit.design_unit import DesignUnit, VHDLDesignUnit, Entity, Module
-from vunit.vhdl_standard import VHDL
 from vunit import ostools
+from vunit.source_file import (VERILOG_FILE_TYPES, VerilogSourceFile, VHDLSourceFile)
+from vunit.vhdl_standard import VHDL
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -318,11 +312,11 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                     add_dependency(dependency, source_file)
 
         dependency_graph = DependencyGraph()
-        for source_file in self.get_source_files_in_order():
+        for source_file in self._source_files_in_order:
             dependency_graph.add_node(source_file)
 
         vhdl_files = [source_file
-                      for source_file in self.get_source_files_in_order()
+                      for source_file in self._source_files_in_order
                       if source_file.file_type == 'vhdl']
 
         depend_on_package_bodies = self._depend_on_package_body or implementation_dependencies
@@ -334,7 +328,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         add_dependencies(self._find_primary_secondary_design_unit_dependencies, vhdl_files)
 
         verilog_files = [source_file
-                         for source_file in self.get_source_files_in_order()
+                         for source_file in self._source_files_in_order
                          if source_file.file_type in VERILOG_FILE_TYPES]
 
         add_dependencies(self._find_verilog_package_dependencies, verilog_files)
@@ -371,34 +365,32 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 timestamps[source_file] = ostools.get_modification_time(hash_file_name)
         return timestamps
 
-    def get_files_in_compile_order(self, incremental=True, dependency_graph=None):
+    def get_files_in_compile_order(self, incremental=True, dependency_graph=None, files=None):
         """
         Get a list of all files in compile order
-        incremental -- Only return files that need recompile if True
+        param: incremental: Only return files that need recompile if True
+        param: files: provide a list of files that shall be sorted, if None all files are used
         """
         if dependency_graph is None:
             dependency_graph = self.create_dependency_graph()
 
-        all_files = self.get_source_files_in_order()
-        timestamps = self._get_compile_timestamps(all_files)
-        files = []
-        for source_file in all_files:
+        files_to_recompile = self._get_files_to_recompile(files or self.get_source_files_in_order(),
+                                                          dependency_graph, incremental)
+        return self._get_affected_files_in_compile_order(files_to_recompile, dependency_graph.get_dependent)
+
+    def _get_files_to_recompile(self, files, dependency_graph, incremental):
+        """
+        Analyse a given set of SourceFile according to the compile timestamps
+        and return the set that has to be recompiled.
+        param: files: a list of type SourceFile
+        param: dependency_graph: The DependencyGraph object to be used
+        """
+        timestamps = self._get_compile_timestamps(files)
+        result_list = []
+        for source_file in files:
             if (not incremental) or self._needs_recompile(dependency_graph, source_file, timestamps):
-                files.append(source_file)
-
-        # Get files that are affected by recompiling the modified files
-        try:
-            affected_files = dependency_graph.get_dependent(files)
-            compile_order = dependency_graph.toposort()
-        except CircularDependencyException as exc:
-            self._handle_circular_dependency(exc)
-            raise CompileError
-
-        def comparison_key(source_file):
-            return compile_order.index(source_file)
-
-        retval = sorted(affected_files, key=comparison_key)
-        return retval
+                result_list.append(source_file)
+        return result_list
 
     def get_dependencies_in_compile_order(self, target_files=None, implementation_dependencies=False):
         """
@@ -408,12 +400,40 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         """
 
         if target_files is None:
-            target_files = self.get_source_files_in_order()
+            target_files = self._source_files_in_order
 
         dependency_graph = self.create_dependency_graph(implementation_dependencies)
+        return self._get_affected_files_in_compile_order(set(target_files), dependency_graph.get_dependencies)
 
+    def _get_affected_files_in_compile_order(self, target_files, get_depend_func):
+        """
+        Returns the affected files in compile order given a list of target files and a dependencie function
+        :param target_files: The files to compile
+        :param get_depend_func: one of DependencyGraph [get_dependencies, get_dependent, get_direct_dependencies]
+        """
+        affected_files = self._get_affected_files(target_files, get_depend_func)
+        return self._get_compile_order(affected_files, get_depend_func.__self__)
+
+    def _get_affected_files(self, target_files, get_depend_func):
+        """
+        Get affected files given a  list of type SourceFile, if the list is None
+        all files are taken into account
+        :param target_files: An initial list of type SourceFile
+        :param get_depend_func: One of either [get_dependent, get_dependencies, get_direct_dependencies]
+        of an object dependency_graph of type DependencyGraph
+        """
         try:
-            affected_files = dependency_graph.get_dependencies(set(target_files))
+            return get_depend_func(target_files)
+        except CircularDependencyException as exc:
+            self._handle_circular_dependency(exc)
+            raise CompileError
+
+    def _get_compile_order(self, files, dependency_graph):
+        """
+        Returns a sorted list of type SourceFile using the given dependency graph
+        param: dependency_graph: The DependencyGraph object
+        """
+        try:
             compile_order = dependency_graph.toposort()
         except CircularDependencyException as exc:
             self._handle_circular_dependency(exc)
@@ -422,8 +442,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         def comparison_key(source_file):
             return compile_order.index(source_file)
 
-        sorted_files = sorted(affected_files, key=comparison_key)
-        return sorted_files
+        return sorted(files, key=comparison_key)
 
     def get_source_files_in_order(self):
         """
@@ -666,308 +685,3 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
 
     def __hash__(self):
         return hash(self.name)
-
-
-class SourceFile(object):
-    """
-    Represents a generic source file
-    """
-
-    def __init__(self, name, library, file_type):
-        self.name = name
-        self.library = library
-        self.file_type = file_type
-        self.design_units = []
-        self._content_hash = None
-        self._compile_options = {}
-
-        # The file name before preprocessing
-        self.original_name = name
-
-    @property
-    def is_vhdl(self):
-        return self.file_type == "vhdl"
-
-    @property
-    def is_system_verilog(self):
-        return self.file_type == "systemverilog"
-
-    @property
-    def is_any_verilog(self):
-        return self.file_type in VERILOG_FILE_TYPES
-
-    def __eq__(self, other):
-        if isinstance(other, type(self)):
-            return self.to_tuple() == other.to_tuple()
-
-        return False
-
-    def to_tuple(self):
-        return (self.name, self.library, self.file_type)
-
-    def __lt__(self, other):
-        return self.to_tuple() < other.to_tuple()
-
-    def __hash__(self):
-        return hash(self.to_tuple())
-
-    def __repr__(self):
-        return "SourceFile(%s, %s)" % (self.name, self.library.name)
-
-    def set_compile_option(self, name, value):
-        """
-        Set compile option
-        """
-        SIMULATOR_FACTORY.check_compile_option(name, value)
-        self._compile_options[name] = copy(value)
-
-    def add_compile_option(self, name, value):
-        """
-        Add compile option
-        """
-        SIMULATOR_FACTORY.check_compile_option(name, value)
-
-        if name not in self._compile_options:
-            self._compile_options[name] = copy(value)
-        else:
-            self._compile_options[name] += value
-
-    @property
-    def compile_options(self):
-        return self._compile_options
-
-    def get_compile_option(self, name):
-        """
-        Return a copy of the compile option list
-        """
-        SIMULATOR_FACTORY.check_compile_option_name(name)
-
-        if name not in self._compile_options:
-            self._compile_options[name] = []
-
-        return copy(self._compile_options[name])
-
-    def _compile_options_hash(self):
-        """
-        Compute hash of compile options
-
-        Needs to be updated if there are nested dictionaries
-        """
-        return hash_string(repr(sorted(self._compile_options.items())))
-
-    @property
-    def content_hash(self):
-        """
-        Compute hash of contents and compile options
-        """
-        return hash_string(self._content_hash + self._compile_options_hash())
-
-
-class VerilogSourceFile(SourceFile):
-    """
-    Represents a Verilog source file
-    """
-    def __init__(self,  # pylint: disable=too-many-arguments
-                 file_type, name, library, verilog_parser, database, include_dirs=None, defines=None, no_parse=False):
-        SourceFile.__init__(self, name, library, file_type)
-        self.package_dependencies = []
-        self.module_dependencies = []
-        self.include_dirs = include_dirs if include_dirs is not None else []
-        self.defines = defines.copy() if defines is not None else {}
-        self._content_hash = file_content_hash(self.name, encoding=HDL_FILE_ENCODING,
-                                               database=database)
-
-        for path in self.include_dirs:
-            self._content_hash = hash_string(self._content_hash + hash_string(path))
-
-        for key, value in sorted(self.defines.items()):
-            self._content_hash = hash_string(self._content_hash + hash_string(key))
-            self._content_hash = hash_string(self._content_hash + hash_string(value))
-
-        if not no_parse:
-            self.parse(verilog_parser, database, include_dirs)
-
-    def parse(self, parser, database, include_dirs):
-        """
-        Parse Verilog code and adding dependencies and design units
-        """
-        try:
-            design_file = parser.parse(self.name, include_dirs, self.defines)
-            for included_file_name in design_file.included_files:
-                self._content_hash = hash_string(self._content_hash
-                                                 + file_content_hash(included_file_name,
-                                                                     encoding=HDL_FILE_ENCODING,
-                                                                     database=database))
-
-            for module in design_file.modules:
-                self.design_units.append(Module(module.name, self, module.parameters))
-
-            for package in design_file.packages:
-                self.design_units.append(DesignUnit(package.name, self, "package"))
-
-            for package_name in design_file.imports:
-                self.package_dependencies.append(package_name)
-
-            for package_name in design_file.package_references:
-                self.package_dependencies.append(package_name)
-
-            for instance_name in design_file.instances:
-                self.module_dependencies.append(instance_name)
-
-        except KeyboardInterrupt:
-            raise KeyboardInterrupt
-        except:  # pylint: disable=bare-except
-            traceback.print_exc()
-            LOGGER.error("Failed to parse %s", self.name)
-
-    def add_to_library(self, library):
-        """
-        Add design units to the library
-        """
-        assert self.library == library
-        library.add_verilog_design_units(self.design_units)
-
-
-class VHDLSourceFile(SourceFile):
-    """
-    Represents a VHDL source file
-    """
-    def __init__(self,  # pylint: disable=too-many-arguments
-                 name, library, vhdl_parser, database, vhdl_standard, no_parse=False):
-        SourceFile.__init__(self, name, library, 'vhdl')
-        self.dependencies = []
-        self.depending_components = []
-        self._vhdl_standard = vhdl_standard
-
-        if not no_parse:
-
-            try:
-                design_file = vhdl_parser.parse(self.name)
-            except KeyboardInterrupt:
-                raise KeyboardInterrupt
-            except:  # pylint: disable=bare-except
-                traceback.print_exc()
-                LOGGER.error("Failed to parse %s", self.name)
-            else:
-                self._add_design_file(design_file)
-
-        self._content_hash = file_content_hash(self.name,
-                                               encoding=HDL_FILE_ENCODING,
-                                               database=database)
-
-    def get_vhdl_standard(self):
-        """
-        Return the VHDL standard used to create this file
-        """
-        return self._vhdl_standard
-
-    def _add_design_file(self, design_file):
-        """
-        Parse VHDL code and adding dependencies and design units
-        """
-        self.design_units = self._find_design_units(design_file)
-        self.dependencies = self._find_dependencies(design_file)
-        self.depending_components = design_file.component_instantiations
-
-        for design_unit in self.design_units:
-            if design_unit.is_primary:
-                LOGGER.debug('Adding primary design unit (%s) %s', design_unit.unit_type, design_unit.name)
-            elif design_unit.unit_type == 'package body':
-                LOGGER.debug('Adding secondary design unit (package body) for package %s',
-                             design_unit.primary_design_unit)
-            else:
-                LOGGER.debug('Adding secondary design unit (%s) %s', design_unit.unit_type, design_unit.name)
-
-        if self.depending_components:
-            LOGGER.debug("The file '%s' has the following components:", self.name)
-            for component in self.depending_components:
-                LOGGER.debug(component)
-        else:
-            LOGGER.debug("The file '%s' has no components", self.name)
-
-    def _find_dependencies(self, design_file):
-        """
-        Return a list of dependencies of this source_file based on the
-        use clause and entity instantiations
-        """
-        # Find dependencies introduced by the use clause
-        result = []
-        for ref in design_file.references:
-            ref = ref.copy()
-
-            if ref.library == "work":
-                # Work means same library as current file
-                ref.library = self.library.name
-
-            result.append(ref)
-
-        for configuration in design_file.configurations:
-            result.append(VHDLReference('entity', self.library.name, configuration.entity, 'all'))
-
-        return result
-
-    def _find_design_units(self, design_file):
-        """
-        Return all design units found in the design_file
-        """
-        result = []
-        for entity in design_file.entities:
-            generic_names = [generic.identifier for generic in entity.generics]
-            result.append(Entity(entity.identifier, self, generic_names))
-
-        for context in design_file.contexts:
-            result.append(VHDLDesignUnit(context.identifier, self, 'context'))
-
-        for package in design_file.packages:
-            result.append(VHDLDesignUnit(package.identifier, self, 'package'))
-
-        for architecture in design_file.architectures:
-            result.append(VHDLDesignUnit(architecture.identifier, self, 'architecture', False, architecture.entity))
-
-        for configuration in design_file.configurations:
-            result.append(VHDLDesignUnit(configuration.identifier, self, 'configuration'))
-
-        for body in design_file.package_bodies:
-            result.append(VHDLDesignUnit(body.identifier,
-                                         self, 'package body', False, body.identifier))
-
-        return result
-
-    @property
-    def content_hash(self):
-        """
-        Compute hash of contents and compile options
-        """
-        return hash_string(self._content_hash + self._compile_options_hash() + hash_string(str(self._vhdl_standard)))
-
-    def add_to_library(self, library):
-        """
-        Add design units to the library
-        """
-        assert self.library == library
-        library.add_vhdl_design_units(self.design_units)
-
-
-# lower case representation of supported extensions
-VHDL_EXTENSIONS = (".vhd", ".vhdl", ".vho")
-VERILOG_EXTENSIONS = (".v", ".vp", ".vams", ".vo")
-SYSTEM_VERILOG_EXTENSIONS = (".sv",)
-VERILOG_FILE_TYPES = ("verilog", "systemverilog")
-FILE_TYPES = ("vhdl", ) + VERILOG_FILE_TYPES
-
-
-def file_type_of(file_name):
-    """
-    Return the file type of file_name based on the file ending
-    """
-    _, ext = splitext(file_name)
-    if ext.lower() in VHDL_EXTENSIONS:
-        return "vhdl"
-
-    if ext.lower() in VERILOG_EXTENSIONS:
-        return "verilog"
-
-    if ext.lower() in SYSTEM_VERILOG_EXTENSIONS:
-        return "systemverilog"
-
-    raise RuntimeError("Unknown file ending '%s' of %s" % (ext, file_name))

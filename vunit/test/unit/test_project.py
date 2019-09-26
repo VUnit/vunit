@@ -20,7 +20,8 @@ import itertools
 from vunit.test.mock_2or3 import mock
 from vunit.exceptions import CompileError
 from vunit.ostools import renew_path, write_file
-from vunit.project import Project, file_type_of
+from vunit.project import Project
+from vunit.source_file import file_type_of
 
 
 class TestProject(unittest.TestCase):  # pylint: disable=too-many-public-methods
@@ -110,7 +111,7 @@ end package body;
         self.assert_has_package("file1.vhd", "foo")
         self.assert_has_package_body("file1.vhd", "foo")
 
-    @mock.patch("vunit.project.LOGGER")
+    @mock.patch("vunit.source_file.LOGGER")
     def test_recovers_from_parse_error(self, logger):
         self.project.add_library("lib", "work_path")
         source_file = self.add_source_file("lib", "file.vhd", """\
