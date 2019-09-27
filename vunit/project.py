@@ -139,11 +139,6 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
 
         return old_source_file
 
-    def remove_source_file(self, file_name, library_name):
-        library = self._libraries[library_name]
-        sourcefile = library.remove_source_file(file_name)
-        self._source_files_in_order.remove(sourcefile)
-
     def add_manual_dependency(self, source_file, depends_on):
         """
         Add manual dependency where 'source_file' depends_on 'depends_on'
@@ -554,14 +549,6 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
         Get source file with file name or raise KeyError
         """
         return self._source_files[file_name]
-
-    def remove_source_file(self, file_name):
-        """
-        Remove source file with file name from library or raise KeyError
-        """
-        print("Try to remove ", file_name, "from ", self.name)
-        print("Removing ", self._source_files[file_name])
-        return self._source_files.pop(file_name)
 
     @property
     def is_external(self):
