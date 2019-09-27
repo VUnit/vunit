@@ -30,6 +30,7 @@ from vunit.simulator_interface import (SimulatorInterface,
 from vunit.exceptions import CompileError
 from vunit.vsim_simulator_mixin import (VsimSimulatorMixin,
                                         fix_path)
+from vunit.vhdl_standard import VHDL
 
 LOGGER = logging.getLogger(__name__)
 
@@ -142,13 +143,23 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         LOGGER.error("Unknown file type: %s", source_file.file_type)
         raise CompileError
 
+    @staticmethod
+    def _std_str(vhdl_standard):
+        """
+        Convert standard to format of Modelsim command line flag
+        """
+        if vhdl_standard <= VHDL.STD_2008:
+            return "-%s" % vhdl_standard
+
+        raise ValueError("Invalid VHDL standard %s" % vhdl_standard)
+
     def compile_vhdl_file_command(self, source_file):
         """
         Returns the command to compile a vhdl file
         """
         return ([join(self._prefix, 'vcom'), '-quiet', '-modelsimini', self._sim_cfg_file_name]
                 + source_file.compile_options.get("modelsim.vcom_flags", [])
-                + ['-' + source_file.get_vhdl_standard(), '-work', source_file.library.name, source_file.name])
+                + [self._std_str(source_file.get_vhdl_standard()), '-work', source_file.library.name, source_file.name])
 
     def compile_verilog_file_command(self, source_file):
         """

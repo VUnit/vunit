@@ -20,6 +20,7 @@ from vunit.test.mock_2or3 import mock
 from vunit.project import Project
 from vunit.ostools import renew_path, write_file, read_file
 from vunit.test_bench import Configuration
+from vunit.vhdl_standard import VHDL
 
 
 class TestIncisiveInterface(unittest.TestCase):
@@ -37,7 +38,7 @@ class TestIncisiveInterface(unittest.TestCase):
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.vhd", "")
-        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="2008")
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2008"))
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_vhdl_file_lib.args")
         check_output.assert_called_once_with(
@@ -79,7 +80,7 @@ define work "%s/libraries/work"
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.vhd", "")
-        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="2002")
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2002"))
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_vhdl_file_lib.args")
         check_output.assert_called_once_with(
@@ -111,7 +112,7 @@ define work "%s/libraries/work"
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file.vhd", "")
-        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="93")
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("93"))
         simif.compile_project(project)
         args_file = join(self.output_path, "irun_compile_vhdl_file_lib.args")
         check_output.assert_called_once_with(

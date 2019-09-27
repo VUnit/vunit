@@ -259,8 +259,9 @@ from vunit.simulator_interface import (is_string_not_iterable,
                                        SimulatorInterface)
 from vunit.color_printer import (COLOR_PRINTER,
                                  NO_COLOR_PRINTER)
+
 from vunit.project import Project
-from vunit.source_file import (file_type_of, FILE_TYPES, VERILOG_FILE_TYPES, check_vhdl_standard)
+from vunit.source_file import (file_type_of, FILE_TYPES, VERILOG_FILE_TYPES)
 from vunit.test_runner import TestRunner
 from vunit.test_report import TestReport
 from vunit.test_bench_list import TestBenchList
@@ -270,6 +271,7 @@ from vunit.check_preprocessor import CheckPreprocessor
 from vunit.parsing.encodings import HDL_FILE_ENCODING
 from vunit.builtins import (Builtins,
                             add_verilog_include_dir)
+from vunit.vhdl_standard import VHDL
 from vunit.com import codec_generator
 
 LOGGER = logging.getLogger(__name__)
@@ -410,6 +412,16 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         level = getattr(logging, log_level.upper())
         logging.basicConfig(filename=None, format='%(levelname)7s - %(message)s', level=level)
 
+    def _which_vhdl_standard(self, vhdl_standard):
+        """
+        Return default vhdl_standard if the argument is None
+        The argument is a string from the user
+        """
+        if vhdl_standard is None:
+            return self._vhdl_standard
+
+        return VHDL.standard(vhdl_standard)
+
     def add_external_library(self, library_name, path, vhdl_standard=None):
         """
         Add an externally compiled library as a black-box
@@ -427,10 +439,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
            prj.add_external_library("unisim", "path/to/unisim/")
 
         """
-        if vhdl_standard is None:
-            vhdl_standard = self._vhdl_standard
 
-        self._project.add_library(library_name, abspath(path), vhdl_standard, is_external=True)
+        self._project.add_library(library_name, abspath(path),
+                                  self._which_vhdl_standard(vhdl_standard), is_external=True)
         return self.library(library_name)
 
     def add_source_files_from_csv(self, project_csv_path, vhdl_standard=None):
@@ -446,9 +457,6 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         :returns: A list of files (:class `.SourceFileList`) that were added
 
         """
-        if vhdl_standard is None:
-            vhdl_standard = self._vhdl_standard
-
         libs = set()
         files = SourceFileList(list())
 
@@ -460,7 +468,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                     file_name_ = normpath(join(dirname(project_csv_path), no_normalized_file))
                     lib = self.library(lib_name) if lib_name in libs else self.add_library(lib_name)
                     libs.add(lib_name)
-                    file_ = lib.add_source_file(file_name_)
+                    file_ = lib.add_source_file(file_name_, vhdl_standard=vhdl_standard)
                     files.append(file_)
                 elif len(row) > 2:
                     LOGGER.error("More than one library and one file in csv description")
@@ -485,8 +493,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
            library = prj.add_library("lib")
 
         """
-        if vhdl_standard is None:
-            vhdl_standard = self._vhdl_standard
+        vhdl_standard = self._which_vhdl_standard(vhdl_standard)
 
         path = join(self._simulator_output_path, "libraries", library_name)
         if not self._project.has_library(library_name):
@@ -1018,7 +1025,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
 
     @property
     def vhdl_standard(self):
-        return self._vhdl_standard
+        return str(self._vhdl_standard)
 
     @property
     def _preprocessed_path(self):
@@ -1902,7 +1909,7 @@ class SourceFile(object):
         None if not a VHDL file
         """
         if self._source_file.file_type == "vhdl":
-            return self._source_file.get_vhdl_standard()
+            return str(self._source_file.get_vhdl_standard())
 
         return None
 
@@ -1993,12 +2000,13 @@ def select_vhdl_standard(vhdl_standard=None):
     Select VHDL standard either from class initialization or according to environment variable VUNIT_VHDL_STANDARD
     """
     if vhdl_standard is not None:
-        check_vhdl_standard(vhdl_standard, from_str="From class initialization")
-    else:
-        vhdl_standard = os.environ.get('VUNIT_VHDL_STANDARD', '2008')
-        check_vhdl_standard(vhdl_standard, from_str="VUNIT_VHDL_STANDARD environment variable")
+        return VHDL.standard(vhdl_standard)
 
-    return vhdl_standard
+    try:
+        return VHDL.standard(os.environ.get('VUNIT_VHDL_STANDARD', '2008'))
+    except ValueError:
+        LOGGER.error("Invalid standard set by VUNIT_VHDL_STANDARD environment variable")
+        raise
 
 
 def lower_generics(generics):

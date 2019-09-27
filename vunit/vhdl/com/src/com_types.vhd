@@ -21,7 +21,7 @@ use work.integer_array_pkg.all;
 use work.string_ptr_pkg.all;
 use work.logger_pkg.all;
 use work.queue_pkg.all;
-use work.queue_2008_pkg.all;
+use work.queue_2008p_pkg.all;
 use work.queue_pool_pkg.all;
 
 package com_types_pkg is

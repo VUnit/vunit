@@ -1350,20 +1350,12 @@ end architecture;
     def test_add_source_file_has_vhdl_standard(self):
         write_file("file.vhd", "")
 
-        for std in ('93', '2002', '2008'):
+        for std in ('93', '2002', '2008', '2019'):
             project = Project()
             project.add_library("lib", "lib_path")
             source_file = project.add_source_file("file.vhd",
                                                   library_name="lib", file_type='vhdl', vhdl_standard=std)
             self.assertEqual(source_file.get_vhdl_standard(), std)
-
-    def test_add_source_file_detects_illegal_vhdl_standard(self):
-        write_file("file.vhd", "")
-
-        project = Project()
-        project.add_library("lib", "lib_path")
-        self.assertRaises(ValueError, project.add_source_file, "file.vhd",
-                          library_name="lib", file_type='vhdl', vhdl_standard='2007')
 
     def test_add_source_file_has_no_parse_vhdl(self):
 

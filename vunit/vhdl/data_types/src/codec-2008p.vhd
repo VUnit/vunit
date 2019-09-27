@@ -16,7 +16,7 @@ use ieee.float_pkg.all;
 
 use std.textio.all;
 
-package codec_2008_pkg is
+package codec_2008p_pkg is
   -----------------------------------------------------------------------------
   -- Predefined composite types
   -----------------------------------------------------------------------------
@@ -85,9 +85,9 @@ end package;
 
 use work.codec_pkg.all;
 use work.codec_builder_pkg.all;
-use work.codec_builder_2008_pkg.all;
+use work.codec_builder_2008p_pkg.all;
 
-package body codec_2008_pkg is
+package body codec_2008p_pkg is
   -----------------------------------------------------------------------------
   -- Predefined composite types
   -----------------------------------------------------------------------------
@@ -250,4 +250,4 @@ package body codec_2008_pkg is
     return ret_val;
   end;
 
-end package body codec_2008_pkg;
+end package body codec_2008p_pkg;

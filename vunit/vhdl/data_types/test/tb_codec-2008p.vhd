@@ -12,7 +12,7 @@ library vunit_lib;
 context vunit_lib.vunit_context;
 use vunit_lib.queue_pkg.all;
 use vunit_lib.integer_vector_ptr_pkg.all;
-use vunit_lib.codec_2008_pkg.all;
+use vunit_lib.codec_2008p_pkg.all;
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -24,12 +24,12 @@ use ieee.fixed_pkg.all;
 
 use std.textio.all;
 
-entity tb_codec_2008 is
+entity tb_codec_2008p is
   generic (
     runner_cfg : string);
-end entity tb_codec_2008;
+end entity tb_codec_2008p;
 
-architecture test_fixture of tb_codec_2008 is
+architecture test_fixture of tb_codec_2008p is
 begin
   test_runner : process
     constant f64    : float64 := (others => '0');

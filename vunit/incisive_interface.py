@@ -18,6 +18,7 @@ from vunit.ostools import write_file, file_exists
 from vunit.simulator_interface import (SimulatorInterface,
                                        run_command,
                                        ListOfStringOption)
+from vunit.vhdl_standard import VHDL
 from vunit.exceptions import CompileError
 from vunit.cds_file import CDSFile
 LOGGER = logging.getLogger(__name__)
@@ -75,7 +76,7 @@ class IncisiveInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         return cls.find_toolchain(['irun'])
 
     @staticmethod
-    def supports_vhdl_2008_contexts():
+    def supports_vhdl_contexts():
         """
         Returns True when this simulator supports VHDL 2008 contexts
         """
@@ -163,13 +164,13 @@ define work "{2}/libraries/work"
         """
         Convert standard to format of irun command line flag
         """
-        if vhdl_standard == "2002":
+        if vhdl_standard == VHDL.STD_2002:
             return "-v200x -extv200x"
 
-        if vhdl_standard == "2008":
+        if vhdl_standard == VHDL.STD_2008:
             return "-v200x -extv200x"
 
-        if vhdl_standard == "93":
+        if vhdl_standard == VHDL.STD_1993:
             return "-v93"
 
         raise ValueError("Invalid VHDL standard %s" % vhdl_standard)

@@ -12,13 +12,13 @@ library vunit_lib;
 context vunit_lib.vunit_context;
 
 use work.queue_pkg.all;
-use work.queue_2008_pkg.all;
+use work.queue_2008p_pkg.all;
 
-entity tb_queue_2008 is
+entity tb_queue_2008p is
   generic (runner_cfg : string);
 end entity;
 
-architecture a of tb_queue_2008 is
+architecture a of tb_queue_2008p is
 begin
   main : process
     variable queue : queue_t;

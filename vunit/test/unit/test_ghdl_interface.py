@@ -19,6 +19,7 @@ from vunit.ostools import renew_path, write_file
 from vunit.exceptions import CompileError
 from vunit.test.unit.test_test_bench import Entity
 from vunit.configuration import Configuration
+from vunit.vhdl_standard import VHDL
 
 
 class TestGHDLInterface(unittest.TestCase):
@@ -109,7 +110,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
 
         project = Project()
         project.add_library("lib", "lib_path")
-        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="2008")
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2008"))
         simif.compile_project(project)
         check_output.assert_called_once_with(
             [join("prefix", 'ghdl'), '-a', '--workdir=lib_path', '--work=lib',
@@ -122,7 +123,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
 
         project = Project()
         project.add_library("lib", "lib_path")
-        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="2002")
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2002"))
         simif.compile_project(project)
         check_output.assert_called_once_with(
             [join("prefix", 'ghdl'), '-a', '--workdir=lib_path', '--work=lib',
@@ -135,7 +136,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
 
         project = Project()
         project.add_library("lib", "lib_path")
-        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard="93")
+        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("93"))
         simif.compile_project(project)
         check_output.assert_called_once_with(
             [join("prefix", 'ghdl'), '-a', '--workdir=lib_path', '--work=lib',
@@ -163,7 +164,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         config = Configuration("name", design_unit, sim_options={"ghdl.elab_e": True})
 
         simif = GHDLInterface(prefix="prefix", output_path="")
-        simif._vhdl_standard = "2008"  # pylint: disable=protected-access
+        simif._vhdl_standard = VHDL.standard("2008")  # pylint: disable=protected-access
         simif._project = Project()  # pylint: disable=protected-access
         simif._project.add_library("lib", "lib_path")  # pylint: disable=protected-access
 

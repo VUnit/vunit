@@ -18,7 +18,7 @@ use std.textio.all;
 
 use work.codec_builder_pkg.all;
 
-package codec_builder_2008_pkg is
+package codec_builder_2008p_pkg is
   procedure decode (
     constant code   :       string;
     variable index  : inout positive;
@@ -47,9 +47,9 @@ package codec_builder_2008_pkg is
     constant code   :       string;
     variable index  : inout positive;
     variable result : out   float);
-end package codec_builder_2008_pkg;
+end package codec_builder_2008p_pkg;
 
-package body codec_builder_2008_pkg is
+package body codec_builder_2008p_pkg is
   procedure decode (
     constant code   :       string;
     variable index  : inout positive;
@@ -125,4 +125,4 @@ package body codec_builder_2008_pkg is
     result := float(result_sula);
   end;
 
-end package body codec_builder_2008_pkg;
+end package body codec_builder_2008p_pkg;

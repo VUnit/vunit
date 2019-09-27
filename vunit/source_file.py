@@ -190,7 +190,6 @@ class VHDLSourceFile(SourceFile):
         self.dependencies = []
         self.depending_components = []
         self._vhdl_standard = vhdl_standard
-        check_vhdl_standard(vhdl_standard)
 
         if not no_parse:
 
@@ -291,7 +290,7 @@ class VHDLSourceFile(SourceFile):
         """
         Compute hash of contents and compile options
         """
-        return hash_string(self._content_hash + self._compile_options_hash() + hash_string(self._vhdl_standard))
+        return hash_string(self._content_hash + self._compile_options_hash() + hash_string(str(self._vhdl_standard)))
 
     def add_to_library(self, library):
         """
@@ -324,17 +323,3 @@ def file_type_of(file_name):
         return "systemverilog"
 
     raise RuntimeError("Unknown file ending '%s' of %s" % (ext, file_name))
-
-
-def check_vhdl_standard(vhdl_standard, from_str=None):
-    """
-    Check the VHDL standard selected is recognized
-    """
-    if from_str is None:
-        from_str = ""
-    else:
-        from_str += " "
-
-    valid_standards = ('93', '2002', '2008')
-    if vhdl_standard not in valid_standards:
-        raise ValueError("Unknown VHDL standard '%s' %snot one of %r" % (vhdl_standard, from_str, valid_standards))

@@ -12,7 +12,7 @@ use ieee.std_logic_1164.all;
 context work.vunit_context;
 
 use work.queue_pkg.all;
-use work.queue_2008_pkg.all;
+use work.queue_2008p_pkg.all;
 use work.queue_pool_pkg.all;
 use work.integer_vector_ptr_pkg.all;
 use work.string_ptr_pkg.all;

@@ -20,6 +20,7 @@ from vunit.parsing.verilog.parser import VerilogParser
 from vunit.exceptions import CompileError
 from vunit import ostools
 from vunit.source_file import (VERILOG_FILE_TYPES, VerilogSourceFile, VHDLSourceFile)
+from vunit.vhdl_standard import VHDL
 
 LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +72,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         """
         self._builtin_libraries.add(logical_name)
 
-    def add_library(self, logical_name, directory, vhdl_standard='2008', is_external=False):
+    def add_library(self, logical_name, directory, vhdl_standard=VHDL.STD_2008, is_external=False):
         """
         Add library to project with logical_name located or to be located in directory
         is_external -- Library is assumed to a black-box
