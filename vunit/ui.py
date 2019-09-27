@@ -358,6 +358,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         self._test_filter = test_filter
         self._vhdl_standard = select_vhdl_standard(vhdl_standard)
         self._import_submodule = False
+        self._import_submodule_latch = False
+        self._import_testbenches = True
 
         self._external_preprocessors = []
         self._location_preprocessor = None
@@ -504,6 +506,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         path = join(self._simulator_output_path, "libraries", library_name)
         if not self._project.has_library(library_name):
             self._project.add_library(library_name, abspath(path), vhdl_standard)
+        elif self._import_submodule:
+            pass
         elif not allow_duplicate:
             raise ValueError("Library %s already added. Use allow_duplicate to ignore this error." % library_name)
         return self.library(library_name)
@@ -1155,14 +1159,17 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         return SourceFileList([SourceFile(source_file, self._project, self)
                                for source_file in source_files])
 
-    def add_submodule(self, module):
+    def add_submodule(self, module, import_testbenches = False):
 
         rootpath = os.getcwd()
         path = os.path.abspath(os.path.dirname(module))
         sys.path.insert(0, path)
         os.chdir(path)
         self._import_submodule = True
+        self._import_submodule_latch = True
+        self._import_testbenches = import_testbenches
         importlib.import_module(os.path.basename(module).split('.')[0])
+        self._import_testbenches = True
         self._import_submodule = False
         os.chdir(rootpath)
         sys.path.remove(path)
@@ -1375,10 +1382,10 @@ class Library(object):
         new_file_name = self._parent._preprocess(  # pylint: disable=protected-access
             self._library_name, file_name, preprocessors)
 
-        if self._parent._import_submodule:
+        if self._parent._import_submodule_latch:
             try:
                 duplicate = self.get_source_file('*/' + os.path.basename(file_name))
-                self._project.remove_source_file(os.path.abspath(duplicate.name), self._library_name)
+                return duplicate
             except ValueError:
                 pass
 
@@ -1392,7 +1399,8 @@ class Library(object):
         # To get correct tb_path generic
         source_file.original_name = file_name
 
-        self._test_bench_list.add_from_source_file(source_file)
+        if self._parent._import_testbenches:
+            self._test_bench_list.add_from_source_file(source_file)
 
         return SourceFile(source_file,
                           self._project,
