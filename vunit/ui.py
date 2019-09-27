@@ -251,6 +251,7 @@ import os
 from os.path import exists, abspath, join, basename, splitext, normpath, dirname
 from glob import glob
 from fnmatch import fnmatch
+import importlib
 from vunit.database import PickledDataBase, DataBase
 from vunit import ostools
 from vunit.vunit_cli import VUnitCLI
@@ -356,6 +357,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         self._test_filter = test_filter
         self._vhdl_standard = select_vhdl_standard(vhdl_standard)
+        self._import_submodule = False
 
         self._external_preprocessors = []
         self._location_preprocessor = None
@@ -1153,6 +1155,17 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         return SourceFileList([SourceFile(source_file, self._project, self)
                                for source_file in source_files])
 
+    def add_submodule(self, module):
+
+        rootpath = os.getcwd()
+        path = os.path.abspath(os.path.dirname(module))
+        sys.path.insert(0, path)
+        os.chdir(path)
+        self._import_submodule = True
+        importlib.import_module(os.path.basename(module).split('.')[0])
+        self._import_submodule = False
+        os.chdir(rootpath)
+        sys.path.remove(path)
 
 class Library(object):
     """
@@ -1361,6 +1374,13 @@ class Library(object):
 
         new_file_name = self._parent._preprocess(  # pylint: disable=protected-access
             self._library_name, file_name, preprocessors)
+
+        if self._parent._import_submodule:
+            try:
+                duplicate = self.get_source_file('*/' + os.path.basename(file_name))
+                self._project.remove_source_file(os.path.abspath(duplicate.name), self._library_name)
+            except ValueError:
+                pass
 
         source_file = self._project.add_source_file(new_file_name,
                                                     self._library_name,
