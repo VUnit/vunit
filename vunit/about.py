@@ -68,6 +68,6 @@ def version():
     return '%i.%i.%i' % (VERSION[0], VERSION[1], VERSION[2])
 
 
-VERSION = (4, 1, 0)
+VERSION = (4, 1, 1)
 
-PRE_RELEASE = False
+PRE_RELEASE = True
