@@ -54,7 +54,10 @@ def tag_release(ver):
     check_output([
         'git',
         'tag',
-        '"v' + ver + '" -a -m "Generated tag from TravisCI for release ' + ver + '"'
+        'v%s' % ver,
+        '-a',
+        '-m',
+        'release %s' % ver,
     ])
 
 
@@ -67,10 +70,6 @@ def check_release(ver):
               % (ver, ver))
         sys.exit(1)
 
-    if ver.endswith("rc0"):
-        print("Not releasing version %s since it ends with rc0" % ver)
-        sys.exit(1)
-
     with urlopen('https://pypi.python.org/pypi/vunit_hdl/json') as fptr:
         info = json.load(fptr)
 
@@ -78,20 +77,19 @@ def check_release(ver):
         print("Version %s has already been released" % ver)
         sys.exit(1)
 
-    check_output([
-        'sed',
-        '-i',
-        '"s/PRE_RELEASE = True/PRE_RELEASE = False/"',
-        'vunit/about.py'
-    ])
-
-    print("Releasing new version: %s" % ver)
-
 
 if __name__ == "__main__":
+    if '--rc' not in sys.argv:
+        check_output([
+            'sed',
+            '-i',
+            's/PRE_RELEASE = True/PRE_RELEASE = False/',
+            'vunit/about.py'
+        ])
+
     VER = get_local_version()
 
-    if sys.argv[1] == 'check':
+    if '--check' in sys.argv:
         check_release(VER)
-
-    tag_release(VER)
+    else:
+        tag_release(VER)

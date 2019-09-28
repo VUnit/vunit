@@ -74,7 +74,7 @@ matrix:
     if: tag IS present
     script:
       - git fetch --unshallow --tags
-      - python tools/new_release.py 'check'
+      - python tools/new_release.py --check
     deploy:
       provider: pypi
       distributions: sdist
@@ -84,4 +84,4 @@ matrix:
       password: $PYPI_PASSWORD
       on:
         repo: VUnit/vunit
-        branch: master
+        all_branches: true

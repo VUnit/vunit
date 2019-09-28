@@ -70,5 +70,4 @@ def version():
 
 VERSION = (4, 1, 0)
 
-# DO NOT TOUCH: Only set to False by PyPI deployment script
-PRE_RELEASE = True
+PRE_RELEASE = False
