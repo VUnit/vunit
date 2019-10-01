@@ -112,14 +112,12 @@ begin
         tready <= '0';
 
         report_msg := new_string_ptr(pop_string(msg));
-        check_equal(tdata, pop_std_ulogic_vector(msg), "TDATA mismatch, " & to_string(report_msg));
-        check_equal(tlast, pop_std_ulogic(msg), "TLAST mismatch, " & to_string(report_msg));
-        if tkeep'length > 0 then
+        if tdata'length > 0 then
+          check_equal(tdata, pop_std_ulogic_vector(msg), "TDATA mismatch, " & to_string(report_msg));
           check_equal(tkeep, pop_std_ulogic_vector(msg), "TKEEP mismatch, " & to_string(report_msg));
-        end if;
-        if tstrb'length > 0 then
           check_equal(tstrb, pop_std_ulogic_vector(msg), "TSTRB mismatch, " & to_string(report_msg));
         end if;
+        check_equal(tlast, pop_std_ulogic(msg), "TLAST mismatch, " & to_string(report_msg));
         if tid'length > 0 then
           check_equal(tid, pop_std_ulogic_vector(msg), "TID mismatch, " & to_string(report_msg));
         end if;
