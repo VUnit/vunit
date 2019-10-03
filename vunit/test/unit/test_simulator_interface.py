@@ -72,8 +72,7 @@ Compile passed
             printer = MockPrinter()
             simif.compile_source_files(project, printer=printer, target_files=[file2])
             check_output.assert_has_calls([mock.call(["command1"], env=simif.get_env()),
-                                           mock.call(["command2"], env=simif.get_env())
-                                           ])
+                                           mock.call(["command2"], env=simif.get_env())])
             self.assertEqual(printer.output, """\
 Compiling into lib: file1.vhd passed
 Compiling into lib: file2.vhd passed
