@@ -982,6 +982,44 @@ endmodule
             method("ghdl.elab_flags", [], allow_empty=True)
             self.assertRaises(ValueError, method, "ghdl.elab_flags", [])
 
+    def test_get_testbench_files(self):
+        ui = self._create_ui()
+        lib = ui.add_library("lib")
+        file_name = self.create_entity_file()
+        lib.add_source_file(file_name)
+        self.create_file('tb_ent.vhd', '''
+entity tb_ent is
+  generic (runner_cfg : string);
+end entity;
+
+architecture a of tb_ent is
+begin
+  main : process
+  begin
+    if run("test1") then
+    elsif run("test2") then
+    end if;
+  end process;
+end architecture;
+        ''')
+
+        self.create_file('tb_ent2.vhd', '''
+entity tb_ent2 is
+  generic (runner_cfg : string);
+end entity;
+
+architecture a of tb_ent2 is
+begin
+end architecture;
+        ''')
+        lib.add_source_file('tb_ent.vhd')
+        lib.add_source_file('tb_ent2.vhd')
+        simulator_if = ui._create_simulator_if()  # pylint: disable=protected-access
+        target_files = ui._get_testbench_files(simulator_if)  # pylint: disable=protected-access
+        expected = [lib.get_source_file(file_name)._source_file  # pylint: disable=protected-access
+                    for file_name in ['tb_ent2.vhd', 'tb_ent.vhd']]
+        self.assertEqual(sorted(target_files, key=lambda x: x.name), sorted(expected, key=lambda x: x.name))
+
     def _create_ui(self, *args):
         """ Create an instance of the VUnit public interface class """
         with mock.patch("vunit.ui.SIMULATOR_FACTORY.select_simulator",
