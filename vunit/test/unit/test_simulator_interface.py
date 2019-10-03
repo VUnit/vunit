@@ -53,6 +53,34 @@ Compile passed
 """)
         self.assertEqual(project.get_files_in_compile_order(incremental=True), [])
 
+    def test_compile_source_files_minimal_subset(self):
+        simif = create_simulator_interface()
+        simif.compile_source_file_command.side_effect = iter([["command1"], ["command2"], ["command3"]])
+        project = Project()
+        project.add_library("lib", "lib_path")
+        write_file("file1.vhd", "")
+        file1 = project.add_source_file("file1.vhd", "lib", file_type="vhdl")
+        write_file("file2.vhd", "")
+        file2 = project.add_source_file("file2.vhd", "lib", file_type="vhdl")
+        write_file("file3.vhd", "")
+        file3 = project.add_source_file("file3.vhd", "lib", file_type="vhdl")
+        project.add_manual_dependency(file2, depends_on=file1)
+        project.add_manual_dependency(file3, depends_on=file2)
+
+        with mock.patch("vunit.simulator_interface.check_output", autospec=True) as check_output:
+            check_output.side_effect = iter(["", "", ""])
+            printer = MockPrinter()
+            simif.compile_source_files(project, printer=printer, target_files=[file2])
+            check_output.assert_has_calls([mock.call(["command1"], env=simif.get_env()),
+                                           mock.call(["command2"], env=simif.get_env())
+                                           ])
+            self.assertEqual(printer.output, """\
+Compiling into lib: file1.vhd passed
+Compiling into lib: file2.vhd passed
+Compile passed
+""")
+        self.assertEqual(project.get_files_in_compile_order(incremental=True), [file3])
+
     def test_compile_source_files_continue_on_error(self):
         simif = create_simulator_interface()
 
