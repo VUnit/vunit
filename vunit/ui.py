@@ -1034,16 +1034,19 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         # get test benches
         if self._args.minimal:
-            test_list = self._create_tests(simulator_if)
-            tb_file_names = {test_suite.file_name for test_suite in test_list}
-            target_files = [self.get_source_file(file_name)._source_file  # pylint: disable=protected-access
-                            for file_name in tb_file_names]
+            target_files = self._get_testbench_files(simulator_if)
         else:
             target_files = None
 
         simulator_if.compile_project(self._project,
                                      continue_on_error=self._args.keep_compiling,
                                      printer=self._printer, target_files=target_files)
+
+    def _get_testbench_files(self, simulator_if):
+        test_list = self._create_tests(simulator_if)
+        tb_file_names = {test_suite.file_name for test_suite in test_list}
+        return [self.get_source_file(file_name)._source_file  # pylint: disable=protected-access
+                for file_name in tb_file_names]
 
     def _run_test(self, test_cases, report):
         """
