@@ -421,7 +421,8 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         ###
         # First get all files that are required to fullfill the dependencies for the target files
         dependency_graph = self.create_dependency_graph(True)
-        dependency_files = self._get_affected_files(target_files, dependency_graph.get_dependencies)
+        dependency_files = self._get_affected_files(target_files or self.get_source_files_in_order(),
+                                                    dependency_graph.get_dependencies)
 
         ###
         # Now the file set is known, but it has to be evaluated which files
