@@ -42,7 +42,7 @@ class IndependentSimTestCase(object):
 
     @property
     def file_name(self):
-        return self._test.file_name
+        return self._test.location.file_name
 
     @property
     def name(self):
@@ -93,7 +93,7 @@ class SameSimTestSuite(object):
 
     @property
     def file_name(self):
-        return self._tests[0].file_name if self._tests else ""
+        return self._tests[0].location.file_name if self._tests else ""
 
     @property
     def test_names(self):

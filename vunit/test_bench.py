@@ -281,15 +281,10 @@ class Test(object):
          Implicit tests are those when there are no tests in the test bench, just the test suite
     """
 
-    def __init__(self, name, location, file_name):
+    def __init__(self, name, location):
         self._name = name
         self._location = location
         self._attributes = []
-        self._file_name = file_name
-
-    @property
-    def file_name(self):
-        return self._file_name
 
     @property
     def name(self):
@@ -461,7 +456,7 @@ def _find_tests(code, file_name, line_offsets=None):
         suite_regexp = _RE_VHDL_TEST_SUITE
 
     tests = [Test(name=match.group("name"),
-                  location=FileLocation.from_match(file_name, match, "name", line_offsets), file_name=file_name)
+                  location=FileLocation.from_match(file_name, match, "name", line_offsets))
              for match in regexp.finditer(code)]
 
     _check_duplicate_tests(tests)
@@ -477,7 +472,7 @@ def _find_tests(code, file_name, line_offsets=None):
             location = FileLocation.from_line_offsets(file_name, 0, 0, line_offsets)
 
         tests = [Test(None,
-                      location=location, file_name=file_name)]
+                      location=location)]
 
     return tests
 
