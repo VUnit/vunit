@@ -14,6 +14,9 @@ use work.axi_stream_pkg.all;
 use work.queue_pkg.all;
 use work.sync_pkg.all;
 
+library osvvm;
+use osvvm.RandomPkg.all;
+
 entity axi_stream_master is
   generic (
     master                 : axi_stream_master_t;
@@ -41,6 +44,7 @@ architecture a of axi_stream_master is
   constant notify_request_msg      : msg_type_t := new_msg_type("notify request");
   constant message_queue           : queue_t    := new_queue;
   signal   notify_bus_process_done : std_logic  := '0';
+  shared variable rnd              : RandomPType;
 
 begin
 
@@ -64,6 +68,12 @@ begin
     else
       unexpected_msg_type(msg_type);
     end if;
+  end process;
+
+  init_rnd : process
+  begin
+    rnd.InitSeed(rnd'instance_name);
+    wait;
   end process;
 
   bus_process : process
@@ -96,6 +106,16 @@ begin
         elsif msg_type = notify_request_msg then
           -- Ignore this message, but expect it
         elsif msg_type = stream_push_msg or msg_type = push_axi_stream_msg then
+
+          tdata <= (others => drive_invalid_val);
+          tkeep <= (others => drive_invalid_val);
+          tstrb <= (others => drive_invalid_val);
+          tid   <= (others => drive_invalid_val);
+          tdest <= (others => drive_invalid_val);
+          tuser <= (others => drive_invalid_val_user);
+          -- stall according to probability configuration
+          probability_stall_axi_stream(aclk, master, rnd);
+
           tvalid <= '1';
           tdata <= pop_std_ulogic_vector(msg);
           if msg_type = push_axi_stream_msg then

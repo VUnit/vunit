@@ -19,25 +19,50 @@ use work.sync_pkg.all;
 entity tb_axi_stream is
   generic(
     runner_cfg    : string;
-    g_id_length   : natural := 8;
-    g_dest_length : natural := 8;
-    g_user_length : natural := 8
+    g_id_length   : natural  := 8;
+    g_dest_length : natural  := 8;
+    g_user_length : natural  := 8;
+    g_stall_master : natural := 0;
+    g_stall_slave : natural  := 0
   );
 end entity;
 
 architecture a of tb_axi_stream is
+
+  impure function master_stall_config return stall_config_t is
+    variable stall_config : stall_config_t;
+  begin
+    if (g_stall_master > 0) then
+      stall_config := (stall_probability => 0.3, min_stall_cycles => 5, max_stall_cycles => 15);
+    else
+      stall_config := null_stall_config;
+    end if;
+    return stall_config;
+  end;
+
+  impure function slave_stall_config return stall_config_t is
+    variable stall_config : stall_config_t;
+  begin
+    if (g_stall_slave > 0) then
+      stall_config := (stall_probability => 0.3, min_stall_cycles => 5, max_stall_cycles => 15);
+    else
+      stall_config := null_stall_config;
+    end if;
+    return stall_config;
+  end;
+
   constant master_axi_stream : axi_stream_master_t := new_axi_stream_master(
     data_length => 8, id_length => g_id_length, dest_length => g_dest_length, user_length => g_user_length,
-    logger      => get_logger("master"), actor => new_actor("master"),
-    monitor     => default_axi_stream_monitor, protocol_checker => default_axi_stream_protocol_checker
+    stall_config => master_stall_config, logger => get_logger("master"), actor => new_actor("master"),
+    monitor => default_axi_stream_monitor, protocol_checker => default_axi_stream_protocol_checker
   );
   constant master_stream : stream_master_t := as_stream(master_axi_stream);
   constant master_sync   : sync_handle_t   := as_sync(master_axi_stream);
 
   constant slave_axi_stream : axi_stream_slave_t := new_axi_stream_slave(
     data_length => 8, id_length => g_id_length, dest_length => g_dest_length, user_length => g_user_length,
-    logger      => get_logger("slave"), actor => new_actor("slave"),
-    monitor     => default_axi_stream_monitor, protocol_checker => default_axi_stream_protocol_checker
+    stall_config => slave_stall_config, logger => get_logger("slave"), actor => new_actor("slave"),
+    monitor => default_axi_stream_monitor, protocol_checker => default_axi_stream_protocol_checker
   );
   constant slave_stream : stream_slave_t := as_stream(slave_axi_stream);
   constant slave_sync   : sync_handle_t  := as_sync(slave_axi_stream);
@@ -75,6 +100,21 @@ architecture a of tb_axi_stream is
   signal not_valid_id   : std_logic;
   signal not_valid_dest : std_logic;
   signal not_valid_user : std_logic;
+
+  -----------------------------------------------------------------------------
+  -- signals used for the statistics for stall evaluation
+  signal tvalid_prev             : std_logic;
+  signal tready_prev             : std_logic;
+  signal tvalid_stall_events     : natural := 0;
+  signal tready_stall_events     : natural := 0;
+  signal tvalid_min_stall_length : natural := 1000;
+  signal tvalid_max_stall_length : natural := 0;
+  signal tvalid_stall_length     : natural := 0;
+  signal tvalid_start            : std_logic := '0';
+  signal tready_min_stall_length : natural := 1000;
+  signal tready_max_stall_length : natural := 0;
+  signal tready_stall_length     : natural := 0;
+  signal tready_start            : std_logic := '0';
 begin
 
   main : process
@@ -464,6 +504,53 @@ begin
 
       check_equal(now, timestamp + 20 ns, " transaction time incorrect");
 
+    elsif run("test random stall on master") then
+      wait until rising_edge(aclk);
+      for i in 0 to 100 loop
+        pop_stream(net, slave_stream, reference);
+        push(reference_queue, reference);
+      end loop;
+      for i in 0 to 100 loop
+        push_stream(net, master_stream, std_logic_vector(to_unsigned(i + 1, data'length)), true);
+      end loop;
+
+      wait_until_idle(net, master_sync);  -- wait until all transfers are done before checking them
+      wait_until_idle(net, slave_sync);
+
+      for i in 0 to 100 loop
+        reference := pop(reference_queue);
+        await_pop_stream_reply(net, reference, data);
+      -- check_equal(data, to_unsigned(i + 1, data'length), result("for await pop stream data"));
+      end loop;
+      info("There have been " & integer'image(tvalid_stall_events) & " tvalid stall events"); 
+      info("Min stall length was " & integer'image(tvalid_min_stall_length));
+      info("Max stall length was " & integer'image(tvalid_max_stall_length));
+      check((tvalid_stall_events < 40) and (tvalid_stall_events > 20), "Checking that the tvalid stall probability lies within reasonable boundaries");
+      check((tvalid_min_stall_length >= 5) and (tvalid_max_stall_length <=15), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
+      
+    elsif run("test random stall on slave") then
+      wait until rising_edge(aclk);
+      for i in 0 to 100 loop
+        pop_stream(net, slave_stream, reference);
+        push(reference_queue, reference);
+      end loop;
+      for i in 0 to 100 loop
+        push_stream(net, master_stream, std_logic_vector(to_unsigned(i + 1, data'length)), true);
+      end loop;
+
+      wait_until_idle(net, master_sync);  -- wait until all transfers are done before checking them
+      wait_until_idle(net, slave_sync);
+
+      for i in 0 to 100 loop
+        reference := pop(reference_queue);
+        await_pop_stream_reply(net, reference, data);
+      -- check_equal(data, to_unsigned(i + 1, data'length), result("for await pop stream data"));
+      end loop;
+      info("There have been " & integer'image(tready_stall_events) & " tready stall events"); 
+      info("Min stall length was " & integer'image(tready_min_stall_length));
+      info("Max stall length was " & integer'image(tready_max_stall_length));
+      check((tready_stall_events < 40) and (tready_stall_events > 20), "Checking that the tready stall probability lies within reasonable boundaries");
+      check((tready_min_stall_length >= 5) and (tready_max_stall_length <=15), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
     end if;
     test_runner_cleanup(runner);
   end process;
@@ -555,6 +642,60 @@ begin
       tdest    => tdest,
       tuser    => tuser
     );
+
+  statistics : process(aclk)
+  begin
+    if rising_edge(aclk) then
+      tvalid_prev <= tvalid;
+      tready_prev <= tready;
+      -------------------------------------------------------------------------
+      -- TVALID and TREADY stall events counters
+      if tvalid = '1' and tready = '0' and tready_prev = '1' then
+        tready_stall_events <= tready_stall_events + 1;
+      end if;
+      if tready = '1' and tvalid = '0' and tvalid_prev = '1' then
+        tvalid_stall_events <= tvalid_stall_events + 1;
+      end if;
+
+      -------------------------------------------------------------------------
+      -- TVALID Minmal and Maximal Stall lengths
+      if tvalid = '1' then
+        tvalid_start <= '1';
+      end if;
+
+      if tvalid = '0' and tvalid_start = '1' then
+        tvalid_stall_length <= tvalid_stall_length + 1;
+      end if;
+      if tvalid = '1' and tvalid_prev = '0' and tvalid_start = '1' then
+        tvalid_stall_length <= 0;
+        if tvalid_stall_length < tvalid_min_stall_length then
+          tvalid_min_stall_length <= tvalid_stall_length;
+        end if;
+        if tvalid_stall_length > tvalid_min_stall_length then
+          tvalid_max_stall_length <= tvalid_stall_length;
+        end if;
+      end if;
+      -------------------------------------------------------------------------
+      -- TREADY Minmal and Maximal Stall lengths
+      if tready = '1' then
+        tready_start <= '1';
+      end if;
+
+      if tready = '0' and tready_start = '1' then
+        tready_stall_length <= tready_stall_length + 1;
+      end if;
+      if tready = '1' and tready_prev = '0' and tready_start = '1' then
+        tready_stall_length <= 0;
+        if tready_stall_length < tready_min_stall_length then
+          tready_min_stall_length <= tready_stall_length;
+        end if;
+        if tready_stall_length > tready_min_stall_length then
+          tready_max_stall_length <= tready_stall_length;
+        end if;
+      end if;
+
+    end if;
+  end process;
 
   aclk <= not aclk after 5 ns;
 end architecture;

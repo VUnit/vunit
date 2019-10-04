@@ -14,6 +14,9 @@ use work.axi_stream_pkg.all;
 use work.sync_pkg.all;
 use work.string_ptr_pkg.all;
 
+library osvvm;
+use osvvm.RandomPkg.all;
+
 entity axi_stream_slave is
   generic (
     slave : axi_stream_slave_t);
@@ -34,9 +37,10 @@ end entity;
 
 architecture a of axi_stream_slave is
 
-  constant notify_request_msg      : msg_type_t := new_msg_type("notify request");
-  constant message_queue           : queue_t    := new_queue;
-  signal   notify_bus_process_done : std_logic  := '0';
+  constant        notify_request_msg      : msg_type_t := new_msg_type("notify request");
+  constant        message_queue           : queue_t    := new_queue;
+  signal          notify_bus_process_done : std_logic  := '0';
+  shared variable rnd                     : RandomPType;
 
 begin
 
@@ -62,6 +66,12 @@ begin
     else
       unexpected_msg_type(msg_type);
     end if;
+  end process;
+
+  init_rnd : process
+  begin
+    rnd.InitSeed(rnd'instance_name);
+    wait;
   end process;
 
   bus_process : process
@@ -90,6 +100,10 @@ begin
       elsif msg_type = notify_request_msg then
         -- Ignore this message, but expect it
       elsif msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg then
+
+        -- stall according to probability configuration
+        probability_stall_axi_stream(aclk, slave, rnd);
+
         tready <= '1';
         wait until (tvalid and tready) = '1' and rising_edge(aclk);
         tready <= '0';

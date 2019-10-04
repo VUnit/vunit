@@ -17,7 +17,22 @@ context work.vunit_context;
 context work.com_context;
 context work.data_types_context;
 
+library osvvm;
+use osvvm.RandomPkg.all;
+
 package axi_stream_pkg is
+
+  type stall_config_t is record
+    stall_probability : real range 0.0 to 1.0;
+    min_stall_cycles  : natural;
+    max_stall_cycles  : natural;
+  end record;
+
+  constant null_stall_config : stall_config_t := (
+    stall_probability => 0.0,
+    min_stall_cycles  => 0,
+    max_stall_cycles  => 0
+    );
 
   type axi_stream_component_type_t is (null_component, default_component, custom_component);
 
@@ -99,6 +114,7 @@ package axi_stream_pkg is
     p_id_length        : natural;
     p_dest_length      : natural;
     p_user_length      : natural;
+    p_stall_config     : stall_config_t;
     p_logger           : logger_t;
     p_monitor          : axi_stream_monitor_t;
     p_protocol_checker : axi_stream_protocol_checker_t;
@@ -110,6 +126,7 @@ package axi_stream_pkg is
     p_id_length        : natural;
     p_dest_length      : natural;
     p_user_length      : natural;
+    p_stall_config     : stall_config_t;
     p_logger           : logger_t;
     p_monitor          : axi_stream_monitor_t;
     p_protocol_checker : axi_stream_protocol_checker_t;
@@ -123,6 +140,7 @@ package axi_stream_pkg is
     id_length        : natural                       := 0;
     dest_length      : natural                       := 0;
     user_length      : natural                       := 0;
+    stall_config     : stall_config_t                := null_stall_config;
     logger           : logger_t                      := axi_stream_logger;
     actor            : actor_t                       := null_actor;
     monitor          : axi_stream_monitor_t          := null_axi_stream_monitor;
@@ -134,6 +152,7 @@ package axi_stream_pkg is
     id_length        : natural                       := 0;
     dest_length      : natural                       := 0;
     user_length      : natural                       := 0;
+    stall_config     : stall_config_t                := null_stall_config;
     logger           : logger_t                      := axi_stream_logger;
     actor            : actor_t                       := null_actor;
     monitor          : axi_stream_monitor_t          := null_axi_stream_monitor;
@@ -260,6 +279,24 @@ package axi_stream_pkg is
       blocking : boolean          := true
     );
 
+  procedure probability_stall_axi_stream(
+      signal aclk : in std_logic;
+      axi_stream  : in axi_stream_slave_t;
+      rnd         : inout RandomPType
+    );
+
+  procedure probability_stall_axi_stream(
+      signal aclk : in std_logic;
+      axi_stream  : in axi_stream_master_t;
+      rnd         : inout RandomPType
+    );
+
+  procedure probability_stall_axi_stream(
+      signal aclk  : in std_logic;
+      stall_config : in stall_config_t;
+      rnd          : inout RandomPType
+    );
+
   type axi_stream_transaction_t is record
     tdata : std_logic_vector;
     tlast : boolean;
@@ -343,6 +380,7 @@ package body axi_stream_pkg is
     id_length        : natural                       := 0;
     dest_length      : natural                       := 0;
     user_length      : natural                       := 0;
+    stall_config     : stall_config_t                := null_stall_config;
     logger           : logger_t                      := axi_stream_logger;
     actor            : actor_t                       := null_actor;
     monitor          : axi_stream_monitor_t          := null_axi_stream_monitor;
@@ -361,6 +399,7 @@ package body axi_stream_pkg is
       p_id_length        => id_length,
       p_dest_length      => dest_length,
       p_user_length      => user_length,
+      p_stall_config     => stall_config,
       p_logger           => logger,
       p_monitor          => p_monitor,
       p_protocol_checker => p_protocol_checker);
@@ -371,6 +410,7 @@ package body axi_stream_pkg is
       id_length        : natural                       := 0;
       dest_length      : natural                       := 0;
       user_length      : natural                       := 0;
+      stall_config     : stall_config_t                := null_stall_config;
       logger           : logger_t                      := axi_stream_logger;
       actor            : actor_t                       := null_actor;
       monitor          : axi_stream_monitor_t          := null_axi_stream_monitor;
@@ -389,6 +429,7 @@ package body axi_stream_pkg is
       p_id_length        => id_length,
       p_dest_length      => dest_length,
       p_user_length      => user_length,
+      p_stall_config     => stall_config,
       p_logger           => logger,
       p_monitor          => p_monitor,
       p_protocol_checker => p_protocol_checker);
@@ -779,5 +820,35 @@ package body axi_stream_pkg is
       pop_axi_stream_transaction(msg, axi_transaction);
     end if;
   end;
+
+  procedure probability_stall_axi_stream(
+    signal aclk : in std_logic;
+    axi_stream  : in axi_stream_master_t;
+    rnd         : inout RandomPType) is
+  begin
+    probability_stall_axi_stream(aclk, axi_stream.p_stall_config, rnd);
+  end procedure;
+
+  procedure probability_stall_axi_stream(
+    signal aclk : in std_logic;
+    axi_stream  : in axi_stream_slave_t;
+    rnd         : inout RandomPType) is
+  begin
+    probability_stall_axi_stream(aclk, axi_stream.p_stall_config, rnd);
+  end procedure;
+
+  procedure probability_stall_axi_stream(
+    signal aclk  : in std_logic;
+    stall_config : in stall_config_t;
+    rnd          : inout RandomPType) is
+    variable num_stall_cycles : natural := 0;
+  begin
+    if rnd.Uniform(0.0, 1.0) < stall_config.stall_probability then
+      num_stall_cycles := rnd.FavorSmall(stall_config.min_stall_cycles, stall_config.max_stall_cycles);
+    end if;
+    for stall in 0 to num_stall_cycles-1 loop
+       wait until rising_edge(aclk);
+    end loop;
+  end procedure;
 
 end package body;
