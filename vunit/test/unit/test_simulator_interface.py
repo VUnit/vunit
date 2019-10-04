@@ -53,6 +53,21 @@ Compile passed
 """)
         self.assertEqual(project.get_files_in_compile_order(incremental=True), [])
 
+    def test_compile_source_files_minimal_subset(self):
+        simif = create_simulator_interface()
+        project = Project()
+        project.add_library("lib", "lib_path")
+        write_file("file1.vhd", "")
+        file1 = project.add_source_file("file1.vhd", "lib", file_type="vhdl")
+
+        with mock.patch("vunit.project.Project.get_minimal_file_set_in_compile_order",
+                        autospec=True) as target_function:
+            target_function.return_value = []
+            printer = MockPrinter()
+            simif.compile_source_files(project, printer=printer, target_files=[file1])
+            simif.compile_source_files(project, printer=printer, target_files=[file1])
+            self.assertTrue(target_function.called)
+
     def test_compile_source_files_continue_on_error(self):
         simif = create_simulator_interface()
 

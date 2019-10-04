@@ -110,6 +110,10 @@ def _create_argument_parser(description=None, for_documentation=False):
                         default=False,
                         help='Only compile project without running tests')
 
+    parser.add_argument('-m', '--minimal', action='store_true',
+                        default=False,
+                        help='Only compile files required for the (filtered) test benches')
+
     parser.add_argument('-k', '--keep-compiling', action='store_true',
                         default=False,
                         help='Continue compiling even after errors only skipping files that depend on failed files')

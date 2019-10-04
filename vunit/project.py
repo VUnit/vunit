@@ -414,6 +414,28 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         affected_files = self._get_affected_files(target_files, get_depend_func)
         return self._get_compile_order(affected_files, get_depend_func.__self__)
 
+    def get_minimal_file_set_in_compile_order(self, target_files=None):
+        """
+        Get the minimal set of files to be compiled for a list of target files of type SourceFile
+        param: target_files: List of type SourceFile, if the paramater is None all files are used
+        """
+        ###
+        # First get all files that are required to fullfill the dependencies for the target files
+        dependency_graph = self.create_dependency_graph(True)
+        dependency_files = self._get_affected_files(target_files or self.get_source_files_in_order(),
+                                                    dependency_graph.get_dependencies)
+
+        ###
+        # Now the file set is known, but it has to be evaluated which files
+        # realy have to be compiled according to their timestamp.
+        max_file_set_to_be_compiled = self.get_files_in_compile_order(incremental=True, files=dependency_files)
+
+        # get_files_in_compile_order returns more files than actually are in the
+        # list of dependent files. So the list is filtered for only the files
+        # that are required
+        min_file_set_to_be_compiled = [f for f in max_file_set_to_be_compiled if f in dependency_files]
+        return min_file_set_to_be_compiled
+
     def _get_affected_files(self, target_files, get_depend_func):
         """
         Get affected files given a  list of type SourceFile, if the list is None

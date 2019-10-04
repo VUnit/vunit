@@ -41,6 +41,10 @@ class IndependentSimTestCase(object):
                             test_cases=[test.name])
 
     @property
+    def file_name(self):
+        return self._test.location.file_name
+
+    @property
     def name(self):
         return self._name
 
@@ -86,6 +90,10 @@ class SameSimTestSuite(object):
                             elaborate_only=elaborate_only,
                             test_suite_name=self._name,
                             test_cases=[test.name for test in tests])
+
+    @property
+    def file_name(self):
+        return self._tests[0].location.file_name if self._tests else ""
 
     @property
     def test_names(self):

@@ -805,6 +805,30 @@ end architecture;
         self.assertIn(comp1_arch, dependencies)
         self.assertIn(comp2, dependencies)
 
+    def test_get_minimal_file_set_in_compile_order_without_target(self):
+        self.create_dummy_three_file_project()
+        deps = self.project.get_minimal_file_set_in_compile_order()
+        self.assertEqual(len(deps), 3)
+        self.assertTrue(deps[0] == self.project.get_source_files_in_order()[0])
+        self.assertTrue(deps[1] == self.project.get_source_files_in_order()[1])
+        self.assertTrue(deps[2] == self.project.get_source_files_in_order()[2])
+
+    def test_get_minimal_file_set_in_compile_order_with_target(self):
+        self.create_dummy_three_file_project()
+        deps = self.project.get_minimal_file_set_in_compile_order(
+            target_files=[self.project.get_source_files_in_order()[1]])
+        self.assertEqual(len(deps), 2)
+        self.assertTrue(deps[0] == self.project.get_source_files_in_order()[0])
+        self.assertTrue(deps[1] == self.project.get_source_files_in_order()[1])
+
+        # To test that indirect dependencies are included
+        deps = self.project.get_dependencies_in_compile_order(
+            target_files=[self.project.get_source_files_in_order()[2]])
+        self.assertEqual(len(deps), 3)
+        self.assertTrue(deps[0] == self.project.get_source_files_in_order()[0])
+        self.assertTrue(deps[1] == self.project.get_source_files_in_order()[1])
+        self.assertTrue(deps[2] == self.project.get_source_files_in_order()[2])
+
     def test_get_dependencies_in_compile_order_without_target(self):
         self.create_dummy_three_file_project()
         deps = self.project.get_dependencies_in_compile_order()
