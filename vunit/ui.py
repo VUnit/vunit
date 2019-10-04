@@ -1043,6 +1043,9 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
                                      printer=self._printer, target_files=target_files)
 
     def _get_testbench_files(self, simulator_if):
+        """
+        Return the list of all test bench files for the currently selected tests to run
+        """
         test_list = self._create_tests(simulator_if)
         tb_file_names = {test_suite.file_name for test_suite in test_list}
         return [self.get_source_file(file_name)._source_file  # pylint: disable=protected-access
