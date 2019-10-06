@@ -33,9 +33,6 @@ class TestExternalRunScripts(unittest.TestCase):
     Verify that example projects run correctly
     """
 
-    def test_vhdl_uart_example_project(self):
-        self.check(join(ROOT, "examples", "vhdl", "uart", "run.py"))
-
     @unittest.skipUnless(simulator_supports_verilog(), "Verilog")
     def test_verilog_uart_example_project(self):
         self.check(join(ROOT, "examples", "verilog", "uart", "run.py"))
@@ -110,12 +107,6 @@ class TestExternalRunScripts(unittest.TestCase):
 
     def test_vhdl_array_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "array", "run.py"))
-
-    def test_vhdl_array_axis_vcs_example_project(self):
-        self.check(join(ROOT, "examples", "vhdl", "array_axis_vcs", "run.py"))
-
-    def test_vhdl_axi_dma_example_project(self):
-        self.check(join(ROOT, "examples", "vhdl", "axi_dma", "run.py"))
 
     def test_vhdl_user_guide_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "user_guide", "run.py"), exit_code=1)
