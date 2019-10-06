@@ -1160,6 +1160,12 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
                                for source_file in source_files])
 
     def add_submodule(self, module, import_testbenches = False):
+        """
+        Add a complete vunit build script to the design at once. 
+        
+        :param module: Path to the submodule's run.py file
+        :param import_testbenches : If set, the submodules testbenches are imported, otherwise not.
+        """
 
         rootpath = os.getcwd()
         path = os.path.abspath(os.path.dirname(module))
