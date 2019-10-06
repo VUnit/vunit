@@ -1167,6 +1167,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         :param import_testbenches : If set, the submodules testbenches are imported, otherwise not.
         """
 
+        f = open(module) # raises FileNotFoundError if the module is not available
         rootpath = os.getcwd()
         path = os.path.abspath(os.path.dirname(module))
         sys.path.insert(0, path)
