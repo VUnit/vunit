@@ -16,6 +16,7 @@ ui.add_verification_components()
 lib = ui.library("vunit_lib")
 lib.add_source_files(join(root, "test", "*.vhd"))
 
+
 def encode(tb_cfg):
     return ",".join(["%s:%s" % (key, str(tb_cfg[key])) for key in tb_cfg])
 
@@ -137,4 +138,5 @@ for test in tb_axi_stream.get_tests("test random stall on master"):
 
 for test in tb_axi_stream.get_tests("test random stall on slave"):
     test.add_config(name="stall_slave", generics=dict(g_stall_slave=1))
+
 ui.main()
