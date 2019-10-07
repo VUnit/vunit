@@ -522,12 +522,13 @@ begin
         await_pop_stream_reply(net, reference, data);
       -- check_equal(data, to_unsigned(i + 1, data'length), result("for await pop stream data"));
       end loop;
-      info("There have been " & integer'image(tvalid_stall_events) & " tvalid stall events"); 
+      info("There have been " & integer'image(tvalid_stall_events) & " tvalid stall events");
       info("Min stall length was " & integer'image(tvalid_min_stall_length));
       info("Max stall length was " & integer'image(tvalid_max_stall_length));
       check((tvalid_stall_events < 40) and (tvalid_stall_events > 20), "Checking that the tvalid stall probability lies within reasonable boundaries");
       check((tvalid_min_stall_length >= 5) and (tvalid_max_stall_length <=15), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
-      
+      check_equal(tready_stall_events, 0, "Checking that there are zero tready stall events");
+
     elsif run("test random stall on slave") then
       wait until rising_edge(aclk);
       for i in 0 to 100 loop
@@ -546,11 +547,13 @@ begin
         await_pop_stream_reply(net, reference, data);
       -- check_equal(data, to_unsigned(i + 1, data'length), result("for await pop stream data"));
       end loop;
-      info("There have been " & integer'image(tready_stall_events) & " tready stall events"); 
+      info("There have been " & integer'image(tready_stall_events) & " tready stall events");
       info("Min stall length was " & integer'image(tready_min_stall_length));
       info("Max stall length was " & integer'image(tready_max_stall_length));
       check((tready_stall_events < 40) and (tready_stall_events > 20), "Checking that the tready stall probability lies within reasonable boundaries");
       check((tready_min_stall_length >= 5) and (tready_max_stall_length <=15), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
+      check_equal(tvalid_stall_events, 0, "Checking that there are zero tvalid stall events");
+
     end if;
     test_runner_cleanup(runner);
   end process;
