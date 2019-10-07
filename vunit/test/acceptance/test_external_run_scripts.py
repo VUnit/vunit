@@ -123,6 +123,7 @@ class TestExternalRunScripts(unittest.TestCase):
     )
     def test_vhdl_external_buffer_project(self):
         self.check(join(ROOT, "examples", "vhdl", "external_buffer", "run.py"))
+        self.check(join(ROOT, "examples", "vhdl", "external_buffer", "cp.py"))
 
     def test_vhdl_user_guide_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "user_guide", "run.py"), exit_code=1)

@@ -44,7 +44,7 @@ vu = VUnit.from_argv(vhdl_standard='2008', compile_builtins=False)
 vu.add_builtins({'string': True})
 
 lib = vu.add_library('lib')
-lib.add_source_files(join(src_path, '*.vhd'))
+lib.add_source_files(join(src_path, 'tb_ext_*.vhd'))
 
 # Add the C object to the elaboration of GHDL
 vu.set_sim_option('ghdl.elab_flags', ['-Wl,' + c_obj])
