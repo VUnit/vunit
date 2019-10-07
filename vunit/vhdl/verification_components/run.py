@@ -86,6 +86,15 @@ tb_wishbone_master = lib.test_bench("tb_wishbone_master")
 for test in tb_wishbone_master.get_tests():
     gen_wb_tests(test, [8, 32], [1, 64], [0.3, 1.0], [0.3, 1.0], [0.4, 0.0])
 
+tb_axi_stream = lib.test_bench("tb_axi_stream")
+
+for id_length in [0, 8]:
+    for dest_length in [0, 8]:
+        for user_length in [0, 8]:
+            for test in tb_axi_stream.get_tests("*check"):
+                test.add_config(name="id_l=%d dest_l=%d user_l=%d" % (id_length, dest_length, user_length), 
+                        generics=dict(g_id_length=id_length, g_dest_length=dest_length, g_user_length=user_length))
+
 tb_axi_stream_protocol_checker = lib.test_bench("tb_axi_stream_protocol_checker")
 
 for data_length in [0, 8]:
