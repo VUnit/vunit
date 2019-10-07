@@ -93,7 +93,7 @@ for id_length in [0, 8]:
         for user_length in [0, 8]:
             for test in tb_axi_stream.get_tests("*check"):
                 test.add_config(name="id_l=%d dest_l=%d user_l=%d" % (id_length, dest_length, user_length),
-                                generics=dict(g_id_length=id_length, 
+                                generics=dict(g_id_length=id_length,
                                               g_dest_length=dest_length,
                                               g_user_length=user_length))
 
