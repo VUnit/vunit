@@ -164,7 +164,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         """
         Find a VHDL library reference that is case insensitive or raise KeyError
         """
-        real_library_name = self._lower_library_names_dict[library_name]
+        real_library_name = self._lower_library_names_dict[library_name.lower()]
         return self._libraries[real_library_name]
 
     def _find_other_vhdl_design_unit_dependencies(self,  # pylint: disable=too-many-branches
@@ -179,6 +179,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 library = self._find_vhdl_library_reference(ref.library)
             except KeyError:
                 if ref.library not in self._builtin_libraries:
+
                     LOGGER.warning("%s: failed to find library '%s'", source_file.name, ref.library)
                 continue
 

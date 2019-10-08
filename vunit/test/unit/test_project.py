@@ -455,6 +455,35 @@ end architecture;
         self.assert_compiles(ent_a1, before=top1)
         self.assert_compiles(ent_a2, before=top2)
 
+    def test_work_library_reference_non_lower_case(self):
+        """
+        Bug discovered in #556
+        """
+        self.project.add_library("UPPER", "lib_path")
+
+        self.add_source_file("UPPER", "ent.vhd", """
+entity ent is
+end entity;
+""")
+
+        ent_a1 = self.add_source_file("UPPER", "ent_a1.vhd", """
+architecture a1 of ent is
+begin
+end architecture;
+""")
+
+        top1 = self.add_source_file("UPPER", "top1.vhd", """
+entity top1 is
+end entity;
+
+architecture a of top1 is
+begin
+  inst : entity work.ent(a1);
+end architecture;
+""")
+
+        self.assert_compiles(ent_a1, before=top1)
+
     @mock.patch("vunit.project.LOGGER")
     def test_warning_on_missing_specific_architecture_reference(self, mock_logger):
         self.project.add_library("lib", "lib_path")
