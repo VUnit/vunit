@@ -164,6 +164,7 @@ proc vunit_run {} {
 
 """
         tcl += self._create_init_files_after_load(config)
+        tcl += self._create_init_files_before_run(config)
         tcl += self._create_load_function(test_suite_name, config, script_path)
         tcl += get_is_test_suite_done_tcl(get_result_file_name(output_path))
         tcl += self._create_run_function()
@@ -194,6 +195,20 @@ proc vunit_run {} {
         opt_name = self.name + ".init_files.after_load"
         init_files = config.sim_options.get(opt_name, [])
         tcl = "proc _vunit_source_init_files_after_load {} {\n"
+        for init_file in init_files:
+            tcl += self._source_tcl_file(init_file, config, opt_name)
+        tcl += "    return 0\n"
+        tcl += "}\n"
+        return tcl
+
+    def _create_init_files_before_run(self, config):
+        """
+        Create the _vunit_source_init_files_before_run function which sources the user defined TCL file in
+        simulator_name.init_files.before_run
+        """
+        opt_name = self.name + ".init_files.before_run"
+        init_files = config.sim_options.get(opt_name, [])
+        tcl = "proc _vunit_source_init_files_before_run {} {\n"
         for init_file in init_files:
             tcl += self._source_tcl_file(init_file, config, opt_name)
         tcl += "    return 0\n"

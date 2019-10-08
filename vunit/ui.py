@@ -136,8 +136,15 @@ The following simulation options are known.
 
 ``modelsim.init_files.after_load``
    A list of user defined DO/TCL-files that is sourced after the design has been loaded.
+   They will be executed during ``vunit_load``, after the top level has been loaded
+   using the ``vsim`` command.
    During script evaluation the ``vunit_tb_path`` variable is defined
    as the path of the folder containing the test bench.
+   Must be a list of strings.
+
+``modelsim.init_files.before_run``
+   A list of user defined DO/TCL-files that is sourced before the simulation is run.
+   They will be executed at the start of ``vunit_restart``.
    Must be a list of strings.
 
 ``modelsim.init_file.gui``
@@ -158,8 +165,15 @@ The following simulation options are known.
 
 ``rivierapro.init_files.after_load``
    A list of user defined DO/TCL-files that is sourced after the design has been loaded.
+   They will be executed during ``vunit_load``, after the top level has been loaded
+   using the ``vsim`` command.
    During script evaluation the ``vunit_tb_path`` variable is defined
    as the path of the folder containing the test bench.
+   Must be a list of strings.
+
+``rivierapro.init_files.before_run``
+   A list of user defined DO/TCL-files that is sourced before the simulation is run.
+   They will be executed at the start of ``vunit_restart``.
    Must be a list of strings.
 
 ``rivierapro.init_file.gui``

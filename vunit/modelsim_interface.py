@@ -55,6 +55,7 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         ListOfStringOption("modelsim.vsim_flags"),
         ListOfStringOption("modelsim.vsim_flags.gui"),
         ListOfStringOption("modelsim.init_files.after_load"),
+        ListOfStringOption("modelsim.init_files.before_run"),
         StringOption("modelsim.init_file.gui"),
     ]
 
@@ -312,6 +313,10 @@ proc _vunit_run_failure {} {
 }
 
 proc _vunit_run {} {
+    if {{[_vunit_source_init_files_before_run]}} {{
+        return true
+    }}
+
     proc on_break {} {
         resume
     }
