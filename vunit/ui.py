@@ -144,7 +144,8 @@ The following simulation options are known.
 
 ``modelsim.init_files.before_run``
    A list of user defined DO/TCL-files that is sourced before the simulation is run.
-   They will be executed at the start of ``vunit_restart``.
+   They will be executed at the start of ``vunit_run`` (and therefore also re-executed
+   by ``vunit_restart``).
    Must be a list of strings.
 
 ``modelsim.init_file.gui``
@@ -173,7 +174,8 @@ The following simulation options are known.
 
 ``rivierapro.init_files.before_run``
    A list of user defined DO/TCL-files that is sourced before the simulation is run.
-   They will be executed at the start of ``vunit_restart``.
+   They will be executed at the start of ``vunit_run`` (and therefore also re-executed
+   by ``vunit_restart``).
    Must be a list of strings.
 
 ``rivierapro.init_file.gui``
