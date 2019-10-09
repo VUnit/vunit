@@ -313,9 +313,9 @@ proc _vunit_run_failure {} {
 }
 
 proc _vunit_run {} {
-    if {{[_vunit_source_init_files_before_run]}} {{
+    if {[_vunit_source_init_files_before_run]} {
         return true
-    }}
+    }
 
     proc on_break {} {
         resume
