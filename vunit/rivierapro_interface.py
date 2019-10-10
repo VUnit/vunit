@@ -45,6 +45,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         ListOfStringOption("rivierapro.vsim_flags"),
         ListOfStringOption("rivierapro.vsim_flags.gui"),
         ListOfStringOption("rivierapro.init_files.after_load"),
+        ListOfStringOption("rivierapro.init_files.before_run"),
         StringOption("rivierapro.init_file.gui"),
     ]
 
@@ -323,6 +324,10 @@ proc _vunit_run_failure {} {
 }
 
 proc _vunit_run {} {
+    if {[_vunit_source_init_files_before_run]} {
+        return true
+    }
+
     proc on_break {} {
         resume
     }
