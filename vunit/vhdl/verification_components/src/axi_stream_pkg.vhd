@@ -708,19 +708,27 @@ package body axi_stream_pkg is
       end if;
     else
       push_string(check_msg, msg);
-      normalized_data(expected'length-1 downto 0) := expected;
-      push_std_ulogic_vector(check_msg, normalized_data);
+      if normalized_data'length > 0 then
+        normalized_data(expected'length-1 downto 0) := expected;
+        push_std_ulogic_vector(check_msg, normalized_data);
+        normalized_keep(tkeep'length-1 downto 0) := tkeep;
+        push_std_ulogic_vector(check_msg, normalized_keep);
+        normalized_strb(tstrb'length-1 downto 0) := tstrb;
+        push_std_ulogic_vector(check_msg, normalized_strb);
+      end if;
       push_std_ulogic(check_msg, tlast);
-      normalized_keep(tkeep'length-1 downto 0) := tkeep;
-      push_std_ulogic_vector(check_msg, normalized_keep);
-      normalized_strb(tstrb'length-1 downto 0) := tstrb;
-      push_std_ulogic_vector(check_msg, normalized_strb);
-      normalized_id(tid'length-1 downto 0) := tid;
-      push_std_ulogic_vector(check_msg, normalized_id);
-      normalized_dest(tdest'length-1 downto 0) := tdest;
-      push_std_ulogic_vector(check_msg, normalized_dest);
-      normalized_user(tuser'length-1 downto 0) := tuser;
-      push_std_ulogic_vector(check_msg, normalized_user);
+      if normalized_id'length > 0 then
+        normalized_id(tid'length-1 downto 0) := tid;
+        push_std_ulogic_vector(check_msg, normalized_id);
+      end if;
+      if normalized_dest'length > 0 then
+        normalized_dest(tdest'length-1 downto 0) := tdest;
+        push_std_ulogic_vector(check_msg, normalized_dest);
+      end if;
+      if normalized_user'length > 0 then
+        normalized_user(tuser'length-1 downto 0) := tuser;
+        push_std_ulogic_vector(check_msg, normalized_user);
+      end if;
       send(net, axi_stream.p_actor, check_msg);
     end if;
   end procedure;
