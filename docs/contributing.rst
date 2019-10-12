@@ -189,21 +189,24 @@ Making releases
 Releases are automatically made by Travic CI on any ``master`` commit
 which is tagged.
 
-In order to tag a commit:
+To create a new tagged release commit:
 
-- If required, bump version in ``vunit/about.py``.
-- Add corresponding release notes in ``docs/release_notes/X.Y.Z.rst``. The
-  release notes files in ``docs/release_notes/`` are used to
-  automatically generate the :ref:`release notes <release_notes>`.
-- Commit changes.
-- Execute ``python tools/new_release.py``. To generate a release candidate, use cli arg ``--rc``.
-- Push the new version/tag: ``git push vX.Y.Z``.
-- Bump version in ``vunit/about.py``.
-- Commit changes.
+- Create corresponding release notes in ``docs/release_notes/X.Y.Z.rst``.
+   - The release notes files in ``docs/release_notes/`` are used to
+     automatically generate the :ref:`release notes <release_notes>`.
+- Execute ``python tools/release.py create X.Y.Z``.
+   - Will make commit with the new ``about.py`` version and release notes and tag it.
+   - Will make another commit setting ``about.py`` to the next pre release candidate version.
+- Push the tag to remote to trigger the release build.
+   -  ``git push origin vX.Y.Z``
+- If the release build is succesful you can push the two commits to master.
+   -  ``git push origin master``
+   - If in the meantime a new commit has come into origin/master the two
+     commits have to be merged into origin/master.
+
 
 Travic CI makes a release by uploading a new package to PyPI when a tag
 named ``vX.Y.Z`` is found in Git. A new release will not be made if:
 
 - The ``X.Y.Z`` release is already on PyPI.
-- The version ends with ``rc0``.
 - The repo tag does not exist.
