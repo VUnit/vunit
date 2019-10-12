@@ -199,9 +199,9 @@ To create a new tagged release commit:
    - Will make another commit setting ``about.py`` to the next pre release candidate version.
 - Push the tag to remote to trigger the release build.
    -  ``git push origin vX.Y.Z``
-- If the release build is succesful you can push the two commits to master.
+- If the release build is successful, you can push the two commits to master.
    -  ``git push origin master``
-   - If in the meantime a new commit has come into origin/master the two
+   - If, in the meantime, a new commit has come into origin/master the two
      commits have to be merged into origin/master.
 
 

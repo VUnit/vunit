@@ -139,7 +139,7 @@ def set_version(version):
 
     print("Set local version to %s" % version)
     content = content.replace(
-        'VERSION = "%s"' % get_local_version(), 'VERSION = "%s"' % version
+        "VERSION = '%s'" % get_local_version(), "VERSION = '%s'" % version
     )
 
     with open(ABOUT_PY, "w") as fptr:
