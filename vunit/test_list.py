@@ -8,13 +8,14 @@
 Functionality to handle lists of test suites and filtering of them
 """
 
-from vunit.test_report import (PASSED, FAILED)
+from vunit.test_report import PASSED, FAILED
 
 
 class TestList(object):
     """
     A list of test suites
     """
+
     def __init__(self):
         self._test_suites = []
 
@@ -32,8 +33,9 @@ class TestList(object):
         """
         Keep only testcases matching any pattern
         """
-        self._test_suites = [test for test in self._test_suites
-                             if test.keep_matches(test_filter)]
+        self._test_suites = [
+            test for test in self._test_suites if test.keep_matches(test_filter)
+        ]
 
     @property
     def num_tests(self):
@@ -69,6 +71,7 @@ class TestSuiteWrapper(object):
     """
     Wrapper which creates a test suite from a single test case
     """
+
     def __init__(self, test_case):
         self._test_case = test_case
 
@@ -95,8 +98,7 @@ class TestSuiteWrapper(object):
     def keep_matches(self, test_filter):
         attributes = self._test_case.attribute_names.copy()
         attributes.update(set(self._test_case.test_configuration.attributes.keys()))
-        return test_filter(name=self._test_case.name,
-                           attribute_names=attributes)
+        return test_filter(name=self._test_case.name, attribute_names=attributes)
 
     def run(self, *args, **kwargs):
         """

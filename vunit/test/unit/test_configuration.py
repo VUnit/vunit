@@ -14,11 +14,9 @@ Tests the test test_bench module
 import unittest
 import contextlib
 from os.path import join
-from vunit.configuration import (Configuration,
-                                 AttributeException)
+from vunit.configuration import Configuration, AttributeException
 from vunit.test.mock_2or3 import mock
-from vunit.test.common import (with_tempdir,
-                               create_tempdir)
+from vunit.test.common import with_tempdir, create_tempdir
 from vunit.test.unit.test_test_bench import Entity
 
 
@@ -45,7 +43,9 @@ class TestConfiguration(unittest.TestCase):
 
     def test_error_on_setting_illegal_value_sim_option(self):
         with _create_config() as config:
-            self.assertRaises(ValueError, config.set_sim_option, "vhdl_assert_stop_level", "illegal")
+            self.assertRaises(
+                ValueError, config.set_sim_option, "vhdl_assert_stop_level", "illegal"
+            )
 
     def test_sim_option_is_not_mutated(self):
         with _create_config() as config:
@@ -60,13 +60,16 @@ class TestConfiguration(unittest.TestCase):
 
     @with_tempdir
     def test_adds_tb_path_generic(self, tempdir):
-        design_unit_tb_path = Entity('tb_entity_without_tb_path',
-                                     file_name=join(tempdir, "file.vhd"))
+        design_unit_tb_path = Entity(
+            "tb_entity_without_tb_path", file_name=join(tempdir, "file.vhd")
+        )
         tb_path = join(tempdir, "other_path")
         design_unit_tb_path.original_file_name = join(tb_path, "original_file.vhd")
         design_unit_tb_path.generic_names = ["runner_cfg", "tb_path"]
-        config_tb_path = Configuration('name', design_unit_tb_path)
-        self.assertEqual(config_tb_path.generics["tb_path"], (tb_path + "/").replace("\\", "/"))
+        config_tb_path = Configuration("name", design_unit_tb_path)
+        self.assertEqual(
+            config_tb_path.generics["tb_path"], (tb_path + "/").replace("\\", "/")
+        )
 
     def test_constructor_adds_no_attributes(self):
         with _create_config() as config:
@@ -81,25 +84,45 @@ class TestConfiguration(unittest.TestCase):
             self.assertRaises(AttributeException, config.set_attribute, "foo", "bar")
 
     def test_call_post_check_none(self):
-        self.assertEqual(self._call_post_check(None, output_path="output_path", read_output=None), True)
+        self.assertEqual(
+            self._call_post_check(None, output_path="output_path", read_output=None),
+            True,
+        )
 
     def test_call_post_check_false(self):
         def post_check():
             return False
-        self.assertEqual(self._call_post_check(post_check, output_path="output_path", read_output=None), False)
+
+        self.assertEqual(
+            self._call_post_check(
+                post_check, output_path="output_path", read_output=None
+            ),
+            False,
+        )
 
     def test_call_post_check_true(self):
         def post_check():
             return True
-        self.assertEqual(self._call_post_check(post_check, output_path="output_path", read_output=None), True)
+
+        self.assertEqual(
+            self._call_post_check(
+                post_check, output_path="output_path", read_output=None
+            ),
+            True,
+        )
 
     def test_call_post_check_no_return(self):
         def post_check():
             pass
-        self.assertEqual(self._call_post_check(post_check, output_path="output_path", read_output=None), False)
+
+        self.assertEqual(
+            self._call_post_check(
+                post_check, output_path="output_path", read_output=None
+            ),
+            False,
+        )
 
     def test_call_post_check_with_output_path(self):
-
         def post_check(output_path):
             """
             Pre config with output path
@@ -107,7 +130,13 @@ class TestConfiguration(unittest.TestCase):
             self.assertEqual(output_path, "output_path")
             raise WasHere
 
-        self.assertRaises(WasHere, self._call_post_check, post_check, output_path="output_path", read_output=None)
+        self.assertRaises(
+            WasHere,
+            self._call_post_check,
+            post_check,
+            output_path="output_path",
+            read_output=None,
+        )
 
     def test_call_post_check_with_no_output(self):
         def read_output():
@@ -122,8 +151,13 @@ class TestConfiguration(unittest.TestCase):
             """
             raise WasHere
 
-        self.assertRaises(WasHere,
-                          self._call_post_check, post_check, output_path="output_path", read_output=read_output)
+        self.assertRaises(
+            WasHere,
+            self._call_post_check,
+            post_check,
+            output_path="output_path",
+            read_output=read_output,
+        )
 
     def test_call_post_check_with_output(self):
 
@@ -142,29 +176,47 @@ class TestConfiguration(unittest.TestCase):
             self.assertEqual(output, output_string)
             raise WasHere
 
-        self.assertRaises(WasHere,
-                          self._call_post_check, post_check, output_path="output_path", read_output=read_output)
+        self.assertRaises(
+            WasHere,
+            self._call_post_check,
+            post_check,
+            output_path="output_path",
+            read_output=read_output,
+        )
 
     def test_call_pre_config_none(self):
-        self.assertEqual(self._call_pre_config(None, "output_path", "simulator_output_path"), True)
+        self.assertEqual(
+            self._call_pre_config(None, "output_path", "simulator_output_path"), True
+        )
 
     def test_call_pre_config_false(self):
         def pre_config():
             return False
-        self.assertEqual(self._call_pre_config(pre_config, "output_path", "simulator_output_path"), False)
+
+        self.assertEqual(
+            self._call_pre_config(pre_config, "output_path", "simulator_output_path"),
+            False,
+        )
 
     def test_call_pre_config_true(self):
         def pre_config():
             return True
-        self.assertEqual(self._call_pre_config(pre_config, "output_path", "simulator_output_path"), True)
+
+        self.assertEqual(
+            self._call_pre_config(pre_config, "output_path", "simulator_output_path"),
+            True,
+        )
 
     def test_call_pre_config_no_return(self):
         def pre_config():
             pass
-        self.assertEqual(self._call_pre_config(pre_config, "output_path", "simulator_output_path"), False)
+
+        self.assertEqual(
+            self._call_pre_config(pre_config, "output_path", "simulator_output_path"),
+            False,
+        )
 
     def test_call_pre_config_with_output_path(self):
-
         def pre_config(output_path):
             """
             Pre config with output path
@@ -172,10 +224,15 @@ class TestConfiguration(unittest.TestCase):
             self.assertEqual(output_path, "output_path")
             raise WasHere
 
-        self.assertRaises(WasHere, self._call_pre_config, pre_config, "output_path", "simulator_output_path")
+        self.assertRaises(
+            WasHere,
+            self._call_pre_config,
+            pre_config,
+            "output_path",
+            "simulator_output_path",
+        )
 
     def test_call_pre_config_with_simulator_output_path(self):
-
         def pre_config(output_path, simulator_output_path):
             """
             Pre config with output path
@@ -184,14 +241,20 @@ class TestConfiguration(unittest.TestCase):
             self.assertEqual(simulator_output_path, "simulator_output_path")
             raise WasHere
 
-        self.assertRaises(WasHere, self._call_pre_config, pre_config, "output_path", "simulator_output_path")
+        self.assertRaises(
+            WasHere,
+            self._call_pre_config,
+            pre_config,
+            "output_path",
+            "simulator_output_path",
+        )
 
     def test_call_pre_config_class_method(self):
-
         class MyClass(object):
             """
             Class to test pre_config method
             """
+
             def __init__(self, value):
                 self.value = value
 
@@ -204,9 +267,13 @@ class TestConfiguration(unittest.TestCase):
                 assert simulator_output_path == "simulator_output_path"
                 raise WasHere
 
-        self.assertRaises(WasHere,
-                          self._call_pre_config,
-                          MyClass(value=2).pre_config, "output_path", "simulator_output_path")
+        self.assertRaises(
+            WasHere,
+            self._call_pre_config,
+            MyClass(value=2).pre_config,
+            "output_path",
+            "simulator_output_path",
+        )
 
     @staticmethod
     def _call_pre_config(pre_config, output_path, simulator_output_path):
@@ -231,10 +298,9 @@ def _create_config(**kwargs):
     Helper function to create a config
     """
     with create_tempdir() as tempdir:
-        design_unit = Entity('tb_entity',
-                             file_name=join(tempdir, "file.vhd"))
+        design_unit = Entity("tb_entity", file_name=join(tempdir, "file.vhd"))
         design_unit.generic_names = ["runner_cfg"]
-        yield Configuration('name', design_unit, **kwargs)
+        yield Configuration("name", design_unit, **kwargs)
 
 
 class WasHere(Exception):

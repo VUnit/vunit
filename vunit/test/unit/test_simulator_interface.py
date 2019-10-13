@@ -14,11 +14,13 @@ import os
 import subprocess
 from shutil import rmtree
 from vunit.project import Project
-from vunit.simulator_interface import (SimulatorInterface,
-                                       BooleanOption,
-                                       ListOfStringOption,
-                                       StringOption,
-                                       VHDLAssertLevelOption)
+from vunit.simulator_interface import (
+    SimulatorInterface,
+    BooleanOption,
+    ListOfStringOption,
+    StringOption,
+    VHDLAssertLevelOption,
+)
 from vunit.test.mock_2or3 import mock
 from vunit.exceptions import CompileError
 from vunit.ostools import renew_path, write_file
@@ -31,7 +33,9 @@ class TestSimulatorInterface(unittest.TestCase):
 
     def test_compile_source_files(self):
         simif = create_simulator_interface()
-        simif.compile_source_file_command.side_effect = iter([["command1"], ["command2"]])
+        simif.compile_source_file_command.side_effect = iter(
+            [["command1"], ["command2"]]
+        )
         project = Project()
         project.add_library("lib", "lib_path")
         write_file("file1.vhd", "")
@@ -40,17 +44,26 @@ class TestSimulatorInterface(unittest.TestCase):
         file2 = project.add_source_file("file2.vhd", "lib", file_type="vhdl")
         project.add_manual_dependency(file2, depends_on=file1)
 
-        with mock.patch("vunit.simulator_interface.check_output", autospec=True) as check_output:
+        with mock.patch(
+            "vunit.simulator_interface.check_output", autospec=True
+        ) as check_output:
             check_output.side_effect = iter(["", ""])
             printer = MockPrinter()
             simif.compile_source_files(project, printer=printer)
-            check_output.assert_has_calls([mock.call(["command1"], env=simif.get_env()),
-                                           mock.call(["command2"], env=simif.get_env())])
-            self.assertEqual(printer.output, """\
+            check_output.assert_has_calls(
+                [
+                    mock.call(["command1"], env=simif.get_env()),
+                    mock.call(["command2"], env=simif.get_env()),
+                ]
+            )
+            self.assertEqual(
+                printer.output,
+                """\
 Compiling into lib: file1.vhd passed
 Compiling into lib: file2.vhd passed
 Compile passed
-""")
+""",
+            )
         self.assertEqual(project.get_files_in_compile_order(incremental=True), [])
 
     def test_compile_source_files_minimal_subset(self):
@@ -60,8 +73,9 @@ Compile passed
         write_file("file1.vhd", "")
         file1 = project.add_source_file("file1.vhd", "lib", file_type="vhdl")
 
-        with mock.patch("vunit.project.Project.get_minimal_file_set_in_compile_order",
-                        autospec=True) as target_function:
+        with mock.patch(
+            "vunit.project.Project.get_minimal_file_set_in_compile_order", autospec=True
+        ) as target_function:
             target_function.return_value = []
             printer = MockPrinter()
             simif.compile_source_files(project, printer=printer, target_files=[file1])
@@ -96,20 +110,33 @@ Compile passed
 
             raise AssertionError
 
-        def check_output_side_effect(command, env=None):  # pylint: disable=missing-docstring, unused-argument
+        def check_output_side_effect(
+            command, env=None
+        ):  # pylint: disable=missing-docstring, unused-argument
             if command == ["command1"]:
-                raise subprocess.CalledProcessError(returncode=-1, cmd=command, output="bad stuff")
+                raise subprocess.CalledProcessError(
+                    returncode=-1, cmd=command, output="bad stuff"
+                )
 
             return ""
 
         simif.compile_source_file_command.side_effect = compile_source_file_command
 
-        with mock.patch("vunit.simulator_interface.check_output", autospec=True) as check_output:
+        with mock.patch(
+            "vunit.simulator_interface.check_output", autospec=True
+        ) as check_output:
             check_output.side_effect = check_output_side_effect
             printer = MockPrinter()
-            self.assertRaises(CompileError, simif.compile_source_files,
-                              project, printer=printer, continue_on_error=True)
-            self.assertEqual(printer.output, """\
+            self.assertRaises(
+                CompileError,
+                simif.compile_source_files,
+                project,
+                printer=printer,
+                continue_on_error=True,
+            )
+            self.assertEqual(
+                printer.output,
+                """\
 Compiling into lib: file3.vhd passed
 Compiling into lib: file1.vhd failed
 === Command used: ===
@@ -119,11 +146,19 @@ command1
 bad stuff
 Compiling into lib: file2.vhd skipped
 Compile failed
-""")
+""",
+            )
             self.assertEqual(len(check_output.mock_calls), 2)
-            check_output.assert_has_calls([mock.call(["command1"], env=simif.get_env()),
-                                           mock.call(["command3"], env=simif.get_env())], any_order=True)
-        self.assertEqual(project.get_files_in_compile_order(incremental=True), [file1, file2])
+            check_output.assert_has_calls(
+                [
+                    mock.call(["command1"], env=simif.get_env()),
+                    mock.call(["command3"], env=simif.get_env()),
+                ],
+                any_order=True,
+            )
+        self.assertEqual(
+            project.get_files_in_compile_order(incremental=True), [file1, file2]
+        )
 
     def test_compile_source_files_check_output_error(self):
         simif = create_simulator_interface()
@@ -133,15 +168,25 @@ Compile failed
         write_file("file.vhd", "")
         source_file = project.add_source_file("file.vhd", "lib", file_type="vhdl")
 
-        with mock.patch("vunit.simulator_interface.check_output", autospec=True) as check_output:
+        with mock.patch(
+            "vunit.simulator_interface.check_output", autospec=True
+        ) as check_output:
 
-            def check_output_side_effect(command, env=None):  # pylint: disable=missing-docstring, unused-argument
-                raise subprocess.CalledProcessError(returncode=-1, cmd=command, output="bad stuff")
+            def check_output_side_effect(
+                command, env=None
+            ):  # pylint: disable=missing-docstring, unused-argument
+                raise subprocess.CalledProcessError(
+                    returncode=-1, cmd=command, output="bad stuff"
+                )
 
             check_output.side_effect = check_output_side_effect
             printer = MockPrinter()
-            self.assertRaises(CompileError, simif.compile_source_files, project, printer=printer)
-            self.assertEqual(printer.output, """\
+            self.assertRaises(
+                CompileError, simif.compile_source_files, project, printer=printer
+            )
+            self.assertEqual(
+                printer.output,
+                """\
 Compiling into lib: file.vhd failed
 === Command used: ===
 command
@@ -149,9 +194,12 @@ command
 === Command output: ===
 bad stuff
 Compile failed
-""")
+""",
+            )
             check_output.assert_called_once_with(["command"], env=simif.get_env())
-        self.assertEqual(project.get_files_in_compile_order(incremental=True), [source_file])
+        self.assertEqual(
+            project.get_files_in_compile_order(incremental=True), [source_file]
+        )
 
     def test_compile_source_files_create_command_error(self):
         simif = create_simulator_interface()
@@ -160,7 +208,9 @@ Compile failed
         write_file("file.vhd", "")
         source_file = project.add_source_file("file.vhd", "lib", file_type="vhdl")
 
-        with mock.patch("vunit.simulator_interface.check_output", autospec=True) as check_output:
+        with mock.patch(
+            "vunit.simulator_interface.check_output", autospec=True
+        ) as check_output:
             check_output.return_value = ""
 
             def raise_compile_error(source_file):  # pylint: disable=unused-argument
@@ -168,15 +218,19 @@ Compile failed
 
             simif.compile_source_file_command.side_effect = raise_compile_error
             self.assertRaises(CompileError, simif.compile_source_files, project)
-        self.assertEqual(project.get_files_in_compile_order(incremental=True), [source_file])
+        self.assertEqual(
+            project.get_files_in_compile_order(incremental=True), [source_file]
+        )
 
     @mock.patch("os.environ", autospec=True)
     def test_find_prefix(self, environ):
-
-        class MySimulatorInterface(SimulatorInterface):  # pylint: disable=abstract-method
+        class MySimulatorInterface(
+            SimulatorInterface
+        ):  # pylint: disable=abstract-method
             """
             Dummy simulator interface for testing
             """
+
             name = "simname"
             prefix_from_path = None
 
@@ -223,31 +277,32 @@ class TestOptions(unittest.TestCase):
         option = BooleanOption("optname")
         self._test_ok(option, True)
         self._test_ok(option, False)
-        self._test_not_ok(option, None,
-                          "Option 'optname' must be a boolean. Got None")
+        self._test_not_ok(option, None, "Option 'optname' must be a boolean. Got None")
 
     def test_string_option(self):
         option = StringOption("optname")
         self._test_ok(option, "hello")
         self._test_ok(option, u"hello")
-        self._test_not_ok(option, False,
-                          "Option 'optname' must be a string. Got False")
-        self._test_not_ok(option, ["foo"],
-                          "Option 'optname' must be a string. Got ['foo']")
+        self._test_not_ok(option, False, "Option 'optname' must be a string. Got False")
+        self._test_not_ok(
+            option, ["foo"], "Option 'optname' must be a string. Got ['foo']"
+        )
 
     def test_list_of_string_option(self):
         option = ListOfStringOption("optname")
         self._test_ok(option, ["hello", "foo"])
         self._test_ok(option, [u"hello"])
-        self._test_not_ok(option, [True],
-                          "Option 'optname' must be a list of strings. "
-                          "Got [True]")
-        self._test_not_ok(option, [["foo"]],
-                          "Option 'optname' must be a list of strings. "
-                          "Got [['foo']]")
-        self._test_not_ok(option, "foo",
-                          "Option 'optname' must be a list of strings. "
-                          "Got 'foo'")
+        self._test_not_ok(
+            option, [True], "Option 'optname' must be a list of strings. " "Got [True]"
+        )
+        self._test_not_ok(
+            option,
+            [["foo"]],
+            "Option 'optname' must be a list of strings. " "Got [['foo']]",
+        )
+        self._test_not_ok(
+            option, "foo", "Option 'optname' must be a list of strings. " "Got 'foo'"
+        )
 
     def test_vhdl_assert_level(self):
         option = VHDLAssertLevelOption()
@@ -255,9 +310,12 @@ class TestOptions(unittest.TestCase):
         self._test_ok(option, "error")
         self._test_ok(option, "failure")
 
-        self._test_not_ok(option, "foo",
-                          "Option 'vhdl_assert_stop_level' must be one of "
-                          "('warning', 'error', 'failure'). Got 'foo'")
+        self._test_not_ok(
+            option,
+            "foo",
+            "Option 'vhdl_assert_stop_level' must be one of "
+            "('warning', 'error', 'failure'). Got 'foo'",
+        )
 
     @staticmethod
     def _test_ok(option, value):
@@ -280,7 +338,9 @@ def create_simulator_interface():
     Create a simulator interface with fake method
     """
     simif = SimulatorInterface(output_path="output_path", gui=False)
-    simif.compile_source_file_command = mock.create_autospec(simif.compile_source_file_command)
+    simif.compile_source_file_command = mock.create_autospec(
+        simif.compile_source_file_command
+    )
     return simif
 
 
@@ -288,8 +348,11 @@ class MockPrinter(object):
     """
     Mock printer that accumulates the calls as a string
     """
+
     def __init__(self):
         self.output = ""
 
-    def write(self, text, output_file=None, fg=None, bg=None):  # pylint: disable=unused-argument
+    def write(
+        self, text, output_file=None, fg=None, bg=None
+    ):  # pylint: disable=unused-argument
         self.output += text

@@ -1,4 +1,3 @@
-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -43,7 +42,12 @@ def test_str():
 
 
 def test_and_later():
-    assert VHDL.STD_1993.and_later == {VHDL.STD_1993, VHDL.STD_2002, VHDL.STD_2008, VHDL.STD_2019}
+    assert VHDL.STD_1993.and_later == {
+        VHDL.STD_1993,
+        VHDL.STD_2002,
+        VHDL.STD_2008,
+        VHDL.STD_2019,
+    }
     assert VHDL.STD_2008.and_later == {VHDL.STD_2008, VHDL.STD_2019}
     assert VHDL.STD_2019.and_later == {VHDL.STD_2019}
 

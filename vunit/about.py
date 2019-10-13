@@ -35,7 +35,8 @@ def doc():
     """
     Returns short introduction to VUnit
     """
-    return r"""What is VUnit?
+    return (
+        r"""What is VUnit?
 ==============
 
 VUnit is an open source unit testing framework for VHDL/SystemVerilog
@@ -55,7 +56,9 @@ welcome. Read our `contribution guide
 
 License
 =======
-""" + license_text()
+"""
+        + license_text()
+    )
 
 
 def version():
@@ -63,9 +66,9 @@ def version():
     Returns VUnit version
     """
     if PRE_RELEASE:
-        return '%i.%i.%irc0' % (VERSION[0], VERSION[1], VERSION[2] + 1)
+        return "%i.%i.%irc0" % (VERSION[0], VERSION[1], VERSION[2] + 1)
 
-    return '%i.%i.%i' % (VERSION[0], VERSION[1], VERSION[2])
+    return "%i.%i.%i" % (VERSION[0], VERSION[1], VERSION[2])
 
 
 VERSION = (4, 2, 0)

@@ -130,6 +130,7 @@ class PickledDataBase(object):
     Wraps a byte based database (un)pickling the values
     Allowing storage of arbitrary Python objects
     """
+
     def __init__(self, database):
         self._database = database
 

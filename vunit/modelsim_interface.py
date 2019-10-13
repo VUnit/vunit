@@ -16,6 +16,7 @@ import sys
 import io
 import os
 from os.path import join, dirname, abspath
+
 try:
     # Python 3
     from configparser import RawConfigParser
@@ -24,24 +25,28 @@ except ImportError:
     from ConfigParser import RawConfigParser  # pylint: disable=import-error
 
 from vunit.ostools import Process, file_exists
-from vunit.simulator_interface import (SimulatorInterface,
-                                       ListOfStringOption,
-                                       StringOption)
+from vunit.simulator_interface import (
+    SimulatorInterface,
+    ListOfStringOption,
+    StringOption,
+)
 from vunit.exceptions import CompileError
-from vunit.vsim_simulator_mixin import (VsimSimulatorMixin,
-                                        fix_path)
+from vunit.vsim_simulator_mixin import VsimSimulatorMixin, fix_path
 from vunit.vhdl_standard import VHDL
 
 LOGGER = logging.getLogger(__name__)
 
 
-class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disable=too-many-instance-attributes
+class ModelSimInterface(
+    VsimSimulatorMixin, SimulatorInterface
+):  # pylint: disable=too-many-instance-attributes
     """
     Mentor Graphics ModelSim interface
 
     The interface supports both running each simulation in separate vsim processes or
     re-using the same vsim process to avoid startup-overhead (persistent=True)
     """
+
     name = "modelsim"
     supports_gui_flag = True
     package_users_depend_on_bodies = False
@@ -66,21 +71,23 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         """
         persistent = not (args.unique_sim or args.gui)
 
-        return cls(prefix=cls.find_prefix(),
-                   output_path=output_path,
-                   persistent=persistent,
-                   gui=args.gui)
+        return cls(
+            prefix=cls.find_prefix(),
+            output_path=output_path,
+            persistent=persistent,
+            gui=args.gui,
+        )
 
     @classmethod
     def find_prefix_from_path(cls):
         """
         Find first valid modelsim toolchain prefix
         """
+
         def has_modelsim_ini(path):
             return os.path.isfile(join(path, "..", "modelsim.ini"))
 
-        return cls.find_toolchain(["vsim"],
-                                  constraints=[has_modelsim_ini])
+        return cls.find_toolchain(["vsim"], constraints=[has_modelsim_ini])
 
     @classmethod
     def supports_vhdl_package_generics(cls):
@@ -91,8 +98,12 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
 
     def __init__(self, prefix, output_path, persistent=False, gui=False):
         SimulatorInterface.__init__(self, output_path, gui)
-        VsimSimulatorMixin.__init__(self, prefix, persistent,
-                                    sim_cfg_file_name=join(output_path, "modelsim.ini"))
+        VsimSimulatorMixin.__init__(
+            self,
+            prefix,
+            persistent,
+            sim_cfg_file_name=join(output_path, "modelsim.ini"),
+        )
         self._libraries = []
         self._coverage_files = set()
         assert not (persistent and gui)
@@ -106,10 +117,11 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         if not file_exists(parent):
             os.makedirs(parent)
 
-        original_modelsim_ini = os.environ.get("VUNIT_MODELSIM_INI",
-                                               join(self._prefix, "..", "modelsim.ini"))
-        with open(original_modelsim_ini, 'rb') as fread:
-            with open(self._sim_cfg_file_name, 'wb') as fwrite:
+        original_modelsim_ini = os.environ.get(
+            "VUNIT_MODELSIM_INI", join(self._prefix, "..", "modelsim.ini")
+        )
+        with open(original_modelsim_ini, "rb") as fread:
+            with open(self._sim_cfg_file_name, "wb") as fwrite:
                 fwrite.write(fread.read())
 
     def add_simulator_specific(self, project):
@@ -158,19 +170,36 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         """
         Returns the command to compile a vhdl file
         """
-        return ([join(self._prefix, 'vcom'), '-quiet', '-modelsimini', self._sim_cfg_file_name]
-                + source_file.compile_options.get("modelsim.vcom_flags", [])
-                + [self._std_str(source_file.get_vhdl_standard()), '-work', source_file.library.name, source_file.name])
+        return (
+            [
+                join(self._prefix, "vcom"),
+                "-quiet",
+                "-modelsimini",
+                self._sim_cfg_file_name,
+            ]
+            + source_file.compile_options.get("modelsim.vcom_flags", [])
+            + [
+                self._std_str(source_file.get_vhdl_standard()),
+                "-work",
+                source_file.library.name,
+                source_file.name,
+            ]
+        )
 
     def compile_verilog_file_command(self, source_file):
         """
         Returns the command to compile a verilog file
         """
-        args = [join(self._prefix, 'vlog'), '-quiet', '-modelsimini', self._sim_cfg_file_name]
+        args = [
+            join(self._prefix, "vlog"),
+            "-quiet",
+            "-modelsimini",
+            self._sim_cfg_file_name,
+        ]
         if source_file.is_system_verilog:
             args += ["-sv"]
         args += source_file.compile_options.get("modelsim.vlog_flags", [])
-        args += ['-work', source_file.library.name, source_file.name]
+        args += ["-work", source_file.library.name, source_file.name]
 
         for library in self._libraries:
             args += ["-L", library.name]
@@ -190,8 +219,9 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
             os.makedirs(dirname(abspath(path)))
 
         if not file_exists(path):
-            proc = Process([join(self._prefix, 'vlib'), '-unix', path],
-                           env=self.get_env())
+            proc = Process(
+                [join(self._prefix, "vlib"), "-unix", path], env=self.get_env()
+            )
             proc.consume_output(callback=None)
 
         if library_name in mapped_libraries and mapped_libraries[library_name] == path:
@@ -216,11 +246,15 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
         Create the vunit_load TCL function that runs the vsim command and loads the design
         """
 
-        set_generic_str = " ".join(('-g/%s/%s=%s' % (config.entity_name,
-                                                     name,
-                                                     encode_generic_value(value))
-                                    for name, value in config.generics.items()))
-        pli_str = " ".join("-pli {%s}" % fix_path(name) for name in config.sim_options.get('pli', []))
+        set_generic_str = " ".join(
+            (
+                "-g/%s/%s=%s" % (config.entity_name, name, encode_generic_value(value))
+                for name, value in config.generics.items()
+            )
+        )
+        pli_str = " ".join(
+            "-pli {%s}" % fix_path(name) for name in config.sim_options.get("pli", [])
+        )
 
         if config.architecture_name is None:
             architecture_suffix = ""
@@ -232,22 +266,25 @@ class ModelSimInterface(VsimSimulatorMixin, SimulatorInterface):  # pylint: disa
             self._coverage_files.add(coverage_file)
             coverage_save_cmd = (
                 "coverage save -onexit -testname {%s} -assert -directive -cvg -codeAll {%s}"
-                % (test_suite_name, fix_path(coverage_file)))
+                % (test_suite_name, fix_path(coverage_file))
+            )
             coverage_args = "-coverage"
         else:
             coverage_save_cmd = ""
             coverage_args = ""
 
-        vsim_flags = ["-wlf {%s}" % fix_path(join(output_path, "vsim.wlf")),
-                      "-quiet",
-                      "-t ps",
-                      # for correct handling of verilog fatal/finish
-                      "-onfinish stop",
-                      pli_str,
-                      set_generic_str,
-                      config.library_name + "." + config.entity_name + architecture_suffix,
-                      coverage_args,
-                      self._vsim_extra_args(config)]
+        vsim_flags = [
+            "-wlf {%s}" % fix_path(join(output_path, "vsim.wlf")),
+            "-quiet",
+            "-t ps",
+            # for correct handling of verilog fatal/finish
+            "-onfinish stop",
+            pli_str,
+            set_generic_str,
+            config.library_name + "." + config.entity_name + architecture_suffix,
+            coverage_args,
+            self._vsim_extra_args(config),
+        ]
 
         # There is a known bug in modelsim that prevents the -modelsimini flag from accepting
         # a space in the path even with escaping, see issue #36
@@ -287,10 +324,16 @@ proc vunit_load {{{{vsim_extra_args ""}}}} {{
     {coverage_save_cmd}
     return false
 }}
-""".format(coverage_save_cmd=coverage_save_cmd,
-           vsim_flags=" ".join(vsim_flags),
-           break_on_assert=vhdl_assert_stop_level_mapping[config.vhdl_assert_stop_level],
-           no_warnings=1 if config.sim_options.get("disable_ieee_warnings", False) else 0)
+""".format(
+            coverage_save_cmd=coverage_save_cmd,
+            vsim_flags=" ".join(vsim_flags),
+            break_on_assert=vhdl_assert_stop_level_mapping[
+                config.vhdl_assert_stop_level
+            ],
+            no_warnings=1
+            if config.sim_options.get("disable_ieee_warnings", False)
+            else 0,
+        )
 
         return tcl
 
@@ -335,12 +378,12 @@ proc _vunit_sim_restart {} {
         Determine vsim_extra_args
         """
         vsim_extra_args = []
-        vsim_extra_args = config.sim_options.get("modelsim.vsim_flags",
-                                                 vsim_extra_args)
+        vsim_extra_args = config.sim_options.get("modelsim.vsim_flags", vsim_extra_args)
 
         if self._gui:
-            vsim_extra_args = config.sim_options.get("modelsim.vsim_flags.gui",
-                                                     vsim_extra_args)
+            vsim_extra_args = config.sim_options.get(
+                "modelsim.vsim_flags.gui", vsim_extra_args
+            )
 
         return " ".join(vsim_extra_args)
 
@@ -355,8 +398,13 @@ proc _vunit_sim_restart {} {
         if args is None:
             args = []
 
-        coverage_files = join(self._output_path, 'coverage_files.txt')
-        vcover_cmd = [join(self._prefix, 'vcover'), 'merge', '-inputs'] + [coverage_files] + args + [file_name]
+        coverage_files = join(self._output_path, "coverage_files.txt")
+        vcover_cmd = (
+            [join(self._prefix, "vcover"), "merge", "-inputs"]
+            + [coverage_files]
+            + args
+            + [file_name]
+        )
         with open(coverage_files, "w") as fptr:
             for coverage_file in self._coverage_files:
                 if file_exists(coverage_file):
@@ -365,8 +413,7 @@ proc _vunit_sim_restart {} {
                     LOGGER.warning("Missing coverage file: %s", coverage_file)
 
         print("Merging coverage files into %s..." % file_name)
-        vcover_merge_process = Process(vcover_cmd,
-                                       env=self.get_env())
+        vcover_merge_process = Process(vcover_cmd, env=self.get_env())
         vcover_merge_process.consume_output()
         print("Done merging coverage files")
 

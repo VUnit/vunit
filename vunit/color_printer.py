@@ -20,10 +20,10 @@ class LinuxColorPrinter(object):
     Print in color on linux
     """
 
-    BLUE = 'b'
-    GREEN = 'g'
-    RED = 'r'
-    INTENSITY = 'i'
+    BLUE = "b"
+    GREEN = "g"
+    RED = "r"
+    INTENSITY = "i"
     WHITE = RED + GREEN + BLUE
 
     def __init__(self):
@@ -46,13 +46,13 @@ class LinuxColorPrinter(object):
         Translate strings containing 'rgb' characters to numerical color codes
         """
         code = 0
-        if 'r' in rgb:
+        if "r" in rgb:
             code += 1
 
-        if 'g' in rgb:
+        if "g" in rgb:
             code += 2
 
-        if 'b' in rgb:
+        if "b" in rgb:
             code += 4
         return code
 
@@ -70,55 +70,63 @@ class LinuxColorPrinter(object):
         if bg is not None:
             codes.append(40 + self._to_code(bg))
 
-        if fg is not None and 'i' in fg:
+        if fg is not None and "i" in fg:
             codes.append(1)  # Bold
 
-        if bg is not None and 'i' in bg:
+        if bg is not None and "i" in bg:
             codes.append(4)  # Underscore
 
-        return "\033[" + ";".join([str(code) for code in codes]) + "m" + text + "\033[0m"
+        return (
+            "\033[" + ";".join([str(code) for code in codes]) + "m" + text + "\033[0m"
+        )
 
 
 class Coord(Structure):
     """struct in wincon.h."""
-    _fields_ = [
-        ("X", c_short),
-        ("Y", c_short)]
+
+    _fields_ = [("X", c_short), ("Y", c_short)]
 
 
 class SmallRect(Structure):
     """struct in wincon.h."""
+
     _fields_ = [
         ("Left", c_short),
         ("Top", c_short),
         ("Right", c_short),
-        ("Bottom", c_short)]
+        ("Bottom", c_short),
+    ]
 
 
 class ConsoleScreenBufferInfo(Structure):
     """struct in wincon.h."""
+
     _fields_ = [
         ("dwSize", Coord),
         ("dwCursorPosition", Coord),
         ("wAttributes", c_ushort),
         ("srWindow", SmallRect),
-        ("dwMaximumWindowSize", Coord)]
+        ("dwMaximumWindowSize", Coord),
+    ]
 
 
 class Win32ColorPrinter(LinuxColorPrinter):
     """
     Prints in color on windows
     """
+
     def __init__(self):
         LinuxColorPrinter.__init__(self)
         self._stdout_handle = ctypes.windll.kernel32.GetStdHandle(-11)
         self._stderr_handle = ctypes.windll.kernel32.GetStdHandle(-12)
         self._default_attr = self._get_text_attr(self._stdout_handle)
 
-        self._color_to_code = {self.RED: 4,
-                               self.GREEN: 2,
-                               self.BLUE: 1,
-                               self.INTENSITY: 8}
+        self._color_to_code = {
+            self.RED: 4,
+            self.GREEN: 2,
+            self.BLUE: 1,
+            self.INTENSITY: 8,
+        }
 
     def write(self, text, output_file=None, fg=None, bg=None):
         """
@@ -139,10 +147,10 @@ class Win32ColorPrinter(LinuxColorPrinter):
             output_file.flush()
             attr = self._default_attr
             if fg is not None:
-                attr &= 0xf0
+                attr &= 0xF0
                 attr |= self._decode_color(fg)
             if bg is not None:
-                attr &= 0x0f
+                attr &= 0x0F
                 attr |= self._decode_color(bg) * 16
             self._set_text_attr(handle, attr)
 
@@ -182,11 +190,14 @@ class NoColorPrinter(object):
     """
     Dummy printer that does not print in color
     """
+
     def __init__(self):
         pass
 
     @staticmethod
-    def write(text, output_file=None, fg=None, bg=None):  # pylint: disable=unused-argument
+    def write(
+        text, output_file=None, fg=None, bg=None
+    ):  # pylint: disable=unused-argument
         """
         Print the text in color to the output_file
         uses stdout if output_file is None
@@ -201,7 +212,7 @@ NO_COLOR_PRINTER = NoColorPrinter()
 # On MSYS/MINGW shells (https://www.msys2.org/) with Python installed through pacman, IS_WINDOWS_SYSTEM is true.
 # However, regular Linux color strings are supported/required, instead of 'native' windows color format.
 # Environment variable MSYSTEM is checked, which should contain 'msys'|'mingw32'|'mingw64' or be unset/empty.
-if IS_WINDOWS_SYSTEM and ('MSYSTEM' not in os.environ):
+if IS_WINDOWS_SYSTEM and ("MSYSTEM" not in os.environ):
     COLOR_PRINTER = Win32ColorPrinter()
 else:
     COLOR_PRINTER = LinuxColorPrinter()

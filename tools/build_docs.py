@@ -21,9 +21,22 @@ def main():
     """
     create_release_notes()
     examples()
-    check_call([sys.executable, "-m", "sphinx",
-                "-T", "-E", "-W", "-a", "-n", "-b", "html",
-                join(dirname(__file__), "..", "docs"), sys.argv[1]])
+    check_call(
+        [
+            sys.executable,
+            "-m",
+            "sphinx",
+            "-T",
+            "-E",
+            "-W",
+            "-a",
+            "-n",
+            "-b",
+            "html",
+            join(dirname(__file__), "..", "docs"),
+            sys.argv[1],
+        ]
+    )
 
 
 if __name__ == "__main__":

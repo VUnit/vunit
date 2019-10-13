@@ -30,12 +30,14 @@ class VerilogTokenizer(object):
             return Token(token.kind, token.value[start:end], token.location)
 
         def str_value(token):
-            return Token(token.kind,
-                         token.value[1:-1].replace("\\\n", "").replace("\\\"", "\""),
-                         token.location)
+            return Token(
+                token.kind,
+                token.value[1:-1].replace("\\\n", "").replace('\\"', '"'),
+                token.location,
+            )
 
         def remove_value(token):
-            return Token(token.kind, '', token.location)
+            return Token(token.kind, "", token.location)
 
         def ignore_value(token):  # pylint: disable=unused-argument
             pass
@@ -49,87 +51,55 @@ class VerilogTokenizer(object):
 
             return token
 
-        add(PREPROCESSOR,
+        add(
+            PREPROCESSOR,
             r"`[a-zA-Z][a-zA-Z0-9_]*",
-            lambda token: slice_value(token, start=1))
+            lambda token: slice_value(token, start=1),
+        )
 
-        add(STRING,
-            r'(?<!\\)"((.|\n)*?)(?<!\\)"',
-            str_value)
+        add(STRING, r'(?<!\\)"((.|\n)*?)(?<!\\)"', str_value)
 
-        add(COMMENT,
-            r'//.*$',
-            lambda token: slice_value(token, start=2))
+        add(COMMENT, r"//.*$", lambda token: slice_value(token, start=2))
 
-        add(IDENTIFIER,
-            r"[a-zA-Z_][a-zA-Z0-9_]*",
-            replace_keywords)
+        add(IDENTIFIER, r"[a-zA-Z_][a-zA-Z0-9_]*", replace_keywords)
 
-        add(ESCAPED_NEWLINE,
-            r"\\\n",
-            ignore_value)
+        add(ESCAPED_NEWLINE, r"\\\n", ignore_value)
 
-        add(NEWLINE,
-            r"\n",
-            remove_value)
+        add(NEWLINE, r"\n", remove_value)
 
-        add(WHITESPACE,
-            r"\s +")
+        add(WHITESPACE, r"\s +")
 
-        add(MULTI_COMMENT,
+        add(
+            MULTI_COMMENT,
             r"/\*(.|\n)*?\*/",
-            lambda token: slice_value(token, start=2, end=-2))
+            lambda token: slice_value(token, start=2, end=-2),
+        )
 
-        add(DOUBLE_COLON,
-            r"::",
-            remove_value)
+        add(DOUBLE_COLON, r"::", remove_value)
 
-        add(COLON,
-            r":",
-            remove_value)
+        add(COLON, r":", remove_value)
 
-        add(SEMI_COLON,
-            r";",
-            remove_value)
+        add(SEMI_COLON, r";", remove_value)
 
-        add(HASH,
-            r"\#",
-            remove_value)
+        add(HASH, r"\#", remove_value)
 
-        add(EQUAL,
-            r"=",
-            remove_value)
+        add(EQUAL, r"=", remove_value)
 
-        add(LPAR,
-            r"\(",
-            remove_value)
+        add(LPAR, r"\(", remove_value)
 
-        add(RPAR,
-            r"\)",
-            remove_value)
+        add(RPAR, r"\)", remove_value)
 
-        add(LBRACKET,
-            r"\[",
-            remove_value)
+        add(LBRACKET, r"\[", remove_value)
 
-        add(RBRACKET,
-            r"\]",
-            remove_value)
+        add(RBRACKET, r"\]", remove_value)
 
-        add(LBRACE,
-            r"{",
-            remove_value)
+        add(LBRACE, r"{", remove_value)
 
-        add(RBRACE,
-            r"}",
-            remove_value)
+        add(RBRACE, r"}", remove_value)
 
-        add(COMMA,
-            r",",
-            remove_value)
+        add(COMMA, r",", remove_value)
 
-        add(OTHER,
-            r".+?")
+        add(OTHER, r".+?")
 
         self._tokenizer.finalize()
 
@@ -138,7 +108,9 @@ class VerilogTokenizer(object):
         Tokenize Verilog code to be preprocessed
         """
 
-        return self._tokenizer.tokenize(code=code,
-                                        file_name=file_name,
-                                        previous_location=previous_location,
-                                        create_locations=self._create_locations)
+        return self._tokenizer.tokenize(
+            code=code,
+            file_name=file_name,
+            previous_location=previous_location,
+            create_locations=self._create_locations,
+        )

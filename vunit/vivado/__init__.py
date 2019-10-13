@@ -8,6 +8,8 @@
 Utilities for integrating with Vivado
 """
 
-from vunit.vivado.vivado import (run_vivado,
-                                 add_from_compile_order_file,
-                                 create_compile_order_file)
+from vunit.vivado.vivado import (
+    run_vivado,
+    add_from_compile_order_file,
+    create_compile_order_file,
+)

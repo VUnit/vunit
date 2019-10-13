@@ -6,6 +6,8 @@
 #
 # Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
+# pylint: disable=too-many-lines
+
 """
 Functionality to represent and operate on a HDL code project
 """
@@ -13,13 +15,12 @@ from os.path import join, basename, dirname, isdir, exists
 import logging
 from collections import OrderedDict
 from vunit.hashing import hash_string
-from vunit.dependency_graph import (DependencyGraph,
-                                    CircularDependencyException)
+from vunit.dependency_graph import DependencyGraph, CircularDependencyException
 from vunit.vhdl_parser import VHDLParser
 from vunit.parsing.verilog.parser import VerilogParser
 from vunit.exceptions import CompileError
 from vunit import ostools
-from vunit.source_file import (VERILOG_FILE_TYPES, VerilogSourceFile, VHDLSourceFile)
+from vunit.source_file import VERILOG_FILE_TYPES, VerilogSourceFile, VHDLSourceFile
 from vunit.vhdl_standard import VHDL
 
 LOGGER = logging.getLogger(__name__)
@@ -31,9 +32,8 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
     Compute lists of source files to recompile based on file contents,
     timestamps and depenencies derived from the design hierarchy.
     """
-    def __init__(self,
-                 depend_on_package_body=False,
-                 database=None):
+
+    def __init__(self, depend_on_package_body=False, database=None):
         """
         depend_on_package_body - Package users depend also on package body
         """
@@ -53,8 +53,10 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         Check that the library_name is valid or raise RuntimeError
         """
         if library_name == "work":
-            LOGGER.error("Cannot add library named work. work is a reference to the current library. "
-                         "http://www.sigasi.com/content/work-not-vhdl-library")
+            LOGGER.error(
+                "Cannot add library named work. work is a reference to the current library. "
+                "http://www.sigasi.com/content/work-not-vhdl-library"
+            )
             raise RuntimeError("Illegal library name 'work'")
 
         if library_name in self._libraries:
@@ -64,7 +66,8 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         if lower_name in self._lower_library_names_dict:
             raise RuntimeError(
                 "Library name %r not case-insensitive unique. Library name %r previously defined"
-                % (library_name, self._lower_library_names_dict[lower_name]))
+                % (library_name, self._lower_library_names_dict[lower_name])
+            )
 
     def add_builtin_library(self, logical_name):
         """
@@ -72,7 +75,9 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         """
         self._builtin_libraries.add(logical_name)
 
-    def add_library(self, logical_name, directory, vhdl_standard=VHDL.STD_2008, is_external=False):
+    def add_library(
+        self, logical_name, directory, vhdl_standard=VHDL.STD_2008, is_external=False
+    ):
         """
         Add library to project with logical_name located or to be located in directory
         is_external -- Library is assumed to a black-box
@@ -84,18 +89,28 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 raise ValueError("External library %r does not exist" % directory)
 
             if not isdir(directory):
-                raise ValueError("External library must be a directory. Got %r" % directory)
+                raise ValueError(
+                    "External library must be a directory. Got %r" % directory
+                )
 
-        library = Library(logical_name, directory, vhdl_standard, is_external=is_external)
-        LOGGER.debug('Adding library %s with path %s', logical_name, directory)
+        library = Library(
+            logical_name, directory, vhdl_standard, is_external=is_external
+        )
+        LOGGER.debug("Adding library %s with path %s", logical_name, directory)
 
         self._libraries[logical_name] = library
         self._lower_library_names_dict[logical_name.lower()] = library.name
 
-    def add_source_file(self,    # pylint: disable=too-many-arguments
-                        file_name, library_name, file_type='vhdl', include_dirs=None, defines=None,
-                        vhdl_standard=None,
-                        no_parse=False):
+    def add_source_file(  # pylint: disable=too-many-arguments
+        self,
+        file_name,
+        library_name,
+        file_type="vhdl",
+        include_dirs=None,
+        defines=None,
+        vhdl_standard=None,
+        no_parse=False,
+    ):
         """
         Add a file_name as a source file in library_name with file_type
 
@@ -104,7 +119,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         if not ostools.file_exists(file_name):
             raise ValueError("File %r does not exist" % file_name)
 
-        LOGGER.debug('Adding source file %s to library %s', file_name, library_name)
+        LOGGER.debug("Adding source file %s to library %s", file_name, library_name)
         library = self._libraries[library_name]
 
         if file_type == "vhdl":
@@ -114,17 +129,22 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 library,
                 vhdl_parser=self._vhdl_parser,
                 database=self._database,
-                vhdl_standard=library.vhdl_standard if vhdl_standard is None else vhdl_standard,
-                no_parse=no_parse)
+                vhdl_standard=library.vhdl_standard
+                if vhdl_standard is None
+                else vhdl_standard,
+                no_parse=no_parse,
+            )
         elif file_type in VERILOG_FILE_TYPES:
-            source_file = VerilogSourceFile(file_type,
-                                            file_name,
-                                            library,
-                                            verilog_parser=self._verilog_parser,
-                                            database=self._database,
-                                            include_dirs=include_dirs,
-                                            defines=defines,
-                                            no_parse=no_parse)
+            source_file = VerilogSourceFile(
+                file_type,
+                file_name,
+                library,
+                verilog_parser=self._verilog_parser,
+                database=self._database,
+                include_dirs=include_dirs,
+                defines=defines,
+                no_parse=no_parse,
+            )
         else:
             raise ValueError(file_type)
 
@@ -155,8 +175,12 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
             try:
                 primary_unit = library.primary_design_units[unit.primary_design_unit]
             except KeyError:
-                LOGGER.warning("%s: failed to find a primary design unit '%s' in library '%s'",
-                               source_file.name, unit.primary_design_unit, library.name)
+                LOGGER.warning(
+                    "%s: failed to find a primary design unit '%s' in library '%s'",
+                    source_file.name,
+                    unit.primary_design_unit,
+                    library.name,
+                )
             else:
                 yield primary_unit.source_file
 
@@ -167,10 +191,9 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         real_library_name = self._lower_library_names_dict[library_name.lower()]
         return self._libraries[real_library_name]
 
-    def _find_other_vhdl_design_unit_dependencies(self,  # pylint: disable=too-many-branches
-                                                  source_file,
-                                                  depend_on_package_body,
-                                                  implementation_dependencies):
+    def _find_other_vhdl_design_unit_dependencies(  # pylint: disable=too-many-branches
+        self, source_file, depend_on_package_body, implementation_dependencies
+    ):
         """
         Iterate over the dependencies on other design unit of the source_file
         """
@@ -180,7 +203,9 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
             except KeyError:
                 if ref.library not in self._builtin_libraries:
 
-                    LOGGER.warning("%s: failed to find library '%s'", source_file.name, ref.library)
+                    LOGGER.warning(
+                        "%s: failed to find library '%s'", source_file.name, ref.library
+                    )
                 continue
 
             if ref.is_entity_reference() and ref.design_unit in library.modules:
@@ -192,8 +217,12 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 primary_unit = library.primary_design_units[ref.design_unit]
             except KeyError:
                 if not library.is_external:
-                    LOGGER.warning("%s: failed to find a primary design unit '%s' in library '%s'",
-                                   source_file.name, ref.design_unit, library.name)
+                    LOGGER.warning(
+                        "%s: failed to find a primary design unit '%s' in library '%s'",
+                        source_file.name,
+                        ref.design_unit,
+                        library.name,
+                    )
                 continue
             else:
                 yield primary_unit.source_file
@@ -218,8 +247,13 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                         file_name = primary_unit.architecture_names[name]
                         yield library.get_source_file(file_name)
                     else:
-                        LOGGER.warning("%s: failed to find architecture '%s' of entity '%s.%s'",
-                                       source_file.name, name, library.name, primary_unit.name)
+                        LOGGER.warning(
+                            "%s: failed to find architecture '%s' of entity '%s.%s'",
+                            source_file.name,
+                            name,
+                            library.name,
+                            primary_unit.name,
+                        )
 
             elif ref.is_package_reference() and depend_on_package_body:
                 try:
@@ -285,12 +319,16 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 yield module.source_file
 
             if not found_component_match:
-                LOGGER.debug("failed to find a matching entity/module for component '%s' ", unit_name)
+                LOGGER.debug(
+                    "failed to find a matching entity/module for component '%s' ",
+                    unit_name,
+                )
 
     def create_dependency_graph(self, implementation_dependencies=False):
         """
         Create a DependencyGraph object of the HDL code project
         """
+
         def add_dependency(start, end):
             """
             Utility to add dependency
@@ -301,7 +339,9 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
             is_new = dependency_graph.add_dependency(start, end)
 
             if is_new:
-                LOGGER.debug('Adding dependency: %s depends on %s', end.name, start.name)
+                LOGGER.debug(
+                    "Adding dependency: %s depends on %s", end.name, start.name
+                )
 
         def add_dependencies(dependency_function, files):
             """
@@ -316,21 +356,30 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         for source_file in self._source_files_in_order:
             dependency_graph.add_node(source_file)
 
-        vhdl_files = [source_file
-                      for source_file in self._source_files_in_order
-                      if source_file.file_type == 'vhdl']
+        vhdl_files = [
+            source_file
+            for source_file in self._source_files_in_order
+            if source_file.file_type == "vhdl"
+        ]
 
-        depend_on_package_bodies = self._depend_on_package_body or implementation_dependencies
+        depend_on_package_bodies = (
+            self._depend_on_package_body or implementation_dependencies
+        )
         add_dependencies(
-            lambda source_file: self._find_other_vhdl_design_unit_dependencies(source_file,
-                                                                               depend_on_package_bodies,
-                                                                               implementation_dependencies),
-            vhdl_files)
-        add_dependencies(self._find_primary_secondary_design_unit_dependencies, vhdl_files)
+            lambda source_file: self._find_other_vhdl_design_unit_dependencies(
+                source_file, depend_on_package_bodies, implementation_dependencies
+            ),
+            vhdl_files,
+        )
+        add_dependencies(
+            self._find_primary_secondary_design_unit_dependencies, vhdl_files
+        )
 
-        verilog_files = [source_file
-                         for source_file in self._source_files_in_order
-                         if source_file.file_type in VERILOG_FILE_TYPES]
+        verilog_files = [
+            source_file
+            for source_file in self._source_files_in_order
+            if source_file.file_type in VERILOG_FILE_TYPES
+        ]
 
         add_dependencies(self._find_verilog_package_dependencies, verilog_files)
         add_dependencies(self._find_verilog_module_dependencies, verilog_files)
@@ -348,8 +397,10 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         """
         Pretty print circular dependency to error log
         """
-        LOGGER.error("Found circular dependency:\n%s",
-                     " ->\n".join(source_file.name for source_file in exception.path))
+        LOGGER.error(
+            "Found circular dependency:\n%s",
+            " ->\n".join(source_file.name for source_file in exception.path),
+        )
 
     def _get_compile_timestamps(self, files):
         """
@@ -366,7 +417,9 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 timestamps[source_file] = ostools.get_modification_time(hash_file_name)
         return timestamps
 
-    def get_files_in_compile_order(self, incremental=True, dependency_graph=None, files=None):
+    def get_files_in_compile_order(
+        self, incremental=True, dependency_graph=None, files=None
+    ):
         """
         Get a list of all files in compile order
         param: incremental: Only return files that need recompile if True
@@ -375,9 +428,12 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         if dependency_graph is None:
             dependency_graph = self.create_dependency_graph()
 
-        files_to_recompile = self._get_files_to_recompile(files or self.get_source_files_in_order(),
-                                                          dependency_graph, incremental)
-        return self._get_affected_files_in_compile_order(files_to_recompile, dependency_graph.get_dependent)
+        files_to_recompile = self._get_files_to_recompile(
+            files or self.get_source_files_in_order(), dependency_graph, incremental
+        )
+        return self._get_affected_files_in_compile_order(
+            files_to_recompile, dependency_graph.get_dependent
+        )
 
     def _get_files_to_recompile(self, files, dependency_graph, incremental):
         """
@@ -389,11 +445,15 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         timestamps = self._get_compile_timestamps(files)
         result_list = []
         for source_file in files:
-            if (not incremental) or self._needs_recompile(dependency_graph, source_file, timestamps):
+            if (not incremental) or self._needs_recompile(
+                dependency_graph, source_file, timestamps
+            ):
                 result_list.append(source_file)
         return result_list
 
-    def get_dependencies_in_compile_order(self, target_files=None, implementation_dependencies=False):
+    def get_dependencies_in_compile_order(
+        self, target_files=None, implementation_dependencies=False
+    ):
         """
         Get a list of dependencies of target files including the
         target files.
@@ -404,7 +464,9 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
             target_files = self._source_files_in_order
 
         dependency_graph = self.create_dependency_graph(implementation_dependencies)
-        return self._get_affected_files_in_compile_order(set(target_files), dependency_graph.get_dependencies)
+        return self._get_affected_files_in_compile_order(
+            set(target_files), dependency_graph.get_dependencies
+        )
 
     def _get_affected_files_in_compile_order(self, target_files, get_depend_func):
         """
@@ -423,18 +485,24 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         ###
         # First get all files that are required to fullfill the dependencies for the target files
         dependency_graph = self.create_dependency_graph(True)
-        dependency_files = self._get_affected_files(target_files or self.get_source_files_in_order(),
-                                                    dependency_graph.get_dependencies)
+        dependency_files = self._get_affected_files(
+            target_files or self.get_source_files_in_order(),
+            dependency_graph.get_dependencies,
+        )
 
         ###
         # Now the file set is known, but it has to be evaluated which files
         # realy have to be compiled according to their timestamp.
-        max_file_set_to_be_compiled = self.get_files_in_compile_order(incremental=True, files=dependency_files)
+        max_file_set_to_be_compiled = self.get_files_in_compile_order(
+            incremental=True, files=dependency_files
+        )
 
         # get_files_in_compile_order returns more files than actually are in the
         # list of dependent files. So the list is filtered for only the files
         # that are required
-        min_file_set_to_be_compiled = [f for f in max_file_set_to_be_compiled if f in dependency_files]
+        min_file_set_to_be_compiled = [
+            f for f in max_file_set_to_be_compiled if f in dependency_files
+        ]
         return min_file_set_to_be_compiled
 
     def _get_affected_files(self, target_files, get_depend_func):
@@ -491,14 +559,19 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
 
         content_hash_file_name = self._hash_file_name_of(source_file)
         if timestamp is None:
-            LOGGER.debug("%s has no vunit_hash file at %s and must be recompiled",
-                         source_file.name, content_hash_file_name)
+            LOGGER.debug(
+                "%s has no vunit_hash file at %s and must be recompiled",
+                source_file.name,
+                content_hash_file_name,
+            )
             return True
 
         old_content_hash = ostools.read_file(content_hash_file_name)
         if old_content_hash != source_file.content_hash:
-            LOGGER.debug("%s has different hash than last time and must be recompiled",
-                         source_file.name)
+            LOGGER.debug(
+                "%s has different hash than last time and must be recompiled",
+                source_file.name,
+            )
             return True
 
         for other_file in dependency_graph.get_direct_dependencies(source_file):
@@ -509,12 +582,15 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 continue
 
             if other_timestamp > timestamp:
-                LOGGER.debug("%s has dependency compiled earlier and must be recompiled",
-                             source_file.name)
+                LOGGER.debug(
+                    "%s has dependency compiled earlier and must be recompiled",
+                    source_file.name,
+                )
                 return True
 
-        LOGGER.debug("%s has same hash file and must not be recompiled",
-                     source_file.name)
+        LOGGER.debug(
+            "%s has same hash file and must not be recompiled", source_file.name
+        )
 
         return False
 
@@ -524,7 +600,9 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         """
         library = self.get_library(source_file.library.name)
         prefix = hash_string(dirname(source_file.name))
-        return join(library.directory, prefix, basename(source_file.name) + ".vunit_hash")
+        return join(
+            library.directory, prefix, basename(source_file.name) + ".vunit_hash"
+        )
 
     def update(self, source_file):
         """
@@ -533,13 +611,14 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         """
         new_content_hash = source_file.content_hash
         ostools.write_file(self._hash_file_name_of(source_file), new_content_hash)
-        LOGGER.debug('Wrote %s content_hash=%s', source_file.name, new_content_hash)
+        LOGGER.debug("Wrote %s content_hash=%s", source_file.name, new_content_hash)
 
 
 class Library(object):  # pylint: disable=too-many-instance-attributes
     """
     Represents a VHDL library
     """
+
     def __init__(self, name, directory, vhdl_standard, is_external=False):
         self.name = name
         self.directory = directory
@@ -574,11 +653,15 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
         if source_file.name in self._source_files:
             old_source_file = self._source_files[source_file.name]
             if old_source_file.content_hash != source_file.content_hash:
-                raise RuntimeError("%s already added to library %s" % (
-                    source_file.name, self.name))
+                raise RuntimeError(
+                    "%s already added to library %s" % (source_file.name, self.name)
+                )
 
-            LOGGER.info("Ignoring duplicate file %s added to library %s due to identical contents",
-                        source_file.name, self.name)
+            LOGGER.info(
+                "Ignoring duplicate file %s added to library %s due to identical contents",
+                source_file.name,
+                self.name,
+            )
 
             return old_source_file
 
@@ -605,11 +688,13 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
         """
         Utility function to give warning for design unit duplication
         """
-        LOGGER.warning("%s: %s '%s' previously defined in %s",
-                       design_unit.source_file.name,
-                       design_unit.unit_type,
-                       design_unit.name,
-                       old_file_name)
+        LOGGER.warning(
+            "%s: %s '%s' previously defined in %s",
+            design_unit.source_file.name,
+            design_unit.unit_type,
+            design_unit.name,
+            old_file_name,
+        )
 
     def _check_duplication(self, dictionary, design_unit):
         """
@@ -617,7 +702,9 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
         and give warning
         """
         if design_unit.name in dictionary:
-            self._warning_on_duplication(design_unit, dictionary[design_unit.name].source_file.name)
+            self._warning_on_duplication(
+                design_unit, dictionary[design_unit.name].source_file.name
+            )
 
     def add_vhdl_design_units(self, design_units):
         """
@@ -625,11 +712,10 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
         """
         for design_unit in design_units:
             if design_unit.is_primary:
-                self._check_duplication(self.primary_design_units,
-                                        design_unit)
+                self._check_duplication(self.primary_design_units, design_unit)
                 self.primary_design_units[design_unit.name] = design_unit
 
-                if design_unit.unit_type == 'entity':
+                if design_unit.unit_type == "entity":
                     if design_unit.name not in self._architectures:
                         self._architectures[design_unit.name] = {}
                     self._entities[design_unit.name] = design_unit
@@ -638,25 +724,38 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
                         design_unit.add_architecture(architecture)
 
             else:
-                if design_unit.unit_type == 'architecture':
+                if design_unit.unit_type == "architecture":
                     if design_unit.primary_design_unit not in self._architectures:
                         self._architectures[design_unit.primary_design_unit] = {}
 
-                    if design_unit.name in self._architectures[design_unit.primary_design_unit]:
+                    if (
+                        design_unit.name
+                        in self._architectures[design_unit.primary_design_unit]
+                    ):
                         self._warning_on_duplication(
                             design_unit,
-                            self._architectures[design_unit.primary_design_unit][design_unit.name].source_file.name)
+                            self._architectures[design_unit.primary_design_unit][
+                                design_unit.name
+                            ].source_file.name,
+                        )
 
-                    self._architectures[design_unit.primary_design_unit][design_unit.name] = design_unit
+                    self._architectures[design_unit.primary_design_unit][
+                        design_unit.name
+                    ] = design_unit
 
                     if design_unit.primary_design_unit in self._entities:
-                        self._entities[design_unit.primary_design_unit].add_architecture(design_unit)
+                        self._entities[
+                            design_unit.primary_design_unit
+                        ].add_architecture(design_unit)
 
-                if design_unit.unit_type == 'package body':
+                if design_unit.unit_type == "package body":
                     if design_unit.primary_design_unit in self._package_bodies:
                         self._warning_on_duplication(
                             design_unit,
-                            self._package_bodies[design_unit.primary_design_unit].source_file.name)
+                            self._package_bodies[
+                                design_unit.primary_design_unit
+                            ].source_file.name,
+                        )
                     self._package_bodies[design_unit.primary_design_unit] = design_unit
 
     def add_verilog_design_units(self, design_units):
@@ -664,13 +763,18 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
         Add Verilog design units to the library
         """
         for design_unit in design_units:
-            if design_unit.unit_type == 'module':
+            if design_unit.unit_type == "module":
                 if design_unit.name in self.modules:
-                    self._warning_on_duplication(design_unit, self.modules[design_unit.name].source_file.name)
+                    self._warning_on_duplication(
+                        design_unit, self.modules[design_unit.name].source_file.name
+                    )
                 self.modules[design_unit.name] = design_unit
-            elif design_unit.unit_type == 'package':
+            elif design_unit.unit_type == "package":
                 if design_unit.name in self.verilog_packages:
-                    self._warning_on_duplication(design_unit, self.verilog_packages[design_unit.name].source_file.name)
+                    self._warning_on_duplication(
+                        design_unit,
+                        self.verilog_packages[design_unit.name].source_file.name,
+                    )
                 self.verilog_packages[design_unit.name] = design_unit
 
     def get_entities(self):

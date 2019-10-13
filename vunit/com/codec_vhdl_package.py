@@ -19,12 +19,10 @@ class CodecVHDLPackage(VHDLPackage):
     """Class derived from VHDLPackage to provide codec generator functionality for the data types definied
     in the package."""
 
-    def __init__(self, identifier,
-                 enumeration_types, record_types, array_types):
-        super(CodecVHDLPackage, self).__init__(identifier,
-                                               enumeration_types,
-                                               record_types,
-                                               array_types)
+    def __init__(self, identifier, enumeration_types, record_types, array_types):
+        super(CodecVHDLPackage, self).__init__(
+            identifier, enumeration_types, record_types, array_types
+        )
         self._template = None
 
     @classmethod
@@ -34,10 +32,10 @@ class CodecVHDLPackage(VHDLPackage):
         """
         code = remove_comments(code).lower()
         return cls(
-            cls._package_start_re.match(code).group('id'),
+            cls._package_start_re.match(code).group("id"),
             list(CodecVHDLEnumerationType.find(code)),
             list(CodecVHDLRecordType.find(code)),
-            list(CodecVHDLArrayType.find(code))
+            list(CodecVHDLArrayType.find(code)),
         )
 
     @classmethod
@@ -55,11 +53,13 @@ class CodecVHDLPackage(VHDLPackage):
 
         self._template = PackageCodecTemplate()
 
-        declarations = ''
-        definitions = ''
+        declarations = ""
+        definitions = ""
 
         # Record
-        new_declarations, new_definitions = self._generate_record_codec_and_to_string_functions()
+        new_declarations, new_definitions = (
+            self._generate_record_codec_and_to_string_functions()
+        )
         declarations += new_declarations
         definitions += new_definitions
 
@@ -72,26 +72,33 @@ class CodecVHDLPackage(VHDLPackage):
         definitions += new_definitions
 
         # Enumerations
-        all_msg_types_enumeration_type, msg_type_enumeration_types = self._create_enumeration_of_all_msg_types()
+        all_msg_types_enumeration_type, msg_type_enumeration_types = (
+            self._create_enumeration_of_all_msg_types()
+        )
         if all_msg_types_enumeration_type is not None:
             declarations += self._template.all_msg_types_enumeration_type_declaration.substitute(
                 identifier=all_msg_types_enumeration_type.identifier,
-                literals=', '.join(all_msg_types_enumeration_type.literals))
+                literals=", ".join(all_msg_types_enumeration_type.literals),
+            )
 
         if all_msg_types_enumeration_type is not None:
-            declarations += \
-                self._template.get_msg_type_declaration.substitute(type=all_msg_types_enumeration_type.identifier)
-            definitions += \
-                self._template.get_msg_type_definition.substitute(type=all_msg_types_enumeration_type.identifier)
+            declarations += self._template.get_msg_type_declaration.substitute(
+                type=all_msg_types_enumeration_type.identifier
+            )
+            definitions += self._template.get_msg_type_definition.substitute(
+                type=all_msg_types_enumeration_type.identifier
+            )
 
-        new_declarations, new_definitions = \
-            self._generate_enumeration_codec_and_to_string_functions(all_msg_types_enumeration_type,
-                                                                     msg_type_enumeration_types)
+        new_declarations, new_definitions = self._generate_enumeration_codec_and_to_string_functions(
+            all_msg_types_enumeration_type, msg_type_enumeration_types
+        )
         declarations += new_declarations
         definitions += new_definitions
 
         # Arrays
-        new_declarations, new_definitions = self._generate_array_codec_and_to_string_functions()
+        new_declarations, new_definitions = (
+            self._generate_array_codec_and_to_string_functions()
+        )
         declarations += new_declarations
         definitions += new_definitions
 
@@ -100,10 +107,12 @@ class CodecVHDLPackage(VHDLPackage):
     def _generate_record_codec_and_to_string_functions(self):
         """Generate codecs and to_string functions for all record data types."""
 
-        declarations = ''
-        definitions = ''
+        declarations = ""
+        definitions = ""
         for record in self.record_types:
-            new_declarations, new_definitions = record.generate_codecs_and_support_functions()
+            new_declarations, new_definitions = (
+                record.generate_codecs_and_support_functions()
+            )
             declarations += new_declarations
             definitions += new_definitions
         return declarations, definitions
@@ -111,10 +120,12 @@ class CodecVHDLPackage(VHDLPackage):
     def _generate_array_codec_and_to_string_functions(self):
         """Generate codecs and to_string functions for all array data types."""
 
-        declarations = ''
-        definitions = ''
+        declarations = ""
+        definitions = ""
         for array in self.array_types:
-            new_declarations, new_definitions = array.generate_codecs_and_support_functions()
+            new_declarations, new_definitions = (
+                array.generate_codecs_and_support_functions()
+            )
             declarations += new_declarations
             definitions += new_definitions
 
@@ -126,36 +137,44 @@ class CodecVHDLPackage(VHDLPackage):
 
         msg_type_enumeration_types = []
         for record in self.record_types:
-            if record.elements[0].identifier_list[0] == 'msg_type':
-                msg_type_enumeration_types.append(record.elements[0].subtype_indication.code)
+            if record.elements[0].identifier_list[0] == "msg_type":
+                msg_type_enumeration_types.append(
+                    record.elements[0].subtype_indication.code
+                )
 
         msg_type_enumeration_literals = []
         for enum in self.enumeration_types:
             if enum.identifier in msg_type_enumeration_types:
                 for literal in enum.literals:
                     if literal in msg_type_enumeration_literals:
-                        raise RuntimeError('Different msg_type enumerations may not have the same literals')
+                        raise RuntimeError(
+                            "Different msg_type enumerations may not have the same literals"
+                        )
 
                     msg_type_enumeration_literals.append(literal)
 
         if msg_type_enumeration_literals:
-            all_msg_types_enumeration_type = CodecVHDLEnumerationType(self.identifier + '_msg_type_t',
-                                                                      msg_type_enumeration_literals)
+            all_msg_types_enumeration_type = CodecVHDLEnumerationType(
+                self.identifier + "_msg_type_t", msg_type_enumeration_literals
+            )
         else:
             all_msg_types_enumeration_type = None
 
         return all_msg_types_enumeration_type, msg_type_enumeration_types
 
-    def _generate_enumeration_codec_and_to_string_functions(self,
-                                                            all_msg_types_enumeration_type,
-                                                            msg_type_enumeration_types):
+    def _generate_enumeration_codec_and_to_string_functions(
+        self, all_msg_types_enumeration_type, msg_type_enumeration_types
+    ):
         """Generate codecs and to_string functions for all enumeration data types."""
 
-        declarations = ''
-        definitions = ''
+        declarations = ""
+        definitions = ""
         enumeration_offset = 0
-        for enum in self.enumeration_types + ([all_msg_types_enumeration_type] if
-                                              all_msg_types_enumeration_type is not None else []):
+        for enum in self.enumeration_types + (
+            [all_msg_types_enumeration_type]
+            if all_msg_types_enumeration_type is not None
+            else []
+        ):
 
             if enum.identifier in msg_type_enumeration_types:
                 offset = enumeration_offset
@@ -163,7 +182,9 @@ class CodecVHDLPackage(VHDLPackage):
             else:
                 offset = 0
 
-            new_declarations, new_definitions = enum.generate_codecs_and_support_functions(offset)
+            new_declarations, new_definitions = enum.generate_codecs_and_support_functions(
+                offset
+            )
             declarations += new_declarations
             definitions += new_definitions
 
@@ -176,8 +197,8 @@ class CodecVHDLPackage(VHDLPackage):
         read(addr, data) and write(addr, data) will be generated. These are shorthands for
         encode((<read or write>, addr, data))"""
 
-        declarations = ''
-        definitions = ''
+        declarations = ""
+        definitions = ""
 
         enumeration_types = {}
         for enum in self.enumeration_types:
@@ -186,7 +207,9 @@ class CodecVHDLPackage(VHDLPackage):
         msg_type_record_types = self._get_records_with_an_initial_msg_type_element()
 
         for record in msg_type_record_types:
-            msg_type_values = enumeration_types.get(record.elements[0].subtype_indication.type_mark)
+            msg_type_values = enumeration_types.get(
+                record.elements[0].subtype_indication.type_mark
+            )
 
             if msg_type_values is None:
                 continue
@@ -197,41 +220,55 @@ class CodecVHDLPackage(VHDLPackage):
                 encoding_list = []
                 for element in record.elements:
                     for identifier in element.identifier_list:
-                        if identifier != 'msg_type':
-                            parameter_list.append('    constant %s : %s' % (identifier,
-                                                                            element.subtype_indication.code))
-                            parameter_type_list.append(element.subtype_indication.type_mark)
-                            encoding_list.append('encode(%s)' % identifier)
+                        if identifier != "msg_type":
+                            parameter_list.append(
+                                "    constant %s : %s"
+                                % (identifier, element.subtype_indication.code)
+                            )
+                            parameter_type_list.append(
+                                element.subtype_indication.type_mark
+                            )
+                            encoding_list.append("encode(%s)" % identifier)
                         else:
-                            encoding_list.append("encode(%s'(%s))" % (element.subtype_indication.code, value))
+                            encoding_list.append(
+                                "encode(%s'(%s))"
+                                % (element.subtype_indication.code, value)
+                            )
 
                 if parameter_list == []:
-                    parameter_part = ''
-                    alias_signature = value + '[return string];'
+                    parameter_part = ""
+                    alias_signature = value + "[return string];"
                 else:
-                    parameter_part = ' (\n' + ';\n'.join(parameter_list) + ')'
-                    alias_signature = value + '[' + ', '.join(parameter_type_list) + ' return string];'
+                    parameter_part = " (\n" + ";\n".join(parameter_list) + ")"
+                    alias_signature = (
+                        value
+                        + "["
+                        + ", ".join(parameter_type_list)
+                        + " return string];"
+                    )
 
-                encodings = ' & '.join(encoding_list)
+                encodings = " & ".join(encoding_list)
 
-                declarations += \
-                    self._template.msg_type_record_codec_declaration.substitute(name=value,
-                                                                                parameter_part=parameter_part,
-                                                                                alias_signature=alias_signature,
-                                                                                alias_name=value + '_msg')
-                definitions += \
-                    self._template.msg_type_record_codec_definition.substitute(name=value,
-                                                                               parameter_part=parameter_part,
-                                                                               num_of_encodings=len(encoding_list),
-                                                                               encodings=encodings)
+                declarations += self._template.msg_type_record_codec_declaration.substitute(
+                    name=value,
+                    parameter_part=parameter_part,
+                    alias_signature=alias_signature,
+                    alias_name=value + "_msg",
+                )
+                definitions += self._template.msg_type_record_codec_definition.substitute(
+                    name=value,
+                    parameter_part=parameter_part,
+                    num_of_encodings=len(encoding_list),
+                    encodings=encodings,
+                )
 
         return declarations, definitions
 
     def _generate_get_functions(self):
         """Generate a get function which will return the message type for records"""
 
-        declarations = ''
-        definitions = ''
+        declarations = ""
+        definitions = ""
 
         msg_type_record_types = self._get_records_with_an_initial_msg_type_element()
         msg_type_types = []
@@ -239,8 +276,12 @@ class CodecVHDLPackage(VHDLPackage):
             msg_type_type = record.elements[0].subtype_indication.code
             if msg_type_type not in msg_type_types:
                 msg_type_types.append(msg_type_type)
-                declarations += self._template.get_specific_msg_type_declaration.substitute(type=msg_type_type)
-                definitions += self._template.get_specific_msg_type_definition.substitute(type=msg_type_type)
+                declarations += self._template.get_specific_msg_type_declaration.substitute(
+                    type=msg_type_type
+                )
+                definitions += self._template.get_specific_msg_type_definition.substitute(
+                    type=msg_type_type
+                )
 
         return declarations, definitions
 
@@ -249,7 +290,7 @@ class CodecVHDLPackage(VHDLPackage):
 
         msg_type_record_types = []
         for record in self.record_types:
-            if record.elements[0].identifier_list[0] == 'msg_type':
+            if record.elements[0].identifier_list[0] == "msg_type":
                 msg_type_record_types.append(record)
 
         return msg_type_record_types
@@ -258,41 +299,52 @@ class CodecVHDLPackage(VHDLPackage):
 class PackageCodecTemplate(object):
     """This class contains package codec templates."""
 
-    msg_type_record_codec_declaration = Template("""\
+    msg_type_record_codec_declaration = Template(
+        """\
   function $name$parameter_part
     return string;
   alias $alias_name is $alias_signature
 
-""")
+"""
+    )
 
-    get_specific_msg_type_declaration = Template("""\
+    get_specific_msg_type_declaration = Template(
+        """\
   function get_$type (
     constant code : string)
     return $type;
 
-""")
+"""
+    )
 
-    all_msg_types_enumeration_type_declaration = Template("""\
+    all_msg_types_enumeration_type_declaration = Template(
+        """\
   type $identifier is ($literals);
-""")
+"""
+    )
 
-    get_msg_type_declaration = Template("""\
+    get_msg_type_declaration = Template(
+        """\
   function get_msg_type (
     constant code : string)
     return $type;
 
-""")
+"""
+    )
 
-    msg_type_record_codec_definition = Template("""\
+    msg_type_record_codec_definition = Template(
+        """\
   function $name$parameter_part
     return string is
   begin
     return $encodings;
   end function $name;
 
-""")
+"""
+    )
 
-    get_specific_msg_type_definition = Template("""\
+    get_specific_msg_type_definition = Template(
+        """\
   function get_$type (
     constant code : string)
     return $type is
@@ -300,9 +352,11 @@ class PackageCodecTemplate(object):
     return decode(code);
   end;
 
-""")
+"""
+    )
 
-    get_msg_type_definition = Template("""\
+    get_msg_type_definition = Template(
+        """\
   function get_msg_type (
     constant code : string)
     return $type is
@@ -310,4 +364,5 @@ class PackageCodecTemplate(object):
     return decode(code);
   end;
 
-""")
+"""
+    )

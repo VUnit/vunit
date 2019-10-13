@@ -17,6 +17,7 @@ import subprocess
 import threading
 import shutil
 import sys
+
 try:
     # Python 3.x
     from queue import Queue, Empty
@@ -29,15 +30,17 @@ import os
 import io
 
 import logging
+
 LOGGER = logging.getLogger(__name__)
 
-IS_WINDOWS_SYSTEM = os.name == 'nt'
+IS_WINDOWS_SYSTEM = os.name == "nt"
 
 
 class ProgramStatus(object):
     """
     Maintain global program status to support graceful shutdown
     """
+
     def __init__(self):
         self._lock = threading.Lock()
         self._shutting_down = False
@@ -116,7 +119,8 @@ class Process(object):
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
                 # Create new process group on Windows
-                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+            )
         else:
             self._process = subprocess.Popen(
                 args,
@@ -128,9 +132,12 @@ class Process(object):
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
                 # Create new process group on POSIX, setpgrp does not exist on Windows
-                preexec_fn=os.setpgrp)  # pylint: disable=no-member
+                preexec_fn=os.setpgrp,  # pylint: disable=no-member
+            )
 
-        LOGGER.debug("Started process with pid=%i: '%s'", self._process.pid, (" ".join(args)))
+        LOGGER.debug(
+            "Started process with pid=%i: '%s'", self._process.pid, (" ".join(args))
+        )
 
         self._queue = InterruptableQueue()
         self._reader = AsynchronousFileReader(self._process.stdout, self._queue)
@@ -228,9 +235,11 @@ class Process(object):
             LOGGER.debug("Waiting for process with pid=%i", self._process.pid)
             self.wait()
 
-        LOGGER.debug("Process with pid=%i terminated with code=%i",
-                     self._process.pid,
-                     self._process.returncode)
+        LOGGER.debug(
+            "Process with pid=%i terminated with code=%i",
+            self._process.pid,
+            self._process.returncode,
+        )
 
         self._reader.join()
         self._process.stdout.close()
@@ -263,7 +272,7 @@ class AsynchronousFileReader(threading.Thread):
 
     def run(self):
         """The body of the tread: read lines and put them on the queue."""
-        for line in iter(self._fd.readline, ''):
+        for line in iter(self._fd.readline, ""):
             if PROGRAM_STATUS.is_shutting_down:
                 break
 
@@ -284,12 +293,19 @@ class AsynchronousFileReader(threading.Thread):
 def read_file(file_name, encoding="utf-8", newline=None):
     """ To stub during testing """
     try:
-        with io.open(file_name, "r", encoding=encoding, newline=newline) as file_to_read:
+        with io.open(
+            file_name, "r", encoding=encoding, newline=newline
+        ) as file_to_read:
             data = file_to_read.read()
     except UnicodeDecodeError:
-        LOGGER.warning("Could not decode file %s using encoding %s, ignoring encoding errors",
-                       file_name, encoding)
-        with io.open(file_name, "r", encoding=encoding, errors="ignore", newline=newline) as file_to_read:
+        LOGGER.warning(
+            "Could not decode file %s using encoding %s, ignoring encoding errors",
+            file_name,
+            encoding,
+        )
+        with io.open(
+            file_name, "r", encoding=encoding, errors="ignore", newline=newline
+        ) as file_to_read:
             data = file_to_read.read()
 
     return data

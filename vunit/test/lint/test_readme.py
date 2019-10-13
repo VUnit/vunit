@@ -23,5 +23,5 @@ class TestReadMe(unittest.TestCase):
     def test_that_readme_file_matches_vunit_docstring(self):
         with catch_warnings():
             simplefilter("ignore", category=DeprecationWarning)
-            with open(join(ROOT, 'README.rst'), "rU") as readme:
+            with open(join(ROOT, "README.rst"), "rU") as readme:
                 self.assertEqual(readme.read(), doc())

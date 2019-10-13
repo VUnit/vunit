@@ -9,15 +9,17 @@ Test of the VHDL parser
 """
 
 from unittest import TestCase
-from vunit.vhdl_parser import (VHDLDesignFile,
-                               VHDLInterfaceElement,
-                               VHDLEntity,
-                               VHDLSubtypeIndication,
-                               VHDLEnumerationType,
-                               VHDLArrayType,
-                               VHDLReference,
-                               VHDLRecordType,
-                               remove_comments)
+from vunit.vhdl_parser import (
+    VHDLDesignFile,
+    VHDLInterfaceElement,
+    VHDLEntity,
+    VHDLSubtypeIndication,
+    VHDLEnumerationType,
+    VHDLArrayType,
+    VHDLReference,
+    VHDLRecordType,
+    remove_comments,
+)
 
 
 class TestVHDLParser(TestCase):  # pylint: disable=too-many-public-methods
@@ -32,46 +34,53 @@ class TestVHDLParser(TestCase):  # pylint: disable=too-many-public-methods
         self.assertEqual(design_file.architectures, [])
 
     def test_parsing_simple_entity(self):
-        entity = self.parse_single_entity("""\
+        entity = self.parse_single_entity(
+            """\
 entity simple is
 end entity;
-""")
+"""
+        )
         self.assertEqual(entity.identifier, "simple")
         self.assertEqual(entity.ports, [])
         self.assertEqual(entity.generics, [])
 
     def test_parsing_entity_with_package_generic(self):
-        entity = self.parse_single_entity("""\
+        entity = self.parse_single_entity(
+            """\
 entity ent is
   generic (
     package p is new work.pkg generic map (c => 1, b => 2);
     package_g : integer
     );
 end entity;
-""")
+"""
+        )
         self.assertEqual(entity.identifier, "ent")
         self.assertEqual(entity.ports, [])
         self.assertEqual(len(entity.generics), 1)
-        self.assertEqual(entity.generics[0].identifier, 'package_g')
-        self.assertEqual(entity.generics[0].subtype_indication.type_mark, 'integer')
+        self.assertEqual(entity.generics[0].identifier, "package_g")
+        self.assertEqual(entity.generics[0].subtype_indication.type_mark, "integer")
 
     def test_parsing_entity_with_type_generic(self):
-        entity = self.parse_single_entity("""\
+        entity = self.parse_single_entity(
+            """\
 entity ent is
   generic (
     type t;
     type_g : integer
     );
 end entity;
-""")
+"""
+        )
         self.assertEqual(entity.identifier, "ent")
         self.assertEqual(entity.ports, [])
         self.assertEqual(len(entity.generics), 1)
-        self.assertEqual(entity.generics[0].identifier, 'type_g')
-        self.assertEqual(entity.generics[0].subtype_indication.type_mark, 'integer')
+        self.assertEqual(entity.generics[0].identifier, "type_g")
+        self.assertEqual(entity.generics[0].subtype_indication.type_mark, "integer")
 
     def test_parsing_entity_with_string_semicolon_colon(self):
-        entity = self.parse_single_entity("""\
+        entity = self.parse_single_entity(
+            """\
 entity ent is
   generic (
         const : string := "a;a";
@@ -79,22 +88,24 @@ entity ent is
         const3 : string := ": a b c :"
     );
 end entity;
-""")
+"""
+        )
         self.assertEqual(entity.identifier, "ent")
         self.assertEqual(entity.ports, [])
         self.assertEqual(len(entity.generics), 3)
-        self.assertEqual(entity.generics[0].identifier, 'const')
-        self.assertEqual(entity.generics[0].subtype_indication.type_mark, 'string')
+        self.assertEqual(entity.generics[0].identifier, "const")
+        self.assertEqual(entity.generics[0].subtype_indication.type_mark, "string")
         self.assertEqual(entity.generics[0].init_value, '"a;a"')
-        self.assertEqual(entity.generics[1].identifier, 'const2')
-        self.assertEqual(entity.generics[1].subtype_indication.type_mark, 'string')
+        self.assertEqual(entity.generics[1].identifier, "const2")
+        self.assertEqual(entity.generics[1].subtype_indication.type_mark, "string")
         self.assertEqual(entity.generics[1].init_value, '";a""a;a"')
-        self.assertEqual(entity.generics[2].identifier, 'const3')
-        self.assertEqual(entity.generics[2].subtype_indication.type_mark, 'string')
+        self.assertEqual(entity.generics[2].identifier, "const3")
+        self.assertEqual(entity.generics[2].subtype_indication.type_mark, "string")
         self.assertEqual(entity.generics[2].init_value, '": a b c :"')
 
     def test_parsing_entity_with_function_generic(self):
-        entity = self.parse_single_entity("""\
+        entity = self.parse_single_entity(
+            """\
 entity ent is
   generic (
     function f(a : integer; b : integer) return integer;
@@ -104,17 +115,19 @@ entity ent is
     procedure p(a : integer; b : integer)
     );
 end entity;
-""")
+"""
+        )
         self.assertEqual(entity.identifier, "ent")
         self.assertEqual(entity.ports, [])
         self.assertEqual(len(entity.generics), 2)
-        self.assertEqual(entity.generics[0].identifier, 'function_g')
-        self.assertEqual(entity.generics[0].subtype_indication.type_mark, 'boolean')
-        self.assertEqual(entity.generics[1].identifier, 'procedure_g')
-        self.assertEqual(entity.generics[1].subtype_indication.type_mark, 'boolean')
+        self.assertEqual(entity.generics[0].identifier, "function_g")
+        self.assertEqual(entity.generics[0].subtype_indication.type_mark, "boolean")
+        self.assertEqual(entity.generics[1].identifier, "procedure_g")
+        self.assertEqual(entity.generics[1].subtype_indication.type_mark, "boolean")
 
     def test_getting_entities_from_design_file(self):
-        design_file = VHDLDesignFile.parse("""
+        design_file = VHDLDesignFile.parse(
+            """
 entity entity1 is
 end entity;
 
@@ -123,21 +136,24 @@ end package;
 
 entity entity2 is
 end entity;
-""")
+"""
+        )
         entities = design_file.entities
         self.assertEqual(len(entities), 2)
         self.assertEqual(entities[0].identifier, "entity1")
         self.assertEqual(entities[1].identifier, "entity2")
 
     def test_getting_architectures_from_design_file(self):
-        design_file = VHDLDesignFile.parse("""
+        design_file = VHDLDesignFile.parse(
+            """
 entity foo is
 end entity;
 
 architecture rtl of foo is
 begin
 end architecture;
-""")
+"""
+        )
         self.assertEqual(len(design_file.entities), 1)
         self.assertEqual(len(design_file.architectures), 1)
         arch = design_file.architectures
@@ -146,7 +162,8 @@ end architecture;
         self.assertEqual(arch[0].identifier, "rtl")
 
     def test_parsing_references(self):
-        design_file = VHDLDesignFile.parse("""
+        design_file = VHDLDesignFile.parse(
+            """
 library name1;
  use name1.foo.all;
 
@@ -171,33 +188,42 @@ entity foo is -- False
 configuration bar of ent -- False
 
 package new_pkg is new lib.pkg;
-""")
+"""
+        )
         self.assertEqual(len(design_file.references), 14)
-        self.assertEqual(sorted(design_file.references, key=repr), sorted([
-            VHDLReference('configuration', 'work', 'cfg', None),
-            VHDLReference('context', 'name1', 'is_identifier', None),
-            VHDLReference('entity', 'work1', 'foo1', 'a1'),
-            VHDLReference('entity', 'work1', 'foo1', None),
-            VHDLReference('entity', 'work2', 'foo2', 'a2'),
-            VHDLReference('entity', 'work2', 'foo2', None),
-            VHDLReference('package', 'ieee', 'numeric_std', 'all'),
-            VHDLReference('package', 'ieee', 'std_logic_1164', 'all'),
-            VHDLReference('package', 'lib1', 'foo', None),
-            VHDLReference('package', 'lib2', 'bar', None),
-            VHDLReference('package', 'lib3', 'xyz', None),
-            VHDLReference('package', 'name1', 'bla', 'all'),
-            VHDLReference('package', 'name1', 'foo', 'all'),
-            VHDLReference('package', 'lib', 'pkg', None),
-        ], key=repr))
+        self.assertEqual(
+            sorted(design_file.references, key=repr),
+            sorted(
+                [
+                    VHDLReference("configuration", "work", "cfg", None),
+                    VHDLReference("context", "name1", "is_identifier", None),
+                    VHDLReference("entity", "work1", "foo1", "a1"),
+                    VHDLReference("entity", "work1", "foo1", None),
+                    VHDLReference("entity", "work2", "foo2", "a2"),
+                    VHDLReference("entity", "work2", "foo2", None),
+                    VHDLReference("package", "ieee", "numeric_std", "all"),
+                    VHDLReference("package", "ieee", "std_logic_1164", "all"),
+                    VHDLReference("package", "lib1", "foo", None),
+                    VHDLReference("package", "lib2", "bar", None),
+                    VHDLReference("package", "lib3", "xyz", None),
+                    VHDLReference("package", "name1", "bla", "all"),
+                    VHDLReference("package", "name1", "foo", "all"),
+                    VHDLReference("package", "lib", "pkg", None),
+                ],
+                key=repr,
+            ),
+        )
 
     def test_parsing_entity_with_generics(self):
-        entity = self.parse_single_entity("""\
+        entity = self.parse_single_entity(
+            """\
 entity name is
    generic (max_value : integer range 2-2 to 2**10 := (2-19)*4;
             enable_foo : boolean
    );
 end entity;
-""")
+"""
+        )
         self.assertEqual(entity.identifier, "name")
         self.assertNotEqual(entity.generics, [])
         self.assertEqual(entity.ports, [])
@@ -207,10 +233,12 @@ end entity;
         self.assertEqual(generics[0].identifier, "max_value")
         self.assertEqual(generics[0].init_value, "(2-19)*4")
         self.assertEqual(generics[0].mode, None)
-        self.assertEqual(generics[0].subtype_indication.code, "integer range 2-2 to 2**10")
+        self.assertEqual(
+            generics[0].subtype_indication.code, "integer range 2-2 to 2**10"
+        )
         self.assertEqual(generics[0].subtype_indication.type_mark, "integer")
         # @TODO does not work
-#        self.assertEqual(generics[0].subtypeIndication.constraint, "range 2-2 to 2**10")
+        #        self.assertEqual(generics[0].subtypeIndication.constraint, "range 2-2 to 2**10")
         self.assertEqual(generics[1].identifier, "enable_foo")
         self.assertEqual(generics[1].init_value, None)
         self.assertEqual(generics[1].mode, None)
@@ -218,52 +246,64 @@ end entity;
         self.assertEqual(generics[1].subtype_indication.type_mark, "boolean")
 
     def test_parsing_entity_with_generics_corner_cases(self):
-        self.parse_single_entity("""\
+        self.parse_single_entity(
+            """\
 entity name is end entity;
-""")
+"""
+        )
 
-        entity = self.parse_single_entity("""\
+        entity = self.parse_single_entity(
+            """\
 entity name is generic(g : t); end entity;
-""")
+"""
+        )
         self.assertEqual(len(entity.generics), 1)
         self.assertEqual(entity.generics[0].identifier, "g")
 
-        entity = self.parse_single_entity("""\
+        entity = self.parse_single_entity(
+            """\
 entity name is generic
 (
 g : t
 );
 end entity;
-""")
+"""
+        )
         self.assertEqual(len(entity.generics), 1)
         self.assertEqual(entity.generics[0].identifier, "g")
 
-        entity = self.parse_single_entity("""\
+        entity = self.parse_single_entity(
+            """\
 end architecture; entity name is generic
 (
 g : t
 );
 end entity;
-""")
+"""
+        )
         self.assertEqual(len(entity.generics), 1)
         self.assertEqual(entity.generics[0].identifier, "g")
 
-        entity = self.parse_single_entity("""\
+        entity = self.parse_single_entity(
+            """\
 entity name is foo_generic
 (
 g : t
 );
 end entity;
-""")
+"""
+        )
         self.assertEqual(len(entity.generics), 0)
 
     def test_parsing_entity_with_ports(self):
-        entity = self.parse_single_entity("""\
+        entity = self.parse_single_entity(
+            """\
 entity name is
    port (clk : in std_logic;
          data : out std_logic_vector(11-1 downto 0));
 end entity;
-""")
+"""
+        )
 
         self.assertEqual(entity.identifier, "name")
         self.assertEqual(entity.generics, [])
@@ -281,82 +321,103 @@ end entity;
         self.assertEqual(ports[1].identifier, "data")
         self.assertEqual(ports[1].init_value, None)
         self.assertEqual(ports[1].mode, "out")
-        self.assertEqual(ports[1].subtype_indication.code, "std_logic_vector(11-1 downto 0)")
+        self.assertEqual(
+            ports[1].subtype_indication.code, "std_logic_vector(11-1 downto 0)"
+        )
         self.assertEqual(ports[1].subtype_indication.type_mark, "std_logic_vector")
         self.assertEqual(ports[1].subtype_indication.constraint, "(11-1 downto 0)")
 
     def test_parsing_simple_package_body(self):
-        package_body = self.parse_single_package_body("""\
+        package_body = self.parse_single_package_body(
+            """\
 package body simple is
 begin
 end package body;
-""")
+"""
+        )
         self.assertEqual(package_body.identifier, "simple")
 
     def test_parsing_simple_package(self):
-        package = self.parse_single_package("""\
+        package = self.parse_single_package(
+            """\
 package simple is
 end package;
-""")
+"""
+        )
         self.assertEqual(package.identifier, "simple")
 
     def test_parsing_generic_package(self):
-        package = self.parse_single_package("""\
+        package = self.parse_single_package(
+            """\
 package pkg is
   generic (c : integer;
            b : bit_vector(4-1 downto 0));
 end package;
-""")
+"""
+        )
         self.assertEqual(package.identifier, "pkg")
 
     def test_parsing_generic_package_instance(self):
-        package = self.parse_single_package("""\
+        package = self.parse_single_package(
+            """\
 package instance_pkg is new work.generic_pkg;
-""")
+"""
+        )
         self.assertEqual(package.identifier, "instance_pkg")
 
-        package = self.parse_single_package("""\
+        package = self.parse_single_package(
+            """\
 
 
 package instance_pkg is
 new work.generic_pkg;
-""")
+"""
+        )
         self.assertEqual(package.identifier, "instance_pkg")
 
-        package = self.parse_single_package("""\
+        package = self.parse_single_package(
+            """\
 package instance_pkg is new work.generic_pkg
         generic map (foo : boolean);
-""")
+"""
+        )
         self.assertEqual(package.identifier, "instance_pkg")
 
         # Skip nested packages using the heuristic that the package is
         # indented from the first column.
-        design_file = VHDLDesignFile.parse("""\
+        design_file = VHDLDesignFile.parse(
+            """\
  package instance_pkg is new work.generic_pkg
-""")
+"""
+        )
         self.assertEqual(len(design_file.packages), 0)
 
     def test_parsing_context(self):
-        context = self.parse_single_context("""\
+        context = self.parse_single_context(
+            """\
 context foo is
   library bar;
   use bar.bar_pkg.all;
 end context;
 
 context name1.is_identifier; -- Should be ignored
-""")
+"""
+        )
         self.assertEqual(context.identifier, "foo")
 
-        context = self.parse_single_context("""\
+        context = self.parse_single_context(
+            """\
 context identifier is
   library bar;
   use bar.bar_pkg.all;
 end context identifier;
-""")
+"""
+        )
         self.assertEqual(context.identifier, "identifier")
 
     def test_getting_component_instantiations_from_design_file(self):
-        design_file = VHDLDesignFile.parse("""
+        design_file = VHDLDesignFile.parse(
+            """
 entity top is
 end entity;
 
@@ -378,7 +439,8 @@ begin
 
 end architecture;
 
-""")
+"""
+        )
         component_instantiations = design_file.component_instantiations
         self.assertEqual(len(component_instantiations), 3)
         self.assertEqual(component_instantiations[0], "foo")
@@ -408,7 +470,7 @@ type incomplete_type_declaration_t;
 type animal_t is (cow);"""
 
         enums = {e.identifier: e.literals for e in VHDLEnumerationType.find(code)}
-        expect = {'color_t': ['blue', 'red', 'green'], 'animal_t': ['cow']}
+        expect = {"color_t": ["blue", "red", "green"], "animal_t": ["cow"]}
         self.assertEqual(enums, expect)
 
     def test_that_array_type_declarations_are_found(self):
@@ -418,13 +480,15 @@ type unconstrained_fish_array_t is array(integer range <>) of fish_t;
 type constrained_badgers_array_t is array ( -1 downto 0 ) of badger_t;
 type unconstrained_natural_array_t is array ( integer range <> ) of natural;
 """
-        arrays = {e.identifier: e.subtype_indication.type_mark
-                  for e in VHDLArrayType.find(code)}
+        arrays = {
+            e.identifier: e.subtype_indication.type_mark
+            for e in VHDLArrayType.find(code)
+        }
         expect = {
-            'constrained_integer_array_t': 'integer',
-            'unconstrained_fish_array_t': 'fish_t',
-            'constrained_badgers_array_t': 'badger_t',
-            'unconstrained_natural_array_t': 'natural',
+            "constrained_integer_array_t": "integer",
+            "unconstrained_fish_array_t": "fish_t",
+            "constrained_badgers_array_t": "badger_t",
+            "unconstrained_natural_array_t": "natural",
         }
         self.assertEqual(arrays, expect)
 
@@ -447,25 +511,32 @@ record
         records = {e.identifier: e.elements for e in VHDLRecordType.find(code)}
         self.assertEqual(len(records), 3)
 
-        self.assertIn('space_time_t', records)
-        self.assertEqual(records['space_time_t'][0].identifier_list, ['x', 'y', 'z'])
-        self.assertEqual(records['space_time_t'][0].subtype_indication.type_mark, 'real')
-        self.assertEqual(records['space_time_t'][1].identifier_list, ['t'])
-        self.assertEqual(records['space_time_t'][1].subtype_indication.type_mark, 'time')
+        self.assertIn("space_time_t", records)
+        self.assertEqual(records["space_time_t"][0].identifier_list, ["x", "y", "z"])
+        self.assertEqual(
+            records["space_time_t"][0].subtype_indication.type_mark, "real"
+        )
+        self.assertEqual(records["space_time_t"][1].identifier_list, ["t"])
+        self.assertEqual(
+            records["space_time_t"][1].subtype_indication.type_mark, "time"
+        )
 
-        self.assertIn('complex_t', records)
-        self.assertEqual(records['complex_t'][0].identifier_list, ['im', 're'])
-        self.assertEqual(records['complex_t'][0].subtype_indication.type_mark, 'real')
+        self.assertIn("complex_t", records)
+        self.assertEqual(records["complex_t"][0].identifier_list, ["im", "re"])
+        self.assertEqual(records["complex_t"][0].subtype_indication.type_mark, "real")
 
-        self.assertIn('foo', records)
-        self.assertEqual(records['foo'][0].identifier_list, ['bar'])
-        self.assertEqual(records['foo'][0].subtype_indication.type_mark, 'std_logic_vector')
-        self.assertEqual(records['foo'][0].subtype_indication.constraint, '(7 downto 0)')
-        self.assertTrue(records['foo'][0].subtype_indication.array_type)
+        self.assertIn("foo", records)
+        self.assertEqual(records["foo"][0].identifier_list, ["bar"])
+        self.assertEqual(
+            records["foo"][0].subtype_indication.type_mark, "std_logic_vector"
+        )
+        self.assertEqual(
+            records["foo"][0].subtype_indication.constraint, "(7 downto 0)"
+        )
+        self.assertTrue(records["foo"][0].subtype_indication.array_type)
 
     def test_remove_comments(self):
-        self.assertEqual(remove_comments("a\n-- foo  \nb"),
-                         "a\n        \nb")
+        self.assertEqual(remove_comments("a\n-- foo  \nb"), "a\n        \nb")
 
     def parse_single_entity(self, code):
         """
@@ -504,17 +575,18 @@ record
         """
         Helper function to create a VHDLEntity
         """
-        data_width = VHDLInterfaceElement("data_width",
-                                          VHDLSubtypeIndication.parse("natural := 16"))
+        data_width = VHDLInterfaceElement(
+            "data_width", VHDLSubtypeIndication.parse("natural := 16")
+        )
 
-        clk = VHDLInterfaceElement("clk",
-                                   VHDLSubtypeIndication.parse("std_logic"),
-                                   "in")
-        data = VHDLInterfaceElement("data",
-                                    VHDLSubtypeIndication.parse("std_logic_vector(data_width-1 downto 0)"),
-                                    "out")
+        clk = VHDLInterfaceElement(
+            "clk", VHDLSubtypeIndication.parse("std_logic"), "in"
+        )
+        data = VHDLInterfaceElement(
+            "data",
+            VHDLSubtypeIndication.parse("std_logic_vector(data_width-1 downto 0)"),
+            "out",
+        )
 
-        entity = VHDLEntity(identifier="name",
-                            generics=[data_width],
-                            ports=[clk, data])
+        entity = VHDLEntity(identifier="name", generics=[data_width], ports=[clk, data])
         return entity

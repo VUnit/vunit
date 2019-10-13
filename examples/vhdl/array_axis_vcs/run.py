@@ -29,10 +29,9 @@ vu.add_verification_components()
 
 src_path = join(dirname(__file__), "src")
 
-vu.add_library("lib").add_source_files([
-    join(src_path, "*.vhd"),
-    join(src_path, "**", "*.vhd")
-])
+vu.add_library("lib").add_source_files(
+    [join(src_path, "*.vhd"), join(src_path, "**", "*.vhd")]
+)
 
 # vu.set_sim_option('modelsim.init_files.after_load',['runall_addwave.do'])
 

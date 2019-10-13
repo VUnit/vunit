@@ -14,9 +14,11 @@ from vunit.activehdl_interface import ActiveHDLInterface
 from vunit.rivierapro_interface import RivieraProInterface
 from vunit.ghdl_interface import GHDLInterface
 from vunit.incisive_interface import IncisiveInterface
-from vunit.simulator_interface import (BooleanOption,
-                                       ListOfStringOption,
-                                       VHDLAssertLevelOption)
+from vunit.simulator_interface import (
+    BooleanOption,
+    ListOfStringOption,
+    VHDLAssertLevelOption,
+)
 
 
 class SimulatorFactory(object):
@@ -29,11 +31,13 @@ class SimulatorFactory(object):
         """
         Return a list of supported simulator classes
         """
-        return [ModelSimInterface,
-                RivieraProInterface,
-                ActiveHDLInterface,
-                GHDLInterface,
-                IncisiveInterface]
+        return [
+            ModelSimInterface,
+            RivieraProInterface,
+            ActiveHDLInterface,
+            GHDLInterface,
+            IncisiveInterface,
+        ]
 
     def _extract_compile_options(self):
         """
@@ -53,11 +57,15 @@ class SimulatorFactory(object):
         """
         Return all supported sim options
         """
-        result = dict((opt.name, opt) for opt in
-                      [VHDLAssertLevelOption(),
-                       BooleanOption("disable_ieee_warnings"),
-                       BooleanOption("enable_coverage"),
-                       ListOfStringOption("pli")])
+        result = dict(
+            (opt.name, opt)
+            for opt in [
+                VHDLAssertLevelOption(),
+                BooleanOption("disable_ieee_warnings"),
+                BooleanOption("enable_coverage"),
+                ListOfStringOption("pli"),
+            ]
+        )
 
         for sim_class in self.supported_simulators():
             for opt in sim_class.sim_options:
@@ -76,8 +84,9 @@ class SimulatorFactory(object):
         known_options = sorted(list(self._sim_options.keys()))
 
         if name not in self._sim_options:
-            raise ValueError("Unknown sim_option %r, expected one of %r" %
-                             (name, known_options))
+            raise ValueError(
+                "Unknown sim_option %r, expected one of %r" % (name, known_options)
+            )
 
         self._sim_options[name].validate(value)
 
@@ -87,8 +96,9 @@ class SimulatorFactory(object):
         """
         known_options = sorted(list(self._compile_options.keys()))
         if name not in known_options:
-            raise ValueError("Unknown compile_option %r, expected one of %r" %
-                             (name, known_options))
+            raise ValueError(
+                "Unknown compile_option %r, expected one of %r" % (name, known_options)
+            )
 
     def check_compile_option(self, name, value):
         """
@@ -103,7 +113,10 @@ class SimulatorFactory(object):
         or the first available
         """
         available_simulators = self._detect_available_simulators()
-        name_mapping = {simulator_class.name: simulator_class for simulator_class in self.supported_simulators()}
+        name_mapping = {
+            simulator_class.name: simulator_class
+            for simulator_class in self.supported_simulators()
+        }
         if not available_simulators:
             return None
 
@@ -112,9 +125,14 @@ class SimulatorFactory(object):
             simulator_name = os.environ[environ_name]
             if simulator_name not in name_mapping:
                 raise RuntimeError(
-                    ("Simulator from " + environ_name + " environment variable %r is not supported. "
-                     "Supported simulators are %r")
-                    % (simulator_name, name_mapping.keys()))
+                    (
+                        "Simulator from "
+                        + environ_name
+                        + " environment variable %r is not supported. "
+                        "Supported simulators are %r"
+                    )
+                    % (simulator_name, name_mapping.keys())
+                )
             simulator_class = name_mapping[simulator_name]
         else:
             simulator_class = available_simulators[0]
@@ -126,10 +144,13 @@ class SimulatorFactory(object):
         Add command line arguments to parser
         """
 
-        parser.add_argument('-g', '--gui',
-                            action="store_true",
-                            default=False,
-                            help=("Open test case(s) in simulator gui with top level pre loaded"))
+        parser.add_argument(
+            "-g",
+            "--gui",
+            action="store_true",
+            default=False,
+            help=("Open test case(s) in simulator gui with top level pre loaded"),
+        )
 
         for sim in self.supported_simulators():
             sim.add_arguments(parser)
@@ -142,9 +163,11 @@ class SimulatorFactory(object):
         """
         Detect available simulators and return a list
         """
-        return [simulator_class
-                for simulator_class in self.supported_simulators()
-                if simulator_class.is_available()]
+        return [
+            simulator_class
+            for simulator_class in self.supported_simulators()
+            if simulator_class.is_available()
+        ]
 
     @property
     def has_simulator(self):

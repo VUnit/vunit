@@ -23,6 +23,7 @@ from contextlib import contextmanager
 from vunit import ostools
 from vunit.test_report import PASSED, FAILED, SKIPPED
 from vunit.hashing import hash_string
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -35,22 +36,27 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
     VERBOSITY_NORMAL = 1
     VERBOSITY_VERBOSE = 2
 
-    def __init__(self,  # pylint: disable=too-many-arguments
-                 report, output_path,
-                 verbosity=VERBOSITY_NORMAL,
-                 num_threads=1,
-                 fail_fast=False,
-                 dont_catch_exceptions=False,
-                 no_color=False):
+    def __init__(  # pylint: disable=too-many-arguments
+        self,
+        report,
+        output_path,
+        verbosity=VERBOSITY_NORMAL,
+        num_threads=1,
+        fail_fast=False,
+        dont_catch_exceptions=False,
+        no_color=False,
+    ):
         self._lock = threading.Lock()
         self._fail_fast = fail_fast
         self._abort = False
         self._local = threading.local()
         self._report = report
         self._output_path = output_path
-        assert verbosity in (self.VERBOSITY_QUIET,
-                             self.VERBOSITY_NORMAL,
-                             self.VERBOSITY_VERBOSE)
+        assert verbosity in (
+            self.VERBOSITY_QUIET,
+            self.VERBOSITY_NORMAL,
+            self.VERBOSITY_VERBOSE,
+        )
         self._verbosity = verbosity
         self._num_threads = num_threads
         self._stdout = sys.stdout
@@ -105,8 +111,10 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
             # Start P-1 worker threads
             for _ in range(self._num_threads - 1):
-                new_thread = threading.Thread(target=self._run_thread,
-                                              args=(write_stdout, scheduler, num_tests, False))
+                new_thread = threading.Thread(
+                    target=self._run_thread,
+                    args=(write_stdout, scheduler, num_tests, False),
+                )
                 threads.append(new_thread)
                 new_thread.start()
 
@@ -147,11 +155,9 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                         print("Starting %s" % test_name)
                     print("Output file: %s" % relpath(output_file_name))
 
-                self._run_test_suite(test_suite,
-                                     write_stdout,
-                                     num_tests,
-                                     output_path,
-                                     output_file_name)
+                self._run_test_suite(
+                    test_suite, write_stdout, num_tests, output_path, output_file_name
+                )
 
             except StopIteration:
                 return
@@ -168,17 +174,19 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                 if test_suite is not None:
                     scheduler.test_done()
 
-    def _add_skipped_tests(self, test_suite, results, start_time, num_tests, output_file_name):
+    def _add_skipped_tests(
+        self, test_suite, results, start_time, num_tests, output_file_name
+    ):
+        """
+        Add skipped tests
+        """
         for name in test_suite.test_names:
             results[name] = SKIPPED
         self._add_results(test_suite, results, start_time, num_tests, output_file_name)
 
-    def _run_test_suite(self,
-                        test_suite,
-                        write_stdout,
-                        num_tests,
-                        output_path,
-                        output_file_name):
+    def _run_test_suite(
+        self, test_suite, write_stdout, num_tests, output_path, output_file_name
+    ):
         """
         Run the actual test suite
         """
@@ -213,10 +221,11 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                 output_file.seek(prev)
                 return contents
 
-            results = test_suite.run(output_path=output_path,
-                                     read_output=read_output)
+            results = test_suite.run(output_path=output_path, read_output=read_output)
         except KeyboardInterrupt:
-            self._add_skipped_tests(test_suite, results, start_time, num_tests, output_file_name)
+            self._add_skipped_tests(
+                test_suite, results, start_time, num_tests, output_file_name
+            )
             raise KeyboardInterrupt
         except:  # pylint: disable=bare-except
             if self._dont_catch_exceptions:
@@ -238,10 +247,16 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
         with self._stdout_lock():
 
-            if (color_output_file is not None) and (any_not_passed or self._is_verbose) and not self._is_quiet:
+            if (
+                (color_output_file is not None)
+                and (any_not_passed or self._is_verbose)
+                and not self._is_quiet
+            ):
                 self._print_output(color_output_file_name)
 
-            self._add_results(test_suite, results, start_time, num_tests, output_file_name)
+            self._add_results(
+                test_suite, results, start_time, num_tests, output_file_name
+            )
 
             if self._fail_fast and any_not_passed:
                 self._abort = True
@@ -266,7 +281,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             mapping.add("%s %s" % (basename(test_output), test_suite.name))
 
         # Sort by everything except hash
-        mapping = sorted(mapping, key=lambda value: value[value.index(" "):])
+        mapping = sorted(mapping, key=lambda value: value[value.index(" ") :])
 
         with open(mapping_file_name, "w") as fptr:
             for value in mapping:
@@ -280,7 +295,9 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             for line in fread.readlines():
                 self._stdout_ansi.write(line)
 
-    def _add_results(self, test_suite, results, start_time, num_tests, output_file_name):
+    def _add_results(
+        self, test_suite, results, start_time, num_tests, output_file_name
+    ):
         """
         Add results to test report
         """
@@ -289,10 +306,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
         for test_name in test_suite.test_names:
             status = results[test_name]
-            self._report.add_result(test_name,
-                                    status,
-                                    time_per_test,
-                                    output_file_name)
+            self._report.add_result(test_name, status, time_per_test, output_file_name)
             self._report.print_latest_status(total_tests=num_tests)
         print()
 
@@ -321,6 +335,7 @@ class Tee(object):
     Provide a write method which writes to multiple files
     like the unix 'tee' command.
     """
+
     def __init__(self, files):
         self._files = files
 
@@ -338,6 +353,7 @@ class ThreadLocalOutput(object):
     Replacement for stdout/err that separates re-directs
     output to a thread local file interface
     """
+
     def __init__(self, local, stdout):
         self._local = local
         self._stdout = stdout
@@ -430,7 +446,9 @@ def create_output_path(output_path, test_suite_name):
     Ensure no bad characters and no long path names.
     """
     output_path = abspath(output_path)
-    safe_name = "".join(char if _is_legal(char) else '_' for char in test_suite_name) + "_"
+    safe_name = (
+        "".join(char if _is_legal(char) else "_" for char in test_suite_name) + "_"
+    )
     hash_name = hash_string(test_suite_name)
 
     if "VUNIT_SHORT_TEST_OUTPUT_PATHS" in os.environ:
@@ -439,7 +457,12 @@ def create_output_path(output_path, test_suite_name):
         max_path = 260
         margin = int(os.environ.get("VUNIT_TEST_OUTPUT_PATH_MARGIN", "100"))
         prefix_len = len(output_path)
-        full_name = safe_name[:min(max_path - margin - prefix_len - len(hash_name), len(safe_name))] + hash_name
+        full_name = (
+            safe_name[
+                : min(max_path - margin - prefix_len - len(hash_name), len(safe_name))
+            ]
+            + hash_name
+        )
     else:
         full_name = safe_name + hash_name
 

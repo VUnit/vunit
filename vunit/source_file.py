@@ -17,6 +17,7 @@ from vunit.vhdl_parser import VHDLReference
 from vunit.cached import file_content_hash
 from vunit.parsing.encodings import HDL_FILE_ENCODING
 from vunit.design_unit import DesignUnit, VHDLDesignUnit, Entity, Module
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -119,15 +120,26 @@ class VerilogSourceFile(SourceFile):
     """
     Represents a Verilog source file
     """
-    def __init__(self,  # pylint: disable=too-many-arguments
-                 file_type, name, library, verilog_parser, database, include_dirs=None, defines=None, no_parse=False):
+
+    def __init__(  # pylint: disable=too-many-arguments
+        self,
+        file_type,
+        name,
+        library,
+        verilog_parser,
+        database,
+        include_dirs=None,
+        defines=None,
+        no_parse=False,
+    ):
         SourceFile.__init__(self, name, library, file_type)
         self.package_dependencies = []
         self.module_dependencies = []
         self.include_dirs = include_dirs if include_dirs is not None else []
         self.defines = defines.copy() if defines is not None else {}
-        self._content_hash = file_content_hash(self.name, encoding=HDL_FILE_ENCODING,
-                                               database=database)
+        self._content_hash = file_content_hash(
+            self.name, encoding=HDL_FILE_ENCODING, database=database
+        )
 
         for path in self.include_dirs:
             self._content_hash = hash_string(self._content_hash + hash_string(path))
@@ -146,10 +158,14 @@ class VerilogSourceFile(SourceFile):
         try:
             design_file = parser.parse(self.name, include_dirs, self.defines)
             for included_file_name in design_file.included_files:
-                self._content_hash = hash_string(self._content_hash
-                                                 + file_content_hash(included_file_name,
-                                                                     encoding=HDL_FILE_ENCODING,
-                                                                     database=database))
+                self._content_hash = hash_string(
+                    self._content_hash
+                    + file_content_hash(
+                        included_file_name,
+                        encoding=HDL_FILE_ENCODING,
+                        database=database,
+                    )
+                )
 
             for module in design_file.modules:
                 self.design_units.append(Module(module.name, self, module.parameters))
@@ -184,9 +200,11 @@ class VHDLSourceFile(SourceFile):
     """
     Represents a VHDL source file
     """
-    def __init__(self,  # pylint: disable=too-many-arguments
-                 name, library, vhdl_parser, database, vhdl_standard, no_parse=False):
-        SourceFile.__init__(self, name, library, 'vhdl')
+
+    def __init__(  # pylint: disable=too-many-arguments
+        self, name, library, vhdl_parser, database, vhdl_standard, no_parse=False
+    ):
+        SourceFile.__init__(self, name, library, "vhdl")
         self.dependencies = []
         self.depending_components = []
         self._vhdl_standard = vhdl_standard
@@ -203,9 +221,9 @@ class VHDLSourceFile(SourceFile):
             else:
                 self._add_design_file(design_file)
 
-        self._content_hash = file_content_hash(self.name,
-                                               encoding=HDL_FILE_ENCODING,
-                                               database=database)
+        self._content_hash = file_content_hash(
+            self.name, encoding=HDL_FILE_ENCODING, database=database
+        )
 
     def get_vhdl_standard(self):
         """
@@ -223,12 +241,22 @@ class VHDLSourceFile(SourceFile):
 
         for design_unit in self.design_units:
             if design_unit.is_primary:
-                LOGGER.debug('Adding primary design unit (%s) %s', design_unit.unit_type, design_unit.name)
-            elif design_unit.unit_type == 'package body':
-                LOGGER.debug('Adding secondary design unit (package body) for package %s',
-                             design_unit.primary_design_unit)
+                LOGGER.debug(
+                    "Adding primary design unit (%s) %s",
+                    design_unit.unit_type,
+                    design_unit.name,
+                )
+            elif design_unit.unit_type == "package body":
+                LOGGER.debug(
+                    "Adding secondary design unit (package body) for package %s",
+                    design_unit.primary_design_unit,
+                )
             else:
-                LOGGER.debug('Adding secondary design unit (%s) %s', design_unit.unit_type, design_unit.name)
+                LOGGER.debug(
+                    "Adding secondary design unit (%s) %s",
+                    design_unit.unit_type,
+                    design_unit.name,
+                )
 
         if self.depending_components:
             LOGGER.debug("The file '%s' has the following components:", self.name)
@@ -254,7 +282,9 @@ class VHDLSourceFile(SourceFile):
             result.append(ref)
 
         for configuration in design_file.configurations:
-            result.append(VHDLReference('entity', self.library.name, configuration.entity, 'all'))
+            result.append(
+                VHDLReference("entity", self.library.name, configuration.entity, "all")
+            )
 
         return result
 
@@ -268,20 +298,33 @@ class VHDLSourceFile(SourceFile):
             result.append(Entity(entity.identifier, self, generic_names))
 
         for context in design_file.contexts:
-            result.append(VHDLDesignUnit(context.identifier, self, 'context'))
+            result.append(VHDLDesignUnit(context.identifier, self, "context"))
 
         for package in design_file.packages:
-            result.append(VHDLDesignUnit(package.identifier, self, 'package'))
+            result.append(VHDLDesignUnit(package.identifier, self, "package"))
 
         for architecture in design_file.architectures:
-            result.append(VHDLDesignUnit(architecture.identifier, self, 'architecture', False, architecture.entity))
+            result.append(
+                VHDLDesignUnit(
+                    architecture.identifier,
+                    self,
+                    "architecture",
+                    False,
+                    architecture.entity,
+                )
+            )
 
         for configuration in design_file.configurations:
-            result.append(VHDLDesignUnit(configuration.identifier, self, 'configuration'))
+            result.append(
+                VHDLDesignUnit(configuration.identifier, self, "configuration")
+            )
 
         for body in design_file.package_bodies:
-            result.append(VHDLDesignUnit(body.identifier,
-                                         self, 'package body', False, body.identifier))
+            result.append(
+                VHDLDesignUnit(
+                    body.identifier, self, "package body", False, body.identifier
+                )
+            )
 
         return result
 
@@ -290,7 +333,11 @@ class VHDLSourceFile(SourceFile):
         """
         Compute hash of contents and compile options
         """
-        return hash_string(self._content_hash + self._compile_options_hash() + hash_string(str(self._vhdl_standard)))
+        return hash_string(
+            self._content_hash
+            + self._compile_options_hash()
+            + hash_string(str(self._vhdl_standard))
+        )
 
     def add_to_library(self, library):
         """
@@ -305,7 +352,7 @@ VHDL_EXTENSIONS = (".vhd", ".vhdl", ".vho")
 VERILOG_EXTENSIONS = (".v", ".vp", ".vams", ".vo")
 SYSTEM_VERILOG_EXTENSIONS = (".sv",)
 VERILOG_FILE_TYPES = ("verilog", "systemverilog")
-FILE_TYPES = ("vhdl", ) + VERILOG_FILE_TYPES
+FILE_TYPES = ("vhdl",) + VERILOG_FILE_TYPES
 
 
 def file_type_of(file_name):

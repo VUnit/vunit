@@ -74,13 +74,14 @@ class TestBenchList(object):
         Log a warning when there are no test benches
         """
         if not self.get_test_benches():
-            LOGGER.warning("Found no test benches using current filter rule:\n%s",
-                           tb_filter.__doc__)
+            LOGGER.warning(
+                "Found no test benches using current filter rule:\n%s",
+                tb_filter.__doc__,
+            )
 
 
 TB_PATTERN = "^(tb_.*)|(.*_tb)$"
-TB_RE = re.compile(TB_PATTERN,
-                   re.IGNORECASE)
+TB_RE = re.compile(TB_PATTERN, re.IGNORECASE)
 
 
 def tb_filter(design_unit):
@@ -105,7 +106,8 @@ def tb_filter(design_unit):
             design_unit.name,
             TB_PATTERN,
             generic_type,
-            design_unit.file_name)
+            design_unit.file_name,
+        )
 
     elif has_runner_cfg and not has_tb_name:
         LOGGER.warning(
@@ -116,6 +118,7 @@ def tb_filter(design_unit):
             generic_type,
             design_unit_type.lower(),
             TB_PATTERN,
-            design_unit.file_name)
+            design_unit.file_name,
+        )
 
     return has_runner_cfg

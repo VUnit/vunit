@@ -75,7 +75,7 @@ def _create_argument_parser(description=None, for_documentation=False):
     :returns: The created :mod:`argparse` parser object
     """
     if description is None:
-        description = 'VUnit command line tool version %s' % version()
+        description = "VUnit command line tool version %s" % version()
 
     if for_documentation:
         default_output_path = "./vunit_out"
@@ -84,113 +84,175 @@ def _create_argument_parser(description=None, for_documentation=False):
 
     parser = argparse.ArgumentParser(description=description)
 
-    parser.add_argument('test_patterns', metavar='tests', nargs='*',
-                        default='*',
-                        help='Tests to run')
+    parser.add_argument(
+        "test_patterns", metavar="tests", nargs="*", default="*", help="Tests to run"
+    )
 
-    parser.add_argument("--with-attributes",
-                        default=None,
-                        action="append",
-                        help="Only select tests with these attributes set")
+    parser.add_argument(
+        "--with-attributes",
+        default=None,
+        action="append",
+        help="Only select tests with these attributes set",
+    )
 
-    parser.add_argument("--without-attributes",
-                        default=None,
-                        action="append",
-                        help="Only select tests without these attributes set")
+    parser.add_argument(
+        "--without-attributes",
+        default=None,
+        action="append",
+        help="Only select tests without these attributes set",
+    )
 
-    parser.add_argument('-l', '--list', action='store_true',
-                        default=False,
-                        help='Only list all test cases')
+    parser.add_argument(
+        "-l",
+        "--list",
+        action="store_true",
+        default=False,
+        help="Only list all test cases",
+    )
 
-    parser.add_argument('-f', '--files', action='store_true',
-                        default=False,
-                        help='Only list all files in compile order')
+    parser.add_argument(
+        "-f",
+        "--files",
+        action="store_true",
+        default=False,
+        help="Only list all files in compile order",
+    )
 
-    parser.add_argument('--compile', action='store_true',
-                        default=False,
-                        help='Only compile project without running tests')
+    parser.add_argument(
+        "--compile",
+        action="store_true",
+        default=False,
+        help="Only compile project without running tests",
+    )
 
-    parser.add_argument('-m', '--minimal', action='store_true',
-                        default=False,
-                        help='Only compile files required for the (filtered) test benches')
+    parser.add_argument(
+        "-m",
+        "--minimal",
+        action="store_true",
+        default=False,
+        help="Only compile files required for the (filtered) test benches",
+    )
 
-    parser.add_argument('-k', '--keep-compiling', action='store_true',
-                        default=False,
-                        help='Continue compiling even after errors only skipping files that depend on failed files')
+    parser.add_argument(
+        "-k",
+        "--keep-compiling",
+        action="store_true",
+        default=False,
+        help="Continue compiling even after errors only skipping files that depend on failed files",
+    )
 
-    parser.add_argument('--fail-fast', action='store_true',
-                        default=False,
-                        help='Stop immediately on first failing test')
+    parser.add_argument(
+        "--fail-fast",
+        action="store_true",
+        default=False,
+        help="Stop immediately on first failing test",
+    )
 
-    parser.add_argument('--elaborate', action='store_true',
-                        default=False,
-                        help='Only elaborate test benches without running')
+    parser.add_argument(
+        "--elaborate",
+        action="store_true",
+        default=False,
+        help="Only elaborate test benches without running",
+    )
 
-    parser.add_argument('--clean', action='store_true',
-                        default=False,
-                        help='Remove output path first')
+    parser.add_argument(
+        "--clean", action="store_true", default=False, help="Remove output path first"
+    )
 
-    parser.add_argument('-o', '--output-path',
-                        default=default_output_path,
-                        help='Output path for compilation and simulation artifacts')
+    parser.add_argument(
+        "-o",
+        "--output-path",
+        default=default_output_path,
+        help="Output path for compilation and simulation artifacts",
+    )
 
-    parser.add_argument('-x', '--xunit-xml',
-                        default=None,
-                        help='Xunit test report .xml file')
+    parser.add_argument(
+        "-x", "--xunit-xml", default=None, help="Xunit test report .xml file"
+    )
 
-    parser.add_argument('--xunit-xml-format',
-                        choices=['jenkins', 'bamboo'],
-                        default='jenkins',
-                        help=('Only valid with --xunit-xml argument. '
-                              'Defines where in the XML file the simulator output is stored on a failure. '
-                              '"jenkins" = Output stored in <system-out>, '
-                              '"bamboo" = Output stored in <failure>.'))
+    parser.add_argument(
+        "--xunit-xml-format",
+        choices=["jenkins", "bamboo"],
+        default="jenkins",
+        help=(
+            "Only valid with --xunit-xml argument. "
+            "Defines where in the XML file the simulator output is stored on a failure. "
+            '"jenkins" = Output stored in <system-out>, '
+            '"bamboo" = Output stored in <failure>.'
+        ),
+    )
 
-    parser.add_argument('--exit-0',
-                        default=False,
-                        action="store_true",
-                        help=('Exit with code 0 even if a test failed. '
-                              'Still exits with code 1 on fatal errors such as compilation failure'))
+    parser.add_argument(
+        "--exit-0",
+        default=False,
+        action="store_true",
+        help=(
+            "Exit with code 0 even if a test failed. "
+            "Still exits with code 1 on fatal errors such as compilation failure"
+        ),
+    )
 
-    parser.add_argument('--dont-catch-exceptions',
-                        default=False,
-                        action="store_true",
-                        help=('Let exceptions bubble up all the way. '
-                              'Useful when running with "python -m pdb".'))
+    parser.add_argument(
+        "--dont-catch-exceptions",
+        default=False,
+        action="store_true",
+        help=(
+            "Let exceptions bubble up all the way. "
+            'Useful when running with "python -m pdb".'
+        ),
+    )
 
-    parser.add_argument('-v', '--verbose', action="store_true",
-                        default=False,
-                        help='Print test output immediately and not only when failure')
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        default=False,
+        help="Print test output immediately and not only when failure",
+    )
 
-    parser.add_argument('-q', '--quiet', action="store_true",
-                        default=False,
-                        help='Do not print test output even in the case of failure')
+    parser.add_argument(
+        "-q",
+        "--quiet",
+        action="store_true",
+        default=False,
+        help="Do not print test output even in the case of failure",
+    )
 
-    parser.add_argument('--no-color', action='store_true',
-                        default=False,
-                        help='Do not color output')
+    parser.add_argument(
+        "--no-color", action="store_true", default=False, help="Do not color output"
+    )
 
-    parser.add_argument('--log-level',
-                        default="warning",
-                        choices=["info", "error", "warning", "debug"],
-                        help=("Log level of VUnit internal python logging. "
-                              "Used for debugging"))
+    parser.add_argument(
+        "--log-level",
+        default="warning",
+        choices=["info", "error", "warning", "debug"],
+        help=("Log level of VUnit internal python logging. " "Used for debugging"),
+    )
 
-    parser.add_argument('-p', '--num-threads', type=positive_int,
-                        default=1,
-                        help=('Number of tests to run in parallel. '
-                              'Test output is not continuously written in verbose mode with p > 1'))
+    parser.add_argument(
+        "-p",
+        "--num-threads",
+        type=positive_int,
+        default=1,
+        help=(
+            "Number of tests to run in parallel. "
+            "Test output is not continuously written in verbose mode with p > 1"
+        ),
+    )
 
-    parser.add_argument("-u", "--unique-sim",
-                        action="store_true",
-                        default=False,
-                        help="Do not re-use the same simulator process for running different test cases (slower)")
+    parser.add_argument(
+        "-u",
+        "--unique-sim",
+        action="store_true",
+        default=False,
+        help="Do not re-use the same simulator process for running different test cases (slower)",
+    )
 
-    parser.add_argument("--export-json",
-                        default=None,
-                        help="Export project information to a JSON file.")
+    parser.add_argument(
+        "--export-json", default=None, help="Export project information to a JSON file."
+    )
 
-    parser.add_argument('--version', action='version', version=version())
+    parser.add_argument("--version", action="version", version=version())
 
     SIMULATOR_FACTORY.add_arguments(parser)
 

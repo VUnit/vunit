@@ -9,6 +9,6 @@ from vunit import VUnit
 
 root = dirname(__file__)
 ui = VUnit.from_argv()
-lib = ui.library('vunit_lib')
+lib = ui.library("vunit_lib")
 lib.add_source_files(join(root, "test", "*.vhd"))
 ui.main()

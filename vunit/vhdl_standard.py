@@ -36,7 +36,9 @@ class VHDLStandard(object):
         return False
 
     def __lt__(self, other):
-        return int(self._standard) < int(other._standard)  # pylint: disable=protected-access
+        return int(self._standard) < int(
+            other._standard  # pylint: disable=protected-access
+        )
 
     def __str__(self):
         if self == VHDL.STD_1993:
@@ -66,10 +68,11 @@ class VHDL(object):
     """
     Just a namespace for standards
     """
-    STD_1993 = VHDLStandard('1993')
-    STD_2002 = VHDLStandard('2002')
-    STD_2008 = VHDLStandard('2008')
-    STD_2019 = VHDLStandard('2019')
+
+    STD_1993 = VHDLStandard("1993")
+    STD_2002 = VHDLStandard("2002")
+    STD_2008 = VHDLStandard("2008")
+    STD_2019 = VHDLStandard("2019")
     STANDARDS = [STD_1993, STD_2002, STD_2008, STD_2019]
 
     @staticmethod

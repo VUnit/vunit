@@ -45,13 +45,20 @@ class TestProject(unittest.TestCase):  # pylint: disable=too-many-public-methods
         self.project.add_library("lib", "work_path")
 
         # Add architecture before entity to test that they are paired later
-        self.add_source_file("lib", "file2.vhd", """\
+        self.add_source_file(
+            "lib",
+            "file2.vhd",
+            """\
 architecture arch3 of foo is
 begin
 end architecture;
-""")
+""",
+        )
 
-        file1 = self.add_source_file("lib", "file1.vhd", """\
+        file1 = self.add_source_file(
+            "lib",
+            "file1.vhd",
+            """\
 entity foo is
 end entity;
 
@@ -62,18 +69,25 @@ end architecture;
 architecture arch2 of foo is
 begin
 end architecture;
-""")
+""",
+        )
 
-        self.assert_has_entity(file1, "foo",
-                               architecture_names=["arch", "arch2", "arch3"])
-        self.add_source_file("lib", "file3.vhd", """\
+        self.assert_has_entity(
+            file1, "foo", architecture_names=["arch", "arch2", "arch3"]
+        )
+        self.add_source_file(
+            "lib",
+            "file3.vhd",
+            """\
 architecture arch4 of foo is
 begin
 end architecture;
-""")
+""",
+        )
 
-        self.assert_has_entity(file1, "foo",
-                               architecture_names=["arch", "arch2", "arch3", "arch4"])
+        self.assert_has_entity(
+            file1, "foo", architecture_names=["arch", "arch2", "arch3", "arch4"]
+        )
         self.assert_has_architecture("file1.vhd", "arch", "foo")
         self.assert_has_architecture("file1.vhd", "arch2", "foo")
         self.assert_has_architecture("file2.vhd", "arch3", "foo")
@@ -81,7 +95,10 @@ end architecture;
 
     def test_parses_entity_architecture_with_generics(self):
         self.project.add_library("lib", "work_path")
-        file1 = self.add_source_file("lib", "file1.vhd", """\
+        file1 = self.add_source_file(
+            "lib",
+            "file1.vhd",
+            """\
 entity foo is
   generic (
     testing_that_foo : boolean;
@@ -91,34 +108,46 @@ end entity;
 architecture arch of foo is
 begin
 end architecture;
-""")
+""",
+        )
 
-        self.assert_has_entity(file1, "foo",
-                               generic_names=["testing_that_bar", "testing_that_foo"],
-                               architecture_names=["arch"])
+        self.assert_has_entity(
+            file1,
+            "foo",
+            generic_names=["testing_that_bar", "testing_that_foo"],
+            architecture_names=["arch"],
+        )
         self.assert_has_architecture("file1.vhd", "arch", "foo")
 
     def test_parses_package(self):
         self.project.add_library("lib", "work_path")
-        self.add_source_file("lib", "file1.vhd", """\
+        self.add_source_file(
+            "lib",
+            "file1.vhd",
+            """\
 package foo is
 end package;
 
 package body foo is
 begin
 end package body;
-""")
+""",
+        )
         self.assert_has_package("file1.vhd", "foo")
         self.assert_has_package_body("file1.vhd", "foo")
 
     @mock.patch("vunit.source_file.LOGGER")
     def test_recovers_from_parse_error(self, logger):
         self.project.add_library("lib", "work_path")
-        source_file = self.add_source_file("lib", "file.vhd", """\
+        source_file = self.add_source_file(
+            "lib",
+            "file.vhd",
+            """\
 entity foo is
  port (;);
 end entity;
-""")
+""",
+        )
         logger.error.assert_called_once_with("Failed to parse %s", "file.vhd")
         self.assertEqual(source_file.design_units, [])
 
@@ -132,36 +161,56 @@ end entity;
         self.project.add_library("lib1", "lib1_path")
         self.project.add_library("lib2", "lib2_path")
 
-        foo_arch = self.add_source_file("lib1", "foo_arch.vhd", """
+        foo_arch = self.add_source_file(
+            "lib1",
+            "foo_arch.vhd",
+            """
 architecture arch of foo is
 begin
 end architecture;
-""")
+""",
+        )
 
-        foo1_ent = self.add_source_file("lib1", "foo1_ent.vhd", """
+        foo1_ent = self.add_source_file(
+            "lib1",
+            "foo1_ent.vhd",
+            """
 entity foo is
 port (signal bar : boolean);
 end entity;
-""")
+""",
+        )
 
-        self.add_source_file("lib2", "foo2_ent.vhd", """
+        self.add_source_file(
+            "lib2",
+            "foo2_ent.vhd",
+            """
 entity foo is
 end entity;
-""")
+""",
+        )
 
         self.assert_compiles(foo1_ent, before=foo_arch)
 
     def test_multiple_identical_file_names_with_different_path_in_same_library(self):
         self.project.add_library("lib", "lib_path")
-        a_foo = self.add_source_file("lib", join("a", "foo.vhd"), """
+        a_foo = self.add_source_file(
+            "lib",
+            join("a", "foo.vhd"),
+            """
 entity a_foo is
 end entity;
-""")
+""",
+        )
 
-        b_foo = self.add_source_file("lib", join("b", "foo.vhd"), """
+        b_foo = self.add_source_file(
+            "lib",
+            join("b", "foo.vhd"),
+            """
 entity b_foo is
 end entity;
-""")
+""",
+        )
         self.assert_should_recompile([a_foo, b_foo])
         self.update(a_foo)
         self.assert_should_recompile([b_foo])
@@ -170,37 +219,57 @@ end entity;
 
     def test_finds_entity_architecture_dependencies(self):
         self.project.add_library("lib", "lib_path")
-        entity = self.add_source_file("lib", "entity.vhd", """
+        entity = self.add_source_file(
+            "lib",
+            "entity.vhd",
+            """
 entity foo is
 end entity;
-""")
+""",
+        )
 
-        arch1 = self.add_source_file("lib", "arch1.vhd", """
+        arch1 = self.add_source_file(
+            "lib",
+            "arch1.vhd",
+            """
 architecture arch1 of foo is
 begin
 end architecture;
-""")
+""",
+        )
 
-        arch2 = self.add_source_file("lib", "arch2.vhd", """
+        arch2 = self.add_source_file(
+            "lib",
+            "arch2.vhd",
+            """
 architecture arch2 of foo is
 begin
 end architecture;
-""")
+""",
+        )
         self.assert_compiles(entity, before=arch1)
         self.assert_compiles(entity, before=arch2)
 
     def test_finds_package_dependencies(self):
         self.project.add_library("lib", "lib_path")
-        package = self.add_source_file("lib", "package.vhd", """
+        package = self.add_source_file(
+            "lib",
+            "package.vhd",
+            """
 package foo is
 end package;
-""")
+""",
+        )
 
-        body = self.add_source_file("lib", "body.vhd", """
+        body = self.add_source_file(
+            "lib",
+            "body.vhd",
+            """
 package body foo is
 begin
 end package body;
-""")
+""",
+        )
 
         self.assert_compiles(package, before=body)
 
@@ -211,21 +280,32 @@ end package body;
         """
         self.project.add_library("lib", "lib_path")
 
-        package = self.add_source_file("lib", "package.vhd", """
+        package = self.add_source_file(
+            "lib",
+            "package.vhd",
+            """
 package pkg is
 end package;
-""")
+""",
+        )
 
         body = None
         if add_body:
-            body = self.add_source_file("lib", "body.vhd", """
+            body = self.add_source_file(
+                "lib",
+                "body.vhd",
+                """
 package body pkg is
 begin
 end package body;
-""")
+""",
+            )
 
         self.project.add_library("lib2", "work_path")
-        module = self.add_source_file("lib2", "module.vhd", """
+        module = self.add_source_file(
+            "lib2",
+            "module.vhd",
+            """
 library lib;
 use lib.pkg.all;
 
@@ -235,7 +315,8 @@ end entity;
 architecture arch of module is
 begin
 end architecture;
-""")
+""",
+        )
         return package, body, module
 
     def test_finds_use_package_dependencies_case_insensitive(self):
@@ -243,20 +324,30 @@ end architecture;
             self.project = Project()
             self.project.add_library("Lib", "lib_path")
 
-            package = self.add_source_file("Lib", "package.vhd", """
+            package = self.add_source_file(
+                "Lib",
+                "package.vhd",
+                """
 package pkg is
 end package;
 
 package body PKG is
 begin
 end package body;
-""")
+""",
+            )
 
             self.project.add_library("lib2", "lib2_path")
-            module = self.add_source_file("lib2", "module.vhd", """
+            module = self.add_source_file(
+                "lib2",
+                "module.vhd",
+                """
 library {library_clause};
 use {use_clause}.PKG.all;
-            """.format(library_clause=library_clause, use_clause=use_clause))
+            """.format(
+                    library_clause=library_clause, use_clause=use_clause
+                ),
+            )
             self.assert_compiles(package, before=module)
 
     def test_error_on_case_insensitive_library_name_conflict(self):
@@ -264,9 +355,11 @@ use {use_clause}.PKG.all;
         try:
             self.project.add_library("lib", "lib_path1")
         except RuntimeError as exception:
-            self.assertEqual(str(exception),
-                             "Library name 'lib' not case-insensitive unique. "
-                             "Library name 'Lib' previously defined")
+            self.assertEqual(
+                str(exception),
+                "Library name 'lib' not case-insensitive unique. "
+                "Library name 'Lib' previously defined",
+            )
         else:
             raise AssertionError("RuntimeError not raised")
 
@@ -290,13 +383,20 @@ use {use_clause}.PKG.all;
 
     def test_package_instantiation_dependencies_on_generic_package(self):
         self.project.add_library("pkg_lib", "pkg_lib_path")
-        pkg = self.add_source_file("pkg_lib", "pkg.vhd", """
+        pkg = self.add_source_file(
+            "pkg_lib",
+            "pkg.vhd",
+            """
 package pkg is
 end package;
-        """)
+        """,
+        )
 
         self.project.add_library("lib", "lib_path")
-        ent = self.add_source_file("lib", "ent.vhd", """
+        ent = self.add_source_file(
+            "lib",
+            "ent.vhd",
+            """
 library pkg_lib;
 
 entity ent is
@@ -306,36 +406,56 @@ architecture a of ent is
    package pkg_inst is new pkg_lib.pkg;
 begin
 end architecture;
-""")
+""",
+        )
 
         self.assert_compiles(pkg, before=ent)
 
     def test_package_instantiation_dependencies_on_instantiated_package(self):
         self.project.add_library("lib", "lib_path")
-        generic_pkg = self.add_source_file("lib", "generic_pkg.vhd", """
+        generic_pkg = self.add_source_file(
+            "lib",
+            "generic_pkg.vhd",
+            """
 package generic_pkg is
   generic (foo : boolean);
 end package;
-""")
-        instance_pkg = self.add_source_file("lib", "instance_pkg.vhd", """
+""",
+        )
+        instance_pkg = self.add_source_file(
+            "lib",
+            "instance_pkg.vhd",
+            """
 package instance_pkg is new work.generic_pkg
   generic map (foo => false);
-""")
-        user = self.add_source_file("lib", "user.vhd", """
+""",
+        )
+        user = self.add_source_file(
+            "lib",
+            "user.vhd",
+            """
 use work.instance_pkg;
-""")
+""",
+        )
         self.assert_compiles(generic_pkg, before=instance_pkg)
         self.assert_compiles(instance_pkg, before=user)
 
     def test_finds_context_dependencies(self):
         self.project.add_library("lib", "lib_path")
-        context = self.add_source_file("lib", "context.vhd", """
+        context = self.add_source_file(
+            "lib",
+            "context.vhd",
+            """
 context foo is
 end context;
-""")
+""",
+        )
 
         self.project.add_library("lib2", "work_path")
-        module = self.add_source_file("lib2", "module.vhd", """
+        module = self.add_source_file(
+            "lib2",
+            "module.vhd",
+            """
 library lib;
 context lib.foo;
 
@@ -345,33 +465,50 @@ end entity;
 architecture arch of module is
 begin
 end architecture;
-""")
+""",
+        )
 
         self.assert_compiles(context, before=module)
 
     def test_finds_configuration_dependencies(self):
         self.project.add_library("lib", "lib_path")
-        cfg = self.add_source_file("lib", "cfg.vhd", """
+        cfg = self.add_source_file(
+            "lib",
+            "cfg.vhd",
+            """
 configuration cfg of ent is
 end configuration;
-""")
+""",
+        )
 
-        ent = self.add_source_file("lib", "ent.vhd", """
+        ent = self.add_source_file(
+            "lib",
+            "ent.vhd",
+            """
 entity ent is
 end entity;
-""")
+""",
+        )
 
-        ent_a1 = self.add_source_file("lib", "ent_a1.vhd", """
+        ent_a1 = self.add_source_file(
+            "lib",
+            "ent_a1.vhd",
+            """
 architecture a1 of ent is
 begin
 end architecture;
-""")
+""",
+        )
 
-        ent_a2 = self.add_source_file("lib", "ent_a2.vhd", """
+        ent_a2 = self.add_source_file(
+            "lib",
+            "ent_a2.vhd",
+            """
 architecture a2 of ent is
 begin
 end architecture;
-""")
+""",
+        )
 
         self.assert_compiles(ent, before=cfg)
         self.assert_compiles(ent_a1, before=cfg)
@@ -379,23 +516,38 @@ end architecture;
 
     def test_finds_configuration_reference_dependencies(self):
         self.project.add_library("lib", "lib_path")
-        cfg = self.add_source_file("lib", "cfg.vhd", """
+        cfg = self.add_source_file(
+            "lib",
+            "cfg.vhd",
+            """
 configuration cfg of ent is
 end configuration;
-""")
+""",
+        )
 
-        self.add_source_file("lib", "ent.vhd", """
+        self.add_source_file(
+            "lib",
+            "ent.vhd",
+            """
 entity ent is
 end entity;
-""")
+""",
+        )
 
-        self.add_source_file("lib", "ent_a.vhd", """
+        self.add_source_file(
+            "lib",
+            "ent_a.vhd",
+            """
 architecture a of ent is
 begin
 end architecture;
-""")
+""",
+        )
 
-        top = self.add_source_file("lib", "top.vhd", """
+        top = self.add_source_file(
+            "lib",
+            "top.vhd",
+            """
 entity top is
 end entity;
 
@@ -404,7 +556,8 @@ architecture a of top is
 begin
    inst : comp;
 end architecture;
-""")
+""",
+        )
 
         self.assert_compiles(cfg, before=top)
 
@@ -414,24 +567,39 @@ end architecture;
         """
         self.project.add_library("lib", "lib_path")
 
-        self.add_source_file("lib", "ent.vhd", """
+        self.add_source_file(
+            "lib",
+            "ent.vhd",
+            """
 entity ent is
 end entity;
-""")
+""",
+        )
 
-        ent_a1 = self.add_source_file("lib", "ent_a1.vhd", """
+        ent_a1 = self.add_source_file(
+            "lib",
+            "ent_a1.vhd",
+            """
 architecture a1 of ent is
 begin
 end architecture;
-""")
+""",
+        )
 
-        ent_a2 = self.add_source_file("lib", "ent_a2.vhd", """
+        ent_a2 = self.add_source_file(
+            "lib",
+            "ent_a2.vhd",
+            """
 architecture a2 of ent is
 begin
 end architecture;
-""")
+""",
+        )
 
-        top1 = self.add_source_file("lib", "top1.vhd", """
+        top1 = self.add_source_file(
+            "lib",
+            "top1.vhd",
+            """
 entity top1 is
 end entity;
 
@@ -439,9 +607,13 @@ architecture a of top1 is
 begin
   inst : entity work.ent(a1);
 end architecture;
-""")
+""",
+        )
 
-        top2 = self.add_source_file("lib", "top2.vhd", """
+        top2 = self.add_source_file(
+            "lib",
+            "top2.vhd",
+            """
 entity top2 is
 end entity;
 
@@ -450,7 +622,8 @@ architecture a of top2 is
 begin
   inst : comp;
 end architecture;
-""")
+""",
+        )
 
         self.assert_compiles(ent_a1, before=top1)
         self.assert_compiles(ent_a2, before=top2)
@@ -461,18 +634,29 @@ end architecture;
         """
         self.project.add_library("UPPER", "lib_path")
 
-        self.add_source_file("UPPER", "ent.vhd", """
+        self.add_source_file(
+            "UPPER",
+            "ent.vhd",
+            """
 entity ent is
 end entity;
-""")
+""",
+        )
 
-        ent_a1 = self.add_source_file("UPPER", "ent_a1.vhd", """
+        ent_a1 = self.add_source_file(
+            "UPPER",
+            "ent_a1.vhd",
+            """
 architecture a1 of ent is
 begin
 end architecture;
-""")
+""",
+        )
 
-        top1 = self.add_source_file("UPPER", "top1.vhd", """
+        top1 = self.add_source_file(
+            "UPPER",
+            "top1.vhd",
+            """
 entity top1 is
 end entity;
 
@@ -480,7 +664,8 @@ architecture a of top1 is
 begin
   inst : entity work.ent(a1);
 end architecture;
-""")
+""",
+        )
 
         self.assert_compiles(ent_a1, before=top1)
 
@@ -488,18 +673,29 @@ end architecture;
     def test_warning_on_missing_specific_architecture_reference(self, mock_logger):
         self.project.add_library("lib", "lib_path")
 
-        self.add_source_file("lib", "ent.vhd", """
+        self.add_source_file(
+            "lib",
+            "ent.vhd",
+            """
 entity ent is
 end entity;
-""")
+""",
+        )
 
-        self.add_source_file("lib", "arch.vhd", """
+        self.add_source_file(
+            "lib",
+            "arch.vhd",
+            """
 architecture a1 of ent is
 begin
 end architecture;
-""")
+""",
+        )
 
-        self.add_source_file("lib", "top.vhd", """
+        self.add_source_file(
+            "lib",
+            "top.vhd",
+            """
 entity top1 is
 end entity;
 
@@ -508,7 +704,8 @@ begin
   inst1 : entity work.ent(a1);
   inst2 : entity work.ent(a2); # Missing
 end architecture;
-""")
+""",
+        )
 
         self.project.get_files_in_compile_order()
         warning_calls = mock_logger.warning.call_args_list
@@ -522,7 +719,13 @@ end architecture;
     def test_error_on_duplicate_file(self, logger):
         self.project.add_library("lib", "lib_path")
         file1 = self.add_source_file("lib", "file.vhd", "entity foo is end entity;")
-        self.assertRaises(RuntimeError, self.add_source_file, "lib", "file.vhd", "entity foo is end entity foo;")
+        self.assertRaises(
+            RuntimeError,
+            self.add_source_file,
+            "lib",
+            "file.vhd",
+            "entity foo is end entity foo;",
+        )
 
         # No extra design unit of file added
         lib = self.project.get_library("lib")
@@ -568,7 +771,8 @@ end architecture;
 entity ent is
 end entity;
 """,
-            "file_copy.vhd: entity 'ent' previously defined in file.vhd")
+            "file_copy.vhd: entity 'ent' previously defined in file.vhd",
+        )
 
     def test_warning_on_duplicate_package(self):
         self.project.add_library("lib", "lib_path")
@@ -577,7 +781,8 @@ end entity;
 package pkg is
 end package;
 """,
-            "file_copy.vhd: package 'pkg' previously defined in file.vhd")
+            "file_copy.vhd: package 'pkg' previously defined in file.vhd",
+        )
 
     def test_warning_on_duplicate_configuration(self):
         self.project.add_library("lib", "lib_path")
@@ -586,34 +791,48 @@ end package;
 configuration cfg of ent is
 end configuration;
 """,
-            "file_copy.vhd: configuration 'cfg' previously defined in file.vhd")
+            "file_copy.vhd: configuration 'cfg' previously defined in file.vhd",
+        )
 
     def test_warning_on_duplicate_package_body(self):
         self.project.add_library("lib", "lib_path")
-        self.add_source_file("lib", "pkg.vhd", """
+        self.add_source_file(
+            "lib",
+            "pkg.vhd",
+            """
 package pkg is
 end package;
-""")
+""",
+        )
 
         self._test_warning_on_duplicate(
             """
 package body pkg is
 end package bodY;
 """,
-            "file_copy.vhd: package body 'pkg' previously defined in file.vhd")
+            "file_copy.vhd: package body 'pkg' previously defined in file.vhd",
+        )
 
     def test_warning_on_duplicate_architecture(self):
         self.project.add_library("lib", "lib_path")
-        self.add_source_file("lib", "ent.vhd", """
+        self.add_source_file(
+            "lib",
+            "ent.vhd",
+            """
 entity ent is
 end entity;
-""")
+""",
+        )
 
-        self.add_source_file("lib", "arch.vhd", """
+        self.add_source_file(
+            "lib",
+            "arch.vhd",
+            """
 architecture a_no_duplicate of ent is
 begin
 end architecture;
-""")
+""",
+        )
 
         self._test_warning_on_duplicate(
             """
@@ -621,7 +840,8 @@ architecture a of ent is
 begin
 end architecture;
 """,
-            "file_copy.vhd: architecture 'a' previously defined in file.vhd")
+            "file_copy.vhd: architecture 'a' previously defined in file.vhd",
+        )
 
     def test_warning_on_duplicate_context(self):
         self.project.add_library("lib", "lib_path")
@@ -630,12 +850,14 @@ end architecture;
 context ctx is
 end context;
 """,
-            "file_copy.vhd: context 'ctx' previously defined in file.vhd")
+            "file_copy.vhd: context 'ctx' previously defined in file.vhd",
+        )
 
     def test_error_on_adding_duplicate_library(self):
         self.project.add_library(logical_name="lib", directory="dir")
-        self.assertRaises(ValueError, self.project.add_library,
-                          logical_name="lib", directory="dir")
+        self.assertRaises(
+            ValueError, self.project.add_library, logical_name="lib", directory="dir"
+        )
 
     def test_warning_on_duplicate_verilog_module(self):
         self.project.add_library("lib", "lib_path")
@@ -645,7 +867,8 @@ module foo;
 endmodule
 """,
             "file_copy.v: module 'foo' previously defined in file.v",
-            verilog=True)
+            verilog=True,
+        )
 
     def test_warning_on_duplicate_verilog_package(self):
         self.project.add_library("lib", "lib_path")
@@ -655,7 +878,8 @@ package pkg;
 endpackage
 """,
             "file_copy.v: package 'pkg' previously defined in file.v",
-            verilog=True)
+            verilog=True,
+        )
 
     def test_should_recompile_all_files_initially(self):
         file1, file2, file3 = self.create_dummy_three_file_project()
@@ -711,14 +935,18 @@ endpackage
 
         self.project = Project()
         self.project.add_library("lib", "lib_path")
-        source_file = self.project.add_source_file("file_name.vhd", library_name="lib", vhdl_standard='2008')
+        source_file = self.project.add_source_file(
+            "file_name.vhd", library_name="lib", vhdl_standard="2008"
+        )
         self.assert_should_recompile([source_file])
         self.update(source_file)
         self.assert_should_recompile([])
 
         self.project = Project()
         self.project.add_library("lib", "lib_path")
-        source_file = self.project.add_source_file("file_name.vhd", library_name="lib", vhdl_standard='2002')
+        source_file = self.project.add_source_file(
+            "file_name.vhd", library_name="lib", vhdl_standard="2002"
+        )
         self.assert_should_recompile([source_file])
 
     def test_add_compile_option(self):
@@ -753,8 +981,12 @@ endpackage
         self.project.add_library("lib", "lib_path")
         source_file = self.add_source_file("lib", "file.vhd", "")
         self.assertRaises(ValueError, source_file.set_compile_option, "foo", None)
-        self.assertRaises(ValueError, source_file.set_compile_option, "ghdl.flags", None)
-        self.assertRaises(ValueError, source_file.add_compile_option, "ghdl.flags", None)
+        self.assertRaises(
+            ValueError, source_file.set_compile_option, "ghdl.flags", None
+        )
+        self.assertRaises(
+            ValueError, source_file.add_compile_option, "ghdl.flags", None
+        )
         self.assertRaises(ValueError, source_file.get_compile_option, "foo")
 
     def test_should_recompile_files_affected_by_change_with_later_timestamp(self):
@@ -788,7 +1020,10 @@ endpackage
 
     def test_finds_component_instantiation_dependencies(self):
         self.project.add_library("toplib", "work_path")
-        top = self.add_source_file("toplib", "top.vhd", """\
+        top = self.add_source_file(
+            "toplib",
+            "top.vhd",
+            """\
 entity top is
 end entity;
 
@@ -806,30 +1041,45 @@ begin
              rst => '0',
              output => "00");
 end architecture;
-""")
+""",
+        )
 
-        comp1 = self.add_source_file("toplib", "comp1.vhd", """\
+        comp1 = self.add_source_file(
+            "toplib",
+            "comp1.vhd",
+            """\
 entity foo is
 end entity;
-""")
+""",
+        )
 
-        comp2 = self.add_source_file("toplib", "comp2.vhd", """\
+        comp2 = self.add_source_file(
+            "toplib",
+            "comp2.vhd",
+            """\
 entity foo2 is
 end entity;
 
 architecture arch of foo2 is
 begin
 end architecture;
-""")
-        comp1_arch = self.add_source_file("toplib", "comp1_arch.vhd", """\
+""",
+        )
+        comp1_arch = self.add_source_file(
+            "toplib",
+            "comp1_arch.vhd",
+            """\
 architecture arch of foo is
 begin
 end architecture;
-""")
+""",
+        )
 
         self.assert_has_component_instantiation("top.vhd", "foo")
         self.assert_has_component_instantiation("top.vhd", "foo2")
-        dependencies = self.project.get_dependencies_in_compile_order([top], implementation_dependencies=True)
+        dependencies = self.project.get_dependencies_in_compile_order(
+            [top], implementation_dependencies=True
+        )
         self.assertIn(comp1, dependencies)
         self.assertIn(comp1_arch, dependencies)
         self.assertIn(comp2, dependencies)
@@ -845,14 +1095,16 @@ end architecture;
     def test_get_minimal_file_set_in_compile_order_with_target(self):
         self.create_dummy_three_file_project()
         deps = self.project.get_minimal_file_set_in_compile_order(
-            target_files=[self.project.get_source_files_in_order()[1]])
+            target_files=[self.project.get_source_files_in_order()[1]]
+        )
         self.assertEqual(len(deps), 2)
         self.assertTrue(deps[0] == self.project.get_source_files_in_order()[0])
         self.assertTrue(deps[1] == self.project.get_source_files_in_order()[1])
 
         # To test that indirect dependencies are included
         deps = self.project.get_dependencies_in_compile_order(
-            target_files=[self.project.get_source_files_in_order()[2]])
+            target_files=[self.project.get_source_files_in_order()[2]]
+        )
         self.assertEqual(len(deps), 3)
         self.assertTrue(deps[0] == self.project.get_source_files_in_order()[0])
         self.assertTrue(deps[1] == self.project.get_source_files_in_order()[1])
@@ -869,14 +1121,16 @@ end architecture;
     def test_get_dependencies_in_compile_order_with_target(self):
         self.create_dummy_three_file_project()
         deps = self.project.get_dependencies_in_compile_order(
-            target_files=[self.project.get_source_files_in_order()[1]])
+            target_files=[self.project.get_source_files_in_order()[1]]
+        )
         self.assertEqual(len(deps), 2)
         self.assertTrue(deps[0] == self.project.get_source_files_in_order()[0])
         self.assertTrue(deps[1] == self.project.get_source_files_in_order()[1])
 
         # To test that indirect dependencies are included
         deps = self.project.get_dependencies_in_compile_order(
-            target_files=[self.project.get_source_files_in_order()[2]])
+            target_files=[self.project.get_source_files_in_order()[2]]
+        )
         self.assertEqual(len(deps), 3)
         self.assertTrue(deps[0] == self.project.get_source_files_in_order()[0])
         self.assertTrue(deps[1] == self.project.get_source_files_in_order()[1])
@@ -887,30 +1141,47 @@ end architecture;
         second_pkgs = []
         self.project.add_library("lib", "lib_path")
 
-        other_pkg = self.add_source_file("lib", "other_pkg.vhd", """
+        other_pkg = self.add_source_file(
+            "lib",
+            "other_pkg.vhd",
+            """
 package other_pkg is
 end package other_pkg;
-""")
+""",
+        )
 
         for lib in ["lib1", "lib2"]:
             self.project.add_library(lib, lib + "_path")
-            pkgs.append(self.add_source_file(lib, "pkg.vhd", """
+            pkgs.append(
+                self.add_source_file(
+                    lib,
+                    "pkg.vhd",
+                    """
 library lib;
 use lib.other_pkg.all;
 
 package pkg is
 end package pkg;
-"""))
+""",
+                )
+            )
 
-            second_pkgs.append(self.add_source_file(lib, lib + "_pkg.vhd", """
+            second_pkgs.append(
+                self.add_source_file(
+                    lib,
+                    lib + "_pkg.vhd",
+                    """
 use work.pkg.all;
 
 package second_pkg is
 end package second_pkg;
-"""))
+""",
+                )
+            )
 
-        self.assertNotEqual(self.hash_file_name_of(pkgs[0]),
-                            self.hash_file_name_of(pkgs[1]))
+        self.assertNotEqual(
+            self.hash_file_name_of(pkgs[0]), self.hash_file_name_of(pkgs[1])
+        )
         self.assertEqual(len(self.project.get_files_in_compile_order()), 5)
         self.assert_compiles(other_pkg, before=pkgs[0])
         self.assert_compiles(other_pkg, before=pkgs[1])
@@ -919,115 +1190,182 @@ end package second_pkg;
 
     def test_has_verilog_module(self):
         self.project.add_library("lib", "lib_path")
-        self.add_source_file("lib", "module.v", """\
+        self.add_source_file(
+            "lib",
+            "module.v",
+            """\
 module name;
 endmodule
-""")
+""",
+        )
         library = self.project.get_library("lib")
         modules = library.get_modules()
         self.assertEqual(len(modules), 1)
 
     def test_finds_verilog_package_import_dependencies(self):
         self.project.add_library("lib", "lib_path")
-        pkg = self.add_source_file("lib", "pkg.sv", """\
+        pkg = self.add_source_file(
+            "lib",
+            "pkg.sv",
+            """\
 package pkg;
 endpackage
-""")
-        module = self.add_source_file("lib", "module.sv", """\
+""",
+        )
+        module = self.add_source_file(
+            "lib",
+            "module.sv",
+            """\
 module name;
   import pkg::*;
 endmodule
-""")
+""",
+        )
         self.assert_compiles(pkg, before=module)
 
     def test_finds_verilog_package_reference_dependencies(self):
         self.project.add_library("lib", "lib_path")
-        pkg = self.add_source_file("lib", "pkg.sv", """\
+        pkg = self.add_source_file(
+            "lib",
+            "pkg.sv",
+            """\
 package pkg;
 endpackage
-""")
-        module = self.add_source_file("lib", "module.sv", """\
+""",
+        )
+        module = self.add_source_file(
+            "lib",
+            "module.sv",
+            """\
 module name;
   pkg::func();
 endmodule
-""")
+""",
+        )
         self.assert_compiles(pkg, before=module)
 
     def test_verilog_package_reference_is_case_sensitive(self):
         self.project = Project()
         self.project.add_library("lib", "lib_path")
-        pkg = self.add_source_file("lib", "pkg.sv", """\
+        pkg = self.add_source_file(
+            "lib",
+            "pkg.sv",
+            """\
 package Pkg;
 endpackage
-""")
-        module = self.add_source_file("lib", "module.sv", """\
+""",
+        )
+        module = self.add_source_file(
+            "lib",
+            "module.sv",
+            """\
 module name;
   pkg::func();
 endmodule
-""")
+""",
+        )
         self.assert_not_compiles(pkg, before=module)
 
         self.project = Project()
         self.project.add_library("lib", "lib_path")
-        pkg = self.add_source_file("lib", "pkg.sv", """\
+        pkg = self.add_source_file(
+            "lib",
+            "pkg.sv",
+            """\
 package pkg;
 endpackage
-""")
-        module = self.add_source_file("lib", "module.sv", """\
+""",
+        )
+        module = self.add_source_file(
+            "lib",
+            "module.sv",
+            """\
 module name;
   Pkg::func();
 endmodule
-""")
+""",
+        )
         self.assert_not_compiles(pkg, before=module)
 
     def test_finds_verilog_module_instantiation_dependencies(self):
         self.project.add_library("lib", "lib_path")
-        module1 = self.add_source_file("lib", "module1.sv", """\
+        module1 = self.add_source_file(
+            "lib",
+            "module1.sv",
+            """\
 module module1;
 endmodule
-""")
-        module2 = self.add_source_file("lib", "module2.sv", """\
+""",
+        )
+        module2 = self.add_source_file(
+            "lib",
+            "module2.sv",
+            """\
 module module2;
   module1 inst();
 endmodule
-""")
+""",
+        )
         self.assert_compiles(module1, before=module2)
 
     def test_verilog_module_instantiation_is_case_sensitive(self):
         self.project = Project()
         self.project.add_library("lib", "lib_path")
-        module1 = self.add_source_file("lib", "module1.sv", """\
+        module1 = self.add_source_file(
+            "lib",
+            "module1.sv",
+            """\
 module Module1;
 endmodule
-""")
-        module2 = self.add_source_file("lib", "module2.sv", """\
+""",
+        )
+        module2 = self.add_source_file(
+            "lib",
+            "module2.sv",
+            """\
 module module2;
   module1 inst();
 endmodule
-""")
+""",
+        )
         self.assert_not_compiles(module1, before=module2)
 
         self.project = Project()
         self.project.add_library("lib", "lib_path")
-        module1 = self.add_source_file("lib", "module1.sv", """\
+        module1 = self.add_source_file(
+            "lib",
+            "module1.sv",
+            """\
 module module1;
 endmodule
-""")
-        module2 = self.add_source_file("lib", "module2.sv", """\
+""",
+        )
+        module2 = self.add_source_file(
+            "lib",
+            "module2.sv",
+            """\
 module module2;
   Module1 inst();
 endmodule
-""")
+""",
+        )
         self.assert_not_compiles(module1, before=module2)
 
     def test_finds_verilog_module_instantiation_dependencies_in_vhdl(self):
         self.project.add_library("lib1", "lib_path")
         self.project.add_library("lib2", "lib_path")
-        module1 = self.add_source_file("lib1", "module1.sv", """\
+        module1 = self.add_source_file(
+            "lib1",
+            "module1.sv",
+            """\
 module module1;
 endmodule
-""")
-        module2 = self.add_source_file("lib2", "module2.vhd", """\
+""",
+        )
+        module2 = self.add_source_file(
+            "lib2",
+            "module2.vhd",
+            """\
 library lib1;
 
 entity ent is
@@ -1037,7 +1375,8 @@ architecture a of ent is
 begin
   inst : entity lib1.module1;
 end architecture;
-""")
+""",
+        )
         self.assert_compiles(module1, before=module2)
 
     def test_finds_verilog_include_dependencies(self):
@@ -1047,14 +1386,21 @@ end architecture;
             """
             self.project = Project()
             self.project.add_library("lib", "lib_path")
-            return self.add_source_file("lib", "module.sv", """\
+            return self.add_source_file(
+                "lib",
+                "module.sv",
+                """\
 `include "include.svh"
-""")
+""",
+            )
 
-        write_file("include.svh", """\
+        write_file(
+            "include.svh",
+            """\
 module name;
 endmodule
-""")
+""",
+        )
         module = create_project()
         self.assert_should_recompile([module])
 
@@ -1063,33 +1409,45 @@ endmodule
         create_project()
         self.assert_should_recompile([])
 
-        write_file("include.svh", """\
+        write_file(
+            "include.svh",
+            """\
 module other_name;
 endmodule
-""")
+""",
+        )
         module = create_project()
         self.assert_should_recompile([module])
 
     def test_verilog_defines_affects_dependency_scanning(self):
         self.project.add_library("lib", "lib_path")
-        self.add_source_file("lib", "module.v", """\
+        self.add_source_file(
+            "lib",
+            "module.v",
+            """\
 `ifdef foo
 module mod;
 endmodule
 `endif
-""")
+""",
+        )
         library = self.project.get_library("lib")
         modules = library.get_modules()
         self.assertEqual(len(modules), 0)
 
         self.project = Project()
         self.project.add_library("lib", "lib_path")
-        self.add_source_file("lib", "module.v", """\
+        self.add_source_file(
+            "lib",
+            "module.v",
+            """\
 `ifdef foo
 module mod;
 endmodule
 `endif
-""", defines={"foo": ""})
+""",
+            defines={"foo": ""},
+        )
         library = self.project.get_library("lib")
         modules = library.get_modules()
         self.assertEqual(len(modules), 1)
@@ -1114,8 +1472,9 @@ endmodule
 
         self.project = Project()
         self.project.add_library("lib", "lib_path")
-        mod1 = self.add_source_file("lib", "module1.v", contents1,
-                                    defines={"foo": "bar"})
+        mod1 = self.add_source_file(
+            "lib", "module1.v", contents1, defines={"foo": "bar"}
+        )
         mod2 = self.add_source_file("lib", "module2.v", contents2)
         self.assert_should_recompile([mod1])
         self.update(mod1)
@@ -1124,8 +1483,9 @@ endmodule
 
         self.project = Project()
         self.project.add_library("lib", "lib_path")
-        mod1 = self.add_source_file("lib", "module1.v", contents1,
-                                    defines={"foo": "other_bar"})
+        mod1 = self.add_source_file(
+            "lib", "module1.v", contents1, defines={"foo": "other_bar"}
+        )
         mod2 = self.add_source_file("lib", "module2.v", contents2)
         self.assert_should_recompile([mod1])
         self.update(mod1)
@@ -1134,23 +1494,31 @@ endmodule
 
     def test_manual_dependencies(self):
         self.project.add_library("lib", "lib_path")
-        ent1 = self.add_source_file("lib", "ent1.vhd", """\
+        ent1 = self.add_source_file(
+            "lib",
+            "ent1.vhd",
+            """\
 entity ent1 is
 end ent1;
 
 architecture arch of ent1 is
 begin
 end architecture;
-""")
+""",
+        )
 
-        ent2 = self.add_source_file("lib", "ent2.vhd", """\
+        ent2 = self.add_source_file(
+            "lib",
+            "ent2.vhd",
+            """\
 entity ent2 is
 end ent2;
 
 architecture arch of ent2 is
 begin
 end architecture;
-""")
+""",
+        )
 
         self.project.add_manual_dependency(ent2, depends_on=ent1)
         self.assert_compiles(ent1, before=ent2)
@@ -1158,7 +1526,10 @@ end architecture;
     @mock.patch("vunit.project.LOGGER", autospec=True)
     def test_circular_dependencies_causes_error(self, logger):
         self.project.add_library("lib", "lib_path")
-        self.add_source_file("lib", "ent1.vhd", """\
+        self.add_source_file(
+            "lib",
+            "ent1.vhd",
+            """\
 entity ent1 is
 end ent1;
 
@@ -1166,9 +1537,13 @@ architecture arch of ent1 is
 begin
    ent2_inst : entity work.ent2;
 end architecture;
-""")
+""",
+        )
 
-        self.add_source_file("lib", "ent2.vhd", """\
+        self.add_source_file(
+            "lib",
+            "ent2.vhd",
+            """\
 entity ent2 is
 end ent2;
 
@@ -1176,14 +1551,13 @@ architecture arch of ent2 is
 begin
    ent1_inst : entity work.ent1;
 end architecture;
-""")
+""",
+        )
 
         self.assertRaises(CompileError, self.project.get_files_in_compile_order)
         logger.error.assert_called_once_with(
-            "Found circular dependency:\n%s",
-            "ent1.vhd ->\n"
-            "ent2.vhd ->\n"
-            "ent1.vhd")
+            "Found circular dependency:\n%s", "ent1.vhd ->\n" "ent2.vhd ->\n" "ent1.vhd"
+        )
 
     def test_order_of_adding_libraries_is_kept(self):
         for order in itertools.combinations(range(4), 4):
@@ -1242,7 +1616,10 @@ end architecture;
         """
         self.add_source_file("lib_1", "file1.vhd", text_file_1_2)
         self.add_source_file("lib_2", "file2.vhd", text_file_1_2)
-        file3 = self.add_source_file("lib", "file3.vhd", """\
+        file3 = self.add_source_file(
+            "lib",
+            "file3.vhd",
+            """\
         library lib_1;
 
         entity your_buffer is
@@ -1252,8 +1629,11 @@ end architecture;
         begin
           my_buffer_i : entity lib_1.buffer1;
         end architecture;
-        """)
-        self.project.get_dependencies_in_compile_order([file3], implementation_dependencies=True)
+        """,
+        )
+        self.project.get_dependencies_in_compile_order(
+            [file3], implementation_dependencies=True
+        )
 
     def test_dependencies_on_multiple_libraries(self):
         """
@@ -1276,14 +1656,20 @@ begin my_buffer_i : buffer1 port map (D => D,Q => Q);end architecture;
         """
         self.add_source_file("lib_1", "file1.vhd", text_file_1_2)
         lib2_file1_vhd = self.add_source_file("lib_2", "file1.vhd", text_file_1_2)
-        file3 = self.add_source_file("lib", "file3.vhd", """\
+        file3 = self.add_source_file(
+            "lib",
+            "file3.vhd",
+            """\
 library ieee;use ieee.std_logic_1164.all;
 library lib_1;entity your_buffer is port (D : in std_logic; Q : out std_logic);end entity;
 architecture arch of your_buffer is
 component buffer1 port (D : in  std_logic;Q : out std_logic);end component buffer1;
 begin  my_buffer_i : buffer1 port map (D => D,Q => Q);end architecture;
-        """)
-        dep_files = self.project.get_dependencies_in_compile_order([file3], implementation_dependencies=True)
+        """,
+        )
+        dep_files = self.project.get_dependencies_in_compile_order(
+            [file3], implementation_dependencies=True
+        )
         self.assertNotIn(lib2_file1_vhd, dep_files)
 
     def test_dependencies_on_separated_architecture(self):
@@ -1293,7 +1679,10 @@ begin  my_buffer_i : buffer1 port map (D => D,Q => Q);end architecture;
         """
         self.project = Project()
         self.project.add_library("lib", "work_path")
-        self.add_source_file("lib", "file1.vhd", """\
+        self.add_source_file(
+            "lib",
+            "file1.vhd",
+            """\
 library ieee;
 use ieee.std_logic_1164.all;
 
@@ -1301,9 +1690,13 @@ entity buffer1 is
   port (D : in std_logic;
         Q : out std_logic);
 end entity;
-        """)
+        """,
+        )
 
-        file1_arch_vhd = self.add_source_file("lib", "file1_arch.vhd", """\
+        file1_arch_vhd = self.add_source_file(
+            "lib",
+            "file1_arch.vhd",
+            """\
 library ieee;
 use ieee.std_logic_1164.all;
 
@@ -1311,9 +1704,13 @@ architecture arch of buffer1 is
 begin
   Q <= D;
 end architecture;
-        """)
+        """,
+        )
 
-        file3 = self.add_source_file("lib", "file3.vhd", """\
+        file3 = self.add_source_file(
+            "lib",
+            "file3.vhd",
+            """\
 library ieee;
 use ieee.std_logic_1164.all;
 
@@ -1326,8 +1723,11 @@ begin
 my_buffer_i : entity work.buffer1
   port map (D => D,Q => Q);
 end architecture;
-        """)
-        dep_files = self.project.get_dependencies_in_compile_order([file3], implementation_dependencies=True)
+        """,
+        )
+        dep_files = self.project.get_dependencies_in_compile_order(
+            [file3], implementation_dependencies=True
+        )
         self.assertIn(file1_arch_vhd, dep_files)
 
     def test_dependencies_on_verilog_component(self):
@@ -1337,19 +1737,29 @@ end architecture;
         """
         self.project = Project()
         self.project.add_library("lib", "work_path")
-        file1_v = self.add_source_file("lib", "file1.v", """\
+        file1_v = self.add_source_file(
+            "lib",
+            "file1.v",
+            """\
 module buffer1 (input   D,output   Q);
 assign Q = D;
 endmodule
-        """)
-        file3 = self.add_source_file("lib", "file3.vhd", """\
+        """,
+        )
+        file3 = self.add_source_file(
+            "lib",
+            "file3.vhd",
+            """\
 library ieee;use ieee.std_logic_1164.all;
 entity your_buffer is port (D : in std_logic;Q : out std_logic);end entity;
 architecture arch of your_buffer is
 component buffer1 port (D : in  std_logic;Q : out std_logic);end component buffer1;
 begin my_buffer_i : buffer1 port map (D => D,Q => Q);end architecture;
-        """)
-        dep_files = self.project.get_dependencies_in_compile_order([file3], implementation_dependencies=True)
+        """,
+        )
+        dep_files = self.project.get_dependencies_in_compile_order(
+            [file3], implementation_dependencies=True
+        )
         self.assertIn(file1_v, dep_files)
 
     def create_dummy_three_file_project(self, update_file1=False):
@@ -1361,16 +1771,23 @@ begin my_buffer_i : buffer1 port map (D => D,Q => Q);end architecture;
         self.project.add_library("lib", "work_path")
 
         if update_file1:
-            file1 = self.add_source_file("lib", "file1.vhd", """\
+            file1 = self.add_source_file(
+                "lib",
+                "file1.vhd",
+                """\
 entity module1 is
 end entity;
 
 architecture arch of module1 is
 begin
 end architecture;
-""")
+""",
+            )
         else:
-            file1 = self.add_source_file("lib", "file1.vhd", """\
+            file1 = self.add_source_file(
+                "lib",
+                "file1.vhd",
+                """\
 entity module1 is
 end entity;
 
@@ -1378,8 +1795,12 @@ architecture arch of module1 is
 begin
   report "Updated";
 end architecture;
-""")
-        file2 = self.add_source_file("lib", "file2.vhd", """\
+""",
+            )
+        file2 = self.add_source_file(
+            "lib",
+            "file2.vhd",
+            """\
 entity module2 is
 end entity;
 
@@ -1387,9 +1808,13 @@ architecture arch of module2 is
 begin
   module1_inst : entity lib.module1;
 end architecture;
-""")
+""",
+        )
 
-        file3 = self.add_source_file("lib", "file3.vhd", """\
+        file3 = self.add_source_file(
+            "lib",
+            "file3.vhd",
+            """\
 entity module3 is
 end entity;
 
@@ -1397,17 +1822,19 @@ architecture arch of module3 is
 begin
   module1_inst : entity work.module2;
 end architecture;
-""")
+""",
+        )
         return file1, file2, file3
 
     def test_add_source_file_has_vhdl_standard(self):
         write_file("file.vhd", "")
 
-        for std in ('93', '2002', '2008', '2019'):
+        for std in ("93", "2002", "2008", "2019"):
             project = Project()
             project.add_library("lib", "lib_path")
-            source_file = project.add_source_file("file.vhd",
-                                                  library_name="lib", file_type='vhdl', vhdl_standard=std)
+            source_file = project.add_source_file(
+                "file.vhd", library_name="lib", file_type="vhdl", vhdl_standard=std
+            )
             self.assertEqual(source_file.get_vhdl_standard(), std)
 
     def test_add_source_file_has_no_parse_vhdl(self):
@@ -1415,15 +1842,17 @@ end architecture;
         for no_parse in (True, False):
             project = Project()
             file_name = "file.vhd"
-            write_file(file_name, """
+            write_file(
+                file_name,
+                """
     entity ent is
     end entity;
-                       """)
+                       """,
+            )
             project.add_library("lib", "work_path")
-            source_file = project.add_source_file(file_name,
-                                                  "lib",
-                                                  file_type=file_type_of(file_name),
-                                                  no_parse=no_parse)
+            source_file = project.add_source_file(
+                file_name, "lib", file_type=file_type_of(file_name), no_parse=no_parse
+            )
             self.assertEqual(len(source_file.design_units), int(not no_parse))
 
     def test_add_source_file_has_no_parse_verilog(self):
@@ -1431,26 +1860,32 @@ end architecture;
         for no_parse in (True, False):
             project = Project()
             file_name = "file.v"
-            write_file(file_name, """
+            write_file(
+                file_name,
+                """
     module mod;
     endmodule
-                       """)
+                       """,
+            )
             project.add_library("lib", "work_path")
-            source_file = project.add_source_file(file_name,
-                                                  "lib",
-                                                  file_type=file_type_of(file_name),
-                                                  no_parse=no_parse)
+            source_file = project.add_source_file(
+                file_name, "lib", file_type=file_type_of(file_name), no_parse=no_parse
+            )
             self.assertEqual(len(source_file.design_units), int(not no_parse))
 
     @mock.patch("vunit.project.LOGGER")
     def test_no_warning_builtin_library_reference(self, mock_logger):
         self.project.add_library("lib", "lib_path")
 
-        self.add_source_file("lib", "ent.vhd", """
+        self.add_source_file(
+            "lib",
+            "ent.vhd",
+            """
 use std.foo.all;
 use ieee.bar.all;
 use builtin_lib.all;
-""")
+""",
+        )
 
         self.project.add_builtin_library("builtin_lib")
         self.project.get_files_in_compile_order()
@@ -1474,7 +1909,9 @@ use builtin_lib.all;
         try:
             self.project.add_library("lib3", "lib_path3", is_external=True)
         except ValueError as err:
-            self.assertEqual(str(err), "External library must be a directory. Got 'lib_path3'")
+            self.assertEqual(
+                str(err), "External library must be a directory. Got 'lib_path3'"
+            )
         else:
             assert False, "ValueError not raised"
 
@@ -1483,17 +1920,18 @@ use builtin_lib.all;
         Convenient wrapper arround project.add_source_file
         """
         write_file(file_name, contents)
-        source_file = self.project.add_source_file(file_name,
-                                                   library_name,
-                                                   file_type=file_type_of(file_name),
-                                                   defines=defines)
+        source_file = self.project.add_source_file(
+            file_name, library_name, file_type=file_type_of(file_name), defines=defines
+        )
         return source_file
 
     def hash_file_name_of(self, source_file):
         """
         Get the hash file name of a source_file
         """
-        return self.project._hash_file_name_of(source_file)  # pylint: disable=protected-access
+        return self.project._hash_file_name_of(  # pylint: disable=protected-access
+            source_file
+        )
 
     def update(self, source_file):
         """
@@ -1530,24 +1968,21 @@ use builtin_lib.all;
         """
         Assert that there is a package body with package_name withing source_file_name
         """
-        unit = self._find_design_unit(source_file_name,
-                                      "package body",
-                                      package_name,
-                                      False, package_name)
+        unit = self._find_design_unit(
+            source_file_name, "package body", package_name, False, package_name
+        )
         self.assertIsNotNone(unit)
 
     def assert_has_package(self, source_file_name, name):
         """
         Assert that there is a package with name withing source_file_name
         """
-        unit = self._find_design_unit(source_file_name,
-                                      "package",
-                                      name)
+        unit = self._find_design_unit(source_file_name, "package", name)
         self.assertIsNotNone(unit)
 
-    def assert_has_entity(self, source_file, name,
-                          generic_names=None,
-                          architecture_names=None):
+    def assert_has_entity(
+        self, source_file, name, generic_names=None, architecture_names=None
+    ):
         """
         Assert that there is an entity with name withing source_file
         that has architectures with architecture_names.
@@ -1567,9 +2002,9 @@ use builtin_lib.all;
         """
         Assert that there is an architecture with name of entity_name within source_file_name
         """
-        unit = self._find_design_unit(source_file_name,
-                                      "architecture",
-                                      name, False, entity_name)
+        unit = self._find_design_unit(
+            source_file_name, "architecture", name, False, entity_name
+        )
         self.assertIsNotNone(unit)
 
     def assert_has_component_instantiation(self, source_file_name, component_name):
@@ -1582,14 +2017,19 @@ use builtin_lib.all;
                 if component == component_name:
                     found_comp = True
 
-        self.assertTrue(found_comp, "Did not find component " + component_name + " in " + source_file_name)
+        self.assertTrue(
+            found_comp,
+            "Did not find component " + component_name + " in " + source_file_name,
+        )
 
-    def _find_design_unit(self,  # pylint: disable=too-many-arguments
-                          source_file_name,
-                          design_unit_type,
-                          design_unit_name,
-                          is_primary=True,
-                          primary_design_unit_name=None):
+    def _find_design_unit(  # pylint: disable=too-many-arguments
+        self,
+        source_file_name,
+        design_unit_type,
+        design_unit_name,
+        is_primary=True,
+        primary_design_unit_name=None,
+    ):
         """
         Utility fnction to find and return a design unit
         """
@@ -1604,7 +2044,9 @@ use builtin_lib.all;
                 self.assertEqual(design_unit.is_primary, is_primary)
                 self.assertEqual(source_file.name, source_file_name)
                 if not is_primary:
-                    self.assertEqual(design_unit.primary_design_unit, primary_design_unit_name)
+                    self.assertEqual(
+                        design_unit.primary_design_unit, primary_design_unit_name
+                    )
                 return design_unit
 
         return None

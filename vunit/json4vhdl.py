@@ -23,7 +23,7 @@ def encode_json(obj):
 
        stringified_generic = encode_json(generics)
     """
-    return json.dumps(obj, separators=(',', ':'))
+    return json.dumps(obj, separators=(",", ":"))
 
 
 def read_json(filename):
@@ -38,4 +38,4 @@ def read_json(filename):
 
        generics = read_json(join(root, "src/test/data/data.json"))
     """
-    return json.loads(open(filename, 'r').read())
+    return json.loads(open(filename, "r").read())

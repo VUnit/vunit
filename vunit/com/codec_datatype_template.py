@@ -14,14 +14,17 @@ from string import Template
 class DatatypeCodecTemplate(object):
     """Templates when generating codecs"""
 
-    to_string_declarations = Template("""\
+    to_string_declarations = Template(
+        """\
   function to_string (
     constant data : $type)
     return string;
 
-""")
+"""
+    )
 
-    codec_declarations = Template("""\
+    codec_declarations = Template(
+        """\
   function encode (
     constant data : $type)
     return string;
@@ -44,4 +47,5 @@ class DatatypeCodecTemplate(object):
   alias push_$type is push[msg_t, $type];
   alias pop_$type is pop[msg_t return $type];
 
-""")
+"""
+    )

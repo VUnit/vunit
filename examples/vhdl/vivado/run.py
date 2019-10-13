@@ -27,7 +27,7 @@ vu.add_library("tb_lib").add_source_files(join(src_path, "test", "*.vhd"))
 add_vivado_ip(
     vu,
     output_path=join(root, "vivado_libs"),
-    project_file=join(root, "myproject", "myproject.xpr")
+    project_file=join(root, "myproject", "myproject.xpr"),
 )
 
 vu.main()

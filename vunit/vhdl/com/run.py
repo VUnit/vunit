@@ -12,8 +12,14 @@ root = dirname(__file__)
 prj = VUnit.from_argv()
 prj.add_com()
 tb_com_lib = prj.add_library("tb_com_lib")
-tb_com_lib.add_source_files(join(root, 'test', '*.vhd'))
-pkg = tb_com_lib.package('custom_types_pkg')
-pkg.generate_codecs(codec_package_name='custom_codec_pkg', used_packages=['ieee.std_logic_1164', 'constants_pkg',
-                                                                          'tb_com_lib.more_constants_pkg'])
+tb_com_lib.add_source_files(join(root, "test", "*.vhd"))
+pkg = tb_com_lib.package("custom_types_pkg")
+pkg.generate_codecs(
+    codec_package_name="custom_codec_pkg",
+    used_packages=[
+        "ieee.std_logic_1164",
+        "constants_pkg",
+        "tb_com_lib.more_constants_pkg",
+    ],
+)
 prj.main()

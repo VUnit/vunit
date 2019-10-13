@@ -11,5 +11,5 @@ root = dirname(__file__)
 ui = VUnit.from_argv()
 
 lib = ui.add_library("tb_run_lib")
-lib.add_source_files(join(root, 'test', '*.vhd'))
+lib.add_source_files(join(root, "test", "*.vhd"))
 ui.main()

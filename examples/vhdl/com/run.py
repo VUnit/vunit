@@ -21,7 +21,7 @@ vu.add_com()
 vu.add_verification_components()
 vu.add_osvvm()
 
-vu.add_library('lib').add_source_files(join(dirname(__file__), 'src', '*.vhd'))
-vu.add_library('tb_lib').add_source_files(join(dirname(__file__), 'test', '*.vhd'))
+vu.add_library("lib").add_source_files(join(dirname(__file__), "src", "*.vhd"))
+vu.add_library("tb_lib").add_source_files(join(dirname(__file__), "test", "*.vhd"))
 
 vu.main()
