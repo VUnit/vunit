@@ -10,6 +10,7 @@ from vunit.check_preprocessor import CheckPreprocessor
 from glob import glob
 
 import sys
+
 sys.path.append(join(dirname(__file__), "tools"))
 
 import generate_check_equal
@@ -20,13 +21,15 @@ generate_check_match.main()
 
 ui = VUnit.from_argv()
 
-lib = ui.add_library('lib')
+lib = ui.add_library("lib")
 lib.add_source_files(join(ROOT, "vunit", "vhdl", "check", "test", "test_support.vhd"))
-logging_tb_lib = ui.add_library('logging_tb_lib')
-logging_tb_lib.add_source_files(join(ROOT, "vunit", "vhdl", "logging", "test", "test_support_pkg.vhd"))
+logging_tb_lib = ui.add_library("logging_tb_lib")
+logging_tb_lib.add_source_files(
+    join(ROOT, "vunit", "vhdl", "logging", "test", "test_support_pkg.vhd")
+)
 
 for file_name in glob(join(ROOT, "vunit", "vhdl", "check", "test", "tb_*.vhd")):
-    if ui.vhdl_standard not in ['2008', '2019'] and file_name.endswith("2008p.vhd"):
+    if ui.vhdl_standard not in ["2008", "2019"] and file_name.endswith("2008p.vhd"):
         continue
 
     if basename(file_name).startswith("tb_check_relation"):
@@ -36,6 +39,8 @@ for file_name in glob(join(ROOT, "vunit", "vhdl", "check", "test", "tb_*.vhd")):
 
 tb_check = lib.entity("tb_check")
 tb_check.add_config(generics=dict(use_check_not_check_true=True), name="using check")
-tb_check.add_config(generics=dict(use_check_not_check_true=False), name="using check_true")
+tb_check.add_config(
+    generics=dict(use_check_not_check_true=False), name="using check_true"
+)
 
 ui.main()

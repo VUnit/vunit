@@ -20,12 +20,16 @@ class TestCDSFile(unittest.TestCase):
 
     def test_parses_cds_file(self):
         cds = self._create_cds_file(CDS_FILE_CONTENTS)
-        self.assertEqual(sorted(cds.items()), [
-            ("lib", "./vunit_out/incisive/libraries/lib"),
-            ("tb_uart_lib", "./vunit_out/incisive/libraries/tb_uart_lib"),
-            ("uart_lib", "./vunit_out/incisive/libraries/uart_lib"),
-            ("vunit_lib", "./vunit_out/incisive/libraries/vunit_lib"),
-            ("worklib", "./vunit_out/incisive/libraries/worklib")])
+        self.assertEqual(
+            sorted(cds.items()),
+            [
+                ("lib", "./vunit_out/incisive/libraries/lib"),
+                ("tb_uart_lib", "./vunit_out/incisive/libraries/tb_uart_lib"),
+                ("uart_lib", "./vunit_out/incisive/libraries/uart_lib"),
+                ("vunit_lib", "./vunit_out/incisive/libraries/vunit_lib"),
+                ("worklib", "./vunit_out/incisive/libraries/worklib"),
+            ],
+        )
 
     def test_writes_cds_file(self):
         cds = self._create_cds_file(CDS_FILE_CONTENTS)
@@ -39,40 +43,46 @@ class TestCDSFile(unittest.TestCase):
         del cds["vunit_lib"]
         del cds["worklib"]
 
-        self._check_written_as(cds, """
+        self._check_written_as(
+            cds,
+            """
 #
 # cds.lib: Defines the locations of compiled libraries.
 #
 softinclude $CDS_INST_DIR/tools/inca/files/cds.lib
 
-""")
+""",
+        )
         cds["foo"] = "bar"
 
-        self._check_written_as(cds, """
+        self._check_written_as(
+            cds,
+            """
 #
 # cds.lib: Defines the locations of compiled libraries.
 #
 softinclude $CDS_INST_DIR/tools/inca/files/cds.lib
 
 define foo "bar"
-""")
+""",
+        )
 
     def test_ignores_case(self):
-        cds = self._create_cds_file('DeFiNe foo bar')
+        cds = self._create_cds_file("DeFiNe foo bar")
         self.assertEqual(list(cds.keys()), ["foo"])
-        self.assertEqual(cds["foo"], 'bar')
+        self.assertEqual(cds["foo"], "bar")
 
     def test_unquotes_define(self):
         cds = self._create_cds_file('define foo "bar xyz"')
-        self.assertEqual(cds["foo"], 'bar xyz')
+        self.assertEqual(cds["foo"], "bar xyz")
 
     def test_does_not_unquotes_define(self):
-        cds = self._create_cds_file('define foo bar')
-        self.assertEqual(cds["foo"], 'bar')
+        cds = self._create_cds_file("define foo bar")
+        self.assertEqual(cds["foo"], "bar")
 
     def test_quotes_define(self):
         cds = CDSFile()
-        cds["foo"] = 'bar xyz'
+        cds["foo"] = "bar xyz"
         self._check_written_as(cds, 'define foo "bar xyz"\n')
 
     @staticmethod

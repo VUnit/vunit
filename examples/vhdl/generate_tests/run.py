@@ -28,8 +28,7 @@ def make_post_check(data_width, sign):
         This function recives the output_path of the test
         """
 
-        expected = ", ".join([str(data_width),
-                              str(sign).lower()]) + "\n"
+        expected = ", ".join([str(data_width), str(sign).lower()]) + "\n"
 
         output_file = join(output_path, "generics.txt")
 
@@ -56,10 +55,8 @@ def generate_tests(obj, signs, data_widths):
         # Add the configuration with a post check function to verify the output
         obj.add_config(
             name=config_name,
-            generics=dict(
-                data_width=data_width,
-                sign=sign),
-            post_check=make_post_check(data_width, sign)
+            generics=dict(data_width=data_width, sign=sign),
+            post_check=make_post_check(data_width, sign),
         )
 
 

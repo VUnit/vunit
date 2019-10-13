@@ -20,15 +20,23 @@ class TestPycodestyle(unittest.TestCase):
     """
     Test that all python code follows PEP8 Python coding standard
     """
+
     @staticmethod
     def test_pycodestyle():
-        check_call([sys.executable, "-m", "pycodestyle",
-                    "--show-source",
-                    "--show-pep8",
-                    "--max-line-length=120",
-                    # W503 mutually exclusive with W504
-                    # E722 bare except checked by pylint
-                    "--ignore=E402,W503,E722"] + get_files_and_folders())
+        check_call(
+            [
+                sys.executable,
+                "-m",
+                "pycodestyle",
+                "--show-source",
+                "--show-pep8",
+                "--max-line-length=120",
+                # W503 mutually exclusive with W504
+                # E722 bare except checked by pylint
+                "--ignore=E402,W503,E722",
+            ]
+            + get_files_and_folders()
+        )
 
 
 def get_files_and_folders():

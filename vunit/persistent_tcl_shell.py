@@ -114,6 +114,7 @@ class SilentOutputConsumer(object):
     """
     Consume output until reaching #VUNIT_RETURN, silent
     """
+
     def __init__(self):
         self.output = ""
 
@@ -129,6 +130,7 @@ class ReadVarOutputConsumer(object):
     """
     Consume output from modelsim and print with indentation
     """
+
     def __init__(self):
         self.var = None
 

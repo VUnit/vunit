@@ -22,6 +22,7 @@ class TestReport(object):
     """
     Collect reports from running testcases
     """
+
     def __init__(self, printer=COLOR_PRINTER):
         self._test_results = {}
         self._test_names_in_order = []
@@ -76,11 +77,11 @@ class TestReport(object):
         result = self._last_test_result()
         passed, failed, skipped = self._split()
         if result.passed:
-            self._printer.write("pass", fg='gi')
+            self._printer.write("pass", fg="gi")
         elif result.failed:
-            self._printer.write("fail", fg='ri')
+            self._printer.write("fail", fg="ri")
         elif result.skipped:
-            self._printer.write("skip", fg='rgi')
+            self._printer.write("skip", fg="rgi")
         else:
             assert False
 
@@ -90,10 +91,9 @@ class TestReport(object):
         args.append("F=%i" % len(failed))
         args.append("T=%i" % total_tests)
 
-        self._printer.write(" (%s) %s (%.1f seconds)\n" %
-                            (" ".join(args),
-                             result.name,
-                             result.time))
+        self._printer.write(
+            " (%s) %s (%.1f seconds)\n" % (" ".join(args), result.name, result.time)
+        )
 
     def all_ok(self):
         """
@@ -122,7 +122,9 @@ class TestReport(object):
 
         prefix = "==== Summary "
         max_len = max(len(test.name) for test in all_tests)
-        self._printer.write("%s%s\n" % (prefix, "=" * (max(max_len - len(prefix) + 25, 0))))
+        self._printer.write(
+            "%s%s\n" % (prefix, "=" * (max(max_len - len(prefix) + 25, 0)))
+        )
         for test_result in all_tests:
             test_result.print_status(self._printer, padding=max_len)
 
@@ -132,15 +134,15 @@ class TestReport(object):
         n_passed = len(passed)
         total = len(all_tests)
 
-        self._printer.write("pass", fg='gi')
+        self._printer.write("pass", fg="gi")
         self._printer.write(" %i of %i\n" % (n_passed, total))
 
         if n_skipped > 0:
-            self._printer.write("skip", fg='rgi')
+            self._printer.write("skip", fg="rgi")
             self._printer.write(" %i of %i\n" % (n_skipped, total))
 
         if n_failed > 0:
-            self._printer.write("fail", fg='ri')
+            self._printer.write("fail", fg="ri")
             self._printer.write(" %i of %i\n" % (n_failed, total))
         self._printer.write("%s\n" % ("=" * (max(max_len + 25, 0))))
 
@@ -151,17 +153,20 @@ class TestReport(object):
         self._printer.write("%s\n" % ("=" * (max(max_len + 25, 0))))
 
         if n_failed > 0:
-            self._printer.write("Some failed!", fg='ri')
+            self._printer.write("Some failed!", fg="ri")
         elif n_skipped > 0:
-            self._printer.write("Some skipped!", fg='rgxi')
+            self._printer.write("Some skipped!", fg="rgxi")
         else:
-            self._printer.write("All passed!", fg='gi')
+            self._printer.write("All passed!", fg="gi")
         self._printer.write("\n")
 
         assert len(all_tests) <= self._expected_num_tests
         if len(all_tests) < self._expected_num_tests:
-            self._printer.write("WARNING: Test execution aborted after running %d out of %d tests"
-                                % (len(all_tests), self._expected_num_tests), fg='rgi')
+            self._printer.write(
+                "WARNING: Test execution aborted after running %d out of %d tests"
+                % (len(all_tests), self._expected_num_tests),
+                fg="rgi",
+            )
             self._printer.write("\n")
 
     def _split(self):
@@ -181,7 +186,7 @@ class TestReport(object):
 
         return passed, failures, skipped
 
-    def to_junit_xml_str(self, xunit_xml_format='jenkins'):
+    def to_junit_xml_str(self, xunit_xml_format="jenkins"):
         """
         Convert test report to a junit xml string
         """
@@ -211,6 +216,7 @@ class TestStatus(object):
     """
     The status of a test
     """
+
     def __init__(self, name):
         self._name = name
 
@@ -236,9 +242,7 @@ class TestResult(object):
     """
 
     def __init__(self, name, status, time, output_file_name):
-        assert status in (PASSED,
-                          FAILED,
-                          SKIPPED)
+        assert status in (PASSED, FAILED, SKIPPED)
         self.name = name
         self._status = status
         self.time = time
@@ -273,18 +277,20 @@ class TestResult(object):
         Print the status and runtime of this test result
         """
         if self.passed:
-            printer.write("pass", fg='gi')
+            printer.write("pass", fg="gi")
             printer.write(" ")
         elif self.failed:
-            printer.write("fail", fg='ri')
+            printer.write("fail", fg="ri")
             printer.write(" ")
         elif self.skipped:
-            printer.write("skip", fg='rgi')
+            printer.write("skip", fg="rgi")
             printer.write(" ")
 
         my_padding = max(padding - len(self.name), 0)
 
-        printer.write("%s (%.1f seconds)\n" % (self.name + (" " * my_padding), self.time))
+        printer.write(
+            "%s (%.1f seconds)\n" % (self.name + (" " * my_padding), self.time)
+        )
 
     def to_xml(self, xunit_xml_format):
         """
@@ -308,9 +314,9 @@ class TestResult(object):
             failure.attrib["message"] = "Failed"
 
             # Store output under <failure> if the 'bamboo' format is specified
-            if xunit_xml_format == 'bamboo':
+            if xunit_xml_format == "bamboo":
                 failure.text = system_out.text
-                system_out.text = ''
+                system_out.text = ""
 
         elif self.skipped:
             skipped = ElementTree.SubElement(test, "skipped")

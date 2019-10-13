@@ -43,67 +43,108 @@ class TestExternalRunScripts(unittest.TestCase):
     @unittest.skipUnless(simulator_supports_verilog(), "Verilog")
     def test_verilog_ams_example(self):
         self.check(join(ROOT, "examples", "verilog", "verilog_ams", "run.py"))
-        check_report(self.report_file,
-                     [("passed", "lib.tb_dut.Test that pass"),
-                      ("failed", "lib.tb_dut.Test that fail")])
+        check_report(
+            self.report_file,
+            [
+                ("passed", "lib.tb_dut.Test that pass"),
+                ("failed", "lib.tb_dut.Test that fail"),
+            ],
+        )
 
     def test_vhdl_logging_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "logging", "run.py"))
 
     def test_vhdl_run_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "run", "run.py"), exit_code=1)
-        check_report(self.report_file,
-                     [("passed", "lib.tb_with_watchdog.Test to_string for boolean"),
-                      ("passed", "lib.tb_with_watchdog.Test that needs longer timeout"),
-                      ("passed", "lib.tb_standalone.Test to_string for boolean"),
-                      ("passed", "lib.tb_with_test_cases.Test to_string for integer"),
-                      ("passed", "lib.tb_with_test_cases.Test to_string for boolean"),
-                      ("passed", "lib.tb_with_lower_level_control.Test something"),
-                      ("passed", "lib.tb_with_lower_level_control.Test something else"),
-                      ("passed", "lib.tb_running_test_case.Test scenario A"),
-                      ("passed", "lib.tb_running_test_case.Test scenario B"),
-                      ("passed", "lib.tb_running_test_case.Test something else"),
-                      ("passed", "lib.tb_minimal.all"),
-                      ("passed", "lib.tb_magic_paths.all"),
-                      ("failed", "lib.tb_with_watchdog.Test that stalls"),
-                      ("failed",
-                       "lib.tb_with_watchdog.Test that stalling processes can inform why they caused a timeout"),
-                      ("failed", "lib.tb_counting_errors.Test that fails multiple times but doesn't stop"),
-                      ("failed", "lib.tb_standalone.Test that fails on VUnit check procedure"),
-                      ("failed", "lib.tb_many_ways_to_fail.Test that fails on an assert"),
-                      ("failed", "lib.tb_many_ways_to_fail.Test that crashes on boundary problems"),
-                      ("failed", "lib.tb_many_ways_to_fail.Test that fails on VUnit check procedure")])
+        check_report(
+            self.report_file,
+            [
+                ("passed", "lib.tb_with_watchdog.Test to_string for boolean"),
+                ("passed", "lib.tb_with_watchdog.Test that needs longer timeout"),
+                ("passed", "lib.tb_standalone.Test to_string for boolean"),
+                ("passed", "lib.tb_with_test_cases.Test to_string for integer"),
+                ("passed", "lib.tb_with_test_cases.Test to_string for boolean"),
+                ("passed", "lib.tb_with_lower_level_control.Test something"),
+                ("passed", "lib.tb_with_lower_level_control.Test something else"),
+                ("passed", "lib.tb_running_test_case.Test scenario A"),
+                ("passed", "lib.tb_running_test_case.Test scenario B"),
+                ("passed", "lib.tb_running_test_case.Test something else"),
+                ("passed", "lib.tb_minimal.all"),
+                ("passed", "lib.tb_magic_paths.all"),
+                ("failed", "lib.tb_with_watchdog.Test that stalls"),
+                (
+                    "failed",
+                    "lib.tb_with_watchdog.Test that stalling processes can inform why they caused a timeout",
+                ),
+                (
+                    "failed",
+                    "lib.tb_counting_errors.Test that fails multiple times but doesn't stop",
+                ),
+                (
+                    "failed",
+                    "lib.tb_standalone.Test that fails on VUnit check procedure",
+                ),
+                ("failed", "lib.tb_many_ways_to_fail.Test that fails on an assert"),
+                (
+                    "failed",
+                    "lib.tb_many_ways_to_fail.Test that crashes on boundary problems",
+                ),
+                (
+                    "failed",
+                    "lib.tb_many_ways_to_fail.Test that fails on VUnit check procedure",
+                ),
+            ],
+        )
 
     def test_vhdl_third_party_integration_example_project(self):
-        self.check(join(ROOT, "examples", "vhdl", "third_party_integration", "run.py"), exit_code=1)
-        check_report(self.report_file,
-                     [("passed", "lib.tb_external_framework_integration.Test that pass"),
-                      ("failed",
-                       "lib.tb_external_framework_integration.Test that stops the simulation on first error"),
-                      ("failed",
-                       "lib.tb_external_framework_integration.Test that doesn't stop the simulation on error")])
+        self.check(
+            join(ROOT, "examples", "vhdl", "third_party_integration", "run.py"),
+            exit_code=1,
+        )
+        check_report(
+            self.report_file,
+            [
+                ("passed", "lib.tb_external_framework_integration.Test that pass"),
+                (
+                    "failed",
+                    "lib.tb_external_framework_integration.Test that stops the simulation on first error",
+                ),
+                (
+                    "failed",
+                    "lib.tb_external_framework_integration.Test that doesn't stop the simulation on error",
+                ),
+            ],
+        )
 
     def test_vhdl_check_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "check", "run.py"))
 
     def test_vhdl_generate_tests_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "generate_tests", "run.py"))
-        check_report(self.report_file,
-                     [("passed", "lib.tb_generated.data_width=1,sign=False.Test 1"),
-                      ("passed", "lib.tb_generated.data_width=1,sign=True.Test 1"),
-                      ("passed", "lib.tb_generated.data_width=2,sign=False.Test 1"),
-                      ("passed", "lib.tb_generated.data_width=2,sign=True.Test 1"),
-                      ("passed", "lib.tb_generated.data_width=3,sign=False.Test 1"),
-                      ("passed", "lib.tb_generated.data_width=3,sign=True.Test 1"),
-                      ("passed", "lib.tb_generated.data_width=4,sign=False.Test 1"),
-                      ("passed", "lib.tb_generated.data_width=4,sign=True.Test 1"),
-                      ("passed", "lib.tb_generated.data_width=16,sign=True.Test 2")])
+        check_report(
+            self.report_file,
+            [
+                ("passed", "lib.tb_generated.data_width=1,sign=False.Test 1"),
+                ("passed", "lib.tb_generated.data_width=1,sign=True.Test 1"),
+                ("passed", "lib.tb_generated.data_width=2,sign=False.Test 1"),
+                ("passed", "lib.tb_generated.data_width=2,sign=True.Test 1"),
+                ("passed", "lib.tb_generated.data_width=3,sign=False.Test 1"),
+                ("passed", "lib.tb_generated.data_width=3,sign=True.Test 1"),
+                ("passed", "lib.tb_generated.data_width=4,sign=False.Test 1"),
+                ("passed", "lib.tb_generated.data_width=4,sign=True.Test 1"),
+                ("passed", "lib.tb_generated.data_width=16,sign=True.Test 2"),
+            ],
+        )
 
     def test_vhdl_composite_generics_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "composite_generics", "run.py"))
-        check_report(self.report_file,
-                     [("passed", "tb_lib.tb_composite_generics.VGA.Test 1"),
-                      ("passed", "tb_lib.tb_composite_generics.tiny.Test 1")])
+        check_report(
+            self.report_file,
+            [
+                ("passed", "tb_lib.tb_composite_generics.VGA.Test 1"),
+                ("passed", "tb_lib.tb_composite_generics.tiny.Test 1"),
+            ],
+        )
 
     def test_vhdl_json4vhdl_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "json4vhdl", "run.py"))
@@ -119,7 +160,7 @@ class TestExternalRunScripts(unittest.TestCase):
 
     @unittest.skipIf(
         simulator_check(lambda simclass: not simclass.supports_vhpi()),
-        "This simulator/backend does not support interfacing with external C code"
+        "This simulator/backend does not support interfacing with external C code",
     )
     def test_vhdl_external_buffer_project(self):
         self.check(join(ROOT, "examples", "vhdl", "external_buffer", "run.py"))
@@ -127,19 +168,35 @@ class TestExternalRunScripts(unittest.TestCase):
 
     def test_vhdl_user_guide_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "user_guide", "run.py"), exit_code=1)
-        check_report(self.report_file,
-                     [("passed", "lib.tb_example.all"),
-                      ("passed", "lib.tb_example_many.test_pass"),
-                      ("failed", "lib.tb_example_many.test_fail")])
+        check_report(
+            self.report_file,
+            [
+                ("passed", "lib.tb_example.all"),
+                ("passed", "lib.tb_example_many.test_pass"),
+                ("failed", "lib.tb_example_many.test_fail"),
+            ],
+        )
 
     @unittest.skipUnless(simulator_supports_verilog(), "Verilog")
     def test_verilog_user_guide_example_project(self):
-        self.check(join(ROOT, "examples", "verilog", "user_guide", "run.py"), exit_code=1)
-        check_report(self.report_file,
-                     [("passed", "lib.tb_example_basic.all"),
-                      ("passed", "lib.tb_example.Test that a successful test case passes"),
-                      ("failed", "lib.tb_example.Test that a failing test case actually fails"),
-                      ("failed", "lib.tb_example.Test that a test case that takes too long time fails with a timeout")])
+        self.check(
+            join(ROOT, "examples", "verilog", "user_guide", "run.py"), exit_code=1
+        )
+        check_report(
+            self.report_file,
+            [
+                ("passed", "lib.tb_example_basic.all"),
+                ("passed", "lib.tb_example.Test that a successful test case passes"),
+                (
+                    "failed",
+                    "lib.tb_example.Test that a failing test case actually fails",
+                ),
+                (
+                    "failed",
+                    "lib.tb_example.Test that a test case that takes too long time fails with a timeout",
+                ),
+            ],
+        )
 
     def test_vhdl_com_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "com", "run.py"))
@@ -151,12 +208,10 @@ class TestExternalRunScripts(unittest.TestCase):
         self.check(join(VHDL_PATH, "data_types", "run.py"))
 
     def test_data_types_vhdl_2002(self):
-        self.check(join(VHDL_PATH, "data_types", "run.py"),
-                   vhdl_standard="2002")
+        self.check(join(VHDL_PATH, "data_types", "run.py"), vhdl_standard="2002")
 
     def test_data_types_vhdl_93(self):
-        self.check(join(VHDL_PATH, "data_types", "run.py"),
-                   vhdl_standard="93")
+        self.check(join(VHDL_PATH, "data_types", "run.py"), vhdl_standard="93")
 
     def test_random_vhdl_2008(self):
         self.check(join(VHDL_PATH, "random", "run.py"))
@@ -165,67 +220,55 @@ class TestExternalRunScripts(unittest.TestCase):
         self.check(join(VHDL_PATH, "check", "run.py"))
 
     def test_check_vhdl_2002(self):
-        self.check(join(VHDL_PATH, "check", "run.py"),
-                   vhdl_standard='2002')
+        self.check(join(VHDL_PATH, "check", "run.py"), vhdl_standard="2002")
 
     def test_check_vhdl_93(self):
-        self.check(join(VHDL_PATH, "check", "run.py"),
-                   vhdl_standard='93')
+        self.check(join(VHDL_PATH, "check", "run.py"), vhdl_standard="93")
 
     def test_logging_vhdl_2008(self):
         self.check(join(VHDL_PATH, "logging", "run.py"))
 
     def test_logging_vhdl_2002(self):
-        self.check(join(VHDL_PATH, "logging", "run.py"),
-                   vhdl_standard='2002')
+        self.check(join(VHDL_PATH, "logging", "run.py"), vhdl_standard="2002")
 
     def test_logging_vhdl_93(self):
-        self.check(join(VHDL_PATH, "logging", "run.py"),
-                   vhdl_standard='93')
+        self.check(join(VHDL_PATH, "logging", "run.py"), vhdl_standard="93")
 
     def test_run_vhdl_2008(self):
         self.check(join(VHDL_PATH, "run", "run.py"))
 
     def test_run_vhdl_2002(self):
-        self.check(join(VHDL_PATH, "run", "run.py"),
-                   vhdl_standard='2002')
+        self.check(join(VHDL_PATH, "run", "run.py"), vhdl_standard="2002")
 
     def test_run_vhdl_93(self):
-        self.check(join(VHDL_PATH, "run", "run.py"),
-                   vhdl_standard='93')
+        self.check(join(VHDL_PATH, "run", "run.py"), vhdl_standard="93")
 
     def test_string_ops_vhdl_2008(self):
         self.check(join(VHDL_PATH, "string_ops", "run.py"))
 
     def test_string_ops_vhdl_2002(self):
-        self.check(join(VHDL_PATH, "string_ops", "run.py"),
-                   vhdl_standard='2002')
+        self.check(join(VHDL_PATH, "string_ops", "run.py"), vhdl_standard="2002")
 
     def test_string_ops_vhdl_93(self):
-        self.check(join(VHDL_PATH, "string_ops", "run.py"),
-                   vhdl_standard='93')
+        self.check(join(VHDL_PATH, "string_ops", "run.py"), vhdl_standard="93")
 
     def test_dictionary_vhdl_2008(self):
         self.check(join(VHDL_PATH, "dictionary", "run.py"))
 
     def test_dictionary_vhdl_2002(self):
-        self.check(join(VHDL_PATH, "dictionary", "run.py"),
-                   vhdl_standard='2002')
+        self.check(join(VHDL_PATH, "dictionary", "run.py"), vhdl_standard="2002")
 
     def test_dictionary_vhdl_93(self):
-        self.check(join(VHDL_PATH, "dictionary", "run.py"),
-                   vhdl_standard='93')
+        self.check(join(VHDL_PATH, "dictionary", "run.py"), vhdl_standard="93")
 
     def test_path_vhdl_2008(self):
         self.check(join(VHDL_PATH, "path", "run.py"))
 
     def test_path_vhdl_2002(self):
-        self.check(join(VHDL_PATH, "path", "run.py"),
-                   vhdl_standard='2002')
+        self.check(join(VHDL_PATH, "path", "run.py"), vhdl_standard="2002")
 
     def test_path_vhdl_93(self):
-        self.check(join(VHDL_PATH, "path", "run.py"),
-                   vhdl_standard='93')
+        self.check(join(VHDL_PATH, "path", "run.py"), vhdl_standard="93")
 
     def test_com_vhdl_2008(self):
         self.check(join(VHDL_PATH, "com", "run.py"))
@@ -234,16 +277,22 @@ class TestExternalRunScripts(unittest.TestCase):
         self.output_path = join(dirname(__file__), "external_run_out")
         self.report_file = join(self.output_path, "xunit.xml")
 
-    def check(self, run_file, args=None, vhdl_standard='2008', exit_code=0):
+    def check(self, run_file, args=None, vhdl_standard="2008", exit_code=0):
         """
         Run external run file and verify exit code
         """
         args = args if args is not None else []
         new_env = environ.copy()
         new_env["VUNIT_VHDL_STANDARD"] = vhdl_standard
-        retcode = call([sys.executable, run_file,
-                        "--clean",
-                        "--output-path=%s" % self.output_path,
-                        "--xunit-xml=%s" % self.report_file] + args,
-                       env=new_env)
+        retcode = call(
+            [
+                sys.executable,
+                run_file,
+                "--clean",
+                "--output-path=%s" % self.output_path,
+                "--xunit-xml=%s" % self.report_file,
+            ]
+            + args,
+            env=new_env,
+        )
         self.assertEqual(retcode, exit_code)

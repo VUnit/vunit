@@ -41,9 +41,11 @@ class TestGHDLInterface(unittest.TestCase):
 
         executables["gtkwave"] = []
         GHDLInterface(prefix="prefix", output_path="")
-        self.assertRaises(RuntimeError, GHDLInterface, prefix="prefix", output_path="", gui=True)
+        self.assertRaises(
+            RuntimeError, GHDLInterface, prefix="prefix", output_path="", gui=True
+        )
 
-    @mock.patch('subprocess.check_output', autospec=True)
+    @mock.patch("subprocess.check_output", autospec=True)
     def test_parses_llvm_backend(self, check_output):
         version = b"""\
 GHDL 0.33dev (20141104) [Dunoon edition]
@@ -58,7 +60,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
         check_output.return_value = version
         self.assertEqual(GHDLInterface.determine_backend("prefix"), "llvm")
 
-    @mock.patch('subprocess.check_output', autospec=True)
+    @mock.patch("subprocess.check_output", autospec=True)
     def test_parses_mcode_backend(self, check_output):
         version = b"""\
 GHDL 0.33dev (20141104) [Dunoon edition]
@@ -73,7 +75,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
         check_output.return_value = version
         self.assertEqual(GHDLInterface.determine_backend("prefix"), "mcode")
 
-    @mock.patch('subprocess.check_output', autospec=True)
+    @mock.patch("subprocess.check_output", autospec=True)
     def test_parses_gcc_backend(self, check_output):
         version = b"""\
 GHDL 0.31 (20140108) [Dunoon edition]
@@ -88,7 +90,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
         check_output.return_value = version
         self.assertEqual(GHDLInterface.determine_backend("prefix"), "gcc")
 
-    @mock.patch('subprocess.check_output', autospec=True)
+    @mock.patch("subprocess.check_output", autospec=True)
     def test_assertion_on_unknown_backend(self, check_output):
         version = b"""\
 GHDL 0.31 (20140108) [Dunoon edition]
@@ -103,47 +105,88 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         check_output.return_value = version
         self.assertRaises(AssertionError, GHDLInterface.determine_backend, "prefix")
 
-    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
-    def test_compile_project_2008(self, check_output):  # pylint: disable=no-self-use
+    @mock.patch(
+        "vunit.simulator_interface.check_output", autospec=True, return_value=""
+    )  # pylint: disable=no-self-use
+    def test_compile_project_2008(self, check_output):
         simif = GHDLInterface(prefix="prefix", output_path="")
         write_file("file.vhd", "")
 
         project = Project()
         project.add_library("lib", "lib_path")
-        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2008"))
+        project.add_source_file(
+            "file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2008")
+        )
         simif.compile_project(project)
         check_output.assert_called_once_with(
-            [join("prefix", 'ghdl'), '-a', '--workdir=lib_path', '--work=lib',
-             '--std=08', '-Plib_path', 'file.vhd'], env=simif.get_env())
+            [
+                join("prefix", "ghdl"),
+                "-a",
+                "--workdir=lib_path",
+                "--work=lib",
+                "--std=08",
+                "-Plib_path",
+                "file.vhd",
+            ],
+            env=simif.get_env(),
+        )
 
-    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
-    def test_compile_project_2002(self, check_output):  # pylint: disable=no-self-use
+    @mock.patch(
+        "vunit.simulator_interface.check_output", autospec=True, return_value=""
+    )  # pylint: disable=no-self-use
+    def test_compile_project_2002(self, check_output):
         simif = GHDLInterface(prefix="prefix", output_path="")
         write_file("file.vhd", "")
 
         project = Project()
         project.add_library("lib", "lib_path")
-        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2002"))
+        project.add_source_file(
+            "file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2002")
+        )
         simif.compile_project(project)
         check_output.assert_called_once_with(
-            [join("prefix", 'ghdl'), '-a', '--workdir=lib_path', '--work=lib',
-             '--std=02', '-Plib_path', 'file.vhd'], env=simif.get_env())
+            [
+                join("prefix", "ghdl"),
+                "-a",
+                "--workdir=lib_path",
+                "--work=lib",
+                "--std=02",
+                "-Plib_path",
+                "file.vhd",
+            ],
+            env=simif.get_env(),
+        )
 
-    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
-    def test_compile_project_93(self, check_output):  # pylint: disable=no-self-use
+    @mock.patch(
+        "vunit.simulator_interface.check_output", autospec=True, return_value=""
+    )  # pylint: disable=no-self-use
+    def test_compile_project_93(self, check_output):
         simif = GHDLInterface(prefix="prefix", output_path="")
         write_file("file.vhd", "")
 
         project = Project()
         project.add_library("lib", "lib_path")
-        project.add_source_file("file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("93"))
+        project.add_source_file(
+            "file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("93")
+        )
         simif.compile_project(project)
         check_output.assert_called_once_with(
-            [join("prefix", 'ghdl'), '-a', '--workdir=lib_path', '--work=lib',
-             '--std=93', '-Plib_path', 'file.vhd'], env=simif.get_env())
+            [
+                join("prefix", "ghdl"),
+                "-a",
+                "--workdir=lib_path",
+                "--work=lib",
+                "--std=93",
+                "-Plib_path",
+                "file.vhd",
+            ],
+            env=simif.get_env(),
+        )
 
-    @mock.patch("vunit.simulator_interface.check_output", autospec=True, return_value="")
-    def test_compile_project_extra_flags(self, check_output):  # pylint: disable=no-self-use
+    @mock.patch(
+        "vunit.simulator_interface.check_output", autospec=True, return_value=""
+    )  # pylint: disable=no-self-use
+    def test_compile_project_extra_flags(self, check_output):
         simif = GHDLInterface(prefix="prefix", output_path="")
         write_file("file.vhd", "")
 
@@ -153,12 +196,25 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         source_file.set_compile_option("ghdl.flags", ["custom", "flags"])
         simif.compile_project(project)
         check_output.assert_called_once_with(
-            [join("prefix", 'ghdl'), '-a', '--workdir=lib_path', '--work=lib', '--std=08',
-             '-Plib_path', 'custom', 'flags', 'file.vhd'], env=simif.get_env())
+            [
+                join("prefix", "ghdl"),
+                "-a",
+                "--workdir=lib_path",
+                "--work=lib",
+                "--std=08",
+                "-Plib_path",
+                "custom",
+                "flags",
+                "file.vhd",
+            ],
+            env=simif.get_env(),
+        )
 
     def test_elaborate_e_project(self):
-        design_unit = Entity('tb_entity', file_name=join("tempdir", "file.vhd"))
-        design_unit.original_file_name = join("tempdir", "other_path", "original_file.vhd")
+        design_unit = Entity("tb_entity", file_name=join("tempdir", "file.vhd"))
+        design_unit.original_file_name = join(
+            "tempdir", "other_path", "original_file.vhd"
+        )
         design_unit.generic_names = ["runner_cfg", "tb_path"]
 
         config = Configuration("name", design_unit, sim_options={"ghdl.elab_e": True})
@@ -166,20 +222,26 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         simif = GHDLInterface(prefix="prefix", output_path="")
         simif._vhdl_standard = VHDL.standard("2008")  # pylint: disable=protected-access
         simif._project = Project()  # pylint: disable=protected-access
-        simif._project.add_library("lib", "lib_path")  # pylint: disable=protected-access
+        simif._project.add_library(  # pylint: disable=protected-access
+            "lib", "lib_path"
+        )
 
         self.assertEqual(
-            simif._get_command(config, join('output_path', 'ghdl'), True),  # pylint: disable=protected-access
+            simif._get_command(  # pylint: disable=protected-access
+                config, join("output_path", "ghdl"), True
+            ),
             [
-                join('prefix', 'ghdl'),
-                '-e',
-                '--std=08',
-                '--work=lib',
-                '--workdir=lib_path',
-                '-Plib_path',
-                '-o', join('output_path', 'ghdl', 'tb_entity-arch'),
-                'tb_entity', 'arch'
-            ]
+                join("prefix", "ghdl"),
+                "-e",
+                "--std=08",
+                "--work=lib",
+                "--workdir=lib_path",
+                "-Plib_path",
+                "-o",
+                join("output_path", "ghdl", "tb_entity-arch"),
+                "tb_entity",
+                "arch",
+            ],
         )
 
     def test_compile_project_verilog_error(self):

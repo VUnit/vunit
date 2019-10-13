@@ -16,8 +16,16 @@ from os.path import abspath
 class CsvLogs(object):
     # pylint: disable=missing-docstring
 
-    def __init__(self, pattern='', field_names=None):
-        default_field_names = ['#', 'Time', 'Level', 'File', 'Line', 'Source', 'Message']
+    def __init__(self, pattern="", field_names=None):
+        default_field_names = [
+            "#",
+            "Time",
+            "Level",
+            "File",
+            "Line",
+            "Source",
+            "Message",
+        ]
         self._field_names = default_field_names if field_names is None else field_names
         self._entries = []
         self.add(pattern)
@@ -33,13 +41,17 @@ class CsvLogs(object):
                 fread.seek(0)
                 if sample:
                     dialect = Sniffer().sniff(sample)
-                    self._entries += DictReader(fread, fieldnames=self._field_names, dialect=dialect)
+                    self._entries += DictReader(
+                        fread, fieldnames=self._field_names, dialect=dialect
+                    )
 
-        self._entries.sort(key=lambda dictionary: int(dictionary['#']))
+        self._entries.sort(key=lambda dictionary: int(dictionary["#"]))
 
     def write(self, output_file):
         # pylint: disable=missing-docstring
         with open(output_file, "w") as fwrite:
-            csv_writer = DictWriter(fwrite, delimiter=',', fieldnames=self._field_names, lineterminator="\n")
+            csv_writer = DictWriter(
+                fwrite, delimiter=",", fieldnames=self._field_names, lineterminator="\n"
+            )
             csv_writer.writerow({name: name for name in self._field_names})
             csv_writer.writerows(self._entries)

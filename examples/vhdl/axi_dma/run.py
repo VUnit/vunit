@@ -24,9 +24,8 @@ vu.add_verification_components()
 
 src_path = join(dirname(__file__), "src")
 
-vu.add_library("axi_dma_lib").add_source_files([
-    join(src_path, "*.vhd"),
-    join(src_path, "test", "*.vhd")
-])
+vu.add_library("axi_dma_lib").add_source_files(
+    [join(src_path, "*.vhd"), join(src_path, "test", "*.vhd")]
+)
 
 vu.main()

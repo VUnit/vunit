@@ -47,7 +47,10 @@ class Builtins(object):
         """
         Add files with naming convention to indicate which standard is supported
         """
-        supports_context = self._simulator_class.supports_vhdl_contexts() and self._vhdl_standard.supports_context
+        supports_context = (
+            self._simulator_class.supports_vhdl_contexts()
+            and self._vhdl_standard.supports_context
+        )
 
         for file_name in glob(pattern):
             base_file_name = basename(file_name)
@@ -77,8 +80,8 @@ class Builtins(object):
         """
         self._add_files(join(VHDL_PATH, "data_types", "src", "*.vhd"))
 
-        use_ext = {'string': False}
-        files = {'string': None}
+        use_ext = {"string": False}
+        files = {"string": None}
 
         if external:
             for ind, val in external.items():
@@ -89,8 +92,12 @@ class Builtins(object):
                     files[ind] = val
 
         for ind in use_ext:
-            if use_ext[ind] and simulator_check(lambda simclass: not simclass.supports_vhpi()):
-                raise RuntimeError("the selected simulator does not support VHPI; must use non-VHPI packages...")
+            if use_ext[ind] and simulator_check(
+                lambda simclass: not simclass.supports_vhpi()
+            ):
+                raise RuntimeError(
+                    "the selected simulator does not support VHPI; must use non-VHPI packages..."
+                )
 
         ext_path = join(VHDL_PATH, "data_types", "src", "external")
 
@@ -98,12 +105,15 @@ class Builtins(object):
             """
             Return name of VHDL file with default VHPIDIRECT foreign declarations.
             """
-            return join(ext_path, 'external_' + type_str + '-' + ('' if cond else 'no') + 'vhpi.vhd')
+            return join(
+                ext_path,
+                "external_" + type_str + "-" + ("" if cond else "no") + "vhpi.vhd",
+            )
 
-        if not files['string']:
-            files['string'] = [
-                default_pkg(use_ext['string'], 'string'),
-                join(ext_path, "external_string-body.vhd")
+        if not files["string"]:
+            files["string"] = [
+                default_pkg(use_ext["string"], "string"),
+                join(ext_path, "external_string-body.vhd"),
             ]
 
         for ind in files:
@@ -133,7 +143,9 @@ class Builtins(object):
         Add com library
         """
         if not self._vhdl_standard >= VHDL.STD_2008:
-            raise RuntimeError("Communication package only supports vhdl 2008 and later")
+            raise RuntimeError(
+                "Communication package only supports vhdl 2008 and later"
+            )
 
         self._add_files(join(VHDL_PATH, "com", "src", "*.vhd"))
 
@@ -142,7 +154,9 @@ class Builtins(object):
         Add verification component library
         """
         if not self._vhdl_standard >= VHDL.STD_2008:
-            raise RuntimeError("Verification component library only supports vhdl 2008 and later")
+            raise RuntimeError(
+                "Verification component library only supports vhdl 2008 and later"
+            )
         self._add_files(join(VHDL_PATH, "verification_components", "src", "*.vhd"))
 
     def _add_osvvm(self):
@@ -157,29 +171,42 @@ class Builtins(object):
             library = self._vunit_obj.add_library(library_name)
 
         simulator_coverage_api = self._simulator_class.get_osvvm_coverage_api()
-        supports_vhdl_package_generics = self._simulator_class.supports_vhdl_package_generics()
+        supports_vhdl_package_generics = (
+            self._simulator_class.supports_vhdl_package_generics()
+        )
 
         if not osvvm_is_installed():
-            raise RuntimeError("""
+            raise RuntimeError(
+                """
 Found no OSVVM VHDL files. Did you forget to run
 
 git submodule update --init --recursive
 
-in your VUnit Git repository? You have to do this first if installing using setup.py.""")
+in your VUnit Git repository? You have to do this first if installing using setup.py."""
+            )
 
         for file_name in glob(join(VHDL_PATH, "osvvm", "*.vhd")):
             if basename(file_name) == "AlertLogPkg_body_BVUL.vhd":
                 continue
 
-            if (simulator_coverage_api != "rivierapro") and (basename(file_name) == "VendorCovApiPkg_Aldec.vhd"):
+            if (simulator_coverage_api != "rivierapro") and (
+                basename(file_name) == "VendorCovApiPkg_Aldec.vhd"
+            ):
                 continue
 
-            if (simulator_coverage_api == "rivierapro") and (basename(file_name) == "VendorCovApiPkg.vhd"):
+            if (simulator_coverage_api == "rivierapro") and (
+                basename(file_name) == "VendorCovApiPkg.vhd"
+            ):
                 continue
 
-            if not supports_vhdl_package_generics and (basename(file_name) in ["ScoreboardGenericPkg.vhd",
-                                                                               "ScoreboardPkg_int.vhd",
-                                                                               "ScoreboardPkg_slv.vhd"]):
+            if not supports_vhdl_package_generics and (
+                basename(file_name)
+                in [
+                    "ScoreboardGenericPkg.vhd",
+                    "ScoreboardPkg_int.vhd",
+                    "ScoreboardPkg_slv.vhd",
+                ]
+            ):
                 continue
 
             library.add_source_files(file_name, preprocessors=[])
@@ -212,7 +239,15 @@ in your VUnit Git repository? You have to do this first if installing using setu
         """
         self._add_data_types(external=external)
         self._add_files(join(VHDL_PATH, "*.vhd"))
-        for path in ("core", "logging", "string_ops", "check", "dictionary", "run", "path"):
+        for path in (
+            "core",
+            "logging",
+            "string_ops",
+            "check",
+            "dictionary",
+            "run",
+            "path",
+        ):
             self._add_files(join(VHDL_PATH, path, "src", "*.vhd"))
 
 
@@ -269,5 +304,6 @@ class BuiltinsAdder(object):
         if args != old_args:
             raise RuntimeError(
                 "Optional builtin %r added with arguments %r has already been added with arguments %r"
-                % (name, args, old_args))
+                % (name, args, old_args)
+            )
         return True

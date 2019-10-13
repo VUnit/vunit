@@ -145,18 +145,33 @@ class TestTestRunner(unittest.TestCase):
                 output_path = "output_path"
                 test_name = "_" * 400
                 test_output = create_output_path(output_path, test_name)
-                self.assertEqual(test_output, join(abspath(output_path), test_name + "_" + hash_string(test_name)))
+                self.assertEqual(
+                    test_output,
+                    join(
+                        abspath(output_path), test_name + "_" + hash_string(test_name)
+                    ),
+                )
 
                 output_path = "output_path"
                 test_name = "123._-+"
                 test_output = create_output_path(output_path, test_name)
-                self.assertEqual(test_output, join(abspath(output_path), test_name + "_" + hash_string(test_name)))
+                self.assertEqual(
+                    test_output,
+                    join(
+                        abspath(output_path), test_name + "_" + hash_string(test_name)
+                    ),
+                )
 
                 output_path = "output_path"
                 test_name = "#<>:"
                 safe_name = "____"
                 test_output = create_output_path(output_path, test_name)
-                self.assertEqual(test_output, join(abspath(output_path), safe_name + "_" + hash_string(test_name)))
+                self.assertEqual(
+                    test_output,
+                    join(
+                        abspath(output_path), safe_name + "_" + hash_string(test_name)
+                    ),
+                )
 
     def test_create_output_path_on_windows(self):
         with mock.patch("sys.platform", new="win32"):
@@ -166,17 +181,26 @@ class TestTestRunner(unittest.TestCase):
                 test_output = create_output_path(output_path, test_name)
                 self.assertEqual(len(test_output), 260 - 100 + 1)
 
-            with mock.patch("os.environ", new={"VUNIT_TEST_OUTPUT_PATH_MARGIN": "-1000"}):
+            with mock.patch(
+                "os.environ", new={"VUNIT_TEST_OUTPUT_PATH_MARGIN": "-1000"}
+            ):
                 output_path = "output_path"
                 test_name = "_" * 400
                 test_output = create_output_path(output_path, test_name)
-                self.assertEqual(test_output, join(abspath(output_path), test_name + "_" + hash_string(test_name)))
+                self.assertEqual(
+                    test_output,
+                    join(
+                        abspath(output_path), test_name + "_" + hash_string(test_name)
+                    ),
+                )
 
             with mock.patch("os.environ", new={"VUNIT_SHORT_TEST_OUTPUT_PATHS": ""}):
                 output_path = "output_path"
                 test_name = "_" * 400
                 test_output = create_output_path(output_path, test_name)
-                self.assertEqual(test_output, join(abspath(output_path), hash_string(test_name)))
+                self.assertEqual(
+                    test_output, join(abspath(output_path), hash_string(test_name))
+                )
 
     @staticmethod
     def create_test(name, passed, order=None):
@@ -193,8 +217,7 @@ class TestTestRunner(unittest.TestCase):
                 order.append(name)
             return passed
 
-        test_case = TestCaseMock(name=name,
-                                 run_side_effect=run_side_effect)
+        test_case = TestCaseMock(name=name, run_side_effect=run_side_effect)
         return test_case
 
 

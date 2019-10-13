@@ -15,6 +15,7 @@ class DependencyGraph(object):
     """
     A dependency graph
     """
+
     def __init__(self):
         self._forward = {}
         self._backward = {}
@@ -26,9 +27,11 @@ class DependencyGraph(object):
         every node is located after its dependency nodes
         """
         sorted_nodes = []
-        self._visit(sorted(self._nodes),
-                    dict((key, sorted(values)) for key, values in self._forward.items()),
-                    sorted_nodes.append)
+        self._visit(
+            sorted(self._nodes),
+            dict((key, sorted(values)) for key, values in self._forward.items()),
+            sorted_nodes.append,
+        )
         sorted_nodes = list(reversed(sorted_nodes))
         return sorted_nodes
 
@@ -40,8 +43,7 @@ class DependencyGraph(object):
         Add a dependency edge between the start and end node such that
         end node depends on the start node
         """
-        new_dependency = (start not in self._forward
-                          or end not in self._forward[start])
+        new_dependency = start not in self._forward or end not in self._forward[start]
 
         if start not in self._forward:
             self._forward[start] = set()
@@ -60,6 +62,7 @@ class DependencyGraph(object):
         Follow graph edges starting from the nodes iteratively
         returning all the nodes visited
         """
+
         def visit(node):
             """
             Visit a single node and all following nodes in the graph
@@ -68,7 +71,7 @@ class DependencyGraph(object):
             """
             if node in path:
                 start = path_ordered.index(node)
-                raise CircularDependencyException(path_ordered[start:] + [node, ])
+                raise CircularDependencyException(path_ordered[start:] + [node])
 
             path.add(node)
             path_ordered.append(node)

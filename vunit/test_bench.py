@@ -74,8 +74,10 @@ class TestBench(ConfigurationVisitor):
         Get the default configuration of this test bench
         """
         if self._individual_tests:
-            raise RuntimeError("Test bench %s.%s has individually configured tests"
-                               % (self.library_name, self.name))
+            raise RuntimeError(
+                "Test bench %s.%s has individually configured tests"
+                % (self.library_name, self.name)
+            )
         return self._configs[DEFAULT_NAME]
 
     @staticmethod
@@ -86,15 +88,24 @@ class TestBench(ConfigurationVisitor):
         """
         if design_unit.is_entity:
             if not design_unit.architecture_names:
-                raise RuntimeError("Test bench '%s' has no architecture."
-                                   % design_unit.name)
+                raise RuntimeError(
+                    "Test bench '%s' has no architecture." % design_unit.name
+                )
 
             if len(design_unit.architecture_names) > 1:
-                raise RuntimeError("Test bench not allowed to have multiple architectures. "
-                                   "Entity %s has %s"
-                                   % (design_unit.name,
-                                      ", ".join("%s:%s" % (name, basename(fname))
-                                                for name, fname in sorted(design_unit.architecture_names.items()))))
+                raise RuntimeError(
+                    "Test bench not allowed to have multiple architectures. "
+                    "Entity %s has %s"
+                    % (
+                        design_unit.name,
+                        ", ".join(
+                            "%s:%s" % (name, basename(fname))
+                            for name, fname in sorted(
+                                design_unit.architecture_names.items()
+                            )
+                        ),
+                    )
+                )
 
     def create_tests(self, simulator_if, elaborate_only, test_list=None):
         """
@@ -116,7 +127,9 @@ class TestBench(ConfigurationVisitor):
                         test=self._implicit_test,
                         config=config,
                         simulator_if=simulator_if,
-                        elaborate_only=elaborate_only))
+                        elaborate_only=elaborate_only,
+                    )
+                )
         else:
             for config in self._get_configurations_to_run():
                 test_list.add_suite(
@@ -124,7 +137,9 @@ class TestBench(ConfigurationVisitor):
                         tests=[test.test for test in self._test_cases],
                         config=config,
                         simulator_if=simulator_if,
-                        elaborate_only=elaborate_only))
+                        elaborate_only=elaborate_only,
+                    )
+                )
         return test_list
 
     @property
@@ -178,23 +193,29 @@ class TestBench(ConfigurationVisitor):
             tests, attributes = _find_tests_and_attributes(content, file_name)
             return tests, attributes
 
-        tests, attributes = cached("test_bench.parse",
-                                   parse,
-                                   file_name,
-                                   encoding=HDL_FILE_ENCODING,
-                                   database=self._database,
-                                   newline='')
+        tests, attributes = cached(
+            "test_bench.parse",
+            parse,
+            file_name,
+            encoding=HDL_FILE_ENCODING,
+            database=self._database,
+            newline="",
+        )
 
         for attr in attributes:
             if _is_user_attribute(attr.name):
-                raise RuntimeError("File global attributes are not yet supported: %s in %s line %i"
-                                   % (attr.name, file_name, attr.location.lineno))
+                raise RuntimeError(
+                    "File global attributes are not yet supported: %s in %s line %i"
+                    % (attr.name, file_name, attr.location.lineno)
+                )
 
         for test in tests:
             for attr in test.attributes:
                 if attr.name in _VALID_ATTRIBUTES:
-                    raise RuntimeError("Attribute %s is global and cannot be associated with test %s: %s line %i"
-                                       % (attr.name, test.name, file_name, attr.location.lineno))
+                    raise RuntimeError(
+                        "Attribute %s is global and cannot be associated with test %s: %s line %i"
+                        % (attr.name, test.name, file_name, attr.location.lineno)
+                    )
 
         attribute_names = [attr.name for attr in attributes]
 
@@ -215,12 +236,15 @@ class TestBench(ConfigurationVisitor):
             assert len(tests) == 1
             self._implicit_test = tests[0]
 
-        self._individual_tests = "run_all_in_same_sim" not in attribute_names and len(explicit_tests) > 0
-        self._test_cases = [TestConfigurationVisitor(test,
-                                                     self.design_unit,
-                                                     self._individual_tests,
-                                                     default_config.copy())
-                            for test in explicit_tests]
+        self._individual_tests = (
+            "run_all_in_same_sim" not in attribute_names and len(explicit_tests) > 0
+        )
+        self._test_cases = [
+            TestConfigurationVisitor(
+                test, self.design_unit, self._individual_tests, default_config.copy()
+            )
+            for test in explicit_tests
+        ]
 
 
 class FileLocation(object):
@@ -245,7 +269,9 @@ class FileLocation(object):
         """
         Create FileLocation with lineno computed from line offsets
         """
-        return FileLocation(file_name, offset, length, _lookup_lineno(offset, line_offsets))
+        return FileLocation(
+            file_name, offset, length, _lookup_lineno(offset, line_offsets)
+        )
 
     def __init__(self, file_name, offset, length, lineno):
         self.file_name = file_name
@@ -254,10 +280,7 @@ class FileLocation(object):
         self.lineno = lineno
 
     def _to_tuple(self):
-        return (self.file_name,
-                self.offset,
-                self.length,
-                self.lineno)
+        return (self.file_name, self.offset, self.length, self.lineno)
 
     def __eq__(self, other):
         return self._to_tuple() == other._to_tuple()  # pylint: disable=protected-access
@@ -310,9 +333,7 @@ class Test(object):
         return set((attr.name for attr in self._attributes))
 
     def _to_tuple(self):
-        return (self._name,
-                self._location,
-                tuple(self._attributes))
+        return (self._name, self._location, tuple(self._attributes))
 
     def __repr__(self):
         return "Test" + repr(self._to_tuple())
@@ -328,6 +349,7 @@ class TestConfigurationVisitor(ConfigurationVisitor):
     """
     A means to creates configurations for single test
     """
+
     def __init__(self, test, design_unit, enable_configuration, default_config):
         ConfigurationVisitor.__init__(self)
         self._test = test
@@ -353,7 +375,9 @@ class TestConfigurationVisitor(ConfigurationVisitor):
 
     def _check_enabled(self):
         if not self._enable_configuration:
-            raise RuntimeError("Individual test configuration is not possible with run_all_in_same_sim")
+            raise RuntimeError(
+                "Individual test configuration is not possible with run_all_in_same_sim"
+            )
 
     def get_configuration_dicts(self):
         """
@@ -381,13 +405,17 @@ class TestConfigurationVisitor(ConfigurationVisitor):
                     test=self._test,
                     config=config,
                     simulator_if=simulator_if,
-                    elaborate_only=elaborate_only))
+                    elaborate_only=elaborate_only,
+                )
+            )
 
 
-_RE_VHDL_TEST_CASE = re.compile(r'(\s|\()+run\s*\(\s*"(?P<name>.*?)"\s*\)', re.IGNORECASE)
+_RE_VHDL_TEST_CASE = re.compile(
+    r'(\s|\()+run\s*\(\s*"(?P<name>.*?)"\s*\)', re.IGNORECASE
+)
 _RE_VERILOG_TEST_CASE = re.compile(r'`TEST_CASE\s*\(\s*"(?P<name>.*?)"\s*\)')
-_RE_VHDL_TEST_SUITE = re.compile(r'test_runner_setup\s*\(', re.IGNORECASE)
-_RE_VERILOG_TEST_SUITE = re.compile(r'`TEST_SUITE\b')
+_RE_VHDL_TEST_SUITE = re.compile(r"test_runner_setup\s*\(", re.IGNORECASE)
+_RE_VERILOG_TEST_SUITE = re.compile(r"`TEST_SUITE\b")
 
 
 def _get_line_offsets(code):
@@ -421,16 +449,19 @@ def _check_duplicate_tests(tests):
     for test in tests:
         if test.name in known_tests:
             known_test = known_tests[test.name]
-            LOGGER.error('Duplicate test "%s" in %s line %i previously defined on line %i',
-                         test.name,
-                         test.location.file_name, test.location.lineno,
-                         known_test.location.lineno)
+            LOGGER.error(
+                'Duplicate test "%s" in %s line %i previously defined on line %i',
+                test.name,
+                test.location.file_name,
+                test.location.lineno,
+                known_test.location.lineno,
+            )
             found_duplicates = True
         else:
             known_tests[test.name] = test
 
     if found_duplicates:
-        raise RuntimeError('Duplicate tests where found')
+        raise RuntimeError("Duplicate tests where found")
 
 
 def _find_tests(code, file_name, line_offsets=None):
@@ -455,9 +486,13 @@ def _find_tests(code, file_name, line_offsets=None):
         regexp = _RE_VHDL_TEST_CASE
         suite_regexp = _RE_VHDL_TEST_SUITE
 
-    tests = [Test(name=match.group("name"),
-                  location=FileLocation.from_match(file_name, match, "name", line_offsets))
-             for match in regexp.finditer(code)]
+    tests = [
+        Test(
+            name=match.group("name"),
+            location=FileLocation.from_match(file_name, match, "name", line_offsets),
+        )
+        for match in regexp.finditer(code)
+    ]
 
     _check_duplicate_tests(tests)
 
@@ -471,8 +506,7 @@ def _find_tests(code, file_name, line_offsets=None):
             LOGGER.warning("Found no tests or test suite within %s", file_name)
             location = FileLocation.from_line_offsets(file_name, 0, 0, line_offsets)
 
-        tests = [Test(None,
-                      location=location)]
+        tests = [Test(None, location=location)]
 
     return tests
 
@@ -488,10 +522,16 @@ def _check_duplicates(attrs, file_name, test_name=None):
             if test_name is None:
                 loc = "%s line %i" % (file_name, attr.location.lineno)
             else:
-                loc = "test %s in %s line %i" % (test_name, file_name, attr.location.lineno)
+                loc = "test %s in %s line %i" % (
+                    test_name,
+                    file_name,
+                    attr.location.lineno,
+                )
 
-            raise RuntimeError("Duplicate attribute %s of %s, previously defined on line %i"
-                               % (attr.name, loc, previous[attr.name].location.lineno))
+            raise RuntimeError(
+                "Duplicate attribute %s of %s, previously defined on line %i"
+                % (attr.name, loc, previous[attr.name].location.lineno)
+            )
 
         previous[attr.name] = attr
 
@@ -547,9 +587,12 @@ def _find_tests_and_attributes(content, file_name):
 
 
 _RE_ATTR_NAME = r"[a-zA-Z0-9_\-]+"
-_RE_ATTRIBUTE = re.compile(r'vunit:\s*(?P<name>\.?' + _RE_ATTR_NAME + r')',
-                           re.IGNORECASE)
-_RE_PRAGMA_LEGACY = re.compile(r'vunit_pragma\s+(?P<name>' + _RE_ATTR_NAME + ')', re.IGNORECASE)
+_RE_ATTRIBUTE = re.compile(
+    r"vunit:\s*(?P<name>\.?" + _RE_ATTR_NAME + r")", re.IGNORECASE
+)
+_RE_PRAGMA_LEGACY = re.compile(
+    r"vunit_pragma\s+(?P<name>" + _RE_ATTR_NAME + ")", re.IGNORECASE
+)
 _VALID_ATTRIBUTES = ["run_all_in_same_sim", "fail_on_warning"]
 
 
@@ -581,19 +624,16 @@ def _find_attributes(code, file_name, line_offsets=None):
         """
         for match in regex.finditer(code):
             groups = match.groupdict(default=None)
-            name = groups['name']
+            name = groups["name"]
             location = FileLocation.from_match(file_name, match, "name", line_offsets)
 
             if not _is_user_attribute(name) and name not in _VALID_ATTRIBUTES:
                 raise RuntimeError(
-                    "Invalid attribute '%s' in %s line %i" % (
-                        name,
-                        file_name,
-                        location.lineno))
+                    "Invalid attribute '%s' in %s line %i"
+                    % (name, file_name, location.lineno)
+                )
 
-            attributes.append(attr_class(name,
-                                         value=None,
-                                         location=location))
+            attributes.append(attr_class(name, value=None, location=location))
 
     _find(LegacyAttribute, _RE_PRAGMA_LEGACY)
     _find(Attribute, _RE_ATTRIBUTE)
@@ -603,11 +643,12 @@ def _find_attributes(code, file_name, line_offsets=None):
 
 # Add value field to be forwards compatible with having attribute values
 Attribute = collections.namedtuple("Attribute", ["name", "value", "location"])
-LegacyAttribute = collections.namedtuple("LegacyAttribute", ["name", "value", "location"])
+LegacyAttribute = collections.namedtuple(
+    "LegacyAttribute", ["name", "value", "location"]
+)
 
 
-VERILOG_REMOVE_COMMENT_RE = re.compile(r'(//[^\n]*)|(/\*.*?\*/)',
-                                       re.DOTALL)
+VERILOG_REMOVE_COMMENT_RE = re.compile(r"(//[^\n]*)|(/\*.*?\*/)", re.DOTALL)
 
 
 def _comment_repl(match):
@@ -616,8 +657,7 @@ def _comment_repl(match):
     lexical position unaffected
     """
     text = match.group(0)
-    return "".join(" " if c != "\n" else "\n"
-                   for c in text)
+    return "".join(" " if c != "\n" else "\n" for c in text)
 
 
 def _remove_verilog_comments(code):

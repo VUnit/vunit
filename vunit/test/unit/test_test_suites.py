@@ -10,8 +10,8 @@ Test the test suites
 
 from os.path import join
 from unittest import TestCase
-from vunit.test_suites import (TestRun)
-from vunit.test_report import (PASSED, SKIPPED, FAILED)
+from vunit.test_suites import TestRun
+from vunit.test_report import PASSED, SKIPPED, FAILED
 from vunit.test.common import create_tempdir
 from vunit.simulator_interface import SimulatorInterface
 
@@ -25,44 +25,65 @@ class TestTestSuites(TestCase):
         self._read_test_results({"test1": FAILED, "test2": FAILED}, None)
 
     def test_read_results_all_passed(self):
-        self._read_test_results({"test1": PASSED, "test2": PASSED}, """\
+        self._read_test_results(
+            {"test1": PASSED, "test2": PASSED},
+            """\
 test_start:test1
 test_start:test2
 test_suite_done
-""")
+""",
+        )
 
     def test_read_results_suite_not_done(self):
-        self._read_test_results({"test1": PASSED, "test2": FAILED}, """\
+        self._read_test_results(
+            {"test1": PASSED, "test2": FAILED},
+            """\
 test_start:test1
 test_start:test2
-""")
+""",
+        )
 
-        self._read_test_results({"test1": FAILED, "test2": PASSED}, """\
+        self._read_test_results(
+            {"test1": FAILED, "test2": PASSED},
+            """\
 test_start:test2
 test_start:test1
-""")
+""",
+        )
 
     def test_read_results_skipped_test(self):
-        self._read_test_results({"test1": PASSED, "test2": SKIPPED, "test3": SKIPPED}, """\
+        self._read_test_results(
+            {"test1": PASSED, "test2": SKIPPED, "test3": SKIPPED},
+            """\
 test_start:test1
 test_suite_done
-""")
+""",
+        )
 
     def test_read_results_anonynmous_test_pass(self):
-        self._read_test_results({None: PASSED}, """\
+        self._read_test_results(
+            {None: PASSED},
+            """\
 test_suite_done
-""")
+""",
+        )
 
     def test_read_results_anonynmous_test_fail(self):
-        self._read_test_results({None: FAILED}, """\
-""")
+        self._read_test_results(
+            {None: FAILED},
+            """\
+""",
+        )
 
     def test_read_results_unknown_test(self):
         try:
-            self._read_test_results(["test1"], """\
+            self._read_test_results(
+                ["test1"],
+                """\
 test_start:test1
 test_start:test3
-test_suite_done""")
+test_suite_done""",
+            )
         except RuntimeError as exc:
             self.assertIn("unknown test case test3", str(exc))
         else:
@@ -78,12 +99,16 @@ test_suite_done""")
                 with open(file_name, "w") as fptr:
                     fptr.write(contents)
 
-            run = TestRun(simulator_if=None,
-                          config=None,
-                          elaborate_only=False,
-                          test_suite_name=None,
-                          test_cases=expected)
-            results = run._read_test_results(file_name=file_name)  # pylint: disable=protected-access
+            run = TestRun(
+                simulator_if=None,
+                config=None,
+                elaborate_only=False,
+                test_suite_name=None,
+                test_cases=expected,
+            )
+            results = run._read_test_results(  # pylint: disable=protected-access
+                file_name=file_name
+            )
             self.assertEqual(results, expected)
             return results
 
@@ -110,14 +135,14 @@ test_suite_done""")
             """\ntest_start:test1\ntest_suite_done\n""",
             {"test1": PASSED},
             {"test1": FAILED},
-            [False, False, False, True]
+            [False, False, False, True],
         )
 
         test(
             """\ntest_start:test1\ntest_suite_done\n""",
             {"test1": PASSED, "test2": SKIPPED},
             {"test1": FAILED, "test2": SKIPPED},
-            [False, False, False, True]
+            [False, False, False, True],
         )
 
         test("""\ntest_start:test1\n""", {"test1": FAILED, "test2": SKIPPED})
@@ -125,7 +150,14 @@ test_suite_done""")
         test(contents, {"test1": PASSED, "test2": FAILED})
         test(contents, {"test1": PASSED, "test2": FAILED, "test3": SKIPPED})
 
-    def _test_exit_code(self, contents, expected, sim_ok=True, has_valid_exit_code=False, waschecked=False):
+    def _test_exit_code(
+        self,
+        contents,
+        expected,
+        sim_ok=True,
+        has_valid_exit_code=False,
+        waschecked=False,
+    ):
         """
         Helper method to test the check_results function
         """
@@ -143,14 +175,18 @@ test_suite_done""")
 
             sim_if.has_valid_exit_code = func
 
-            run = TestRun(simulator_if=sim_if,
-                          config=None,
-                          elaborate_only=False,
-                          test_suite_name=None,
-                          test_cases=expected)
+            run = TestRun(
+                simulator_if=sim_if,
+                config=None,
+                elaborate_only=False,
+                test_suite_name=None,
+                test_cases=expected,
+            )
 
-            results = run._read_test_results(file_name=file_name)  # pylint: disable=protected-access
+            results = run._read_test_results(  # pylint: disable=protected-access
+                file_name=file_name
+            )
             self.assertEqual(
                 run._check_results(results, sim_ok),  # pylint: disable=protected-access
-                (waschecked, expected)
+                (waschecked, expected),
             )

@@ -11,8 +11,7 @@ root = dirname(__file__)
 
 ui = VUnit.from_argv()
 lib = ui.add_library("lib")
-lib.add_source_files(join(root, "*.sv"),
-                     defines={"DEFINE_FROM_RUN_PY": ""})
+lib.add_source_files(join(root, "*.sv"), defines={"DEFINE_FROM_RUN_PY": ""})
 
 
 def configure_tb_with_parameter_config(ui):
@@ -24,32 +23,42 @@ def configure_tb_with_parameter_config(ui):
 
     bench.set_parameter("set_parameter", "set-for-module")
 
-    tests[1].add_config('cfg', parameters=dict(config_parameter="set-from-config"))
+    tests[1].add_config("cfg", parameters=dict(config_parameter="set-from-config"))
 
     tests[2].set_parameter("set_parameter", "set-for-test")
 
-    tests[3].add_config('cfg', parameters=dict(set_parameter="set-for-test",
-                                               config_parameter="set-from-config"))
+    tests[3].add_config(
+        "cfg",
+        parameters=dict(
+            set_parameter="set-for-test", config_parameter="set-from-config"
+        ),
+    )
 
     def post_check(output_path):
         with open(join(output_path, "post_check.txt"), "r") as fptr:
             return fptr.read() == "Test 4 was here"
 
-    tests[4].add_config('cfg',
-                        parameters=dict(set_parameter="set-from-config",
-                                        config_parameter="set-from-config"),
-                        post_check=post_check)
+    tests[4].add_config(
+        "cfg",
+        parameters=dict(
+            set_parameter="set-from-config", config_parameter="set-from-config"
+        ),
+        post_check=post_check,
+    )
 
 
 def configure_tb_same_sim_all_pass(self):
     def post_check(output_path):
         with open(join(output_path, "post_check.txt"), "r") as fptr:
             return fptr.read() == "Test 3 was here"
+
     module = ui.library("lib").module("tb_same_sim_all_pass")
-    module.add_config('cfg', post_check=post_check)
+    module.add_config("cfg", post_check=post_check)
 
 
 configure_tb_with_parameter_config(ui)
 configure_tb_same_sim_all_pass(ui)
-lib.module("tb_other_file_tests").scan_tests_from_file(join(root, "other_file_tests.sv"))
+lib.module("tb_other_file_tests").scan_tests_from_file(
+    join(root, "other_file_tests.sv")
+)
 ui.main()

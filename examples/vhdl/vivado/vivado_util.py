@@ -10,9 +10,11 @@ import os
 from os.path import join, exists, abspath, dirname, basename
 from os import makedirs
 from vunit.simulator_factory import SIMULATOR_FACTORY
-from vunit.vivado import (run_vivado,
-                          add_from_compile_order_file,
-                          create_compile_order_file)
+from vunit.vivado import (
+    run_vivado,
+    add_from_compile_order_file,
+    create_compile_order_file,
+)
 
 
 def add_vivado_ip(vunit_obj, output_path, project_file):
@@ -47,13 +49,19 @@ def compile_standard_libraries(vunit_obj, output_path):
         if simname == "rivierapro":
             simname = "riviera"
 
-        run_vivado(join(dirname(__file__), "tcl", "compile_standard_libs.tcl"),
-                   tcl_args=[simname,
-                             simulator_class.find_prefix().replace("\\", "/"),
-                             output_path])
+        run_vivado(
+            join(dirname(__file__), "tcl", "compile_standard_libs.tcl"),
+            tcl_args=[
+                simname,
+                simulator_class.find_prefix().replace("\\", "/"),
+                output_path,
+            ],
+        )
 
     else:
-        print("Standard libraries already exists in %s, skipping" % abspath(output_path))
+        print(
+            "Standard libraries already exists in %s, skipping" % abspath(output_path)
+        )
 
     for library_name in ["unisim", "unimacro", "unifast", "secureip", "xpm"]:
         path = join(output_path, library_name)
@@ -77,8 +85,13 @@ def add_project_ip(vunit_obj, project_file, output_path, vivado_path=None, clean
     compile_order_file = join(output_path, "compile_order.txt")
 
     if clean or not exists(compile_order_file):
-        create_compile_order_file(project_file, compile_order_file, vivado_path=vivado_path)
+        create_compile_order_file(
+            project_file, compile_order_file, vivado_path=vivado_path
+        )
     else:
-        print("Vivado project Compile order already exists, re-using: %s" % abspath(compile_order_file))
+        print(
+            "Vivado project Compile order already exists, re-using: %s"
+            % abspath(compile_order_file)
+        )
 
     return add_from_compile_order_file(vunit_obj, compile_order_file)

@@ -271,13 +271,11 @@ from vunit.database import PickledDataBase, DataBase
 from vunit import ostools
 from vunit.vunit_cli import VUnitCLI
 from vunit.simulator_factory import SIMULATOR_FACTORY
-from vunit.simulator_interface import (is_string_not_iterable,
-                                       SimulatorInterface)
-from vunit.color_printer import (COLOR_PRINTER,
-                                 NO_COLOR_PRINTER)
+from vunit.simulator_interface import is_string_not_iterable, SimulatorInterface
+from vunit.color_printer import COLOR_PRINTER, NO_COLOR_PRINTER
 
 from vunit.project import Project
-from vunit.source_file import (file_type_of, FILE_TYPES, VERILOG_FILE_TYPES)
+from vunit.source_file import file_type_of, FILE_TYPES, VERILOG_FILE_TYPES
 from vunit.test_runner import TestRunner
 from vunit.test_report import TestReport
 from vunit.test_bench_list import TestBenchList
@@ -285,15 +283,16 @@ from vunit.exceptions import CompileError
 from vunit.location_preprocessor import LocationPreprocessor
 from vunit.check_preprocessor import CheckPreprocessor
 from vunit.parsing.encodings import HDL_FILE_ENCODING
-from vunit.builtins import (Builtins,
-                            add_verilog_include_dir)
+from vunit.builtins import Builtins, add_verilog_include_dir
 from vunit.vhdl_standard import VHDL
 from vunit.com import codec_generator
 
 LOGGER = logging.getLogger(__name__)
 
 
-class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-public-methods
+class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-methods
+    object
+):
     """
     The public interface of VUnit
 
@@ -325,9 +324,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         args = VUnitCLI().parse_args(argv=argv)
         return cls.from_args(
-            args,
-            compile_builtins=compile_builtins,
-            vhdl_standard=vhdl_standard
+            args, compile_builtins=compile_builtins, vhdl_standard=vhdl_standard
         )
 
     @classmethod
@@ -345,11 +342,7 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         :returns: A :class:`.VUnit` object instance
 
         """
-        return cls(
-            args,
-            compile_builtins=compile_builtins,
-            vhdl_standard=vhdl_standard
-        )
+        return cls(args, compile_builtins=compile_builtins, vhdl_standard=vhdl_standard)
 
     def __init__(self, args, compile_builtins=True, vhdl_standard=None):
         self._args = args
@@ -393,7 +386,8 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         database = self._create_database()
         self._project = Project(
             database=database,
-            depend_on_package_body=simulator_class.package_users_depend_on_bodies)
+            depend_on_package_body=simulator_class.package_users_depend_on_bodies,
+        )
 
         self._test_bench_list = TestBenchList(database=database)
 
@@ -434,7 +428,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         Configure logging based on log_level string
         """
         level = getattr(logging, log_level.upper())
-        logging.basicConfig(filename=None, format='%(levelname)7s - %(message)s', level=level)
+        logging.basicConfig(
+            filename=None, format="%(levelname)7s - %(message)s", level=level
+        )
 
     def _which_vhdl_standard(self, vhdl_standard):
         """
@@ -464,8 +460,12 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         """
 
-        self._project.add_library(library_name, abspath(path),
-                                  self._which_vhdl_standard(vhdl_standard), is_external=True)
+        self._project.add_library(
+            library_name,
+            abspath(path),
+            self._which_vhdl_standard(vhdl_standard),
+            is_external=True,
+        )
         return self.library(library_name)
 
     def add_source_files_from_csv(self, project_csv_path, vhdl_standard=None):
@@ -489,13 +489,21 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                 if len(row) == 2:
                     lib_name = row[0].strip()
                     no_normalized_file = row[1].strip()
-                    file_name_ = normpath(join(dirname(project_csv_path), no_normalized_file))
-                    lib = self.library(lib_name) if lib_name in libs else self.add_library(lib_name)
+                    file_name_ = normpath(
+                        join(dirname(project_csv_path), no_normalized_file)
+                    )
+                    lib = (
+                        self.library(lib_name)
+                        if lib_name in libs
+                        else self.add_library(lib_name)
+                    )
                     libs.add(lib_name)
                     file_ = lib.add_source_file(file_name_, vhdl_standard=vhdl_standard)
                     files.append(file_)
                 elif len(row) > 2:
-                    LOGGER.error("More than one library and one file in csv description")
+                    LOGGER.error(
+                        "More than one library and one file in csv description"
+                    )
         return files
 
     def add_library(self, library_name, vhdl_standard=None, allow_duplicate=False):
@@ -523,7 +531,10 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         if not self._project.has_library(library_name):
             self._project.add_library(library_name, abspath(path), vhdl_standard)
         elif not allow_duplicate:
-            raise ValueError("Library %s already added. Use allow_duplicate to ignore this error." % library_name)
+            raise ValueError(
+                "Library %s already added. Use allow_duplicate to ignore this error."
+                % library_name
+            )
         return self.library(library_name)
 
     def library(self, library_name):
@@ -555,7 +566,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
            Only affects test benches added *before* the attribute is set.
         """
         test_benches = self._test_bench_list.get_test_benches()
-        for test_bench in check_not_empty(test_benches, allow_empty, "No test benches found"):
+        for test_bench in check_not_empty(
+            test_benches, allow_empty, "No test benches found"
+        ):
             test_bench.set_attribute(name, value)
 
     def set_generic(self, name, value, allow_empty=False):
@@ -576,7 +589,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
            Only affects test benches added *before* the generic is set.
         """
         test_benches = self._test_bench_list.get_test_benches()
-        for test_bench in check_not_empty(test_benches, allow_empty, "No test benches found"):
+        for test_bench in check_not_empty(
+            test_benches, allow_empty, "No test benches found"
+        ):
             test_bench.set_generic(name.lower(), value)
 
     def set_parameter(self, name, value, allow_empty=False):
@@ -597,7 +612,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
            Only affects test benches added *before* the parameter is set.
         """
         test_benches = self._test_bench_list.get_test_benches()
-        for test_bench in check_not_empty(test_benches, allow_empty, "No test benches found"):
+        for test_bench in check_not_empty(
+            test_benches, allow_empty, "No test benches found"
+        ):
             test_bench.set_generic(name, value)
 
     def set_sim_option(self, name, value, allow_empty=False, overwrite=True):
@@ -619,7 +636,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
            Only affects test benches added *before* the option is set.
         """
         test_benches = self._test_bench_list.get_test_benches()
-        for test_bench in check_not_empty(test_benches, allow_empty, "No test benches found"):
+        for test_bench in check_not_empty(
+            test_benches, allow_empty, "No test benches found"
+        ):
             test_bench.set_sim_option(name, value, overwrite)
 
     def set_compile_option(self, name, value, allow_empty=False):
@@ -641,7 +660,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
            Only affects files added *before* the option is set.
         """
         source_files = self._project.get_source_files_in_order()
-        for source_file in check_not_empty(source_files, allow_empty, "No source files found"):
+        for source_file in check_not_empty(
+            source_files, allow_empty, "No source files found"
+        ):
             source_file.set_compile_option(name, value)
 
     def add_compile_option(self, name, value, allow_empty=False):
@@ -656,7 +677,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
            Only affects files added *before* the option is set.
         """
         source_files = self._project.get_source_files_in_order()
-        for source_file in check_not_empty(source_files, allow_empty, "No source files found"):
+        for source_file in check_not_empty(
+            source_files, allow_empty, "No source files found"
+        ):
             source_file.add_compile_option(name, value)
 
     def get_source_file(self, file_name, library_name=None):
@@ -670,14 +693,17 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
 
         files = self.get_source_files(file_name, library_name, allow_empty=True)
         if len(files) > 1:
-            raise ValueError("Found file named '%s' in multiple-libraries, "
-                             "add explicit library_name." % file_name)
+            raise ValueError(
+                "Found file named '%s' in multiple-libraries, "
+                "add explicit library_name." % file_name
+            )
         if not files:
             if library_name is None:
                 raise ValueError("Found no file named '%s'" % file_name)
 
-            raise ValueError("Found no file named '%s' in library '%s'"
-                             % (file_name, library_name))
+            raise ValueError(
+                "Found no file named '%s' in library '%s'" % (file_name, library_name)
+            )
         return files[0]
 
     def get_source_files(self, pattern="*", library_name=None, allow_empty=False):
@@ -695,21 +721,37 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
                 if source_file.library.name != library_name:
                     continue
 
-            if not (fnmatch(abspath(source_file.name), pattern)
-                    or fnmatch(ostools.simplify_path(source_file.name), pattern)):
+            if not (
+                fnmatch(abspath(source_file.name), pattern)
+                or fnmatch(ostools.simplify_path(source_file.name), pattern)
+            ):
                 continue
 
             results.append(SourceFile(source_file, self._project, self))
 
-        check_not_empty(results, allow_empty,
-                        ("Pattern %r did not match any file" % pattern)
-                        + (("within library %s" % library_name) if library_name is not None else ""))
+        check_not_empty(
+            results,
+            allow_empty,
+            ("Pattern %r did not match any file" % pattern)
+            + (
+                ("within library %s" % library_name) if library_name is not None else ""
+            ),
+        )
 
         return SourceFileList(results)
 
-    def add_source_files(self,   # pylint: disable=too-many-arguments
-                         pattern, library_name, preprocessors=None, include_dirs=None, defines=None, allow_empty=False,
-                         vhdl_standard=None, no_parse=False, file_type=None):
+    def add_source_files(  # pylint: disable=too-many-arguments
+        self,
+        pattern,
+        library_name,
+        preprocessors=None,
+        include_dirs=None,
+        defines=None,
+        allow_empty=False,
+        vhdl_standard=None,
+        no_parse=False,
+        file_type=None,
+    ):
         """
         Add source files matching wildcard pattern to library
 
@@ -732,18 +774,28 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
            prj.add_source_files("*.vhd", "lib")
 
         """
-        return self.library(library_name).add_source_files(pattern=pattern,
-                                                           preprocessors=preprocessors,
-                                                           include_dirs=include_dirs,
-                                                           defines=defines,
-                                                           allow_empty=allow_empty,
-                                                           vhdl_standard=vhdl_standard,
-                                                           no_parse=no_parse,
-                                                           file_type=file_type)
+        return self.library(library_name).add_source_files(
+            pattern=pattern,
+            preprocessors=preprocessors,
+            include_dirs=include_dirs,
+            defines=defines,
+            allow_empty=allow_empty,
+            vhdl_standard=vhdl_standard,
+            no_parse=no_parse,
+            file_type=file_type,
+        )
 
-    def add_source_file(self,   # pylint: disable=too-many-arguments
-                        file_name, library_name, preprocessors=None, include_dirs=None, defines=None,
-                        vhdl_standard=None, no_parse=False, file_type=None):
+    def add_source_file(  # pylint: disable=too-many-arguments
+        self,
+        file_name,
+        library_name,
+        preprocessors=None,
+        include_dirs=None,
+        defines=None,
+        vhdl_standard=None,
+        no_parse=False,
+        file_type=None,
+    ):
         """
         Add source file to library
 
@@ -765,13 +817,15 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
            prj.add_source_file("file.vhd", "lib")
 
         """
-        return self.library(library_name).add_source_file(file_name=file_name,
-                                                          preprocessors=preprocessors,
-                                                          include_dirs=include_dirs,
-                                                          defines=defines,
-                                                          vhdl_standard=vhdl_standard,
-                                                          no_parse=no_parse,
-                                                          file_type=file_type)
+        return self.library(library_name).add_source_file(
+            file_name=file_name,
+            preprocessors=preprocessors,
+            include_dirs=include_dirs,
+            defines=defines,
+            vhdl_standard=vhdl_standard,
+            no_parse=no_parse,
+            file_type=file_type,
+        )
 
     def _preprocess(self, library_name, file_name, preprocessors):
         """
@@ -799,13 +853,20 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
             LOGGER.error("Failed to preprocess %s", file_name)
             return file_name
         else:
-            pp_file_name = join(self._preprocessed_path, library_name, basename(file_name))
+            pp_file_name = join(
+                self._preprocessed_path, library_name, basename(file_name)
+            )
 
             idx = 1
             while ostools.file_exists(pp_file_name):
-                LOGGER.debug("Preprocessed file exists '%s', adding prefix", pp_file_name)
-                pp_file_name = join(self._preprocessed_path,
-                                    library_name, "%i_%s" % (idx, basename(file_name)))
+                LOGGER.debug(
+                    "Preprocessed file exists '%s', adding prefix", pp_file_name
+                )
+                pp_file_name = join(
+                    self._preprocessed_path,
+                    library_name,
+                    "%i_%s" % (idx, basename(file_name)),
+                )
                 idx += 1
 
             ostools.write_file(pp_file_name, code, encoding=HDL_FILE_ENCODING)
@@ -817,7 +878,9 @@ class VUnit(object):  # pylint: disable=too-many-instance-attributes, too-many-p
         """
         self._external_preprocessors.append(preprocessor)
 
-    def enable_location_preprocessing(self, additional_subprograms=None, exclude_subprograms=None):
+    def enable_location_preprocessing(
+        self, additional_subprograms=None, exclude_subprograms=None
+    ):
         """
         Inserts file name and line number information into VUnit check and log subprograms calls. Custom
         subprograms can also be added. Must be called before adding any files.
@@ -882,7 +945,9 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         Create the test cases
         """
         self._test_bench_list.warn_when_empty()
-        test_list = self._test_bench_list.create_tests(simulator_if, self._args.elaborate)
+        test_list = self._test_bench_list.create_tests(
+            simulator_if, self._args.elaborate
+        )
         test_list.keep_matches(self._test_filter)
         return test_list
 
@@ -915,14 +980,16 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
             LOGGER.error(
                 "No available simulator detected.\n"
                 "Simulator binary folder must be available in PATH environment variable.\n"
-                "Simulator binary folder can also be set the in VUNIT_<SIMULATOR_NAME>_PATH environment variable.\n")
+                "Simulator binary folder can also be set the in VUNIT_<SIMULATOR_NAME>_PATH environment variable.\n"
+            )
             sys.exit(1)
 
         if not exists(self._simulator_output_path):
             os.makedirs(self._simulator_output_path)
 
-        return self._simulator_class.from_args(args=self._args,
-                                               output_path=self._simulator_output_path)
+        return self._simulator_class.from_args(
+            args=self._args, output_path=self._simulator_output_path
+        )
 
     def _main_run(self, post_run):
         """
@@ -976,8 +1043,12 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         file_objects = self.get_compile_order()
         files = []
         for source_file in file_objects:
-            files.append(dict(file_name=abspath(source_file.name),
-                              library_name=source_file.library.name))
+            files.append(
+                dict(
+                    file_name=abspath(source_file.name),
+                    library_name=source_file.library.name,
+                )
+            )
 
         tests = []
         for test_suite in self._create_tests(simulator_if=None):
@@ -993,28 +1064,29 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
 
                 attributes.update(config.attributes)
 
-                tests.append(dict(name=name,
-                                  location=dict(file_name=info.location.file_name,
-                                                offset=info.location.offset,
-                                                length=info.location.length),
-                                  attributes=attributes))
+                tests.append(
+                    dict(
+                        name=name,
+                        location=dict(
+                            file_name=info.location.file_name,
+                            offset=info.location.offset,
+                            length=info.location.length,
+                        ),
+                        attributes=attributes,
+                    )
+                )
 
         json_data = dict(
             # The semantic version (https://semver.org/) of the JSON export data format
             export_format_version=dict(major=1, minor=0, patch=0),
-
             # The set of files added to the project
             files=files,
-
             # The list of all tests
-            tests=tests)
+            tests=tests,
+        )
 
         with open(json_file_name, "w") as fptr:
-            json.dump(json_data,
-                      fptr,
-                      sort_keys=True,
-                      indent=4,
-                      separators=(',', ': '))
+            json.dump(json_data, fptr, sort_keys=True, indent=4, separators=(",", ": "))
 
         return True
 
@@ -1069,9 +1141,12 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         else:
             target_files = None
 
-        simulator_if.compile_project(self._project,
-                                     continue_on_error=self._args.keep_compiling,
-                                     printer=self._printer, target_files=target_files)
+        simulator_if.compile_project(
+            self._project,
+            continue_on_error=self._args.keep_compiling,
+            printer=self._printer,
+            target_files=target_files,
+        )
 
     def _get_testbench_files(self, simulator_if):
         """
@@ -1079,8 +1154,12 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         test_list = self._create_tests(simulator_if)
         tb_file_names = {test_suite.file_name for test_suite in test_list}
-        return [self.get_source_file(file_name)._source_file  # pylint: disable=protected-access
-                for file_name in tb_file_names]
+        return [
+            self.get_source_file(  # pylint: disable=protected-access
+                file_name
+            )._source_file
+            for file_name in tb_file_names
+        ]
 
     def _run_test(self, test_cases, report):
         """
@@ -1094,13 +1173,15 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         else:
             verbosity = TestRunner.VERBOSITY_NORMAL
 
-        runner = TestRunner(report,
-                            join(self._output_path, "test_output"),
-                            verbosity=verbosity,
-                            num_threads=self._args.num_threads,
-                            fail_fast=self._args.fail_fast,
-                            dont_catch_exceptions=self._args.dont_catch_exceptions,
-                            no_color=self._args.no_color)
+        runner = TestRunner(
+            report,
+            join(self._output_path, "test_output"),
+            verbosity=verbosity,
+            num_threads=self._args.num_threads,
+            fail_fast=self._args.fail_fast,
+            dont_catch_exceptions=self._args.dont_catch_exceptions,
+            no_color=self._args.no_color,
+        )
         runner.run(test_cases)
 
     def add_builtins(self, external=None):
@@ -1168,11 +1249,17 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         if source_files is None:
             source_files = self.get_source_files(allow_empty=True)
 
-        target_files = [source_file._source_file  # pylint: disable=protected-access
-                        for source_file in source_files]
+        target_files = [
+            source_file._source_file  # pylint: disable=protected-access
+            for source_file in source_files
+        ]
         source_files = self._project.get_dependencies_in_compile_order(target_files)
-        return SourceFileList([SourceFile(source_file, self._project, self)
-                               for source_file in source_files])
+        return SourceFileList(
+            [
+                SourceFile(source_file, self._project, self)
+                for source_file in source_files
+            ]
+        )
 
     def get_implementation_subset(self, source_files):
         """
@@ -1183,19 +1270,26 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         :param source_files: A list of :class:`.SourceFile` objects
         :returns: A list of :class:`.SourceFile` objects which is the implementation subset.
         """
-        target_files = [source_file._source_file  # pylint: disable=protected-access
-                        for source_file in source_files]
+        target_files = [
+            source_file._source_file  # pylint: disable=protected-access
+            for source_file in source_files
+        ]
         source_files = self._project.get_dependencies_in_compile_order(
-            target_files,
-            implementation_dependencies=True)
-        return SourceFileList([SourceFile(source_file, self._project, self)
-                               for source_file in source_files])
+            target_files, implementation_dependencies=True
+        )
+        return SourceFileList(
+            [
+                SourceFile(source_file, self._project, self)
+                for source_file in source_files
+            ]
+        )
 
 
 class Library(object):
     """
     User interface of a library
     """
+
     def __init__(self, library_name, parent, project, test_bench_list):
         self._library_name = library_name
         self._parent = parent
@@ -1325,9 +1419,17 @@ class Library(object):
         """
         return self._parent.get_source_files(pattern, self._library_name, allow_empty)
 
-    def add_source_files(self,   # pylint: disable=too-many-arguments
-                         pattern, preprocessors=None, include_dirs=None, defines=None, allow_empty=False,
-                         vhdl_standard=None, no_parse=False, file_type=None):
+    def add_source_files(  # pylint: disable=too-many-arguments
+        self,
+        pattern,
+        preprocessors=None,
+        include_dirs=None,
+        defines=None,
+        allow_empty=False,
+        vhdl_standard=None,
+        no_parse=False,
+        file_type=None,
+    ):
         """
         Add source files matching wildcard pattern to library
 
@@ -1356,17 +1458,38 @@ class Library(object):
         file_names = []
         for pattern_instance in patterns:
             new_file_names = glob(pattern_instance)
-            check_not_empty(new_file_names, allow_empty, "Pattern %r did not match any file" % pattern_instance)
+            check_not_empty(
+                new_file_names,
+                allow_empty,
+                "Pattern %r did not match any file" % pattern_instance,
+            )
             file_names += new_file_names
 
-        return SourceFileList(source_files=[
-            self.add_source_file(file_name, preprocessors, include_dirs, defines, vhdl_standard,
-                                 no_parse=no_parse, file_type=file_type)
-            for file_name in file_names])
+        return SourceFileList(
+            source_files=[
+                self.add_source_file(
+                    file_name,
+                    preprocessors,
+                    include_dirs,
+                    defines,
+                    vhdl_standard,
+                    no_parse=no_parse,
+                    file_type=file_type,
+                )
+                for file_name in file_names
+            ]
+        )
 
-    def add_source_file(self,  # pylint: disable=too-many-arguments
-                        file_name, preprocessors=None, include_dirs=None, defines=None,
-                        vhdl_standard=None, no_parse=False, file_type=None):
+    def add_source_file(  # pylint: disable=too-many-arguments
+        self,
+        file_name,
+        preprocessors=None,
+        include_dirs=None,
+        defines=None,
+        vhdl_standard=None,
+        no_parse=False,
+        file_type=None,
+    ):
         """
         Add source file to library
 
@@ -1398,23 +1521,24 @@ class Library(object):
             include_dirs = add_verilog_include_dir(include_dirs)
 
         new_file_name = self._parent._preprocess(  # pylint: disable=protected-access
-            self._library_name, file_name, preprocessors)
+            self._library_name, file_name, preprocessors
+        )
 
-        source_file = self._project.add_source_file(new_file_name,
-                                                    self._library_name,
-                                                    file_type=file_type,
-                                                    include_dirs=include_dirs,
-                                                    defines=defines,
-                                                    vhdl_standard=vhdl_standard,
-                                                    no_parse=no_parse)
+        source_file = self._project.add_source_file(
+            new_file_name,
+            self._library_name,
+            file_type=file_type,
+            include_dirs=include_dirs,
+            defines=defines,
+            vhdl_standard=vhdl_standard,
+            no_parse=no_parse,
+        )
         # To get correct tb_path generic
         source_file.original_name = file_name
 
         self._test_bench_list.add_from_source_file(source_file)
 
-        return SourceFile(source_file,
-                          self._project,
-                          self._parent)
+        return SourceFile(source_file, self._project, self._parent)
 
     def package(self, name):
         """
@@ -1425,7 +1549,7 @@ class Library(object):
 
         if design_unit is None:
             raise KeyError(name)
-        if design_unit.unit_type != 'package':
+        if design_unit.unit_type != "package":
             raise KeyError(name)
 
         return PackageFacade(self._parent, self._library_name, name, design_unit)
@@ -1469,7 +1593,9 @@ class Library(object):
         """
         name = name.lower()
 
-        return TestBench(self._test_bench_list.get_test_bench(self._library_name, name), self)
+        return TestBench(
+            self._test_bench_list.get_test_bench(self._library_name, name), self
+        )
 
     def get_test_benches(self, pattern="*", allow_empty=False):
         """
@@ -1480,14 +1606,19 @@ class Library(object):
         :returns: A list of :class:`.TestBench` objects
         """
         results = []
-        for test_bench in self._test_bench_list.get_test_benches_in_library(self._library_name):
+        for test_bench in self._test_bench_list.get_test_benches_in_library(
+            self._library_name
+        ):
             if not fnmatch(abspath(test_bench.name), pattern):
                 continue
 
             results.append(TestBench(test_bench, self))
 
-        return check_not_empty(results, allow_empty,
-                               "No test benches found within library %s" % self._library_name)
+        return check_not_empty(
+            results,
+            allow_empty,
+            "No test benches found within library %s" % self._library_name,
+        )
 
 
 class TestBench(object):
@@ -1496,6 +1627,7 @@ class TestBench(object):
     A test bench consists of one or more :class:`.Test` cases. Setting options for a test
     bench will apply that option all test cases belonging to that test bench.
     """
+
     def __init__(self, test_bench, library):
         self._test_bench = test_bench
         self._library = library
@@ -1597,9 +1729,16 @@ class TestBench(object):
         """
         self._test_bench.set_post_check(value)
 
-    def add_config(self,  # pylint: disable=too-many-arguments
-                   name, generics=None, parameters=None, pre_config=None, post_check=None, sim_options=None,
-                   attributes=None):
+    def add_config(  # pylint: disable=too-many-arguments
+        self,
+        name,
+        generics=None,
+        parameters=None,
+        pre_config=None,
+        post_check=None,
+        sim_options=None,
+        attributes=None,
+    ):
         """
         Add a configuration of this test bench or to all test cases within it by copying the default configuration.
 
@@ -1643,12 +1782,14 @@ class TestBench(object):
         parameters = {} if parameters is None else parameters
         generics.update(parameters)
         attributes = {} if attributes is None else attributes
-        self._test_bench.add_config(name=name,
-                                    generics=generics,
-                                    pre_config=pre_config,
-                                    post_check=post_check,
-                                    sim_options=sim_options,
-                                    attributes=attributes)
+        self._test_bench.add_config(
+            name=name,
+            generics=generics,
+            pre_config=pre_config,
+            post_check=post_check,
+            sim_options=sim_options,
+            attributes=attributes,
+        )
 
     def test(self, name):
         """
@@ -1702,28 +1843,30 @@ class PackageFacade(object):
     """
     User interface of a Package
     """
+
     def __init__(self, parent, library_name, package_name, design_unit):
         self._parent = parent
         self._library_name = library_name
         self._package_name = package_name
         self._design_unit = design_unit
 
-    def generate_codecs(self, codec_package_name=None, used_packages=None, output_file_name=None):
+    def generate_codecs(
+        self, codec_package_name=None, used_packages=None, output_file_name=None
+    ):
         """
         Generates codecs for the datatypes in this Package
         """
         if codec_package_name is None:
-            codec_package_name = self._package_name + '_codecs'
+            codec_package_name = self._package_name + "_codecs"
 
         if output_file_name is None:
             codecs_path = join(self._parent.codecs_path, self._library_name)
             file_extension = splitext(self._design_unit.source_file.name)[1]
             output_file_name = join(codecs_path, codec_package_name + file_extension)
 
-        codec_generator.generate_codecs(self._design_unit,
-                                        codec_package_name,
-                                        used_packages,
-                                        output_file_name)
+        codec_generator.generate_codecs(
+            self._design_unit, codec_package_name, used_packages, output_file_name
+        )
 
         return self._parent.add_source_files(output_file_name, self._library_name)
 
@@ -1733,6 +1876,7 @@ class Test(object):
     User interface of a single test case
 
     """
+
     def __init__(self, test_case):
         self._test_case = test_case
 
@@ -1743,9 +1887,16 @@ class Test(object):
         """
         return self._test_case.name
 
-    def add_config(self,  # pylint: disable=too-many-arguments
-                   name, generics=None, parameters=None, pre_config=None, post_check=None, sim_options=None,
-                   attributes=None):
+    def add_config(  # pylint: disable=too-many-arguments
+        self,
+        name,
+        generics=None,
+        parameters=None,
+        pre_config=None,
+        post_check=None,
+        sim_options=None,
+        attributes=None,
+    ):
         """
         Add a configuration to this test copying the default configuration.
 
@@ -1788,12 +1939,14 @@ class Test(object):
         parameters = {} if parameters is None else parameters
         generics.update(parameters)
         attributes = {} if attributes is None else attributes
-        self._test_case.add_config(name=name,
-                                   generics=generics,
-                                   pre_config=pre_config,
-                                   post_check=post_check,
-                                   sim_options=sim_options,
-                                   attributes=attributes)
+        self._test_case.add_config(
+            name=name,
+            generics=generics,
+            pre_config=pre_config,
+            post_check=post_check,
+            sim_options=sim_options,
+            attributes=attributes,
+        )
 
     def set_attribute(self, name, value):
         """
@@ -1932,6 +2085,7 @@ class SourceFile(object):
     """
     A single file
     """
+
     def __init__(self, source_file, project, ui):
         self._source_file = source_file
         self._project = project
@@ -2008,9 +2162,12 @@ class SourceFile(object):
            my_file.add_dependency_on(other_files)
         """
         if isinstance(source_file, SourceFile):
-            private_source_file = source_file._source_file  # pylint: disable=protected-access
-            self._project.add_manual_dependency(self._source_file,
-                                                depends_on=private_source_file)
+            private_source_file = (
+                source_file._source_file  # pylint: disable=protected-access
+            )
+            self._project.add_manual_dependency(
+                self._source_file, depends_on=private_source_file
+            )
         elif hasattr(source_file, "__iter__"):
             for element in source_file:
                 self.add_dependency_on(element)
@@ -2045,7 +2202,7 @@ def select_vhdl_standard(vhdl_standard=None):
         return VHDL.standard(vhdl_standard)
 
     try:
-        return VHDL.standard(os.environ.get('VUNIT_VHDL_STANDARD', '2008'))
+        return VHDL.standard(os.environ.get("VUNIT_VHDL_STANDARD", "2008"))
     except ValueError:
         LOGGER.error("Invalid standard set by VUNIT_VHDL_STANDARD environment variable")
         raise
@@ -2065,6 +2222,5 @@ def check_not_empty(lst, allow_empty, error_msg):
     Returns the list
     """
     if (not allow_empty) and (not lst):
-        raise ValueError(error_msg
-                         + ". Use allow_empty=True to avoid exception.")
+        raise ValueError(error_msg + ". Use allow_empty=True to avoid exception.")
     return lst

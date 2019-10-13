@@ -17,11 +17,14 @@ import shlex
 from sys import stdout  # To avoid output catched in non-verbose mode
 from vunit.ostools import Process
 from vunit.vhdl_standard import VHDL
-from vunit.simulator_interface import (SimulatorInterface,
-                                       ListOfStringOption,
-                                       StringOption,
-                                       BooleanOption)
+from vunit.simulator_interface import (
+    SimulatorInterface,
+    ListOfStringOption,
+    StringOption,
+    BooleanOption,
+)
 from vunit.exceptions import CompileError
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -35,15 +38,13 @@ class GHDLInterface(SimulatorInterface):
     supports_gui_flag = True
     supports_colors_in_gui = True
 
-    compile_options = [
-        ListOfStringOption("ghdl.flags"),
-    ]
+    compile_options = [ListOfStringOption("ghdl.flags")]
 
     sim_options = [
         ListOfStringOption("ghdl.sim_flags"),
         ListOfStringOption("ghdl.elab_flags"),
         StringOption("ghdl.gtkwave_script.gui"),
-        BooleanOption("ghdl.elab_e")
+        BooleanOption("ghdl.elab_e"),
     ]
 
     @staticmethod
@@ -51,14 +52,16 @@ class GHDLInterface(SimulatorInterface):
         """
         Add command line arguments
         """
-        group = parser.add_argument_group("ghdl",
-                                          description="GHDL specific flags")
-        group.add_argument("--gtkwave-fmt", choices=["vcd", "ghw"],
-                           default=None,
-                           help="Save .vcd or .ghw to open in gtkwave")
-        group.add_argument("--gtkwave-args",
-                           default="",
-                           help="Arguments to pass to gtkwave")
+        group = parser.add_argument_group("ghdl", description="GHDL specific flags")
+        group.add_argument(
+            "--gtkwave-fmt",
+            choices=["vcd", "ghw"],
+            default=None,
+            help="Save .vcd or .ghw to open in gtkwave",
+        )
+        group.add_argument(
+            "--gtkwave-args", default="", help="Arguments to pass to gtkwave"
+        )
 
     @classmethod
     def from_args(cls, args, output_path, **kwargs):
@@ -66,12 +69,14 @@ class GHDLInterface(SimulatorInterface):
         Create instance from args namespace
         """
         prefix = cls.find_prefix()
-        return cls(output_path=output_path,
-                   prefix=prefix,
-                   gui=args.gui,
-                   gtkwave_fmt=args.gtkwave_fmt,
-                   gtkwave_args=args.gtkwave_args,
-                   backend=cls.determine_backend(prefix))
+        return cls(
+            output_path=output_path,
+            prefix=prefix,
+            gui=args.gui,
+            gtkwave_fmt=args.gtkwave_fmt,
+            gtkwave_args=args.gtkwave_args,
+            backend=cls.determine_backend(prefix),
+        )
 
     @classmethod
     def find_prefix_from_path(cls):
@@ -80,15 +85,23 @@ class GHDLInterface(SimulatorInterface):
         """
         return cls.find_toolchain([cls.executable])
 
-    def __init__(self,  # pylint: disable=too-many-arguments
-                 output_path, prefix, gui=False, gtkwave_fmt=None, gtkwave_args="", backend="llvm"):
+    def __init__(  # pylint: disable=too-many-arguments
+        self,
+        output_path,
+        prefix,
+        gui=False,
+        gtkwave_fmt=None,
+        gtkwave_args="",
+        backend="llvm",
+    ):
         SimulatorInterface.__init__(self, output_path, gui)
         self._prefix = prefix
         self._project = None
 
-        if gui and (not self.find_executable('gtkwave')):
+        if gui and (not self.find_executable("gtkwave")):
             raise RuntimeError(
-                "Cannot find the gtkwave executable in the PATH environment variable. GUI not possible")
+                "Cannot find the gtkwave executable in the PATH environment variable. GUI not possible"
+            )
 
         self._gui = gui
         self._gtkwave_fmt = "ghw" if gui and gtkwave_fmt is None else gtkwave_fmt
@@ -110,9 +123,11 @@ class GHDLInterface(SimulatorInterface):
         mapping = {
             "mcode code generator": "mcode",
             "llvm code generator": "llvm",
-            "GCC back-end code generator": "gcc"
+            "GCC back-end code generator": "gcc",
         }
-        output = subprocess.check_output([join(prefix, cls.executable), "--version"]).decode()
+        output = subprocess.check_output(
+            [join(prefix, cls.executable), "--version"]
+        ).decode()
         for name, backend in mapping.items():
             if name in output:
                 LOGGER.debug("Detected GHDL %s", name)
@@ -123,7 +138,9 @@ class GHDLInterface(SimulatorInterface):
         print("== Output of 'ghdl --version'" + ("=" * 60))
         print(output)
         print("=============================" + ("=" * 60))
-        raise AssertionError("No known GHDL back-end could be detected from running 'ghdl --version'")
+        raise AssertionError(
+            "No known GHDL back-end could be detected from running 'ghdl --version'"
+        )
 
     @classmethod
     def supports_vhpi(cls):
@@ -147,14 +164,19 @@ class GHDLInterface(SimulatorInterface):
             if not exists(library.directory):
                 os.makedirs(library.directory)
 
-        vhdl_standards = set(source_file.get_vhdl_standard()
-                             for source_file in project.get_source_files_in_order()
-                             if source_file.is_vhdl)
+        vhdl_standards = set(
+            source_file.get_vhdl_standard()
+            for source_file in project.get_source_files_in_order()
+            if source_file.is_vhdl
+        )
 
         if not vhdl_standards:
             self._vhdl_standard = VHDL.STD_2008
         elif len(vhdl_standards) != 1:
-            raise RuntimeError("GHDL cannot handle mixed VHDL standards, found %r" % list(vhdl_standards))
+            raise RuntimeError(
+                "GHDL cannot handle mixed VHDL standards, found %r"
+                % list(vhdl_standards)
+            )
         else:
             self._vhdl_standard = list(vhdl_standards)[0]
 
@@ -188,9 +210,13 @@ class GHDLInterface(SimulatorInterface):
         """
         Returns the command to compile a vhdl file
         """
-        cmd = [join(self._prefix, self.executable), '-a', '--workdir=%s' % source_file.library.directory,
-               '--work=%s' % source_file.library.name,
-               '--std=%s' % self._std_str(source_file.get_vhdl_standard())]
+        cmd = [
+            join(self._prefix, self.executable),
+            "-a",
+            "--workdir=%s" % source_file.library.directory,
+            "--work=%s" % source_file.library.name,
+            "--std=%s" % self._std_str(source_file.get_vhdl_standard()),
+        ]
         for library in self._project.get_libraries():
             cmd += ["-P%s" % library.directory]
         cmd += source_file.compile_options.get("ghdl.flags", [])
@@ -204,34 +230,40 @@ class GHDLInterface(SimulatorInterface):
         cmd = [join(self._prefix, self.executable)]
 
         if ghdl_e:
-            cmd += ['-e']
+            cmd += ["-e"]
         else:
-            cmd += ['--elab-run']
+            cmd += ["--elab-run"]
 
-        cmd += ['--std=%s' % self._std_str(self._vhdl_standard)]
-        cmd += ['--work=%s' % config.library_name]
-        cmd += ['--workdir=%s' % self._project.get_library(config.library_name).directory]
-        cmd += ['-P%s' % lib.directory for lib in self._project.get_libraries()]
+        cmd += ["--std=%s" % self._std_str(self._vhdl_standard)]
+        cmd += ["--work=%s" % config.library_name]
+        cmd += [
+            "--workdir=%s" % self._project.get_library(config.library_name).directory
+        ]
+        cmd += ["-P%s" % lib.directory for lib in self._project.get_libraries()]
         if self._has_output_flag():
-            cmd += ['-o', join(output_path, "%s-%s" % (config.entity_name,
-                                                       config.architecture_name))]
+            cmd += [
+                "-o",
+                join(
+                    output_path,
+                    "%s-%s" % (config.entity_name, config.architecture_name),
+                ),
+            ]
         cmd += config.sim_options.get("ghdl.elab_flags", [])
         cmd += [config.entity_name, config.architecture_name]
 
         if not ghdl_e:
             cmd += config.sim_options.get("ghdl.sim_flags", [])
             for name, value in config.generics.items():
-                cmd += ['-g%s=%s' % (name, value)]
-            cmd += ['--assert-level=%s' % config.vhdl_assert_stop_level]
+                cmd += ["-g%s=%s" % (name, value)]
+            cmd += ["--assert-level=%s" % config.vhdl_assert_stop_level]
             if config.sim_options.get("disable_ieee_warnings", False):
                 cmd += ["--ieee-asserts=disable"]
 
         return cmd
 
-    def simulate(self,  # pylint: disable=too-many-locals
-                 output_path,
-                 test_suite_name,
-                 config, elaborate_only):
+    def simulate(  # pylint: disable=too-many-locals
+        self, output_path, test_suite_name, config, elaborate_only
+    ):
         """
         Simulate with entity as top level using generics
         """
@@ -255,9 +287,9 @@ class GHDLInterface(SimulatorInterface):
                 os.remove(data_file_name)
 
             if self._gtkwave_fmt == "ghw":
-                cmd += ['--wave=%s' % data_file_name]
+                cmd += ["--wave=%s" % data_file_name]
             elif self._gtkwave_fmt == "vcd":
-                cmd += ['--vcd=%s' % data_file_name]
+                cmd += ["--vcd=%s" % data_file_name]
 
         else:
             data_file_name = None

@@ -29,14 +29,17 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
     """
     Represents a configuration of a test bench
     """
-    def __init__(self,  # pylint: disable=too-many-arguments
-                 name,
-                 design_unit,
-                 generics=None,
-                 sim_options=None,
-                 pre_config=None,
-                 post_check=None,
-                 attributes=None):
+
+    def __init__(  # pylint: disable=too-many-arguments
+        self,
+        name,
+        design_unit,
+        generics=None,
+        sim_options=None,
+        pre_config=None,
+        post_check=None,
+        attributes=None,
+    ):
         self.name = name
         self._design_unit = design_unit
         self.generics = {} if generics is None else generics
@@ -47,19 +50,21 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
 
         # Fill in tb_path generic with location of test bench
         if "tb_path" in design_unit.generic_names:
-            self.generics["tb_path"] = '%s/' % self.tb_path.replace("\\", "/")
+            self.generics["tb_path"] = "%s/" % self.tb_path.replace("\\", "/")
 
         self.pre_config = pre_config
         self.post_check = post_check
 
     def copy(self):
-        return Configuration(name=self.name,
-                             design_unit=self._design_unit,
-                             generics=self.generics.copy(),
-                             sim_options=self.sim_options.copy(),
-                             pre_config=self.pre_config,
-                             post_check=self.post_check,
-                             attributes=self.attributes.copy())
+        return Configuration(
+            name=self.name,
+            design_unit=self._design_unit,
+            generics=self.generics.copy(),
+            sim_options=self.sim_options.copy(),
+            pre_config=self.pre_config,
+            post_check=self.post_check,
+            attributes=self.attributes.copy(),
+        )
 
     @property
     def is_default(self):
@@ -104,10 +109,13 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         if name not in self._design_unit.generic_names:
             LOGGER.warning(
                 "Generic '%s' set to value '%s' not found in %s '%s.%s'. Possible values are [%s]",
-                name, value,
+                name,
+                value,
                 "entity" if self._design_unit.is_entity else "module",
-                self._design_unit.library_name, self._design_unit.name,
-                ", ".join('%s' % gname for gname in self._design_unit.generic_names))
+                self._design_unit.library_name,
+                self._design_unit.name,
+                ", ".join("%s" % gname for gname in self._design_unit.generic_names),
+            )
         else:
             self.generics[name] = value
 
@@ -137,10 +145,14 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         if self.pre_config is None:
             return True
 
-        args = inspect.getargspec(self.pre_config).args  # pylint: disable=deprecated-method
+        args = inspect.getargspec(  # pylint: disable=deprecated-method
+            self.pre_config
+        ).args
 
-        kwargs = {"output_path": output_path,
-                  "simulator_output_path": simulator_output_path}
+        kwargs = {
+            "output_path": output_path,
+            "simulator_output_path": simulator_output_path,
+        }
 
         for argname in list(kwargs.keys()):
             if argname not in args:
@@ -155,10 +167,11 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         if self.post_check is None:
             return True
 
-        args = inspect.getargspec(self.post_check).args  # pylint: disable=deprecated-method
+        args = inspect.getargspec(  # pylint: disable=deprecated-method
+            self.post_check
+        ).args
 
-        kwargs = {"output_path": lambda: output_path,
-                  "output": read_output}
+        kwargs = {"output_path": lambda: output_path, "output": read_output}
 
         for argname, provider in list(kwargs.items()):
             if argname not in args:
@@ -209,7 +222,9 @@ class ConfigurationVisitor(object):
         for configs in self.get_configuration_dicts():
             for config in configs.values():
                 if not overwrite:
-                    config.set_sim_option(name, config.sim_options.get(name, []) + value)
+                    config.set_sim_option(
+                        name, config.sim_options.get(name, []) + value
+                    )
                     continue
                 config.set_sim_option(name, value)
 
@@ -231,15 +246,24 @@ class ConfigurationVisitor(object):
             for config in configs.values():
                 config.post_check = value
 
-    def add_config(self, name,  # pylint: disable=too-many-arguments
-                   generics=None, pre_config=None, post_check=None, sim_options=None, attributes=None):
+    def add_config(  # pylint: disable=too-many-arguments
+        self,
+        name,
+        generics=None,
+        pre_config=None,
+        post_check=None,
+        sim_options=None,
+        attributes=None,
+    ):
         """
         Add a configuration copying unset fields from the default configuration:
         """
         self._check_enabled()
 
-        if name in (DEFAULT_NAME, '', u''):
-            raise ValueError("Illegal configuration name %r. Must be non-empty string" % name)
+        if name in (DEFAULT_NAME, "", u""):
+            raise ValueError(
+                "Illegal configuration name %r. Must be non-empty string" % name
+            )
 
         for configs in self.get_configuration_dicts():
             if name in configs:

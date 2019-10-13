@@ -38,7 +38,8 @@ class TestVerilogParser(TestCase):  # pylint: disable=too-many-public-methods
         self.assertEqual(design_file.modules, [])
 
     def test_parse_module(self):
-        modules = self.parse("""\
+        modules = self.parse(
+            """\
 module true1;
   my_module hello
   "module false";
@@ -49,7 +50,8 @@ module false
   module true2; // module false
 endmodule module true3
 endmodule
-""").modules
+"""
+        ).modules
         self.assertEqual(len(modules), 3)
         self.assertEqual(modules[0].name, "true1")
         self.assertEqual(modules[1].name, "true2")
@@ -60,24 +62,28 @@ endmodule
         We relax the requirement and allow keywords since standards may be mixed.
         A future enhancement could be to tokenize with awareness of the verilog standard
         """
-        modules = self.parse("""\
+        modules = self.parse(
+            """\
 module global;
 endmodule
 
 module soft;
 endmodule
-""").modules
+"""
+        ).modules
         self.assertEqual(len(modules), 2)
         self.assertEqual(modules[0].name, "global")
         self.assertEqual(modules[1].name, "soft")
 
     def test_parse_parameter_without_type(self):
-        modules = self.parse("""\
+        modules = self.parse(
+            """\
 module foo;
   parameter param1;
   parameter param2 = 1;
 endmodule
-""").modules
+"""
+        ).modules
         self.assertEqual(len(modules), 1)
         module = modules[0]
         self.assertEqual(module.name, "foo")
@@ -87,12 +93,14 @@ endmodule
         self.assertEqual(param2, "param2")
 
     def test_parse_parameter_with_type(self):
-        modules = self.parse("""\
+        modules = self.parse(
+            """\
 module foo;
   parameter string param1;
   parameter integer param2 = 1;
 endmodule
-""").modules
+"""
+        ).modules
         self.assertEqual(len(modules), 1)
         module = modules[0]
         self.assertEqual(module.name, "foo")
@@ -102,7 +110,8 @@ endmodule
         self.assertEqual(param2, "param2")
 
     def test_nested_modules_are_ignored(self):
-        modules = self.parse("""\
+        modules = self.parse(
+            """\
 module foo;
   parameter string param1;
   module nested;
@@ -110,7 +119,8 @@ module foo;
   endmodule
   parameter string param2;
 endmodule
-""").modules
+"""
+        ).modules
         self.assertEqual(len(modules), 1)
         module = modules[0]
         self.assertEqual(module.name, "foo")
@@ -120,34 +130,40 @@ endmodule
         self.assertEqual(param2, "param2")
 
     def test_parse_package(self):
-        packages = self.parse("""\
+        packages = self.parse(
+            """\
 package true1;
 endpackage package true2; endpackage
-""").packages
+"""
+        ).packages
         self.assertEqual(len(packages), 2)
         self.assertEqual(packages[0].name, "true1")
         self.assertEqual(packages[1].name, "true2")
 
     def test_parse_imports(self):
-        imports = self.parse("""\
+        imports = self.parse(
+            """\
 import true1;
 package pkg;
   import true2::*;
 endpackage
-""").imports
+"""
+        ).imports
         self.assertEqual(len(imports), 2)
         self.assertEqual(imports[0], "true1")
         self.assertEqual(imports[1], "true2")
 
     def test_parse_package_references(self):
-        package_references = self.parse("""\
+        package_references = self.parse(
+            """\
 import false1;
 import false1::false2::*;
 package pkg;
   true1::func(true2::bar());
   true3::foo();
 endpackage
-""").package_references
+"""
+        ).package_references
         self.assertEqual(len(package_references), 3)
         self.assertEqual(package_references[0], "true1")
         self.assertEqual(package_references[1], "true2")
@@ -155,43 +171,47 @@ endpackage
 
     @mock.patch("vunit.parsing.verilog.parser.LOGGER", autospec=True)
     def test_parse_import_with_bad_argument(self, logger):
-        imports = self.parse("""\
+        imports = self.parse(
+            """\
 import;
-""").imports
+"""
+        ).imports
         self.assertEqual(len(imports), 0)
         logger.warning.assert_called_once_with(
-            "import bad argument\n%s",
-            "at file_name.sv line 1:\n"
-            "import;\n"
-            "      ~")
+            "import bad argument\n%s", "at file_name.sv line 1:\n" "import;\n" "      ~"
+        )
 
     @mock.patch("vunit.parsing.verilog.parser.LOGGER", autospec=True)
     def test_parse_import_eof(self, logger):
-        imports = self.parse("""\
+        imports = self.parse(
+            """\
 import
-""").imports
+"""
+        ).imports
         self.assertEqual(len(imports), 0)
         logger.warning.assert_called_once_with(
             "EOF reached when parsing import\n%s",
-            "at file_name.sv line 1:\n"
-            "import\n"
-            "~~~~~~")
+            "at file_name.sv line 1:\n" "import\n" "~~~~~~",
+        )
 
     def test_parse_instances(self):
-        instances = self.parse("""\
+        instances = self.parse(
+            """\
 module name;
   true1 instance_name1();
   true2 instance_name2(.foo(bar));
   true3 #(.param(1)) instance_name3(.foo(bar));
 endmodule
-""").instances
+"""
+        ).instances
         self.assertEqual(len(instances), 3)
         self.assertEqual(instances[0], "true1")
         self.assertEqual(instances[1], "true2")
         self.assertEqual(instances[2], "true3")
 
     def test_parse_instances_after_block_label(self):
-        instances = self.parse("""\
+        instances = self.parse(
+            """\
 module name;
 genvar i;
   generate
@@ -202,16 +222,19 @@ genvar i;
     true2 instance_name2();
   endgenerate
 endmodule
-""").instances
+"""
+        ).instances
         self.assertEqual(len(instances), 2)
         self.assertEqual(instances[0], "true1")
         self.assertEqual(instances[1], "true2")
 
     def test_parse_instances_without_crashing(self):
-        instances = self.parse("""\
+        instances = self.parse(
+            """\
 module name;
 endmodule identifier
-""").instances
+"""
+        ).instances
         self.assertEqual(len(instances), 0)
 
     def test_can_set_pre_defined_defines(self):
@@ -271,10 +294,13 @@ endmodule
         self.assertEqual(result.modules[0].name, "mod2")
 
     def test_cached_parsing_updated_by_includes(self):
-        self.write_file("include.svh", """
+        self.write_file(
+            "include.svh",
+            """
 module mod;
 endmodule;
-""")
+""",
+        )
         code = """\
 `include "include.svh"
 """
@@ -285,13 +311,16 @@ endmodule;
 
         tick()
 
-        self.write_file("include.svh", """
+        self.write_file(
+            "include.svh",
+            """
 module mod1;
 endmodule;
 
 module mod2;
 endmodule;
-""")
+""",
+        )
         result = self.parse(code, cache=cache, include_paths=[self.output_path])
         self.assertEqual(len(result.modules), 2)
         self.assertEqual(result.modules[0].name, "mod1")
@@ -301,10 +330,13 @@ endmodule;
         cache = {}
         include_paths = [self.output_path, join(self.output_path, "lower_prio")]
 
-        self.write_file(join("lower_prio", "include.svh"), """
+        self.write_file(
+            join("lower_prio", "include.svh"),
+            """
 module mod_lower_prio;
 endmodule;
-""")
+""",
+        )
 
         code = """\
 `include "include.svh"
@@ -314,10 +346,13 @@ endmodule;
         self.assertEqual(len(result.modules), 1)
         self.assertEqual(result.modules[0].name, "mod_lower_prio")
 
-        self.write_file("include.svh", """
+        self.write_file(
+            "include.svh",
+            """
 module mod_higher_prio;
 endmodule;
-""")
+""",
+        )
         result = self.parse(code, cache=cache, include_paths=include_paths)
         self.assertEqual(len(result.modules), 1)
         self.assertEqual(result.modules[0].name, "mod_higher_prio")

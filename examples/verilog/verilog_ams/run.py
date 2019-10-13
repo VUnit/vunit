@@ -12,6 +12,8 @@ root = dirname(__file__)
 vu = VUnit.from_argv()
 lib = vu.add_library("lib")
 lib.add_source_files(join(root, "*.sv"))
-lib.add_source_files(join(root, "*.vams")).set_compile_option("modelsim.vlog_flags", ["-ams"])
+lib.add_source_files(join(root, "*.vams")).set_compile_option(
+    "modelsim.vlog_flags", ["-ams"]
+)
 
 vu.main()

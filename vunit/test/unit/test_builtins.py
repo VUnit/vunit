@@ -51,8 +51,10 @@ class TestBuiltinsAdder(unittest.TestCase):
         try:
             adder.add("foo", dict(argument=2))
         except RuntimeError as exc:
-            self.assertEqual(str(exc),
-                             "Optional builtin %r added with arguments %r has already been added with arguments %r"
-                             % ("foo", dict(argument=2), dict(argument=1)))
+            self.assertEqual(
+                str(exc),
+                "Optional builtin %r added with arguments %r has already been added with arguments %r"
+                % ("foo", dict(argument=2), dict(argument=1)),
+            )
         else:
             self.fail("RuntimeError not raised")

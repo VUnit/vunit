@@ -28,10 +28,15 @@ def tee_to_double_writeline(file_name):
     with open(file_name, "r") as fptr:
         text = fptr.read()
 
-    text = re.sub(r"^(\s *)TEE\((.*?),(.*?)\)\s *;", """\
+    text = re.sub(
+        r"^(\s *)TEE\((.*?),(.*?)\)\s *;",
+        """\
 -- \\g<0> -- Not supported by Cadence Incisive
 \\1WriteLine(OUTPUT, \\3);
-\\1WriteLine(\\2, \\3);""", text, flags=re.MULTILINE)
+\\1WriteLine(\\2, \\3);""",
+        text,
+        flags=re.MULTILINE,
+    )
 
     with open(file_name, "w") as fptr:
         fptr.write(text)
@@ -45,7 +50,9 @@ def replace_context_with_use_clauses(file_name):
     with open(file_name, "r") as fptr:
         text = fptr.read()
 
-    text = text.replace("context vunit_lib.vunit_context;", """\
+    text = text.replace(
+        "context vunit_lib.vunit_context;",
+        """\
 -- context vunit_lib.vunit_context; -- Not supported by Cadence Incisive
 
 use vunit_lib.integer_vector_ptr_pkg.all;
@@ -72,9 +79,12 @@ use vunit_lib.check_pkg.all;
 use vunit_lib.check_deprecated_pkg.all;
 use vunit_lib.run_types_pkg.all;
 use vunit_lib.run_pkg.all;
-use vunit_lib.run_deprecated_pkg.all;""")
+use vunit_lib.run_deprecated_pkg.all;""",
+    )
 
-    text = text.replace("context vunit_lib.com_context;", """\
+    text = text.replace(
+        "context vunit_lib.com_context;",
+        """\
 -- context vunit_lib.com_context; -- Not supported by Cadence Incisive
 use vunit_lib.com_pkg.all;
 use vunit_lib.com_types_pkg.all;
@@ -86,7 +96,8 @@ use vunit_lib.codec_builder_2008_pkg.all;
 use vunit_lib.com_debug_codec_builder_pkg.all;
 use vunit_lib.com_deprecated_pkg.all;
 use vunit_lib.com_common_pkg.all;
-""")
+""",
+    )
 
     with open(file_name, "w") as fptr:
         fptr.write(text)

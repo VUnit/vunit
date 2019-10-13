@@ -19,6 +19,7 @@ class TestDependencies(unittest.TestCase):
     """
     Test to expose simulator dependency requirements
     """
+
     def setUp(self):
         self.data_path = join(dirname(__file__), "dependencies")
         self.output_path = join(dirname(__file__), "dependencies_vunit_out")
@@ -39,8 +40,7 @@ class TestDependencies(unittest.TestCase):
             pkg_file_name = join(self.data_path, "pkg.vhd")
             pkg_body_file_name = join(self.data_path, "pkg_body%i.vhd" % value)
 
-            argv = ["--output-path=%s" % self.output_path,
-                    "-v"]
+            argv = ["--output-path=%s" % self.output_path, "-v"]
             if value == 1:
                 argv.append("--clean")
 

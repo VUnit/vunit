@@ -67,8 +67,9 @@ def check_report(report_file, tests=None):
 
     for status, name in tests:
         if report[name] != status:
-            raise AssertionError("Wrong status of %s got %s expected %s" %
-                                 (name, report[name], status))
+            raise AssertionError(
+                "Wrong status of %s got %s expected %s" % (name, report[name], status)
+            )
 
     num_tests = int(root.attrib["tests"])
     assert num_tests == len(tests)
@@ -118,8 +119,9 @@ def create_tempdir(path=None):
     """
 
     if path is None:
-        path = os.path.join(os.path.dirname(__file__),
-                            "tempdir_%i" % random.randint(0, 2**64 - 1))
+        path = os.path.join(
+            os.path.dirname(__file__), "tempdir_%i" % random.randint(0, 2 ** 64 - 1)
+        )
 
     if os.path.exists(path):
         shutil.rmtree(path)
@@ -139,14 +141,16 @@ def with_tempdir(func):
 
     The path is named the same as the function and its parent module
     """
+
     @functools.wraps(func)
     def new_function(*args, **kwargs):
         """
         Wrapper funciton that maintains temporary directory around nested
         function
         """
-        path_name = os.path.join(os.path.dirname(__file__),
-                                 func.__module__ + "." + func.__name__)
+        path_name = os.path.join(
+            os.path.dirname(__file__), func.__module__ + "." + func.__name__
+        )
 
         with create_tempdir(path_name) as path:
             return func(*args, tempdir=path, **kwargs)
@@ -154,10 +158,9 @@ def with_tempdir(func):
     return new_function
 
 
-def get_vhdl_test_bench(test_bench_name,
-                        tests=None,
-                        same_sim=False,
-                        test_attributes=None):
+def get_vhdl_test_bench(
+    test_bench_name, tests=None, same_sim=False, test_attributes=None
+):
     """
     Create a valid VUnit test bench
 
@@ -186,7 +189,7 @@ def get_vhdl_test_bench(test_bench_name,
                     tests_contents += "-- vunit: %s\n" % attr_name
 
             if idx == last_idx:
-                tests_contents += '    endif;\n'
+                tests_contents += "    endif;\n"
 
     if same_sim:
         contents = "-- vunit: run_all_in_same_sim\n"
@@ -210,22 +213,25 @@ begin
     test_runner_cleanup(runner);
   end process;
 end architecture;
-""".format(test_bench_name=test_bench_name,
-           tests_contents=tests_contents)
+""".format(
+        test_bench_name=test_bench_name, tests_contents=tests_contents
+    )
 
     return contents
 
 
-def create_vhdl_test_bench_file(test_bench_name,
-                                file_name,
-                                tests=None,
-                                same_sim=False,
-                                test_attributes=None):
+def create_vhdl_test_bench_file(
+    test_bench_name, file_name, tests=None, same_sim=False, test_attributes=None
+):
     """
     Create a valid VUnit test bench and writes it to file_name
     """
     with open(file_name, "wb") as fptr:
-        fptr.write(get_vhdl_test_bench(test_bench_name=test_bench_name,
-                                       tests=tests,
-                                       same_sim=same_sim,
-                                       test_attributes=test_attributes).encode("utf-8"))
+        fptr.write(
+            get_vhdl_test_bench(
+                test_bench_name=test_bench_name,
+                tests=tests,
+                same_sim=same_sim,
+                test_attributes=test_attributes,
+            ).encode("utf-8")
+        )

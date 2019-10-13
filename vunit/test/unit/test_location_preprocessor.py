@@ -20,16 +20,16 @@ class TestLocationPreprocessor(unittest.TestCase):
 
     def setUp(self):
         self._location_preprocessor = LocationPreprocessor()
-        self._location_preprocessor.add_subprogram('sub_prog')
-        self._location_preprocessor.add_subprogram('unwanted_sub_prog')
-        self._location_preprocessor.remove_subprogram('unwanted_sub_prog')
-        self._location_preprocessor.remove_subprogram('log')
+        self._location_preprocessor.add_subprogram("sub_prog")
+        self._location_preprocessor.add_subprogram("unwanted_sub_prog")
+        self._location_preprocessor.remove_subprogram("unwanted_sub_prog")
+        self._location_preprocessor.remove_subprogram("log")
 
     def _verify_result(self, code, expected_result):
         """
         Assert that the code after preprocessing is equal to the expected_result
         """
-        result = self._location_preprocessor.run(code, 'foo.vhd')
+        result = self._location_preprocessor.run(code, "foo.vhd")
         self.assertEqual(result, expected_result)
 
     def test_that_procedure_calls_are_found(self):
@@ -100,7 +100,11 @@ unwanted_sub_prog("2");
         self._verify_result(code, expected_result)
 
     def test_that_an_unknown_subprogram_cannot_be_removed(self):
-        self.assertRaises(RuntimeError, self._location_preprocessor.remove_subprogram, 'unknown_sub_prog')
+        self.assertRaises(
+            RuntimeError,
+            self._location_preprocessor.remove_subprogram,
+            "unknown_sub_prog",
+        )
 
     def test_that_similar_sub_program_names_are_ignored(self):
         code = """
@@ -163,7 +167,9 @@ end;
 """
         self._verify_result(code, expected_result)
 
-    def test_that_asserts_with_severity_level_are_not_affected_despite_name_conflict_with_log_functions(self):
+    def test_that_asserts_with_severity_level_are_not_affected_despite_name_conflict_with_log_functions(
+        self
+    ):
         code = """
 assert False report "Failed" severity warning;
 assert False report "Failed" severity error;
@@ -172,7 +178,9 @@ assert False report "Failed" severity failure;
 
         self._verify_result(code, expected_result=code)
 
-    def test_that_assignments_to_signals_and_variables_with_listed_subprogram_names_are_ignored(self):
+    def test_that_assignments_to_signals_and_variables_with_listed_subprogram_names_are_ignored(
+        self
+    ):
         code = """
 sub_prog := true;
 sub_prog <= true;

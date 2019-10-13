@@ -25,35 +25,48 @@ class TestCsvLogs(unittest.TestCase):
         self._log_files = []
         self._all_fields_dir = mkdtemp()
         self._few_fields_dir = mkdtemp()
-        self._all_fields_files = join(self._all_fields_dir, '*.csv')
-        self._few_fields_files = join(self._few_fields_dir, '*.csv')
+        self._all_fields_files = join(self._all_fields_dir, "*.csv")
+        self._few_fields_files = join(self._few_fields_dir, "*.csv")
 
         def make_log(directory, contents):
-            with NamedTemporaryFile('w+', delete=False, dir=directory, suffix='.csv') as file_obj:
+            """
+            Make log
+            """
+            with NamedTemporaryFile(
+                "w+", delete=False, dir=directory, suffix=".csv"
+            ) as file_obj:
                 file_obj.write(contents)
                 self._log_files.append(file_obj.name)
 
-        make_log(self._all_fields_dir,
-                 "0,10 fs,info,bar.vhd,17,src1,This is an info entry.\n"
-                 "10,20 ps,failure,foo.vhd,42,src2,This is a failure entry.\n"
-                 "21,30 ns,error,foo.vhd,42,src2,This is an error entry.\n")
+        make_log(
+            self._all_fields_dir,
+            "0,10 fs,info,bar.vhd,17,src1,This is an info entry.\n"
+            "10,20 ps,failure,foo.vhd,42,src2,This is a failure entry.\n"
+            "21,30 ns,error,foo.vhd,42,src2,This is an error entry.\n",
+        )
 
         make_log(self._all_fields_dir, "")
 
-        make_log(self._all_fields_dir,
-                 "4,100 fs,info,zoo.vhd,17,src3,This is an info entry.\n"
-                 "30,50 ns,failure,ying.vhd,42,src4,This is a failure entry.\n"
-                 "31,70 ns,error,yang.vhd,42,src5,This is an error entry.\n")
+        make_log(
+            self._all_fields_dir,
+            "4,100 fs,info,zoo.vhd,17,src3,This is an info entry.\n"
+            "30,50 ns,failure,ying.vhd,42,src4,This is a failure entry.\n"
+            "31,70 ns,error,yang.vhd,42,src5,This is an error entry.\n",
+        )
 
-        make_log(self._few_fields_dir,
-                 "0,10 fs,info,src1,This is an info entry.\n"
-                 "10,20 ps,failure,src2,This is a failure entry.\n"
-                 "21,30 ns,error,src2,This is an error entry.\n")
+        make_log(
+            self._few_fields_dir,
+            "0,10 fs,info,src1,This is an info entry.\n"
+            "10,20 ps,failure,src2,This is a failure entry.\n"
+            "21,30 ns,error,src2,This is an error entry.\n",
+        )
 
-        make_log(self._few_fields_dir,
-                 "4,100 fs,info,src3,This is an info entry.\n"
-                 "30,50 ns,failure,src4,This is a failure entry.\n"
-                 "31,70 ns,error,src5,This is an error entry.\n")
+        make_log(
+            self._few_fields_dir,
+            "4,100 fs,info,src3,This is an info entry.\n"
+            "30,50 ns,failure,src4,This is a failure entry.\n"
+            "31,70 ns,error,src5,This is an error entry.\n",
+        )
 
     @staticmethod
     def _write_to_file_and_read_back_result(csv_logs):
@@ -123,7 +136,9 @@ class TestCsvLogs(unittest.TestCase):
         self.assertEqual(result, expected_result)
 
     def test_should_sort_several_csv_files_with_non_default_fields(self):
-        csvlogs = CsvLogs(self._few_fields_files, ['#', 'Time', 'Level', 'Source', 'Message'])
+        csvlogs = CsvLogs(
+            self._few_fields_files, ["#", "Time", "Level", "Source", "Message"]
+        )
 
         result = self._write_to_file_and_read_back_result(csvlogs)
         expected_result = """#,Time,Level,Source,Message

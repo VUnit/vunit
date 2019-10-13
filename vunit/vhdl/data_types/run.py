@@ -13,7 +13,10 @@ root = dirname(__file__)
 ui = VUnit.from_argv()
 lib = ui.library("vunit_lib")
 for file_name in glob(join(root, "test", "*.vhd")):
-    if basename(file_name).endswith("2008p.vhd") and ui.vhdl_standard not in ["2008", "2019"]:
+    if basename(file_name).endswith("2008p.vhd") and ui.vhdl_standard not in [
+        "2008",
+        "2019",
+    ]:
         continue
     lib.add_source_file(file_name)
 

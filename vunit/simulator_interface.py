@@ -61,15 +61,15 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         """
         Return a list of all executables found in PATH
         """
-        path = os.environ.get('PATH', None)
+        path = os.environ.get("PATH", None)
         if path is None:
             return []
 
         paths = path.split(os.pathsep)
         _, ext = os.path.splitext(executable)
 
-        if (sys.platform == 'win32' or os.name == 'os2') and (ext != '.exe'):
-            executable = executable + '.exe'
+        if (sys.platform == "win32" or os.name == "os2") and (ext != ".exe"):
+            executable = executable + ".exe"
 
         result = []
         if isfile(executable):
@@ -115,13 +115,19 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         if not executables:
             return None
 
-        all_paths = [[os.path.abspath(os.path.dirname(executables))
-                      for executables in cls.find_executable(name)]
-                     for name in executables]
+        all_paths = [
+            [
+                os.path.abspath(os.path.dirname(executables))
+                for executables in cls.find_executable(name)
+            ]
+            for name in executables
+        ]
 
         for path0 in all_paths[0]:
-            if all([path0 in paths for paths in all_paths]
-                   + [constraint(path0) for constraint in constraints]):
+            if all(
+                [path0 in paths for paths in all_paths]
+                + [constraint(path0) for constraint in constraints]
+            ):
                 return path0
         return None
 
@@ -152,7 +158,9 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         """
         return False
 
-    def merge_coverage(self, file_name, args):  # pylint: disable=unused-argument, no-self-use
+    def merge_coverage(  # pylint: disable=unused-argument, no-self-use
+        self, file_name, args
+    ):
         """
         Hook for simulator interface to creating coverage reports
         """
@@ -163,14 +171,22 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         Hook for the simulator interface to add simulator specific things to the project
         """
 
-    def compile_project(self, project, printer=NO_COLOR_PRINTER, continue_on_error=False, target_files=None):
+    def compile_project(
+        self,
+        project,
+        printer=NO_COLOR_PRINTER,
+        continue_on_error=False,
+        target_files=None,
+    ):
         """
         Compile the project
         param: target_files: Given a list of SourceFiles only these and dependent files are compiled
         """
         self.add_simulator_specific(project)
         self.setup_library_mapping(project)
-        self.compile_source_files(project, printer, continue_on_error, target_files=target_files)
+        self.compile_source_files(
+            project, printer, continue_on_error, target_files=target_files
+        )
 
     def simulate(self, output_path, test_suite_name, config, elaborate_only):
         """
@@ -197,8 +213,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
             return False
 
         try:
-            output = check_output(command,
-                                  env=self.get_env())
+            output = check_output(command, env=self.get_env())
             printer.write("passed", fg="gi")
             printer.write("\n")
             printer.write(output)
@@ -206,8 +221,9 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         except subprocess.CalledProcessError as err:
             printer.write("failed", fg="ri")
             printer.write("\n")
-            printer.write("=== Command used: ===\n%s\n"
-                          % (subprocess.list2cmdline(command)))
+            printer.write(
+                "=== Command used: ===\n%s\n" % (subprocess.list2cmdline(command))
+            )
             printer.write("\n")
             printer.write("=== Command output: ===\n%s\n" % err.output)
 
@@ -215,7 +231,13 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
 
         return True
 
-    def compile_source_files(self, project, printer=NO_COLOR_PRINTER, continue_on_error=False, target_files=None):
+    def compile_source_files(
+        self,
+        project,
+        printer=NO_COLOR_PRINTER,
+        continue_on_error=False,
+        target_files=None,
+    ):
         """
         Use compile_source_file_command to compile all source_files
         param: target_files: Given a list of SourceFiles only these and dependent files are compiled
@@ -224,7 +246,9 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         failures = []
 
         if target_files is None:
-            source_files = project.get_files_in_compile_order(dependency_graph=dependency_graph)
+            source_files = project.get_files_in_compile_order(
+                dependency_graph=dependency_graph
+            )
         else:
             source_files = project.get_minimal_file_set_in_compile_order(target_files)
 
@@ -233,14 +257,21 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         max_library_name = 0
         max_source_file_name = 0
         if source_files:
-            max_library_name = max(len(source_file.library.name) for source_file in source_files)
-            max_source_file_name = max(len(simplify_path(source_file.name)) for source_file in source_files)
+            max_library_name = max(
+                len(source_file.library.name) for source_file in source_files
+            )
+            max_source_file_name = max(
+                len(simplify_path(source_file.name)) for source_file in source_files
+            )
 
         for source_file in source_files:
             printer.write(
-                'Compiling into %s %s ' % (
+                "Compiling into %s %s "
+                % (
                     (source_file.library.name + ":").ljust(max_library_name + 1),
-                    simplify_path(source_file.name).ljust(max_source_file_name)))
+                    simplify_path(source_file.name).ljust(max_source_file_name),
+                )
+            )
             sys.stdout.flush()
 
             if source_file in source_files_to_skip:
@@ -251,22 +282,26 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
             if self.__compile_source_file(source_file, printer):
                 project.update(source_file)
             else:
-                source_files_to_skip.update(dependency_graph.get_dependent([source_file]))
+                source_files_to_skip.update(
+                    dependency_graph.get_dependent([source_file])
+                )
                 failures.append(source_file)
 
                 if not continue_on_error:
                     break
 
         if failures:
-            printer.write("Compile failed\n", fg='ri')
+            printer.write("Compile failed\n", fg="ri")
             raise CompileError
 
         if source_files:
-            printer.write("Compile passed\n", fg='gi')
+            printer.write("Compile passed\n", fg="gi")
         else:
             printer.write("Re-compile not needed\n")
 
-    def compile_source_file_command(self, source_file):  # pylint: disable=unused-argument
+    def compile_source_file_command(  # pylint: disable=unused-argument
+        self, source_file
+    ):
         raise NotImplementedError
 
     @staticmethod
@@ -304,9 +339,9 @@ def check_output(command, env=None):
     Wrapper arround subprocess.check_output
     """
     try:
-        output = subprocess.check_output(command,  # pylint: disable=unexpected-keyword-arg
-                                         env=env,
-                                         stderr=subprocess.STDOUT)
+        output = subprocess.check_output(  # pylint: disable=unexpected-keyword-arg
+            command, env=env, stderr=subprocess.STDOUT
+        )
     except subprocess.CalledProcessError as err:
         err.output = err.output.decode("utf-8")
         raise err
@@ -336,8 +371,7 @@ class BooleanOption(Option):
 
     def validate(self, value):
         if value not in (True, False):
-            raise ValueError("Option %r must be a boolean. Got %r"
-                             % (self.name, value))
+            raise ValueError("Option %r must be a boolean. Got %r" % (self.name, value))
 
 
 class StringOption(Option):
@@ -347,8 +381,7 @@ class StringOption(Option):
 
     def validate(self, value):
         if not is_string_not_iterable(value):
-            raise ValueError("Option %r must be a string. Got %r"
-                             % (self.name, value))
+            raise ValueError("Option %r must be a string. Got %r" % (self.name, value))
 
 
 class ListOfStringOption(Option):
@@ -358,8 +391,9 @@ class ListOfStringOption(Option):
 
     def validate(self, value):
         def fail():
-            raise ValueError("Option %r must be a list of strings. Got %r"
-                             % (self.name, value))
+            raise ValueError(
+                "Option %r must be a list of strings. Got %r" % (self.name, value)
+            )
 
         if is_string_not_iterable(value):
             fail()
@@ -384,8 +418,10 @@ class VHDLAssertLevelOption(Option):
 
     def validate(self, value):
         if value not in self._legal_values:
-            raise ValueError("Option %r must be one of %s. Got %r"
-                             % (self.name, self._legal_values, value))
+            raise ValueError(
+                "Option %r must be one of %s. Got %r"
+                % (self.name, self._legal_values, value)
+            )
 
 
 def is_string_not_iterable(value):

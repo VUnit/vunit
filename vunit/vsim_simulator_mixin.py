@@ -12,8 +12,7 @@ and RivieraPRO
 import sys
 import os
 from os.path import join, dirname, abspath
-from vunit.ostools import (write_file,
-                           Process)
+from vunit.ostools import write_file, Process
 from vunit.test_suites import get_result_file_name
 from vunit.persistent_tcl_shell import PersistentTclShell
 
@@ -29,15 +28,24 @@ class VsimSimulatorMixin(object):
         sim_cfg_file_name = abspath(sim_cfg_file_name)
         self._sim_cfg_file_name = sim_cfg_file_name
 
-        prefix = self._prefix  # Avoid circular dependency inhibiting process destruction
+        prefix = (
+            self._prefix
+        )  # Avoid circular dependency inhibiting process destruction
         env = self.get_env()
 
         def create_process(ident):
-            return Process([join(prefix, "vsim"), "-c",
-                            "-l", join(dirname(sim_cfg_file_name), "transcript%i" % ident),
-                            "-do", abspath(join(dirname(__file__), "tcl_read_eval_loop.tcl"))],
-                           cwd=dirname(sim_cfg_file_name),
-                           env=env)
+            return Process(
+                [
+                    join(prefix, "vsim"),
+                    "-c",
+                    "-l",
+                    join(dirname(sim_cfg_file_name), "transcript%i" % ident),
+                    "-do",
+                    abspath(join(dirname(__file__), "tcl_read_eval_loop.tcl")),
+                ],
+                cwd=dirname(sim_cfg_file_name),
+                env=env,
+            )
 
         if persistent:
             self._persistent_shell = PersistentTclShell(create_process=create_process)
@@ -58,16 +66,11 @@ class VsimSimulatorMixin(object):
 
         -u flag is needed for continuous output
         """
-        recompile_command = [
-            sys.executable,
-            "-u",
-            sys.argv[0],
-            "--compile"]
+        recompile_command = [sys.executable, "-u", sys.argv[0], "--compile"]
 
         # Strip --clean from re-compile command
         # Leave other arguments intact since users can add custom CLI options
-        recompile_command += [arg for arg in sys.argv[1:]
-                              if arg != "--clean"]
+        recompile_command += [arg for arg in sys.argv[1:] if arg != "--clean"]
 
         recompile_command_visual = " ".join(recompile_command)
 
@@ -78,15 +81,21 @@ class VsimSimulatorMixin(object):
             "%s" % sys.executable,
             "-u",
             "-c",
-            ("import sys;"
-             "import subprocess;"
-             "exit(subprocess.call(%r, "
-             "cwd=%r, "
-             "bufsize=0, "
-             "universal_newlines=True, "
-             "stdout=sys.stdout, "
-             "stderr=sys.stdout))") % (recompile_command, abspath(os.getcwd()))]
-        recompile_command_eval_tcl = " ".join(["{%s}" % part for part in recompile_command_eval])
+            (
+                "import sys;"
+                "import subprocess;"
+                "exit(subprocess.call(%r, "
+                "cwd=%r, "
+                "bufsize=0, "
+                "universal_newlines=True, "
+                "stdout=sys.stdout, "
+                "stderr=sys.stdout))"
+            )
+            % (recompile_command, abspath(os.getcwd())),
+        ]
+        recompile_command_eval_tcl = " ".join(
+            ["{%s}" % part for part in recompile_command_eval]
+        )
 
         tcl = """
 proc vunit_compile {} {
@@ -115,14 +124,13 @@ proc vunit_restart {} {
         vunit_run
     }
 }
-""" % (recompile_command_visual, recompile_command_eval_tcl)
+""" % (
+            recompile_command_visual,
+            recompile_command_eval_tcl,
+        )
         return tcl
 
-    def _create_common_script(self,
-                              test_suite_name,
-                              config,
-                              script_path,
-                              output_path):
+    def _create_common_script(self, test_suite_name, config, script_path, output_path):
         """
         Create tcl script with functions common to interactive and batch modes
         """
@@ -178,7 +186,7 @@ proc vunit_run {} {
         """
         batch_do = ""
         batch_do += "onerror {quit -code 1}\n"
-        batch_do += "source \"%s\"\n" % fix_path(common_file_name)
+        batch_do += 'source "%s"\n' % fix_path(common_file_name)
         batch_do += "set failed [vunit_load]\n"
         batch_do += "if {$failed} {quit -code 1}\n"
         if not load_only:
@@ -245,9 +253,11 @@ proc vunit_run {} {
         return true
     }
 """
-        tcl = template % (fix_path(abspath(config.tb_path)),
-                          fix_path(abspath(file_name)),
-                          message)
+        tcl = template % (
+            fix_path(abspath(config.tb_path)),
+            fix_path(abspath(file_name)),
+            message,
+        )
         return tcl
 
     def _create_gui_script(self, common_file_name, config):
@@ -268,9 +278,14 @@ proc vunit_run {} {
         """
 
         try:
-            args = [join(self._prefix, "vsim"), "-gui" if gui else "-c",
-                    "-l", join(dirname(batch_file_name), "transcript"),
-                    '-do', "source \"%s\"" % fix_path(batch_file_name)]
+            args = [
+                join(self._prefix, "vsim"),
+                "-gui" if gui else "-c",
+                "-l",
+                join(dirname(batch_file_name), "transcript"),
+                "-do",
+                'source "%s"' % fix_path(batch_file_name),
+            ]
 
             proc = Process(args, cwd=dirname(self._sim_cfg_file_name))
             proc.consume_output()
@@ -307,15 +322,16 @@ proc vunit_run {} {
         gui_file_name = join(script_path, "gui.do")
         batch_file_name = join(script_path, "batch.do")
 
-        write_file(common_file_name,
-                   self._create_common_script(test_suite_name,
-                                              config,
-                                              script_path,
-                                              output_path))
-        write_file(gui_file_name,
-                   self._create_gui_script(common_file_name, config))
-        write_file(batch_file_name,
-                   self._create_batch_script(common_file_name, elaborate_only))
+        write_file(
+            common_file_name,
+            self._create_common_script(
+                test_suite_name, config, script_path, output_path
+            ),
+        )
+        write_file(gui_file_name, self._create_gui_script(common_file_name, config))
+        write_file(
+            batch_file_name, self._create_batch_script(common_file_name, elaborate_only)
+        )
 
         if self._gui:
             return self._run_batch_file(gui_file_name, gui=True)
@@ -353,5 +369,7 @@ proc is_test_suite_done {} {
 
     return false;
 }
-""" % (fix_path(vunit_result_file))
+""" % (
+        fix_path(vunit_result_file)
+    )
     return tcl

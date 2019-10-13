@@ -24,17 +24,13 @@ def new_token_kind(name):
     Create a new token kind with nice __repr__
     """
 
-    def new_token(kind, value='', location=None):
+    def new_token(kind, value="", location=None):
         """
         Create new token of kind
         """
         return Token(kind, value, location)
 
-    cls = type(name,
-               (object,), {
-                   "__repr__": lambda self: name,
-                   "__call__": new_token
-               })
+    cls = type(name, (object,), {"__repr__": lambda self: name, "__call__": new_token})
     return cls()
 
 
@@ -52,15 +48,20 @@ class Tokenizer(object):
         """
         Add token type
         """
-        key = chr(ord('a') + len(self._regexs))
+        key = chr(ord("a") + len(self._regexs))
         self._regexs.append((key, regex))
         self._assoc[key] = (kind, func)
         return kind
 
     def finalize(self):
-        self._regex = re.compile("|".join("(?P<%s>%s)" % spec for spec in self._regexs), re.VERBOSE | re.MULTILINE)
+        self._regex = re.compile(
+            "|".join("(?P<%s>%s)" % spec for spec in self._regexs),
+            re.VERBOSE | re.MULTILINE,
+        )
 
-    def tokenize(self, code, file_name=None, previous_location=None, create_locations=False):
+    def tokenize(
+        self, code, file_name=None, previous_location=None, create_locations=False
+    ):
         """
         Tokenize the code
         """
@@ -159,8 +160,9 @@ class TokenStream(object):
                 expected = str(kinds[0])
             else:
                 expected = "any of [%s]" % ", ".join(str(kind) for kind in kinds)
-            raise LocationException.error("Expected %s got %s" % (expected, token.kind),
-                                          token.location)
+            raise LocationException.error(
+                "Expected %s got %s" % (expected, token.kind), token.location
+            )
         return token
 
     def slice(self, start, end):
@@ -200,9 +202,15 @@ def describe_location(location, first=True):
         lstart = count
         lend = lstart + len(line)
         if lstart <= start <= lend:
-            retval += "%s %s line %i:\n" % (prefix, simplify_path(file_name), lineno + 1)
+            retval += "%s %s line %i:\n" % (
+                prefix,
+                simplify_path(file_name),
+                lineno + 1,
+            )
             retval += line + "\n"
-            retval += (" " * (start - lstart)) + ("~" * (min(lend - 1, end) - start + 1))
+            retval += (" " * (start - lstart)) + (
+                "~" * (min(lend - 1, end) - start + 1)
+            )
             return retval
 
         count = lend + 1
@@ -219,6 +227,7 @@ class LocationException(Exception):
     """
     A an exception to be raised when there is a problem in a location
     """
+
     @classmethod
     def error(cls, message, location):
         return cls(message, location, "error")
@@ -249,8 +258,7 @@ class LocationException(Exception):
         else:
             method = logger.debug
 
-        method(self._message + "\n%s",
-               describe_location(self._location))
+        method(self._message + "\n%s", describe_location(self._location))
 
 
 def add_previous(location, previous):

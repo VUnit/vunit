@@ -40,7 +40,9 @@ class TestTestReport(TestCase):
     def test_report_with_all_passed_tests(self):
         report = self._report_with_all_passed_tests()
         report.set_real_total_time(1.0)
-        self.assertEqual(self.report_to_str(report), """\
+        self.assertEqual(
+            self.report_to_str(report),
+            """\
 ==== Summary ========================
 {gi}pass{x} passed_test0 (1.0 seconds)
 {gi}pass{x} passed_test1 (2.0 seconds)
@@ -51,17 +53,19 @@ Total time was 3.0 seconds
 Elapsed time was 1.0 seconds
 =====================================
 {gi}All passed!{x}
-""")
+""",
+        )
         self.assertTrue(report.all_ok())
         self.assertTrue(report.result_of("passed_test0").passed)
         self.assertTrue(report.result_of("passed_test1").passed)
-        self.assertRaises(KeyError,
-                          report.result_of, "invalid_test")
+        self.assertRaises(KeyError, report.result_of, "invalid_test")
 
     def test_report_with_missing_tests(self):
         report = self._report_with_missing_tests()
         report.set_real_total_time(1.0)
-        self.assertEqual(self.report_to_str(report), """\
+        self.assertEqual(
+            self.report_to_str(report),
+            """\
 ==== Summary ========================
 {gi}pass{x} passed_test0 (1.0 seconds)
 {gi}pass{x} passed_test1 (2.0 seconds)
@@ -73,17 +77,19 @@ Elapsed time was 1.0 seconds
 =====================================
 {gi}All passed!{x}
 {rgi}WARNING: Test execution aborted after running 2 out of 3 tests{x}
-""")
+""",
+        )
         self.assertTrue(report.all_ok())
         self.assertTrue(report.result_of("passed_test0").passed)
         self.assertTrue(report.result_of("passed_test1").passed)
-        self.assertRaises(KeyError,
-                          report.result_of, "invalid_test")
+        self.assertRaises(KeyError, report.result_of, "invalid_test")
 
     def test_report_with_failed_tests(self):
         report = self._report_with_some_failed_tests()
         report.set_real_total_time(12.0)
-        self.assertEqual(self.report_to_str(report), """\
+        self.assertEqual(
+            self.report_to_str(report),
+            """\
 ==== Summary ========================
 {gi}pass{x} passed_test  (2.0 seconds)
 {ri}fail{x} failed_test0 (11.1 seconds)
@@ -96,7 +102,8 @@ Total time was 16.1 seconds
 Elapsed time was 12.0 seconds
 =====================================
 {ri}Some failed!{x}
-""")
+""",
+        )
         self.assertFalse(report.all_ok())
         self.assertTrue(report.result_of("passed_test").passed)
         self.assertTrue(report.result_of("failed_test0").failed)
@@ -105,7 +112,9 @@ Elapsed time was 12.0 seconds
     def test_report_with_skipped_tests(self):
         report = self._report_with_some_skipped_tests()
         report.set_real_total_time(3.0)
-        self.assertEqual(self.report_to_str(report), """\
+        self.assertEqual(
+            self.report_to_str(report),
+            """\
 ==== Summary ========================
 {gi}pass{x} passed_test  (1.0 seconds)
 {rgi}skip{x} skipped_test (0.0 seconds)
@@ -119,7 +128,8 @@ Total time was 4.0 seconds
 Elapsed time was 3.0 seconds
 =====================================
 {ri}Some failed!{x}
-""")
+""",
+        )
         self.assertFalse(report.all_ok())
         self.assertTrue(report.result_of("passed_test").passed)
         self.assertTrue(report.result_of("skipped_test").skipped)
@@ -127,13 +137,23 @@ Elapsed time was 3.0 seconds
 
     def test_report_with_no_tests(self):
         report = self._new_report()
-        self.assertEqual(self.report_to_str(report), """\
+        self.assertEqual(
+            self.report_to_str(report),
+            """\
 {rgi}No tests were run!{x}
-""")
+""",
+        )
         self.assertTrue(report.all_ok())
 
-    def assert_has_test(self, root, name, time, status,  # pylint: disable=too-many-arguments
-                        output=None, fmt='jenkins'):  # pylint: disable=too-many-arguments
+    def assert_has_test(
+        self,
+        root,
+        name,
+        time,
+        status,  # pylint: disable=too-many-arguments
+        output=None,
+        fmt="jenkins",
+    ):  # pylint: disable=too-many-arguments
         """
         Assert that junit report xml tree contains a test
         """
@@ -155,7 +175,7 @@ Elapsed time was 3.0 seconds
                 else:
                     assert False
 
-                if status == 'failed' and fmt == 'bamboo':
+                if status == "failed" and fmt == "bamboo":
                     self.assertEqual(test.find("failure").text, output)
                 else:
                     self.assertEqual(test.find("system-out").text, output)
@@ -178,10 +198,12 @@ Elapsed time was 3.0 seconds
         root = ElementTree.fromstring(report.to_junit_xml_str())
         self.assertEqual(root.tag, "testsuite")
         self.assertEqual(len(root.findall("*")), 2)
-        self.assert_has_test(root, "passed_test0", time="1.0", status="passed",
-                             output=fail_output)
-        self.assert_has_test(root, "passed_test1", time="2.0", status="passed",
-                             output=fail_output)
+        self.assert_has_test(
+            root, "passed_test0", time="1.0", status="passed", output=fail_output
+        )
+        self.assert_has_test(
+            root, "passed_test1", time="2.0", status="passed", output=fail_output
+        )
 
     def test_junit_report_with_some_failed_tests(self):
         report = self._report_with_some_failed_tests()
@@ -194,12 +216,20 @@ Elapsed time was 3.0 seconds
 
     def test_junit_report_with_some_failed_tests_bamboo_fmt(self):
         report = self._report_with_some_failed_tests()
-        root = ElementTree.fromstring(report.to_junit_xml_str(xunit_xml_format='bamboo'))
+        root = ElementTree.fromstring(
+            report.to_junit_xml_str(xunit_xml_format="bamboo")
+        )
         self.assertEqual(root.tag, "testsuite")
         self.assertEqual(len(root.findall("*")), 3)
-        self.assert_has_test(root, "failed_test0", time="11.1", status="failed", fmt='bamboo')
-        self.assert_has_test(root, "passed_test", time="2.0", status="passed", fmt='bamboo')
-        self.assert_has_test(root, "failed_test1", time="3.0", status="failed", fmt='bamboo')
+        self.assert_has_test(
+            root, "failed_test0", time="11.1", status="failed", fmt="bamboo"
+        )
+        self.assert_has_test(
+            root, "passed_test", time="2.0", status="passed", fmt="bamboo"
+        )
+        self.assert_has_test(
+            root, "failed_test1", time="3.0", status="failed", fmt="bamboo"
+        )
 
     def test_junit_report_with_some_skipped_tests(self):
         report = self._report_with_some_skipped_tests()
@@ -212,63 +242,89 @@ Elapsed time was 3.0 seconds
 
     def test_junit_report_with_testcase_classname(self):
         report = self._new_report()
-        report.add_result("test", PASSED, time=1.0,
-                          output_file_name=self.output_file_name)
-        report.add_result("lib.entity", PASSED, time=1.0,
-                          output_file_name=self.output_file_name)
-        report.add_result("lib.entity.test", PASSED, time=1.0,
-                          output_file_name=self.output_file_name)
-        report.add_result("lib.entity.config.test", PASSED, time=1.0,
-                          output_file_name=self.output_file_name)
+        report.add_result(
+            "test", PASSED, time=1.0, output_file_name=self.output_file_name
+        )
+        report.add_result(
+            "lib.entity", PASSED, time=1.0, output_file_name=self.output_file_name
+        )
+        report.add_result(
+            "lib.entity.test", PASSED, time=1.0, output_file_name=self.output_file_name
+        )
+        report.add_result(
+            "lib.entity.config.test",
+            PASSED,
+            time=1.0,
+            output_file_name=self.output_file_name,
+        )
         root = ElementTree.fromstring(report.to_junit_xml_str())
-        names = set((elem.attrib.get("classname", None), elem.attrib.get("name", None))
-                    for elem in root.findall("testcase"))
-        self.assertEqual(names, set([(None, "test"),
-                                     ("lib", "entity"),
-                                     ("lib.entity", "test"),
-                                     ("lib.entity.config", "test")]))
+        names = set(
+            (elem.attrib.get("classname", None), elem.attrib.get("name", None))
+            for elem in root.findall("testcase")
+        )
+        self.assertEqual(
+            names,
+            set(
+                [
+                    (None, "test"),
+                    ("lib", "entity"),
+                    ("lib.entity", "test"),
+                    ("lib.entity.config", "test"),
+                ]
+            ),
+        )
 
     def _report_with_all_passed_tests(self):
         " @returns A report with all passed tests "
         report = self._new_report()
-        report.add_result("passed_test0", PASSED, time=1.0,
-                          output_file_name=self.output_file_name)
-        report.add_result("passed_test1", PASSED, time=2.0,
-                          output_file_name=self.output_file_name)
+        report.add_result(
+            "passed_test0", PASSED, time=1.0, output_file_name=self.output_file_name
+        )
+        report.add_result(
+            "passed_test1", PASSED, time=2.0, output_file_name=self.output_file_name
+        )
         report.set_expected_num_tests(2)
         return report
 
     def _report_with_missing_tests(self):
         " @returns A report with all passed tests "
         report = self._new_report()
-        report.add_result("passed_test0", PASSED, time=1.0,
-                          output_file_name=self.output_file_name)
-        report.add_result("passed_test1", PASSED, time=2.0,
-                          output_file_name=self.output_file_name)
+        report.add_result(
+            "passed_test0", PASSED, time=1.0, output_file_name=self.output_file_name
+        )
+        report.add_result(
+            "passed_test1", PASSED, time=2.0, output_file_name=self.output_file_name
+        )
         report.set_expected_num_tests(3)
         return report
 
     def _report_with_some_failed_tests(self):
         " @returns A report with some failed tests "
         report = self._new_report()
-        report.add_result("failed_test0", FAILED, time=11.12,
-                          output_file_name=self.output_file_name)
-        report.add_result("passed_test", PASSED, time=2.0,
-                          output_file_name=self.output_file_name)
-        report.add_result("failed_test1", FAILED, time=3.0,
-                          output_file_name=self.output_file_name)
+        report.add_result(
+            "failed_test0", FAILED, time=11.12, output_file_name=self.output_file_name
+        )
+        report.add_result(
+            "passed_test", PASSED, time=2.0, output_file_name=self.output_file_name
+        )
+        report.add_result(
+            "failed_test1", FAILED, time=3.0, output_file_name=self.output_file_name
+        )
         report.set_expected_num_tests(3)
         return report
 
     def _report_with_some_skipped_tests(self):
         " @returns A report with some skipped tests "
         report = self._new_report()
-        report.add_result("passed_test", PASSED, time=1.0,
-                          output_file_name=self.output_file_name)
-        report.add_result("skipped_test", SKIPPED, time=0.0,
-                          output_file_name=self.output_file_name)
-        report.add_result("failed_test", FAILED, time=3.0,
-                          output_file_name=self.output_file_name)
+        report.add_result(
+            "passed_test", PASSED, time=1.0, output_file_name=self.output_file_name
+        )
+        report.add_result(
+            "skipped_test", SKIPPED, time=0.0, output_file_name=self.output_file_name
+        )
+        report.add_result(
+            "failed_test", FAILED, time=3.0, output_file_name=self.output_file_name
+        )
         report.set_expected_num_tests(3)
         return report
 
@@ -280,6 +336,7 @@ class StubPrinter(object):
     """
     A stub of a ColorPrinter
     """
+
     def __init__(self):
         self.report_str = ""
 

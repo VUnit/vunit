@@ -11,13 +11,14 @@ Contains different kinds of test suites
 
 from os.path import join
 from vunit import ostools
-from vunit.test_report import (PASSED, SKIPPED, FAILED)
+from vunit.test_report import PASSED, SKIPPED, FAILED
 
 
 class IndependentSimTestCase(object):
     """
     A test case to be run in an independent simulation
     """
+
     def __init__(self, test, config, simulator_if, elaborate_only=False):
         self._name = "%s.%s" % (config.library_name, config.design_unit_name)
 
@@ -34,11 +35,13 @@ class IndependentSimTestCase(object):
 
         self._test = test
 
-        self._run = TestRun(simulator_if=simulator_if,
-                            config=config,
-                            elaborate_only=elaborate_only,
-                            test_suite_name=self._name,
-                            test_cases=[test.name])
+        self._run = TestRun(
+            simulator_if=simulator_if,
+            config=config,
+            elaborate_only=elaborate_only,
+            test_suite_name=self._name,
+            test_cases=[test.name],
+        )
 
     @property
     def file_name(self):
@@ -85,11 +88,13 @@ class SameSimTestSuite(object):
         self._configuration = config
 
         self._tests = tests
-        self._run = TestRun(simulator_if=simulator_if,
-                            config=config,
-                            elaborate_only=elaborate_only,
-                            test_suite_name=self._name,
-                            test_cases=[test.name for test in tests])
+        self._run = TestRun(
+            simulator_if=simulator_if,
+            config=config,
+            elaborate_only=elaborate_only,
+            test_suite_name=self._name,
+            test_cases=[test.name for test in tests],
+        )
 
     @property
     def file_name(self):
@@ -97,16 +102,14 @@ class SameSimTestSuite(object):
 
     @property
     def test_names(self):
-        return [_full_name(self._name, test.name)
-                for test in self._tests]
+        return [_full_name(self._name, test.name) for test in self._tests]
 
     @property
     def test_information(self):
         """
         Returns a dictionary mapping full test name to test information object
         """
-        return {_full_name(self._name, test.name): test
-                for test in self._tests}
+        return {_full_name(self._name, test.name): test for test in self._tests}
 
     @property
     def name(self):
@@ -116,15 +119,22 @@ class SameSimTestSuite(object):
         """
         Keep tests which pattern return False if no remaining tests
         """
+
         def _merge_attributes(attribute_names, attributes):
             merged_attributes = attribute_names.copy()
             merged_attributes.update(set(attributes.keys()))
             return merged_attributes
 
-        self._tests = [test for test in self._tests
-                       if test_filter(name=_full_name(self.name, test.name),
-                                      attribute_names=_merge_attributes(test.attribute_names,
-                                                                        self._configuration.attributes))]
+        self._tests = [
+            test
+            for test in self._tests
+            if test_filter(
+                name=_full_name(self.name, test.name),
+                attribute_names=_merge_attributes(
+                    test.attribute_names, self._configuration.attributes
+                ),
+            )
+        ]
         self._run.set_test_cases([test.name for test in self._tests])
         return len(self._tests) > 0
 
@@ -133,8 +143,10 @@ class SameSimTestSuite(object):
         Run the test suite using output_path
         """
         results = self._run.run(*args, **kwargs)
-        results = {_full_name(self._name, test_name): result
-                   for test_name, result in results.items()}
+        results = {
+            _full_name(self._name, test_name): result
+            for test_name, result in results.items()
+        }
         return results
 
 
@@ -143,7 +155,9 @@ class TestRun(object):
     A single simulation run yielding the results for one or several test cases
     """
 
-    def __init__(self, simulator_if, config, elaborate_only, test_suite_name, test_cases):
+    def __init__(
+        self, simulator_if, config, elaborate_only, test_suite_name, test_cases
+    ):
         self._simulator_if = simulator_if
         self._config = config
         self._elaborate_only = elaborate_only
@@ -163,8 +177,9 @@ class TestRun(object):
         for name in self._test_cases:
             results[name] = FAILED
 
-        if not self._config.call_pre_config(output_path,
-                                            self._simulator_if.output_path):
+        if not self._config.call_pre_config(
+            output_path, self._simulator_if.output_path
+        ):
             return results
 
         # Ensure result file exists
@@ -199,7 +214,13 @@ class TestRun(object):
 
         # Force fail if all tests pass in the presence of non-zero exit code
         if self._simulator_if.has_valid_exit_code() and not sim_ok:
-            return True, dict((name, FAILED) if results[name] is PASSED else (name, results[name]) for name in results)
+            return (
+                True,
+                dict(
+                    (name, FAILED) if results[name] is PASSED else (name, results[name])
+                    for name in results
+                ),
+            )
 
         return False, results
 
@@ -210,13 +231,18 @@ class TestRun(object):
 
         config = self._config.copy()
 
-        if "output_path" in config.generic_names and "output_path" not in config.generics:
-            config.generics["output_path"] = '%s/' % output_path.replace("\\", "/")
+        if (
+            "output_path" in config.generic_names
+            and "output_path" not in config.generics
+        ):
+            config.generics["output_path"] = "%s/" % output_path.replace("\\", "/")
 
         runner_cfg = {
-            "enabled_test_cases": ",".join(encode_test_case(test_case)
-                                           for test_case in self._test_cases
-                                           if test_case is not None),
+            "enabled_test_cases": ",".join(
+                encode_test_case(test_case)
+                for test_case in self._test_cases
+                if test_case is not None
+            ),
             "use_color": self._simulator_if.use_color,
             "output path": output_path.replace("\\", "/") + "/",
             "active python runner": True,
@@ -230,7 +256,8 @@ class TestRun(object):
             output_path=output_path,
             test_suite_name=self._test_suite_name,
             config=config,
-            elaborate_only=self._elaborate_only)
+            elaborate_only=self._elaborate_only,
+        )
 
     def _read_test_results(self, file_name):
         """
@@ -251,7 +278,7 @@ class TestRun(object):
         for line in test_results.splitlines():
 
             if line.startswith("test_start:"):
-                test_name = line[len("test_start:"):]
+                test_name = line[len("test_start:") :]
                 test_starts.append(test_name)
 
             elif line.startswith("test_suite_done"):
@@ -287,7 +314,7 @@ def encode_test_case(test_case):
     included in the runner_cfg string.
     """
     if test_case is not None:
-        return test_case.replace(',', ',,')
+        return test_case.replace(",", ",,")
 
     return None
 
@@ -296,14 +323,14 @@ def encode_dict(dictionary):
     """
     Encode dictionary for custom VHDL dictionary parser
     """
+
     def escape(value):
-        return value.replace(':', '::').replace(',', ',,')
+        return value.replace(":", "::").replace(",", ",,")
 
     encoded = []
     for key in sorted(dictionary.keys()):
         value = dictionary[key]
-        encoded.append("%s : %s" % (escape(key),
-                                    escape(encode_dict_value(value))))
+        encoded.append("%s : %s" % (escape(key), escape(encode_dict_value(value))))
     return ",".join(encoded)
 
 

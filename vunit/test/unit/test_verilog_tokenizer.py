@@ -22,119 +22,97 @@ class TestVerilogTokenizer(TestCase):
     """
 
     def test_tokenizes_define(self):
-        self.check("`define name",
-                   [PREPROCESSOR(value="define"),
-                    WHITESPACE(value=" "),
-                    IDENTIFIER(value="name")])
+        self.check(
+            "`define name",
+            [
+                PREPROCESSOR(value="define"),
+                WHITESPACE(value=" "),
+                IDENTIFIER(value="name"),
+            ],
+        )
 
     def test_tokenizes_string_literal(self):
-        self.check('"hello"',
-                   [STRING(value='hello')])
+        self.check('"hello"', [STRING(value="hello")])
 
-        self.check('"hel""lo"',
-                   [STRING(value='hel'),
-                    STRING(value='lo')])
+        self.check('"hel""lo"', [STRING(value="hel"), STRING(value="lo")])
 
-        self.check(r'"h\"ello"',
-                   [STRING(value='h"ello')])
+        self.check(r'"h\"ello"', [STRING(value='h"ello')])
 
-        self.check(r'"h\"ello"',
-                   [STRING(value='h"ello')])
+        self.check(r'"h\"ello"', [STRING(value='h"ello')])
 
-        self.check(r'"\"ello"',
-                   [STRING(value='"ello')])
+        self.check(r'"\"ello"', [STRING(value='"ello')])
 
-        self.check(r'"\"\""',
-                   [STRING(value='""')])
+        self.check(r'"\"\""', [STRING(value='""')])
 
-        self.check(r'''"hi
+        self.check(
+            r'''"hi
 there"''',
-                   [STRING(value='hi\nthere')])
+            [STRING(value="hi\nthere")],
+        )
 
-        self.check(r'''"hi\
+        self.check(
+            r'''"hi\
 there"''',
-                   [STRING(value='hithere')])
+            [STRING(value="hithere")],
+        )
 
     def test_tokenizes_single_line_comment(self):
-        self.check("// asd",
-                   [COMMENT(value=" asd")])
+        self.check("// asd", [COMMENT(value=" asd")])
 
-        self.check("asd// asd",
-                   [IDENTIFIER(value="asd"),
-                    COMMENT(value=" asd")])
+        self.check("asd// asd", [IDENTIFIER(value="asd"), COMMENT(value=" asd")])
 
-        self.check("asd// asd //",
-                   [IDENTIFIER(value="asd"),
-                    COMMENT(value=" asd //")])
+        self.check("asd// asd //", [IDENTIFIER(value="asd"), COMMENT(value=" asd //")])
 
     def test_tokenizes_multi_line_comment(self):
-        self.check("/* asd */",
-                   [MULTI_COMMENT(value=" asd ")])
+        self.check("/* asd */", [MULTI_COMMENT(value=" asd ")])
 
-        self.check("/* /* asd */",
-                   [MULTI_COMMENT(value=" /* asd ")])
+        self.check("/* /* asd */", [MULTI_COMMENT(value=" /* asd ")])
 
-        self.check("/* /* asd */",
-                   [MULTI_COMMENT(value=" /* asd ")])
+        self.check("/* /* asd */", [MULTI_COMMENT(value=" /* asd ")])
 
-        self.check("/* 1 \n 2 */",
-                   [MULTI_COMMENT(value=" 1 \n 2 ")])
+        self.check("/* 1 \n 2 */", [MULTI_COMMENT(value=" 1 \n 2 ")])
 
-        self.check("/* 1 \r\n 2 */",
-                   [MULTI_COMMENT(value=" 1 \r\n 2 ")])
+        self.check("/* 1 \r\n 2 */", [MULTI_COMMENT(value=" 1 \r\n 2 ")])
 
     def test_tokenizes_semi_colon(self):
-        self.check("asd;",
-                   [IDENTIFIER(value="asd"),
-                    SEMI_COLON(value='')])
+        self.check("asd;", [IDENTIFIER(value="asd"), SEMI_COLON(value="")])
 
     def test_tokenizes_newline(self):
-        self.check("asd\n",
-                   [IDENTIFIER(value="asd"),
-                    NEWLINE(value='')])
+        self.check("asd\n", [IDENTIFIER(value="asd"), NEWLINE(value="")])
 
     def test_tokenizes_comma(self):
-        self.check(",",
-                   [COMMA(value='')])
+        self.check(",", [COMMA(value="")])
 
     def test_tokenizes_parenthesis(self):
-        self.check("()",
-                   [LPAR(value=''),
-                    RPAR(value='')])
+        self.check("()", [LPAR(value=""), RPAR(value="")])
 
     def test_tokenizes_hash(self):
-        self.check("#",
-                   [HASH(value='')])
+        self.check("#", [HASH(value="")])
 
     def test_tokenizes_equal(self):
-        self.check("=",
-                   [EQUAL(value='')])
+        self.check("=", [EQUAL(value="")])
 
     def test_escaped_newline_ignored(self):
-        self.check("a\\\nb",
-                   [IDENTIFIER(value='a'),
-                    IDENTIFIER(value='b')])
+        self.check("a\\\nb", [IDENTIFIER(value="a"), IDENTIFIER(value="b")])
 
     def test_tokenizes_keywords(self):
-        self.check("module",
-                   [MODULE(value='module')])
-        self.check("endmodule",
-                   [ENDMODULE(value='endmodule')])
-        self.check("package",
-                   [PACKAGE(value='package')])
-        self.check("endpackage",
-                   [ENDPACKAGE(value='endpackage')])
-        self.check("parameter",
-                   [PARAMETER(value='parameter')])
-        self.check("import",
-                   [IMPORT(value='import')])
+        self.check("module", [MODULE(value="module")])
+        self.check("endmodule", [ENDMODULE(value="endmodule")])
+        self.check("package", [PACKAGE(value="package")])
+        self.check("endpackage", [ENDPACKAGE(value="endpackage")])
+        self.check("parameter", [PARAMETER(value="parameter")])
+        self.check("import", [IMPORT(value="import")])
 
     def test_has_location_information(self):
-        self.check("`define foo", [
-            PREPROCESSOR(value="define", location=(("fn.v", (0, 6)), None)),
-            WHITESPACE(value=" ", location=(("fn.v", (7, 7)), None)),
-            IDENTIFIER(value="foo", location=(("fn.v", (8, 10)), None)),
-        ], strip_loc=False)
+        self.check(
+            "`define foo",
+            [
+                PREPROCESSOR(value="define", location=(("fn.v", (0, 6)), None)),
+                WHITESPACE(value=" ", location=(("fn.v", (7, 7)), None)),
+                IDENTIFIER(value="foo", location=(("fn.v", (8, 10)), None)),
+            ],
+            strip_loc=False,
+        )
 
     def setUp(self):
         self.tokenizer = VerilogTokenizer()
@@ -152,5 +130,6 @@ there"''',
 
             return tokens
 
-        self.assertEqual(preprocess(list(self.tokenizer.tokenize(code, "fn.v"))),
-                         tokens)
+        self.assertEqual(
+            preprocess(list(self.tokenizer.tokenize(code, "fn.v"))), tokens
+        )

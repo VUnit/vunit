@@ -30,35 +30,41 @@ def gen_wb_tests(obj, *args):
             strobe_prob=strobe_prob,
             ack_prob=ack_prob,
             stall_prob=stall_prob,
-            num_cycles=num_cycles)
+            num_cycles=num_cycles,
+        )
         config_name = encode(tb_cfg)
-        obj.add_config(name=config_name,
-                       generics=dict(encoded_tb_cfg=encode(tb_cfg)))
+        obj.add_config(name=config_name, generics=dict(encoded_tb_cfg=encode(tb_cfg)))
 
 
 def gen_avalon_tests(obj, *args):
-    for data_width, num_cycles, readdatavalid_prob, waitrequest_prob, in product(*args):
+    for data_width, num_cycles, readdatavalid_prob, waitrequest_prob in product(*args):
         tb_cfg = dict(
             data_width=data_width,
             readdatavalid_prob=readdatavalid_prob,
             waitrequest_prob=waitrequest_prob,
-            num_cycles=num_cycles)
+            num_cycles=num_cycles,
+        )
         config_name = encode(tb_cfg)
-        obj.add_config(name=config_name,
-                       generics=dict(encoded_tb_cfg=encode(tb_cfg)))
+        obj.add_config(name=config_name, generics=dict(encoded_tb_cfg=encode(tb_cfg)))
 
 
 def gen_avalon_master_tests(obj, *args):
-    for transfers, readdatavalid_prob, waitrequest_prob, write_prob, read_prob, in product(*args):
+    for (
+        transfers,
+        readdatavalid_prob,
+        waitrequest_prob,
+        write_prob,
+        read_prob,
+    ) in product(*args):
         tb_cfg = dict(
             readdatavalid_prob=readdatavalid_prob,
             waitrequest_prob=waitrequest_prob,
             write_prob=write_prob,
             read_prob=read_prob,
-            transfers=transfers)
+            transfers=transfers,
+        )
         config_name = encode(tb_cfg)
-        obj.add_config(name=config_name,
-                       generics=dict(encoded_tb_cfg=encode(tb_cfg)))
+        obj.add_config(name=config_name, generics=dict(encoded_tb_cfg=encode(tb_cfg)))
 
 
 tb_avalon_slave = lib.test_bench("tb_avalon_slave")
@@ -72,7 +78,9 @@ for test in tb_avalon_master.get_tests():
     if test.name == "wr single rd single":
         gen_avalon_master_tests(test, [1], [1.0], [0.0], [1.0], [1.0])
     else:
-        gen_avalon_master_tests(test, [64], [1.0, 0.3], [0.0, 0.7], [1.0, 0.3], [1.0, 0.3])
+        gen_avalon_master_tests(
+            test, [64], [1.0, 0.3], [0.0, 0.7], [1.0, 0.3], [1.0, 0.3]
+        )
 
 tb_wishbone_slave = lib.test_bench("tb_wishbone_slave")
 
@@ -92,25 +100,37 @@ for id_length in [0, 8]:
     for dest_length in [0, 8]:
         for user_length in [0, 8]:
             for test in tb_axi_stream.get_tests("*check"):
-                test.add_config(name="id_l=%d dest_l=%d user_l=%d" % (id_length, dest_length, user_length),
-                                generics=dict(g_id_length=id_length,
-                                              g_dest_length=dest_length,
-                                              g_user_length=user_length))
+                test.add_config(
+                    name="id_l=%d dest_l=%d user_l=%d"
+                    % (id_length, dest_length, user_length),
+                    generics=dict(
+                        g_id_length=id_length,
+                        g_dest_length=dest_length,
+                        g_user_length=user_length,
+                    ),
+                )
 
 tb_axi_stream_protocol_checker = lib.test_bench("tb_axi_stream_protocol_checker")
 
 for data_length in [0, 8]:
     for test in tb_axi_stream_protocol_checker.get_tests("*passing*tdata*"):
-        test.add_config(name="data_length=%d" % data_length, generics=dict(data_length=data_length))
+        test.add_config(
+            name="data_length=%d" % data_length, generics=dict(data_length=data_length)
+        )
 
 for test in tb_axi_stream_protocol_checker.get_tests("*failing*tid width*"):
     test.add_config(name="dest_length=25", generics=dict(dest_length=25))
-    test.add_config(name="id_length=8 dest_length=17", generics=dict(id_length=8, dest_length=17))
+    test.add_config(
+        name="id_length=8 dest_length=17", generics=dict(id_length=8, dest_length=17)
+    )
 
 test_failing_max_waits = tb_axi_stream_protocol_checker.test(
-    "Test failing check of that tready comes within max_waits after valid")
+    "Test failing check of that tready comes within max_waits after valid"
+)
 for max_waits in [0, 8]:
-    test_failing_max_waits.add_config(name="max_waits=%d" % max_waits, generics=dict(max_waits=max_waits))
+    test_failing_max_waits.add_config(
+        name="max_waits=%d" % max_waits, generics=dict(max_waits=max_waits)
+    )
 
 
 ui.main()

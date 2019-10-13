@@ -40,11 +40,14 @@ class TestOSTools(TestCase):
         return full_file_name
 
     def test_run_basic_subprocess(self):
-        python_script = self.make_file("run_basic.py", r"""
+        python_script = self.make_file(
+            "run_basic.py",
+            r"""
 from sys import stdout
 stdout.write("foo\n")
 stdout.write("bar\n")
-""")
+""",
+        )
 
         output = []
         process = Process([sys.executable, python_script])
@@ -52,35 +55,45 @@ stdout.write("bar\n")
         self.assertEqual(output, ["foo", "bar"])
 
     def test_run_error_subprocess(self):
-        python_script = self.make_file("run_err.py", r"""
+        python_script = self.make_file(
+            "run_err.py",
+            r"""
 from sys import stdout
 stdout.write("error\n")
 exit(1)
-""")
+""",
+        )
         process = Process([sys.executable, python_script])
         output = []
-        self.assertRaises(Process.NonZeroExitCode,
-                          process.consume_output, output.append)
+        self.assertRaises(
+            Process.NonZeroExitCode, process.consume_output, output.append
+        )
         self.assertEqual(output, ["error"])
 
     def test_parses_stderr(self):
-        python_script = self.make_file("run_err.py", r"""
+        python_script = self.make_file(
+            "run_err.py",
+            r"""
 from sys import stderr
 stderr.write("error\n")
-""")
+""",
+        )
         process = Process([sys.executable, python_script])
         output = []
         process.consume_output(output.append)
         self.assertEqual(output, ["error"])
 
     def test_output_is_parallel(self):
-        python_script = self.make_file("run_timeout.py", r"""
+        python_script = self.make_file(
+            "run_timeout.py",
+            r"""
 from time import sleep
 from sys import stdout
 stdout.write("message\n")
 stdout.flush()
 sleep(1000)
-""")
+""",
+        )
 
         process = Process([sys.executable, python_script])
         message = process.next_line()

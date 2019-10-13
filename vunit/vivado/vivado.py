@@ -14,7 +14,9 @@ from os import makedirs
 from os.path import abspath, join, dirname, exists, basename
 
 
-def add_from_compile_order_file(vunit_obj, compile_order_file, dependency_scan_defaultlib=True):
+def add_from_compile_order_file(
+    vunit_obj, compile_order_file, dependency_scan_defaultlib=True
+):
     """
     Add Vivado IP:s from a compile order file
     """
@@ -34,11 +36,14 @@ def add_from_compile_order_file(vunit_obj, compile_order_file, dependency_scan_d
 
         # Optionally use VUnit dependency scanning for everything in xil_defaultlib, which
         # typically contains unencrypted top levels that instantiate encrypted implementations.
-        scan_dependencies = dependency_scan_defaultlib and library_name == "xil_defaultlib"
+        scan_dependencies = (
+            dependency_scan_defaultlib and library_name == "xil_defaultlib"
+        )
         source_file = vunit_obj.library(library_name).add_source_file(
             file_name,
             no_parse=not scan_dependencies,
-            include_dirs=include_dirs if is_verilog else None)
+            include_dirs=include_dirs if is_verilog else None,
+        )
 
         if scan_dependencies:
             with_dependency_scan.append(source_file)
@@ -63,15 +68,20 @@ def create_compile_order_file(project_file, compile_order_file, vivado_path=None
     """
     Create compile file from Vivado project
     """
-    print("Generating Vivado project compile order into %s ..." % abspath(compile_order_file))
+    print(
+        "Generating Vivado project compile order into %s ..."
+        % abspath(compile_order_file)
+    )
 
     if not exists(dirname(compile_order_file)):
         makedirs(dirname(compile_order_file))
 
     print("Extracting compile order ...")
-    run_vivado(join(dirname(__file__), "tcl", "extract_compile_order.tcl"),
-               tcl_args=[project_file, compile_order_file],
-               vivado_path=vivado_path)
+    run_vivado(
+        join(dirname(__file__), "tcl", "extract_compile_order.tcl"),
+        tcl_args=[project_file, compile_order_file],
+        vivado_path=vivado_path,
+    )
 
 
 def _read_compile_order(file_name):
@@ -111,9 +121,12 @@ def run_vivado(tcl_file_name, tcl_args=None, cwd=None, vivado_path=None):
 
     Note: the shell=True is important in windows where Vivado is just a bat file.
     """
-    vivado = "vivado" if vivado_path is None else join(abspath(vivado_path), "bin", "vivado")
-    cmd = "{} -nojournal -nolog -notrace -mode batch -source {}".format(vivado,
-                                                                        abspath(tcl_file_name))
+    vivado = (
+        "vivado" if vivado_path is None else join(abspath(vivado_path), "bin", "vivado")
+    )
+    cmd = "{} -nojournal -nolog -notrace -mode batch -source {}".format(
+        vivado, abspath(tcl_file_name)
+    )
     if tcl_args is not None:
         cmd += " -tclargs " + " ".join([str(val) for val in tcl_args])
 

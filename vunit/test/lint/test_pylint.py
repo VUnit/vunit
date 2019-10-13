@@ -20,8 +20,15 @@ class TestPylint(unittest.TestCase):
     """
     Check that there are no pylint errors or warnings
     """
+
     @staticmethod
     def test_pylint():
-        check_call([sys.executable, "-m", "pylint",
-                    "--rcfile=" + join(dirname(__file__), "pylintrc")]
-                   + get_files_and_folders())
+        check_call(
+            [
+                sys.executable,
+                "-m",
+                "pylint",
+                "--rcfile=" + join(dirname(__file__), "pylintrc"),
+            ]
+            + get_files_and_folders()
+        )
