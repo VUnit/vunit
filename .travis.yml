@@ -28,6 +28,11 @@ matrix:
       - DOCKER_IMAGE=mcode
 
 
+  - env: BUILD_NAME=py37-fmt
+    python: '3.7'
+    script: tox -e $BUILD_NAME -- --check
+
+
   - env: BUILD_NAME=py27-lint
     python: '2.7'
   - env: BUILD_NAME=py37-lint
