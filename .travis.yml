@@ -79,7 +79,7 @@ matrix:
     if: tag IS present
     script:
       - git fetch --unshallow --tags
-      - python tools/new_release.py --check
+      - python tools/release.py validate
     deploy:
       provider: pypi
       distributions: sdist

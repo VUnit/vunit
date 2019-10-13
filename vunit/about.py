@@ -65,12 +65,7 @@ def version():
     """
     Returns VUnit version
     """
-    if PRE_RELEASE:
-        return "%i.%i.%irc0" % (VERSION[0], VERSION[1], VERSION[2] + 1)
-
-    return "%i.%i.%i" % (VERSION[0], VERSION[1], VERSION[2])
+    return VERSION
 
 
-VERSION = (4, 2, 0)
-
-PRE_RELEASE = True
+VERSION = "4.2.0"
