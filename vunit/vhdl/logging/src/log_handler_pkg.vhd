@@ -55,6 +55,10 @@ package log_handler_pkg is
                        variable format : out log_format_t;
                        variable use_color : out boolean);
 
+  impure function new_log_handler(file_name : string;
+                                  format : log_format_t := verbose;
+                                  use_color : boolean := false) return log_handler_t;
+
   ---------------------------------------------
   -- Private parts not intended for public use
   ---------------------------------------------
@@ -70,10 +74,6 @@ package log_handler_pkg is
                            sequence_number : natural;
                            line_num : natural := 0;
                            file_name : string := "");
-
-  impure function new_log_handler(file_name : string;
-                                  format : log_format_t;
-                                  use_color : boolean) return log_handler_t;
 
   procedure init_log_handler(log_handler : log_handler_t;
                              format : log_format_t;

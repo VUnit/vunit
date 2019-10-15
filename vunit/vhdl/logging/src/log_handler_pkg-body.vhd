@@ -61,8 +61,8 @@ package body log_handler_pkg is
   end;
 
   impure function new_log_handler(file_name : string;
-                                  format : log_format_t;
-                                  use_color : boolean) return log_handler_t is
+                                  format : log_format_t := verbose;
+                                  use_color : boolean := false) return log_handler_t is
     constant id : natural := get(next_log_handler_id, 0);
   begin
     set(next_log_handler_id, 0, id + 1);
