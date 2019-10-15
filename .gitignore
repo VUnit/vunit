@@ -10,3 +10,6 @@ docs/_build
 docs/examples.rst
 docs/release_notes.rst
 vunit/test/acceptance/*_out
+vunit/test/unit/test_report_output.txt
+env/
+venv/
