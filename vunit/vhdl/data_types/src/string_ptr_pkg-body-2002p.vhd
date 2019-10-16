@@ -38,7 +38,7 @@ package body string_ptr_pkg is
 
     procedure reallocate (
       ref   : natural;
-      value : string
+      value : vec_t
     );
 
     procedure resize (
