@@ -33,8 +33,6 @@ matrix:
     script: tox -e $BUILD_NAME -- --check
 
 
-  - env: BUILD_NAME=py27-lint
-    python: '2.7'
   - env: BUILD_NAME=py37-lint
     dist: xenial
     python: '3.7'

@@ -18,8 +18,6 @@ environment:
     - BUILD_NAME: py37-unit
       PYTHON: "C:\\Python37"
 
-    - BUILD_NAME: py27-lint
-      PYTHON: "C:\\Python27"
     - BUILD_NAME: py37-lint
       PYTHON: "C:\\Python37"
 
