@@ -476,7 +476,7 @@ def wrap(file_obj, use_color=True):
     NOTE:
     imports colorama here to avoid dependency from setup.py importing VUnit before colorama is installed
     """
-    from colorama import AnsiToWin32
+    from colorama import AnsiToWin32  # pylint: disable=import-outside-toplevel
 
     if use_color:
         return AnsiToWin32(file_obj).stream

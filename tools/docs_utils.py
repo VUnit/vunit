@@ -60,7 +60,7 @@ def _get_eg_doc(location, ref):
 
     print("Extracting docs from '" + basename(location) + "'...")
     sys.path.append(location)
-    from _main import _main  # pylint: disable=import-error
+    from _main import _main  # pylint: disable=import-error,import-outside-toplevel
 
     eg_doc = inspect.getdoc(_main)
     del sys.modules["_main"]
