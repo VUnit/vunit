@@ -19,50 +19,46 @@ matrix:
 
   - <<: *docker
     env:
-      - BUILD_NAME=py37-acceptance-ghdl
+      - BUILD_NAME=py38-acceptance-ghdl
       - DOCKER_IMAGE=llvm
 
   - <<: *docker
     env:
-      - BUILD_NAME=py37-vcomponents-ghdl
+      - BUILD_NAME=py38-vcomponents-ghdl
       - DOCKER_IMAGE=mcode
 
 
-  - env: BUILD_NAME=py37-fmt
-    python: '3.7'
+  - env: BUILD_NAME=py38-fmt
+    python: '3.8'
     script: tox -e $BUILD_NAME -- --check
 
 
-  - env: BUILD_NAME=py37-lint
+  - env: BUILD_NAME=py38-lint
     dist: xenial
-    python: '3.7'
+    python: '3.8'
 
 
   - env: BUILD_NAME=py27-unit
     python: '2.7'
-  - env: BUILD_NAME=py34-unit
-    python: '3.4'
   - env: BUILD_NAME=py35-unit
     python: '3.5'
-  - env: BUILD_NAME=py36-unit
-    python: '3.6'
-  - env: BUILD_NAME=py37-unit
+  - env: BUILD_NAME=py38-unit
     dist: xenial
-    python: '3.7'
+    python: '3.8'
 
 
   - env: BUILD_NAME=py27-docs
     python: '2.7'
     before_script: git fetch --unshallow --tags
-  - env: BUILD_NAME=py36-docs
-    python: '3.6'
+  - env: BUILD_NAME=py38-docs
+    python: '3.8'
     before_script: git fetch --unshallow --tags
-    after_success: touch .tox/py36-docs/tmp/docsbuild/.nojekyll
+    after_success: touch .tox/${BUILD_NAME}/tmp/docsbuild/.nojekyll
     deploy:
       provider: pages
       repo: VUnit/VUnit.github.io
       target_branch: master
-      local_dir: .tox/py36-docs/tmp/docsbuild/
+      local_dir: .tox/${BUILD_NAME}/tmp/docsbuild/
       # This environment variable is set to an OAuth token in travis vunit settings
       github_token: $GITHUB_PAGES_TOKEN
       skip_cleanup: true
@@ -73,7 +69,7 @@ matrix:
   # Deploy to PyPI whenever the package version has changed
   # When a package version has not changed a new upload will not be triggered
   - stage: deploy
-    python: '3.6'
+    python: '3.8'
     if: tag IS present
     script:
       - git fetch --unshallow --tags
