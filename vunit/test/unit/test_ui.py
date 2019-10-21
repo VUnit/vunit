@@ -19,7 +19,7 @@ import json
 import re
 from re import MULTILINE
 from shutil import rmtree
-from vunit.ui import VUnit
+from vunit.ui.vunit import VUnit
 from vunit.source_file import VHDL_EXTENSIONS, VERILOG_EXTENSIONS
 from vunit.test.mock_2or3 import mock
 from vunit.test.common import set_env, with_tempdir, create_vhdl_test_bench_file
@@ -159,7 +159,7 @@ end architecture;
             )
             self.assertEqual(fread.read(), expectd)
 
-    @mock.patch("vunit.ui.LOGGER.error", autospec=True)
+    @mock.patch("vunit.ui.vunit.LOGGER.error", autospec=True)
     def test_recovers_from_preprocessing_error(self, logger):
         ui = self._create_ui()
         ui.add_library("lib")
@@ -1092,7 +1092,7 @@ endmodule
             ui = self._create_ui_real_sim("--files")
             self._run_main(ui, 0)
 
-    @mock.patch("vunit.ui.LOGGER", autospec=True)
+    @mock.patch("vunit.ui.vunit.LOGGER", autospec=True)
     def test_compile_without_simulator_fails(self, logger):
         with set_env():
             ui = self._create_ui_real_sim("--compile")
@@ -1102,7 +1102,7 @@ endmodule
                 "No available simulator detected" in str(logger.error.mock_calls)
             )
 
-    @mock.patch("vunit.ui.LOGGER", autospec=True)
+    @mock.patch("vunit.ui.vunit.LOGGER", autospec=True)
     def test_simulate_without_simulator_fails(self, logger):
         with set_env():
             ui = self._create_ui_real_sim()
@@ -1187,7 +1187,8 @@ end architecture;
     def _create_ui(self, *args):
         """ Create an instance of the VUnit public interface class """
         with mock.patch(
-            "vunit.ui.SIMULATOR_FACTORY.select_simulator", new=lambda: MockSimulator
+            "vunit.simulator_factory.SIMULATOR_FACTORY.select_simulator",
+            new=lambda: MockSimulator,
         ):
             return self._create_ui_real_sim(*args)
 
