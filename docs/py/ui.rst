@@ -3,11 +3,41 @@
 Python Interface
 ================
 The Python interface of VUnit is exposed through the :class:`VUnit
-<vunit.ui.VUnit>` class that can be imported directly from the
-:mod:`vunit <vunit.ui>` module.
+class <vunit.ui.vunit.VUnit>` that can be imported directly. See the
+:ref:`User Guide <user_guide>` for a quick introduction. The
+following list provides detailed references of the Python API and
+about how to set compilation and simulation options.
 
-.. automodule:: vunit.ui
+.. toctree::
 
+   vunit
+   opts
+
+.. _configurations:
+
+Configurations
+--------------
+In VUnit Python API the name ``configuration`` is used to denote the
+user controllable configuration of one test run such as
+generic/parameter settings, simulation options as well as the
+pre_config and post_check :ref:`callback functions <pre_and_post_hooks>`.
+User :ref:`attributes <attributes>` can also be added as a part of a
+configuration.
+
+Configurations can either be unique for each test case or must be
+common for the entire test bench depending on the situation.  For test
+benches without test such as `tb_example` in the User Guide the
+configuration is common for the entire test bench. For test benches
+containing tests such as `tb_example_many` the configuration is done
+for each test case. If the ``run_all_in_same_sim`` attribute has been used
+configuration is performed at the test bench level even if there are
+individual test within since they must run in the same simulation.
+
+In a VUnit all test benches and test cases are created with an unnamed default
+configuration which is modified by different methods such as ``set_generic`` etc.
+In addition to the unnamed default configuration multiple named configurations
+can be derived from it by using the ``add_config`` method. The default
+configuration is only run if there are no named configurations.
 
 .. _attributes:
 
