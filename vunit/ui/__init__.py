@@ -284,13 +284,13 @@ from vunit.parsing.encodings import HDL_FILE_ENCODING
 from vunit.builtins import Builtins
 from vunit.vhdl_standard import VHDL
 
-from vunit.ui_common import select_vhdl_standard, check_not_empty
-from vunit.ui_source import SourceFile, SourceFileList
-from vunit.ui_test import Test  # pylint: disable=unused-import
-from vunit.ui_testbench import TestBench  # pylint: disable=unused-import
-from vunit.ui_packagefacade import PackageFacade  # pylint: disable=unused-import
-from vunit.ui_library import Library
-from vunit.ui_results import Results
+from vunit.ui.common import select_vhdl_standard, check_not_empty
+from vunit.ui.source import SourceFile, SourceFileList
+from vunit.ui.test import Test  # pylint: disable=unused-import
+from vunit.ui.testbench import TestBench  # pylint: disable=unused-import
+from vunit.ui.packagefacade import PackageFacade  # pylint: disable=unused-import
+from vunit.ui.library import Library
+from vunit.ui.results import Results
 
 
 LOGGER = logging.getLogger(__name__)

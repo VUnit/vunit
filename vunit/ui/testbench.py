@@ -9,8 +9,8 @@ UI class TestBench
 """
 
 from fnmatch import fnmatch
-from vunit.ui_common import lower_generics
-from vunit.ui_test import Test
+from vunit.ui.common import lower_generics
+from vunit.ui.test import Test
 
 
 class TestBench(object):

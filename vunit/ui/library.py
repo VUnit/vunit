@@ -15,10 +15,10 @@ from vunit.simulator_interface import is_string_not_iterable
 from vunit.source_file import file_type_of, FILE_TYPES, VERILOG_FILE_TYPES
 from vunit.builtins import add_verilog_include_dir
 
-from vunit.ui_common import check_not_empty
-from vunit.ui_source import SourceFile, SourceFileList
-from vunit.ui_testbench import TestBench
-from vunit.ui_packagefacade import PackageFacade
+from vunit.ui.common import check_not_empty
+from vunit.ui.source import SourceFile, SourceFileList
+from vunit.ui.testbench import TestBench
+from vunit.ui.packagefacade import PackageFacade
 
 
 class Library(object):
