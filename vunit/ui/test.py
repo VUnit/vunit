@@ -8,7 +8,7 @@
 UI class Test
 """
 
-from vunit.ui.common import lower_generics
+from .common import lower_generics
 
 
 class Test(object):

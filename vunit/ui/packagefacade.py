@@ -9,7 +9,7 @@ UI class PackageFacade
 """
 
 from os.path import join, splitext
-from vunit.com import codec_generator
+from ..com import codec_generator
 
 
 class PackageFacade(object):

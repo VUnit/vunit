@@ -20,31 +20,31 @@ import json
 import os
 from os.path import exists, abspath, join, basename, normpath, dirname
 from fnmatch import fnmatch
-from vunit.database import PickledDataBase, DataBase
-from vunit import ostools
-from vunit.vunit_cli import VUnitCLI
-from vunit.simulator_factory import SIMULATOR_FACTORY
-from vunit.simulator_interface import SimulatorInterface
-from vunit.color_printer import COLOR_PRINTER, NO_COLOR_PRINTER
+from ..database import PickledDataBase, DataBase
+from .. import ostools
+from ..vunit_cli import VUnitCLI
+from ..simulator_factory import SIMULATOR_FACTORY
+from ..simulator_interface import SimulatorInterface
+from ..color_printer import COLOR_PRINTER, NO_COLOR_PRINTER
 
-from vunit.project import Project
-from vunit.test_runner import TestRunner
-from vunit.test_report import TestReport
-from vunit.test_bench_list import TestBenchList
-from vunit.exceptions import CompileError
-from vunit.location_preprocessor import LocationPreprocessor
-from vunit.check_preprocessor import CheckPreprocessor
-from vunit.parsing.encodings import HDL_FILE_ENCODING
-from vunit.builtins import Builtins
-from vunit.vhdl_standard import VHDL
+from ..project import Project
+from ..test_runner import TestRunner
+from ..test_report import TestReport
+from ..test_bench_list import TestBenchList
+from ..exceptions import CompileError
+from ..location_preprocessor import LocationPreprocessor
+from ..check_preprocessor import CheckPreprocessor
+from ..parsing.encodings import HDL_FILE_ENCODING
+from ..builtins import Builtins
+from ..vhdl_standard import VHDL
 
-from vunit.ui.common import LOGGER, select_vhdl_standard, check_not_empty
-from vunit.ui.source import SourceFile, SourceFileList
-from vunit.ui.test import Test  # pylint: disable=unused-import
-from vunit.ui.testbench import TestBench  # pylint: disable=unused-import
-from vunit.ui.packagefacade import PackageFacade  # pylint: disable=unused-import
-from vunit.ui.library import Library
-from vunit.ui.results import Results
+from .common import LOGGER, select_vhdl_standard, check_not_empty
+from .source import SourceFile, SourceFileList
+from .test import Test  # pylint: disable=unused-import
+from .testbench import TestBench  # pylint: disable=unused-import
+from .packagefacade import PackageFacade  # pylint: disable=unused-import
+from .library import Library
+from .results import Results
 
 
 class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-methods

@@ -11,14 +11,14 @@ UI class Library
 from os.path import abspath
 from glob import glob
 from fnmatch import fnmatch
-from vunit.simulator_interface import is_string_not_iterable
-from vunit.source_file import file_type_of, FILE_TYPES, VERILOG_FILE_TYPES
-from vunit.builtins import add_verilog_include_dir
+from ..simulator_interface import is_string_not_iterable
+from ..source_file import file_type_of, FILE_TYPES, VERILOG_FILE_TYPES
+from ..builtins import add_verilog_include_dir
 
-from vunit.ui.common import check_not_empty
-from vunit.ui.source import SourceFile, SourceFileList
-from vunit.ui.testbench import TestBench
-from vunit.ui.packagefacade import PackageFacade
+from .common import check_not_empty
+from .source import SourceFile, SourceFileList
+from .testbench import TestBench
+from .packagefacade import PackageFacade
 
 
 class Library(object):

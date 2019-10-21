@@ -8,7 +8,7 @@
 UI classes SourceFile and SourceFileList
 """
 
-from vunit import ostools
+from .. import ostools
 
 
 class SourceFileList(list):

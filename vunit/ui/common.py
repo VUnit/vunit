@@ -10,7 +10,7 @@ UI common functions
 
 from os import environ
 from logging import getLogger
-from vunit.vhdl_standard import VHDL
+from ..vhdl_standard import VHDL
 
 
 LOGGER = getLogger(__name__)
