@@ -260,8 +260,8 @@ message was produced.  There is also the ``check_log`` procedure which
 checks and consumes one log message from the list of recorded log calls to
 check a sequence of log messages.
 
-The ``mock`` procedures ensures that all future calls to the logger
-are recorded and not sent to a any log handler or cause simulation
+The ``mock`` procedures ensure that all future calls to the logger
+are recorded and not sent to a log handler or cause simulation
 abort. The ``unmock`` procedure restores the logger to its normal
 state.  The ``unmock`` call also checks that all recorded log messages
 have been checked by a corresponding ``check_log`` or
