@@ -23,9 +23,11 @@ jobs:
           { tag: mcode-2, pyver: 2, tgt: mcode, pkg: mcode  },
         ]
     runs-on: ubuntu-latest
+    env:
+      DOCKER_REGISTRY: docker.pkg.github.com
     steps:
     - uses: actions/checkout@v1
-    - name: Run job
+    - name: build image
       env:
         TAG:   ${{ matrix.task.tag }}
         PYVER: ${{ matrix.task.pyver }}
@@ -33,12 +35,18 @@ jobs:
         PKG:   ${{ matrix.task.pkg }}
       run: |
         ./.github/images.sh
-    - name: Deploy to hub.docker.com
+    - name: docker login
+      run: echo "$GITHUB_TOKEN" | docker login -u vunit-gha --password-stdin "$DOCKER_REGISTRY"
       env:
-        DOCKER_USER: ${{ secrets.DOCKER_USER }}
-        DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
-        TAG: ${{ matrix.task.tag }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: docker push
       run: |
-        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-        docker push vunit/dev:$TAG
-        docker logout
+        DIMG="vunit/dev:$TAG"
+        GHIMG="${DOCKER_REGISTRY}/vunit/$DIMG"
+        docker tag "$DIMG" "$GHIMG"
+        docker push "$GHIMG"
+      env:
+        TAG: ${{ matrix.task.tag }}
+    - name: docker logout
+      run: docker logout "$DOCKER_REGISTRY"
+      if: always()
