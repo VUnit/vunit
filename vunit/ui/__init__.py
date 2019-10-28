@@ -38,7 +38,7 @@ from ..test.bench_list import TestBenchList
 from ..test.report import TestReport
 from ..test.runner import TestRunner
 
-from .common import LOGGER, select_vhdl_standard, check_not_empty
+from .common import LOGGER, TEST_OUTPUT_PATH, select_vhdl_standard, check_not_empty
 from .source import SourceFile, SourceFileList
 from .library import Library
 from .results import Results
@@ -769,7 +769,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         report.print_str()
 
         if post_run is not None:
-            post_run(results=Results(simulator_if))
+            post_run(results=Results(self._output_path, simulator_if, report))
 
         del simulator_if
 
@@ -929,7 +929,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
 
         runner = TestRunner(
             report,
-            join(self._output_path, "test_output"),
+            join(self._output_path, TEST_OUTPUT_PATH),
             verbosity=verbosity,
             num_threads=self._args.num_threads,
             fail_fast=self._args.fail_fast,
