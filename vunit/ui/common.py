@@ -15,6 +15,8 @@ from ..vhdl_standard import VHDL
 
 LOGGER = getLogger(__name__)
 
+TEST_OUTPUT_PATH = "test_output"
+
 
 def select_vhdl_standard(vhdl_standard=None):
     """

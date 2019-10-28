@@ -14,6 +14,7 @@ from sys import version_info
 import os
 import socket
 import re
+from os.path import dirname
 from vunit.color_printer import COLOR_PRINTER
 from vunit.ostools import read_file
 
@@ -322,3 +323,13 @@ class TestResult(object):
             skipped = ElementTree.SubElement(test, "skipped")
             skipped.attrib["message"] = "Skipped"
         return test
+
+    def to_dict(self):
+        """
+        Convert a subset of the test result to a dictionary
+        """
+        return {
+            "status": self._status.name,
+            "time": self.time,
+            "path": dirname(self._output_file_name),
+        }

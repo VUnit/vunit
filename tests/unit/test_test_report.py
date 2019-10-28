@@ -10,9 +10,11 @@ Test the test report functionality
 
 from unittest import TestCase
 from xml.etree import ElementTree
-from os.path import join, dirname
+from os.path import basename, dirname, join
 import os
 from vunit.test.report import TestReport, PASSED, SKIPPED, FAILED
+from vunit.ui.common import TEST_OUTPUT_PATH
+from vunit.ui.results import Results
 
 
 class TestTestReport(TestCase):
@@ -274,14 +276,49 @@ Elapsed time was 3.0 seconds
             ),
         )
 
-    def _report_with_all_passed_tests(self):
+    def test_dict_report_with_all_passed_tests(self):
+        opath = dirname(dirname(self.output_file_name))
+        test_path = join(opath, TEST_OUTPUT_PATH, "unit")
+        output_file_name = join(test_path, basename(self.output_file_name))
+        results = Results(
+            opath, None, self._report_with_all_passed_tests(output_file_name),
+        )
+        report = results.get_report()
+        for key, test in report.tests.items():
+            self.assertEqual(
+                basename(test.path), test.relpath,
+            )
+        test0 = report.tests["passed_test0"]
+        test1 = report.tests["passed_test1"]
+        self.assertEqual(
+            {
+                "passed_test0": {
+                    "status": test0.status,
+                    "time": test0.time,
+                    "path": test0.path,
+                },
+                "passed_test1": {
+                    "status": test1.status,
+                    "time": test1.time,
+                    "path": test1.path,
+                },
+            },
+            {
+                "passed_test0": {"status": "passed", "time": 1.0, "path": test_path},
+                "passed_test1": {"status": "passed", "time": 2.0, "path": test_path},
+            },
+        )
+
+    def _report_with_all_passed_tests(self, output_file_name=None):
         " @returns A report with all passed tests "
+        if not output_file_name:
+            output_file_name = self.output_file_name
         report = self._new_report()
         report.add_result(
-            "passed_test0", PASSED, time=1.0, output_file_name=self.output_file_name
+            "passed_test0", PASSED, time=1.0, output_file_name=output_file_name
         )
         report.add_result(
-            "passed_test1", PASSED, time=2.0, output_file_name=self.output_file_name
+            "passed_test1", PASSED, time=2.0, output_file_name=output_file_name
         )
         report.set_expected_num_tests(2)
         return report
