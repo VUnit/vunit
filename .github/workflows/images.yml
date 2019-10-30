@@ -40,6 +40,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: docker push
+      if: github.repository == 'VUnit/vunit'
       run: |
         DIMG="vunit/dev:$TAG"
         GHIMG="${DOCKER_REGISTRY}/vunit/$DIMG"
