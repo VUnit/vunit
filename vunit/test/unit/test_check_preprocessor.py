@@ -29,7 +29,7 @@ class TestCheckPreprocessor(unittest.TestCase):
         self.assertEqual(result, expected_result)
 
     def test_that_only_relation_checks_are_preprocessed_so_that_parsing_is_simplified(
-        self
+        self,
     ):
         code = """
 check_relation(a /= b);
@@ -57,7 +57,7 @@ check_relation(age("John") >= 0, "Age must not be negative.", context_msg => %s)
         self._verify_result(code, expected_result)
 
     def test_that_the_top_level_relation_is_correctly_identified_as_the_main_relation(
-        self
+        self,
     ):
         code = """
 check_relation(foo(a > b) = c);
@@ -79,7 +79,7 @@ check_relation(( (a > b))  , context_msg => %s);""" % (
         self._verify_result(code, expected_result)
 
     def test_that_parsing_is_not_fooled_by_strings_containing_characters_relevant_to_parsing(
-        self
+        self,
     ):
         code = """
 check_relation(41 = ascii(')'), "Incorrect ascii for ')'");

@@ -77,7 +77,7 @@ class TestDependencyGraph(unittest.TestCase):
         self._check_result(result, dependencies)
 
     def test_get_direct_dependencies_should_return_empty_set_when_no_dependendencies(
-        self
+        self,
     ):
         nodes = ["a", "b", "c"]
         dependencies = []

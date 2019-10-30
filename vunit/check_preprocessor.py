@@ -38,9 +38,10 @@ class CheckPreprocessor(object):
         check_relation_calls.reverse()
 
         for match in check_relation_calls:
-            relation, offset_to_point_before_closing_paranthesis = self._extract_relation(
-                code, match
-            )
+            (
+                relation,
+                offset_to_point_before_closing_paranthesis,
+            ) = self._extract_relation(code, match)
             if relation:
                 context_msg_parameter = (
                     ", context_msg => %s" % relation.make_context_msg()

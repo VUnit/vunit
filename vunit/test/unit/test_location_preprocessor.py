@@ -168,7 +168,7 @@ end;
         self._verify_result(code, expected_result)
 
     def test_that_asserts_with_severity_level_are_not_affected_despite_name_conflict_with_log_functions(
-        self
+        self,
     ):
         code = """
 assert False report "Failed" severity warning;
@@ -179,7 +179,7 @@ assert False report "Failed" severity failure;
         self._verify_result(code, expected_result=code)
 
     def test_that_assignments_to_signals_and_variables_with_listed_subprogram_names_are_ignored(
-        self
+        self,
     ):
         code = """
 sub_prog := true;

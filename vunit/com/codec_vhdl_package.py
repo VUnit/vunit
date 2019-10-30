@@ -57,9 +57,10 @@ class CodecVHDLPackage(VHDLPackage):
         definitions = ""
 
         # Record
-        new_declarations, new_definitions = (
-            self._generate_record_codec_and_to_string_functions()
-        )
+        (
+            new_declarations,
+            new_definitions,
+        ) = self._generate_record_codec_and_to_string_functions()
         declarations += new_declarations
         definitions += new_definitions
 
@@ -72,9 +73,10 @@ class CodecVHDLPackage(VHDLPackage):
         definitions += new_definitions
 
         # Enumerations
-        all_msg_types_enumeration_type, msg_type_enumeration_types = (
-            self._create_enumeration_of_all_msg_types()
-        )
+        (
+            all_msg_types_enumeration_type,
+            msg_type_enumeration_types,
+        ) = self._create_enumeration_of_all_msg_types()
         if all_msg_types_enumeration_type is not None:
             declarations += self._template.all_msg_types_enumeration_type_declaration.substitute(
                 identifier=all_msg_types_enumeration_type.identifier,
@@ -89,16 +91,20 @@ class CodecVHDLPackage(VHDLPackage):
                 type=all_msg_types_enumeration_type.identifier
             )
 
-        new_declarations, new_definitions = self._generate_enumeration_codec_and_to_string_functions(
+        (
+            new_declarations,
+            new_definitions,
+        ) = self._generate_enumeration_codec_and_to_string_functions(
             all_msg_types_enumeration_type, msg_type_enumeration_types
         )
         declarations += new_declarations
         definitions += new_definitions
 
         # Arrays
-        new_declarations, new_definitions = (
-            self._generate_array_codec_and_to_string_functions()
-        )
+        (
+            new_declarations,
+            new_definitions,
+        ) = self._generate_array_codec_and_to_string_functions()
         declarations += new_declarations
         definitions += new_definitions
 
@@ -110,9 +116,10 @@ class CodecVHDLPackage(VHDLPackage):
         declarations = ""
         definitions = ""
         for record in self.record_types:
-            new_declarations, new_definitions = (
-                record.generate_codecs_and_support_functions()
-            )
+            (
+                new_declarations,
+                new_definitions,
+            ) = record.generate_codecs_and_support_functions()
             declarations += new_declarations
             definitions += new_definitions
         return declarations, definitions
@@ -123,9 +130,10 @@ class CodecVHDLPackage(VHDLPackage):
         declarations = ""
         definitions = ""
         for array in self.array_types:
-            new_declarations, new_definitions = (
-                array.generate_codecs_and_support_functions()
-            )
+            (
+                new_declarations,
+                new_definitions,
+            ) = array.generate_codecs_and_support_functions()
             declarations += new_declarations
             definitions += new_definitions
 
@@ -182,9 +190,10 @@ class CodecVHDLPackage(VHDLPackage):
             else:
                 offset = 0
 
-            new_declarations, new_definitions = enum.generate_codecs_and_support_functions(
-                offset
-            )
+            (
+                new_declarations,
+                new_definitions,
+            ) = enum.generate_codecs_and_support_functions(offset)
             declarations += new_declarations
             definitions += new_definitions
 

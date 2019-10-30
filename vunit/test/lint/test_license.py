@@ -44,7 +44,7 @@ class TestLicense(unittest.TestCase):
     """
 
     def test_that_a_valid_license_exists_in_source_files_and_that_global_licensing_information_is_correct(
-        self
+        self,
     ):
         for file_name in find_licensed_files():
             code = ostools.read_file(file_name)

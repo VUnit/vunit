@@ -48,7 +48,7 @@ class TestUi(unittest.TestCase):
             rmtree(self.tmp_path)
 
     def test_global_custom_preprocessors_should_be_applied_in_the_order_they_are_added(
-        self
+        self,
     ):
         ui = self._create_ui()
         ui.add_library("lib")
@@ -81,7 +81,7 @@ end architecture;
             )
 
     def test_global_check_and_location_preprocessors_should_be_applied_after_global_custom_preprocessors(
-        self
+        self,
     ):
         ui = self._create_ui()
         ui.add_library("lib")
@@ -119,7 +119,7 @@ end architecture;
             )
 
     def test_locally_specified_preprocessors_should_be_used_instead_of_any_globally_defined_preprocessors(
-        self
+        self,
     ):
         ui = self._create_ui()
         ui.add_library("lib")

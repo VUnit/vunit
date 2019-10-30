@@ -589,7 +589,7 @@ if run("Test 2")
 
     def test_find_implicit_test_vhdl(self):
         with mock.patch("vunit.test_bench.LOGGER") as logger:
-            test, = _find_tests(
+            (test,) = _find_tests(
                 """\
 
             test_runner_setup(
@@ -602,7 +602,7 @@ if run("Test 2")
             assert not logger.warning.called
 
         with mock.patch("vunit.test_bench.LOGGER") as logger:
-            test, = _find_tests(
+            (test,) = _find_tests(
                 """\
 
             test_runner_setup
@@ -615,7 +615,7 @@ if run("Test 2")
             assert logger.warning.called
 
         with mock.patch("vunit.test_bench.LOGGER") as logger:
-            test, = _find_tests(
+            (test,) = _find_tests(
                 """\
 
             """,
@@ -628,7 +628,7 @@ if run("Test 2")
 
     def test_find_implicit_test_verilog(self):
         with mock.patch("vunit.test_bench.LOGGER") as logger:
-            test, = _find_tests(
+            (test,) = _find_tests(
                 """\
 
             `TEST_SUITE""",
@@ -640,7 +640,7 @@ if run("Test 2")
             assert not logger.warning.called
 
         with mock.patch("vunit.test_bench.LOGGER") as logger:
-            test, = _find_tests(
+            (test,) = _find_tests(
                 """\
             TEST_SUITE
             """,
@@ -652,7 +652,7 @@ if run("Test 2")
             assert logger.warning.called
 
         with mock.patch("vunit.test_bench.LOGGER") as logger:
-            test, = _find_tests(
+            (test,) = _find_tests(
                 """\
             """,
                 file_name="file_name.sv",
