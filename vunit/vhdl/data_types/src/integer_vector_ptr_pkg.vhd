@@ -37,7 +37,7 @@ package integer_vector_ptr_pkg is
   ) return integer;
 
   impure function to_integer_vector_ptr (
-    value : integer
+    value : val_t
   ) return ptr_t;
 
   impure function new_integer_vector_ptr (
