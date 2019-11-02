@@ -8,14 +8,13 @@
 Interface towards Mentor Graphics ModelSim
 """
 
-
 from __future__ import print_function
 
+from os.path import join, dirname, abspath
+import os
 import logging
 import sys
 import io
-import os
-from os.path import join, dirname, abspath
 
 try:
     # Python 3
@@ -24,15 +23,11 @@ except ImportError:
     # Python 2
     from ConfigParser import RawConfigParser  # pylint: disable=import-error
 
-from vunit.ostools import Process, file_exists
-from vunit.simulator_interface import (
-    SimulatorInterface,
-    ListOfStringOption,
-    StringOption,
-)
-from vunit.exceptions import CompileError
-from vunit.vsim_simulator_mixin import VsimSimulatorMixin, fix_path
-from vunit.vhdl_standard import VHDL
+from ..exceptions import CompileError
+from ..ostools import Process, file_exists
+from ..vhdl_standard import VHDL
+from . import SimulatorInterface, ListOfStringOption, StringOption
+from .vsim_simulator_mixin import VsimSimulatorMixin, fix_path
 
 LOGGER = logging.getLogger(__name__)
 

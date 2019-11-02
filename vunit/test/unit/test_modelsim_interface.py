@@ -13,7 +13,7 @@ import unittest
 from os.path import join, dirname, exists
 import os
 from shutil import rmtree
-from vunit.modelsim_interface import ModelSimInterface
+from vunit.sim_if.modelsim import ModelSimInterface
 from vunit.test.mock_2or3 import mock
 from vunit.test.common import set_env
 from vunit.project import Project
@@ -26,10 +26,8 @@ class TestModelSimInterface(unittest.TestCase):
     Test the ModelSim interface
     """
 
-    @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
-    )
-    @mock.patch("vunit.modelsim_interface.Process", autospec=True)
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
+    @mock.patch("vunit.sim_if.modelsim.Process", autospec=True)
     def test_compile_project_vhdl_2008(self, process, check_output):
         simif = ModelSimInterface(
             prefix=self.prefix_path, output_path=self.output_path, persistent=False
@@ -55,10 +53,8 @@ class TestModelSimInterface(unittest.TestCase):
         ]
         check_output.assert_called_once_with(check_args, env=simif.get_env())
 
-    @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
-    )
-    @mock.patch("vunit.modelsim_interface.Process", autospec=True)
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
+    @mock.patch("vunit.sim_if.modelsim.Process", autospec=True)
     def test_compile_project_vhdl_2002(self, process, check_output):
         simif = ModelSimInterface(
             prefix=self.prefix_path, output_path=self.output_path, persistent=False
@@ -84,10 +80,8 @@ class TestModelSimInterface(unittest.TestCase):
         ]
         check_output.assert_called_once_with(check_args, env=simif.get_env())
 
-    @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
-    )
-    @mock.patch("vunit.modelsim_interface.Process", autospec=True)
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
+    @mock.patch("vunit.sim_if.modelsim.Process", autospec=True)
     def test_compile_project_vhdl_93(self, process, check_output):
         simif = ModelSimInterface(
             prefix=self.prefix_path, output_path=self.output_path, persistent=False
@@ -113,10 +107,8 @@ class TestModelSimInterface(unittest.TestCase):
         ]
         check_output.assert_called_once_with(check_args, env=simif.get_env())
 
-    @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
-    )
-    @mock.patch("vunit.modelsim_interface.Process", autospec=True)
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
+    @mock.patch("vunit.sim_if.modelsim.Process", autospec=True)
     def test_compile_project_vhdl_extra_flags(self, process, check_output):
         simif = ModelSimInterface(
             prefix=self.prefix_path, output_path=self.output_path, persistent=False
@@ -143,10 +135,8 @@ class TestModelSimInterface(unittest.TestCase):
         ]
         check_output.assert_called_once_with(check_args, env=simif.get_env())
 
-    @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
-    )
-    @mock.patch("vunit.modelsim_interface.Process", autospec=True)
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
+    @mock.patch("vunit.sim_if.modelsim.Process", autospec=True)
     def test_compile_project_verilog(self, process, check_output):
         simif = ModelSimInterface(
             prefix=self.prefix_path, output_path=self.output_path, persistent=False
@@ -171,10 +161,8 @@ class TestModelSimInterface(unittest.TestCase):
         ]
         check_output.assert_called_once_with(check_args, env=simif.get_env())
 
-    @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
-    )
-    @mock.patch("vunit.modelsim_interface.Process", autospec=True)
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
+    @mock.patch("vunit.sim_if.modelsim.Process", autospec=True)
     def test_compile_project_system_verilog(self, process, check_output):
         simif = ModelSimInterface(
             prefix=self.prefix_path, output_path=self.output_path, persistent=False
@@ -200,10 +188,8 @@ class TestModelSimInterface(unittest.TestCase):
         ]
         check_output.assert_called_once_with(check_args, env=simif.get_env())
 
-    @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
-    )
-    @mock.patch("vunit.modelsim_interface.Process", autospec=True)
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
+    @mock.patch("vunit.sim_if.modelsim.Process", autospec=True)
     def test_compile_project_verilog_extra_flags(self, process, check_output):
         simif = ModelSimInterface(
             prefix=self.prefix_path, output_path=self.output_path, persistent=False
@@ -231,10 +217,8 @@ class TestModelSimInterface(unittest.TestCase):
         ]
         check_output.assert_called_once_with(check_args, env=simif.get_env())
 
-    @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
-    )
-    @mock.patch("vunit.modelsim_interface.Process", autospec=True)
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
+    @mock.patch("vunit.sim_if.modelsim.Process", autospec=True)
     def test_compile_project_verilog_include(self, process, check_output):
         simif = ModelSimInterface(
             prefix=self.prefix_path, output_path=self.output_path, persistent=False
@@ -262,10 +246,8 @@ class TestModelSimInterface(unittest.TestCase):
         ]
         check_output.assert_called_once_with(check_args, env=simif.get_env())
 
-    @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
-    )
-    @mock.patch("vunit.modelsim_interface.Process", autospec=True)
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
+    @mock.patch("vunit.sim_if.modelsim.Process", autospec=True)
     def test_compile_project_verilog_define(self, process, check_output):
         simif = ModelSimInterface(
             prefix=self.prefix_path, output_path=self.output_path, persistent=False

@@ -9,7 +9,7 @@ Handles Cadence Incisive .cds files
 """
 
 import re
-from vunit.ostools import read_file, write_file
+from ..ostools import read_file, write_file
 
 
 class CDSFile(dict):

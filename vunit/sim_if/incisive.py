@@ -9,20 +9,17 @@ Interface for the Cadence Incisive simulator
 """
 
 from __future__ import print_function
-import os
+
 from os.path import join, dirname, abspath, relpath
+import os
 import subprocess
 import sys
 import logging
-from vunit.ostools import write_file, file_exists
-from vunit.simulator_interface import (
-    SimulatorInterface,
-    run_command,
-    ListOfStringOption,
-)
-from vunit.vhdl_standard import VHDL
-from vunit.exceptions import CompileError
-from vunit.cds_file import CDSFile
+from ..exceptions import CompileError
+from ..ostools import write_file, file_exists
+from ..vhdl_standard import VHDL
+from . import SimulatorInterface, run_command, ListOfStringOption
+from .cds_file import CDSFile
 
 LOGGER = logging.getLogger(__name__)
 

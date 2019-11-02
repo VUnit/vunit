@@ -12,7 +12,7 @@ import unittest
 from os.path import join, dirname, exists
 import os
 from shutil import rmtree
-from vunit.ghdl_interface import GHDLInterface
+from vunit.sim_if.ghdl import GHDLInterface
 from vunit.test.mock_2or3 import mock
 from vunit.project import Project
 from vunit.ostools import renew_path, write_file
@@ -27,7 +27,7 @@ class TestGHDLInterface(unittest.TestCase):
     Test the GHDL interface
     """
 
-    @mock.patch("vunit.ghdl_interface.GHDLInterface.find_executable")
+    @mock.patch("vunit.sim_if.ghdl.GHDLInterface.find_executable")
     def test_runtime_error_on_missing_gtkwave(self, find_executable):
         executables = {}
 
@@ -106,7 +106,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         self.assertRaises(AssertionError, GHDLInterface.determine_backend, "prefix")
 
     @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
+        "vunit.sim_if.check_output", autospec=True, return_value=""
     )  # pylint: disable=no-self-use
     def test_compile_project_2008(self, check_output):
         simif = GHDLInterface(prefix="prefix", output_path="")
@@ -132,7 +132,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         )
 
     @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
+        "vunit.sim_if.check_output", autospec=True, return_value=""
     )  # pylint: disable=no-self-use
     def test_compile_project_2002(self, check_output):
         simif = GHDLInterface(prefix="prefix", output_path="")
@@ -158,7 +158,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         )
 
     @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
+        "vunit.sim_if.check_output", autospec=True, return_value=""
     )  # pylint: disable=no-self-use
     def test_compile_project_93(self, check_output):
         simif = GHDLInterface(prefix="prefix", output_path="")
@@ -184,7 +184,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         )
 
     @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
+        "vunit.sim_if.check_output", autospec=True, return_value=""
     )  # pylint: disable=no-self-use
     def test_compile_project_extra_flags(self, check_output):
         simif = GHDLInterface(prefix="prefix", output_path="")
