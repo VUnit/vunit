@@ -15,7 +15,7 @@ import functools
 import os
 import shutil
 import random
-from vunit.simulator_factory import SIMULATOR_FACTORY
+from vunit.sim_if.factory import SIMULATOR_FACTORY
 
 
 def has_simulator():

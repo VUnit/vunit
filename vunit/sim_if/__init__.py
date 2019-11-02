@@ -5,16 +5,17 @@
 # Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
 """
-Generic simulator interface
+Simulator interface(s)
 """
 
 from __future__ import print_function
+
 import sys
 import os
 import subprocess
-from vunit.ostools import Process, simplify_path
-from vunit.exceptions import CompileError
-from vunit.color_printer import NO_COLOR_PRINTER
+from ..ostools import Process, simplify_path
+from ..exceptions import CompileError
+from ..color_printer import NO_COLOR_PRINTER
 
 
 class SimulatorInterface(object):  # pylint: disable=too-many-public-methods

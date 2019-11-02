@@ -9,16 +9,12 @@ Create simulator instances
 """
 
 import os
-from vunit.modelsim_interface import ModelSimInterface
-from vunit.activehdl_interface import ActiveHDLInterface
-from vunit.rivierapro_interface import RivieraProInterface
-from vunit.ghdl_interface import GHDLInterface
-from vunit.incisive_interface import IncisiveInterface
-from vunit.simulator_interface import (
-    BooleanOption,
-    ListOfStringOption,
-    VHDLAssertLevelOption,
-)
+from .activehdl import ActiveHDLInterface
+from .ghdl import GHDLInterface
+from .incisive import IncisiveInterface
+from .modelsim import ModelSimInterface
+from .rivierapro import RivieraProInterface
+from . import BooleanOption, ListOfStringOption, VHDLAssertLevelOption
 
 
 class SimulatorFactory(object):

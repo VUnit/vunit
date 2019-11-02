@@ -11,7 +11,7 @@ from os.path import splitext
 import logging
 from copy import copy
 import traceback
-from vunit.simulator_factory import SIMULATOR_FACTORY
+from vunit.sim_if.factory import SIMULATOR_FACTORY
 from vunit.hashing import hash_string
 from vunit.vhdl_parser import VHDLReference
 from vunit.cached import file_content_hash

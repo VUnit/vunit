@@ -41,7 +41,7 @@ A :class:`.VUnitCLI` object has a ``parser`` field which is an
 import argparse
 from os.path import join, abspath
 import os
-from vunit.simulator_factory import SIMULATOR_FACTORY
+from vunit.sim_if.factory import SIMULATOR_FACTORY
 from vunit.about import version
 
 

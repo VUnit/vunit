@@ -25,7 +25,7 @@ from vunit.test.mock_2or3 import mock
 from vunit.test.common import set_env, with_tempdir, create_vhdl_test_bench_file
 from vunit.ostools import renew_path
 from vunit.builtins import add_verilog_include_dir
-from vunit.simulator_interface import SimulatorInterface
+from vunit.sim_if import SimulatorInterface
 
 
 class TestUi(unittest.TestCase):
@@ -1187,7 +1187,7 @@ end architecture;
     def _create_ui(self, *args):
         """ Create an instance of the VUnit public interface class """
         with mock.patch(
-            "vunit.simulator_factory.SIMULATOR_FACTORY.select_simulator",
+            "vunit.sim_if.factory.SIMULATOR_FACTORY.select_simulator",
             new=lambda: MockSimulator,
         ):
             return self._create_ui_real_sim(*args)

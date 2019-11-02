@@ -12,7 +12,7 @@ import logging
 import inspect
 from os.path import dirname
 from copy import copy
-from vunit.simulator_factory import SIMULATOR_FACTORY
+from vunit.sim_if.factory import SIMULATOR_FACTORY
 
 
 LOGGER = logging.getLogger(__name__)

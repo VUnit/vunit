@@ -8,23 +8,18 @@
 Interface towards Aldec Active HDL
 """
 
-
 from __future__ import print_function
 
 from os.path import join, dirname, abspath
 import os
 import re
 import logging
-from vunit.ostools import Process, write_file, file_exists, renew_path
-from vunit.test_suites import get_result_file_name
-from vunit.vhdl_standard import VHDL
-from vunit.vsim_simulator_mixin import get_is_test_suite_done_tcl, fix_path
-from vunit.simulator_interface import (
-    SimulatorInterface,
-    ListOfStringOption,
-    StringOption,
-)
-from vunit.exceptions import CompileError
+from ..exceptions import CompileError
+from ..ostools import Process, write_file, file_exists, renew_path
+from ..test_suites import get_result_file_name
+from ..vhdl_standard import VHDL
+from . import SimulatorInterface, ListOfStringOption, StringOption
+from .vsim_simulator_mixin import get_is_test_suite_done_tcl, fix_path
 
 LOGGER = logging.getLogger(__name__)
 

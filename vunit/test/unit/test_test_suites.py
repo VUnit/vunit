@@ -13,7 +13,7 @@ from unittest import TestCase
 from vunit.test_suites import TestRun
 from vunit.test_report import PASSED, SKIPPED, FAILED
 from vunit.test.common import create_tempdir
-from vunit.simulator_interface import SimulatorInterface
+from vunit.sim_if import SimulatorInterface
 
 
 class TestTestSuites(TestCase):

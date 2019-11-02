@@ -14,7 +14,7 @@ import os
 import subprocess
 from shutil import rmtree
 from vunit.project import Project
-from vunit.simulator_interface import (
+from vunit.sim_if import (
     SimulatorInterface,
     BooleanOption,
     ListOfStringOption,
@@ -44,9 +44,7 @@ class TestSimulatorInterface(unittest.TestCase):
         file2 = project.add_source_file("file2.vhd", "lib", file_type="vhdl")
         project.add_manual_dependency(file2, depends_on=file1)
 
-        with mock.patch(
-            "vunit.simulator_interface.check_output", autospec=True
-        ) as check_output:
+        with mock.patch("vunit.sim_if.check_output", autospec=True) as check_output:
             check_output.side_effect = iter(["", ""])
             printer = MockPrinter()
             simif.compile_source_files(project, printer=printer)
@@ -122,9 +120,7 @@ Compile passed
 
         simif.compile_source_file_command.side_effect = compile_source_file_command
 
-        with mock.patch(
-            "vunit.simulator_interface.check_output", autospec=True
-        ) as check_output:
+        with mock.patch("vunit.sim_if.check_output", autospec=True) as check_output:
             check_output.side_effect = check_output_side_effect
             printer = MockPrinter()
             self.assertRaises(
@@ -168,9 +164,7 @@ Compile failed
         write_file("file.vhd", "")
         source_file = project.add_source_file("file.vhd", "lib", file_type="vhdl")
 
-        with mock.patch(
-            "vunit.simulator_interface.check_output", autospec=True
-        ) as check_output:
+        with mock.patch("vunit.sim_if.check_output", autospec=True) as check_output:
 
             def check_output_side_effect(
                 command, env=None
@@ -208,9 +202,7 @@ Compile failed
         write_file("file.vhd", "")
         source_file = project.add_source_file("file.vhd", "lib", file_type="vhdl")
 
-        with mock.patch(
-            "vunit.simulator_interface.check_output", autospec=True
-        ) as check_output:
+        with mock.patch("vunit.sim_if.check_output", autospec=True) as check_output:
             check_output.return_value = ""
 
             def raise_compile_error(source_file):  # pylint: disable=unused-argument

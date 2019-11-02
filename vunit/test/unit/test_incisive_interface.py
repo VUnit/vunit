@@ -15,7 +15,7 @@ import unittest
 from os.path import join, dirname, exists, basename
 import os
 from shutil import rmtree
-from vunit.incisive_interface import IncisiveInterface
+from vunit.sim_if.incisive import IncisiveInterface
 from vunit.test.mock_2or3 import mock
 from vunit.project import Project
 from vunit.ostools import renew_path, write_file, read_file
@@ -28,11 +28,9 @@ class TestIncisiveInterface(unittest.TestCase):
     Test the Incisive interface
     """
 
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
-    )
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     def test_compile_project_vhdl_2008(
         self, check_output, find_cds_root_irun, find_cds_root_virtuoso
     ):
@@ -84,11 +82,9 @@ define work "%s/libraries/work"
             % self.output_path,
         )
 
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
-    )
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     def test_compile_project_vhdl_2002(
         self, check_output, find_cds_root_irun, find_cds_root_virtuoso
     ):
@@ -126,11 +122,9 @@ define work "%s/libraries/work"
             ],
         )
 
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
-    )
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     def test_compile_project_vhdl_93(
         self, check_output, find_cds_root_irun, find_cds_root_virtuoso
     ):
@@ -168,11 +162,9 @@ define work "%s/libraries/work"
             ],
         )
 
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
-    )
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     def test_compile_project_vhdl_extra_flags(
         self, check_output, find_cds_root_irun, find_cds_root_virtuoso
     ):
@@ -211,11 +203,9 @@ define work "%s/libraries/work"
             ],
         )
 
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
-    )
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     def test_compile_project_vhdl_hdlvar(
         self, check_output, find_cds_root_irun, find_cds_root_virtuoso
     ):
@@ -254,11 +244,9 @@ define work "%s/libraries/work"
             ],
         )
 
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
-    )
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     def test_compile_project_verilog(
         self, check_output, find_cds_root_irun, find_cds_root_virtuoso
     ):
@@ -296,11 +284,9 @@ define work "%s/libraries/work"
             ],
         )
 
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
-    )
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     def test_compile_project_system_verilog(
         self, check_output, find_cds_root_irun, find_cds_root_virtuoso
     ):
@@ -352,11 +338,9 @@ define work "%s/libraries/work"
             % self.output_path,
         )
 
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
-    )
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     def test_compile_project_verilog_extra_flags(
         self, check_output, find_cds_root_irun, find_cds_root_virtuoso
     ):
@@ -399,11 +383,9 @@ define work "%s/libraries/work"
             ],
         )
 
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
-    )
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     def test_compile_project_verilog_include(
         self, check_output, find_cds_root_irun, find_cds_root_virtuoso
     ):
@@ -444,11 +426,9 @@ define work "%s/libraries/work"
             ],
         )
 
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
-    )
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     def test_compile_project_verilog_define(
         self, check_output, find_cds_root_irun, find_cds_root_virtuoso
     ):
@@ -489,11 +469,9 @@ define work "%s/libraries/work"
             ],
         )
 
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch(
-        "vunit.simulator_interface.check_output", autospec=True, return_value=""
-    )
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
+    @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     def test_compile_project_verilog_hdlvar(
         self, check_output, find_cds_root_irun, find_cds_root_virtuoso
     ):
@@ -537,8 +515,8 @@ define work "%s/libraries/work"
             ],
         )
 
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
     def test_create_cds_lib(self, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
@@ -556,8 +534,8 @@ define work "%s/libraries/work"
             % self.output_path,
         )
 
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
     def test_create_cds_lib_virtuoso(self, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = "cds_root_virtuoso"
@@ -574,11 +552,9 @@ define work "%s/libraries/work"
             % self.output_path,
         )
 
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch(
-        "vunit.incisive_interface.run_command", autospec=True, return_value=True
-    )
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
+    @mock.patch("vunit.sim_if.incisive.run_command", autospec=True, return_value=True)
     def test_simulate_vhdl(
         self, run_command, find_cds_root_irun, find_cds_root_virtuoso
     ):
@@ -592,7 +568,7 @@ define work "%s/libraries/work"
         project.add_source_file("file.vhd", "lib", file_type="vhdl")
 
         with mock.patch(
-            "vunit.simulator_interface.check_output", autospec=True, return_value=""
+            "vunit.sim_if.check_output", autospec=True, return_value=""
         ) as dummy:
             simif.compile_project(project)
 
@@ -668,11 +644,9 @@ define work "%s/libraries/work"
             ],
         )
 
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch(
-        "vunit.incisive_interface.run_command", autospec=True, return_value=True
-    )
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
+    @mock.patch("vunit.sim_if.incisive.run_command", autospec=True, return_value=True)
     def test_simulate_verilog(
         self, run_command, find_cds_root_irun, find_cds_root_virtuoso
     ):
@@ -686,7 +660,7 @@ define work "%s/libraries/work"
         project.add_source_file("file.vhd", "lib", file_type="vhdl")
 
         with mock.patch(
-            "vunit.simulator_interface.check_output", autospec=True, return_value=""
+            "vunit.sim_if.check_output", autospec=True, return_value=""
         ) as dummy:
             simif.compile_project(project)
 
@@ -762,11 +736,9 @@ define work "%s/libraries/work"
             ],
         )
 
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch(
-        "vunit.incisive_interface.run_command", autospec=True, return_value=True
-    )
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
+    @mock.patch("vunit.sim_if.incisive.run_command", autospec=True, return_value=True)
     def test_simulate_extra_flags(
         self, run_command, find_cds_root_irun, find_cds_root_virtuoso
     ):
@@ -804,11 +776,9 @@ define work "%s/libraries/work"
         self.assertIn("custom", args)
         self.assertIn("flags", args)
 
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch(
-        "vunit.incisive_interface.run_command", autospec=True, return_value=True
-    )
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
+    @mock.patch("vunit.sim_if.incisive.run_command", autospec=True, return_value=True)
     def test_simulate_generics_and_parameters(
         self, run_command, find_cds_root_irun, find_cds_root_virtuoso
     ):
@@ -844,11 +814,9 @@ define work "%s/libraries/work"
             self.assertIn('-gpg "modulename.genint => 1"', args)
             self.assertIn('-gpg "modulename.genbool => \\"True\\""', args)
 
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch(
-        "vunit.incisive_interface.run_command", autospec=True, return_value=True
-    )
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
+    @mock.patch("vunit.sim_if.incisive.run_command", autospec=True, return_value=True)
     def test_simulate_hdlvar(
         self, run_command, find_cds_root_irun, find_cds_root_virtuoso
     ):
@@ -882,11 +850,9 @@ define work "%s/libraries/work"
             args = read_file(args_file).splitlines()
             self.assertIn('-hdlvar "custom_hdlvar"', args)
 
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch(
-        "vunit.incisive_interface.run_command", autospec=True, return_value=True
-    )
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
+    @mock.patch("vunit.sim_if.incisive.run_command", autospec=True, return_value=True)
     def test_elaborate(self, run_command, find_cds_root_irun, find_cds_root_virtuoso):
         find_cds_root_irun.return_value = "cds_root_irun"
         find_cds_root_virtuoso.return_value = None
@@ -935,11 +901,9 @@ define work "%s/libraries/work"
             ],
         )
 
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch(
-        "vunit.incisive_interface.run_command", autospec=True, return_value=False
-    )
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
+    @mock.patch("vunit.sim_if.incisive.run_command", autospec=True, return_value=False)
     def test_elaborate_fail(
         self, run_command, find_cds_root_irun, find_cds_root_virtuoso
     ):
@@ -961,10 +925,10 @@ define work "%s/libraries/work"
             ]
         )
 
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
     @mock.patch(
-        "vunit.incisive_interface.run_command", autospec=True, side_effect=[True, False]
+        "vunit.sim_if.incisive.run_command", autospec=True, side_effect=[True, False]
     )
     def test_simulate_fail(
         self, run_command, find_cds_root_irun, find_cds_root_virtuoso
@@ -993,11 +957,9 @@ define work "%s/libraries/work"
             ]
         )
 
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_virtuoso")
-    @mock.patch("vunit.incisive_interface.IncisiveInterface.find_cds_root_irun")
-    @mock.patch(
-        "vunit.incisive_interface.run_command", autospec=True, return_value=True
-    )
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_virtuoso")
+    @mock.patch("vunit.sim_if.incisive.IncisiveInterface.find_cds_root_irun")
+    @mock.patch("vunit.sim_if.incisive.run_command", autospec=True, return_value=True)
     def test_simulate_gui(
         self, run_command, find_cds_root_irun, find_cds_root_virtuoso
     ):
@@ -1013,7 +975,7 @@ define work "%s/libraries/work"
             prefix="prefix", output_path=self.output_path, gui=True
         )
         with mock.patch(
-            "vunit.simulator_interface.check_output", autospec=True, return_value=""
+            "vunit.sim_if.check_output", autospec=True, return_value=""
         ) as dummy:
             simif.compile_project(project)
         config = make_config()

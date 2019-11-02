@@ -8,22 +8,17 @@
 Interface towards Aldec Riviera Pro
 """
 
-
 from __future__ import print_function
 
 from os.path import join, dirname, abspath
 import os
 import re
 import logging
-from vunit.ostools import Process, file_exists
-from vunit.simulator_interface import (
-    SimulatorInterface,
-    ListOfStringOption,
-    StringOption,
-)
-from vunit.vhdl_standard import VHDL
-from vunit.exceptions import CompileError
-from vunit.vsim_simulator_mixin import VsimSimulatorMixin, fix_path
+from ..exceptions import CompileError
+from ..ostools import Process, file_exists
+from ..vhdl_standard import VHDL
+from . import SimulatorInterface, ListOfStringOption, StringOption
+from .vsim_simulator_mixin import VsimSimulatorMixin, fix_path
 
 LOGGER = logging.getLogger(__name__)
 

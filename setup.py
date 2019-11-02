@@ -44,6 +44,7 @@ setup(
         "vunit.com",
         "vunit.parsing",
         "vunit.parsing.verilog",
+        "vunit.sim_if",
         "vunit.test",
         "vunit.test.lint",
         "vunit.test.unit",

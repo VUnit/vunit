@@ -23,8 +23,8 @@ from fnmatch import fnmatch
 from ..database import PickledDataBase, DataBase
 from .. import ostools
 from ..vunit_cli import VUnitCLI
-from ..simulator_factory import SIMULATOR_FACTORY
-from ..simulator_interface import SimulatorInterface
+from ..sim_if.factory import SIMULATOR_FACTORY
+from ..sim_if import SimulatorInterface
 from ..color_printer import COLOR_PRINTER, NO_COLOR_PRINTER
 
 from ..project import Project

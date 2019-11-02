@@ -9,21 +9,17 @@ Interface for GHDL simulator
 """
 
 from __future__ import print_function
-import logging
+
 from os.path import exists, join, abspath
 import os
+import logging
 import subprocess
 import shlex
 from sys import stdout  # To avoid output catched in non-verbose mode
-from vunit.ostools import Process
-from vunit.vhdl_standard import VHDL
-from vunit.simulator_interface import (
-    SimulatorInterface,
-    ListOfStringOption,
-    StringOption,
-    BooleanOption,
-)
-from vunit.exceptions import CompileError
+from ..exceptions import CompileError
+from ..ostools import Process
+from . import SimulatorInterface, ListOfStringOption, StringOption, BooleanOption
+from ..vhdl_standard import VHDL
 
 LOGGER = logging.getLogger(__name__)
 
