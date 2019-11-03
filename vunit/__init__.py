@@ -10,7 +10,7 @@ Public VUnit interface
 
 from os.path import dirname, join, abspath
 import vunit.version_check
-from vunit.ui.vunit import VUnit
+from vunit.ui import VUnit
 from vunit.vunit_cli import VUnitCLI
 from vunit.about import version, doc
 from vunit.json4vhdl import read_json, encode_json
