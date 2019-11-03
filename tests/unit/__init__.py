@@ -3,7 +3,3 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 # Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
-
-"""
-Test bench, runner, etc.
-"""
