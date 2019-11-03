@@ -40,9 +40,6 @@ from ..test.runner import TestRunner
 
 from .common import LOGGER, select_vhdl_standard, check_not_empty
 from .source import SourceFile, SourceFileList
-from .test import Test  # pylint: disable=unused-import
-from .testbench import TestBench  # pylint: disable=unused-import
-from .packagefacade import PackageFacade  # pylint: disable=unused-import
 from .library import Library
 from .results import Results
 
