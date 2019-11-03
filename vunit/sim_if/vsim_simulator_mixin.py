@@ -13,7 +13,7 @@ import sys
 import os
 from os.path import join, dirname, abspath
 from ..ostools import write_file, Process
-from ..test_suites import get_result_file_name
+from ..test.suites import get_result_file_name
 from ..persistent_tcl_shell import PersistentTclShell
 
 

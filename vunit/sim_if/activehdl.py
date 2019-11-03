@@ -16,8 +16,8 @@ import re
 import logging
 from ..exceptions import CompileError
 from ..ostools import Process, write_file, file_exists, renew_path
-from ..test_suites import get_result_file_name
 from ..vhdl_standard import VHDL
+from ..test.suites import get_result_file_name
 from . import SimulatorInterface, ListOfStringOption, StringOption
 from .vsim_simulator_mixin import get_is_test_suite_done_tcl, fix_path
 

@@ -28,15 +28,15 @@ from ..sim_if import SimulatorInterface
 from ..color_printer import COLOR_PRINTER, NO_COLOR_PRINTER
 
 from ..project import Project
-from ..test_runner import TestRunner
-from ..test_report import TestReport
-from ..test_bench_list import TestBenchList
 from ..exceptions import CompileError
 from ..location_preprocessor import LocationPreprocessor
 from ..check_preprocessor import CheckPreprocessor
 from ..parsing.encodings import HDL_FILE_ENCODING
 from ..builtins import Builtins
 from ..vhdl_standard import VHDL
+from ..test.bench_list import TestBenchList
+from ..test.report import TestReport
+from ..test.runner import TestRunner
 
 from .common import LOGGER, select_vhdl_standard, check_not_empty
 from .source import SourceFile, SourceFileList
