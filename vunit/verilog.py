@@ -8,7 +8,7 @@
 The main public Python interface of VUnit-Verilog.
 """
 
-from vunit.ui.vunit import VUnit as VUnitVHDL
+from vunit.ui import VUnit as VUnitVHDL
 
 
 class VUnit(VUnitVHDL):

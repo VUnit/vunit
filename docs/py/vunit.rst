@@ -1,7 +1,7 @@
-vunit.ui.vunit
+vunit.ui
 ==============
 
-.. autoclass:: vunit.ui.vunit.VUnit()
+.. autoclass:: vunit.ui.VUnit()
    :exclude-members: add_preprocessor,
       add_builtins
 
