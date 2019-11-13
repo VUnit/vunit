@@ -15,31 +15,6 @@ import functools
 import os
 import shutil
 import random
-from vunit.sim_if.factory import SIMULATOR_FACTORY
-
-
-def has_simulator():
-    return SIMULATOR_FACTORY.has_simulator
-
-
-def simulator_is(*names):
-    """
-    Check that current simulator is any of names
-    """
-    supported_names = [sim.name for sim in SIMULATOR_FACTORY.supported_simulators()]
-    for name in names:
-        assert name in supported_names
-    return SIMULATOR_FACTORY.select_simulator().name in names
-
-
-def simulator_check(func):
-    """
-    Check some method of the selected simulator
-    """
-    simif = SIMULATOR_FACTORY.select_simulator()
-    if simif is None:
-        return False
-    return func(simif)
 
 
 def check_report(report_file, tests=None):
