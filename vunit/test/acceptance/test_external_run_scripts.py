@@ -8,7 +8,6 @@
 Verify that all external run scripts work correctly
 """
 
-
 import unittest
 from os import environ
 from os.path import join, dirname
@@ -16,7 +15,8 @@ from subprocess import call
 import sys
 from vunit import ROOT
 from vunit.builtins import VHDL_PATH
-from vunit.test.common import has_simulator, check_report, simulator_is, simulator_check
+from vunit.sim_if.common import has_simulator, simulator_is, simulator_check
+from vunit.test.common import check_report
 
 
 def simulator_supports_verilog():
