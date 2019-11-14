@@ -14,3 +14,5 @@ env/
 tests/acceptance/*_out
 tests/unit/test_report_output.txt
 venv/
+vunit/vhdl/check/test/tb_check_equal.vhd
+vunit/vhdl/check/test/tb_check_match.vhd
