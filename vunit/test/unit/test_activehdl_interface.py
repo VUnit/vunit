@@ -13,7 +13,7 @@ import unittest
 from os.path import join, dirname, exists
 import os
 from shutil import rmtree
-from vunit.activehdl_interface import ActiveHDLInterface
+from vunit.activehdl_interface import ActiveHDLInterface, VersionConsumer
 from vunit.test.mock_2or3 import mock
 from vunit.project import Project
 from vunit.ostools import renew_path, write_file
@@ -367,6 +367,26 @@ class TestActiveHDLInterface(unittest.TestCase):
             ],
             env=simif.get_env(),
         )
+
+    def test_vendor_version_without_letters(self):
+        version_line = "Aldec, Inc. VHDL compiler version 10.5.216.6767 built for Windows on January 20, 2018."
+        expected_major = 10
+        expected_minor = 5
+
+        consumer = VersionConsumer()
+        consumer(version_line)
+        assert consumer.major == expected_major
+        assert consumer.minor == expected_minor
+
+    def test_vendor_version_with_letters(self):
+        version_line = "Aldec, Inc. VHDL compiler version 10.5a.12.6914 built for Windows on June 06, 2018."
+        expected_major = 10
+        expected_minor = 5
+
+        consumer = VersionConsumer()
+        consumer(version_line)
+        assert consumer.major == expected_major
+        assert consumer.minor == expected_minor
 
     def setUp(self):
         self.output_path = join(dirname(__file__), "test_activehdl_out")
