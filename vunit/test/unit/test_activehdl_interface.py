@@ -381,23 +381,33 @@ class TestActiveHDLInterface(unittest.TestCase):
             rmtree(self.output_path)
 
 
-def test_vendor_version_without_letters():
-    version_line = "Aldec, Inc. VHDL compiler version 10.5.216.6767 built for Windows on January 20, 2018."
-    expected_major = 10
-    expected_minor = 5
+class TestVersionConsumer(unittest.TestCase):
+    """
+    Test the VersionConsumer class
+    """
 
-    consumer = VersionConsumer()
-    consumer(version_line)
-    assert consumer.major == expected_major
-    assert consumer.minor == expected_minor
+    def setUp(self):
+        self.version_line = None
+        self.expected_major = None
+        self.expected_minor = None
 
+    def _assert_version_correct(self):
+        """
+        Assertion function used by tests in this class
+        """
+        consumer = VersionConsumer()
+        consumer(self.version_line)
+        assert consumer.major == self.expected_major
+        assert consumer.minor == self.expected_minor
 
-def test_vendor_version_with_letters():
-    version_line = "Aldec, Inc. VHDL compiler version 10.5a.12.6914 built for Windows on June 06, 2018."
-    expected_major = 10
-    expected_minor = 5
+    def test_vendor_version_without_letters(self):
+        self.version_line = "Aldec, Inc. VHDL compiler version 10.5.216.6767 built for Windows on January 20, 2018."
+        self.expected_major = 10
+        self.expected_minor = 5
+        self._assert_version_correct()
 
-    consumer = VersionConsumer()
-    consumer(version_line)
-    assert consumer.major == expected_major
-    assert consumer.minor == expected_minor
+    def test_vendor_version_with_letters(self):
+        self.version_line = "Aldec, Inc. VHDL compiler version 10.5a.12.6914 built for Windows on June 06, 2018."
+        self.expected_major = 10
+        self.expected_minor = 5
+        self._assert_version_correct()
