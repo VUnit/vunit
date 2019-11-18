@@ -635,23 +635,23 @@ begin
       tready_prev <= tready;
       -------------------------------------------------------------------------
       -- TVALID and TREADY stall events counters
-      if tvalid = '1' and tready = '0' and tready_prev = '1' then
+      if tvalid and (not tready) and tready_prev then
         tready_stall_events <= tready_stall_events + 1;
       end if;
-      if tready = '1' and tvalid = '0' and tvalid_prev = '1' then
+      if (not tvalid) and tready and tvalid_prev then
         tvalid_stall_events <= tvalid_stall_events + 1;
       end if;
 
       -------------------------------------------------------------------------
       -- TVALID Minmal and Maximal Stall lengths
-      if tvalid = '1' then
+      if tvalid then
         tvalid_start <= '1';
       end if;
 
-      if tvalid = '0' and tvalid_start = '1' then
+      if (not tvalid) and tvalid_start then
         tvalid_stall_length <= tvalid_stall_length + 1;
       end if;
-      if tvalid = '1' and tvalid_prev = '0' and tvalid_start = '1' then
+      if tvalid and tvalid_start and (not tvalid_prev) then
         tvalid_stall_length <= 0;
         if tvalid_stall_length < tvalid_min_stall_length then
           tvalid_min_stall_length <= tvalid_stall_length;
@@ -662,14 +662,14 @@ begin
       end if;
       -------------------------------------------------------------------------
       -- TREADY Minmal and Maximal Stall lengths
-      if tready = '1' then
+      if tready then
         tready_start <= '1';
       end if;
 
-      if tready = '0' and tready_start = '1' then
+      if (not tready) and tready_start then
         tready_stall_length <= tready_stall_length + 1;
       end if;
-      if tready = '1' and tready_prev = '0' and tready_start = '1' then
+      if tready and tready_start and (not tready_prev) then
         tready_stall_length <= 0;
         if tready_stall_length < tready_min_stall_length then
           tready_min_stall_length <= tready_stall_length;
