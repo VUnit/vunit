@@ -11,7 +11,7 @@ UI class Library
 from os.path import abspath
 from glob import glob
 from fnmatch import fnmatch
-from ..simulator_interface import is_string_not_iterable
+from ..sim_if import is_string_not_iterable
 from ..source_file import file_type_of, FILE_TYPES, VERILOG_FILE_TYPES
 from ..builtins import add_verilog_include_dir
 

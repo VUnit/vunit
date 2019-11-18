@@ -3,7 +3,7 @@
 Python Interface
 ================
 The Python interface of VUnit is exposed through the :class:`VUnit
-class <vunit.ui.vunit.VUnit>` that can be imported directly. See the
+class <vunit.ui.VUnit>` that can be imported directly. See the
 :ref:`User Guide <user_guide>` for a quick introduction. The
 following list provides detailed references of the Python API and
 about how to set compilation and simulation options.

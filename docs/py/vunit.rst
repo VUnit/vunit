@@ -1,7 +1,7 @@
-vunit.ui.vunit
+vunit.ui
 ==============
 
-.. autoclass:: vunit.ui.vunit.VUnit()
+.. autoclass:: vunit.ui.VUnit()
    :exclude-members: add_preprocessor,
       add_builtins
 
@@ -35,6 +35,10 @@ Results
 -------
 
 .. autoclass:: vunit.ui.results.Results()
+
+.. autoclass:: vunit.ui.results.Report()
+
+.. autoclass:: vunit.ui.results.TestResult()
 
 .. |compile_option| replace::
    The name of the compile option (See :ref:`Compilation options <compile_options>`)
