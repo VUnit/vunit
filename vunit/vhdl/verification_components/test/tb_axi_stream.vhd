@@ -502,7 +502,7 @@ begin
       for i in 0 to 100 loop
         reference := pop(reference_queue);
         await_pop_stream_reply(net, reference, data);
-      -- check_equal(data, to_unsigned(i + 1, data'length), result("for await pop stream data"));
+        check_equal(data, to_unsigned(i + 1, data'length), result("for await pop stream data"));
       end loop;
       info("There have been " & integer'image(tvalid_stall_events) & " tvalid stall events");
       info("Min stall length was " & integer'image(tvalid_min_stall_length));
@@ -527,7 +527,7 @@ begin
       for i in 0 to 100 loop
         reference := pop(reference_queue);
         await_pop_stream_reply(net, reference, data);
-      -- check_equal(data, to_unsigned(i + 1, data'length), result("for await pop stream data"));
+        check_equal(data, to_unsigned(i + 1, data'length), result("for await pop stream data"));
       end loop;
       info("There have been " & integer'image(tready_stall_events) & " tready stall events");
       info("Min stall length was " & integer'image(tready_min_stall_length));
