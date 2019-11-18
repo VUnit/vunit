@@ -29,27 +29,9 @@ end entity;
 
 architecture a of tb_axi_stream is
 
-  impure function master_stall_config return stall_config_t is
-    variable stall_config : stall_config_t;
-  begin
-    if (g_stall_master > 0) then
-      stall_config := (stall_probability => 0.3, min_stall_cycles => 5, max_stall_cycles => 15);
-    else
-      stall_config := null_stall_config;
-    end if;
-    return stall_config;
-  end;
-
-  impure function slave_stall_config return stall_config_t is
-    variable stall_config : stall_config_t;
-  begin
-    if (g_stall_slave > 0) then
-      stall_config := (stall_probability => 0.3, min_stall_cycles => 5, max_stall_cycles => 15);
-    else
-      stall_config := null_stall_config;
-    end if;
-    return stall_config;
-  end;
+  constant stall_config : real_vector(0 to 1) := (0.0, 0.3);
+  constant master_stall_config : stall_config_t := (stall_probability => stall_config(g_stall_master), min_stall_cycles => 5, max_stall_cycles => 15);
+  constant slave_stall_config  : stall_config_t := (stall_probability => stall_config(g_stall_slave), min_stall_cycles => 5, max_stall_cycles => 15);
 
   constant master_axi_stream : axi_stream_master_t := new_axi_stream_master(
     data_length => 8, id_length => g_id_length, dest_length => g_dest_length, user_length => g_user_length,
