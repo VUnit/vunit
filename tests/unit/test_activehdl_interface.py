@@ -388,12 +388,12 @@ class TestVersionConsumer(unittest.TestCase):
         self.version_line = "Aldec, Inc. VHDL compiler version 10.5.216.6767 built for Windows on January 20, 2018."
         self.expected_major = 10
         self.expected_minor = 5
-        self.expected_minor_letter = ''
+        self.expected_minor_letter = ""
         self._assert_version_correct()
 
     def test_vendor_version_with_letters(self):
         self.version_line = "Aldec, Inc. VHDL compiler version 10.5a.12.6914 built for Windows on June 06, 2018."
         self.expected_major = 10
         self.expected_minor = 5
-        self.expected_minor_letter = 'a'
+        self.expected_minor_letter = "a"
         self._assert_version_correct()

@@ -449,7 +449,9 @@ class VersionConsumer(object):
         self.minor = None
         self.minor_letter = None
 
-    _version_re = re.compile(r"(?P<major>\d+)\.(?P<minor>\d+)(?P<minor_letter>[a-zA-Z]?)\.\d+\.\d+")
+    _version_re = re.compile(
+        r"(?P<major>\d+)\.(?P<minor>\d+)(?P<minor_letter>[a-zA-Z]?)\.\d+\.\d+"
+    )
 
     def __call__(self, line):
         match = self._version_re.search(line)
