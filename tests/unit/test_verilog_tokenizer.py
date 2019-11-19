@@ -31,6 +31,18 @@ class TestVerilogTokenizer(TestCase):
             ],
         )
 
+    def test_newline_is_not_whitespace(self):
+        self.check(
+            " \n  \n\n",
+            [
+                WHITESPACE(value=" "),
+                NEWLINE(),
+                WHITESPACE(value="  "),
+                NEWLINE(),
+                NEWLINE(),
+            ],
+        )
+
     def test_tokenizes_string_literal(self):
         self.check('"hello"', [STRING(value="hello")])
 

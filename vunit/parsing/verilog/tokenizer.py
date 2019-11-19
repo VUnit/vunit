@@ -67,7 +67,7 @@ class VerilogTokenizer(object):
 
         add(NEWLINE, r"\n", remove_value)
 
-        add(WHITESPACE, r"\s +")
+        add(WHITESPACE, r"[ \t]+")
 
         add(
             MULTI_COMMENT,
