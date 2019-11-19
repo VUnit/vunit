@@ -18,7 +18,7 @@ context work.com_context;
 context work.data_types_context;
 
 library osvvm;
-use osvvm.RandomPkg.all;
+use osvvm.RandomPkg.RandomPType;
 
 package axi_stream_pkg is
 

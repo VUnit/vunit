@@ -15,7 +15,7 @@ use work.queue_pkg.all;
 use work.sync_pkg.all;
 
 library osvvm;
-use osvvm.RandomPkg.all;
+use osvvm.RandomPkg.RandomPType;
 
 entity axi_stream_master is
   generic (
