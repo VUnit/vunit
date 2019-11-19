@@ -83,18 +83,21 @@ architecture a of tb_axi_stream is
 
   -----------------------------------------------------------------------------
   -- signals used for the statistics for stall evaluation
-  signal tvalid_prev             : std_logic;
-  signal tready_prev             : std_logic;
-  signal tvalid_stall_events     : natural := 0;
-  signal tready_stall_events     : natural := 0;
-  signal tvalid_min_stall_length : natural := 1000;
-  signal tvalid_max_stall_length : natural := 0;
-  signal tvalid_stall_length     : natural := 0;
-  signal tvalid_start            : std_logic := '0';
-  signal tready_min_stall_length : natural := 1000;
-  signal tready_max_stall_length : natural := 0;
-  signal tready_stall_length     : natural := 0;
-  signal tready_start            : std_logic := '0';
+  type axis_stall_stats_fields_t is record
+    length, min, max, events : natural;
+    prev, start      : std_logic;
+  end record;
+
+  type axis_stall_stats_t is record
+    valid : axis_stall_stats_fields_t;
+    ready : axis_stall_stats_fields_t;
+  end record;
+
+  signal axis_stall_stats : axis_stall_stats_t := (
+    valid => (0, 1000, 0, 0, '0', '0'),
+    ready => (0, 1000, 0, 0, '0', '0')
+    );
+
 begin
 
   main : process
@@ -502,12 +505,12 @@ begin
         await_pop_stream_reply(net, reference, data);
         check_equal(data, to_unsigned(i + 1, data'length), result("for await pop stream data"));
       end loop;
-      info("There have been " & integer'image(tvalid_stall_events) & " tvalid stall events");
-      info("Min stall length was " & integer'image(tvalid_min_stall_length));
-      info("Max stall length was " & integer'image(tvalid_max_stall_length));
-      check((tvalid_stall_events < 40) and (tvalid_stall_events > 20), "Checking that the tvalid stall probability lies within reasonable boundaries");
-      check((tvalid_min_stall_length >= 5) and (tvalid_max_stall_length <=15), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
-      check_equal(tready_stall_events, 0, "Checking that there are zero tready stall events");
+      info("There have been " & to_string(axis_stall_stats.valid.events) & " tvalid stall events");
+      info("Min stall length was " & to_string(axis_stall_stats.valid.min));
+      info("Max stall length was " & to_string(axis_stall_stats.valid.max));
+      check((axis_stall_stats.valid.events < 40) and (axis_stall_stats.valid.events > 20), "Checking that the tvalid stall probability lies within reasonable boundaries");
+      check((axis_stall_stats.valid.min >= 5) and (axis_stall_stats.valid.max <= 15), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
+      check_equal(axis_stall_stats.ready.events, 0, "Checking that there are zero tready stall events");
 
     elsif run("test random stall on slave") then
       wait until rising_edge(aclk);
@@ -527,12 +530,12 @@ begin
         await_pop_stream_reply(net, reference, data);
         check_equal(data, to_unsigned(i + 1, data'length), result("for await pop stream data"));
       end loop;
-      info("There have been " & integer'image(tready_stall_events) & " tready stall events");
-      info("Min stall length was " & integer'image(tready_min_stall_length));
-      info("Max stall length was " & integer'image(tready_max_stall_length));
-      check((tready_stall_events < 40) and (tready_stall_events > 20), "Checking that the tready stall probability lies within reasonable boundaries");
-      check((tready_min_stall_length >= 5) and (tready_max_stall_length <=15), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
-      check_equal(tvalid_stall_events, 0, "Checking that there are zero tvalid stall events");
+      info("There have been " & to_string(axis_stall_stats.ready.events) & " tready stall events");
+      info("Min stall length was " & to_string(axis_stall_stats.ready.min));
+      info("Max stall length was " & to_string(axis_stall_stats.ready.max));
+      check((axis_stall_stats.ready.events < 40) and (axis_stall_stats.ready.events > 20), "Checking that the tready stall probability lies within reasonable boundaries");
+      check((axis_stall_stats.ready.min >= 5) and (axis_stall_stats.ready.max <= 15), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
+      check_equal(axis_stall_stats.valid.events, 0, "Checking that there are zero tvalid stall events");
 
     end if;
     test_runner_cleanup(runner);
@@ -624,56 +627,56 @@ begin
       tid      => tid,
       tdest    => tdest,
       tuser    => tuser
-    );
+      );
 
   statistics : process(aclk)
   begin
     if rising_edge(aclk) then
-      tvalid_prev <= tvalid;
-      tready_prev <= tready;
+      axis_stall_stats.valid.prev <= tvalid;
+      axis_stall_stats.ready.prev <= tready;
       -------------------------------------------------------------------------
       -- TVALID and TREADY stall events counters
-      if tvalid and (not tready) and tready_prev then
-        tready_stall_events <= tready_stall_events + 1;
+      if tvalid and (not tready) and axis_stall_stats.ready.prev then
+        axis_stall_stats.ready.events <= axis_stall_stats.ready.events + 1;
       end if;
-      if (not tvalid) and tready and tvalid_prev then
-        tvalid_stall_events <= tvalid_stall_events + 1;
+      if (not tvalid) and tready and axis_stall_stats.valid.prev then
+        axis_stall_stats.valid.events <= axis_stall_stats.valid.events + 1;
       end if;
 
       -------------------------------------------------------------------------
       -- TVALID Minmal and Maximal Stall lengths
       if tvalid then
-        tvalid_start <= '1';
+        axis_stall_stats.valid.start <= '1';
       end if;
 
-      if (not tvalid) and tvalid_start then
-        tvalid_stall_length <= tvalid_stall_length + 1;
+      if (not tvalid) and axis_stall_stats.valid.start then
+        axis_stall_stats.valid.length <= axis_stall_stats.valid.length + 1;
       end if;
-      if tvalid and tvalid_start and (not tvalid_prev) then
-        tvalid_stall_length <= 0;
-        if tvalid_stall_length < tvalid_min_stall_length then
-          tvalid_min_stall_length <= tvalid_stall_length;
+      if tvalid and axis_stall_stats.valid.start and (not axis_stall_stats.valid.prev) then
+        axis_stall_stats.valid.length <= 0;
+        if axis_stall_stats.valid.length < axis_stall_stats.valid.min then
+          axis_stall_stats.valid.min <= axis_stall_stats.valid.length;
         end if;
-        if tvalid_stall_length > tvalid_min_stall_length then
-          tvalid_max_stall_length <= tvalid_stall_length;
+        if axis_stall_stats.valid.length > axis_stall_stats.valid.min then
+          axis_stall_stats.valid.max <= axis_stall_stats.valid.length;
         end if;
       end if;
       -------------------------------------------------------------------------
       -- TREADY Minmal and Maximal Stall lengths
       if tready then
-        tready_start <= '1';
+        axis_stall_stats.ready.start <= '1';
       end if;
 
-      if (not tready) and tready_start then
-        tready_stall_length <= tready_stall_length + 1;
+      if (not tready) and axis_stall_stats.ready.start then
+        axis_stall_stats.ready.length <= axis_stall_stats.ready.length + 1;
       end if;
-      if tready and tready_start and (not tready_prev) then
-        tready_stall_length <= 0;
-        if tready_stall_length < tready_min_stall_length then
-          tready_min_stall_length <= tready_stall_length;
+      if tready and axis_stall_stats.ready.start and (not axis_stall_stats.ready.prev) then
+        axis_stall_stats.ready.length <= 0;
+        if axis_stall_stats.ready.length < axis_stall_stats.ready.min then
+          axis_stall_stats.ready.min <= axis_stall_stats.ready.length;
         end if;
-        if tready_stall_length > tready_min_stall_length then
-          tready_max_stall_length <= tready_stall_length;
+        if axis_stall_stats.ready.length > axis_stall_stats.ready.min then
+          axis_stall_stats.ready.max <= axis_stall_stats.ready.length;
         end if;
       end if;
 
