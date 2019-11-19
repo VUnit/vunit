@@ -17,14 +17,13 @@ use work.stream_slave_pkg.all;
 use work.sync_pkg.all;
 
 entity tb_axi_stream is
-  generic(
-    runner_cfg    : string;
-    g_id_length   : natural  := 8;
-    g_dest_length : natural  := 8;
-    g_user_length : natural  := 8;
-    g_stall_master : natural := 0;
-    g_stall_slave : natural  := 0
-  );
+  generic(runner_cfg : string;
+      	  g_id_length    : natural := 8;
+          g_dest_length  : natural := 8;
+          g_user_length  : natural := 8;
+          g_stall_master : natural := 0;
+          g_stall_slave  : natural := 0
+        );
 end entity;
 
 architecture a of tb_axi_stream is
