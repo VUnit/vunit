@@ -21,16 +21,15 @@ entity tb_axi_stream is
       	  g_id_length    : natural := 8;
           g_dest_length  : natural := 8;
           g_user_length  : natural := 8;
-          g_stall_master : natural := 0;
-          g_stall_slave  : natural := 0
+          g_stall_master : natural range 0 to 100 := 0; -- as in 0 to 100%
+          g_stall_slave  : natural range 0 to 100 := 0  -- as in 0 to 100%
         );
 end entity;
 
 architecture a of tb_axi_stream is
 
-  constant stall_config : real_vector(0 to 1) := (0.0, 0.3);
-  constant master_stall_config : stall_config_t := (stall_probability => stall_config(g_stall_master), min_stall_cycles => 5, max_stall_cycles => 15);
-  constant slave_stall_config  : stall_config_t := (stall_probability => stall_config(g_stall_slave), min_stall_cycles => 5, max_stall_cycles => 15);
+  constant master_stall_config : stall_config_t := (stall_probability => real(g_stall_master)/100.0, min_stall_cycles => 5, max_stall_cycles => 15);
+  constant slave_stall_config  : stall_config_t := (stall_probability => real(g_stall_slave)/100.0, min_stall_cycles => 5, max_stall_cycles => 15);
 
   constant master_axi_stream : axi_stream_master_t := new_axi_stream_master(
     data_length => 8, id_length => g_id_length, dest_length => g_dest_length, user_length => g_user_length,
