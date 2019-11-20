@@ -9,6 +9,7 @@ Interface towards Aldec Active HDL
 """
 
 from __future__ import print_function
+from functools import total_ordering
 
 from os.path import join, dirname, abspath
 import os
@@ -439,15 +440,64 @@ proc vunit_run {} {
         )
 
 
-class VersionConsumer(object):
+@total_ordering
+class Version(object):
+    """
+    Simulator version
+    """
+
+    def __init__(self, major=0, minor=0, minor_letter=""):
+        self.major = major
+        self.minor = minor
+        self.minor_letter = minor_letter
+
+    def _compare(self, other, greater_than, less_than, equal_to):
+        """
+        Compares this object with another
+        """
+        if self.major > other.major:
+            result = greater_than
+        elif self.major < other.major:
+            result = less_than
+        elif self.minor > other.minor:
+            result = greater_than
+        elif self.minor < other.minor:
+            result = less_than
+        elif self.minor_letter > other.minor_letter:
+            result = greater_than
+        elif self.minor_letter < other.minor_letter:
+            result = less_than
+        else:
+            result = equal_to
+
+        return result
+
+    def __lt__(self, other):
+        return self._compare(other, greater_than=False, less_than=True, equal_to=False)
+
+    def __le__(self, other):
+        return self._compare(other, greater_than=False, less_than=True, equal_to=True)
+
+    def __gt__(self, other):
+        return self._compare(other, greater_than=True, less_than=False, equal_to=False)
+
+    def __ge__(self, other):
+        return self._compare(other, greater_than=True, less_than=False, equal_to=True)
+
+    def __eq__(self, other):
+        return self._compare(other, greater_than=False, less_than=False, equal_to=True)
+
+    def __ne__(self, other):
+        return self._compare(other, greater_than=True, less_than=True, equal_to=False)
+
+
+class VersionConsumer(Version):
     """
     Consume version information
     """
 
     def __init__(self):
-        self.major = None
-        self.minor = None
-        self.minor_letter = None
+        Version.__init__(self)
 
     _version_re = re.compile(
         r"(?P<major>\d+)\.(?P<minor>\d+)(?P<minor_letter>[a-zA-Z]?)\.\d+\.\d+"

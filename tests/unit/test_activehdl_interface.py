@@ -14,7 +14,7 @@ from os.path import join, dirname, exists
 import os
 from shutil import rmtree
 from tests.mock_2or3 import mock
-from vunit.sim_if.activehdl import ActiveHDLInterface, VersionConsumer
+from vunit.sim_if.activehdl import ActiveHDLInterface, VersionConsumer, Version
 from vunit.project import Project
 from vunit.ostools import renew_path, write_file
 from vunit.vhdl_standard import VHDL
@@ -368,32 +368,81 @@ class TestVersionConsumer(unittest.TestCase):
     Test the VersionConsumer class
     """
 
-    def setUp(self):
-        self.version_line = None
-        self.expected_major = None
-        self.expected_minor = None
-        self.expected_minor_letter = None
-
-    def _assert_version_correct(self):
+    def _assert_version_correct(
+        self, version_line, expected_major, expected_minor, expected_minor_letter
+    ):
         """
         Assertion function used by tests in this class
         """
         consumer = VersionConsumer()
-        consumer(self.version_line)
-        assert consumer.major == self.expected_major
-        assert consumer.minor == self.expected_minor
-        assert consumer.minor_letter == self.expected_minor_letter
+        consumer(version_line)
+        self.assertEqual(consumer.major, expected_major)
+        self.assertEqual(consumer.minor, expected_minor)
+        self.assertEqual(consumer.minor_letter, expected_minor_letter)
 
     def test_vendor_version_without_letters(self):
-        self.version_line = "Aldec, Inc. VHDL compiler version 10.5.216.6767 built for Windows on January 20, 2018."
-        self.expected_major = 10
-        self.expected_minor = 5
-        self.expected_minor_letter = ""
-        self._assert_version_correct()
+        self._assert_version_correct(
+            "Aldec, Inc. VHDL compiler version 10.5.216.6767 built for Windows on January 20, 2018.",
+            10,
+            5,
+            "",
+        )
 
     def test_vendor_version_with_letters(self):
-        self.version_line = "Aldec, Inc. VHDL compiler version 10.5a.12.6914 built for Windows on June 06, 2018."
-        self.expected_major = 10
-        self.expected_minor = 5
-        self.expected_minor_letter = "a"
-        self._assert_version_correct()
+        self._assert_version_correct(
+            "Aldec, Inc. VHDL compiler version 10.5a.12.6914 built for Windows on June 06, 2018.",
+            10,
+            5,
+            "a",
+        )
+
+    def test_lt(self):
+        # Test with letters
+        self.assertTrue(Version(10, 5, "a") < Version(10, 5, "b"))
+        self.assertFalse(Version(10, 5, "a") < Version(10, 4, "a"))
+        # Test without letters
+        self.assertTrue(Version(10, 5) < Version(10, 6))
+        self.assertFalse(Version(10, 5) < Version(10, 4))
+
+    def test_le(self):
+        # Test with letters
+        self.assertTrue(Version(10, 5, "a") <= Version(10, 5, "a"))
+        self.assertTrue(Version(10, 5, "a") <= Version(10, 5, "b"))
+        self.assertFalse(Version(10, 5, "a") <= Version(10, 4, "a"))
+        # Test without letters
+        self.assertTrue(Version(10, 5) <= Version(10, 5))
+        self.assertFalse(Version(10, 5) <= Version(10, 4))
+
+    def test_gt(self):
+        # Test with letters
+        self.assertTrue(Version(10, 5, "b") > Version(10, 5, "a"))
+        self.assertFalse(Version(10, 4, "a") > Version(10, 5, "a"))
+        # Test without letters
+        self.assertTrue(Version(10, 5) > Version(10, 4))
+        self.assertFalse(Version(10, 4) > Version(10, 5))
+
+    def test_ge(self):
+        # Test with letters
+        self.assertTrue(Version(10, 5, "a") >= Version(10, 5, "a"))
+        self.assertTrue(Version(10, 5, "b") >= Version(10, 5, "a"))
+        self.assertFalse(Version(10, 5, "a") >= Version(10, 5, "b"))
+        # Test without letters
+        self.assertTrue(Version(10, 5) >= Version(10, 5))
+        self.assertTrue(Version(10, 6) >= Version(10, 5))
+        self.assertFalse(Version(10, 3) >= Version(10, 4))
+
+    def test_eq(self):
+        # Test with letters
+        self.assertTrue(Version(10, 5, "a") == Version(10, 5, "a"))
+        self.assertFalse(Version(10, 5, "a") == Version(10, 4, "a"))
+        # Test without letters
+        self.assertTrue(Version(10, 5) == Version(10, 5))
+        self.assertFalse(Version(10, 5) == Version(10, 4))
+
+    def test_ne(self):
+        # Test with letters
+        self.assertTrue(Version(10, 5, "a") != Version(10, 5, "b"))
+        self.assertFalse(Version(10, 5, "a") != Version(10, 5, "a"))
+        # Test without letters
+        self.assertTrue(Version(10, 5) != Version(10, 6))
+        self.assertFalse(Version(10, 5) != Version(10, 5))
