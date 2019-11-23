@@ -41,10 +41,6 @@ class MockProcessVersionWithPackageGenerics(MockProcess):
         MockProcess.__init__(self, args, cwd, env, "10.5a.12.6914")
 
 
-def mock_find_prefix():
-    return ""
-
-
 class TestActiveHDLInterface(unittest.TestCase):
     """
     Test the ActiveHDL interface
@@ -375,23 +371,21 @@ class TestActiveHDLInterface(unittest.TestCase):
             env=simif.get_env(),
         )
 
-    @mock.patch(
-        "vunit.sim_if.activehdl.ActiveHDLInterface.find_prefix", new=mock_find_prefix
-    )
+    @mock.patch("vunit.sim_if.activehdl.ActiveHDLInterface.find_prefix")
     @mock.patch(
         "vunit.sim_if.activehdl.Process", new=MockProcessVersionWithPackageGenerics
     )
-    def test_supports_vhdl_package_generics_true(self):
+    def test_supports_vhdl_package_generics_true(self, find_prefix):
+        find_prefix.return_value = ""
         simif = ActiveHDLInterface(prefix="prefix", output_path=self.output_path)
         self.assertTrue(simif.supports_vhdl_package_generics())
 
-    @mock.patch(
-        "vunit.sim_if.activehdl.ActiveHDLInterface.find_prefix", new=mock_find_prefix
-    )
+    @mock.patch("vunit.sim_if.activehdl.ActiveHDLInterface.find_prefix")
     @mock.patch(
         "vunit.sim_if.activehdl.Process", new=MockProcessVersionWithoutPackageGenerics
     )
-    def test_supports_vhdl_package_generics_false(self):
+    def test_supports_vhdl_package_generics_false(self, find_prefix):
+        find_prefix.return_value = ""
         simif = ActiveHDLInterface(prefix="prefix", output_path=self.output_path)
         self.assertFalse(simif.supports_vhdl_package_generics())
 
