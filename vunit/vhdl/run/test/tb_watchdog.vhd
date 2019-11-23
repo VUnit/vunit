@@ -28,13 +28,10 @@ begin
     if run("test watchdog no timeout") then
       wait for 1 ns;
 
-    elsif run("Test timeout notification") then
-      wait until timeout_notification(runner);
-      check_equal(now, 2 ns);
-
-    elsif run("test watchdog timeout") then
+    elsif run("Test watchdog timeout") then
       mock(runner_trace_logger, error);
       wait until timeout_notification(runner);
+      check_equal(now, 2 ns);
       wait for 1 ps;
       check_only_log(runner_trace_logger, "Test runner timeout after " & time'image(2 ns) & ".", error, 2 ns);
       unmock(runner_trace_logger);

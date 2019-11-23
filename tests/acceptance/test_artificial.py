@@ -25,8 +25,12 @@ class TestVunitArtificial(unittest.TestCase):
     """
 
     def setUp(self):
-        # Spaces in path intentional to verify that it is supported
-        self.output_path = join(dirname(__file__), "artificial _out")
+        if simulator_is("activehdl"):
+            self.output_path = join(dirname(__file__), "artificial_out")
+        else:
+            # Spaces in path intentional to verify that it is supported
+            self.output_path = join(dirname(__file__), "artificial _out")
+
         self.report_file = join(self.output_path, "xunit.xml")
         self.artificial_run_vhdl = join(
             dirname(__file__), "artificial", "vhdl", "run.py"

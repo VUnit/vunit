@@ -172,7 +172,7 @@ begin
         mock(default_logger);
         verbose("hello", 17, "foo.vhd");
         check_log(default_logger, "Mapping deprecated procedure verbose to trace", warning);
-        check_log(default_logger, "hello", verbose, 0 ns, 17, "foo.vhd");
+        check_log(default_logger, "hello", trace, 0 ns, 17, "foo.vhd");
         unmock(default_logger);
 
       end if;

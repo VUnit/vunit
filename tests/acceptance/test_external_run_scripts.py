@@ -146,6 +146,9 @@ class TestExternalRunScripts(unittest.TestCase):
             ],
         )
 
+    @unittest.skipUnless(
+        simulator_is("ghdl"), "Support complex JSON strings as generic"
+    )
     def test_vhdl_json4vhdl_example_project(self):
         self.check(join(ROOT, "examples", "vhdl", "json4vhdl", "run.py"))
 

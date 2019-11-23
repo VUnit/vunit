@@ -198,7 +198,7 @@ package body string_ptr_pkg is
 
   procedure reallocate (
     ptr   : ptr_t;
-    value : string
+    value : vec_t
   ) is
     variable s : storage_t := st.idxs(ptr.ref);
     variable n_value : string(1 to value'length) := value;
