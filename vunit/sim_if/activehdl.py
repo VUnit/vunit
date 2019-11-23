@@ -9,6 +9,7 @@ Interface towards Aldec Active HDL
 """
 
 from __future__ import print_function
+from functools import total_ordering
 
 from os.path import join, dirname, abspath
 import os
@@ -62,8 +63,8 @@ class ActiveHDLInterface(SimulatorInterface):
         proc = Process([join(cls.find_prefix(), "vcom"), "-version"], env=cls.get_env())
         consumer = VersionConsumer()
         proc.consume_output(consumer)
-        if consumer.major is not None:
-            return consumer.minor >= 1 if consumer.major == 10 else consumer.major > 10
+        if consumer.version is not None:
+            return consumer.version >= Version(10, 1)
 
         return False
 
@@ -439,20 +440,62 @@ proc vunit_run {} {
         )
 
 
+@total_ordering
+class Version(object):
+    """
+    Simulator version
+    """
+
+    def __init__(self, major=0, minor=0, minor_letter=""):
+        self.major = major
+        self.minor = minor
+        self.minor_letter = minor_letter
+
+    def _compare(self, other, greater_than, less_than, equal_to):
+        """
+        Compares this object with another
+        """
+        if self.major > other.major:
+            result = greater_than
+        elif self.major < other.major:
+            result = less_than
+        elif self.minor > other.minor:
+            result = greater_than
+        elif self.minor < other.minor:
+            result = less_than
+        elif self.minor_letter > other.minor_letter:
+            result = greater_than
+        elif self.minor_letter < other.minor_letter:
+            result = less_than
+        else:
+            result = equal_to
+
+        return result
+
+    def __lt__(self, other):
+        return self._compare(other, greater_than=False, less_than=True, equal_to=False)
+
+    def __eq__(self, other):
+        return self._compare(other, greater_than=False, less_than=False, equal_to=True)
+
+
 class VersionConsumer(object):
     """
     Consume version information
     """
 
     def __init__(self):
-        self.major = None
-        self.minor = None
+        self.version = None
 
-    _version_re = re.compile(r"(?P<major>\d+)\.(?P<minor>\d+)\.\d+\.\d+")
+    _version_re = re.compile(
+        r"(?P<major>\d+)\.(?P<minor>\d+)(?P<minor_letter>[a-zA-Z]?)\.\d+\.\d+"
+    )
 
     def __call__(self, line):
         match = self._version_re.search(line)
         if match is not None:
-            self.major = int(match.group("major"))
-            self.minor = int(match.group("minor"))
+            major = int(match.group("major"))
+            minor = int(match.group("minor"))
+            minor_letter = match.group("minor_letter")
+            self.version = Version(major, minor, minor_letter)
         return True
