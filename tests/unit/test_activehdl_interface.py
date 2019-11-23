@@ -375,14 +375,22 @@ class TestActiveHDLInterface(unittest.TestCase):
             env=simif.get_env(),
         )
 
-    @mock.patch("vunit.sim_if.activehdl.ActiveHDLInterface.find_prefix", new=mock_find_prefix)
-    @mock.patch("vunit.sim_if.activehdl.Process", new=MockProcessVersionWithPackageGenerics)
+    @mock.patch(
+        "vunit.sim_if.activehdl.ActiveHDLInterface.find_prefix", new=mock_find_prefix
+    )
+    @mock.patch(
+        "vunit.sim_if.activehdl.Process", new=MockProcessVersionWithPackageGenerics
+    )
     def test_supports_vhdl_package_generics_true(self):
         simif = ActiveHDLInterface(prefix="prefix", output_path=self.output_path)
         self.assertTrue(simif.supports_vhdl_package_generics())
 
-    @mock.patch("vunit.sim_if.activehdl.ActiveHDLInterface.find_prefix", new=mock_find_prefix)
-    @mock.patch("vunit.sim_if.activehdl.Process", new=MockProcessVersionWithoutPackageGenerics)
+    @mock.patch(
+        "vunit.sim_if.activehdl.ActiveHDLInterface.find_prefix", new=mock_find_prefix
+    )
+    @mock.patch(
+        "vunit.sim_if.activehdl.Process", new=MockProcessVersionWithoutPackageGenerics
+    )
     def test_supports_vhdl_package_generics_false(self):
         simif = ActiveHDLInterface(prefix="prefix", output_path=self.output_path)
         self.assertFalse(simif.supports_vhdl_package_generics())
@@ -413,7 +421,10 @@ class TestVersionConsumer(unittest.TestCase):
         """
         consumer = VersionConsumer()
         consumer(version_line)
-        self.assertEqual(consumer.version, Version(expected_major, expected_minor, expected_minor_letter))
+        self.assertEqual(
+            consumer.version,
+            Version(expected_major, expected_minor, expected_minor_letter),
+        )
 
     def test_vendor_version_without_letters(self):
         self._assert_version_correct(
@@ -447,90 +458,189 @@ class TestVersion(unittest.TestCase):
 
     def test_lt(self):
         # Test with letters
-        self.assertTrue(TestVersion.low_version_letter < TestVersion.high_version_letter)
-        self.assertFalse(TestVersion.high_version_letter < TestVersion.low_version_letter)
+        self.assertTrue(
+            TestVersion.low_version_letter < TestVersion.high_version_letter
+        )
+        self.assertFalse(
+            TestVersion.high_version_letter < TestVersion.low_version_letter
+        )
         # Test without letters
-        self.assertTrue(TestVersion.low_version_no_letter < TestVersion.high_version_no_letter)
-        self.assertFalse(TestVersion.high_version_no_letter < TestVersion.low_version_no_letter)
+        self.assertTrue(
+            TestVersion.low_version_no_letter < TestVersion.high_version_no_letter
+        )
+        self.assertFalse(
+            TestVersion.high_version_no_letter < TestVersion.low_version_no_letter
+        )
         # Both
-        self.assertTrue(TestVersion.low_version_letter < TestVersion.high_version_no_letter)
-        self.assertFalse(TestVersion.high_version_letter < TestVersion.low_version_no_letter)
+        self.assertTrue(
+            TestVersion.low_version_letter < TestVersion.high_version_no_letter
+        )
+        self.assertFalse(
+            TestVersion.high_version_letter < TestVersion.low_version_no_letter
+        )
 
     def test_le(self):
         # Test equal
         # Test with letters
-        self.assertTrue(TestVersion.high_version_letter <= TestVersion.high_version_letter)
-        self.assertFalse(TestVersion.high_version_letter <= TestVersion.low_version_letter)
+        self.assertTrue(
+            TestVersion.high_version_letter <= TestVersion.high_version_letter
+        )
+        self.assertFalse(
+            TestVersion.high_version_letter <= TestVersion.low_version_letter
+        )
         # Test without letters
-        self.assertTrue(TestVersion.high_version_no_letter <= TestVersion.high_version_no_letter)
-        self.assertFalse(TestVersion.high_version_no_letter <= TestVersion.low_version_no_letter)
+        self.assertTrue(
+            TestVersion.high_version_no_letter <= TestVersion.high_version_no_letter
+        )
+        self.assertFalse(
+            TestVersion.high_version_no_letter <= TestVersion.low_version_no_letter
+        )
         # Both
-        self.assertTrue(TestVersion.high_version_letter <= TestVersion.high_version_no_letter)
-        self.assertFalse(TestVersion.high_version_letter <= TestVersion.low_version_no_letter)
+        self.assertTrue(
+            TestVersion.high_version_letter <= TestVersion.high_version_no_letter
+        )
+        self.assertFalse(
+            TestVersion.high_version_letter <= TestVersion.low_version_no_letter
+        )
 
         # Test less than
         # Test with letters
-        self.assertTrue(TestVersion.low_version_letter <= TestVersion.high_version_letter)
-        self.assertFalse(TestVersion.high_version_letter <= TestVersion.low_version_letter)
+        self.assertTrue(
+            TestVersion.low_version_letter <= TestVersion.high_version_letter
+        )
+        self.assertFalse(
+            TestVersion.high_version_letter <= TestVersion.low_version_letter
+        )
         # Test without letters
-        self.assertTrue(TestVersion.low_version_no_letter <= TestVersion.high_version_no_letter)
-        self.assertFalse(TestVersion.high_version_no_letter <= TestVersion.low_version_no_letter)
+        self.assertTrue(
+            TestVersion.low_version_no_letter <= TestVersion.high_version_no_letter
+        )
+        self.assertFalse(
+            TestVersion.high_version_no_letter <= TestVersion.low_version_no_letter
+        )
         # Both
-        self.assertTrue(TestVersion.low_version_letter <= TestVersion.high_version_no_letter)
-        self.assertFalse(TestVersion.high_version_letter <= TestVersion.low_version_no_letter)
+        self.assertTrue(
+            TestVersion.low_version_letter <= TestVersion.high_version_no_letter
+        )
+        self.assertFalse(
+            TestVersion.high_version_letter <= TestVersion.low_version_no_letter
+        )
 
     def test_gt(self):
         # Test with letters
-        self.assertTrue(TestVersion.high_version_letter > TestVersion.low_version_letter)
-        self.assertFalse(TestVersion.low_version_letter > TestVersion.high_version_letter)
+        self.assertTrue(
+            TestVersion.high_version_letter > TestVersion.low_version_letter
+        )
+        self.assertFalse(
+            TestVersion.low_version_letter > TestVersion.high_version_letter
+        )
         # Test without letters
-        self.assertTrue(TestVersion.high_version_no_letter > TestVersion.low_version_no_letter)
-        self.assertFalse(TestVersion.low_version_no_letter > TestVersion.high_version_no_letter)
+        self.assertTrue(
+            TestVersion.high_version_no_letter > TestVersion.low_version_no_letter
+        )
+        self.assertFalse(
+            TestVersion.low_version_no_letter > TestVersion.high_version_no_letter
+        )
         # Both
-        self.assertTrue(TestVersion.high_version_letter > TestVersion.low_version_no_letter)
-        self.assertFalse(TestVersion.low_version_letter > TestVersion.high_version_no_letter)
+        self.assertTrue(
+            TestVersion.high_version_letter > TestVersion.low_version_no_letter
+        )
+        self.assertFalse(
+            TestVersion.low_version_letter > TestVersion.high_version_no_letter
+        )
 
     def test_ge(self):
         # Test equal
         # Test with letters
-        self.assertTrue(TestVersion.high_version_letter >= TestVersion.high_version_letter)
-        self.assertFalse(TestVersion.low_version_letter >= TestVersion.high_version_letter)
+        self.assertTrue(
+            TestVersion.high_version_letter >= TestVersion.high_version_letter
+        )
+        self.assertFalse(
+            TestVersion.low_version_letter >= TestVersion.high_version_letter
+        )
         # Test without letters
-        self.assertTrue(TestVersion.high_version_no_letter >= TestVersion.high_version_no_letter)
-        self.assertFalse(TestVersion.low_version_no_letter >= TestVersion.high_version_no_letter)
+        self.assertTrue(
+            TestVersion.high_version_no_letter >= TestVersion.high_version_no_letter
+        )
+        self.assertFalse(
+            TestVersion.low_version_no_letter >= TestVersion.high_version_no_letter
+        )
         # Both
-        self.assertTrue(TestVersion.high_version_letter_for_mixed >= TestVersion.high_version_no_letter)
-        self.assertFalse(TestVersion.low_version_letter >= TestVersion.high_version_no_letter)
+        self.assertTrue(
+            TestVersion.high_version_letter_for_mixed
+            >= TestVersion.high_version_no_letter
+        )
+        self.assertFalse(
+            TestVersion.low_version_letter >= TestVersion.high_version_no_letter
+        )
 
         # Test greater than
         # Test with letters
-        self.assertTrue(TestVersion.high_version_letter >= TestVersion.low_version_letter)
-        self.assertFalse(TestVersion.low_version_letter >= TestVersion.high_version_letter)
+        self.assertTrue(
+            TestVersion.high_version_letter >= TestVersion.low_version_letter
+        )
+        self.assertFalse(
+            TestVersion.low_version_letter >= TestVersion.high_version_letter
+        )
         # Test without letters
-        self.assertTrue(TestVersion.high_version_no_letter >= TestVersion.low_version_no_letter)
-        self.assertFalse(TestVersion.low_version_no_letter >= TestVersion.high_version_no_letter)
+        self.assertTrue(
+            TestVersion.high_version_no_letter >= TestVersion.low_version_no_letter
+        )
+        self.assertFalse(
+            TestVersion.low_version_no_letter >= TestVersion.high_version_no_letter
+        )
         # Both
-        self.assertTrue(TestVersion.high_version_letter >= TestVersion.low_version_no_letter)
-        self.assertFalse(TestVersion.low_version_letter >= TestVersion.high_version_no_letter)
+        self.assertTrue(
+            TestVersion.high_version_letter >= TestVersion.low_version_no_letter
+        )
+        self.assertFalse(
+            TestVersion.low_version_letter >= TestVersion.high_version_no_letter
+        )
 
     def test_eq(self):
         # Test with letters
-        self.assertTrue(TestVersion.high_version_letter == TestVersion.high_version_letter)
-        self.assertFalse(TestVersion.high_version_letter == TestVersion.low_version_letter)
+        self.assertTrue(
+            TestVersion.high_version_letter == TestVersion.high_version_letter
+        )
+        self.assertFalse(
+            TestVersion.high_version_letter == TestVersion.low_version_letter
+        )
         # Test without letters
-        self.assertTrue(TestVersion.high_version_no_letter == TestVersion.high_version_no_letter)
-        self.assertFalse(TestVersion.high_version_no_letter == TestVersion.low_version_no_letter)
+        self.assertTrue(
+            TestVersion.high_version_no_letter == TestVersion.high_version_no_letter
+        )
+        self.assertFalse(
+            TestVersion.high_version_no_letter == TestVersion.low_version_no_letter
+        )
         # Both
-        self.assertTrue(TestVersion.high_version_letter_for_mixed == TestVersion.high_version_no_letter)
-        self.assertFalse(TestVersion.high_version_letter == TestVersion.low_version_no_letter)
+        self.assertTrue(
+            TestVersion.high_version_letter_for_mixed
+            == TestVersion.high_version_no_letter
+        )
+        self.assertFalse(
+            TestVersion.high_version_letter == TestVersion.low_version_no_letter
+        )
 
     def test_ne(self):
         # Test with letters
-        self.assertTrue(TestVersion.high_version_letter != TestVersion.low_version_letter)
-        self.assertFalse(TestVersion.high_version_letter != TestVersion.high_version_letter)
+        self.assertTrue(
+            TestVersion.high_version_letter != TestVersion.low_version_letter
+        )
+        self.assertFalse(
+            TestVersion.high_version_letter != TestVersion.high_version_letter
+        )
         # Test without letters
-        self.assertTrue(TestVersion.high_version_no_letter != TestVersion.low_version_no_letter)
-        self.assertFalse(TestVersion.high_version_no_letter != TestVersion.high_version_no_letter)
+        self.assertTrue(
+            TestVersion.high_version_no_letter != TestVersion.low_version_no_letter
+        )
+        self.assertFalse(
+            TestVersion.high_version_no_letter != TestVersion.high_version_no_letter
+        )
         # Both
-        self.assertTrue(TestVersion.high_version_letter != TestVersion.low_version_no_letter)
-        self.assertFalse(TestVersion.high_version_letter_for_mixed != TestVersion.high_version_no_letter)
+        self.assertTrue(
+            TestVersion.high_version_letter != TestVersion.low_version_no_letter
+        )
+        self.assertFalse(
+            TestVersion.high_version_letter_for_mixed
+            != TestVersion.high_version_no_letter
+        )
