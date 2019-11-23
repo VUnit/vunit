@@ -63,8 +63,8 @@ class ActiveHDLInterface(SimulatorInterface):
         proc = Process([join(cls.find_prefix(), "vcom"), "-version"], env=cls.get_env())
         consumer = VersionConsumer()
         proc.consume_output(consumer)
-        if consumer.major is not None:
-            return consumer.minor >= 1 if consumer.major == 10 else consumer.major > 10
+        if consumer.version is not None:
+            return consumer.version >= Version(10, 1)
 
         return False
 
@@ -475,29 +475,17 @@ class Version(object):
     def __lt__(self, other):
         return self._compare(other, greater_than=False, less_than=True, equal_to=False)
 
-    def __le__(self, other):
-        return self._compare(other, greater_than=False, less_than=True, equal_to=True)
-
-    def __gt__(self, other):
-        return self._compare(other, greater_than=True, less_than=False, equal_to=False)
-
-    def __ge__(self, other):
-        return self._compare(other, greater_than=True, less_than=False, equal_to=True)
-
     def __eq__(self, other):
         return self._compare(other, greater_than=False, less_than=False, equal_to=True)
 
-    def __ne__(self, other):
-        return self._compare(other, greater_than=True, less_than=True, equal_to=False)
 
-
-class VersionConsumer(Version):
+class VersionConsumer(object):
     """
     Consume version information
     """
 
     def __init__(self):
-        Version.__init__(self)
+        self.version = None
 
     _version_re = re.compile(
         r"(?P<major>\d+)\.(?P<minor>\d+)(?P<minor_letter>[a-zA-Z]?)\.\d+\.\d+"
@@ -506,7 +494,8 @@ class VersionConsumer(Version):
     def __call__(self, line):
         match = self._version_re.search(line)
         if match is not None:
-            self.major = int(match.group("major"))
-            self.minor = int(match.group("minor"))
-            self.minor_letter = match.group("minor_letter")
+            major = int(match.group("major"))
+            minor = int(match.group("minor"))
+            minor_letter = match.group("minor_letter")
+            self.version = Version(major, minor, minor_letter)
         return True
