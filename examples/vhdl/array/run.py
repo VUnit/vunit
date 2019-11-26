@@ -8,9 +8,9 @@
 Array
 -----
 
-Demonstrates the ``array_t`` data type of ``array_pkg.vhd`` which
-can be used to handle dynamically sized 1D, 2D and 3D data as well
-as storing and loading it from csv and raw files.
+Demonstrates the ``integer_array_t`` data type, which can be used to
+handle dynamically sized 1D, 2D and 3D data as well as storing and
+loading it from csv and raw files.
 """
 
 from os.path import join, dirname
@@ -20,12 +20,14 @@ root = dirname(__file__)
 
 vu = VUnit.from_argv()
 vu.add_osvvm()
-vu.add_array_util()
 
 src_path = join(dirname(__file__), "src")
 
 vu.add_library("lib").add_source_files(
     [join(src_path, "*.vhd"), join(src_path, "test", "*.vhd")]
 )
+
+vu.set_compile_option("ghdl.flags", ["-frelaxed"])
+vu.set_sim_option("ghdl.elab_flags", ["-frelaxed"])
 
 vu.main()
