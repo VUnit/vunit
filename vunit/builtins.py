@@ -10,6 +10,7 @@ Functions to add builtin VHDL code to a project for compilation
 
 from os.path import join, abspath, dirname, basename
 from glob import glob
+from warnings import warn
 from vunit.vhdl_standard import VHDL
 from vunit.sim_if.common import simulator_check
 
@@ -127,6 +128,12 @@ class Builtins(object):
         """
         if not self._vhdl_standard >= VHDL.STD_2008:
             raise RuntimeError("Array util only supports vhdl 2008 and later")
+
+        arr_deprecation_note = (
+            "'array_t' is deprecated and it will removed in future releases;"
+            "use 'integer_array_t' instead"
+        )
+        warn(arr_deprecation_note, Warning)
 
         self._vunit_lib.add_source_files(join(VHDL_PATH, "array", "src", "*.vhd"))
 
