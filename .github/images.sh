@@ -4,7 +4,7 @@
 set -e
 
 docker build \
-  --build-arg IMAGE="python:$PYVER-slim-buster" \
+  --build-arg IMAGE="python:3-slim-buster" \
   --build-arg LLVM_VER=7 \
   --build-arg GNAT_VER=8 \
   --target vunit \

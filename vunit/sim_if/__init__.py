@@ -429,7 +429,4 @@ def is_string_not_iterable(value):
     """
     Returns True if value is a string and not another iterable
     """
-    if sys.version_info.major == 3:
-        return isinstance(value, str)
-
-    return isinstance(value, (str, unicode))  # pylint: disable=undefined-variable
+    return isinstance(value, str)

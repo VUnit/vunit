@@ -14,7 +14,7 @@ Tests the test test_bench module
 import unittest
 from os.path import join
 
-from tests.mock_2or3 import mock
+from unittest import mock
 from tests.common import with_tempdir, get_vhdl_test_bench
 from vunit.test.bench import (
     TestBench,

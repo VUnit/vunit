@@ -7,25 +7,20 @@ environment:
     # For Python versions available on Appveyor, see
     # http://www.appveyor.com/docs/installed-software#python
 
-    - BUILD_NAME: py27-unit
-      PYTHON: "C:\\Python27"
     - BUILD_NAME: py35-unit
       PYTHON: "C:\\Python35"
+
     - BUILD_NAME: py38-unit
       PYTHON: "C:\\Python38"
 
     - BUILD_NAME: py38-lint
       PYTHON: "C:\\Python38"
 
-    - BUILD_NAME: py27-docs
-      PYTHON: "C:\\Python27"
     - BUILD_NAME: py38-docs
-      PYTHON: "C:\\Python38"
+      PYTHON: "C:\\Python37"
 
-    - BUILD_NAME: py27-acceptance-ghdl
-      PYTHON: "C:\\Python27"
     - BUILD_NAME: py38-acceptance-ghdl
-      PYTHON: "C:\\Python38"
+      PYTHON: "C:\\Python37"
 
     - BUILD_NAME: py38-vcomponents-ghdl
       PYTHON: "C:\\Python38"

@@ -13,7 +13,7 @@ import unittest
 from os.path import join, dirname, exists
 import os
 from shutil import rmtree
-from tests.mock_2or3 import mock
+from unittest import mock
 from tests.common import set_env
 from vunit.sim_if.modelsim import ModelSimInterface
 from vunit.project import Project

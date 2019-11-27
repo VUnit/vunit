@@ -9,7 +9,7 @@ Test builtins.py
 """
 
 import unittest
-from tests.mock_2or3 import mock
+from unittest import mock
 from vunit.builtins import BuiltinsAdder
 
 

@@ -387,18 +387,9 @@ class TestScheduler(object):
         self._idx = 0
         self._num_done = 0
 
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        """
-        Iterator in Python 3
-        """
-        return self.__next__()
-
     def next(self):
         """
-        Iterator in Python 2
+        Return the next test
         """
         ostools.PROGRAM_STATUS.check_for_shutdown()
         with self._lock:  # pylint: disable=not-context-manager

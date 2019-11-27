@@ -7,11 +7,5 @@
 # pylint: skip-file
 from sys import stdout
 
-if hasattr(stdout, "buffer"):
-    # Python 3
-    stdout.buffer.write(b"a" + b"\x87" + b"c")
-else:
-    # Python 2.7
-    stdout.write(b"a" + b"\x87" + b"c")
-
+stdout.buffer.write(b"a" + b"\x87" + b"c")
 stdout.write("\n")

@@ -13,7 +13,7 @@ from __future__ import print_function
 import unittest
 from os.path import join, abspath
 
-from tests.mock_2or3 import mock
+from unittest import mock
 from tests.common import with_tempdir
 from vunit.hashing import hash_string
 from vunit.test.runner import TestRunner, create_output_path

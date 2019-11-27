@@ -13,7 +13,6 @@ from __future__ import print_function
 from os.path import join, dirname, abspath, relpath
 import os
 import subprocess
-import sys
 import logging
 from ..exceptions import CompileError
 from ..ostools import write_file, file_exists
@@ -422,9 +421,4 @@ define work "{2}/libraries/work"
 
 
 def _generic_needs_quoting(value):  # pylint: disable=missing-docstring
-    if sys.version_info.major == 2:
-        return isinstance(
-            value, (str, bool, unicode)  # pylint: disable=undefined-variable
-        )
-
     return isinstance(value, (str, bool))

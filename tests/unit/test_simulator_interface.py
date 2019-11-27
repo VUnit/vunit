@@ -13,7 +13,7 @@ from os.path import join, dirname, exists
 import os
 import subprocess
 from shutil import rmtree
-from tests.mock_2or3 import mock
+from unittest import mock
 from vunit.project import Project
 from vunit.sim_if import (
     SimulatorInterface,

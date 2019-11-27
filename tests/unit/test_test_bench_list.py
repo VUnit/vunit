@@ -15,7 +15,7 @@ import unittest
 from os.path import join
 
 from tests.unit.test_test_bench import Entity, Module
-from tests.mock_2or3 import mock
+from unittest import mock
 from tests.common import with_tempdir
 from vunit.test.bench_list import TestBenchList, tb_filter
 

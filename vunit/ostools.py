@@ -16,15 +16,7 @@ import time
 import subprocess
 import threading
 import shutil
-import sys
-
-try:
-    # Python 3.x
-    from queue import Queue, Empty
-except ImportError:
-    # Python 2.7
-    from Queue import Queue, Empty  # pylint: disable=import-error
-
+from queue import Queue, Empty
 from os.path import exists, getmtime, dirname, relpath, splitdrive
 import os
 import io
@@ -276,11 +268,7 @@ class AsynchronousFileReader(threading.Thread):
             if PROGRAM_STATUS.is_shutting_down:
                 break
 
-            # Convert string into utf-8 if necessary
-            if sys.version_info.major == 2:
-                string = line[:-1].decode(encoding=self._encoding, errors="ignore")
-            else:
-                string = line[:-1]
+            string = line[:-1]
 
             self._queue.put(string)
         self._queue.put(None)

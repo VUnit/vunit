@@ -13,16 +13,8 @@ from __future__ import print_function
 from os.path import join, dirname, abspath
 import os
 import logging
-import sys
 import io
-
-try:
-    # Python 3
-    from configparser import RawConfigParser
-except ImportError:
-    # Python 2
-    from ConfigParser import RawConfigParser  # pylint: disable=import-error
-
+from configparser import RawConfigParser
 from ..exceptions import CompileError
 from ..ostools import Process, file_exists
 from ..vhdl_standard import VHDL
@@ -443,14 +435,8 @@ def parse_modelsimini(file_name):
     :returns: A RawConfigParser object
     """
     cfg = RawConfigParser()
-    if sys.version_info.major == 2:
-        # For Python 2 read modelsim.ini as binary file since ConfigParser
-        # does not support unicode
-        with io.open(file_name, "rb") as fptr:
-            cfg.readfp(fptr)  # pylint: disable=deprecated-method
-    else:
-        with io.open(file_name, "r", encoding="utf-8") as fptr:
-            cfg.read_file(fptr)
+    with io.open(file_name, "r", encoding="utf-8") as fptr:
+        cfg.read_file(fptr)
     return cfg
 
 
@@ -458,11 +444,5 @@ def write_modelsimini(cfg, file_name):
     """
     Writes a modelsim.ini file
     """
-    if sys.version_info.major == 2:
-        # For Python 2 write modelsim.ini as binary file since ConfigParser
-        # does not support unicode
-        with io.open(file_name, "wb") as optr:
-            cfg.write(optr)
-    else:
-        with io.open(file_name, "w", encoding="utf-8") as optr:
-            cfg.write(optr)
+    with io.open(file_name, "w", encoding="utf-8") as optr:
+        cfg.write(optr)
