@@ -808,9 +808,10 @@ Listed 2 files""".splitlines()
 
         for no_parse in (True, False):
             for method in range(4):
-                ui, add_source_file = (
-                    self._create_ui_with_mocked_project_add_source_file()
-                )
+                (
+                    ui,
+                    add_source_file,
+                ) = self._create_ui_with_mocked_project_add_source_file()
                 lib = ui.add_library("lib")
 
                 if method == 0:
