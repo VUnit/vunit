@@ -10,7 +10,8 @@ UI common functions
 
 from os import environ
 from logging import getLogger
-from ..vhdl_standard import VHDL
+from typing import Optional
+from ..vhdl_standard import VHDL, VHDLStandard
 
 
 LOGGER = getLogger(__name__)
@@ -18,7 +19,7 @@ LOGGER = getLogger(__name__)
 TEST_OUTPUT_PATH = "test_output"
 
 
-def select_vhdl_standard(vhdl_standard=None):
+def select_vhdl_standard(vhdl_standard: Optional[str] = None) -> VHDLStandard:
     """
     Select VHDL standard either from class initialization or according to environment variable VUNIT_VHDL_STANDARD
     """

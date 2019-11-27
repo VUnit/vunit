@@ -17,6 +17,7 @@ from vunit.vhdl_parser import VHDLReference
 from vunit.cached import file_content_hash
 from vunit.parsing.encodings import HDL_FILE_ENCODING
 from vunit.design_unit import DesignUnit, VHDLDesignUnit, Entity, Module
+from vunit.vhdl_standard import VHDLStandard
 
 LOGGER = logging.getLogger(__name__)
 
@@ -202,11 +203,17 @@ class VHDLSourceFile(SourceFile):
     """
 
     def __init__(  # pylint: disable=too-many-arguments
-        self, name, library, vhdl_parser, database, vhdl_standard, no_parse=False
+        self,
+        name,
+        library,
+        vhdl_parser,
+        database,
+        vhdl_standard: VHDLStandard,
+        no_parse=False,
     ):
         SourceFile.__init__(self, name, library, "vhdl")
-        self.dependencies = []
-        self.depending_components = []
+        self.dependencies = []  # type: ignore
+        self.depending_components = []  # type: ignore
         self._vhdl_standard = vhdl_standard
 
         if not no_parse:
@@ -225,7 +232,7 @@ class VHDLSourceFile(SourceFile):
             self.name, encoding=HDL_FILE_ENCODING, database=database
         )
 
-    def get_vhdl_standard(self):
+    def get_vhdl_standard(self) -> VHDLStandard:
         """
         Return the VHDL standard used to create this file
         """

@@ -16,6 +16,7 @@ import traceback
 import logging
 import json
 import os
+from typing import Optional, Set
 from os.path import exists, abspath, join, basename, normpath, dirname
 from fnmatch import fnmatch
 from ..database import PickledDataBase, DataBase
@@ -31,7 +32,7 @@ from ..location_preprocessor import LocationPreprocessor
 from ..check_preprocessor import CheckPreprocessor
 from ..parsing.encodings import HDL_FILE_ENCODING
 from ..builtins import Builtins
-from ..vhdl_standard import VHDL
+from ..vhdl_standard import VHDL, VHDLStandard
 from ..test.bench_list import TestBenchList
 from ..test.report import TestReport
 from ..test.runner import TestRunner
@@ -56,7 +57,9 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
     """
 
     @classmethod
-    def from_argv(cls, argv=None, compile_builtins=True, vhdl_standard=None):
+    def from_argv(
+        cls, argv=None, compile_builtins=True, vhdl_standard: Optional[str] = None
+    ):
         """
         Create VUnit instance from command line arguments.
 
@@ -80,7 +83,9 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
         )
 
     @classmethod
-    def from_args(cls, args, compile_builtins=True, vhdl_standard=None):
+    def from_args(
+        cls, args, compile_builtins=True, vhdl_standard: Optional[str] = None
+    ):
         """
         Create VUnit instance from args namespace.
         Intended for users who adds custom command line options.
@@ -96,7 +101,9 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
         """
         return cls(args, compile_builtins=compile_builtins, vhdl_standard=vhdl_standard)
 
-    def __init__(self, args, compile_builtins=True, vhdl_standard=None):
+    def __init__(
+        self, args, compile_builtins=True, vhdl_standard: Optional[str] = None
+    ):
         self._args = args
         self._configure_logging(args.log_level)
         self._output_path = abspath(args.output_path)
@@ -117,9 +124,9 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
             return keep
 
         self._test_filter = test_filter
-        self._vhdl_standard = select_vhdl_standard(vhdl_standard)
+        self._vhdl_standard: VHDLStandard = select_vhdl_standard(vhdl_standard)
 
-        self._external_preprocessors = []
+        self._external_preprocessors = []  # type: ignore
         self._location_preprocessor = None
         self._check_preprocessor = None
 
@@ -184,7 +191,7 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
             filename=None, format="%(levelname)7s - %(message)s", level=level
         )
 
-    def _which_vhdl_standard(self, vhdl_standard):
+    def _which_vhdl_standard(self, vhdl_standard: Optional[str]) -> VHDLStandard:
         """
         Return default vhdl_standard if the argument is None
         The argument is a string from the user
@@ -194,7 +201,9 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
 
         return VHDL.standard(vhdl_standard)
 
-    def add_external_library(self, library_name, path, vhdl_standard=None):
+    def add_external_library(
+        self, library_name, path, vhdl_standard: Optional[str] = None
+    ):
         """
         Add an externally compiled library as a black-box
 
@@ -220,7 +229,9 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
         )
         return self.library(library_name)
 
-    def add_source_files_from_csv(self, project_csv_path, vhdl_standard=None):
+    def add_source_files_from_csv(
+        self, project_csv_path, vhdl_standard: Optional[str] = None
+    ):
         """
         Add a project configuration, mapping all the libraries and files
 
@@ -233,7 +244,7 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
         :returns: A list of files (:class `.SourceFileList`) that were added
 
         """
-        libs = set()
+        libs: Set[str] = set()
         files = SourceFileList(list())
 
         with open(project_csv_path) as csv_path_file:
@@ -258,7 +269,9 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
                     )
         return files
 
-    def add_library(self, library_name, vhdl_standard=None, allow_duplicate=False):
+    def add_library(
+        self, library_name, vhdl_standard: Optional[str] = None, allow_duplicate=False
+    ):
         """
         Add a library managed by VUnit.
 
@@ -277,11 +290,11 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
            library = prj.add_library("lib")
 
         """
-        vhdl_standard = self._which_vhdl_standard(vhdl_standard)
+        standard = self._which_vhdl_standard(vhdl_standard)
 
         path = join(self._simulator_output_path, "libraries", library_name)
         if not self._project.has_library(library_name):
-            self._project.add_library(library_name, abspath(path), vhdl_standard)
+            self._project.add_library(library_name, abspath(path), standard)
         elif not allow_duplicate:
             raise ValueError(
                 "Library %s already added. Use allow_duplicate to ignore this error."
@@ -500,7 +513,7 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
         include_dirs=None,
         defines=None,
         allow_empty=False,
-        vhdl_standard=None,
+        vhdl_standard: Optional[str] = None,
         no_parse=False,
         file_type=None,
     ):
@@ -544,7 +557,7 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
         preprocessors=None,
         include_dirs=None,
         defines=None,
-        vhdl_standard=None,
+        vhdl_standard: Optional[str] = None,
         no_parse=False,
         file_type=None,
     ):
@@ -872,7 +885,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         ostools.renew_path(self._preprocessed_path)
 
     @property
-    def vhdl_standard(self):
+    def vhdl_standard(self) -> str:
         return str(self._vhdl_standard)
 
     @property

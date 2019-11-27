@@ -13,6 +13,7 @@ Functionality to represent and operate on a HDL code project
 """
 from os.path import join, basename, dirname, isdir, exists
 import logging
+from typing import Optional
 from collections import OrderedDict
 from vunit.hashing import hash_string
 from vunit.dependency_graph import DependencyGraph, CircularDependencyException
@@ -20,8 +21,13 @@ from vunit.vhdl_parser import VHDLParser
 from vunit.parsing.verilog.parser import VerilogParser
 from vunit.exceptions import CompileError
 from vunit import ostools
-from vunit.source_file import VERILOG_FILE_TYPES, VerilogSourceFile, VHDLSourceFile
-from vunit.vhdl_standard import VHDL
+from vunit.source_file import (
+    VERILOG_FILE_TYPES,
+    SourceFile,
+    VerilogSourceFile,
+    VHDLSourceFile,
+)
+from vunit.vhdl_standard import VHDL, VHDLStandard
 
 LOGGER = logging.getLogger(__name__)
 
@@ -76,7 +82,11 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         self._builtin_libraries.add(logical_name)
 
     def add_library(
-        self, logical_name, directory, vhdl_standard=VHDL.STD_2008, is_external=False
+        self,
+        logical_name,
+        directory,
+        vhdl_standard: VHDLStandard = VHDL.STD_2008,
+        is_external=False,
     ):
         """
         Add library to project with logical_name located or to be located in directory
@@ -108,7 +118,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         file_type="vhdl",
         include_dirs=None,
         defines=None,
-        vhdl_standard=None,
+        vhdl_standard: Optional[VHDLStandard] = None,
         no_parse=False,
     ):
         """
@@ -124,7 +134,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
 
         if file_type == "vhdl":
             assert include_dirs is None
-            source_file = VHDLSourceFile(
+            source_file: SourceFile = VHDLSourceFile(
                 file_name,
                 library,
                 vhdl_parser=self._vhdl_parser,
@@ -619,28 +629,30 @@ class Library(object):  # pylint: disable=too-many-instance-attributes
     Represents a VHDL library
     """
 
-    def __init__(self, name, directory, vhdl_standard, is_external=False):
+    def __init__(
+        self, name: str, directory: str, vhdl_standard: VHDLStandard, is_external=False
+    ):
         self.name = name
         self.directory = directory
 
         # Default VHDL standard for files added unless explicitly set per file
         self.vhdl_standard = vhdl_standard
 
-        self._source_files = {}
+        self._source_files = {}  # type: ignore
 
         # Entity objects
-        self._entities = {}
-        self._package_bodies = {}
+        self._entities = {}  # type: ignore
+        self._package_bodies = {}  # type: ignore
 
-        self.primary_design_units = {}
+        self.primary_design_units = {}  # type: ignore
 
         # Entity name to architecture design unit mapping
-        self._architectures = {}
+        self._architectures = {}  # type: ignore
 
         # Verilog specific
         # Module objects
-        self.modules = {}
-        self.verilog_packages = {}
+        self.modules = {}  # type: ignore
+        self.verilog_packages = {}  # type: ignore
 
         self._is_external = is_external
 

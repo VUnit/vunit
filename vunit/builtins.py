@@ -11,7 +11,7 @@ Functions to add builtin VHDL code to a project for compilation
 from os.path import join, abspath, dirname, basename
 from glob import glob
 from warnings import warn
-from vunit.vhdl_standard import VHDL
+from vunit.vhdl_standard import VHDL, VHDLStandard
 from vunit.sim_if.common import simulator_check
 
 VHDL_PATH = abspath(join(dirname(__file__), "vhdl"))
@@ -23,7 +23,7 @@ class Builtins(object):
     Manage VUnit builtins and their dependencies
     """
 
-    def __init__(self, vunit_obj, vhdl_standard, simulator_class):
+    def __init__(self, vunit_obj, vhdl_standard: VHDLStandard, simulator_class):
         self._vunit_obj = vunit_obj
         self._vunit_lib = vunit_obj.add_library("vunit_lib")
         self._vhdl_standard = vhdl_standard
