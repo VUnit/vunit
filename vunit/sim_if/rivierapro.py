@@ -8,8 +8,6 @@
 Interface towards Aldec Riviera Pro
 """
 
-from __future__ import print_function
-
 from os.path import join, dirname, abspath
 import os
 import re

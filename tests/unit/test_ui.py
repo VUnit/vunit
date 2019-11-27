@@ -10,7 +10,6 @@
 Acceptance test of the VUnit public interface class
 """
 
-from __future__ import print_function
 import unittest
 from string import Template
 import os
@@ -19,7 +18,7 @@ import json
 import re
 from re import MULTILINE
 from shutil import rmtree
-from tests.mock_2or3 import mock
+from unittest import mock
 from tests.common import set_env, with_tempdir, create_vhdl_test_bench_file
 from vunit.ui import VUnit
 from vunit.source_file import VHDL_EXTENSIONS, VERILOG_EXTENSIONS
@@ -1260,21 +1259,6 @@ end architecture;
         """
         with open(file_name, "w") as fprt:
             fprt.write(contents)
-
-    def assertRaisesRegex(  # pylint: disable=invalid-name,arguments-differ
-        self, *args, **kwargs
-    ):
-        """
-        Python 2/3 compatability
-        """
-        if hasattr(unittest.TestCase, "assertRaisesRegex"):
-            unittest.TestCase.assertRaisesRegex(  # pylint: disable=no-member
-                self, *args, **kwargs
-            )
-        else:
-            unittest.TestCase.assertRaisesRegexp(  # pylint: disable=deprecated-method
-                self, *args, **kwargs
-            )
 
 
 class TestPreprocessor(object):

@@ -15,7 +15,7 @@ import unittest
 from os.path import join, dirname, exists, basename
 import os
 from shutil import rmtree
-from tests.mock_2or3 import mock
+from unittest import mock
 from vunit.sim_if.incisive import IncisiveInterface
 from vunit.project import Project
 from vunit.ostools import renew_path, write_file, read_file

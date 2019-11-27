@@ -13,7 +13,7 @@ import os
 from os.path import join, dirname, exists
 import time
 import shutil
-from tests.mock_2or3 import mock
+from unittest import mock
 from vunit.ostools import renew_path
 from vunit.parsing.verilog.parser import VerilogParser
 

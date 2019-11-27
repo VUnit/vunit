@@ -9,8 +9,6 @@ Perform necessary modifications to VUnit VHDL code to support
 Cadence Incisive
 """
 
-from __future__ import print_function
-
 import os
 import re
 

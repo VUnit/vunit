@@ -10,8 +10,6 @@
 Public VUnit User Interface (UI)
 """
 
-from __future__ import print_function
-
 import csv
 import sys
 import traceback

@@ -9,8 +9,6 @@ Create and validates new tagged release commits
 The release process is described in the Contributing section of the web page
 """
 
-from __future__ import print_function
-
 import argparse
 import json
 from urllib.request import urlopen  # pylint: disable=no-name-in-module, import-error

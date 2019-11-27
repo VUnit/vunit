@@ -8,8 +8,6 @@
 Helper functions to generate examples.rst from docstrings in run.py files
 """
 
-from __future__ import print_function
-
 import sys
 import inspect
 from os.path import basename, dirname, isdir, isfile, join

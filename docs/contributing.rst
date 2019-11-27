@@ -45,8 +45,7 @@ The test suite is divided into three parts:
 **tests/lint/**
    Style checks such as pycodestyle and license header verification.
 
-The test suites must pass with both Python 2.7 and Python 3.x as well
-as with all supported simulators.
+The test suites must pass with Python 3.x as well as with all supported simulators.
 
 For running the test locally we recommend using `pytest <https://pypi.python.org/pypi/pytest>`__.
 
@@ -62,9 +61,6 @@ Dependencies
 
 Other than the dependencies required to use VUnit as a user the
 following are also required for developers to run the test suite manually:
-
-`mock <https://pypi.python.org/pypi/mock>`__
-   For Python 2.7 only, built into Python 3.x
 
 `pycodestyle <https://pypi.python.org/pypi/pycodestyle>`__
    Coding style check.
@@ -168,13 +164,13 @@ PyPI with pip:
 For most developers, running the full testsuite will likely lead to failed test
 cases because not all Python interpreters or HDL simulators are installed in
 their environment. More focused testing is possible by specifying which tox
-"environments" should be tested. For example, assume a developer uses Python 2.7
+"environments" should be tested. For example, assume a developer uses Python 3.8
 and Modelsim and would like to test changes using tools available in his
 environment:
 
 .. code-block:: console
 
-    vunit/ > tox -e py27-unit,py27-acceptance-modelsim
+    vunit/ > tox -e py38-unit,py38-acceptance-modelsim
 
 A full list of test environments can be seen by issuing the following command:
 

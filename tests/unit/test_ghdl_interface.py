@@ -12,7 +12,7 @@ import unittest
 from os.path import join, dirname, exists
 import os
 from shutil import rmtree
-from tests.mock_2or3 import mock
+from unittest import mock
 from tests.unit.test_test_bench import Entity
 from vunit.sim_if.ghdl import GHDLInterface
 from vunit.project import Project

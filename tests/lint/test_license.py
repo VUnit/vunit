@@ -7,7 +7,6 @@
 """
 License header sanity check
 """
-from __future__ import print_function
 
 import unittest
 from warnings import simplefilter, catch_warnings

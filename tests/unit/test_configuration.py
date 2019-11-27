@@ -14,7 +14,7 @@ Tests the test test_bench module
 import unittest
 import contextlib
 from os.path import join
-from tests.mock_2or3 import mock
+from unittest import mock
 from tests.common import with_tempdir, create_tempdir
 from tests.unit.test_test_bench import Entity
 from vunit.configuration import Configuration, AttributeException

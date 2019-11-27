@@ -9,7 +9,7 @@ Test of the general tokenizer
 """
 
 from unittest import TestCase
-from tests.mock_2or3 import mock
+from unittest import mock
 from vunit.parsing.tokenizer import describe_location
 
 

@@ -10,7 +10,6 @@ Provide test reporting functionality
 
 
 from xml.etree import ElementTree
-from sys import version_info
 import os
 import socket
 import re
@@ -204,12 +203,7 @@ class TestReport(object):
         for result in self._test_results_in_order():
             root.append(result.to_xml(xunit_xml_format))
 
-        if version_info >= (3, 0):
-            # Python 3.x
-            xml = ElementTree.tostring(root, encoding="unicode")
-        else:
-            # Python 2.x
-            xml = ElementTree.tostring(root, encoding="utf-8")
+        xml = ElementTree.tostring(root, encoding="unicode")
         return xml
 
 
