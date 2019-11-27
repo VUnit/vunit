@@ -8,7 +8,8 @@
 Verilog tokens
 """
 
-from vunit.parsing.tokenizer import new_token_kind
+from typing import Dict
+from vunit.parsing.tokenizer import new_token_kind, TokenKind
 
 
 def __token(kind):
@@ -27,7 +28,7 @@ def __keyword(kind):
     return token_kind
 
 
-KEYWORDS = {}
+KEYWORDS: Dict[str, TokenKind] = {}
 
 PREPROCESSOR = __token("preprocessor")
 STRING = __token("string")

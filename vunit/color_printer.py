@@ -15,9 +15,9 @@ from ctypes import Structure, c_short, c_ushort, byref
 from vunit.ostools import IS_WINDOWS_SYSTEM
 
 
-class LinuxColorPrinter(object):
+class ColorPrinter(object):
     """
-    Print in color on linux
+    Base class
     """
 
     BLUE = "b"
@@ -28,6 +28,45 @@ class LinuxColorPrinter(object):
 
     def __init__(self):
         pass
+
+    @staticmethod
+    def write(
+        text, output_file=None, fg=None, bg=None
+    ):  # pylint: disable=unused-argument
+        """
+        Print the text in color to the output_file
+        uses stdout if output_file is None
+        """
+
+
+class NoColorPrinter(ColorPrinter):
+    """
+    Dummy printer that does not print in color
+    """
+
+    def __init__(self):
+        ColorPrinter.__init__(self)
+
+    @staticmethod
+    def write(
+        text, output_file=None, fg=None, bg=None
+    ):  # pylint: disable=unused-argument
+        """
+        Print the text in color to the output_file
+        uses stdout if output_file is None
+        """
+        if output_file is None:
+            output_file = sys.stdout
+        output_file.write(text)
+
+
+class LinuxColorPrinter(ColorPrinter):
+    """
+    Print in color on linux
+    """
+
+    def __init__(self):
+        ColorPrinter.__init__(self)
 
     def write(self, text, output_file=None, fg=None, bg=None):
         """
@@ -110,13 +149,13 @@ class ConsoleScreenBufferInfo(Structure):
     ]
 
 
-class Win32ColorPrinter(LinuxColorPrinter):
+class Win32ColorPrinter(ColorPrinter):
     """
     Prints in color on windows
     """
 
     def __init__(self):
-        LinuxColorPrinter.__init__(self)
+        ColorPrinter.__init__(self)
         self._stdout_handle = ctypes.windll.kernel32.GetStdHandle(-11)
         self._stderr_handle = ctypes.windll.kernel32.GetStdHandle(-12)
         self._default_attr = self._get_text_attr(self._stdout_handle)
@@ -186,32 +225,13 @@ class Win32ColorPrinter(LinuxColorPrinter):
         return code
 
 
-class NoColorPrinter(object):
-    """
-    Dummy printer that does not print in color
-    """
-
-    def __init__(self):
-        pass
-
-    @staticmethod
-    def write(
-        text, output_file=None, fg=None, bg=None
-    ):  # pylint: disable=unused-argument
-        """
-        Print the text in color to the output_file
-        uses stdout if output_file is None
-        """
-        if output_file is None:
-            output_file = sys.stdout
-        output_file.write(text)
-
-
-NO_COLOR_PRINTER = NoColorPrinter()
+NO_COLOR_PRINTER: ColorPrinter = NoColorPrinter()
 
 # On MSYS/MINGW shells (https://www.msys2.org/) with Python installed through pacman, IS_WINDOWS_SYSTEM is true.
 # However, regular Linux color strings are supported/required, instead of 'native' windows color format.
 # Environment variable MSYSTEM is checked, which should contain 'msys'|'mingw32'|'mingw64' or be unset/empty.
+COLOR_PRINTER: ColorPrinter
+
 if IS_WINDOWS_SYSTEM and ("MSYSTEM" not in os.environ):
     COLOR_PRINTER = Win32ColorPrinter()
 else:

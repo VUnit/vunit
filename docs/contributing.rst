@@ -68,6 +68,9 @@ following are also required for developers to run the test suite manually:
 `pylint <https://pypi.python.org/pypi/pylint>`__
    Code analysis.
 
+`mypy <http://www.mypy-lang.org/>`__
+   Optional static typing for Python.
+
 Code coverage
 ~~~~~~~~~~~~~
 
