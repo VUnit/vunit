@@ -71,6 +71,7 @@ setup(
         "Topic :: Software Development :: Testing",
         "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
     ],
+    python_requires=">=3.4",
     install_requires=["colorama"],
     requires=["colorama"],
     license=["Mozilla Public License 2.0 (MPL 2.0)"],
