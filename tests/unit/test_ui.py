@@ -26,6 +26,7 @@ from vunit.source_file import VHDL_EXTENSIONS, VERILOG_EXTENSIONS
 from vunit.ostools import renew_path
 from vunit.builtins import add_verilog_include_dir
 from vunit.sim_if import SimulatorInterface
+from vunit.vhdl_standard import VHDL
 
 
 class TestUi(unittest.TestCase):
@@ -722,6 +723,20 @@ Listed 2 files""".splitlines()
                 names(ui.get_compile_order([foo_file])), names([bar_file, foo_file])
             )
 
+    def _create_ui_with_mocked_project_add_source_file(self):
+        """
+        Helper method to create an VUnit object with a mocked project
+        to test that the Project.add_source_files method gets the correct arguments
+        """
+        ui = self._create_ui()
+        real_project = ui._project
+        fun = mock.Mock()
+        retval = mock.Mock()
+        retval.design_units = []
+        fun.return_value = retval
+        ui._project.add_source_file = fun
+        return ui, fun
+
     def test_add_source_files_has_include_dirs(self):
         file_name = "verilog.v"
         include_dirs = ["include_dir"]
@@ -732,20 +747,18 @@ Listed 2 files""".splitlines()
             """
             Helper to check that project method was called
             """
-            ui = self._create_ui()
-            with mock.patch.object(ui, "_project", autospec=True) as project:
-                project.has_library.return_value = True
-                lib = ui.library("lib")
-                action(ui, lib)
-                project.add_source_file.assert_called_once_with(
-                    abspath("verilog.v"),
-                    "lib",
-                    file_type="verilog",
-                    include_dirs=all_include_dirs,
-                    defines=None,
-                    vhdl_standard=None,
-                    no_parse=False,
-                )
+            ui, add_source_file = self._create_ui_with_mocked_project_add_source_file()
+            lib = ui.add_library("lib")
+            action(ui, lib)
+            add_source_file.assert_called_once_with(
+                abspath("verilog.v"),
+                "lib",
+                file_type="verilog",
+                include_dirs=all_include_dirs,
+                defines=None,
+                vhdl_standard=VHDL.STD_2008,
+                no_parse=False,
+            )
 
         check(
             lambda ui, _: ui.add_source_files(
@@ -770,20 +783,18 @@ Listed 2 files""".splitlines()
             """
             Helper to check that project method was called
             """
-            ui = self._create_ui()
-            with mock.patch.object(ui, "_project", autospec=True) as project:
-                project.has_library.return_value = True
-                lib = ui.library("lib")
-                action(ui, lib)
-                project.add_source_file.assert_called_once_with(
-                    abspath("verilog.v"),
-                    "lib",
-                    file_type="verilog",
-                    include_dirs=all_include_dirs,
-                    defines=defines,
-                    vhdl_standard=None,
-                    no_parse=False,
-                )
+            ui, add_source_file = self._create_ui_with_mocked_project_add_source_file()
+            lib = ui.add_library("lib")
+            action(ui, lib)
+            add_source_file.assert_called_once_with(
+                abspath("verilog.v"),
+                "lib",
+                file_type="verilog",
+                include_dirs=all_include_dirs,
+                defines=defines,
+                vhdl_standard=VHDL.STD_2008,
+                no_parse=False,
+            )
 
         check(lambda ui, _: ui.add_source_files(file_name, "lib", defines=defines))
         check(lambda ui, _: ui.add_source_file(file_name, "lib", defines=defines))
@@ -797,29 +808,27 @@ Listed 2 files""".splitlines()
 
         for no_parse in (True, False):
             for method in range(4):
+                ui, add_source_file = (
+                    self._create_ui_with_mocked_project_add_source_file()
+                )
+                lib = ui.add_library("lib")
 
-                ui = self._create_ui()
-                with mock.patch.object(ui, "_project", autospec=True) as project:
-                    project.has_library.return_value = True
+                if method == 0:
+                    ui.add_source_files(file_name, "lib", no_parse=no_parse)
+                elif method == 1:
+                    ui.add_source_file(file_name, "lib", no_parse=no_parse)
+                elif method == 2:
+                    lib.add_source_files(file_name, no_parse=no_parse)
+                elif method == 3:
+                    lib.add_source_file(file_name, no_parse=no_parse)
 
-                    if method == 0:
-                        ui.add_source_files(file_name, "lib", no_parse=no_parse)
-                    elif method == 1:
-                        ui.add_source_file(file_name, "lib", no_parse=no_parse)
-                    elif method == 2:
-                        lib = ui.library("lib")
-                        lib.add_source_files(file_name, no_parse=no_parse)
-                    elif method == 3:
-                        lib = ui.library("lib")
-                        lib.add_source_file(file_name, no_parse=no_parse)
-
-                    project.add_source_file.assert_called_once_with(
+                    add_source_file.assert_called_once_with(
                         abspath("verilog.v"),
                         "lib",
                         file_type="verilog",
                         include_dirs=all_include_dirs,
                         defines=None,
-                        vhdl_standard=None,
+                        vhdl_standard=VHDL.STD_2008,
                         no_parse=no_parse,
                     )
 

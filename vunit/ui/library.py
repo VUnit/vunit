@@ -11,6 +11,7 @@ UI class Library
 from os.path import abspath
 from glob import glob
 from fnmatch import fnmatch
+from ..vhdl_standard import VHDL
 from ..sim_if import is_string_not_iterable
 from ..source_file import file_type_of, FILE_TYPES, VERILOG_FILE_TYPES
 from ..builtins import add_verilog_include_dir
@@ -266,7 +267,7 @@ class Library(object):
             file_type=file_type,
             include_dirs=include_dirs,
             defines=defines,
-            vhdl_standard=vhdl_standard,
+            vhdl_standard=self._which_vhdl_standard(vhdl_standard),
             no_parse=no_parse,
         )
         # To get correct tb_path generic
@@ -355,3 +356,13 @@ class Library(object):
             allow_empty,
             "No test benches found within library %s" % self._library_name,
         )
+
+    def _which_vhdl_standard(self, vhdl_standard):
+        """
+        Return default vhdl_standard if the argument is None
+        The argument is a string from the user
+        """
+        if vhdl_standard is None:
+            return self._project.get_library(self._library_name).vhdl_standard
+
+        return VHDL.standard(vhdl_standard)

@@ -281,13 +281,11 @@ Elapsed time was 3.0 seconds
         test_path = join(opath, TEST_OUTPUT_PATH, "unit")
         output_file_name = join(test_path, basename(self.output_file_name))
         results = Results(
-            opath, None, self._report_with_all_passed_tests(output_file_name),
+            opath, None, self._report_with_all_passed_tests(output_file_name)
         )
         report = results.get_report()
         for key, test in report.tests.items():
-            self.assertEqual(
-                basename(test.path), test.relpath,
-            )
+            self.assertEqual(basename(test.path), test.relpath)
         test0 = report.tests["passed_test0"]
         test1 = report.tests["passed_test1"]
         self.assertEqual(
