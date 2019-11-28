@@ -35,14 +35,14 @@ Running the tests
 
 The test suite is divided into three parts:
 
-**vunit/test/unit/**
+**tests/unit/**
    Short and concise unit tests for internal modules and classes.
 
-**vunit/test/acceptance/**
+**tests/acceptance/**
    End to end tests of public functionality. Depends on external tools
    such as simulators.
 
-**vunit/test/lint/**
+**tests/lint/**
    Style checks such as pycodestyle and license header verification.
 
 The test suites must pass with both Python 2.7 and Python 3.x as well
@@ -55,7 +55,7 @@ Example
 .. code-block:: shell
    :caption: Example of running all unit tests
 
-   pytest vunit/test/unit/
+   pytest tests/unit/
 
 Dependencies
 ~~~~~~~~~~~~
@@ -81,7 +81,7 @@ commands measure the code coverage while running the entire test suite:
 
 .. code:: console
 
-    vunit/ > coverage run --branch --source vunit/ -m unittest discover vunit/test/
+    vunit/ > coverage run --branch --source vunit/ -m unittest discover tests/
     vunit/ > coverage html --directory=htmlcov
     vunit/ > open htmlcov/index.html
 
