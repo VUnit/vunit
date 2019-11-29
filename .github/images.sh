@@ -17,5 +17,5 @@ COPY --from=ghdl/pkg:buster-$PKG / /test
 
 RUN tar xzf \$(ls /test/ghdl-*) -C /usr/local/ \\
  && rm -rf /test \
- && pip install tox colorama
+ && pip install -U tox colorama coverage --progress-bar off
 EOF
