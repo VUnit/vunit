@@ -10,14 +10,16 @@ Check that the Python version used is supported by VUnit
 
 import sys
 
+MAJOR = 3
+MINOR = 6
+
 
 def version_is_ok():
     """
     Returns true if version is high enough
     """
     version = (sys.version_info[0], sys.version_info[1])
-    # We only state 3.5 support but why forbid lower version if we do not know it doesnt work
-    return version >= (3, 4)
+    return version >= (3, 6)
 
 
 if not version_is_ok():
@@ -26,5 +28,5 @@ if not version_is_ok():
         "Please consider upgrading." % (sys.version_info[0], sys.version_info[1])
     )
     print("VUnit supports versions:")
-    print(" - Python 3.4 or higher")
+    print(" - Python %i.%i or higher" % (MAJOR, MINOR))
     sys.exit(1)

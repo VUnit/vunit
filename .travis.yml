@@ -33,8 +33,8 @@ matrix:
     python: '3.8'
 
 
-  - env: BUILD_NAME=py35-unit
-    python: '3.5'
+  - env: BUILD_NAME=py36-unit
+    python: '3.6'
   - env: BUILD_NAME=py38-unit
     dist: xenial
     python: '3.8'
