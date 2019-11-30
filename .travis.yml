@@ -1,6 +1,7 @@
 language: python
+python: '3.8'
 install: pip install tox
-script: tox -e $BUILD_NAME
+script: PY_COLORS=1 tox -e $BUILD_NAME
 
 stages:
   - test
@@ -22,45 +23,19 @@ matrix:
       - BUILD_NAME=py38-vcomponents-ghdl
       - DOCKER_IMAGE=mcode
 
-
   - env: BUILD_NAME=py38-fmt
-    python: '3.8'
-    script: tox -e $BUILD_NAME -- --check
+    script: PY_COLORS=1 tox -e $BUILD_NAME -- --check
 
+  - env: BUILD_NAME="py38-lint -- --color=yes"
 
-  - env: BUILD_NAME=py38-lint
-    dist: xenial
-    python: '3.8'
-
-
-  - env: BUILD_NAME=py36-unit
-    python: '3.6'
-  - env: BUILD_NAME=py38-unit
-    dist: xenial
-    python: '3.8'
-
+  - env: BUILD_NAME="py38-unit -- --color=yes"
 
   - env: BUILD_NAME=py38-docs
-    python: '3.8'
     before_script: git fetch --unshallow --tags
-    after_success: touch .tox/${BUILD_NAME}/tmp/docsbuild/.nojekyll
-    deploy:
-      provider: pages
-      repo: VUnit/VUnit.github.io
-      target_branch: master
-      local_dir: .tox/${BUILD_NAME}/tmp/docsbuild/
-      # This environment variable is set to an OAuth token in travis vunit settings
-      github_token: $GITHUB_PAGES_TOKEN
-      skip_cleanup: true
-      on:
-        repo: VUnit/vunit
-        branch: master
-
 
   # Deploy to PyPI whenever the package version has changed
   # When a package version has not changed a new upload will not be triggered
   - stage: deploy
-    python: '3.8'
     if: tag IS present
     script:
       - git fetch --unshallow --tags

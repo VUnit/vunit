@@ -7,9 +7,6 @@ environment:
     # For Python versions available on Appveyor, see
     # https://www.appveyor.com/docs/windows-images-software/#python
 
-    - BUILD_NAME: py36-unit
-      PYTHON: "C:\\Python36"
-
     - BUILD_NAME: py38-unit
       PYTHON: "C:\\Python38"
 

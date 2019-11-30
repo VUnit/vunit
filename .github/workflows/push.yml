@@ -1,0 +1,110 @@
+name: 'push'
+
+on: [ push, pull_request ]
+
+env:
+  DOCKER_REGISTRY: docker.pkg.github.com
+  # https://github.com/tox-dev/tox/issues/1468
+  PY_COLORS: 1
+
+jobs:
+
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: install dependencies
+      run: |
+        pip install -U pip --progress-bar off
+        pip install -U virtualenv tox --progress-bar off
+    - name: run 'black'
+      run: tox -e py37-fmt -- --check
+
+  lin:
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        task: [
+          37-lint,
+          36-unit,
+          37-unit,
+        ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: install dependencies
+      run: |
+        pip install -U pip --progress-bar off
+        pip install -U virtualenv tox --progress-bar off
+    - name: run job
+      run: |
+        tox -e py${{ matrix.task }} -- --color=yes
+
+  docker:
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        task: [
+          {do: 38-acceptance,  tag: llvm},
+          {do: 38-vcomponents, tag: mcode},
+        ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        submodules: recursive
+    - name: docker login
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login -u vunit-gha --password-stdin "$DOCKER_REGISTRY"
+    - name: run job
+      run: |
+        docker run --rm -tv $(pwd):/src -w /src "$DOCKER_REGISTRY"/vunit/vunit/dev:${{ matrix.task.tag }} tox -e py${{ matrix.task.do }}-ghdl
+    - name: docker logout
+      run: docker logout "$DOCKER_REGISTRY"
+      if: always()
+
+  win:
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        task: [
+          37-acceptance-ghdl,
+          37-vcomponents-ghdl,
+          37-lint,
+          36-unit,
+          37-unit,
+        ]
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: git submodule update
+      run: git submodule update --init --recursive
+      if: (endsWith( matrix.task, '-lint' ) || endsWith( matrix.task, '-unit' )) == false
+    - uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: install dependencies
+      run: |
+        pip install -U pip --progress-bar off
+        pip install -U virtualenv tox --progress-bar off
+    - name: install GHDL
+      if: endsWith( matrix.task, '-ghdl' )
+      shell: bash
+      run: |
+        curl -fsSL -o ghdl.zip https://github.com/ghdl/ghdl/releases/download/v0.36/ghdl-0.36-mingw32-mcode.zip
+        7z x ghdl.zip "-o../ghdl" -y
+        mv ../ghdl/GHDL/0.36-mingw32-mcode/ ../ghdl-v0.36
+        rm -rf ../ghdl ghdl.zip
+    - name: run job
+      shell: bash
+      run: |
+        export PATH=$PATH:$(pwd)/../ghdl-v0.36/bin
+        tox -e py${{ matrix.task }} -- --color=yes
