@@ -33,18 +33,14 @@ jobs:
       run: |
         ./.github/images.sh
     - name: docker login
-      run: echo "$GITHUB_TOKEN" | docker login -u vunit-gha --password-stdin "$DOCKER_REGISTRY"
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login -u vunit-gha --password-stdin "$DOCKER_REGISTRY"
     - name: docker push
       if: github.repository == 'VUnit/vunit'
       run: |
-        DIMG="vunit/dev:$TAG"
+        DIMG="vunit/dev:${{ matrix.task.tag }}"
         GHIMG="${DOCKER_REGISTRY}/vunit/$DIMG"
         docker tag "$DIMG" "$GHIMG"
         docker push "$GHIMG"
-      env:
-        TAG: ${{ matrix.task.tag }}
     - name: docker logout
       run: docker logout "$DOCKER_REGISTRY"
       if: always()
