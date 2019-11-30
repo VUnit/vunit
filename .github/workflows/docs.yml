@@ -1,0 +1,47 @@
+name: 'docs'
+
+on: [ push, pull_request ]
+
+env:
+  # https://github.com/tox-dev/tox/issues/1468
+  PY_COLORS: 1
+
+jobs:
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        submodules: recursive
+    - uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: install dependencies
+      run: |
+        pip install -U pip --progress-bar off
+        pip install -U virtualenv tox --progress-bar off
+    - name: build docs
+      run: tox -e py37-docs
+    - name: 'publish site to gh-pages'
+      if: github.event_name != 'pull_request' && github.repository == 'VUnit/vunit'
+      env:
+        GH_DEPKEY: ${{ secrets.VUNIT_GITHUB_IO_DEPLOY_KEY }}
+      run: |
+        cd .tox/py37-docs/tmp/docsbuild/
+        touch .nojekyll
+
+        git init
+        git add .
+        git config --local user.email "push@gha"
+        git config --local user.name "GHA"
+        git commit -a -m "update ${{ github.sha }}"
+
+        git remote add origin git@github.com:VUnit/VUnit.github.io
+
+        eval `ssh-agent -t 60 -s`
+        echo "$GH_DEPKEY" | ssh-add -
+        mkdir -p ~/.ssh/
+        ssh-keyscan github.com >> ~/.ssh/known_hosts
+        git push -u origin +master
+        ssh-agent -k
