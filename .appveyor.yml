@@ -9,30 +9,26 @@ environment:
 
     - BUILD_NAME: py27-unit
       PYTHON: "C:\\Python27"
-    - BUILD_NAME: py34-unit
-      PYTHON: "C:\\Python34"
     - BUILD_NAME: py35-unit
       PYTHON: "C:\\Python35"
-    - BUILD_NAME: py36-unit
-      PYTHON: "C:\\Python36"
-    - BUILD_NAME: py37-unit
-      PYTHON: "C:\\Python37"
+    - BUILD_NAME: py38-unit
+      PYTHON: "C:\\Python38"
 
-    - BUILD_NAME: py37-lint
-      PYTHON: "C:\\Python37"
+    - BUILD_NAME: py38-lint
+      PYTHON: "C:\\Python38"
 
     - BUILD_NAME: py27-docs
       PYTHON: "C:\\Python27"
-    - BUILD_NAME: py37-docs
-      PYTHON: "C:\\Python37"
+    - BUILD_NAME: py38-docs
+      PYTHON: "C:\\Python38"
 
     - BUILD_NAME: py27-acceptance-ghdl
       PYTHON: "C:\\Python27"
-    - BUILD_NAME: py37-acceptance-ghdl
-      PYTHON: "C:\\Python37"
+    - BUILD_NAME: py38-acceptance-ghdl
+      PYTHON: "C:\\Python38"
 
-    - BUILD_NAME: py37-vcomponents-ghdl
-      PYTHON: "C:\\Python37"
+    - BUILD_NAME: py38-vcomponents-ghdl
+      PYTHON: "C:\\Python38"
 
 install:
   - "git submodule update --init --recursive"
