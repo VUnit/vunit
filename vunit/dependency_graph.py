@@ -11,22 +11,27 @@ Functionality to compute a dependency graph
 """
 
 
-class DependencyGraph(object):
+from typing import Set, List, TypeVar, Generic, Dict, Mapping, Callable, Iterable
+
+T = TypeVar("T")
+
+
+class DependencyGraph(Generic[T]):
     """
     A dependency graph
     """
 
     def __init__(self):
-        self._forward = {}
-        self._backward = {}
-        self._nodes = []
+        self._forward: Dict[T, Set[T]] = {}
+        self._backward: Dict[T, Set[T]] = {}
+        self._nodes: List[T] = []
 
-    def toposort(self):
+    def toposort(self) -> List[T]:
         """
         Perform a topological sort returning a list of nodes such that
         every node is located after its dependency nodes
         """
-        sorted_nodes = []
+        sorted_nodes: List[T] = []
         self._visit(
             sorted(self._nodes),
             dict((key, sorted(values)) for key, values in self._forward.items()),
@@ -35,10 +40,10 @@ class DependencyGraph(object):
         sorted_nodes = list(reversed(sorted_nodes))
         return sorted_nodes
 
-    def add_node(self, node):
+    def add_node(self, node: T):
         self._nodes.append(node)
 
-    def add_dependency(self, start, end):
+    def add_dependency(self, start: T, end: T) -> bool:
         """
         Add a dependency edge between the start and end node such that
         end node depends on the start node
@@ -57,7 +62,11 @@ class DependencyGraph(object):
         return new_dependency
 
     @staticmethod
-    def _visit(nodes, graph, callback):
+    def _visit(
+        nodes: Iterable[T],
+        graph: Mapping[T, Iterable[T]],
+        callback: Callable[[T], None],
+    ):
         """
         Follow graph edges starting from the nodes iteratively
         returning all the nodes visited
@@ -84,32 +93,32 @@ class DependencyGraph(object):
             visited.add(node)
             callback(node)
 
-        visited = set()
+        visited: Set[T] = set()
         for node in nodes:
             if node not in visited:
-                path = set()
-                path_ordered = []
+                path: Set[T] = set()
+                path_ordered: List[T] = []
                 visit(node)
 
-    def get_dependent(self, nodes):
+    def get_dependent(self, nodes: Iterable[T]) -> Set[T]:
         """
         Get all nodes which are directly or indirectly dependent on
         the input nodes
         """
-        result = set()
+        result: Set[T] = set()
         self._visit(nodes, self._forward, result.add)
         return result
 
-    def get_dependencies(self, nodes):
+    def get_dependencies(self, nodes: Iterable[T]) -> Set[T]:
         """
         Get all nodes which are directly or indirectly dependencies of
         the input nodes
         """
-        result = set()
+        result: Set[T] = set()
         self._visit(nodes, self._backward, result.add)
         return result
 
-    def get_direct_dependencies(self, node):
+    def get_direct_dependencies(self, node: T) -> Set[T]:
         """
         Get the direct dependencies of node
         """
