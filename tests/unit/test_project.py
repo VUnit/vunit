@@ -734,7 +734,7 @@ end architecture;
         self.assertEqual(self.project.get_source_files_in_order(), [file1])
         self.assertFalse(logger.warning.called)
 
-    @mock.patch("vunit.project.LOGGER")
+    @mock.patch("vunit.library.LOGGER")
     def test_no_error_on_duplicate_identical_file(self, logger):
         self.project.add_library("lib", "lib_path")
         file1 = self.add_source_file("lib", "file.vhd", "entity foo is end entity;")
@@ -757,7 +757,7 @@ end architecture;
 
         self.add_source_file("lib", "file." + suffix, code)
 
-        with mock.patch("vunit.project.LOGGER") as mock_logger:
+        with mock.patch("vunit.library.LOGGER") as mock_logger:
             self.add_source_file("lib", "file_copy." + suffix, code)
             warning_calls = mock_logger.warning.call_args_list
             log_msg = warning_calls[0][0][0] % warning_calls[0][0][1:]

@@ -18,6 +18,7 @@ from vunit.cached import file_content_hash
 from vunit.parsing.encodings import HDL_FILE_ENCODING
 from vunit.design_unit import DesignUnit, VHDLDesignUnit, Entity, Module
 from vunit.vhdl_standard import VHDLStandard
+from vunit.library import Library
 
 LOGGER = logging.getLogger(__name__)
 
@@ -204,8 +205,8 @@ class VHDLSourceFile(SourceFile):
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        name,
-        library,
+        name: str,
+        library: Library,
         vhdl_parser,
         database,
         vhdl_standard: VHDLStandard,
