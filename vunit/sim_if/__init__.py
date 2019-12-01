@@ -11,9 +11,26 @@ Simulator interface(s)
 import sys
 import os
 import subprocess
+from typing import List
 from ..ostools import Process, simplify_path
 from ..exceptions import CompileError
 from ..color_printer import NO_COLOR_PRINTER
+
+
+class Option(object):
+    """
+    A compile or sim option
+    """
+
+    def __init__(self, name):
+        self._name = name
+
+    @property
+    def name(self):
+        return self._name
+
+    def validate(self, value):
+        pass
 
 
 class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
@@ -21,11 +38,11 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
     Generic simulator interface
     """
 
-    name = None
+    name: str = "none"
     supports_gui_flag = False
     package_users_depend_on_bodies = False
-    compile_options = []
-    sim_options = []
+    compile_options: List[Option] = []
+    sim_options: List[Option] = []
 
     # True if simulator supports ANSI colors in GUI mode
     supports_colors_in_gui = False
@@ -345,22 +362,6 @@ def check_output(command, env=None):
         err.output = err.output.decode("utf-8")
         raise err
     return output.decode("utf-8")
-
-
-class Option(object):
-    """
-    A compile or sim option
-    """
-
-    def __init__(self, name):
-        self._name = name
-
-    @property
-    def name(self):
-        return self._name
-
-    def validate(self, value):
-        pass
 
 
 class BooleanOption(Option):

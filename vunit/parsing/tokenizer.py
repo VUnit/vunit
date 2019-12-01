@@ -19,7 +19,11 @@ def Token(kind, value="", location=None):  # pylint: disable=invalid-name
     return TokenType(kind, value, location)
 
 
-def new_token_kind(name):
+class TokenKind:
+    pass
+
+
+def new_token_kind(name: str) -> TokenKind:
     """
     Create a new token kind with nice __repr__
     """

@@ -11,11 +11,12 @@ UI class Library
 from os.path import abspath
 from glob import glob
 from fnmatch import fnmatch
-from ..vhdl_standard import VHDL
+from typing import Optional, List
+from ..vhdl_standard import VHDL, VHDLStandard
+from ..project import Project
 from ..sim_if import is_string_not_iterable
 from ..source_file import file_type_of, FILE_TYPES, VERILOG_FILE_TYPES
 from ..builtins import add_verilog_include_dir
-
 from .common import check_not_empty
 from .source import SourceFile, SourceFileList
 from .testbench import TestBench
@@ -27,7 +28,7 @@ class Library(object):
     User interface of a library
     """
 
-    def __init__(self, library_name, parent, project, test_bench_list):
+    def __init__(self, library_name, parent, project: Project, test_bench_list):
         self._library_name = library_name
         self._parent = parent
         self._project = project
@@ -163,7 +164,7 @@ class Library(object):
         include_dirs=None,
         defines=None,
         allow_empty=False,
-        vhdl_standard=None,
+        vhdl_standard: Optional[str] = None,
         no_parse=False,
         file_type=None,
     ):
@@ -192,7 +193,7 @@ class Library(object):
         else:
             patterns = pattern
 
-        file_names = []
+        file_names: List[str] = []
         for pattern_instance in patterns:
             new_file_names = glob(pattern_instance)
             check_not_empty(
@@ -223,7 +224,7 @@ class Library(object):
         preprocessors=None,
         include_dirs=None,
         defines=None,
-        vhdl_standard=None,
+        vhdl_standard: Optional[str] = None,
         no_parse=False,
         file_type=None,
     ):
@@ -357,7 +358,7 @@ class Library(object):
             "No test benches found within library %s" % self._library_name,
         )
 
-    def _which_vhdl_standard(self, vhdl_standard):
+    def _which_vhdl_standard(self, vhdl_standard: Optional[str]) -> VHDLStandard:
         """
         Return default vhdl_standard if the argument is None
         The argument is a string from the user
