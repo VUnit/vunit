@@ -15,12 +15,11 @@ jobs:
   build:
     strategy:
       fail-fast: false
-      max-parallel: 3
+      max-parallel: 2
       matrix:
         task: [
-          { tag: llvm,    pyver: 3, tgt: llvm,  pkg: llvm-7 },
-          { tag: mcode,   pyver: 3, tgt: mcode, pkg: mcode  },
-          { tag: mcode-2, pyver: 2, tgt: mcode, pkg: mcode  },
+          { tag: llvm,  pkg: llvm-7 },
+          { tag: mcode, pkg: mcode  },
         ]
     runs-on: ubuntu-latest
     env:
@@ -29,10 +28,8 @@ jobs:
     - uses: actions/checkout@v1
     - name: build image
       env:
-        TAG:   ${{ matrix.task.tag }}
-        PYVER: ${{ matrix.task.pyver }}
-        TGT:   ${{ matrix.task.tgt }}
-        PKG:   ${{ matrix.task.pkg }}
+        TAG: ${{ matrix.task.tag }}
+        PKG: ${{ matrix.task.pkg }}
       run: |
         ./.github/images.sh
     - name: docker login

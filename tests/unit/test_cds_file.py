@@ -9,7 +9,7 @@ Test handling of Cadence Incisive .cds files
 """
 
 import unittest
-from tests.mock_2or3 import mock
+from unittest import mock
 from vunit.sim_if.cds_file import CDSFile
 
 

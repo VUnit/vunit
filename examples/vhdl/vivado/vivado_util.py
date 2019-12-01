@@ -4,7 +4,6 @@
 #
 # Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
 
-from __future__ import print_function
 from subprocess import check_call
 import os
 from os.path import join, exists, abspath, dirname, basename

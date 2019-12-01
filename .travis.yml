@@ -10,17 +10,12 @@ matrix:
   include:
   - &docker
     env:
-      - BUILD_NAME=py27-acceptance-ghdl
-      - DOCKER_IMAGE=mcode-2
+      - BUILD_NAME=py38-acceptance-ghdl
+      - DOCKER_IMAGE=llvm
     services: docker
     language: minimal
     install: skip
     script: docker run --rm -tv $(pwd):/src -w /src vunit/dev:$DOCKER_IMAGE tox -e $BUILD_NAME
-
-  - <<: *docker
-    env:
-      - BUILD_NAME=py38-acceptance-ghdl
-      - DOCKER_IMAGE=llvm
 
   - <<: *docker
     env:
@@ -38,8 +33,6 @@ matrix:
     python: '3.8'
 
 
-  - env: BUILD_NAME=py27-unit
-    python: '2.7'
   - env: BUILD_NAME=py35-unit
     python: '3.5'
   - env: BUILD_NAME=py38-unit
@@ -47,9 +40,6 @@ matrix:
     python: '3.8'
 
 
-  - env: BUILD_NAME=py27-docs
-    python: '2.7'
-    before_script: git fetch --unshallow --tags
   - env: BUILD_NAME=py38-docs
     python: '3.8'
     before_script: git fetch --unshallow --tags
@@ -65,6 +55,7 @@ matrix:
       on:
         repo: VUnit/vunit
         branch: master
+
 
   # Deploy to PyPI whenever the package version has changed
   # When a package version has not changed a new upload will not be triggered

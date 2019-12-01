@@ -10,21 +10,11 @@ stubbed for testing
 """
 
 
-from __future__ import print_function
-
 import time
 import subprocess
 import threading
 import shutil
-import sys
-
-try:
-    # Python 3.x
-    from queue import Queue, Empty
-except ImportError:
-    # Python 2.7
-    from Queue import Queue, Empty  # pylint: disable=import-error
-
+from queue import Queue, Empty
 from os.path import exists, getmtime, dirname, relpath, splitdrive
 import os
 import io
@@ -262,11 +252,7 @@ class AsynchronousFileReader(threading.Thread):
     def __init__(self, fd, queue, encoding="utf-8"):
         threading.Thread.__init__(self)
 
-        # If Python 3 change encoding of TextIOWrapper to utf-8 ignoring decode errors
-        if isinstance(fd, io.TextIOWrapper):
-            fd = io.TextIOWrapper(fd.buffer, encoding=encoding, errors="ignore")
-
-        self._fd = fd
+        self._fd = io.TextIOWrapper(fd.buffer, encoding=encoding, errors="ignore")
         self._queue = queue
         self._encoding = encoding
 
@@ -276,11 +262,7 @@ class AsynchronousFileReader(threading.Thread):
             if PROGRAM_STATUS.is_shutting_down:
                 break
 
-            # Convert string into utf-8 if necessary
-            if sys.version_info.major == 2:
-                string = line[:-1].decode(encoding=self._encoding, errors="ignore")
-            else:
-                string = line[:-1]
+            string = line[:-1]
 
             self._queue.put(string)
         self._queue.put(None)

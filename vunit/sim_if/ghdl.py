@@ -8,8 +8,6 @@
 Interface for GHDL simulator
 """
 
-from __future__ import print_function
-
 from os.path import exists, join, abspath
 import os
 import logging

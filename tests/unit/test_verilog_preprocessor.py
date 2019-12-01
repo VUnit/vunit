@@ -16,7 +16,7 @@ from os.path import join, dirname, exists
 import os
 from unittest import TestCase
 import shutil
-from tests.mock_2or3 import mock
+from unittest import mock
 from vunit.ostools import renew_path, write_file
 from vunit.parsing.verilog.preprocess import VerilogPreprocessor, Macro
 from vunit.parsing.verilog.tokenizer import VerilogTokenizer

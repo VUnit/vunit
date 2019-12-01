@@ -17,7 +17,7 @@ from os.path import join, exists, dirname
 import os
 from time import sleep
 import itertools
-from tests.mock_2or3 import mock
+from unittest import mock
 from vunit.exceptions import CompileError
 from vunit.ostools import renew_path, write_file
 from vunit.project import Project
@@ -1940,7 +1940,7 @@ use builtin_lib.all;
         self.project.update(source_file)
 
     def assert_should_recompile(self, source_files):
-        self.assert_count_equal(source_files, self.project.get_files_in_compile_order())
+        self.assertCountEqual(source_files, self.project.get_files_in_compile_order())
 
     def assert_compiles(self, source_file, before):
         """
@@ -1992,8 +1992,8 @@ use builtin_lib.all;
 
         for entity in source_file.library.get_entities():
             if entity.name == name:
-                self.assert_count_equal(entity.generic_names, generic_names)
-                self.assert_count_equal(entity.architecture_names, architecture_names)
+                self.assertCountEqual(entity.generic_names, generic_names)
+                self.assertCountEqual(entity.architecture_names, architecture_names)
                 return
 
         self.assertFalse("Did not find entity " + name + "in " + source_file.name)
@@ -2050,10 +2050,6 @@ use builtin_lib.all;
                 return design_unit
 
         return None
-
-    def assert_count_equal(self, values1, values2):
-        # Python 2.7 compatability
-        self.assertEqual(sorted(values1), sorted(values2))
 
 
 def tick():
