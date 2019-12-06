@@ -953,9 +953,11 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         Add vunit VHDL builtin libraries
 
-        :param external: struct to select whether to enable external models for 'string' and/or 'integer' vectors.
-                         {'string': <VAL>, 'integer': <VAL>}. Allowed values are: None, False/True or
-                         ['path/to/custom/file'].
+        :param external: struct to provide bridges for the external VHDL API.
+                         {
+                             'string': ['path/to/custom/file'],
+                             'integer': ['path/to/custom/file']
+                         }.
         """
         self._builtins.add_vhdl_builtins(external=external)
 

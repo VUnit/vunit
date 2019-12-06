@@ -12,7 +12,6 @@ from pathlib import Path
 from glob import glob
 from warnings import warn
 from vunit.vhdl_standard import VHDL, VHDLStandard
-from vunit.sim_if.common import simulator_check
 from vunit.ui.common import get_checked_file_names_from_globs
 
 VHDL_PATH = (Path(__file__).parent / "vhdl").resolve()
@@ -53,7 +52,7 @@ class Builtins(object):
             and self._vhdl_standard.supports_context
         )
 
-        for file_name in get_checked_file_names_from_globs(str(pattern), allow_empty):
+        for file_name in get_checked_file_names_from_globs(pattern, allow_empty):
             base_file_name = Path(file_name).name
 
             standards = set()
@@ -76,58 +75,30 @@ class Builtins(object):
         """
         Add data types packages (sources corresponding to VHPIDIRECT arrays, or their placeholders)
 
-        :param external: struct to select whether to enable external models for 'string' and/or 'integer' vectors.
-                         {'string': <VAL>, 'integer': <VAL>}. Allowed values are: None, False/True or
-                         ['path/to/custom/file'].
+        :param external: struct to provide bridges for the external VHDL API.
+                         {
+                             'string': ['path/to/custom/file'],
+                             'integer': ['path/to/custom/file']
+                         }.
         """
         self._add_files(VHDL_PATH / "data_types" / "src" / "*.vhd")
 
-        use_ext = {"string": False, "integer": False}
-        files = {"string": None, "integer": None}
-
-        if external:
-            for ind, val in external.items():
-                if isinstance(val, bool):
-                    use_ext[ind] = val
-                else:
-                    use_ext[ind] = True
-                    files[ind] = val
-
-        for _, val in use_ext.items():
-            if val and simulator_check(lambda simclass: not simclass.supports_vhpi()):
-                raise RuntimeError(
-                    "the selected simulator does not support VHPI; must use non-VHPI packages..."
+        for key in ["string", "integer_vector"]:
+            self._add_files(
+                pattern=str(
+                    VHDL_PATH
+                    / "data_types"
+                    / "src"
+                    / "api"
+                    / ("external_%s_pkg.vhd" % key)
                 )
-
-        ext_path = VHDL_PATH / "data_types" / "src" / "external"
-
-        def default_files(cond, type_str):
-            """
-            Return name of VHDL file with default VHPIDIRECT foreign declarations.
-            """
-            return [
-                str(
-                    ext_path
-                    / (
-                        "external_"
-                        + type_str
-                        + "-"
-                        + ("" if cond else "no")
-                        + "vhpi.vhd"
-                    )
-                ),
-                str(ext_path / ("external_" + type_str + "-body.vhd")),
-            ]
-
-        if not files["string"]:
-            files["string"] = default_files(use_ext["string"], "string")
-
-        if not files["integer"]:
-            files["integer"] = default_files(use_ext["integer"], "integer_vector")
-
-        for _, val in files.items():
-            for name in val:
-                self._add_files(name)
+                if external is None
+                or key not in external
+                or not external[key]
+                or external[key] is True
+                else external[key],
+                allow_empty=False,
+            )
 
     def _add_array_util(self):
         """
@@ -250,9 +221,11 @@ in your VUnit Git repository? You have to do this first if installing using setu
         """
         Add vunit VHDL builtin libraries
 
-        :param external: struct to select whether to enable external models for 'string' and/or 'integer' vectors.
-                         {'string': <VAL>, 'integer': <VAL>}. Allowed values are: None, False/True or
-                         ['path/to/custom/file'].
+        :param external: struct to provide bridges for the external VHDL API.
+                         {
+                             'string': ['path/to/custom/file'],
+                             'integer': ['path/to/custom/file']
+                         }.
         """
         self._add_data_types(external=external)
         self._add_files(VHDL_PATH / "*.vhd")
