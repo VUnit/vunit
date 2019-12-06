@@ -11,6 +11,7 @@ Command line utility to build documentation/website
 from subprocess import check_call
 from os.path import join, dirname
 import sys
+from sys import argv
 from create_release_notes import create_release_notes
 from docs_utils import examples
 
@@ -25,16 +26,12 @@ def main():
         [
             sys.executable,
             "-m",
-            "sphinx",
-            "-T",
-            "-E",
-            "-W",
-            "-a",
-            "-n",
-            "-b",
+            "sphinx"
+        ] + ([] if len(argv) < 2 else argv[2:]) + [
+            "-TEWanb",
             "html",
             join(dirname(__file__), "..", "docs"),
-            sys.argv[1],
+            argv[1],
         ]
     )
 

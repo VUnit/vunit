@@ -22,7 +22,7 @@ jobs:
         pip install -U pip --progress-bar off
         pip install -U virtualenv tox --progress-bar off
     - name: build docs
-      run: tox -e py37-docs
+      run: tox -e py37-docs -- --color
     - name: 'publish site to gh-pages'
       if: github.event_name != 'pull_request' && github.repository == 'VUnit/vunit'
       env:
