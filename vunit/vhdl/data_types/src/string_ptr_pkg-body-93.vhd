@@ -79,6 +79,11 @@ package body string_ptr_pkg is
     value  : val_t   := val_t'low
   ) return ptr_t is begin
     reallocate_ids(st.idxs, st.idx);
+    if mode = internal then
+      assert eid = -1 report "mode internal: id/=-1 not supported" severity error;
+    else
+      assert eid /= -1 report "mode external: id must be natural" severity error;
+    end if;
     case mode is
       when internal =>
         st.idxs(st.idx) := (
