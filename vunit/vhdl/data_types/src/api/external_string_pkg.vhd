@@ -22,3 +22,26 @@ package external_string_pkg is
     id : integer
   ) return extstring_access_t;
 end package;
+
+package body external_string_pkg is
+  procedure write_char (
+    id : integer;
+    i  : integer;
+    v  : character
+  ) is begin
+    assert false report "EXTERNAL write_char" severity failure;
+  end;
+
+  impure function read_char (
+    id : integer;
+    i  : integer
+  ) return character is begin
+    assert false report "EXTERNAL read_char" severity failure;
+  end;
+
+  impure function get_ptr (
+    id : integer
+  ) return extstring_access_t is begin
+    assert false report "EXTERNAL get_string_ptr" severity failure;
+  end;
+end package body;
