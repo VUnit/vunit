@@ -23,6 +23,10 @@ jobs:
         pip install -U virtualenv tox --progress-bar off
     - name: build docs
       run: tox -e py38-docs -- --color
+    - uses: actions/upload-artifact@master
+      with:
+        name: VUnit-site
+        path: .tox/py38-docs/tmp/docsbuild/
     - name: 'publish site to gh-pages'
       if: github.event_name != 'pull_request' && github.repository == 'VUnit/vunit'
       env:
