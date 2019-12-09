@@ -11,6 +11,7 @@ context work.vunit_context;
 context work.com_context;
 use work.stream_master_pkg.all;
 use work.axi_stream_pkg.all;
+use work.axi_stream_private_pkg.all;
 use work.queue_pkg.all;
 use work.sync_pkg.all;
 
