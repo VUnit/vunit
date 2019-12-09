@@ -134,9 +134,9 @@ for max_waits in [0, 8]:
 
 tb_axi_stream = lib.test_bench("tb_axi_stream")
 for test in tb_axi_stream.get_tests("test random stall on master"):
-    test.add_config(name="stall_master", generics=dict(g_stall_master=30))
+    test.add_config(name="stall_master", generics=dict(g_stall_percentage_master=30))
 
 for test in tb_axi_stream.get_tests("test random stall on slave"):
-    test.add_config(name="stall_slave", generics=dict(g_stall_slave=30))
+    test.add_config(name="stall_slave", generics=dict(g_stall_percentage_slave=30))
 
 ui.main()
