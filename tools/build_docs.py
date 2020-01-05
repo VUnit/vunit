@@ -13,7 +13,7 @@ from pathlib import Path
 import sys
 from sys import argv
 from create_release_notes import create_release_notes
-from docs_utils import examples
+from docs_utils import examples, get_theme
 
 
 def main():
@@ -22,6 +22,10 @@ def main():
     """
     create_release_notes()
     examples()
+    get_theme(
+        Path(__file__).parent.parent / "docs",
+        "https://codeload.github.com/buildthedocs/sphinx.theme/tar.gz/v0"
+    )
     check_call(
         [
             sys.executable,

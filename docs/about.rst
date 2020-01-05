@@ -112,7 +112,7 @@ Simulators
      <https://github.com/cmarqu>`_.  VUnit maintainers does not have
      access to this simulator to verify the functionality.
    - Run ``incisive_vhdl_fixup.py`` to remove VHDL constructs that are
-      not compatible with Incisive
+     not compatible with Incisive
 
 Getting Started
 ---------------

@@ -38,9 +38,6 @@ def create_release_notes():
     releases = get_releases(source_path)
     latest_release = releases[0]
 
-    def banner(fptr):
-        fptr.write("\n" + ("-" * 80) + "\n\n")
-
     with (source_path / "release_notes.rst").open("w") as fptr:
         fptr.write(
             """
@@ -49,7 +46,7 @@ def create_release_notes():
 Release notes
 =============
 
-For installation instructions read :ref:`this <installing>`.
+.. NOTE:: For installation instructions read :ref:`this <installing>`.
 
 `Commits since last release <https://github.com/VUnit/vunit/compare/%s...master>`__
 
@@ -57,7 +54,7 @@ For installation instructions read :ref:`this <installing>`.
             % latest_release.tag
         )
 
-        banner(fptr)
+        fptr.write("\n\n")
 
         for idx, release in enumerate(releases):
             is_last = idx == len(releases) - 1
@@ -75,19 +72,20 @@ For installation instructions read :ref:`this <installing>`.
             fptr.write(title + "\n")
             fptr.write("-" * len(title) + "\n\n")
 
-            fptr.write(".. include:: %s\n" % relpath(release.file_name, source_path))
-
             fptr.write(
-                "\n`Download from PyPI <https://pypi.python.org/pypi/vunit_hdl/%s/>`__\n"
+                "\n`Download from PyPI <https://pypi.python.org/pypi/vunit_hdl/%s/>`__"
                 % release.name
             )
 
             if not is_last:
                 fptr.write(
-                    "\n`Commits since previous release <https://github.com/VUnit/vunit/compare/%s...%s>`__\n"
+                    " | `Commits since previous release <https://github.com/VUnit/vunit/compare/%s...%s>`__"
                     % (releases[idx + 1].tag, release.tag)
                 )
-                banner(fptr)
+
+            fptr.write("\n\n")
+
+            fptr.write(".. include:: %s\n" % relpath(release.file_name, source_path))
 
 
 class Release(object):
