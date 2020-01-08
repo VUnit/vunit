@@ -43,16 +43,11 @@ package body logger_pkg is
 
   constant n_log_levels : natural := log_level_t'pos(log_level_t'high) + 1;
 
-  impure function to_integer(logger : logger_t) return integer is
-  begin
-    return to_integer(logger.p_data);
-  end;
-
   procedure add_child(logger : logger_t; child : logger_t) is
     constant children : integer_vector_ptr_t := to_integer_vector_ptr(get(logger.p_data, children_idx));
   begin
-    resize(children, length(children)+1);
-    set(children, length(children)-1, to_integer(child));
+    resize(children, length(children) + 1);
+    set(children, length(children) - 1, to_integer(child));
   end;
 
   impure function new_logger(id : natural;
@@ -66,10 +61,10 @@ package body logger_pkg is
     set(logger.p_data, name_idx, to_integer(new_string_ptr(name)));
     set(logger.p_data, parent_idx, to_integer(parent));
     set(logger.p_data, children_idx, to_integer(new_integer_vector_ptr));
-    set(logger.p_data, log_count_idx, to_integer(new_integer_vector_ptr(log_level_t'pos(log_level_t'high)+1, value => 0)));
-    set(logger.p_data, stop_counts_idx, to_integer(new_integer_vector_ptr(log_level_t'pos(log_level_t'high)+1, value => stop_count_unset)));
+    set(logger.p_data, log_count_idx, to_integer(new_integer_vector_ptr(log_level_t'pos(log_level_t'high) + 1, value => 0)));
+    set(logger.p_data, stop_counts_idx, to_integer(new_integer_vector_ptr(log_level_t'pos(log_level_t'high) + 1, value => stop_count_unset)));
     set(logger.p_data, handlers_idx, to_integer(new_integer_vector_ptr));
-    set(logger.p_data, state_idx, to_integer(new_integer_vector_ptr(log_level_t'pos(log_level_t'high)+1, value => enabled_state)));
+    set(logger.p_data, state_idx, to_integer(new_integer_vector_ptr(log_level_t'pos(log_level_t'high) + 1, value => enabled_state)));
     set(logger.p_data, log_level_filters_idx, to_integer(new_integer_vector_ptr));
 
     if parent /= null_logger then
@@ -78,7 +73,7 @@ package body logger_pkg is
       -- Re-use parent log handlers and log level settings
       set_log_handlers(logger, get_log_handlers(parent));
 
-      for i in 0 to num_log_handlers(parent)-1 loop
+      for i in 0 to num_log_handlers(parent) - 1 loop
         log_handler := get_log_handler(parent, i);
         show(logger, log_handler, get_visible_log_levels(parent, log_handler));
         hide(logger, log_handler, get_invisible_log_levels(parent, log_handler));
@@ -144,7 +139,7 @@ package body logger_pkg is
     end loop;
 
     if include_children then
-      for i in 0 to num_children(logger)-1 loop
+      for i in 0 to num_children(logger) - 1 loop
         set_log_level_filter(get_child(logger, i), log_handler, log_levels, visible,
                              include_children => true);
       end loop;
@@ -176,7 +171,7 @@ package body logger_pkg is
     if dot_idx = 0 then
       return name;
     else
-      return name(name'left to dot_idx-1);
+      return name(name'left to dot_idx - 1);
     end if;
   end;
 
@@ -185,7 +180,7 @@ package body logger_pkg is
     if dot_idx = 0 then
       return "";
     else
-      return name(dot_idx+1 to name'right);
+      return name(dot_idx + 1 to name'right);
     end if;
   end;
 
@@ -230,7 +225,7 @@ package body logger_pkg is
     end if;
 
     logger := null_logger;
-    for i in 0 to num_children(real_parent)-1 loop
+    for i in 0 to num_children(real_parent) - 1 loop
       child := get_child(real_parent, i);
 
       if get_name(child) = head_name then
@@ -269,7 +264,7 @@ package body logger_pkg is
       return get_full_name(logger)'length;
     end if;
 
-    for i in 0 to num_children(logger)-1 loop
+    for i in 0 to num_children(logger) - 1 loop
       child_result := get_max_name_length(get_child(logger, i));
       if child_result > result then
         result := child_result;
@@ -349,7 +344,7 @@ package body logger_pkg is
     set(stop_counts, log_level_idx, value);
 
     if unset_children then
-      for idx in 0 to num_children(logger)-1 loop
+      for idx in 0 to num_children(logger) - 1 loop
         p_set_stop_count(get_child(logger, idx), log_level, stop_count_unset,
                          unset_children => true);
       end loop;
@@ -366,8 +361,8 @@ package body logger_pkg is
   end;
 
   procedure disable_stop(logger : logger_t;
-                                    log_level : log_level_t;
-                                    unset_children : boolean := false) is
+                         log_level : log_level_t;
+                         unset_children : boolean := false) is
   begin
     p_set_stop_count(logger, log_level, stop_count_infinite, unset_children);
   end;
@@ -394,7 +389,7 @@ package body logger_pkg is
   begin
     for level in log_level_t'low to log_level_t'high loop
       disable_stop(logger, level,
-                              unset_children => true);
+                   unset_children => true);
     end loop;
 
     for level in alert_log_level_t'low to alert_log_level_t'high loop
@@ -505,7 +500,7 @@ package body logger_pkg is
     set_state(logger, log_level, disabled_state);
 
     if include_children then
-      for idx in 0 to num_children(logger)-1 loop
+      for idx in 0 to num_children(logger) - 1 loop
         disable(get_child(logger, idx), log_level, include_children => true);
       end loop;
     end if;
@@ -615,7 +610,7 @@ package body logger_pkg is
       return false;
     end if;
 
-    for i in 0 to num_log_handlers(logger)-1 loop
+    for i in 0 to num_log_handlers(logger) - 1 loop
       if is_visible(logger, get_log_handler(logger, i), log_level) then
         return true;
       end if;
@@ -650,7 +645,7 @@ package body logger_pkg is
 
   impure function get_log_handlers(logger : logger_t) return log_handler_vec_t is
     constant handlers : integer_vector_ptr_t := to_integer_vector_ptr(get(logger.p_data, handlers_idx));
-    variable result : log_handler_vec_t(0 to length(handlers)-1);
+    variable result : log_handler_vec_t(0 to length(handlers) - 1);
   begin
     for i in result'range loop
       result(i) := (p_data => to_integer_vector_ptr(get(handlers, i)));
@@ -665,7 +660,7 @@ package body logger_pkg is
     p_set_log_handlers(logger, log_handlers);
 
     if include_children then
-      for i in 0 to num_children(logger)-1 loop
+      for i in 0 to num_children(logger) - 1 loop
         set_log_handlers(get_child(logger, i), log_handlers,
                          include_children => true);
       end loop;
@@ -712,7 +707,7 @@ package body logger_pkg is
     end if;
 
     if include_children then
-      for idx in 0 to num_children(logger)-1 loop
+      for idx in 0 to num_children(logger) - 1 loop
         reset_log_count(get_child(logger, idx), log_level, include_children => true);
       end loop;
     end if;
@@ -1202,7 +1197,7 @@ package body logger_pkg is
 
       variable failed : boolean := false;
     begin
-      for idx in 0 to num_children(logger)-1 loop
+      for idx in 0 to num_children(logger) - 1 loop
         if not p_final_log_check(get_child(logger, idx)) then
           failed := true;
         end if;
@@ -1246,6 +1241,20 @@ package body logger_pkg is
     result := final_log_check(allow_disabled_errors => allow_disabled_errors,
                               allow_disabled_failures => allow_disabled_failures,
                               fail_on_warning => fail_on_warning);
+  end;
+
+  impure function to_integer(
+    logger : logger_t
+  ) return integer is
+  begin
+    return to_integer(logger.p_data);
+  end;
+
+  impure function to_logger(
+    int : integer
+  ) return logger_t is
+  begin
+    return (p_data => to_integer_vector_ptr(int));
   end;
 
 end package body;

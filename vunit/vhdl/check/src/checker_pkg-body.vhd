@@ -9,12 +9,12 @@
 
 package body checker_pkg is
 
-  constant logger_idx            : natural := 0;
+  constant logger_idx : natural := 0;
   constant default_log_level_idx : natural := 1;
-  constant stat_checks_idx       : natural := 2;
-  constant stat_failed_idx       : natural := 3;
-  constant stat_passed_idx       : natural := 4;
-  constant checker_length        : natural := stat_passed_idx + 1;
+  constant stat_checks_idx : natural := 2;
+  constant stat_failed_idx : natural := 3;
+  constant stat_passed_idx : natural := 4;
+  constant checker_length : natural := stat_passed_idx + 1;
 
   impure function new_checker(logger_name : string;
                               default_log_level : log_level_t := error) return checker_t is
@@ -22,10 +22,10 @@ package body checker_pkg is
     return new_checker(get_logger(logger_name), default_log_level);
   end;
 
-  impure function new_checker(logger            : logger_t;
+  impure function new_checker(logger : logger_t;
                               default_log_level : log_level_t := error) return checker_t is
     variable checker : checker_t;
-    variable id      : natural;
+    variable id : natural;
   begin
     checker := (p_data => new_integer_vector_ptr(checker_length));
     set(checker.p_data, logger_idx, to_integer(logger.p_data));
@@ -64,10 +64,24 @@ package body checker_pkg is
 
   end;
 
-  procedure get_checker_stat(checker       :     checker_t;
+  procedure get_checker_stat(checker : checker_t;
                              variable stat : out checker_stat_t) is
   begin
     stat := get_checker_stat(checker);
+  end;
+
+  impure function to_integer(
+    checker : checker_t
+  ) return integer is
+  begin
+    return to_integer(checker.p_data);
+  end;
+
+  impure function to_checker(
+    int : integer
+  ) return checker_t is
+  begin
+    return (p_data => to_integer_vector_ptr(int));
   end;
 
   impure function is_pass_visible(checker : checker_t) return boolean is
@@ -85,10 +99,10 @@ package body checker_pkg is
   end;
 
   procedure passing_check(
-    checker   : checker_t;
-    msg       : string;
-    line_num  : natural := 0;
-    file_name : string  := "") is
+    checker : checker_t;
+    msg : string;
+    line_num : natural := 0;
+    file_name : string := "") is
     constant logger : logger_t := get_logger(checker);
   begin
     -- pragma translate_off
@@ -101,15 +115,15 @@ package body checker_pkg is
       log(logger, "", pass); -- invisible log
     end if;
 
-  -- pragma translate_on
+    -- pragma translate_on
   end;
 
   procedure failing_check(
-    checker   : checker_t;
-    msg       : string;
-    level     : log_level_t := null_log_level;
-    line_num  : natural                := 0;
-    file_name : string                 := "") is
+    checker : checker_t;
+    msg : string;
+    level : log_level_t := null_log_level;
+    line_num : natural := 0;
+    file_name : string := "") is
   begin
     -- pragma translate_off
     set(checker.p_data, stat_checks_idx, get(checker.p_data, stat_checks_idx) + 1);
@@ -120,13 +134,13 @@ package body checker_pkg is
     else
       log(get_logger(checker), msg, level, line_num, file_name);
     end if;
-  -- pragma translate_on
+    -- pragma translate_on
   end;
 
-  function "+" (
+  function "+"(
     stat1 : checker_stat_t;
     stat2 : checker_stat_t)
-    return checker_stat_t is
+  return checker_stat_t is
     variable sum : checker_stat_t;
   begin
     sum.n_checks := stat1.n_checks + stat2.n_checks;
@@ -136,10 +150,10 @@ package body checker_pkg is
     return sum;
   end function "+";
 
-  function "-" (
+  function "-"(
     stat1 : checker_stat_t;
     stat2 : checker_stat_t)
-    return checker_stat_t is
+  return checker_stat_t is
     variable diff : checker_stat_t;
   begin
     diff.n_checks := stat1.n_checks - stat2.n_checks;
@@ -151,7 +165,7 @@ package body checker_pkg is
 
   function to_string(stat : checker_stat_t) return string is
   begin
-    return ("checker_stat'("&
+    return ("checker_stat'(" &
             "n_checks => " & integer'image(stat.n_checks) & ", " &
             "n_failed => " & integer'image(stat.n_failed) & ", " &
             "n_passed => " & integer'image(stat.n_passed) &

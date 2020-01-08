@@ -384,4 +384,12 @@ package logger_pkg is
   -- Return the number of unchecked messages in the mock queue
   impure function mock_queue_length return natural;
 
+  impure function to_integer(
+    logger : logger_t
+  ) return integer;
+
+  impure function to_logger(
+    int : integer
+  ) return logger_t;
+
 end package;
