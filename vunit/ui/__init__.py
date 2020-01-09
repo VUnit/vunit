@@ -1049,3 +1049,13 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
                 for source_file in source_files
             ]
         )
+
+    def get_simulator_name(self):
+        """
+        Get the name of the simulator used.
+
+        Will return None if no simulator was found.
+        """
+        if self._simulator_class is None:
+            return None
+        return self._simulator_class.name
