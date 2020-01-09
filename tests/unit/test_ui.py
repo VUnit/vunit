@@ -1193,6 +1193,10 @@ end architecture;
             sorted(expected, key=lambda x: x.name),
         )
 
+    def test_get_simulator_name(self):
+        ui = self._create_ui()
+        self.assertEqual(ui.get_simulator_name(), "mock")
+
     def _create_ui(self, *args):
         """ Create an instance of the VUnit public interface class """
         with mock.patch(
