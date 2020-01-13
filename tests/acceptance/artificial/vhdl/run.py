@@ -67,6 +67,11 @@ def configure_tb_set_generic(ui):
     tb.set_generic("str_val", "4ns")
     tb.set_generic("str_space_val", "1 2 3")
     tb.set_generic("str_quote_val", 'a"b')
+    str_long_num = 512
+    tb.set_generic("str_long_num", str_long_num)
+    tb.set_generic(
+        "str_long_val", "".join(["0123456789abcdef" for x in range(str_long_num)])
+    )
 
 
 def configure_tb_assert_stop_level(ui):
