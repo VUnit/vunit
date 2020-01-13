@@ -14,17 +14,29 @@ This is an alternative to composite generics, that supports any depth in the con
 """
 
 from pathlib import Path
-from vunit import VUnit, read_json, encode_json
+from vunit import VUnit
+from vunit.json4vhdl import read_json, encode_json, b16encode
 
 TEST_PATH = Path(__file__).parent / "src" / "test"
 
 VU = VUnit.from_argv()
 VU.add_json4vhdl()
 
-VU.add_library("test").add_source_files(TEST_PATH / "*.vhd")
+LIB = VU.add_library("test")
+LIB.add_source_files(TEST_PATH / "*.vhd")
 
 TB_CFG = read_json(TEST_PATH / "data" / "data.json")
 TB_CFG["dump_debug_data"] = False
-VU.set_generic("tb_cfg", encode_json(TB_CFG))
+JSON_STR = encode_json(TB_CFG)
+JSON_FILE = Path("data") / "data.json"
+
+TB = LIB.get_test_benches()[0]
+
+TB.get_tests("stringified*")[0].set_generic("tb_cfg", JSON_STR)
+TB.get_tests("b16encoded stringified*")[0].set_generic("tb_cfg", b16encode(JSON_STR))
+TB.get_tests("JSON file*")[0].set_generic("tb_cfg", JSON_FILE)
+TB.get_tests("b16encoded JSON file*")[0].set_generic(
+    "tb_cfg", b16encode(str(TEST_PATH / JSON_FILE))
+)
 
 VU.main()
