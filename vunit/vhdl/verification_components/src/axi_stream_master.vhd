@@ -46,6 +46,22 @@ architecture a of axi_stream_master is
   constant message_queue           : queue_t    := new_queue;
   signal   notify_bus_process_done : std_logic  := '0';
 
+  procedure drive_invalid_output(signal l_tdata : out std_logic_vector(data_length(master)-1 downto 0);
+                                 signal l_tkeep : out std_logic_vector(data_length(master)/8-1 downto 0);
+                                 signal l_tstrb : out std_logic_vector(data_length(master)/8-1 downto 0);
+                                 signal l_tid   : out std_logic_vector(id_length(master)-1 downto 0);
+                                 signal l_tdest : out std_logic_vector(dest_length(master)-1 downto 0);
+                                 signal l_tuser : out std_logic_vector(user_length(master)-1 downto 0))
+  is
+  begin
+    l_tdata <= (others => drive_invalid_val);
+    l_tkeep <= (others => drive_invalid_val);
+    l_tstrb <= (others => drive_invalid_val);
+    l_tid   <= (others => drive_invalid_val);
+    l_tdest <= (others => drive_invalid_val);
+    l_tuser <= (others => drive_invalid_val_user);
+  end procedure;
+
 begin
 
   main : process
@@ -78,12 +94,7 @@ begin
     rnd.InitSeed(rnd'instance_name);
     loop
       if drive_invalid then
-        tdata <= (others => drive_invalid_val);
-        tkeep <= (others => drive_invalid_val);
-        tstrb <= (others => drive_invalid_val);
-        tid   <= (others => drive_invalid_val);
-        tdest <= (others => drive_invalid_val);
-        tuser <= (others => drive_invalid_val_user);
+        drive_invalid_output(tdata, tkeep, tstrb, tid, tdest, tuser);
       end if;
 
       -- Wait for messages to arrive on the queue, posted by the process above
@@ -103,13 +114,7 @@ begin
           elsif msg_type = notify_request_msg then
             -- Ignore this message, but expect it
           elsif msg_type = stream_push_msg or msg_type = push_axi_stream_msg then
-
-            tdata <= (others => drive_invalid_val);
-            tkeep <= (others => drive_invalid_val);
-            tstrb <= (others => drive_invalid_val);
-            tid   <= (others => drive_invalid_val);
-            tdest <= (others => drive_invalid_val);
-            tuser <= (others => drive_invalid_val_user);
+            drive_invalid_output(tdata, tkeep, tstrb, tid, tdest, tuser);
             -- stall according to probability configuration
             probability_stall_axi_stream(aclk, master, rnd);
 
