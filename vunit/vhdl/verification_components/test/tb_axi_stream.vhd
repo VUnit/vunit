@@ -28,8 +28,8 @@ end entity;
 
 architecture a of tb_axi_stream is
 
-  constant master_stall_config : stall_config_t := (stall_probability => real(g_stall_percentage_master)/100.0, min_stall_cycles => 5, max_stall_cycles => 15);
-  constant slave_stall_config  : stall_config_t := (stall_probability => real(g_stall_percentage_slave)/100.0, min_stall_cycles => 5, max_stall_cycles => 15);
+  constant master_stall_config : stall_config_t := new_stall_config(stall_probability => real(g_stall_percentage_master)/100.0, min_stall_cycles => 5, max_stall_cycles => 15);
+  constant slave_stall_config  : stall_config_t := new_stall_config(stall_probability => real(g_stall_percentage_slave)/100.0, min_stall_cycles => 5, max_stall_cycles => 15);
 
   constant master_axi_stream : axi_stream_master_t := new_axi_stream_master(
     data_length => 8, id_length => g_id_length, dest_length => g_dest_length, user_length => g_user_length,

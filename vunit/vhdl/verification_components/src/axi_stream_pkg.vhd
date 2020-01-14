@@ -301,6 +301,12 @@ package axi_stream_pkg is
     variable msg             : inout msg_t;
     variable axi_transaction : out axi_stream_transaction_t);
 
+  function new_stall_config(
+    stall_probability : real range 0.0 to 1.0;
+    min_stall_cycles  : natural;
+    max_stall_cycles  : natural
+  ) return stall_config_t;
+
 end package;
 
 package body axi_stream_pkg is
@@ -798,6 +804,19 @@ package body axi_stream_pkg is
 
       pop_axi_stream_transaction(msg, axi_transaction);
     end if;
+  end;
+
+  function new_stall_config(
+    stall_probability : real range 0.0 to 1.0;
+    min_stall_cycles  : natural;
+    max_stall_cycles  : natural) return stall_config_t is
+      variable stall_config : stall_config_t;
+  begin
+    stall_config := (
+      stall_probability => stall_probability,
+      min_stall_cycles  => min_stall_cycles,
+      max_stall_cycles  => max_stall_cycles);
+    return stall_config;
   end;
 
 end package body;
