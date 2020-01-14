@@ -403,7 +403,7 @@ package body axi_stream_pkg is
     p_actor            := actor when actor /= null_actor else new_actor;
     p_protocol_checker := get_valid_protocol_checker(data_length, id_length, dest_length, user_length, logger, actor, protocol_checker, "slave");
 
-    return (p_actor      => new_actor,
+    return (p_actor      => p_actor,
       p_data_length      => data_length,
       p_id_length        => id_length,
       p_dest_length      => dest_length,
