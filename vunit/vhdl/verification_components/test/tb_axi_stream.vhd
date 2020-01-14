@@ -28,8 +28,10 @@ end entity;
 
 architecture a of tb_axi_stream is
 
-  constant master_stall_config : stall_config_t := new_stall_config(stall_probability => real(g_stall_percentage_master)/100.0, min_stall_cycles => 5, max_stall_cycles => 15);
-  constant slave_stall_config  : stall_config_t := new_stall_config(stall_probability => real(g_stall_percentage_slave)/100.0, min_stall_cycles => 5, max_stall_cycles => 15);
+  constant min_stall_cycles : natural := 5;
+  constant max_stall_cycles : natural := 15;
+  constant master_stall_config : stall_config_t := new_stall_config(stall_probability => real(g_stall_percentage_master)/100.0, min_stall_cycles => min_stall_cycles, max_stall_cycles => max_stall_cycles);
+  constant slave_stall_config  : stall_config_t := new_stall_config(stall_probability => real(g_stall_percentage_slave)/100.0 , min_stall_cycles => min_stall_cycles, max_stall_cycles => max_stall_cycles);
 
   constant master_axi_stream : axi_stream_master_t := new_axi_stream_master(
     data_length => 8, id_length => g_id_length, dest_length => g_dest_length, user_length => g_user_length,
@@ -509,12 +511,12 @@ begin
       info("Min stall length was " & to_string(axis_stall_stats.valid.min));
       info("Max stall length was " & to_string(axis_stall_stats.valid.max));
       if running_test_case = "test random stall on master" then
-        check((axis_stall_stats.valid.events < 40) and (axis_stall_stats.valid.events > 20), "Checking that the tvalid stall probability lies within reasonable boundaries");
-        check((axis_stall_stats.valid.min >= 5) and (axis_stall_stats.valid.max <= 15), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
+        check((axis_stall_stats.valid.events < (g_stall_percentage_master+10)) and (axis_stall_stats.valid.events > (g_stall_percentage_master-10)), "Checking that the tvalid stall probability lies within reasonable boundaries");
+        check((axis_stall_stats.valid.min >= min_stall_cycles) and (axis_stall_stats.valid.max <= max_stall_cycles), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
         check_equal(axis_stall_stats.ready.events, 0, "Checking that there are zero tready stall events");
       else
-        check((axis_stall_stats.ready.events < 40) and (axis_stall_stats.ready.events > 20), "Checking that the tready stall probability lies within reasonable boundaries");
-        check((axis_stall_stats.ready.min >= 5) and (axis_stall_stats.ready.max <= 15), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
+        check((axis_stall_stats.ready.events < (g_stall_percentage_slave+10)) and (axis_stall_stats.ready.events > (g_stall_percentage_slave-10)), "Checking that the tready stall probability lies within reasonable boundaries");
+        check((axis_stall_stats.ready.min >= min_stall_cycles) and (axis_stall_stats.ready.max <= max_stall_cycles), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
         check_equal(axis_stall_stats.valid.events, 0, "Checking that there are zero tvalid stall events");
       end if;
 
