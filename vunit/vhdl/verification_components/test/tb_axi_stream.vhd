@@ -487,7 +487,7 @@ begin
 
       check_equal(now, timestamp + 20 ns, " transaction time incorrect");
 
-    elsif run("test random stall on master") then
+    elsif run("test random stall on master") or run("test random stall on slave") then
       wait until rising_edge(aclk);
       for i in 0 to 100 loop
         pop_stream(net, slave_stream, reference);
@@ -508,34 +508,15 @@ begin
       info("There have been " & to_string(axis_stall_stats.valid.events) & " tvalid stall events");
       info("Min stall length was " & to_string(axis_stall_stats.valid.min));
       info("Max stall length was " & to_string(axis_stall_stats.valid.max));
-      check((axis_stall_stats.valid.events < 40) and (axis_stall_stats.valid.events > 20), "Checking that the tvalid stall probability lies within reasonable boundaries");
-      check((axis_stall_stats.valid.min >= 5) and (axis_stall_stats.valid.max <= 15), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
-      check_equal(axis_stall_stats.ready.events, 0, "Checking that there are zero tready stall events");
-
-    elsif run("test random stall on slave") then
-      wait until rising_edge(aclk);
-      for i in 0 to 100 loop
-        pop_stream(net, slave_stream, reference);
-        push(reference_queue, reference);
-      end loop;
-      for i in 0 to 100 loop
-        push_stream(net, master_stream, std_logic_vector(to_unsigned(i + 1, data'length)), true);
-      end loop;
-
-      wait_until_idle(net, master_sync);  -- wait until all transfers are done before checking them
-      wait_until_idle(net, slave_sync);
-
-      for i in 0 to 100 loop
-        reference := pop(reference_queue);
-        await_pop_stream_reply(net, reference, data);
-        check_equal(data, to_unsigned(i + 1, data'length), result("for await pop stream data"));
-      end loop;
-      info("There have been " & to_string(axis_stall_stats.ready.events) & " tready stall events");
-      info("Min stall length was " & to_string(axis_stall_stats.ready.min));
-      info("Max stall length was " & to_string(axis_stall_stats.ready.max));
-      check((axis_stall_stats.ready.events < 40) and (axis_stall_stats.ready.events > 20), "Checking that the tready stall probability lies within reasonable boundaries");
-      check((axis_stall_stats.ready.min >= 5) and (axis_stall_stats.ready.max <= 15), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
-      check_equal(axis_stall_stats.valid.events, 0, "Checking that there are zero tvalid stall events");
+      if running_test_case = "test random stall on master" then
+        check((axis_stall_stats.valid.events < 40) and (axis_stall_stats.valid.events > 20), "Checking that the tvalid stall probability lies within reasonable boundaries");
+        check((axis_stall_stats.valid.min >= 5) and (axis_stall_stats.valid.max <= 15), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
+        check_equal(axis_stall_stats.ready.events, 0, "Checking that there are zero tready stall events");
+      else
+        check((axis_stall_stats.ready.events < 40) and (axis_stall_stats.ready.events > 20), "Checking that the tready stall probability lies within reasonable boundaries");
+        check((axis_stall_stats.ready.min >= 5) and (axis_stall_stats.ready.max <= 15), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
+        check_equal(axis_stall_stats.valid.events, 0, "Checking that there are zero tvalid stall events");
+      end if;
 
     end if;
     test_runner_cleanup(runner);
