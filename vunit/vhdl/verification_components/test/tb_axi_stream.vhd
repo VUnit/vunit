@@ -637,12 +637,8 @@ begin
       end if;
       if tvalid and axis_stall_stats.valid.start and (not axis_stall_stats.valid.prev) then
         axis_stall_stats.valid.length <= 0;
-        if axis_stall_stats.valid.length < axis_stall_stats.valid.min then
-          axis_stall_stats.valid.min <= axis_stall_stats.valid.length;
-        end if;
-        if axis_stall_stats.valid.length > axis_stall_stats.valid.min then
-          axis_stall_stats.valid.max <= axis_stall_stats.valid.length;
-        end if;
+        axis_stall_stats.valid.min <= minimum(axis_stall_stats.valid.length, axis_stall_stats.valid.min);
+        axis_stall_stats.valid.max <= maximum(axis_stall_stats.valid.length, axis_stall_stats.valid.max);
       end if;
       -------------------------------------------------------------------------
       -- TREADY Minmal and Maximal Stall lengths
@@ -655,12 +651,8 @@ begin
       end if;
       if tready and axis_stall_stats.ready.start and (not axis_stall_stats.ready.prev) then
         axis_stall_stats.ready.length <= 0;
-        if axis_stall_stats.ready.length < axis_stall_stats.ready.min then
-          axis_stall_stats.ready.min <= axis_stall_stats.ready.length;
-        end if;
-        if axis_stall_stats.ready.length > axis_stall_stats.ready.min then
-          axis_stall_stats.ready.max <= axis_stall_stats.ready.length;
-        end if;
+        axis_stall_stats.ready.min <= minimum(axis_stall_stats.ready.length, axis_stall_stats.ready.min);
+        axis_stall_stats.ready.max <= maximum(axis_stall_Stats.ready.length, axis_stall_stats.ready.max);
       end if;
 
     end if;
