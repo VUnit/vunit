@@ -4,7 +4,7 @@
 #
 # Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
-from os.path import join, dirname
+from pathlib import Path
 from vunit import VUnit
 
 
@@ -15,7 +15,7 @@ def post_run(results):
 vu = VUnit.from_argv()
 
 lib = vu.add_library("lib")
-lib.add_source_files(join(dirname(__file__), "*.vhd"))
+lib.add_source_files(Path(__file__).parent / "*.vhd")
 
 lib.set_compile_option("rivierapro.vcom_flags", ["-coverage", "bs"])
 lib.set_compile_option("rivierapro.vlog_flags", ["-coverage", "bs"])

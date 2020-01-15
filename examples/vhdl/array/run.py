@@ -13,18 +13,16 @@ handle dynamically sized 1D, 2D and 3D data as well as storing and
 loading it from csv and raw files.
 """
 
-from os.path import join, dirname
+from pathlib import Path
 from vunit import VUnit
-
-root = dirname(__file__)
 
 vu = VUnit.from_argv()
 vu.add_osvvm()
 
-src_path = join(dirname(__file__), "src")
+src_path = Path(__file__).parent / "src"
 
 vu.add_library("lib").add_source_files(
-    [join(src_path, "*.vhd"), join(src_path, "test", "*.vhd")]
+    [src_path / "*.vhd", src_path / "test" / "*.vhd"]
 )
 
 vu.set_compile_option("ghdl.flags", ["-frelaxed"])

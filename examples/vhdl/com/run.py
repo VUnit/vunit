@@ -13,7 +13,7 @@ to communicate arbitrary objects between processes.  Further reading
 can be found in the :ref:`com user guide <com_user_guide>`.
 """
 
-from os.path import join, dirname
+from pathlib import Path
 from vunit import VUnit
 
 vu = VUnit.from_argv()
@@ -21,7 +21,9 @@ vu.add_com()
 vu.add_verification_components()
 vu.add_osvvm()
 
-vu.add_library("lib").add_source_files(join(dirname(__file__), "src", "*.vhd"))
-vu.add_library("tb_lib").add_source_files(join(dirname(__file__), "test", "*.vhd"))
+root = Path(__file__).parent
+
+vu.add_library("lib").add_source_files(root / "src" / "*.vhd")
+vu.add_library("tb_lib").add_source_files(root / "test" / "*.vhd")
 
 vu.main()

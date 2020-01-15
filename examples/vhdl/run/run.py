@@ -11,16 +11,16 @@ Run
 Demonstrates the VUnit run library.
 """
 
-from os.path import join, dirname
+from pathlib import Path
 from vunit import VUnit
 
-root = dirname(__file__)
+root = Path(__file__).parent
 
 vu = VUnit.from_argv()
 
 lib = vu.add_library("lib")
-lib.add_source_files(join(root, "*.vhd"))
+lib.add_source_files(root / "*.vhd")
 tb_with_lower_level_control = lib.entity("tb_with_lower_level_control")
-tb_with_lower_level_control.scan_tests_from_file(join(root, "test_control.vhd"))
+tb_with_lower_level_control.scan_tests_from_file(root / "test_control.vhd")
 
 vu.main()

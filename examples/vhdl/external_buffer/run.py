@@ -26,33 +26,29 @@ simulation.
 """
 
 from vunit import VUnit, ROOT
-from os import popen
-from os.path import join, dirname
+from subprocess import check_call
+from pathlib import Path
 
-src_path = join(dirname(__file__), "src")
-ext_srcs = join(ROOT, "vunit", "vhdl", "data_types", "src", "external", "ghdl")
+src_path = Path(__file__).parent / "src"
+ext_srcs = Path(ROOT) / "vunit" / "vhdl" / "data_types" / "src" / "external" / "ghdl"
 
 # Compile C applications to an objects
-c_iobj = join(src_path, "imain.o")
-c_bobj = join(src_path, "bmain.o")
+c_iobj = src_path / "imain.o"
+c_bobj = src_path / "bmain.o"
 
 for val in [["int32_t", c_iobj], ["uint8_t", c_bobj]]:
-    print(
-        popen(
-            " ".join(
-                [
-                    "gcc",
-                    "-fPIC",
-                    "-DTYPE=" + val[0],
-                    "-I",
-                    ext_srcs,
-                    "-c",
-                    join(src_path, "main.c"),
-                    "-o",
-                    val[1],
-                ]
-            )
-        ).read()
+    check_call(
+        [
+            "gcc",
+            "-fPIC",
+            "-DTYPE=" + val[0],
+            "-I",
+            ext_srcs,
+            "-c",
+            src_path / "main.c",
+            "-o",
+            val[1],
+        ]
     )
 
 # Enable the external feature for strings/byte_vectors and integer_vectors
@@ -60,19 +56,19 @@ vu = VUnit.from_argv(vhdl_standard="2008", compile_builtins=False)
 vu.add_builtins({"string": True, "integer": True})
 
 lib = vu.add_library("lib")
-lib.add_source_files(join(src_path, "tb_ext_*.vhd"))
+lib.add_source_files(src_path / "tb_ext_*.vhd")
 
 # Add the C object to the elaboration of GHDL
 for tb in lib.get_test_benches(pattern="*tb_ext*", allow_empty=False):
     tb.set_sim_option(
         "ghdl.elab_flags",
-        ["-Wl," + c_bobj, "-Wl,-Wl,--version-script=" + join(ext_srcs, "grt.ver")],
+        ["-Wl," + str(c_bobj), "-Wl,-Wl,--version-script=" + str(ext_srcs / "grt.ver")],
         overwrite=True,
     )
 for tb in lib.get_test_benches(pattern="*tb_ext*_integer*", allow_empty=False):
     tb.set_sim_option(
         "ghdl.elab_flags",
-        ["-Wl," + c_iobj, "-Wl,-Wl,--version-script=" + join(ext_srcs, "grt.ver")],
+        ["-Wl," + str(c_iobj), "-Wl,-Wl,--version-script=" + str(ext_srcs / "grt.ver")],
         overwrite=True,
     )
 

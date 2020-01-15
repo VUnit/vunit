@@ -9,6 +9,7 @@ UI class Library
 """
 
 from os.path import abspath
+from pathlib import Path
 from glob import glob
 from fnmatch import fnmatch
 from typing import Optional, List
@@ -190,12 +191,14 @@ class Library(object):
         """
         if is_string_not_iterable(pattern):
             patterns = [pattern]
+        elif isinstance(pattern, Path):
+            patterns = [str(pattern)]
         else:
             patterns = pattern
 
         file_names: List[str] = []
         for pattern_instance in patterns:
-            new_file_names = glob(pattern_instance)
+            new_file_names = glob(str(pattern_instance))
             check_not_empty(
                 new_file_names,
                 allow_empty,

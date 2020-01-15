@@ -5,25 +5,23 @@
 # Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 from vunit import VUnit
-from os import popen
-from os.path import join, dirname
+from subprocess import check_call
+from pathlib import Path
 
-src_path = join(dirname(__file__), "src")
+src_path = Path(__file__).parent / "src"
 
-c_obj = join(src_path, "cp.o")
+c_obj = src_path / "cp.o"
 # Compile C application to an object
-print(
-    popen(" ".join(["gcc", "-fPIC", "-c", join(src_path, "cp.c"), "-o", c_obj])).read()
-)
+check_call(["gcc", "-fPIC", "-c", str(src_path / "cp.c"), "-o", str(c_obj)])
 
 # Enable the external feature for strings
 vu = VUnit.from_argv(vhdl_standard="2008", compile_builtins=False)
 vu.add_builtins({"string": True})
 
 lib = vu.add_library("lib")
-lib.add_source_files(join(src_path, "tb_extcp_*.vhd"))
+lib.add_source_files(str(src_path / "tb_extcp_*.vhd"))
 
 # Add the C object to the elaboration of GHDL
-vu.set_sim_option("ghdl.elab_flags", ["-Wl," + c_obj])
+vu.set_sim_option("ghdl.elab_flags", ["-Wl," + str(c_obj)])
 
 vu.main()

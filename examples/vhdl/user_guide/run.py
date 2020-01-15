@@ -12,9 +12,9 @@ The most minimal VUnit VHDL project covering the basics of the
 :ref:`User Guide <user_guide>`.
 """
 
-from os.path import join, dirname
+from pathlib import Path
 from vunit import VUnit
 
 vu = VUnit.from_argv()
-vu.add_library("lib").add_source_files(join(dirname(__file__), "*.vhd"))
+vu.add_library("lib").add_source_files(Path(__file__).parent / "*.vhd")
 vu.main()

@@ -13,7 +13,7 @@ with different generic values. Also demonstrates use of ``output_path`` generic
 to create test bench output files in location specified by VUnit python runner.
 """
 
-from os.path import join, dirname
+from pathlib import Path
 from itertools import product
 from vunit import VUnit
 
@@ -30,10 +30,10 @@ def make_post_check(data_width, sign):
 
         expected = ", ".join([str(data_width), str(sign).lower()]) + "\n"
 
-        output_file = join(output_path, "generics.txt")
+        output_file = Path(output_path) / "generics.txt"
 
-        print("Post check: %s" % output_file)
-        with open(output_file, "r") as fread:
+        print("Post check: %s" % str(output_file))
+        with output_file.open("r") as fread:
             got = fread.read()
             if not got == expected:
                 print("Content mismatch, got %r expected %r" % (got, expected))
@@ -60,11 +60,9 @@ def generate_tests(obj, signs, data_widths):
         )
 
 
-test_path = join(dirname(__file__), "test")
-
 vu = VUnit.from_argv()
 lib = vu.add_library("lib")
-lib.add_source_files(join(test_path, "*.vhd"))
+lib.add_source_files(Path(__file__).parent / "test" / "*.vhd")
 
 tb_generated = lib.test_bench("tb_generated")
 

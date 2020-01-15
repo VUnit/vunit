@@ -4,9 +4,9 @@
 #
 # Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
-from os.path import join, dirname
+from pathlib import Path
 from vunit import VUnit
 
 vu = VUnit.from_argv()
-vu.add_library("lib").add_source_files(join(dirname(__file__), "test", "*.vhd"))
+vu.add_library("lib").add_source_files(Path(__file__).parent / "test" / "*.vhd")
 vu.main()

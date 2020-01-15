@@ -11,7 +11,7 @@ Composite generics
 See `Enable Your Simulator to Handle Complex Top-Level Generics <https://vunit.github.io/posts/2017_06_03_enable_your_simulator_to_handle_complex_top_level_generics/post.html>`_.
 """
 
-from os.path import join, dirname
+from pathlib import Path
 from vunit import VUnit
 
 
@@ -22,7 +22,7 @@ def encode(tb_cfg):
 vu = VUnit.from_argv()
 
 tb_lib = vu.add_library("tb_lib")
-tb_lib.add_source_files(join(dirname(__file__), "test", "*.vhd"))
+tb_lib.add_source_files(Path(__file__).parent / "test" / "*.vhd")
 
 test_1 = tb_lib.test_bench("tb_composite_generics").test("Test 1")
 

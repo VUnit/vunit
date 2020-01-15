@@ -12,16 +12,16 @@ A more realistic test bench of an UART to show VUnit VHDL usage on a
 typical module.
 """
 
-from os.path import join, dirname
+from pathlib import Path
 from vunit import VUnit
 
 vu = VUnit.from_argv()
 vu.add_osvvm()
 vu.add_verification_components()
 
-src_path = join(dirname(__file__), "src")
+src_path = Path(__file__).parent / "src"
 
-vu.add_library("uart_lib").add_source_files(join(src_path, "*.vhd"))
-vu.add_library("tb_uart_lib").add_source_files(join(src_path, "test", "*.vhd"))
+vu.add_library("uart_lib").add_source_files(src_path / "*.vhd")
+vu.add_library("tb_uart_lib").add_source_files(src_path / "test" / "*.vhd")
 
 vu.main()

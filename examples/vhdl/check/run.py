@@ -11,7 +11,7 @@ Check
 Demonstrates the VUnit check library.
 """
 
-from os.path import join, dirname
+from pathlib import Path
 from vunit import VUnit
 
 vu = VUnit.from_argv()
@@ -38,6 +38,6 @@ vu.enable_location_preprocessing(
 
 vu.enable_check_preprocessing()
 
-vu.add_library("lib").add_source_files(join(dirname(__file__), "tb_example.vhd"))
+vu.add_library("lib").add_source_files(Path(__file__).parent / "tb_example.vhd")
 
 vu.main()

@@ -16,17 +16,15 @@ in subsection :ref:`Stream <stream_vci>` and in
 :vunit_file:`vhdl/verification_components/test/tb_axi_stream.vhd <vunit/vhdl/verification_components/test/tb_axi_stream.vhd>`.
 """
 
-from os.path import join, dirname
+from pathlib import Path
 from vunit import VUnit
 
 vu = VUnit.from_argv()
 vu.add_verification_components()
 
-src_path = join(dirname(__file__), "src")
+src_path = Path(__file__).parent / "src"
 
-vu.add_library("lib").add_source_files(
-    [join(src_path, "*.vhd"), join(src_path, "**", "*.vhd")]
-)
+vu.add_library("lib").add_source_files([src_path / "*.vhd", src_path / "**" / "*.vhd"])
 
 # vu.set_sim_option('modelsim.init_files.after_load',['runall_addwave.do'])
 
