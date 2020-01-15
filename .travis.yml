@@ -16,7 +16,10 @@ matrix:
     services: docker
     language: minimal
     install: skip
-    script: docker run --rm -tv $(pwd):/src -w /src vunit/dev:$DOCKER_IMAGE tox -e $BUILD_NAME
+    script:
+      - echo "$GITHUB_PAGES_TOKEN" | docker login -u vunit-travis --password-stdin docker.pkg.github.com
+      - docker run --rm -tv $(pwd):/src -w /src docker.pkg.github.com/vunit/vunit/dev:$DOCKER_IMAGE tox -e $BUILD_NAME
+      - docker logout docker.pkg.github.com
 
   - <<: *docker
     env:
