@@ -26,13 +26,21 @@ simulation.
 """
 
 from vunit import VUnit, ROOT
-from os import popen
+from sys import argv
+from os import popen, makedirs
 from os.path import join, dirname
+from shutil import copyfile
+import re
+
 
 src_path = join(dirname(__file__), "src")
 ext_srcs = join(ROOT, "vunit", "vhdl", "data_types", "src", "external", "ghdl")
+build_only = False
+if "--build" in argv:
+    argv.remove("--build")
+    build_only = True
 
-# Compile C applications to an objects
+# Compile C applications to objects
 c_iobj = join(src_path, "imain.o")
 c_bobj = join(src_path, "bmain.o")
 
@@ -76,4 +84,26 @@ for tb in lib.get_test_benches(pattern="*tb_ext*_integer*", allow_empty=False):
         overwrite=True,
     )
 
-vu.main()
+if build_only:
+    vu.set_sim_option("ghdl.elab_e", True)
+    vu._args.elaborate = True
+
+    def post_func(results):
+        """
+        Copy runtime args for each test/executable to output dir 'cosim'
+        """
+        report = results.get_report()
+        cosim_args_dir = join(report.output_path, "cosim")
+        try:
+            makedirs(cosim_args_dir)
+        except FileExistsError:
+            pass
+        for key, val in report.tests.items():
+            copyfile(
+                join(val.path, "ghdl", "args.json"),
+                join(cosim_args_dir, "%s.json" % re.search("lib\.(.+)\.all", key)[1]),
+            )
+
+    vu.main(post_run=post_func)
+else:
+    vu.main()

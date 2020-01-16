@@ -25,8 +25,8 @@ architecture tb of tb_external_string is
 
   constant block_len : natural := 5;
 
-  constant ebuf: string_ptr_t := new_string_ptr( 3*block_len, extfnc, 0);  -- external through VHPIDIRECT functions 'read_char' and 'write_char'
-  constant abuf: string_ptr_t := new_string_ptr( 3*block_len, extacc, 0);  -- external through access (requires VHPIDIRECT function 'get_string_ptr')
+  constant ebuf: string_ptr_t := new_string_ptr( 3*block_len, extfnc, 1);  -- external through VHPIDIRECT functions 'read_char' and 'write_char'
+  constant abuf: string_ptr_t := new_string_ptr( 3*block_len, extacc, 1);  -- external through access (requires VHPIDIRECT function 'get_string_ptr')
 
 begin
 
