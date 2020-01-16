@@ -15,17 +15,34 @@ external memory. The AXI DMA also has a control register interface
 via AXI-lite.
 """
 
+from os import popen
 from os.path import join, dirname
 from vunit import VUnit
+import inspect
 
-vu = VUnit.from_argv()
+vu = VUnit.from_argv(external={'string': True, 'integer': False})
 vu.add_osvvm()
 vu.add_verification_components()
 
 src_path = join(dirname(__file__), "src")
+ext_srcs = join(dirname(inspect.getfile(VUnit)), 'vhdl', 'data_types', 'src', 'external')
 
 vu.add_library("axi_dma_lib").add_source_files(
     [join(src_path, "*.vhd"), join(src_path, "test", "*.vhd")]
 )
+
+c_obj = join(src_path, 'test', 'main.o')
+
+print(popen(' '.join([
+    'gcc -fPIC -rdynamic',
+    '-I', ext_srcs,
+    '-c', join(src_path, '**', 'main.c'),
+    '-o', c_obj
+])).read())
+
+vu.set_sim_option("ghdl.elab_flags", [
+    '-Wl,' + c_obj,
+    '-Wl,-Wl,--version-script=' + join(ext_srcs, 'grt.ver')
+])
 
 vu.main()

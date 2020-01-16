@@ -21,6 +21,7 @@ or tb_ext_integer_vector.vhd
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <limits.h>
 #include "vhpidirect_user.h"
 
 const uint32_t length = 5;
@@ -41,7 +42,7 @@ static void exit_handler(void) {
       z = (length*j)+i;
 
       expected = (i+1)*11 + k;
-      got = ((TYPE*)D[0])[z];
+      got = ((TYPE*)D[1])[z];
       if (expected != got) {
         printf("check error %d: %d %d\n", z, expected, got);
         exit(1);
@@ -50,26 +51,41 @@ static void exit_handler(void) {
     }
   }
   free(D[0]);
+  free(D[1]);
 }
 
 // Main entrypoint of the application
 int main(int argc, char **argv) {
   // Allocate a buffer which is three times the number of values
   // that we want to copy/modify
-  D[0] = (uint8_t *) malloc(3*length*sizeof(TYPE));
+  D[0] = (uint8_t *) malloc(5*sizeof(int32_t));
   if ( D[0] == NULL ) {
     perror("execution of malloc() failed!\n");
     return -1;
   }
+
+  // Initialize 'params' array
+  int32_t *P = (int32_t*)D[0];
+  P[0] = INT_MIN+10;
+  P[1] = INT_MIN;
+  P[2] = 3;          // clk_step
+  P[3] = 0;          // update
+  P[4] = length;     // block_length
+
   // Initialize the first 1/3 of the buffer
+  D[1] = (uint8_t *) malloc(3*length*sizeof(TYPE));
+  if ( D[1] == NULL ) {
+    perror("execution of malloc() failed!\n");
+    return -1;
+  }
   int i;
   for(i=0; i<length; i++) {
-    ((TYPE*)D[0])[i] = (i+1)*11;
+    ((TYPE*)D[1])[i] = (i+1)*11;
   }
   // Print all the buffer
   printf("sizeof: %lu\n", sizeof(TYPE));
   for(i=0; i<3*length; i++) {
-    printf("%d: %d\n", i, ((TYPE*)D[0])[i]);
+    printf("%d: %d\n", i, ((TYPE*)D[1])[i]);
   }
 
   // Register a function to be called when GHDL exits

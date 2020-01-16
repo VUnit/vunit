@@ -25,8 +25,8 @@ architecture tb of tb_external_integer_vector is
 
   constant block_len : natural := 5;
 
-  constant ebuf: integer_vector_ptr_t := new_integer_vector_ptr( 3*block_len, extfnc, 0);  -- external through VHPIDIRECT functions 'read_char' and 'write_char'
-  constant abuf: integer_vector_ptr_t := new_integer_vector_ptr( 3*block_len, extacc, 0);  -- external through access (requires VHPIDIRECT function 'get_string_ptr')
+  constant ebuf: integer_vector_ptr_t := new_integer_vector_ptr( 3*block_len, extfnc, 1);  -- external through VHPIDIRECT functions 'read_char' and 'write_char'
+  constant abuf: integer_vector_ptr_t := new_integer_vector_ptr( 3*block_len, extacc, 1);  -- external through access (requires VHPIDIRECT function 'get_string_ptr')
 
 begin
 
