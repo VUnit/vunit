@@ -11,6 +11,7 @@ use vunit_lib.run_pkg.all;
 use vunit_lib.check_pkg.all;
 use vunit_lib.logger_pkg.all;
 use vunit_lib.log_levels_pkg.all;
+use vunit_lib.integer_vector_ptr_pkg.all;
 
 use vunit_lib.id_pkg.all;
 
@@ -35,7 +36,8 @@ begin
         check_true(valid(my_id), result("for ID validity"));
 
       elsif run("Test that an ID is named properly") then
-        check_equal(name(new_id), "id 1");
+        id := new_id;
+        check_equal(name(id), "id " & integer'image(get(id.p_data, 0)));
         check_equal(name(my_id), "my_id", result("for my_id name"));
 
       elsif run("Test that two IDs cannot have the same name") then

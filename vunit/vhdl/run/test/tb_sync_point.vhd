@@ -8,13 +8,19 @@
 
 library vunit_lib;
 use vunit_lib.run_pkg.all;
+use vunit_lib.runner_pkg.all;
 use vunit_lib.checker_pkg.all;
 use vunit_lib.check_pkg.all;
 use vunit_lib.logger_pkg.all;
 use vunit_lib.log_levels_pkg.all;
 
+use vunit_lib.sync_point_db_pkg.all;
 use vunit_lib.sync_point_pkg.all;
 use vunit_lib.id_pkg.all;
+use vunit_lib.integer_vector_ptr_pkg.all;
+
+library ieee;
+use ieee.numeric_std.all;
 
 entity tb_sync_point is
   generic(runner_cfg : string);
@@ -41,6 +47,7 @@ begin
     constant id, id2 : id_t := new_id;
     constant ids : id_vec_t := (id, id2);
     constant my_id : id_t := new_id("my_id");
+    variable external_failure : boolean := false;
   begin
     test_runner_setup(runner, runner_cfg);
 
@@ -54,7 +61,9 @@ begin
         check_true(valid(sync_point), result("for sync point validity"));
 
       elsif run("Test that sync points are named correctly") then
-        check_equal(name(get_id(sync_point)), "sync point 0", result("for unnamed sync point"));
+        check_equal(name(get_id(sync_point)), "sync point " &
+          integer'image(to_integer(unsigned(sync_point(sync_point_id_rng)))), result("for unnamed sync point")
+        );
         check_equal(name(get_id(my_sync_point)), "my_sync_point", result("for named sync point"));
 
       elsif run("Test that a new sync point has no members") then
@@ -171,17 +180,18 @@ begin
         unmock(checker_logger);
 
       elsif run("Test that sync point join and leave events are logged") then
-        mock(test_logger, info);
+        mock(test_logger, trace);
         join(my_sync_point, id);
-        check_log(test_logger, "Joining my_sync_point with " & name(id) & ".", info, 0 ns);
+        check_log(test_logger, name(id) & " joined my_sync_point.", trace, 0 ns);
         wait for 1 ns;
         leave(my_sync_point, id);
-        check_log(test_logger, "Leaving my_sync_point with " & name(id) & ".", info, 1 ns);
+        check_log(test_logger, name(id) & " left my_sync_point.", trace, 1 ns);
         unmock(test_logger);
 
       elsif run("Test that unsynchronized sync points are identified on watchdog timeout") then
         join(my_sync_point, id);
         join(my_sync_point, my_id);
+
         mock(test_logger, debug);
         mock(runner_logger);
 
@@ -196,13 +206,33 @@ begin
         unmock(test_logger);
         unmock(runner_logger);
 
+      elsif run("Test that simulation exit can be prevented") then
+        p_disable_simulation_exit(runner_state);
+        wait for 2 ns;
+        test_runner_cleanup(runner);
+        runner_init(runner_state);
+        external_failure := not check_equal(now, 11 ns);
+        join(test_runner_cleanup_entry, runner_id);
+        exit;
       end if;
     end loop;
 
-    test_runner_cleanup(runner);
+    test_runner_cleanup(runner, external_failure);
   end process;
 
   test_runner_watchdog(runner, 15 ns, do_runner_cleanup => false);
+
+  delay_simulation_exit : process
+    constant id : id_t := new_id;
+  begin
+    wait for 1 ns;
+    if enabled("Test that simulation exit can be prevented") then
+      join(test_runner_cleanup_entry, id);
+      wait for 10 ns;
+      sync(test_runner_cleanup_entry, id);
+    end if;
+    wait;
+  end process;
 
   process
     constant id : id_t := new_id;

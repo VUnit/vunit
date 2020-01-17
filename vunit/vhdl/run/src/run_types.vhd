@@ -8,6 +8,7 @@
 
 use std.textio.all;
 use work.dictionary.all;
+use work.sync_point_db_pkg.all;
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -36,18 +37,21 @@ package run_types_pkg is
 
   type boolean_array_t is array (integer range <>) of boolean;
 
-  constant runner_event_idx : natural := 0;
-  constant runner_exit_status_idx : natural := 1;
-  constant runner_timeout_update_idx : natural := 2;
-  constant runner_timeout_idx : natural := 3;
+  constant runner_event_idx : natural := 35;
+  constant runner_exit_status_idx : natural := 34;
+  constant runner_timeout_update_idx : natural := 33;
+  constant runner_timeout_idx : natural := 32;
+  constant test_runner_cleanup_entry_base : natural := 0;
+
+  subtype test_runner_cleanup_entry_rng is integer range test_runner_cleanup_entry_base + sync_point_id_length downto test_runner_cleanup_entry_base;
 
   constant runner_event : std_logic := '1';
-  constant idle_runner  : std_logic := 'Z';
+  constant idle_runner : std_logic := 'Z';
 
   constant runner_exit_with_errors : std_logic := 'Z';
   constant runner_exit_without_errors : std_logic := '1';
 
-  subtype runner_sync_t is std_logic_vector(runner_event_idx to runner_timeout_idx);
+  subtype runner_sync_t is std_logic_vector(runner_event_idx downto test_runner_cleanup_entry_base);
 end package;
 
 package body run_types_pkg is

@@ -50,6 +50,27 @@ begin
       file fptr : text;
       variable l : line;
       variable status : file_open_status;
+
+      function remove_indentation(s : string) return string is
+        constant normalized_s : string(1 to s'length) := s;
+        variable result : line;
+        variable previous_character : character;
+      begin
+        if s'length < 2 then
+          return s;
+        end if;
+
+        previous_character := normalized_s(1);
+        write(result, normalized_s(1));
+        for i in 2 to normalized_s'length loop
+          if not((normalized_s(i) = ' ') and (previous_character = ' ')) then
+            write(result, normalized_s(i));
+          end if;
+          previous_character := normalized_s(i);
+        end loop;
+
+        return result.all;
+      end;
     begin
       file_open(status, fptr, file_name, read_mode);
       assert status = open_ok
@@ -59,7 +80,7 @@ begin
       if status = open_ok then
         for i in 0 to num_keys(entries)-1 loop
           readline(fptr, l);
-          assert l.all = get(entries, integer'image(i))
+          assert remove_indentation(l.all) = remove_indentation(get(entries, integer'image(i)))
             report "(" & integer'image(i) & ") " & LF & "Got:" & LF & l.all & LF & "expected:" & LF & get(entries, integer'image(i))
             severity failure;
         end loop;
@@ -122,7 +143,7 @@ begin
   begin
 
     -- Check defaults before test runner setup
-    assert_equal(get_log_count, 0);
+    assert_equal(get_log_count, 4);
     assert_equal(num_log_handlers(logger), 1);
     assert_true(get_log_handler(logger, 0) = display_handler);
     assert_true(get_log_handlers(logger) = (0 => display_handler));
