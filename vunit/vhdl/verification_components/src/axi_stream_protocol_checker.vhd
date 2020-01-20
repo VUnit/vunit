@@ -148,8 +148,7 @@ begin
     check_that_streams_have_ended : process
       variable incomplete_streams : line;
     begin
-      lock_entry(runner, test_runner_cleanup);
-      wait_until(runner, test_runner_cleanup);
+      sync(test_runner_cleanup_entry);
 
       if tid'length = 0 then
         check(rule9_checker, get(active_streams, 0) = 0, result("for packet completion."));
@@ -172,7 +171,6 @@ begin
         end if;
       end if;
 
-      unlock_entry(runner, test_runner_cleanup);
       wait;
     end process;
   end block;

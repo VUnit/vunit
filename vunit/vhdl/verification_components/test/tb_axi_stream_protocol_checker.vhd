@@ -439,9 +439,9 @@ begin
       tlast  <= '0';
       wait until rising_edge(aclk);
 
-      set_phase(runner_state, test_runner_cleanup);
-      notify(runner);
-      entry_gate(runner);
+      sync(test_runner_cleanup_entry, runner_id);
+      wait for 0 ns;
+      join(test_runner_cleanup_entry, runner_id);
 
       check_only_log(rule_logger, "Unconditional check failed for packet completion for the following streams: 0.", error);
 

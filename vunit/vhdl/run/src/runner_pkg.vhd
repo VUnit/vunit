@@ -34,18 +34,6 @@ package runner_pkg is
   procedure set_active_python_runner(runner : runner_t; value : boolean);
   impure function has_active_python_runner(runner : runner_t) return boolean;
 
-  procedure lock_entry(runner : runner_t; phase : runner_legal_phase_t);
-
-  procedure unlock_entry(runner : runner_t; phase : runner_legal_phase_t);
-
-  impure function entry_is_locked(runner : runner_t; phase : runner_legal_phase_t) return boolean;
-
-  procedure lock_exit(runner : runner_t; phase : runner_legal_phase_t);
-
-  procedure unlock_exit(runner : runner_t; phase : runner_legal_phase_t);
-
-  impure function exit_is_locked(runner : runner_t; phase : runner_legal_phase_t) return boolean;
-
   procedure set_phase(runner : runner_t; new_phase : runner_phase_t);
 
   impure function get_phase(runner : runner_t) return runner_phase_t;
@@ -145,10 +133,8 @@ package body runner_pkg is
   constant test_suite_exit_after_error_idx : natural := 14;
   constant runner_cfg_idx : natural := 15;
   constant disable_simulation_exit_idx : natural := 16;
-  constant entry_locks_idx : natural := 17;
-  constant exit_locks_idx : natural := 18;
-  constant timeout_idx : natural := 19;
-  constant runner_length : natural := 20;
+  constant timeout_idx : natural := 17;
+  constant runner_length : natural := 18;
 
   function to_integer(value : boolean) return natural is
   begin
@@ -163,7 +149,7 @@ package body runner_pkg is
   constant int_pool : integer_vector_ptr_pool_t := new_integer_vector_ptr_pool;
 
   impure function new_runner return runner_t is
-    variable runner : runner_t := (p_data => new_integer_vector_ptr(int_pool, runner_length));
+    constant runner : runner_t := (p_data => new_integer_vector_ptr(int_pool, runner_length));
   begin
     runner_init(runner);
     return runner;
@@ -199,8 +185,6 @@ package body runner_pkg is
     set(runner.p_data, runner_cfg_idx, to_integer(new_string_ptr(str_pool, runner_cfg_default)));
 
     set(runner.p_data, disable_simulation_exit_idx, to_integer(false));
-    set(runner.p_data, entry_locks_idx, to_integer(integer_vector_ptr_t'(new_integer_vector_ptr(n_legal_phases))));
-    set(runner.p_data, exit_locks_idx, to_integer(integer_vector_ptr_t'(new_integer_vector_ptr(n_legal_phases))));
     set(runner.p_data, timeout_idx, to_integer(new_string_ptr(str_pool, encode(0 ns))));
   end;
 
@@ -213,58 +197,6 @@ package body runner_pkg is
   begin
     return get(runner.p_data, active_python_runner_idx) = 1;
   end function;
-
-  procedure lock_entry(runner : runner_t; phase : runner_legal_phase_t) is
-    constant entry_locks : integer_vector_ptr_t := to_integer_vector_ptr(get(runner.p_data, entry_locks_idx));
-    constant idx : natural := runner_legal_phase_t'pos(phase) - runner_legal_phase_t'pos(runner_legal_phase_t'low);
-    constant n_locks : natural := get(entry_locks, idx);
-  begin
-    set(entry_locks, idx, n_locks + 1);
-  end;
-
-  procedure unlock_entry(runner : runner_t; phase : runner_legal_phase_t) is
-    constant entry_locks : integer_vector_ptr_t := to_integer_vector_ptr(get(runner.p_data, entry_locks_idx));
-    constant idx : natural := runner_legal_phase_t'pos(phase) - runner_legal_phase_t'pos(runner_legal_phase_t'low);
-    constant n_locks : natural := get(entry_locks, idx);
-  begin
-    failure_if(runner_trace_logger, n_locks = 0,
-               "No locks to unlock on " & replace(runner_legal_phase_t'image(phase), "_", " ") & " entry gate.");
-    set(entry_locks, idx, n_locks - 1);
-  end;
-
-  impure function entry_is_locked(runner : runner_t; phase : runner_legal_phase_t) return boolean is
-    constant entry_locks : integer_vector_ptr_t := to_integer_vector_ptr(get(runner.p_data, entry_locks_idx));
-    constant idx : natural := runner_legal_phase_t'pos(phase) - runner_legal_phase_t'pos(runner_legal_phase_t'low);
-    constant n_locks : natural := get(entry_locks, idx);
-  begin
-    return n_locks > 0;
-  end;
-
-  procedure lock_exit(runner : runner_t; phase : runner_legal_phase_t) is
-    constant exit_locks : integer_vector_ptr_t := to_integer_vector_ptr(get(runner.p_data, exit_locks_idx));
-    constant idx : natural := runner_legal_phase_t'pos(phase) - runner_legal_phase_t'pos(runner_legal_phase_t'low);
-    constant n_locks : natural := get(exit_locks, idx);
-  begin
-    set(exit_locks, idx, n_locks + 1);
-  end;
-
-  procedure unlock_exit(runner : runner_t; phase : runner_legal_phase_t) is
-    constant exit_locks : integer_vector_ptr_t := to_integer_vector_ptr(get(runner.p_data, exit_locks_idx));
-    constant idx : natural := runner_legal_phase_t'pos(phase) - runner_legal_phase_t'pos(runner_legal_phase_t'low);
-    constant n_locks : natural := get(exit_locks, idx);
-  begin
-    failure_if(runner_trace_logger, n_locks = 0,
-               "No locks to unlock on " & replace(runner_legal_phase_t'image(phase), "_", " ") & " exit gate.");
-    set(exit_locks, idx, n_locks - 1);
-  end;
-
-  impure function exit_is_locked(runner : runner_t; phase : runner_legal_phase_t) return boolean is
-    constant exit_locks : integer_vector_ptr_t := to_integer_vector_ptr(get(runner.p_data, exit_locks_idx));
-    constant idx : natural := runner_legal_phase_t'pos(phase) - runner_legal_phase_t'pos(runner_legal_phase_t'low);
-    constant n_locks : natural := get(exit_locks, idx);
-  begin
-    return n_locks > 0;
-  end;
 
   procedure set_phase(runner : runner_t; new_phase : runner_phase_t) is
   begin

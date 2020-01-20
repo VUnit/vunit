@@ -28,11 +28,6 @@ entity run_tests is
 end entity;
 
 architecture test_fixture of run_tests is
-  constant locking_proc1_logger : logger_t := get_logger("locking_proc1_logger");
-  constant locking_proc2_logger : logger_t := get_logger("locking_proc2");
-  signal start_test_process, start_test_process2 : boolean := false;
-  signal test_process_completed : boolean := false;
-  signal start_locking_process : boolean := false;
   signal start_test_runner_watchdog, test_runner_watchdog_completed : boolean := false;
 
   impure function get_phase return runner_phase_t is
@@ -41,97 +36,6 @@ architecture test_fixture of run_tests is
   end;
 
 begin
-  test_process : process is
-    variable t_start : time;
-  begin
-    wait until start_test_process;
-    t_start := now;
-    if get_phase /= test_suite_setup then
-      wait on runner until get_phase = test_suite_setup for 20 ns;
-    end if;
-    check_equal(now - t_start, 17 ns, "Expected wait on test_suite_setup phase to be 17 ns.");
-    t_start := now;
-    if get_phase /= test_case_setup then
-      wait on runner until get_phase = test_case_setup for 20 ns;
-    end if;
-    check_equal(now - t_start, 9 ns, "Expected wait on test_case_setup phase to be 9 ns.");
-    test_process_completed <= true;
-    wait;
-  end process;
-
-  test_process2 : process is
-  begin
-    wait until start_test_process2;
-    lock_entry(runner, test_suite_setup);
-    lock_exit(runner, test_suite_setup);
-    wait for 7 ns;
-    unlock_entry(runner, test_suite_setup);
-    wait for 4 ns;
-    unlock_exit(runner, test_suite_setup);
-    wait;
-  end process;
-
-  locking_proc1 : process is
-  begin
-    wait until start_locking_process = true;
-    lock_entry(runner, test_runner_setup, locking_proc1_logger);
-    lock_exit(runner, test_runner_setup, locking_proc1_logger);
-    lock_entry(runner, test_suite_setup, locking_proc1_logger);
-    lock_exit(runner, test_suite_setup, locking_proc1_logger);
-    wait for 2 ns;
-    unlock_entry(runner, test_runner_setup, locking_proc1_logger);
-    wait for 1 ns;
-    unlock_exit(runner, test_runner_setup, locking_proc1_logger);
-    wait for 1 ns;
-    unlock_entry(runner, test_suite_setup, locking_proc1_logger);
-    wait for 3 ns;
-
-    lock_entry(runner, test_case_setup, locking_proc1_logger);
-    lock_exit(runner, test_case_setup, locking_proc1_logger);
-    lock_entry(runner, test_case, locking_proc1_logger);
-    lock_exit(runner, test_case, locking_proc1_logger);
-    lock_entry(runner, test_case_cleanup, locking_proc1_logger);
-    lock_exit(runner, test_case_cleanup, locking_proc1_logger);
-    lock_entry(runner, test_suite_cleanup, locking_proc1_logger);
-    lock_exit(runner, test_suite_cleanup, locking_proc1_logger);
-    lock_entry(runner, test_runner_cleanup, locking_proc1_logger);
-    lock_exit(runner, test_runner_cleanup, locking_proc1_logger);
-
-    wait for 1 ns;
-    unlock_exit(runner, test_suite_setup, locking_proc1_logger);
-    wait for 1 ns;
-    unlock_entry(runner, test_case_setup, locking_proc1_logger);
-    wait for 2 ns;
-    unlock_exit(runner, test_case_setup, locking_proc1_logger);
-    wait for 1 ns;
-    unlock_entry(runner, test_case, locking_proc1_logger);
-    wait for 2 ns;
-    unlock_exit(runner, test_case, locking_proc1_logger);
-    wait for 1 ns;
-    unlock_entry(runner, test_case_cleanup, locking_proc1_logger);
-    wait for 2 ns;
-    unlock_exit(runner, test_case_cleanup, locking_proc1_logger);
-    wait for 4 ns;
-    unlock_entry(runner, test_suite_cleanup, locking_proc1_logger);
-    wait for 2 ns;
-    unlock_exit(runner, test_suite_cleanup, locking_proc1_logger);
-    wait for 1 ns;
-    unlock_entry(runner, test_runner_cleanup, locking_proc1_logger);
-    wait for 1 ns;
-    unlock_exit(runner, test_runner_cleanup, locking_proc1_logger);
-    wait;
-  end process locking_proc1;
-
-  locking_proc2 : process is
-  begin
-    wait until start_locking_process = true;
-    wait for 6 ns;
-    lock_exit(runner, test_runner_cleanup, locking_proc2_logger);
-    wait for 21 ns;
-    unlock_exit(runner, test_runner_cleanup, locking_proc2_logger);
-    wait;
-  end process locking_proc2;
-
   watchdog : process is
   begin
     wait until start_test_runner_watchdog;
@@ -143,15 +47,10 @@ begin
   test_runner : process
     procedure banner(
       constant s : in string) is
-      variable dashes : string(1 to 256) := (others => '-');
+      constant dashes : string(1 to 256) := (others => '-');
     begin
       info(dashes(s'range) & LF & s & LF & dashes(s'range) & LF);
     end banner;
-
-    function to_string(value : integer) return string is
-    begin
-      return integer'image(value);
-    end;
 
     procedure test_case_setup(join_sync_point : boolean := false) is
     begin
@@ -188,14 +87,8 @@ begin
     variable i : natural;
     variable n_run_a, n_run_b, n_run_c : natural := 0;
     variable t_start : time;
-    constant test_checker : checker_t := new_checker("test_checker");
     variable runner_cfg : line;
     variable passed : boolean;
-    variable level : log_level_t;
-    variable my_checker : checker_t;
-    variable error_counter : natural := 0;
-    constant test_runner_logger : logger_t := get_logger("test_runner");
-
   begin
     banner("Should extract single enabled test case from input string");
     test_case_setup;
@@ -505,59 +398,6 @@ begin
     test_case_cleanup(false);
 
     ---------------------------------------------------------------------------
-    banner("Should be possible to stall execution and stall the exit of a phase");
-    test_case_setup;
-    start_test_process2 <= true;
-    t_start := now;
-    wait for 1 ns;
-    test_runner_setup(runner, "enabled_test_cases : test a");
-    entry_gate(runner);
-    check(c, now - t_start = 7 ns, "Expected a 7 ns delay due to phase lock");
-    t_start := now;
-    exit_gate(runner);
-    while test_suite loop
-      check(c, now - t_start = 4 ns, "Expected a 4 ns delay due to phase lock");
-      while in_test_case loop
-      end loop;
-    end loop;
-    p_disable_simulation_exit(runner_state);
-    test_runner_cleanup(runner);
-    test_case_cleanup(false);
-
-    ---------------------------------------------------------------------------
-    banner("Should be possible to suspend a process/procedure waiting for a specific phase");
-    test_case_setup;
-    start_test_process <= true;
-    wait for 17 ns;
-    test_runner_setup(runner, "enabled_test_cases : test a");
-    wait for 9 ns;
-    while test_suite loop
-      entry_gate(runner);
-      wait for 1 ns;
-      while in_test_case loop
-      end loop;
-    end loop;
-    p_disable_simulation_exit(runner_state);
-    test_runner_cleanup(runner);
-    if not test_process_completed then
-      wait until test_process_completed;
-    end if;
-    test_case_cleanup(false);
-
-    ---------------------------------------------------------------------------
-    banner("Test that unlocking an unlocked phase will trigger a failure");
-    test_case_setup;
-    mock(runner_trace_logger);
-    unlock_entry(runner, test_runner_setup);
-    unlock_exit(runner, test_runner_setup);
-    check_log(runner_trace_logger, "No locks to unlock on test runner setup entry gate.", failure);
-    check_log(runner_trace_logger, "Unlocked test runner setup phase entry gate.", trace);
-    check_log(runner_trace_logger, "No locks to unlock on test runner setup exit gate.", failure);
-    check_log(runner_trace_logger, "Unlocked test runner setup phase exit gate.", trace);
-    unmock(runner_trace_logger);
-    test_case_cleanup(false);
-
-    ---------------------------------------------------------------------------
     banner("Should be possible to read current test case name");
     test_case_setup;
     test_runner_setup(runner, "enabled_test_cases : test a,, test b");
@@ -606,167 +446,6 @@ begin
       end if;
     end loop;
     check(c, i = 3, "Not all test cases were run.");
-    p_disable_simulation_exit(runner_state);
-    test_runner_cleanup(runner);
-    test_case_cleanup(false);
-
-    ---------------------------------------------------------------------------
-    banner("Should have a trace log where source of locking/unlocking commands can be logged.");
-    test_case_setup;
-
-    mock(locking_proc1_logger);
-    mock(locking_proc2_logger);
-    mock(runner_trace_logger);
-    start_locking_process <= true;
-
-    wait for 1 ns;
-    check_log(locking_proc1_logger, "Locked test runner setup phase entry gate.", trace);
-    check_log(locking_proc1_logger, "Locked test runner setup phase exit gate.", trace);
-    check_log(locking_proc1_logger, "Locked test suite setup phase entry gate.", trace);
-    check_log(locking_proc1_logger, "Locked test suite setup phase exit gate.", trace);
-    check_no_log;
-
-    test_runner_setup(runner, "enabled_test_cases : test a");
-    check_log(runner_trace_logger, "Entering test runner setup phase.", trace);
-    check_log(runner_trace_logger, "Halting on test runner setup phase entry gate.", trace);
-    check_log(locking_proc1_logger, "Unlocked test runner setup phase entry gate.", trace);
-    check_log(runner_trace_logger, "Passed test runner setup phase entry gate.", trace);
-    check_log(runner_trace_logger, "Halting on test runner setup phase exit gate.", trace);
-    check_log(locking_proc1_logger, "Unlocked test runner setup phase exit gate.", trace);
-    check_log(runner_trace_logger, "Passed test runner setup phase exit gate.", trace);
-    check_log(runner_trace_logger, "Entering test suite setup phase.", trace);
-    check_log(runner_trace_logger, "Halting on test suite setup phase entry gate.", trace);
-    check_log(locking_proc1_logger, "Unlocked test suite setup phase entry gate.", trace);
-    check_log(runner_trace_logger, "Passed test suite setup phase entry gate.", trace);
-    check_no_log;
-
-    test_suite_setup_entry_gate(runner);
-    wait for 1 ns;
-
-    test_suite_setup_exit_gate(runner);
-    check_log(runner_trace_logger, "Passed test suite setup phase entry gate.", trace);
-    check_log(runner_trace_logger, "Halting on test suite setup phase exit gate.", trace);
-    check_log(locking_proc2_logger, "Locked test runner cleanup phase exit gate.", trace);
-    check_log(locking_proc1_logger, "Locked test case setup phase entry gate.", trace);
-    check_log(locking_proc1_logger, "Locked test case setup phase exit gate.", trace);
-    check_log(locking_proc1_logger, "Locked test case phase entry gate.", trace);
-    check_log(locking_proc1_logger, "Locked test case phase exit gate.", trace);
-    check_log(locking_proc1_logger, "Locked test case cleanup phase entry gate.", trace);
-    check_log(locking_proc1_logger, "Locked test case cleanup phase exit gate.", trace);
-    check_log(locking_proc1_logger, "Locked test suite cleanup phase entry gate.", trace);
-    check_log(locking_proc1_logger, "Locked test suite cleanup phase exit gate.", trace);
-    check_log(locking_proc1_logger, "Locked test runner cleanup phase entry gate.", trace);
-    check_log(locking_proc1_logger, "Locked test runner cleanup phase exit gate.", trace);
-    check_log(locking_proc1_logger, "Unlocked test suite setup phase exit gate.", trace);
-    check_log(runner_trace_logger, "Passed test suite setup phase exit gate.", trace);
-    check_no_log;
-
-    while test_suite loop
-      check_only_log(runner_trace_logger, "Entering test case setup phase.", trace);
-
-      test_case_setup_entry_gate(runner);
-      check_log(runner_trace_logger, "Halting on test case setup phase entry gate.", trace);
-      check_log(locking_proc1_logger, "Unlocked test case setup phase entry gate.", trace);
-      check_log(runner_trace_logger, "Passed test case setup phase entry gate.", trace);
-      check_no_log;
-
-      wait for 1 ns;
-      test_case_setup_exit_gate(runner);
-      check_log(runner_trace_logger, "Halting on test case setup phase exit gate.", trace);
-      check_log(locking_proc1_logger, "Unlocked test case setup phase exit gate.", trace);
-      check_log(runner_trace_logger, "Passed test case setup phase exit gate.", trace);
-      check_no_log;
-
-      while in_test_case loop
-        check_only_log(runner_trace_logger, "Entering test case phase.", trace);
-
-        test_case_entry_gate(runner);
-        check_log(runner_trace_logger, "Halting on test case phase entry gate.", trace);
-        check_log(locking_proc1_logger, "Unlocked test case phase entry gate.", trace);
-        check_log(runner_trace_logger, "Passed test case phase entry gate.", trace);
-        check_no_log;
-
-        if run("test a") then
-          wait for 1 ns;
-        end if;
-        check_only_log(runner_trace_logger, "Test case: test a", info);
-
-        test_case_exit_gate(runner);
-        check_log(runner_trace_logger, "Halting on test case phase exit gate.", trace);
-        check_log(locking_proc1_logger, "Unlocked test case phase exit gate.", trace);
-        check_log(runner_trace_logger, "Passed test case phase exit gate.", trace);
-        check_no_log;
-      end loop;
-      check_only_log(runner_trace_logger, "Entering test case cleanup phase.", trace);
-
-      test_case_cleanup_entry_gate(runner);
-      check_log(runner_trace_logger, "Halting on test case cleanup phase entry gate.", trace);
-      check_log(locking_proc1_logger, "Unlocked test case cleanup phase entry gate.", trace);
-      check_log(runner_trace_logger, "Passed test case cleanup phase entry gate.", trace);
-      check_no_log;
-
-      wait for 1 ns;
-      test_case_cleanup_exit_gate(runner);
-
-      check_log(runner_trace_logger, "Halting on test case cleanup phase exit gate.", trace);
-      check_log(locking_proc1_logger, "Unlocked test case cleanup phase exit gate.", trace);
-      check_log(runner_trace_logger, "Passed test case cleanup phase exit gate.", trace);
-      check_no_log;
-    end loop;
-    check_only_log(runner_trace_logger, "Entering test suite cleanup phase.", trace);
-
-    test_suite_cleanup_entry_gate(runner);
-    check_log(runner_trace_logger, "Halting on test suite cleanup phase entry gate.", trace);
-    check_log(locking_proc1_logger, "Unlocked test suite cleanup phase entry gate.", trace);
-    check_log(runner_trace_logger, "Passed test suite cleanup phase entry gate.", trace);
-    check_no_log;
-
-    wait for 1 ns;
-    test_suite_cleanup_exit_gate(runner);
-    check_log(runner_trace_logger, "Halting on test suite cleanup phase exit gate.", trace);
-    check_log(locking_proc1_logger, "Unlocked test suite cleanup phase exit gate.", trace);
-    check_log(runner_trace_logger, "Passed test suite cleanup phase exit gate.", trace);
-    check_no_log;
-
-    core_pkg.mock_core_failure;
-    p_disable_simulation_exit(runner_state);
-    test_runner_cleanup(runner);
-    core_pkg.check_core_failure("Final log check failed");
-    core_pkg.unmock_core_failure;
-
-    check_log(runner_trace_logger, "Entering test runner cleanup phase.", trace);
-    check_log(runner_trace_logger, "Halting on test runner cleanup phase entry gate.", trace);
-    check_log(locking_proc1_logger, "Unlocked test runner cleanup phase entry gate.", trace);
-    check_log(runner_trace_logger, "Passed test runner cleanup phase entry gate.", trace);
-    check_log(runner_trace_logger, "Halting on test runner cleanup phase exit gate.", trace);
-    check_log(locking_proc1_logger, "Unlocked test runner cleanup phase exit gate.", trace);
-    check_log(locking_proc2_logger, "Unlocked test runner cleanup phase exit gate.", trace);
-    check_log(runner_trace_logger, "Passed test runner cleanup phase exit gate.", trace);
-    check_log(runner_trace_logger, "Entering test runner exit phase.", trace);
-    unmock(locking_proc1_logger);
-    unmock(locking_proc2_logger);
-    unmock(runner_trace_logger);
-    test_case_cleanup(false);
-
-    ---------------------------------------------------------------------------
-    banner("Should be possible to track (un)lock commands to file and line number");
-    test_case_setup;
-
-    test_runner_setup(runner, "enabled_test_cases : test a");
-    mock(runner_trace_logger);
-    lock_entry(runner, test_case_setup, line_num => 17, file_name => "foo1.vhd");
-    lock_exit(runner, test_case_setup, line_num => 18, file_name => "foo2.vhd");
-    unlock_entry(runner, test_case_setup, line_num => 19, file_name => "foo3.vhd");
-    unlock_exit(runner, test_case_setup, line_num => 20, file_name => "foo4.vhd");
-    check_log(runner_trace_logger, "Locked test case setup phase entry gate.", trace,
-              line_num => 17, file_name => "foo1.vhd");
-    check_log(runner_trace_logger, "Locked test case setup phase exit gate.", trace,
-              line_num => 18, file_name => "foo2.vhd");
-    check_log(runner_trace_logger, "Unlocked test case setup phase entry gate.", trace,
-              line_num => 19, file_name => "foo3.vhd");
-    check_log(runner_trace_logger, "Unlocked test case setup phase exit gate.", trace,
-              line_num => 20, file_name => "foo4.vhd");
-    unmock(runner_trace_logger);
     p_disable_simulation_exit(runner_state);
     test_runner_cleanup(runner);
     test_case_cleanup(false);

@@ -77,7 +77,6 @@ package body run_pkg is
     notify(runner);
 
     trace(runner_trace_logger, "Entering test runner setup phase.");
-    entry_gate(runner);
 
     if selected_enabled_test_cases /= null then
       deallocate(selected_enabled_test_cases);
@@ -107,11 +106,9 @@ package body run_pkg is
         end if;
       end loop;
     end if;
-    exit_gate(runner);
     set_phase(runner_state, test_suite_setup);
     notify(runner);
     trace(runner_trace_logger, "Entering test suite setup phase.");
-    entry_gate(runner);
   end test_runner_setup;
 
   procedure test_runner_cleanup(
@@ -121,15 +118,15 @@ package body run_pkg is
     allow_disabled_failures : boolean := false;
     fail_on_warning : boolean := false) is
   begin
-    sync(runner(test_runner_cleanup_entry_rng), runner_id);
-
     failure_if(runner_trace_logger, external_failure, "External failure.");
 
     set_phase(runner_state, test_runner_cleanup);
     notify(runner);
     trace(runner_trace_logger, "Entering test runner cleanup phase.");
-    entry_gate(runner);
-    exit_gate(runner);
+
+    sync(runner(test_runner_cleanup_entry_rng), runner_id);
+    allow_syncing_processes_to_have_an_epilogue_after_their_syncs : wait for 0 ns;
+
     set_phase(runner_state, test_runner_exit);
     notify(runner);
     trace(runner_trace_logger, "Entering test runner exit phase.");
@@ -382,54 +379,6 @@ package body run_pkg is
     return test_suite_exit or test_case_exit;
   end function test_exit;
 
-  procedure lock_entry(
-    signal runner : inout runner_sync_t;
-    constant phase : in runner_legal_phase_t;
-    constant logger : in logger_t := runner_trace_logger;
-    constant line_num : in natural := 0;
-    constant file_name : in string := "") is
-  begin
-    lock_entry(runner_state, phase);
-    log(logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase entry gate.", trace, line_num, file_name);
-    notify(runner);
-  end;
-
-  procedure unlock_entry(
-    signal runner : inout runner_sync_t;
-    constant phase : in runner_legal_phase_t;
-    constant logger : in logger_t := runner_trace_logger;
-    constant line_num : in natural := 0;
-    constant file_name : in string := "") is
-  begin
-    unlock_entry(runner_state, phase);
-    log(logger, "Unlocked " & replace(runner_phase_t'image(phase), "_", " ") & " phase entry gate.", trace, line_num, file_name);
-    notify(runner);
-  end;
-
-  procedure lock_exit(
-    signal runner : inout runner_sync_t;
-    constant phase : in runner_legal_phase_t;
-    constant logger : in logger_t := runner_trace_logger;
-    constant line_num : in natural := 0;
-    constant file_name : in string := "") is
-  begin
-    lock_exit(runner_state, phase);
-    log(logger, "Locked " & replace(runner_phase_t'image(phase), "_", " ") & " phase exit gate.", trace, line_num, file_name);
-    notify(runner);
-  end;
-
-  procedure unlock_exit(
-    signal runner : inout runner_sync_t;
-    constant phase : in runner_legal_phase_t;
-    constant logger : in logger_t := runner_trace_logger;
-    constant line_num : in natural := 0;
-    constant file_name : in string := "") is
-  begin
-    unlock_exit(runner_state, phase);
-    log(logger, "Unlocked " & replace(runner_phase_t'image(phase), "_", " ") & " phase exit gate.", trace, line_num, file_name);
-    notify(runner);
-  end;
-
   procedure wait_until(
     signal runner : in runner_sync_t;
     constant phase : in runner_legal_phase_t;
@@ -443,28 +392,6 @@ package body run_pkg is
       log(logger, "Waking up. Phase is " & replace(runner_phase_t'image(phase), "_", " ") & ".", trace, line_num, file_name);
     end if;
   end;
-
-  procedure entry_gate(
-    signal runner : inout runner_sync_t) is
-  begin
-    if entry_is_locked(runner_state, get_phase(runner_state)) then
-      trace(runner_trace_logger, "Halting on " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase entry gate.");
-      wait on runner until not entry_is_locked(runner_state, get_phase(runner_state)) for max_locked_time;
-    end if;
-    notify(runner);
-    trace(runner_trace_logger, "Passed " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase entry gate.");
-  end procedure entry_gate;
-
-  procedure exit_gate(
-    signal runner : in runner_sync_t) is
-  begin
-    if exit_is_locked(runner_state, get_phase(runner_state)) then
-      trace(runner_trace_logger, "Halting on " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase exit gate.");
-      wait on runner until not exit_is_locked(runner_state, get_phase(runner_state)) for max_locked_time;
-    end if;
-    trace(runner_trace_logger, "Passed " & replace(runner_phase_t'image(get_phase(runner_state)), "_", " ") & " phase exit gate.");
-  end procedure exit_gate;
-
   impure function active_python_runner(
     constant runner_cfg : string)
   return boolean is

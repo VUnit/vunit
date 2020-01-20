@@ -92,47 +92,12 @@ package run_pkg is
     signal runner : runner_sync_t
   ) return boolean;
 
-  procedure lock_entry(
-    signal runner : inout runner_sync_t;
-    constant phase : in runner_legal_phase_t;
-    constant logger : in logger_t := runner_trace_logger;
-    constant line_num : in natural := 0;
-    constant file_name : in string := "");
-
-  procedure unlock_entry(
-    signal runner : inout runner_sync_t;
-    constant phase : in runner_legal_phase_t;
-    constant logger : in logger_t := runner_trace_logger;
-    constant line_num : in natural := 0;
-    constant file_name : in string := "");
-
-  procedure lock_exit(
-    signal runner : inout runner_sync_t;
-    constant phase : in runner_legal_phase_t;
-    constant logger : in logger_t := runner_trace_logger;
-    constant line_num : in natural := 0;
-    constant file_name : in string := "");
-
-  procedure unlock_exit(
-    signal runner : inout runner_sync_t;
-    constant phase : in runner_legal_phase_t;
-    constant logger : in logger_t := runner_trace_logger;
-    constant line_num : in natural := 0;
-    constant file_name : in string := "");
-
   procedure wait_until(
     signal runner : in runner_sync_t;
     constant phase : in runner_legal_phase_t;
     constant logger : in logger_t := runner_trace_logger;
     constant line_num : in natural := 0;
     constant file_name : in string := "");
-
-  procedure entry_gate(
-    signal runner : inout runner_sync_t);
-
-  procedure exit_gate(
-    signal runner : in runner_sync_t);
-
   impure function active_python_runner(
     constant runner_cfg : string)
   return boolean;
@@ -148,21 +113,6 @@ package run_pkg is
   impure function tb_path(
     constant runner_cfg : string)
   return string;
-
-  alias test_runner_setup_entry_gate is entry_gate[runner_sync_t];
-  alias test_runner_setup_exit_gate is exit_gate[runner_sync_t];
-  alias test_suite_setup_entry_gate is entry_gate[runner_sync_t];
-  alias test_suite_setup_exit_gate is exit_gate[runner_sync_t];
-  alias test_case_setup_entry_gate is entry_gate[runner_sync_t];
-  alias test_case_setup_exit_gate is exit_gate[runner_sync_t];
-  alias test_case_entry_gate is entry_gate[runner_sync_t];
-  alias test_case_exit_gate is exit_gate[runner_sync_t];
-  alias test_case_cleanup_entry_gate is entry_gate[runner_sync_t];
-  alias test_case_cleanup_exit_gate is exit_gate[runner_sync_t];
-  alias test_suite_cleanup_entry_gate is entry_gate[runner_sync_t];
-  alias test_suite_cleanup_exit_gate is exit_gate[runner_sync_t];
-  alias test_runner_cleanup_entry_gate is entry_gate[runner_sync_t];
-  alias test_runner_cleanup_exit_gate is exit_gate[runner_sync_t];
 
   -- Private
   procedure notify(signal runner : inout runner_sync_t;

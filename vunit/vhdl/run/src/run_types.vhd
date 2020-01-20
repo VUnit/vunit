@@ -14,11 +14,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 package run_types_pkg is
-  constant max_locked_time : time := 1 ms;
   constant max_n_test_cases : natural := 1024;
 
   -- Deprecated
-  constant max_locked_time_c : time := max_locked_time;
   constant max_n_test_cases_c : natural := max_n_test_cases;
 
   subtype runner_cfg_t is string; -- Subtype deprecated, use string instead
@@ -29,11 +27,6 @@ package run_types_pkg is
                           test_case, test_case_cleanup, test_suite_cleanup, test_runner_cleanup,
                           test_runner_exit);
   subtype runner_legal_phase_t is runner_phase_t range test_runner_setup to test_runner_cleanup;
-
-  type phase_locks_t is record
-    entry_is_locked : boolean;
-    exit_is_locked : boolean;
-  end record;
 
   type boolean_array_t is array (integer range <>) of boolean;
 
