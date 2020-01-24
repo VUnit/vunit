@@ -1,6 +1,10 @@
 name: 'push'
 
-on: [ push, pull_request ]
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 0 * * 5'
 
 env:
   DOCKER_REGISTRY: docker.pkg.github.com
