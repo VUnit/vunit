@@ -1131,7 +1131,8 @@ class VHDLReference(object):
         return self.name_within == "all"
 
 
-VHDL_REMOVE_COMMENT_RE = re.compile(r"--[^\n]*")
+VHDL_REMOVE_COMMENT_RE = r"(?:(?:\"[^\"]*\")|(--[^\n]*))"
+VHDL_REMOVE_COMMENT_COMPILED_RE = re.compile(VHDL_REMOVE_COMMENT_RE, re.MULTILINE)
 
 
 def _comment_repl(match):
@@ -1139,7 +1140,9 @@ def _comment_repl(match):
     Replace comment with equal amount of whitespace to make
     lexical position unaffected
     """
-    text = match.group(0)
+    text = match.group(1)
+    if text is None:
+        return match.group(0)
     return " " * len(text)
 
 
@@ -1147,4 +1150,4 @@ def remove_comments(code):
     """
     Return the code with comments removed
     """
-    return VHDL_REMOVE_COMMENT_RE.sub(_comment_repl, code)
+    return VHDL_REMOVE_COMMENT_COMPILED_RE.sub(_comment_repl, code)
