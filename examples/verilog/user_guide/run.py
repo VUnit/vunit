@@ -12,13 +12,12 @@ The most minimal VUnit SystemVerilog project covering the basics of
 the :ref:`User Guide <user_guide>`.
 """
 
-from os.path import join, dirname
+from pathlib import Path
 from vunit.verilog import VUnit
 
-root = dirname(__file__)
+ROOT = Path(__file__).parent
 
-vu = VUnit.from_argv()
-lib = vu.add_library("lib")
-lib.add_source_files(join(root, "*.sv"))
+VU = VUnit.from_argv()
+VU.add_library("lib").add_source_files(ROOT / "*.sv")
 
-vu.main()
+VU.main()

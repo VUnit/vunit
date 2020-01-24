@@ -14,9 +14,8 @@ Test of the Verilog preprocessor
 
 from os.path import join, dirname, exists
 import os
-from unittest import TestCase
+from unittest import TestCase, mock
 import shutil
-from unittest import mock
 from vunit.ostools import renew_path, write_file
 from vunit.parsing.verilog.preprocess import VerilogPreprocessor, Macro
 from vunit.parsing.verilog.tokenizer import VerilogTokenizer
@@ -856,7 +855,7 @@ keep_end"""
             self,
             tokens,
             defines,
-            [file_name for _, file_name in included_files if file_name is not None],
+            [fname for _, fname in included_files if fname is not None],
             logger,
         )
 

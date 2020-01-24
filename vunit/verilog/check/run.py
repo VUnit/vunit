@@ -4,18 +4,14 @@
 #
 # Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
-from os.path import join, dirname, basename, abspath
-import sys
+from pathlib import Path
 from vunit.verilog import VUnit
 
-vu = VUnit.from_argv()
 
-root = dirname(__file__)
+ROOT = Path(__file__).parent
 
-lib = vu.add_library("lib")
+VU = VUnit.from_argv()
+VU.add_library("lib").add_source_files(ROOT / "test" / "*.sv")
+VU.set_sim_option("modelsim.vsim_flags.gui", ["-novopt"])
 
-tb_list = lib.add_source_files(join(root, "test", "*.sv"))
-
-vu.set_sim_option("modelsim.vsim_flags.gui", ["-novopt"])
-
-vu.main()
+VU.main()

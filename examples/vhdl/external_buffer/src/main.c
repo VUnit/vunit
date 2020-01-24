@@ -43,10 +43,10 @@ static void exit_handler(void) {
       expected = (i+1)*11 + k;
       got = ((TYPE*)D[0])[z];
       if (expected != got) {
-        printf("check error %d: %d %d\n", z, expected, got);
+        printf("check error %u: %d %d\n", z, expected, got);
         exit(1);
       }
-      printf("%d: %d\n", z, got);
+      printf("%u: %d\n", z, got);
     }
   }
   free(D[0]);

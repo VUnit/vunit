@@ -16,16 +16,16 @@ loading it from csv and raw files.
 from pathlib import Path
 from vunit import VUnit
 
-vu = VUnit.from_argv()
-vu.add_osvvm()
+VU = VUnit.from_argv()
+VU.add_osvvm()
 
-src_path = Path(__file__).parent / "src"
+SRC_PATH = Path(__file__).parent / "src"
 
-vu.add_library("lib").add_source_files(
-    [src_path / "*.vhd", src_path / "test" / "*.vhd"]
+VU.add_library("lib").add_source_files(
+    [SRC_PATH / "*.vhd", SRC_PATH / "test" / "*.vhd"]
 )
 
-vu.set_compile_option("ghdl.flags", ["-frelaxed"])
-vu.set_sim_option("ghdl.elab_flags", ["-frelaxed"])
+VU.set_compile_option("ghdl.flags", ["-frelaxed"])
+VU.set_sim_option("ghdl.elab_flags", ["-frelaxed"])
 
-vu.main()
+VU.main()

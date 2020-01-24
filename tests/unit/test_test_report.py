@@ -9,9 +9,9 @@ Test the test report functionality
 """
 
 from unittest import TestCase
-from xml.etree import ElementTree
-from os.path import basename, dirname, join
 import os
+from os.path import basename, dirname, join
+from xml.etree import ElementTree
 from vunit.test.report import TestReport, PASSED, SKIPPED, FAILED
 from vunit.ui.common import TEST_OUTPUT_PATH
 from vunit.ui.results import Results
@@ -284,7 +284,7 @@ Elapsed time was 3.0 seconds
             opath, None, self._report_with_all_passed_tests(output_file_name)
         )
         report = results.get_report()
-        for key, test in report.tests.items():
+        for _, test in report.tests.items():
             self.assertEqual(basename(test.path), test.relpath)
         test0 = report.tests["passed_test0"]
         test1 = report.tests["passed_test1"]

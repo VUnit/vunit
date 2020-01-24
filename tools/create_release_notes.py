@@ -11,6 +11,7 @@ Create monolithic release notes file from several input files
 from os.path import join, dirname, basename, splitext, relpath
 from glob import glob
 from subprocess import check_output, CalledProcessError
+from shutil import which
 import datetime
 
 
@@ -119,7 +120,9 @@ def _get_date(commit):
     Get date
     """
     date_str = (
-        check_output(["git", "log", "-1", "--format=%ci", commit]).decode().strip()
+        check_output([which("git"), "log", "-1", "--format=%ci", commit])
+        .decode()
+        .strip()
     )
     date_str = " ".join(date_str.split(" ")[0:2])
     return datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")

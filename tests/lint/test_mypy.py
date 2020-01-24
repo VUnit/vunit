@@ -11,7 +11,6 @@ MyPy check
 import unittest
 import sys
 from subprocess import check_call
-from vunit import ROOT
 
 
 class TestMyPy(unittest.TestCase):

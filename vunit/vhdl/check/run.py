@@ -4,14 +4,13 @@
 #
 # Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
-from os.path import join, dirname, basename
+from pathlib import Path
+from glob import glob
+import sys
 from vunit import VUnit, ROOT
 from vunit.check_preprocessor import CheckPreprocessor
-from glob import glob
 
-import sys
-
-sys.path.append(join(dirname(__file__), "tools"))
+sys.path.append(str(Path(__file__).parent / "tools"))
 
 import generate_check_equal
 import generate_check_match
@@ -19,28 +18,31 @@ import generate_check_match
 generate_check_equal.main()
 generate_check_match.main()
 
-ui = VUnit.from_argv()
+VU = VUnit.from_argv()
 
-lib = ui.add_library("lib")
-lib.add_source_files(join(ROOT, "vunit", "vhdl", "check", "test", "test_support.vhd"))
-logging_tb_lib = ui.add_library("logging_tb_lib")
-logging_tb_lib.add_source_files(
-    join(ROOT, "vunit", "vhdl", "logging", "test", "test_support_pkg.vhd")
+LIB = VU.add_library("lib")
+LIB.add_source_files(
+    Path(ROOT) / "vunit" / "vhdl" / "check" / "test" / "test_support.vhd"
+)
+VU.add_library("logging_tb_lib").add_source_files(
+    Path(ROOT) / "vunit" / "vhdl" / "logging" / "test" / "test_support_pkg.vhd"
 )
 
-for file_name in glob(join(ROOT, "vunit", "vhdl", "check", "test", "tb_*.vhd")):
-    if ui.vhdl_standard not in ["2008", "2019"] and file_name.endswith("2008p.vhd"):
+for file_name in glob(
+    str(Path(ROOT) / "vunit" / "vhdl" / "check" / "test" / "tb_*.vhd")
+):
+    if VU.vhdl_standard not in ["2008", "2019"] and file_name.endswith("2008p.vhd"):
         continue
 
-    if basename(file_name).startswith("tb_check_relation"):
-        lib.add_source_files(file_name, preprocessors=[CheckPreprocessor()])
+    if Path(file_name).name.startswith("tb_check_relation"):
+        LIB.add_source_files(file_name, preprocessors=[CheckPreprocessor()])
     else:
-        lib.add_source_files(file_name)
+        LIB.add_source_files(file_name)
 
-tb_check = lib.entity("tb_check")
-tb_check.add_config(generics=dict(use_check_not_check_true=True), name="using check")
-tb_check.add_config(
+TB_CHECK = LIB.entity("tb_check")
+TB_CHECK.add_config(generics=dict(use_check_not_check_true=True), name="using check")
+TB_CHECK.add_config(
     generics=dict(use_check_not_check_true=False), name="using check_true"
 )
 
-ui.main()
+VU.main()

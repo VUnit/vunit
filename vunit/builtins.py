@@ -8,14 +8,14 @@
 Functions to add builtin VHDL code to a project for compilation
 """
 
-from os.path import join, abspath, dirname, basename
+from pathlib import Path
 from glob import glob
 from warnings import warn
 from vunit.vhdl_standard import VHDL, VHDLStandard
 from vunit.sim_if.common import simulator_check
 
-VHDL_PATH = abspath(join(dirname(__file__), "vhdl"))
-VERILOG_PATH = abspath(join(dirname(__file__), "verilog"))
+VHDL_PATH = (Path(__file__).parent / "vhdl").resolve()
+VERILOG_PATH = (Path(__file__).parent / "verilog").resolve()
 
 
 class Builtins(object):
@@ -52,8 +52,8 @@ class Builtins(object):
             and self._vhdl_standard.supports_context
         )
 
-        for file_name in glob(pattern):
-            base_file_name = basename(file_name)
+        for file_name in glob(str(pattern)):
+            base_file_name = Path(file_name).name
 
             standards = set()
             for standard in VHDL.STANDARDS:
@@ -79,7 +79,7 @@ class Builtins(object):
                          {'string': <VAL>, 'integer': <VAL>}. Allowed values are: None, False/True or
                          ['path/to/custom/file'].
         """
-        self._add_files(join(VHDL_PATH, "data_types", "src", "*.vhd"))
+        self._add_files(VHDL_PATH / "data_types" / "src" / "*.vhd")
 
         use_ext = {"string": False, "integer": False}
         files = {"string": None, "integer": None}
@@ -98,18 +98,24 @@ class Builtins(object):
                     "the selected simulator does not support VHPI; must use non-VHPI packages..."
                 )
 
-        ext_path = join(VHDL_PATH, "data_types", "src", "external")
+        ext_path = VHDL_PATH / "data_types" / "src" / "external"
 
         def default_files(cond, type_str):
             """
             Return name of VHDL file with default VHPIDIRECT foreign declarations.
             """
             return [
-                join(
-                    ext_path,
-                    "external_" + type_str + "-" + ("" if cond else "no") + "vhpi.vhd",
+                str(
+                    ext_path
+                    / (
+                        "external_"
+                        + type_str
+                        + "-"
+                        + ("" if cond else "no")
+                        + "vhpi.vhd"
+                    )
                 ),
-                join(ext_path, "external_" + type_str + "-body.vhd"),
+                str(ext_path / ("external_" + type_str + "-body.vhd")),
             ]
 
         if not files["string"]:
@@ -135,7 +141,7 @@ class Builtins(object):
         )
         warn(arr_deprecation_note, Warning)
 
-        self._vunit_lib.add_source_files(join(VHDL_PATH, "array", "src", "*.vhd"))
+        self._vunit_lib.add_source_files(VHDL_PATH / "array" / "src" / "*.vhd")
 
     def _add_random(self):
         """
@@ -144,7 +150,7 @@ class Builtins(object):
         if not self._vhdl_standard >= VHDL.STD_2008:
             raise RuntimeError("Random only supports vhdl 2008 and later")
 
-        self._vunit_lib.add_source_files(join(VHDL_PATH, "random", "src", "*.vhd"))
+        self._vunit_lib.add_source_files(VHDL_PATH / "random" / "src" / "*.vhd")
 
     def _add_com(self):
         """
@@ -155,7 +161,7 @@ class Builtins(object):
                 "Communication package only supports vhdl 2008 and later"
             )
 
-        self._add_files(join(VHDL_PATH, "com", "src", "*.vhd"))
+        self._add_files(VHDL_PATH / "com" / "src" / "*.vhd")
 
     def _add_verification_components(self):
         """
@@ -165,7 +171,7 @@ class Builtins(object):
             raise RuntimeError(
                 "Verification component library only supports vhdl 2008 and later"
             )
-        self._add_files(join(VHDL_PATH, "verification_components", "src", "*.vhd"))
+        self._add_files(VHDL_PATH / "verification_components" / "src" / "*.vhd")
 
     def _add_osvvm(self):
         """
@@ -193,22 +199,23 @@ git submodule update --init --recursive
 in your VUnit Git repository? You have to do this first if installing using setup.py."""
             )
 
-        for file_name in glob(join(VHDL_PATH, "osvvm", "*.vhd")):
-            if basename(file_name) == "AlertLogPkg_body_BVUL.vhd":
-                continue
-
-            if (simulator_coverage_api != "rivierapro") and (
-                basename(file_name) == "VendorCovApiPkg_Aldec.vhd"
-            ):
-                continue
-
-            if (simulator_coverage_api == "rivierapro") and (
-                basename(file_name) == "VendorCovApiPkg.vhd"
+        for file_name in glob(str(VHDL_PATH / "osvvm" / "*.vhd")):
+            bname = Path(file_name).name
+            if (
+                bname == "AlertLogPkg_body_BVUL.vhd"
+                or (
+                    (simulator_coverage_api != "rivierapro")
+                    and (bname == "VendorCovApiPkg_Aldec.vhd")
+                )
+                or (
+                    (simulator_coverage_api == "rivierapro")
+                    and (bname == "VendorCovApiPkg.vhd")
+                )
             ):
                 continue
 
             if not supports_vhdl_package_generics and (
-                basename(file_name)
+                bname
                 in [
                     "ScoreboardGenericPkg.vhd",
                     "ScoreboardPkg_int.vhd",
@@ -230,13 +237,13 @@ in your VUnit Git repository? You have to do this first if installing using setu
         except KeyError:
             library = self._vunit_obj.add_library(library_name)
 
-        library.add_source_files(join(VHDL_PATH, "JSON-for-VHDL", "vhdl", "*.vhdl"))
+        library.add_source_files(VHDL_PATH / "JSON-for-VHDL" / "vhdl" / "*.vhdl")
 
     def add_verilog_builtins(self):
         """
         Add Verilog builtins
         """
-        self._vunit_lib.add_source_files(join(VERILOG_PATH, "vunit_pkg.sv"))
+        self._vunit_lib.add_source_files(VERILOG_PATH / "vunit_pkg.sv")
 
     def add_vhdl_builtins(self, external=None):
         """
@@ -247,7 +254,7 @@ in your VUnit Git repository? You have to do this first if installing using setu
                          ['path/to/custom/file'].
         """
         self._add_data_types(external=external)
-        self._add_files(join(VHDL_PATH, "*.vhd"))
+        self._add_files(VHDL_PATH / "*.vhd")
         for path in (
             "core",
             "logging",
@@ -257,21 +264,21 @@ in your VUnit Git repository? You have to do this first if installing using setu
             "run",
             "path",
         ):
-            self._add_files(join(VHDL_PATH, path, "src", "*.vhd"))
+            self._add_files(VHDL_PATH / path / "src" / "*.vhd")
 
 
 def osvvm_is_installed():
     """
     Checks if OSVVM is installed within the VUnit directory structure
     """
-    return len(glob(join(VHDL_PATH, "osvvm", "*.vhd"))) != 0
+    return len(glob(str(VHDL_PATH / "osvvm" / "*.vhd"))) != 0
 
 
 def add_verilog_include_dir(include_dirs):
     """
     Add VUnit Verilog include directory
     """
-    return [join(VERILOG_PATH, "include")] + include_dirs
+    return [str(VERILOG_PATH / "include")] + include_dirs
 
 
 class BuiltinsAdder(object):

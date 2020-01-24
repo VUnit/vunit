@@ -12,15 +12,15 @@ def post_run(results):
     results.merge_coverage(file_name="coverage_data")
 
 
-vu = VUnit.from_argv()
+VU = VUnit.from_argv()
 
-lib = vu.add_library("lib")
-lib.add_source_files(Path(__file__).parent / "*.vhd")
+LIB = VU.add_library("lib")
+LIB.add_source_files(Path(__file__).parent / "*.vhd")
 
-lib.set_compile_option("rivierapro.vcom_flags", ["-coverage", "bs"])
-lib.set_compile_option("rivierapro.vlog_flags", ["-coverage", "bs"])
-lib.set_compile_option("modelsim.vcom_flags", ["+cover=bs"])
-lib.set_compile_option("modelsim.vlog_flags", ["+cover=bs"])
-lib.set_sim_option("enable_coverage", True)
+LIB.set_compile_option("rivierapro.vcom_flags", ["-coverage", "bs"])
+LIB.set_compile_option("rivierapro.vlog_flags", ["-coverage", "bs"])
+LIB.set_compile_option("modelsim.vcom_flags", ["+cover=bs"])
+LIB.set_compile_option("modelsim.vlog_flags", ["+cover=bs"])
+LIB.set_sim_option("enable_coverage", True)
 
-vu.main(post_run=post_run)
+VU.main(post_run=post_run)

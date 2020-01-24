@@ -14,10 +14,10 @@ Demonstrates the VUnit check library.
 from pathlib import Path
 from vunit import VUnit
 
-vu = VUnit.from_argv()
+VU = VUnit.from_argv()
 
 # Enable location preprocessing but exclude all but check_false to make the example less bloated
-vu.enable_location_preprocessing(
+VU.enable_location_preprocessing(
     exclude_subprograms=[
         "debug",
         "info",
@@ -36,8 +36,8 @@ vu.enable_location_preprocessing(
     ]
 )
 
-vu.enable_check_preprocessing()
+VU.enable_check_preprocessing()
 
-vu.add_library("lib").add_source_files(Path(__file__).parent / "tb_example.vhd")
+VU.add_library("lib").add_source_files(Path(__file__).parent / "tb_example.vhd")
 
-vu.main()
+VU.main()

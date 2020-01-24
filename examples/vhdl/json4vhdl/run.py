@@ -16,15 +16,15 @@ This is an alternative to composite generics, that supports any depth in the con
 from pathlib import Path
 from vunit import VUnit, read_json, encode_json
 
-test_path = Path(__file__).parent / "src" / "test"
+TEST_PATH = Path(__file__).parent / "src" / "test"
 
-vu = VUnit.from_argv()
-vu.add_json4vhdl()
+VU = VUnit.from_argv()
+VU.add_json4vhdl()
 
-vu.add_library("test").add_source_files(test_path / "*.vhd")
+VU.add_library("test").add_source_files(TEST_PATH / "*.vhd")
 
-tb_cfg = read_json(test_path / "data" / "data.json")
-tb_cfg["dump_debug_data"] = False
-vu.set_generic("tb_cfg", encode_json(tb_cfg))
+TB_CFG = read_json(TEST_PATH / "data" / "data.json")
+TB_CFG["dump_debug_data"] = False
+VU.set_generic("tb_cfg", encode_json(TB_CFG))
 
-vu.main()
+VU.main()

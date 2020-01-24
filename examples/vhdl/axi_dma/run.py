@@ -18,14 +18,14 @@ via AXI-lite.
 from pathlib import Path
 from vunit import VUnit
 
-vu = VUnit.from_argv()
-vu.add_osvvm()
-vu.add_verification_components()
+VU = VUnit.from_argv()
+VU.add_osvvm()
+VU.add_verification_components()
 
-src_path = Path(__file__).parent / "src"
+SRC_PATH = Path(__file__).parent / "src"
 
-vu.add_library("axi_dma_lib").add_source_files(
-    [src_path / "*.vhd", src_path / "test" / "*.vhd"]
+VU.add_library("axi_dma_lib").add_source_files(
+    [SRC_PATH / "*.vhd", SRC_PATH / "test" / "*.vhd"]
 )
 
-vu.main()
+VU.main()

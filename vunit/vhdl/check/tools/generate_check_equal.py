@@ -529,10 +529,7 @@ def generate_api():
 
 
 def dual_format(base_type, got_or_expected):
-    if got_or_expected == "got":
-        expected_or_got = "expected"
-    else:
-        expected_or_got = "got"
+    expected_or_got = "expected" if got_or_expected == "got" else "got"
 
     if base_type in ["unsigned", "signed", "std_logic_vector"]:
         return (
@@ -540,20 +537,17 @@ def dual_format(base_type, got_or_expected):
             + "to_integer_string(%s) & " % got_or_expected
             + '")"'
         )
-    elif base_type == "integer":
-        return (
-            'to_string(%s) & " (" & ' % got_or_expected
-            + "to_nibble_string(to_sufficient_signed(%s, %s'length)) & "
-            % (got_or_expected, expected_or_got)
-            + '")"'
+
+    return (
+        'to_string(%s) & " (" & ' % got_or_expected
+        + "to_nibble_string(to_sufficient_%s(%s, %s'length)) & "
+        % (
+            ("signed" if base_type == "integer" else "unsigned"),
+            got_or_expected,
+            expected_or_got,
         )
-    else:
-        return (
-            'to_string(%s) & " (" & ' % got_or_expected
-            + "to_nibble_string(to_sufficient_unsigned(%s, %s'length)) & "
-            % (got_or_expected, expected_or_got)
-            + '")"'
-        )
+        + '")"'
+    )
 
 
 def generate_impl():

@@ -10,12 +10,10 @@
 Tests the test test_bench module
 """
 
-
 import unittest
 from os.path import join
-
-from tests.unit.test_test_bench import Entity, Module
 from unittest import mock
+from tests.unit.test_test_bench import Entity, Module
 from tests.common import with_tempdir
 from vunit.test.bench_list import TestBenchList, tb_filter
 

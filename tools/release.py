@@ -17,6 +17,7 @@ from urllib.request import urlopen  # pylint: disable=no-name-in-module, import-
 import sys
 from os.path import dirname, join, exists
 import subprocess
+from shutil import which
 
 
 def main():
@@ -170,7 +171,7 @@ def get_local_version():
 
 def check_tag(version):
     return "v" + version in set(
-        subprocess.check_output(["git", "tag", "--list"]).decode().splitlines()
+        subprocess.check_output([which("git"), "tag", "--list"]).decode().splitlines()
     )
 
 

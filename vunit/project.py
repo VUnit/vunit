@@ -10,6 +10,7 @@
 Functionality to represent and operate on a HDL code project
 """
 from os.path import join, basename, dirname, isdir, exists
+from pathlib import Path
 import logging
 from typing import Optional
 from collections import OrderedDict
@@ -125,16 +126,17 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
 
         :param no_parse: Do not parse file contents
         """
-        if not ostools.file_exists(file_name):
-            raise ValueError("File %r does not exist" % file_name)
+        fname = file_name if isinstance(file_name, Path) else Path(file_name)
+        if not fname.exists():
+            raise ValueError("File %r does not exist" % str(fname))
 
-        LOGGER.debug("Adding source file %s to library %s", file_name, library_name)
+        LOGGER.debug("Adding source file %s to library %s", str(fname), library_name)
         library = self._libraries[library_name]
 
         if file_type == "vhdl":
             assert include_dirs is None
             source_file: SourceFile = VHDLSourceFile(
-                file_name,
+                fname,
                 library,
                 vhdl_parser=self._vhdl_parser,
                 database=self._database,
@@ -146,7 +148,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         elif file_type in VERILOG_FILE_TYPES:
             source_file = VerilogSourceFile(
                 file_type,
-                file_name,
+                fname,
                 library,
                 verilog_parser=self._verilog_parser,
                 database=self._database,

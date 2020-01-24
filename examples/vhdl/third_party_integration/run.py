@@ -7,6 +7,6 @@
 from pathlib import Path
 from vunit import VUnit
 
-vu = VUnit.from_argv()
-vu.add_library("lib").add_source_files(Path(__file__).parent / "test" / "*.vhd")
-vu.main()
+VU = VUnit.from_argv()
+VU.add_library("lib").add_source_files(Path(__file__).parent / "test" / "*.vhd")
+VU.main()

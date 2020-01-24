@@ -9,16 +9,16 @@ from vunit import VUnit
 
 root = dirname(__file__)
 
-ui = VUnit.from_argv()
-lib = ui.add_library("lib")
-lib.add_source_files(join(root, "*.vhd"))
+VU = VUnit.from_argv()
+LIB = VU.add_library("lib")
+LIB.add_source_files(join(root, "*.vhd"))
 
 
-def configure_tb_with_generic_config(ui):
+def configure_tb_with_generic_config():
     """
     Configure tb_with_generic_config test bench
     """
-    bench = lib.entity("tb_with_generic_config")
+    bench = LIB.entity("tb_with_generic_config")
     tests = [bench.test("Test %i" % i) for i in range(5)]
 
     bench.set_generic("set_generic", "set-for-entity")
@@ -81,13 +81,13 @@ def configure_tb_assert_stop_level(ui):
             test.set_sim_option("vhdl_assert_stop_level", vhdl_assert_stop_level)
 
 
-configure_tb_with_generic_config(ui)
-configure_tb_same_sim_all_pass(ui)
-configure_tb_set_generic(ui)
-configure_tb_assert_stop_level(ui)
-lib.entity("tb_no_generic_override").set_generic("g_val", False)
-lib.entity("tb_ieee_warning").test("pass").set_sim_option("disable_ieee_warnings", True)
-lib.entity("tb_other_file_tests").scan_tests_from_file(
+configure_tb_with_generic_config()
+configure_tb_same_sim_all_pass(VU)
+configure_tb_set_generic(VU)
+configure_tb_assert_stop_level(VU)
+LIB.entity("tb_no_generic_override").set_generic("g_val", False)
+LIB.entity("tb_ieee_warning").test("pass").set_sim_option("disable_ieee_warnings", True)
+LIB.entity("tb_other_file_tests").scan_tests_from_file(
     join(root, "other_file_tests.vhd")
 )
-ui.main()
+VU.main()

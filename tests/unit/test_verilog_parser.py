@@ -8,12 +8,11 @@
 Test of the Verilog parser
 """
 
-from unittest import TestCase
+from unittest import TestCase, mock
 import os
 from os.path import join, dirname, exists
 import time
 import shutil
-from unittest import mock
 from vunit.ostools import renew_path
 from vunit.parsing.verilog.parser import VerilogParser
 

@@ -19,17 +19,27 @@ def encode(tb_cfg):
     return ", ".join(["%s:%s" % (key, str(tb_cfg[key])) for key in tb_cfg])
 
 
-vu = VUnit.from_argv()
+VU = VUnit.from_argv()
 
-tb_lib = vu.add_library("tb_lib")
-tb_lib.add_source_files(Path(__file__).parent / "test" / "*.vhd")
+TB_LIB = VU.add_library("tb_lib")
+TB_LIB.add_source_files(Path(__file__).parent / "test" / "*.vhd")
 
-test_1 = tb_lib.test_bench("tb_composite_generics").test("Test 1")
+TEST = TB_LIB.test_bench("tb_composite_generics").test("Test 1")
 
-vga_tb_cfg = dict(image_width=640, image_height=480, dump_debug_data=False)
-test_1.add_config(name="VGA", generics=dict(encoded_tb_cfg=encode(vga_tb_cfg)))
+TEST.add_config(
+    name="VGA",
+    generics=dict(
+        encoded_tb_cfg=encode(
+            dict(image_width=640, image_height=480, dump_debug_data=False)
+        )
+    ),
+)
 
-tiny_tb_cfg = dict(image_width=4, image_height=3, dump_debug_data=True)
-test_1.add_config(name="tiny", generics=dict(encoded_tb_cfg=encode(tiny_tb_cfg)))
+TEST.add_config(
+    name="tiny",
+    generics=dict(
+        encoded_tb_cfg=encode(dict(image_width=4, image_height=3, dump_debug_data=True))
+    ),
+)
 
-vu.main()
+VU.main()

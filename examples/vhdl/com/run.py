@@ -16,14 +16,14 @@ can be found in the :ref:`com user guide <com_user_guide>`.
 from pathlib import Path
 from vunit import VUnit
 
-vu = VUnit.from_argv()
-vu.add_com()
-vu.add_verification_components()
-vu.add_osvvm()
+VU = VUnit.from_argv()
+VU.add_com()
+VU.add_verification_components()
+VU.add_osvvm()
 
-root = Path(__file__).parent
+ROOT = Path(__file__).parent
 
-vu.add_library("lib").add_source_files(root / "src" / "*.vhd")
-vu.add_library("tb_lib").add_source_files(root / "test" / "*.vhd")
+VU.add_library("lib").add_source_files(ROOT / "src" / "*.vhd")
+VU.add_library("tb_lib").add_source_files(ROOT / "test" / "*.vhd")
 
-vu.main()
+VU.main()

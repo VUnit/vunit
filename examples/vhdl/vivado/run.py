@@ -16,18 +16,18 @@ from pathlib import Path
 from vunit import VUnit
 from vivado_util import add_vivado_ip
 
-root = Path(__file__).parent
-src_path = root / "src"
+ROOT = Path(__file__).parent
+SRC_PATH = ROOT / "src"
 
-vu = VUnit.from_argv()
+VU = VUnit.from_argv()
 
-vu.add_library("lib").add_source_files(src_path / "*.vhd")
-vu.add_library("tb_lib").add_source_files(src_path / "test" / "*.vhd")
+VU.add_library("lib").add_source_files(SRC_PATH / "*.vhd")
+VU.add_library("tb_lib").add_source_files(SRC_PATH / "test" / "*.vhd")
 
 add_vivado_ip(
-    vu,
-    output_path=root / "vivado_libs",
-    project_file=root / "myproject" / "myproject.xpr",
+    VU,
+    output_path=ROOT / "vivado_libs",
+    project_file=ROOT / "myproject" / "myproject.xpr",
 )
 
-vu.main()
+VU.main()

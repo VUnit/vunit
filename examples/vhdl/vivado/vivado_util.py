@@ -4,10 +4,8 @@
 #
 # Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
-from subprocess import check_call
-import os
-from os.path import join, exists, abspath, dirname, basename
-from os import makedirs
+import sys
+from os.path import join, exists, abspath, dirname
 from vunit.sim_if.factory import SIMULATOR_FACTORY
 from vunit.vivado import (
     run_vivado,
@@ -23,7 +21,7 @@ def add_vivado_ip(vunit_obj, output_path, project_file):
 
     if not exists(project_file):
         print("Could not find vivado project %s" % project_file)
-        exit(1)
+        sys.exit(1)
 
     standard_library_path = join(output_path, "standard")
     compile_standard_libraries(vunit_obj, standard_library_path)

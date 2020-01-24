@@ -60,16 +60,16 @@ def generate_tests(obj, signs, data_widths):
         )
 
 
-vu = VUnit.from_argv()
-lib = vu.add_library("lib")
-lib.add_source_files(Path(__file__).parent / "test" / "*.vhd")
+VU = VUnit.from_argv()
+LIB = VU.add_library("lib")
+LIB.add_source_files(Path(__file__).parent / "test" / "*.vhd")
 
-tb_generated = lib.test_bench("tb_generated")
+TB_GENERATED = LIB.test_bench("tb_generated")
 
 # Just set a generic for all configurations within the test bench
-tb_generated.set_generic("message", "set-for-entity")
+TB_GENERATED.set_generic("message", "set-for-entity")
 
-for test in tb_generated.get_tests():
+for test in TB_GENERATED.get_tests():
     if test.name == "Test 2":
         # Test 2 should only be run with signed width of 16
         generate_tests(test, [True], [16])
@@ -78,4 +78,4 @@ for test in tb_generated.get_tests():
         # Run all other tests with signed/unsigned and data width in range [1,5[
         generate_tests(test, [False, True], range(1, 5))
 
-vu.main()
+VU.main()

@@ -5,8 +5,8 @@
 # Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 from os.path import join, dirname
-from vunit import VUnit
 from itertools import product
+from vunit import VUnit
 
 root = dirname(__file__)
 
@@ -82,24 +82,24 @@ for test in tb_avalon_master.get_tests():
             test, [64], [1.0, 0.3], [0.0, 0.7], [1.0, 0.3], [1.0, 0.3]
         )
 
-tb_wishbone_slave = lib.test_bench("tb_wishbone_slave")
+TB_WISHBONE_SLAVE = lib.test_bench("tb_wishbone_slave")
 
-for test in tb_wishbone_slave.get_tests():
+for test in TB_WISHBONE_SLAVE.get_tests():
     #  TODO strobe_prob not implemented in slave tb
     gen_wb_tests(test, [8, 32], [1, 64], [1.0], [0.3, 1.0], [0.4, 0.0])
 
 
-tb_wishbone_master = lib.test_bench("tb_wishbone_master")
+TB_WISHBONE_MASTER = lib.test_bench("tb_wishbone_master")
 
-for test in tb_wishbone_master.get_tests():
+for test in TB_WISHBONE_MASTER.get_tests():
     gen_wb_tests(test, [8, 32], [1, 64], [0.3, 1.0], [0.3, 1.0], [0.4, 0.0])
 
-tb_axi_stream = lib.test_bench("tb_axi_stream")
+TB_AXI_STREAM = lib.test_bench("tb_axi_stream")
 
 for id_length in [0, 8]:
     for dest_length in [0, 8]:
         for user_length in [0, 8]:
-            for test in tb_axi_stream.get_tests("*check"):
+            for test in TB_AXI_STREAM.get_tests("*check"):
                 test.add_config(
                     name="id_l=%d dest_l=%d user_l=%d"
                     % (id_length, dest_length, user_length),
@@ -110,25 +110,25 @@ for id_length in [0, 8]:
                     ),
                 )
 
-tb_axi_stream_protocol_checker = lib.test_bench("tb_axi_stream_protocol_checker")
+TB_AXI_STREAM_PROTOCOL_CHECKER = lib.test_bench("tb_axi_stream_protocol_checker")
 
 for data_length in [0, 8]:
-    for test in tb_axi_stream_protocol_checker.get_tests("*passing*tdata*"):
+    for test in TB_AXI_STREAM_PROTOCOL_CHECKER.get_tests("*passing*tdata*"):
         test.add_config(
             name="data_length=%d" % data_length, generics=dict(data_length=data_length)
         )
 
-for test in tb_axi_stream_protocol_checker.get_tests("*failing*tid width*"):
+for test in TB_AXI_STREAM_PROTOCOL_CHECKER.get_tests("*failing*tid width*"):
     test.add_config(name="dest_length=25", generics=dict(dest_length=25))
     test.add_config(
         name="id_length=8 dest_length=17", generics=dict(id_length=8, dest_length=17)
     )
 
-test_failing_max_waits = tb_axi_stream_protocol_checker.test(
+TEST_FAILING_MAX_WAITS = TB_AXI_STREAM_PROTOCOL_CHECKER.test(
     "Test failing check of that tready comes within max_waits after valid"
 )
 for max_waits in [0, 8]:
-    test_failing_max_waits.add_config(
+    TEST_FAILING_MAX_WAITS.add_config(
         name="max_waits=%d" % max_waits, generics=dict(max_waits=max_waits)
     )
 

@@ -18,7 +18,7 @@ NOTE: This file is expected to be used along with tb_extcp_byte_vector.vhd or tb
 
 extern int ghdl_main (int argc, char **argv);
 
-uint8_t *D[1];
+uint8_t *D[2];
 const uint32_t length = 10;
 
 // Check procedure, to be executed when GHDL exits.
@@ -26,18 +26,16 @@ const uint32_t length = 10;
 // while incrementing each value by one, and then copy elements from [1/3, 2/3) to
 // [2/3, 3/3), while incrementing each value by two.
 static void exit_handler(void) {
-  int i, j, z, k;
-  uint8_t expected, got;
-  k = 0;
-
-  for(i=0; i<length; i++) {
+  uint i;
+  for ( i=0; i<length ; i++ ) {
+    int8_t expected, got;
     expected = D[0][i];
     got = D[1][i];
     if (expected != got) {
-      printf("check error %d: %d %d\n", i, expected, got);
+      printf("check error %u: %d %d\n", i, expected, got);
       exit(1);
     }
-    printf("%d: %d\n", i, got);
+    printf("%u: %d\n", i, got);
   }
 
   free(D[0]);

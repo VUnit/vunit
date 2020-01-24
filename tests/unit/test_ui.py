@@ -12,6 +12,7 @@ Acceptance test of the VUnit public interface class
 
 import unittest
 from string import Template
+from pathlib import Path
 import os
 from os.path import join, dirname, basename, exists, abspath
 import json
@@ -187,7 +188,9 @@ end architecture;
         self.create_file(file_name, contents)
 
         ui.add_source_file(file_name, "lib")
-        logger.assert_called_once_with("Failed to preprocess %s", file_name)
+        logger.assert_called_once_with(
+            "Failed to preprocess %s", Path(file_name).resolve()
+        )
         pp_file = join(self._preprocessed_path, "lib", basename(file_name))
         self.assertFalse(exists(pp_file))
 
@@ -728,7 +731,6 @@ Listed 2 files""".splitlines()
         to test that the Project.add_source_files method gets the correct arguments
         """
         ui = self._create_ui()
-        real_project = ui._project
         fun = mock.Mock()
         retval = mock.Mock()
         retval.design_units = []
@@ -750,7 +752,7 @@ Listed 2 files""".splitlines()
             lib = ui.add_library("lib")
             action(ui, lib)
             add_source_file.assert_called_once_with(
-                abspath("verilog.v"),
+                Path("verilog.v").resolve(),
                 "lib",
                 file_type="verilog",
                 include_dirs=all_include_dirs,
@@ -786,7 +788,7 @@ Listed 2 files""".splitlines()
             lib = ui.add_library("lib")
             action(ui, lib)
             add_source_file.assert_called_once_with(
-                abspath("verilog.v"),
+                Path("verilog.v").resolve(),
                 "lib",
                 file_type="verilog",
                 include_dirs=all_include_dirs,
@@ -823,7 +825,7 @@ Listed 2 files""".splitlines()
                     lib.add_source_file(file_name, no_parse=no_parse)
 
                     add_source_file.assert_called_once_with(
-                        abspath("verilog.v"),
+                        Path("verilog.v").resolve(),
                         "lib",
                         file_type="verilog",
                         include_dirs=all_include_dirs,
@@ -1183,10 +1185,8 @@ end architecture;
             simulator_if
         )
         expected = [
-            lib.get_source_file(  # pylint: disable=protected-access
-                file_name
-            )._source_file
-            for file_name in ["tb_ent2.vhd", "tb_ent.vhd"]
+            lib.get_source_file(fname)._source_file  # pylint: disable=protected-access
+            for fname in ["tb_ent2.vhd", "tb_ent.vhd"]
         ]
         self.assertEqual(
             sorted(target_files, key=lambda x: x.name),

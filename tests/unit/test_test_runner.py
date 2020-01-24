@@ -8,9 +8,8 @@
 Test the test runner
 """
 
-import unittest
 from os.path import join, abspath
-
+import unittest
 from unittest import mock
 from tests.common import with_tempdir
 from vunit.hashing import hash_string

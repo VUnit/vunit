@@ -12,17 +12,13 @@ A more realistic test bench of an UART to show VUnit SystemVerilog
 usage on a typical module.
 """
 
-from os.path import join, dirname
+from pathlib import Path
 from vunit.verilog import VUnit
 
-vu = VUnit.from_argv()
+SRC_PATH = Path(__file__).parent / "src"
 
-src_path = join(dirname(__file__), "src")
+VU = VUnit.from_argv()
+VU.add_library("uart_lib").add_source_files(SRC_PATH / "*.sv")
+VU.add_library("tb_uart_lib").add_source_files(SRC_PATH / "test" / "*.sv")
 
-uart_lib = vu.add_library("uart_lib")
-uart_lib.add_source_files(join(src_path, "*.sv"))
-
-tb_uart_lib = vu.add_library("tb_uart_lib")
-tb_uart_lib.add_source_files(join(src_path, "test", "*.sv"))
-
-vu.main()
+VU.main()

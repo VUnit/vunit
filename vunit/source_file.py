@@ -7,6 +7,8 @@
 """
 Functionality to represent and operate on VHDL and Verilog source files
 """
+from pathlib import Path
+from typing import Union
 from os.path import splitext
 import logging
 from copy import copy
@@ -134,7 +136,7 @@ class VerilogSourceFile(SourceFile):
         defines=None,
         no_parse=False,
     ):
-        SourceFile.__init__(self, name, library, file_type)
+        SourceFile.__init__(self, str(name), library, file_type)
         self.package_dependencies = []
         self.module_dependencies = []
         self.include_dirs = include_dirs if include_dirs is not None else []
@@ -205,14 +207,14 @@ class VHDLSourceFile(SourceFile):
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        name: str,
+        name: Union[str, Path],
         library: Library,
         vhdl_parser,
         database,
         vhdl_standard: VHDLStandard,
         no_parse=False,
     ):
-        SourceFile.__init__(self, name, library, "vhdl")
+        SourceFile.__init__(self, str(name), library, "vhdl")
         self.dependencies = []  # type: ignore
         self.depending_components = []  # type: ignore
         self._vhdl_standard = vhdl_standard

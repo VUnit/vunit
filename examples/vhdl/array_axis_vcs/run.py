@@ -19,13 +19,13 @@ in subsection :ref:`Stream <stream_vci>` and in
 from pathlib import Path
 from vunit import VUnit
 
-vu = VUnit.from_argv()
-vu.add_verification_components()
+VU = VUnit.from_argv()
+VU.add_verification_components()
 
-src_path = Path(__file__).parent / "src"
+SRC_PATH = Path(__file__).parent / "src"
 
-vu.add_library("lib").add_source_files([src_path / "*.vhd", src_path / "**" / "*.vhd"])
+VU.add_library("lib").add_source_files([SRC_PATH / "*.vhd", SRC_PATH / "**" / "*.vhd"])
 
 # vu.set_sim_option('modelsim.init_files.after_load',['runall_addwave.do'])
 
-vu.main()
+VU.main()

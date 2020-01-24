@@ -4,18 +4,17 @@
 #
 # Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
-from vunit.vivado import run_vivado
-from os.path import join, dirname, exists, normpath
+from pathlib import Path
 from shutil import rmtree
+from vunit.vivado import run_vivado
 
 
 def main():
-    root = normpath(dirname(__file__))
+    root = Path(__file__).parent.resolve()
     project_name = "myproject"
-    if exists(join(root, project_name)):
-        rmtree(join(root, project_name))
-
-    run_vivado(join(root, "tcl", "generate_project.tcl"), tcl_args=[root, "myproject"])
+    if (root / project_name).exists():
+        rmtree(root / project_name)
+    run_vivado(root / "tcl" / "generate_project.tcl", tcl_args=[root, "myproject"])
 
 
 if __name__ == "__main__":

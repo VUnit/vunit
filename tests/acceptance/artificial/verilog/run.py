@@ -9,16 +9,16 @@ from vunit.verilog import VUnit
 
 root = dirname(__file__)
 
-ui = VUnit.from_argv()
-lib = ui.add_library("lib")
-lib.add_source_files(join(root, "*.sv"), defines={"DEFINE_FROM_RUN_PY": ""})
+VU = VUnit.from_argv()
+LIB = VU.add_library("lib")
+LIB.add_source_files(join(root, "*.sv"), defines={"DEFINE_FROM_RUN_PY": ""})
 
 
-def configure_tb_with_parameter_config(ui):
+def configure_tb_with_parameter_config():
     """
     Configure tb_with_parameter_config test bench
     """
-    bench = lib.module("tb_with_parameter_config")
+    bench = LIB.module("tb_with_parameter_config")
     tests = [bench.test("Test %i" % i) for i in range(5)]
 
     bench.set_parameter("set_parameter", "set-for-module")
@@ -47,7 +47,7 @@ def configure_tb_with_parameter_config(ui):
     )
 
 
-def configure_tb_same_sim_all_pass(self):
+def configure_tb_same_sim_all_pass(ui):
     def post_check(output_path):
         with open(join(output_path, "post_check.txt"), "r") as fptr:
             return fptr.read() == "Test 3 was here"
@@ -56,9 +56,9 @@ def configure_tb_same_sim_all_pass(self):
     module.add_config("cfg", post_check=post_check)
 
 
-configure_tb_with_parameter_config(ui)
-configure_tb_same_sim_all_pass(ui)
-lib.module("tb_other_file_tests").scan_tests_from_file(
+configure_tb_with_parameter_config()
+configure_tb_same_sim_all_pass(VU)
+LIB.module("tb_other_file_tests").scan_tests_from_file(
     join(root, "other_file_tests.sv")
 )
-ui.main()
+VU.main()

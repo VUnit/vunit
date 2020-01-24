@@ -8,7 +8,6 @@
 UI class Library
 """
 
-from os.path import abspath
 from pathlib import Path
 from glob import glob
 from fnmatch import fnmatch
@@ -250,7 +249,7 @@ class Library(object):
            library.add_source_file("file.vhd")
 
         """
-        file_name = abspath(file_name)
+        file_name = Path(file_name).resolve()
 
         if file_type is None:
             file_type = file_type_of(file_name)
@@ -350,7 +349,7 @@ class Library(object):
         for test_bench in self._test_bench_list.get_test_benches_in_library(
             self._library_name
         ):
-            if not fnmatch(abspath(test_bench.name), pattern):
+            if not fnmatch(Path(test_bench.name).resolve(), pattern):
                 continue
 
             results.append(TestBench(test_bench, self))
