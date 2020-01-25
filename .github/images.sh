@@ -13,9 +13,6 @@ docker build \
 $(curl -fsSL https://raw.githubusercontent.com/ghdl/docker/master/dockerfiles/run_debian)
 
 FROM $TAG AS vunit
-COPY --from=ghdl/pkg:buster-$PKG / /test
-
-RUN tar xzf \$(ls /test/ghdl-*) -C /usr/local/ \\
- && rm -rf /test \
- && pip install -U tox colorama coverage --progress-bar off
+COPY --from=ghdl/pkg:buster-$PKG / /
+RUN pip install -U tox colorama coverage --progress-bar off
 EOF
