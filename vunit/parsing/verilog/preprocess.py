@@ -20,7 +20,21 @@ from vunit.parsing.tokenizer import (
     EOFException,
     LocationException,
 )
-from vunit.parsing.verilog.tokens import *
+from vunit.parsing.verilog.tokens import (
+    COMMA,
+    EQUAL,
+    IDENTIFIER,
+    LBRACE,
+    LBRACKET,
+    LPAR,
+    NEWLINE,
+    PREPROCESSOR,
+    RBRACE,
+    RBRACKET,
+    RPAR,
+    STRING,
+    WHITESPACE,
+)
 from vunit.ostools import read_file
 
 LOGGER = logging.getLogger(__name__)

@@ -22,7 +22,24 @@ from vunit.parsing.verilog.preprocess import (
     find_included_file,
     Macro,
 )
-from vunit.parsing.verilog.tokens import *
+from vunit.parsing.verilog.tokens import (
+    BEGIN,
+    COLON,
+    COMMENT,
+    END,
+    ENDMODULE,
+    DOUBLE_COLON,
+    HASH,
+    IDENTIFIER,
+    IMPORT,
+    MODULE,
+    MULTI_COMMENT,
+    NEWLINE,
+    PACKAGE,
+    PARAMETER,
+    SEMI_COLON,
+    WHITESPACE,
+)
 from vunit.cached import file_content_hash
 
 LOGGER = logging.getLogger(__name__)

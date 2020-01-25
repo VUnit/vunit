@@ -13,7 +13,27 @@ Test of the Verilog tokenizer
 
 from unittest import TestCase
 from vunit.parsing.verilog.tokenizer import VerilogTokenizer
-from vunit.parsing.verilog.tokens import *
+from vunit.parsing.verilog.tokens import (
+    COMMA,
+    COMMENT,
+    ENDMODULE,
+    ENDPACKAGE,
+    EQUAL,
+    HASH,
+    IDENTIFIER,
+    IMPORT,
+    LPAR,
+    MODULE,
+    MULTI_COMMENT,
+    NEWLINE,
+    PACKAGE,
+    PARAMETER,
+    PREPROCESSOR,
+    RPAR,
+    SEMI_COLON,
+    STRING,
+    WHITESPACE,
+)
 
 
 class TestVerilogTokenizer(TestCase):

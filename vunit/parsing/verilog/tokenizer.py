@@ -13,7 +13,30 @@ Verilog preprocessing
 """
 
 from vunit.parsing.tokenizer import Tokenizer, Token
-from vunit.parsing.verilog.tokens import *
+from vunit.parsing.verilog.tokens import (
+    COLON,
+    COMMA,
+    COMMENT,
+    EQUAL,
+    ESCAPED_NEWLINE,
+    DOUBLE_COLON,
+    HASH,
+    IDENTIFIER,
+    KEYWORDS,
+    LBRACE,
+    LBRACKET,
+    LPAR,
+    MULTI_COMMENT,
+    NEWLINE,
+    OTHER,
+    PREPROCESSOR,
+    RBRACE,
+    RBRACKET,
+    RPAR,
+    SEMI_COLON,
+    STRING,
+    WHITESPACE,
+)
 
 
 class VerilogTokenizer(object):
