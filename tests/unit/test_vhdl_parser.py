@@ -538,8 +538,8 @@ record
     def test_remove_comments(self):
         self.assertEqual(remove_comments("a\n-- foo  \nb"), "a\n        \nb")
 
-    def test_issue_529(self):
-        stimulus = "signal a : std_logic_vector(3 downto 0) := \"----\";"
+    def test_two_adjacent_hyphens_in_a_literal(self):
+        stimulus = 'signal a : std_logic_vector(3 downto 0) := "----";'
         self.assertEqual(remove_comments(stimulus), stimulus)
 
     def parse_single_entity(self, code):
