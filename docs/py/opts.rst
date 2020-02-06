@@ -86,10 +86,6 @@ The following simulation options are known.
 ``pli``
   A list of PLI file names.
 
-``ghdl.flags``
-   Extra arguments passed to ``ghdl --elab-run`` command *before* executable specific flags.
-   Must be a list of strings.
-
 ``incisive.irun_sim_flags``
    Extra arguments passed to the Incisive ``irun`` command when loading the design.
    Must be a list of strings.
