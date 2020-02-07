@@ -17,13 +17,14 @@ use work.stream_slave_pkg.all;
 use work.sync_pkg.all;
 
 entity tb_axi_stream is
-  generic(runner_cfg : string;
-      	  g_id_length    : natural := 8;
-          g_dest_length  : natural := 8;
-          g_user_length  : natural := 8;
-          g_stall_percentage_master : natural range 0 to 100 := 0;
-          g_stall_percentage_slave  : natural range 0 to 100 := 0
-        );
+  generic(
+    runner_cfg    : string;
+    g_id_length   : natural := 8;
+    g_dest_length : natural := 8;
+    g_user_length : natural := 8;
+    g_stall_percentage_master : natural range 0 to 100 := 0;
+    g_stall_percentage_slave  : natural range 0 to 100 := 0
+  );
 end entity;
 
 architecture a of tb_axi_stream is
@@ -610,7 +611,7 @@ begin
       tid      => tid,
       tdest    => tdest,
       tuser    => tuser
-      );
+    );
 
   statistics : process(aclk)
   begin
