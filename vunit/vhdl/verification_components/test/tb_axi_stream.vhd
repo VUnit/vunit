@@ -652,7 +652,7 @@ begin
       if tready and axis_stall_stats.ready.start and (not axis_stall_stats.ready.prev) then
         axis_stall_stats.ready.length <= 0;
         axis_stall_stats.ready.min <= minimum(axis_stall_stats.ready.length, axis_stall_stats.ready.min);
-        axis_stall_stats.ready.max <= maximum(axis_stall_Stats.ready.length, axis_stall_stats.ready.max);
+        axis_stall_stats.ready.max <= maximum(axis_stall_stats.ready.length, axis_stall_stats.ready.max);
       end if;
 
     end if;
