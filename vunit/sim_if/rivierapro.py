@@ -327,6 +327,10 @@ proc vunit_load {{}} {{
     # Make the variable 'LICENSE_QUEUE' visible (if set); otherwise vsim
     # will not wait for simulation licenses.
     global LICENSE_QUEUE
+    # Make the variable 'sv_container_non_existent_entry_verbose' visible
+    # (if set); otherwise RUNTIME_0232 and RUNTIME_0222 messages will be
+    # printed even if they have been disabled in startup.tcl.
+    global sv_container_non_existent_entry_verbose
 
     set vsim_failed [catch {{
         eval vsim {{{vsim_flags}}}
