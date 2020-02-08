@@ -11,10 +11,11 @@ and RivieraPRO
 
 import sys
 import os
-from os.path import join, dirname, abspath
+from os.path import join, dirname, abspath, exists
 from ..ostools import write_file, Process
 from ..test.suites import get_result_file_name
 from ..persistent_tcl_shell import PersistentTclShell
+from .utils import read_tcl
 
 
 class VsimSimulatorMixin(object):
@@ -97,86 +98,30 @@ class VsimSimulatorMixin(object):
             ["{%s}" % part for part in recompile_command_eval]
         )
 
-        tcl = """
-proc vunit_compile {} {
-    set cmd_show {%s}
-    puts "Re-compiling using command ${cmd_show}"
-
-    set chan [open |[list %s] r]
-
-    while {[gets $chan line] >= 0} {
-        puts $line
-    }
-
-    if {[catch {close $chan} error_msg]} {
-        puts "Re-compile failed"
-        puts ${error_msg}
-        return true
-    } else {
-        puts "Re-compile finished"
-        return false
-    }
-}
-
-proc vunit_restart {} {
-    if {![vunit_compile]} {
-        _vunit_sim_restart
-        vunit_run
-    }
-}
-""" % (
-            recompile_command_visual,
-            recompile_command_eval_tcl,
+        tcl = read_sim_if_tcl(
+            "vunit_compile.tcl",
+            recompile_command_visual=recompile_command_visual,
+            recompile_command_eval_tcl=recompile_command_eval_tcl,
         )
         return tcl
+
+    @staticmethod
+    def _create_wave_function(config):
+        wave_path = fix_path(join(config.tb_path, "wave.do"))
+        return read_sim_if_tcl("vunit_wave.tcl", wave_path=wave_path)
 
     def _create_common_script(self, test_suite_name, config, script_path, output_path):
         """
         Create tcl script with functions common to interactive and batch modes
         """
-        tcl = """
-proc vunit_help {} {
-    puts {List of VUnit commands:}
-    puts {vunit_help}
-    puts {  - Prints this help}
-    puts {vunit_load [vsim_extra_args]}
-    puts {  - Load design with correct generics for the test}
-    puts {  - Optional first argument are passed as extra flags to vsim}
-    puts {vunit_user_init}
-    puts {  - Re-runs the user defined init file}
-    puts {vunit_run}
-    puts {  - Run test, must do vunit_load first}
-    puts {vunit_compile}
-    puts {  - Recompiles the source files}
-    puts {vunit_restart}
-    puts {  - Recompiles the source files}
-    puts {  - and re-runs the simulation if the compile was successful}
-}
-
-proc vunit_run {} {
-    if {[catch {_vunit_run} failed_or_err]} {
-        echo $failed_or_err
-        return true;
-    }
-
-    if {![is_test_suite_done]} {
-        echo
-        echo "Test Run Failed!"
-        echo
-        _vunit_run_failure;
-        return true;
-    }
-
-    return false;
-}
-
-"""
+        tcl = read_sim_if_tcl("vunit_common.tcl")
         tcl += self._create_init_files_after_load(config)
         tcl += self._create_init_files_before_run(config)
         tcl += self._create_load_function(test_suite_name, config, script_path)
         tcl += get_is_test_suite_done_tcl(get_result_file_name(output_path))
         tcl += self._create_run_function()
         tcl += self._create_restart_function()
+        tcl += self._create_wave_function(config)
         return tcl
 
     @staticmethod
@@ -202,7 +147,12 @@ proc vunit_run {} {
         """
         opt_name = self.name + ".init_files.after_load"
         init_files = config.sim_options.get(opt_name, [])
-        tcl = "proc _vunit_source_init_files_after_load {} {\n"
+        default_wave = join(config.tb_path, "wave.do")
+        if exists(default_wave):
+            init_files.append(default_wave)
+        gui = 1 if self._gui else 0
+        tcl = "set gui %s\n" % str(gui)
+        tcl += "proc _vunit_source_init_files_after_load {} {\n"
         for init_file in init_files:
             tcl += self._source_tcl_file(init_file, config, opt_name)
         tcl += "    return 0\n"
@@ -354,22 +304,7 @@ def get_is_test_suite_done_tcl(vunit_result_file):
     Returns tcl procedure to detect if simulation was successful or not
     Simulation is considered successful if the test_suite_done was reached in the results file
     """
-
-    tcl = """
-proc is_test_suite_done {} {
-    set fd [open "%s" "r"]
-    set contents [read $fd]
-    close $fd
-    set lines [split $contents "\n"]
-    foreach line $lines {
-        if {$line=="test_suite_done"} {
-           return true;
-        }
-    }
-
-    return false;
-}
-""" % (
-        fix_path(vunit_result_file)
+    tcl = read_sim_if_tcl(
+        "is_test_suite_done.tcl", vunit_result_file=fix_path(vunit_result_file)
     )
     return tcl
