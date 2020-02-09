@@ -321,19 +321,13 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
 
         tcl = """
 proc vunit_load {{}} {{
-    # Make the variable 'aldec' visible; otherwise, the Matlab interface
-    # is broken because vsim does not find the library aldec_matlab_cosim.
-    global aldec
-    # Make the variable 'LICENSE_QUEUE' visible (if set); otherwise vsim
-    # will not wait for simulation licenses.
-    global LICENSE_QUEUE
-    # Make the variable 'sv_container_non_existent_entry_verbose' visible
-    # (if set); otherwise RUNTIME_0232 and RUNTIME_0222 messages will be
-    # printed even if they have been disabled in startup.tcl.
-    global sv_container_non_existent_entry_verbose
-
+    # Run the 'vsim' command in the global variable context. This will make
+    # variables such as 'aldec' visible, otherwise the Matlab interface
+    # is broken because vsim does not find the library aldec_matlab_cosim,
+    # and 'LICENSE_QUEUE' visible (if set); otherwise vsim will not wait 
+    # for simulation licenses.
     set vsim_failed [catch {{
-        eval vsim {{{vsim_flags}}}
+        uplevel #0 vsim {{{vsim_flags}}}
     }}]
 
     if {{${{vsim_failed}}}} {{
