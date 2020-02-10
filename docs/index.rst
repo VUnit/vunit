@@ -34,6 +34,7 @@ Latest Posts
 .. toctree::
    :hidden:
 
+   blog/index
    about
    installing
    documentation
