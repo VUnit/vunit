@@ -1,10 +1,21 @@
 
-.. vunit index file, created by `ablog start` on Fri Jan 29 21:15:19 2016.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. centered:: |shieldRepo|_ |shieldPyPI|_ |shieldGitter|_ |shieldTwitter|_
+
+.. |shieldRepo| image:: https://img.shields.io/badge/VUnit/vunit-0c479d.svg?longCache=true&style=flat-square&logo=github
+.. _shieldRepo: https://github.com/VUnit/vunit
+
+.. |shieldPyPI| image:: https://img.shields.io/pypi/v/vunit_hdl?longCache=true&style=flat-square&label=PyPI&logo=PyPI&logoColor=FFF
+.. _shieldPyPI: https://pypi.org/project/vunit-hdl/
+
+.. |shieldGitter| image:: https://img.shields.io/gitter/room/VUnit/vunit.svg?longCache=true&style=flat-square&logo=gitter&logoColor=4db797&color=4db797
+.. _shieldGitter: https://gitter.im/VUnit/vunit
+
+.. |shieldTwitter| image:: https://img.shields.io/twitter/follow/VUnitFramework.svg?longCache=true&style=flat-square&color=1DA1F2&label=%40VUnitFramework&logo=twitter&logoColor=fff
+.. _shieldTwitter: https://www.twitter.com/VUnitFramework
 
 VUnit
 =====
+
 VUnit is an open source unit testing framework for VHDL/SystemVerilog
 released under the terms of Mozilla Public License, v. 2.0. It
 features the functionality needed to realize continuous and automated
@@ -13,23 +24,6 @@ traditional testing methodologies by supporting a "test early and
 often" approach through automation. :ref:`Read more <about>`
 
 .. image:: vunit_demo.gif
-
-Latest Posts
-------------
-
-.. postlist:: 5
-   :date: %B %d, %Y
-   :format: {title} by {author} on {date}
-   :list-style: disk
-   :excerpts:
-
-
-.. `toctree` directive, below, contains list of non-post `.rst` files.
-   This is how they appear in Navigation sidebar. Note that directive
-   also contains `:hidden:` option so that it is not included inside the page.
-
-   Posts are excluded from this directive so that they aren't double listed
-   in the sidebar both under Navigation and Recent Posts.
 
 .. toctree::
    :hidden:
