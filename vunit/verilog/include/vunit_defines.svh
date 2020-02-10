@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at http://mozilla.org/MPL/2.0/.
 //
-// Copyright (c) 2015-2016, Lars Asplund lars.anders.asplund@gmail.com
+// Copyright (c) 2015-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 `define WATCHDOG(runtime) \
    initial begin \
@@ -34,7 +34,7 @@
          arg_str = arg_str.substr(i, arg_str.len()-1); \
       break; \
       end \
-   end 
+   end
 `define CREATE_MSG(full_msg,func_name,got,expected,prefix,msg=__none__) \
    string __none__; \
    string got_str; \
@@ -45,7 +45,7 @@
    expected_str ="";\
    `CREATE_ARG_STRING(got, got_str); \
    `CREATE_ARG_STRING(expected, expected_str); \
-   full_msg = {func_name, " failed! Got ",`"got`", "=",  got_str, " expected ", prefix, expected_str, ". ", msg}; 
+   full_msg = {func_name, " failed! Got ",`"got`", "=",  got_str, " expected ", prefix, expected_str, ". ", msg};
 `define CHECK_EQUAL(got,expected,msg=__none__) \
         assert ((got) === (expected)) else \
           begin \
