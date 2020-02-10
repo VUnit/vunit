@@ -11,8 +11,12 @@ context work.vunit_context;
 context work.com_context;
 use work.stream_master_pkg.all;
 use work.axi_stream_pkg.all;
+use work.axi_stream_private_pkg.all;
 use work.queue_pkg.all;
 use work.sync_pkg.all;
+
+library osvvm;
+use osvvm.RandomPkg.RandomPType;
 
 entity axi_stream_master is
   generic (
@@ -42,6 +46,22 @@ architecture a of axi_stream_master is
   constant message_queue           : queue_t    := new_queue;
   signal   notify_bus_process_done : std_logic  := '0';
 
+  procedure drive_invalid_output(signal l_tdata : out std_logic_vector(data_length(master)-1 downto 0);
+                                 signal l_tkeep : out std_logic_vector(data_length(master)/8-1 downto 0);
+                                 signal l_tstrb : out std_logic_vector(data_length(master)/8-1 downto 0);
+                                 signal l_tid   : out std_logic_vector(id_length(master)-1 downto 0);
+                                 signal l_tdest : out std_logic_vector(dest_length(master)-1 downto 0);
+                                 signal l_tuser : out std_logic_vector(user_length(master)-1 downto 0))
+  is
+  begin
+    l_tdata <= (others => drive_invalid_val);
+    l_tkeep <= (others => drive_invalid_val);
+    l_tstrb <= (others => drive_invalid_val);
+    l_tid   <= (others => drive_invalid_val);
+    l_tdest <= (others => drive_invalid_val);
+    l_tuser <= (others => drive_invalid_val_user);
+  end procedure;
+
 begin
 
   main : process
@@ -69,68 +89,71 @@ begin
   bus_process : process
     variable msg : msg_t;
     variable msg_type : msg_type_t;
+    variable rnd : RandomPType;
   begin
-    if drive_invalid then
-      tdata <= (others => drive_invalid_val);
-      tkeep <= (others => drive_invalid_val);
-      tstrb <= (others => drive_invalid_val);
-      tid   <= (others => drive_invalid_val);
-      tdest <= (others => drive_invalid_val);
-      tuser <= (others => drive_invalid_val_user);
-    end if;
+    rnd.InitSeed(rnd'instance_name);
+    loop
+      if drive_invalid then
+        drive_invalid_output(tdata, tkeep, tstrb, tid, tdest, tuser);
+      end if;
 
-    -- Wait for messages to arrive on the queue, posted by the process above
-    wait until rising_edge(aclk) and (not is_empty(message_queue) or areset_n = '0');
+      -- Wait for messages to arrive on the queue, posted by the process above
+      wait until rising_edge(aclk) and (not is_empty(message_queue) or areset_n = '0');
 
-    if (areset_n = '0') then
-      tvalid <= '0';
-    else
-      while not is_empty(message_queue) loop
-        msg := pop(message_queue);
-        msg_type := message_type(msg);
+      if (areset_n = '0') then
+        tvalid <= '0';
+      else
+        while not is_empty(message_queue) loop
+          msg := pop(message_queue);
+          msg_type := message_type(msg);
 
-        if msg_type = wait_for_time_msg then
-          handle_sync_message(net, msg_type, msg);
-          -- Re-align with the clock when a wait for time message was handled, because this breaks edge alignment.
-          wait until rising_edge(aclk);
-        elsif msg_type = notify_request_msg then
-          -- Ignore this message, but expect it
-        elsif msg_type = stream_push_msg or msg_type = push_axi_stream_msg then
-          tvalid <= '1';
-          tdata <= pop_std_ulogic_vector(msg);
-          if msg_type = push_axi_stream_msg then
-            tlast <= pop_std_ulogic(msg);
-            tkeep <= pop_std_ulogic_vector(msg);
-            tstrb <= pop_std_ulogic_vector(msg);
-            tid <= pop_std_ulogic_vector(msg);
-            tdest <= pop_std_ulogic_vector(msg);
-            tuser <= pop_std_ulogic_vector(msg);
-          else
-            if pop_boolean(msg) then
-              tlast <= '1';
+          if msg_type = wait_for_time_msg then
+            handle_sync_message(net, msg_type, msg);
+            -- Re-align with the clock when a wait for time message was handled, because this breaks edge alignment.
+            wait until rising_edge(aclk);
+          elsif msg_type = notify_request_msg then
+            -- Ignore this message, but expect it
+          elsif msg_type = stream_push_msg or msg_type = push_axi_stream_msg then
+            drive_invalid_output(tdata, tkeep, tstrb, tid, tdest, tuser);
+            -- stall according to probability configuration
+            probability_stall_axi_stream(aclk, master, rnd);
+
+            tvalid <= '1';
+            tdata <= pop_std_ulogic_vector(msg);
+            if msg_type = push_axi_stream_msg then
+              tlast <= pop_std_ulogic(msg);
+              tkeep <= pop_std_ulogic_vector(msg);
+              tstrb <= pop_std_ulogic_vector(msg);
+              tid <= pop_std_ulogic_vector(msg);
+              tdest <= pop_std_ulogic_vector(msg);
+              tuser <= pop_std_ulogic_vector(msg);
             else
-              tlast <= '0';
+              if pop_boolean(msg) then
+                tlast <= '1';
+              else
+                tlast <= '0';
+              end if;
+              tkeep <= (others => '1');
+              tstrb <= (others => '1');
+              tid   <= (others => '0');
+              tdest <= (others => '0');
+              tuser <= (others => '0');
             end if;
-            tkeep <= (others => '1');
-            tstrb <= (others => '1');
-            tid   <= (others => '0');
-            tdest <= (others => '0');
-            tuser <= (others => '0');
+            wait until ((tvalid and tready) = '1' or areset_n = '0') and rising_edge(aclk);
+            tvalid <= '0';
+            tlast <= '0';
+          else
+            unexpected_msg_type(msg_type);
           end if;
-          wait until ((tvalid and tready) = '1' or areset_n = '0') and rising_edge(aclk);
-          tvalid <= '0';
-          tlast <= '0';
-        else
-          unexpected_msg_type(msg_type);
-        end if;
 
-        delete(msg);
-      end loop;
+          delete(msg);
+        end loop;
 
-      notify_bus_process_done <= '1';
-      wait until notify_bus_process_done = '1';
-      notify_bus_process_done <= '0';
-    end if;
+        notify_bus_process_done <= '1';
+        wait until notify_bus_process_done = '1';
+        notify_bus_process_done <= '0';
+      end if;
+    end loop;
   end process;
 
   axi_stream_monitor_generate : if master.p_monitor /= null_axi_stream_monitor generate

@@ -11,8 +11,12 @@ context work.vunit_context;
 context work.com_context;
 use work.stream_slave_pkg.all;
 use work.axi_stream_pkg.all;
+use work.axi_stream_private_pkg.all;
 use work.sync_pkg.all;
 use work.string_ptr_pkg.all;
+
+library osvvm;
+use osvvm.RandomPkg.RandomPType;
 
 entity axi_stream_slave is
   generic (
@@ -76,66 +80,73 @@ begin
       tdest(tdest'range),
       tuser(tuser'range)
     );
+    variable rnd : RandomPType;
   begin
-      -- Wait for messages to arrive on the queue, posted by the process above
-    wait until rising_edge(aclk) and (not is_empty(message_queue));
+    rnd.InitSeed(rnd'instance_name);
+    loop
+        -- Wait for messages to arrive on the queue, posted by the process above
+      wait until rising_edge(aclk) and (not is_empty(message_queue));
 
-    while not is_empty(message_queue) loop
-      msg := pop(message_queue);
-      msg_type := message_type(msg);
+      while not is_empty(message_queue) loop
+        msg := pop(message_queue);
+        msg_type := message_type(msg);
 
-      if msg_type = wait_for_time_msg then
-        handle_sync_message(net, msg_type, msg);
-        wait until rising_edge(aclk);
-      elsif msg_type = notify_request_msg then
-        -- Ignore this message, but expect it
-      elsif msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg then
-        tready <= '1';
-        wait until (tvalid and tready) = '1' and rising_edge(aclk);
-        tready <= '0';
+        if msg_type = wait_for_time_msg then
+          handle_sync_message(net, msg_type, msg);
+          wait until rising_edge(aclk);
+        elsif msg_type = notify_request_msg then
+          -- Ignore this message, but expect it
+        elsif msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg then
 
-        axi_stream_transaction := (
-          tdata => tdata,
-          tlast => tlast = '1',
-          tkeep => tkeep,
-          tstrb => tstrb,
-          tid   => tid,
-          tdest => tdest,
-          tuser => tuser
-        );
+          -- stall according to probability configuration
+          probability_stall_axi_stream(aclk, slave, rnd);
 
-        reply_msg := new_axi_stream_transaction_msg(axi_stream_transaction);
-        reply(net, msg, reply_msg);
-      elsif msg_type = check_axi_stream_msg then
-        tready <= '1';
-        wait until (tvalid and tready) = '1' and rising_edge(aclk);
-        tready <= '0';
+          tready <= '1';
+          wait until (tvalid and tready) = '1' and rising_edge(aclk);
+          tready <= '0';
 
-        report_msg := new_string_ptr(pop_string(msg));
-        if tdata'length > 0 then
-          check_equal(tdata, pop_std_ulogic_vector(msg), "TDATA mismatch, " & to_string(report_msg));
-          check_equal(tkeep, pop_std_ulogic_vector(msg), "TKEEP mismatch, " & to_string(report_msg));
-          check_equal(tstrb, pop_std_ulogic_vector(msg), "TSTRB mismatch, " & to_string(report_msg));
+          axi_stream_transaction := (
+            tdata => tdata,
+            tlast => tlast = '1',
+            tkeep => tkeep,
+            tstrb => tstrb,
+            tid   => tid,
+            tdest => tdest,
+            tuser => tuser
+          );
+
+          reply_msg := new_axi_stream_transaction_msg(axi_stream_transaction);
+          reply(net, msg, reply_msg);
+        elsif msg_type = check_axi_stream_msg then
+          tready <= '1';
+          wait until (tvalid and tready) = '1' and rising_edge(aclk);
+          tready <= '0';
+
+          report_msg := new_string_ptr(pop_string(msg));
+          if tdata'length > 0 then
+            check_equal(tdata, pop_std_ulogic_vector(msg), "TDATA mismatch, " & to_string(report_msg));
+            check_equal(tkeep, pop_std_ulogic_vector(msg), "TKEEP mismatch, " & to_string(report_msg));
+            check_equal(tstrb, pop_std_ulogic_vector(msg), "TSTRB mismatch, " & to_string(report_msg));
+          end if;
+          check_equal(tlast, pop_std_ulogic(msg), "TLAST mismatch, " & to_string(report_msg));
+          if tid'length > 0 then
+            check_equal(tid, pop_std_ulogic_vector(msg), "TID mismatch, " & to_string(report_msg));
+          end if;
+          if tdest'length > 0 then
+            check_equal(tdest, pop_std_ulogic_vector(msg), "TDEST mismatch, " & to_string(report_msg));
+          end if;
+          if tuser'length > 0 then
+            check_equal(tuser, pop_std_ulogic_vector(msg), "TUSER mismatch, " & to_string(report_msg));
+          end if;
+        else
+          unexpected_msg_type(msg_type);
         end if;
-        check_equal(tlast, pop_std_ulogic(msg), "TLAST mismatch, " & to_string(report_msg));
-        if tid'length > 0 then
-          check_equal(tid, pop_std_ulogic_vector(msg), "TID mismatch, " & to_string(report_msg));
-        end if;
-        if tdest'length > 0 then
-          check_equal(tdest, pop_std_ulogic_vector(msg), "TDEST mismatch, " & to_string(report_msg));
-        end if;
-        if tuser'length > 0 then
-          check_equal(tuser, pop_std_ulogic_vector(msg), "TUSER mismatch, " & to_string(report_msg));
-        end if;
-      else
-        unexpected_msg_type(msg_type);
-      end if;
+      end loop;
+
+      notify_bus_process_done <= '1';
+      wait until notify_bus_process_done = '1';
+      notify_bus_process_done <= '0';
     end loop;
-
-    notify_bus_process_done <= '1';
-    wait until notify_bus_process_done = '1';
-    notify_bus_process_done <= '0';
-
   end process;
 
   axi_stream_monitor_generate : if slave.p_monitor /= null_axi_stream_monitor generate

@@ -132,5 +132,12 @@ for max_waits in [0, 8]:
         name="max_waits=%d" % max_waits, generics=dict(max_waits=max_waits)
     )
 
+TB_AXI_STREAM.test("test random stall on master").add_config(
+    name="stall_master", generics=dict(g_stall_percentage_master=30)
+)
+
+TB_AXI_STREAM.test("test random stall on slave").add_config(
+    name="stall_slave", generics=dict(g_stall_percentage_slave=30)
+)
 
 ui.main()
