@@ -30,7 +30,7 @@ class SourceFileList(list):
 
         .. code-block:: python
 
-           files.set_compile_option("ghdl.flags", ["--no-vital-checks"])
+           files.set_compile_option("ghdl.a_flags", ["--no-vital-checks"])
         """
         for source_file in self:
             source_file.set_compile_option(name, value)
@@ -108,7 +108,7 @@ class SourceFile(object):
 
         .. code-block:: python
 
-           my_file.set_compile_option("ghdl.flags", ["--no-vital-checks"])
+           my_file.set_compile_option("ghdl.a_flags", ["--no-vital-checks"])
         """
         self._source_file.set_compile_option(name, value)
 

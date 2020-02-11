@@ -395,7 +395,7 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
 
         .. code-block:: python
 
-           prj.set_sim_option("ghdl.flags", ["--no-vital-checks"])
+           prj.set_sim_option("ghdl.a_flags", ["--no-vital-checks"])
 
         .. note::
            Only affects test benches added *before* the option is set.
@@ -418,7 +418,7 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
 
         .. code-block:: python
 
-           prj.set_compile_option("ghdl.flags", ["--no-vital-checks"])
+           prj.set_compile_option("ghdl.a_flags", ["--no-vital-checks"])
 
 
         .. note::

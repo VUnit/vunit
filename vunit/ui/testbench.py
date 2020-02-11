@@ -98,7 +98,7 @@ class TestBench(object):
 
         .. code-block:: python
 
-           test_bench.set_sim_option("ghdl.flags", ["--no-vital-checks"])
+           test_bench.set_sim_option("ghdl.a_flags", ["--no-vital-checks"])
 
         """
         self._test_bench.set_sim_option(name, value, overwrite)
