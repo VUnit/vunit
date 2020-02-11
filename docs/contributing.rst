@@ -132,9 +132,10 @@ style. For example :vunit_file:`examples/vhdl/uart/src/uart_tx.vhd`
 
 Continous Integration
 ---------------------
-VUnit runs all test and lint checks on both Windows using AppVeyor and
-Linux using Travis CI with several versions of Python. GHDL is used to
-run the VHDL tests of all our libraries and examples.
+VUnit runs all test and lint checks on both GNU/Linux and Windows
+with several versions of Python (typically, the oldest and newest
+supported by both VUnit and the CI environment). `GHDL <https://github.com/ghdl/ghdl>`_
+is used to run the VHDL tests of all our libraries and examples.
 
 All tests will be automatically run on any pull request and they are
 expected to pass for us to approve the merge.
