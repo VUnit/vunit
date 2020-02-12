@@ -10,7 +10,7 @@ Test the ModelSim interface
 
 
 import unittest
-from os.path import join, dirname, exists
+from pathlib import Path
 import os
 from shutil import rmtree
 from unittest import mock
@@ -39,13 +39,13 @@ class TestModelSimInterface(unittest.TestCase):
             "file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2008")
         )
         simif.compile_project(project)
-        process_args = [join(self.prefix_path, "vlib"), "-unix", "lib_path"]
+        process_args = [str(Path(self.prefix_path) / "vlib"), "-unix", "lib_path"]
         process.assert_called_once_with(process_args, env=simif.get_env())
         check_args = [
-            join(self.prefix_path, "vcom"),
+            str(Path(self.prefix_path) / "vcom"),
             "-quiet",
             "-modelsimini",
-            join(self.output_path, "modelsim.ini"),
+            str(Path(self.output_path) / "modelsim.ini"),
             "-2008",
             "-work",
             "lib",
@@ -66,13 +66,13 @@ class TestModelSimInterface(unittest.TestCase):
             "file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2002")
         )
         simif.compile_project(project)
-        process_args = [join(self.prefix_path, "vlib"), "-unix", "lib_path"]
+        process_args = [str(Path(self.prefix_path) / "vlib"), "-unix", "lib_path"]
         process.assert_called_once_with(process_args, env=simif.get_env())
         check_args = [
-            join(self.prefix_path, "vcom"),
+            str(Path(self.prefix_path) / "vcom"),
             "-quiet",
             "-modelsimini",
-            join(self.output_path, "modelsim.ini"),
+            str(Path(self.output_path) / "modelsim.ini"),
             "-2002",
             "-work",
             "lib",
@@ -93,13 +93,13 @@ class TestModelSimInterface(unittest.TestCase):
             "file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("93")
         )
         simif.compile_project(project)
-        process_args = [join(self.prefix_path, "vlib"), "-unix", "lib_path"]
+        process_args = [str(Path(self.prefix_path) / "vlib"), "-unix", "lib_path"]
         process.assert_called_once_with(process_args, env=simif.get_env())
         check_args = [
-            join(self.prefix_path, "vcom"),
+            str(Path(self.prefix_path) / "vcom"),
             "-quiet",
             "-modelsimini",
-            join(self.output_path, "modelsim.ini"),
+            str(Path(self.output_path) / "modelsim.ini"),
             "-93",
             "-work",
             "lib",
@@ -119,13 +119,13 @@ class TestModelSimInterface(unittest.TestCase):
         source_file = project.add_source_file("file.vhd", "lib", file_type="vhdl")
         source_file.set_compile_option("modelsim.vcom_flags", ["custom", "flags"])
         simif.compile_project(project)
-        process_args = [join(self.prefix_path, "vlib"), "-unix", "lib_path"]
+        process_args = [str(Path(self.prefix_path) / "vlib"), "-unix", "lib_path"]
         process.assert_called_once_with(process_args, env=simif.get_env())
         check_args = [
-            join(self.prefix_path, "vcom"),
+            str(Path(self.prefix_path) / "vcom"),
             "-quiet",
             "-modelsimini",
-            join(self.output_path, "modelsim.ini"),
+            str(Path(self.output_path) / "modelsim.ini"),
             "custom",
             "flags",
             "-2008",
@@ -146,13 +146,13 @@ class TestModelSimInterface(unittest.TestCase):
         write_file("file.v", "")
         project.add_source_file("file.v", "lib", file_type="verilog")
         simif.compile_project(project)
-        process_args = [join(self.prefix_path, "vlib"), "-unix", "lib_path"]
+        process_args = [str(Path(self.prefix_path) / "vlib"), "-unix", "lib_path"]
         process.assert_called_once_with(process_args, env=simif.get_env())
         check_args = [
-            join(self.prefix_path, "vlog"),
+            str(Path(self.prefix_path) / "vlog"),
             "-quiet",
             "-modelsimini",
-            join(self.output_path, "modelsim.ini"),
+            str(Path(self.output_path) / "modelsim.ini"),
             "-work",
             "lib",
             "file.v",
@@ -172,13 +172,13 @@ class TestModelSimInterface(unittest.TestCase):
         write_file("file.sv", "")
         project.add_source_file("file.sv", "lib", file_type="systemverilog")
         simif.compile_project(project)
-        process_args = [join(self.prefix_path, "vlib"), "-unix", "lib_path"]
+        process_args = [str(Path(self.prefix_path) / "vlib"), "-unix", "lib_path"]
         process.assert_called_once_with(process_args, env=simif.get_env())
         check_args = [
-            join(self.prefix_path, "vlog"),
+            str(Path(self.prefix_path) / "vlog"),
             "-quiet",
             "-modelsimini",
-            join(self.output_path, "modelsim.ini"),
+            str(Path(self.output_path) / "modelsim.ini"),
             "-sv",
             "-work",
             "lib",
@@ -200,13 +200,13 @@ class TestModelSimInterface(unittest.TestCase):
         source_file = project.add_source_file("file.v", "lib", file_type="verilog")
         source_file.set_compile_option("modelsim.vlog_flags", ["custom", "flags"])
         simif.compile_project(project)
-        process_args = [join(self.prefix_path, "vlib"), "-unix", "lib_path"]
+        process_args = [str(Path(self.prefix_path) / "vlib"), "-unix", "lib_path"]
         process.assert_called_once_with(process_args, env=simif.get_env())
         check_args = [
-            join(self.prefix_path, "vlog"),
+            str(Path(self.prefix_path) / "vlog"),
             "-quiet",
             "-modelsimini",
-            join(self.output_path, "modelsim.ini"),
+            str(Path(self.output_path) / "modelsim.ini"),
             "custom",
             "flags",
             "-work",
@@ -230,13 +230,13 @@ class TestModelSimInterface(unittest.TestCase):
             "file.v", "lib", file_type="verilog", include_dirs=["include"]
         )
         simif.compile_project(project)
-        process_args = [join(self.prefix_path, "vlib"), "-unix", "lib_path"]
+        process_args = [str(Path(self.prefix_path) / "vlib"), "-unix", "lib_path"]
         process.assert_called_once_with(process_args, env=simif.get_env())
         check_args = [
-            join(self.prefix_path, "vlog"),
+            str(Path(self.prefix_path) / "vlog"),
             "-quiet",
             "-modelsimini",
-            join(self.output_path, "modelsim.ini"),
+            str(Path(self.output_path) / "modelsim.ini"),
             "-work",
             "lib",
             "file.v",
@@ -259,13 +259,13 @@ class TestModelSimInterface(unittest.TestCase):
             "file.v", "lib", file_type="verilog", defines={"defname": "defval"}
         )
         simif.compile_project(project)
-        process_args = [join(self.prefix_path, "vlib"), "-unix", "lib_path"]
+        process_args = [str(Path(self.prefix_path) / "vlib"), "-unix", "lib_path"]
         process.assert_called_once_with(process_args, env=simif.get_env())
         process_args = [
-            join(self.prefix_path, "vlog"),
+            str(Path(self.prefix_path) / "vlog"),
             "-quiet",
             "-modelsimini",
-            join(self.output_path, "modelsim.ini"),
+            str(Path(self.output_path) / "modelsim.ini"),
             "-work",
             "lib",
             "file.v",
@@ -275,10 +275,15 @@ class TestModelSimInterface(unittest.TestCase):
         ]
         check_output.assert_called_once_with(process_args, env=simif.get_env())
 
+    def _get_inis(self):
+        return (
+            str(Path(self.output_path) / "modelsim.ini"),
+            str(Path(self.prefix_path) / ".." / "modelsim.ini"),
+            str(Path(self.test_path) / "my_modelsim.ini"),
+        )
+
     def test_copies_modelsim_ini_file_from_install(self):
-        modelsim_ini = join(self.output_path, "modelsim.ini")
-        installed_modelsim_ini = join(self.prefix_path, "..", "modelsim.ini")
-        user_modelsim_ini = join(self.test_path, "my_modelsim.ini")
+        (modelsim_ini, installed_modelsim_ini, user_modelsim_ini) = self._get_inis()
 
         with open(installed_modelsim_ini, "w") as fptr:
             fptr.write("installed")
@@ -293,9 +298,7 @@ class TestModelSimInterface(unittest.TestCase):
             self.assertEqual(fptr.read(), "installed")
 
     def test_copies_modelsim_ini_file_from_user(self):
-        modelsim_ini = join(self.output_path, "modelsim.ini")
-        installed_modelsim_ini = join(self.prefix_path, "..", "modelsim.ini")
-        user_modelsim_ini = join(self.test_path, "my_modelsim.ini")
+        (modelsim_ini, installed_modelsim_ini, user_modelsim_ini) = self._get_inis()
 
         with open(installed_modelsim_ini, "w") as fptr:
             fptr.write("installed")
@@ -312,9 +315,7 @@ class TestModelSimInterface(unittest.TestCase):
             self.assertEqual(fptr.read(), "user")
 
     def test_overwrites_modelsim_ini_file_from_install(self):
-        modelsim_ini = join(self.output_path, "modelsim.ini")
-        installed_modelsim_ini = join(self.prefix_path, "..", "modelsim.ini")
-        user_modelsim_ini = join(self.test_path, "my_modelsim.ini")
+        (modelsim_ini, installed_modelsim_ini, user_modelsim_ini) = self._get_inis()
 
         with open(modelsim_ini, "w") as fptr:
             fptr.write("existing")
@@ -332,9 +333,7 @@ class TestModelSimInterface(unittest.TestCase):
             self.assertEqual(fptr.read(), "installed")
 
     def test_overwrites_modelsim_ini_file_from_user(self):
-        modelsim_ini = join(self.output_path, "modelsim.ini")
-        installed_modelsim_ini = join(self.prefix_path, "..", "modelsim.ini")
-        user_modelsim_ini = join(self.test_path, "my_modelsim.ini")
+        (modelsim_ini, installed_modelsim_ini, user_modelsim_ini) = self._get_inis()
 
         with open(modelsim_ini, "w") as fptr:
             fptr.write("existing")
@@ -354,13 +353,14 @@ class TestModelSimInterface(unittest.TestCase):
             self.assertEqual(fptr.read(), "user")
 
     def setUp(self):
-        self.test_path = join(dirname(__file__), "test_modelsim_out")
-        self.output_path = join(self.test_path, "modelsim")
-        self.prefix_path = join(self.test_path, "prefix", "bin")
+        self.test_path = str(Path(__file__).parent / "test_modelsim_out")
+
+        self.output_path = str(Path(self.test_path) / "modelsim")
+        self.prefix_path = str(Path(self.test_path) / "prefix" / "bin")
         renew_path(self.test_path)
         renew_path(self.output_path)
         renew_path(self.prefix_path)
-        installed_modelsim_ini = join(self.prefix_path, "..", "modelsim.ini")
+        installed_modelsim_ini = str(Path(self.prefix_path) / ".." / "modelsim.ini")
         write_file(installed_modelsim_ini, "[Library]")
         self.project = Project()
         self.cwd = os.getcwd()
@@ -368,5 +368,5 @@ class TestModelSimInterface(unittest.TestCase):
 
     def tearDown(self):
         os.chdir(self.cwd)
-        if exists(self.test_path):
+        if Path(self.test_path).exists():
             rmtree(self.test_path)

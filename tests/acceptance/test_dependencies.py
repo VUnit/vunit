@@ -11,8 +11,10 @@ tests to expose those differences.
 
 
 import unittest
-from os.path import join, dirname
+from pathlib import Path
 from vunit import VUnit
+
+ROOT = Path(__file__).parent
 
 
 class TestDependencies(unittest.TestCase):
@@ -21,8 +23,8 @@ class TestDependencies(unittest.TestCase):
     """
 
     def setUp(self):
-        self.data_path = join(dirname(__file__), "dependencies")
-        self.output_path = join(dirname(__file__), "dependencies_vunit_out")
+        self.data_path = str(ROOT / "dependencies")
+        self.output_path = str(ROOT / "dependencies_vunit_out")
 
     def test_package_body_dependencies(self):
         """
@@ -36,9 +38,11 @@ class TestDependencies(unittest.TestCase):
             Utility function to first run with pkg_body1 then pkg_body2
             """
 
-            tb_pkg_file_name = join(self.data_path, "tb_pkg.vhd")
-            pkg_file_name = join(self.data_path, "pkg.vhd")
-            pkg_body_file_name = join(self.data_path, "pkg_body%i.vhd" % value)
+            dpath = Path(self.data_path)
+
+            tb_pkg_file_name = str(dpath / "tb_pkg.vhd")
+            pkg_file_name = str(dpath / "pkg.vhd")
+            pkg_body_file_name = str(dpath / ("pkg_body%i.vhd" % value))
 
             argv = ["--output-path=%s" % self.output_path, "-v"]
             if value == 1:

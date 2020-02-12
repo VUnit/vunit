@@ -9,10 +9,9 @@
 """
 Functionality to represent and operate on a HDL code project
 """
-from os.path import join, basename, dirname, isdir, exists
+from typing import Optional
 from pathlib import Path
 import logging
-from typing import Optional
 from collections import OrderedDict
 from vunit.hashing import hash_string
 from vunit.dependency_graph import DependencyGraph, CircularDependencyException
@@ -610,9 +609,12 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         Returns the name of the hash file associated with the source_file
         """
         library = self.get_library(source_file.library.name)
-        prefix = hash_string(dirname(source_file.name))
-        return join(
-            library.directory, prefix, basename(source_file.name) + ".vunit_hash"
+        prefix = hash_string(str(Path(source_file.name).parent))
+        return str(
+            Path(library.directory)
+            / prefix
+            / Path(source_file.name).name
+            / ".vunit_hash"
         )
 
     def update(self, source_file):

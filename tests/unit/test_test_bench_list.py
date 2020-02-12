@@ -11,7 +11,7 @@ Tests the test test_bench module
 """
 
 import unittest
-from os.path import join
+from pathlib import Path
 from unittest import mock
 from tests.unit.test_test_bench import Entity, Module
 from tests.common import with_tempdir
@@ -29,19 +29,21 @@ class TestTestBenchList(unittest.TestCase):
 
     @with_tempdir
     def test_tb_filter_requires_runner_cfg(self, tempdir):
-        design_unit = Entity("tb_entity", file_name=join(tempdir, "file.vhd"))
+        fname = str(Path(tempdir) / "file.vhd")
+
+        design_unit = Entity("tb_entity", file_name=fname)
         design_unit.generic_names = ["runner_cfg"]
         self.assertTrue(tb_filter(design_unit))
 
-        design_unit = Entity("tb_entity", file_name=join(tempdir, "file.vhd"))
+        design_unit = Entity("tb_entity", file_name=fname)
         design_unit.generic_names = []
         self.assertFalse(tb_filter(design_unit))
 
-        design_unit = Module("tb_module", file_name=join(tempdir, "file.vhd"))
+        design_unit = Module("tb_module", file_name=fname)
         design_unit.generic_names = ["runner_cfg"]
         self.assertTrue(tb_filter(design_unit))
 
-        design_unit = Module("tb_module", file_name=join(tempdir, "file.vhd"))
+        design_unit = Module("tb_module", file_name=fname)
         design_unit.generic_names = []
         self.assertFalse(tb_filter(design_unit))
 
@@ -51,7 +53,9 @@ class TestTestBenchList(unittest.TestCase):
         Issue #263
         """
         with mock.patch("vunit.test.bench_list.LOGGER", autospec=True) as logger:
-            design_unit = Entity("mul_tbl_scale", file_name=join(tempdir, "file.vhd"))
+            design_unit = Entity(
+                "mul_tbl_scale", file_name=str(Path(tempdir) / "file.vhd")
+            )
             self.assertFalse(tb_filter(design_unit))
             self.assertFalse(logger.warning.called)
 
@@ -59,7 +63,9 @@ class TestTestBenchList(unittest.TestCase):
     def test_tb_filter_warning_on_missing_runner_cfg_when_matching_tb_pattern(
         self, tempdir
     ):
-        design_unit = Module("tb_module_not_ok", file_name=join(tempdir, "file.vhd"))
+        design_unit = Module(
+            "tb_module_not_ok", file_name=str(Path(tempdir) / "file.vhd")
+        )
         design_unit.generic_names = []
 
         with mock.patch("vunit.test.bench_list.LOGGER", autospec=True) as logger:
@@ -82,7 +88,7 @@ class TestTestBenchList(unittest.TestCase):
     @with_tempdir
     def test_tb_filter_warning_on_runner_cfg_but_not_matching_tb_pattern(self, tempdir):
         design_unit = Entity(
-            "entity_ok_but_warning", file_name=join(tempdir, "file.vhd")
+            "entity_ok_but_warning", file_name=str(Path(tempdir) / "file.vhd")
         )
         design_unit.generic_names = ["runner_cfg"]
 

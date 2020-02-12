@@ -10,8 +10,8 @@ Test the os-dependent functionality wrappers
 
 
 from unittest import TestCase
+from pathlib import Path
 from shutil import rmtree
-from os.path import exists, dirname, join, abspath
 import sys
 from vunit.ostools import Process, renew_path
 
@@ -22,11 +22,11 @@ class TestOSTools(TestCase):
     """
 
     def setUp(self):
-        self.tmp_dir = join(dirname(__file__), "test_ostools_tmp")
+        self.tmp_dir = str(Path(__file__).parent / "test_ostools_tmp")
         renew_path(self.tmp_dir)
 
     def tearDown(self):
-        if exists(self.tmp_dir):
+        if Path(self.tmp_dir).exists():
             rmtree(self.tmp_dir)
 
     def make_file(self, file_name, contents):
@@ -34,7 +34,7 @@ class TestOSTools(TestCase):
         Create a file in the temporary directory with contents
         Returns the absolute path to the file.
         """
-        full_file_name = abspath(join(self.tmp_dir, file_name))
+        full_file_name = str((Path(self.tmp_dir) / file_name).resolve())
         with open(full_file_name, "w") as outfile:
             outfile.write(contents)
         return full_file_name
@@ -101,7 +101,7 @@ sleep(1000)
         self.assertEqual(message, "message")
 
     def test_non_utf8_in_output(self):
-        python_script = join(dirname(__file__), "non_utf8_printer.py")
+        python_script = str(Path(__file__).parent / "non_utf8_printer.py")
         output = []
         process = Process([sys.executable, python_script])
         process.consume_output(output.append)

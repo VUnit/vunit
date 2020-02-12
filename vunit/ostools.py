@@ -15,8 +15,10 @@ import subprocess
 import threading
 import shutil
 from queue import Queue, Empty
-from os.path import exists, getmtime, dirname, relpath, splitdrive
+from pathlib import Path
+from os.path import getmtime, relpath, splitdrive
 import os
+from os import getcwd, makedirs
 import io
 
 import logging
@@ -296,12 +298,12 @@ def read_file(file_name, encoding="utf-8", newline=None):
 def write_file(file_name, contents, encoding="utf-8"):
     """ To stub during testing """
 
-    path = dirname(file_name)
+    path = str(Path(file_name).parent)
     if path == "":
         path = "."
 
     if not file_exists(path):
-        os.makedirs(path)
+        makedirs(path)
 
     with io.open(file_name, "wb") as file_to_write:
         file_to_write.write(contents.encode(encoding=encoding))
@@ -309,7 +311,7 @@ def write_file(file_name, contents, encoding="utf-8"):
 
 def file_exists(file_name):
     """ To stub during testing """
-    return exists(file_name)
+    return Path(file_name).exists()
 
 
 def get_modification_time(file_name):
@@ -334,14 +336,14 @@ def renew_path(path):
     """
     if IS_WINDOWS_SYSTEM:
         retries = 10
-        while retries > 0 and exists(path):
+        while retries > 0 and Path(path).exists():
             shutil.rmtree(path, ignore_errors=retries > 1)
             time.sleep(0.01)
             retries -= 1
     else:
-        if exists(path):
+        if Path(path).exists():
             shutil.rmtree(path)
-    os.makedirs(path)
+    makedirs(path)
 
 
 def simplify_path(path):
@@ -349,7 +351,7 @@ def simplify_path(path):
     Return relative path towards current working directory
     unless it is a separate Windows drive
     """
-    cwd = os.getcwd()
+    cwd = getcwd()
     drive_cwd = splitdrive(cwd)[0]
     drive_path = splitdrive(path)[0]
     if drive_path == drive_cwd:

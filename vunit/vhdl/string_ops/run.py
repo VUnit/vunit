@@ -4,14 +4,12 @@
 #
 # Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
-from os.path import join, dirname
+from pathlib import Path
 from vunit import VUnit
 
-root = dirname(__file__)
-common_path = join(root, "..", "common", "test")
+ROOT = Path(__file__).parent
 
-ui = VUnit.from_argv()
-lib = ui.add_library("lib")
-lib.add_source_files(join(root, "test", "*.vhd"))
+UI = VUnit.from_argv()
+UI.add_library("lib").add_source_files(ROOT / "test" / "*.vhd")
 
-ui.main()
+UI.main()

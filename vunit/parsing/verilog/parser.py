@@ -12,7 +12,7 @@ Verilog parsing functionality
 """
 
 import logging
-from os.path import dirname, exists, abspath
+from pathlib import Path
 from vunit.ostools import read_file
 from vunit.parsing.encodings import HDL_FILE_ENCODING
 from vunit.parsing.tokenizer import TokenStream, EOFException, LocationException
@@ -63,7 +63,7 @@ class VerilogParser(object):
 
         defines = {} if defines is None else defines
         include_paths = [] if include_paths is None else include_paths
-        include_paths = [dirname(file_name)] + include_paths
+        include_paths = [str(Path(file_name).parent)] + include_paths
 
         cached = self._lookup_parse_cache(file_name, include_paths, defines)
         if cached is not None:
@@ -99,7 +99,7 @@ class VerilogParser(object):
         """
         Returns the database key for parse results of file_name
         """
-        return ("CachedVerilogParser.parse(%s)" % abspath(file_name)).encode()
+        return ("CachedVerilogParser.parse(%s)" % str(Path(file_name).resolve)).encode()
 
     def _store_result(self, file_name, result, included_files, defines):
         """
@@ -124,7 +124,7 @@ class VerilogParser(object):
         """
         Hash the contents of the file
         """
-        if file_name is None or not exists(file_name):
+        if file_name is None or not Path(file_name).exists():
             return None
         if file_name not in self._content_cache:
             self._content_cache[file_name] = file_content_hash(

@@ -39,7 +39,7 @@ A :class:`.VUnitCLI` object has a ``parser`` field which is an
 """
 
 import argparse
-from os.path import join, abspath
+from pathlib import Path
 import os
 from vunit.sim_if.factory import SIMULATOR_FACTORY
 from vunit.about import version
@@ -80,7 +80,7 @@ def _create_argument_parser(description=None, for_documentation=False):
     if for_documentation:
         default_output_path = "./vunit_out"
     else:
-        default_output_path = join(abspath(os.getcwd()), "vunit_out")
+        default_output_path = str(Path(os.getcwd()).resolve() / "vunit_out")
 
     parser = argparse.ArgumentParser(description=description)
 

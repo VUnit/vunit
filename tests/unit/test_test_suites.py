@@ -8,7 +8,7 @@
 Test the test suites
 """
 
-from os.path import join
+from pathlib import Path
 from unittest import TestCase
 from tests.common import create_tempdir
 from vunit.test.suites import TestRun
@@ -94,9 +94,9 @@ test_suite_done""",
         Helper method to test the read_test_results function
         """
         with create_tempdir() as path:
-            file_name = join(path, "vunit_results")
+            file_name = Path(path) / "vunit_results"
             if contents is not None:
-                with open(file_name, "w") as fptr:
+                with file_name.open("w") as fptr:
                     fptr.write(contents)
 
             run = TestRun(
@@ -162,9 +162,9 @@ test_suite_done""",
         Helper method to test the check_results function
         """
         with create_tempdir() as path:
-            file_name = join(path, "vunit_results")
+            file_name = Path(path) / "vunit_results"
             if contents is not None:
-                with open(file_name, "w") as fptr:
+                with file_name.open("w") as fptr:
                     fptr.write(contents)
 
             sim_if = SimulatorInterface

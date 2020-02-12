@@ -12,8 +12,7 @@ Tests the test test_bench module
 
 
 import unittest
-from os.path import join
-
+from pathlib import Path
 from unittest import mock
 from tests.common import with_tempdir, get_vhdl_test_bench
 from vunit.test.bench import (
@@ -40,7 +39,7 @@ class TestTestBench(unittest.TestCase):
 
     @with_tempdir
     def test_that_single_vhdl_test_is_created(self, tempdir):
-        design_unit = Entity("tb_entity", file_name=join(tempdir, "file.vhd"))
+        design_unit = Entity("tb_entity", file_name=str(Path(tempdir) / "file.vhd"))
         test_bench = TestBench(design_unit)
         tests = self.create_tests(test_bench)
         self.assert_has_tests(tests, ["lib.tb_entity.all"])
@@ -49,14 +48,14 @@ class TestTestBench(unittest.TestCase):
     @with_tempdir
     def test_no_architecture_at_creation(tempdir):
         design_unit = Entity(
-            "tb_entity", file_name=join(tempdir, "file.vhd"), no_arch=True
+            "tb_entity", file_name=str(Path(tempdir) / "file.vhd"), no_arch=True
         )
         TestBench(design_unit)
 
     @with_tempdir
     def test_no_architecture_gives_runtime_error(self, tempdir):
         design_unit = Entity(
-            "tb_entity", file_name=join(tempdir, "file.vhd"), no_arch=True
+            "tb_entity", file_name=str(Path(tempdir) / "file.vhd"), no_arch=True
         )
         test_bench = TestBench(design_unit)
         try:
@@ -68,14 +67,14 @@ class TestTestBench(unittest.TestCase):
 
     @with_tempdir
     def test_that_single_verilog_test_is_created(self, tempdir):
-        design_unit = Module("tb_module", file_name=join(tempdir, "file.v"))
+        design_unit = Module("tb_module", file_name=str(Path(tempdir) / "file.v"))
         test_bench = TestBench(design_unit)
         tests = self.create_tests(test_bench)
         self.assert_has_tests(tests, ["lib.tb_module.all"])
 
     @with_tempdir
     def test_create_default_test(self, tempdir):
-        design_unit = Entity("tb_entity", file_name=join(tempdir, "file.vhd"))
+        design_unit = Entity("tb_entity", file_name=str(Path(tempdir) / "file.vhd"))
         design_unit.generic_names = ["runner_cfg"]
         test_bench = TestBench(design_unit)
         tests = self.create_tests(test_bench)
@@ -83,9 +82,11 @@ class TestTestBench(unittest.TestCase):
 
     @with_tempdir
     def test_multiple_architectures_are_not_allowed_for_test_bench(self, tempdir):
-        design_unit = Entity("tb_entity", file_name=join(tempdir, "file.vhd"))
+        design_unit = Entity("tb_entity", file_name=str(Path(tempdir) / "file.vhd"))
         design_unit.generic_names = ["runner_cfg"]
-        design_unit.add_architecture("arch2", file_name=join(tempdir, "arch2.vhd"))
+        design_unit.add_architecture(
+            "arch2", file_name=str(Path(tempdir) / "arch2.vhd")
+        )
         try:
             TestBench(design_unit)
         except RuntimeError as exc:
@@ -101,7 +102,7 @@ class TestTestBench(unittest.TestCase):
     def test_creates_tests_vhdl(self, tempdir):
         design_unit = Entity(
             "tb_entity",
-            file_name=join(tempdir, "file.vhd"),
+            file_name=str(Path(tempdir) / "file.vhd"),
             contents="""\
 if run("Test 1")
 --if run("Test 2")
@@ -135,7 +136,7 @@ if my_protected_variable.run("Test 10")
     def test_creates_tests_verilog(self, tempdir):
         design_unit = Module(
             "tb_module",
-            file_name=join(tempdir, "file.v"),
+            file_name=str(Path(tempdir) / "file.v"),
             contents="""\
 `TEST_CASE("Test 1")
 `TEST_CASE  ("Test 2")
@@ -168,7 +169,9 @@ if my_protected_variable.run("Test 10")
     @with_tempdir
     def test_keyerror_on_non_existent_test(self, tempdir):
         design_unit = Entity(
-            "tb_entity", file_name=join(tempdir, "file.vhd"), contents='if run("Test")'
+            "tb_entity",
+            file_name=str(Path(tempdir) / "file.vhd"),
+            contents='if run("Test")',
         )
         design_unit.generic_names = ["runner_cfg", "name"]
         test_bench = TestBench(design_unit)
@@ -177,14 +180,14 @@ if my_protected_variable.run("Test 10")
     @with_tempdir
     def test_creates_tests_when_adding_architecture_late(self, tempdir):
         design_unit = Entity(
-            "tb_entity", file_name=join(tempdir, "file.vhd"), no_arch=True
+            "tb_entity", file_name=str(Path(tempdir) / "file.vhd"), no_arch=True
         )
         design_unit.generic_names = ["runner_cfg"]
         test_bench = TestBench(design_unit)
 
         design_unit.add_architecture(
             "arch",
-            file_name=join(tempdir, "arch.vhd"),
+            file_name=str(Path(tempdir) / "file.vhd"),
             contents="""\
 if run("Test_1")
 --if run("Test_2")
@@ -196,11 +199,11 @@ if run("Test_3")
 
     @with_tempdir
     def test_scan_tests_from_file(self, tempdir):
-        design_unit = Entity("tb_entity", file_name=join(tempdir, "file.vhd"))
+        design_unit = Entity("tb_entity", file_name=str(Path(tempdir) / "file.vhd"))
         design_unit.generic_names = ["runner_cfg"]
         test_bench = TestBench(design_unit)
 
-        file_name = join(tempdir, "file.vhd")
+        file_name = str(Path(tempdir) / "file.vhd")
         write_file(
             file_name,
             """\
@@ -212,41 +215,36 @@ if run("Test_2")
         tests = self.create_tests(test_bench)
         self.assert_has_tests(tests, ["lib.tb_entity.Test_1", "lib.tb_entity.Test_2"])
 
-    @with_tempdir
-    def test_scan_tests_from_file_location_unix(self, tempdir):
-        design_unit = Entity("tb_entity", file_name=join(tempdir, "file.vhd"))
+    def _test_scan_tests_from_file_location(self, tempdir, code):
+        fstr = str(Path(tempdir) / "file.vhd")
+
+        design_unit = Entity("tb_entity", file_name=fstr)
         design_unit.generic_names = ["runner_cfg"]
         test_bench = TestBench(design_unit)
 
-        file_name = join(tempdir, "file.vhd")
-        code = 'foo \n bar \n if run("Test_1")'
-        write_file(file_name, code)
-        test_bench.scan_tests_from_file(file_name)
+        write_file(fstr, code)
+        test_bench.scan_tests_from_file(fstr)
         tests = self.create_tests(test_bench)
         test_info = tests[0].test_information
         location = test_info["lib.tb_entity.Test_1"].location
         assert location.offset == code.find("Test_1")
         assert location.length == len("Test_1")
+
+    @with_tempdir
+    def test_scan_tests_from_file_location_unix(self, tempdir):
+        self._test_scan_tests_from_file_location(
+            tempdir, 'foo \n bar \n if run("Test_1")'
+        )
 
     @with_tempdir
     def test_scan_tests_from_file_location_dos(self, tempdir):
-        design_unit = Entity("tb_entity", file_name=join(tempdir, "file.vhd"))
-        design_unit.generic_names = ["runner_cfg"]
-        test_bench = TestBench(design_unit)
-
-        file_name = join(tempdir, "file.vhd")
-        code = 'foo \r\n bar \r\n if run("Test_1")'
-        write_file(file_name, code)
-        test_bench.scan_tests_from_file(file_name)
-        tests = self.create_tests(test_bench)
-        test_info = tests[0].test_information
-        location = test_info["lib.tb_entity.Test_1"].location
-        assert location.offset == code.find("Test_1")
-        assert location.length == len("Test_1")
+        self._test_scan_tests_from_file_location(
+            tempdir, 'foo \r\n bar \r\n if run("Test_1")'
+        )
 
     @with_tempdir
     def test_scan_tests_from_missing_file(self, tempdir):
-        design_unit = Entity("tb_entity", file_name=join(tempdir, "file.vhd"))
+        design_unit = Entity("tb_entity", file_name=str(Path(tempdir) / "file.vhd"))
         design_unit.generic_names = ["runner_cfg"]
         test_bench = TestBench(design_unit)
 
@@ -259,7 +257,7 @@ if run("Test_2")
 
     @with_tempdir
     def test_does_not_add_all_suffix_with_named_configurations(self, tempdir):
-        design_unit = Entity("tb_entity", file_name=join(tempdir, "file.vhd"))
+        design_unit = Entity("tb_entity", file_name=str(Path(tempdir) / "file.vhd"))
         design_unit.generic_names = ["runner_cfg"]
         test_bench = TestBench(design_unit)
 
@@ -274,7 +272,7 @@ if run("Test_2")
     def test_that_run_in_same_simulation_attribute_works(self, tempdir):
         design_unit = Entity(
             "tb_entity",
-            file_name=join(tempdir, "file.vhd"),
+            file_name=str(Path(tempdir) / "file.vhd"),
             contents="""\
 -- vunit: run_all_in_same_sim
 if run("Test_1")
@@ -291,7 +289,7 @@ if run("Test_2")
 
     @with_tempdir
     def test_add_config(self, tempdir):
-        design_unit = Entity("tb_entity", file_name=join(tempdir, "file.vhd"))
+        design_unit = Entity("tb_entity", file_name=str(Path(tempdir) / "file.vhd"))
         design_unit.generic_names = ["runner_cfg", "value", "global_value"]
         test_bench = TestBench(design_unit)
 
@@ -331,7 +329,7 @@ if run("Test_2")
     def test_test_case_add_config(self, tempdir):
         design_unit = Entity(
             "tb_entity",
-            file_name=join(tempdir, "file.vhd"),
+            file_name=str(Path(tempdir) / "file.vhd"),
             contents="""
 if run("test 1")
 if run("test 2")
@@ -389,7 +387,7 @@ if run("test 2")
     ):
         design_unit = Entity(
             "tb_entity",
-            file_name=join(tempdir, "file.vhd"),
+            file_name=str(Path(tempdir) / "file.vhd"),
             contents="""\
 -- vunit: run_all_in_same_sim
 if run("Test 1")
@@ -407,7 +405,7 @@ if run("Test 2")
     def test_run_all_in_same_sim_can_be_configured(self, tempdir):
         design_unit = Entity(
             "tb_entity",
-            file_name=join(tempdir, "file.vhd"),
+            file_name=str(Path(tempdir) / "file.vhd"),
             contents="""\
 -- vunit: run_all_in_same_sim
 if run("Test 1")
@@ -436,7 +434,7 @@ if run("Test 2")
     def test_global_user_attributes_not_supported_yet(self, tempdir):
         design_unit = Entity(
             "tb_entity",
-            file_name=join(tempdir, "file.vhd"),
+            file_name=str(Path(tempdir) / "file.vhd"),
             contents="""\
 -- vunit: .attr0
 if run("Test 1")
@@ -451,7 +449,7 @@ if run("Test 2")
             self.assertEqual(
                 str(exc),
                 "File global attributes are not yet supported: .attr0 in %s line 1"
-                % join(tempdir, "file.vhd"),
+                % str(Path(tempdir) / "file.vhd"),
             )
         else:
             assert False, "RuntimeError not raised"
@@ -460,7 +458,7 @@ if run("Test 2")
     def test_error_on_global_attributes_on_tests(self, tempdir):
         design_unit = Entity(
             "tb_entity",
-            file_name=join(tempdir, "file.vhd"),
+            file_name=str(Path(tempdir) / "file.vhd"),
             contents="""\
 if run("Test 1")
 -- vunit: run_all_in_same_sim
@@ -475,14 +473,14 @@ if run("Test 2")
             self.assertEqual(
                 str(exc),
                 "Attribute run_all_in_same_sim is global and cannot be associated with test Test 1: %s line 2"
-                % join(tempdir, "file.vhd"),
+                % str(Path(tempdir) / "file.vhd"),
             )
         else:
             assert False, "RuntimeError not raised"
 
     @with_tempdir
     def test_test_information(self, tempdir):
-        file_name = join(tempdir, "file.vhd")
+        file_name = str(Path(tempdir) / "file.vhd")
 
         for same_sim in [True, False]:
             contents = get_vhdl_test_bench(
@@ -521,7 +519,7 @@ if run("Test 2")
 
     @with_tempdir
     def test_fail_on_unknown_sim_option(self, tempdir):
-        design_unit = Entity("tb_entity", file_name=join(tempdir, "file.vhd"))
+        design_unit = Entity("tb_entity", file_name=str(Path(tempdir) / "file.vhd"))
         design_unit.generic_names = ["runner_cfg"]
         test_bench = TestBench(design_unit)
         self.assertRaises(ValueError, test_bench.set_sim_option, "unknown", "value")

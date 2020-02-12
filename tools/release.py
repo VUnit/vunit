@@ -15,7 +15,7 @@ import argparse
 import json
 from urllib.request import urlopen  # pylint: disable=no-name-in-module, import-error
 import sys
-from os.path import dirname, join, exists
+from pathlib import Path
 import subprocess
 from shutil import which
 
@@ -67,8 +67,8 @@ def make_release_commit(version):
     """
     Add release notes and make the release commit
     """
-    run(["git", "add", release_note_file_name(version)])
-    run(["git", "add", ABOUT_PY])
+    run(["git", "add", str(release_note_file_name(version))])
+    run(["git", "add", str(ABOUT_PY)])
     run(["git", "commit", "-m", "Release %s" % version])
     run(["git", "tag", "v%s" % version, "-a", "-m", "release %s" % version])
 
@@ -77,7 +77,7 @@ def make_next_pre_release_commit(version):
     """
     Add release notes and make the release commit
     """
-    run(["git", "add", ABOUT_PY])
+    run(["git", "add", str(ABOUT_PY)])
     run(["git", "commit", "-m", "Start of next release candidate %s" % version])
 
 
@@ -87,18 +87,18 @@ def validate_new_release(version, pre_tag):
     """
 
     release_note = release_note_file_name(version)
-    if not exists(release_note):
+    if not release_note.exists():
         print(
             "Not releasing version %s since release note %s does not exist"
-            % (version, release_note)
+            % (version, str(release_note))
         )
         sys.exit(1)
 
-    with open(release_note, "r") as fptr:
+    with release_note.open("r") as fptr:
         if not fptr.read():
             print(
                 "Not releasing version %s since release note %s is empty"
-                % (version, release_note)
+                % (version, str(release_note))
             )
             sys.exit(1)
 
@@ -135,7 +135,7 @@ def set_version(version):
     Update vunit/about.py with correct version
     """
 
-    with open(ABOUT_PY, "r") as fptr:
+    with ABOUT_PY.open("r") as fptr:
         content = fptr.read()
 
     print("Set local version to %s" % version)
@@ -143,14 +143,14 @@ def set_version(version):
         'VERSION = "%s"' % get_local_version(), 'VERSION = "%s"' % version
     )
 
-    with open(ABOUT_PY, "w") as fptr:
+    with ABOUT_PY.open("w") as fptr:
         fptr.write(content)
 
     assert get_local_version() == version
 
 
-def release_note_file_name(version):
-    return join(REPO_ROOT, "docs", "release_notes", version + ".rst")
+def release_note_file_name(version) -> Path:
+    return REPO_ROOT / "docs" / "release_notes" / (version + ".rst")
 
 
 def get_local_version():
@@ -160,7 +160,7 @@ def get_local_version():
     """
     version = (
         subprocess.check_output(
-            [sys.executable, join(REPO_ROOT, "setup.py"), "--version"]
+            [sys.executable, str(REPO_ROOT / "setup.py"), "--version"]
         )
         .decode()
         .strip()
@@ -180,8 +180,8 @@ def run(cmd):
     subprocess.check_call(cmd)
 
 
-REPO_ROOT = join(dirname(__file__), "..")
-ABOUT_PY = join(REPO_ROOT, "vunit", "about.py")
+REPO_ROOT = Path(__file__).parent.parent
+ABOUT_PY = REPO_ROOT / "vunit" / "about.py"
 
 
 if __name__ == "__main__":

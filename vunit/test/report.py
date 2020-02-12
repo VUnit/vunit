@@ -13,7 +13,7 @@ from xml.etree import ElementTree
 import os
 import socket
 import re
-from os.path import dirname
+from pathlib import Path
 from vunit.color_printer import COLOR_PRINTER
 from vunit.ostools import read_file
 
@@ -325,5 +325,5 @@ class TestResult(object):
         return {
             "status": self._status.name,
             "time": self.time,
-            "path": dirname(self._output_file_name),
+            "path": str(Path(self._output_file_name).parent),
         }

@@ -8,7 +8,7 @@
 Contains different kinds of test suites
 """
 
-from os.path import join
+from pathlib import Path
 from .. import ostools
 from .report import PASSED, SKIPPED, FAILED
 
@@ -345,4 +345,4 @@ def _full_name(test_suite_name, test_case_name):
 
 
 def get_result_file_name(output_path):
-    return join(output_path, "vunit_results")
+    return str(Path(output_path) / "vunit_results")

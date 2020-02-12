@@ -10,7 +10,7 @@
 """
 Verilog parsing functionality
 """
-from os.path import join, exists, abspath
+from pathlib import Path
 import logging
 from vunit.parsing.tokenizer import (
     TokenStream,
@@ -350,8 +350,8 @@ def find_included_file(include_paths, file_name):
     Find the file to include given include_paths
     """
     for include_path in include_paths:
-        full_name = abspath(join(include_path, file_name))
-        if exists(full_name):
+        full_name = str((Path(include_path) / file_name).resolve())
+        if Path(full_name).exists():
             return full_name
     return None
 

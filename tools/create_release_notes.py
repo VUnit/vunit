@@ -8,21 +8,22 @@
 Create monolithic release notes file from several input files
 """
 
-from os.path import join, dirname, basename, splitext, relpath
+from pathlib import Path
+from os.path import relpath
 from glob import glob
 from subprocess import check_output, CalledProcessError
 from shutil import which
 import datetime
 
 
-def get_releases(source_path):
+def get_releases(source_path: Path):
     """
     Get all releases defined by release note files
     """
-    release_notes = join(source_path, "release_notes")
+    release_notes = source_path / "release_notes"
     releases = []
     for idx, file_name in enumerate(
-        sorted(glob(join(release_notes, "*.rst")), reverse=True)
+        sorted(glob(str(release_notes / "*.rst")), reverse=True)
     ):
         releases.append(Release(file_name, is_latest=idx == 0))
     return releases
@@ -32,7 +33,7 @@ def create_release_notes():
     """
     Create monolithic release notes file from several input files
     """
-    source_path = join(dirname(__file__), "..", "docs")
+    source_path = Path(__file__).parent.parent / "docs"
 
     releases = get_releases(source_path)
     latest_release = releases[0]
@@ -40,7 +41,7 @@ def create_release_notes():
     def banner(fptr):
         fptr.write("\n" + ("-" * 80) + "\n\n")
 
-    with open(join(source_path, "release_notes.rst"), "w") as fptr:
+    with (source_path / "release_notes.rst").open("w") as fptr:
         fptr.write(
             """
 .. _release_notes:
@@ -96,7 +97,7 @@ class Release(object):
 
     def __init__(self, file_name, is_latest):
         self.file_name = file_name
-        self.name = splitext(basename(file_name))[0]
+        self.name = str(Path(file_name).with_suffix("").name)
         self.tag = "v" + self.name
         self.is_latest = is_latest
 

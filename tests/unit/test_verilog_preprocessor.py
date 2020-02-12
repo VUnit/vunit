@@ -12,7 +12,7 @@
 Test of the Verilog preprocessor
 """
 
-from os.path import join, dirname, exists
+from pathlib import Path
 import os
 from unittest import TestCase, mock
 import shutil
@@ -28,7 +28,7 @@ class TestVerilogPreprocessor(TestCase):
     """
 
     def setUp(self):
-        self.output_path = join(dirname(__file__), "test_verilog_preprocessor_out")
+        self.output_path = str(Path(__file__).parent / "test_verilog_preprocessor_out")
         renew_path(self.output_path)
         self.cwd = os.getcwd()
         os.chdir(self.output_path)
@@ -150,7 +150,7 @@ class TestVerilogPreprocessor(TestCase):
             '`include "include.svh"', include_paths=[self.output_path]
         )
         result.assert_has_tokens("hello hey")
-        result.assert_included_files([join(self.output_path, "include.svh")])
+        result.assert_included_files([str(Path(self.output_path) / "include.svh")])
 
     def test_detects_circular_includes(self):
         self.write_file("include1.svh", '`include "include2.svh"')
@@ -267,7 +267,7 @@ class TestVerilogPreprocessor(TestCase):
             include_paths=[self.output_path],
         )
         result.assert_has_tokens("hello hey")
-        result.assert_included_files([join(self.output_path, "include.svh")])
+        result.assert_included_files([str(Path(self.output_path) / "include.svh")])
 
     def test_preprocess_include_directive_from_define_with_args(self):
         self.write_file("include.svh", "hello hey")
@@ -278,7 +278,7 @@ class TestVerilogPreprocessor(TestCase):
             include_paths=[self.output_path],
         )
         result.assert_has_tokens("hello hey")
-        result.assert_included_files([join(self.output_path, "include.svh")])
+        result.assert_included_files([str(Path(self.output_path) / "include.svh")])
 
     def test_preprocess_macros_are_recursively_expanded(self):
         result = self.preprocess(
@@ -674,7 +674,7 @@ keep""",
             '\n\n`include "include.svh"', include_paths=[self.output_path]
         )
         result.assert_has_tokens("\n\n")
-        result.assert_included_files([join(self.output_path, "include.svh")])
+        result.assert_included_files([str(Path(self.output_path) / "include.svh")])
         result.logger.warning.assert_called_once_with(
             "Verilog `include bad argument\n%s",
             "from fn.v line 3:\n"
@@ -863,11 +863,11 @@ keep_end"""
         """
         Write file with contents into output path
         """
-        full_name = join(self.output_path, file_name)
-        full_path = dirname(full_name)
-        if not exists(full_path):
-            os.makedirs(full_path)
-        with open(full_name, "w") as fptr:
+        full_name = Path(self.output_path) / file_name
+        full_path = full_name.parent
+        if not full_path.exists():
+            os.makedirs(str(full_path))
+        with full_name.open("w") as fptr:
             fptr.write(contents)
 
 

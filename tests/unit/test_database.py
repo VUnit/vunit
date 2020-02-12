@@ -9,7 +9,7 @@ Test the database related classes
 """
 
 import unittest
-from os.path import join
+from pathlib import Path
 from tests.common import with_tempdir
 from vunit.database import DataBase, PickledDataBase
 
@@ -26,7 +26,7 @@ class TestDataBase(unittest.TestCase):
 
     @staticmethod
     def create_database(tempdir, new=False):
-        return DataBase(join(tempdir, "database"), new=new)
+        return DataBase(str(Path(tempdir) / "database"), new=new)
 
     def _test_add_items(self, tempdir):
         """

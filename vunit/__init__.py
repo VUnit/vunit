@@ -8,14 +8,14 @@
 Public VUnit interface
 """
 
-from os.path import dirname, join, abspath
+from pathlib import Path
 import vunit.version_check
 from vunit.ui import VUnit
 from vunit.vunit_cli import VUnitCLI
 from vunit.about import version, doc
 
 # Repository root
-ROOT = abspath(join(dirname(__file__), ".."))
+ROOT = str(Path(__file__).parent.parent.resolve())
 
 __version__ = version()
 __doc__ = doc()  # pylint: disable=redefined-builtin

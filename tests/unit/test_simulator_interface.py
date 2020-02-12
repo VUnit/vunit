@@ -9,8 +9,8 @@ Test the SimulatorInterface class
 """
 
 import unittest
-from os.path import join, dirname, exists
-import os
+from pathlib import Path
+from os import chdir, getcwd
 import subprocess
 from shutil import rmtree
 from unittest import mock
@@ -248,15 +248,15 @@ Compile failed
         environ.get.assert_called_once_with("VUNIT_SIMNAME_PATH", None)
 
     def setUp(self):
-        self.output_path = join(dirname(__file__), "test_simulator_interface__out")
+        self.output_path = str(Path(__file__).parent / "test_simulator_interface__out")
         renew_path(self.output_path)
         self.project = Project()
-        self.cwd = os.getcwd()
-        os.chdir(self.output_path)
+        self.cwd = getcwd()
+        chdir(self.output_path)
 
     def tearDown(self):
-        os.chdir(self.cwd)
-        if exists(self.output_path):
+        chdir(self.cwd)
+        if Path(self.output_path).exists():
             rmtree(self.output_path)
 
 

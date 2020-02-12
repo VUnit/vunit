@@ -10,7 +10,7 @@ Contains Configuration class which contains configuration of a test run
 
 import logging
 import inspect
-from os.path import dirname
+from pathlib import Path
 from copy import copy
 from vunit.sim_if.factory import SIMULATOR_FACTORY
 
@@ -46,7 +46,7 @@ class Configuration(object):  # pylint: disable=too-many-instance-attributes
         self.sim_options = {} if sim_options is None else sim_options
         self.attributes = {} if attributes is None else attributes
 
-        self.tb_path = dirname(design_unit.original_file_name)
+        self.tb_path = str(Path(design_unit.original_file_name).parent)
 
         # Fill in tb_path generic with location of test bench
         if "tb_path" in design_unit.generic_names:

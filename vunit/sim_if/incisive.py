@@ -8,7 +8,8 @@
 Interface for the Cadence Incisive simulator
 """
 
-from os.path import join, dirname, abspath, relpath
+from pathlib import Path
+from os.path import relpath
 import os
 import subprocess
 import logging
@@ -94,9 +95,9 @@ class IncisiveInterface(  # pylint: disable=too-many-instance-attributes
         self._libraries = []
         self._log_level = log_level
         if cdslib is None:
-            self._cdslib = abspath(join(output_path, "cds.lib"))
+            self._cdslib = str((Path(output_path) / "cds.lib").resolve())
         else:
-            self._cdslib = abspath(cdslib)
+            self._cdslib = str(Path(cdslib).resolve())
         self._hdlvar = hdlvar
         self._cds_root_irun = self.find_cds_root_irun()
         self._create_cdslib()
@@ -106,7 +107,7 @@ class IncisiveInterface(  # pylint: disable=too-many-instance-attributes
         Finds irun cds root
         """
         return subprocess.check_output(
-            [join(self._prefix, "cds_root"), "irun"]
+            [str(Path(self._prefix) / "cds_root"), "irun"]
         ).splitlines()[0]
 
     def find_cds_root_virtuoso(self):
@@ -115,7 +116,7 @@ class IncisiveInterface(  # pylint: disable=too-many-instance-attributes
         """
         try:
             return subprocess.check_output(
-                [join(self._prefix, "cds_root"), "virtuoso"]
+                [str(Path(self._prefix) / "cds_root"), "virtuoso"]
             ).splitlines()[0]
         except subprocess.CalledProcessError:
             return None
@@ -192,7 +193,7 @@ define work "{2}/libraries/work"
         """
         Returns command to compile a VHDL file
         """
-        cmd = join(self._prefix, "irun")
+        cmd = str(Path(self._prefix) / "irun")
         args = []
         args += ["-compile"]
         args += ["-nocopyright"]
@@ -205,9 +206,9 @@ define work "{2}/libraries/work"
         args += self._hdlvar_args()
         args += [
             '-log "%s"'
-            % join(
-                self._output_path,
-                "irun_compile_vhdl_file_%s.log" % source_file.library.name,
+            % str(
+                Path(self._output_path)
+                / ("irun_compile_vhdl_file_%s.log" % source_file.library.name)
             )
         ]
         if not self._log_level == "debug":
@@ -216,13 +217,13 @@ define work "{2}/libraries/work"
             args += ["-messages"]
             args += ["-libverbose"]
         args += source_file.compile_options.get("incisive.irun_vhdl_flags", [])
-        args += ['-nclibdirname "%s"' % dirname(source_file.library.directory)]
+        args += ['-nclibdirname "%s"' % str(Path(source_file.library.directory).parent)]
         args += ["-makelib %s" % source_file.library.directory]
         args += ['"%s"' % source_file.name]
         args += ["-endlib"]
-        argsfile = join(
-            self._output_path,
-            "irun_compile_vhdl_file_%s.args" % source_file.library.name,
+        argsfile = str(
+            Path(self._output_path)
+            / ("irun_compile_vhdl_file_%s.args" % source_file.library.name)
         )
         write_file(argsfile, "\n".join(args))
         return [cmd, "-f", argsfile]
@@ -231,7 +232,7 @@ define work "{2}/libraries/work"
         """
         Returns commands to compile a Verilog file
         """
-        cmd = join(self._prefix, "irun")
+        cmd = str(Path(self._prefix) / "irun")
         args = []
         args += ["-compile"]
         args += ["-nocopyright"]
@@ -248,9 +249,9 @@ define work "{2}/libraries/work"
         args += self._hdlvar_args()
         args += [
             '-log "%s"'
-            % join(
-                self._output_path,
-                "irun_compile_verilog_file_%s.log" % source_file.library.name,
+            % str(
+                Path(self._output_path)
+                / ("irun_compile_verilog_file_%s.log" % source_file.library.name)
             )
         ]
         if not self._log_level == "debug":
@@ -266,13 +267,13 @@ define work "{2}/libraries/work"
 
         for key, value in source_file.defines.items():
             args += ["-define %s=%s" % (key, value.replace('"', '\\"'))]
-        args += ['-nclibdirname "%s"' % dirname(source_file.library.directory)]
+        args += ['-nclibdirname "%s"' % str(Path(source_file.library.directory).parent)]
         args += ["-makelib %s" % source_file.library.name]
         args += ['"%s"' % source_file.name]
         args += ["-endlib"]
-        argsfile = join(
-            self._output_path,
-            "irun_compile_verilog_file_%s.args" % source_file.library.name,
+        argsfile = str(
+            Path(self._output_path)
+            / ("irun_compile_verilog_file_%s.args" % source_file.library.name)
         )
         write_file(argsfile, "\n".join(args))
         return [cmd, "-f", argsfile]
@@ -283,8 +284,10 @@ define work "{2}/libraries/work"
         """
         mapped_libraries = mapped_libraries if mapped_libraries is not None else {}
 
-        if not file_exists(dirname(abspath(library_path))):
-            os.makedirs(dirname(abspath(library_path)))
+        lpath = str(Path(library_path).resolve().parent)
+
+        if not file_exists(lpath):
+            os.makedirs(lpath)
 
         if (
             library_name in mapped_libraries
@@ -310,7 +313,7 @@ define work "{2}/libraries/work"
         Elaborates and Simulates with entity as top level using generics
         """
 
-        script_path = join(output_path, self.name)
+        script_path = str(Path(output_path) / self.name)
         launch_gui = self._gui is not False and not elaborate_only
 
         if elaborate_only:
@@ -319,7 +322,7 @@ define work "{2}/libraries/work"
             steps = ["elaborate", "simulate"]
 
         for step in steps:
-            cmd = join(self._prefix, "irun")
+            cmd = str(Path(self._prefix) / "irun")
             args = []
             if step == "elaborate":
                 args += ["-elaborate"]
@@ -345,12 +348,12 @@ define work "{2}/libraries/work"
             ]  # promote to error: "bad natural literal in generic association"
             args += ["-work work"]
             args += [
-                '-nclibdirname "%s"' % (join(self._output_path, "libraries"))
+                '-nclibdirname "%s"' % (str(Path(self._output_path) / "libraries"))
             ]  # @TODO: ugly
             args += config.sim_options.get("incisive.irun_sim_flags", [])
             args += ['-cdslib "%s"' % self._cdslib]
             args += self._hdlvar_args()
-            args += ['-log "%s"' % join(script_path, "irun_%s.log" % step)]
+            args += ['-log "%s"' % str(Path(script_path) / ("irun_%s.log" % step))]
             if not self._log_level == "debug":
                 args += ["-quiet"]
             else:
@@ -369,21 +372,15 @@ define work "{2}/libraries/work"
 
             if config.architecture_name is None:
                 # we have a SystemVerilog toplevel:
-                args += [
-                    "-top %s"
-                    % join("%s.%s:sv" % (config.library_name, config.entity_name))
-                ]
+                args += ["-top %s.%s:sv" % (config.library_name, config.entity_name)]
             else:
                 # we have a VHDL toplevel:
                 args += [
-                    "-top %s"
-                    % join(
-                        "%s.%s:%s"
-                        % (
-                            config.library_name,
-                            config.entity_name,
-                            config.architecture_name,
-                        )
+                    "-top %s.%s:%s"
+                    % (
+                        config.library_name,
+                        config.entity_name,
+                        config.architecture_name,
                     )
                 ]
             argsfile = "%s/irun_%s.args" % (script_path, step)
