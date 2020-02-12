@@ -17,7 +17,7 @@ import logging
 import json
 import os
 from typing import Optional, Set
-from os.path import exists, abspath, join, basename, normpath, dirname
+from pathlib import Path
 from fnmatch import fnmatch
 from ..database import PickledDataBase, DataBase
 from .. import ostools
@@ -106,7 +106,7 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
     ):
         self._args = args
         self._configure_logging(args.log_level)
-        self._output_path = abspath(args.output_path)
+        self._output_path = str(Path(args.output_path).resolve())
 
         if args.no_color:
             self._printer = NO_COLOR_PRINTER
@@ -135,10 +135,12 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
         # Use default simulator options if no simulator was present
         if self._simulator_class is None:
             simulator_class = SimulatorInterface
-            self._simulator_output_path = join(self._output_path, "none")
+            self._simulator_output_path = str(Path(self._output_path) / "none")
         else:
             simulator_class = self._simulator_class
-            self._simulator_output_path = join(self._output_path, simulator_class.name)
+            self._simulator_output_path = str(
+                Path(self._output_path) / simulator_class.name
+            )
 
         self._create_output_path(args.clean)
 
@@ -161,7 +163,7 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
         Check for Python version used to create the database is the
         same as the running python instance or re-create
         """
-        project_database_file_name = join(self._output_path, "project_database")
+        project_database_file_name = str(Path(self._output_path) / "project_database")
         create_new = False
         key = b"version"
         version = str((9, sys.version)).encode()
@@ -223,7 +225,7 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
 
         self._project.add_library(
             library_name,
-            abspath(path),
+            str(Path(path).resolve()),
             self._which_vhdl_standard(vhdl_standard),
             is_external=True,
         )
@@ -252,8 +254,8 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
                 if len(row) == 2:
                     lib_name = row[0].strip()
                     no_normalized_file = row[1].strip()
-                    file_name_ = normpath(
-                        join(dirname(project_csv_path), no_normalized_file)
+                    file_name_ = str(
+                        (Path(project_csv_path).parent / no_normalized_file).resolve()
                     )
                     lib = (
                         self.library(lib_name)
@@ -291,10 +293,9 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
 
         """
         standard = self._which_vhdl_standard(vhdl_standard)
-
-        path = join(self._simulator_output_path, "libraries", library_name)
+        path = Path(self._simulator_output_path) / "libraries" / library_name
         if not self._project.has_library(library_name):
-            self._project.add_library(library_name, abspath(path), standard)
+            self._project.add_library(library_name, str(path.resolve()), standard)
         elif not allow_duplicate:
             raise ValueError(
                 "Library %s already added. Use allow_duplicate to ignore this error."
@@ -487,7 +488,7 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
                     continue
 
             if not (
-                fnmatch(abspath(source_file.name), pattern)
+                fnmatch(str(Path(source_file.name).resolve()), pattern)
                 or fnmatch(ostools.simplify_path(source_file.name), pattern)
             ):
                 continue
@@ -607,10 +608,12 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
         if not preprocessors:
             return file_name
 
+        fname = str(Path(file_name).name)
+
         try:
             code = ostools.read_file(file_name, encoding=HDL_FILE_ENCODING)
             for preprocessor in preprocessors:
-                code = preprocessor.run(code, basename(file_name))
+                code = preprocessor.run(code, fname)
         except KeyboardInterrupt:
             raise KeyboardInterrupt
         except:  # pylint: disable=bare-except
@@ -618,19 +621,17 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
             LOGGER.error("Failed to preprocess %s", file_name)
             return file_name
         else:
-            pp_file_name = join(
-                self._preprocessed_path, library_name, basename(file_name)
-            )
+            pp_file_name = str(Path(self._preprocessed_path) / library_name / fname)
 
             idx = 1
             while ostools.file_exists(pp_file_name):
                 LOGGER.debug(
                     "Preprocessed file exists '%s', adding prefix", pp_file_name
                 )
-                pp_file_name = join(
-                    self._preprocessed_path,
-                    library_name,
-                    "%i_%s" % (idx, basename(file_name)),
+                pp_file_name = str(
+                    Path(self._preprocessed_path)
+                    / library_name
+                    / ("%i_%s" % (idx, fname)),
                 )
                 idx += 1
 
@@ -749,7 +750,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
             )
             sys.exit(1)
 
-        if not exists(self._simulator_output_path):
+        if not Path(self._simulator_output_path).exists():
             os.makedirs(self._simulator_output_path)
 
         return self._simulator_class.from_args(
@@ -810,7 +811,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         for source_file in file_objects:
             files.append(
                 dict(
-                    file_name=abspath(source_file.name),
+                    file_name=str(Path(source_file.name).resolve()),
                     library_name=source_file.library.name,
                 )
             )
@@ -879,7 +880,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         if clean:
             ostools.renew_path(self._output_path)
-        elif not exists(self._output_path):
+        elif not Path(self._output_path).exists():
             os.makedirs(self._output_path)
 
         ostools.renew_path(self._preprocessed_path)
@@ -890,11 +891,11 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
 
     @property
     def _preprocessed_path(self):
-        return join(self._output_path, "preprocessed")
+        return str(Path(self._output_path) / "preprocessed")
 
     @property
     def codecs_path(self):
-        return join(self._output_path, "codecs")
+        return str(Path(self._output_path) / "codecs")
 
     def _compile(self, simulator_if):
         """
@@ -940,7 +941,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
 
         runner = TestRunner(
             report,
-            join(self._output_path, TEST_OUTPUT_PATH),
+            str(Path(self._output_path) / TEST_OUTPUT_PATH),
             verbosity=verbosity,
             num_threads=self._args.num_threads,
             fail_fast=self._args.fail_fast,

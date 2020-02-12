@@ -10,7 +10,7 @@ Test of the Verilog parser
 
 from unittest import TestCase, mock
 import os
-from os.path import join, dirname, exists
+from pathlib import Path
 import time
 import shutil
 from vunit.ostools import renew_path
@@ -23,7 +23,7 @@ class TestVerilogParser(TestCase):  # pylint: disable=too-many-public-methods
     """
 
     def setUp(self):
-        self.output_path = join(dirname(__file__), "test_verilog_parser_out")
+        self.output_path = str(Path(__file__).parent / "test_verilog_parser_out")
         renew_path(self.output_path)
         self.cwd = os.getcwd()
         os.chdir(self.output_path)
@@ -327,10 +327,10 @@ endmodule;
 
     def test_cached_parsing_updated_by_higher_priority_file(self):
         cache = {}
-        include_paths = [self.output_path, join(self.output_path, "lower_prio")]
+        include_paths = [self.output_path, str(Path(self.output_path) / "lower_prio")]
 
         self.write_file(
-            join("lower_prio", "include.svh"),
+            str(Path("lower_prio") / "include.svh"),
             """
 module mod_lower_prio;
 endmodule;
@@ -381,11 +381,11 @@ endmodule;
         """
         Write file with contents into output path
         """
-        full_name = join(self.output_path, file_name)
-        full_path = dirname(full_name)
-        if not exists(full_path):
-            os.makedirs(full_path)
-        with open(full_name, "w") as fptr:
+        full_name = Path(self.output_path) / file_name
+        full_path = full_name.parent
+        if not full_path.exists():
+            os.makedirs(str(full_path))
+        with full_name.open("w") as fptr:
             fptr.write(contents)
 
     def parse(self, code, include_paths=None, cache=None, defines=None):

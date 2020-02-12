@@ -10,13 +10,16 @@ License header sanity check
 
 import unittest
 from warnings import simplefilter, catch_warnings
-from os.path import join, splitext, abspath, commonprefix
+from pathlib import Path
+from os.path import commonprefix
 from os import walk
 import re
-from vunit import ROOT
+from vunit import ROOT as RSTR
 from vunit.builtins import VHDL_PATH
 from vunit import ostools
 from vunit.about import license_text
+
+ROOT = Path(RSTR)
 
 RE_LICENSE_NOTICE = re.compile(
     r"(?P<comment_start>#|--|//) This Source Code Form is subject to the terms of the Mozilla Public"
@@ -48,13 +51,13 @@ class TestLicense(unittest.TestCase):
         for file_name in find_licensed_files():
             code = ostools.read_file(file_name)
             self._check_license(code, file_name)
-            if splitext(file_name)[1] in (".vhd", ".vhdl", ".v", ".sv"):
+            if Path(file_name).suffix in (".vhd", ".vhdl", ".v", ".sv"):
                 self._check_no_trailing_whitespace(code, file_name)
 
     def test_that_license_file_matches_vunit_license_text(self):
         with catch_warnings():
             simplefilter("ignore", category=DeprecationWarning)
-            with open(join(ROOT, "LICENSE.txt"), "rU") as lic:
+            with (ROOT / "LICENSE.txt").open("rU") as lic:
                 self.assertEqual(lic.read(), license_text())
 
     def _check_license(self, code, file_name):
@@ -128,34 +131,37 @@ def find_licensed_files():
     Return all licensed files
     """
     licensed_files = []
-    osvvm_directory = abspath(join(VHDL_PATH, "osvvm"))
-    json4vhdl_directory = abspath(join(VHDL_PATH, "JSON-for-VHDL"))
-    for root, _, files in walk(ROOT):
+    for root, _, files in walk(RSTR):
         for file_name in files:
             if "preprocessed" in root:
                 continue
             if "codecs" in root:
                 continue
-            if root == join(ROOT, "docs"):
+            if root == str(ROOT / "docs"):
                 continue
-            if join(ROOT, "venv") in root:
+            if str(ROOT / "venv") in root:
                 continue
-            if join(ROOT, ".tox") in root:
+            if str(ROOT / ".tox") in root:
                 continue
-            if is_prefix_of(osvvm_directory, abspath(join(root, file_name))):
+            if is_prefix_of(
+                (VHDL_PATH / "osvvm").resolve(), (Path(root) / file_name).resolve(),
+            ):
                 continue
-            if is_prefix_of(json4vhdl_directory, abspath(join(root, file_name))):
+            if is_prefix_of(
+                (VHDL_PATH / "JSON-for-VHDL").resolve(),
+                (Path(root) / file_name).resolve(),
+            ):
                 continue
-            if splitext(file_name)[1] in (".vhd", ".vhdl", ".py", ".v", ".sv"):
-                licensed_files.append(join(root, file_name))
+            if Path(file_name).suffix in (".vhd", ".vhdl", ".py", ".v", ".sv"):
+                licensed_files.append(str(Path(root) / file_name))
     return licensed_files
 
 
-def is_prefix_of(prefix, of_path):
+def is_prefix_of(prefix: Path, of_path: Path):
     """
     Return True if 'prefix' is a prefix of 'of_path'
     """
-    return commonprefix([prefix, of_path]) == prefix
+    return commonprefix([str(prefix), str(of_path)]) == str(prefix)
 
 
 def main():

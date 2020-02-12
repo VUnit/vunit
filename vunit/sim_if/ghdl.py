@@ -9,8 +9,7 @@ Interface for GHDL simulator
 """
 
 from pathlib import Path
-from os.path import exists, join, abspath
-import os
+from os import environ, makedirs, remove
 import logging
 import subprocess
 import shlex
@@ -32,7 +31,7 @@ class GHDLInterface(SimulatorInterface):
     """
 
     name = "ghdl"
-    executable = os.environ.get("GHDL", "ghdl")
+    executable = environ.get("GHDL", "ghdl")
     supports_gui_flag = True
     supports_colors_in_gui = True
 
@@ -122,7 +121,7 @@ class GHDLInterface(SimulatorInterface):
         Get the output of 'ghdl --version'
         """
         return subprocess.check_output(
-            [join(prefix, cls.executable), "--version"]
+            [str(Path(prefix) / cls.executable), "--version"]
         ).decode()
 
     @classmethod
@@ -183,8 +182,8 @@ class GHDLInterface(SimulatorInterface):
         """
         self._project = project
         for library in project.get_libraries():
-            if not exists(library.directory):
-                os.makedirs(library.directory)
+            if not Path(library.directory).exists():
+                makedirs(library.directory)
 
         vhdl_standards = set(
             source_file.get_vhdl_standard()
@@ -233,7 +232,7 @@ class GHDLInterface(SimulatorInterface):
         Returns the command to compile a vhdl file
         """
         cmd = [
-            join(self._prefix, self.executable),
+            str(Path(self._prefix) / self.executable),
             "-a",
             "--workdir=%s" % source_file.library.directory,
             "--work=%s" % source_file.library.name,
@@ -262,7 +261,7 @@ class GHDLInterface(SimulatorInterface):
         """
         Return GHDL simulation command
         """
-        cmd = [join(self._prefix, self.executable)]
+        cmd = [str(Path(self._prefix) / self.executable)]
 
         if ghdl_e:
             cmd += ["-e"]
@@ -276,8 +275,9 @@ class GHDLInterface(SimulatorInterface):
         ]
         cmd += ["-P%s" % lib.directory for lib in self._project.get_libraries()]
 
-        bin_path = join(
-            output_path, "%s-%s" % (config.entity_name, config.architecture_name)
+        bin_path = str(
+            Path(output_path)
+            / ("%s-%s" % (config.entity_name, config.architecture_name))
         )
         if self._has_output_flag():
             cmd += ["-o", bin_path]
@@ -306,7 +306,7 @@ class GHDLInterface(SimulatorInterface):
                 os.makedirs(output_path, mode=0o777)
             except OSError:
                 pass
-            with open(join(output_path, "args.json"), "w") as fname:
+            with (Path(output_path) / "args.json").open("w") as fname:
                 dump(
                     {
                         "bin": str(
@@ -328,17 +328,17 @@ class GHDLInterface(SimulatorInterface):
         Simulate with entity as top level using generics
         """
 
-        script_path = join(output_path, self.name)
+        script_path = str(Path(output_path) / self.name)
 
-        if not exists(script_path):
-            os.makedirs(script_path)
+        if not Path(script_path).exists():
+            makedirs(script_path)
 
         ghdl_e = elaborate_only and config.sim_options.get("ghdl.elab_e", False)
 
         if self._gtkwave_fmt is not None:
-            data_file_name = join(script_path, "wave.%s" % self._gtkwave_fmt)
-            if exists(data_file_name):
-                os.remove(data_file_name)
+            data_file_name = str(Path(script_path) / ("wave.%s" % self._gtkwave_fmt))
+            if  Path(data_file_name).exists():
+                remove(data_file_name)
         else:
             data_file_name = None
 
@@ -358,7 +358,7 @@ class GHDLInterface(SimulatorInterface):
 
             init_file = config.sim_options.get(self.name + ".gtkwave_script.gui", None)
             if init_file is not None:
-                cmd += ["--script", "{}".format(abspath(init_file))]
+                cmd += ["--script", "{}".format(str(Path(init_file).resolve()))]
 
             stdout.write("%s\n" % " ".join(cmd))
             subprocess.call(cmd)

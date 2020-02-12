@@ -11,7 +11,7 @@ Test csv log functionality
 import unittest
 from shutil import rmtree
 from os import remove
-from os.path import join
+from pathlib import Path
 from tempfile import NamedTemporaryFile, mkdtemp
 from vunit.csv_logs import CsvLogs
 
@@ -25,8 +25,8 @@ class TestCsvLogs(unittest.TestCase):
         self._log_files = []
         self._all_fields_dir = mkdtemp()
         self._few_fields_dir = mkdtemp()
-        self._all_fields_files = join(self._all_fields_dir, "*.csv")
-        self._few_fields_files = join(self._few_fields_dir, "*.csv")
+        self._all_fields_files = str(Path(self._all_fields_dir) / "*.csv")
+        self._few_fields_files = str(Path(self._few_fields_dir) / "*.csv")
 
         def make_log(directory, contents):
             """

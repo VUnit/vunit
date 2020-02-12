@@ -12,8 +12,10 @@ import unittest
 from subprocess import check_call
 import sys
 from glob import glob
-from os.path import join
-from vunit import ROOT
+from pathlib import Path
+from vunit import ROOT as RSTR
+
+ROOT = Path(RSTR)
 
 
 class TestPycodestyle(unittest.TestCase):
@@ -43,7 +45,7 @@ def get_files_and_folders():
     """
     Return all files and folders which shall be arguments to pycodestyle and pylint
     """
-    ret = [join(ROOT, "vunit")]
-    ret += list(glob(join(ROOT, "*.py")))
-    ret += list(glob(join(ROOT, "tools", "*.py")))
+    ret = [str(ROOT / "vunit")]
+    ret += list(glob(str(ROOT / "*.py")))
+    ret += list(glob(str(ROOT / "tools" / "*.py")))
     return ret

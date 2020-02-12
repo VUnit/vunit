@@ -12,7 +12,7 @@ Test the Incisive interface
 
 
 import unittest
-from os.path import join, dirname, exists, basename
+from pathlib import Path
 import os
 from shutil import rmtree
 from unittest import mock
@@ -44,9 +44,9 @@ class TestIncisiveInterface(unittest.TestCase):
             "file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2008")
         )
         simif.compile_project(project)
-        args_file = join(self.output_path, "irun_compile_vhdl_file_lib.args")
+        args_file = str(Path(self.output_path) / "irun_compile_vhdl_file_lib.args")
         check_output.assert_called_once_with(
-            [join("prefix", "irun"), "-f", args_file], env=simif.get_env()
+            [str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env()
         )
         self.assertEqual(
             read_file(args_file).splitlines(),
@@ -58,10 +58,11 @@ class TestIncisiveInterface(unittest.TestCase):
                 "-nowarn DLCVAR",
                 "-v200x -extv200x",
                 "-work work",
-                '-cdslib "%s"' % join(self.output_path, "cds.lib"),
-                '-log "%s"' % join(self.output_path, "irun_compile_vhdl_file_lib.log"),
+                '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
+                '-log "%s"'
+                % str(Path(self.output_path) / "irun_compile_vhdl_file_lib.log"),
                 "-quiet",
-                '-nclibdirname ""',
+                '-nclibdirname "."',
                 "-makelib lib_path",
                 '"file.vhd"',
                 "-endlib",
@@ -69,7 +70,7 @@ class TestIncisiveInterface(unittest.TestCase):
         )
 
         self.assertEqual(
-            read_file(join(self.output_path, "cds.lib")),
+            read_file(str(Path(self.output_path) / "cds.lib")),
             """\
 ## cds.lib: Defines the locations of compiled libraries.
 softinclude cds_root_irun/tools/inca/files/cds.lib
@@ -98,9 +99,9 @@ define work "%s/libraries/work"
             "file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("2002")
         )
         simif.compile_project(project)
-        args_file = join(self.output_path, "irun_compile_vhdl_file_lib.args")
+        args_file = str(Path(self.output_path) / "irun_compile_vhdl_file_lib.args")
         check_output.assert_called_once_with(
-            [join("prefix", "irun"), "-f", args_file], env=simif.get_env()
+            [str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env()
         )
         self.assertEqual(
             read_file(args_file).splitlines(),
@@ -112,10 +113,11 @@ define work "%s/libraries/work"
                 "-nowarn DLCVAR",
                 "-v200x -extv200x",
                 "-work work",
-                '-cdslib "%s"' % join(self.output_path, "cds.lib"),
-                '-log "%s"' % join(self.output_path, "irun_compile_vhdl_file_lib.log"),
+                '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
+                '-log "%s"'
+                % str(Path(self.output_path) / "irun_compile_vhdl_file_lib.log"),
                 "-quiet",
-                '-nclibdirname ""',
+                '-nclibdirname "."',
                 "-makelib lib_path",
                 '"file.vhd"',
                 "-endlib",
@@ -138,9 +140,9 @@ define work "%s/libraries/work"
             "file.vhd", "lib", file_type="vhdl", vhdl_standard=VHDL.standard("93")
         )
         simif.compile_project(project)
-        args_file = join(self.output_path, "irun_compile_vhdl_file_lib.args")
+        args_file = str(Path(self.output_path) / "irun_compile_vhdl_file_lib.args")
         check_output.assert_called_once_with(
-            [join("prefix", "irun"), "-f", args_file], env=simif.get_env()
+            [str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env()
         )
         self.assertEqual(
             read_file(args_file).splitlines(),
@@ -152,10 +154,11 @@ define work "%s/libraries/work"
                 "-nowarn DLCVAR",
                 "-v93",
                 "-work work",
-                '-cdslib "%s"' % join(self.output_path, "cds.lib"),
-                '-log "%s"' % join(self.output_path, "irun_compile_vhdl_file_lib.log"),
+                '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
+                '-log "%s"'
+                % str(Path(self.output_path) / "irun_compile_vhdl_file_lib.log"),
                 "-quiet",
-                '-nclibdirname ""',
+                '-nclibdirname "."',
                 "-makelib lib_path",
                 '"file.vhd"',
                 "-endlib",
@@ -177,9 +180,9 @@ define work "%s/libraries/work"
         source_file = project.add_source_file("file.vhd", "lib", file_type="vhdl")
         source_file.set_compile_option("incisive.irun_vhdl_flags", ["custom", "flags"])
         simif.compile_project(project)
-        args_file = join(self.output_path, "irun_compile_vhdl_file_lib.args")
+        args_file = str(Path(self.output_path) / "irun_compile_vhdl_file_lib.args")
         check_output.assert_called_once_with(
-            [join("prefix", "irun"), "-f", args_file], env=simif.get_env()
+            [str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env()
         )
         self.assertEqual(
             read_file(args_file).splitlines(),
@@ -191,12 +194,13 @@ define work "%s/libraries/work"
                 "-nowarn DLCVAR",
                 "-v200x -extv200x",
                 "-work work",
-                '-cdslib "%s"' % join(self.output_path, "cds.lib"),
-                '-log "%s"' % join(self.output_path, "irun_compile_vhdl_file_lib.log"),
+                '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
+                '-log "%s"'
+                % str(Path(self.output_path) / "irun_compile_vhdl_file_lib.log"),
                 "-quiet",
                 "custom",
                 "flags",
-                '-nclibdirname ""',
+                '-nclibdirname "."',
                 "-makelib lib_path",
                 '"file.vhd"',
                 "-endlib",
@@ -219,9 +223,9 @@ define work "%s/libraries/work"
         write_file("file.vhd", "")
         project.add_source_file("file.vhd", "lib", file_type="vhdl")
         simif.compile_project(project)
-        args_file = join(self.output_path, "irun_compile_vhdl_file_lib.args")
+        args_file = str(Path(self.output_path) / "irun_compile_vhdl_file_lib.args")
         check_output.assert_called_once_with(
-            [join("prefix", "irun"), "-f", args_file], env=simif.get_env()
+            [str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env()
         )
         self.assertEqual(
             read_file(args_file).splitlines(),
@@ -233,11 +237,12 @@ define work "%s/libraries/work"
                 "-nowarn DLCVAR",
                 "-v200x -extv200x",
                 "-work work",
-                '-cdslib "%s"' % join(self.output_path, "cds.lib"),
+                '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
                 '-hdlvar "custom_hdlvar"',
-                '-log "%s"' % join(self.output_path, "irun_compile_vhdl_file_lib.log"),
+                '-log "%s"'
+                % str(Path(self.output_path) / "irun_compile_vhdl_file_lib.log"),
                 "-quiet",
-                '-nclibdirname ""',
+                '-nclibdirname "."',
                 "-makelib lib_path",
                 '"file.vhd"',
                 "-endlib",
@@ -258,9 +263,9 @@ define work "%s/libraries/work"
         write_file("file.v", "")
         project.add_source_file("file.v", "lib", file_type="verilog")
         simif.compile_project(project)
-        args_file = join(self.output_path, "irun_compile_verilog_file_lib.args")
+        args_file = str(Path(self.output_path) / "irun_compile_verilog_file_lib.args")
         check_output.assert_called_once_with(
-            [join("prefix", "irun"), "-f", args_file], env=simif.get_env()
+            [str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env()
         )
         self.assertEqual(
             read_file(args_file).splitlines(),
@@ -272,12 +277,12 @@ define work "%s/libraries/work"
                 "-nowarn DLCPTH",
                 "-nowarn DLCVAR",
                 "-work work",
-                '-cdslib "%s"' % join(self.output_path, "cds.lib"),
+                '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
                 '-log "%s"'
-                % join(self.output_path, "irun_compile_verilog_file_lib.log"),
+                % str(Path(self.output_path) / "irun_compile_verilog_file_lib.log"),
                 "-quiet",
                 '-incdir "cds_root_irun/tools/spectre/etc/ahdl/"',
-                '-nclibdirname ""',
+                '-nclibdirname "."',
                 "-makelib lib",
                 '"file.v"',
                 "-endlib",
@@ -298,9 +303,9 @@ define work "%s/libraries/work"
         write_file("file.sv", "")
         project.add_source_file("file.sv", "lib", file_type="systemverilog")
         simif.compile_project(project)
-        args_file = join(self.output_path, "irun_compile_verilog_file_lib.args")
+        args_file = str(Path(self.output_path) / "irun_compile_verilog_file_lib.args")
         check_output.assert_called_once_with(
-            [join("prefix", "irun"), "-f", args_file], env=simif.get_env()
+            [str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env()
         )
         self.assertEqual(
             read_file(args_file).splitlines(),
@@ -312,12 +317,12 @@ define work "%s/libraries/work"
                 "-nowarn DLCPTH",
                 "-nowarn DLCVAR",
                 "-work work",
-                '-cdslib "%s"' % join(self.output_path, "cds.lib"),
+                '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
                 '-log "%s"'
-                % join(self.output_path, "irun_compile_verilog_file_lib.log"),
+                % str(Path(self.output_path) / "irun_compile_verilog_file_lib.log"),
                 "-quiet",
                 '-incdir "cds_root_irun/tools/spectre/etc/ahdl/"',
-                '-nclibdirname ""',
+                '-nclibdirname "."',
                 "-makelib lib",
                 '"file.sv"',
                 "-endlib",
@@ -325,7 +330,7 @@ define work "%s/libraries/work"
         )
 
         self.assertEqual(
-            read_file(join(self.output_path, "cds.lib")),
+            read_file(str(Path(self.output_path) / "cds.lib")),
             """\
 ## cds.lib: Defines the locations of compiled libraries.
 softinclude cds_root_irun/tools/inca/files/cds.lib
@@ -355,9 +360,9 @@ define work "%s/libraries/work"
             "incisive.irun_verilog_flags", ["custom", "flags"]
         )
         simif.compile_project(project)
-        args_file = join(self.output_path, "irun_compile_verilog_file_lib.args")
+        args_file = str(Path(self.output_path) / "irun_compile_verilog_file_lib.args")
         check_output.assert_called_once_with(
-            [join("prefix", "irun"), "-f", args_file], env=simif.get_env()
+            [str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env()
         )
         self.assertEqual(
             read_file(args_file).splitlines(),
@@ -371,12 +376,12 @@ define work "%s/libraries/work"
                 "-work work",
                 "custom",
                 "flags",
-                '-cdslib "%s"' % join(self.output_path, "cds.lib"),
+                '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
                 '-log "%s"'
-                % join(self.output_path, "irun_compile_verilog_file_lib.log"),
+                % str(Path(self.output_path) / "irun_compile_verilog_file_lib.log"),
                 "-quiet",
                 '-incdir "cds_root_irun/tools/spectre/etc/ahdl/"',
-                '-nclibdirname ""',
+                '-nclibdirname "."',
                 "-makelib lib",
                 '"file.v"',
                 "-endlib",
@@ -399,9 +404,9 @@ define work "%s/libraries/work"
             "file.v", "lib", file_type="verilog", include_dirs=["include"]
         )
         simif.compile_project(project)
-        args_file = join(self.output_path, "irun_compile_verilog_file_lib.args")
+        args_file = str(Path(self.output_path) / "irun_compile_verilog_file_lib.args")
         check_output.assert_called_once_with(
-            [join("prefix", "irun"), "-f", args_file], env=simif.get_env()
+            [str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env()
         )
         self.assertEqual(
             read_file(args_file).splitlines(),
@@ -413,13 +418,13 @@ define work "%s/libraries/work"
                 "-nowarn DLCPTH",
                 "-nowarn DLCVAR",
                 "-work work",
-                '-cdslib "%s"' % join(self.output_path, "cds.lib"),
+                '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
                 '-log "%s"'
-                % join(self.output_path, "irun_compile_verilog_file_lib.log"),
+                % str(Path(self.output_path) / "irun_compile_verilog_file_lib.log"),
                 "-quiet",
                 '-incdir "include"',
                 '-incdir "cds_root_irun/tools/spectre/etc/ahdl/"',
-                '-nclibdirname ""',
+                '-nclibdirname "."',
                 "-makelib lib",
                 '"file.v"',
                 "-endlib",
@@ -442,9 +447,9 @@ define work "%s/libraries/work"
             "file.v", "lib", file_type="verilog", defines=dict(defname="defval")
         )
         simif.compile_project(project)
-        args_file = join(self.output_path, "irun_compile_verilog_file_lib.args")
+        args_file = str(Path(self.output_path) / "irun_compile_verilog_file_lib.args")
         check_output.assert_called_once_with(
-            [join("prefix", "irun"), "-f", args_file], env=simif.get_env()
+            [str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env()
         )
         self.assertEqual(
             read_file(args_file).splitlines(),
@@ -456,13 +461,13 @@ define work "%s/libraries/work"
                 "-nowarn DLCPTH",
                 "-nowarn DLCVAR",
                 "-work work",
-                '-cdslib "%s"' % join(self.output_path, "cds.lib"),
+                '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
                 '-log "%s"'
-                % join(self.output_path, "irun_compile_verilog_file_lib.log"),
+                % str(Path(self.output_path) / "irun_compile_verilog_file_lib.log"),
                 "-quiet",
                 '-incdir "cds_root_irun/tools/spectre/etc/ahdl/"',
                 "-define defname=defval",
-                '-nclibdirname ""',
+                '-nclibdirname "."',
                 "-makelib lib",
                 '"file.v"',
                 "-endlib",
@@ -487,9 +492,9 @@ define work "%s/libraries/work"
             "file.v", "lib", file_type="verilog", defines=dict(defname="defval")
         )
         simif.compile_project(project)
-        args_file = join(self.output_path, "irun_compile_verilog_file_lib.args")
+        args_file = str(Path(self.output_path) / "irun_compile_verilog_file_lib.args")
         check_output.assert_called_once_with(
-            [join("prefix", "irun"), "-f", args_file], env=simif.get_env()
+            [str(Path("prefix") / "irun"), "-f", args_file], env=simif.get_env()
         )
         self.assertEqual(
             read_file(args_file).splitlines(),
@@ -501,14 +506,14 @@ define work "%s/libraries/work"
                 "-nowarn DLCPTH",
                 "-nowarn DLCVAR",
                 "-work work",
-                '-cdslib "%s"' % join(self.output_path, "cds.lib"),
+                '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
                 '-hdlvar "custom_hdlvar"',
                 '-log "%s"'
-                % join(self.output_path, "irun_compile_verilog_file_lib.log"),
+                % str(Path(self.output_path) / "irun_compile_verilog_file_lib.log"),
                 "-quiet",
                 '-incdir "cds_root_irun/tools/spectre/etc/ahdl/"',
                 "-define defname=defval",
-                '-nclibdirname ""',
+                '-nclibdirname "."',
                 "-makelib lib",
                 '"file.v"',
                 "-endlib",
@@ -522,7 +527,7 @@ define work "%s/libraries/work"
         find_cds_root_virtuoso.return_value = None
         IncisiveInterface(prefix="prefix", output_path=self.output_path)
         self.assertEqual(
-            read_file(join(self.output_path, "cds.lib")),
+            read_file(str(Path(self.output_path) / "cds.lib")),
             """\
 ## cds.lib: Defines the locations of compiled libraries.
 softinclude cds_root_irun/tools/inca/files/cds.lib
@@ -541,7 +546,7 @@ define work "%s/libraries/work"
         find_cds_root_virtuoso.return_value = "cds_root_virtuoso"
         IncisiveInterface(prefix="prefix", output_path=self.output_path)
         self.assertEqual(
-            read_file(join(self.output_path, "cds.lib")),
+            read_file(str(Path(self.output_path) / "cds.lib")),
             """\
 ## cds.lib: Defines the locations of compiled libraries.
 softinclude cds_root_irun/tools/inca/files/cds.lib
@@ -574,20 +579,26 @@ define work "%s/libraries/work"
 
         config = make_config()
         self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = join(
-            "suite_output_path", simif.name, "irun_elaborate.args"
+        elaborate_args_file = str(
+            Path("suite_output_path") / simif.name / "irun_elaborate.args"
         )
-        simulate_args_file = join("suite_output_path", simif.name, "irun_simulate.args")
+        simulate_args_file = str(
+            Path("suite_output_path") / simif.name / "irun_simulate.args"
+        )
         run_command.assert_has_calls(
             [
                 mock.call(
-                    [join("prefix", "irun"), "-f", basename(elaborate_args_file)],
-                    cwd=dirname(elaborate_args_file),
+                    [
+                        str(Path("prefix") / "irun"),
+                        "-f",
+                        Path(elaborate_args_file).name,
+                    ],
+                    cwd=str(Path(elaborate_args_file).parent),
                     env=simif.get_env(),
                 ),
                 mock.call(
-                    [join("prefix", "irun"), "-f", basename(simulate_args_file)],
-                    cwd=dirname(simulate_args_file),
+                    [str(Path("prefix") / "irun"), "-f", Path(simulate_args_file).name],
+                    cwd=str(Path(simulate_args_file).parent),
                     env=simif.get_env(),
                 ),
             ]
@@ -607,10 +618,10 @@ define work "%s/libraries/work"
                 "-ncerror EVBSTR",
                 "-ncerror EVBNAT",
                 "-work work",
-                '-nclibdirname "%s"' % join(self.output_path, "libraries"),
-                '-cdslib "%s"' % join(self.output_path, "cds.lib"),
+                '-nclibdirname "%s"' % str(Path(self.output_path) / "libraries"),
+                '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
                 '-log "%s"'
-                % join("suite_output_path", simif.name, "irun_elaborate.log"),
+                % str(Path("suite_output_path") / simif.name / "irun_elaborate.log"),
                 "-quiet",
                 '-reflib "lib_path"',
                 "-access +r",
@@ -632,10 +643,10 @@ define work "%s/libraries/work"
                 "-ncerror EVBSTR",
                 "-ncerror EVBNAT",
                 "-work work",
-                '-nclibdirname "%s"' % join(self.output_path, "libraries"),
-                '-cdslib "%s"' % join(self.output_path, "cds.lib"),
+                '-nclibdirname "%s"' % str(Path(self.output_path) / "libraries"),
+                '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
                 '-log "%s"'
-                % join("suite_output_path", simif.name, "irun_simulate.log"),
+                % str(Path("suite_output_path") / simif.name / "irun_simulate.log"),
                 "-quiet",
                 '-reflib "lib_path"',
                 "-access +r",
@@ -666,20 +677,26 @@ define work "%s/libraries/work"
 
         config = make_config(verilog=True)
         self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = join(
-            "suite_output_path", simif.name, "irun_elaborate.args"
+        elaborate_args_file = str(
+            Path("suite_output_path") / simif.name / "irun_elaborate.args"
         )
-        simulate_args_file = join("suite_output_path", simif.name, "irun_simulate.args")
+        simulate_args_file = str(
+            Path("suite_output_path") / simif.name / "irun_simulate.args"
+        )
         run_command.assert_has_calls(
             [
                 mock.call(
-                    [join("prefix", "irun"), "-f", basename(elaborate_args_file)],
-                    cwd=dirname(elaborate_args_file),
+                    [
+                        str(Path("prefix") / "irun"),
+                        "-f",
+                        Path(elaborate_args_file).name,
+                    ],
+                    cwd=str(Path(elaborate_args_file).parent),
                     env=simif.get_env(),
                 ),
                 mock.call(
-                    [join("prefix", "irun"), "-f", basename(simulate_args_file)],
-                    cwd=dirname(simulate_args_file),
+                    [str(Path("prefix") / "irun"), "-f", Path(simulate_args_file).name],
+                    cwd=str(Path(simulate_args_file).parent),
                     env=simif.get_env(),
                 ),
             ]
@@ -699,10 +716,10 @@ define work "%s/libraries/work"
                 "-ncerror EVBSTR",
                 "-ncerror EVBNAT",
                 "-work work",
-                '-nclibdirname "%s"' % join(self.output_path, "libraries"),
-                '-cdslib "%s"' % join(self.output_path, "cds.lib"),
+                '-nclibdirname "%s"' % str(Path(self.output_path) / "libraries"),
+                '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
                 '-log "%s"'
-                % join("suite_output_path", simif.name, "irun_elaborate.log"),
+                % str(Path("suite_output_path") / simif.name / "irun_elaborate.log"),
                 "-quiet",
                 '-reflib "lib_path"',
                 "-access +r",
@@ -724,10 +741,10 @@ define work "%s/libraries/work"
                 "-ncerror EVBSTR",
                 "-ncerror EVBNAT",
                 "-work work",
-                '-nclibdirname "%s"' % join(self.output_path, "libraries"),
-                '-cdslib "%s"' % join(self.output_path, "cds.lib"),
+                '-nclibdirname "%s"' % str(Path(self.output_path) / "libraries"),
+                '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
                 '-log "%s"'
-                % join("suite_output_path", simif.name, "irun_simulate.log"),
+                % str(Path("suite_output_path") / simif.name / "irun_simulate.log"),
                 "-quiet",
                 '-reflib "lib_path"',
                 "-access +r",
@@ -749,20 +766,26 @@ define work "%s/libraries/work"
             sim_options={"incisive.irun_sim_flags": ["custom", "flags"]}
         )
         self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = join(
-            "suite_output_path", simif.name, "irun_elaborate.args"
+        elaborate_args_file = str(
+            Path("suite_output_path") / simif.name / "irun_elaborate.args"
         )
-        simulate_args_file = join("suite_output_path", simif.name, "irun_simulate.args")
+        simulate_args_file = str(
+            Path("suite_output_path") / simif.name / "irun_simulate.args"
+        )
         run_command.assert_has_calls(
             [
                 mock.call(
-                    [join("prefix", "irun"), "-f", basename(elaborate_args_file)],
-                    cwd=dirname(elaborate_args_file),
+                    [
+                        str(Path("prefix") / "irun"),
+                        "-f",
+                        Path(elaborate_args_file).name,
+                    ],
+                    cwd=str(Path(elaborate_args_file).parent),
                     env=simif.get_env(),
                 ),
                 mock.call(
-                    [join("prefix", "irun"), "-f", basename(simulate_args_file)],
-                    cwd=dirname(simulate_args_file),
+                    [str(Path("prefix") / "irun"), "-f", Path(simulate_args_file).name],
+                    cwd=str(Path(simulate_args_file).parent),
                     env=simif.get_env(),
                 ),
             ]
@@ -789,20 +812,26 @@ define work "%s/libraries/work"
             verilog=True, generics={"genstr": "genval", "genint": 1, "genbool": True}
         )
         self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = join(
-            "suite_output_path", simif.name, "irun_elaborate.args"
+        elaborate_args_file = str(
+            Path("suite_output_path") / simif.name / "irun_elaborate.args"
         )
-        simulate_args_file = join("suite_output_path", simif.name, "irun_simulate.args")
+        simulate_args_file = str(
+            Path("suite_output_path") / simif.name / "irun_simulate.args"
+        )
         run_command.assert_has_calls(
             [
                 mock.call(
-                    [join("prefix", "irun"), "-f", basename(elaborate_args_file)],
-                    cwd=dirname(elaborate_args_file),
+                    [
+                        str(Path("prefix") / "irun"),
+                        "-f",
+                        Path(elaborate_args_file).name,
+                    ],
+                    cwd=str(Path(elaborate_args_file).parent),
                     env=simif.get_env(),
                 ),
                 mock.call(
-                    [join("prefix", "irun"), "-f", basename(simulate_args_file)],
-                    cwd=dirname(simulate_args_file),
+                    [str(Path("prefix") / "irun"), "-f", Path(simulate_args_file).name],
+                    cwd=str(Path(simulate_args_file).parent),
                     env=simif.get_env(),
                 ),
             ]
@@ -827,20 +856,26 @@ define work "%s/libraries/work"
         )
         config = make_config()
         self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = join(
-            "suite_output_path", simif.name, "irun_elaborate.args"
+        elaborate_args_file = str(
+            Path("suite_output_path") / simif.name / "irun_elaborate.args"
         )
-        simulate_args_file = join("suite_output_path", simif.name, "irun_simulate.args")
+        simulate_args_file = str(
+            Path("suite_output_path") / simif.name / "irun_simulate.args"
+        )
         run_command.assert_has_calls(
             [
                 mock.call(
-                    [join("prefix", "irun"), "-f", basename(elaborate_args_file)],
-                    cwd=dirname(elaborate_args_file),
+                    [
+                        str(Path("prefix") / "irun"),
+                        "-f",
+                        Path(elaborate_args_file).name,
+                    ],
+                    cwd=str(Path(elaborate_args_file).parent),
                     env=simif.get_env(),
                 ),
                 mock.call(
-                    [join("prefix", "irun"), "-f", basename(simulate_args_file)],
-                    cwd=dirname(simulate_args_file),
+                    [str(Path("prefix") / "irun"), "-f", Path(simulate_args_file).name],
+                    cwd=str(Path(simulate_args_file).parent),
                     env=simif.get_env(),
                 ),
             ]
@@ -863,14 +898,18 @@ define work "%s/libraries/work"
                 "suite_output_path", "test_suite_name", config, elaborate_only=True
             )
         )
-        elaborate_args_file = join(
-            "suite_output_path", simif.name, "irun_elaborate.args"
+        elaborate_args_file = str(
+            Path("suite_output_path") / simif.name / "irun_elaborate.args"
         )
         run_command.assert_has_calls(
             [
                 mock.call(
-                    [join("prefix", "irun"), "-f", basename(elaborate_args_file)],
-                    cwd=dirname(elaborate_args_file),
+                    [
+                        str(Path("prefix") / "irun"),
+                        "-f",
+                        Path(elaborate_args_file).name,
+                    ],
+                    cwd=str(Path(elaborate_args_file).parent),
                     env=simif.get_env(),
                 )
             ]
@@ -890,10 +929,10 @@ define work "%s/libraries/work"
                 "-ncerror EVBSTR",
                 "-ncerror EVBNAT",
                 "-work work",
-                '-nclibdirname "%s"' % join(self.output_path, "libraries"),
-                '-cdslib "%s"' % join(self.output_path, "cds.lib"),
+                '-nclibdirname "%s"' % str(Path(self.output_path) / "libraries"),
+                '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
                 '-log "%s"'
-                % join("suite_output_path", simif.name, "irun_elaborate.log"),
+                % str(Path("suite_output_path") / simif.name / "irun_elaborate.log"),
                 "-quiet",
                 "-access +r",
                 '-input "@run"',
@@ -912,14 +951,18 @@ define work "%s/libraries/work"
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
         config = make_config()
         self.assertFalse(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = join(
-            "suite_output_path", simif.name, "irun_elaborate.args"
+        elaborate_args_file = str(
+            Path("suite_output_path") / simif.name / "irun_elaborate.args"
         )
         run_command.assert_has_calls(
             [
                 mock.call(
-                    [join("prefix", "irun"), "-f", basename(elaborate_args_file)],
-                    cwd=dirname(elaborate_args_file),
+                    [
+                        str(Path("prefix") / "irun"),
+                        "-f",
+                        Path(elaborate_args_file).name,
+                    ],
+                    cwd=str(Path(elaborate_args_file).parent),
                     env=simif.get_env(),
                 )
             ]
@@ -938,20 +981,26 @@ define work "%s/libraries/work"
         simif = IncisiveInterface(prefix="prefix", output_path=self.output_path)
         config = make_config()
         self.assertFalse(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = join(
-            "suite_output_path", simif.name, "irun_elaborate.args"
+        elaborate_args_file = str(
+            Path("suite_output_path") / simif.name / "irun_elaborate.args"
         )
-        simulate_args_file = join("suite_output_path", simif.name, "irun_simulate.args")
+        simulate_args_file = str(
+            Path("suite_output_path") / simif.name / "irun_simulate.args"
+        )
         run_command.assert_has_calls(
             [
                 mock.call(
-                    [join("prefix", "irun"), "-f", basename(elaborate_args_file)],
-                    cwd=dirname(elaborate_args_file),
+                    [
+                        str(Path("prefix") / "irun"),
+                        "-f",
+                        Path(elaborate_args_file).name,
+                    ],
+                    cwd=str(Path(elaborate_args_file).parent),
                     env=simif.get_env(),
                 ),
                 mock.call(
-                    [join("prefix", "irun"), "-f", basename(simulate_args_file)],
-                    cwd=dirname(simulate_args_file),
+                    [str(Path("prefix") / "irun"), "-f", Path(simulate_args_file).name],
+                    cwd=str(Path(simulate_args_file).parent),
                     env=simif.get_env(),
                 ),
             ]
@@ -980,20 +1029,26 @@ define work "%s/libraries/work"
             simif.compile_project(project)
         config = make_config()
         self.assertTrue(simif.simulate("suite_output_path", "test_suite_name", config))
-        elaborate_args_file = join(
-            "suite_output_path", simif.name, "irun_elaborate.args"
+        elaborate_args_file = str(
+            Path("suite_output_path") / simif.name / "irun_elaborate.args"
         )
-        simulate_args_file = join("suite_output_path", simif.name, "irun_simulate.args")
+        simulate_args_file = str(
+            Path("suite_output_path") / simif.name / "irun_simulate.args"
+        )
         run_command.assert_has_calls(
             [
                 mock.call(
-                    [join("prefix", "irun"), "-f", basename(elaborate_args_file)],
-                    cwd=dirname(elaborate_args_file),
+                    [
+                        str(Path("prefix") / "irun"),
+                        "-f",
+                        Path(elaborate_args_file).name,
+                    ],
+                    cwd=str(Path(elaborate_args_file).parent),
                     env=simif.get_env(),
                 ),
                 mock.call(
-                    [join("prefix", "irun"), "-f", basename(simulate_args_file)],
-                    cwd=dirname(simulate_args_file),
+                    [str(Path("prefix") / "irun"), "-f", Path(simulate_args_file).name],
+                    cwd=str(Path(simulate_args_file).parent),
                     env=simif.get_env(),
                 ),
             ]
@@ -1012,10 +1067,10 @@ define work "%s/libraries/work"
                 "-ncerror EVBSTR",
                 "-ncerror EVBNAT",
                 "-work work",
-                '-nclibdirname "%s"' % join(self.output_path, "libraries"),
-                '-cdslib "%s"' % join(self.output_path, "cds.lib"),
+                '-nclibdirname "%s"' % str(Path(self.output_path) / "libraries"),
+                '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
                 '-log "%s"'
-                % join("suite_output_path", simif.name, "irun_elaborate.log"),
+                % str(Path("suite_output_path") / simif.name / "irun_elaborate.log"),
                 "-quiet",
                 '-reflib "lib_path"',
                 "-access +rwc",
@@ -1037,10 +1092,10 @@ define work "%s/libraries/work"
                 "-ncerror EVBSTR",
                 "-ncerror EVBNAT",
                 "-work work",
-                '-nclibdirname "%s"' % join(self.output_path, "libraries"),
-                '-cdslib "%s"' % join(self.output_path, "cds.lib"),
+                '-nclibdirname "%s"' % str(Path(self.output_path) / "libraries"),
+                '-cdslib "%s"' % str(Path(self.output_path) / "cds.lib"),
                 '-log "%s"'
-                % join("suite_output_path", simif.name, "irun_simulate.log"),
+                % str(Path("suite_output_path") / simif.name / "irun_simulate.log"),
                 "-quiet",
                 '-reflib "lib_path"',
                 "-access +rwc",
@@ -1050,7 +1105,7 @@ define work "%s/libraries/work"
         )
 
     def setUp(self):
-        self.output_path = join(dirname(__file__), "test_incisive_out")
+        self.output_path = str(Path(__file__).parent / "test_incisive_out")
         renew_path(self.output_path)
         self.project = Project()
         self.cwd = os.getcwd()
@@ -1058,7 +1113,7 @@ define work "%s/libraries/work"
 
     def tearDown(self):
         os.chdir(self.cwd)
-        if exists(self.output_path):
+        if Path(self.output_path).exists():
             rmtree(self.output_path)
 
 

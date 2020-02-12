@@ -9,7 +9,8 @@ Provided functionality to run a suite of test in a robust way
 """
 
 import os
-from os.path import join, exists, abspath, basename, relpath
+from os.path import relpath
+from pathlib import Path
 import traceback
 import threading
 import sys
@@ -77,7 +78,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         Run a list of test suites
         """
 
-        if not exists(self._output_path):
+        if not Path(self._output_path).exists():
             os.makedirs(self._output_path)
 
         self._create_test_mapping_file(test_suites)
@@ -145,7 +146,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                 test_suite = scheduler.next()
 
                 output_path = create_output_path(self._output_path, test_suite.name)
-                output_file_name = join(output_path, "output.txt")
+                output_file_name = str(Path(output_path) / "output.txt")
 
                 with self._stdout_lock():
                     for test_name in test_suite.test_names:
@@ -187,7 +188,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         """
         Run the actual test suite
         """
-        color_output_file_name = join(output_path, "output_with_color.txt")
+        color_output_file_name = str(Path(output_path) / "output_with_color.txt")
 
         output_file = None
         color_output_file = None
@@ -263,11 +264,13 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         Create a file mapping test name to test output folder.
         This is to allow the user to find the test output folder when it is hashed
         """
-        mapping_file_name = join(self._output_path, "test_name_to_path_mapping.txt")
+        mapping_file_name = str(
+            Path(self._output_path) / "test_name_to_path_mapping.txt"
+        )
 
         # Load old mapping to remember non-deleted test folders as well
         # even when re-running only a single test case
-        if exists(mapping_file_name):
+        if Path(mapping_file_name).exists():
             with open(mapping_file_name, "r") as fptr:
                 mapping = set(fptr.read().splitlines())
         else:
@@ -275,7 +278,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
         for test_suite in test_suites:
             test_output = create_output_path(self._output_path, test_suite.name)
-            mapping.add("%s %s" % (basename(test_output), test_suite.name))
+            mapping.add("%s %s" % (Path(test_output).name, test_suite.name))
 
         # Sort by everything except hash
         mapping = sorted(mapping, key=lambda value: value[value.index(" ") :])
@@ -288,7 +291,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         """
         Print contents of output file if it exists
         """
-        with open(output_file_name, "r") as fread:
+        with Path(output_file_name).open("r") as fread:
             for line in fread.readlines():
                 self._stdout_ansi.write(line)
 
@@ -433,7 +436,7 @@ def create_output_path(output_path, test_suite_name):
     Create the full output path of a test case.
     Ensure no bad characters and no long path names.
     """
-    output_path = abspath(output_path)
+    output_path = str(Path(output_path).resolve())
     safe_name = (
         "".join(char if _is_legal(char) else "_" for char in test_suite_name) + "_"
     )
@@ -454,7 +457,7 @@ def create_output_path(output_path, test_suite_name):
     else:
         full_name = safe_name + hash_name
 
-    return join(output_path, full_name)
+    return str(Path(output_path) / full_name)
 
 
 def wrap(file_obj, use_color=True):

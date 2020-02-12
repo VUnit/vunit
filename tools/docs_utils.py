@@ -10,25 +10,25 @@ Helper functions to generate examples.rst from docstrings in run.py files
 
 import sys
 import inspect
-from os.path import basename, dirname, isdir, isfile, join
+
+from pathlib import Path
 from os import listdir, remove
 
-
-ROOT = join(dirname(__file__), "..", "docs")
+ROOT = Path(__file__).parent.parent / "docs"
 
 
 def examples():
     """
     Traverses the examples directory and generates examples.rst with the docstrings
     """
-    eg_path = join(ROOT, "..", "examples")
-    egs_fptr = open(join(ROOT, "examples.rst"), "w+")
+    eg_path = ROOT.parent / "examples"
+    egs_fptr = (ROOT / "examples.rst").open("w+")
     egs_fptr.write("\n".join([".. _examples:\n", "Examples", "========", "\n"]))
     for language, subdir in {"VHDL": "vhdl", "SystemVerilog": "verilog"}.items():
         egs_fptr.write("\n".join([language, "~~~~~~~~~~~~~~~~~~~~~~~", "\n"]))
-        for item in listdir(join(eg_path, subdir)):
-            loc = join(eg_path, subdir, item)
-            if isdir(loc):
+        for item in listdir(str(eg_path / subdir)):
+            loc = eg_path / subdir / item
+            if loc.is_dir():
                 _data = _get_eg_doc(
                     loc,
                     "https://github.com/VUnit/vunit/tree/master/examples/%s/%s"
@@ -38,37 +38,39 @@ def examples():
                     egs_fptr.write(_data)
 
 
-def _get_eg_doc(location, ref):
+def _get_eg_doc(location: Path, ref):
     """
     Reads the docstring from a run.py file and rewrites the title to make it a ref
     """
-    if not isfile(join(location, "run.py")):
+    nstr = str(location.name)
+
+    if not (location / "run.py").is_file():
         print(
             "WARNING: Example subdir '"
-            + basename(location)
+            + nstr
             + "' does not contain a 'run.py' file. Skipping..."
         )
         return None
 
-    print("Generating '_main.py' from 'run.py' in '" + basename(location) + "'...")
-    with open(join(location, "run.py"), "r") as ifile:
-        with open(join(location, "_main.py"), "w") as ofile:
+    print("Generating '_main.py' from 'run.py' in '" + nstr + "'...")
+    with (location / "run.py").open("r") as ifile:
+        with (location / "_main.py").open("w") as ofile:
             ofile.writelines(["def _main():\n"])
             ofile.writelines(["".join(["    ", x]) for x in ifile])
 
-    print("Extracting docs from '" + basename(location) + "'...")
-    sys.path.append(location)
+    print("Extracting docs from '" + nstr + "'...")
+    sys.path.append(str(location))
     from _main import _main  # pylint: disable=import-error,import-outside-toplevel
 
     eg_doc = inspect.getdoc(_main)
     del sys.modules["_main"]
-    sys.path.remove(location)
-    remove(join(location, "_main.py"))
+    sys.path.remove(str(location))
+    remove(str(location / "_main.py"))
 
     if not eg_doc:
         print(
             "WARNING: 'run.py' file in example subdir '"
-            + basename(location)
+            + nstr
             + "' does not contain a docstring. Skipping..."
         )
         return ""

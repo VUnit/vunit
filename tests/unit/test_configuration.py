@@ -13,7 +13,7 @@ Tests the test test_bench module
 
 import unittest
 import contextlib
-from os.path import join
+from pathlib import Path
 from unittest import mock
 from tests.common import with_tempdir, create_tempdir
 from tests.unit.test_test_bench import Entity
@@ -61,10 +61,12 @@ class TestConfiguration(unittest.TestCase):
     @with_tempdir
     def test_adds_tb_path_generic(self, tempdir):
         design_unit_tb_path = Entity(
-            "tb_entity_without_tb_path", file_name=join(tempdir, "file.vhd")
+            "tb_entity_without_tb_path", file_name=str(Path(tempdir) / "file.vhd")
         )
-        tb_path = join(tempdir, "other_path")
-        design_unit_tb_path.original_file_name = join(tb_path, "original_file.vhd")
+        tb_path = str(Path(tempdir) / "other_path")
+        design_unit_tb_path.original_file_name = str(
+            Path(tb_path) / "original_file.vhd"
+        )
         design_unit_tb_path.generic_names = ["runner_cfg", "tb_path"]
         config_tb_path = Configuration("name", design_unit_tb_path)
         self.assertEqual(
@@ -298,7 +300,7 @@ def _create_config(**kwargs):
     Helper function to create a config
     """
     with create_tempdir() as tempdir:
-        design_unit = Entity("tb_entity", file_name=join(tempdir, "file.vhd"))
+        design_unit = Entity("tb_entity", file_name=str(Path(tempdir) / "file.vhd"))
         design_unit.generic_names = ["runner_cfg"]
         yield Configuration("name", design_unit, **kwargs)
 

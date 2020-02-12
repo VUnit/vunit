@@ -4,17 +4,17 @@
 #
 # Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
-from os.path import join, dirname
+from pathlib import Path
 from itertools import product
 from vunit import VUnit
 
-root = dirname(__file__)
+ROOT = Path(__file__).parent
 
-ui = VUnit.from_argv()
-ui.add_random()
-ui.add_verification_components()
-lib = ui.library("vunit_lib")
-lib.add_source_files(join(root, "test", "*.vhd"))
+UI = VUnit.from_argv()
+UI.add_random()
+UI.add_verification_components()
+LIB = UI.library("vunit_lib")
+LIB.add_source_files(ROOT / "test" / "*.vhd")
 
 
 def encode(tb_cfg):
@@ -67,12 +67,12 @@ def gen_avalon_master_tests(obj, *args):
         obj.add_config(name=config_name, generics=dict(encoded_tb_cfg=encode(tb_cfg)))
 
 
-tb_avalon_slave = lib.test_bench("tb_avalon_slave")
+tb_avalon_slave = LIB.test_bench("tb_avalon_slave")
 
 for test in tb_avalon_slave.get_tests():
     gen_avalon_tests(test, [32], [1, 2, 64], [1.0, 0.3], [0.0, 0.4])
 
-tb_avalon_master = lib.test_bench("tb_avalon_master")
+tb_avalon_master = LIB.test_bench("tb_avalon_master")
 
 for test in tb_avalon_master.get_tests():
     if test.name == "wr single rd single":
@@ -82,19 +82,19 @@ for test in tb_avalon_master.get_tests():
             test, [64], [1.0, 0.3], [0.0, 0.7], [1.0, 0.3], [1.0, 0.3]
         )
 
-TB_WISHBONE_SLAVE = lib.test_bench("tb_wishbone_slave")
+TB_WISHBONE_SLAVE = LIB.test_bench("tb_wishbone_slave")
 
 for test in TB_WISHBONE_SLAVE.get_tests():
     #  TODO strobe_prob not implemented in slave tb
     gen_wb_tests(test, [8, 32], [1, 64], [1.0], [0.3, 1.0], [0.4, 0.0])
 
 
-TB_WISHBONE_MASTER = lib.test_bench("tb_wishbone_master")
+TB_WISHBONE_MASTER = LIB.test_bench("tb_wishbone_master")
 
 for test in TB_WISHBONE_MASTER.get_tests():
     gen_wb_tests(test, [8, 32], [1, 64], [0.3, 1.0], [0.3, 1.0], [0.4, 0.0])
 
-TB_AXI_STREAM = lib.test_bench("tb_axi_stream")
+TB_AXI_STREAM = LIB.test_bench("tb_axi_stream")
 
 for id_length in [0, 8]:
     for dest_length in [0, 8]:
@@ -110,7 +110,7 @@ for id_length in [0, 8]:
                     ),
                 )
 
-TB_AXI_STREAM_PROTOCOL_CHECKER = lib.test_bench("tb_axi_stream_protocol_checker")
+TB_AXI_STREAM_PROTOCOL_CHECKER = LIB.test_bench("tb_axi_stream_protocol_checker")
 
 for data_length in [0, 8]:
     for test in TB_AXI_STREAM_PROTOCOL_CHECKER.get_tests("*passing*tdata*"):
@@ -140,4 +140,4 @@ TB_AXI_STREAM.test("test random stall on slave").add_config(
     name="stall_slave", generics=dict(g_stall_percentage_slave=30)
 )
 
-ui.main()
+UI.main()

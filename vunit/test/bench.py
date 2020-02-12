@@ -9,7 +9,7 @@ Contains classes to represent a test bench and test cases
 """
 
 import logging
-from os.path import basename
+from pathlib import Path
 import re
 import bisect
 import collections
@@ -98,7 +98,7 @@ class TestBench(ConfigurationVisitor):
                     % (
                         design_unit.name,
                         ", ".join(
-                            "%s:%s" % (name, basename(fname))
+                            "%s:%s" % (name, str(Path(fname).name))
                             for name, fname in sorted(
                                 design_unit.architecture_names.items()
                             )

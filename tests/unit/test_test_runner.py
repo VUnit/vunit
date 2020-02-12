@@ -8,7 +8,7 @@
 Test the test runner
 """
 
-from os.path import join, abspath
+from pathlib import Path
 import unittest
 from unittest import mock
 from tests.common import with_tempdir
@@ -143,8 +143,9 @@ class TestTestRunner(unittest.TestCase):
                 test_output = create_output_path(output_path, test_name)
                 self.assertEqual(
                     test_output,
-                    join(
-                        abspath(output_path), test_name + "_" + hash_string(test_name)
+                    str(
+                        Path(output_path).resolve()
+                        / (test_name + "_" + hash_string(test_name))
                     ),
                 )
 
@@ -153,8 +154,9 @@ class TestTestRunner(unittest.TestCase):
                 test_output = create_output_path(output_path, test_name)
                 self.assertEqual(
                     test_output,
-                    join(
-                        abspath(output_path), test_name + "_" + hash_string(test_name)
+                    str(
+                        Path(output_path).resolve()
+                        / (test_name + "_" + hash_string(test_name))
                     ),
                 )
 
@@ -164,8 +166,9 @@ class TestTestRunner(unittest.TestCase):
                 test_output = create_output_path(output_path, test_name)
                 self.assertEqual(
                     test_output,
-                    join(
-                        abspath(output_path), safe_name + "_" + hash_string(test_name)
+                    str(
+                        Path(output_path).resolve()
+                        / (safe_name + "_" + hash_string(test_name))
                     ),
                 )
 
@@ -185,8 +188,9 @@ class TestTestRunner(unittest.TestCase):
                 test_output = create_output_path(output_path, test_name)
                 self.assertEqual(
                     test_output,
-                    join(
-                        abspath(output_path), test_name + "_" + hash_string(test_name)
+                    str(
+                        Path(output_path).resolve()
+                        / (test_name + "_" + hash_string(test_name))
                     ),
                 )
 
@@ -195,7 +199,8 @@ class TestTestRunner(unittest.TestCase):
                 test_name = "_" * 400
                 test_output = create_output_path(output_path, test_name)
                 self.assertEqual(
-                    test_output, join(abspath(output_path), hash_string(test_name))
+                    test_output,
+                    str(Path(output_path).resolve() / hash_string(test_name)),
                 )
 
     @staticmethod

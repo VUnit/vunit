@@ -13,8 +13,7 @@ Acceptance test of the VUnit public interface class
 import unittest
 from string import Template
 from pathlib import Path
-import os
-from os.path import join, dirname, basename, exists, abspath
+from os import chdir, getcwd
 import json
 import re
 from re import MULTILINE
@@ -35,17 +34,17 @@ class TestUi(unittest.TestCase):
     """
 
     def setUp(self):
-        self.tmp_path = join(dirname(__file__), "test_ui_tmp")
+        self.tmp_path = str(Path(__file__).parent / "test_ui_tmp")
         renew_path(self.tmp_path)
-        self.cwd = os.getcwd()
-        os.chdir(self.tmp_path)
+        self.cwd = getcwd()
+        chdir(self.tmp_path)
 
-        self._output_path = join(self.tmp_path, "output")
-        self._preprocessed_path = join(self._output_path, "preprocessed")
+        self._output_path = str(Path(self.tmp_path) / "output")
+        self._preprocessed_path = str(Path(self._output_path) / "preprocessed")
 
     def tearDown(self):
-        os.chdir(self.cwd)
-        if exists(self.tmp_path):
+        chdir(self.cwd)
+        if Path(self.tmp_path).exists():
             rmtree(self.tmp_path)
 
     def test_global_custom_preprocessors_should_be_applied_in_the_order_they_are_added(
@@ -75,10 +74,10 @@ begin
 end architecture;
 """
         )
-        with open(join(self._preprocessed_path, "lib", basename(file_name))) as fread:
+        fname = Path(file_name).name
+        with (Path(self._preprocessed_path) / "lib" / fname).open() as fread:
             self.assertEqual(
-                fread.read(),
-                pp_source.substitute(entity="ent0", file=basename(file_name)),
+                fread.read(), pp_source.substitute(entity="ent0", file=fname),
             )
 
     def test_global_check_and_location_preprocessors_should_be_applied_after_global_custom_preprocessors(
@@ -90,8 +89,8 @@ end architecture;
         ui.enable_check_preprocessing()
         ui.add_preprocessor(TestPreprocessor())
 
-        file_name = self.create_entity_file()
-        ui.add_source_files(file_name, "lib")
+        entity_file = Path(self.create_entity_file())
+        ui.add_source_files(str(entity_file), "lib")
 
         pp_source = Template(
             """\
@@ -113,10 +112,10 @@ context_msg => "Expected 1 /= 2. Left is " & to_string(1) & ". Right is " & to_s
 end architecture;
 """
         )
-        with open(join(self._preprocessed_path, "lib", basename(file_name))) as fread:
+        with (Path(self._preprocessed_path) / "lib" / entity_file.name).open() as fread:
             self.assertEqual(
                 fread.read(),
-                pp_source.substitute(entity="ent0", file=basename(file_name)),
+                pp_source.substitute(entity="ent0", file=entity_file.name),
             )
 
     def test_locally_specified_preprocessors_should_be_used_instead_of_any_globally_defined_preprocessors(
@@ -151,9 +150,11 @@ end architecture;
 """
         )
         self.assertFalse(
-            exists(join(self._preprocessed_path, "lib", basename(file_name1)))
+            (Path(self._preprocessed_path) / "lib" / Path(file_name1).name).exists()
         )
-        with open(join(self._preprocessed_path, "lib", basename(file_name2))) as fread:
+        with (
+            Path(self._preprocessed_path) / "lib" / Path(file_name2).name
+        ).open() as fread:
             expectd = pp_source.substitute(
                 entity="ent2",
                 report='log("Here I am!"); -- VUnitfier preprocessor: Report turned off, keeping original code.',
@@ -183,16 +184,17 @@ begin
 end architecture;
 """
         )
-        file_name = join(self.tmp_path, "ent1.vhd")
+        file_name = Path(self.tmp_path) / "ent1.vhd"
         contents = source_with_error.substitute(entity="ent1")
-        self.create_file(file_name, contents)
+        self.create_file(str(file_name), contents)
 
         ui.add_source_file(file_name, "lib")
         logger.assert_called_once_with(
-            "Failed to preprocess %s", Path(file_name).resolve()
+            "Failed to preprocess %s", str(Path(file_name).resolve())
         )
-        pp_file = join(self._preprocessed_path, "lib", basename(file_name))
-        self.assertFalse(exists(pp_file))
+        self.assertFalse(
+            (Path(self._preprocessed_path) / "lib" / file_name.name).exists()
+        )
 
     def test_supported_source_file_suffixes(self):
         """Test adding a supported filetype, of any case, is accepted."""
@@ -221,23 +223,26 @@ end architecture;
     def test_exception_on_adding_zero_files(self):
         ui = self._create_ui()
         lib = ui.add_library("lib")
+        dname = Path(__file__).parent
         self.assertRaisesRegex(
             ValueError,
             "Pattern.*missing1.vhd.*",
             lib.add_source_files,
-            join(dirname(__file__), "missing1.vhd"),
+            str(dname / "missing1.vhd"),
         )
         self.assertRaisesRegex(
             ValueError,
             "File.*missing2.vhd.*",
             lib.add_source_file,
-            join(dirname(__file__), "missing2.vhd"),
+            str(dname / "missing2.vhd"),
         )
 
     def test_no_exception_on_adding_zero_files_when_allowed(self):
         ui = self._create_ui()
         lib = ui.add_library("lib")
-        lib.add_source_files(join(dirname(__file__), "missing.vhd"), allow_empty=True)
+        lib.add_source_files(
+            str(Path(__file__).parent / "missing.vhd"), allow_empty=True
+        )
 
     def test_get_test_benchs_and_test(self):
         ui = self._create_ui()
@@ -475,7 +480,7 @@ Listed 2 files""".splitlines()
         def setup(ui):
             " Setup the project "
             lib = ui.add_library("lib")
-            file_name = join(tempdir, "tb_filter.vhd")
+            file_name = str(Path(tempdir) / "tb_filter.vhd")
             create_vhdl_test_bench_file(
                 "tb_filter",
                 file_name,
@@ -554,17 +559,18 @@ Listed 2 files""".splitlines()
 
     @with_tempdir
     def test_export_json(self, tempdir):
-        json_file = join(tempdir, "export.json")
+        tdir = Path(tempdir)
+        json_file = str(tdir / "export.json")
 
         ui = self._create_ui("--export-json", json_file)
         lib1 = ui.add_library("lib1")
         lib2 = ui.add_library("lib2")
 
-        file_name1 = join(tempdir, "tb_foo.vhd")
+        file_name1 = str(tdir / "tb_foo.vhd")
         create_vhdl_test_bench_file("tb_foo", file_name1)
         lib1.add_source_file(file_name1)
 
-        file_name2 = join(tempdir, "tb_bar.vhd")
+        file_name2 = str(tdir / "tb_bar.vhd")
         create_vhdl_test_bench_file(
             "tb_bar",
             file_name2,
@@ -595,7 +601,12 @@ Listed 2 files""".splitlines()
         # Check the contents of the files section
         self.assertEqual(
             set((item["library_name"], item["file_name"]) for item in data["files"]),
-            set([("lib1", abspath(file_name1)), ("lib2", abspath(file_name2))]),
+            set(
+                [
+                    ("lib1", str(Path(file_name1).resolve())),
+                    ("lib2", str(Path(file_name2).resolve())),
+                ]
+            ),
         )
 
         # Check the contents of the tests section
@@ -752,7 +763,7 @@ Listed 2 files""".splitlines()
             lib = ui.add_library("lib")
             action(ui, lib)
             add_source_file.assert_called_once_with(
-                Path("verilog.v").resolve(),
+                str(Path("verilog.v").resolve()),
                 "lib",
                 file_type="verilog",
                 include_dirs=all_include_dirs,
@@ -788,7 +799,7 @@ Listed 2 files""".splitlines()
             lib = ui.add_library("lib")
             action(ui, lib)
             add_source_file.assert_called_once_with(
-                Path("verilog.v").resolve(),
+                str(Path("verilog.v").resolve()),
                 "lib",
                 file_type="verilog",
                 include_dirs=all_include_dirs,
@@ -825,7 +836,7 @@ Listed 2 files""".splitlines()
                     lib.add_source_file(file_name, no_parse=no_parse)
 
                     add_source_file.assert_called_once_with(
-                        Path("verilog.v").resolve(),
+                        str(Path("verilog.v").resolve()),
                         "lib",
                         file_type="verilog",
                         include_dirs=all_include_dirs,

@@ -11,7 +11,7 @@ and RivieraPRO
 
 import sys
 import os
-from os.path import join, dirname, abspath
+from pathlib import Path
 from ..ostools import write_file, Process
 from ..test.suites import get_result_file_name
 from ..persistent_tcl_shell import PersistentTclShell
@@ -25,7 +25,7 @@ class VsimSimulatorMixin(object):
 
     def __init__(self, prefix, persistent, sim_cfg_file_name):
         self._prefix = prefix
-        sim_cfg_file_name = abspath(sim_cfg_file_name)
+        sim_cfg_file_name = str(Path(sim_cfg_file_name).resolve())
         self._sim_cfg_file_name = sim_cfg_file_name
 
         prefix = (
@@ -36,14 +36,14 @@ class VsimSimulatorMixin(object):
         def create_process(ident):
             return Process(
                 [
-                    join(prefix, "vsim"),
+                    str(Path(prefix) / "vsim"),
                     "-c",
                     "-l",
-                    join(dirname(sim_cfg_file_name), "transcript%i" % ident),
+                    str(Path(sim_cfg_file_name).parent / ("transcript%i" % ident)),
                     "-do",
-                    abspath(join(dirname(__file__), "tcl_read_eval_loop.tcl")),
+                    str((Path(__file__).parent / "tcl_read_eval_loop.tcl").resolve()),
                 ],
-                cwd=dirname(sim_cfg_file_name),
+                cwd=str(Path(sim_cfg_file_name).parent),
                 env=env,
             )
 
@@ -91,7 +91,7 @@ class VsimSimulatorMixin(object):
                 "stdout=sys.stdout, "
                 "stderr=sys.stdout))"
             )
-            % (recompile_command, abspath(os.getcwd())),
+            % (recompile_command, str(Path(os.getcwd()).resolve())),
         ]
         recompile_command_eval_tcl = " ".join(
             ["{%s}" % part for part in recompile_command_eval]
@@ -254,8 +254,8 @@ proc vunit_run {} {
     }
 """
         tcl = template % (
-            fix_path(abspath(config.tb_path)),
-            fix_path(abspath(file_name)),
+            fix_path(str(Path(config.tb_path).resolve())),
+            fix_path(str(Path(file_name).resolve())),
             message,
         )
         return tcl
@@ -279,15 +279,15 @@ proc vunit_run {} {
 
         try:
             args = [
-                join(self._prefix, "vsim"),
+                str(Path(self._prefix) / "vsim"),
                 "-gui" if gui else "-c",
                 "-l",
-                join(dirname(batch_file_name), "transcript"),
+                str(Path(batch_file_name).parent / "transcript"),
                 "-do",
                 'source "%s"' % fix_path(batch_file_name),
             ]
 
-            proc = Process(args, cwd=dirname(self._sim_cfg_file_name))
+            proc = Process(args, cwd=str(Path(self._sim_cfg_file_name).parent))
             proc.consume_output()
         except Process.NonZeroExitCode:
             return False
@@ -316,30 +316,33 @@ proc vunit_run {} {
         """
         Run a test bench
         """
-        script_path = join(output_path, self.name)
+        script_path = Path(output_path) / self.name
 
-        common_file_name = join(script_path, "common.do")
-        gui_file_name = join(script_path, "gui.do")
-        batch_file_name = join(script_path, "batch.do")
+        common_file_name = script_path / "common.do"
+        gui_file_name = script_path / "gui.do"
+        batch_file_name = script_path / "batch.do"
 
         write_file(
-            common_file_name,
+            str(common_file_name),
             self._create_common_script(
                 test_suite_name, config, script_path, output_path
             ),
         )
-        write_file(gui_file_name, self._create_gui_script(common_file_name, config))
         write_file(
-            batch_file_name, self._create_batch_script(common_file_name, elaborate_only)
+            str(gui_file_name), self._create_gui_script(str(common_file_name), config)
+        )
+        write_file(
+            str(batch_file_name),
+            self._create_batch_script(str(common_file_name), elaborate_only),
         )
 
         if self._gui:
-            return self._run_batch_file(gui_file_name, gui=True)
+            return self._run_batch_file(str(gui_file_name), gui=True)
 
         if self._persistent_shell is not None:
-            return self._run_persistent(common_file_name, load_only=elaborate_only)
+            return self._run_persistent(str(common_file_name), load_only=elaborate_only)
 
-        return self._run_batch_file(batch_file_name)
+        return self._run_batch_file(str(batch_file_name))
 
 
 def fix_path(path):

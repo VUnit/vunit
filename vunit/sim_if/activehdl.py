@@ -9,7 +9,7 @@ Interface towards Aldec Active HDL
 """
 
 from functools import total_ordering
-from os.path import join, dirname, abspath
+from pathlib import Path
 import os
 import re
 import logging
@@ -58,7 +58,9 @@ class ActiveHDLInterface(SimulatorInterface):
         """
         Returns True when this simulator supports VHDL package generics
         """
-        proc = Process([join(cls.find_prefix(), "vcom"), "-version"], env=cls.get_env())
+        proc = Process(
+            [str(Path(cls.find_prefix()) / "vcom"), "-version"], env=cls.get_env()
+        )
         consumer = VersionConsumer()
         proc.consume_output(consumer)
         if consumer.version is not None:
@@ -68,7 +70,7 @@ class ActiveHDLInterface(SimulatorInterface):
 
     def __init__(self, prefix, output_path, gui=False):
         SimulatorInterface.__init__(self, output_path, gui)
-        self._library_cfg = join(output_path, "library.cfg")
+        self._library_cfg = str(Path(output_path) / "library.cfg")
         self._prefix = prefix
         self._create_library_cfg()
         self._libraries = []
@@ -112,7 +114,12 @@ class ActiveHDLInterface(SimulatorInterface):
         Returns the command to compile a VHDL file
         """
         return (
-            [join(self._prefix, "vcom"), "-quiet", "-j", dirname(self._library_cfg)]
+            [
+                str(Path(self._prefix) / "vcom"),
+                "-quiet",
+                "-j",
+                str(Path(self._library_cfg).parent),
+            ]
             + source_file.compile_options.get("activehdl.vcom_flags", [])
             + [
                 self._std_str(source_file.get_vhdl_standard()),
@@ -126,7 +133,7 @@ class ActiveHDLInterface(SimulatorInterface):
         """
         Returns the command to compile a Verilog file
         """
-        args = [join(self._prefix, "vlog"), "-quiet", "-lc", self._library_cfg]
+        args = [str(Path(self._prefix) / "vlog"), "-quiet", "-lc", self._library_cfg]
         args += source_file.compile_options.get("activehdl.vlog_flags", [])
         args += ["-work", source_file.library.name, source_file.name]
         for library in self._libraries:
@@ -143,13 +150,15 @@ class ActiveHDLInterface(SimulatorInterface):
         """
         mapped_libraries = mapped_libraries if mapped_libraries is not None else {}
 
-        if not file_exists(dirname(abspath(path))):
-            os.makedirs(dirname(abspath(path)))
+        apath = str(Path(path).parent.resolve())
+
+        if not file_exists(apath):
+            os.makedirs(apath)
 
         if not file_exists(path):
             proc = Process(
-                [join(self._prefix, "vlib"), library_name, path],
-                cwd=dirname(self._library_cfg),
+                [str(Path(self._prefix) / "vlib"), library_name, path],
+                cwd=str(Path(self._library_cfg).parent),
                 env=self.get_env(),
             )
             proc.consume_output(callback=None)
@@ -158,8 +167,8 @@ class ActiveHDLInterface(SimulatorInterface):
             return
 
         proc = Process(
-            [join(self._prefix, "vmap"), library_name, path],
-            cwd=dirname(self._library_cfg),
+            [str(Path(self._prefix) / "vmap"), library_name, path],
+            cwd=str(Path(self._library_cfg).parent),
             env=self.get_env(),
         )
         proc.consume_output(callback=None)
@@ -173,7 +182,8 @@ class ActiveHDLInterface(SimulatorInterface):
 
         with open(self._library_cfg, "w") as ofile:
             ofile.write(
-                '$INCLUDE = "%s"\n' % join(self._prefix, "..", "vlib", "library.cfg")
+                '$INCLUDE = "%s"\n'
+                % str(Path(self._prefix).parent / "vlib" / "library.cfg")
             )
 
     _library_re = re.compile(r'([a-zA-Z_]+)\s=\s"(.*)"')
@@ -192,7 +202,9 @@ class ActiveHDLInterface(SimulatorInterface):
                 continue
             key = match.group(1)
             value = match.group(2)
-            libraries[key] = abspath(join(dirname(self._library_cfg), dirname(value)))
+            libraries[key] = str(
+                (Path(self._library_cfg).parent / Path(value).parent).resolve()
+            )
         return libraries
 
     def _vsim_extra_args(self, config):
@@ -243,7 +255,7 @@ class ActiveHDLInterface(SimulatorInterface):
             vsim_flags.append(config.architecture_name)
 
         if config.sim_options.get("enable_coverage", False):
-            coverage_file_path = join(output_path, "coverage.acdb")
+            coverage_file_path = str(Path(output_path) / "coverage.acdb")
             self._coverage_files.add(coverage_file_path)
             vsim_flags += ["-acdb_file {%s}" % fix_path(coverage_file_path)]
 
@@ -323,12 +335,12 @@ proc vunit_run {} {
 
         merge_command += " -o {%s}" % fix_path(file_name) + "\n"
 
-        merge_script_name = join(self._output_path, "acdb_merge.tcl")
+        merge_script_name = str(Path(self._output_path) / "acdb_merge.tcl")
         with open(merge_script_name, "w") as fptr:
             fptr.write(merge_command + "\n")
 
         vcover_cmd = [
-            join(self._prefix, "vsimsa"),
+            str(Path(self._prefix) / "vsimsa"),
             "-tcl",
             "%s" % fix_path(merge_script_name),
         ]
@@ -380,7 +392,7 @@ proc vunit_run {} {
 
         init_file = config.sim_options.get(self.name + ".init_file.gui", None)
         if init_file is not None:
-            tcl += 'source "%s"\n' % fix_path(abspath(init_file))
+            tcl += 'source "%s"\n' % fix_path(str(Path(init_file).resolve()))
 
         tcl += (
             'puts "VUnit help: Design already loaded. Use run -all to run the test."\n'
@@ -399,10 +411,10 @@ proc vunit_run {} {
 
         try:
             args = [
-                join(self._prefix, "vsim"),
+                str(Path(self._prefix) / "vsim"),
                 "-gui" if gui else "-c",
                 "-l",
-                join(dirname(batch_file_name), "transcript"),
+                str(Path(batch_file_name).parent / "transcript"),
                 "-do",
                 todo,
             ]
@@ -417,24 +429,27 @@ proc vunit_run {} {
         """
         Run a test bench
         """
-        script_path = join(output_path, self.name)
-        common_file_name = join(script_path, "common.tcl")
-        batch_file_name = join(script_path, "batch.tcl")
-        gui_file_name = join(script_path, "gui.tcl")
+        script_path = Path(output_path) / self.name
+        common_file_name = script_path / "common.tcl"
+        batch_file_name = script_path / "batch.tcl"
+        gui_file_name = script_path / "gui.tcl"
 
         write_file(common_file_name, self._create_common_script(config, output_path))
-        write_file(gui_file_name, self._create_gui_script(common_file_name, config))
         write_file(
-            batch_file_name, self._create_batch_script(common_file_name, elaborate_only)
+            gui_file_name, self._create_gui_script(str(common_file_name), config)
+        )
+        write_file(
+            str(batch_file_name),
+            self._create_batch_script(str(common_file_name), elaborate_only),
         )
 
         if self._gui:
-            gui_path = join(script_path, "gui")
+            gui_path = str(script_path / "gui")
             renew_path(gui_path)
-            return self._run_batch_file(gui_file_name, gui=True, cwd=gui_path)
+            return self._run_batch_file(str(gui_file_name), gui=True, cwd=gui_path)
 
         return self._run_batch_file(
-            batch_file_name, gui=False, cwd=dirname(self._library_cfg)
+            str(batch_file_name), gui=False, cwd=str(Path(self._library_cfg).parent)
         )
 
 

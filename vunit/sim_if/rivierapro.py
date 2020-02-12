@@ -8,7 +8,7 @@
 Interface towards Aldec Riviera Pro
 """
 
-from os.path import join, dirname, abspath
+from pathlib import Path
 import os
 import re
 import logging
@@ -66,7 +66,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
 
         def no_avhdl(path):
-            return not file_exists(join(path, "avhdl.exe"))
+            return not file_exists(str(Path(path) / "avhdl.exe"))
 
         return cls.find_toolchain(["vsim", "vsimsa"], constraints=[no_avhdl])
 
@@ -75,7 +75,9 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         Returns simulator name when OSVVM coverage API is supported, None otherwise.
         """
-        proc = Process([join(cls.find_prefix(), "vcom"), "-version"], env=cls.get_env())
+        proc = Process(
+            [str(Path(cls.find_prefix()) / "vcom"), "-version"], env=cls.get_env()
+        )
         consumer = VersionConsumer()
         proc.consume_output(consumer)
         if consumer.year is not None:
@@ -96,7 +98,10 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
     def __init__(self, prefix, output_path, persistent=False, gui=False):
         SimulatorInterface.__init__(self, output_path, gui)
         VsimSimulatorMixin.__init__(
-            self, prefix, persistent, sim_cfg_file_name=join(output_path, "library.cfg")
+            self,
+            prefix,
+            persistent,
+            sim_cfg_file_name=str(Path(output_path) / "library.cfg"),
         )
         self._create_library_cfg()
         self._libraries = []
@@ -151,10 +156,10 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
 
         return (
             [
-                join(self._prefix, "vcom"),
+                str(Path(self._prefix) / "vcom"),
                 "-quiet",
                 "-j",
-                dirname(self._sim_cfg_file_name),
+                str(Path(self._sim_cfg_file_name).parent),
             ]
             + source_file.compile_options.get("rivierapro.vcom_flags", [])
             + [
@@ -169,7 +174,12 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         Returns the command to compile a Verilog file
         """
-        args = [join(self._prefix, "vlog"), "-quiet", "-lc", self._sim_cfg_file_name]
+        args = [
+            str(Path(self._prefix) / "vlog"),
+            "-quiet",
+            "-lc",
+            self._sim_cfg_file_name,
+        ]
         if source_file.is_system_verilog:
             args += ["-sv2k12"]
         args += source_file.compile_options.get("rivierapro.vlog_flags", [])
@@ -188,13 +198,15 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         mapped_libraries = mapped_libraries if mapped_libraries is not None else {}
 
-        if not file_exists(dirname(abspath(path))):
-            os.makedirs(dirname(abspath(path)))
+        apath = str(Path(path).parent.resolve())
+
+        if not file_exists(apath):
+            os.makedirs(apath)
 
         if not file_exists(path):
             proc = Process(
-                [join(self._prefix, "vlib"), library_name, path],
-                cwd=dirname(self._sim_cfg_file_name),
+                [str(Path(self._prefix) / "vlib"), library_name, path],
+                cwd=str(Path(self._sim_cfg_file_name).parent),
                 env=self.get_env(),
             )
             proc.consume_output(callback=None)
@@ -203,8 +215,8 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
             return
 
         proc = Process(
-            [join(self._prefix, "vmap"), library_name, path],
-            cwd=dirname(self._sim_cfg_file_name),
+            [str(Path(self._prefix) / "vmap"), library_name, path],
+            cwd=str(Path(self._sim_cfg_file_name).parent),
             env=self.get_env(),
         )
         proc.consume_output(callback=None)
@@ -221,7 +233,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
 
     @property
     def _builtin_library_cfg(self):
-        return join(self._prefix, "..", "vlib", "library.cfg")
+        return str(Path(self._prefix).parent / "vlib" / "library.cfg")
 
     _library_re = re.compile(r"([a-zA-Z_0-9]+)\s=\s(.*)")
 
@@ -230,7 +242,9 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         Get mapped libraries by running vlist on the working directory
         """
         lines = []
-        proc = Process([join(self._prefix, "vlist")], cwd=dirname(library_cfg_file))
+        proc = Process(
+            [str(Path(self._prefix) / "vlist")], cwd=str(Path(library_cfg_file).parent)
+        )
         proc.consume_output(callback=lines.append)
 
         libraries = {}
@@ -240,7 +254,9 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
                 continue
             key = match.group(1)
             value = match.group(2)
-            libraries[key] = abspath(join(dirname(library_cfg_file), dirname(value)))
+            libraries[key] = str(
+                (Path(library_cfg_file).parent / (Path(value).parent)).resolve()
+            )
         return libraries
 
     def _create_load_function(
@@ -260,13 +276,13 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         )
 
         vsim_flags = [
-            "-dataset {%s}" % fix_path(join(output_path, "dataset.asdb")),
+            "-dataset {%s}" % fix_path(str(Path(output_path) / "dataset.asdb")),
             pli_str,
             set_generic_str,
         ]
 
         if config.sim_options.get("enable_coverage", False):
-            coverage_file_path = join(output_path, "coverage.acdb")
+            coverage_file_path = str(Path(output_path) / "coverage.acdb")
             self._coverage_files.add(coverage_file_path)
             vsim_flags += ["-acdb_file {%s}" % coverage_file_path]
 
@@ -384,12 +400,12 @@ proc _vunit_sim_restart {} {
 
         merge_command += " -o {%s}" % file_name.replace("\\", "/")
 
-        merge_script_name = join(self._output_path, "acdb_merge.tcl")
+        merge_script_name = str(Path(self._output_path) / "acdb_merge.tcl")
         with open(merge_script_name, "w") as fptr:
             fptr.write(merge_command + "\n")
 
         vcover_cmd = [
-            join(self._prefix, "vsim"),
+            str(Path(self._prefix) / "vsim"),
             "-c",
             "-do",
             "source %s; quit;" % merge_script_name.replace("\\", "/"),

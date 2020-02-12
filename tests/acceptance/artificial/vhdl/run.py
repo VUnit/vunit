@@ -4,14 +4,14 @@
 #
 # Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
-from os.path import join, dirname
+from pathlib import Path
 from vunit import VUnit
 
-root = dirname(__file__)
+ROOT = Path(__file__).parent
 
 VU = VUnit.from_argv()
 LIB = VU.add_library("lib")
-LIB.add_source_files(join(root, "*.vhd"))
+LIB.add_source_files(ROOT / "*.vhd")
 
 
 def configure_tb_with_generic_config():
@@ -33,7 +33,7 @@ def configure_tb_with_generic_config():
     )
 
     def post_check(output_path):
-        with open(join(output_path, "post_check.txt"), "r") as fptr:
+        with (Path(output_path) / "post_check.txt").open("r") as fptr:
             return "Test 4 was here" in fptr.read()
 
     tests[4].add_config(
@@ -45,7 +45,7 @@ def configure_tb_with_generic_config():
 
 def configure_tb_same_sim_all_pass(ui):
     def post_check(output_path):
-        with open(join(output_path, "post_check.txt"), "r") as fptr:
+        with (Path(output_path) / "post_check.txt").open("r") as fptr:
             return "Test 3 was here" in fptr.read()
 
     ent = ui.library("lib").entity("tb_same_sim_all_pass")
@@ -93,6 +93,6 @@ configure_tb_assert_stop_level(VU)
 LIB.entity("tb_no_generic_override").set_generic("g_val", False)
 LIB.entity("tb_ieee_warning").test("pass").set_sim_option("disable_ieee_warnings", True)
 LIB.entity("tb_other_file_tests").scan_tests_from_file(
-    join(root, "other_file_tests.vhd")
+    str(ROOT / "other_file_tests.vhd")
 )
 VU.main()

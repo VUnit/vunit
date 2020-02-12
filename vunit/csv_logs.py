@@ -10,7 +10,7 @@ Provides csv log functionality
 
 from csv import Sniffer, DictReader, DictWriter
 from glob import glob
-from os.path import abspath
+from pathlib import Path
 
 
 class CsvLogs(object):
@@ -35,7 +35,7 @@ class CsvLogs(object):
 
     def add(self, pattern):
         # pylint: disable=missing-docstring
-        for csv_file in [abspath(p) for p in glob(pattern)]:
+        for csv_file in [str(Path(p).resolve()) for p in glob(pattern)]:
             with open(csv_file, "r") as fread:
                 sample = fread.readline()
                 fread.seek(0)

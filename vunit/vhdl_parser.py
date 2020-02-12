@@ -11,7 +11,7 @@ VHDL parsing functionality
 """
 
 import re
-from os.path import abspath
+from pathlib import Path
 import logging
 from vunit.cached import cached
 from vunit.parsing.encodings import HDL_FILE_ENCODING
@@ -32,7 +32,7 @@ class VHDLParser(object):
         Parse the VHDL code and return a VHDLDesignFile parse result
         parse result is re-used if content hash found in database
         """
-        file_name = abspath(file_name)
+        file_name = str(Path(file_name).resolve())
         return cached(
             "CachedVHDLParser.parse",
             VHDLDesignFile.parse,

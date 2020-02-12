@@ -11,7 +11,7 @@ Pylint check
 
 import unittest
 from subprocess import check_call
-from os.path import join, dirname
+from pathlib import Path
 import sys
 from tests.lint.test_pycodestyle import get_files_and_folders
 
@@ -28,7 +28,7 @@ class TestPylint(unittest.TestCase):
                 sys.executable,
                 "-m",
                 "pylint",
-                "--rcfile=" + join(dirname(__file__), "pylintrc"),
+                "--rcfile=" + str(Path(__file__).parent / "pylintrc"),
             ]
             + get_files_and_folders()
         )

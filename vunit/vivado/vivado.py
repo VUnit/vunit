@@ -10,7 +10,7 @@ Utilities for integrating with Vivado
 
 from subprocess import check_call
 from os import makedirs
-from os.path import abspath, join, dirname, exists, basename
+from pathlib import Path
 
 
 def add_from_compile_order_file(
@@ -69,15 +69,16 @@ def create_compile_order_file(project_file, compile_order_file, vivado_path=None
     """
     print(
         "Generating Vivado project compile order into %s ..."
-        % abspath(compile_order_file)
+        % str(Path(compile_order_file).resolve())
     )
 
-    if not exists(dirname(compile_order_file)):
-        makedirs(dirname(compile_order_file))
+    fpath = Path(compile_order_file)
+    if not fpath.parent.exists():
+        makedirs(str(fpath.parent))
 
     print("Extracting compile order ...")
     run_vivado(
-        join(dirname(__file__), "tcl", "extract_compile_order.tcl"),
+        str(Path(__file__).parent / "tcl" / "extract_compile_order.tcl"),
         tcl_args=[project_file, compile_order_file],
         vivado_path=vivado_path,
     )
@@ -101,13 +102,13 @@ def _read_compile_order(file_name):
 
             # Vivado generates duplicate files for different IP:s
             # using the same underlying libraries. We remove duplicates here
-            key = (library_name, basename(file_name))
+            key = (library_name, Path(file_name).name)
             if key in unique:
                 continue
             unique.add(key)
 
             if file_type == "Verilog Header":
-                include_dirs.add(dirname(file_name))
+                include_dirs.add(str(Path(file_name).parent))
             else:
                 compile_order.append((library_name, file_name))
 
@@ -121,10 +122,12 @@ def run_vivado(tcl_file_name, tcl_args=None, cwd=None, vivado_path=None):
     Note: the shell=True is important in windows where Vivado is just a bat file.
     """
     vivado = (
-        "vivado" if vivado_path is None else join(abspath(vivado_path), "bin", "vivado")
+        "vivado"
+        if vivado_path is None
+        else str(Path(vivado_path).resolve() / "bin" / "vivado")
     )
     cmd = "{} -nojournal -nolog -notrace -mode batch -source {}".format(
-        vivado, abspath(tcl_file_name)
+        vivado, str(Path(tcl_file_name).resolve())
     )
     if tcl_args is not None:
         cmd += " -tclargs " + " ".join([str(val) for val in tcl_args])

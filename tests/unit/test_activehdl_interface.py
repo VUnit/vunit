@@ -10,7 +10,7 @@ Test the ActiveHDL interface
 
 
 import unittest
-from os.path import join, dirname, exists
+from pathlib import Path
 import os
 from shutil import rmtree
 from unittest import mock
@@ -58,18 +58,18 @@ class TestActiveHDLInterface(unittest.TestCase):
         )
         simif.compile_project(project)
         process.assert_any_call(
-            [join("prefix", "vlib"), "lib", "lib_path"],
+            [str(Path("prefix") / "vlib"), "lib", "lib_path"],
             cwd=self.output_path,
             env=simif.get_env(),
         )
         process.assert_called_with(
-            [join("prefix", "vmap"), "lib", "lib_path"],
+            [str(Path("prefix") / "vmap"), "lib", "lib_path"],
             cwd=self.output_path,
             env=simif.get_env(),
         )
         check_output.assert_called_once_with(
             [
-                join("prefix", "vcom"),
+                str(Path("prefix") / "vcom"),
                 "-quiet",
                 "-j",
                 self.output_path,
@@ -93,18 +93,18 @@ class TestActiveHDLInterface(unittest.TestCase):
         )
         simif.compile_project(project)
         process.assert_any_call(
-            [join("prefix", "vlib"), "lib", "lib_path"],
+            [str(Path("prefix") / "vlib"), "lib", "lib_path"],
             cwd=self.output_path,
             env=simif.get_env(),
         )
         process.assert_called_with(
-            [join("prefix", "vmap"), "lib", "lib_path"],
+            [str(Path("prefix") / "vmap"), "lib", "lib_path"],
             cwd=self.output_path,
             env=simif.get_env(),
         )
         check_output.assert_called_once_with(
             [
-                join("prefix", "vcom"),
+                str(Path("prefix") / "vcom"),
                 "-quiet",
                 "-j",
                 self.output_path,
@@ -128,18 +128,18 @@ class TestActiveHDLInterface(unittest.TestCase):
         )
         simif.compile_project(project)
         process.assert_any_call(
-            [join("prefix", "vlib"), "lib", "lib_path"],
+            [str(Path("prefix") / "vlib"), "lib", "lib_path"],
             cwd=self.output_path,
             env=simif.get_env(),
         )
         process.assert_called_with(
-            [join("prefix", "vmap"), "lib", "lib_path"],
+            [str(Path("prefix") / "vmap"), "lib", "lib_path"],
             cwd=self.output_path,
             env=simif.get_env(),
         )
         check_output.assert_called_once_with(
             [
-                join("prefix", "vcom"),
+                str(Path("prefix") / "vcom"),
                 "-quiet",
                 "-j",
                 self.output_path,
@@ -162,18 +162,18 @@ class TestActiveHDLInterface(unittest.TestCase):
         source_file.set_compile_option("activehdl.vcom_flags", ["custom", "flags"])
         simif.compile_project(project)
         process.assert_any_call(
-            [join("prefix", "vlib"), "lib", "lib_path"],
+            [str(Path("prefix") / "vlib"), "lib", "lib_path"],
             cwd=self.output_path,
             env=simif.get_env(),
         )
         process.assert_called_with(
-            [join("prefix", "vmap"), "lib", "lib_path"],
+            [str(Path("prefix") / "vmap"), "lib", "lib_path"],
             cwd=self.output_path,
             env=simif.get_env(),
         )
         check_output.assert_called_once_with(
             [
-                join("prefix", "vcom"),
+                str(Path("prefix") / "vcom"),
                 "-quiet",
                 "-j",
                 self.output_path,
@@ -190,7 +190,7 @@ class TestActiveHDLInterface(unittest.TestCase):
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.activehdl.Process", autospec=True)
     def test_compile_project_verilog(self, process, check_output):
-        library_cfg = join(self.output_path, "library.cfg")
+        library_cfg = str(Path(self.output_path) / "library.cfg")
         simif = ActiveHDLInterface(prefix="prefix", output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -198,18 +198,18 @@ class TestActiveHDLInterface(unittest.TestCase):
         project.add_source_file("file.v", "lib", file_type="verilog")
         simif.compile_project(project)
         process.assert_any_call(
-            [join("prefix", "vlib"), "lib", "lib_path"],
+            [str(Path("prefix") / "vlib"), "lib", "lib_path"],
             cwd=self.output_path,
             env=simif.get_env(),
         )
         process.assert_called_with(
-            [join("prefix", "vmap"), "lib", "lib_path"],
+            [str(Path("prefix") / "vmap"), "lib", "lib_path"],
             cwd=self.output_path,
             env=simif.get_env(),
         )
         check_output.assert_called_once_with(
             [
-                join("prefix", "vlog"),
+                str(Path("prefix") / "vlog"),
                 "-quiet",
                 "-lc",
                 library_cfg,
@@ -225,7 +225,7 @@ class TestActiveHDLInterface(unittest.TestCase):
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.activehdl.Process", autospec=True)
     def test_compile_project_system_verilog(self, process, check_output):
-        library_cfg = join(self.output_path, "library.cfg")
+        library_cfg = str(Path(self.output_path) / "library.cfg")
         simif = ActiveHDLInterface(prefix="prefix", output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -233,18 +233,18 @@ class TestActiveHDLInterface(unittest.TestCase):
         project.add_source_file("file.sv", "lib", file_type="systemverilog")
         simif.compile_project(project)
         process.assert_any_call(
-            [join("prefix", "vlib"), "lib", "lib_path"],
+            [str(Path("prefix") / "vlib"), "lib", "lib_path"],
             cwd=self.output_path,
             env=simif.get_env(),
         )
         process.assert_called_with(
-            [join("prefix", "vmap"), "lib", "lib_path"],
+            [str(Path("prefix") / "vmap"), "lib", "lib_path"],
             cwd=self.output_path,
             env=simif.get_env(),
         )
         check_output.assert_called_once_with(
             [
-                join("prefix", "vlog"),
+                str(Path("prefix") / "vlog"),
                 "-quiet",
                 "-lc",
                 library_cfg,
@@ -260,7 +260,7 @@ class TestActiveHDLInterface(unittest.TestCase):
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.activehdl.Process", autospec=True)
     def test_compile_project_verilog_extra_flags(self, process, check_output):
-        library_cfg = join(self.output_path, "library.cfg")
+        library_cfg = str(Path(self.output_path) / "library.cfg")
         simif = ActiveHDLInterface(prefix="prefix", output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -269,18 +269,18 @@ class TestActiveHDLInterface(unittest.TestCase):
         source_file.set_compile_option("activehdl.vlog_flags", ["custom", "flags"])
         simif.compile_project(project)
         process.assert_any_call(
-            [join("prefix", "vlib"), "lib", "lib_path"],
+            [str(Path("prefix") / "vlib"), "lib", "lib_path"],
             cwd=self.output_path,
             env=simif.get_env(),
         )
         process.assert_called_with(
-            [join("prefix", "vmap"), "lib", "lib_path"],
+            [str(Path("prefix") / "vmap"), "lib", "lib_path"],
             cwd=self.output_path,
             env=simif.get_env(),
         )
         check_output.assert_called_once_with(
             [
-                join("prefix", "vlog"),
+                str(Path("prefix") / "vlog"),
                 "-quiet",
                 "-lc",
                 library_cfg,
@@ -298,7 +298,7 @@ class TestActiveHDLInterface(unittest.TestCase):
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.activehdl.Process", autospec=True)
     def test_compile_project_verilog_include(self, process, check_output):
-        library_cfg = join(self.output_path, "library.cfg")
+        library_cfg = str(Path(self.output_path) / "library.cfg")
         simif = ActiveHDLInterface(prefix="prefix", output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -308,18 +308,18 @@ class TestActiveHDLInterface(unittest.TestCase):
         )
         simif.compile_project(project)
         process.assert_any_call(
-            [join("prefix", "vlib"), "lib", "lib_path"],
+            [str(Path("prefix") / "vlib"), "lib", "lib_path"],
             cwd=self.output_path,
             env=simif.get_env(),
         )
         process.assert_called_with(
-            [join("prefix", "vmap"), "lib", "lib_path"],
+            [str(Path("prefix") / "vmap"), "lib", "lib_path"],
             cwd=self.output_path,
             env=simif.get_env(),
         )
         check_output.assert_called_once_with(
             [
-                join("prefix", "vlog"),
+                str(Path("prefix") / "vlog"),
                 "-quiet",
                 "-lc",
                 library_cfg,
@@ -336,7 +336,7 @@ class TestActiveHDLInterface(unittest.TestCase):
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.activehdl.Process", autospec=True)
     def test_compile_project_verilog_define(self, process, check_output):
-        library_cfg = join(self.output_path, "library.cfg")
+        library_cfg = str(Path(self.output_path) / "library.cfg")
         simif = ActiveHDLInterface(prefix="prefix", output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -346,18 +346,18 @@ class TestActiveHDLInterface(unittest.TestCase):
         )
         simif.compile_project(project)
         process.assert_any_call(
-            [join("prefix", "vlib"), "lib", "lib_path"],
+            [str(Path("prefix") / "vlib"), "lib", "lib_path"],
             cwd=self.output_path,
             env=simif.get_env(),
         )
         process.assert_called_with(
-            [join("prefix", "vmap"), "lib", "lib_path"],
+            [str(Path("prefix") / "vmap"), "lib", "lib_path"],
             cwd=self.output_path,
             env=simif.get_env(),
         )
         check_output.assert_called_once_with(
             [
-                join("prefix", "vlog"),
+                str(Path("prefix") / "vlog"),
                 "-quiet",
                 "-lc",
                 library_cfg,
@@ -390,7 +390,7 @@ class TestActiveHDLInterface(unittest.TestCase):
         self.assertFalse(simif.supports_vhdl_package_generics())
 
     def setUp(self):
-        self.output_path = join(dirname(__file__), "test_activehdl_out")
+        self.output_path = str(Path(__file__).parent / "test_activehdl_out")
         renew_path(self.output_path)
         self.project = Project()
         self.cwd = os.getcwd()
@@ -398,7 +398,7 @@ class TestActiveHDLInterface(unittest.TestCase):
 
     def tearDown(self):
         os.chdir(self.cwd)
-        if exists(self.output_path):
+        if Path(self.output_path).exists():
             rmtree(self.output_path)
 
 

@@ -4,7 +4,7 @@
 #
 # Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
-from os.path import join, dirname
+from pathlib import Path
 from string import Template
 from generate_check_equal import replace_region
 
@@ -448,14 +448,14 @@ end test_fixture;
 
 
 def main():
-    check_api_file_name = join(dirname(__file__), "..", "src", "check_api.vhd")
+    check_api_file_name = str(Path(__file__).parent.parent / "src" / "check_api.vhd")
     replace_region("check_match", check_api_file_name, generate_api())
 
-    check_file_name = join(dirname(__file__), "..", "src", "check.vhd")
+    check_file_name = str(Path(__file__).parent.parent / "src" / "check.vhd")
     replace_region("check_match", check_file_name, generate_impl())
 
-    with open(
-        join(dirname(__file__), "..", "test", "tb_check_match.vhd"), "wb"
+    with (Path(__file__).parent.parent / "test" / "tb_check_match.vhd").open(
+        "wb"
     ) as fptr:
         fptr.write(generate_test().encode())
 

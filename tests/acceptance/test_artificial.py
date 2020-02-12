@@ -9,12 +9,14 @@ Acceptance test of VUnit end to end functionality
 """
 
 import unittest
-from os.path import join, dirname
+from pathlib import Path
 from os import environ
 from subprocess import call
 import sys
 from tests.common import check_report
 from vunit.sim_if.common import has_simulator, simulator_is
+
+ROOT = Path(__file__).parent
 
 
 @unittest.skipUnless(has_simulator(), "Requires simulator")
@@ -26,18 +28,14 @@ class TestVunitArtificial(unittest.TestCase):
 
     def setUp(self):
         if simulator_is("activehdl"):
-            self.output_path = join(dirname(__file__), "artificial_out")
+            self.output_path = str(ROOT / "artificial_out")
         else:
             # Spaces in path intentional to verify that it is supported
-            self.output_path = join(dirname(__file__), "artificial _out")
+            self.output_path = str(ROOT / "artificial _out")
 
-        self.report_file = join(self.output_path, "xunit.xml")
-        self.artificial_run_vhdl = join(
-            dirname(__file__), "artificial", "vhdl", "run.py"
-        )
-        self.artificial_run_verilog = join(
-            dirname(__file__), "artificial", "verilog", "run.py"
-        )
+        self.report_file = str(Path(self.output_path) / "xunit.xml")
+        self.artificial_run_vhdl = str(ROOT / "artificial" / "vhdl" / "run.py")
+        self.artificial_run_verilog = str(ROOT / "artificial" / "verilog" / "run.py")
 
     @unittest.skipUnless(
         simulator_is("modelsim", "rivierapro"),

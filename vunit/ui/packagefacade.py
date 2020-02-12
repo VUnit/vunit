@@ -8,7 +8,7 @@
 UI class PackageFacade
 """
 
-from os.path import join, splitext
+from pathlib import Path
 from ..com import codec_generator
 
 
@@ -33,9 +33,9 @@ class PackageFacade(object):
             codec_package_name = self._package_name + "_codecs"
 
         if output_file_name is None:
-            codecs_path = join(self._parent.codecs_path, self._library_name)
-            file_extension = splitext(self._design_unit.source_file.name)[1]
-            output_file_name = join(codecs_path, codec_package_name + file_extension)
+            codecs_path = Path(self._parent.codecs_path) / self._library_name
+            file_extension = Path(self._design_unit.source_file.name).suffix
+            output_file_name = codecs_path / (codec_package_name + file_extension)
 
         codec_generator.generate_codecs(
             self._design_unit, codec_package_name, used_packages, output_file_name

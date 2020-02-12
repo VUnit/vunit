@@ -8,7 +8,8 @@
 UI class Results
 """
 
-from os.path import join, basename, normpath
+from pathlib import Path
+from typing import Dict, Union
 from .common import TEST_OUTPUT_PATH
 
 
@@ -45,7 +46,7 @@ class Results(object):
             report.tests.update(
                 {
                     test.name: TestResult(
-                        join(self._output_path, TEST_OUTPUT_PATH),
+                        Path(self._output_path) / TEST_OUTPUT_PATH,
                         obj["status"],
                         obj["time"],
                         obj["path"],
@@ -63,9 +64,9 @@ class Report(object):
     :data tests: Dictionary of :class:`TestResult` objects
     """
 
-    def __init__(self, output_path):
-        self.output_path = output_path
-        self.tests = {}
+    def __init__(self, output_path: Union[str, Path]):
+        self.output_path = Path(output_path)
+        self.tests: Dict[str, TestResult] = {}
 
 
 class TestResult(object):
@@ -93,20 +94,22 @@ class TestResult(object):
        vu.main(post_run=post_func)
     """
 
-    def __init__(self, test_output_path, status, time, path):
-        self._test_output_path = test_output_path
+    def __init__(
+        self, test_output_path: Union[str, Path], status, time, path: Union[str, Path]
+    ):
+        self._test_output_path = Path(test_output_path)
         self.status = status
         self.time = time
-        self.path = path
+        self.path = Path(path)
 
     @property
-    def relpath(self):
+    def relpath(self) -> str:
         """
         If the path is a subdir to the default TEST_OUTPUT_PATH, return the subdir only
         """
-        base = basename(self.path)
-        return (
+        base = self.path.name
+        return str(
             base
-            if normpath(join(self._test_output_path, base)) == normpath(self.path)
+            if (self._test_output_path / base).resolve() == self.path.resolve()
             else self.path
         )

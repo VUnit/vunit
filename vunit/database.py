@@ -8,7 +8,7 @@
 A simple file based database
 """
 
-from os.path import join, exists
+from pathlib import Path
 import os
 import pickle
 import io
@@ -39,7 +39,7 @@ class DataBase(object):
 
         if new:
             renew_path(path)
-        elif not exists(path):
+        elif not Path(path).exists():
             os.makedirs(path)
 
         # Map keys to nodes indexes
@@ -55,7 +55,7 @@ class DataBase(object):
         """
         keys_to_nodes = {}
         for file_base_name in os.listdir(self._path):
-            key = self._read_key(join(self._path, file_base_name))
+            key = self._read_key(str(Path(self._path) / file_base_name))
             assert key not in keys_to_nodes  # Two nodes contains the same key
             keys_to_nodes[key] = int(file_base_name)
         return keys_to_nodes
@@ -100,7 +100,7 @@ class DataBase(object):
         """
         Convert key to file name
         """
-        return join(self._path, str(self._keys_to_nodes[key]))
+        return str(Path(self._path) / str(self._keys_to_nodes[key]))
 
     def _allocate_node_for_key(self, key):
         """

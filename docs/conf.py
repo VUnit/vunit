@@ -2,7 +2,7 @@
 
 import os
 import sys
-from os.path import join
+from pathlib import Path
 
 # blog_title = u"VUnit Blog"
 # blog_baseurl = "http://vunit.github.io"
@@ -70,9 +70,9 @@ html_theme_options = {
 
 html_static_path = ["_static"]
 
-html_logo = join(html_static_path[0], "VUnit_logo_420x420.png")
+html_logo = str(Path(html_static_path[0]) / "VUnit_logo_420x420.png")
 
-html_favicon = join(html_static_path[0], "vunit.ico")
+html_favicon = str(Path(html_static_path[0]) / "vunit.ico")
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = "vunitdoc"

@@ -10,7 +10,7 @@ Test the test report functionality
 
 from unittest import TestCase
 import os
-from os.path import basename, dirname, join
+from pathlib import Path
 from xml.etree import ElementTree
 from vunit.test.report import TestReport, PASSED, SKIPPED, FAILED
 from vunit.ui.common import TEST_OUTPUT_PATH
@@ -26,7 +26,7 @@ class TestTestReport(TestCase):
         self.printer = StubPrinter()
 
         self.output_file_contents = 'Output file contents\n<xml>&13!--"<\\xml>'
-        self.output_file_name = join(dirname(__file__), "test_report_output.txt")
+        self.output_file_name = str(Path(__file__).parent / "test_report_output.txt")
         with open(self.output_file_name, "w") as fwrite:
             fwrite.write(self.output_file_contents)
 
@@ -277,15 +277,15 @@ Elapsed time was 3.0 seconds
         )
 
     def test_dict_report_with_all_passed_tests(self):
-        opath = dirname(dirname(self.output_file_name))
-        test_path = join(opath, TEST_OUTPUT_PATH, "unit")
-        output_file_name = join(test_path, basename(self.output_file_name))
+        opath = Path(self.output_file_name).parent.parent
+        test_path = opath / TEST_OUTPUT_PATH / "unit"
+        output_file_name = test_path / Path(self.output_file_name).name
         results = Results(
             opath, None, self._report_with_all_passed_tests(output_file_name)
         )
         report = results.get_report()
         for _, test in report.tests.items():
-            self.assertEqual(basename(test.path), test.relpath)
+            self.assertEqual(test.path.name, test.relpath)
         test0 = report.tests["passed_test0"]
         test1 = report.tests["passed_test1"]
         self.assertEqual(

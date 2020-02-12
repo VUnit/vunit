@@ -9,7 +9,6 @@ Functionality to represent and operate on VHDL and Verilog source files
 """
 from pathlib import Path
 from typing import Union
-from os.path import splitext
 import logging
 from copy import copy
 import traceback
@@ -369,7 +368,7 @@ def file_type_of(file_name):
     """
     Return the file type of file_name based on the file ending
     """
-    _, ext = splitext(file_name)
+    ext = str(Path(file_name).suffix)
     if ext.lower() in VHDL_EXTENSIONS:
         return "vhdl"
 

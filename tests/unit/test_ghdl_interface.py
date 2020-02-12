@@ -9,7 +9,7 @@ Test the GHDL interface
 """
 
 import unittest
-from os.path import join, dirname, exists
+from pathlib import Path
 import os
 from shutil import rmtree
 from unittest import mock
@@ -120,7 +120,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         simif.compile_project(project)
         check_output.assert_called_once_with(
             [
-                join("prefix", "ghdl"),
+                str(Path("prefix") / "ghdl"),
                 "-a",
                 "--workdir=lib_path",
                 "--work=lib",
@@ -146,7 +146,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         simif.compile_project(project)
         check_output.assert_called_once_with(
             [
-                join("prefix", "ghdl"),
+                str(Path("prefix") / "ghdl"),
                 "-a",
                 "--workdir=lib_path",
                 "--work=lib",
@@ -172,7 +172,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         simif.compile_project(project)
         check_output.assert_called_once_with(
             [
-                join("prefix", "ghdl"),
+                str(Path("prefix") / "ghdl"),
                 "-a",
                 "--workdir=lib_path",
                 "--work=lib",
@@ -197,7 +197,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         simif.compile_project(project)
         check_output.assert_called_once_with(
             [
-                join("prefix", "ghdl"),
+                str(Path("prefix") / "ghdl"),
                 "-a",
                 "--workdir=lib_path",
                 "--work=lib",
@@ -211,9 +211,9 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         )
 
     def test_elaborate_e_project(self):
-        design_unit = Entity("tb_entity", file_name=join("tempdir", "file.vhd"))
-        design_unit.original_file_name = join(
-            "tempdir", "other_path", "original_file.vhd"
+        design_unit = Entity("tb_entity", file_name=str(Path("tempdir") / "file.vhd"))
+        design_unit.original_file_name = str(
+            Path("tempdir") / "other_path" / "original_file.vhd"
         )
         design_unit.generic_names = ["runner_cfg", "tb_path"]
 
@@ -228,17 +228,17 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
 
         self.assertEqual(
             simif._get_command(  # pylint: disable=protected-access
-                config, join("output_path", "ghdl"), True, True, None
+                config, str(Path("output_path") / "ghdl"), True, True, None
             ),
             [
-                join("prefix", "ghdl"),
+                str(Path("prefix") / "ghdl"),
                 "-e",
                 "--std=08",
                 "--work=lib",
                 "--workdir=lib_path",
                 "-Plib_path",
                 "-o",
-                join("output_path", "ghdl", "tb_entity-arch"),
+                str(Path("output_path") / "ghdl" / "tb_entity-arch"),
                 "tb_entity",
                 "arch",
             ],
@@ -254,7 +254,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
         self.assertRaises(CompileError, simif.compile_project, project)
 
     def setUp(self):
-        self.output_path = join(dirname(__file__), "test_ghdl_interface_out")
+        self.output_path = str(Path(__file__).parent / "test_ghdl_interface_out")
         renew_path(self.output_path)
         self.project = Project()
         self.cwd = os.getcwd()
@@ -262,5 +262,5 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
 
     def tearDown(self):
         os.chdir(self.cwd)
-        if exists(self.output_path):
+        if Path(self.output_path).exists():
             rmtree(self.output_path)

@@ -12,9 +12,9 @@ Test the project functionality
 
 
 import unittest
-from shutil import rmtree
-from os.path import join, exists, dirname
+from pathlib import Path
 import os
+from shutil import rmtree
 from time import sleep
 import itertools
 from unittest import mock
@@ -30,7 +30,7 @@ class TestProject(unittest.TestCase):  # pylint: disable=too-many-public-methods
     """
 
     def setUp(self):
-        self.output_path = join(dirname(__file__), "test_project_out")
+        self.output_path = str(Path(__file__).parent / "test_project_out")
         renew_path(self.output_path)
         self.project = Project()
         self.cwd = os.getcwd()
@@ -38,7 +38,7 @@ class TestProject(unittest.TestCase):  # pylint: disable=too-many-public-methods
 
     def tearDown(self):
         os.chdir(self.cwd)
-        if exists(self.output_path):
+        if Path(self.output_path).exists():
             rmtree(self.output_path)
 
     def test_parses_entity_architecture(self):
@@ -196,7 +196,7 @@ end entity;
         self.project.add_library("lib", "lib_path")
         a_foo = self.add_source_file(
             "lib",
-            join("a", "foo.vhd"),
+            str(Path("a") / "foo.vhd"),
             """
 entity a_foo is
 end entity;
@@ -205,7 +205,7 @@ end entity;
 
         b_foo = self.add_source_file(
             "lib",
-            join("b", "foo.vhd"),
+            str(Path("b") / "foo.vhd"),
             """
 entity b_foo is
 end entity;
@@ -891,7 +891,7 @@ endpackage
 
         for source_file in files:
             self.update(source_file)
-            self.assertTrue(exists(self.hash_file_name_of(source_file)))
+            self.assertTrue(Path(self.hash_file_name_of(source_file)).exists())
 
     def test_should_not_recompile_updated_files(self):
         file1, file2, file3 = self.create_dummy_three_file_project()

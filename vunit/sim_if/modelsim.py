@@ -8,7 +8,7 @@
 Interface towards Mentor Graphics ModelSim
 """
 
-from os.path import join, dirname, abspath
+from pathlib import Path
 import os
 import logging
 import io
@@ -70,7 +70,7 @@ class ModelSimInterface(
         """
 
         def has_modelsim_ini(path):
-            return os.path.isfile(join(path, "..", "modelsim.ini"))
+            return os.path.isfile(str(Path(path) / "modelsim.ini"))
 
         return cls.find_toolchain(["vsim"], constraints=[has_modelsim_ini])
 
@@ -87,7 +87,7 @@ class ModelSimInterface(
             self,
             prefix,
             persistent,
-            sim_cfg_file_name=join(output_path, "modelsim.ini"),
+            sim_cfg_file_name=str(Path(output_path) / "modelsim.ini"),
         )
         self._libraries = []
         self._coverage_files = set()
@@ -98,12 +98,12 @@ class ModelSimInterface(
         """
         Create the modelsim.ini file
         """
-        parent = dirname(self._sim_cfg_file_name)
+        parent = str(Path(self._sim_cfg_file_name).parent)
         if not file_exists(parent):
             os.makedirs(parent)
 
         original_modelsim_ini = os.environ.get(
-            "VUNIT_MODELSIM_INI", join(self._prefix, "..", "modelsim.ini")
+            "VUNIT_MODELSIM_INI", str(Path(self._prefix).parent / "modelsim.ini")
         )
         with open(original_modelsim_ini, "rb") as fread:
             with open(self._sim_cfg_file_name, "wb") as fwrite:
@@ -157,7 +157,7 @@ class ModelSimInterface(
         """
         return (
             [
-                join(self._prefix, "vcom"),
+                str(Path(self._prefix) / "vcom"),
                 "-quiet",
                 "-modelsimini",
                 self._sim_cfg_file_name,
@@ -176,7 +176,7 @@ class ModelSimInterface(
         Returns the command to compile a verilog file
         """
         args = [
-            join(self._prefix, "vlog"),
+            str(Path(self._prefix) / "vlog"),
             "-quiet",
             "-modelsimini",
             self._sim_cfg_file_name,
@@ -200,12 +200,14 @@ class ModelSimInterface(
         """
         mapped_libraries = mapped_libraries if mapped_libraries is not None else {}
 
-        if not file_exists(dirname(abspath(path))):
-            os.makedirs(dirname(abspath(path)))
+        apath = str(Path(path).parent.resolve())
+
+        if not file_exists(apath):
+            os.makedirs(apath)
 
         if not file_exists(path):
             proc = Process(
-                [join(self._prefix, "vlib"), "-unix", path], env=self.get_env()
+                [str(Path(self._prefix) / "vlib"), "-unix", path], env=self.get_env()
             )
             proc.consume_output(callback=None)
 
@@ -247,7 +249,7 @@ class ModelSimInterface(
             architecture_suffix = "(%s)" % config.architecture_name
 
         if config.sim_options.get("enable_coverage", False):
-            coverage_file = join(output_path, "coverage.ucdb")
+            coverage_file = str(Path(output_path) / "coverage.ucdb")
             self._coverage_files.add(coverage_file)
             coverage_save_cmd = (
                 "coverage save -onexit -testname {%s} -assert -directive -cvg -codeAll {%s}"
@@ -259,7 +261,7 @@ class ModelSimInterface(
             coverage_args = ""
 
         vsim_flags = [
-            "-wlf {%s}" % fix_path(join(output_path, "vsim.wlf")),
+            "-wlf {%s}" % fix_path(str(Path(output_path) / "vsim.wlf")),
             "-quiet",
             "-t ps",
             # for correct handling of verilog fatal/finish
@@ -383,9 +385,9 @@ proc _vunit_sim_restart {} {
         if args is None:
             args = []
 
-        coverage_files = join(self._output_path, "coverage_files.txt")
+        coverage_files = str(Path(self._output_path) / "coverage_files.txt")
         vcover_cmd = (
-            [join(self._prefix, "vcover"), "merge", "-inputs"]
+            [str(Path(self._prefix) / "vcover"), "merge", "-inputs"]
             + [coverage_files]
             + args
             + [file_name]
