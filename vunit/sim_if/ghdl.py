@@ -303,7 +303,7 @@ class GHDLInterface(SimulatorInterface):
                 cmd += ["--no-run"]
         else:
             try:
-                os.makedirs(output_path, mode=0o777)
+                makedirs(output_path, mode=0o777)
             except OSError:
                 pass
             with (Path(output_path) / "args.json").open("w") as fname:
@@ -337,7 +337,7 @@ class GHDLInterface(SimulatorInterface):
 
         if self._gtkwave_fmt is not None:
             data_file_name = str(Path(script_path) / ("wave.%s" % self._gtkwave_fmt))
-            if  Path(data_file_name).exists():
+            if Path(data_file_name).exists():
                 remove(data_file_name)
         else:
             data_file_name = None

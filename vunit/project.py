@@ -9,7 +9,7 @@
 """
 Functionality to represent and operate on a HDL code project
 """
-from typing import Optional
+from typing import Optional, Union
 from pathlib import Path
 import logging
 from collections import OrderedDict
@@ -83,7 +83,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
     def add_library(
         self,
         logical_name,
-        directory,
+        directory: Union[str, Path],
         vhdl_standard: VHDLStandard = VHDL.STD_2008,
         is_external=False,
     ):
@@ -93,19 +93,18 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         """
         self._validate_new_library_name(logical_name)
 
+        dpath = Path(directory)
+        dstr = str(directory)
+
         if is_external:
-            if not exists(directory):
-                raise ValueError("External library %r does not exist" % directory)
+            if not dpath.exists():
+                raise ValueError("External library %r does not exist" % dstr)
 
-            if not isdir(directory):
-                raise ValueError(
-                    "External library must be a directory. Got %r" % directory
-                )
+            if not dpath.is_dir():
+                raise ValueError("External library must be a directory. Got %r" % dstr)
 
-        library = Library(
-            logical_name, directory, vhdl_standard, is_external=is_external
-        )
-        LOGGER.debug("Adding library %s with path %s", logical_name, directory)
+        library = Library(logical_name, dstr, vhdl_standard, is_external=is_external)
+        LOGGER.debug("Adding library %s with path %s", logical_name, dstr)
 
         self._libraries[logical_name] = library
         self._lower_library_names_dict[logical_name.lower()] = library.name
