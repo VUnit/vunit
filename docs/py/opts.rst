@@ -7,9 +7,12 @@ Compilation options allow customization of compilation behavior. Since simulator
 differing options available, generic options may be specified through this interface.
 The following compilation options are known.
 
-``ghdl.flags``
+``ghdl.a_flags``
    Extra arguments passed to ``ghdl -a`` command during compilation.
    Must be a list of strings.
+
+``ghdl.flags``
+  Deprecated alias of ``ghdl.a_flags``. It will be removed in future releases.
 
 ``incisive.irun_vhdl_flags``
    Extra arguments passed to the Incisive ``irun`` command when compiling VHDL files.

@@ -148,7 +148,7 @@ class Test(object):
 
         .. code-block:: python
 
-           test.set_sim_option("ghdl.flags", ["--no-vital-checks"])
+           test.set_sim_option("ghdl.a_flags", ["--no-vital-checks"])
 
         """
         self._test_case.set_sim_option(name, value, overwrite)

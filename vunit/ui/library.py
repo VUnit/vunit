@@ -94,7 +94,7 @@ class Library(object):
 
         .. code-block:: python
 
-           lib.set_sim_option("ghdl.flags", ["--no-vital-checks"])
+           lib.set_sim_option("ghdl.a_flags", ["--no-vital-checks"])
 
         .. note::
            Only affects test benches added *before* the option is set.
@@ -114,7 +114,7 @@ class Library(object):
 
         .. code-block:: python
 
-           lib.set_compile_option("ghdl.flags", ["--no-vital-checks"])
+           lib.set_compile_option("ghdl.a_flags", ["--no-vital-checks"])
 
 
         .. note::

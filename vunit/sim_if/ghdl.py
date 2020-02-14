@@ -14,6 +14,7 @@ import logging
 import subprocess
 import shlex
 from sys import stdout  # To avoid output catched in non-verbose mode
+from warnings import warn
 from ..exceptions import CompileError
 from ..ostools import Process
 from . import SimulatorInterface, ListOfStringOption, StringOption, BooleanOption
@@ -32,7 +33,10 @@ class GHDLInterface(SimulatorInterface):
     supports_gui_flag = True
     supports_colors_in_gui = True
 
-    compile_options = [ListOfStringOption("ghdl.flags")]
+    compile_options = [
+        ListOfStringOption("ghdl.a_flags"),
+        ListOfStringOption("ghdl.flags"),
+    ]
 
     sim_options = [
         ListOfStringOption("ghdl.sim_flags"),
@@ -213,7 +217,20 @@ class GHDLInterface(SimulatorInterface):
         ]
         for library in self._project.get_libraries():
             cmd += ["-P%s" % library.directory]
-        cmd += source_file.compile_options.get("ghdl.flags", [])
+
+        a_flags = source_file.compile_options.get("ghdl.a_flags", [])
+        flags = source_file.compile_options.get("ghdl.flags", [])
+        if flags != []:
+            warn(
+                (
+                    "'ghdl.flags' is deprecated and it will be removed in future releases; "
+                    "use 'ghdl.a_flags' instead"
+                ),
+                Warning,
+            )
+            a_flags += flags
+
+        cmd += a_flags
         cmd += [source_file.name]
         return cmd
 
