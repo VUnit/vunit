@@ -237,7 +237,7 @@ in your VUnit Git repository? You have to do this first if installing using setu
         except KeyError:
             library = self._vunit_obj.add_library(library_name)
 
-        library.add_source_files(VHDL_PATH / "JSON-for-VHDL" / "vhdl" / "*.vhdl")
+        library.add_source_files(VHDL_PATH / "JSON-for-VHDL" / "src" / "*.vhdl")
 
     def add_verilog_builtins(self):
         """
