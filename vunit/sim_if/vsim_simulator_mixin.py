@@ -15,7 +15,7 @@ from os.path import join, dirname, abspath, exists
 from ..ostools import write_file, Process
 from ..test.suites import get_result_file_name
 from ..persistent_tcl_shell import PersistentTclShell
-from .utils import read_tcl
+from .utils import read_sim_if_tcl
 
 
 class VsimSimulatorMixin(object):
