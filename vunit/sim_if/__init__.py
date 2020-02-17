@@ -172,7 +172,14 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
     @staticmethod
     def supports_vhpi():
         """
-        Return if the simulator supports VHPI
+        Returns True when the simulator supports VHPI
+        """
+        return False
+
+    @staticmethod
+    def supports_coverage():
+        """
+        Returns True when the simulator supports coverage
         """
         return False
 
