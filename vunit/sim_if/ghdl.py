@@ -354,6 +354,10 @@ class GHDLInterface(SimulatorInterface):
         )
 
         status = True
+
+        # Set environment variable to put the coverage output in the test_output folder
+        os.environ["GCOV_PREFIX"] = os.path.join(output_path, "coverage")
+
         try:
             proc = Process(cmd)
             proc.consume_output()
@@ -371,3 +375,17 @@ class GHDLInterface(SimulatorInterface):
             subprocess.call(cmd)
 
         return status
+
+    def _compile_source_file(self, source_file, printer):
+        """
+        Runs parent command for compilation, and moves the .gcno file (if any) to the compilation output folder
+        """
+        compilation_ok = super()._compile_source_file(source_file, printer)
+
+        # GCOV gcno files are output to where the command is run,
+        # move it back to the compilation folder
+        gcno_file = os.path.splitext(os.path.basename(source_file.name))[0] + ".gcno"
+        if os.path.exists(gcno_file):
+            os.rename(gcno_file, os.path.join(source_file.library.directory, gcno_file))
+
+        return compilation_ok
