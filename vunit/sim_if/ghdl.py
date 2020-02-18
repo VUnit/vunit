@@ -355,11 +355,11 @@ class GHDLInterface(SimulatorInterface):
 
         status = True
 
-        # Set environment variable to put the coverage output in the test_output folder
-        os.environ["GCOV_PREFIX"] = os.path.join(output_path, "coverage")
-
         try:
-            proc = Process(cmd)
+            # Set environment variable to put the coverage output in the test_output folder
+            gcov_env = os.environ.copy()
+            gcov_env["GCOV_PREFIX"] = os.path.join(output_path, "coverage")
+            proc = Process(cmd, env=gcov_env)
             proc.consume_output()
         except Process.NonZeroExitCode:
             status = False
