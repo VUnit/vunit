@@ -9,15 +9,13 @@ UI class Library
 """
 
 from pathlib import Path
-from glob import glob
 from fnmatch import fnmatch
-from typing import Optional, List
+from typing import Optional
 from ..vhdl_standard import VHDL, VHDLStandard
 from ..project import Project
-from ..sim_if import is_string_not_iterable
 from ..source_file import file_type_of, FILE_TYPES, VERILOG_FILE_TYPES
 from ..builtins import add_verilog_include_dir
-from .common import check_not_empty
+from .common import check_not_empty, get_checked_file_names_from_globs
 from .source import SourceFile, SourceFileList
 from .testbench import TestBench
 from .packagefacade import PackageFacade
@@ -188,23 +186,6 @@ class Library(object):
            library.add_source_files("*.vhd")
 
         """
-        if is_string_not_iterable(pattern):
-            patterns = [pattern]
-        elif isinstance(pattern, Path):
-            patterns = [str(pattern)]
-        else:
-            patterns = pattern
-
-        file_names: List[str] = []
-        for pattern_instance in patterns:
-            new_file_names = glob(str(pattern_instance))
-            check_not_empty(
-                new_file_names,
-                allow_empty,
-                "Pattern %r did not match any file" % pattern_instance,
-            )
-            file_names += new_file_names
-
         return SourceFileList(
             source_files=[
                 self.add_source_file(
@@ -216,7 +197,7 @@ class Library(object):
                     no_parse=no_parse,
                     file_type=file_type,
                 )
-                for file_name in file_names
+                for file_name in get_checked_file_names_from_globs(pattern, allow_empty)
             ]
         )
 
