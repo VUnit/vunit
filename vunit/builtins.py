@@ -13,6 +13,7 @@ from glob import glob
 from warnings import warn
 from vunit.vhdl_standard import VHDL, VHDLStandard
 from vunit.sim_if.common import simulator_check
+from vunit.ui.common import get_checked_file_names_from_globs
 
 VHDL_PATH = (Path(__file__).parent / "vhdl").resolve()
 VERILOG_PATH = (Path(__file__).parent / "verilog").resolve()
@@ -43,7 +44,7 @@ class Builtins(object):
     def add(self, name, args=None):
         self._builtins_adder.add(name, args)
 
-    def _add_files(self, pattern):
+    def _add_files(self, pattern=None, allow_empty=True):
         """
         Add files with naming convention to indicate which standard is supported
         """
@@ -52,7 +53,7 @@ class Builtins(object):
             and self._vhdl_standard.supports_context
         )
 
-        for file_name in glob(str(pattern)):
+        for file_name in get_checked_file_names_from_globs(str(pattern), allow_empty):
             base_file_name = Path(file_name).name
 
             standards = set()

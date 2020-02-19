@@ -8,11 +8,13 @@
 UI common functions
 """
 
+from pathlib import Path
+from glob import glob
 from os import environ
 from logging import getLogger
-from typing import Optional
+from typing import Optional, List
+from ..sim_if import is_string_not_iterable
 from ..vhdl_standard import VHDL, VHDLStandard
-
 
 LOGGER = getLogger(__name__)
 
@@ -49,3 +51,27 @@ def check_not_empty(lst, allow_empty, error_msg):
     if (not allow_empty) and (not lst):
         raise ValueError(error_msg + ". Use allow_empty=True to avoid exception.")
     return lst
+
+
+def get_checked_file_names_from_globs(pattern, allow_empty):
+    """
+    Get file names from globs and check that exist
+    """
+    if is_string_not_iterable(pattern):
+        patterns = [pattern]
+    elif isinstance(pattern, Path):
+        patterns = [str(pattern)]
+    else:
+        patterns = pattern
+
+    file_names: List[str] = []
+    for pattern_instance in patterns:
+        new_file_names = glob(str(pattern_instance))
+        check_not_empty(
+            new_file_names,
+            allow_empty,
+            "Pattern %r did not match any file" % pattern_instance,
+        )
+        file_names += new_file_names
+
+    return file_names
