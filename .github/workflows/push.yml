@@ -103,14 +103,14 @@ jobs:
       if: endsWith( matrix.task, '-ghdl' )
       shell: bash
       run: |
-        curl -fsSL -o ghdl.zip https://github.com/ghdl/ghdl/releases/download/v0.36/ghdl-0.36-mingw32-mcode.zip
+        curl -fsSL -o ghdl.zip https://github.com/ghdl/ghdl/releases/download/v0.37/ghdl-0.37-mingw32-mcode.zip
         7z x ghdl.zip "-o../ghdl" -y
-        mv ../ghdl/GHDL/0.36-mingw32-mcode/ ../ghdl-v0.36
+        mv ../ghdl/GHDL/0.37-mingw32-mcode/ ../ghdl-v0.37
         rm -rf ../ghdl ghdl.zip
     - name: run job
       shell: bash
       run: |
-        export PATH=$PATH:$(pwd)/../ghdl-v0.36/bin
+        export PATH=$PATH:$(pwd)/../ghdl-v0.37/bin
         tox -e py${{ matrix.task }} -- --color=yes
 
   deploy:

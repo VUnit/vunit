@@ -14,6 +14,7 @@ import os
 import logging
 import subprocess
 import shlex
+import re
 from json import dump
 from sys import stdout  # To avoid output catched in non-verbose mode
 from warnings import warn
@@ -116,6 +117,15 @@ class GHDLInterface(SimulatorInterface):
         return self._vhdl_standard >= VHDL.STD_2008
 
     @classmethod
+    def _get_version_output(cls, prefix):
+        """
+        Get the output of 'ghdl --version'
+        """
+        return subprocess.check_output(
+            [join(prefix, cls.executable), "--version"]
+        ).decode()
+
+    @classmethod
     def determine_backend(cls, prefix):
         """
         Determine the GHDL backend
@@ -125,9 +135,7 @@ class GHDLInterface(SimulatorInterface):
             "llvm code generator": "llvm",
             "GCC back-end code generator": "gcc",
         }
-        output = subprocess.check_output(
-            [join(prefix, cls.executable), "--version"]
-        ).decode()
+        output = cls._get_version_output(prefix)
         for name, backend in mapping.items():
             if name in output:
                 LOGGER.debug("Detected GHDL %s", name)
@@ -143,11 +151,25 @@ class GHDLInterface(SimulatorInterface):
         )
 
     @classmethod
+    def determine_version(cls, prefix):
+        """
+        Determine the GHDL version
+        """
+        return float(
+            re.match(
+                r"GHDL ([0-9]*\.[0-9]*).*\(.*\) \[Dunoon edition\]",
+                cls._get_version_output(prefix),
+            ).group(1)
+        )
+
+    @classmethod
     def supports_vhpi(cls):
         """
         Return if the simulator supports VHPI
         """
-        return cls.determine_backend(cls.find_prefix_from_path()) != "mcode"
+        return (cls.determine_backend(cls.find_prefix_from_path()) != "mcode") or (
+            cls.determine_version(cls.find_prefix_from_path()) > 0.36
+        )
 
     def _has_output_flag(self):
         """
