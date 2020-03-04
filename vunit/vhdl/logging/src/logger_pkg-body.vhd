@@ -92,12 +92,13 @@ package body logger_pkg is
   procedure p_set_log_handlers(logger : logger_t;
                                log_handlers : log_handler_vec_t) is
     constant handlers : integer_vector_ptr_t := to_integer_vector_ptr(get(logger.p_data, handlers_idx));
+    constant full_logger_name : string := get_full_name(logger);
   begin
     resize(handlers, log_handlers'length);
 
     for i in log_handlers'range loop
       set(handlers, i, to_integer(log_handlers(i).p_data));
-      update_max_logger_name_length(log_handlers(i), get_full_name(logger)'length);
+      update_max_logger_name_length(log_handlers(i), full_logger_name'length);
     end loop;
   end;
 
@@ -262,11 +263,12 @@ package body logger_pkg is
   end;
 
   impure function get_max_name_length(logger : logger_t) return natural is
+    constant full_name : string := get_full_name(logger);
     variable result : natural := 0;
     variable child_result : natural;
   begin
     if num_children(logger) = 0 then
-      return get_full_name(logger)'length;
+      return full_name'length;
     end if;
 
     for i in 0 to num_children(logger)-1 loop
