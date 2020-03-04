@@ -110,7 +110,8 @@ package body codec_2008p_pkg is
   function decode (
     constant code : string)
     return boolean_vector is
-    variable ret_val : boolean_vector(get_range(code)'range) := (others => false);
+    constant ret_range : range_t := get_range(code);
+    variable ret_val : boolean_vector(ret_range'range) := (others => false);
     variable index   : positive := code'left;
   begin
     decode(code, index, ret_val);
@@ -136,7 +137,8 @@ package body codec_2008p_pkg is
   function decode (
     constant code : string)
     return integer_vector is
-    variable ret_val : integer_vector(get_range(code)'range) := (others => integer'left);
+    constant ret_range : range_t := get_range(code);
+    variable ret_val : integer_vector(ret_range'range) := (others => integer'left);
     variable index   : positive := code'left;
   begin
     decode(code, index, ret_val);
@@ -162,7 +164,8 @@ package body codec_2008p_pkg is
   function decode (
     constant code : string)
     return real_vector is
-    variable ret_val : real_vector(get_range(code)'range) := (others => real'left);
+    constant ret_range : range_t := get_range(code);
+    variable ret_val : real_vector(ret_range'range) := (others => real'left);
     variable index   : positive := code'left;
   begin
     decode(code, index, ret_val);
@@ -188,7 +191,8 @@ package body codec_2008p_pkg is
   function decode (
     constant code : string)
     return time_vector is
-    variable ret_val : time_vector(get_range(code)'range) := (others => time'left);
+    constant ret_range : range_t := get_range(code);
+    variable ret_val : time_vector(ret_range'range) := (others => time'left);
     variable index   : positive := code'left;
   begin
     decode(code, index, ret_val);
@@ -206,7 +210,8 @@ package body codec_2008p_pkg is
   function decode (
     constant code : string)
     return ufixed is
-    variable ret_val : ufixed(get_range(code)'range);
+    constant ret_range : range_t := get_range(code);
+    variable ret_val : ufixed(ret_range'range);
     variable index   : positive := code'left;
   begin
     decode(code, index, ret_val);
@@ -224,7 +229,8 @@ package body codec_2008p_pkg is
   function decode (
     constant code : string)
     return sfixed is
-    variable ret_val : sfixed(get_range(code)'range);
+    constant ret_range : range_t := get_range(code);
+    variable ret_val : sfixed(ret_range'range);
     variable index   : positive := code'left;
   begin
     decode(code, index, ret_val);
@@ -242,7 +248,8 @@ package body codec_2008p_pkg is
   function decode (
     constant code : string)
     return float is
-    variable ret_val : float(get_range(code)'range);
+    constant ret_range : range_t := get_range(code);
+    variable ret_val : float(ret_range'range);
     variable index   : positive := code'left;
   begin
     decode(code, index, ret_val);
