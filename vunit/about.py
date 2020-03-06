@@ -68,4 +68,4 @@ def version():
     return VERSION
 
 
-VERSION = "4.4.0"
+VERSION = "4.4.1rc0"
