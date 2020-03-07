@@ -70,7 +70,7 @@ class ModelSimInterface(
         """
 
         def has_modelsim_ini(path):
-            return os.path.isfile(str(Path(path) / "modelsim.ini"))
+            return os.path.isfile(str(Path(path).parent / "modelsim.ini"))
 
         return cls.find_toolchain(["vsim"], constraints=[has_modelsim_ini])
 
