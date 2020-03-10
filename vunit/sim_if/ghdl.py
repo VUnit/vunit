@@ -357,10 +357,10 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
 
         status = True
 
-        gcov_env = os.environ.copy()
+        gcov_env = environ.copy()
         if config.sim_options.get("enable_coverage", False):
             # Set environment variable to put the coverage output in the test_output folder
-            coverage_dir = join(output_path, "coverage")
+            coverage_dir = str(Path(output_path) / "coverage")
             gcov_env["GCOV_PREFIX"] = coverage_dir
             self._coverage_dirs.add(coverage_dir)
 
@@ -390,9 +390,11 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
 
         # GCOV gcno files are output to where the command is run,
         # move it back to the compilation folder
-        gcno_file = os.path.splitext(os.path.basename(source_file.name))[0] + ".gcno"
-        if os.path.exists(gcno_file):
-            os.rename(gcno_file, os.path.join(source_file.library.directory, gcno_file))
+        source_path = Path(source_file.name)
+        gcno_file = Path(source_path.stem + ".gcno")
+        if Path(gcno_file).exists():
+            new_path = Path(source_file.library.directory) / gcno_file
+            gcno_file.rename(new_path)
 
         return compilation_ok
 
@@ -436,8 +438,8 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         # Add compile-time .gcno files as well, they are needed or the report
         if file_exists(dir_name):
             for library in self._project.get_libraries():
-                if exists(library.directory):
-                    lib_dir_path = Path(library.directory)
+                lib_dir_path = Path(library.directory)
+                if lib_dir_path.exists():
                     gcno_files = lib_dir_path.glob("*.gcno")
                     for gcno_file in gcno_files:
                         # gcda files are output to the the coverage directory, but within subdirectories
