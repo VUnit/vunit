@@ -438,10 +438,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         # Add compile-time .gcno files as well, they are needed or the report
         if file_exists(dir_name):
             for library in self._project.get_libraries():
-                lib_dir_path = Path(library.directory)
-                if lib_dir_path.exists():
-                    gcno_files = lib_dir_path.glob("*.gcno")
-                    for gcno_file in gcno_files:
+                for gcno_file in Path(library.directory).glob("*.gcno"):
                         # gcda files are output to the the coverage directory, but within subdirectories
                         # taken directly from where the command was run, so appdn cwd to output here
                         shutil.copy(gcno_file, gcda_dir)
