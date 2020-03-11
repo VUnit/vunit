@@ -435,7 +435,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         assert len(gcda_dirs) == 1, "Expected exactly one folder with gcda files"
         gcda_dir = str(gcda_dirs.pop())
 
-        # Add compile-time .gcno files as well, they are needed or the report
+        # Add compile-time .gcno files as well, they are needed for the report
         if file_exists(dir_name):
             for library in self._project.get_libraries():
                 for gcno_file in Path(library.directory).glob("*.gcno"):
