@@ -109,7 +109,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         self._gtkwave_args = gtkwave_args
         self._backend = backend
         self._vhdl_standard = None
-        self._coverage_dirs = set()
+        self._coverage_test_dirs = set()
 
     def has_valid_exit_code(self):
         """
@@ -362,7 +362,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
             # Set environment variable to put the coverage output in the test_output folder
             coverage_dir = str(Path(output_path) / "coverage")
             gcov_env["GCOV_PREFIX"] = coverage_dir
-            self._coverage_dirs.add(coverage_dir)
+            self._coverage_test_dirs.add(coverage_dir)
 
         try:
             proc = Process(cmd, env=gcov_env)
@@ -384,7 +384,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
 
     def _compile_source_file(self, source_file, printer):
         """
-        Runs parent command for compilation, and moves the .gcno file (if any) to the compilation output folder
+        Runs parent command for compilation, and moves any .gcno files to the compilation output
         """
         compilation_ok = super()._compile_source_file(source_file, printer)
 
@@ -402,23 +402,22 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         """
         Merge coverage from all test cases
         """
-
-        dir_name = file_name
+        output_dir = file_name
 
         # Loop over each .gcda output folder and merge them two at a time
         first_input = True
-        for coverage_dir in self._coverage_dirs:
+        for coverage_dir in self._coverage_test_dirs:
             if file_exists(coverage_dir):
                 if first_input:
                     # There is no output to merge with, so merge with itself to produce first output
                     first_dir = coverage_dir
                 else:
-                    first_dir = dir_name
+                    first_dir = output_dir
                 merge_command = [
                     "gcov-tool",
                     "merge",
                     "-o",
-                    dir_name,
+                    output_dir,
                     first_dir,
                     coverage_dir,
                 ]
@@ -428,17 +427,14 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
                 LOGGER.warning("Missing coverage directory: %s", coverage_dir)
 
         # Find actual output path of the .gcda files (they are deep in hierarchy)
-        dir_path = Path(dir_name)
+        dir_path = Path(output_dir)
         gcda_files = dir_path.glob("**/*.gcda")
         gcda_dirs = [x.parent for x in gcda_files]
         gcda_dirs = set(gcda_dirs)
         assert len(gcda_dirs) == 1, "Expected exactly one folder with gcda files"
-        gcda_dir = str(gcda_dirs.pop())
+        gcda_dir = gcda_dirs.pop()
 
         # Add compile-time .gcno files as well, they are needed for the report
-        if file_exists(dir_name):
-            for library in self._project.get_libraries():
-                for gcno_file in Path(library.directory).glob("*.gcno"):
-                        # gcda files are output to the the coverage directory, but within subdirectories
-                        # taken directly from where the command was run, so appdn cwd to output here
-                        shutil.copy(gcno_file, gcda_dir)
+        for library in self._project.get_libraries():
+            for gcno_file in Path(library.directory).glob("*.gcno"):
+                shutil.copy(gcno_file, gcda_dir)

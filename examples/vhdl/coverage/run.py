@@ -27,7 +27,7 @@ LIB.set_compile_option("rivierapro.vlog_flags", ["-coverage", "bs"])
 LIB.set_compile_option("modelsim.vcom_flags", ["+cover=bs"])
 LIB.set_compile_option("modelsim.vlog_flags", ["+cover=bs"])
 LIB.set_compile_option(
-    "ghdl.a_flags", ["-g", "-O2", "-fprofile-arcs", "-ftest-coverage"]
+    "ghdl.a_flags", ["-fprofile-arcs", "-ftest-coverage"]
 )
 LIB.set_sim_option("ghdl.elab_flags", ["-Wl,-lgcov"])
 
