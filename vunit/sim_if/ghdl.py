@@ -272,7 +272,9 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         cmd += [source_file.name]
         return cmd
 
-    def _get_command(self, config, output_path, elaborate_only, ghdl_e, wave_file):
+    def _get_command(  # pylint: disable=too-many-branches
+        self, config, output_path, elaborate_only, ghdl_e, wave_file
+    ):
         """
         Return GHDL simulation command
         """
