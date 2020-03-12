@@ -263,6 +263,12 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
             a_flags += flags
 
         cmd += a_flags
+
+        if source_file.compile_options.get("enable_coverage", False):
+            # Add gcc compilation flags for coverage
+            #   -ftest-coverages creates .gcno notes files needed by gcov
+            #   -fprofile-arcs creates branch profiling in .gcda database files
+            cmd += ["-fprofile-arcs", "-ftest-coverage"]
         cmd += [source_file.name]
         return cmd
 
@@ -291,6 +297,9 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
         if self._has_output_flag():
             cmd += ["-o", bin_path]
         cmd += config.sim_options.get("ghdl.elab_flags", [])
+        if config.sim_options.get("enable_coverage", False):
+            # Enable coverage in linker
+            cmd += ["-Wl,-lgcov"]
         cmd += [config.entity_name, config.architecture_name]
 
         sim = config.sim_options.get("ghdl.sim_flags", [])

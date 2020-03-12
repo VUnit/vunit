@@ -39,7 +39,7 @@ class SimulatorFactory(object):
         """
         Return all supported compile options
         """
-        result = dict()
+        result = dict((opt.name, opt) for opt in [BooleanOption("enable_coverage"),])
         for sim_class in self.supported_simulators():
             for opt in sim_class.compile_options:
                 assert hasattr(opt, "name")
