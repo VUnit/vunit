@@ -57,28 +57,28 @@ begin
     variable range_left, range_right : integer;
 
     -- Helper functions to make tests pass GHDL v0.37
-    function get_range_left ( constant vec: boolean_vector ) return integer is
+    function get_decoded_range_left ( constant vec: boolean_vector ) return integer is
     begin return vec'left; end;
 
-    function get_range_right ( constant vec: boolean_vector ) return integer is
+    function get_decoded_range_right ( constant vec: boolean_vector ) return integer is
     begin return vec'right; end;
 
-    function get_range_left ( constant vec: integer_vector ) return integer is
+    function get_decoded_range_left ( constant vec: integer_vector ) return integer is
     begin return vec'left; end;
 
-    function get_range_right ( constant vec: integer_vector ) return integer is
+    function get_decoded_range_right ( constant vec: integer_vector ) return integer is
     begin return vec'right; end;
 
-    function get_range_left ( constant vec: real_vector ) return integer is
+    function get_decoded_range_left ( constant vec: real_vector ) return integer is
     begin return vec'left; end;
 
-    function get_range_right ( constant vec: real_vector ) return integer is
+    function get_decoded_range_right ( constant vec: real_vector ) return integer is
     begin return vec'right; end;
 
-    function get_range_left ( constant vec: time_vector ) return integer is
+    function get_decoded_range_left ( constant vec: time_vector ) return integer is
     begin return vec'left; end;
 
-    function get_range_right ( constant vec: time_vector ) return integer is
+    function get_decoded_range_right ( constant vec: time_vector ) return integer is
     begin return vec'right; end;
 
   begin
@@ -91,8 +91,8 @@ begin
         check_relation(decode_boolean_vector(encode_boolean_vector((0         => true))) = boolean_vector'(0 => true));
         check_relation(decode_boolean_vector(encode_boolean_vector(null_boolean_vector)) = null_boolean_vector);
         check_relation(decode_boolean_vector(encode_boolean_vector(boolean_vector_5_downto_3)) = boolean_vector'(true, false, true));
-        range_left := get_range_left(decode_boolean_vector(encode_boolean_vector(boolean_vector_5_downto_3)));
-        range_right := get_range_right(decode_boolean_vector(encode_boolean_vector(boolean_vector_5_downto_3)));
+        range_left := get_decoded_range_left(decode_boolean_vector(encode_boolean_vector(boolean_vector_5_downto_3)));
+        range_right := get_decoded_range_right(decode_boolean_vector(encode_boolean_vector(boolean_vector_5_downto_3)));
         check_relation(range_left = 5);
         check_relation(range_right = 3);
       elsif run("Test that integer_vector can be encoded and decoded") then
@@ -102,8 +102,8 @@ begin
         check_relation(decode_integer_vector(encode_integer_vector((0   => -42))) = integer_vector'(0 => -42));
         check_relation(decode_integer_vector(encode_integer_vector(null_integer_vector)) = null_integer_vector);
         check_relation(decode_integer_vector(encode_integer_vector(integer_vector_5_downto_3)) = integer_vector'(-42, 0, 17));
-        range_left := get_range_left(decode_integer_vector(encode_integer_vector(integer_vector_5_downto_3)));
-        range_right := get_range_right(decode_integer_vector(encode_integer_vector(integer_vector_5_downto_3)));
+        range_left := get_decoded_range_left(decode_integer_vector(encode_integer_vector(integer_vector_5_downto_3)));
+        range_right := get_decoded_range_right(decode_integer_vector(encode_integer_vector(integer_vector_5_downto_3)));
         check_relation(range_left = 5);
         check_relation(range_right = 3);
       elsif run("Test that real_vector can be encoded and decoded") then
@@ -112,8 +112,8 @@ begin
         check_relation(decode_real_vector(encode_real_vector((0          => -42.42))) = real_vector'(0 => -42.42));
         check_relation(decode_real_vector(encode_real_vector(null_real_vector)) = null_real_vector);
         check_relation(decode_real_vector(encode_real_vector(real_vector_5_downto_3)) = real_vector'(-42.42, 0.001, 17.17));
-        range_left := get_range_left(decode_real_vector(encode_real_vector(real_vector_5_downto_3)));
-        range_right := get_range_right(decode_real_vector(encode_real_vector(real_vector_5_downto_3)));
+        range_left := get_decoded_range_left(decode_real_vector(encode_real_vector(real_vector_5_downto_3)));
+        range_right := get_decoded_range_right(decode_real_vector(encode_real_vector(real_vector_5_downto_3)));
         check_relation(range_left = 5);
         check_relation(range_right = 3);
       elsif run("Test that time_vector can be encoded and decoded") then
@@ -122,8 +122,8 @@ begin
         check_relation(decode_time_vector(encode_time_vector((0           => -42 ms))) = time_vector'(0 => -42 ms));
         check_relation(decode_time_vector(encode_time_vector(null_time_vector)) = null_time_vector);
         check_relation(decode_time_vector(encode_time_vector(time_vector_5_downto_3)) = time_vector'(-42 ms, 0 sec, 17 min));
-        range_left := get_range_left(decode_time_vector(encode_time_vector(time_vector_5_downto_3)));
-        range_right := get_range_right(decode_time_vector(encode_time_vector(time_vector_5_downto_3)));
+        range_left := get_decoded_range_left(decode_time_vector(encode_time_vector(time_vector_5_downto_3)));
+        range_right := get_decoded_range_right(decode_time_vector(encode_time_vector(time_vector_5_downto_3)));
         check_relation(range_left = 5);
         check_relation(range_right = 3);
       elsif run("Test that ufixed can be encoded and decoded") then

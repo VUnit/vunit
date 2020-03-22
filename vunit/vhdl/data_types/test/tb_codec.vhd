@@ -105,46 +105,46 @@ begin
     variable range_left, range_right : integer;
 
     -- Helper functions to make tests pass GHDL v0.37
-    function get_range_left ( constant vec: string ) return integer is
+    function get_decoded_range_left ( constant vec: string ) return integer is
     begin return vec'left; end;
 
-    function get_range_right ( constant vec: string ) return integer is
+    function get_decoded_range_right ( constant vec: string ) return integer is
     begin return vec'right; end;
 
-    function get_range_left ( constant vec: bit_vector ) return integer is
+    function get_decoded_range_left ( constant vec: bit_vector ) return integer is
     begin return vec'left; end;
 
-    function get_range_right ( constant vec: bit_vector ) return integer is
+    function get_decoded_range_right ( constant vec: bit_vector ) return integer is
     begin return vec'right; end;
 
-    function get_range_left ( constant vec: std_ulogic_vector ) return integer is
+    function get_decoded_range_left ( constant vec: std_ulogic_vector ) return integer is
     begin return vec'left; end;
 
-    function get_range_right ( constant vec: std_ulogic_vector ) return integer is
+    function get_decoded_range_right ( constant vec: std_ulogic_vector ) return integer is
     begin return vec'right; end;
 
-    function get_range_left ( constant vec: ieee.numeric_bit.unsigned ) return integer is
+    function get_decoded_range_left ( constant vec: ieee.numeric_bit.unsigned ) return integer is
     begin return vec'left; end;
 
-    function get_range_right ( constant vec: ieee.numeric_bit.unsigned ) return integer is
+    function get_decoded_range_right ( constant vec: ieee.numeric_bit.unsigned ) return integer is
     begin return vec'right; end;
 
-    function get_range_left ( constant vec: ieee.numeric_bit.signed ) return integer is
+    function get_decoded_range_left ( constant vec: ieee.numeric_bit.signed ) return integer is
     begin return vec'left; end;
 
-    function get_range_right ( constant vec: ieee.numeric_bit.signed ) return integer is
+    function get_decoded_range_right ( constant vec: ieee.numeric_bit.signed ) return integer is
     begin return vec'right; end;
 
-    function get_range_left ( constant vec: ieee.numeric_std.unsigned ) return integer is
+    function get_decoded_range_left ( constant vec: ieee.numeric_std.unsigned ) return integer is
     begin return vec'left; end;
 
-    function get_range_right ( constant vec: ieee.numeric_std.unsigned ) return integer is
+    function get_decoded_range_right ( constant vec: ieee.numeric_std.unsigned ) return integer is
     begin return vec'right; end;
 
-    function get_range_left ( constant vec: ieee.numeric_std.signed ) return integer is
+    function get_decoded_range_left ( constant vec: ieee.numeric_std.signed ) return integer is
     begin return vec'left; end;
 
-    function get_range_right ( constant vec: ieee.numeric_std.signed ) return integer is
+    function get_decoded_range_right ( constant vec: ieee.numeric_std.signed ) return integer is
     begin return vec'right; end;
 
   begin
@@ -217,13 +217,13 @@ begin
         string_15_downto_4 := "Hello world!";
         check_relation(decode_string(encode_string("The quick brown fox jumps over the lazy dog")) = string'("The quick brown fox jumps over the lazy dog"));
         check_relation(decode_string(encode_string(special_chars)) = string'(special_chars));
-        range_left := get_range_left(decode_string(encode_string(null_string)));
-        range_right := get_range_right(decode_string(encode_string(null_string)));
+        range_left := get_decoded_range_left(decode_string(encode_string(null_string)));
+        range_right := get_decoded_range_right(decode_string(encode_string(null_string)));
         check_relation(range_left = 10);
         check_relation(range_right = 9);
         check_relation(decode_string(encode_string(string_15_downto_4)) = string'("Hello world!"));
-        range_left := get_range_left(decode_string(encode_string(string_15_downto_4)));
-        range_right := get_range_right(decode_string(encode_string(string_15_downto_4)));
+        range_left := get_decoded_range_left(decode_string(encode_string(string_15_downto_4)));
+        range_right := get_decoded_range_right(decode_string(encode_string(string_15_downto_4)));
         check_relation(range_left = 15);
         check_relation(range_right = 4);
       elsif run("Test that bit_vector can be encoded and decoded") then
@@ -232,8 +232,8 @@ begin
         check_relation(decode_bit_vector(encode_bit_vector("1")) = bit_vector'("1"));
         check_relation(decode_bit_vector(encode_bit_vector("")) = bit_vector'(""));
         check_relation(decode_bit_vector(encode_bit_vector(bit_vector_5_downto_3)) = bit_vector'("101"));
-        range_left := get_range_left(decode_bit_vector(encode_bit_vector(bit_vector_5_downto_3)));
-        range_right := get_range_right(decode_bit_vector(encode_bit_vector(bit_vector_5_downto_3)));
+        range_left := get_decoded_range_left(decode_bit_vector(encode_bit_vector(bit_vector_5_downto_3)));
+        range_right := get_decoded_range_right(decode_bit_vector(encode_bit_vector(bit_vector_5_downto_3)));
         check_relation(range_left = 5);
         check_relation(range_right = 3);
       elsif run("Test that std_ulogic_vector can be encoded and decoded") then
@@ -242,8 +242,8 @@ begin
         check_relation(decode_std_ulogic_vector(encode_std_ulogic_vector("X")) = std_ulogic_vector'("X"));
         check_relation(decode_std_ulogic_vector(encode_std_ulogic_vector("")) = std_ulogic_vector'(""));
         check_relation(decode_std_ulogic_vector(encode_std_ulogic_vector(std_ulogic_vector_5_downto_3)) = std_ulogic_vector'("XU1"));
-        range_left := get_range_left(decode_std_ulogic_vector(encode_std_ulogic_vector(std_ulogic_vector_5_downto_3)));
-        range_right := get_range_right(decode_std_ulogic_vector(encode_std_ulogic_vector(std_ulogic_vector_5_downto_3)));
+        range_left := get_decoded_range_left(decode_std_ulogic_vector(encode_std_ulogic_vector(std_ulogic_vector_5_downto_3)));
+        range_right := get_decoded_range_right(decode_std_ulogic_vector(encode_std_ulogic_vector(std_ulogic_vector_5_downto_3)));
         check_relation(range_left = 5);
         check_relation(range_right = 3);
       elsif run("Test that complex can be encoded and decoded") then
@@ -256,8 +256,8 @@ begin
         check_relation(decode_numeric_bit_unsigned(encode_numeric_bit_unsigned("1")) = ieee.numeric_bit.unsigned'("1"));
         check_relation(decode_numeric_bit_unsigned(encode_numeric_bit_unsigned("")) = ieee.numeric_bit.unsigned'(""));
         check_relation(decode_numeric_bit_unsigned(encode_numeric_bit_unsigned(numeric_bit_unsigned_5_downto_3)) = ieee.numeric_bit.unsigned'("101"));
-        range_left := get_range_left(decode_numeric_bit_unsigned(encode_numeric_bit_unsigned(numeric_bit_unsigned_5_downto_3)));
-        range_right := get_range_right(decode_numeric_bit_unsigned(encode_numeric_bit_unsigned(numeric_bit_unsigned_5_downto_3)));
+        range_left := get_decoded_range_left(decode_numeric_bit_unsigned(encode_numeric_bit_unsigned(numeric_bit_unsigned_5_downto_3)));
+        range_right := get_decoded_range_right(decode_numeric_bit_unsigned(encode_numeric_bit_unsigned(numeric_bit_unsigned_5_downto_3)));
         check_relation(range_left = 5);
         check_relation(range_right = 3);
       elsif run("Test that signed from numeric_bit can be encoded and decoded") then
@@ -266,8 +266,8 @@ begin
         check_relation(decode_numeric_bit_signed(encode_numeric_bit_signed("1")) = ieee.numeric_bit.signed'("1"));
         check_relation(decode_numeric_bit_signed(encode_numeric_bit_signed("")) = ieee.numeric_bit.signed'(""));
         check_relation(decode_numeric_bit_signed(encode_numeric_bit_signed(numeric_bit_signed_5_downto_3)) = ieee.numeric_bit.signed'("101"));
-        range_left := get_range_left(decode_numeric_bit_signed(encode_numeric_bit_signed(numeric_bit_signed_5_downto_3)));
-        range_right := get_range_right(decode_numeric_bit_signed(encode_numeric_bit_signed(numeric_bit_signed_5_downto_3)));
+        range_left := get_decoded_range_left(decode_numeric_bit_signed(encode_numeric_bit_signed(numeric_bit_signed_5_downto_3)));
+        range_right := get_decoded_range_right(decode_numeric_bit_signed(encode_numeric_bit_signed(numeric_bit_signed_5_downto_3)));
         check_relation(range_left = 5);
         check_relation(range_right = 3);
       elsif run("Test that unsigned from numeric_std can be encoded and decoded") then
@@ -276,8 +276,8 @@ begin
         check_relation(decode_numeric_std_unsigned(encode_numeric_std_unsigned("1")) = ieee.numeric_std.unsigned'("1"));
         check_relation(decode_numeric_std_unsigned(encode_numeric_std_unsigned("")) = ieee.numeric_std.unsigned'(""));
         check_relation(decode_numeric_std_unsigned(encode_numeric_std_unsigned(numeric_std_unsigned_5_downto_3)) = ieee.numeric_std.unsigned'("101"));
-        range_left := get_range_left(decode_numeric_std_unsigned(encode_numeric_std_unsigned(numeric_std_unsigned_5_downto_3)));
-        range_right := get_range_right(decode_numeric_std_unsigned(encode_numeric_std_unsigned(numeric_std_unsigned_5_downto_3)));
+        range_left := get_decoded_range_left(decode_numeric_std_unsigned(encode_numeric_std_unsigned(numeric_std_unsigned_5_downto_3)));
+        range_right := get_decoded_range_right(decode_numeric_std_unsigned(encode_numeric_std_unsigned(numeric_std_unsigned_5_downto_3)));
         check_relation(range_left = 5);
         check_relation(range_right = 3);
       elsif run("Test that signed from numeric_std can be encoded and decoded") then
@@ -286,8 +286,8 @@ begin
         check_relation(decode_numeric_std_signed(encode_numeric_std_signed("1")) = ieee.numeric_std.signed'("1"));
         check_relation(decode_numeric_std_signed(encode_numeric_std_signed("")) = ieee.numeric_std.signed'(""));
         check_relation(decode_numeric_std_signed(encode_numeric_std_signed(numeric_std_signed_5_downto_3)) = ieee.numeric_std.signed'("101"));
-        range_left := get_range_left(decode_numeric_std_signed(encode_numeric_std_signed(numeric_std_signed_5_downto_3)));
-        range_right := get_range_right(decode_numeric_std_signed(encode_numeric_std_signed(numeric_std_signed_5_downto_3)));
+        range_left := get_decoded_range_left(decode_numeric_std_signed(encode_numeric_std_signed(numeric_std_signed_5_downto_3)));
+        range_right := get_decoded_range_right(decode_numeric_std_signed(encode_numeric_std_signed(numeric_std_signed_5_downto_3)));
         check_relation(range_left = 5);
         check_relation(range_right = 3);
       end if;

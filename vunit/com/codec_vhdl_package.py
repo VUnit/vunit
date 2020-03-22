@@ -130,7 +130,7 @@ class CodecVHDLPackage(VHDLPackage):
         declarations = ""
         definitions = """
   -- Helper function to make tests pass GHDL v0.37
-  function get_length ( constant vec: string ) return integer is
+  function get_encoded_length ( constant vec: string ) return integer is
   begin return vec'length; end;
 
 """
