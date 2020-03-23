@@ -1102,7 +1102,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
 
     def simulator_supports_coverage(self):
         """
-        Returns True if the simulator supports coverage
+        Returns True when the simulator supports coverage
 
         Will return None if no simulator was found.
         """
