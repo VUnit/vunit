@@ -121,6 +121,13 @@ class TestExternalRunScripts(unittest.TestCase):
     def test_vhdl_check_example_project(self):
         self.check(ROOT / "examples" / "vhdl" / "check" / "run.py")
 
+    @unittest.skipIf(
+        simulator_check(lambda simclass: not simclass.supports_coverage()),
+        "This simulator/backend does not support coverage",
+    )
+    def test_vhdl_coverage_example_project(self):
+        self.check(join(ROOT, "examples", "vhdl", "coverage", "run.py"))
+
     def test_vhdl_generate_tests_example_project(self):
         self.check(ROOT / "examples" / "vhdl" / "generate_tests" / "run.py")
         check_report(
