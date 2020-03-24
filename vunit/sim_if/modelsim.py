@@ -81,6 +81,13 @@ class ModelSimInterface(
         """
         return True
 
+    @staticmethod
+    def supports_coverage():
+        """
+        Returns True when the simulator supports coverage
+        """
+        return True
+
     def __init__(self, prefix, output_path, persistent=False, gui=False):
         SimulatorInterface.__init__(self, output_path, gui)
         VsimSimulatorMixin.__init__(

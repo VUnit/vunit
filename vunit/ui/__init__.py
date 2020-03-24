@@ -1099,3 +1099,13 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         if self._simulator_class is None:
             return None
         return self._simulator_class.name
+
+    def simulator_supports_coverage(self):
+        """
+        Returns True when the simulator supports coverage
+
+        Will return None if no simulator was found.
+        """
+        if self._simulator_class is None:
+            return None
+        return self._simulator_class.supports_coverage

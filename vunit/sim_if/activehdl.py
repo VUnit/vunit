@@ -68,6 +68,13 @@ class ActiveHDLInterface(SimulatorInterface):
 
         return False
 
+    @staticmethod
+    def supports_coverage():
+        """
+        Returns True when the simulator supports coverage
+        """
+        return True
+
     def __init__(self, prefix, output_path, gui=False):
         SimulatorInterface.__init__(self, output_path, gui)
         self._library_cfg = str(Path(output_path) / "library.cfg")

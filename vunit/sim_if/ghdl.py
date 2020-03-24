@@ -14,6 +14,7 @@ import logging
 import subprocess
 import shlex
 import re
+import shutil
 from json import dump
 from sys import stdout  # To avoid output catched in non-verbose mode
 from warnings import warn
@@ -25,7 +26,7 @@ from ..vhdl_standard import VHDL
 LOGGER = logging.getLogger(__name__)
 
 
-class GHDLInterface(SimulatorInterface):
+class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-attributes
     """
     Interface for GHDL simulator
     """
@@ -108,6 +109,7 @@ class GHDLInterface(SimulatorInterface):
         self._gtkwave_args = gtkwave_args
         self._backend = backend
         self._vhdl_standard = None
+        self._coverage_test_dirs = set()
 
     def has_valid_exit_code(self):
         """
@@ -164,11 +166,18 @@ class GHDLInterface(SimulatorInterface):
     @classmethod
     def supports_vhpi(cls):
         """
-        Return if the simulator supports VHPI
+        Returns True when the simulator supports VHPI
         """
         return (cls.determine_backend(cls.find_prefix_from_path()) != "mcode") or (
             cls.determine_version(cls.find_prefix_from_path()) > 0.36
         )
+
+    @classmethod
+    def supports_coverage(cls):
+        """
+        Returns True when the simulator supports coverage
+        """
+        return cls.determine_backend(cls.find_prefix_from_path()) == "gcc"
 
     def _has_output_flag(self):
         """
@@ -254,10 +263,18 @@ class GHDLInterface(SimulatorInterface):
             a_flags += flags
 
         cmd += a_flags
+
+        if source_file.compile_options.get("enable_coverage", False):
+            # Add gcc compilation flags for coverage
+            #   -ftest-coverages creates .gcno notes files needed by gcov
+            #   -fprofile-arcs creates branch profiling in .gcda database files
+            cmd += ["-fprofile-arcs", "-ftest-coverage"]
         cmd += [source_file.name]
         return cmd
 
-    def _get_command(self, config, output_path, elaborate_only, ghdl_e, wave_file):
+    def _get_command(  # pylint: disable=too-many-branches
+        self, config, output_path, elaborate_only, ghdl_e, wave_file
+    ):
         """
         Return GHDL simulation command
         """
@@ -282,6 +299,9 @@ class GHDLInterface(SimulatorInterface):
         if self._has_output_flag():
             cmd += ["-o", bin_path]
         cmd += config.sim_options.get("ghdl.elab_flags", [])
+        if config.sim_options.get("enable_coverage", False):
+            # Enable coverage in linker
+            cmd += ["-Wl,-lgcov"]
         cmd += [config.entity_name, config.architecture_name]
 
         sim = config.sim_options.get("ghdl.sim_flags", [])
@@ -347,8 +367,16 @@ class GHDLInterface(SimulatorInterface):
         )
 
         status = True
+
+        gcov_env = environ.copy()
+        if config.sim_options.get("enable_coverage", False):
+            # Set environment variable to put the coverage output in the test_output folder
+            coverage_dir = str(Path(output_path) / "coverage")
+            gcov_env["GCOV_PREFIX"] = coverage_dir
+            self._coverage_test_dirs.add(coverage_dir)
+
         try:
-            proc = Process(cmd)
+            proc = Process(cmd, env=gcov_env)
             proc.consume_output()
         except Process.NonZeroExitCode:
             status = False
@@ -364,3 +392,54 @@ class GHDLInterface(SimulatorInterface):
             subprocess.call(cmd)
 
         return status
+
+    def _compile_source_file(self, source_file, printer):
+        """
+        Runs parent command for compilation, and moves any .gcno files to the compilation output
+        """
+        compilation_ok = super()._compile_source_file(source_file, printer)
+
+        if source_file.compile_options.get("enable_coverage", False):
+            # GCOV gcno files are output to where the command is run,
+            # move it back to the compilation folder
+            source_path = Path(source_file.name)
+            gcno_file = Path(source_path.stem + ".gcno")
+            if Path(gcno_file).exists():
+                new_path = Path(source_file.library.directory) / gcno_file
+                gcno_file.rename(new_path)
+
+        return compilation_ok
+
+    def merge_coverage(self, file_name, args=None):
+        """
+        Merge coverage from all test cases
+        """
+        output_dir = file_name
+
+        # Loop over each .gcda output folder and merge them two at a time
+        first_input = True
+        for coverage_dir in self._coverage_test_dirs:
+            if Path(coverage_dir).exists():
+                merge_command = [
+                    "gcov-tool",
+                    "merge",
+                    "-o",
+                    output_dir,
+                    coverage_dir if first_input else output_dir,
+                    coverage_dir,
+                ]
+                subprocess.call(merge_command)
+                first_input = False
+            else:
+                LOGGER.warning("Missing coverage directory: %s", coverage_dir)
+
+        # Find actual output path of the .gcda files (they are deep in hierarchy)
+        dir_path = Path(output_dir)
+        gcda_dirs = {x.parent for x in dir_path.glob("**/*.gcda")}
+        assert len(gcda_dirs) == 1, "Expected exactly one folder with gcda files"
+        gcda_dir = gcda_dirs.pop()
+
+        # Add compile-time .gcno files as well, they are needed for the report
+        for library in self._project.get_libraries():
+            for gcno_file in Path(library.directory).glob("*.gcno"):
+                shutil.copy(gcno_file, gcda_dir)

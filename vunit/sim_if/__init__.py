@@ -172,7 +172,14 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
     @staticmethod
     def supports_vhpi():
         """
-        Return if the simulator supports VHPI
+        Returns True when the simulator supports VHPI
+        """
+        return False
+
+    @staticmethod
+    def supports_coverage():
+        """
+        Returns True when the simulator supports coverage
         """
         return False
 
@@ -216,7 +223,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         Implemented by specific simulators
         """
 
-    def __compile_source_file(self, source_file, printer):
+    def _compile_source_file(self, source_file, printer):
         """
         Compiles a single source file and prints status information
         """
@@ -297,7 +304,7 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
                 printer.write("\n")
                 continue
 
-            if self.__compile_source_file(source_file, printer):
+            if self._compile_source_file(source_file, printer):
                 project.update(source_file)
             else:
                 source_files_to_skip.update(

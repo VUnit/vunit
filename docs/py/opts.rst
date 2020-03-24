@@ -46,6 +46,11 @@ The following compilation options are known.
    Extra arguments passed to Active HDL ``vcom`` command.
    Must be a list of strings.
 
+``enable_coverage``
+   Enables compilation flags needed for code coverage and tells VUnit to handle
+   the coverage files created at compilation. Only used for coverage with GHDL.
+   Must be a boolean value. Default is False.
+
 .. note::
    Only affects source files added *before* the option is set.
 
@@ -73,17 +78,22 @@ The following simulation options are known.
   Must be a boolean value. Default is False.
 
   When coverage is enabled VUnit only takes the minimal steps required
-  to make the simulator creates an unique coverage file for the
-  simulation run. The VUnit users must still set :ref:`sim
+  to make the simulator create a unique coverage file for the
+  simulation run.
+
+  For RiverieraPRO and Modelsim/Questa, the VUnit users must still set :ref:`sim
   <sim_options>` and :ref:`compile <compile_options>` options to
   configure the simulator specific coverage options they want. The
   reason for this to allow the VUnit users maximum control of their
   coverage settings.
 
+  For GHDL with GCC backend there is less configurability for coverage, and all
+  necessary flags are set by the the ``enable_coverage`` sim and compile options.
+
   An example of a ``run.py`` file using coverage can be found
   :vunit_example:`here <vhdl/coverage>`.
 
-  .. note: Supported by RivieraPRO and Modelsim/Questa simulators.
+  .. note: Supported by GHDL with GCC backend, RivieraPRO and Modelsim/Questa simulators.
 
 
 ``pli``
