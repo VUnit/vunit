@@ -172,7 +172,7 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
   function encode (
     constant data : $type)
     return string is
-    constant length : positive := encode(data(data'left))'length;
+    constant length : positive := get_encoded_length(encode(data(data'left)));
     variable index : positive := 1;
     variable ret_val : string(1 to data'length * length);
   begin
@@ -233,7 +233,7 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
   function encode (
     constant data : $type)
     return string is
-    constant length : positive := encode(data(data'left(1), data'left(2)))'length;
+    constant length : positive := get_encoded_length(encode(data(data'left(1), data'left(2))));
     variable index : positive := 1;
     variable ret_val : string(1 to data'length(1) * data'length(2) * length);
   begin
@@ -305,11 +305,11 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
       if data'length = 0 then
         return 0;
       else
-        return encode(data(data'left))'length;
+        return get_encoded_length(encode(data(data'left)));
       end if;
     end;
     constant length : natural := element_length(data);
-    constant range_length : positive := encode(data'left)'length;
+    constant range_length : positive := get_encoded_length(encode(data'left));
     variable index : positive := 2 + 2 * range_length;
     variable ret_val : string(1 to 1 + 2 * range_length + data'length * length);
   begin
@@ -328,7 +328,7 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
     constant code   : string;
     variable index : inout   positive;
     variable result : out $array_type) is
-    constant range_length : positive := encode($range_type'left)'length;
+    constant range_length : positive := get_encoded_length(encode($range_type'left));
   begin
     index := index + 1 + 2 * range_length;
     for i in result'range loop
@@ -339,7 +339,7 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
   function decode (
     constant code : string)
     return $array_type is
-    constant range_length : positive := encode($range_type'left)'length;
+    constant range_length : positive := get_encoded_length(encode($range_type'left));
     function ret_val_range (
       constant code : string)
       return $array_type is
@@ -401,12 +401,12 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
       if data'length(1) * data'length(2) = 0 then
         return 0;
       else
-        return encode(data(data'left(1), data'left(2)))'length;
+        return get_encoded_length(encode(data(data'left(1), data'left(2))));
       end if;
     end;
     constant length : natural := element_length(data);
-    constant range1_length : positive := encode(data'left(1))'length;
-    constant range2_length : positive := encode(data'left(2))'length;
+    constant range1_length : positive := get_encoded_length(encode(data'left(1)));
+    constant range2_length : positive := get_encoded_length(encode(data'left(2)));
     variable index : positive := 3 + 2 * range1_length + 2 * range2_length;
     variable ret_val : string(1 to 2 + 2 * range1_length + 2 * range2_length +
                                    data'length(1) * data'length(2) * length);
@@ -428,8 +428,8 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
     constant code   : string;
     variable index : inout   positive;
     variable result : out $array_type) is
-    constant range1_length : positive := encode($range_type1'left)'length;
-    constant range2_length : positive := encode($range_type2'left)'length;
+    constant range1_length : positive := get_encoded_length(encode($range_type1'left));
+    constant range2_length : positive := get_encoded_length(encode($range_type2'left));
   begin
     index := index + 2 + 2 * range1_length + 2 * range2_length;
     for i in result'range(1) loop
@@ -442,8 +442,8 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
   function decode (
     constant code : string)
     return $array_type is
-    constant range1_length : positive := encode($range_type1'left)'length;
-    constant range2_length : positive := encode($range_type2'left)'length;
+    constant range1_length : positive := get_encoded_length(encode($range_type1'left));
+    constant range2_length : positive := get_encoded_length(encode($range_type2'left));
     function ret_val_range (
       constant code : string)
       return $array_type is

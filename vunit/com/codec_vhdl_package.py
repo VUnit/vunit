@@ -128,7 +128,12 @@ class CodecVHDLPackage(VHDLPackage):
         """Generate codecs and to_string functions for all array data types."""
 
         declarations = ""
-        definitions = ""
+        definitions = """
+  -- Helper function to make tests pass GHDL v0.37
+  function get_encoded_length ( constant vec: string ) return integer is
+  begin return vec'length; end;
+
+"""
         for array in self.array_types:
             (
                 new_declarations,
