@@ -205,7 +205,7 @@ To create a new tagged release commit:
      commits have to be merged into origin/master.
 
 
-Travic CI makes a release by uploading a new package to PyPI when a tag
+The CI service makes a release by uploading a new package to PyPI when a tag
 named ``vX.Y.Z`` is found in Git. A new release will not be made if:
 
 - The ``X.Y.Z`` release is already on PyPI.
