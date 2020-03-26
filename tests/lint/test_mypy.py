@@ -9,6 +9,7 @@ MyPy check
 """
 
 import unittest
+import pytest
 import sys
 from subprocess import check_call
 
@@ -19,5 +20,18 @@ class TestMyPy(unittest.TestCase):
     """
 
     @staticmethod
-    def test_pycodestyle():
+    def test_mypy():
         check_call([sys.executable, "-m", "mypy", "vunit"])
+
+    @pytest.mark.xfail(run=True, strict=True)
+    def test_mypy_strict(self):
+        check_call(
+            [
+                sys.executable,
+                "-m",
+                "mypy",
+                "vunit",
+                "--disallow-incomplete-defs",
+                "--check-untyped-defs",
+            ]
+        )
