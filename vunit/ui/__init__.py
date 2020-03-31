@@ -1108,4 +1108,4 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         if self._simulator_class is None:
             return None
-        return self._simulator_class.supports_coverage
+        return self._simulator_class.supports_coverage()
