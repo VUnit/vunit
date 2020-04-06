@@ -1,5 +1,5 @@
 vunit.ui
-==============
+========
 
 .. autoclass:: vunit.ui.VUnit()
    :exclude-members: add_preprocessor,

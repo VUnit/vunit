@@ -3,12 +3,10 @@
 Command Line Interface
 ======================
 A :class:`VUnit <vunit.ui.VUnit>` object can be created from command
-line arguments by using the :meth:`from_argv
-<vunit.ui.VUnit.from_argv>` method effectively creating a custom
+line arguments by using the **from_argv** method effectively creating a custom
 command line tool for running tests in the user project.  Source files
 and libraries are added to the project by using methods on the VUnit
-object. The configuration is followed by a call to the :meth:`main
-<vunit.ui.VUnit.main>` method which will execute the function
+object. The configuration is followed by a call to the **main** method which will execute the function
 specified by the command line arguments and exit the script. The added
 source files are automatically scanned for test cases.
 
