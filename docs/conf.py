@@ -27,7 +27,9 @@ extensions = [
     "sphinxarg.ext",  # Automatic argparse command line argument documentation
 ]
 
-autodoc_default_flags = ["members"]
+autodoc_default_options = {
+    "members": True,
+}
 
 # The suffix(es) of source filenames.
 source_suffix = ".rst"
