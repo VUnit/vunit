@@ -120,10 +120,9 @@ def _get_date(commit):
     """
     Get date
     """
-    date_str = (
-        check_output([which("git"), "log", "-1", "--format=%ci", commit])
-        .decode()
-        .strip()
-    )
+    git = which("git")
+    if git is None:
+        raise BaseException("'git' is required!")
+    date_str = check_output([git, "log", "-1", "--format=%ci", commit]).decode().strip()
     date_str = " ".join(date_str.split(" ")[0:2])
     return datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
