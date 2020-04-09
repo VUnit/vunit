@@ -79,6 +79,12 @@ html_favicon = str(Path(html_static_path[0]) / "vunit.ico")
 # Output file base name for HTML help builder.
 htmlhelp_basename = "vunitdoc"
 
+# -- InterSphinx ----------------------------------------------------------
+
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3.8/", None),
+}
+
 # -- ExtLinks -------------------------------------------------------------
 
 extlinks = {
