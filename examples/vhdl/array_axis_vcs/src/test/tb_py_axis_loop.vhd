@@ -18,7 +18,7 @@ library vunit_lib;
 context vunit_lib.vunit_context;
 context vunit_lib.vc_context;
 
-entity tb_axis_loop is
+entity tb_py_axis_loop is
   generic (
     runner_cfg : string;
     tb_path    : string;
@@ -27,7 +27,7 @@ entity tb_axis_loop is
   );
 end entity;
 
-architecture tb of tb_axis_loop is
+architecture tb of tb_py_axis_loop is
 
   -- Simulation constants
 
@@ -38,22 +38,19 @@ architecture tb of tb_axis_loop is
 
   constant master_axi_stream : axi_stream_master_t := new_axi_stream_master(data_length => data_width);
   constant slave_axi_stream  : axi_stream_slave_t  := new_axi_stream_slave(data_length => data_width);
-
-  -- Signals to/from the UUT from/to the verification components
-
-  signal m_valid, m_ready, m_last, s_valid, s_ready, s_last : std_logic;
-  signal m_data, s_data : std_logic_vector(data_length(master_axi_stream)-1 downto 0);
+  constant m_axis : axi_stream_master_t := new_axi_stream_master(data_length => data_width);
+  constant s_axis : axi_stream_slave_t := new_axi_stream_slave(data_length => data_width);
 
   -- tb signals and variables
 
   signal clk, rst, rstn : std_logic := '0';
   constant m_I : integer_array_t := load_csv(tb_path & csv_i);
   constant m_O : integer_array_t := new_2d(width(m_I), height(m_I), data_width, true);
-  signal start, done, saved : boolean := false;
+  signal start, sent, saved : boolean := false;
 
 begin
 
-  clk <= not clk after clk_period/2;
+  clk <= not clk after (clk_period/2);
   rstn <= not rst;
 
   main: process
@@ -61,7 +58,7 @@ begin
       info("Init test");
       wait until rising_edge(clk); start <= true;
       wait until rising_edge(clk); start <= false;
-      wait until (done and saved and rising_edge(clk));
+      wait until (sent and saved and rising_edge(clk));
       info("Test done");
     end procedure;
   begin
@@ -78,12 +75,13 @@ begin
     wait;
   end process;
 
+--
+
   stimuli: process
     variable last : std_logic;
   begin
+    sent <= false;
     wait until start and rising_edge(clk);
-    done <= false;
-    wait until rising_edge(clk);
 
     info("Sending m_I of size " & to_string(height(m_I)) & "x" & to_string(width(m_I)) & " to UUT...");
 
@@ -91,29 +89,30 @@ begin
       for x in 0 to width(m_I)-1 loop
         wait until rising_edge(clk);
         if x = width(m_I)-1 then last := '1'; else last := '0'; end if;
-        push_axi_stream(net, master_axi_stream, std_logic_vector(to_signed(get(m_I, x, y), data_width)) , tlast => last);
+        push_axi_stream(net, m_axis, std_logic_vector(to_signed(get(m_I, x, y), data_width)) , tlast => last);
       end loop;
     end loop;
 
     info("m_I sent!");
 
     wait until rising_edge(clk);
-    done <= true;
+    sent <= true;
+    wait;
   end process;
 
   save: process
     variable o : std_logic_vector(31 downto 0);
     variable last : std_logic:='0';
   begin
-    wait until start and rising_edge(clk);
     saved <= false;
+    wait until start and rising_edge(clk);
     wait for 50*clk_period;
 
     info("Receiving m_O of size " & to_string(height(m_O)) & "x" & to_string(width(m_O)) & " from UUT...");
 
     for y in 0 to height(m_O)-1 loop
       for x in 0 to width(m_O)-1 loop
-        pop_axi_stream(net, slave_axi_stream, tdata => o, tlast => last);
+        pop_axi_stream(net, s_axis, tdata => o, tlast => last);
         if (x = width(m_O)-1) and (last='0') then
           error("Something went wrong. Last misaligned!");
         end if;
@@ -130,57 +129,21 @@ begin
 
     wait until rising_edge(clk);
     saved <= true;
+    wait;
   end process;
 
 --
 
-  vunit_axism: entity vunit_lib.axi_stream_master
-  generic map (
-    master => master_axi_stream
-  )
-  port map (
-    aclk   => clk,
-    tvalid => m_valid,
-    tready => m_ready,
-    tdata  => m_data,
-    tlast  => m_last
-  );
-
-  vunit_axiss: entity vunit_lib.axi_stream_slave
-  generic map (
-    slave => slave_axi_stream
-  )
-  port map (
-    aclk   => clk,
-    tvalid => s_valid,
-    tready => s_ready,
-    tdata  => s_data,
-    tlast  => s_last
-  );
-
---
-
-  uut: entity work.axis_buffer
-  generic map (
-    data_width => data_width,
-    fifo_depth => 4
-  )
-  port map (
-    s_axis_clk   => clk,
-    s_axis_rstn  => rstn,
-    s_axis_rdy   => m_ready,
-    s_axis_data  => m_data,
-    s_axis_valid => m_valid,
-    s_axis_strb  => "1111",
-    s_axis_last  => m_last,
-
-    m_axis_clk   => clk,
-    m_axis_rstn  => rstn,
-    m_axis_valid => s_valid,
-    m_axis_data  => s_data,
-    m_axis_rdy   => s_ready,
-    m_axis_strb  => open,
-    m_axis_last  => s_last
-  );
+  uut_vc: entity work.tb_vc_axis_loop
+    generic map (
+      m_axis => m_axis,
+      s_axis => s_axis,
+      data_width => data_width,
+      fifo_depth => 4
+    )
+    port map (
+      clk  => clk,
+      rstn => rstn
+    );
 
 end architecture;

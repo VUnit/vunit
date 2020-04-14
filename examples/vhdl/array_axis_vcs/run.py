@@ -17,6 +17,7 @@ in subsection :ref:`Stream <stream_vci>` and in
 """
 
 from pathlib import Path
+from os import popen
 from vunit import VUnit
 
 VU = VUnit.from_argv()
@@ -24,8 +25,28 @@ VU.add_verification_components()
 
 SRC_PATH = Path(__file__).parent / "src"
 
-VU.add_library("lib").add_source_files([SRC_PATH / "*.vhd", SRC_PATH / "**" / "*.vhd"])
+LIB = vu.add_library("lib")
+LIB.add_source_files([SRC_PATH / "*.vhd", SRC_PATH / "**" / "*.vhd"])
 
 # vu.set_sim_option('modelsim.init_files.after_load',['runall_addwave.do'])
+
+C_NOBJ = join(src_path, "test", "stubs.o")
+C_OBJ = join(src_path, "test", "main.o")
+print(
+    popen(
+        "gcc -fPIC -rdynamic -c " + join(src_path, "**", "stubs.c") + " -o " + C_NOBJ
+    ).read()
+)
+print(
+    popen(
+        "gcc -fPIC -rdynamic -c " + join(src_path, "**", "main.c") + " -o " + C_OBJ
+    ).read()
+)
+
+for tb in lib.get_test_benches(pattern="*tb_py_*", allow_empty=False):
+    tb.set_sim_option("ghdl.elab_flags", ["-Wl," + C_NOBJ], overwrite=False)
+
+for tb in lib.get_test_benches(pattern="*tb_c_*", allow_empty=False):
+    tb.set_sim_option("ghdl.elab_flags", ["-Wl," + C_OBJ], overwrite=False)
 
 VU.main()
