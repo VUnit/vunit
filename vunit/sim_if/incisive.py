@@ -85,7 +85,6 @@ class IncisiveInterface(  # pylint: disable=too-many-instance-attributes
             cls.executable_name = "irun"
             cls.option_prefix = "nc"
             prefix = cls.find_toolchain([cls.executable_name])
-        print(prefix)
         return prefix
 
     @staticmethod
@@ -371,6 +370,9 @@ define work "{2}/libraries/work"
             args += self._generic_args(config.entity_name, config.generics)
             for library in self._libraries:
                 args += ['-reflib "%s"' % library.directory]
+            args += ['-input "@set intovf_severity_level ignore"']
+            if config.sim_options.get("disable_ieee_warnings", False):
+                args += ['-input "@set pack_assert_off { std_logic_arith numeric_std }"']
             if launch_gui:
                 args += ["-access +rwc"]
                 # args += ['-linedebug']
