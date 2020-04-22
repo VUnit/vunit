@@ -5,7 +5,7 @@
 # Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 """
-Interface for the Cadence Incisive simulator
+Interface for the Cadence Incisive/Xcelium simulator
 """
 
 from pathlib import Path
@@ -26,10 +26,12 @@ class IncisiveInterface(  # pylint: disable=too-many-instance-attributes
     SimulatorInterface
 ):
     """
-    Interface for the Cadence Incisive simulator
+    Interface for the Cadence Incisive/Xcelium simulator
     """
 
     name = "incisive"
+    executable_name = "xrun"
+    option_prefix = "xm"
     supports_gui_flag = True
     package_users_depend_on_bodies = False
 
@@ -76,15 +78,23 @@ class IncisiveInterface(  # pylint: disable=too-many-instance-attributes
     @classmethod
     def find_prefix_from_path(cls):
         """
-        Find incisive simulator from PATH environment variable
+        Find incisive/xcelium simulator from PATH environment variable
         """
-        return cls.find_toolchain(["irun"])
+        prefix = cls.find_toolchain([cls.executable_name])
+        if prefix is None:
+            cls.executable_name = "irun"
+            cls.option_prefix = "nc"
+            prefix = cls.find_toolchain([cls.executable_name])
+        print(prefix)
+        return prefix
 
     @staticmethod
     def supports_vhdl_contexts():
         """
         Returns True when this simulator supports VHDL 2008 contexts
         """
+        if IncisiveInterface.executable_name == "xrun":
+            return True
         return False
 
     def __init__(  # pylint: disable=too-many-arguments
@@ -107,7 +117,7 @@ class IncisiveInterface(  # pylint: disable=too-many-instance-attributes
         Finds irun cds root
         """
         return subprocess.check_output(
-            [str(Path(self._prefix) / "cds_root"), "irun"]
+            [str(Path(self._prefix) / "cds_root"), self.executable_name]
         ).splitlines()[0]
 
     def find_cds_root_virtuoso(self):
@@ -173,8 +183,7 @@ define work "{2}/libraries/work"
 
         raise CompileError
 
-    @staticmethod
-    def _vhdl_std_opt(vhdl_standard):
+    def _vhdl_std_opt(self, vhdl_standard):
         """
         Convert standard to format of irun command line flag
         """
@@ -182,7 +191,7 @@ define work "{2}/libraries/work"
             return "-v200x -extv200x"
 
         if vhdl_standard == VHDL.STD_2008:
-            return "-v200x -extv200x"
+            return "-v200x -extv200x" + " -inc_v200x_pkg" if self.executable_name == "xrun" else ""
 
         if vhdl_standard == VHDL.STD_1993:
             return "-v93"
@@ -193,7 +202,7 @@ define work "{2}/libraries/work"
         """
         Returns command to compile a VHDL file
         """
-        cmd = str(Path(self._prefix) / "irun")
+        cmd = str(Path(self._prefix) / self.executable_name)
         args = []
         args += ["-compile"]
         args += ["-nocopyright"]
@@ -217,7 +226,7 @@ define work "{2}/libraries/work"
             args += ["-messages"]
             args += ["-libverbose"]
         args += source_file.compile_options.get("incisive.irun_vhdl_flags", [])
-        args += ['-nclibdirname "%s"' % str(Path(source_file.library.directory).parent)]
+        args += ['-%slibdirname "%s"' % (self.option_prefix, str(Path(source_file.library.directory).parent))]
         args += ["-makelib %s" % source_file.library.directory]
         args += ['"%s"' % source_file.name]
         args += ["-endlib"]
@@ -232,7 +241,7 @@ define work "{2}/libraries/work"
         """
         Returns commands to compile a Verilog file
         """
-        cmd = str(Path(self._prefix) / "irun")
+        cmd = str(Path(self._prefix) / self.executable_name)
         args = []
         args += ["-compile"]
         args += ["-nocopyright"]
@@ -267,7 +276,7 @@ define work "{2}/libraries/work"
 
         for key, value in source_file.defines.items():
             args += ["-define %s=%s" % (key, value.replace('"', '\\"'))]
-        args += ['-nclibdirname "%s"' % str(Path(source_file.library.directory).parent)]
+        args += ['-%slibdirname "%s"' % (self.option_prefix, str(Path(source_file.library.directory).parent))]
         args += ["-makelib %s" % source_file.library.name]
         args += ['"%s"' % source_file.name]
         args += ["-endlib"]
@@ -322,7 +331,7 @@ define work "{2}/libraries/work"
             steps = ["elaborate", "simulate"]
 
         for step in steps:
-            cmd = str(Path(self._prefix) / "irun")
+            cmd = str(Path(self._prefix) / self.executable_name)
             args = []
             if step == "elaborate":
                 args += ["-elaborate"]
@@ -338,17 +347,17 @@ define work "{2}/libraries/work"
             args += ["-nowarn DLCPTH"]  # "cds.lib Invalid path"
             args += ["-nowarn DLCVAR"]  # "cds.lib Invalid environment variable ''."
             args += [
-                "-ncerror EVBBOL"
+                "-%serror EVBBOL" % self.option_prefix
             ]  # promote to error: "bad boolean literal in generic association"
             args += [
-                "-ncerror EVBSTR"
+                "-%serror EVBSTR" % self.option_prefix
             ]  # promote to error: "bad string literal in generic association"
             args += [
-                "-ncerror EVBNAT"
+                "-%serror EVBNAT" % self.option_prefix
             ]  # promote to error: "bad natural literal in generic association"
             args += ["-work work"]
             args += [
-                '-nclibdirname "%s"' % (str(Path(self._output_path) / "libraries"))
+                '-%slibdirname "%s"' % (self.option_prefix, str(Path(self._output_path) / "libraries"))
             ]  # @TODO: ugly
             args += config.sim_options.get("incisive.irun_sim_flags", [])
             args += ['-cdslib "%s"' % self._cdslib]
