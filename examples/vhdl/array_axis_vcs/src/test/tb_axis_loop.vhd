@@ -39,11 +39,6 @@ architecture tb of tb_axis_loop is
   constant master_axi_stream : axi_stream_master_t := new_axi_stream_master(data_length => data_width);
   constant slave_axi_stream  : axi_stream_slave_t  := new_axi_stream_slave(data_length => data_width);
 
-  -- Signals to/from the UUT from/to the verification components
-
-  signal m_valid, m_ready, m_last, s_valid, s_ready, s_last : std_logic;
-  signal m_data, s_data : std_logic_vector(data_length(master_axi_stream)-1 downto 0);
-
   -- tb signals and variables
 
   signal clk, rst, rstn : std_logic := '0';
@@ -134,53 +129,15 @@ begin
 
 --
 
-  vunit_axism: entity vunit_lib.axi_stream_master
+  uut_vc: entity work.vc_axis
   generic map (
-    master => master_axi_stream
+    m_axis => master_axi_stream,
+    s_axis => slave_axi_stream,
+    data_width => data_width
   )
   port map (
-    aclk   => clk,
-    tvalid => m_valid,
-    tready => m_ready,
-    tdata  => m_data,
-    tlast  => m_last
-  );
-
-  vunit_axiss: entity vunit_lib.axi_stream_slave
-  generic map (
-    slave => slave_axi_stream
-  )
-  port map (
-    aclk   => clk,
-    tvalid => s_valid,
-    tready => s_ready,
-    tdata  => s_data,
-    tlast  => s_last
-  );
-
---
-
-  uut: entity work.axis_buffer
-  generic map (
-    data_width => data_width,
-    fifo_depth => 4
-  )
-  port map (
-    s_axis_clk   => clk,
-    s_axis_rstn  => rstn,
-    s_axis_rdy   => m_ready,
-    s_axis_data  => m_data,
-    s_axis_valid => m_valid,
-    s_axis_strb  => "1111",
-    s_axis_last  => m_last,
-
-    m_axis_clk   => clk,
-    m_axis_rstn  => rstn,
-    m_axis_valid => s_valid,
-    m_axis_data  => s_data,
-    m_axis_rdy   => s_ready,
-    m_axis_strb  => open,
-    m_axis_last  => s_last
+    clk  => clk,
+    rstn => rstn
   );
 
 end architecture;
