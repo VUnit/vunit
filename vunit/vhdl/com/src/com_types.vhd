@@ -20,6 +20,7 @@ use work.integer_vector_ptr_pkg.all;
 use work.integer_array_pkg.all;
 use work.string_ptr_pkg.all;
 use work.logger_pkg.all;
+use work.checker_pkg.all;
 use work.queue_pkg.all;
 use work.queue_2008p_pkg.all;
 use work.queue_pool_pkg.all;
@@ -187,6 +188,9 @@ package com_types_pkg is
 
   procedure unexpected_msg_type(msg_type : msg_type_t;
                                 logger : logger_t := com_logger);
+
+  procedure unexpected_msg_type(msg_type : msg_type_t;
+                                checker : checker_t);
 
   procedure push_msg_type(msg : msg_t; msg_type : msg_type_t; logger : logger_t := com_logger);
   alias push is push_msg_type [msg_t, msg_type_t, logger_t];
@@ -444,6 +448,12 @@ package body com_types_pkg is
       failure(logger, "Got invalid message with code " & to_string(code));
     end if;
   end procedure;
+
+  procedure unexpected_msg_type(msg_type : msg_type_t;
+                                checker  : checker_t) is
+  begin
+    unexpected_msg_type(msg_type, get_logger(checker));
+  end;
 
   procedure push_msg_type(msg : msg_t; msg_type : msg_type_t; logger : logger_t := com_logger) is
   begin

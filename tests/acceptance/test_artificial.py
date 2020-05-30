@@ -255,4 +255,131 @@ EXPECTED_REPORT = (
         "failed",
         "lib.tb_assert_stop_level.Report failure when VHDL assert stop level = failure",
     ),
+    ("passed", "test_lib.tb_vc_compliance.Test that sync interface is supported"),
+    ("passed", "test_lib.tb_vc_compliance.Test that the actor can be customised"),
+    (
+        "passed",
+        "test_lib.tb_vc_compliance.accept_unexpected_msg_type.Test unexpected message handling",
+    ),
+    (
+        "passed",
+        "test_lib.tb_vc_compliance.fail_unexpected_msg_type_with_null_checker.Test unexpected message handling",
+    ),
+    (
+        "passed",
+        "test_lib.tb_vc_compliance.fail_unexpected_msg_type_with_custom_checker.Test unexpected message handling",
+    ),
+    (
+        "passed",
+        "test_lib.tb_vc_not_supporting_sync_compliance.accept_unexpected_msg_type.Test unexpected message handling",
+    ),
+    (
+        "passed",
+        "test_lib.tb_vc_not_supporting_sync_compliance.fail_unexpected_msg_type_with_null_checker."
+        "Test unexpected message handling",
+    ),
+    (
+        "passed",
+        "test_lib.tb_vc_not_supporting_sync_compliance.fail_unexpected_msg_type_with_custom_checker."
+        "Test unexpected message handling",
+    ),
+    (
+        "passed",
+        "test_lib.tb_vc_not_supporting_custom_actor_compliance.Test that sync interface is supported",
+    ),
+    (
+        "passed",
+        "test_lib.tb_vc_not_supporting_custom_actor_compliance.accept_unexpected_msg_type."
+        "Test unexpected message handling",
+    ),
+    (
+        "passed",
+        "test_lib.tb_vc_not_supporting_custom_actor_compliance.fail_unexpected_msg_type_with_null_checker."
+        "Test unexpected message handling",
+    ),
+    (
+        "passed",
+        "test_lib.tb_vc_not_supporting_custom_actor_compliance.fail_unexpected_msg_type_with_custom_checker."
+        "Test unexpected message handling",
+    ),
+    (
+        "passed",
+        "test_lib.tb_vc_not_supporting_custom_logger_compliance.Test that sync interface is supported",
+    ),
+    (
+        "passed",
+        "test_lib.tb_vc_not_supporting_custom_logger_compliance.Test that the actor can be customised",
+    ),
+    (
+        "passed",
+        "test_lib.tb_vc_not_supporting_custom_logger_compliance.accept_unexpected_msg_type."
+        "Test unexpected message handling",
+    ),
+    (
+        "passed",
+        "test_lib.tb_vc_not_supporting_custom_logger_compliance.fail_unexpected_msg_type_with_custom_checker."
+        "Test unexpected message handling",
+    ),
+    (
+        "passed",
+        "test_lib.tb_vc_not_supporting_unexpected_msg_handling_compliance.Test that sync interface is supported",
+    ),
+    (
+        "passed",
+        "test_lib.tb_vc_not_supporting_unexpected_msg_handling_compliance.Test that the actor can be customised",
+    ),
+    (
+        "passed",
+        "test_lib.tb_vc_not_supporting_unexpected_msg_handling_compliance.fail_unexpected_msg_type_with_null_checker."
+        "Test unexpected message handling",
+    ),
+    (
+        "passed",
+        "test_lib.tb_vc_not_supporting_unexpected_msg_handling_compliance."
+        "fail_unexpected_msg_type_with_custom_checker.Test unexpected message handling",
+    ),
+    (
+        "failed",
+        "test_lib.tb_vc_not_supporting_sync_compliance.Test that sync interface is supported",
+    ),
+    (
+        "failed",
+        "test_lib.tb_vc_not_supporting_sync_compliance.Test that the actor can be customised",
+    ),
+    (
+        "failed",
+        "test_lib.tb_vc_not_supporting_custom_actor_compliance.Test that the actor can be customised",
+    ),
+    (
+        "failed",
+        "test_lib.tb_vc_not_supporting_custom_logger_compliance.fail_unexpected_msg_type_with_null_checker."
+        "Test unexpected message handling",
+    ),
+    (
+        "failed",
+        "test_lib.tb_vc_not_supporting_unexpected_msg_handling_compliance.accept_unexpected_msg_type."
+        "Test unexpected message handling",
+    ),
+    (
+        "passed",
+        "test_lib.tb_vc_with_template_compliance.Test that sync interface is supported",
+    ),
+    (
+        "passed",
+        "test_lib.tb_vc_with_template_compliance.Test that the actor can be customised",
+    ),
+    (
+        "passed",
+        "test_lib.tb_vc_with_template_compliance.accept_unexpected_msg_type.Test unexpected message handling",
+    ),
+    (
+        "passed",
+        "test_lib.tb_vc_with_template_compliance.fail_unexpected_msg_type_with_null_checker."
+        "Test unexpected message handling",
+    ),
+    (
+        "passed",
+        "test_lib.tb_vc_with_template_compliance.fail_unexpected_msg_type_with_custom_checker."
+        "Test unexpected message handling",
+    ),
 )

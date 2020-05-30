@@ -57,6 +57,7 @@ setup(
         "vunit.sim_if",
         "vunit.test",
         "vunit.ui",
+        "vunit.vc",
         "vunit.vivado",
     ],
     package_data={"vunit": DATA_FILES},
