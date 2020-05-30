@@ -38,3 +38,24 @@ class PackageFacade(object):
         codec_generator.generate_codecs(self._design_unit, codec_package_name, used_packages, output_file_name)
 
         return self._parent.add_source_files(output_file_name, self._library_name)
+
+    @property
+    def name(self):
+        """
+        :returns: The package name
+        """
+        return self._package_name
+
+    @property
+    def library(self):
+        """
+        :returns: The library that contains this package
+        """
+        return self._library_name
+
+    @property
+    def source_file(self):
+        """
+        :returns: The source file that contains this package
+        """
+        return self._design_unit.source_file

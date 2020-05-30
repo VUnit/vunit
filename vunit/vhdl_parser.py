@@ -63,7 +63,9 @@ class VHDLDesignFile(object):  # pylint: disable=too-many-instance-attributes
         self.package_bodies = [] if package_bodies is None else package_bodies
         self.architectures = [] if architectures is None else architectures
         self.contexts = [] if contexts is None else contexts
-        self.component_instantiations = [] if component_instantiations is None else component_instantiations
+        self.component_instantiations = (
+            [] if component_instantiations is None else component_instantiations
+        )
         self.configurations = [] if configurations is None else configurations
         self.references = [] if references is None else references
 
@@ -244,7 +246,9 @@ class VHDLPackage(object):
             if match:
                 yield cls.parse(sub_code[: match.end()])
 
-    _package_instance_re = re.compile("^" + PACKAGE_INSTANCE_PATTERN, re.MULTILINE | re.IGNORECASE)
+    _package_instance_re = re.compile(
+        "^" + PACKAGE_INSTANCE_PATTERN, re.MULTILINE | re.IGNORECASE
+    )
 
     @classmethod
     def _find_package_instances(cls, code):
@@ -303,7 +307,8 @@ class VHDLEntity(object):
         """
         self.generics.append(
             VHDLInterfaceElement(
-                identifier,
+                "constant",
+                [identifier],
                 VHDLSubtypeIndication.parse(subtype_code),
                 init_value=init_value,
             )
@@ -315,7 +320,8 @@ class VHDLEntity(object):
         """
         self.ports.append(
             VHDLInterfaceElement(
-                identifier,
+                "signal",
+                [identifier],
                 VHDLSubtypeIndication.parse(subtype_code),
                 init_value=init_value,
                 mode=mode,
@@ -415,7 +421,11 @@ class VHDLEntity(object):
             match_semicolon = semicolon.match(code[match.end() + closing_pos :])
             if match_semicolon:
                 return cls._parse_generic_clause(
-                    code[match.start() : match.end() + closing_pos + match_semicolon.end()]
+                    code[
+                        match.start() : match.end()
+                        + closing_pos
+                        + match_semicolon.end()
+                    ]
                 )
         return []
 
@@ -447,7 +457,13 @@ class VHDLEntity(object):
             )
             match_semicolon = semicolon.match(code[match.end() + closing_pos :])
             if match_semicolon:
-                return cls._parse_port_clause(code[match.start() : match.end() + closing_pos + match_semicolon.end()])
+                return cls._parse_port_clause(
+                    code[
+                        match.start() : match.end()
+                        + closing_pos
+                        + match_semicolon.end()
+                    ]
+                )
         return []
 
     @staticmethod
@@ -492,7 +508,9 @@ class VHDLEntity(object):
 
     _package_generic_re = re.compile(r"\s*package\s+", re.MULTILINE | re.IGNORECASE)
     _type_generic_re = re.compile(r"\s*type\s+", re.MULTILINE | re.IGNORECASE)
-    _function_generic_re = re.compile(r"\s*(impure\s+)?(function|procedure)\s+", re.MULTILINE | re.IGNORECASE)
+    _function_generic_re = re.compile(
+        r"\s*(impure\s+)?(function|procedure)\s+", re.MULTILINE | re.IGNORECASE
+    )
 
     @classmethod
     def _parse_generic_clause(cls, code):
@@ -521,7 +539,11 @@ class VHDLEntity(object):
                 # Ignore function generics
                 continue
 
-            generic_list.append(VHDLInterfaceElement.parse(interface_element))
+            generic_list.append(
+                VHDLInterfaceElement.parse(
+                    interface_element, default_entity_class="constant"
+                )
+            )
 
         return generic_list
 
@@ -539,7 +561,11 @@ class VHDLEntity(object):
         port_list = []
         # Add interface elements to the port list
         for interface_element in interface_elements:
-            port_list.append(VHDLInterfaceElement.parse(interface_element, is_signal=True))
+            port_list.append(
+                VHDLInterfaceElement.parse(
+                    interface_element, default_entity_class="signal"
+                )
+            )
 
         return port_list
 
@@ -618,8 +644,16 @@ class VHDLInterfaceElement(object):
     Represents a VHDL interface element
     """
 
-    def __init__(self, identifier, subtype_indication, mode=None, init_value=None):
-        self.identifier = identifier
+    def __init__(
+        self,
+        entity_class,
+        identifier_list,
+        subtype_indication,
+        mode=None,
+        init_value=None,
+    ):
+        self.entity_class = entity_class
+        self.identifier_list = identifier_list
         self.mode = mode
         self.subtype_indication = subtype_indication
         self.init_value = init_value
@@ -628,21 +662,32 @@ class VHDLInterfaceElement(object):
         """
         @returns A copy of this interface element without a mode
         """
-        return VHDLInterfaceElement(self.identifier, self.subtype_indication, init_value=self.init_value)
+        return VHDLInterfaceElement(
+            self.entity_class,
+            self.identifier_list,
+            self.subtype_indication,
+            init_value=self.init_value,
+        )
 
     @classmethod
-    def parse(cls, code, is_signal=False):
+    def parse(cls, code, default_entity_class=None):
         """
         Returns a new instance by parsing the code
         """
-        if is_signal:
-            # Remove 'signal' string if a signal is beeing parsed
-            code = code.replace("signal", "")
+        entity_class_split = code.split(None, 1)
+        if cls._is_interface_entity_class(entity_class_split[0]):
+            entity_class = entity_class_split[0]
+            code = entity_class_split[1]
+        else:
+            entity_class = default_entity_class
 
         interface_element_string = code
 
-        # Extract the identifier
-        identifier = interface_element_string.split(":")[0].strip()
+        # Extract the identifier_list
+        identifier_list_string = interface_element_string.split(":")[0].strip()
+        identifier_list = [
+            identifier.strip() for identifier in identifier_list_string.split(",")
+        ]
 
         # Extract subtype indication and mode (if any)
 
@@ -652,7 +697,9 @@ class VHDLInterfaceElement(object):
             subtype_indication = VHDLSubtypeIndication.parse(mode_split[1])
         else:
             mode = None
-            subtype_indication = VHDLSubtypeIndication.parse(interface_element_string.split(":")[1].strip())
+            subtype_indication = VHDLSubtypeIndication.parse(
+                interface_element_string.split(":")[1].strip()
+            )
 
         # Extract initial value
         init_value_split = interface_element_string.split(":=")
@@ -661,7 +708,7 @@ class VHDLInterfaceElement(object):
         else:
             init_value = None
 
-        return cls(identifier, subtype_indication, mode, init_value)
+        return cls(entity_class, identifier_list, subtype_indication, mode, init_value)
 
     @staticmethod
     def _is_mode(code):
@@ -670,8 +717,15 @@ class VHDLInterfaceElement(object):
         """
         return code in ("in", "out", "inout", "buffer", "linkage")
 
+    @staticmethod
+    def _is_interface_entity_class(code):
+        """
+        Return True if the code is an interface entity class
+        """
+        return code in ("constant", "variable", "signal", "file")
+
     def __str__(self):
-        code = self.identifier + " : "
+        code = self.identifier_list + " : "
 
         if self.mode is not None:
             code += self.mode + " "
@@ -717,14 +771,6 @@ class VHDLEnumerationType(object):
             yield cls(identifier, literals)
 
 
-class VHDLElementDeclaration(object):
-    """Represents a VHDL element declaration"""
-
-    def __init__(self, identifier_list, subtype_indication):
-        self.identifier_list = identifier_list
-        self.subtype_indication = subtype_indication
-
-
 class VHDLRecordType(object):
     """Represents a VHDL record type"""
 
@@ -758,9 +804,16 @@ class VHDLRecordType(object):
             for element in elements:
                 if ":" in element:
                     identifier_list_and_subtype_indication = element.split(":")
-                    identifier_list = [i.strip() for i in identifier_list_and_subtype_indication[0].split(",")]
-                    subtype_indication = VHDLSubtypeIndication.parse(identifier_list_and_subtype_indication[1].strip())
-                    parsed_elements.append(VHDLElementDeclaration(identifier_list, subtype_indication))
+                    identifier_list = [
+                        i.strip()
+                        for i in identifier_list_and_subtype_indication[0].split(",")
+                    ]
+                    subtype_indication = VHDLSubtypeIndication.parse(
+                        identifier_list_and_subtype_indication[1].strip()
+                    )
+                    parsed_elements.append(
+                        VHDLInterfaceElement(None, identifier_list, subtype_indication)
+                    )
             yield cls(identifier, parsed_elements)
 
 
@@ -854,7 +907,9 @@ class VHDLArrayType(object):
         """Iterate over new instances of VHDLArrayType for all array types within the code"""
         for array_type in cls._array_declaration_re.finditer(code):
             identifier = array_type.group("id")
-            subtype_indication = VHDLSubtypeIndication.parse(array_type.group("subtype_indication"))
+            subtype_indication = VHDLSubtypeIndication.parse(
+                array_type.group("subtype_indication")
+            )
             ranges = array_type.group("ranges")
             range1_str, range2_str = cls._split_ranges(ranges)
             range1 = cls._parse_range(range1_str)
@@ -926,7 +981,9 @@ def find_closing_delimiter(start, end, code):
 
         if count == 0:
             return delimiter.end()
-    raise ValueError("Failed to find closing delimiter to " + start + " in " + code + ".")
+    raise ValueError(
+        "Failed to find closing delimiter to " + start + " in " + code + "."
+    )
 
 
 class VHDLReference(object):
@@ -934,7 +991,7 @@ class VHDLReference(object):
     Reference to design unit
     """
 
-    _reference_types = ("package", "context", "entity", "configuration")
+    _reference_types = ("package", "context", "entity", "configuration", "library")
 
     _uses_re = re.compile(
         r"""
@@ -949,37 +1006,40 @@ class VHDLReference(object):
         re.MULTILINE | re.IGNORECASE | re.VERBOSE,
     )
 
+    @staticmethod
+    def get_ids(match):
+        """
+        Get all ids found within the match taking the optinal extra ids of
+        library and use clauses into account such as:
+
+        use foo, bar;
+
+        or
+
+        library foo, bar;
+        """
+        ids = [match.group("id").strip()]
+        if match.group("extra"):
+            ids += [name.strip() for name in match.group("extra").split(",")[1:]]
+        return ids
+
     @classmethod
     def _find_uses(cls, code):
         """
-        Find all the libraries and use clasues within the code
+        Find all the use and context clauses within the code
         """
-
-        def get_ids(match):
-            """
-            Get all ids found within the match taking the optinal extra ids of
-            library and use clauses into account such as:
-
-            use foo, bar;
-
-            or
-
-            library foo, bar;
-            """
-            ids = [match.group("id").strip()]
-            if match.group("extra"):
-                ids += [name.strip() for name in match.group("extra").split(",")[1:]]
-            return ids
 
         references = []
         for match in cls._uses_re.finditer(code):
-            for uses in get_ids(match):
+            for uses in cls.get_ids(match):
                 uses = uses.split(".")
 
                 names_within = uses[2:] if len(uses) > 2 else (None,)
                 for name_within in names_within:
                     ref = cls(
-                        reference_type="package" if match.group("use_type") == "use" else "context",
+                        reference_type="package"
+                        if match.group("use_type") == "use"
+                        else "context",
                         library=uses[0],
                         design_unit=uses[1],
                         name_within=name_within,
@@ -1025,10 +1085,14 @@ class VHDLReference(object):
         """
         references = []
         for match in cls._configuration_reference_re.finditer(code):
-            references.append(cls("configuration", match.group("lib"), match.group("cfg")))
+            references.append(
+                cls("configuration", match.group("lib"), match.group("cfg"))
+            )
         return references
 
-    _package_instance_re = re.compile(PACKAGE_INSTANCE_PATTERN, re.MULTILINE | re.IGNORECASE)
+    _package_instance_re = re.compile(
+        PACKAGE_INSTANCE_PATTERN, re.MULTILINE | re.IGNORECASE
+    )
 
     @classmethod
     def _find_package_instance_references(cls, code):
@@ -1038,6 +1102,33 @@ class VHDLReference(object):
         references = []
         for match in cls._package_instance_re.finditer(code):
             references.append(cls("package", match.group("lib"), match.group("name")))
+        return references
+
+    _library_re = re.compile(
+        r"""
+            \b                                  # Word boundary
+            library                             # library keyword
+            \s+                                 # At least one whitespace
+            (?P<id>[a-zA-Z][\w]*)               # First library identifier
+            (?P<extra>(\s*,\s*[a-zA-Z][\w]*)*)  # Extra library identifiers
+            \s*                                 # Potential whitespaces
+            ;                                   # Semi-colon
+    """,
+        re.MULTILINE | re.IGNORECASE | re.VERBOSE,
+    )
+
+    @classmethod
+    def _find_library_references(cls, code):
+        """
+        Finds all library clauses
+        """
+
+        references = []
+        for match in cls._library_re.finditer(code):
+            for library in cls.get_ids(match):
+                ref = cls(reference_type="library", library=library)
+                references.append(ref)
+
         return references
 
     @classmethod
@@ -1050,9 +1141,10 @@ class VHDLReference(object):
             + cls._find_entity_references(code)
             + cls._find_configuration_references(code)
             + cls._find_package_instance_references(code)
+            + cls._find_library_references(code)
         )
 
-    def __init__(self, reference_type, library, design_unit, name_within=None):
+    def __init__(self, reference_type, library, design_unit=None, name_within=None):
         assert reference_type in self._reference_types
         self.reference_type = reference_type
         self.library = library
@@ -1060,6 +1152,14 @@ class VHDLReference(object):
 
         # String "all" may be used to denote all names within
         self.name_within = name_within
+
+    @property
+    def library_name(self):
+        return self.library
+
+    @property
+    def design_unit_name(self):
+        return self.design_unit
 
     def __repr__(self):
         return f"VHDLReference({self.reference_type!r}, {self.library!r}, {self.design_unit!r}, {self.name_within!r})"
@@ -1073,7 +1173,9 @@ class VHDLReference(object):
         )
 
     def copy(self):
-        return VHDLReference(self.reference_type, self.library, self.design_unit, self.name_within)
+        return VHDLReference(
+            self.reference_type, self.library, self.design_unit, self.name_within
+        )
 
     def is_entity_reference(self):
         return self.reference_type == "entity"
@@ -1081,12 +1183,72 @@ class VHDLReference(object):
     def is_package_reference(self):
         return self.reference_type == "package"
 
+    def is_context_reference(self):
+        return self.reference_type == "context"
+
+    def is_library_reference(self):
+        return self.reference_type == "library"
+
     def reference_all_names_within(self):
         return self.name_within == "all"
 
 
 VHDL_REMOVE_COMMENT_RE = r"(?:(?:\"[^\"]*\")|(--[^\n]*))"
 VHDL_REMOVE_COMMENT_COMPILED_RE = re.compile(VHDL_REMOVE_COMMENT_RE, re.MULTILINE)
+
+
+class VHDLFunctionSpecification(object):
+    """
+    Represents a VHDL function specification.
+    """
+
+    def __init__(self, identifier, return_type_mark, parameter_list=None):
+        self.identifier = identifier
+        self.return_type_mark = return_type_mark
+
+        self.parameter_list = parameter_list if parameter_list is not None else []
+
+    _function_specification_re = re.compile(
+        r"""
+            \b                                   # Word boundary
+            function                             # Function keyword
+            \s+                                  # At least one whitespace
+            (?P<id>[a-zA-Z]\w*)                  # Function identifier
+            \s*                                  # Potential whitespaces
+            (?P<parameter_list>\(.*?\))?         # Parameter list
+            \s+                                  # At least one whitespace
+            return                               # Return keyword
+            \s+                                  # At least one whitespace
+            (?P<return_type_mark>[a-zA-Z]\w*)    # Return type mark
+            \s*                                  # Potential whitespaces
+            ;                                    # Semi-colon
+    """,
+        re.MULTILINE | re.IGNORECASE | re.VERBOSE | re.DOTALL,
+    )
+
+    @classmethod
+    def find(cls, code):
+        """
+        Iterate over new instances of VHDLFunctionSpecification for all function specifications within the code.
+        """
+        for function_specification in cls._function_specification_re.finditer(code):
+            identifier = function_specification.group("id")
+            return_type_mark = function_specification.group("return_type_mark")
+
+            parsed_parameter_list = []
+            if function_specification.group("parameter_list"):
+                for element in function_specification.group("parameter_list")[
+                    1:-1
+                ].split(";"):
+                    parsed_parameter_list.append(
+                        VHDLInterfaceElement.parse(
+                            element, default_entity_class="constant"
+                        )
+                    )
+
+            yield VHDLFunctionSpecification(
+                identifier, return_type_mark, parsed_parameter_list
+            )
 
 
 def _comment_repl(match):
