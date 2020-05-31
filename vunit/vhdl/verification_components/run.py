@@ -6,7 +6,11 @@
 
 from pathlib import Path
 from itertools import product
-from vunit import VUnit
+from vunit import (
+    VUnit,
+    VerificationComponentInterface,
+    VerificationComponent,
+)
 
 ROOT = Path(__file__).parent
 
@@ -169,6 +173,7 @@ for max_waits in [0, 8]:
         name="max_waits=%d" % max_waits, generics=dict(max_waits=max_waits)
     )
 
+
 TB_AXI_STREAM.test("test random stall on master").add_config(
     name="stall_master", generics=dict(g_stall_percentage_master=30)
 )
@@ -179,6 +184,177 @@ TB_AXI_STREAM.test("test random pop stall on slave").add_config(
 
 TB_AXI_STREAM.test("test random check stall on slave").add_config(
     name="stall_slave", generics=dict(g_stall_percentage_slave=40)
+)
+
+TEST_LIB = UI.add_library("test_lib")
+
+bus_master_vci = VerificationComponentInterface.find(
+    LIB, "bus_master_pkg", "bus_master_t"
+)
+bus_master_vci.add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "bus_master_pkg" / "tb_bus_master_t_compliance_template.vhd",
+)
+VerificationComponent.find(LIB, "axi_lite_master", bus_master_vci).add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "tb_axi_lite_master_compliance_template.vhd",
+)
+
+axi_slave_vci = VerificationComponentInterface.find(LIB, "axi_slave_pkg", "axi_slave_t")
+axi_slave_vci.add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "axi_slave_pkg" / "tb_axi_slave_t_compliance_template.vhd",
+)
+VerificationComponent.find(LIB, "axi_read_slave", axi_slave_vci).add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "tb_axi_read_slave_compliance_template.vhd",
+)
+
+VerificationComponent.find(LIB, "axi_write_slave", axi_slave_vci).add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "tb_axi_write_slave_compliance_template.vhd",
+)
+
+axi_stream_master_vci = VerificationComponentInterface.find(
+    LIB, "axi_stream_pkg", "axi_stream_master_t"
+)
+axi_stream_master_vci.add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "axi_stream_pkg" / "tb_axi_stream_master_t_compliance_template.vhd",
+)
+VerificationComponent.find(
+    LIB, "axi_stream_master", axi_stream_master_vci
+).add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "tb_axi_stream_master_compliance_template.vhd",
+)
+
+axi_stream_slave_vci = VerificationComponentInterface.find(
+    LIB, "axi_stream_pkg", "axi_stream_slave_t"
+)
+axi_stream_slave_vci.add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "axi_stream_pkg" / "tb_axi_stream_slave_t_compliance_template.vhd",
+)
+VerificationComponent.find(
+    LIB, "axi_stream_slave", axi_stream_slave_vci
+).add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "tb_axi_stream_slave_compliance_template.vhd",
+)
+
+axi_stream_monitor_vci = VerificationComponentInterface.find(
+    LIB, "axi_stream_pkg", "axi_stream_monitor_t"
+)
+axi_stream_monitor_vci.add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "axi_stream_pkg" / "tb_axi_stream_monitor_t_compliance_template.vhd",
+)
+VerificationComponent.find(
+    LIB, "axi_stream_monitor", axi_stream_monitor_vci
+).add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "tb_axi_stream_monitor_compliance_template.vhd",
+)
+
+axi_stream_protocol_checker_vci = VerificationComponentInterface.find(
+    LIB, "axi_stream_pkg", "axi_stream_protocol_checker_t"
+)
+axi_stream_protocol_checker_vci.add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT
+    / ".vc"
+    / "axi_stream_pkg"
+    / "tb_axi_stream_protocol_checker_t_compliance_template.vhd",
+)
+VerificationComponent.find(
+    LIB, "axi_stream_protocol_checker", axi_stream_protocol_checker_vci
+).add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "tb_axi_stream_protocol_checker_compliance_template.vhd",
+)
+
+uart_master_vci = VerificationComponentInterface.find(LIB, "uart_pkg", "uart_master_t")
+uart_master_vci.add_vhdl_testbench(
+    TEST_LIB, ROOT / "compliance_test",
+)
+VerificationComponent.find(LIB, "uart_master", uart_master_vci).add_vhdl_testbench(
+    TEST_LIB, ROOT / "compliance_test",
+)
+
+uart_slave_vci = VerificationComponentInterface.find(LIB, "uart_pkg", "uart_slave_t")
+uart_slave_vci.add_vhdl_testbench(
+    TEST_LIB, ROOT / "compliance_test",
+)
+VerificationComponent.find(LIB, "uart_slave", uart_slave_vci).add_vhdl_testbench(
+    TEST_LIB, ROOT / "compliance_test",
+)
+
+std_logic_checker_vci = VerificationComponentInterface.find(
+    LIB, "signal_checker_pkg", "signal_checker_t"
+)
+std_logic_checker_vci.add_vhdl_testbench(
+    TEST_LIB, ROOT / "compliance_test",
+)
+VerificationComponent.find(
+    LIB, "std_logic_checker", std_logic_checker_vci
+).add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "tb_std_logic_checker_compliance_template.vhd",
+)
+
+ram_master_vci = VerificationComponentInterface.find(
+    LIB, "ram_master_pkg", "ram_master_t"
+)
+ram_master_vci.add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "ram_master_pkg" / "tb_ram_master_t_compliance_template.vhd",
+)
+VerificationComponent.find(LIB, "ram_master", ram_master_vci).add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "tb_ram_master_compliance_template.vhd",
+)
+
+VerificationComponentInterface.find(
+    LIB, "stream_master_pkg", "stream_master_t"
+).add_vhdl_testbench(
+    TEST_LIB, ROOT / "compliance_test",
+)
+
+VerificationComponentInterface.find(
+    LIB, "stream_slave_pkg", "stream_slave_t"
+).add_vhdl_testbench(
+    TEST_LIB, ROOT / "compliance_test",
+)
+
+bus2memory_vci = VerificationComponentInterface.find(
+    LIB, "bus2memory_pkg", "bus2memory_t"
+)
+bus2memory_vci.add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "bus2memory_pkg" / "tb_bus2memory_t_compliance_template.vhd",
+)
+VerificationComponent.find(LIB, "bus2memory", bus2memory_vci).add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "tb_bus2memory_compliance_template.vhd",
 )
 
 UI.main()

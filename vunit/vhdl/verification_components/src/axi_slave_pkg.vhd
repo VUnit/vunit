@@ -9,7 +9,10 @@ use ieee.std_logic_1164.all;
 
 use work.queue_pkg.all;
 use work.logger_pkg.all;
+use work.checker_pkg.all;
 use work.memory_pkg.all;
+use work.sync_pkg.all;
+use work.vc_pkg.all;
 context work.com_context;
 use work.axi_statistics_pkg.all;
 
@@ -18,6 +21,7 @@ package axi_slave_pkg is
 
   type axi_slave_t is record
     -- Private
+    p_std_cfg  : std_cfg_t;
     p_initial_address_fifo_depth : positive;
     p_initial_write_response_fifo_depth : positive;
     p_initial_check_4kbyte_boundary : boolean;
@@ -26,12 +30,11 @@ package axi_slave_pkg is
     p_initial_write_response_stall_probability : probability_t;
     p_initial_min_response_latency : delay_length;
     p_initial_max_response_latency : delay_length;
-    p_actor : actor_t;
     p_memory : memory_t;
-    p_logger : logger_t;
   end record;
 
   constant axi_slave_logger : logger_t := get_logger("vunit_lib:axi_slave_pkg");
+  constant axi_slave_checker : checker_t := new_checker(axi_slave_logger);
   impure function new_axi_slave(memory : memory_t;
                                 actor : actor_t := null_actor;
                                 address_fifo_depth : positive := 1;
@@ -42,10 +45,26 @@ package axi_slave_pkg is
                                 write_response_stall_probability : probability_t := 0.0;
                                 min_response_latency : delay_length := 0 ns;
                                 max_response_latency : delay_length := 0 ns;
-                                logger : logger_t := axi_slave_logger) return axi_slave_t;
+                                logger : logger_t := axi_slave_logger;
+                                actor : actor_t := null_actor;
+                                checker : checker_t := null_checker;
+                                unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail) return axi_slave_t;
 
-  -- Get the logger used by the axi_slave
-  function get_logger(axi_slave : axi_slave_t) return logger_t;
+  function get_std_cfg(axi_slave : axi_slave_t) return std_cfg_t;
+
+  impure function as_sync(axi_slave : axi_slave_t) return sync_handle_t;
+
+  -- Return the actor used by the axi_slave
+  impure function get_actor(axi_slave : axi_slave_t) return actor_t;
+
+  -- Return the logger used by the axi_slave
+  impure function get_logger(axi_slave : axi_slave_t) return logger_t;
+
+  -- Return the checker used by the axi_slave
+  impure function get_checker(axi_slave : axi_slave_t) return checker_t;
+
+  -- Return policy for handling unexpected messages to the actor
+  impure function unexpected_msg_type_policy(axi_slave : axi_slave_t) return unexpected_msg_type_policy_t;
 
   -- Set the maximum number address channel tokens that can be queued
   procedure set_address_fifo_depth(signal net : inout network_t;
@@ -147,15 +166,15 @@ package body axi_slave_pkg is
                                 write_response_stall_probability : probability_t := 0.0;
                                 min_response_latency : delay_length := 0 ns;
                                 max_response_latency : delay_length := 0 ns;
-                                logger : logger_t := axi_slave_logger) return axi_slave_t is
-    variable actor_tmp : actor_t := null_actor;
+                                logger : logger_t := axi_slave_logger;
+                                actor : actor_t := null_actor;
+                                checker : checker_t := null_checker;
+                                unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail) return axi_slave_t is
+    constant p_std_cfg : std_cfg_t := create_std_cfg(
+      axi_slave_logger, axi_slave_checker, actor, logger, checker, unexpected_msg_type_policy
+    );
   begin
-    if actor = null_actor then
-      actor_tmp := new_actor;
-    else
-      actor_tmp := actor;
-    end if;
-    return (p_actor => actor_tmp,
+    return (p_std_cfg => p_std_cfg,
             p_initial_address_fifo_depth => address_fifo_depth,
             p_initial_write_response_fifo_depth => write_response_fifo_depth,
             p_initial_check_4kbyte_boundary => check_4kbyte_boundary,
@@ -164,13 +183,37 @@ package body axi_slave_pkg is
             p_initial_write_response_stall_probability => write_response_stall_probability,
             p_initial_min_response_latency => min_response_latency,
             p_initial_max_response_latency => max_response_latency,
-            p_memory => to_vc_interface(memory, logger),
-            p_logger => logger);
+            p_memory => to_vc_interface(memory, logger));
   end;
 
-  function get_logger(axi_slave : axi_slave_t) return logger_t is
+  function get_std_cfg(axi_slave : axi_slave_t) return std_cfg_t is
   begin
-    return axi_slave.p_logger;
+    return axi_slave.p_std_cfg;
+  end;
+
+  impure function as_sync(axi_slave : axi_slave_t) return sync_handle_t is
+  begin
+    return get_actor(axi_slave.p_std_cfg);
+  end;
+
+  impure function get_actor(axi_slave : axi_slave_t) return actor_t is
+  begin
+    return get_actor(axi_slave.p_std_cfg);
+  end;
+
+  impure function get_logger(axi_slave : axi_slave_t) return logger_t is
+  begin
+    return get_logger(axi_slave.p_std_cfg);
+  end;
+
+  impure function get_checker(axi_slave : axi_slave_t) return checker_t is
+  begin
+    return get_checker(axi_slave.p_std_cfg);
+  end;
+
+  impure function unexpected_msg_type_policy(axi_slave : axi_slave_t) return unexpected_msg_type_policy_t is
+  begin
+    return unexpected_msg_type_policy(axi_slave.p_std_cfg);
   end;
 
   procedure set_address_fifo_depth(signal net : inout network_t;
@@ -181,7 +224,7 @@ package body axi_slave_pkg is
   begin
     request_msg := new_msg(axi_slave_set_address_fifo_depth_msg);
     push(request_msg, depth);
-    request(net, axi_slave.p_actor, request_msg, ack);
+    request(net, get_actor(axi_slave.p_std_cfg), request_msg, ack);
     assert ack report "Failed on set_address_fifo_depth command";
   end;
 
@@ -193,7 +236,7 @@ package body axi_slave_pkg is
   begin
     request_msg := new_msg(axi_slave_set_write_response_fifo_depth_msg);
     push(request_msg, depth);
-    request(net, axi_slave.p_actor, request_msg, ack);
+    request(net, get_actor(axi_slave.p_std_cfg), request_msg, ack);
     assert ack report "Failed on set_write_response_fifo_depth command";
   end;
 
@@ -205,7 +248,7 @@ package body axi_slave_pkg is
   begin
     request_msg := new_msg(axi_slave_set_address_stall_probability_msg);
     push_real(request_msg, probability);
-    request(net, axi_slave.p_actor, request_msg, ack);
+    request(net, get_actor(axi_slave.p_std_cfg), request_msg, ack);
     assert ack report "Failed on set_address_stall_probability command";
   end;
 
@@ -217,7 +260,7 @@ package body axi_slave_pkg is
   begin
     request_msg := new_msg(axi_slave_set_data_stall_probability_msg);
     push_real(request_msg, probability);
-    request(net, axi_slave.p_actor, request_msg, ack);
+    request(net, get_actor(axi_slave.p_std_cfg), request_msg, ack);
     assert ack report "Failed on set_data_stall_probability command";
   end;
 
@@ -228,7 +271,7 @@ package body axi_slave_pkg is
   begin
     request_msg := new_msg(axi_slave_set_write_response_stall_probability_msg);
     push_real(request_msg, probability);
-    request(net, axi_slave.p_actor, request_msg, ack);
+    request(net, get_actor(axi_slave.p_std_cfg), request_msg, ack);
     assert ack report "Failed on set_write_response_stall_probability command";
   end;
 
@@ -240,7 +283,7 @@ package body axi_slave_pkg is
   begin
     request_msg := new_msg(axi_slave_configure_4kbyte_boundary_check_msg);
     push_boolean(request_msg, value);
-    request(net, axi_slave.p_actor, request_msg, ack);
+    request(net, get_actor(axi_slave.p_std_cfg), request_msg, ack);
     assert ack report "Failed on configure_4kbyte_boundary_check command";
   end;
 
@@ -253,7 +296,7 @@ package body axi_slave_pkg is
     request_msg := new_msg(axi_slave_set_response_latency_msg);
     push_time(request_msg, min_latency);
     push_time(request_msg, max_latency);
-    request(net, axi_slave.p_actor, request_msg, ack);
+    request(net, get_actor(axi_slave.p_std_cfg), request_msg, ack);
     assert ack report "Failed on set_response_latency command";
   end;
 
@@ -287,7 +330,7 @@ package body axi_slave_pkg is
     deallocate(stat);
     request_msg := new_msg(axi_slave_get_statistics_msg);
     push_boolean(request_msg, clear);
-    send(net, axi_slave.p_actor, request_msg);
+    send(net, get_actor(axi_slave.p_std_cfg), request_msg);
     receive_reply(net, request_msg, reply_msg);
     stat := (p_count_by_burst_length => pop_integer_vector_ptr_ref(reply_msg));
     delete(request_msg);
@@ -300,7 +343,7 @@ package body axi_slave_pkg is
     variable ack : boolean;
   begin
     request_msg := new_msg(axi_slave_enable_well_behaved_check_msg);
-    request(net, axi_slave.p_actor, request_msg, ack);
+    request(net, get_actor(axi_slave.p_std_cfg), request_msg, ack);
     assert ack report "Failed on msg_enable_well_behaved_check command";
   end;
 end package body;

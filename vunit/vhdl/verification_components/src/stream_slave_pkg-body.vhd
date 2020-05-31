@@ -5,9 +5,24 @@
 -- Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
 
 package body stream_slave_pkg is
-  impure function new_stream_slave return stream_slave_t is
+
+  impure function new_stream_slave(
+    logger                     : logger_t                     := stream_slave_logger;
+    actor                      : actor_t                      := null_actor;
+    checker                    : checker_t                    := null_checker;
+    unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail
+  ) return stream_slave_t is
+    constant p_std_cfg       : std_cfg_t := create_std_cfg(
+      stream_slave_logger, stream_slave_checker, actor, logger, checker, unexpected_msg_type_policy
+    );
+
+    begin
+    return (p_std_cfg => p_std_cfg);
+  end;
+
+  function get_std_cfg(slave : stream_slave_t) return std_cfg_t is
   begin
-    return (p_actor => new_actor);
+    return slave.p_std_cfg;
   end;
 
   procedure pop_stream(signal net : inout network_t;
@@ -15,7 +30,7 @@ package body stream_slave_pkg is
                        variable reference : inout stream_reference_t) is
   begin
     reference := new_msg(stream_pop_msg);
-    send(net, stream.p_actor, reference);
+    send(net, get_actor(stream.p_std_cfg), reference);
   end;
 
   procedure await_pop_stream_reply(signal net : inout network_t;

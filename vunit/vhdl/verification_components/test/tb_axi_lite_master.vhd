@@ -192,7 +192,7 @@ begin
       wait until (bready and bvalid) = '1' and rising_edge(clk);
       bvalid <= '0';
       wait until mock_queue_length > 0 for 0 ns;
-      check_only_log(bus_logger, "bresp - Got AXI response SLVERR(10) expected OKAY(00)", failure);
+      check_only_log(bus_logger, "Check failed for bresp - Got AXI response SLVERR(10) expected OKAY(00)", failure);
       unmock(bus_logger);
 
       done <= true;
@@ -234,7 +234,7 @@ begin
       wait until (bready and bvalid) = '1' and rising_edge(clk);
       bvalid <= '0';
       wait until mock_queue_length > 0 for 0 ns;
-      check_only_log(bus_logger, "bresp - Got AXI response EXOKAY(01) expected DECERR(11)", failure);
+      check_only_log(bus_logger, "Check failed for bresp - Got AXI response EXOKAY(01) expected DECERR(11)", failure);
       unmock(bus_logger);
 
       done <= true;
@@ -265,7 +265,7 @@ begin
       wait until (rready and rvalid) = '1' and rising_edge(clk);
       rvalid <= '0';
       wait until mock_queue_length > 0 for 0 ns;
-      check_only_log(bus_logger, "rresp - Got AXI response DECERR(11) expected OKAY(00)", failure);
+      check_only_log(bus_logger, "Check failed for rresp - Got AXI response DECERR(11) expected OKAY(00)", failure);
       unmock(bus_logger);
 
       done <= true;
@@ -297,7 +297,7 @@ begin
       wait until (rready and rvalid) = '1' and rising_edge(clk);
       rvalid <= '0';
       wait until mock_queue_length > 0 for 0 ns;
-      check_only_log(bus_logger, "rresp - Got AXI response DECERR(11) expected EXOKAY(01)", failure);
+      check_only_log(bus_logger, "Check failed for rresp - Got AXI response DECERR(11) expected EXOKAY(01)", failure);
       unmock(bus_logger);
 
       done <= true;

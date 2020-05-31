@@ -12,27 +12,31 @@ context work.com_context;
 use work.queue_pkg.all;
 use work.bus_master_pkg.all;
 use work.memory_pkg.all;
+use work.bus2memory_pkg.all;
+use work.sync_pkg.all;
+use work.vc_pkg.all;
 
 entity bus2memory is
   generic (
-    bus_handle : bus_master_t;
-    memory : memory_t);
+    bus2memory_handle : bus2memory_t);
 end entity;
 
 architecture a of bus2memory is
-  constant my_memory : memory_t := to_vc_interface(memory);
+  constant my_memory : memory_t := to_vc_interface(bus2memory_handle.p_memory);
 begin
   main : process
     variable request_msg, reply_msg : msg_t;
     variable msg_type : msg_type_t;
-    variable address : std_logic_vector(address_length(bus_handle)-1 downto 0);
-    variable byte_enable : std_logic_vector(byte_enable_length(bus_handle)-1 downto 0);
-    variable data  : std_logic_vector(data_length(bus_handle)-1 downto 0);
-    constant blen : natural := byte_length(bus_handle);
+    variable address : std_logic_vector(address_length(bus2memory_handle.p_bus_handle)-1 downto 0);
+    variable byte_enable : std_logic_vector(byte_enable_length(bus2memory_handle.p_bus_handle)-1 downto 0);
+    variable data  : std_logic_vector(data_length(bus2memory_handle.p_bus_handle)-1 downto 0);
+    constant blen : natural := byte_length(bus2memory_handle.p_bus_handle);
   begin
     while true loop
-      receive(net, bus_handle.p_actor, request_msg);
+      receive(net, get_actor(bus2memory_handle.p_bus_handle), request_msg);
       msg_type := message_type(request_msg);
+
+      handle_sync_message(net, msg_type, request_msg);
 
       if msg_type = bus_read_msg then
         address := pop_std_ulogic_vector(request_msg);
@@ -53,7 +57,7 @@ begin
           end if;
         end loop;
       else
-        unexpected_msg_type(msg_type);
+        unexpected_msg_type(msg_type, get_std_cfg(bus2memory_handle.p_bus_handle));
       end if;
     end loop;
   end process;
