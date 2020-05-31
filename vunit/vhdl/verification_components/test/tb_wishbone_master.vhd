@@ -63,8 +63,8 @@ architecture a of tb_wishbone_master is
 
   constant master_logger : logger_t := get_logger("master");
   constant tb_logger : logger_t := get_logger("tb");
-  constant bus_handle : bus_master_t := new_bus(data_length => tb_cfg.dat_width,
-      address_length => tb_cfg.adr_width, logger => master_logger);
+  constant wishbone_master : wishbone_master_t := new_wishbone_master(data_length => tb_cfg.dat_width,
+      address_length => tb_cfg.adr_width, strobe_high_probability => tb_cfg.strobe_prob, logger => master_logger);
 
   constant memory : memory_t := new_memory;
   constant buf : buffer_t := allocate(memory, tb_cfg.num_cycles * sel'length);
@@ -79,7 +79,7 @@ begin
   main_stim : process
     variable tmp : std_logic_vector(dat_i'range);
     variable chk_time : time;
-    variable value : std_logic_vector(dat_i'range) := (others => '1');
+    constant value : std_logic_vector(dat_i'range) := (others => '1');
     variable bus_rd_ref1 : bus_reference_t;
     variable bus_rd_ref2 : bus_reference_t;
     type bus_reference_arr_t is array (0 to tb_cfg.num_cycles-1) of bus_reference_t;
@@ -96,12 +96,12 @@ begin
 
     if run("wr single rd single") then
       info(tb_logger, "Writing...");
-      write_bus(net, bus_handle, 0, value);
+      write_bus(net, wishbone_master, 0, value);
       wait until ack = '1' and rising_edge(clk);
       wait until rising_edge(clk);
       wait for 100 ns;
       info(tb_logger, "Reading...");
-      read_bus(net, bus_handle, 0, tmp);
+      read_bus(net, wishbone_master, 0, tmp);
       check_equal(tmp, value, "read data");
 --    elsif run("wr block") then
 --      -- TODO not sure if is allowed to toggle signal we during
@@ -112,26 +112,26 @@ begin
     elsif run("wr block rd single") then
       info(tb_logger, "Writing...");
       for i in 0 to tb_cfg.num_cycles-1 loop
-        write_bus(net, bus_handle, i*(sel'length),
+        write_bus(net, wishbone_master, i*(sel'length),
             std_logic_vector(to_unsigned(i, dat_i'length)));
       end loop;
 
       info(tb_logger, "Reading...");
       for i in 0 to tb_cfg.num_cycles-1 loop
-        read_bus(net, bus_handle, i*(sel'length), tmp);
+        read_bus(net, wishbone_master, i*(sel'length), tmp);
         check_equal(tmp, std_logic_vector(to_unsigned(i, dat_i'length)), "read data");
       end loop;
 
     elsif run("wr block rd block") then
       info(tb_logger, "Writing...");
       for i in 0 to tb_cfg.num_cycles-1 loop
-        write_bus(net, bus_handle, i*(sel'length),
+        write_bus(net, wishbone_master, i*(sel'length),
             std_logic_vector(to_unsigned(i, dat_i'length)));
       end loop;
 
       info(tb_logger, "Reading...");
       for i in 0 to tb_cfg.num_cycles-1 loop
-        read_bus(net, bus_handle, i*(sel'length), rd_ref(i));
+        read_bus(net, wishbone_master, i*(sel'length), rd_ref(i));
       end loop;
 
       info(tb_logger, "Get reads by references...");
@@ -143,11 +143,11 @@ begin
     elsif run ("wait for idle") then
       for i in 0 to 5 loop
         chk_time := now;
-        read_bus(net, bus_handle, 0, bus_rd_ref1);
-        write_bus(net, bus_handle, 0, value);
-        read_bus(net, bus_handle, 0, bus_rd_ref2);
+        read_bus(net, wishbone_master, 0, bus_rd_ref1);
+        write_bus(net, wishbone_master, 0, value);
+        read_bus(net, wishbone_master, 0, bus_rd_ref2);
         check_equal(chk_time, now, "tb concept broken, command issueing takes time");
-        wait_until_idle(net, bus_handle);
+        wait_until_idle(net, wishbone_master);
         check_equal(cyc, '0', "bus not idle");
         info(tb_logger, "Waited for " & to_string(now-chk_time));
         chk_time := now;
@@ -174,8 +174,7 @@ begin
 
   dut : entity work.wishbone_master
     generic map (
-      bus_handle => bus_handle,
-      strobe_high_probability => tb_cfg.strobe_prob)
+      wishbone_master => wishbone_master)
     port map (
       clk   => clk,
       adr   => adr,
