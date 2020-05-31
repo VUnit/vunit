@@ -15,6 +15,8 @@ context work.vunit_context;
 context work.com_context;
 use work.memory_pkg.all;
 use work.avalon_pkg.all;
+use work.vc_pkg.all;
+use work.sync_pkg.all;
 
 library osvvm;
 use osvvm.RandomPkg.all;
@@ -43,6 +45,18 @@ architecture a of avalon_slave is
 
 begin
 
+  -- TODO: Add interface for updating probability numbers
+  main : process
+    variable request_msg : msg_t;
+    variable msg_type : msg_type_t;
+  begin
+      receive(net, get_actor(avalon_slave.p_std_cfg), request_msg);
+      msg_type := message_type(request_msg);
+
+      handle_sync_message(net, msg_type, request_msg);
+      unexpected_msg_type(msg_type, avalon_slave.p_std_cfg);
+  end process;
+
   write_handler : process
     variable pending_writes : positive := 1;
     variable addr : natural;
@@ -67,7 +81,7 @@ begin
     variable rd_request_msg : msg_t;
   begin
     wait until read = '1' and waitrequest = '0' and rising_edge(clk);
-    rd_request_msg := new_msg(slave_read_msg, avalon_slave.p_actor);
+    rd_request_msg := new_msg(slave_read_msg);
     -- For read, only address is passed to ack proc
     push_integer(rd_request_msg, to_integer(unsigned(burstcount)));
     push_integer(rd_request_msg, to_integer(unsigned(address)));
@@ -89,7 +103,7 @@ begin
       burst := pop_integer(request_msg);
       baseaddr := pop_integer(request_msg);
       for i in 0 to burst-1 loop
-        while rnd.Uniform(0.0, 1.0) > avalon_slave.readdatavalid_high_probability loop
+        while rnd.Uniform(0.0, 1.0) > avalon_slave.p_readdatavalid_high_probability loop
           wait until rising_edge(clk);
         end loop;
         readdata <= read_word(avalon_slave.p_memory, baseaddr + byteenable'length*i, byteenable'length);
@@ -106,7 +120,7 @@ begin
   waitrequest_stim: process
     variable rnd : RandomPType;
   begin
-    if rnd.Uniform(0.0, 1.0) < avalon_slave.waitrequest_high_probability then
+    if rnd.Uniform(0.0, 1.0) < avalon_slave.p_waitrequest_high_probability then
       waitrequest <= '1';
     else
       waitrequest <= '0';

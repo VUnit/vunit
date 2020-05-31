@@ -357,4 +357,60 @@ VerificationComponent.find(LIB, "bus2memory", bus2memory_vci).add_vhdl_testbench
     ROOT / ".vc" / "tb_bus2memory_compliance_template.vhd",
 )
 
+avalon_master_vci = VerificationComponentInterface.find(
+    LIB, "avalon_pkg", "avalon_master_t"
+)
+avalon_master_vci.add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "avalon_pkg" / "tb_avalon_master_t_compliance_template.vhd",
+)
+VerificationComponent.find(LIB, "avalon_master", avalon_master_vci).add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "tb_avalon_master_compliance_template.vhd",
+)
+
+avalon_slave_vci = VerificationComponentInterface.find(
+    LIB, "avalon_pkg", "avalon_slave_t"
+)
+avalon_slave_vci.add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "avalon_pkg" / "tb_avalon_slave_t_compliance_template.vhd",
+)
+VerificationComponent.find(LIB, "avalon_slave", avalon_slave_vci).add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "tb_avalon_slave_compliance_template.vhd",
+)
+
+avalon_source_vci = VerificationComponentInterface.find(
+    LIB, "avalon_stream_pkg", "avalon_source_t"
+)
+avalon_source_vci.add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "avalon_stream_pkg" / "tb_avalon_source_t_compliance_template.vhd",
+)
+VerificationComponent.find(LIB, "avalon_source", avalon_source_vci).add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "tb_avalon_source_compliance_template.vhd",
+)
+
+avalon_sink_vci = VerificationComponentInterface.find(
+    LIB, "avalon_stream_pkg", "avalon_sink_t"
+)
+avalon_sink_vci.add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "avalon_stream_pkg" / "tb_avalon_sink_t_compliance_template.vhd",
+)
+VerificationComponent.find(LIB, "avalon_sink", avalon_sink_vci).add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "tb_avalon_sink_compliance_template.vhd",
+)
+
 UI.main()
