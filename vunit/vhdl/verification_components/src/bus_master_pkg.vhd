@@ -10,8 +10,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 use work.logger_pkg.all;
+use work.checker_pkg.all;
 context work.com_context;
 use work.sync_pkg.all;
+use work.vc_pkg.all;
 use work.queue_pkg.all;
 
 package bus_master_pkg is
@@ -19,11 +21,10 @@ package bus_master_pkg is
   -- Handle to VC instance with bus master VCI
   type bus_master_t is record
     -- These fields are private, do not use directly
-    p_actor : actor_t;
+    p_std_cfg : std_cfg_t;
     p_data_length : natural;
     p_address_length : natural;
     p_byte_length : natural;
-    p_logger : logger_t;
   end record;
 
   -- Reference to non-blocking bus command
@@ -31,16 +32,30 @@ package bus_master_pkg is
 
   -- Default logger object for bus master instances
   constant bus_logger : logger_t := get_logger("vunit_lib:bus_master_pkg");
+  constant bus_checker : checker_t := new_checker(bus_logger);
 
   -- Create new handle for bus master VC
   impure function new_bus(data_length : natural;
                           address_length : natural;
                           byte_length : natural := 8;
                           logger : logger_t := bus_logger;
-                          actor : actor_t := null_actor) return bus_master_t;
+                          actor : actor_t := null_actor;
+                          checker : checker_t := null_checker;
+                          unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail) return bus_master_t;
+
+  impure function get_std_cfg(master : bus_master_t) return std_cfg_t;
+
+  -- Return the actor used by the bus master
+  impure function get_actor(bus_handle : bus_master_t) return actor_t;
 
   -- Return the logger used by the bus master
-  function get_logger(bus_handle : bus_master_t) return logger_t;
+  impure function get_logger(bus_handle : bus_master_t) return logger_t;
+
+  -- Return the checker used by the bus master
+  impure function get_checker(bus_handle : bus_master_t) return checker_t;
+
+  -- Return true if the bus VC fails on unexpected messages to the actor
+  impure function unexpected_msg_type_policy(bus_handle : bus_master_t) return unexpected_msg_type_policy_t;
 
   -- Return the length of the data on this bus
   impure function data_length(bus_handle : bus_master_t) return natural;

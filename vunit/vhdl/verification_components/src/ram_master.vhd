@@ -11,34 +11,35 @@ use ieee.numeric_std.all;
 
 use work.queue_pkg.all;
 use work.bus_master_pkg.all;
+use work.ram_master_pkg.all;
 use work.sync_pkg.all;
+use work.vc_pkg.all;
 context work.com_context;
 
 entity ram_master is
   generic (
-    bus_handle : bus_master_t;
-    latency : positive
+    ram_master : ram_master_t
     );
   port (
     clk : in std_logic;
     en : out std_logic := '0';
-    we : out std_logic_vector(byte_enable_length(bus_handle)-1 downto 0);
-    addr : out std_logic_vector(address_length(bus_handle)-1 downto 0);
-    wdata : out std_logic_vector(data_length(bus_handle)-1 downto 0);
-    rdata : in std_logic_vector(data_length(bus_handle)-1 downto 0)
+    we : out std_logic_vector(byte_enable_length(as_bus_master(ram_master))-1 downto 0);
+    addr : out std_logic_vector(address_length(as_bus_master(ram_master)) - 1 downto 0);
+    wdata : out std_logic_vector(data_length(as_bus_master(ram_master)) - 1 downto 0);
+    rdata : in std_logic_vector(data_length(as_bus_master(ram_master)) - 1 downto 0)
     );
 end entity;
 
 architecture a of ram_master is
   signal rd : std_logic := '0';
-  signal rd_pipe : std_logic_vector(0 to latency-1);
+  signal rd_pipe : std_logic_vector(0 to ram_master.p_latency - 1);
   constant request_queue : queue_t := new_queue;
 begin
   main : process
     variable request_msg : msg_t;
     variable msg_type : msg_type_t;
   begin
-    receive(net, bus_handle.p_actor, request_msg);
+    receive(net, get_actor(ram_master), request_msg);
     msg_type := message_type(request_msg);
 
     if msg_type = bus_read_msg then
@@ -59,15 +60,15 @@ begin
       wait until en = '1' and rising_edge(clk);
       en <= '0';
 
-    elsif msg_type = wait_until_idle_msg then
+    elsif msg_type = wait_until_idle_msg or msg_type = wait_for_time_msg then
       while not is_empty(request_queue) loop
         wait until rising_edge(clk);
       end loop;
-      handle_wait_until_idle(net, msg_type, request_msg);
-    else
-      unexpected_msg_type(msg_type);
-    end if;
+      handle_sync_message(net, msg_type, request_msg);
 
+    else
+        unexpected_msg_type(msg_type, get_std_cfg(ram_master));
+    end if;
   end process;
 
   read_return : process
