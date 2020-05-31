@@ -69,9 +69,14 @@ architecture a of tb_avalon_master is
   constant master_logger : logger_t := get_logger("master");
   constant tb_logger : logger_t := get_logger("tb");
   constant master_actor : actor_t := new_actor("Avalon-MM Master");
-  constant bus_handle : bus_master_t := new_bus(data_length => tb_cfg.data_width,
-      address_length => tb_cfg.addr_width, logger => master_logger,
-      actor => master_actor);
+  constant avalon_master : avalon_master_t := new_avalon_master(data_length            => tb_cfg.data_width,
+                                                                address_length         => tb_cfg.addr_width,
+                                                                logger                 => master_logger,
+                                                                actor                  => master_actor,
+                                                                write_high_probability => tb_cfg.write_prob,
+                                                                read_high_probability  => tb_cfg.read_prob
+                                                               );
+  constant bus_handle : bus_master_t := as_bus_master(avalon_master);
 
   constant memory : memory_t := new_memory;
   constant buf : buffer_t := allocate(memory, tb_cfg.transfers * byteenable'length);
@@ -79,7 +84,7 @@ architecture a of tb_avalon_master is
     memory => memory,
     readdatavalid_high_probability => tb_cfg.readdatavalid_prob,
     waitrequest_high_probability => tb_cfg.waitrequest_prob,
-    name => "Avalon-MM Slave"
+    actor => new_actor("Avalon-MM Slave")
   );
 
   procedure gen_rndburst(
@@ -290,9 +295,7 @@ begin
 
   dut : entity work.avalon_master
     generic map (
-      bus_handle => bus_handle,
-      write_high_probability => tb_cfg.write_prob,
-      read_high_probability => tb_cfg.read_prob
+      avalon_master_handle => avalon_master
     )
     port map (
       clk   => clk,

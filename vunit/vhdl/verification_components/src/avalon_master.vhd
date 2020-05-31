@@ -19,19 +19,16 @@ use work.logger_pkg.all;
 use work.check_pkg.all;
 use work.sync_pkg.all;
 use work.vc_pkg.all;
+use work.avalon_pkg.all;
 
 library osvvm;
 use osvvm.RandomPkg.all;
 
 entity avalon_master is
-  generic (
-    bus_handle          : bus_master_t;
-    use_readdatavalid   : boolean := true;
-    fixed_read_latency  : natural := 1;  -- (bus cycles).  This parameter is ignored when use_readdatavalid is true
-    write_high_probability : real range 0.0 to 1.0 := 1.0;
-    read_high_probability : real range 0.0 to 1.0 := 1.0
+  generic(
+    avalon_master_handle : avalon_master_t
   );
-  port (
+  port(
     clk           : in  std_logic;
     address       : out std_logic_vector;
     byteenable    : out std_logic_vector;
@@ -58,85 +55,80 @@ begin
     variable request_msg : msg_t;
     variable msg_type : msg_type_t;
     variable rnd : RandomPType;
-    variable msgs : natural;
     variable burst : positive;
   begin
     rnd.InitSeed(rnd'instance_name);
     write <= '0';
     read  <= '0';
     burstcount <= std_logic_vector(to_unsigned(1, burstcount'length));
-    wait until rising_edge(clk);
     loop
-      request_msg := null_msg;
-      msgs := num_of_messages(get_actor(bus_handle));
-      if (msgs > 0) then
-        receive(net, get_actor(bus_handle), request_msg);
-        msg_type := message_type(request_msg);
-        if msg_type = bus_read_msg then
-          while rnd.Uniform(0.0, 1.0) > read_high_probability loop
-            wait until rising_edge(clk);
-          end loop;
-          address <= pop_std_ulogic_vector(request_msg);
-          byteenable(byteenable'range) <= (others => '1');
-          read <= '1';
-          push(acknowledge_queue, request_msg);
-          wait until rising_edge(clk) and waitrequest = '0';
-          read <= '0';
+      receive(net, get_actor(avalon_master_handle.p_bus_handle), request_msg);
+      msg_type := message_type(request_msg);
 
-        elsif msg_type = bus_burst_read_msg then
-          while rnd.Uniform(0.0, 1.0) > read_high_probability loop
-            wait until rising_edge(clk);
-          end loop;
-          address <= pop_std_ulogic_vector(request_msg);
-          burstcount <= std_logic_vector(to_unsigned(1, burstcount'length));
-          burst := pop_integer(request_msg);
-          burstcount <= std_logic_vector(to_unsigned(burst, burstcount'length));
-          byteenable(byteenable'range) <= (others => '1');
-          read <= '1';
-          push(burst_acknowledge_queue, request_msg);
-          wait until rising_edge(clk) and waitrequest = '0';
-          read <= '0';
-          push(burstlen_queue, burst);
+      if msg_type = bus_read_msg then
+        while rnd.Uniform(0.0, 1.0) > avalon_master_handle.p_read_high_probability loop
+          wait until rising_edge(clk);
+        end loop;
+        address <= pop_std_ulogic_vector(request_msg);
+        byteenable(byteenable'range) <= (others => '1');
+        read <= '1';
+        push(acknowledge_queue, request_msg);
+        wait until rising_edge(clk) and waitrequest = '0';
+        read <= '0';
 
-        elsif msg_type = bus_write_msg then
-          while rnd.Uniform(0.0, 1.0) > write_high_probability loop
+      elsif msg_type = bus_burst_read_msg then
+        while rnd.Uniform(0.0, 1.0) > avalon_master_handle.p_read_high_probability loop
+          wait until rising_edge(clk);
+        end loop;
+        address <= pop_std_ulogic_vector(request_msg);
+        burstcount <= std_logic_vector(to_unsigned(1, burstcount'length));
+        burst := pop_integer(request_msg);
+        burstcount <= std_logic_vector(to_unsigned(burst, burstcount'length));
+        byteenable(byteenable'range) <= (others => '1');
+        read <= '1';
+        push(burst_acknowledge_queue, request_msg);
+        wait until rising_edge(clk) and waitrequest = '0';
+        read <= '0';
+        push(burstlen_queue, burst);
+
+      elsif msg_type = bus_write_msg then
+        while rnd.Uniform(0.0, 1.0) > avalon_master_handle.p_write_high_probability loop
+          wait until rising_edge(clk);
+        end loop;
+        address <= pop_std_ulogic_vector(request_msg);
+        burstcount <= std_logic_vector(to_unsigned(1, burstcount'length));
+        writedata <= pop_std_ulogic_vector(request_msg);
+        byteenable <= pop_std_ulogic_vector(request_msg);
+        write <= '1';
+        wait until rising_edge(clk) and waitrequest = '0';
+        write <= '0';
+
+      elsif msg_type = bus_burst_write_msg then
+        address <= pop_std_ulogic_vector(request_msg);
+        burst := pop_integer(request_msg);
+        burstcount <= std_logic_vector(to_unsigned(burst, burstcount'length));
+        for i in 0 to burst-1 loop
+          while rnd.Uniform(0.0, 1.0) > avalon_master_handle.p_write_high_probability loop
             wait until rising_edge(clk);
           end loop;
-          address <= pop_std_ulogic_vector(request_msg);
-          burstcount <= std_logic_vector(to_unsigned(1, burstcount'length));
           writedata <= pop_std_ulogic_vector(request_msg);
-          byteenable <= pop_std_ulogic_vector(request_msg);
+          -- TODO handle byteenable
+          byteenable(byteenable'range) <= (others => '1');
           write <= '1';
           wait until rising_edge(clk) and waitrequest = '0';
           write <= '0';
+          address(address'range) <= (others => 'U');
+          burstcount(burstcount'range) <= (others => 'U');
+        end loop;
 
-        elsif msg_type = bus_burst_write_msg then
-          address <= pop_std_ulogic_vector(request_msg);
-          burst := pop_integer(request_msg);
-          burstcount <= std_logic_vector(to_unsigned(burst, burstcount'length));
-          for i in 0 to burst-1 loop
-            while rnd.Uniform(0.0, 1.0) > write_high_probability loop
-              wait until rising_edge(clk);
-            end loop;
-            writedata <= pop_std_ulogic_vector(request_msg);
-            -- TODO handle byteenable
-            byteenable(byteenable'range) <= (others => '1');
-            write <= '1';
-            wait until rising_edge(clk) and waitrequest = '0';
-            write <= '0';
-            address(address'range) <= (others => 'U');
-            burstcount(burstcount'range) <= (others => 'U');
-          end loop;
+      elsif msg_type = wait_until_idle_msg or msg_type = wait_for_time_msg then
+        while burst_read_flag or not is_empty(burst_acknowledge_queue) loop
+          wait until rising_edge(clk);
+        end loop;
+        handle_sync_message(net, msg_type, request_msg);
 
-        elsif msg_type = wait_until_idle_msg then
-          wait until not burst_read_flag and is_empty(burst_acknowledge_queue) and rising_edge(clk);
-          handle_wait_until_idle(net, msg_type, request_msg);
-
-        else
-          unexpected_msg_type(msg_type);
-        end if;
       else
-        wait until rising_edge(clk);
+        unexpected_msg_type(msg_type, get_std_cfg(avalon_master_handle.p_bus_handle));
       end if;
     end loop;
   end process;
@@ -144,13 +136,13 @@ begin
   read_capture : process
     variable request_msg, reply_msg : msg_t;
   begin
-    if use_readdatavalid then
+    if avalon_master_handle.p_use_readdatavalid then
         wait until readdatavalid = '1' and not is_empty(acknowledge_queue) and rising_edge(clk);
     else
         -- Non-pipelined case: waits for slave to de-assert waitrequest and sample data after fixed_read_latency cycles.
         wait until rising_edge(clk) and waitrequest = '0' and read = '1';
-        if fixed_read_latency > 0 then
-            for i in 0 to fixed_read_latency - 1 loop
+        if avalon_master_handle.p_fixed_read_latency > 0 then
+            for i in 0 to avalon_master_handle.p_fixed_read_latency - 1 loop
                 wait until rising_edge(clk);
             end loop;
         end if;
