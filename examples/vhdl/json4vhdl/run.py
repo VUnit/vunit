@@ -2,22 +2,41 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
-from os.path import join, dirname
-from vunit import VUnit, read_json, encode_json
+"""
+JSON-for-VHDL
+-------------
 
-root = dirname(__file__)
+Demonstrates the ``JSON-for-VHDL`` library which can be used to parse JSON content.
+The content can be read from a file, or passed as a stringified generic.
+This is an alternative to composite generics, that supports any depth in the content structure.
+"""
 
-vu = VUnit.from_argv()
+from pathlib import Path
+from vunit import VUnit
+from vunit.json4vhdl import read_json, encode_json, b16encode
 
-vu.add_json4vhdl()
+TEST_PATH = Path(__file__).parent / "src" / "test"
 
-lib = vu.add_library("test")
-lib.add_source_files(join(root, "src/test/*.vhd"))
+VU = VUnit.from_argv()
+VU.add_json4vhdl()
 
-tb_cfg = read_json(join(root, "src/test/data/data.json"))
-tb_cfg["dump_debug_data"]=False
-vu.set_generic("tb_cfg", encode_json(tb_cfg))
+LIB = VU.add_library("test")
+LIB.add_source_files(TEST_PATH / "*.vhd")
 
-vu.main()
+TB_CFG = read_json(TEST_PATH / "data" / "data.json")
+TB_CFG["dump_debug_data"] = False
+JSON_STR = encode_json(TB_CFG)
+JSON_FILE = Path("data") / "data.json"
+
+TB = LIB.get_test_benches()[0]
+
+TB.get_tests("stringified*")[0].set_generic("tb_cfg", JSON_STR)
+TB.get_tests("b16encoded stringified*")[0].set_generic("tb_cfg", b16encode(JSON_STR))
+TB.get_tests("JSON file*")[0].set_generic("tb_cfg", JSON_FILE)
+TB.get_tests("b16encoded JSON file*")[0].set_generic(
+    "tb_cfg", b16encode(str(TEST_PATH / JSON_FILE))
+)
+
+VU.main()

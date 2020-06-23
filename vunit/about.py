@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Provides documentation and version information
@@ -19,7 +19,7 @@ def license_text():
 VUnit except for OSVVM (see below) is released under the terms of
 Mozilla Public License, v. 2.0.
 
-Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 OSVVM
 -----
@@ -35,7 +35,8 @@ def doc():
     """
     Returns short introduction to VUnit
     """
-    return r"""What is VUnit?
+    return (
+        r"""What is VUnit?
 ==============
 
 VUnit is an open source unit testing framework for VHDL/SystemVerilog
@@ -55,20 +56,16 @@ welcome. Read our `contribution guide
 
 License
 =======
-""" + license_text()
+"""
+        + license_text()
+    )
 
 
 def version():
     """
     Returns VUnit version
     """
-    if PRE_RELEASE:
-        return '%i.%i.%irc0' % (VERSION[0], VERSION[1], VERSION[2] + 1)
-
-    return '%i.%i.%i' % (VERSION[0], VERSION[1], VERSION[2])
+    return VERSION
 
 
-VERSION = (4, 0, 8)
-
-# DO NOT TOUCH: Only set to False by PyPI deployment script
-PRE_RELEASE = True
+VERSION = "4.4.1rc0"

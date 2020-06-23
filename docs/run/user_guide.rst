@@ -10,7 +10,7 @@ The VHDL run library is a number of VHDL packages providing functionality for ru
 This functionality is also known as the VHDL test runner (VR). It's possible to run a VUnit testbench standalone,
 just using VR, but the highly recommended approach and the main focus of this user guide is to use VR together
 with the Python-based test runner (PR) documented in this :doc:`user guide <../user_guide>` and
-:doc:`API documentation <../python_interface>`.
+:doc:`API documentation <../py/ui>`.
 
 Minimal VUnit Testbench
 -----------------------
@@ -258,7 +258,7 @@ And the lower-level entity like this
 
 The default PR behaviour is to scan all VHDL files with an entity containing a ``runner_cfg`` generic for
 test cases to run. Now that that the lower-level entity uses another generic name you have to use the
-:doc:`scan_tests_from_file <../python_interface>` method in your run script.
+:doc:`scan_tests_from_file <../py/vunit>` method in your run script.
 
 Controlling What Test Cases to Run
 ----------------------------------

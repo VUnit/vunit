@@ -24,7 +24,7 @@ Copyright is given by adding the copyright notice to the beginning of each file.
    # License, v. 2.0. If a copy of the MPL was not distributed with this file,
    # You can obtain one at http://mozilla.org/MPL/2.0/.
    #
-   # Copyright (c) 2014-2018, Lars Asplund lars.anders.asplund@gmail.com
+   # Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 
 Python related
@@ -35,18 +35,17 @@ Running the tests
 
 The test suite is divided into three parts:
 
-**vunit/test/unit/**
+**tests/unit/**
    Short and concise unit tests for internal modules and classes.
 
-**vunit/test/acceptance/**
+**tests/acceptance/**
    End to end tests of public functionality. Depends on external tools
    such as simulators.
 
-**vunit/test/lint/**
+**tests/lint/**
    Style checks such as pycodestyle and license header verification.
 
-The test suites must pass with both Python 2.7 and Python 3.x as well
-as with all supported simulators.
+The test suites must pass with Python 3.x as well as with all supported simulators.
 
 For running the test locally we recommend using `pytest <https://pypi.python.org/pypi/pytest>`__.
 
@@ -55,7 +54,7 @@ Example
 .. code-block:: shell
    :caption: Example of running all unit tests
 
-   pytest vunit/test/unit/
+   pytest tests/unit/
 
 Dependencies
 ~~~~~~~~~~~~
@@ -63,14 +62,14 @@ Dependencies
 Other than the dependencies required to use VUnit as a user the
 following are also required for developers to run the test suite manually:
 
-`mock <https://pypi.python.org/pypi/mock>`__
-   For Python 2.7 only, built into Python 3.x
-
 `pycodestyle <https://pypi.python.org/pypi/pycodestyle>`__
    Coding style check.
 
 `pylint <https://pypi.python.org/pypi/pylint>`__
    Code analysis.
+
+`mypy <http://www.mypy-lang.org/>`__
+   Optional static typing for Python.
 
 Code coverage
 ~~~~~~~~~~~~~
@@ -81,7 +80,7 @@ commands measure the code coverage while running the entire test suite:
 
 .. code:: console
 
-    vunit/ > coverage run --branch --source vunit/ -m unittest discover vunit/test/
+    vunit/ > coverage run --branch --source vunit/ -m unittest discover tests/
     vunit/ > coverage html --directory=htmlcov
     vunit/ > open htmlcov/index.html
 
@@ -133,9 +132,10 @@ style. For example :vunit_file:`examples/vhdl/uart/src/uart_tx.vhd`
 
 Continous Integration
 ---------------------
-VUnit runs all test and lint checks on both Windows using AppVeyor and
-Linux using Travis CI with several versions of Python. GHDL is used to
-run the VHDL tests of all our libraries and examples.
+VUnit runs all test and lint checks on both GNU/Linux and Windows
+with several versions of Python (typically, the oldest and newest
+supported by both VUnit and the CI environment). `GHDL <https://github.com/ghdl/ghdl>`_
+is used to run the VHDL tests of all our libraries and examples.
 
 All tests will be automatically run on any pull request and they are
 expected to pass for us to approve the merge.
@@ -168,13 +168,13 @@ PyPI with pip:
 For most developers, running the full testsuite will likely lead to failed test
 cases because not all Python interpreters or HDL simulators are installed in
 their environment. More focused testing is possible by specifying which tox
-"environments" should be tested. For example, assume a developer uses Python 2.7
+"environments" should be tested. For example, assume a developer uses Python 3.8
 and Modelsim and would like to test changes using tools available in his
 environment:
 
 .. code-block:: console
 
-    vunit/ > tox -e py27-unit,py27-acceptance-modelsim
+    vunit/ > tox -e py38-unit,py38-acceptance-modelsim
 
 A full list of test environments can be seen by issuing the following command:
 
@@ -189,18 +189,24 @@ Making releases
 Releases are automatically made by Travic CI on any ``master`` commit
 which is tagged.
 
-In order to tag a commit:
+To create a new tagged release commit:
 
-- Set a new version in ``vunit/about.py``.
-- Add a corresponding release note in ``docs/release_notes/X.Y.Z.rst``. The
-  release note files in ``docs/release_notes/`` are used to
-  automatically generate the :ref:`release notes <release_notes>`.
-- Execute ``python tools/new_release.py``.
-- Push the new version/tag: ``git push vX.Y.Z``.
+- Create corresponding release notes in ``docs/release_notes/X.Y.Z.rst``.
+   - The release notes files in ``docs/release_notes/`` are used to
+     automatically generate the :ref:`release notes <release_notes>`.
+- Execute ``python tools/release.py create X.Y.Z``.
+   - Will make commit with the new ``about.py`` version and release notes and tag it.
+   - Will make another commit setting ``about.py`` to the next pre release candidate version.
+- Push the tag to remote to trigger the release build.
+   -  ``git push origin vX.Y.Z``
+- If the release build is successful, you can push the two commits to master.
+   -  ``git push origin master``
+   - If, in the meantime, a new commit has come into origin/master the two
+     commits have to be merged into origin/master.
 
-Travic CI makes a release by uploading a new package to PyPI when a tag
+
+The CI service makes a release by uploading a new package to PyPI when a tag
 named ``vX.Y.Z`` is found in Git. A new release will not be made if:
 
 - The ``X.Y.Z`` release is already on PyPI.
-- The version ends with ``rc0``.
 - The repo tag does not exist.

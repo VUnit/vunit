@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 library vunit_lib;
 use vunit_lib.log_levels_pkg.all;
@@ -24,42 +24,40 @@ begin
   main : process
   begin
     test_runner_setup(runner, runner_cfg);
+
     if run("test watchdog no timeout") then
       wait for 1 ns;
 
-    elsif run("test watchdog timeout") then
+    elsif run("Test watchdog timeout") then
       mock(runner_trace_logger, error);
-      wait for 2 ns;
-      wait for 0 ns;
-      check_only_log(runner_trace_logger, "Test runner timeout after " & time'image(2 ns) & ".", error);
+      wait until timeout_notification(runner);
+      check_equal(now, 2 ns);
+      wait for 1 ps;
+      check_only_log(runner_trace_logger, "Test runner timeout after " & time'image(2 ns) & ".", error, 2 ns);
       unmock(runner_trace_logger);
 
     elsif run("test setting timeout") then
-      set_timeout(runner, 10 ns);
-      wait for 9 ns;
       mock(runner_trace_logger, error);
-      wait for 1 ns;
-      wait for 0 ns;
-      check_only_log(runner_trace_logger, "Test runner timeout after " & time'image(10 ns) & ".", error);
+      set_timeout(runner, 10 ns);
+      wait until timeout_notification(runner);
+      wait for 1 ps;
+      check_only_log(runner_trace_logger, "Test runner timeout after " & time'image(10 ns) & ".", error, 10 ns);
       unmock(runner_trace_logger);
 
     elsif run("test setting timeout several times") then
+      mock(runner_trace_logger, error);
       set_timeout(runner, 10 ns);
       wait for 9 ns;
       set_timeout(runner, 100 ns);
-      wait for 99 ns;
-      mock(runner_trace_logger, error);
-      wait for 1 ns;
-      wait for 0 ns;
-      check_only_log(runner_trace_logger, "Test runner timeout after " & time'image(100 ns) & ".", error);
+      wait until timeout_notification(runner);
+      wait for 1 ps;
+      check_only_log(runner_trace_logger, "Test runner timeout after " & time'image(100 ns) & ".", error, 109 ns);
       unmock(runner_trace_logger);
-
 
     end if;
     test_runner_cleanup(runner);
   end process;
 
-  test_runner_watchdog(runner, 2 ns,
-                       do_runner_cleanup => false);
+  test_runner_watchdog(runner, 2 ns, do_runner_cleanup => false);
 
 end architecture;

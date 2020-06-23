@@ -2,15 +2,16 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 -- Model of a memory address space
 
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.integer_vector_ptr_pkg.all;
+use work.types_pkg.all;
 use work.string_ptr_pkg.all;
+use work.integer_vector_ptr_pkg.all;
 use work.logger_pkg.all;
 
 package memory_pkg is
@@ -51,7 +52,6 @@ package memory_pkg is
   -----------------------------------------------------
   -- Memory data read and write functions
   -----------------------------------------------------
-  subtype byte_t is integer range 0 to 255;
   procedure write_byte(memory : memory_t;
                        address : natural;
                        byte : byte_t);

@@ -2,25 +2,32 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
-from os.path import join, dirname
+"""
+Vivado IP
+---------
+
+Demonstrates compiling and performing behavioral simulation of
+Vivado IPs with VUnit.
+"""
+
+from pathlib import Path
 from vunit import VUnit
 from vivado_util import add_vivado_ip
 
-ui = VUnit.from_argv()
+ROOT = Path(__file__).parent
+SRC_PATH = ROOT / "src"
 
-root = dirname(__file__)
-src_path = join(root, "src")
+VU = VUnit.from_argv()
 
-lib = ui.add_library("lib")
-lib.add_source_files(join(src_path, "*.vhd"))
+VU.add_library("lib").add_source_files(SRC_PATH / "*.vhd")
+VU.add_library("tb_lib").add_source_files(SRC_PATH / "test" / "*.vhd")
 
-tb_lib = ui.add_library("tb_lib")
-tb_lib.add_source_files(join(src_path, "test", "*.vhd"))
+add_vivado_ip(
+    VU,
+    output_path=ROOT / "vivado_libs",
+    project_file=ROOT / "myproject" / "myproject.xpr",
+)
 
-add_vivado_ip(ui,
-              output_path=join(root, "vivado_libs"),
-              project_file=join(root, "myproject", "myproject.xpr"))
-
-ui.main()
+VU.main()

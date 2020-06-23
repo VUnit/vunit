@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 -- This testbench is a Minimum Working Example (MWE) of VUnit's resources to read/write CSV files and to verify
 -- AXI4-Stream components. A CSV file that contains comma separated integers is read from `data_path & csv_i`, and it is
@@ -17,7 +17,6 @@ context ieee.ieee_std_context;
 library vunit_lib;
 context vunit_lib.vunit_context;
 context vunit_lib.vc_context;
-use vunit_lib.array_pkg.all;
 
 entity tb_axis_loop is
   generic (
@@ -32,23 +31,19 @@ architecture tb of tb_axis_loop is
 
   -- Simulation constants
 
-  constant clk_period : time := 20 ns;
+  constant clk_period : time    := 20 ns;
   constant data_width : natural := 32;
 
   -- AXI4Stream Verification Components
 
   constant master_axi_stream : axi_stream_master_t := new_axi_stream_master(data_length => data_width);
-  constant slave_axi_stream : axi_stream_slave_t := new_axi_stream_slave(data_length => data_width);
-
-  -- Signals to/from the UUT from/to the verification components
-
-  signal m_valid, m_ready, m_last, s_valid, s_ready, s_last : std_logic;
-  signal m_data, s_data : std_logic_vector(data_length(master_axi_stream)-1 downto 0);
+  constant slave_axi_stream  : axi_stream_slave_t  := new_axi_stream_slave(data_length => data_width);
 
   -- tb signals and variables
 
   signal clk, rst, rstn : std_logic := '0';
-  shared variable m_I, m_O : array_t;
+  constant m_I : integer_array_t := load_csv(tb_path & csv_i);
+  constant m_O : integer_array_t := new_2d(width(m_I), height(m_I), data_width, true);
   signal start, done, saved : boolean := false;
 
 begin
@@ -85,15 +80,13 @@ begin
     done <= false;
     wait until rising_edge(clk);
 
-    m_I.load_csv(tb_path & csv_i);
+    info("Sending m_I of size " & to_string(height(m_I)) & "x" & to_string(width(m_I)) & " to UUT...");
 
-    info("Sending m_I of size " & to_string(m_I.height) & "x" & to_string(m_I.width) & " to UUT...");
-
-    for y in 0 to m_I.height-1 loop
-      for x in 0 to m_I.width-1 loop
+    for y in 0 to height(m_I)-1 loop
+      for x in 0 to width(m_I)-1 loop
         wait until rising_edge(clk);
-        if x = m_I.width-1 then last := '1'; else last := '0'; end if;
-        push_axi_stream(net, master_axi_stream, std_logic_vector(to_signed(m_I.get(x,y), data_width)) , tlast => last);
+        if x = width(m_I)-1 then last := '1'; else last := '0'; end if;
+        push_axi_stream(net, master_axi_stream, std_logic_vector(to_signed(get(m_I, x, y), data_width)) , tlast => last);
       end loop;
     end loop;
 
@@ -111,24 +104,22 @@ begin
     saved <= false;
     wait for 50*clk_period;
 
-    m_O.init_2d(m_I.width, m_I.height, o'length, true);
+    info("Receiving m_O of size " & to_string(height(m_O)) & "x" & to_string(width(m_O)) & " from UUT...");
 
-    info("Receiving m_O of size " & to_string(m_O.height) & "x" & to_string(m_O.width) & " from UUT...");
-
-    for y in 0 to m_O.height-1 loop
-      for x in 0 to m_O.width-1 loop
+    for y in 0 to height(m_O)-1 loop
+      for x in 0 to width(m_O)-1 loop
         pop_axi_stream(net, slave_axi_stream, tdata => o, tlast => last);
-        if (x = m_O.width-1) and (last='0') then
+        if (x = width(m_O)-1) and (last='0') then
           error("Something went wrong. Last misaligned!");
         end if;
-        m_O.set(x,y,to_integer(signed(o)));
+        set(m_O, x, y, to_integer(signed(o)));
       end loop;
     end loop;
 
     info("m_O read!");
 
     wait until rising_edge(clk);
-    m_O.save_csv(tb_path & csv_o);
+    save_csv(m_O, tb_path & csv_o);
 
     info("m_O saved!");
 
@@ -138,49 +129,15 @@ begin
 
 --
 
-  vunit_axism: entity vunit_lib.axi_stream_master
+  uut_vc: entity work.vc_axis
   generic map (
-    master => master_axi_stream)
-  port map (
-    aclk   => clk,
-    tvalid => m_valid,
-    tready => m_ready,
-    tdata  => m_data,
-    tlast  => m_last);
-
-  vunit_axiss: entity vunit_lib.axi_stream_slave
-  generic map (
-    slave => slave_axi_stream)
-  port map (
-    aclk   => clk,
-    tvalid => s_valid,
-    tready => s_ready,
-    tdata  => s_data,
-    tlast  => s_last);
-
---
-
-  uut: entity work.axis_buffer
-  generic map (
-    data_width => data_width,
-    fifo_depth => 4
+    m_axis => master_axi_stream,
+    s_axis => slave_axi_stream,
+    data_width => data_width
   )
   port map (
-    s_axis_clk   => clk,
-    s_axis_rstn  => rstn,
-    s_axis_rdy   => m_ready,
-    s_axis_data  => m_data,
-    s_axis_valid => m_valid,
-    s_axis_strb  => "1111",
-    s_axis_last  => m_last,
-
-    m_axis_clk   => clk,
-    m_axis_rstn  => rstn,
-    m_axis_valid => s_valid,
-    m_axis_data  => s_data,
-    m_axis_rdy   => s_ready,
-    m_axis_strb  => open,
-    m_axis_last  => s_last
+    clk  => clk,
+    rstn => rstn
   );
 
 end architecture;

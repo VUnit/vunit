@@ -2,7 +2,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -18,6 +18,18 @@ context work.com_context;
 context work.data_types_context;
 
 package axi_stream_pkg is
+
+  type stall_config_t is record
+    stall_probability : real range 0.0 to 1.0;
+    min_stall_cycles  : natural;
+    max_stall_cycles  : natural;
+  end record;
+
+  constant null_stall_config : stall_config_t := (
+    stall_probability => 0.0,
+    min_stall_cycles  => 0,
+    max_stall_cycles  => 0
+    );
 
   type axi_stream_component_type_t is (null_component, default_component, custom_component);
 
@@ -99,6 +111,7 @@ package axi_stream_pkg is
     p_id_length        : natural;
     p_dest_length      : natural;
     p_user_length      : natural;
+    p_stall_config     : stall_config_t;
     p_logger           : logger_t;
     p_monitor          : axi_stream_monitor_t;
     p_protocol_checker : axi_stream_protocol_checker_t;
@@ -110,6 +123,7 @@ package axi_stream_pkg is
     p_id_length        : natural;
     p_dest_length      : natural;
     p_user_length      : natural;
+    p_stall_config     : stall_config_t;
     p_logger           : logger_t;
     p_monitor          : axi_stream_monitor_t;
     p_protocol_checker : axi_stream_protocol_checker_t;
@@ -123,6 +137,7 @@ package axi_stream_pkg is
     id_length        : natural                       := 0;
     dest_length      : natural                       := 0;
     user_length      : natural                       := 0;
+    stall_config     : stall_config_t                := null_stall_config;
     logger           : logger_t                      := axi_stream_logger;
     actor            : actor_t                       := null_actor;
     monitor          : axi_stream_monitor_t          := null_axi_stream_monitor;
@@ -134,6 +149,7 @@ package axi_stream_pkg is
     id_length        : natural                       := 0;
     dest_length      : natural                       := 0;
     user_length      : natural                       := 0;
+    stall_config     : stall_config_t                := null_stall_config;
     logger           : logger_t                      := axi_stream_logger;
     actor            : actor_t                       := null_actor;
     monitor          : axi_stream_monitor_t          := null_axi_stream_monitor;
@@ -285,6 +301,12 @@ package axi_stream_pkg is
     variable msg             : inout msg_t;
     variable axi_transaction : out axi_stream_transaction_t);
 
+  function new_stall_config(
+    stall_probability : real range 0.0 to 1.0;
+    min_stall_cycles  : natural;
+    max_stall_cycles  : natural
+  ) return stall_config_t;
+
 end package;
 
 package body axi_stream_pkg is
@@ -343,6 +365,7 @@ package body axi_stream_pkg is
     id_length        : natural                       := 0;
     dest_length      : natural                       := 0;
     user_length      : natural                       := 0;
+    stall_config     : stall_config_t                := null_stall_config;
     logger           : logger_t                      := axi_stream_logger;
     actor            : actor_t                       := null_actor;
     monitor          : axi_stream_monitor_t          := null_axi_stream_monitor;
@@ -361,6 +384,7 @@ package body axi_stream_pkg is
       p_id_length        => id_length,
       p_dest_length      => dest_length,
       p_user_length      => user_length,
+      p_stall_config     => stall_config,
       p_logger           => logger,
       p_monitor          => p_monitor,
       p_protocol_checker => p_protocol_checker);
@@ -371,6 +395,7 @@ package body axi_stream_pkg is
       id_length        : natural                       := 0;
       dest_length      : natural                       := 0;
       user_length      : natural                       := 0;
+      stall_config     : stall_config_t                := null_stall_config;
       logger           : logger_t                      := axi_stream_logger;
       actor            : actor_t                       := null_actor;
       monitor          : axi_stream_monitor_t          := null_axi_stream_monitor;
@@ -384,11 +409,12 @@ package body axi_stream_pkg is
     p_actor            := actor when actor /= null_actor else new_actor;
     p_protocol_checker := get_valid_protocol_checker(data_length, id_length, dest_length, user_length, logger, actor, protocol_checker, "slave");
 
-    return (p_actor      => new_actor,
+    return (p_actor      => p_actor,
       p_data_length      => data_length,
       p_id_length        => id_length,
       p_dest_length      => dest_length,
       p_user_length      => user_length,
+      p_stall_config     => stall_config,
       p_logger           => logger,
       p_monitor          => p_monitor,
       p_protocol_checker => p_protocol_checker);
@@ -708,19 +734,27 @@ package body axi_stream_pkg is
       end if;
     else
       push_string(check_msg, msg);
-      normalized_data(expected'length-1 downto 0) := expected;
-      push_std_ulogic_vector(check_msg, normalized_data);
+      if normalized_data'length > 0 then
+        normalized_data(expected'length-1 downto 0) := expected;
+        push_std_ulogic_vector(check_msg, normalized_data);
+        normalized_keep(tkeep'length-1 downto 0) := tkeep;
+        push_std_ulogic_vector(check_msg, normalized_keep);
+        normalized_strb(tstrb'length-1 downto 0) := tstrb;
+        push_std_ulogic_vector(check_msg, normalized_strb);
+      end if;
       push_std_ulogic(check_msg, tlast);
-      normalized_keep(tkeep'length-1 downto 0) := tkeep;
-      push_std_ulogic_vector(check_msg, normalized_keep);
-      normalized_strb(tstrb'length-1 downto 0) := tstrb;
-      push_std_ulogic_vector(check_msg, normalized_strb);
-      normalized_id(tid'length-1 downto 0) := tid;
-      push_std_ulogic_vector(check_msg, normalized_id);
-      normalized_dest(tdest'length-1 downto 0) := tdest;
-      push_std_ulogic_vector(check_msg, normalized_dest);
-      normalized_user(tuser'length-1 downto 0) := tuser;
-      push_std_ulogic_vector(check_msg, normalized_user);
+      if normalized_id'length > 0 then
+        normalized_id(tid'length-1 downto 0) := tid;
+        push_std_ulogic_vector(check_msg, normalized_id);
+      end if;
+      if normalized_dest'length > 0 then
+        normalized_dest(tdest'length-1 downto 0) := tdest;
+        push_std_ulogic_vector(check_msg, normalized_dest);
+      end if;
+      if normalized_user'length > 0 then
+        normalized_user(tuser'length-1 downto 0) := tuser;
+        push_std_ulogic_vector(check_msg, normalized_user);
+      end if;
       send(net, axi_stream.p_actor, check_msg);
     end if;
   end procedure;
@@ -770,6 +804,19 @@ package body axi_stream_pkg is
 
       pop_axi_stream_transaction(msg, axi_transaction);
     end if;
+  end;
+
+  function new_stall_config(
+    stall_probability : real range 0.0 to 1.0;
+    min_stall_cycles  : natural;
+    max_stall_cycles  : natural) return stall_config_t is
+      variable stall_config : stall_config_t;
+  begin
+    stall_config := (
+      stall_probability => stall_probability,
+      min_stall_cycles  => min_stall_cycles,
+      max_stall_cycles  => max_stall_cycles);
+    return stall_config;
   end;
 
 end package body;

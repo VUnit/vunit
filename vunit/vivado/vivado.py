@@ -2,19 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Utilities for integrating with Vivado
 """
 
-from __future__ import print_function
 from subprocess import check_call
 from os import makedirs
-from os.path import abspath, join, dirname, exists, basename
+from pathlib import Path
 
 
-def add_from_compile_order_file(vunit_obj, compile_order_file, dependency_scan_defaultlib=True):
+def add_from_compile_order_file(
+    vunit_obj, compile_order_file, dependency_scan_defaultlib=True
+):
     """
     Add Vivado IP:s from a compile order file
     """
@@ -34,11 +35,14 @@ def add_from_compile_order_file(vunit_obj, compile_order_file, dependency_scan_d
 
         # Optionally use VUnit dependency scanning for everything in xil_defaultlib, which
         # typically contains unencrypted top levels that instantiate encrypted implementations.
-        scan_dependencies = dependency_scan_defaultlib and library_name == "xil_defaultlib"
+        scan_dependencies = (
+            dependency_scan_defaultlib and library_name == "xil_defaultlib"
+        )
         source_file = vunit_obj.library(library_name).add_source_file(
             file_name,
             no_parse=not scan_dependencies,
-            include_dirs=include_dirs if is_verilog else None)
+            include_dirs=include_dirs if is_verilog else None,
+        )
 
         if scan_dependencies:
             with_dependency_scan.append(source_file)
@@ -63,15 +67,21 @@ def create_compile_order_file(project_file, compile_order_file, vivado_path=None
     """
     Create compile file from Vivado project
     """
-    print("Generating Vivado project compile order into %s ..." % abspath(compile_order_file))
+    print(
+        "Generating Vivado project compile order into %s ..."
+        % str(Path(compile_order_file).resolve())
+    )
 
-    if not exists(dirname(compile_order_file)):
-        makedirs(dirname(compile_order_file))
+    fpath = Path(compile_order_file)
+    if not fpath.parent.exists():
+        makedirs(str(fpath.parent))
 
     print("Extracting compile order ...")
-    run_vivado(join(dirname(__file__), "tcl", "extract_compile_order.tcl"),
-               tcl_args=[project_file, compile_order_file],
-               vivado_path=vivado_path)
+    run_vivado(
+        str(Path(__file__).parent / "tcl" / "extract_compile_order.tcl"),
+        tcl_args=[project_file, compile_order_file],
+        vivado_path=vivado_path,
+    )
 
 
 def _read_compile_order(file_name):
@@ -92,13 +102,13 @@ def _read_compile_order(file_name):
 
             # Vivado generates duplicate files for different IP:s
             # using the same underlying libraries. We remove duplicates here
-            key = (library_name, basename(file_name))
+            key = (library_name, Path(file_name).name)
             if key in unique:
                 continue
             unique.add(key)
 
             if file_type == "Verilog Header":
-                include_dirs.add(dirname(file_name))
+                include_dirs.add(str(Path(file_name).parent))
             else:
                 compile_order.append((library_name, file_name))
 
@@ -111,9 +121,14 @@ def run_vivado(tcl_file_name, tcl_args=None, cwd=None, vivado_path=None):
 
     Note: the shell=True is important in windows where Vivado is just a bat file.
     """
-    vivado = "vivado" if vivado_path is None else join(abspath(vivado_path), "bin", "vivado")
-    cmd = "{} -nojournal -nolog -notrace -mode batch -source {}".format(vivado,
-                                                                        abspath(tcl_file_name))
+    vivado = (
+        "vivado"
+        if vivado_path is None
+        else str(Path(vivado_path).resolve() / "bin" / "vivado")
+    )
+    cmd = "{} -nojournal -nolog -notrace -mode batch -source {}".format(
+        vivado, str(Path(tcl_file_name).resolve())
+    )
     if tcl_args is not None:
         cmd += " -tclargs " + " ".join([str(val) for val in tcl_args])
 

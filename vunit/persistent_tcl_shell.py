@@ -2,13 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 A persistent TCL shell to avoid startup overhead in TCL-based simulators
 """
 
-from __future__ import print_function
 import threading
 import logging
 from vunit.ostools import Process
@@ -73,6 +72,11 @@ class PersistentTclShell(object):
         process.consume_output(consumer)
         return consumer.var
 
+    def read_bool(self, varname):
+        result = self.read_var(varname)
+        assert result in ("true", "false")
+        return result == "true"
+
     def teardown(self):
         """
         Teardown all active processes before shutdown
@@ -109,6 +113,7 @@ class SilentOutputConsumer(object):
     """
     Consume output until reaching #VUNIT_RETURN, silent
     """
+
     def __init__(self):
         self.output = ""
 
@@ -124,6 +129,7 @@ class ReadVarOutputConsumer(object):
     """
     Consume output from modelsim and print with indentation
     """
+
     def __init__(self):
         self.var = None
 

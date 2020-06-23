@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Provides operating systems dependent functionality that can be easily
@@ -10,34 +10,29 @@ stubbed for testing
 """
 
 
-from __future__ import print_function
-
 import time
 import subprocess
 import threading
 import shutil
-import sys
-try:
-    # Python 3.x
-    from queue import Queue, Empty
-except ImportError:
-    # Python 2.7
-    from Queue import Queue, Empty  # pylint: disable=import-error
-
-from os.path import exists, getmtime, dirname, relpath, splitdrive
+from queue import Queue, Empty
+from pathlib import Path
+from os.path import getmtime, relpath, splitdrive
 import os
+from os import getcwd, makedirs
 import io
 
 import logging
+
 LOGGER = logging.getLogger(__name__)
 
-IS_WINDOWS_SYSTEM = os.name == 'nt'
+IS_WINDOWS_SYSTEM = os.name == "nt"
 
 
 class ProgramStatus(object):
     """
     Maintain global program status to support graceful shutdown
     """
+
     def __init__(self):
         self._lock = threading.Lock()
         self._shutting_down = False
@@ -116,7 +111,8 @@ class Process(object):
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
                 # Create new process group on Windows
-                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+            )
         else:
             self._process = subprocess.Popen(
                 args,
@@ -128,9 +124,12 @@ class Process(object):
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
                 # Create new process group on POSIX, setpgrp does not exist on Windows
-                preexec_fn=os.setpgrp)  # pylint: disable=no-member
+                preexec_fn=os.setpgrp,  # pylint: disable=no-member
+            )
 
-        LOGGER.debug("Started process with pid=%i: '%s'", self._process.pid, (" ".join(args)))
+        LOGGER.debug(
+            "Started process with pid=%i: '%s'", self._process.pid, (" ".join(args))
+        )
 
         self._queue = InterruptableQueue()
         self._reader = AsynchronousFileReader(self._process.stdout, self._queue)
@@ -228,9 +227,11 @@ class Process(object):
             LOGGER.debug("Waiting for process with pid=%i", self._process.pid)
             self.wait()
 
-        LOGGER.debug("Process with pid=%i terminated with code=%i",
-                     self._process.pid,
-                     self._process.returncode)
+        LOGGER.debug(
+            "Process with pid=%i terminated with code=%i",
+            self._process.pid,
+            self._process.returncode,
+        )
 
         self._reader.join()
         self._process.stdout.close()
@@ -253,25 +254,17 @@ class AsynchronousFileReader(threading.Thread):
     def __init__(self, fd, queue, encoding="utf-8"):
         threading.Thread.__init__(self)
 
-        # If Python 3 change encoding of TextIOWrapper to utf-8 ignoring decode errors
-        if isinstance(fd, io.TextIOWrapper):
-            fd = io.TextIOWrapper(fd.buffer, encoding=encoding, errors="ignore")
-
-        self._fd = fd
+        self._fd = io.TextIOWrapper(fd.buffer, encoding=encoding, errors="ignore")
         self._queue = queue
         self._encoding = encoding
 
     def run(self):
         """The body of the tread: read lines and put them on the queue."""
-        for line in iter(self._fd.readline, ''):
+        for line in iter(self._fd.readline, ""):
             if PROGRAM_STATUS.is_shutting_down:
                 break
 
-            # Convert string into utf-8 if necessary
-            if sys.version_info.major == 2:
-                string = line[:-1].decode(encoding=self._encoding, errors="ignore")
-            else:
-                string = line[:-1]
+            string = line[:-1]
 
             self._queue.put(string)
         self._queue.put(None)
@@ -284,12 +277,19 @@ class AsynchronousFileReader(threading.Thread):
 def read_file(file_name, encoding="utf-8", newline=None):
     """ To stub during testing """
     try:
-        with io.open(file_name, "r", encoding=encoding, newline=newline) as file_to_read:
+        with io.open(
+            file_name, "r", encoding=encoding, newline=newline
+        ) as file_to_read:
             data = file_to_read.read()
     except UnicodeDecodeError:
-        LOGGER.warning("Could not decode file %s using encoding %s, ignoring encoding errors",
-                       file_name, encoding)
-        with io.open(file_name, "r", encoding=encoding, errors="ignore", newline=newline) as file_to_read:
+        LOGGER.warning(
+            "Could not decode file %s using encoding %s, ignoring encoding errors",
+            file_name,
+            encoding,
+        )
+        with io.open(
+            file_name, "r", encoding=encoding, errors="ignore", newline=newline
+        ) as file_to_read:
             data = file_to_read.read()
 
     return data
@@ -298,12 +298,12 @@ def read_file(file_name, encoding="utf-8", newline=None):
 def write_file(file_name, contents, encoding="utf-8"):
     """ To stub during testing """
 
-    path = dirname(file_name)
+    path = str(Path(file_name).parent)
     if path == "":
         path = "."
 
     if not file_exists(path):
-        os.makedirs(path)
+        makedirs(path)
 
     with io.open(file_name, "wb") as file_to_write:
         file_to_write.write(contents.encode(encoding=encoding))
@@ -311,7 +311,7 @@ def write_file(file_name, contents, encoding="utf-8"):
 
 def file_exists(file_name):
     """ To stub during testing """
-    return exists(file_name)
+    return Path(file_name).exists()
 
 
 def get_modification_time(file_name):
@@ -336,14 +336,14 @@ def renew_path(path):
     """
     if IS_WINDOWS_SYSTEM:
         retries = 10
-        while retries > 0 and exists(path):
+        while retries > 0 and Path(path).exists():
             shutil.rmtree(path, ignore_errors=retries > 1)
             time.sleep(0.01)
             retries -= 1
     else:
-        if exists(path):
+        if Path(path).exists():
             shutil.rmtree(path)
-    os.makedirs(path)
+    makedirs(path)
 
 
 def simplify_path(path):
@@ -351,7 +351,7 @@ def simplify_path(path):
     Return relative path towards current working directory
     unless it is a separate Windows drive
     """
-    cwd = os.getcwd()
+    cwd = getcwd()
     drive_cwd = splitdrive(cwd)[0]
     drive_path = splitdrive(path)[0]
     if drive_path == drive_cwd:

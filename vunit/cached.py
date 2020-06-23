@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Utility to perform costly operation on file contents which can be cached
@@ -24,7 +24,9 @@ def cached(key, function, file_name, encoding, database=None, newline=None):
         return function(content)
 
     function_key = ("%s(%s, newline=%s)" % (key, file_name, newline)).encode()
-    content, content_hash = _file_content_hash(file_name, encoding, database, newline=newline)
+    content, content_hash = _file_content_hash(
+        file_name, encoding, database, newline=newline
+    )
 
     if function_key not in database:
         # We do not have a cached version of this computation

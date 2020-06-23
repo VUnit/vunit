@@ -2,15 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
-from os.path import join, dirname
+from pathlib import Path
 from vunit import VUnit
 
-root = dirname(__file__)
+ROOT = Path(__file__).parent
 
-ui = VUnit.from_argv()
-ui.add_random()
-lib = ui.library("vunit_lib")
-lib.add_source_files(join(root, "test", "*.vhd"))
-ui.main()
+UI = VUnit.from_argv()
+UI.add_random()
+UI.library("vunit_lib").add_source_files(ROOT / "test" / "*.vhd")
+
+UI.main()

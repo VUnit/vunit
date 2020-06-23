@@ -5,7 +5,8 @@ Documentation
 
    user_guide
    cli
-   python_interface
+   py/ui
    vhdl_libraries
+   examples
 
 * :ref:`genindex`

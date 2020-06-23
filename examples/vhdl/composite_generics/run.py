@@ -2,28 +2,44 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
-from os.path import join, dirname
+"""
+Composite generics
+------------------
+
+See `Enable Your Simulator to Handle Complex Top-Level Generics <https://vunit.github.io/posts/2017_06_03_enable_your_simulator_to_handle_complex_top_level_generics/post.html>`_.
+"""
+
+from pathlib import Path
 from vunit import VUnit
-
-prj = VUnit.from_argv()
-
-tb_lib = prj.add_library('tb_lib')
-tb_lib.add_source_files(join(dirname(__file__), 'test', '*.vhd'))
-
-testbench = tb_lib.test_bench("tb_composite_generics")
-test_1 = testbench.test("Test 1")
 
 
 def encode(tb_cfg):
     return ", ".join(["%s:%s" % (key, str(tb_cfg[key])) for key in tb_cfg])
 
 
-vga_tb_cfg = dict(image_width=640, image_height=480, dump_debug_data=False)
-test_1.add_config(name='VGA', generics=dict(encoded_tb_cfg=encode(vga_tb_cfg)))
+VU = VUnit.from_argv()
 
-tiny_tb_cfg = dict(image_width=4, image_height=3, dump_debug_data=True)
-test_1.add_config(name='tiny', generics=dict(encoded_tb_cfg=encode(tiny_tb_cfg)))
+TB_LIB = VU.add_library("tb_lib")
+TB_LIB.add_source_files(Path(__file__).parent / "test" / "*.vhd")
 
-prj.main()
+TEST = TB_LIB.test_bench("tb_composite_generics").test("Test 1")
+
+TEST.add_config(
+    name="VGA",
+    generics=dict(
+        encoded_tb_cfg=encode(
+            dict(image_width=640, image_height=480, dump_debug_data=False)
+        )
+    ),
+)
+
+TEST.add_config(
+    name="tiny",
+    generics=dict(
+        encoded_tb_cfg=encode(dict(image_width=4, image_height=3, dump_debug_data=True))
+    ),
+)
+
+VU.main()

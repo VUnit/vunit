@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 The main public Python interface of VUnit-Verilog.
@@ -16,7 +16,7 @@ class VUnit(VUnitVHDL):
     VUnit Verilog interface
     """
 
-    def add_builtins(self):  # pylint: disable=arguments-differ
+    def add_builtins(self, external=None):  # pylint: disable=arguments-differ
         """
         Add vunit Verilog builtin libraries
         """

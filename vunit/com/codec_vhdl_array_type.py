@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Module containing the CodecVHDLArrayType class.
@@ -15,42 +15,62 @@ from vunit.com.codec_datatype_template import DatatypeCodecTemplate
 class CodecVHDLArrayType(VHDLArrayType):
     """Class derived from VHDLArrayType to provide codec generator functionality constrained and
     unconstrained 1D/2D arrays"""
+
     def generate_codecs_and_support_functions(self):
         """Generate codecs and communication support functions for the array type."""
         template = ArrayCodecTemplate()
 
-        declarations = ''
-        definitions = ''
-        has_one_dimension = self.range2.left is None and self.range2.right is None and \
-            self.range2.attribute is None and self.range2.range_type is None
-        is_constrained = self.range1.range_type is None and self.range2.range_type is None
+        declarations = ""
+        definitions = ""
+        has_one_dimension = (
+            self.range2.left is None
+            and self.range2.right is None
+            and self.range2.attribute is None
+            and self.range2.range_type is None
+        )
+        is_constrained = (
+            self.range1.range_type is None and self.range2.range_type is None
+        )
 
         declarations += template.codec_declarations.substitute(type=self.identifier)
         declarations += template.to_string_declarations.substitute(type=self.identifier)
         if is_constrained:
             if has_one_dimension:
-                definitions += template.constrained_1d_array_definition.substitute(type=self.identifier)
-                definitions += template.constrained_1d_array_to_string_definition.substitute(type=self.identifier)
+                definitions += template.constrained_1d_array_definition.substitute(
+                    type=self.identifier
+                )
+                definitions += template.constrained_1d_array_to_string_definition.substitute(
+                    type=self.identifier
+                )
             else:
-                definitions += template.constrained_2d_array_definition.substitute(type=self.identifier)
-                definitions += template.constrained_2d_array_to_string_definition.substitute(type=self.identifier)
+                definitions += template.constrained_2d_array_definition.substitute(
+                    type=self.identifier
+                )
+                definitions += template.constrained_2d_array_to_string_definition.substitute(
+                    type=self.identifier
+                )
         else:
             if has_one_dimension:
-                init_value = ''
-                definitions += template.unconstrained_1d_array_definition.substitute(array_type=self.identifier,
-                                                                                     init_value=init_value,
-                                                                                     range_type=self.range1.range_type)
-                definitions += template.unconstrained_1d_array_to_string_definition.substitute(
+                init_value = ""
+                definitions += template.unconstrained_1d_array_definition.substitute(
                     array_type=self.identifier,
-                    range_type=self.range1.range_type)
+                    init_value=init_value,
+                    range_type=self.range1.range_type,
+                )
+                definitions += template.unconstrained_1d_array_to_string_definition.substitute(
+                    array_type=self.identifier, range_type=self.range1.range_type
+                )
             else:
-                definitions += template.unconstrained_2d_array_definition.substitute(array_type=self.identifier,
-                                                                                     range_type1=self.range1.range_type,
-                                                                                     range_type2=self.range2.range_type)
+                definitions += template.unconstrained_2d_array_definition.substitute(
+                    array_type=self.identifier,
+                    range_type1=self.range1.range_type,
+                    range_type2=self.range2.range_type,
+                )
                 definitions += template.unconstrained_2d_array_to_string_definition.substitute(
                     array_type=self.identifier,
                     range_type1=self.range1.range_type,
-                    range_type2=self.range2.range_type)
+                    range_type2=self.range2.range_type,
+                )
 
         return declarations, definitions
 
@@ -58,7 +78,8 @@ class CodecVHDLArrayType(VHDLArrayType):
 class ArrayCodecTemplate(DatatypeCodecTemplate):
     """This class contains array codec templates."""
 
-    constrained_1d_array_to_string_definition = Template("""\
+    constrained_1d_array_to_string_definition = Template(
+        """\
   function to_string (
     constant data : $type)
     return string is
@@ -75,9 +96,11 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
     return element(1 to length);
   end function to_string;
 
-""")
+"""
+    )
 
-    constrained_2d_array_to_string_definition = Template("""\
+    constrained_2d_array_to_string_definition = Template(
+        """\
   function to_string (
     constant data : $type)
     return string is
@@ -96,9 +119,11 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
     return element(1 to length);
   end function to_string;
 
-""")
+"""
+    )
 
-    unconstrained_1d_array_to_string_definition = Template("""\
+    unconstrained_1d_array_to_string_definition = Template(
+        """\
   function to_string (
     constant data : $array_type)
     return string is
@@ -115,9 +140,11 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
     return create_array_group(element(1 to length), encode(data'left), encode(data'right), data'ascending);
   end function to_string;
 
-""")
+"""
+    )
 
-    unconstrained_2d_array_to_string_definition = Template("""\
+    unconstrained_2d_array_to_string_definition = Template(
+        """\
   function to_string (
     constant data : $array_type)
     return string is
@@ -137,13 +164,15 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
                               encode(data'left(2)), encode(data'right(2)), data'ascending(2));
   end function to_string;
 
-""")
+"""
+    )
 
-    constrained_1d_array_definition = Template("""\
+    constrained_1d_array_definition = Template(
+        """\
   function encode (
     constant data : $type)
     return string is
-    constant length : positive := encode(data(data'left))'length;
+    constant length : positive := get_encoded_length(encode(data(data'left)));
     variable index : positive := 1;
     variable ret_val : string(1 to data'length * length);
   begin
@@ -196,13 +225,15 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
     return pop(msg.data);
   end;
 
-""")
+"""
+    )
 
-    constrained_2d_array_definition = Template("""\
+    constrained_2d_array_definition = Template(
+        """\
   function encode (
     constant data : $type)
     return string is
-    constant length : positive := encode(data(data'left(1), data'left(2)))'length;
+    constant length : positive := get_encoded_length(encode(data(data'left(1), data'left(2))));
     variable index : positive := 1;
     variable ret_val : string(1 to data'length(1) * data'length(2) * length);
   begin
@@ -259,9 +290,11 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
     return pop(msg.data);
   end;
 
-""")
+"""
+    )
 
-    unconstrained_1d_array_definition = Template("""\
+    unconstrained_1d_array_definition = Template(
+        """\
   function encode (
     constant data : $array_type)
     return string is
@@ -272,11 +305,11 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
       if data'length = 0 then
         return 0;
       else
-        return encode(data(data'left))'length;
+        return get_encoded_length(encode(data(data'left)));
       end if;
     end;
     constant length : natural := element_length(data);
-    constant range_length : positive := encode(data'left)'length;
+    constant range_length : positive := get_encoded_length(encode(data'left));
     variable index : positive := 2 + 2 * range_length;
     variable ret_val : string(1 to 1 + 2 * range_length + data'length * length);
   begin
@@ -295,7 +328,7 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
     constant code   : string;
     variable index : inout   positive;
     variable result : out $array_type) is
-    constant range_length : positive := encode($range_type'left)'length;
+    constant range_length : positive := get_encoded_length(encode($range_type'left));
   begin
     index := index + 1 + 2 * range_length;
     for i in result'range loop
@@ -306,7 +339,7 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
   function decode (
     constant code : string)
     return $array_type is
-    constant range_length : positive := encode($range_type'left)'length;
+    constant range_length : positive := get_encoded_length(encode($range_type'left));
     function ret_val_range (
       constant code : string)
       return $array_type is
@@ -353,9 +386,11 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
     return pop(msg.data);
   end;
 
-""")
+"""
+    )
 
-    unconstrained_2d_array_definition = Template("""\
+    unconstrained_2d_array_definition = Template(
+        """\
   function encode (
     constant data : $array_type)
     return string is
@@ -366,12 +401,12 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
       if data'length(1) * data'length(2) = 0 then
         return 0;
       else
-        return encode(data(data'left(1), data'left(2)))'length;
+        return get_encoded_length(encode(data(data'left(1), data'left(2))));
       end if;
     end;
     constant length : natural := element_length(data);
-    constant range1_length : positive := encode(data'left(1))'length;
-    constant range2_length : positive := encode(data'left(2))'length;
+    constant range1_length : positive := get_encoded_length(encode(data'left(1)));
+    constant range2_length : positive := get_encoded_length(encode(data'left(2)));
     variable index : positive := 3 + 2 * range1_length + 2 * range2_length;
     variable ret_val : string(1 to 2 + 2 * range1_length + 2 * range2_length +
                                    data'length(1) * data'length(2) * length);
@@ -393,8 +428,8 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
     constant code   : string;
     variable index : inout   positive;
     variable result : out $array_type) is
-    constant range1_length : positive := encode($range_type1'left)'length;
-    constant range2_length : positive := encode($range_type2'left)'length;
+    constant range1_length : positive := get_encoded_length(encode($range_type1'left));
+    constant range2_length : positive := get_encoded_length(encode($range_type2'left));
   begin
     index := index + 2 + 2 * range1_length + 2 * range2_length;
     for i in result'range(1) loop
@@ -407,8 +442,8 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
   function decode (
     constant code : string)
     return $array_type is
-    constant range1_length : positive := encode($range_type1'left)'length;
-    constant range2_length : positive := encode($range_type2'left)'length;
+    constant range1_length : positive := get_encoded_length(encode($range_type1'left));
+    constant range2_length : positive := get_encoded_length(encode($range_type2'left));
     function ret_val_range (
       constant code : string)
       return $array_type is
@@ -480,4 +515,5 @@ class ArrayCodecTemplate(DatatypeCodecTemplate):
     return pop(msg.data);
   end;
 
-""")
+"""
+    )

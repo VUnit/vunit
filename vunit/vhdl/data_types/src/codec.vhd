@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -517,7 +517,8 @@ package body codec_pkg is
   function decode (
     constant code : string)
     return string is
-    variable ret_val : string(get_range(code)'range) := (others => NUL);
+    constant ret_range : range_t := get_range(code);
+    variable ret_val : string(ret_range'range) := (others => NUL);
     variable index   : positive := code'left;
   begin
     decode(code, index, ret_val);
@@ -542,7 +543,8 @@ package body codec_pkg is
   function decode (
     constant code : string)
     return bit_vector is
-    variable ret_val : bit_vector(get_range(code)'range) := (others => '0');
+    constant ret_range : range_t := get_range(code);
+    variable ret_val : bit_vector(ret_range'range) := (others => '0');
     variable index   : positive := code'left;
   begin
     decode(code, index, ret_val);
@@ -560,7 +562,8 @@ package body codec_pkg is
   function decode (
     constant code : string)
     return std_ulogic_vector is
-    variable ret_val : std_ulogic_vector(get_range(code)'range) := (others => 'U');
+    constant ret_range : range_t := get_range(code);
+    variable ret_val : std_ulogic_vector(ret_range'range) := (others => 'U');
     variable index   : positive := code'left;
   begin
     decode(code, index, ret_val);
@@ -614,7 +617,8 @@ package body codec_pkg is
   function decode (
     constant code : string)
     return ieee.numeric_bit.unsigned is
-    variable ret_val : ieee.numeric_bit.unsigned(get_range(code)'range) := (others => '0');
+    constant ret_range : range_t := get_range(code);
+    variable ret_val : ieee.numeric_bit.unsigned(ret_range'range) := (others => '0');
     variable index   : positive := code'left;
   begin
     decode(code, index, ret_val);
@@ -632,7 +636,8 @@ package body codec_pkg is
   function decode (
     constant code : string)
     return ieee.numeric_bit.signed is
-    variable ret_val : ieee.numeric_bit.signed(get_range(code)'range) := (others => '0');
+    constant ret_range : range_t := get_range(code);
+    variable ret_val : ieee.numeric_bit.signed(ret_range'range) := (others => '0');
     variable index   : positive := code'left;
   begin
     decode(code, index, ret_val);
@@ -650,7 +655,8 @@ package body codec_pkg is
   function decode (
     constant code : string)
     return ieee.numeric_std.unsigned is
-    variable ret_val : ieee.numeric_std.unsigned(get_range(code)'range) := (others => 'U');
+    constant ret_range : range_t := get_range(code);
+    variable ret_val : ieee.numeric_std.unsigned(ret_range'range) := (others => 'U');
     variable index   : positive := code'left;
   begin
     decode(code, index, ret_val);
@@ -668,7 +674,8 @@ package body codec_pkg is
   function decode (
     constant code : string)
     return ieee.numeric_std.signed is
-    variable ret_val : ieee.numeric_std.signed(get_range(code)'range) := (others => 'U');
+    constant ret_range : range_t := get_range(code);
+    variable ret_val : ieee.numeric_std.signed(ret_range'range) := (others => 'U');
     variable index   : positive := code'left;
   begin
     decode(code, index, ret_val);

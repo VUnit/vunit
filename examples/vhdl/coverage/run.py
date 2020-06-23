@@ -2,24 +2,30 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
-from os.path import join, dirname
+from pathlib import Path
 from vunit import VUnit
+from subprocess import call
 
-root = dirname(__file__)
-
-ui = VUnit.from_argv()
-lib = ui.add_library("lib")
-lib.add_source_files(join(root, "*.vhd"))
-
-lib.set_compile_option("rivierapro.vcom_flags", ["-coverage", "bs"])
-lib.set_compile_option("rivierapro.vlog_flags", ["-coverage", "bs"])
-lib.set_compile_option("modelsim.vcom_flags", ["+cover=bs"])
-lib.set_compile_option("modelsim.vlog_flags", ["+cover=bs"])
-lib.set_sim_option("enable_coverage", True)
 
 def post_run(results):
     results.merge_coverage(file_name="coverage_data")
+    if VU.get_simulator_name() == "ghdl":
+        call(["gcovr", "coverage_data"])
 
-ui.main(post_run=post_run)
+
+VU = VUnit.from_argv()
+
+LIB = VU.add_library("lib")
+LIB.add_source_files(Path(__file__).parent / "*.vhd")
+
+LIB.set_sim_option("enable_coverage", True)
+
+LIB.set_compile_option("rivierapro.vcom_flags", ["-coverage", "bs"])
+LIB.set_compile_option("rivierapro.vlog_flags", ["-coverage", "bs"])
+LIB.set_compile_option("modelsim.vcom_flags", ["+cover=bs"])
+LIB.set_compile_option("modelsim.vlog_flags", ["+cover=bs"])
+LIB.set_compile_option("enable_coverage", True)
+
+VU.main(post_run=post_run)

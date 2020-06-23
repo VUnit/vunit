@@ -2,27 +2,29 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Create monolithic release notes file from several input files
 """
 
-from __future__ import print_function
-
-from os.path import join, dirname, basename, splitext, relpath
+from pathlib import Path
+from os.path import relpath
 from glob import glob
 from subprocess import check_output, CalledProcessError
+from shutil import which
 import datetime
 
 
-def get_releases(source_path):
+def get_releases(source_path: Path):
     """
     Get all releases defined by release note files
     """
-    release_notes = join(source_path, "release_notes")
+    release_notes = source_path / "release_notes"
     releases = []
-    for idx, file_name in enumerate(sorted(glob(join(release_notes, "*.rst")), reverse=True)):
+    for idx, file_name in enumerate(
+        sorted(glob(str(release_notes / "*.rst")), reverse=True)
+    ):
         releases.append(Release(file_name, is_latest=idx == 0))
     return releases
 
@@ -31,7 +33,7 @@ def create_release_notes():
     """
     Create monolithic release notes file from several input files
     """
-    source_path = join(dirname(__file__), "..", "docs")
+    source_path = Path(__file__).parent.parent / "docs"
 
     releases = get_releases(source_path)
     latest_release = releases[0]
@@ -39,8 +41,9 @@ def create_release_notes():
     def banner(fptr):
         fptr.write("\n" + ("-" * 80) + "\n\n")
 
-    with open(join(source_path, "release_notes.rst"), "w") as fptr:
-        fptr.write("""
+    with (source_path / "release_notes.rst").open("w") as fptr:
+        fptr.write(
+            """
 .. _release_notes:
 
 Release notes
@@ -50,7 +53,9 @@ For installation instructions read :ref:`this <installing>`.
 
 `Commits since last release <https://github.com/VUnit/vunit/compare/%s...master>`__
 
-""" % latest_release.tag)
+"""
+            % latest_release.tag
+        )
 
         banner(fptr)
 
@@ -60,7 +65,11 @@ For installation instructions read :ref:`this <installing>`.
             if release.is_latest:
                 fptr.write(".. _latest_release:\n\n")
 
-            title = ":vunit_commit:`%s <%s>` - %s" % (release.name, release.tag, release.date.strftime("%Y-%m-%d"))
+            title = ":vunit_commit:`%s <%s>` - %s" % (
+                release.name,
+                release.tag,
+                release.date.strftime("%Y-%m-%d"),
+            )
             if release.is_latest:
                 title += " (latest)"
             fptr.write(title + "\n")
@@ -68,12 +77,16 @@ For installation instructions read :ref:`this <installing>`.
 
             fptr.write(".. include:: %s\n" % relpath(release.file_name, source_path))
 
-            fptr.write("\n`Download from PyPI <https://pypi.python.org/pypi/vunit_hdl/%s/>`__\n"
-                       % release.name)
+            fptr.write(
+                "\n`Download from PyPI <https://pypi.python.org/pypi/vunit_hdl/%s/>`__\n"
+                % release.name
+            )
 
             if not is_last:
-                fptr.write("\n`Commits since previous release <https://github.com/VUnit/vunit/compare/%s...%s>`__\n"
-                           % (releases[idx + 1].tag, release.tag))
+                fptr.write(
+                    "\n`Commits since previous release <https://github.com/VUnit/vunit/compare/%s...%s>`__\n"
+                    % (releases[idx + 1].tag, release.tag)
+                )
                 banner(fptr)
 
 
@@ -81,9 +94,10 @@ class Release(object):
     """
     A release object
     """
+
     def __init__(self, file_name, is_latest):
         self.file_name = file_name
-        self.name = splitext(basename(file_name))[0]
+        self.name = str(Path(file_name).with_suffix("").name)
         self.tag = "v" + self.name
         self.is_latest = is_latest
 
@@ -103,6 +117,12 @@ class Release(object):
 
 
 def _get_date(commit):
-    date_str = check_output(["git", "log", "-1", "--format=%ci", commit]).decode().strip()
+    """
+    Get date
+    """
+    git = which("git")
+    if git is None:
+        raise BaseException("'git' is required!")
+    date_str = check_output([git, "log", "-1", "--format=%ci", commit]).decode().strip()
     date_str = " ".join(date_str.split(" ")[0:2])
     return datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")

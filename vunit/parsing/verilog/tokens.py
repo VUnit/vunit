@@ -2,13 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Verilog tokens
 """
 
-from vunit.parsing.tokenizer import new_token_kind
+from typing import Dict
+from vunit.parsing.tokenizer import new_token_kind, TokenKind
 
 
 def __token(kind):
@@ -27,7 +28,7 @@ def __keyword(kind):
     return token_kind
 
 
-KEYWORDS = {}
+KEYWORDS: Dict[str, TokenKind] = {}
 
 PREPROCESSOR = __token("preprocessor")
 STRING = __token("string")

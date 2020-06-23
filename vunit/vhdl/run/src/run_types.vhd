@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 use std.textio.all;
 use work.dictionary.all;
@@ -39,6 +39,7 @@ package run_types_pkg is
   constant runner_event_idx : natural := 0;
   constant runner_exit_status_idx : natural := 1;
   constant runner_timeout_update_idx : natural := 2;
+  constant runner_timeout_idx : natural := 3;
 
   constant runner_event : std_logic := '1';
   constant idle_runner  : std_logic := 'Z';
@@ -46,7 +47,7 @@ package run_types_pkg is
   constant runner_exit_with_errors : std_logic := 'Z';
   constant runner_exit_without_errors : std_logic := '1';
 
-  subtype runner_sync_t is std_logic_vector(runner_event_idx to runner_timeout_update_idx);
+  subtype runner_sync_t is std_logic_vector(runner_event_idx to runner_timeout_idx);
 end package;
 
 package body run_types_pkg is

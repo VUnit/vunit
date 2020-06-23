@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Templates common to all datatype codecs.
@@ -14,14 +14,17 @@ from string import Template
 class DatatypeCodecTemplate(object):
     """Templates when generating codecs"""
 
-    to_string_declarations = Template("""\
+    to_string_declarations = Template(
+        """\
   function to_string (
     constant data : $type)
     return string;
 
-""")
+"""
+    )
 
-    codec_declarations = Template("""\
+    codec_declarations = Template(
+        """\
   function encode (
     constant data : $type)
     return string;
@@ -44,4 +47,5 @@ class DatatypeCodecTemplate(object):
   alias push_$type is push[msg_t, $type];
   alias pop_$type is pop[msg_t return $type];
 
-""")
+"""
+    )

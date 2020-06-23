@@ -2,9 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
-from os.path import join, dirname
+from pathlib import Path
 from string import Template
 from generate_check_equal import replace_region
 
@@ -261,33 +261,67 @@ test_template = """
 """
 
 combinations = [
-    ('unsigned', 'unsigned',
-     """unsigned'(X"A5")""", """unsigned'(X"A5")""",
-     """unsigned'("1010----")""", """unsigned'("1010----")""",
-     """unsigned'(X"5A")""", """unsigned'("0101----")""",
-     '1010_0101 (165)', '0101_1010 (90)',
-     '1010_---- (NaN)', '0101_---- (NaN)'),
-    ('std_logic_vector', 'std_logic_vector',
-     """std_logic_vector'(X"A5")""", """std_logic_vector'(X"A5")""",
-     """std_logic_vector'("1010----")""", """std_logic_vector'("1010----")""",
-     """std_logic_vector'(X"5A")""", """std_logic_vector'("0101----")""",
-     '1010_0101 (165)', '0101_1010 (90)',
-     '1010_---- (NaN)', '0101_---- (NaN)'),
-    ('signed', 'signed',
-     """signed'(X"A5")""", """signed'(X"A5")""",
-     """signed'("1010----")""", """signed'("1010----")""",
-     """signed'(X"5A")""", """signed'("0101----")""",
-     '1010_0101 (-91)', '0101_1010 (90)',
-     '1010_---- (NaN)', '0101_---- (NaN)'),
-    ('std_logic', 'std_logic',
-     "std_logic'('1')", "'1'",
-     "'-'", "'-'",
-     "'0'", "'0'",
-     "1", "0", "-", "0")]
+    (
+        "unsigned",
+        "unsigned",
+        """unsigned'(X"A5")""",
+        """unsigned'(X"A5")""",
+        """unsigned'("1010----")""",
+        """unsigned'("1010----")""",
+        """unsigned'(X"5A")""",
+        """unsigned'("0101----")""",
+        "1010_0101 (165)",
+        "0101_1010 (90)",
+        "1010_---- (NaN)",
+        "0101_---- (NaN)",
+    ),
+    (
+        "std_logic_vector",
+        "std_logic_vector",
+        """std_logic_vector'(X"A5")""",
+        """std_logic_vector'(X"A5")""",
+        """std_logic_vector'("1010----")""",
+        """std_logic_vector'("1010----")""",
+        """std_logic_vector'(X"5A")""",
+        """std_logic_vector'("0101----")""",
+        "1010_0101 (165)",
+        "0101_1010 (90)",
+        "1010_---- (NaN)",
+        "0101_---- (NaN)",
+    ),
+    (
+        "signed",
+        "signed",
+        """signed'(X"A5")""",
+        """signed'(X"A5")""",
+        """signed'("1010----")""",
+        """signed'("1010----")""",
+        """signed'(X"5A")""",
+        """signed'("0101----")""",
+        "1010_0101 (-91)",
+        "0101_1010 (90)",
+        "1010_---- (NaN)",
+        "0101_---- (NaN)",
+    ),
+    (
+        "std_logic",
+        "std_logic",
+        "std_logic'('1')",
+        "'1'",
+        "'-'",
+        "'-'",
+        "'0'",
+        "'0'",
+        "1",
+        "0",
+        "-",
+        "0",
+    ),
+]
 
 
 def generate_api():
-    api = ''
+    api = ""
     for c in combinations:
         t = Template(api_template)
         api += t.substitute(got_type=c[0], expected_type=c[1])
@@ -295,35 +329,45 @@ def generate_api():
 
 
 def dual_format(base_type, got_or_expected):
-    if got_or_expected == 'got':
-        expected_or_got = 'expected'
-    else:
-        expected_or_got = 'got'
+    expected_or_got = "expected" if got_or_expected == "got" else "got"
 
-    if base_type in ['unsigned', 'signed', 'std_logic_vector']:
-        return ('to_nibble_string(%s) & " (" & ' % got_or_expected
-                + "to_integer_string(%s) & " % got_or_expected + '")"')
-    elif base_type == 'integer':
-        return ('to_string(%s) & " (" & ' % got_or_expected
-                + "to_nibble_string(to_sufficient_signed(%s, %s'length)) & " % (got_or_expected, expected_or_got)
-                + '")"')
-    else:
-        return ('to_string(%s) & " (" & ' % got_or_expected
-                + "to_nibble_string(to_sufficient_unsigned(%s, %s'length)) & " % (got_or_expected, expected_or_got)
-                + '")"')
+    if base_type in ["unsigned", "signed", "std_logic_vector"]:
+        return (
+            'to_nibble_string(%s) & " (" & ' % got_or_expected
+            + "to_integer_string(%s) & " % got_or_expected
+            + '")"'
+        )
+
+    return (
+        'to_string(%s) & " (" & ' % got_or_expected
+        + "to_nibble_string(to_sufficient_%s(%s, %s'length)) & "
+        % (
+            ("signed" if base_type == "integer" else "unsigned"),
+            got_or_expected,
+            expected_or_got,
+        )
+        + '")"'
+    )
 
 
 def generate_impl():
-    impl = ''
+    impl = ""
     for c in combinations:
         t = Template(impl_template)
-        if (c[0] in ['unsigned', 'signed', 'std_logic_vector']) or (c[1] in ['unsigned', 'signed', 'std_logic_vector']):
-            got_str = dual_format(c[0], 'got')
-            expected_str = dual_format(c[1], 'expected')
+        if (c[0] in ["unsigned", "signed", "std_logic_vector"]) or (
+            c[1] in ["unsigned", "signed", "std_logic_vector"]
+        ):
+            got_str = dual_format(c[0], "got")
+            expected_str = dual_format(c[1], "expected")
         else:
-            got_str = 'to_string(got)'
-            expected_str = 'to_string(expected)'
-        impl += t.substitute(got_type=c[0], expected_type=c[1], got_str=got_str, expected_str=expected_str)
+            got_str = "to_string(got)"
+            expected_str = "to_string(expected)"
+        impl += t.substitute(
+            got_type=c[0],
+            expected_type=c[1],
+            got_str=got_str,
+            expected_str=expected_str,
+        )
     return impl
 
 
@@ -335,7 +379,7 @@ def generate_test():
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 -- vunit: run_all_in_same_sim
 
@@ -371,13 +415,21 @@ begin
 
     for idx, c in enumerate(combinations):
         t = Template(test_template)
-        test += t.substitute(first_if="if" if idx == 0 else "elsif",
-                             left_type=c[0], right_type=c[1],
-                             left_pass=c[2], right_pass=c[3],
-                             left_pass_dc=c[4], right_pass_dc=c[5],
-                             right_fail=c[6], right_fail_dc=c[7],
-                             pass_str=c[8], fail_str=c[9],
-                             pass_dc_str=c[10], fail_dc_str=c[11])
+        test += t.substitute(
+            first_if="if" if idx == 0 else "elsif",
+            left_type=c[0],
+            right_type=c[1],
+            left_pass=c[2],
+            right_pass=c[3],
+            left_pass_dc=c[4],
+            right_pass_dc=c[5],
+            right_fail=c[6],
+            right_fail_dc=c[7],
+            pass_str=c[8],
+            fail_str=c[9],
+            pass_dc_str=c[10],
+            fail_dc_str=c[11],
+        )
 
     test += """
       end if;
@@ -396,13 +448,15 @@ end test_fixture;
 
 
 def main():
-    check_api_file_name = join(dirname(__file__), "..", "src", "check_api.vhd")
+    check_api_file_name = str(Path(__file__).parent.parent / "src" / "check_api.vhd")
     replace_region("check_match", check_api_file_name, generate_api())
 
-    check_file_name = join(dirname(__file__), "..", "src", "check.vhd")
+    check_file_name = str(Path(__file__).parent.parent / "src" / "check.vhd")
     replace_region("check_match", check_file_name, generate_impl())
 
-    with open(join(dirname(__file__), "..", "test", "tb_check_match.vhd"), "wb") as fptr:
+    with (Path(__file__).parent.parent / "test" / "tb_check_match.vhd").open(
+        "wb"
+    ) as fptr:
         fptr.write(generate_test().encode())
 
 

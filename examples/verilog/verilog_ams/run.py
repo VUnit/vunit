@@ -2,15 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
-from os.path import join, dirname
+from pathlib import Path
 from vunit.verilog import VUnit
 
-root = dirname(__file__)
+ROOT = Path(__file__).parent
 
-ui = VUnit.from_argv()
-lib = ui.add_library("lib")
-lib.add_source_files(join(root, "*.sv"))
-lib.add_source_files(join(root, "*.vams")).set_compile_option("modelsim.vlog_flags", ["-ams"])
-ui.main()
+VU = VUnit.from_argv()
+LIB = VU.add_library("lib")
+LIB.add_source_files(ROOT / "*.sv")
+LIB.add_source_files(ROOT / "*.vams").set_compile_option(
+    "modelsim.vlog_flags", ["-ams"]
+)
+
+VU.main()

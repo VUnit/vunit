@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 PyPI setup script
@@ -29,58 +29,64 @@ def find_all_files(directory, endings=None):
 
 
 DATA_FILES = []
-DATA_FILES += find_all_files(os.path.join('vunit'), endings=[".tcl"])
-DATA_FILES += find_all_files(os.path.join('vunit', 'vhdl'))
-DATA_FILES += find_all_files(os.path.join('vunit', 'verilog'),
-                             endings=[".v", ".sv", ".svh"])
-DATA_FILES = [os.path.relpath(file_name, 'vunit') for file_name in DATA_FILES]
+DATA_FILES += find_all_files(os.path.join("vunit"), endings=[".tcl"])
+DATA_FILES += find_all_files(os.path.join("vunit", "vhdl"))
+DATA_FILES += find_all_files(
+    os.path.join("vunit", "verilog"), endings=[".v", ".sv", ".svh"]
+)
+DATA_FILES = [os.path.relpath(file_name, "vunit") for file_name in DATA_FILES]
 
 setup(
-    name='vunit_hdl',
+    name="vunit_hdl",
     version=version(),
-    packages=['vunit',
-              'vunit.com',
-              'vunit.test',
-              'vunit.parsing',
-              'vunit.parsing.verilog',
-              'vunit.vivado',
-              'vunit.test.lint',
-              'vunit.test.unit',
-              'vunit.test.acceptance'],
-    package_data={'vunit': DATA_FILES},
+    packages=[
+        "tests",
+        "tests.lint",
+        "tests.unit",
+        "tests.acceptance",
+        "vunit",
+        "vunit.com",
+        "vunit.parsing",
+        "vunit.parsing.verilog",
+        "vunit.sim_if",
+        "vunit.test",
+        "vunit.ui",
+        "vunit.vivado",
+    ],
+    package_data={"vunit": DATA_FILES},
     zip_safe=False,
-    url='https://github.com/VUnit/vunit',
-    classifiers=['Development Status :: 5 - Production/Stable',
-                 'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
-                 'Natural Language :: English',
-                 'Intended Audience :: Developers',
-                 'Programming Language :: Python :: 2.7',
-                 'Programming Language :: Python :: 3.4',
-                 'Programming Language :: Python :: 3.5',
-                 'Programming Language :: Python :: 3.6',
-                 'Operating System :: Microsoft :: Windows',
-                 'Operating System :: MacOS :: MacOS X',
-                 'Operating System :: POSIX :: Linux',
-                 'Topic :: Software Development :: Testing'],
-    install_requires=[
-        "colorama",
+    url="https://github.com/VUnit/vunit",
+    classifiers=[
+        "Development Status :: 5 - Production/Stable",
+        "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+        "Natural Language :: English",
+        "Intended Audience :: Developers",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Operating System :: Microsoft :: Windows",
+        "Operating System :: MacOS :: MacOS X",
+        "Operating System :: POSIX :: Linux",
+        "Topic :: Software Development :: Testing",
+        "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
     ],
-    requires=[
-        "colorama",
-    ],
-    license=[
-        "Mozilla Public License 2.0 (MPL 2.0)",
-    ],
-    author='Lars Asplund',
-    author_email='lars.anders.asplund@gmail.com',
+    python_requires=">=3.6",
+    install_requires=["colorama"],
+    requires=["colorama"],
+    license=["Mozilla Public License 2.0 (MPL 2.0)"],
+    author="Lars Asplund",
+    author_email="lars.anders.asplund@gmail.com",
     description="VUnit is an open source unit testing framework for VHDL/SystemVerilog.",
-    long_description=doc())
+    long_description=doc(),
+)
 
 if not osvvm_is_installed():
-    warning("""
+    warning(
+        """
 Found no OSVVM VHDL files. If you're installing from a Git repository and plan to use VUnit's integration
 of OSVVM you should run
 
 git submodule update --init --recursive
 
-in your VUnit repository before running setup.py.""")
+in your VUnit repository before running setup.py."""
+    )

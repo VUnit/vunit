@@ -70,6 +70,7 @@ Languages
 -  VHDL-93
 -  VHDL-2002
 -  VHDL-2008
+-  VHDL-2019
 -  Verilog
 -  SystemVerilog (Support is experimental)
 
@@ -83,10 +84,7 @@ Operating systems
 Python
 ******
 
--  Python 3.4 or higher
--  Python 2.7
-
-   -  VUnit support for Python 2.7 will end in 1 Jan 2020 when it reaches end of life.
+-  Python 3.6 or higher
 
 Simulators
 **********

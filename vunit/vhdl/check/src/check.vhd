@@ -4,7 +4,7 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this file,
 -- You can obtain one at http://mozilla.org/MPL/2.0/.
 --
--- Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+-- Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -132,8 +132,8 @@ package body check_pkg is
     end if;
   end;
 
-  function to_ordinal_number (num : natural) return string is
-    constant num_str      : string := natural'image(num);
+  function to_ordinal_number (num : unsigned) return string is
+    constant num_str      : string := to_integer_string(num);
     variable ordinal_unit : string(1 to 2);
   begin
     case num_str(num_str'right) is
@@ -758,7 +758,7 @@ package body check_pkg is
 
     variable state                : inout check_stable_fsm_state_t;
     variable ref                  : inout std_logic_vector;
-    variable clock_edge_counter   : inout natural;
+    variable clock_edge_counter   : inout unsigned(63 downto 0);
     variable is_stable            : inout boolean;
     variable exit_stability_check : out   boolean) is
 
@@ -779,7 +779,7 @@ package body check_pkg is
 
     procedure open_window (variable open_ok : out boolean) is
     begin
-      clock_edge_counter := 1;
+      clock_edge_counter := x"0000000000000001";
       ref                := to_x01(expr);
       open_ok            := true;
       if is_x(start_event) then
@@ -798,7 +798,7 @@ package body check_pkg is
       end if;
     end procedure;
 
-    procedure close_window(cycle : natural; is_ok : boolean) is
+    procedure close_window(cycle : unsigned; is_ok : boolean) is
       variable close_ok    : boolean := is_ok;
       variable pass_msg_en : boolean;
     begin
@@ -815,7 +815,7 @@ package body check_pkg is
           passing_check(checker,
                         std_msg("Stability check passed", msg,
                                 "Got " & format(ref) &
-                                " for " & positive'image(cycle) &
+                                " for " & to_integer_string(cycle) &
                                 " active and enabled clock edges."),
                         line_num, file_name);
         else
@@ -891,7 +891,7 @@ package body check_pkg is
 
     variable state                : check_stable_fsm_state_t := idle;
     variable ref                  : std_logic_vector(expr'range);
-    variable clock_edge_counter   : natural;
+    variable clock_edge_counter   : unsigned(63 downto 0);
     variable is_stable            : boolean                  := true;
     variable exit_stability_check : boolean;
   begin
@@ -942,7 +942,7 @@ package body check_pkg is
 
     variable state                : check_stable_fsm_state_t := idle;
     variable ref                  : std_logic_vector(0 to 0);
-    variable clock_edge_counter   : natural;
+    variable clock_edge_counter   : unsigned(63 downto 0);
     variable is_stable            : boolean                  := true;
     variable exit_stability_check : boolean;
   begin
@@ -1608,7 +1608,7 @@ package body check_pkg is
         failing_check(checker,
                       std_msg("Next check failed", msg,
                               "Got " & std_logic'image(expr)(2) &
-                              " at the " & to_ordinal_number(num_cks) &
+                              " at the " & to_ordinal_number(to_unsigned(num_cks, 32)) &
                               " active and enabled clock edge."),
                       level, line_num, file_name);
       end if;
@@ -1625,7 +1625,7 @@ package body check_pkg is
           failing_check(checker,
                         std_msg("Next check failed", msg,
                                 "Got overlapping start event at the " &
-                                to_ordinal_number(clock_cycles_after_start_event) &
+                                to_ordinal_number(to_unsigned(clock_cycles_after_start_event, 32)) &
                                 " active and enabled clock edge."),
                         level, line_num, file_name);
         else
@@ -1760,7 +1760,7 @@ package body check_pkg is
             failing_check(checker,
                           std_msg("Sequence check failed", msg,
                                   "Missing required event at " &
-                                  to_ordinal_number(i) &
+                                  to_ordinal_number(to_unsigned(i, 32)) &
                                   " active and enabled clock edge."),
                           level, line_num, file_name);
           elsif i = seq'right then

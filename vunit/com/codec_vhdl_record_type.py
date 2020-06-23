@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Module containing the CodecVHDLRecordType class.
@@ -14,13 +14,14 @@ from vunit.com.codec_datatype_template import DatatypeCodecTemplate
 
 class CodecVHDLRecordType(VHDLRecordType):
     """Class derived from VHDLRecordType to provide codec generator functionality for the record type."""
+
     def generate_codecs_and_support_functions(self):
         """Generate codecs and communication support functions for the record type."""
 
         template = RecordCodecTemplate()
 
-        declarations = ''
-        definitions = ''
+        declarations = ""
+        definitions = ""
 
         declarations += template.codec_declarations.substitute(type=self.identifier)
         declarations += template.to_string_declarations.substitute(type=self.identifier)
@@ -29,21 +30,24 @@ class CodecVHDLRecordType(VHDLRecordType):
         num_of_elements = 0
         for element in self.elements:
             for i in element.identifier_list:
-                element_encoding_list.append('encode(data.%s)' % i)
-                element_decoding_list.append('decode(code, index, result.%s);' % i)
+                element_encoding_list.append("encode(data.%s)" % i)
+                element_decoding_list.append("decode(code, index, result.%s);" % i)
 
                 num_of_elements += 1
-        element_encodings = ' & '.join(element_encoding_list)
+        element_encodings = " & ".join(element_encoding_list)
 
-        element_decodings = '\n    '.join(element_decoding_list)
-        definitions += template.record_codec_definition.substitute(type=self.identifier,
-                                                                   element_encodings=element_encodings,
-                                                                   num_of_elements=str(num_of_elements),
-                                                                   element_decodings=element_decodings)
+        element_decodings = "\n    ".join(element_decoding_list)
+        definitions += template.record_codec_definition.substitute(
+            type=self.identifier,
+            element_encodings=element_encodings,
+            num_of_elements=str(num_of_elements),
+            element_decodings=element_decodings,
+        )
         definitions += template.record_to_string_definition.substitute(
             type=self.identifier,
-            element_encoding_list=', '.join(element_encoding_list),
-            num_of_elements=str(num_of_elements))
+            element_encoding_list=", ".join(element_encoding_list),
+            num_of_elements=str(num_of_elements),
+        )
 
         return declarations, definitions
 
@@ -51,16 +55,19 @@ class CodecVHDLRecordType(VHDLRecordType):
 class RecordCodecTemplate(DatatypeCodecTemplate):
     """This class contains record templates."""
 
-    record_to_string_definition = Template("""\
+    record_to_string_definition = Template(
+        """\
   function to_string (
     constant data : $type)
     return string is
   begin
     return create_group($num_of_elements, $element_encoding_list);
   end function to_string;
-""")
+"""
+    )
 
-    record_codec_definition = Template("""\
+    record_codec_definition = Template(
+        """\
   function encode (
     constant data : $type)
     return string is
@@ -107,4 +114,5 @@ class RecordCodecTemplate(DatatypeCodecTemplate):
     return pop(msg.data);
   end;
 
-""")
+"""
+    )

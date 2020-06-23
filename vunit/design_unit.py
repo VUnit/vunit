@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Classes representing Entites, Architectures, Packades, Modules etc
@@ -15,6 +15,7 @@ class DesignUnit(object):
     """
     Represents a generic design unit
     """
+
     def __init__(self, name, source_file, unit_type):
         self.name = name
         self.source_file = source_file
@@ -45,8 +46,15 @@ class VHDLDesignUnit(DesignUnit):
     """
     Represents a VHDL design unit
     """
-    def __init__(self,  # pylint: disable=too-many-arguments
-                 name, source_file, unit_type, is_primary=True, primary_design_unit=None):
+
+    def __init__(
+        self,  # pylint: disable=too-many-arguments
+        name,
+        source_file,
+        unit_type,
+        is_primary=True,
+        primary_design_unit=None,
+    ):
         DesignUnit.__init__(self, name, source_file, unit_type)
         self.is_primary = is_primary
         self.primary_design_unit = primary_design_unit
@@ -56,8 +64,9 @@ class Entity(VHDLDesignUnit):
     """
     Represents a VHDL Entity
     """
+
     def __init__(self, name, source_file, generic_names=None):
-        VHDLDesignUnit.__init__(self, name, source_file, 'entity', True)
+        VHDLDesignUnit.__init__(self, name, source_file, "entity", True)
         self.generic_names = [] if generic_names is None else generic_names
         self._add_architecture_callback = None
         self._architecture_names = {}
@@ -91,8 +100,9 @@ class Module(DesignUnit):
     """
     Represents a Verilog Module
     """
+
     def __init__(self, name, source_file, generic_names=None):
-        DesignUnit.__init__(self, name, source_file, 'module')
+        DesignUnit.__init__(self, name, source_file, "module")
         self.generic_names = [] if generic_names is None else generic_names
 
     @property

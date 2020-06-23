@@ -2,16 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 json4vhdl helper functions
 """
 
+from typing import Union
 import json
+from base64 import b16encode as b16enc
 
 
-def encode_json(obj):
+def encode_json(obj: object):
     """
     Convert object to stringified JSON
 
@@ -23,10 +25,10 @@ def encode_json(obj):
 
        stringified_generic = encode_json(generics)
     """
-    return json.dumps(obj, separators=(',', ':'))
+    return json.dumps(obj, separators=(",", ":"))
 
 
-def read_json(filename):
+def read_json(filename: str):
     """
     Read a JSON file and return an object
 
@@ -38,4 +40,13 @@ def read_json(filename):
 
        generics = read_json(join(root, "src/test/data/data.json"))
     """
-    return json.loads(open(filename, 'r').read())
+    return json.loads(open(filename, "r").read())
+
+
+def b16encode(data: Union[str, bytes]):
+    """
+    Encode a str|bytes using Base16 and return a str|bytes
+    """
+    if isinstance(data, str):
+        return b16enc(bytes(data, "utf-8")).decode("utf-8")
+    return b16encode(data)

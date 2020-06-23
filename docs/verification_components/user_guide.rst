@@ -107,6 +107,4 @@ and the VC-developers.
    :maxdepth: 1
    :hidden:
 
-   vci/bus_master
-   vci/stream
-   vci/sync
+   vci/vci

@@ -4,44 +4,51 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Functionality to compute a dependency graph
 """
 
 
-class DependencyGraph(object):
+from typing import Set, List, TypeVar, Generic, Dict, Mapping, Callable, Iterable
+
+T = TypeVar("T")
+
+
+class DependencyGraph(Generic[T]):
     """
     A dependency graph
     """
-    def __init__(self):
-        self._forward = {}
-        self._backward = {}
-        self._nodes = []
 
-    def toposort(self):
+    def __init__(self):
+        self._forward: Dict[T, Set[T]] = {}
+        self._backward: Dict[T, Set[T]] = {}
+        self._nodes: List[T] = []
+
+    def toposort(self) -> List[T]:
         """
         Perform a topological sort returning a list of nodes such that
         every node is located after its dependency nodes
         """
-        sorted_nodes = []
-        self._visit(sorted(self._nodes),
-                    dict((key, sorted(values)) for key, values in self._forward.items()),
-                    sorted_nodes.append)
+        sorted_nodes: List[T] = []
+        self._visit(
+            sorted(self._nodes),
+            dict((key, sorted(values)) for key, values in self._forward.items()),
+            sorted_nodes.append,
+        )
         sorted_nodes = list(reversed(sorted_nodes))
         return sorted_nodes
 
-    def add_node(self, node):
+    def add_node(self, node: T):
         self._nodes.append(node)
 
-    def add_dependency(self, start, end):
+    def add_dependency(self, start: T, end: T) -> bool:
         """
         Add a dependency edge between the start and end node such that
         end node depends on the start node
         """
-        new_dependency = (start not in self._forward
-                          or end not in self._forward[start])
+        new_dependency = start not in self._forward or end not in self._forward[start]
 
         if start not in self._forward:
             self._forward[start] = set()
@@ -55,11 +62,16 @@ class DependencyGraph(object):
         return new_dependency
 
     @staticmethod
-    def _visit(nodes, graph, callback):
+    def _visit(
+        nodes: Iterable[T],
+        graph: Mapping[T, Iterable[T]],
+        callback: Callable[[T], None],
+    ):
         """
         Follow graph edges starting from the nodes iteratively
         returning all the nodes visited
         """
+
         def visit(node):
             """
             Visit a single node and all following nodes in the graph
@@ -68,7 +80,7 @@ class DependencyGraph(object):
             """
             if node in path:
                 start = path_ordered.index(node)
-                raise CircularDependencyException(path_ordered[start:] + [node, ])
+                raise CircularDependencyException(path_ordered[start:] + [node])
 
             path.add(node)
             path_ordered.append(node)
@@ -81,32 +93,32 @@ class DependencyGraph(object):
             visited.add(node)
             callback(node)
 
-        visited = set()
+        visited: Set[T] = set()
         for node in nodes:
             if node not in visited:
-                path = set()
-                path_ordered = []
+                path: Set[T] = set()
+                path_ordered: List[T] = []
                 visit(node)
 
-    def get_dependent(self, nodes):
+    def get_dependent(self, nodes: Iterable[T]) -> Set[T]:
         """
         Get all nodes which are directly or indirectly dependent on
         the input nodes
         """
-        result = set()
+        result: Set[T] = set()
         self._visit(nodes, self._forward, result.add)
         return result
 
-    def get_dependencies(self, nodes):
+    def get_dependencies(self, nodes: Iterable[T]) -> Set[T]:
         """
         Get all nodes which are directly or indirectly dependencies of
         the input nodes
         """
-        result = set()
+        result: Set[T] = set()
         self._visit(nodes, self._backward, result.add)
         return result
 
-    def get_direct_dependencies(self, node):
+    def get_direct_dependencies(self, node: T) -> Set[T]:
         """
         Get the direct dependencies of node
         """

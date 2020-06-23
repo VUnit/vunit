@@ -2,21 +2,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2019, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
 
-from os.path import join, dirname, basename
-from vunit import VUnit
+from pathlib import Path
 from glob import glob
+from vunit import VUnit
 
-root = dirname(__file__)
+ROOT = Path(__file__).parent
 
-ui = VUnit.from_argv()
-lib = ui.library("vunit_lib")
-for file_name in glob(join(root, "test", "*.vhd")):
-    if basename(file_name).endswith("2008.vhd") and ui.vhdl_standard != "2008":
+VU = VUnit.from_argv()
+LIB = VU.library("vunit_lib")
+for fname in glob(str(ROOT / "test" / "*.vhd")):
+    if Path(fname).name.endswith("2008p.vhd") and VU.vhdl_standard not in [
+        "2008",
+        "2019",
+    ]:
         continue
-    if basename(file_name) == "tb_codec-2008.vhd" and ui.vhdl_standard != "2008":
-        continue
-    lib.add_source_file(file_name)
+    LIB.add_source_file(fname)
 
-ui.main()
+VU.main()

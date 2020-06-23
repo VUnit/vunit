@@ -13,6 +13,7 @@ The example demonstrates two key tasks to automate simulation with Vivado:
    the user have these libraries pre-compiled in some other for they
    can skip this automation and add them as external libraries
    manually.
+
 2. Generate the behavioral simulation files for all IP:s (XCI-files) within a
    project and add them to the VUnit project.
 
