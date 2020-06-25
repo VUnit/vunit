@@ -205,7 +205,7 @@ package body com_debug_codec_builder_pkg is
       return;
     end if;
 
-    elements      := new line_vector(0 to max_num_of_elements - 1);
+    elements      := new work.string_ops.line_vector(0 to max_num_of_elements - 1);
     element_start := grp'left + 1;
     for i in grp'left + 1 to grp'right loop
       if length = max_num_of_elements then
