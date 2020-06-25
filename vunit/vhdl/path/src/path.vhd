@@ -37,7 +37,7 @@ package body path is
     constant p9 : string := "";
     constant p10 : string := "")
     return string is
-    variable inputs : line_vector(1 to 10);
+    variable inputs : work.string_ops.line_vector(1 to 10);
     variable result : line;
   begin
     write(inputs(1), p1);
