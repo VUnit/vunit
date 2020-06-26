@@ -71,19 +71,26 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         return cls.find_toolchain(["vsim", "vsimsa"], constraints=[no_avhdl])
 
     @classmethod
-    def get_osvvm_coverage_api(cls):
+    def _get_version(cls):
         """
-        Returns simulator name when OSVVM coverage API is supported, None otherwise.
+        Return a VersionConsumer object containing the simulator version.
         """
         proc = Process(
             [str(Path(cls.find_prefix()) / "vcom"), "-version"], env=cls.get_env()
         )
         consumer = VersionConsumer()
         proc.consume_output(consumer)
-        if consumer.year is not None:
-            if (consumer.year == 2016 and consumer.month >= 10) or (
-                consumer.year > 2016
-            ):
+
+        return consumer
+
+    @classmethod
+    def get_osvvm_coverage_api(cls):
+        """
+        Returns simulator name when OSVVM coverage API is supported, None otherwise.
+        """
+        version = cls._get_version()
+        if version.year is not None:
+            if (version.year == 2016 and version.month >= 10) or (version.year > 2016):
                 return cls.name
 
         return None
@@ -113,6 +120,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         self._create_library_cfg()
         self._libraries = []
         self._coverage_files = set()
+        self._version = self._get_version()
 
     def add_simulator_specific(self, project):
         """
@@ -147,13 +155,19 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         LOGGER.error("Unknown file type: %s", source_file.file_type)
         raise CompileError
 
-    @staticmethod
-    def _std_str(vhdl_standard):
+    def _std_str(self, vhdl_standard):
         """
         Convert standard to format of Riviera-PRO command line flag
         """
         if vhdl_standard == VHDL.STD_2019:
-            return "-2018"
+            if self._version.year is not None:
+                if (self._version.year == 2020 and self._version.month < 4) or (
+                    self._version.year < 2020
+                ):
+                    return "-2018"
+
+            return "-2019"
+
         return "-%s" % vhdl_standard
 
     def compile_vhdl_file_command(self, source_file):
