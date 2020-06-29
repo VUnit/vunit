@@ -9,7 +9,6 @@ Provided functionality to run a suite of test in a robust way
 """
 
 import os
-from os.path import relpath
 from pathlib import Path
 import traceback
 import threading
@@ -151,7 +150,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                 with self._stdout_lock():
                     for test_name in test_suite.test_names:
                         print("Starting %s" % test_name)
-                    print("Output file: %s" % relpath(output_file_name))
+                    print("Output file: %s" % output_file_name)
 
                 self._run_test_suite(
                     test_suite, write_stdout, num_tests, output_path, output_file_name
