@@ -52,16 +52,8 @@ begin
       if msg_type = push_avalon_stream_msg then
         pop_avalon_stream_transaction(msg, avalon_stream_transaction);
         data <= avalon_stream_transaction.data;
-        if avalon_stream_transaction.sop then
-          sop <= '1';
-        else
-          sop <= '0';
-        end if;
-        if avalon_stream_transaction.eop then
-          eop <= '1';
-        else
-          eop <= '0';
-        end if;
+        sop <= '1' when avalon_stream_transaction.sop else '0';
+        eop <= '1' when avalon_stream_transaction.eop else '0';
       else
         data <= pop_std_ulogic_vector(msg);
         sop <= '0';

@@ -142,16 +142,8 @@ end;
     variable avalon_stream_transaction : avalon_stream_transaction_t(data(data'length - 1 downto 0));
   begin
     avalon_stream_transaction.data := data;
-    if sop = '1' then
-        avalon_stream_transaction.sop := true;
-    else
-        avalon_stream_transaction.sop := false;
-    end if;
-    if eop = '1' then
-        avalon_stream_transaction.eop := true;
-    else
-        avalon_stream_transaction.eop := false;
-    end if;
+    avalon_stream_transaction.sop := ?? sop;
+    avalon_stream_transaction.eop := ?? eop;
     push_avalon_stream_transaction(msg, avalon_stream_transaction);
     send(net, avalon_source.p_actor, msg);
   end;
@@ -169,16 +161,8 @@ begin
     receive_reply(net, reference, reply_msg);
     pop_avalon_stream_transaction(reply_msg, avalon_stream_transaction);
     data := avalon_stream_transaction.data;
-    if avalon_stream_transaction.sop then
-      sop := '1';
-    else
-      sop := '0';
-    end if;
-    if avalon_stream_transaction.eop then
-      eop := '1';
-    else
-      eop := '0';
-    end if;
+    sop := '1' when avalon_stream_transaction.sop else '0';
+    eop := '1' when avalon_stream_transaction.eop else '0';
     delete(reference);
     delete(reply_msg);
   end;
