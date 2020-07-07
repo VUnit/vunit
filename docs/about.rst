@@ -138,16 +138,27 @@ can be made by creating a `new issue`_.
 Credits
 -------
 
-Founders
-********
--  `Lars Asplund <https://github.com/LarsAsplund>`_
--  `Olof Kraigher <https://github.com/kraigher>`_
+-  Founders:
 
-Notable contributors
-********************
-- `Colin Marquardt <https://github.com/cmarqu>`_: Cadence Incisive support
-- `Sławomir Siluk <https://github.com/slaweksiluk>`_: Verification Components such as Avalon and Wishbone
+  -  `Lars Asplund <https://github.com/LarsAsplund>`_
 
+  -  `Olof Kraigher <https://github.com/kraigher>`_
+
+-  Notable contributors:
+
+  -  `Colin Marquardt <https://github.com/cmarqu>`_:
+
+    -  Cadence Incisive support
+
+  -  `Sławomir Siluk <https://github.com/slaweksiluk>`_:
+
+    -  Verification Components (such as Avalon and Wishbone)
+
+  -  `Unai Martinez-Corral <https://github.com/umarcor>`_:
+
+    -  Co-simulation with GHDL's VHPIDIRECT interface (`VUnit/cosim <https://github.com/VUnit/cosim>`_, based on `ghdl/ghdl-cosim <https://github.com/ghdl/ghdl-cosim>`_)
+
+    -  Continuous Integration (CI)
 
 License
 -------
@@ -157,18 +168,26 @@ License
 VUnit
 *****
 
-VUnit except for OSVVM (see below) is released under the terms of
+VUnit, except for the projects below, is released under the terms of
 `Mozilla Public License, v. 2.0`_.
 
-|copy| 2014-2018 Lars Asplund, lars.anders.asplund@gmail.com.
+|copy| 2014-2020 Lars Asplund, lars.anders.asplund@gmail.com.
 
 OSVVM
 *****
 
-OSVVM is `redistributed`_ with VUnit for your convenience. These
-files are licensed under the terms of `ARTISTIC License`_.
+OSVVM is redistributed (`vunit/vhdl/osvvm <https://github.com/VUnit/vunit/tree/master/vunit/vhdl>`_) with VUnit for your convenience. These
+files are licensed under the terms of `Apache License, v 2.0`_.
 
-|copy| 2010 - 2017 by SynthWorks Design Inc. All rights reserved.
+|copy| 2010 - 2020 by SynthWorks Design Inc. All rights reserved.
+
+JSON-for-VHDL
+*************
+
+JSON-for-VHDL is redistributed (`vunit/vhdl/JSON-for-VHDL <https://github.com/VUnit/vunit/tree/master/vunit/vhdl>`_) with VUnit for your convenience. These
+files are licensed under the terms of `Apache License, v 2.0`_.
+
+|copy| 2015 - 2020 Patrick Lehmann.
 
 .. _xUnit: http://en.wikipedia.org/wiki/XUnit
 .. _Jenkins: http://jenkins-ci.org/
@@ -181,9 +200,7 @@ files are licensed under the terms of `ARTISTIC License`_.
 .. _YouTube: https://www.youtube.com/channel/UCCPVCaeWkz6C95aRUTbIwdg
 .. _an introduction to unit testing (6 min): https://www.youtube.com/watch?v=PZuBqcxS8t4
 .. _short introduction to VUnit (12 min): https://www.youtube.com/watch?v=D8s_VLD91tw
-.. _Development document: https://github.com/VUnit/vunit/blob/master/developing.md
 .. _new issue: https://github.com/VUnit/vunit/issues/new
 .. _Mozilla Public License, v. 2.0: http://mozilla.org/MPL/2.0/
-.. _redistributed: https://github.com/VUnit/vunit/blob/master/vunit/vhdl/osvvm
-.. _modifications: https://github.com/VUnit/vunit/commit/25fce1b3700e746c3fa23bd7157777dd4f20f0d6
 .. _ARTISTIC License: http://www.perlfoundation.org/artistic_license_2_0
+.. _Apache License, v 2.0: http://www.apache.org/licenses/LICENSE-2.0
