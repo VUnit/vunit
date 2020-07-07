@@ -77,6 +77,13 @@ begin
         check_equal(avalon_stream_transaction_tmp.eop, i = 7, "pop stream eop");
       end loop;
 
+    elsif run("calculate empty length") then
+      check_equal(calc_empty_length(8), 0);
+      check_equal(calc_empty_length(16), 1);
+      check_equal(calc_empty_length(24), 2);
+      check_equal(calc_empty_length(32), 2);
+      check_equal(calc_empty_length(40), 3);
+      check_equal(calc_empty_length(256), 5);
     end if;
     wait until rising_edge(clk);
     test_runner_cleanup(runner);
