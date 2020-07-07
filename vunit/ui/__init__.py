@@ -871,7 +871,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
                     dict(
                         name=name,
                         location=dict(
-                            file_name=info.location.file_name,
+                            file_name=str(info.location.file_name),
                             offset=info.location.offset,
                             length=info.location.length,
                         ),
