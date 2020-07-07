@@ -735,6 +735,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         .. note::
            Only affects test benches added *before* the option is set.
         """
+        parent_path = Path(__file__).parent.parent.resolve()
         simulator = self._simulator_class.name
         output_path = str(Path(self._output_path) / simulator / "waves.tcl")
         tcl_sources = {
@@ -746,10 +747,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         # error check selected simulator and create path for TCL files
         # and simulator option
         if simulator in tcl_sources:
-            tcl_src_path = str(
-                Path(__file__).parent.parent.resolve() / "sim_if" / "tcl" / \
-                tcl_sources[simulator]
-            )
+            tcl_src_path = str(parent_path / "sim_if" / "tcl" / tcl_sources[simulator])
             sim_opt = f"{simulator}" + \
                 (".gtkwave_script.gui" if simulator == "ghdl" else ".init_file.gui")
         else:
@@ -757,7 +755,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
                 f"Selected simulator ({simulator}) is not yet supported!"
             )
         # generate TCL commands and write to file
-        path = tcl_src_path.replace('\\', '/') # \ in f-string error
+        path = tcl_src_path.replace('\\', '/')  # \ in f-string error
         tcl_commands = [
             f"source {path}",
             f"addWavesByDepth {depth}"
