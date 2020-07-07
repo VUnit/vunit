@@ -742,27 +742,23 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
             "activehdl": "aldec_if.tcl",
             "ghdl": "gtkwave_if.tcl",
             "modelsim": "modelsim_if.tcl",
-            "rivierapro": "aldec_if.tcl"
+            "rivierapro": "aldec_if.tcl",
         }
         # error check selected simulator and create path for TCL files
         # and simulator option
         if simulator in tcl_sources:
             tcl_src_path = str(parent_path / "sim_if" / "tcl" / tcl_sources[simulator])
-            sim_opt = f"{simulator}" + \
-                (".gtkwave_script.gui" if simulator == "ghdl" else ".init_file.gui")
-        else:
-            raise ValueError(
-                f"Selected simulator ({simulator}) is not yet supported!"
+            sim_opt = f"{simulator}" + (
+                ".gtkwave_script.gui" if simulator == "ghdl" else ".init_file.gui"
             )
+        else:
+            raise ValueError(f"Selected simulator ({simulator}) is not yet supported!")
         # generate TCL commands and write to file
-        path = tcl_src_path.replace('\\', '/')  # \ in f-string error
-        tcl_commands = [
-            f"source {path}",
-            f"addWavesByDepth {depth}"
-        ]
+        path = tcl_src_path.replace("\\", "/")  # \ in f-string error
+        tcl_commands = [f"source {path}", f"addWavesByDepth {depth}"]
         with Path(output_path).open("w") as fptr:
             for cmd in tcl_commands:
-                fptr.write(cmd + '\n')
+                fptr.write(cmd + "\n")
         fptr.close()
         # call set_sim_option with option and GUI waves file
         self.set_sim_option(sim_opt, output_path)
