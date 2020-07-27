@@ -25,22 +25,27 @@ jobs:
     env:
       DOCKER_REGISTRY: docker.pkg.github.com
     steps:
-    - uses: actions/checkout@v1
-    - name: build image
+
+    - uses: actions/checkout@v2
+
+    - name: Build image
       env:
         TAG: ${{ matrix.task.tag }}
         PKG: ${{ matrix.task.pkg }}
       run: |
         ./.github/images.sh
-    - name: docker login
+
+    - name: Docker login
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login -u vunit-gha --password-stdin "$DOCKER_REGISTRY"
-    - name: docker push
+
+    - name: Docker push
       if: github.repository == 'VUnit/vunit'
       run: |
         DIMG="vunit/dev:${{ matrix.task.tag }}"
         GHIMG="${DOCKER_REGISTRY}/vunit/$DIMG"
         docker tag "$DIMG" "$GHIMG"
         docker push "$GHIMG"
-    - name: docker logout
+
+    - name: Docker logout
       run: docker logout "$DOCKER_REGISTRY"
       if: always()
