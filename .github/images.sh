@@ -10,7 +10,7 @@ docker build \
   --target vunit \
   -t "vunit/dev:${TAG}" \
   - <<-EOF
-$(curl -fsSL https://raw.githubusercontent.com/ghdl/docker/master/dockerfiles/run_debian)
+$(curl -fsSL https://raw.githubusercontent.com/ghdl/docker/master/run_debian.dockerfile)
 
 FROM $TAG AS vunit
 COPY --from=ghdl/pkg:buster-$PKG / /
