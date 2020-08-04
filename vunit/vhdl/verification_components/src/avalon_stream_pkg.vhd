@@ -77,6 +77,11 @@ package avalon_stream_pkg is
     constant msg : in msg_t;
     variable avalon_stream_transaction : out avalon_stream_transaction_t
   );
+  procedure push_avalon_stream_transaction(queue : queue_t; avalon_stream_transaction : avalon_stream_transaction_t);
+  procedure pop_avalon_stream_transaction(
+    constant queue : in queue_t;
+    variable avalon_stream_transaction : out avalon_stream_transaction_t
+  );
 
   impure function new_avalon_stream_transaction_msg(
     avalon_stream_transaction : avalon_stream_transaction_t
@@ -216,6 +221,24 @@ begin
     avalon_stream_transaction.sop  := pop_boolean(msg);
     avalon_stream_transaction.eop  := pop_boolean(msg);
     avalon_stream_transaction.empty  := pop_integer(msg);
+  end;
+
+  procedure push_avalon_stream_transaction(queue: queue_t; avalon_stream_transaction : avalon_stream_transaction_t) is
+  begin
+    push(queue, avalon_stream_transaction.data);
+    push(queue, avalon_stream_transaction.sop);
+    push(queue, avalon_stream_transaction.eop);
+    push(queue, avalon_stream_transaction.empty);
+  end;
+
+  procedure pop_avalon_stream_transaction(
+    constant queue : in queue_t;
+    variable avalon_stream_transaction : out avalon_stream_transaction_t) is
+  begin
+    avalon_stream_transaction.data := pop_std_ulogic_vector(queue);
+    avalon_stream_transaction.sop  := pop_boolean(queue);
+    avalon_stream_transaction.eop  := pop_boolean(queue);
+    avalon_stream_transaction.empty  := pop_integer(queue);
   end;
 
   impure function new_avalon_stream_transaction_msg(
