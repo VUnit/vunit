@@ -30,7 +30,8 @@ entity avalon_sink is
     sop   : in std_logic;
     eop   : in std_logic;
     data  : in std_logic_vector(data_length(sink)-1 downto 0);
-    empty : in std_logic_vector(empty_length(sink)-1 downto 0)
+    empty : in std_logic_vector(empty_length(sink)-1 downto 0);
+    channel : in std_logic_vector(channel_length(sink)-1 downto 0)
   );
 end entity;
 
@@ -78,6 +79,7 @@ begin
     avalon_stream_transaction.sop := ?? sop;
     avalon_stream_transaction.eop := ?? eop;
     avalon_stream_transaction.empty := to_integer(empty);
+    avalon_stream_transaction.channel := to_integer(channel);
     push_avalon_stream_transaction(data_queue, avalon_stream_transaction);
     ready <= '0';
   end process;

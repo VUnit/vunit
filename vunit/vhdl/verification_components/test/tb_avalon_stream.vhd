@@ -22,11 +22,11 @@ end entity;
 
 architecture a of tb_avalon_stream is
   constant avalon_source_stream : avalon_source_t :=
-    new_avalon_source(data_length => 32, valid_high_probability => 0.1);
+    new_avalon_source(data_length => 32, valid_high_probability => 0.1, channel_length => 8);
   constant master_stream : stream_master_t := as_stream(avalon_source_stream);
 
   constant avalon_sink_stream : avalon_sink_t :=
-    new_avalon_sink(data_length => 32, ready_high_probability => 0.3);
+    new_avalon_sink(data_length => 32, ready_high_probability => 0.3, channel_length => 8);
   constant slave_stream : stream_slave_t := as_stream(avalon_sink_stream);
 
   signal clk   : std_logic := '0';
@@ -36,6 +36,7 @@ architecture a of tb_avalon_stream is
   signal eop   : std_logic;
   signal data  : std_logic_vector(data_length(avalon_source_stream)-1 downto 0);
   signal empty : std_logic_vector(empty_length(avalon_source_stream)-1 downto 0);
+  signal channel : std_logic_vector(channel_length(avalon_source_stream)-1 downto 0);
 begin
 
   main : process
@@ -43,9 +44,11 @@ begin
     variable is_sop  : std_logic;
     variable is_eop  : std_logic;
     variable is_empty  : natural;
+    variable is_channel  : natural;
     variable sop_tmp : std_logic;
     variable eop_tmp : std_logic;
     variable empty_tmp : natural;
+    variable channel_tmp : natural;
   begin
     test_runner_setup(runner, runner_cfg);
     set_format(display_handler, verbose, true);
@@ -81,8 +84,9 @@ begin
         check_equal(tmp, std_logic_vector(to_unsigned(i, data_length(avalon_source_stream))), "pop stream data"&natural'image(i));
       end loop;
 
-    elsif run("test sop and eop and empty") then
+    elsif run("test sop, eop, empty, channel") then
       for i in 0 to 7 loop
+        is_channel := i;
         if i = 0 then
           is_sop := '1';
           is_eop := '0';
@@ -96,12 +100,13 @@ begin
           is_eop := '0';
           is_empty := 0;
         end if;
-        push_avalon_stream(net, avalon_source_stream, std_logic_vector(to_unsigned(i, data_length(avalon_source_stream))), is_sop, is_eop, is_empty);
-        pop_avalon_stream(net, avalon_sink_stream, tmp, sop_tmp, eop_tmp, empty_tmp);
+        push_avalon_stream(net, avalon_source_stream, std_logic_vector(to_unsigned(i, data_length(avalon_source_stream))), is_sop, is_eop, is_empty, is_channel);
+        pop_avalon_stream(net, avalon_sink_stream, tmp, sop_tmp, eop_tmp, empty_tmp, channel_tmp);
         check_equal(tmp, std_logic_vector(to_unsigned(i, data_length(avalon_source_stream))), "pop stream data"&natural'image(i));
         check_equal(sop_tmp, is_sop, "pop stream sop");
         check_equal(eop_tmp, is_eop, "pop stream eop");
         check_equal(empty_tmp, is_empty, "pop stream empty");
+        check_equal(channel_tmp, is_channel, "pop stream channel");
       end loop;
 
     end if;
@@ -120,7 +125,8 @@ begin
       sop   => sop,
       eop   => eop,
       data  => data,
-      empty => empty
+      empty => empty,
+      channel => channel
     );
 
   avalon_sink_vc : entity work.avalon_sink
@@ -133,7 +139,8 @@ begin
       sop   => sop,
       eop   => eop,
       data  => data,
-      empty => empty
+      empty => empty,
+      channel => channel
     );
 
   clk <= not clk after 5 ns;
