@@ -2,6 +2,7 @@
 
 Command Line Interface
 ======================
+
 A :class:`VUnit <vunit.ui.VUnit>` object can be created from command
 line arguments by using the :meth:`from_argv
 <vunit.ui.VUnit.from_argv>` method effectively creating a custom
@@ -193,10 +194,6 @@ Test Output Path Length Environment Variables
 - ``VUNIT_TEST_OUTPUT_PATH_MARGIN`` Can be used to change the test
   output path margin on Windows. By default the test output path is
   shortened to allow a 100 character margin.
-
-.. _continuous_integration:
-
-.. include:: ci.rst
 
 .. _json_export:
 

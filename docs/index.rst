@@ -49,6 +49,16 @@ often"* approach through automation. :ref:`Read more <about>`
    examples
 
 .. toctree::
+   :caption: Continuous Integration
+   :hidden:
+
+   ci/intro
+   ci/script
+   ci/container
+   ci/manual
+   ci/usecases
+
+.. toctree::
    :caption: Appendix
    :hidden:
 
