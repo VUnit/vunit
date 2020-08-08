@@ -23,7 +23,7 @@ testing of your HDL code. VUnit doesn't replace but rather complements
 traditional testing methodologies by supporting a *"test early and
 often"* approach through automation. :ref:`Read more <about>`
 
-.. image:: vunit_demo.gif
+.. image:: _static/vunit_demo.gif
 
 .. toctree::
    :hidden:

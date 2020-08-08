@@ -36,20 +36,14 @@ def doc():
     Returns short introduction to VUnit
     """
     return (
-        r"""What is VUnit?
-==============
-
-VUnit is an open source unit testing framework for VHDL/SystemVerilog
+        r"""VUnit is an open source unit testing framework for VHDL/SystemVerilog
 released under the terms of Mozilla Public License, v. 2.0. It
 features the functionality needed to realize continuous and automated
 testing of your HDL code. VUnit doesn't replace but rather complements
 traditional testing methodologies by supporting a "test early and
-often" approach through automation.
+often" approach through automation. **Read more on our**
+`Website <https://vunit.github.io>`__
 
-**Read more on our** `Website <https://vunit.github.io>`__
-
-Contributing
-============
 Contributing in the form of code, feedback, ideas or bug reports are
 welcome. Read our `contribution guide
 <https://vunit.github.io/contributing.html>`__ to get started.
