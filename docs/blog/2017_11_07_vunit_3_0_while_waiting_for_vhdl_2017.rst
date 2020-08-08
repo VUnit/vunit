@@ -5,13 +5,12 @@
 VUnit 3.0 - While Waiting for VHDL-2017
 =======================================
 
+.. NOTE:: This article was originally posted on `LinkedIn <https://www.linkedin.com/pulse/vunit-30-while-waiting-vhdl-2017-lars-asplund>`__
+   where you may find some comments on its contents.
+
 .. figure:: img/vunit_waiting.jpg
    :alt: VUnit 3.0 - While Waiting for VHDL-2017
    :align: center
-
-This article was originally posted on `LinkedIn
-<https://www.linkedin.com/pulse/vunit-30-while-waiting-vhdl-2017-lars-asplund>`__
-where you may find some comments on its contents.
 
 Background
 ----------

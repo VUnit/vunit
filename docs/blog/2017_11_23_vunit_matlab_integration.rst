@@ -5,13 +5,12 @@
 VUnit Matlab Integration
 ========================
 
+.. NOTE:: This article was originally posted on `LinkedIn <https://www.linkedin.com/pulse/vunit-matlab-integration-lars-asplund/>`__
+   where you may find some comments on its contents.
+
 .. figure:: img/vunit_matlab.jpg
    :alt: VUnit Matlab Integration
    :align: center
-
-This article was originally posted on `LinkedIn
-<https://www.linkedin.com/pulse/vunit-matlab-integration-lars-asplund/>`__
-where you may find some comments on its contents.
 
 Recently I got a question from an ASIC team if it is possible to
 integrate their VUnit simulations with Matlab. I've been getting this

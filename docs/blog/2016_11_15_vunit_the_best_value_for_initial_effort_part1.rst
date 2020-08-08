@@ -5,13 +5,12 @@
 VUnit - The Best Value for Initial Effort - Part 1
 ==================================================
 
+.. NOTE:: This article was originally posted on `LinkedIn <https://www.linkedin.com/pulse/vunit-best-value-initial-effort-lars-asplund>`__
+   where you may find some comments on its contents.
+
 .. figure:: img/bestvalue1.jpg
    :alt: Best Value Part 1
    :align: center
-
-This article was originally posted on `LinkedIn
-<https://www.linkedin.com/pulse/vunit-best-value-initial-effort-lars-asplund>`__
-where you may find some comments on its contents.
 
 In the book Effective Coding with VHDL published this summer VUnit was
 presented as the most advanced testing framework of its kind.
