@@ -13,8 +13,8 @@
 .. |shieldTwitter| image:: https://img.shields.io/twitter/follow/VUnitFramework.svg?longCache=true&style=flat-square&color=1DA1F2&label=%40VUnitFramework&logo=twitter&logoColor=fff
 .. _shieldTwitter: https://www.twitter.com/VUnitFramework
 
-VUnit
-=====
+VUnit: a test framework for HDL
+===============================
 
 VUnit is an open source unit testing framework for VHDL/SystemVerilog
 released under the terms of Mozilla Public License, v. 2.0. It
