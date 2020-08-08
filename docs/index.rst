@@ -29,10 +29,29 @@ often"* approach through automation. :ref:`Read more <about>`
    :hidden:
 
    blog/index
+
+.. toctree::
+   :caption: About
+   :hidden:
+
    about
    installing
-   documentation
    testimonials/testimonials
-   contributing
+
+.. toctree::
+   :caption: Documentation
+   :hidden:
+
+   user_guide
+   cli
+   py/ui
+   vhdl_libraries
+   examples
+
+.. toctree::
+   :caption: Appendix
+   :hidden:
+
    release_notes
+   contributing
    genindex
