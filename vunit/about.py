@@ -13,21 +13,21 @@ def license_text():
     """
     Returns licence text
     """
-    return """VUnit
------
+    return """**VUnit**, except for the projects below, is released under the terms of
+`Mozilla Public License, v. 2.0`_. |copy| 2014-2020 Lars Asplund, lars.anders.asplund@gmail.com.
 
-VUnit except for OSVVM (see below) is released under the terms of
-Mozilla Public License, v. 2.0.
+The following libraries are `redistributed`_ with VUnit for your convenience:
 
-Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+* **OSVVM** (``vunit/vhdl/osvvm``): these files are licensed under the terms of `Apache License, v 2.0`_, |copy| 2010 - 2020 by `SynthWorks Design Inc`_. All rights reserved.
 
-OSVVM
------
+* **JSON-for-VHDL** (``vunit/vhdl/JSON-for-VHDL``): these files are licensed under the terms of `Apache License, v 2.0`_, |copy| 2015 - 2020 Patrick Lehmann.
 
-OSVVM is redistributed as a submodule to VUnit for your convenience. OSVVM and derivative work
-located under examples/vhdl/osvvm_integration/src are licensed under the terms of Artistic License 2.0.
-
-Copyright (c) 2006-2016, SynthWorks Design Inc http://www.synthworks.com
+.. |copy|   unicode:: U+000A9 .. COPYRIGHT SIGN
+.. _redistributed: https://github.com/VUnit/vunit/blob/master/.gitmodules
+.. _Mozilla Public License, v. 2.0: http://mozilla.org/MPL/2.0/
+.. _ARTISTIC License: http://www.perlfoundation.org/artistic_license_2_0
+.. _Apache License, v 2.0: http://www.apache.org/licenses/LICENSE-2.0
+.. _SynthWorks Design Inc: http://www.synthworks.com
 """
 
 
@@ -54,8 +54,6 @@ Contributing in the form of code, feedback, ideas or bug reports are
 welcome. Read our `contribution guide
 <https://vunit.github.io/contributing.html>`__ to get started.
 
-License
-=======
 """
         + license_text()
     )

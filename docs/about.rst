@@ -135,8 +135,8 @@ Support
 Any bug reports, feature requests or questions about the usage of VUnit
 can be made by creating a `new issue`_.
 
-Credits
--------
+Credits and license
+-------------------
 
 -  Founders:
 
@@ -160,34 +160,7 @@ Credits
 
     -  Continuous Integration (CI)
 
-License
--------
-
-.. |copy|   unicode:: U+000A9 .. COPYRIGHT SIGN
-
-VUnit
-*****
-
-VUnit, except for the projects below, is released under the terms of
-`Mozilla Public License, v. 2.0`_.
-
-|copy| 2014-2020 Lars Asplund, lars.anders.asplund@gmail.com.
-
-OSVVM
-*****
-
-OSVVM is redistributed (`vunit/vhdl/osvvm <https://github.com/VUnit/vunit/tree/master/vunit/vhdl>`_) with VUnit for your convenience. These
-files are licensed under the terms of `Apache License, v 2.0`_.
-
-|copy| 2010 - 2020 by SynthWorks Design Inc. All rights reserved.
-
-JSON-for-VHDL
-*************
-
-JSON-for-VHDL is redistributed (`vunit/vhdl/JSON-for-VHDL <https://github.com/VUnit/vunit/tree/master/vunit/vhdl>`_) with VUnit for your convenience. These
-files are licensed under the terms of `Apache License, v 2.0`_.
-
-|copy| 2015 - 2020 Patrick Lehmann.
+.. include:: license.rst
 
 .. _xUnit: http://en.wikipedia.org/wiki/XUnit
 .. _Jenkins: http://jenkins-ci.org/
@@ -201,6 +174,3 @@ files are licensed under the terms of `Apache License, v 2.0`_.
 .. _an introduction to unit testing (6 min): https://www.youtube.com/watch?v=PZuBqcxS8t4
 .. _short introduction to VUnit (12 min): https://www.youtube.com/watch?v=D8s_VLD91tw
 .. _new issue: https://github.com/VUnit/vunit/issues/new
-.. _Mozilla Public License, v. 2.0: http://mozilla.org/MPL/2.0/
-.. _ARTISTIC License: http://www.perlfoundation.org/artistic_license_2_0
-.. _Apache License, v 2.0: http://www.apache.org/licenses/LICENSE-2.0
