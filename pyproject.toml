@@ -18,7 +18,7 @@ passenv=ALDEC_LICENSE_FILE
 
 deps=
     fmt: black
-    pytest
+    pytest==5.4.3 # work around actions/virtual-environments#1381
     lint: pycodestyle
     lint: pylint
     lint: mypy
