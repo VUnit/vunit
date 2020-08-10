@@ -9,10 +9,16 @@ PyPI setup script
 """
 
 import os
+import sys
+from pathlib import Path
 from logging import warning
 from setuptools import setup
-from vunit.about import version, doc
-from vunit.builtins import osvvm_is_installed
+
+# Ensure that the source tree is on the sys path
+sys.path.insert(0, str(Path(__file__).parent.resolve()))
+
+from vunit.about import version, doc  # pylint: disable=wrong-import-position
+from vunit.builtins import osvvm_is_installed  # pylint: disable=wrong-import-position
 
 
 def find_all_files(directory, endings=None):
@@ -24,15 +30,15 @@ def find_all_files(directory, endings=None):
         for filename in filenames:
             ending = os.path.splitext(filename)[-1]
             if endings is None or ending in endings:
-                result.append(os.path.join(root, filename))
+                result.append(str(Path(root) / filename))
     return result
 
 
 DATA_FILES = []
-DATA_FILES += find_all_files(os.path.join("vunit"), endings=[".tcl"])
-DATA_FILES += find_all_files(os.path.join("vunit", "vhdl"))
+DATA_FILES += find_all_files("vunit", endings=[".tcl"])
+DATA_FILES += find_all_files(str(Path("vunit") / "vhdl"))
 DATA_FILES += find_all_files(
-    os.path.join("vunit", "verilog"), endings=[".v", ".sv", ".svh"]
+    str(Path("vunit") / "verilog"), endings=[".v", ".sv", ".svh"]
 )
 DATA_FILES = [os.path.relpath(file_name, "vunit") for file_name in DATA_FILES]
 
