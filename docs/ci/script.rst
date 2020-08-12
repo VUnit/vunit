@@ -93,7 +93,7 @@ badge/shield to the README of your project. It will show the latest status of yo
 
 Clicking the badge/shield will take you to a list of workflow runs, and then further to the results of those runs:
 
-.. figure:: ../_static/gha_flow.png
+.. figure:: ../blog/img/gha_flow.png
    :align: center
    :alt: Presenting GHA test results.
 

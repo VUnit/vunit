@@ -5,7 +5,7 @@
 Continuous Integration With VUnit Action in 10 Lines of Code
 ============================================================
 
-.. figure:: img/top_image.png
+.. figure:: img/gha_top_image.png
    :align: center
 
 The other week, `semiengineering.com <https://semiengineering.com>`__ published an
