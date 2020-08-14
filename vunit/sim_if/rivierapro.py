@@ -465,3 +465,6 @@ class VersionConsumer(object):
             self.year = int(match.group("year"))
             self.month = int(match.group("month"))
         return True
+
+    def __str__(self):
+        return "{}.{}".format(self.year, self.month)

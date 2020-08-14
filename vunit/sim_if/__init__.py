@@ -335,6 +335,22 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
         Allows inheriting classes to overload this to modify environment variables. Return None for default environment
         """
 
+    @classmethod
+    def get_info(cls):
+        """
+        Allows
+        """
+        infos = {
+            "name": cls.name,
+            "path": cls.find_prefix(),
+            "version": str(cls.get_version()),
+            }
+        return infos
+
+    @classmethod
+    def get_version(cls):
+        return None
+
 
 def isfile(file_name):
     """
