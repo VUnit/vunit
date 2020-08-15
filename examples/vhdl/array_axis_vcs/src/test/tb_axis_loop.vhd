@@ -44,7 +44,7 @@ architecture tb of tb_axis_loop is
   signal clk, rst, rstn : std_logic := '0';
   constant m_I : integer_array_t := load_csv(tb_path & csv_i);
   constant m_O : integer_array_t := new_2d(width(m_I), height(m_I), data_width, true);
-  signal start, done, saved : boolean := false;
+  signal start, start_stall, done, saved : boolean := false;
 
 begin
 
@@ -99,6 +99,8 @@ begin
   save: process
     variable o : std_logic_vector(31 downto 0);
     variable last : std_logic:='0';
+    variable reference_queue : queue_t := new_queue;
+    variable reference : axi_stream_reference_t;
   begin
     wait until start and rising_edge(clk);
     saved <= false;
@@ -108,7 +110,15 @@ begin
 
     for y in 0 to height(m_O)-1 loop
       for x in 0 to width(m_O)-1 loop
-        pop_axi_stream(net, slave_axi_stream, tdata => o, tlast => last);
+        pop_axi_stream(net, slave_axi_stream, reference);
+        push(reference_queue, reference);
+      end loop;
+    end loop;
+
+    for y in 0 to height(m_O)-1 loop
+      for x in 0 to width(m_O)-1 loop
+        reference := pop(reference_queue);
+        await_pop_axi_stream_reply(net, reference, tdata => o, tlast => last);
         if (x = width(m_O)-1) and (last='0') then
           error("Something went wrong. Last misaligned!");
         end if;
