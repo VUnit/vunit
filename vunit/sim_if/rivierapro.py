@@ -429,7 +429,7 @@ proc _vunit_sim_restart {} {
             str(Path(self._prefix) / "vsim"),
             "-c",
             "-do",
-            "source %s; quit;" % merge_script_name.replace("\\", "/"),
+            "source {%s}; quit;" % merge_script_name.replace("\\", "/"),
         ]
 
         print("Merging coverage files into %s..." % file_name)
