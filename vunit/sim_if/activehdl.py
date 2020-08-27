@@ -54,7 +54,7 @@ class ActiveHDLInterface(SimulatorInterface):
         return cls.find_toolchain(["vsim", "avhdl"])
 
     @classmethod
-    def get_version(cls):
+    def _get_version(cls):
         """
         Return Version of this simulator
         """
@@ -66,11 +66,18 @@ class ActiveHDLInterface(SimulatorInterface):
         return consumer.version
 
     @classmethod
+    def get_version(cls):
+        """
+        Returns the version of the simulator
+        """
+        return str(cls._get_version())
+
+    @classmethod
     def supports_vhdl_package_generics(cls):
         """
         Returns True when this simulator supports VHDL package generics
         """
-        version = cls.get_version()
+        version = cls._get_version()
         if version is not None:
             return version >= Version(10, 1)
 

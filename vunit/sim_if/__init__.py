@@ -338,17 +338,20 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
     @classmethod
     def get_info(cls):
         """
-        Allows
+        Returns information about the used simulator as a dict
         """
         infos = {
             "name": cls.name,
             "path": cls.find_prefix(),
-            "version": str(cls.get_version()),
+            "version": cls.get_version(),
             }
         return infos
 
     @classmethod
     def get_version(cls):
+        """
+        Allows inheriting classes to overload this to return the version of the simulator. Return None for no implementation
+        """
         return None
 
 

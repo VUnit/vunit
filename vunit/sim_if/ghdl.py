@@ -153,7 +153,7 @@ class GHDLInterface(SimulatorInterface):  # pylint: disable=too-many-instance-at
 
     @classmethod
     def get_version(cls):
-        return cls.determine_version(cls.find_prefix_from_path())
+        return str(cls.determine_version(cls.find_prefix_from_path()))
 
     @classmethod
     def determine_version(cls, prefix):
