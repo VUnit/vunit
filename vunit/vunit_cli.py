@@ -263,8 +263,10 @@ def positive_int(val):
         ival = int(val)
         assert ival > 0
         return ival
-    except (ValueError, AssertionError):
-        raise argparse.ArgumentTypeError("'%s' is not a valid positive int" % val)
+    except (ValueError, AssertionError) as exv:
+        raise argparse.ArgumentTypeError(
+            "'%s' is not a valid positive int" % val
+        ) from exv
 
 
 def _parser_for_documentation():
