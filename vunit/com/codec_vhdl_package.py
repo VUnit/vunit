@@ -20,9 +20,7 @@ class CodecVHDLPackage(VHDLPackage):
     in the package."""
 
     def __init__(self, identifier, enumeration_types, record_types, array_types):
-        super(CodecVHDLPackage, self).__init__(
-            identifier, enumeration_types, record_types, array_types
-        )
+        super().__init__(identifier, enumeration_types, record_types, array_types)
         self._template = None
 
     @classmethod
