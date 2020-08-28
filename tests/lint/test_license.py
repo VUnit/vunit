@@ -144,7 +144,8 @@ def find_licensed_files():
             if str(ROOT / ".tox") in root:
                 continue
             if is_prefix_of(
-                (VHDL_PATH / "osvvm").resolve(), (Path(root) / file_name).resolve(),
+                (VHDL_PATH / "osvvm").resolve(),
+                (Path(root) / file_name).resolve(),
             ):
                 continue
             if is_prefix_of(

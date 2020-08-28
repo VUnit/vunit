@@ -150,10 +150,10 @@ class VerilogPreprocessor(object):
     @staticmethod
     def _skip_protected_region(stream):
         """
-        Skip a protected region
-`pragma protect begin_protected
-Skipped
-`pragma protect end_protected
+                Skip a protected region
+        `pragma protect begin_protected
+        Skipped
+        `pragma protect end_protected
         """
         while not stream.eof:
             stream.skip_while(WHITESPACE)

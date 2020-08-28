@@ -77,7 +77,8 @@ end architecture;
         fname = Path(file_name).name
         with (Path(self._preprocessed_path) / "lib" / fname).open() as fread:
             self.assertEqual(
-                fread.read(), pp_source.substitute(entity="ent0", file=fname),
+                fread.read(),
+                pp_source.substitute(entity="ent0", file=fname),
             )
 
     def test_global_check_and_location_preprocessors_should_be_applied_after_global_custom_preprocessors(

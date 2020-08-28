@@ -39,15 +39,19 @@ class CodecVHDLArrayType(VHDLArrayType):
                 definitions += template.constrained_1d_array_definition.substitute(
                     type=self.identifier
                 )
-                definitions += template.constrained_1d_array_to_string_definition.substitute(
-                    type=self.identifier
+                definitions += (
+                    template.constrained_1d_array_to_string_definition.substitute(
+                        type=self.identifier
+                    )
                 )
             else:
                 definitions += template.constrained_2d_array_definition.substitute(
                     type=self.identifier
                 )
-                definitions += template.constrained_2d_array_to_string_definition.substitute(
-                    type=self.identifier
+                definitions += (
+                    template.constrained_2d_array_to_string_definition.substitute(
+                        type=self.identifier
+                    )
                 )
         else:
             if has_one_dimension:
@@ -57,8 +61,10 @@ class CodecVHDLArrayType(VHDLArrayType):
                     init_value=init_value,
                     range_type=self.range1.range_type,
                 )
-                definitions += template.unconstrained_1d_array_to_string_definition.substitute(
-                    array_type=self.identifier, range_type=self.range1.range_type
+                definitions += (
+                    template.unconstrained_1d_array_to_string_definition.substitute(
+                        array_type=self.identifier, range_type=self.range1.range_type
+                    )
                 )
             else:
                 definitions += template.unconstrained_2d_array_definition.substitute(
@@ -66,10 +72,12 @@ class CodecVHDLArrayType(VHDLArrayType):
                     range_type1=self.range1.range_type,
                     range_type2=self.range2.range_type,
                 )
-                definitions += template.unconstrained_2d_array_to_string_definition.substitute(
-                    array_type=self.identifier,
-                    range_type1=self.range1.range_type,
-                    range_type2=self.range2.range_type,
+                definitions += (
+                    template.unconstrained_2d_array_to_string_definition.substitute(
+                        array_type=self.identifier,
+                        range_type1=self.range1.range_type,
+                        range_type2=self.range2.range_type,
+                    )
                 )
 
         return declarations, definitions

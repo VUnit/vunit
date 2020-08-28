@@ -54,7 +54,7 @@ class VsimSimulatorMixin(object):
 
     @staticmethod
     def _create_restart_function():
-        """"
+        """ "
         Create the vunit_restart function to recompile and restart the simulation
 
         This function is quite complicated to work around limitations
