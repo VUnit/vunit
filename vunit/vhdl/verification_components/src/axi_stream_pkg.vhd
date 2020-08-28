@@ -152,7 +152,7 @@ package axi_stream_pkg is
     p_monitor          => null_axi_stream_monitor,
     p_protocol_checker => null_axi_stream_protocol_checker
     );
-  
+
   constant axi_stream_logger  : logger_t  := get_logger("vunit_lib:axi_stream_pkg");
   constant axi_stream_checker : checker_t := new_checker(axi_stream_logger);
 
