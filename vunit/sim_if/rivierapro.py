@@ -210,7 +210,9 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         for include_dir in source_file.include_dirs:
             args += ["+incdir+%s" % include_dir]
         for key, value in source_file.defines.items():
-            args += ["+define+%s=%s" % (key, value)]
+            args += ["+define+%s" % key]
+            if value:
+                args[-1] += "=%s" % value
         return args
 
     def create_library(self, library_name, path, mapped_libraries=None):
