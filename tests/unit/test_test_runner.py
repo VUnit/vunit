@@ -13,7 +13,7 @@ import unittest
 from unittest import mock
 from tests.common import with_tempdir
 from vunit.hashing import hash_string
-from vunit.test.runner import TestRunner, create_output_path
+from vunit.test.runner import TestRunner
 from vunit.test.report import TestReport
 from vunit.test.list import TestList
 
@@ -37,9 +37,9 @@ class TestTestRunner(unittest.TestCase):
         test_list.add_test(test_case2)
         test_list.add_test(test_case3)
         runner.run(test_list)
-        self.assertEqual(test_case1.output_path, create_output_path(tempdir, "test1"))
-        self.assertEqual(test_case2.output_path, create_output_path(tempdir, "test2"))
-        self.assertEqual(test_case3.output_path, create_output_path(tempdir, "test3"))
+        self.assertEqual(test_case1.output_path, runner._create_output_path("test1"))
+        self.assertEqual(test_case2.output_path, runner._create_output_path("test2"))
+        self.assertEqual(test_case3.output_path, runner._create_output_path("test3"))
         self.assertEqual(order, ["test1", "test2", "test3"])
         self.assertTrue(report.result_of("test1").passed)
         self.assertTrue(report.result_of("test2").failed)
@@ -62,8 +62,8 @@ class TestTestRunner(unittest.TestCase):
             runner.run(test_list)
         except KeyboardInterrupt:
             pass
-        self.assertEqual(test_case1.output_path, create_output_path(tempdir, "test1"))
-        self.assertEqual(test_case2.output_path, create_output_path(tempdir, "test2"))
+        self.assertEqual(test_case1.output_path, runner._create_output_path("test1"))
+        self.assertEqual(test_case2.output_path, runner._create_output_path("test2"))
         self.assertEqual(test_case3.called, False)
         self.assertEqual(order, ["test1", "test2"])
         self.assertTrue(report.result_of("test1").passed)
@@ -136,11 +136,14 @@ class TestTestRunner(unittest.TestCase):
         self.assertEqual(report.result_of("test").output, "out1out2out3out4out5")
 
     def test_create_output_path_on_linux(self):
+        output_path = "output_path"
+        report = TestReport()
+        runner = TestRunner(report, output_path)
+
         with mock.patch("sys.platform", new="linux"):
             with mock.patch("os.environ", new={}):
-                output_path = "output_path"
                 test_name = "_" * 400
-                test_output = create_output_path(output_path, test_name)
+                test_output = runner._create_output_path(test_name)
                 self.assertEqual(
                     test_output,
                     str(
@@ -151,7 +154,7 @@ class TestTestRunner(unittest.TestCase):
 
                 output_path = "output_path"
                 test_name = "123._-+"
-                test_output = create_output_path(output_path, test_name)
+                test_output = runner._create_output_path(test_name)
                 self.assertEqual(
                     test_output,
                     str(
@@ -163,7 +166,7 @@ class TestTestRunner(unittest.TestCase):
                 output_path = "output_path"
                 test_name = "#<>:"
                 safe_name = "____"
-                test_output = create_output_path(output_path, test_name)
+                test_output = runner._create_output_path(test_name)
                 self.assertEqual(
                     test_output,
                     str(
@@ -173,11 +176,14 @@ class TestTestRunner(unittest.TestCase):
                 )
 
     def test_create_output_path_on_windows(self):
+        output_path = "output_path"
+        report = TestReport()
+        runner = TestRunner(report, output_path)
+
         with mock.patch("sys.platform", new="win32"):
             with mock.patch("os.environ", new={}):
-                output_path = "output_path"
                 test_name = "_" * 400
-                test_output = create_output_path(output_path, test_name)
+                test_output = runner._create_output_path(test_name)
                 self.assertEqual(len(test_output), 260 - 100 + 1)
 
             with mock.patch(
@@ -185,7 +191,7 @@ class TestTestRunner(unittest.TestCase):
             ):
                 output_path = "output_path"
                 test_name = "_" * 400
-                test_output = create_output_path(output_path, test_name)
+                test_output = runner._create_output_path(test_name)
                 self.assertEqual(
                     test_output,
                     str(
@@ -197,7 +203,7 @@ class TestTestRunner(unittest.TestCase):
             with mock.patch("os.environ", new={"VUNIT_SHORT_TEST_OUTPUT_PATHS": ""}):
                 output_path = "output_path"
                 test_name = "_" * 400
-                test_output = create_output_path(output_path, test_name)
+                test_output = runner._create_output_path(test_name)
                 self.assertEqual(
                     test_output,
                     str(Path(output_path).resolve() / hash_string(test_name)),
