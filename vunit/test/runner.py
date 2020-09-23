@@ -144,7 +144,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             try:
                 test_suite = scheduler.next()
 
-                output_path = self._create_output_path(test_suite.name)
+                output_path = self._get_output_path(test_suite.name)
                 output_file_name = str(Path(output_path) / "output.txt")
 
                 with self._stdout_lock():
@@ -171,9 +171,9 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                 if test_suite is not None:
                     scheduler.test_done()
 
-    def _create_output_path(self, test_suite_name):
+    def _get_output_path(self, test_suite_name):
         """
-        Create the full output path of a test case.
+        Construct the full output path of a test case.
         Ensure no bad characters and no long path names.
         """
         output_path = str(Path(self._output_path).resolve())
@@ -306,7 +306,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             mapping = set()
 
         for test_suite in test_suites:
-            test_output = self._create_output_path(test_suite.name)
+            test_output = self._get_output_path(test_suite.name)
             mapping.add("%s %s" % (Path(test_output).name, test_suite.name))
 
         # Sort by everything except hash
