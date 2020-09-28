@@ -279,7 +279,8 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         Create the vunit_load TCL function that runs the vsim command and loads the design
         """
         set_generic_str = " ".join(
-            (f"-g/{config.entity_name!s}/{name!s}={format_generic(value)!s}" for name, value in config.generics.items())
+            f"-g/{config.entity_name!s}/{name!s}={format_generic(name, value)!s}"
+            for name, value in config.generics.items()
         )
         pli_str = " ".join(f'-pli "{fix_path(name)}"' for name in config.sim_options.get("pli", []))
 
@@ -424,12 +425,13 @@ proc _vunit_sim_restart {} {
         print("Done merging coverage files")
 
 
-def format_generic(value):
+def format_generic(name, value):
     """
     Generic values with space in them need to be quoted
+    We know that tb_path and output_path are strings - they also need to be in quote
     """
     value_str = str(value)
-    return f'"{value_str!s}"' if " " in value_str else value_str
+    return f'"{value_str!s}"' if " " in value_str or name == "output_path" or name == "tb_path" else value_str
 
 
 class VersionConsumer(object):
