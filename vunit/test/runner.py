@@ -226,7 +226,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         results = self._fail_suite(test_suite)
 
         try:
-            ostools.renew_path(output_path)
+            self._prepare_test_suite_output_path(output_path)
             output_file = wrap(open(output_file_name, "a+"), use_color=False)
             output_file.seek(0)
             output_file.truncate()
@@ -287,6 +287,13 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
             if self._fail_fast and any_not_passed:
                 self._abort = True
+
+    @staticmethod
+    def _prepare_test_suite_output_path(output_path):
+        """
+        Make sure the directory exists and is empty before running test.
+        """
+        ostools.renew_path(output_path)
 
     def _create_test_mapping_file(self, test_suites):
         """
