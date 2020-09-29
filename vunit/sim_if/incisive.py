@@ -373,6 +373,7 @@ define work "{2}/libraries/work"
             args += ['-input "@set intovf_severity_level ignore"']
             if config.sim_options.get("disable_ieee_warnings", False):
                 args += ['-input "@set pack_assert_off { std_logic_arith numeric_std }"']
+            args += ['-input "@set assert_stop_level %s"' % config.vhdl_assert_stop_level]
             if launch_gui:
                 args += ["-access +rwc"]
                 # args += ['-linedebug']
