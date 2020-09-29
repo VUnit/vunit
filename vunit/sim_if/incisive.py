@@ -190,7 +190,11 @@ define work "{2}/libraries/work"
             return "-v200x -extv200x"
 
         if vhdl_standard == VHDL.STD_2008:
-            return "-v200x -extv200x" + " -inc_v200x_pkg" if self.executable_name == "xrun" else ""
+            return (
+                "-v200x -extv200x" + " -inc_v200x_pkg"
+                if self.executable_name == "xrun"
+                else ""
+            )
 
         if vhdl_standard == VHDL.STD_1993:
             return "-v93"
@@ -225,7 +229,10 @@ define work "{2}/libraries/work"
             args += ["-messages"]
             args += ["-libverbose"]
         args += source_file.compile_options.get("incisive.irun_vhdl_flags", [])
-        args += ['-%slibdirname "%s"' % (self.option_prefix, str(Path(source_file.library.directory).parent))]
+        args += [
+            '-%slibdirname "%s"'
+            % (self.option_prefix, str(Path(source_file.library.directory).parent))
+        ]
         args += ["-makelib %s" % source_file.library.directory]
         args += ['"%s"' % source_file.name]
         args += ["-endlib"]
@@ -275,7 +282,10 @@ define work "{2}/libraries/work"
 
         for key, value in source_file.defines.items():
             args += ["-define %s=%s" % (key, value.replace('"', '\\"'))]
-        args += ['-%slibdirname "%s"' % (self.option_prefix, str(Path(source_file.library.directory).parent))]
+        args += [
+            '-%slibdirname "%s"'
+            % (self.option_prefix, str(Path(source_file.library.directory).parent))
+        ]
         args += ["-makelib %s" % source_file.library.name]
         args += ['"%s"' % source_file.name]
         args += ["-endlib"]
@@ -356,7 +366,8 @@ define work "{2}/libraries/work"
             ]  # promote to error: "bad natural literal in generic association"
             args += ["-work work"]
             args += [
-                '-%slibdirname "%s"' % (self.option_prefix, str(Path(self._output_path) / "libraries"))
+                '-%slibdirname "%s"'
+                % (self.option_prefix, str(Path(self._output_path) / "libraries"))
             ]  # @TODO: ugly
             args += config.sim_options.get("incisive.irun_sim_flags", [])
             args += ['-cdslib "%s"' % self._cdslib]
@@ -372,8 +383,12 @@ define work "{2}/libraries/work"
                 args += ['-reflib "%s"' % library.directory]
             args += ['-input "@set intovf_severity_level ignore"']
             if config.sim_options.get("disable_ieee_warnings", False):
-                args += ['-input "@set pack_assert_off { std_logic_arith numeric_std }"']
-            args += ['-input "@set assert_stop_level %s"' % config.vhdl_assert_stop_level]
+                args += [
+                    '-input "@set pack_assert_off { std_logic_arith numeric_std }"'
+                ]
+            args += [
+                '-input "@set assert_stop_level %s"' % config.vhdl_assert_stop_level
+            ]
             if launch_gui:
                 args += ["-access +rwc"]
                 # args += ['-linedebug']
