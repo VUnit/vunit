@@ -27,7 +27,10 @@ class TestRivieraProInterface(unittest.TestCase):
 
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.rivierapro.Process", autospec=True)
-    def test_compile_project_vhdl_2019(self, process, check_output):
+    @mock.patch(
+        "vunit.sim_if.rivierapro.RivieraProInterface.find_prefix", return_value="prefix"
+    )
+    def test_compile_project_vhdl_2019(self, _find_prefix, process, check_output):
         simif = RivieraProInterface(prefix="prefix", output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -52,7 +55,7 @@ class TestRivieraProInterface(unittest.TestCase):
                 "-quiet",
                 "-j",
                 self.output_path,
-                "-2018",
+                "-2019",
                 "-work",
                 "lib",
                 "file.vhd",
@@ -62,7 +65,10 @@ class TestRivieraProInterface(unittest.TestCase):
 
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.rivierapro.Process", autospec=True)
-    def test_compile_project_vhdl_2008(self, process, check_output):
+    @mock.patch(
+        "vunit.sim_if.rivierapro.RivieraProInterface.find_prefix", return_value="prefix"
+    )
+    def test_compile_project_vhdl_2008(self, _find_prefix, process, check_output):
         simif = RivieraProInterface(prefix="prefix", output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -97,7 +103,10 @@ class TestRivieraProInterface(unittest.TestCase):
 
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.rivierapro.Process", autospec=True)
-    def test_compile_project_vhdl_2002(self, process, check_output):
+    @mock.patch(
+        "vunit.sim_if.rivierapro.RivieraProInterface.find_prefix", return_value="prefix"
+    )
+    def test_compile_project_vhdl_2002(self, _find_prefix, process, check_output):
         simif = RivieraProInterface(prefix="prefix", output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -132,7 +141,10 @@ class TestRivieraProInterface(unittest.TestCase):
 
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.rivierapro.Process", autospec=True)
-    def test_compile_project_vhdl_93(self, process, check_output):
+    @mock.patch(
+        "vunit.sim_if.rivierapro.RivieraProInterface.find_prefix", return_value="prefix"
+    )
+    def test_compile_project_vhdl_93(self, _find_prefix, process, check_output):
         simif = RivieraProInterface(prefix="prefix", output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -167,7 +179,12 @@ class TestRivieraProInterface(unittest.TestCase):
 
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.rivierapro.Process", autospec=True)
-    def test_compile_project_vhdl_extra_flags(self, process, check_output):
+    @mock.patch(
+        "vunit.sim_if.rivierapro.RivieraProInterface.find_prefix", return_value="prefix"
+    )
+    def test_compile_project_vhdl_extra_flags(
+        self, _find_prefix, process, check_output
+    ):
         simif = RivieraProInterface(prefix="prefix", output_path=self.output_path)
         project = Project()
         project.add_library("lib", "lib_path")
@@ -203,7 +220,10 @@ class TestRivieraProInterface(unittest.TestCase):
 
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.rivierapro.Process", autospec=True)
-    def test_compile_project_verilog(self, process, check_output):
+    @mock.patch(
+        "vunit.sim_if.rivierapro.RivieraProInterface.find_prefix", return_value="prefix"
+    )
+    def test_compile_project_verilog(self, _find_prefix, process, check_output):
         library_cfg = str(Path(self.output_path) / "library.cfg")
         simif = RivieraProInterface(prefix="prefix", output_path=self.output_path)
         project = Project()
@@ -238,7 +258,10 @@ class TestRivieraProInterface(unittest.TestCase):
 
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.rivierapro.Process", autospec=True)
-    def test_compile_project_system_verilog(self, process, check_output):
+    @mock.patch(
+        "vunit.sim_if.rivierapro.RivieraProInterface.find_prefix", return_value="prefix"
+    )
+    def test_compile_project_system_verilog(self, _find_prefix, process, check_output):
         library_cfg = str(Path(self.output_path) / "library.cfg")
         simif = RivieraProInterface(prefix="prefix", output_path=self.output_path)
         project = Project()
@@ -274,7 +297,12 @@ class TestRivieraProInterface(unittest.TestCase):
 
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.rivierapro.Process", autospec=True)
-    def test_compile_project_verilog_extra_flags(self, process, check_output):
+    @mock.patch(
+        "vunit.sim_if.rivierapro.RivieraProInterface.find_prefix", return_value="prefix"
+    )
+    def test_compile_project_verilog_extra_flags(
+        self, _find_prefix, process, check_output
+    ):
         library_cfg = str(Path(self.output_path) / "library.cfg")
         simif = RivieraProInterface(prefix="prefix", output_path=self.output_path)
         project = Project()
@@ -312,7 +340,10 @@ class TestRivieraProInterface(unittest.TestCase):
 
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.rivierapro.Process", autospec=True)
-    def test_compile_project_verilog_include(self, process, check_output):
+    @mock.patch(
+        "vunit.sim_if.rivierapro.RivieraProInterface.find_prefix", return_value="prefix"
+    )
+    def test_compile_project_verilog_include(self, _find_prefix, process, check_output):
         library_cfg = str(Path(self.output_path) / "library.cfg")
         simif = RivieraProInterface(prefix="prefix", output_path=self.output_path)
         project = Project()
@@ -350,7 +381,10 @@ class TestRivieraProInterface(unittest.TestCase):
 
     @mock.patch("vunit.sim_if.check_output", autospec=True, return_value="")
     @mock.patch("vunit.sim_if.rivierapro.Process", autospec=True)
-    def test_compile_project_verilog_define(self, process, check_output):
+    @mock.patch(
+        "vunit.sim_if.rivierapro.RivieraProInterface.find_prefix", return_value="prefix"
+    )
+    def test_compile_project_verilog_define(self, _find_prefix, process, check_output):
         library_cfg = str(Path(self.output_path) / "library.cfg")
         simif = RivieraProInterface(prefix="prefix", output_path=self.output_path)
         project = Project()

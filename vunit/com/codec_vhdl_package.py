@@ -20,9 +20,7 @@ class CodecVHDLPackage(VHDLPackage):
     in the package."""
 
     def __init__(self, identifier, enumeration_types, record_types, array_types):
-        super(CodecVHDLPackage, self).__init__(
-            identifier, enumeration_types, record_types, array_types
-        )
+        super().__init__(identifier, enumeration_types, record_types, array_types)
         self._template = None
 
     @classmethod
@@ -78,9 +76,11 @@ class CodecVHDLPackage(VHDLPackage):
             msg_type_enumeration_types,
         ) = self._create_enumeration_of_all_msg_types()
         if all_msg_types_enumeration_type is not None:
-            declarations += self._template.all_msg_types_enumeration_type_declaration.substitute(
-                identifier=all_msg_types_enumeration_type.identifier,
-                literals=", ".join(all_msg_types_enumeration_type.literals),
+            declarations += (
+                self._template.all_msg_types_enumeration_type_declaration.substitute(
+                    identifier=all_msg_types_enumeration_type.identifier,
+                    literals=", ".join(all_msg_types_enumeration_type.literals),
+                )
             )
 
         if all_msg_types_enumeration_type is not None:
@@ -263,17 +263,21 @@ class CodecVHDLPackage(VHDLPackage):
 
                 encodings = " & ".join(encoding_list)
 
-                declarations += self._template.msg_type_record_codec_declaration.substitute(
-                    name=value,
-                    parameter_part=parameter_part,
-                    alias_signature=alias_signature,
-                    alias_name=value + "_msg",
+                declarations += (
+                    self._template.msg_type_record_codec_declaration.substitute(
+                        name=value,
+                        parameter_part=parameter_part,
+                        alias_signature=alias_signature,
+                        alias_name=value + "_msg",
+                    )
                 )
-                definitions += self._template.msg_type_record_codec_definition.substitute(
-                    name=value,
-                    parameter_part=parameter_part,
-                    num_of_encodings=len(encoding_list),
-                    encodings=encodings,
+                definitions += (
+                    self._template.msg_type_record_codec_definition.substitute(
+                        name=value,
+                        parameter_part=parameter_part,
+                        num_of_encodings=len(encoding_list),
+                        encodings=encodings,
+                    )
                 )
 
         return declarations, definitions
@@ -290,11 +294,15 @@ class CodecVHDLPackage(VHDLPackage):
             msg_type_type = record.elements[0].subtype_indication.code
             if msg_type_type not in msg_type_types:
                 msg_type_types.append(msg_type_type)
-                declarations += self._template.get_specific_msg_type_declaration.substitute(
-                    type=msg_type_type
+                declarations += (
+                    self._template.get_specific_msg_type_declaration.substitute(
+                        type=msg_type_type
+                    )
                 )
-                definitions += self._template.get_specific_msg_type_definition.substitute(
-                    type=msg_type_type
+                definitions += (
+                    self._template.get_specific_msg_type_definition.substitute(
+                        type=msg_type_type
+                    )
                 )
 
         return declarations, definitions

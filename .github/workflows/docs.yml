@@ -11,23 +11,30 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+
+    - uses: actions/checkout@v2
       with:
         submodules: recursive
-    - uses: actions/setup-python@v1
+        fetch-depth: 0
+
+    - uses: actions/setup-python@v2
       with:
         python-version: 3.8
-    - name: install dependencies
+
+    - name: Install dependencies
       run: |
         pip install -U pip --progress-bar off
         pip install -U virtualenv tox --progress-bar off
-    - name: build docs
+
+    - name: Build docs
       run: tox -e py38-docs -- --color
-    - uses: actions/upload-artifact@master
+
+    - uses: Actions/upload-artifact@v2
       with:
         name: VUnit-site
         path: .tox/py38-docs/tmp/docsbuild/
-    - name: 'publish site to gh-pages'
+
+    - name: Publish site to gh-pages
       if: github.event_name != 'pull_request' && github.repository == 'VUnit/vunit'
       env:
         GH_DEPKEY: ${{ secrets.VUNIT_GITHUB_IO_DEPLOY_KEY }}

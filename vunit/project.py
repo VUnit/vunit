@@ -526,7 +526,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
             return get_depend_func(target_files)
         except CircularDependencyException as exc:
             self._handle_circular_dependency(exc)
-            raise CompileError
+            raise CompileError from exc
 
     def _get_compile_order(self, files, dependency_graph):
         """
@@ -537,7 +537,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
             compile_order = dependency_graph.toposort()
         except CircularDependencyException as exc:
             self._handle_circular_dependency(exc)
-            raise CompileError
+            raise CompileError from exc
 
         def comparison_key(source_file):
             return compile_order.index(source_file)

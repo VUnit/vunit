@@ -19,5 +19,5 @@ class TestMyPy(unittest.TestCase):
     """
 
     @staticmethod
-    def test_pycodestyle():
+    def test_mypy():
         check_call([sys.executable, "-m", "mypy", "vunit"])

@@ -12,8 +12,12 @@ from subprocess import check_call
 from pathlib import Path
 import sys
 from sys import argv
+from shutil import copyfile
 from create_release_notes import create_release_notes
-from docs_utils import examples
+from docs_utils import examples, get_theme
+
+
+DROOT = Path(__file__).parent.parent / 'docs'
 
 
 def main():
@@ -22,6 +26,11 @@ def main():
     """
     create_release_notes()
     examples()
+    copyfile(str(DROOT / '..' / 'LICENSE.rst'), str(DROOT / 'license.rst'))
+    get_theme(
+        DROOT,
+        "https://codeload.github.com/buildthedocs/sphinx.theme/tar.gz/v0"
+    )
     check_call(
         [
             sys.executable,

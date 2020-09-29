@@ -35,27 +35,17 @@ architecture arch of fifo is
 
 begin
 
--- Assertions
-  process(clkw, clkr)
+  PslChecks : block is
     constant dx : std_logic_vector(d'left downto 0) := (others => 'X');
     constant du : std_logic_vector(d'left downto 0) := (others => 'U');
   begin
-    if rising_edge(clkw) then
-      if ( wr and ( d?=dx or d?=du ) ) then
-        assert false report "wrote X|U to fIfO" severity failure;
-      end if;
-      if (f and wr) then
-        assert false report "wrote to fIfO while full" severity failure;
-      end if;
-    end if;
-    if rising_edge(clkr) then
-      if (e and rd) then
-        assert false report "Read from fIfO while empty" severity failure;
-      end if;
-    end if;
-  end process;
-
---
+    assert always (not rst and wr -> not (d ?= dx or d ?= du))@rising_edge(clkw)
+      report "wrote X|U to FIFO";
+    assert always (not rst and f -> not wr)@rising_edge(clkw)
+      report "Wrote to FIFO while full";
+    assert always (not rst and e -> not rd)@rising_edge(clkr)
+      report "Read from FIFO while empty";
+  end block PslChecks;
 
   process(clkw) begin
     if rising_edge(clkw) then

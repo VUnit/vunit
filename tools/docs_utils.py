@@ -11,8 +11,10 @@ Helper functions to generate examples.rst from docstrings in run.py files
 import sys
 import inspect
 
-from pathlib import Path
 from os import listdir, remove
+from pathlib import Path
+from subprocess import check_call
+
 
 ROOT = Path(__file__).parent.parent / "docs"
 
@@ -77,3 +79,18 @@ def _get_eg_doc(location: Path, ref):
 
     title = "`%s <%s/>`_" % (eg_doc.split("---", 1)[0][0:-1], ref)
     return "\n".join([title, "-" * len(title), eg_doc.split("---\n", 1)[1], "\n"])
+
+
+def get_theme(path: Path, url: str):
+    """
+    Check if the theme is available locally, retrieve it with curl and tar otherwise
+    """
+    tpath = path / "_theme"
+    if not tpath.is_dir() or not (tpath / "theme.conf").is_file():
+        if not tpath.is_dir():
+            tpath.mkdir()
+        zpath = path / "theme.tgz"
+        if not zpath.is_file():
+            check_call(["curl", "-fsSL", url, "-o", str(zpath)])
+        tar_cmd = ["tar", "--strip-components=1", "-C", str(tpath), "-xvzf", str(zpath)]
+        check_call(tar_cmd)

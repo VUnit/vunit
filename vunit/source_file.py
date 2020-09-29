@@ -185,8 +185,8 @@ class VerilogSourceFile(SourceFile):
             for instance_name in design_file.instances:
                 self.module_dependencies.append(instance_name)
 
-        except KeyboardInterrupt:
-            raise KeyboardInterrupt
+        except KeyboardInterrupt as exk:
+            raise KeyboardInterrupt from exk
         except:  # pylint: disable=bare-except
             traceback.print_exc()
             LOGGER.error("Failed to parse %s", self.name)
@@ -222,8 +222,8 @@ class VHDLSourceFile(SourceFile):
 
             try:
                 design_file = vhdl_parser.parse(self.name)
-            except KeyboardInterrupt:
-                raise KeyboardInterrupt
+            except KeyboardInterrupt as exk:
+                raise KeyboardInterrupt from exk
             except:  # pylint: disable=bare-except
                 traceback.print_exc()
                 LOGGER.error("Failed to parse %s", self.name)

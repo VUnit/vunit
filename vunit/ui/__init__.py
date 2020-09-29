@@ -180,8 +180,8 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
         try:
             database = DataBase(project_database_file_name)
             create_new = (key not in database) or (database[key] != version)
-        except KeyboardInterrupt:
-            raise KeyboardInterrupt
+        except KeyboardInterrupt as exk:
+            raise KeyboardInterrupt from exk
         except:  # pylint: disable=bare-except
             traceback.print_exc()
             create_new = True
@@ -649,8 +649,8 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
             code = ostools.read_file(file_name, encoding=HDL_FILE_ENCODING)
             for preprocessor in preprocessors:
                 code = preprocessor.run(code, fname)
-        except KeyboardInterrupt:
-            raise KeyboardInterrupt
+        except KeyboardInterrupt as exk:
+            raise KeyboardInterrupt from exk
         except:  # pylint: disable=bare-except
             traceback.print_exc()
             LOGGER.error("Failed to preprocess %s", fstr)
@@ -871,7 +871,7 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
                     dict(
                         name=name,
                         location=dict(
-                            file_name=info.location.file_name,
+                            file_name=str(info.location.file_name),
                             offset=info.location.offset,
                             length=info.location.length,
                         ),
@@ -1108,4 +1108,4 @@ avoid location preprocessing of other functions sharing name with a VUnit log or
         """
         if self._simulator_class is None:
             return None
-        return self._simulator_class.supports_coverage
+        return self._simulator_class.supports_coverage()

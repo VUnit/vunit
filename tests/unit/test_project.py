@@ -1732,8 +1732,8 @@ end architecture;
 
     def test_dependencies_on_verilog_component(self):
         """
-      Create a projected containing an verilog file separated.
-      Dependency should involve it.
+        Create a projected containing an verilog file separated.
+        Dependency should involve it.
         """
         self.project = Project()
         self.project.add_library("lib", "work_path")

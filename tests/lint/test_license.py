@@ -57,7 +57,7 @@ class TestLicense(unittest.TestCase):
     def test_that_license_file_matches_vunit_license_text(self):
         with catch_warnings():
             simplefilter("ignore", category=DeprecationWarning)
-            with (ROOT / "LICENSE.txt").open("rU") as lic:
+            with (ROOT / "LICENSE.rst").open("rU") as lic:
                 self.assertEqual(lic.read(), license_text())
 
     def _check_license(self, code, file_name):
@@ -144,7 +144,8 @@ def find_licensed_files():
             if str(ROOT / ".tox") in root:
                 continue
             if is_prefix_of(
-                (VHDL_PATH / "osvvm").resolve(), (Path(root) / file_name).resolve(),
+                (VHDL_PATH / "osvvm").resolve(),
+                (Path(root) / file_name).resolve(),
             ):
                 continue
             if is_prefix_of(

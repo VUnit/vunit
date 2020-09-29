@@ -10,13 +10,9 @@
 Adding Custom Command Line Arguments
 ------------------------------------
 It is possible to add custom command line arguments to your ``run.py``
-scripts using the :class:`.VUnitCLI` class.
-
-.. autoclass:: vunit.vunit_cli.VUnitCLI
-   :members:
-
-A :class:`.VUnitCLI` object has a ``parser`` field which is an
-`ArgumentParser` object of the `argparse`_ library.
+scripts using the ``VUnitCLI`` class. A ``VUnitCLI`` object
+has a ``parser`` field which is an `ArgumentParser` object of the
+`argparse`_ library.
 
 .. _argparse: https://docs.python.org/3/library/argparse.html
 
@@ -267,8 +263,10 @@ def positive_int(val):
         ival = int(val)
         assert ival > 0
         return ival
-    except (ValueError, AssertionError):
-        raise argparse.ArgumentTypeError("'%s' is not a valid positive int" % val)
+    except (ValueError, AssertionError) as exv:
+        raise argparse.ArgumentTypeError(
+            "'%s' is not a valid positive int" % val
+        ) from exv
 
 
 def _parser_for_documentation():

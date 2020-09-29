@@ -5,13 +5,12 @@
 Sigasi Adds Full VUnit Support
 ==============================
 
+.. NOTE:: This article was originally posted on `LinkedIn <https://www.linkedin.com/pulse/sigasi-adds-full-vunit-support-lars-asplund>`__
+   where you may find some comments on its contents.
+
 .. figure:: img/sigasi_full.png
    :alt: Sigasi Adds Full VUnit Support
    :align: center
-
-This article was originally posted on `LinkedIn
-<https://www.linkedin.com/pulse/sigasi-adds-full-vunit-support-lars-asplund>`__
-where you may find some comments on its contents.
 
 Some time ago I gave a `preview
 <https://www.linkedin.com/pulse/sigasi-deepens-its-commitment-vunit-testing-framework-lars-asplund/?lipi=urn%3Ali%3Apage%3Ad_flagship3_pulse_read%3B3AKDCea7TJOzkRu%2FF7HHHQ%3D%3D>`__

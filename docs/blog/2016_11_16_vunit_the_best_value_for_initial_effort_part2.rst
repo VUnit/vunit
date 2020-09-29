@@ -5,13 +5,12 @@
 VUnit - The Best Value for Initial Effort - Part 2
 ==================================================
 
+.. NOTE:: This article was originally posted on `LinkedIn <https://www.linkedin.com/pulse/vunit-best-value-initial-effort-part-2-lars-asplund>`__
+   where you may find some comments on its contents.
+
 .. figure:: img/bestvalue2.jpg
    :alt: Best Value Part 2
    :align: center
-
-This article was originally posted on `LinkedIn
-<https://www.linkedin.com/pulse/vunit-best-value-initial-effort-part-2-lars-asplund>`__
-where you may find some comments on its contents.
 
 In the previous `blog
 <http://www.linkedin.com/pulse/vunit-best-value-initial-effort-lars-asplund>`__

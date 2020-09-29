@@ -20,7 +20,7 @@ begin
 
   main : process
     variable dict : dict_t;
-    constant many_keys : natural := 2**16;
+    constant many_keys : natural := 2**13;
     constant long_key : string := "long--------------------------------------------------------key";
   begin
     test_runner_setup(runner, runner_cfg);
@@ -94,6 +94,7 @@ begin
           remove(dict, long_key & integer'image(i));
           check_equal(num_keys(dict), i-1);
         end loop;
+
       end loop;
 
       deallocate(dict);

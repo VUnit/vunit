@@ -117,6 +117,18 @@ package axi_stream_pkg is
     p_protocol_checker : axi_stream_protocol_checker_t;
   end record;
 
+  constant null_axi_stream_master : axi_stream_master_t := (
+    p_actor            => null_actor,
+    p_data_length      => 0,
+    p_id_length        => 0,
+    p_dest_length      => 0,
+    p_user_length      => 0,
+    p_stall_config     => null_stall_config,
+    p_logger           => null_logger,
+    p_monitor          => null_axi_stream_monitor,
+    p_protocol_checker => null_axi_stream_protocol_checker
+    );
+
   type axi_stream_slave_t is record
     p_actor            : actor_t;
     p_data_length      : natural;
@@ -128,6 +140,18 @@ package axi_stream_pkg is
     p_monitor          : axi_stream_monitor_t;
     p_protocol_checker : axi_stream_protocol_checker_t;
   end record;
+
+  constant null_axi_stream_slave : axi_stream_slave_t := (
+    p_actor            => null_actor,
+    p_data_length      => 0,
+    p_id_length        => 0,
+    p_dest_length      => 0,
+    p_user_length      => 0,
+    p_stall_config     => null_stall_config,
+    p_logger           => null_logger,
+    p_monitor          => null_axi_stream_monitor,
+    p_protocol_checker => null_axi_stream_protocol_checker
+    );
 
   constant axi_stream_logger  : logger_t  := get_logger("vunit_lib:axi_stream_pkg");
   constant axi_stream_checker : checker_t := new_checker(axi_stream_logger);

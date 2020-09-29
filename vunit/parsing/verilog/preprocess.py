@@ -114,10 +114,10 @@ class VerilogPreprocessor(object):
                     include_paths=include_paths,
                     included_files=included_files,
                 )
-            except EOFException:
+            except EOFException as exe:
                 raise LocationException.warning(
                     "EOF reached when parsing `%s" % token.value, token.location
-                )
+                ) from exe
 
         elif token.value in ("celldefine", "endcelldefine", "nounconnected_drive"):
             # Ignored
@@ -150,10 +150,10 @@ class VerilogPreprocessor(object):
     @staticmethod
     def _skip_protected_region(stream):
         """
-        Skip a protected region
-`pragma protect begin_protected
-Skipped
-`pragma protect end_protected
+                Skip a protected region
+        `pragma protect begin_protected
+        Skipped
+        `pragma protect end_protected
         """
         while not stream.eof:
             stream.skip_while(WHITESPACE)
@@ -275,10 +275,10 @@ Skipped
         stream.skip_while(WHITESPACE)
         try:
             tok = stream.pop()
-        except EOFException:
+        except EOFException as exe:
             raise LocationException.warning(
                 "EOF reached when parsing `include argument", token.location
-            )
+            ) from exe
 
         if tok.kind == PREPROCESSOR:
             if tok.value in defines:
@@ -363,10 +363,10 @@ def undef(undef_token, stream, defines):
     stream.skip_while(WHITESPACE, NEWLINE)
     try:
         name_token = stream.pop()
-    except EOFException:
+    except EOFException as exe:
         raise LocationException.warning(
             "EOF reached when parsing `undef", undef_token.location
-        )
+        ) from exe
 
     if name_token.kind != IDENTIFIER:
         raise LocationException.warning("Bad argument to `undef", name_token.location)
@@ -386,10 +386,10 @@ def define(define_token, stream):
     stream.skip_while(WHITESPACE, NEWLINE)
     try:
         name_token = stream.pop()
-    except EOFException:
+    except EOFException as exe:
         raise LocationException.warning(
             "Verilog `define without argument", define_token.location
-        )
+        ) from exe
 
     if name_token.kind != IDENTIFIER:
         raise LocationException.warning(
@@ -429,10 +429,10 @@ def define(define_token, stream):
                         token = stream.pop()
                 else:
                     token = stream.pop()
-        except EOFException:
+        except EOFException as exe:
             raise LocationException.warning(
                 "EOF reached when parsing `define argument list", lpar_token.location
-            )
+            ) from exe
 
     stream.skip_while(WHITESPACE)
     start = stream.idx
@@ -500,10 +500,10 @@ class Macro(object):
         else:
             try:
                 values = self._parse_macro_actuals(token, stream)
-            except EOFException:
+            except EOFException as exe:
                 raise LocationException.warning(
                     "EOF reached when parsing `define actuals", location=token.location
-                )
+                ) from exe
 
             # Bind defaults
             if len(values) < len(self.args):

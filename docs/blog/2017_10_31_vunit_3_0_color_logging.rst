@@ -5,13 +5,12 @@
 VUnit 3.0 Color Logging
 =======================
 
+.. NOTE:: This article was originally posted on `LinkedIn <https://www.linkedin.com/pulse/vunit-color-logging-lars-asplund>`__
+   where you may find some comments on its contents.
+
 .. figure:: img/color_logging.jpg
    :alt: VUnit 3.0 Color Logging
    :align: center
-
-This article was originally posted on `LinkedIn
-<https://www.linkedin.com/pulse/vunit-color-logging-lars-asplund>`__
-where you may find some comments on its contents.
 
 VUnit 3.0, our next major release, is around the corner and with it
 comes a number of updates and additions. This first preview post will

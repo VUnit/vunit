@@ -5,6 +5,7 @@ User Guide
 
 Introduction
 ------------
+
 VUnit is invoked by a user-defined project specified in a Python
 script.  At minimum, a VUnit project consists of a set of HDL source
 files mapped to libraries. The project serves as single point of entry
@@ -66,6 +67,11 @@ how to choose which one to use :ref:`here <simulator_selection>`.
 
 VHDL Test Benches
 -----------------
+
+.. HINT::
+
+   Example code available at :vunit_example:`vhdl/user_guide`.
+
 In its simplest form a VUnit VHDL test bench looks like this:
 
 .. literalinclude:: ../examples/vhdl/user_guide/tb_example.vhd
@@ -101,13 +107,15 @@ From ``tb_example_many.vhd``'s ``run()`` calls, two test cases are created:
 * ``lib.tb_example_many.test_pass``
 * ``lib.tb_example_many.test_fail``
 
-
-The above example code can be found in :vunit_example:`vhdl/user_guide`.
-
 .. _sv_test_benches:
 
 SystemVerilog Test Benches
 --------------------------
+
+.. HINT::
+
+   Example code available at :vunit_example:`verilog/user_guide`.
+
 In its simplest form a VUnit SystemVerilog test bench looks like this:
 
 .. literalinclude:: ../examples/verilog/user_guide/tb_example.sv
@@ -125,44 +133,39 @@ Each test is run in an individual simulation. Putting multiple tests
 in the same test bench is a good way to share a common test
 environment.
 
-The above example code can be found in :vunit_example:`verilog/user_guide`.
-
 .. _test_bench_scanning:
 
 Scanning for Test Benches
 -------------------------
+
 VUnit will recognize a module or entity as a test bench and run it if
 it has a ``runner_cfg`` generic or parameter. A SystemVerilog test
 bench using the ``TEST_SUITE`` macro will have a ``runner_cfg``
 parameter created by the macro and thus match the criteria.
 
-A warning will be given if the test bench entity or module name does
-not match the pattern ``tb_*`` or ``*_tb``.
+.. WARNING:: A warning will be given if:
 
-A warning will be given if the name *does* match the above pattern but
-lacks a ``runner_cfg`` generic or parameter preventing it to be run
-by VUnit.
+   * The test bench entity or module name **does not match** the pattern
+     ``tb_*`` or ``*_tb``.
+
+   * The name **does match** the above pattern **but lacks** a ``runner_cfg``
+     generic or parameter preventing it to be run by VUnit.
 
 .. _special_generics:
 
 Special generics/parameters
 ---------------------------
-A VUnit test bench can have several special generics/parameters.
-Optional generics are filled in automatically by VUnit if detected on
-the test bench.
 
-- ``runner_cfg : string``
+- [**required**] ``runner_cfg : string``, used by VUnit to pass private information
+  between Python and the HDL test runner.
 
-  Required by VUnit to pass private information between Python and the HDL test runner
+- [**optional**] ``output_path : string``, path to the output directory of the
+  current test; this is useful to create additional output files that can
+  be checked after simulation by a **post_check** Python function.
 
-- ``output_path : string``
-
-  Optional path to the output directory of the current test.
-  This is useful to create additional output files that can be checked
-  after simulation by a **post_check** Python function.
-
-- ``tb_path : string``
-
-  Optional path to the directory containing the test bench.
-  This is useful to read input data with a known location relative to
+- [**optional**] ``tb_path : string``, path to the directory containing the test
+  bench; this is useful to read input data with a known location relative to
   the test bench location.
+
+.. HINT:: Optional generics/parameters are filled in automatically by VUnit if detected
+   on the test bench.

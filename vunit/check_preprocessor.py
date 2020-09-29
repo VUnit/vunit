@@ -249,13 +249,10 @@ class Relation(object):
         self._right = right
 
     def make_context_msg(self):
-        return (
-            '"Expected %s %s %s. Left is " & to_string(%s) & ". Right is " & to_string(%s) & "."'
-            % (
-                self._left.replace('"', '""'),
-                self._operand,
-                self._right.replace('"', '""'),
-                self._left,
-                self._right,
-            )
+        return '"Expected %s %s %s. Left is " & to_string(%s) & ". Right is " & to_string(%s) & "."' % (
+            self._left.replace('"', '""'),
+            self._operand,
+            self._right.replace('"', '""'),
+            self._left,
+            self._right,
         )

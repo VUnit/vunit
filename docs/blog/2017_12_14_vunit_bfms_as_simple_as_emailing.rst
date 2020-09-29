@@ -5,11 +5,12 @@
 VUnit BFMs - as Simple as Emailing
 ==================================
 
+.. NOTE:: This article was originally posted on `LinkedIn <https://www.linkedin.com/pulse/vunit-bfms-simple-emailing-lars-asplund>`__
+   where you may find some comments on its contents.
+
 .. figure:: img/vunit_emailing.jpg
    :alt: VUnit BFMs - as Simple as Emailing
    :align: center
-
-This article was originally posted on `LinkedIn <https://www.linkedin.com/pulse/vunit-bfms-simple-emailing-lars-asplund>`__ where you may find some comments on its contents.
 
 VUnit 3.0, our next major release, is around the corner and with it
 comes a number of updates and additions. One area which we have
