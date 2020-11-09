@@ -52,13 +52,6 @@ begin
   rstn <= not rst;
 
   main: process
-    procedure run_test is begin
-      info("Init test");
-      wait until rising_edge(clk); start <= true;
-      wait until rising_edge(clk); start <= false;
-      wait until (done and saved and rising_edge(clk));
-      info("Test done");
-    end procedure;
   begin
     test_runner_setup(runner, runner_cfg);
     while test_suite loop
@@ -66,7 +59,13 @@ begin
         rst <= '1';
         wait for 15*clk_period;
         rst <= '0';
-        run_test;
+        info("Init test");
+        wait until rising_edge(clk);
+        start <= true;
+        wait until rising_edge(clk);
+        start <= false;
+        wait until (done and saved and rising_edge(clk));
+        info("Test done");
       end if;
     end loop;
     test_runner_cleanup(runner);
