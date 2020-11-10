@@ -10,6 +10,8 @@
 -- either directly or (preferredly) through a FIFO, thus composing a loopback. Therefore, as data is pushed to the
 -- AXI4-Stream Slave interface, the output is read from the AXI4-Stream Master interface and it is saved to
 -- `data_path & csv_o`.
+-- AXI Stream VC's optional 'stall' feature is used for generating random stalls in the interfaces. In this example,
+-- a 5% of probability to stall for a duration of 1 to 10 cycles is defined.
 
 library ieee;
 context ieee.ieee_std_context;
@@ -36,8 +38,14 @@ architecture tb of tb_axis_loop is
 
   -- AXI4Stream Verification Components
 
-  constant master_axi_stream : axi_stream_master_t := new_axi_stream_master(data_length => data_width);
-  constant slave_axi_stream  : axi_stream_slave_t  := new_axi_stream_slave(data_length => data_width);
+  constant master_axi_stream : axi_stream_master_t := new_axi_stream_master(
+    data_length => data_width,
+    stall_config => new_stall_config(0.05, 1, 10)
+  );
+  constant slave_axi_stream  : axi_stream_slave_t  := new_axi_stream_slave(
+    data_length => data_width,
+    stall_config => new_stall_config(0.05, 1, 10)
+  );
 
   -- tb signals and variables
 
