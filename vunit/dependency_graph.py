@@ -33,8 +33,8 @@ class DependencyGraph(Generic[T]):
         """
         sorted_nodes: List[T] = []
         self._visit(
-            sorted(self._nodes),
-            dict((key, sorted(values)) for key, values in self._forward.items()),
+            sorted(self._nodes),  # type: ignore
+            dict((key, sorted(values)) for key, values in self._forward.items()),  # type: ignore
             sorted_nodes.append,
         )
         sorted_nodes = list(reversed(sorted_nodes))
