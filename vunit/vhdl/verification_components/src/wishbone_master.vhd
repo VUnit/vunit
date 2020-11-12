@@ -91,10 +91,9 @@ begin
           -- TODO why sel is not passed in msg for reading (present for writing)?
           --sel <= pop_std_ulogic_vector(request_msg);
         end if;
+        push(acknowledge_queue, request_msg);
         wait until rising_edge(clk) and stall = '0';
         stb <= '0';
-
-        push(acknowledge_queue, request_msg);
 
       elsif msg_type = wait_until_idle_msg then
         if cycle then
