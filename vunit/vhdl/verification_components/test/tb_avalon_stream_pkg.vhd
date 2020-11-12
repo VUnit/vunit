@@ -15,6 +15,7 @@ context work.data_types_context;
 use work.avalon_stream_pkg.all;
 use work.stream_master_pkg.all;
 use work.stream_slave_pkg.all;
+use work.helpers_pkg.all;
 
 entity tb_avalon_stream_pkg is
   generic (runner_cfg : string);
@@ -78,12 +79,12 @@ begin
       end loop;
 
     elsif run("calculate empty length") then
-      check_equal(calc_empty_length(8), 0);
-      check_equal(calc_empty_length(16), 1);
-      check_equal(calc_empty_length(24), 2);
-      check_equal(calc_empty_length(32), 2);
-      check_equal(calc_empty_length(40), 3);
-      check_equal(calc_empty_length(256), 5);
+      check_equal(calc_width(8/8), 0);
+      check_equal(calc_width(16/8), 1);
+      check_equal(calc_width(24/8), 2);
+      check_equal(calc_width(32/8), 2);
+      check_equal(calc_width(40/8), 3);
+      check_equal(calc_width(256/8), 5);
     end if;
     wait until rising_edge(clk);
     test_runner_cleanup(runner);

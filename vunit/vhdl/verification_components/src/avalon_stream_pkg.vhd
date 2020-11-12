@@ -10,6 +10,7 @@ use ieee.std_logic_1164.all;
 use work.logger_pkg.all;
 use work.stream_master_pkg.all;
 use work.stream_slave_pkg.all;
+use work.helpers_pkg.all;
 context work.com_context;
 context work.data_types_context;
 
@@ -45,7 +46,6 @@ package avalon_stream_pkg is
                                        channel_length : natural := 0) return avalon_sink_t;
   impure function data_length(source : avalon_source_t) return natural;
   impure function data_length(source : avalon_sink_t) return natural;
-  function calc_empty_length(data_width : positive) return natural;
   impure function empty_length(source : avalon_source_t) return natural;
   impure function empty_length(source : avalon_sink_t) return natural;
   impure function channel_length(source : avalon_source_t) return natural;
@@ -147,27 +147,16 @@ package body avalon_stream_pkg is
     return source.p_data_length;
   end;
 
-  function calc_empty_length(data_width : positive) return natural is
-    variable v : natural;
-    variable i : natural;
-  begin
-    assert data_width mod 8 = 0;
-    v := data_width/8-1;
-    while v > 0 loop
-      v := v/2;
-      i := i + 1;
-    end loop;
-    return i;
-  end;
-
   impure function empty_length(source : avalon_source_t) return natural is
   begin
-    return calc_empty_length(source.p_data_length);
+    assert source.p_data_length mod 8 = 0;
+    return calc_width(source.p_data_length/8);
   end;
 
   impure function empty_length(source : avalon_sink_t) return natural is
   begin
-    return calc_empty_length(source.p_data_length);
+    assert source.p_data_length mod 8 = 0;
+    return calc_width(source.p_data_length/8);
   end;
 
   impure function channel_length(source : avalon_source_t) return natural is
