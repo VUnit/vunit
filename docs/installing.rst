@@ -19,7 +19,7 @@ Simulators:
    -  `Aldec Active-HDL`_: Tested with Active-HDL 9.3, 10.1, 10.2, 10.3 (x64/x86)
    -  `GHDL`_
 
-      -  Works with versions >= 0.33 (Note: GHDL is a rolling project, it is therefore recommended to use the latest `nightly release`_ tarball.)
+      -  Works with versions >= 0.33 (Note: GHDL is a rolling project, it is therefore recommended to use the latest `nightly release <https://github.com/ghdl/ghdl/releases/tag/nightly>`_ tarball.)
       -  Tested with LLVM and mcode backends, gcc backend might work aswell.
       -  Integrated support for using `GTKWave`_ to view waveforms.
 
