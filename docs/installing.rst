@@ -19,7 +19,7 @@ Simulators:
    -  `Aldec Active-HDL`_: Tested with Active-HDL 9.3, 10.1, 10.2, 10.3 (x64/x86)
    -  `GHDL`_
 
-      -  Works with versions >= 0.33
+      -  Works with versions >= 0.33 (Note: GHDL is a rolling project, it is therefore recommended to use the latest `nightly release <https://github.com/ghdl/ghdl/releases/tag/nightly>`_ tarball.)
       -  Tested with LLVM and mcode backends, gcc backend might work aswell.
       -  Integrated support for using `GTKWave`_ to view waveforms.
 
@@ -42,7 +42,9 @@ Simulators:
 .. _Mentor Graphics ModelSim/Questa: http://www.mentor.com/products/fv/modelsim/
 .. _Cadence Incisive: https://www.cadence.com/content/cadence-www/global/en_US/home/tools/system-design-and-verification/simulation-and-testbench-verification/incisive-enterprise-simulator.html
 .. _GHDL: https://github.com/ghdl/ghdl
+.. _nightly release: https://github.com/ghdl/ghdl/releases/tag/nightly
 .. _GTKWave: http://gtkwave.sourceforge.net/
+
 
 .. _installing_pypi:
 
