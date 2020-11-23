@@ -12,11 +12,11 @@ library vunit_lib;
 context vunit_lib.vunit_context;
 context vunit_lib.vc_context;
 
-entity avalon_tb is
+entity tb_avalon is
     generic (runner_cfg : string);
-end avalon_tb;
+end tb_avalon;
 
-architecture testbench of avalon_tb is
+architecture testbench of tb_avalon is
 
     -- Avalon-MM Slave --
     signal av_address : std_logic_vector(31 downto 0);
@@ -34,11 +34,12 @@ architecture testbench of avalon_tb is
     constant CLK_period : time := 20 ns;
 
 begin
+
     avalon_master : entity vunit_lib.avalon_master
     generic map (
-        bus_handle => avalon_bus,
-        use_readdatavalid => false,
-        fixed_read_latency => 0
+      bus_handle => avalon_bus,
+      use_readdatavalid => false,
+      fixed_read_latency => 0
     )
     port map (
       clk => clk,
@@ -53,23 +54,14 @@ begin
       waitrequest => '0'
     );
 
-    -- Clock process definitions
-    CLK_process: process
-    begin
-        clk <= '0';
-        wait for CLK_period/2;
-        clk <= '1';
-        wait for CLK_period/2;
-    end process;
+    clk <= not clk after CLK_period/2;
 
     tests: process
     begin
-        test_runner_setup(runner, runner_cfg);
-
-        wait for CLK_period*2;
-
-        check_bus(net, avalon_bus, 0, (0 to 31 => '0'));
-
-        test_runner_cleanup(runner);
+      test_runner_setup(runner, runner_cfg);
+      wait for CLK_period*2;
+      check_bus(net, avalon_bus, 0, (0 to 31 => '0'));
+      test_runner_cleanup(runner);
     end process;
+
 end;
