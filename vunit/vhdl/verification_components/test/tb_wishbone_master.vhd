@@ -34,6 +34,7 @@ architecture a of tb_wishbone_master is
     strobe_prob : real;
     ack_prob : real;
     stall_prob : real;
+    slave_inst : boolean;
   end record tb_cfg_t;
 
   impure function decode(encoded_tb_cfg : string) return tb_cfg_t is
@@ -43,7 +44,8 @@ architecture a of tb_wishbone_master is
             num_cycles => positive'value(get(encoded_tb_cfg, "num_cycles")),
             strobe_prob => real'value(get(encoded_tb_cfg, "strobe_prob")),
             ack_prob => real'value(get(encoded_tb_cfg, "ack_prob")),
-            stall_prob => real'value(get(encoded_tb_cfg, "stall_prob")));
+            stall_prob => real'value(get(encoded_tb_cfg, "stall_prob")),
+            slave_inst => boolean'value(get(encoded_tb_cfg, "slave_inst")));
   end function decode;
 
   constant tb_cfg : tb_cfg_t := decode(encoded_tb_cfg);
@@ -156,6 +158,11 @@ begin
         wait for 20 ns;
       end loop;
 
+    elsif run("slave comb ack") then
+      write_bus(net, bus_handle, 0, value);
+      wait until ack = '1' and rising_edge(clk);
+      wait for 20 ns;
+
     end if;
 
     info(tb_logger, "Done, quit...");
@@ -182,22 +189,34 @@ begin
       ack   => ack
     );
 
-  dut_slave : entity work.wishbone_slave
-    generic map (
-      wishbone_slave => wishbone_slave
-    )
-    port map (
-      clk   => clk,
-      adr   => adr,
-      dat_i => dat_o,
-      dat_o => dat_i,
-      sel   => sel,
-      cyc   => cyc,
-      stb   => stb,
-      we    => we,
-      stall => stall,
-      ack   => ack
-    );
+  slave_gen : if tb_cfg.slave_inst generate
+    dut_slave : entity work.wishbone_slave
+      generic map (
+        wishbone_slave => wishbone_slave
+      )
+      port map (
+        clk   => clk,
+        adr   => adr,
+        dat_i => dat_o,
+        dat_o => dat_i,
+        sel   => sel,
+        cyc   => cyc,
+        stb   => stb,
+        we    => we,
+        stall => stall,
+        ack   => ack
+      );
+  else generate
+    signal wr_r : std_ulogic;
+  begin
+    proc : process(clk) is begin
+      if rising_edge(clk) then
+        wr_r <= we and cyc and stb;
+      end if;
+    end process;
+    ack <= wr_r and not stall and cyc;
+    stall <= not wr_r;
+  end generate;
 
   clk <= not clk after 5 ns;
 
