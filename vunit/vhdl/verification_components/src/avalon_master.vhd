@@ -78,9 +78,9 @@ begin
           address <= pop_std_ulogic_vector(request_msg);
           byteenable(byteenable'range) <= (others => '1');
           read <= '1';
+          push(acknowledge_queue, request_msg);
           wait until rising_edge(clk) and waitrequest = '0';
           read <= '0';
-          push(acknowledge_queue, request_msg);
 
         elsif msg_type = bus_burst_read_msg then
           while rnd.Uniform(0.0, 1.0) > read_high_probability loop
@@ -92,9 +92,9 @@ begin
           burstcount <= std_logic_vector(to_unsigned(burst, burstcount'length));
           byteenable(byteenable'range) <= (others => '1');
           read <= '1';
+          push(burst_acknowledge_queue, request_msg);
           wait until rising_edge(clk) and waitrequest = '0';
           read <= '0';
-          push(burst_acknowledge_queue, request_msg);
           push(burstlen_queue, burst);
 
         elsif msg_type = bus_write_msg then
