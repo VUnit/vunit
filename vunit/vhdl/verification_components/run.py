@@ -22,7 +22,9 @@ def encode(tb_cfg):
 
 
 def gen_wb_tests(obj, *args):
-    for dat_width, num_cycles, strobe_prob, ack_prob, stall_prob, slave_inst in product(*args):
+    for dat_width, num_cycles, strobe_prob, ack_prob, stall_prob, slave_inst in product(
+        *args
+    ):
         tb_cfg = dict(
             dat_width=dat_width,
             #  TODO remove fixed addr
@@ -31,7 +33,7 @@ def gen_wb_tests(obj, *args):
             ack_prob=ack_prob,
             stall_prob=stall_prob,
             num_cycles=num_cycles,
-            slave_inst=slave_inst
+            slave_inst=slave_inst,
         )
         config_name = encode(tb_cfg)
         obj.add_config(name=config_name, generics=dict(encoded_tb_cfg=encode(tb_cfg)))
@@ -87,16 +89,46 @@ TB_WISHBONE_SLAVE = LIB.test_bench("tb_wishbone_slave")
 
 for test in TB_WISHBONE_SLAVE.get_tests():
     #  TODO strobe_prob not implemented in slave tb
-    gen_wb_tests(test, [8, 32], [1, 64], [1.0], [0.3, 1.0], [0.4, 0.0], [True, ])
+    gen_wb_tests(
+        test,
+        [8, 32],
+        [1, 64],
+        [1.0],
+        [0.3, 1.0],
+        [0.4, 0.0],
+        [
+            True,
+        ],
+    )
 
 
 TB_WISHBONE_MASTER = LIB.test_bench("tb_wishbone_master")
 
 for test in TB_WISHBONE_MASTER.get_tests():
     if test.name == "slave comb ack":
-        gen_wb_tests(test, [32], [64], [1.0], [1.0], [0.0], [False, ])
+        gen_wb_tests(
+            test,
+            [32],
+            [64],
+            [1.0],
+            [1.0],
+            [0.0],
+            [
+                False,
+            ],
+        )
     else:
-        gen_wb_tests(test, [8, 32], [1, 64], [0.3, 1.0], [0.3, 1.0], [0.4, 0.0], [True, ])    
+        gen_wb_tests(
+            test,
+            [8, 32],
+            [1, 64],
+            [0.3, 1.0],
+            [0.3, 1.0],
+            [0.4, 0.0],
+            [
+                True,
+            ],
+        )
 
 
 TB_AXI_STREAM = LIB.test_bench("tb_axi_stream")
