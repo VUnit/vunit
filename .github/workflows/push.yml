@@ -25,7 +25,7 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: 3.9
 
     - name: Install dependencies
       run: |
@@ -33,7 +33,7 @@ jobs:
         pip install -U virtualenv tox --progress-bar off
 
     - name: Run 'black'
-      run: tox -e py38-fmt -- --check
+      run: tox -e py39-fmt -- --check
 
 #
 # Linux linting and unit tests
@@ -46,9 +46,9 @@ jobs:
       max-parallel: 2
       matrix:
         task: [
-          38-lint,
+          38-lint, # https://github.com/PyCQA/pylint/issues/3882
           36-unit,
-          38-unit,
+          39-unit,
         ]
     steps:
 
@@ -56,7 +56,7 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: 3.9
 
     - name: Install dependencies
       run: |
@@ -77,8 +77,8 @@ jobs:
       max-parallel: 2
       matrix:
         task: [
-          {do: 38-acceptance,  tag: llvm},
-          {do: 38-vcomponents, tag: mcode},
+          {do: 39-acceptance,  tag: llvm},
+          {do: 39-vcomponents, tag: mcode},
         ]
     steps:
 
@@ -107,11 +107,11 @@ jobs:
       max-parallel: 3
       matrix:
         task: [
-          38-acceptance-ghdl,
-          38-vcomponents-ghdl,
-          38-lint,
+          39-acceptance-ghdl,
+          39-vcomponents-ghdl,
+          38-lint, # https://github.com/PyCQA/pylint/issues/3882
           36-unit,
-          38-unit,
+          39-unit,
         ]
     steps:
 
@@ -121,7 +121,7 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: 3.9
 
     - name: Install dependencies
       run: |
@@ -159,7 +159,7 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: 3.9
 
     - name: Install dependencies
       run: |
