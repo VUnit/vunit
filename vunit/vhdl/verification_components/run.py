@@ -322,6 +322,21 @@ VerificationComponent.find(
     ROOT / ".vc" / "tb_std_logic_checker_compliance_template.vhd",
 )
 
+signal_driver_vci = VerificationComponentInterface.find(
+    LIB, "signal_driver_pkg", "signal_driver_t"
+)
+signal_driver_vci.add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "signal_driver_pkg" / "tb_signal_driver_t_compliance_template.vhd",
+)
+VerificationComponent.find(LIB, "std_logic_driver", signal_driver_vci
+).add_vhdl_testbench(
+    TEST_LIB,
+    ROOT / "compliance_test",
+    ROOT / ".vc" / "tb_std_logic_driver_compliance_template.vhd",
+)
+
 ram_master_vci = VerificationComponentInterface.find(
     LIB, "ram_master_pkg", "ram_master_t"
 )
