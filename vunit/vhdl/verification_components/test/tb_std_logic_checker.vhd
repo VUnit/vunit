@@ -24,6 +24,7 @@ architecture tb of tb_std_logic_checker is
 
 begin
   main : process
+      variable read_val : std_logic_vector(1 downto 0);
   begin
     test_runner_setup(runner, runner_cfg);
     show(logger, display_handler, pass);
@@ -121,6 +122,14 @@ begin
                "ZZ" after 5 ns;
 
       wait_until_idle(net, signal_checker);
+
+    elsif run("Test reading back the value") then
+      expect(net, signal_checker, "10", 1 ns);
+      wait for 1 ns;
+      value <= "10";
+      wait for 1 ns;
+      get_value(net, signal_checker, read_val);
+      check_equal(read_val, value, result(" for the readback value"));
 
     end if;
 

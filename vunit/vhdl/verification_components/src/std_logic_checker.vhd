@@ -38,6 +38,11 @@ begin
       push_time(expect_queue, pop_time(request_msg));
       push_time(expect_queue, pop_time(request_msg));
 
+    elsif msg_type = get_value_msg then
+      reply_msg := new_msg(get_value_reply_msg);
+      push_std_ulogic_vector(reply_msg, value);
+      reply(net, request_msg, reply_msg);
+
     elsif msg_type = wait_until_idle_msg then
 
       while not is_empty(expect_queue) loop

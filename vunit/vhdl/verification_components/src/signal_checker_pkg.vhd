@@ -31,12 +31,19 @@ package signal_checker_pkg is
                    event_time : delay_length;
                    margin : delay_length := 0 ns);
 
+  -- Get the current value
+  procedure get_value(signal net     : inout network_t;
+                      signal_checker :       signal_checker_t;
+                      variable value : out   std_logic_vector);
+
   -- Wait until all expected values have been checked
   procedure wait_until_idle(signal net : inout network_t;
                             signal_checker : signal_checker_t);
 
   -- Private message type definitions
   constant expect_msg : msg_type_t := new_msg_type("expect");
+  constant get_value_msg       : msg_type_t := new_msg_type("get value");
+  constant get_value_reply_msg : msg_type_t := new_msg_type("get value reply");
 
 end package;
 
@@ -64,6 +71,17 @@ package body signal_checker_pkg is
     push_time(request_msg, event_time);
     push_time(request_msg, margin);
     send(net, signal_checker.p_actor, request_msg);
+  end;
+
+  procedure get_value(signal net     : inout network_t;
+                      signal_checker :       signal_checker_t;
+                      variable value : out   std_logic_vector) is
+    variable get_msg : msg_t := new_msg(get_value_msg);
+    variable reply   : msg_t;
+  begin
+    request(net, signal_checker.p_actor, get_msg, reply);
+    value := pop_std_ulogic_vector(reply);
+    delete(reply);
   end;
 
   procedure wait_until_idle(signal net : inout network_t;
