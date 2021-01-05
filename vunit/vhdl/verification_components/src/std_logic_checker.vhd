@@ -23,6 +23,7 @@ end entity;
 
 architecture a of std_logic_checker is
   constant expect_queue : queue_t := new_queue;
+  signal monitor_enable : boolean := signal_checker.initial_monitor_enable;
 begin
 
   main : process
@@ -42,6 +43,9 @@ begin
       reply_msg := new_msg(get_value_reply_msg);
       push_std_ulogic_vector(reply_msg, value);
       reply(net, request_msg, reply_msg);
+
+    elsif msg_type = monitor_change_msg then
+      monitor_enable <= pop_boolean(request_msg);
 
     elsif msg_type = wait_until_idle_msg then
 
@@ -77,7 +81,9 @@ begin
   begin
     wait on value;
     if is_empty(expect_queue) then
-      error(signal_checker.p_logger, "Unexpected event with value = " & to_string(value));
+      if monitor_enable then
+        error(signal_checker.p_logger, "Unexpected event with value = " & to_string(value));
+      end if;
     else
       expected_value := pop_std_ulogic_vector(expect_queue);
       event_time := pop_time(expect_queue);

@@ -13,12 +13,13 @@ use work.signal_checker_pkg.all;
 
 entity tb_std_logic_checker is
   generic (
-    runner_cfg : string);
+    runner_cfg : string;
+    initial_monitor_enable : boolean := true);
 end entity;
 
 architecture tb of tb_std_logic_checker is
   constant logger : logger_t := get_logger("signal_checker");
-  constant signal_checker : signal_checker_t := new_signal_checker(logger => logger);
+  constant signal_checker : signal_checker_t := new_signal_checker(logger => logger, initial_monitor_enable => initial_monitor_enable);
 
   signal value : std_logic_vector(1 downto 0);
 
@@ -130,6 +131,42 @@ begin
       wait for 1 ns;
       get_value(net, signal_checker, read_val);
       check_equal(read_val, value, result(" for the readback value"));
+
+    elsif run("Test initial checker monitor state") then
+      mock(logger);
+      wait for 1 ns;
+      value <= "10";
+      wait for 1 us;
+      if initial_monitor_enable then
+        wait_until_idle(net, signal_checker);
+        check_only_log(logger, "Unexpected event with value = " & to_string(std_logic_vector'("10")), error);
+      else
+        check_no_log;
+      end if;
+      unmock(logger);
+
+    elsif run("Test monitor state switch") then
+      mock(logger);
+      wait for 1 ns;
+      value <= "10";
+      wait_until_idle(net, signal_checker);
+      check_only_log(logger, "Unexpected event with value = " & to_string(std_logic_vector'("10")), error);
+
+      wait for 1 ns;
+      disable_monitor(net, signal_checker);
+      wait for 1 ns;
+      value <= "01";
+      wait for 1 ns;
+      check_no_log;
+
+      wait for 1 ns;
+      enable_monitor(net, signal_checker);
+      wait for 1 ns;
+      value <= "11";
+      wait_until_idle(net, signal_checker);
+      check_only_log(logger, "Unexpected event with value = " & to_string(std_logic_vector'("11")), error);
+
+      unmock(logger);
 
     end if;
 
