@@ -187,4 +187,7 @@ for test in TB_STD_LOGIC_CHECKER.get_tests():
             name="initial monitor on", generics=dict(initial_monitor_enable=True)
         )
 
+    test.add_config(name="logger", generics=dict(use_checker=False))
+    test.add_config(name="checker", generics=dict(use_checker=True))
+
 UI.main()

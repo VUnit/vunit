@@ -17,11 +17,13 @@ package signal_checker_pkg is
     -- Private
     p_actor : actor_t;
     p_logger : logger_t;
+    p_checker : checker_t;
     initial_monitor_enable : boolean;
   end record;
 
   impure function new_signal_checker(
     logger : logger_t := null_logger;
+    checker: checker_t := null_checker;
     initial_monitor_enable : boolean := true)
     return signal_checker_t;
 
@@ -58,11 +60,13 @@ end package;
 
 package body signal_checker_pkg is
   impure function new_signal_checker(logger : logger_t := null_logger;
+                                     checker : checker_t := null_checker;
                                      initial_monitor_enable : boolean := true) return signal_checker_t is
     variable result : signal_checker_t;
   begin
     result := (p_actor => new_actor,
                p_logger => logger,
+               p_checker => checker,
                initial_monitor_enable => initial_monitor_enable);
     if logger = null_logger then
       result.p_logger := default_logger;

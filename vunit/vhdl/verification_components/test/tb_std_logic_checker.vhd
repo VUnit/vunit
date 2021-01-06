@@ -14,12 +14,23 @@ use work.signal_checker_pkg.all;
 entity tb_std_logic_checker is
   generic (
     runner_cfg : string;
-    initial_monitor_enable : boolean := true);
+    initial_monitor_enable : boolean := true;
+    use_checker : boolean := false);
 end entity;
 
 architecture tb of tb_std_logic_checker is
   constant logger : logger_t := get_logger("signal_checker");
-  constant signal_checker : signal_checker_t := new_signal_checker(logger => logger, initial_monitor_enable => initial_monitor_enable);
+
+  impure function checker return checker_t is
+  begin
+    if use_checker then
+      return new_checker("signal_checker");
+    else
+      return null_checker;
+    end if;
+  end function checker;
+
+  constant signal_checker : signal_checker_t := new_signal_checker(logger => logger, checker => checker, initial_monitor_enable => initial_monitor_enable);
 
   signal value : std_logic_vector(1 downto 0);
 
@@ -87,7 +98,12 @@ begin
 
       mock(logger, pass);
       wait_until_idle(net, signal_checker);
-      check_only_log(logger, "Got expected event with value = " & to_string(std_logic_vector'("10")), pass);
+      if use_checker then
+        check_log(logger, "Got event with wrong value, got " & to_string(std_logic_vector'("10")) & " expected 10", pass);
+        check_log(logger, "Got event at wrong time, occured at " & to_string(now) & " expected at " & to_string(1 ns), pass);
+      else
+        check_only_log(logger, "Got expected event with value = " & to_string(std_logic_vector'("10")), pass);
+      end if;
       unmock(logger);
 
     elsif run("Test expect single value with late margin") then
@@ -98,7 +114,12 @@ begin
 
       mock(logger, pass);
       wait_until_idle(net, signal_checker);
-      check_only_log(logger, "Got expected event with value = " & to_string(std_logic_vector'("10")), pass);
+      if use_checker then
+        check_log(logger, "Got event with wrong value, got " & to_string(std_logic_vector'("10")) & " expected 10", pass);
+        check_log(logger, "Got event at wrong time, occured at " & to_string(now) & " expected at " & to_string(2 ns) & " +- " & to_string(1 ns), pass);
+      else
+        check_only_log(logger, "Got expected event with value = " & to_string(std_logic_vector'("10")), pass);
+      end if;
       unmock(logger);
 
     elsif run("Test expect single value with early margin") then
@@ -109,7 +130,12 @@ begin
 
       mock(logger, pass);
       wait_until_idle(net, signal_checker);
-      check_only_log(logger, "Got expected event with value = " & to_string(std_logic_vector'("10")), pass);
+      if use_checker then
+        check_log(logger, "Got event with wrong value, got " & to_string(std_logic_vector'("10")) & " expected 10", pass);
+        check_log(logger, "Got event at wrong time, occured at " & to_string(now) & " expected at " & to_string(1 ns) & " +- " & to_string(1 ns), pass);
+      else
+        check_only_log(logger, "Got expected event with value = " & to_string(std_logic_vector'("10")), pass);
+      end if;
       unmock(logger);
 
     elsif run("Test expect multiple values") then
