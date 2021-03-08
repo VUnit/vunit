@@ -33,7 +33,7 @@ package axi_slave_pkg is
 
   constant axi_slave_logger : logger_t := get_logger("vunit_lib:axi_slave_pkg");
   impure function new_axi_slave(memory : memory_t;
-                                actor : actor_t := new_actor;
+                                actor : actor_t := null_actor;
                                 address_fifo_depth : positive := 1;
                                 write_response_fifo_depth : positive := 1;
                                 check_4kbyte_boundary : boolean := true;
@@ -138,7 +138,7 @@ end package;
 
 package body axi_slave_pkg is
   impure function new_axi_slave(memory : memory_t;
-                                actor : actor_t := new_actor;
+                                actor : actor_t := null_actor;
                                 address_fifo_depth : positive := 1;
                                 write_response_fifo_depth : positive := 1;
                                 check_4kbyte_boundary : boolean := true;
