@@ -36,7 +36,8 @@ architecture a of tb_axi_stream is
 
   constant master_axi_stream : axi_stream_master_t := new_axi_stream_master(
     data_length => 8, id_length => g_id_length, dest_length => g_dest_length, user_length => g_user_length,
-    stall_config => master_stall_config, logger => get_logger("master"), actor => new_actor("master"),
+    stall_config => master_stall_config, logger => get_logger("master"),
+    actor => new_actor("master", inbox_size => 200),
     monitor => default_axi_stream_monitor, protocol_checker => default_axi_stream_protocol_checker
   );
   constant master_stream : stream_master_t := as_stream(master_axi_stream);
@@ -231,7 +232,7 @@ begin
       pop_stream(net, slave_stream, data, last_bool);
       check_equal(data, std_logic_vector'(x"77"), result("for pop stream data"));
       check_true(last_bool, result("for pop stream last"));
-      check_equal(now - 10 ns, timestamp + 50 ns, result("for push wait time"));  -- two extra cycles inserted by alignment
+      check_equal(now - 10 ns, timestamp + 30 ns, result("for push wait time"));
       for i in 1 to n_monitors loop
         get_axi_stream_transaction(axi_stream_transaction);
         check_equal(
@@ -250,7 +251,7 @@ begin
       pop_stream(net, slave_stream, data, last_bool);
       check_equal(data, std_logic_vector'(x"77"), result("for pop stream data"));
       check_true(last_bool, result("for pop stream last"));
-      check_equal(now - 10 ns, timestamp + 50 ns, result("for push wait time"));
+      check_equal(now - 10 ns, timestamp + 30 ns, result("for push wait time"));
 
       for i in 1 to n_monitors loop
         get_axi_stream_transaction(axi_stream_transaction);
@@ -270,7 +271,7 @@ begin
       pop_stream(net, slave_stream, data, last_bool);
       check_equal(data, std_logic_vector'(x"77"), result("for pop stream data"));
       check_true(last_bool, result("for pop stream last"));
-      check_equal(now - 10 ns, timestamp + 40 ns, result("for push wait time"));
+      check_equal(now - 10 ns, timestamp + 30 ns, result("for push wait time"));
 
       for i in 1 to n_monitors loop
         get_axi_stream_transaction(axi_stream_transaction);
@@ -290,7 +291,7 @@ begin
       pop_stream(net, slave_stream, data, last_bool);
       check_equal(data, std_logic_vector'(x"77"), result("for pop stream data"));
       check_true(last_bool, result("for pop stream last"));
-      check_equal(now - 10 ns, timestamp + 40 ns, result("for push wait time"));  -- Aligned to clock edge again
+      check_equal(now - 10 ns, timestamp + 30 ns, result("for push wait time"));
       for i in 1 to n_monitors loop
         get_axi_stream_transaction(axi_stream_transaction);
         check_equal(
@@ -438,7 +439,7 @@ begin
       check_equal(now, timestamp, result(" setting up transaction stalled"));
 
       wait_until_idle(net, as_sync(slave_axi_stream));
-      check_equal(now, timestamp + (12+1)*10 ns, " transaction time incorrect");
+      check_equal(now, timestamp + 12*10 ns, " transaction time incorrect");
 
     elsif run("test back-to-back failing check") then
       wait until rising_edge(aclk);
@@ -466,11 +467,11 @@ begin
 
       check_equal(now, timestamp, result(" setting up transaction stalled"));
 
-      wait until rising_edge(aclk);
       mocklogger := get_logger("check");
       mock(mocklogger);
 
-      wait until rising_edge(aclk) and tvalid = '1';
+      wait until rising_edge(aclk) and (tvalid = '1') and (tready = '1');
+      wait for 1 ns;
 
       check_log(mocklogger, "TDATA mismatch, check non-blocking - Got 0000_0011 (3). Expected 0000_0110 (6).", error);
       check_log(mocklogger, "TKEEP mismatch, check non-blocking - Got 0 (0). Expected 1 (1).", error);
@@ -488,7 +489,7 @@ begin
 
       unmock(mocklogger);
 
-      check_equal(now, timestamp + 20 ns, " transaction time incorrect");
+      check_equal(now, timestamp + 11 ns, " transaction time incorrect");
 
     elsif run("test random stall on master") or run("test random stall on slave") then
       wait until rising_edge(aclk);
@@ -520,7 +521,18 @@ begin
         check((axis_stall_stats.ready.min >= min_stall_cycles) and (axis_stall_stats.ready.max <= max_stall_cycles), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
         check_equal(axis_stall_stats.valid.events, 0, "Checking that there are zero tvalid stall events");
       end if;
+    elsif run("Test that a limited inbox leads to backpressure") then
+      timestamp := now;
 
+      for i in 1 to 500 loop
+        pop_stream(net, slave_stream, reference);
+      end loop;
+
+      for i in 1 to 500 loop
+        push_stream(net, master_stream, std_logic_vector(to_unsigned(i, data'length)), true);
+      end loop;
+
+      check(now > timestamp);
     end if;
     test_runner_cleanup(runner);
   end process;

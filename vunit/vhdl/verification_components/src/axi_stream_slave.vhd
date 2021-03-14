@@ -37,40 +37,11 @@ entity axi_stream_slave is
 end entity;
 
 architecture a of axi_stream_slave is
-
-  constant notify_request_msg      : msg_type_t := new_msg_type("notify request");
-  constant message_queue           : queue_t    := new_queue;
-  signal   notify_bus_process_done : std_logic  := '0';
-
 begin
 
   main : process
-    variable request_msg    : msg_t;
-    variable notify_msg     : msg_t;
+    variable request_msg, reply_msg    : msg_t;
     variable msg_type       : msg_type_t;
-  begin
-    receive(net, slave.p_actor, request_msg);
-    msg_type := message_type(request_msg);
-
-    if msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg then
-      push(message_queue, request_msg);
-    elsif msg_type = check_axi_stream_msg then
-      push(message_queue, request_msg);
-    elsif msg_type = wait_for_time_msg then
-      push(message_queue, request_msg);
-    elsif msg_type = wait_until_idle_msg then
-      notify_msg := new_msg(notify_request_msg);
-      push(message_queue, notify_msg);
-      wait on notify_bus_process_done until is_empty(message_queue);
-      handle_wait_until_idle(net, msg_type, request_msg);
-    else
-      unexpected_msg_type(msg_type);
-    end if;
-  end process;
-
-  bus_process : process
-    variable reply_msg, msg : msg_t;
-    variable msg_type : msg_type_t;
     variable report_msg : string_ptr_t;
     variable axi_stream_transaction : axi_stream_transaction_t(
       tdata(tdata'range),
@@ -83,69 +54,65 @@ begin
     variable rnd : RandomPType;
   begin
     rnd.InitSeed(rnd'instance_name);
+
     loop
-        -- Wait for messages to arrive on the queue, posted by the process above
-      wait until rising_edge(aclk) and (not is_empty(message_queue));
+      receive(net, slave.p_actor, request_msg);
+      msg_type := message_type(request_msg);
 
-      while not is_empty(message_queue) loop
-        msg := pop(message_queue);
-        msg_type := message_type(msg);
+      handle_sync_message(net, msg_type, request_msg);
 
-        if msg_type = wait_for_time_msg then
-          handle_sync_message(net, msg_type, msg);
-          wait until rising_edge(aclk);
-        elsif msg_type = notify_request_msg then
-          -- Ignore this message, but expect it
-        elsif msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg then
+      -- Align to clock edge if not already aligned. Note that we
+      -- can't just check rising_edge since that is sensitive to delta
+      -- cycle time differences.
+      if (aclk'last_active /= 0 ns) or (aclk /= '1') then
+        wait until rising_edge(aclk);
+      end if;
 
-          -- stall according to probability configuration
-          probability_stall_axi_stream(aclk, slave, rnd);
+      if msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg then
 
-          tready <= '1';
-          wait until (tvalid and tready) = '1' and rising_edge(aclk);
-          tready <= '0';
+        -- stall according to probability configuration
+        probability_stall_axi_stream(aclk, slave, rnd);
 
-          axi_stream_transaction := (
-            tdata => tdata,
-            tlast => tlast = '1',
-            tkeep => tkeep,
-            tstrb => tstrb,
-            tid   => tid,
-            tdest => tdest,
-            tuser => tuser
+        tready <= '1';
+        wait until (tvalid and tready) = '1' and rising_edge(aclk);
+        tready <= '0';
+
+        axi_stream_transaction := (
+          tdata => tdata,
+          tlast => tlast = '1',
+          tkeep => tkeep,
+          tstrb => tstrb,
+          tid   => tid,
+          tdest => tdest,
+          tuser => tuser
           );
 
-          reply_msg := new_axi_stream_transaction_msg(axi_stream_transaction);
-          reply(net, msg, reply_msg);
-        elsif msg_type = check_axi_stream_msg then
-          tready <= '1';
-          wait until (tvalid and tready) = '1' and rising_edge(aclk);
-          tready <= '0';
+        reply_msg := new_axi_stream_transaction_msg(axi_stream_transaction);
+        reply(net, request_msg, reply_msg);
+      elsif msg_type = check_axi_stream_msg then
+        tready <= '1';
+        wait until (tvalid and tready) = '1' and rising_edge(aclk);
+        tready <= '0';
 
-          report_msg := new_string_ptr(pop_string(msg));
-          if tdata'length > 0 then
-            check_equal(tdata, pop_std_ulogic_vector(msg), "TDATA mismatch, " & to_string(report_msg));
-            check_equal(tkeep, pop_std_ulogic_vector(msg), "TKEEP mismatch, " & to_string(report_msg));
-            check_equal(tstrb, pop_std_ulogic_vector(msg), "TSTRB mismatch, " & to_string(report_msg));
-          end if;
-          check_equal(tlast, pop_std_ulogic(msg), "TLAST mismatch, " & to_string(report_msg));
-          if tid'length > 0 then
-            check_equal(tid, pop_std_ulogic_vector(msg), "TID mismatch, " & to_string(report_msg));
-          end if;
-          if tdest'length > 0 then
-            check_equal(tdest, pop_std_ulogic_vector(msg), "TDEST mismatch, " & to_string(report_msg));
-          end if;
-          if tuser'length > 0 then
-            check_equal(tuser, pop_std_ulogic_vector(msg), "TUSER mismatch, " & to_string(report_msg));
-          end if;
-        else
-          unexpected_msg_type(msg_type);
+        report_msg := new_string_ptr(pop_string(request_msg));
+        if tdata'length > 0 then
+          check_equal(tdata, pop_std_ulogic_vector(request_msg), "TDATA mismatch, " & to_string(report_msg));
+          check_equal(tkeep, pop_std_ulogic_vector(request_msg), "TKEEP mismatch, " & to_string(report_msg));
+          check_equal(tstrb, pop_std_ulogic_vector(request_msg), "TSTRB mismatch, " & to_string(report_msg));
         end if;
-      end loop;
-
-      notify_bus_process_done <= '1';
-      wait until notify_bus_process_done = '1';
-      notify_bus_process_done <= '0';
+        check_equal(tlast, pop_std_ulogic(request_msg), "TLAST mismatch, " & to_string(report_msg));
+        if tid'length > 0 then
+          check_equal(tid, pop_std_ulogic_vector(request_msg), "TID mismatch, " & to_string(report_msg));
+        end if;
+        if tdest'length > 0 then
+          check_equal(tdest, pop_std_ulogic_vector(request_msg), "TDEST mismatch, " & to_string(report_msg));
+        end if;
+        if tuser'length > 0 then
+          check_equal(tuser, pop_std_ulogic_vector(request_msg), "TUSER mismatch, " & to_string(report_msg));
+        end if;
+      else
+        unexpected_msg_type(msg_type);
+      end if;
     end loop;
   end process;
 
