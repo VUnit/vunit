@@ -20,4 +20,4 @@ class TestMyPy(unittest.TestCase):
 
     @staticmethod
     def test_mypy():
-        check_call([sys.executable, "-m", "mypy", "vunit"])
+        check_call([sys.executable, "-m", "mypy", "--namespace-packages", "vunit"])

@@ -6,14 +6,11 @@
 
 from pathlib import Path
 from glob import glob
-import sys
 from vunit import VUnit, ROOT
 from vunit.check_preprocessor import CheckPreprocessor
 
-sys.path.append(str(Path(__file__).parent / "tools"))
-
-import generate_check_equal
-import generate_check_match
+import vunit.vhdl.check.tools.generate_check_equal as generate_check_equal
+import vunit.vhdl.check.tools.generate_check_match as generate_check_match
 
 generate_check_equal.main()
 generate_check_match.main()
