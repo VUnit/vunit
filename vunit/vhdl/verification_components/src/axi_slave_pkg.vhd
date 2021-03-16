@@ -148,8 +148,14 @@ package body axi_slave_pkg is
                                 min_response_latency : delay_length := 0 ns;
                                 max_response_latency : delay_length := 0 ns;
                                 logger : logger_t := axi_slave_logger) return axi_slave_t is
+    variable actor_tmp : actor_t := null_actor;
   begin
-    return (p_actor => actor,
+    if actor = null_actor then
+      actor_tmp := new_actor;
+    else
+      actor_tmp := actor;
+    end if;
+    return (p_actor => actor_tmp,
             p_initial_address_fifo_depth => address_fifo_depth,
             p_initial_write_response_fifo_depth => write_response_fifo_depth,
             p_initial_check_4kbyte_boundary => check_4kbyte_boundary,
