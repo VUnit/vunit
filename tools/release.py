@@ -127,7 +127,7 @@ def parse_version(version_str):
     """
     Create a 3-element tuple with the major,minor,patch version
     """
-    return tuple([int(elem) for elem in version_str.split(".")])
+    return tuple((int(elem) for elem in version_str.split(".")))
 
 
 def set_version(version):

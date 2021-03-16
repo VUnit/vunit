@@ -6,7 +6,7 @@
 
 from pathlib import Path
 from string import Template
-from generate_check_equal import replace_region
+from vunit.vhdl.check.tools.generate_check_equal import replace_region
 
 api_template = """  procedure check_match(
     constant got       : in $got_type;

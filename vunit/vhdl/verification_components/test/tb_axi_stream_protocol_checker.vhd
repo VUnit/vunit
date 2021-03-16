@@ -272,15 +272,24 @@ begin
       unmock(rule_logger);
 
     elsif run("Test passing check of that tready comes within max_waits after valid") then
-      wait until rising_edge(aclk);
-      tvalid <= '1';
-      for i in 1 to max_waits loop
+      rule_logger := get_logger(get_name(logger) & ":rule 4");
+      mock(rule_logger, warning);
+      mock(rule_logger, error);
+
+      for iteration in 1 to 2 loop
         wait until rising_edge(aclk);
+        tvalid <= '1';
+        for i in 1 to max_waits loop
+          wait until rising_edge(aclk);
+        end loop;
+        tready <= '1';
+        wait until rising_edge(aclk);
+        tvalid <= '0';
+        tready <= '0';
       end loop;
-      tready <= '1';
-      wait until rising_edge(aclk);
-      tvalid <= '0';
-      tready <= '0';
+
+      check_no_log;
+      unmock(rule_logger);
 
     elsif run("Test failing check of that tready comes within max_waits after valid") then
       rule_logger := get_logger(get_name(logger) & ":rule 4");

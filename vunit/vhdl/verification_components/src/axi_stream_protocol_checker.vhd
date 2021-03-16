@@ -107,6 +107,7 @@ begin
           result("for performance - tready active " & to_string(n_clock_cycles) &
           " clock cycles after tvalid. Expected <= " & to_string(protocol_checker.p_max_waits) & " clock cycles."),
           level => warning);
+    n_clock_cycles := 0;
   end process;
 
   -- AXI4STREAM_ERRM_TDATA_X A value of X on TDATA is not permitted when TVALID
