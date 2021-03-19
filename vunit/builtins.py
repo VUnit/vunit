@@ -173,16 +173,16 @@ in your VUnit Git repository? You have to do this first if installing using setu
 
         for file_name in glob(str(VHDL_PATH / "osvvm" / "*.vhd")):
             bname = Path(file_name).name
+
+            if (bname == "AlertLogPkg_body_BVUL.vhd") or ("2019" in bname):
+                continue
+
             if (
-                bname == "AlertLogPkg_body_BVUL.vhd"
-                or (
-                    (simulator_coverage_api != "rivierapro")
-                    and (bname == "VendorCovApiPkg_Aldec.vhd")
-                )
-                or (
-                    (simulator_coverage_api == "rivierapro")
-                    and (bname == "VendorCovApiPkg.vhd")
-                )
+                (simulator_coverage_api != "rivierapro")
+                and (bname == "VendorCovApiPkg_Aldec.vhd")
+            ) or (
+                (simulator_coverage_api == "rivierapro")
+                and (bname == "VendorCovApiPkg.vhd")
             ):
                 continue
 
