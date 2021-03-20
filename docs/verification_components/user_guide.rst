@@ -149,8 +149,8 @@ from the templates and some extra parameters. For instance:
     # the previously generated testbench template
     avalon_sink_vci.add_vhdl_testbench(
         test_lib,
-        join(root, "compliance_test"),
-        join(root, ".vc", "avalon_stream_pkg", "tb_avalon_sink_t_compliance_template.vhd")
+        ROOT / "compliance_test",
+        ROOT / ".vc" / "avalon_stream_pkg" / "tb_avalon_sink_t_compliance_template.vhd"
     )
 
     # Find the Avalon_sink VC located in the lib library
@@ -161,8 +161,8 @@ from the templates and some extra parameters. For instance:
     # the previously generated testbench template
     avalon_sink_vc.add_vhdl_testbench(
         test_lib,
-        join(root, "compliance_test"),
-        join(root, ".vc", "tb_avalon_sink_compliance_template.vhd")
+        ROOT / "compliance_test",
+        ROOT / ".vc" / "tb_avalon_sink_compliance_template.vhd"
     )
 
 The Avalon sink test suite will now have a number of extra test cases verifying
