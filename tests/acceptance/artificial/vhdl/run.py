@@ -117,7 +117,8 @@ vci = VerificationComponentInterface.find(
     LIB, "vc_not_supporting_sync_pkg", "vc_not_supporting_sync_handle_t"
 )
 VerificationComponent.find(LIB, "vc_not_supporting_sync", vci).add_vhdl_testbench(
-    TEST_LIB, ROOT / "compliance_test",
+    TEST_LIB,
+    ROOT / "compliance_test",
 )
 
 vci = VerificationComponentInterface.find(
@@ -126,7 +127,8 @@ vci = VerificationComponentInterface.find(
 VerificationComponent.find(
     LIB, "vc_not_supporting_custom_actor", vci
 ).add_vhdl_testbench(
-    TEST_LIB, ROOT / "compliance_test",
+    TEST_LIB,
+    ROOT / "compliance_test",
 )
 
 vci = VerificationComponentInterface.find(
@@ -137,7 +139,8 @@ vci = VerificationComponentInterface.find(
 VerificationComponent.find(
     LIB, "vc_not_supporting_custom_logger", vci
 ).add_vhdl_testbench(
-    TEST_LIB, ROOT / "compliance_test",
+    TEST_LIB,
+    ROOT / "compliance_test",
 )
 
 vci = VerificationComponentInterface.find(
@@ -148,7 +151,8 @@ vci = VerificationComponentInterface.find(
 VerificationComponent.find(
     LIB, "vc_not_supporting_unexpected_msg_handling", vci
 ).add_vhdl_testbench(
-    TEST_LIB, ROOT / "compliance_test",
+    TEST_LIB,
+    ROOT / "compliance_test",
 )
 
 VU.main()

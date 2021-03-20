@@ -289,25 +289,30 @@ VerificationComponent.find(
 
 uart_master_vci = VerificationComponentInterface.find(LIB, "uart_pkg", "uart_master_t")
 uart_master_vci.add_vhdl_testbench(
-    TEST_LIB, ROOT / "compliance_test",
+    TEST_LIB,
+    ROOT / "compliance_test",
 )
 VerificationComponent.find(LIB, "uart_master", uart_master_vci).add_vhdl_testbench(
-    TEST_LIB, ROOT / "compliance_test",
+    TEST_LIB,
+    ROOT / "compliance_test",
 )
 
 uart_slave_vci = VerificationComponentInterface.find(LIB, "uart_pkg", "uart_slave_t")
 uart_slave_vci.add_vhdl_testbench(
-    TEST_LIB, ROOT / "compliance_test",
+    TEST_LIB,
+    ROOT / "compliance_test",
 )
 VerificationComponent.find(LIB, "uart_slave", uart_slave_vci).add_vhdl_testbench(
-    TEST_LIB, ROOT / "compliance_test",
+    TEST_LIB,
+    ROOT / "compliance_test",
 )
 
 std_logic_checker_vci = VerificationComponentInterface.find(
     LIB, "signal_checker_pkg", "signal_checker_t"
 )
 std_logic_checker_vci.add_vhdl_testbench(
-    TEST_LIB, ROOT / "compliance_test",
+    TEST_LIB,
+    ROOT / "compliance_test",
 )
 VerificationComponent.find(
     LIB, "std_logic_checker", std_logic_checker_vci
@@ -334,13 +339,15 @@ VerificationComponent.find(LIB, "ram_master", ram_master_vci).add_vhdl_testbench
 VerificationComponentInterface.find(
     LIB, "stream_master_pkg", "stream_master_t"
 ).add_vhdl_testbench(
-    TEST_LIB, ROOT / "compliance_test",
+    TEST_LIB,
+    ROOT / "compliance_test",
 )
 
 VerificationComponentInterface.find(
     LIB, "stream_slave_pkg", "stream_slave_t"
 ).add_vhdl_testbench(
-    TEST_LIB, ROOT / "compliance_test",
+    TEST_LIB,
+    ROOT / "compliance_test",
 )
 
 bus2memory_vci = VerificationComponentInterface.find(

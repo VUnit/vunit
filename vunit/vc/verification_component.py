@@ -33,7 +33,7 @@ class VerificationComponent:
 
     @classmethod
     def find(cls, vc_lib, vc_name, vci):
-        """ Finds the specified VC if present.
+        """Finds the specified VC if present.
 
         :param vc_lib: Library object containing the VC.
         :param vc_name: Name of VC entity.
@@ -163,7 +163,10 @@ class VerificationComponent:
                         port.subtype_indication,
                     )
                     for identifier in port.identifier_list:
-                        port_mappings += "      %s => %s,\n" % (identifier, identifier,)
+                        port_mappings += "      %s => %s,\n" % (
+                            identifier,
+                            identifier,
+                        )
 
             vc_instantiation = """  -- DO NOT modify the VC instantiation.
   vc_inst: entity %s.%s
