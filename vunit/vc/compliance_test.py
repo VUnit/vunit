@@ -12,8 +12,7 @@ import argparse
 import sys
 import logging
 from pathlib import Path
-from vunit.vc.verification_component import VerificationComponent
-from vunit.vc.verification_component_interface import VerificationComponentInterface
+from vunit.vc import VerificationComponent, VerificationComponentInterface
 
 
 def _create_vc_template(args):
