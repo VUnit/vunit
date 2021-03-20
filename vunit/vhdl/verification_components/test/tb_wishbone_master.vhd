@@ -106,8 +106,8 @@ begin
 --    elsif run("wr block") then
 --      -- TODO not sure if is allowed to toggle signal we during
 --      -- wishbone single cycle
---      write_bus(net, bus_handle, 0, value);
---      read_bus(net, bus_handle, 0, tmp);
+--      write_bus(net, wishbone_master, 0, value);
+--      read_bus(net, wishbone_master, 0, tmp);
 --      check_equal(tmp, value, "read data");
     elsif run("wr block rd single") then
       info(tb_logger, "Writing...");
@@ -159,7 +159,7 @@ begin
       end loop;
 
     elsif run("slave comb ack") then
-      write_bus(net, bus_handle, 0, value);
+      write_bus(net, wishbone_master, 0, value);
       wait until ack = '1' and rising_edge(clk);
       wait for 20 ns;
 

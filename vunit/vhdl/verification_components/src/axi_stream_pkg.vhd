@@ -34,7 +34,7 @@ package axi_stream_pkg is
   type axi_stream_component_type_t is (null_component, default_component, custom_component);
 
   type axi_stream_protocol_checker_t is record
-    p_std_cfg  : std_cfg_t;
+    p_std_cfg     : std_cfg_t;
     p_type        : axi_stream_component_type_t;
     p_data_length : natural;
     p_id_length   : natural;
@@ -44,7 +44,7 @@ package axi_stream_pkg is
   end record;
 
   constant null_axi_stream_protocol_checker : axi_stream_protocol_checker_t := (
-    p_std_cfg                  => null_std_cfg,
+    p_std_cfg     => null_std_cfg,
     p_type        => null_component,
     p_data_length => 0,
     p_id_length   => 0,
@@ -57,7 +57,7 @@ package axi_stream_pkg is
   -- configuration is defined by the parent component into which the checker is
   -- instantiated.
   constant default_axi_stream_protocol_checker : axi_stream_protocol_checker_t := (
-    p_std_cfg                  => null_std_cfg,
+    p_std_cfg     => null_std_cfg,
     p_type        => default_component,
     p_data_length => 0,
     p_id_length   => 0,
@@ -67,7 +67,7 @@ package axi_stream_pkg is
     );
 
   type axi_stream_monitor_t is record
-    p_std_cfg  : std_cfg_t;
+    p_std_cfg          : std_cfg_t;
     p_type             : axi_stream_component_type_t;
     p_data_length      : natural;
     p_id_length        : natural;
@@ -77,7 +77,7 @@ package axi_stream_pkg is
   end record;
 
   constant null_axi_stream_monitor : axi_stream_monitor_t := (
-    p_std_cfg                  => null_std_cfg,
+    p_std_cfg          => null_std_cfg,
     p_type             => null_component,
     p_data_length      => 0,
     p_id_length        => 0,
@@ -90,7 +90,7 @@ package axi_stream_pkg is
   -- configuration is defined by the parent component into which the monitor is
   -- instantiated.
   constant default_axi_stream_monitor : axi_stream_monitor_t := (
-    p_std_cfg                  => null_std_cfg,
+    p_std_cfg          => null_std_cfg,
     p_type             => default_component,
     p_data_length      => 0,
     p_id_length        => 0,
@@ -115,39 +115,42 @@ package axi_stream_pkg is
   end record;
 
   constant null_axi_stream_master : axi_stream_master_t := (
-    p_actor            => null_actor,
-    p_data_length      => 0,
-    p_id_length        => 0,
-    p_dest_length      => 0,
-    p_user_length      => 0,
-    p_stall_config     => null_stall_config,
-    p_logger           => null_logger,
-    p_monitor          => null_axi_stream_monitor,
-    p_protocol_checker => null_axi_stream_protocol_checker
+    p_std_cfg                => null_std_cfg,
+    p_data_length            => 0,
+    p_id_length              => 0,
+    p_dest_length            => 0,
+    p_user_length            => 0,
+    p_stall_config           => null_stall_config,
+    p_drive_invalid          => true,
+    p_drive_invalid_val      => 'X',
+    p_drive_invalid_val_user => '0',
+    p_monitor                => null_axi_stream_monitor,
+    p_use_default_monitor    => true,
+    p_protocol_checker       => null_axi_stream_protocol_checker
     );
 
   type axi_stream_slave_t is record
-    p_std_cfg  : std_cfg_t;
-    p_data_length                 : natural;
-    p_id_length                   : natural;
-    p_dest_length                 : natural;
-    p_user_length                 : natural;
-    p_stall_config                : stall_config_t;
-    p_monitor                     : axi_stream_monitor_t;
-    p_use_default_monitor         : boolean;
-    p_protocol_checker            : axi_stream_protocol_checker_t;
+    p_std_cfg             : std_cfg_t;
+    p_data_length         : natural;
+    p_id_length           : natural;
+    p_dest_length         : natural;
+    p_user_length         : natural;
+    p_stall_config        : stall_config_t;
+    p_monitor             : axi_stream_monitor_t;
+    p_use_default_monitor : boolean;
+    p_protocol_checker    : axi_stream_protocol_checker_t;
   end record;
 
   constant null_axi_stream_slave : axi_stream_slave_t := (
-    p_actor            => null_actor,
-    p_data_length      => 0,
-    p_id_length        => 0,
-    p_dest_length      => 0,
-    p_user_length      => 0,
-    p_stall_config     => null_stall_config,
-    p_logger           => null_logger,
-    p_monitor          => null_axi_stream_monitor,
-    p_protocol_checker => null_axi_stream_protocol_checker
+    p_std_cfg             => null_std_cfg,
+    p_data_length         => 0,
+    p_id_length           => 0,
+    p_dest_length         => 0,
+    p_user_length         => 0,
+    p_stall_config        => null_stall_config,
+    p_monitor             => null_axi_stream_monitor,
+    p_use_default_monitor => true,
+    p_protocol_checker    => null_axi_stream_protocol_checker
     );
 
   constant axi_stream_logger  : logger_t  := get_logger("vunit_lib:axi_stream_pkg");
@@ -165,7 +168,7 @@ package axi_stream_pkg is
     logger                      : logger_t                      := axi_stream_logger;
     actor                       : actor_t                       := null_actor;
     checker                     : checker_t                     := null_checker;
-    unexpected_msg_type_policy : unexpected_msg_type_policy_t  := fail;
+    unexpected_msg_type_policy  : unexpected_msg_type_policy_t  := fail;
     monitor                     : axi_stream_monitor_t          := null_axi_stream_monitor;
     protocol_checker            : axi_stream_protocol_checker_t := null_axi_stream_protocol_checker
     ) return axi_stream_master_t;
@@ -179,7 +182,7 @@ package axi_stream_pkg is
     logger                      : logger_t                      := axi_stream_logger;
     actor                       : actor_t                       := null_actor;
     checker                     : checker_t                     := null_checker;
-    unexpected_msg_type_policy : unexpected_msg_type_policy_t  := fail;
+    unexpected_msg_type_policy  : unexpected_msg_type_policy_t  := fail;
     monitor                     : axi_stream_monitor_t          := null_axi_stream_monitor;
     protocol_checker            : axi_stream_protocol_checker_t := null_axi_stream_protocol_checker
     ) return axi_stream_slave_t;
@@ -190,9 +193,9 @@ package axi_stream_pkg is
     dest_length                 : natural                       := 0;
     user_length                 : natural                       := 0;
     logger                      : logger_t                      := axi_stream_logger;
-    actor                      : actor_t                       := null_actor;
+    actor                       : actor_t                       := null_actor;
     checker                     : checker_t                     := null_checker;
-    unexpected_msg_type_policy : unexpected_msg_type_policy_t  := fail;
+    unexpected_msg_type_policy  : unexpected_msg_type_policy_t  := fail;
     protocol_checker            : axi_stream_protocol_checker_t := null_axi_stream_protocol_checker
     ) return axi_stream_monitor_t;
 
@@ -204,7 +207,7 @@ package axi_stream_pkg is
     logger                      : logger_t  := axi_stream_logger;
     actor                       : actor_t   := null_actor;
     checker                     : checker_t := null_checker;
-    unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail;
+    unexpected_msg_type_policy  : unexpected_msg_type_policy_t := fail;
     max_waits                   : natural   := 16
     ) return axi_stream_protocol_checker_t;
 
