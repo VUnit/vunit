@@ -391,7 +391,8 @@ end package;
             "vc_handle_t",
         )
         error_mock.assert_called_once_with(
-            "Failed to find %s record", "vc_handle_t",
+            "Failed to find %s record",
+            "vc_handle_t",
         )
 
     def test_error_on_missing_default_value(self):

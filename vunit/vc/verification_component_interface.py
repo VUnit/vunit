@@ -58,7 +58,7 @@ class VerificationComponentInterface:
 
     @classmethod
     def find(cls, vc_lib, vci_name, vc_handle_t):
-        """ Finds the specified VCI if present.
+        """Finds the specified VCI if present.
 
         :param vc_lib: Library object containing the VCI.
         :param vci_name: Name of VCI package.
@@ -229,7 +229,8 @@ class VerificationComponentInterface:
                 return handle_is_valid
 
         LOGGER.error(
-            "Failed to find %s record", vc_handle_t,
+            "Failed to find %s record",
+            vc_handle_t,
         )
         return False
 
@@ -408,7 +409,9 @@ class VerificationComponentInterface:
                 unexpected_msg_type_policy="fail",
             ),
             handle6=create_handle_assignment(
-                "handle1", actor="actor1", unexpected_msg_type_policy="fail",
+                "handle1",
+                actor="actor1",
+                unexpected_msg_type_policy="fail",
             ),
             handle7=create_handle_assignment(
                 "handle2",
