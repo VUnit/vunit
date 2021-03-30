@@ -7,7 +7,6 @@ on:
     - cron: '0 0 * * 5'
 
 env:
-  DOCKER_REGISTRY: docker.pkg.github.com
   # https://github.com/tox-dev/tox/issues/1468
   PY_COLORS: 1
 
@@ -86,15 +85,8 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Docker login
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login -u vunit-gha --password-stdin "$DOCKER_REGISTRY"
-
     - name: Run job
-      run: docker run --rm -tv $(pwd):/src -w /src "$DOCKER_REGISTRY"/vunit/vunit/dev:${{ matrix.task.tag }} tox -e py${{ matrix.task.do }}-ghdl
-
-    - name: Docker logout
-      run: docker logout "$DOCKER_REGISTRY"
-      if: always()
+      run: docker run --rm -tv $(pwd):/src -w /src ghcr.io/vunit/dev:${{ matrix.task.tag }} tox -e py${{ matrix.task.do }}-ghdl
 
 #
 # Windows with latest stable GHDL
