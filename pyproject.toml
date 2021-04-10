@@ -27,7 +27,7 @@ deps=
     coverage: pylint
     coverage: mypy
     docs: docutils
-    docs: sphinx
+    docs: sphinx==3.3.1
     docs: sphinx-argparse
 
 setenv=
