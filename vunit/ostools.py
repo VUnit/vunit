@@ -136,12 +136,12 @@ class Process(object):
         self._reader.start()
 
     def write(self, *args, **kwargs):
-        """ Write to stdin """
+        """Write to stdin"""
         if not self._process.stdin.closed:
             self._process.stdin.write(*args, **kwargs)
 
     def writeline(self, line):
-        """ Write a line to stdin """
+        """Write a line to stdin"""
         if not self._process.stdin.closed:
             self._process.stdin.write(line + "\n")
             self._process.stdin.flush()
@@ -275,7 +275,7 @@ class AsynchronousFileReader(threading.Thread):
 
 
 def read_file(file_name, encoding="utf-8", newline=None):
-    """ To stub during testing """
+    """To stub during testing"""
     try:
         with io.open(
             file_name, "r", encoding=encoding, newline=newline
@@ -296,7 +296,7 @@ def read_file(file_name, encoding="utf-8", newline=None):
 
 
 def write_file(file_name, contents, encoding="utf-8"):
-    """ To stub during testing """
+    """To stub during testing"""
 
     path = str(Path(file_name).parent)
     if path == "":
@@ -310,17 +310,17 @@ def write_file(file_name, contents, encoding="utf-8"):
 
 
 def file_exists(file_name):
-    """ To stub during testing """
+    """To stub during testing"""
     return Path(file_name).exists()
 
 
 def get_modification_time(file_name):
-    """ To stub during testing """
+    """To stub during testing"""
     return getmtime(file_name)
 
 
 def get_time():
-    """ To stub during testing """
+    """To stub during testing"""
     return time.time()
 
 

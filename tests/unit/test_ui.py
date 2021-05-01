@@ -479,7 +479,7 @@ Listed 2 files""".splitlines()
     @with_tempdir
     def test_filtering_tests(self, tempdir):
         def setup(ui):
-            " Setup the project "
+            "Setup the project"
             lib = ui.add_library("lib")
             file_name = str(Path(tempdir) / "tb_filter.vhd")
             create_vhdl_test_bench_file(
@@ -497,7 +497,7 @@ Listed 2 files""".splitlines()
             lib.test_bench("tb_filter").test("Test 4").set_attribute(".attr2", None)
 
         def check_stdout(ui, expected):
-            " Check that stdout matches expected "
+            "Check that stdout matches expected"
             with mock.patch("sys.stdout", autospec=True) as stdout:
                 self._run_main(ui)
             text = "".join([call[1][0] for call in stdout.write.mock_calls])
@@ -1210,7 +1210,7 @@ end architecture;
         self.assertEqual(ui.get_simulator_name(), "mock")
 
     def _create_ui(self, *args):
-        """ Create an instance of the VUnit public interface class """
+        """Create an instance of the VUnit public interface class"""
         with mock.patch(
             "vunit.sim_if.factory.SIMULATOR_FACTORY.select_simulator",
             new=lambda: MockSimulator,
@@ -1218,7 +1218,7 @@ end architecture;
             return self._create_ui_real_sim(*args)
 
     def _create_ui_real_sim(self, *args):
-        """ Create an instance of the VUnit public interface class """
+        """Create an instance of the VUnit public interface class"""
         return VUnit.from_argv(
             argv=["--output-path=%s" % self._output_path, "--clean"] + list(args),
             compile_builtins=False,

@@ -348,7 +348,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
     @staticmethod
     def _fail_suite(test_suite):
-        """ Return failure for all tests in suite """
+        """Return failure for all tests in suite"""
         results = {}
         for test_name in test_suite.test_names:
             results[test_name] = FAILED

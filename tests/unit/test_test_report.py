@@ -308,7 +308,7 @@ Elapsed time was 3.0 seconds
         )
 
     def _report_with_all_passed_tests(self, output_file_name=None):
-        " @returns A report with all passed tests "
+        "@returns A report with all passed tests"
         if not output_file_name:
             output_file_name = self.output_file_name
         report = self._new_report()
@@ -322,7 +322,7 @@ Elapsed time was 3.0 seconds
         return report
 
     def _report_with_missing_tests(self):
-        " @returns A report with all passed tests "
+        "@returns A report with all passed tests"
         report = self._new_report()
         report.add_result(
             "passed_test0", PASSED, time=1.0, output_file_name=self.output_file_name
@@ -334,7 +334,7 @@ Elapsed time was 3.0 seconds
         return report
 
     def _report_with_some_failed_tests(self):
-        " @returns A report with some failed tests "
+        "@returns A report with some failed tests"
         report = self._new_report()
         report.add_result(
             "failed_test0", FAILED, time=11.12, output_file_name=self.output_file_name
@@ -349,7 +349,7 @@ Elapsed time was 3.0 seconds
         return report
 
     def _report_with_some_skipped_tests(self):
-        " @returns A report with some skipped tests "
+        "@returns A report with some skipped tests"
         report = self._new_report()
         report.add_result(
             "passed_test", PASSED, time=1.0, output_file_name=self.output_file_name
