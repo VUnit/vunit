@@ -1896,6 +1896,61 @@ package check_pkg is
     return boolean;
 
   procedure check_equal(
+    constant got       : in character;
+    constant expected  : in character;
+    constant msg       : in string      := check_result_tag;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "");
+
+  procedure check_equal(
+    variable pass      : out boolean;
+    constant got       : in character;
+    constant expected  : in character;
+    constant msg       : in string      := check_result_tag;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "");
+
+  procedure check_equal(
+    constant checker   : in checker_t;
+    variable pass      : out boolean;
+    constant got       : in character;
+    constant expected  : in character;
+    constant msg       : in string      := check_result_tag;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "");
+
+  procedure check_equal(
+    constant checker   : in checker_t;
+    constant got       : in character;
+    constant expected  : in character;
+    constant msg       : in string      := check_result_tag;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "");
+
+  impure function check_equal(
+    constant got       : in character;
+    constant expected  : in character;
+    constant msg       : in string      := check_result_tag;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "")
+    return boolean;
+
+  impure function check_equal(
+    constant checker   : in checker_t;
+    constant got       : in character;
+    constant expected  : in character;
+    constant msg       : in string      := check_result_tag;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "")
+    return boolean;
+
+  procedure check_equal(
     constant got       : in time;
     constant expected  : in time;
     constant msg       : in string      := check_result_tag;
