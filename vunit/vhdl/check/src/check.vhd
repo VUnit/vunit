@@ -2198,6 +2198,14 @@ package body check_pkg is
     return time'image(data);
   end function to_string;
 
+  function to_string (
+    constant data : character)
+    return string is
+    constant full_string : string(1 to 3) := character'image(data);
+  begin
+    return full_string(2 to 2);
+  end function to_string;
+
   function max (
     constant value_1 : integer;
     constant value_2 : integer)
@@ -4199,6 +4207,118 @@ package body check_pkg is
     constant checker   : in checker_t;
     constant got       : in string;
     constant expected  : in string;
+    constant msg       : in string      := check_result_tag;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "")
+    return boolean is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_equal(checker, pass, got, expected, msg, level, line_num, file_name);
+    -- pragma translate_on
+    return pass;
+  end;
+
+  procedure check_equal(
+    constant got       : in character;
+    constant expected  : in character;
+    constant msg       : in string      := check_result_tag;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "") is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_equal(default_checker, pass, got, expected, msg, level, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  procedure check_equal(
+    variable pass      : out boolean;
+    constant got       : in character;
+    constant expected  : in character;
+    constant msg       : in string      := check_result_tag;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "") is
+  begin
+    -- pragma translate_off
+    check_equal(default_checker, pass, got, expected, msg, level, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  procedure check_equal(
+    constant checker   : in checker_t;
+    variable pass      : out boolean;
+    constant got       : in character;
+    constant expected  : in character;
+    constant msg       : in string      := check_result_tag;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "") is
+  begin
+    -- pragma translate_off
+    if got = expected then
+      pass := true;
+      if is_pass_visible(checker) then
+        passing_check(
+          checker,
+          std_msg(
+            "Equality check passed", msg,
+            "Got " & to_string(got) & "."),
+          line_num, file_name);
+      else
+        passing_check(checker);
+      end if;
+    else
+      pass := false;
+      failing_check(
+        checker,
+        std_msg(
+          "Equality check failed", msg,
+          "Got " & to_string(got) & ". " &
+          "Expected " & to_string(expected) & "."),
+        level, line_num, file_name);
+    end if;
+    -- pragma translate_on
+  end;
+
+  procedure check_equal(
+    constant checker   : in checker_t;
+    constant got       : in character;
+    constant expected  : in character;
+    constant msg       : in string      := check_result_tag;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "") is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_equal(checker, pass, got, expected, msg, level, line_num, file_name);
+    -- pragma translate_on
+  end;
+
+  impure function check_equal(
+    constant got       : in character;
+    constant expected  : in character;
+    constant msg       : in string      := check_result_tag;
+    constant level     : in log_level_t := null_log_level;
+    constant line_num  : in natural     := 0;
+    constant file_name : in string      := "")
+    return boolean is
+    variable pass : boolean;
+  begin
+    -- pragma translate_off
+    check_equal(default_checker, pass, got, expected, msg, level, line_num, file_name);
+    -- pragma translate_on
+    return pass;
+  end;
+
+  impure function check_equal(
+    constant checker   : in checker_t;
+    constant got       : in character;
+    constant expected  : in character;
     constant msg       : in string      := check_result_tag;
     constant level     : in log_level_t := null_log_level;
     constant line_num  : in natural     := 0;
