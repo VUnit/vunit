@@ -730,12 +730,6 @@ package body axi_stream_pkg is
     variable got_tdest : std_logic_vector(dest_length(axi_stream)-1 downto 0);
     variable got_tuser : std_logic_vector(user_length(axi_stream)-1 downto 0);
     variable check_msg : msg_t := new_msg(check_axi_stream_msg);
-    variable normalized_data : std_logic_vector(data_length(axi_stream)-1 downto 0) := (others => '0');
-    variable normalized_keep : std_logic_vector(data_length(axi_stream)/8-1 downto 0) := (others => '0');
-    variable normalized_strb : std_logic_vector(data_length(axi_stream)/8-1 downto 0) := (others => '0');
-    variable normalized_id   : std_logic_vector(id_length(axi_stream)-1 downto 0) := (others => '0');
-    variable normalized_dest : std_logic_vector(dest_length(axi_stream)-1 downto 0) := (others => '0');
-    variable normalized_user : std_logic_vector(user_length(axi_stream)-1 downto 0) := (others => '0');
   begin
     if blocking then
       pop_axi_stream(net, axi_stream, got_tdata, got_tlast, got_tkeep, got_tstrb, got_tid, got_tdest, got_tuser);
@@ -758,27 +752,13 @@ package body axi_stream_pkg is
       end if;
     else
       push_string(check_msg, msg);
-      if normalized_data'length > 0 then
-        normalized_data(expected'length-1 downto 0) := expected;
-        push_std_ulogic_vector(check_msg, normalized_data);
-        normalized_keep(tkeep'length-1 downto 0) := tkeep;
-        push_std_ulogic_vector(check_msg, normalized_keep);
-        normalized_strb(tstrb'length-1 downto 0) := tstrb;
-        push_std_ulogic_vector(check_msg, normalized_strb);
-      end if;
+      push_std_ulogic_vector(check_msg, expected);
+      push_std_ulogic_vector(check_msg, tkeep);
+      push_std_ulogic_vector(check_msg, tstrb);
       push_std_ulogic(check_msg, tlast);
-      if normalized_id'length > 0 then
-        normalized_id(tid'length-1 downto 0) := tid;
-        push_std_ulogic_vector(check_msg, normalized_id);
-      end if;
-      if normalized_dest'length > 0 then
-        normalized_dest(tdest'length-1 downto 0) := tdest;
-        push_std_ulogic_vector(check_msg, normalized_dest);
-      end if;
-      if normalized_user'length > 0 then
-        normalized_user(tuser'length-1 downto 0) := tuser;
-        push_std_ulogic_vector(check_msg, normalized_user);
-      end if;
+      push_std_ulogic_vector(check_msg, tid);
+      push_std_ulogic_vector(check_msg, tdest);
+      push_std_ulogic_vector(check_msg, tuser);
       send(net, axi_stream.p_actor, check_msg);
     end if;
   end procedure;
