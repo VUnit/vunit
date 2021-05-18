@@ -440,6 +440,42 @@ begin
       wait_until_idle(net, as_sync(slave_axi_stream));
       check_equal(now, timestamp + (12+1)*10 ns, " transaction time incorrect");
 
+    elsif run("test back-to-back passing reduced check") then
+      wait until rising_edge(aclk);
+      timestamp := now;
+
+      last := '0';
+      for i in 3 to 14 loop
+        if i = 14 then
+          last := '1';
+        end if;
+        push_axi_stream(net, master_axi_stream,
+                        tdata => std_logic_vector(to_unsigned(i, 8)),
+                        tlast => last,
+                        tkeep => "1",
+                        tstrb => "1",
+                        tid => std_logic_vector(to_unsigned(42, id'length)),
+                        tdest => std_logic_vector(to_unsigned(i+1, dest'length)),
+                        tuser => std_logic_vector(to_unsigned(i*2, user'length)));
+      end loop;
+
+      last := '0';
+      for i in 3 to 14 loop
+        if i = 14 then
+          last := '1';
+        end if;
+        check_axi_stream(net, slave_axi_stream,
+                         expected => std_logic_vector(to_unsigned(i, 8)),
+                         tlast => last,
+                         msg  => "check non-blocking",
+                         blocking  => false);
+      end loop;
+
+      check_equal(now, timestamp, result(" setting up transaction stalled"));
+
+      wait_until_idle(net, as_sync(slave_axi_stream));
+      check_equal(now, timestamp + (12+1)*10 ns, " transaction time incorrect");
+
     elsif run("test back-to-back failing check") then
       wait until rising_edge(aclk);
       timestamp := now;
