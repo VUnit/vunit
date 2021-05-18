@@ -173,8 +173,12 @@ TB_AXI_STREAM.test("test random stall on master").add_config(
     name="stall_master", generics=dict(g_stall_percentage_master=30)
 )
 
-TB_AXI_STREAM.test("test random stall on slave").add_config(
+TB_AXI_STREAM.test("test random pop stall on slave").add_config(
     name="stall_slave", generics=dict(g_stall_percentage_slave=30)
+)
+
+TB_AXI_STREAM.test("test random check stall on slave").add_config(
+    name="stall_slave", generics=dict(g_stall_percentage_slave=40)
 )
 
 UI.main()
