@@ -234,7 +234,9 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             if write_stdout:
                 self._local.output = Tee([self._stdout_ansi, output_file])
             else:
-                color_output_file = open(color_output_file_name, "w")
+                color_output_file = open(  # pylint: disable=consider-using-with
+                    color_output_file_name, "w"
+                )
                 self._local.output = Tee([color_output_file, output_file])
 
             def read_output():
