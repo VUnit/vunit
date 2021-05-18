@@ -431,7 +431,7 @@ begin
                          tid => std_logic_vector(to_unsigned(42, id'length)),
                          tdest => std_logic_vector(to_unsigned(i+1, dest'length)),
                          tuser => std_logic_vector(to_unsigned(i*2, user'length)),
-                         msg  => "check blocking",
+                         msg  => "check non-blocking",
                          blocking  => false);
       end loop;
 
