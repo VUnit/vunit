@@ -526,7 +526,7 @@ begin
 
       check_equal(now, timestamp + 20 ns, " transaction time incorrect");
 
-    elsif run("test random stall on master") or run("test random stall on slave") then
+    elsif run("test random stall on master") or run("test random pop stall on slave") then
       wait until rising_edge(aclk);
       for i in 0 to 100 loop
         pop_stream(net, slave_stream, reference);
@@ -556,6 +556,25 @@ begin
         check((axis_stall_stats.ready.min >= min_stall_cycles) and (axis_stall_stats.ready.max <= max_stall_cycles), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
         check_equal(axis_stall_stats.valid.events, 0, "Checking that there are zero tvalid stall events");
       end if;
+
+    elsif run("test random check stall on slave") then
+      wait until rising_edge(aclk);
+      for i in 0 to 100 loop
+        check_axi_stream(net, slave_axi_stream, std_logic_vector(to_unsigned(i + 1, data'length)), blocking => false);
+      end loop;
+      for i in 0 to 100 loop
+        push_stream(net, master_stream, std_logic_vector(to_unsigned(i + 1, data'length)), true);
+      end loop;
+
+      wait_until_idle(net, master_sync);  -- wait until all transfers are done before checking them
+      wait_until_idle(net, slave_sync);
+
+      info("There have been " & to_string(axis_stall_stats.valid.events) & " tvalid stall events");
+      info("Min stall length was " & to_string(axis_stall_stats.valid.min));
+      info("Max stall length was " & to_string(axis_stall_stats.valid.max));
+      check((axis_stall_stats.ready.events < (g_stall_percentage_slave+10)) and (axis_stall_stats.ready.events > (g_stall_percentage_slave-10)), "Checking that the tready stall probability lies within reasonable boundaries");
+      check((axis_stall_stats.ready.min >= min_stall_cycles) and (axis_stall_stats.ready.max <= max_stall_cycles), "Checking that the minimal and maximal stall lenghts are in expected boundaries");
+      check_equal(axis_stall_stats.valid.events, 0, "Checking that there are zero tvalid stall events");
 
     end if;
     test_runner_cleanup(runner);
