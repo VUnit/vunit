@@ -104,7 +104,7 @@ begin
           wait until rising_edge(aclk);
         elsif msg_type = notify_request_msg then
           -- Ignore this message, but expect it
-        elsif msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg then
+        elsif msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg or msg_type = check_axi_stream_msg then
 
           -- stall according to probability configuration
           probability_stall_axi_stream(aclk, slave, rnd);
@@ -113,32 +113,29 @@ begin
           wait until (tvalid and tready) = '1' and rising_edge(aclk);
           tready <= '0';
 
-          axi_stream_transaction := (
-            tdata => tdata,
-            tlast => tlast = '1',
-            tkeep => tkeep,
-            tstrb => tstrb,
-            tid   => tid,
-            tdest => tdest,
-            tuser => tuser
-          );
+          if msg_type = stream_pop_msg or msg_type = pop_axi_stream_msg then
+            axi_stream_transaction := (
+              tdata => tdata,
+              tlast => tlast = '1',
+              tkeep => tkeep,
+              tstrb => tstrb,
+              tid   => tid,
+              tdest => tdest,
+              tuser => tuser
+            );
 
-          reply_msg := new_axi_stream_transaction_msg(axi_stream_transaction);
-          reply(net, msg, reply_msg);
-
-        elsif msg_type = check_axi_stream_msg then
-          tready <= '1';
-          wait until (tvalid and tready) = '1' and rising_edge(aclk);
-          tready <= '0';
-
-          report_msg := new_string_ptr(pop_string(msg));
-          check_field(tdata, pop_std_ulogic_vector(msg), "TDATA mismatch, " & to_string(report_msg));
-          check_field(tkeep, pop_std_ulogic_vector(msg), "TKEEP mismatch, " & to_string(report_msg));
-          check_field(tstrb, pop_std_ulogic_vector(msg), "TSTRB mismatch, " & to_string(report_msg));
-          check_equal(tlast, pop_std_ulogic(msg), "TLAST mismatch, " & to_string(report_msg));
-          check_field(tid, pop_std_ulogic_vector(msg), "TID mismatch, " & to_string(report_msg));
-          check_field(tdest, pop_std_ulogic_vector(msg), "TDEST mismatch, " & to_string(report_msg));
-          check_field(tuser, pop_std_ulogic_vector(msg), "TUSER mismatch, " & to_string(report_msg));
+            reply_msg := new_axi_stream_transaction_msg(axi_stream_transaction);
+            reply(net, msg, reply_msg);
+          elsif msg_type = check_axi_stream_msg then
+            report_msg := new_string_ptr(pop_string(msg));
+            check_field(tdata, pop_std_ulogic_vector(msg), "TDATA mismatch, " & to_string(report_msg));
+            check_field(tkeep, pop_std_ulogic_vector(msg), "TKEEP mismatch, " & to_string(report_msg));
+            check_field(tstrb, pop_std_ulogic_vector(msg), "TSTRB mismatch, " & to_string(report_msg));
+            check_equal(tlast, pop_std_ulogic(msg), "TLAST mismatch, " & to_string(report_msg));
+            check_field(tid, pop_std_ulogic_vector(msg), "TID mismatch, " & to_string(report_msg));
+            check_field(tdest, pop_std_ulogic_vector(msg), "TDEST mismatch, " & to_string(report_msg));
+            check_field(tuser, pop_std_ulogic_vector(msg), "TUSER mismatch, " & to_string(report_msg));
+          end if;
 
         else
           unexpected_msg_type(msg_type);
