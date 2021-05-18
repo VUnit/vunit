@@ -353,7 +353,7 @@ begin
         user := x"45";
       end if;
       push_axi_stream(net, master_axi_stream, x"12", tlast => '1', tkeep => "1", tstrb => "1", tid => id, tdest => dest, tuser => user);
-      check_axi_stream(net, slave_axi_stream, x"12", '1', msg => "reduced checking axi stream");
+      check_axi_stream(net, slave_axi_stream, x"12", tlast => '1', msg => "reduced checking axi stream");
 
     elsif run("test failing check") then
       if id'length > 0 then
