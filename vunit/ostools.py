@@ -101,7 +101,7 @@ class Process(object):
         # Sending a signal to a process group will send it to all children
         # Hopefully this way no orphaned processes will be left behind
         if IS_WINDOWS_SYSTEM:  # Windows
-            self._process = subprocess.Popen(
+            self._process = subprocess.Popen(  # pylint: disable=consider-using-with
                 args,
                 bufsize=0,
                 cwd=cwd,
@@ -114,7 +114,7 @@ class Process(object):
                 creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
             )
         else:
-            self._process = subprocess.Popen(
+            self._process = subprocess.Popen(  # pylint: disable=consider-using-with
                 args,
                 bufsize=0,
                 cwd=cwd,
