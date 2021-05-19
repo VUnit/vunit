@@ -2201,9 +2201,13 @@ package body check_pkg is
   function to_string (
     constant data : character)
     return string is
-    constant full_string : string(1 to 3) := character'image(data);
+    constant full_string : string := character'image(data);
   begin
-    return full_string(2 to 2);
+    if (full_string(full_string'left) = ''') and (full_string(full_string'right) = ''') then
+      return full_string(full_string'left + 1 to full_string'right - 1);
+    else
+      return full_string;
+    end if;
   end function to_string;
 
   function max (
