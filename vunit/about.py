@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# Copyright (c) 2014-2020, Lars Asplund lars.anders.asplund@gmail.com
+# Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
 
 """
 Provides documentation and version information
@@ -14,13 +14,13 @@ def license_text():
     Returns licence text
     """
     return """**VUnit**, except for the projects below, is released under the terms of
-`Mozilla Public License, v. 2.0`_. |copy| 2014-2020 Lars Asplund, lars.anders.asplund@gmail.com.
+`Mozilla Public License, v. 2.0`_. |copy| 2014-2021 Lars Asplund, lars.anders.asplund@gmail.com.
 
 The following libraries are `redistributed`_ with VUnit for your convenience:
 
-* **OSVVM** (``vunit/vhdl/osvvm``): these files are licensed under the terms of `Apache License, v 2.0`_, |copy| 2010 - 2020 by `SynthWorks Design Inc`_. All rights reserved.
+* **OSVVM** (``vunit/vhdl/osvvm``): these files are licensed under the terms of `Apache License, v 2.0`_, |copy| 2010 - 2021 by `SynthWorks Design Inc`_. All rights reserved.
 
-* **JSON-for-VHDL** (``vunit/vhdl/JSON-for-VHDL``): these files are licensed under the terms of `Apache License, v 2.0`_, |copy| 2015 - 2020 Patrick Lehmann.
+* **JSON-for-VHDL** (``vunit/vhdl/JSON-for-VHDL``): these files are licensed under the terms of `Apache License, v 2.0`_, |copy| 2015 - 2021 Patrick Lehmann.
 
 .. |copy|   unicode:: U+000A9 .. COPYRIGHT SIGN
 .. _redistributed: https://github.com/VUnit/vunit/blob/master/.gitmodules
