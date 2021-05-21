@@ -45,7 +45,7 @@ jobs:
       max-parallel: 2
       matrix:
         task: [
-          38-lint, # https://github.com/PyCQA/pylint/issues/3882
+          39-lint,
           36-unit,
           39-unit,
         ]
@@ -101,7 +101,7 @@ jobs:
         task: [
           39-acceptance-ghdl,
           39-vcomponents-ghdl,
-          38-lint, # https://github.com/PyCQA/pylint/issues/3882
+          39-lint,
           36-unit,
           39-unit,
         ]
