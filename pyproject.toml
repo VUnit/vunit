@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py{36,37,38}-{fmt,unit,lint,docs}, py{36,37,38}-{acceptance,vcomponents}-{activehdl,ghdl,modelsim,rivierapro}, py{36,37,38}-coverage
+envlist = py{36,37,38,39}-{fmt,unit,lint,docs}, py{36,37,38,39}-{acceptance,vcomponents}-{activehdl,ghdl,modelsim,rivierapro}, py{36,37,38,39}-coverage
 skip_missing_interpreters = True
 isolated_build = True
 
