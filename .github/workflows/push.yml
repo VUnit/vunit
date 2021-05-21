@@ -173,6 +173,7 @@ jobs:
         pip install -U setuptools wheel twine
 
     - name: '🚀 Build and deploy to PyPI'
+      if: github.repository == 'VUnit/vunit'
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.VUNIT_HDL_PYPI_DEPLOY_TOKEN }}
