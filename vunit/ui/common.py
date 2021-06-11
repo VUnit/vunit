@@ -66,7 +66,7 @@ def get_checked_file_names_from_globs(pattern, allow_empty):
 
     file_names: List[str] = []
     for pattern_instance in patterns:
-        new_file_names = glob(str(pattern_instance))
+        new_file_names = glob(str(pattern_instance), recursive=True)
         check_not_empty(
             new_file_names,
             allow_empty,
