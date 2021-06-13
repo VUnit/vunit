@@ -85,7 +85,7 @@ package body axi_lite_master_pkg is
 
     push_std_ulogic_vector(request_msg, expected_bresp);
 
-    send(net, bus_handle.p_actor, request_msg);
+    send(net, get_actor(bus_handle), request_msg);
   end procedure;
 
   procedure read_axi_lite(signal net : inout network_t;
@@ -100,7 +100,7 @@ package body axi_lite_master_pkg is
     full_address(address'length - 1 downto 0) := address;
     push_std_ulogic_vector(request_msg, full_address);
     push_std_ulogic_vector(request_msg, expected_rresp);
-    send(net, bus_handle.p_actor, request_msg);
+    send(net, get_actor(bus_handle), request_msg);
   end procedure;
 
   procedure read_axi_lite(signal net : inout network_t;
@@ -142,7 +142,7 @@ package body axi_lite_master_pkg is
 
     read_axi_lite(net, bus_handle, address, expected_rresp, data);
     if not std_match(data, edata) then
-      failure(bus_handle.p_logger, base_error);
+      failure(get_logger(bus_handle), base_error);
     end if;
   end procedure;
 

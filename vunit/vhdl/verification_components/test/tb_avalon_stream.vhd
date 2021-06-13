@@ -15,6 +15,7 @@ context work.data_types_context;
 use work.avalon_stream_pkg.all;
 use work.stream_master_pkg.all;
 use work.stream_slave_pkg.all;
+use work.vc_pkg.all;
 
 entity tb_avalon_stream is
   generic (runner_cfg : string);
@@ -46,7 +47,7 @@ begin
   begin
     test_runner_setup(runner, runner_cfg);
     set_format(display_handler, verbose, true);
-    show(avalon_sink_stream.p_logger, display_handler, verbose);
+    show(get_logger(avalon_sink_stream.p_std_cfg), display_handler, verbose);
 
     wait until rising_edge(clk);
     if run("test single push and pop") then

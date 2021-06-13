@@ -17,6 +17,8 @@ context work.vunit_context;
 context work.com_context;
 use work.memory_pkg.all;
 use work.wishbone_pkg.all;
+use work.sync_pkg.all;
+use work.vc_pkg.all;
 
 library osvvm;
 use osvvm.RandomPkg.all;
@@ -40,10 +42,28 @@ entity wishbone_slave is
 end entity;
 
 architecture a of wishbone_slave is
-
   constant slave_write_msg  : msg_type_t := new_msg_type("wb slave write");
   constant slave_read_msg   : msg_type_t := new_msg_type("wb slave read");
+
+  signal active_transaction : boolean := false;
 begin
+
+  main : process
+    variable request_msg : msg_t;
+    variable msg_type    : msg_type_t;
+  begin
+    receive(net, get_actor(wishbone_slave.p_std_cfg), request_msg);
+    msg_type := message_type(request_msg);
+
+    if msg_type = wait_for_time_msg or msg_type = wait_until_idle_msg then
+      while active_transaction or has_message(wishbone_slave.p_ack_actor) loop
+        wait until rising_edge(clk);
+      end loop;
+      handle_sync_message(net, msg_type, request_msg);
+    else
+      unexpected_msg_type(msg_type, wishbone_slave.p_std_cfg);
+    end if;
+  end process;
 
   request : process
     variable wr_request_msg : msg_t;
@@ -72,14 +92,16 @@ begin
     variable rnd : RandomPType;
   begin
     ack <= '0';
+    active_transaction <= false;
     receive(net, wishbone_slave.p_ack_actor, request_msg);
+    active_transaction <= true;
     msg_type := message_type(request_msg);
 
     if msg_type = slave_write_msg then
       addr := pop_integer(request_msg);
       data := pop_std_ulogic_vector(request_msg);
       write_word(wishbone_slave.p_memory, addr, data);
-      while rnd.Uniform(0.0, 1.0) > wishbone_slave.ack_high_probability loop
+      while rnd.Uniform(0.0, 1.0) > wishbone_slave.p_ack_high_probability loop
         wait until rising_edge(clk);
       end loop;
       ack <= '1';
@@ -90,7 +112,7 @@ begin
       data := (others => '0');
       addr := pop_integer(request_msg);
       data := read_word(wishbone_slave.p_memory, addr, sel'length);
-      while rnd.Uniform(0.0, 1.0) > wishbone_slave.ack_high_probability loop
+      while rnd.Uniform(0.0, 1.0) > wishbone_slave.p_ack_high_probability loop
         wait until rising_edge(clk);
       end loop;
       dat_o <= data;
@@ -99,14 +121,14 @@ begin
       ack <= '0';
 
     else
-      unexpected_msg_type(msg_type);
+      unexpected_msg_type(msg_type, wishbone_slave.p_std_cfg);
     end if;
   end process;
 
   stall_stim: process
     variable rnd : RandomPType;
   begin
-    if rnd.Uniform(0.0, 1.0) < wishbone_slave.stall_high_probability then
+    if rnd.Uniform(0.0, 1.0) < wishbone_slave.p_stall_high_probability then
       stall <= '1';
     else
       stall <= '0';

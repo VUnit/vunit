@@ -27,7 +27,14 @@ architecture testbench of tb_avalon is
     signal av_byteenable : std_logic_vector(3 downto 0);
     signal av_burstcount : std_logic_vector(3 downto 0);
 
-    constant avalon_bus : bus_master_t := new_bus(data_length => 32, address_length => av_address'length);
+    constant avalon_master : avalon_master_t := new_avalon_master(
+      data_length        => 32,
+      address_length     => av_address'length,
+      use_readdatavalid  => false,
+      fixed_read_latency => 0
+    );
+
+    constant avalon_bus : bus_master_t := as_bus_master(avalon_master);
 
     signal clk : std_logic := '0';
 
@@ -35,11 +42,9 @@ architecture testbench of tb_avalon is
 
 begin
 
-    avalon_master : entity vunit_lib.avalon_master
+    dut : entity vunit_lib.avalon_master
     generic map (
-      bus_handle => avalon_bus,
-      use_readdatavalid => false,
-      fixed_read_latency => 0
+      avalon_master_handle => avalon_master
     )
     port map (
       clk => clk,

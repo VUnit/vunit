@@ -13,6 +13,7 @@ context vunit_lib.vunit_context;
 context work.com_context;
 
 use work.queue_pkg.all;
+use work.ram_master_pkg.all;
 use work.bus_master_pkg.all;
 
 entity tb_ram_master is
@@ -30,14 +31,14 @@ architecture a of tb_ram_master is
   signal wdata : std_logic_vector(31 downto 0);
   signal rdata : std_logic_vector(31 downto 0) := (others => '0');
 
-  constant bus_handle : bus_master_t := new_bus(data_length => wdata'length, address_length => addr'length);
+  constant ram_master : ram_master_t := new_ram_master(data_length => wdata'length, address_length => addr'length, latency => latency);
 
   signal start, done : boolean := false;
 begin
 
   main : process
     variable reference : bus_reference_t;
-    variable reference_queue : queue_t := new_queue;
+    constant reference_queue : queue_t := new_queue;
     variable tmp : std_logic_vector(rdata'range);
   begin
     test_runner_setup(runner, runner_cfg);
@@ -45,18 +46,18 @@ begin
     wait for 0 ns;
 
     if run("Test single write") then
-      write_bus(net, bus_handle, x"77", x"11223344");
+      write_bus(net, ram_master, x"77", x"11223344");
 
     elsif run("Test single write with byte enable") then
-      write_bus(net, bus_handle, x"77", x"11223344", byte_enable => "0101");
+      write_bus(net, ram_master, x"77", x"11223344", byte_enable => "0101");
 
     elsif run("Test single read") then
-      read_bus(net, bus_handle, x"33", tmp);
+      read_bus(net, ram_master, x"33", tmp);
       check_equal(tmp, std_logic_vector'(x"55667788"), "read data");
 
     elsif run("Test read back to back") then
       for i in 1 to num_back_to_back_reads loop
-        read_bus(net, bus_handle, std_logic_vector(to_unsigned(i, addr'length)), reference);
+        read_bus(net, ram_master, std_logic_vector(to_unsigned(i, addr'length)), reference);
         push(reference_queue, reference);
       end loop;
 
@@ -143,8 +144,7 @@ begin
 
   dut : entity work.ram_master
     generic map (
-      bus_handle => bus_handle,
-      latency => latency)
+      ram_master => ram_master)
     port map (
       clk   => clk,
       en    => en,

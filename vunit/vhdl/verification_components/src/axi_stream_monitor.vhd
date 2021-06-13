@@ -10,6 +10,8 @@ use ieee.std_logic_1164.all;
 context work.vunit_context;
 context work.com_context;
 use work.axi_stream_pkg.all;
+use work.sync_pkg.all;
+use work.vc_pkg.all;
 
 entity axi_stream_monitor is
   generic (
@@ -31,6 +33,25 @@ end entity;
 architecture a of axi_stream_monitor is
 begin
   main : process
+    variable request_msg : msg_t;
+    variable msg_type : msg_type_t;
+  begin
+    receive(net,get_actor(monitor.p_std_cfg), request_msg);
+    msg_type := message_type(request_msg);
+
+    handle_wait_for_time(net, msg_type, request_msg);
+
+    if msg_type = wait_until_idle_msg then
+      if monitor.p_protocol_checker /= null_axi_stream_protocol_checker then
+          wait_until_idle(net, as_sync(monitor.p_protocol_checker));
+      end if;
+      handle_wait_until_idle(net, msg_type, request_msg);
+    else
+      unexpected_msg_type(msg_type, monitor.p_std_cfg);
+    end if;
+  end process;
+
+  publish_transactions : process
     variable msg : msg_t;
     variable axi_stream_transaction : axi_stream_transaction_t(
       tdata(tdata'range),
@@ -43,8 +64,8 @@ begin
   begin
     wait until (tvalid and tready) = '1' and rising_edge(aclk);
 
-    if is_visible(monitor.p_logger, debug) then
-      debug(monitor.p_logger, "tdata: " & to_nibble_string(tdata) & " (" & to_integer_string(tdata) & ")" & ", tlast: " & to_string(tlast));
+    if is_visible(get_logger(monitor.p_std_cfg), debug) then
+      debug(get_logger(monitor.p_std_cfg), "tdata: " & to_nibble_string(tdata) & " (" & to_integer_string(tdata) & ")" & ", tlast: " & to_string(tlast));
     end if;
 
     axi_stream_transaction := (
@@ -58,7 +79,7 @@ begin
     );
 
     msg := new_axi_stream_transaction_msg(axi_stream_transaction);
-    publish(net, monitor.p_actor, msg);
+    publish(net, get_actor(monitor.p_std_cfg), msg);
   end process;
 
   axi_stream_protocol_checker_generate : if monitor.p_protocol_checker /= null_axi_stream_protocol_checker generate

@@ -18,6 +18,7 @@ from vunit.vhdl_parser import (
     VHDLArrayType,
     VHDLReference,
     VHDLRecordType,
+    VHDLFunctionSpecification,
     remove_comments,
 )
 
@@ -58,7 +59,7 @@ end entity;
         self.assertEqual(entity.identifier, "ent")
         self.assertEqual(entity.ports, [])
         self.assertEqual(len(entity.generics), 1)
-        self.assertEqual(entity.generics[0].identifier, "package_g")
+        self.assertEqual(entity.generics[0].identifier_list, ["package_g"])
         self.assertEqual(entity.generics[0].subtype_indication.type_mark, "integer")
 
     def test_parsing_entity_with_type_generic(self):
@@ -75,7 +76,7 @@ end entity;
         self.assertEqual(entity.identifier, "ent")
         self.assertEqual(entity.ports, [])
         self.assertEqual(len(entity.generics), 1)
-        self.assertEqual(entity.generics[0].identifier, "type_g")
+        self.assertEqual(entity.generics[0].identifier_list, ["type_g"])
         self.assertEqual(entity.generics[0].subtype_indication.type_mark, "integer")
 
     def test_parsing_entity_with_string_semicolon_colon(self):
@@ -93,13 +94,13 @@ end entity;
         self.assertEqual(entity.identifier, "ent")
         self.assertEqual(entity.ports, [])
         self.assertEqual(len(entity.generics), 3)
-        self.assertEqual(entity.generics[0].identifier, "const")
+        self.assertEqual(entity.generics[0].identifier_list, ["const"])
         self.assertEqual(entity.generics[0].subtype_indication.type_mark, "string")
         self.assertEqual(entity.generics[0].init_value, '"a;a"')
-        self.assertEqual(entity.generics[1].identifier, "const2")
+        self.assertEqual(entity.generics[1].identifier_list, ["const2"])
         self.assertEqual(entity.generics[1].subtype_indication.type_mark, "string")
         self.assertEqual(entity.generics[1].init_value, '";a""a;a"')
-        self.assertEqual(entity.generics[2].identifier, "const3")
+        self.assertEqual(entity.generics[2].identifier_list, ["const3"])
         self.assertEqual(entity.generics[2].subtype_indication.type_mark, "string")
         self.assertEqual(entity.generics[2].init_value, '": a b c :"')
 
@@ -120,9 +121,9 @@ end entity;
         self.assertEqual(entity.identifier, "ent")
         self.assertEqual(entity.ports, [])
         self.assertEqual(len(entity.generics), 2)
-        self.assertEqual(entity.generics[0].identifier, "function_g")
+        self.assertEqual(entity.generics[0].identifier_list, ["function_g"])
         self.assertEqual(entity.generics[0].subtype_indication.type_mark, "boolean")
-        self.assertEqual(entity.generics[1].identifier, "procedure_g")
+        self.assertEqual(entity.generics[1].identifier_list, ["procedure_g"])
         self.assertEqual(entity.generics[1].subtype_indication.type_mark, "boolean")
 
     def test_getting_entities_from_design_file(self):
@@ -190,7 +191,7 @@ configuration bar of ent -- False
 package new_pkg is new lib.pkg;
 """
         )
-        self.assertEqual(len(design_file.references), 14)
+        self.assertEqual(len(design_file.references), 19)
         self.assertEqual(
             sorted(design_file.references, key=repr),
             sorted(
@@ -209,6 +210,11 @@ package new_pkg is new lib.pkg;
                     VHDLReference("package", "name1", "bla", "all"),
                     VHDLReference("package", "name1", "foo", "all"),
                     VHDLReference("package", "lib", "pkg", None),
+                    VHDLReference("library", "ieee", None, None),
+                    VHDLReference("library", "name1", None, None),
+                    VHDLReference("library", "lib1", None, None),
+                    VHDLReference("library", "lib2", None, None),
+                    VHDLReference("library", "lib3", None, None),
                 ],
                 key=repr,
             ),
@@ -230,7 +236,7 @@ end entity;
         generics = entity.generics
         self.assertEqual(len(generics), 2)
 
-        self.assertEqual(generics[0].identifier, "max_value")
+        self.assertEqual(generics[0].identifier_list, ["max_value"])
         self.assertEqual(generics[0].init_value, "(2-19)*4")
         self.assertEqual(generics[0].mode, None)
         self.assertEqual(
@@ -239,7 +245,7 @@ end entity;
         self.assertEqual(generics[0].subtype_indication.type_mark, "integer")
         # @TODO does not work
         #        self.assertEqual(generics[0].subtypeIndication.constraint, "range 2-2 to 2**10")
-        self.assertEqual(generics[1].identifier, "enable_foo")
+        self.assertEqual(generics[1].identifier_list, ["enable_foo"])
         self.assertEqual(generics[1].init_value, None)
         self.assertEqual(generics[1].mode, None)
         self.assertEqual(generics[1].subtype_indication.code, "boolean")
@@ -258,7 +264,7 @@ entity name is generic(g : t); end entity;
 """
         )
         self.assertEqual(len(entity.generics), 1)
-        self.assertEqual(entity.generics[0].identifier, "g")
+        self.assertEqual(entity.generics[0].identifier_list, ["g"])
 
         entity = self.parse_single_entity(
             """\
@@ -270,7 +276,7 @@ end entity;
 """
         )
         self.assertEqual(len(entity.generics), 1)
-        self.assertEqual(entity.generics[0].identifier, "g")
+        self.assertEqual(entity.generics[0].identifier_list, ["g"])
 
         entity = self.parse_single_entity(
             """\
@@ -282,7 +288,7 @@ end entity;
 """
         )
         self.assertEqual(len(entity.generics), 1)
-        self.assertEqual(entity.generics[0].identifier, "g")
+        self.assertEqual(entity.generics[0].identifier_list, ["g"])
 
         entity = self.parse_single_entity(
             """\
@@ -312,13 +318,15 @@ end entity;
         ports = entity.ports
         self.assertEqual(len(ports), 2)
 
-        self.assertEqual(ports[0].identifier, "clk")
+        self.assertEqual(ports[0].entity_class, "signal")
+        self.assertEqual(ports[0].identifier_list, ["clk"])
         self.assertEqual(ports[0].init_value, None)
         self.assertEqual(ports[0].mode, "in")
         self.assertEqual(ports[0].subtype_indication.code, "std_logic")
         self.assertEqual(ports[0].subtype_indication.type_mark, "std_logic")
 
-        self.assertEqual(ports[1].identifier, "data")
+        self.assertEqual(ports[1].entity_class, "signal")
+        self.assertEqual(ports[1].identifier_list, ["data"])
         self.assertEqual(ports[1].init_value, None)
         self.assertEqual(ports[1].mode, "out")
         self.assertEqual(
@@ -451,7 +459,8 @@ end architecture;
         entity = VHDLEntity("name")
         entity.add_generic("max_value", "boolean", "20")
         self.assertEqual(len(entity.generics), 1)
-        self.assertEqual(entity.generics[0].identifier, "max_value")
+        self.assertEqual(entity.generics[0].entity_class, "constant")
+        self.assertEqual(entity.generics[0].identifier_list, ["max_value"])
         self.assertEqual(entity.generics[0].subtype_indication.type_mark, "boolean")
         self.assertEqual(entity.generics[0].init_value, "20")
 
@@ -459,7 +468,8 @@ end architecture;
         entity = VHDLEntity("name")
         entity.add_port("foo", "inout", "foo_t")
         self.assertEqual(len(entity.ports), 1)
-        self.assertEqual(entity.ports[0].identifier, "foo")
+        self.assertEqual(entity.ports[0].entity_class, "signal")
+        self.assertEqual(entity.ports[0].identifier_list, ["foo"])
         self.assertEqual(entity.ports[0].mode, "inout")
         self.assertEqual(entity.ports[0].subtype_indication.type_mark, "foo_t")
 
@@ -535,6 +545,122 @@ record
         )
         self.assertTrue(records["foo"][0].subtype_indication.array_type)
 
+    def test_parsing_interface_element(self):
+        element = VHDLInterfaceElement.parse("a : bit")
+        self.assertEqual(element.identifier_list, ["a"])
+        self.assertEqual(element.subtype_indication.type_mark, "bit")
+        self.assertEqual(element.entity_class, None)
+        self.assertEqual(element.mode, None)
+        self.assertEqual(element.init_value, None)
+
+        element = VHDLInterfaceElement.parse("a : in bit")
+        self.assertEqual(element.identifier_list, ["a"])
+        self.assertEqual(element.subtype_indication.type_mark, "bit")
+        self.assertEqual(element.entity_class, None)
+        self.assertEqual(element.mode, "in")
+        self.assertEqual(element.init_value, None)
+
+        element = VHDLInterfaceElement.parse(
+            "a : in bit", default_entity_class="constant"
+        )
+        self.assertEqual(element.identifier_list, ["a"])
+        self.assertEqual(element.subtype_indication.type_mark, "bit")
+        self.assertEqual(element.entity_class, "constant")
+        self.assertEqual(element.mode, "in")
+        self.assertEqual(element.init_value, None)
+
+        element = VHDLInterfaceElement.parse(
+            "signal a : in bit", default_entity_class="constant"
+        )
+        self.assertEqual(element.identifier_list, ["a"])
+        self.assertEqual(element.subtype_indication.type_mark, "bit")
+        self.assertEqual(element.entity_class, "signal")
+        self.assertEqual(element.mode, "in")
+        self.assertEqual(element.init_value, None)
+
+        element = VHDLInterfaceElement.parse(
+            "signal a : in bit := '1'", default_entity_class="constant"
+        )
+        self.assertEqual(element.identifier_list, ["a"])
+        self.assertEqual(element.subtype_indication.type_mark, "bit")
+        self.assertEqual(element.entity_class, "signal")
+        self.assertEqual(element.mode, "in")
+        self.assertEqual(element.init_value, "'1'")
+
+        element = VHDLInterfaceElement.parse("signal a, b : in bit := '1'")
+        self.assertEqual(len(element.identifier_list), 2)
+        self.assertIn("a", element.identifier_list)
+        self.assertIn("b", element.identifier_list)
+        self.assertEqual(element.subtype_indication.type_mark, "bit")
+        self.assertEqual(element.entity_class, "signal")
+        self.assertEqual(element.mode, "in")
+        self.assertEqual(element.init_value, "'1'")
+
+        element = VHDLInterfaceElement.parse(
+            """\
+signal a ,b,
+       c:in bit:='1'"""
+        )
+        self.assertEqual(len(element.identifier_list), 3)
+        self.assertIn("a", element.identifier_list)
+        self.assertIn("b", element.identifier_list)
+        self.assertIn("c", element.identifier_list)
+        self.assertEqual(element.subtype_indication.type_mark, "bit")
+        self.assertEqual(element.entity_class, "signal")
+        self.assertEqual(element.mode, "in")
+        self.assertEqual(element.init_value, "'1'")
+
+    def test_that_function_declarations_are_found(self):
+        code = """\
+function with_no_parameters return boolean;
+impure function with_side_effects return boolean;
+function with_single_parameter(a : bit) return integer;
+function with_multiple_parameters(a : bit; b : boolean) return integer;
+function with_whitespaces ( a:bit ;b : boolean )
+return integer ;
+"""
+
+        functions = {f.identifier: f for f in VHDLFunctionSpecification.find(code)}
+        self.assertEqual(len(functions), 5)
+
+        self.assertIn("with_no_parameters", functions)
+        self.assertEqual(functions["with_no_parameters"].return_type_mark, "boolean")
+        self.assertFalse(functions["with_no_parameters"].parameter_list)
+
+        self.assertIn("with_side_effects", functions)
+        self.assertEqual(functions["with_side_effects"].return_type_mark, "boolean")
+        self.assertFalse(functions["with_side_effects"].parameter_list)
+
+        self.assertIn("with_single_parameter", functions)
+        func = functions["with_single_parameter"]
+        self.assertEqual(func.return_type_mark, "integer")
+        self.assertEqual(len(func.parameter_list), 1)
+        self.assertEqual(func.parameter_list[0].entity_class, "constant")
+        self.assertEqual(func.parameter_list[0].identifier_list, ["a"])
+        self.assertEqual(func.parameter_list[0].subtype_indication.type_mark, "bit")
+
+        self.assertIn("with_multiple_parameters", functions)
+        func = functions["with_multiple_parameters"]
+        self.assertEqual(func.return_type_mark, "integer")
+        self.assertEqual(len(func.parameter_list), 2)
+        self.assertEqual(func.parameter_list[0].entity_class, "constant")
+        self.assertEqual(func.parameter_list[0].identifier_list, ["a"])
+        self.assertEqual(func.parameter_list[0].subtype_indication.type_mark, "bit")
+        self.assertEqual(func.parameter_list[1].entity_class, "constant")
+        self.assertEqual(func.parameter_list[1].identifier_list, ["b"])
+        self.assertEqual(func.parameter_list[1].subtype_indication.type_mark, "boolean")
+
+        self.assertIn("with_whitespaces", functions)
+        func = functions["with_whitespaces"]
+        self.assertEqual(func.return_type_mark, "integer")
+        self.assertEqual(len(func.parameter_list), 2)
+        self.assertEqual(func.parameter_list[0].entity_class, "constant")
+        self.assertEqual(func.parameter_list[0].identifier_list, ["a"])
+        self.assertEqual(func.parameter_list[0].subtype_indication.type_mark, "bit")
+        self.assertEqual(func.parameter_list[1].entity_class, "constant")
+        self.assertEqual(func.parameter_list[1].identifier_list, ["b"])
+        self.assertEqual(func.parameter_list[1].subtype_indication.type_mark, "boolean")
+
     def test_remove_comments(self):
         self.assertEqual(remove_comments("a\n-- foo  \nb"), "a\n        \nb")
 
@@ -580,14 +706,14 @@ record
         Helper function to create a VHDLEntity
         """
         data_width = VHDLInterfaceElement(
-            "data_width", VHDLSubtypeIndication.parse("natural := 16")
+            "constant", "data_width", VHDLSubtypeIndication.parse("natural := 16")
         )
 
         clk = VHDLInterfaceElement(
-            "clk", VHDLSubtypeIndication.parse("std_logic"), "in"
+            "signal", "clk", VHDLSubtypeIndication.parse("std_logic"), "in"
         )
         data = VHDLInterfaceElement(
-            "data",
+            "signal" "data",
             VHDLSubtypeIndication.parse("std_logic_vector(data_width-1 downto 0)"),
             "out",
         )

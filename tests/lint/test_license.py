@@ -137,6 +137,8 @@ def find_licensed_files():
                 continue
             if "codecs" in root:
                 continue
+            if "compliance_test" in root:
+                continue
             if root == str(ROOT / "docs"):
                 continue
             if str(ROOT / "venv") in root:

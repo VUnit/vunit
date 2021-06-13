@@ -65,7 +65,7 @@ architecture a of tb_avalon_slave is
   constant buf : buffer_t := allocate(memory, tb_cfg.num_cycles * byteenable'length);
   constant avalon_slave : avalon_slave_t :=
       new_avalon_slave(memory => memory,
-        name => "avmm_vc",
+        actor => new_actor("avmm_vc"),
         readdatavalid_high_probability => tb_cfg.readdatavalid_prob,
         waitrequest_high_probability => tb_cfg.waitrequest_prob
       );

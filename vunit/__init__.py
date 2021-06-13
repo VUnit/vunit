@@ -13,6 +13,7 @@ import vunit.version_check
 from vunit.ui import VUnit
 from vunit.vunit_cli import VUnitCLI
 from vunit.about import version, doc
+from vunit.vc import VerificationComponent, VerificationComponentInterface
 
 # Repository root
 ROOT = str(Path(__file__).parent.parent.resolve())

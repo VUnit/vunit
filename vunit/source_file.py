@@ -303,7 +303,10 @@ class VHDLSourceFile(SourceFile):
         """
         result = []
         for entity in design_file.entities:
-            generic_names = [generic.identifier for generic in entity.generics]
+            generic_names = []
+            for generic in entity.generics:
+                for identifier in generic.identifier_list:
+                    generic_names.append(identifier)
             result.append(Entity(entity.identifier, self, generic_names))
 
         for context in design_file.contexts:

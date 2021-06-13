@@ -12,14 +12,26 @@ use ieee.std_logic_1164.all;
 context work.vunit_context;
 context work.com_context;
 
+use work.vc_pkg.all;
+
 package stream_slave_pkg is
   -- Stream slave handle
   type stream_slave_t is record
-    p_actor : actor_t;
+    p_std_cfg  : std_cfg_t;
   end record;
 
+  constant stream_slave_logger  : logger_t  := get_logger("vunit_lib:stream_slave_pkg");
+  constant stream_slave_checker : checker_t := new_checker(stream_slave_logger);
+
   -- Create a new stream slave object
-  impure function new_stream_slave return stream_slave_t;
+  impure function new_stream_slave(
+    logger                     : logger_t                     := stream_slave_logger;
+    actor                      : actor_t                      := null_actor;
+    checker                    : checker_t                    := null_checker;
+    unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail
+  ) return stream_slave_t;
+
+  function get_std_cfg(slave : stream_slave_t) return std_cfg_t;
 
   -- Reference to future stream result
   alias stream_reference_t is msg_t;

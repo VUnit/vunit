@@ -15,6 +15,8 @@ context work.vunit_context;
 context work.com_context;
 use work.stream_slave_pkg.all;
 use work.avalon_stream_pkg.all;
+use work.vc_pkg.all;
+use work.sync_pkg.all;
 
 library osvvm;
 use osvvm.RandomPkg.all;
@@ -40,13 +42,15 @@ begin
     variable rnd : RandomPType;
     variable avalon_stream_transaction : avalon_stream_transaction_t(data(data'range));
   begin
-    receive(net, sink.p_actor, msg);
+    receive(net, get_actor(sink.p_std_cfg), msg);
     msg_type := message_type(msg);
+
+    handle_sync_message(net, msg_type, msg);
 
     if msg_type = stream_pop_msg or msg_type = pop_avalon_stream_msg then
       -- Loop till got valid data
       loop
-        while rnd.Uniform(0.0, 1.0) > sink.ready_high_probability loop
+        while rnd.Uniform(0.0, 1.0) > sink.p_ready_high_probability loop
           wait until rising_edge(clk);
         end loop;
         ready <= '1';
@@ -77,7 +81,7 @@ begin
       end loop;
 
     else
-      unexpected_msg_type(msg_type);
+      unexpected_msg_type(msg_type, sink.p_std_cfg);
     end if;
 
   end process;

@@ -15,6 +15,7 @@ use std.textio.all;
 use work.axi_pkg.all;
 use work.queue_pkg.all;
 use work.integer_vector_ptr_pkg.all;
+use work.vc_pkg.all;
 context work.vunit_context;
 context work.com_context;
 context work.vc_context;
@@ -47,6 +48,10 @@ package axi_slave_private_pkg is
                    max_id : natural;
                    data : std_logic_vector);
     impure function get_actor return actor_t;
+    impure function get_logger return logger_t;
+    impure function get_checker return checker_t;
+    impure function unexpected_msg_type_policy return unexpected_msg_type_policy_t;
+    impure function get_std_cfg return std_cfg_t;
 
     procedure set_address_fifo_depth(depth : positive);
     procedure set_write_response_fifo_depth(depth : positive);
@@ -162,7 +167,27 @@ package body axi_slave_private_pkg is
 
     impure function get_actor return actor_t is
     begin
-      return p_axi_slave.p_actor;
+      return get_actor(p_axi_slave.p_std_cfg);
+    end;
+
+    impure function get_logger return logger_t is
+    begin
+      return get_logger(p_axi_slave.p_std_cfg);
+    end;
+
+    impure function get_checker return checker_t is
+    begin
+      return get_checker(p_axi_slave.p_std_cfg);
+    end;
+
+    impure function unexpected_msg_type_policy return unexpected_msg_type_policy_t is
+    begin
+      return unexpected_msg_type_policy(p_axi_slave.p_std_cfg);
+    end;
+
+    impure function get_std_cfg return std_cfg_t is
+    begin
+      return p_axi_slave.p_std_cfg;
     end;
 
     procedure set_address_fifo_depth(depth : positive) is
@@ -295,8 +320,8 @@ package body axi_slave_private_pkg is
       burst.index := get(p_id_indexes, burst.id);
       set(p_id_indexes, burst.id, burst.index + 1);
 
-      if is_visible(p_axi_slave.p_logger, debug) then
-        debug(p_axi_slave.p_logger,
+      if is_visible(get_logger(p_axi_slave), debug) then
+        debug(get_logger(p_axi_slave),
               "Got " & description & " " & describe_burst(burst) &
               LF & ax & "id    = 0x" & to_hstring(axid) &
               LF & ax & "addr  = 0x" & to_hstring(axaddr) &
@@ -328,13 +353,13 @@ package body axi_slave_private_pkg is
     impure function pop_burst return axi_burst_t is
       constant burst : axi_burst_t := pop_axi_burst(p_burst_queue);
     begin
-      if is_visible(p_axi_slave.p_logger, debug) then
+      if is_visible(get_logger(p_axi_slave), debug) then
         case p_axi_slave_type is
           when write_slave =>
-            debug(p_axi_slave.p_logger,
+            debug(get_logger(p_axi_slave),
                   "Start accepting data for write burst " & describe_burst(burst));
           when read_slave =>
-            debug(p_axi_slave.p_logger,
+            debug(get_logger(p_axi_slave),
                   "Start providing data for read burst " & describe_burst(burst));
         end case;
       end if;
@@ -366,8 +391,8 @@ package body axi_slave_private_pkg is
     impure function pop_resp return axi_burst_t is
       constant resp_burst : axi_burst_t := pop_axi_burst(p_resp_queue);
     begin
-      if is_visible(p_axi_slave.p_logger, debug) then
-        debug(p_axi_slave.p_logger,
+      if is_visible(get_logger(p_axi_slave), debug) then
+        debug(get_logger(p_axi_slave),
               "Providing write response for burst " & describe_burst(resp_burst));
       end if;
       p_resp_queue_length := p_resp_queue_length - 1;
@@ -376,13 +401,13 @@ package body axi_slave_private_pkg is
 
     procedure finish_burst(burst : axi_burst_t) is
     begin
-      if is_visible(p_axi_slave.p_logger, debug) then
+      if is_visible(get_logger(p_axi_slave), debug) then
         case p_axi_slave_type is
           when write_slave =>
-            debug(p_axi_slave.p_logger,
+            debug(get_logger(p_axi_slave),
                   "Accepted last data for write burst " & describe_burst(burst));
           when read_slave =>
-            debug(p_axi_slave.p_logger,
+            debug(get_logger(p_axi_slave),
                   "Providing last data for read burst " & describe_burst(burst));
         end case;
       end if;
@@ -424,7 +449,7 @@ package body axi_slave_private_pkg is
 
     procedure fail(msg : string) is
     begin
-      failure(p_axi_slave.p_logger, msg);
+      check_failed(get_checker(p_axi_slave), msg, failure);
     end;
 
     procedure check_4kbyte_boundary(burst : axi_burst_t) is
@@ -503,6 +528,8 @@ package body axi_slave_private_pkg is
       receive(net, self.get_actor, request_msg);
       msg_type := message_type(request_msg);
 
+      handle_sync_message(net, msg_type, request_msg);
+
       if msg_type = axi_slave_set_address_fifo_depth_msg then
         self.set_address_fifo_depth(pop(request_msg));
         acknowledge(net, request_msg, true);
@@ -549,7 +576,7 @@ package body axi_slave_private_pkg is
         self.enable_well_behaved_check;
         acknowledge(net, request_msg, true);
       else
-        unexpected_msg_type(msg_type);
+        unexpected_msg_type(msg_type, self.get_std_cfg);
       end if;
 
       delete(request_msg);
@@ -573,8 +600,6 @@ package body axi_slave_private_pkg is
       return resp_to_string(resp) & "(" & to_string(resp) & ")";
     end;
   begin
-    if got /= expected then
-      failure(bus_handle.p_logger, msg & " - Got AXI response "  & describe(got) & " expected " & describe(expected));
-    end if;
+    check(get_checker(bus_handle), got = expected, result("for " & msg & " - Got AXI response "  & describe(got) & " expected " & describe(expected)), failure);
   end;
 end package body;
