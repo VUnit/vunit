@@ -17,10 +17,14 @@ package signal_checker_pkg is
     -- Private
     p_actor : actor_t;
     p_logger : logger_t;
+    p_checker : checker_t;
+    initial_monitor_enable : boolean;
   end record;
 
   impure function new_signal_checker(
-    logger : logger_t := null_logger)
+    logger : logger_t := null_logger;
+    checker: checker_t := null_checker;
+    initial_monitor_enable : boolean := true)
     return signal_checker_t;
 
   -- Add one value to the expect queue
@@ -31,22 +35,39 @@ package signal_checker_pkg is
                    event_time : delay_length;
                    margin : delay_length := 0 ns);
 
+  -- Get the current value
+  procedure get_value(signal net     : inout network_t;
+                      signal_checker :       signal_checker_t;
+                      variable value : out   std_logic_vector);
+
+  -- Enable the monitor, i.e. each signal change must be expected
+  procedure enable_monitor(signal net : inout network_t; signal_checker : signal_checker_t);
+  -- Disable the monitor, i.e. all signal changes are accepted, checks only done if there is an expected
+  procedure disable_monitor(signal net : inout network_t; signal_checker : signal_checker_t);
+
   -- Wait until all expected values have been checked
   procedure wait_until_idle(signal net : inout network_t;
                             signal_checker : signal_checker_t);
 
   -- Private message type definitions
   constant expect_msg : msg_type_t := new_msg_type("expect");
+  constant get_value_msg       : msg_type_t := new_msg_type("get value");
+  constant get_value_reply_msg : msg_type_t := new_msg_type("get value reply");
+  constant monitor_change_msg : msg_type_t := new_msg_type("monitor change");
 
 end package;
 
 
 package body signal_checker_pkg is
-  impure function new_signal_checker(logger : logger_t := null_logger) return signal_checker_t is
+  impure function new_signal_checker(logger : logger_t := null_logger;
+                                     checker : checker_t := null_checker;
+                                     initial_monitor_enable : boolean := true) return signal_checker_t is
     variable result : signal_checker_t;
   begin
     result := (p_actor => new_actor,
-               p_logger => logger);
+               p_logger => logger,
+               p_checker => checker,
+               initial_monitor_enable => initial_monitor_enable);
     if logger = null_logger then
       result.p_logger := default_logger;
     end if;
@@ -66,10 +87,35 @@ package body signal_checker_pkg is
     send(net, signal_checker.p_actor, request_msg);
   end;
 
+  procedure get_value(signal net     : inout network_t;
+                      signal_checker :       signal_checker_t;
+                      variable value : out   std_logic_vector) is
+    variable get_msg : msg_t := new_msg(get_value_msg);
+    variable reply   : msg_t;
+  begin
+    request(net, signal_checker.p_actor, get_msg, reply);
+    value := pop_std_ulogic_vector(reply);
+    delete(reply);
+  end;
+
   procedure wait_until_idle(signal net : inout network_t;
                             signal_checker : signal_checker_t) is
   begin
     wait_until_idle(net, signal_checker.p_actor);
   end;
+
+  procedure enable_monitor(signal net : inout network_t; signal_checker : signal_checker_t) is
+    variable msg : msg_t := new_msg(monitor_change_msg);
+  begin
+    push(msg, true);
+    send(net, signal_checker.p_actor, msg);
+  end procedure;
+
+  procedure disable_monitor(signal net : inout network_t; signal_checker : signal_checker_t) is
+    variable msg : msg_t := new_msg(monitor_change_msg);
+  begin
+    push(msg, false);
+    send(net, signal_checker.p_actor, msg);
+  end procedure;
 
 end package body;

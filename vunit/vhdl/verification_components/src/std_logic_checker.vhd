@@ -23,6 +23,7 @@ end entity;
 
 architecture a of std_logic_checker is
   constant expect_queue : queue_t := new_queue;
+  signal monitor_enable : boolean := signal_checker.initial_monitor_enable;
 begin
 
   main : process
@@ -37,6 +38,14 @@ begin
       push_std_ulogic_vector(expect_queue, pop_std_ulogic_vector(request_msg));
       push_time(expect_queue, pop_time(request_msg));
       push_time(expect_queue, pop_time(request_msg));
+
+    elsif msg_type = get_value_msg then
+      reply_msg := new_msg(get_value_reply_msg);
+      push_std_ulogic_vector(reply_msg, value);
+      reply(net, request_msg, reply_msg);
+
+    elsif msg_type = monitor_change_msg then
+      monitor_enable <= pop_boolean(request_msg);
 
     elsif msg_type = wait_until_idle_msg then
 
@@ -58,8 +67,25 @@ begin
   end process;
 
   monitor : process
+      constant do_checks : boolean := signal_checker.p_checker /= null_checker;
+
+      procedure check_wrap (expr : boolean; variable pass : out boolean; msg : string ) is
+      begin
+          if do_checks then
+              check(signal_checker.p_checker, pass, expr, msg);
+          else
+            if not expr then
+              error(signal_checker.p_logger, msg);
+              pass := false;
+            else
+              pass := true;
+            end if;
+          end if;
+      end procedure check_wrap;
+
     variable expected_value : std_logic_vector(value'range);
     variable event_time, margin : delay_length;
+    variable v_pass: boolean;
 
     impure function margin_suffix return string is
     begin
@@ -72,23 +98,22 @@ begin
   begin
     wait on value;
     if is_empty(expect_queue) then
-      error(signal_checker.p_logger, "Unexpected event with value = " & to_string(value));
+      if monitor_enable then
+        check_wrap(false, v_pass, "Unexpected event with value = " & to_string(value));
+      end if;
     else
       expected_value := pop_std_ulogic_vector(expect_queue);
       event_time := pop_time(expect_queue);
       margin := pop_time(expect_queue);
 
-      if value /= expected_value then
-        error(signal_checker.p_logger, "Got event with wrong value, got " & to_string(value) &
-              " expected " & to_string(expected_value));
-
-      elsif now < event_time - margin or now > event_time + margin then
-        error(signal_checker.p_logger, "Got event at wrong time, occured at " & time'image(now) &
-              " expected at " & time'image(event_time) & margin_suffix);
-
-      else
-        pass(signal_checker.p_logger, "Got expected event with value = " & to_string(value));
+      check_wrap(value = expected_value, v_pass, "Got event with wrong value, got " & to_string(value) & " expected " & to_string(expected_value));
+      if v_pass then
+        check_wrap( now >= event_time - margin and now <= event_time + margin, v_pass, "Got event at wrong time, occured at " & time'image(now) & " expected at " & time'image(event_time) & margin_suffix);
+        if v_pass and not do_checks then
+          pass(signal_checker.p_logger, "Got expected event with value = " & to_string(value));
+        end if;
       end if;
+
     end if;
   end process;
 end architecture;

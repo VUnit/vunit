@@ -177,4 +177,17 @@ TB_AXI_STREAM.test("test random stall on slave").add_config(
     name="stall_slave", generics=dict(g_stall_percentage_slave=30)
 )
 
+TB_STD_LOGIC_CHECKER = LIB.test_bench("tb_std_logic_checker")
+for test in TB_STD_LOGIC_CHECKER.get_tests():
+    if test.name == "test initial checker monitor state":
+        test.add_config(
+            name="initial monitor off", generics=dict(initial_monitor_enable=False)
+        )
+        test.add_config(
+            name="initial monitor on", generics=dict(initial_monitor_enable=True)
+        )
+
+    test.add_config(name="logger", generics=dict(use_checker=False))
+    test.add_config(name="checker", generics=dict(use_checker=True))
+
 UI.main()
