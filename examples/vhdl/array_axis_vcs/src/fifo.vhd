@@ -35,6 +35,8 @@ architecture arch of fifo is
 
 begin
 
+  -- If your simulator chokes on the following block,
+  -- see https://electronics.stackexchange.com/questions/540769/what-kind-of-vhdl-process-is-this/
   PslChecks : block is
     constant dx : std_logic_vector(d'left downto 0) := (others => 'X');
     constant du : std_logic_vector(d'left downto 0) := (others => 'U');
