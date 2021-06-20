@@ -853,8 +853,9 @@ Stability Check (check\_stable)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``check_stable`` supports four different clocked formats. The ``expr``
-parameter can be ``std_logic`` or ``std_logic_vector`` and the call can
-be made with or without the initial custom checker parameter.
+parameter can be ``std_logic``, ``std_logic_vector``, ``unsigned`` or 
+``signed`` and the call can be made with or without the initial custom 
+checker parameter.
 
 .. code-block:: vhdl
 
@@ -864,7 +865,7 @@ be made with or without the initial custom checker parameter.
       signal en                  : in std_logic;
       signal start_event         : in std_logic;
       signal end_event           : in std_logic;
-      signal expr                : in std_logic or std_logic_vector;
+      signal expr                : in std_logic or std_logic_vector or unsigned or signed;
       constant msg               : in string      := result;
       constant level             : in log_level_t := null_log_level;
       constant active_clock_edge : in edge_t      := rising_edge;
