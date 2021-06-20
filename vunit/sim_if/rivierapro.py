@@ -290,7 +290,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         """
         set_generic_str = " ".join(
             (
-                "-g/%s/%s=%s" % (config.entity_name, name, format_generic(value))
+                "-g/%s/%s=%s" % (config.entity_name, name, format_generic(name, value))
                 for name, value in config.generics.items()
             )
         )
@@ -440,12 +440,13 @@ proc _vunit_sim_restart {} {
         print("Done merging coverage files")
 
 
-def format_generic(value):
+def format_generic(name, value):
     """
     Generic values with space in them need to be quoted
+    We know that tb_path and output_path are strings - they also need to be in quote
     """
     value_str = str(value)
-    if " " in value_str:
+    if " " in value_str or name == "output_path" or name == "tb_path":
         return '"%s"' % value_str
     return value_str
 
