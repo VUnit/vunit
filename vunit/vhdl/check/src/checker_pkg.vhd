@@ -18,29 +18,37 @@ package checker_pkg is
 
   impure function new_checker(logger_name : string;
                               default_log_level : log_level_t := error) return checker_t;
-  impure function new_checker(logger            : logger_t;
+  impure function new_checker(logger : logger_t;
                               default_log_level : log_level_t := error) return checker_t;
 
-  impure function get_logger(checker            : checker_t) return logger_t;
+  impure function get_logger(checker : checker_t) return logger_t;
   impure function get_default_log_level(checker : checker_t) return log_level_t;
   procedure set_default_log_level(checker : checker_t; default_log_level : log_level_t);
+
+  impure function to_integer(
+    checker : checker_t
+  ) return integer;
+
+  impure function to_checker(
+    int : integer
+  ) return checker_t;
 
   impure function is_pass_visible(checker : checker_t) return boolean;
 
   procedure passing_check(checker : checker_t);
 
   procedure passing_check(
-    checker   : checker_t;
-    msg       : string;
-    line_num  : natural := 0;
-    file_name : string  := "");
+    checker : checker_t;
+    msg : string;
+    line_num : natural := 0;
+    file_name : string := "");
 
   procedure failing_check(
-    checker   : checker_t;
-    msg       : string;
-    level     : log_level_t := null_log_level;
-    line_num  : natural                := 0;
-    file_name : string                 := "");
+    checker : checker_t;
+    msg : string;
+    level : log_level_t := null_log_level;
+    line_num : natural := 0;
+    file_name : string := "");
 
   type checker_stat_t is record
     n_checks : natural;
@@ -48,21 +56,21 @@ package checker_pkg is
     n_passed : natural;
   end record;
 
-  function "+" (
+  function "+"(
     stat1 : checker_stat_t;
     stat2 : checker_stat_t)
-    return checker_stat_t;
+  return checker_stat_t;
 
-  function "-" (
+  function "-"(
     stat1 : checker_stat_t;
     stat2 : checker_stat_t)
-    return checker_stat_t;
+  return checker_stat_t;
 
   function to_string(stat : checker_stat_t) return string;
 
   impure function get_checker_stat(checker : checker_t) return checker_stat_t;
-  procedure reset_checker_stat(checker     : checker_t);
-  procedure get_checker_stat(checker       :     checker_t;
+  procedure reset_checker_stat(checker : checker_t);
+  procedure get_checker_stat(checker : checker_t;
                              variable stat : out checker_stat_t);
 
 end package;
