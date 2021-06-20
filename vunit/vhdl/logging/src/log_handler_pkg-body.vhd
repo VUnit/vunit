@@ -163,7 +163,7 @@ package body log_handler_pkg is
       end;
 
       procedure write_time(variable l : inout line; justify : boolean := false) is
-        constant time_string : string := time'image(log_time);
+        constant time_string : string := to_string(log_time, ns);
       begin
         if justify then
           pad(l, max_time_length - time_string'length);
