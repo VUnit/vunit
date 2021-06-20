@@ -7,6 +7,7 @@
 -- Avalon-St Source Verification Component
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std_unsigned.all;
 
 context work.vunit_context;
 context work.com_context;
@@ -27,7 +28,9 @@ entity avalon_source is
     valid : out std_logic := '0';
     sop   : out std_logic := '0';
     eop   : out std_logic := '0';
-    data  : out std_logic_vector(data_length(source)-1 downto 0) := (others => '0')
+    data  : out std_logic_vector(data_length(source)-1 downto 0) := (others => '0');
+    empty : out std_logic_vector(empty_length(source)-1 downto 0) := (others => '0');
+    channel : out std_logic_vector(channel_length(source)-1 downto 0) := (others => '0')
   );
 end entity;
 
@@ -52,16 +55,10 @@ begin
       if msg_type = push_avalon_stream_msg then
         pop_avalon_stream_transaction(msg, avalon_stream_transaction);
         data <= avalon_stream_transaction.data;
-        if avalon_stream_transaction.sop then
-          sop <= '1';
-        else
-          sop <= '0';
-        end if;
-        if avalon_stream_transaction.eop then
-          eop <= '1';
-        else
-          eop <= '0';
-        end if;
+        sop <= '1' when avalon_stream_transaction.sop else '0';
+        eop <= '1' when avalon_stream_transaction.eop else '0';
+        empty <= to_slv(avalon_stream_transaction.empty, empty'length);
+        channel <= to_slv(avalon_stream_transaction.channel, channel'length);
       else
         data <= pop_std_ulogic_vector(msg);
         sop <= '0';

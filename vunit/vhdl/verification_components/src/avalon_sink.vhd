@@ -10,6 +10,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std_unsigned.all;
 
 context work.vunit_context;
 context work.com_context;
@@ -28,11 +29,14 @@ entity avalon_sink is
     valid : in std_logic;
     sop   : in std_logic;
     eop   : in std_logic;
-    data  : in std_logic_vector(data_length(sink)-1 downto 0)
+    data  : in std_logic_vector(data_length(sink)-1 downto 0);
+    empty : in std_logic_vector(empty_length(sink)-1 downto 0);
+    channel : in std_logic_vector(channel_length(sink)-1 downto 0)
   );
 end entity;
 
 architecture a of avalon_sink is
+  constant data_queue : queue_t := new_queue;
 begin
   main : process
     variable reply_msg, msg : msg_t;
@@ -40,46 +44,44 @@ begin
     variable rnd : RandomPType;
     variable avalon_stream_transaction : avalon_stream_transaction_t(data(data'range));
   begin
-    receive(net, sink.p_actor, msg);
-    msg_type := message_type(msg);
+    if is_empty(data_queue) then
+      wait until rising_edge(clk);
+    else
+      receive(net, sink.p_actor, msg);
+      msg_type := message_type(msg);
 
-    if msg_type = stream_pop_msg or msg_type = pop_avalon_stream_msg then
-      -- Loop till got valid data
-      loop
-        while rnd.Uniform(0.0, 1.0) > sink.ready_high_probability loop
-          wait until rising_edge(clk);
-        end loop;
-        ready <= '1';
-        wait until ready = '1' and rising_edge(clk);
-        if valid = '1' then
-          reply_msg := new_msg;
+      if msg_type = stream_pop_msg or msg_type = pop_avalon_stream_msg then
+        reply_msg := new_msg;
+        pop_avalon_stream_transaction(data_queue, avalon_stream_transaction);
           if msg_type = pop_avalon_stream_msg then
-            avalon_stream_transaction.data := data;
-            if sop = '1' then
-                avalon_stream_transaction.sop := true;
-            else
-                avalon_stream_transaction.sop := false;
-            end if;
-            if eop = '1' then
-                avalon_stream_transaction.eop := true;
-            else
-                avalon_stream_transaction.eop := false;
-            end if;
             push_avalon_stream_transaction(reply_msg, avalon_stream_transaction);
           else
-            push_std_ulogic_vector(reply_msg, data);
+            push_std_ulogic_vector(reply_msg, avalon_stream_transaction.data);
           end if;
           reply(net, msg, reply_msg);
-          ready <= '0';
-          exit;
-        end if;
-        ready <= '0';
-      end loop;
-
-    else
-      unexpected_msg_type(msg_type);
+      else
+        unexpected_msg_type(msg_type);
+      end if;
     end if;
 
+  end process;
+
+  data_handle : process
+    variable rnd : RandomPType;
+    variable avalon_stream_transaction : avalon_stream_transaction_t(data(data'range));
+  begin
+    while rnd.Uniform(0.0, 1.0) > sink.ready_high_probability loop
+      wait until rising_edge(clk);
+    end loop;
+    ready <= '1';
+    wait until (valid and ready) = '1' and rising_edge(clk);
+    avalon_stream_transaction.data := data;
+    avalon_stream_transaction.sop := ?? sop;
+    avalon_stream_transaction.eop := ?? eop;
+    avalon_stream_transaction.empty := to_integer(empty);
+    avalon_stream_transaction.channel := to_integer(channel);
+    push_avalon_stream_transaction(data_queue, avalon_stream_transaction);
+    ready <= '0';
   end process;
 
 end architecture;
