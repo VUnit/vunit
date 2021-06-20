@@ -1,0 +1,19 @@
+image: ghdl/vunit:llvm
+stages:
+  - test
+
+before_script:
+  - cd $CI_PROJECT_DIR/src/tests
+
+test:
+  tags:
+    - linux-docker
+  stage: test
+  script:
+    - python3 ./run.py --xunit-xml ./test_output.xml
+  artifacts:
+    when: always
+    paths:
+      - $CI_PROJECT_DIR/src/tests/test_output.xml
+    reports:
+      junit: $CI_PROJECT_DIR/src/tests/test_output.xml
