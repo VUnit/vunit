@@ -54,7 +54,7 @@ package body core_pkg is
   constant core_failure_mock_state_length : natural := 3;
 
   impure function new_core_failure_mock_state return integer_vector_ptr_t is
-    constant state : integer_vector_ptr_t := new_integer_vector_ptr(core_failure_mock_state_length);
+    variable state : integer_vector_ptr_t := new_integer_vector_ptr(core_failure_mock_state_length);
   begin
     set(state, is_mocked_idx, 0);
     set(state, core_failure_called_idx, 0);
@@ -62,7 +62,7 @@ package body core_pkg is
     return state;
   end;
 
-  constant core_failure_mock_state : integer_vector_ptr_t := new_core_failure_mock_state;
+  shared variable core_failure_mock_state : integer_vector_ptr_t := new_core_failure_mock_state;
 
   procedure mock_core_failure is
   begin

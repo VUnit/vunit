@@ -333,7 +333,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                     unit_name,
                 )
 
-    def create_dependency_graph(self, implementation_dependencies=False):
+    def create_dependency_graph(self, implementation_dependencies=True):
         """
         Create a DependencyGraph object of the HDL code project
         """
@@ -461,7 +461,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         return result_list
 
     def get_dependencies_in_compile_order(
-        self, target_files=None, implementation_dependencies=False
+        self, target_files=None, implementation_dependencies=True
     ):
         """
         Get a list of dependencies of target files including the

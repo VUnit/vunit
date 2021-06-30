@@ -241,7 +241,6 @@ class SimulatorInterface(object):  # pylint: disable=too-many-public-methods
             output = check_output(command, env=self.get_env())
             printer.write("passed", fg="gi")
             printer.write("\n")
-            printer.write(output)
 
         except subprocess.CalledProcessError as err:
             printer.write("failed", fg="ri")

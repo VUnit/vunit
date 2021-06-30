@@ -51,11 +51,11 @@ package dict_pkg is
 end package;
 
 package body dict_pkg is
-  constant int_pool : integer_vector_ptr_pool_t := new_integer_vector_ptr_pool;
-  constant str_pool : string_ptr_pool_t := new_string_ptr_pool;
-  constant meta_num_keys : natural := 0;
-  constant meta_length : natural := meta_num_keys+1;
-  constant new_bucket_size : natural := 1;
+  shared variable int_pool : integer_vector_ptr_pool_t := new_integer_vector_ptr_pool;
+  shared variable str_pool : string_ptr_pool_t := new_string_ptr_pool;
+  shared variable meta_num_keys : natural := 0;
+  shared variable meta_length : natural := meta_num_keys+1;
+  shared variable new_bucket_size : natural := 1;
 
   impure function new_dict
   return dict_t is
@@ -129,11 +129,11 @@ package body dict_pkg is
     key_hash : natural;
     key      : string
   ) return string_ptr_t is
-    constant num_buckets : natural := length(dict.p_bucket_lengths);
-    constant bucket_idx : natural := key_hash mod num_buckets;
-    constant bucket_length : natural := get(dict.p_bucket_lengths, bucket_idx);
-    constant bucket_values : integer_vector_ptr_t := to_integer_vector_ptr(get(dict.p_bucket_values, bucket_idx));
-    constant bucket_keys : integer_vector_ptr_t := to_integer_vector_ptr(get(dict.p_bucket_keys, bucket_idx));
+    variable num_buckets : natural := length(dict.p_bucket_lengths);
+    variable bucket_idx : natural := key_hash mod num_buckets;
+    variable bucket_length : natural := get(dict.p_bucket_lengths, bucket_idx);
+    variable bucket_values : integer_vector_ptr_t := to_integer_vector_ptr(get(dict.p_bucket_values, bucket_idx));
+    variable bucket_keys : integer_vector_ptr_t := to_integer_vector_ptr(get(dict.p_bucket_keys, bucket_idx));
   begin
     for i in 0 to bucket_length-1 loop
       if to_string(to_string_ptr(get(bucket_keys, i))) = key then
@@ -171,10 +171,10 @@ package body dict_pkg is
     key_hash : natural;
     key      : string
   ) is
-    constant num_buckets : natural := length(dict.p_bucket_lengths);
-    constant bucket_idx : natural := key_hash mod num_buckets;
-    constant bucket_length : natural := get(dict.p_bucket_lengths, bucket_idx);
-    constant bucket_keys : integer_vector_ptr_t := to_integer_vector_ptr(get(dict.p_bucket_keys, bucket_idx));
+    variable num_buckets : natural := length(dict.p_bucket_lengths);
+    variable bucket_idx : natural := key_hash mod num_buckets;
+    variable bucket_length : natural := get(dict.p_bucket_lengths, bucket_idx);
+    variable bucket_keys : integer_vector_ptr_t := to_integer_vector_ptr(get(dict.p_bucket_keys, bucket_idx));
   begin
     for i in 0 to bucket_length-1 loop
       if to_string(to_string_ptr(get(bucket_keys, i))) = key then
@@ -253,8 +253,8 @@ package body dict_pkg is
     dict       : dict_t;
     key, value : string
   ) is
-    constant key_hash : natural := hash(key);
-    constant old_value_ptr : string_ptr_t := get_value_ptr(dict, key_hash, key);
+    variable key_hash : natural := hash(key);
+    variable old_value_ptr : string_ptr_t := get_value_ptr(dict, key_hash, key);
   begin
     if old_value_ptr /= null_string_ptr then
       -- Reuse existing value storage
@@ -269,13 +269,13 @@ package body dict_pkg is
     key_hash   : natural;
     key, value : string_ptr_t
   ) is
-    constant num_buckets : natural := length(dict.p_bucket_lengths);
-    constant bucket_idx : natural := key_hash mod num_buckets;
-    constant bucket_length : natural := get(dict.p_bucket_lengths, bucket_idx);
-    constant bucket_values : integer_vector_ptr_t := to_integer_vector_ptr(get(dict.p_bucket_values, bucket_idx));
-    constant bucket_keys : integer_vector_ptr_t := to_integer_vector_ptr(get(dict.p_bucket_keys, bucket_idx));
-    constant bucket_max_length : natural := length(bucket_values);
-    constant num_keys : natural := get(dict.p_meta, meta_num_keys);
+    variable num_buckets : natural := length(dict.p_bucket_lengths);
+    variable bucket_idx : natural := key_hash mod num_buckets;
+    variable bucket_length : natural := get(dict.p_bucket_lengths, bucket_idx);
+    variable bucket_values : integer_vector_ptr_t := to_integer_vector_ptr(get(dict.p_bucket_values, bucket_idx));
+    variable bucket_keys : integer_vector_ptr_t := to_integer_vector_ptr(get(dict.p_bucket_keys, bucket_idx));
+    variable bucket_max_length : natural := length(bucket_values);
+    variable num_keys : natural := get(dict.p_meta, meta_num_keys);
   begin
     if num_keys > num_buckets then
       -- Average bucket length is larger than 1, reallocate
@@ -299,8 +299,8 @@ package body dict_pkg is
     dict : dict_t;
     key  : string
   ) return string is
-    constant key_hash : natural := hash(key);
-    constant value_ptr : string_ptr_t := get_value_ptr(dict, key_hash, key);
+    variable key_hash : natural := hash(key);
+    variable value_ptr : string_ptr_t := get_value_ptr(dict, key_hash, key);
   begin
     assert value_ptr /= null_string_ptr report "missing key '" & key & "'";
     return to_string(value_ptr);
@@ -310,7 +310,7 @@ package body dict_pkg is
     dict : dict_t;
     key  : string
   ) return boolean is
-    constant key_hash : natural := hash(key);
+    variable key_hash : natural := hash(key);
   begin
     return get_value_ptr(dict, key_hash, key) /= null_string_ptr;
   end;
@@ -319,7 +319,7 @@ package body dict_pkg is
     dict : dict_t;
     key  : string
   ) is
-    constant key_hash : natural := hash(key);
+    variable key_hash : natural := hash(key);
   begin
     remove(dict, key_hash, key);
   end;
