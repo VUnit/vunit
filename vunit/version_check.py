@@ -19,7 +19,7 @@ def version_is_ok():
     Returns true if version is high enough
     """
     version = (sys.version_info[0], sys.version_info[1])
-    return version >= (3, 6)
+    return version >= (MAJOR, MINOR)
 
 
 if not version_is_ok():
