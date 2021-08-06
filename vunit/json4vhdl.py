@@ -40,7 +40,8 @@ def read_json(filename: str):
 
        generics = read_json(join(root, "src/test/data/data.json"))
     """
-    return json.loads(open(filename, "r").read())
+    with open(filename, "r") as fptr:
+        return json.loads(fptr.read())
 
 
 def b16encode(data: Union[str, bytes]):

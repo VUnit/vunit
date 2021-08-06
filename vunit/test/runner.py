@@ -227,7 +227,10 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
         try:
             self._prepare_test_suite_output_path(output_path)
-            output_file = wrap(open(output_file_name, "a+"), use_color=False)
+            output_file = wrap(
+                open(output_file_name, "a+"),  # pylint: disable=consider-using-with
+                use_color=False,
+            )
             output_file.seek(0)
             output_file.truncate()
 
