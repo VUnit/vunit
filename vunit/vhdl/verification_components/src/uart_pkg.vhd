@@ -48,7 +48,7 @@ package uart_pkg is
   constant default_data_length : positive := 8;
   impure function new_uart_master(initial_baud_rate          : natural                      := default_baud_rate;
                                   idle_state                 : std_logic                    := default_idle_state;
-                                  logger                     : logger_t                     := uart_logger;
+                                  logger                     : logger_t                     := null_logger;
                                   actor                      : actor_t                      := null_actor;
                                   checker                    : checker_t                    := null_checker;
                                   unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail
@@ -75,7 +75,7 @@ package body uart_pkg is
 
   impure function new_uart_master(initial_baud_rate          : natural                      := default_baud_rate;
                                   idle_state                 : std_logic                    := default_idle_state;
-                                  logger                     : logger_t                     := uart_logger;
+                                  logger                     : logger_t                     := null_logger;
                                   actor                      : actor_t                      := null_actor;
                                   checker                    : checker_t                    := null_checker;
                                   unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail
