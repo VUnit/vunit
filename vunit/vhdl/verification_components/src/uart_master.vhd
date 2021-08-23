@@ -27,7 +27,8 @@ architecture a of uart_master is
 begin
 
   main : process
-    procedure uart_send(data : std_logic_vector;
+    constant logger : logger_t := get_logger(main'path_name, get_logger(uart.p_std_cfg));
+    procedure uart_send(data : std_logic_vector := x"00";
                         signal tx : out std_logic;
                         baud_rate  : integer) is
       constant time_per_bit : time := (10**9 / baud_rate) * 1 ns;
@@ -39,7 +40,9 @@ begin
       end procedure;
 
     begin
-      debug("Sending " & to_string(data));
+    if is_visible(logger, display_handler, debug) then
+        debug(logger, "Sending x""" & to_hstring(data) & """");
+    end if;
       send_bit(not uart.p_idle_state);
       for i in 0 to data'length-1 loop
         send_bit(data(i));
