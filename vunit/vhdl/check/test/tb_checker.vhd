@@ -55,7 +55,7 @@ begin
         failing_check(default_checker, "Custom level", info);
         check_only_log(check_logger, "Custom level", info);
 
-        failing_check(default_checker, "Line and file name", info, 377, "some_file.vhd");
+        failing_check(default_checker, "Line and file name", info, line_num => 377, file_name => "some_file.vhd");
         check_only_log(check_logger, "Line and file name", info,
                        line_num => 377, file_name => "some_file.vhd");
         unmock(check_logger);
@@ -80,7 +80,7 @@ begin
         failing_check(my_checker, "Custom level", info);
         check_only_log(my_logger, "Custom level", info);
 
-        failing_check(my_checker, "Line and file name", info, 377, "some_file.vhd");
+        failing_check(my_checker, "Line and file name", info, line_num => 377, file_name => "some_file.vhd");
         check_only_log(my_logger, "Line and file name", info,
                        line_num => 377, file_name => "some_file.vhd");
         unmock(my_logger);

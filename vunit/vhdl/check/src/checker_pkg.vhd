@@ -30,17 +30,19 @@ package checker_pkg is
   procedure passing_check(checker : checker_t);
 
   procedure passing_check(
-    checker   : checker_t;
-    msg       : string;
-    line_num  : natural := 0;
-    file_name : string  := "");
+    checker     : checker_t;
+    msg         : string;
+    path_offset : natural := 0;
+    line_num    : natural := 0;
+    file_name   : string  := "");
 
   procedure failing_check(
-    checker   : checker_t;
-    msg       : string;
-    level     : log_level_t := null_log_level;
-    line_num  : natural                := 0;
-    file_name : string                 := "");
+    checker     : checker_t;
+    msg         : string;
+    level       : log_level_t := null_log_level;
+    path_offset : natural := 0;
+    line_num    : natural                := 0;
+    file_name   : string                 := "");
 
   type checker_stat_t is record
     n_checks : natural;

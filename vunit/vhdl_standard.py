@@ -63,6 +63,13 @@ class VHDLStandard(object):
         """
         return {standard for standard in VHDL.STANDARDS if standard >= self}
 
+    @property
+    def and_earlier(self):
+        """
+        Return a set including this standard and all earlier standards
+        """
+        return {standard for standard in VHDL.STANDARDS if standard <= self}
+
 
 class VHDL(object):
     """
