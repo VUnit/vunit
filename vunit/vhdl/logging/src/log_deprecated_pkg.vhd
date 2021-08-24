@@ -195,7 +195,7 @@ package body log_deprecated_pkg is
                     file_name : string := "") is
   begin
     warning("Mapping deprecated procedure verbose to trace");
-    trace(logger, msg, line_num, file_name);
+    trace(logger, msg, 1, line_num, file_name);
   end procedure;
 
   procedure verbose(msg : string;

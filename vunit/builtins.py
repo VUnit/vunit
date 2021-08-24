@@ -60,6 +60,8 @@ class Builtins(object):
                 standard_name = str(standard)
                 if standard_name + "p" in base_file_name:
                     standards.update(standard.and_later)
+                elif standard_name + "m" in base_file_name:
+                    standards.update(standard.and_earlier)
                 elif standard_name in base_file_name:
                     standards.add(standard)
 
