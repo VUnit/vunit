@@ -217,7 +217,7 @@ define work "{2}/libraries/work"
             args += ["-messages"]
             args += ["-libverbose"]
         args += source_file.compile_options.get("xcelium.xrun_vhdl_flags", [])
-        args += ['-nclibdirname "%s"' % str(Path(source_file.library.directory).parent)]
+        args += ['-xmlibdirname "%s"' % str(Path(source_file.library.directory).parent)]
         args += ["-makelib %s" % source_file.library.directory]
         args += ['"%s"' % source_file.name]
         args += ["-endlib"]
@@ -267,7 +267,7 @@ define work "{2}/libraries/work"
 
         for key, value in source_file.defines.items():
             args += ["-define %s=%s" % (key, value.replace('"', '\\"'))]
-        args += ['-nclibdirname "%s"' % str(Path(source_file.library.directory).parent)]
+        args += ['-xmlibdirname "%s"' % str(Path(source_file.library.directory).parent)]
         args += ["-makelib %s" % source_file.library.name]
         args += ['"%s"' % source_file.name]
         args += ["-endlib"]
@@ -348,7 +348,7 @@ define work "{2}/libraries/work"
             ]  # promote to error: "bad natural literal in generic association"
             args += ["-work work"]
             args += [
-                '-nclibdirname "%s"' % (str(Path(self._output_path) / "libraries"))
+                '-xmlibdirname "%s"' % (str(Path(self._output_path) / "libraries"))
             ]  # @TODO: ugly
             args += config.sim_options.get("xcelium.xrun_sim_flags", [])
             args += ['-cdslib "%s"' % self._cdslib]
