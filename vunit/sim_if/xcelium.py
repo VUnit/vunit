@@ -338,13 +338,13 @@ define work "{2}/libraries/work"
             args += ["-nowarn DLCPTH"]  # "cds.lib Invalid path"
             args += ["-nowarn DLCVAR"]  # "cds.lib Invalid environment variable ''."
             args += [
-                "-ncerror EVBBOL"
+                "-xmerror EVBBOL"
             ]  # promote to error: "bad boolean literal in generic association"
             args += [
-                "-ncerror EVBSTR"
+                "-xmerror EVBSTR"
             ]  # promote to error: "bad string literal in generic association"
             args += [
-                "-ncerror EVBNAT"
+                "-xmerror EVBNAT"
             ]  # promote to error: "bad natural literal in generic association"
             args += ["-work work"]
             args += [
