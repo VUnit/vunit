@@ -93,7 +93,7 @@ def _read_compile_order(file_name):
     include_dirs = set()
     libraries = set()
 
-    with open(file_name, "r") as ifile:
+    with open(file_name, "r", encoding="utf-8") as ifile:
 
         for line in ifile.readlines():
             library_name, file_type, file_name = line.strip().split(",", 2)

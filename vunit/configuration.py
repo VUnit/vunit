@@ -260,7 +260,7 @@ class ConfigurationVisitor(object):
         """
         self._check_enabled()
 
-        if name in (DEFAULT_NAME, "", u""):
+        if name in (DEFAULT_NAME, ""):
             raise ValueError(
                 "Illegal configuration name %r. Must be non-empty string" % name
             )

@@ -228,7 +228,9 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         try:
             self._prepare_test_suite_output_path(output_path)
             output_file = wrap(
-                open(output_file_name, "a+"),  # pylint: disable=consider-using-with
+                open(  # pylint: disable=consider-using-with
+                    output_file_name, "a+", encoding="utf-8"
+                ),
                 use_color=False,
             )
             output_file.seek(0)
@@ -238,7 +240,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                 self._local.output = Tee([self._stdout_ansi, output_file])
             else:
                 color_output_file = open(  # pylint: disable=consider-using-with
-                    color_output_file_name, "w"
+                    color_output_file_name, "w", encoding="utf-8"
                 )
                 self._local.output = Tee([color_output_file, output_file])
 
@@ -312,7 +314,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         # Load old mapping to remember non-deleted test folders as well
         # even when re-running only a single test case
         if Path(mapping_file_name).exists():
-            with open(mapping_file_name, "r") as fptr:
+            with open(mapping_file_name, "r", encoding="utf-8") as fptr:
                 mapping = set(fptr.read().splitlines())
         else:
             mapping = set()
@@ -324,7 +326,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         # Sort by everything except hash
         mapping = sorted(mapping, key=lambda value: value[value.index(" ") :])
 
-        with open(mapping_file_name, "w") as fptr:
+        with open(mapping_file_name, "w", encoding="utf-8") as fptr:
             for value in mapping:
                 fptr.write(value + "\n")
 

@@ -399,7 +399,7 @@ proc _vunit_sim_restart {} {
             + args
             + [file_name]
         )
-        with open(coverage_files, "w") as fptr:
+        with open(coverage_files, "w", encoding="utf-8") as fptr:
             for coverage_file in self._coverage_files:
                 if file_exists(coverage_file):
                     fptr.write(str(coverage_file) + "\n")

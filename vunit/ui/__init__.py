@@ -256,7 +256,7 @@ class VUnit(  # pylint: disable=too-many-instance-attributes, too-many-public-me
 
         """
         libs: Set[str] = set()
-        files = SourceFileList(list())
+        files = SourceFileList([])
 
         ppath = Path(project_csv_path)
 

@@ -16,7 +16,7 @@ from pathlib import Path
 class CsvLogs(object):
     # pylint: disable=missing-docstring
 
-    def __init__(self, pattern="", field_names=None):
+    def __init__(self, pattern="", field_names=None, encoding="iso-8859-1"):
         default_field_names = [
             "#",
             "Time",
@@ -28,6 +28,7 @@ class CsvLogs(object):
         ]
         self._field_names = default_field_names if field_names is None else field_names
         self._entries = []
+        self._encoding = encoding
         self.add(pattern)
 
     def __iter__(self):
@@ -36,7 +37,7 @@ class CsvLogs(object):
     def add(self, pattern):
         # pylint: disable=missing-docstring
         for csv_file in [str(Path(p).resolve()) for p in glob(pattern)]:
-            with open(csv_file, "r") as fread:
+            with open(csv_file, "r", encoding=self._encoding) as fread:
                 sample = fread.readline()
                 fread.seek(0)
                 if sample:
@@ -49,7 +50,7 @@ class CsvLogs(object):
 
     def write(self, output_file):
         # pylint: disable=missing-docstring
-        with open(output_file, "w") as fwrite:
+        with open(output_file, "w", encoding=self._encoding) as fwrite:
             csv_writer = DictWriter(
                 fwrite, delimiter=",", fieldnames=self._field_names, lineterminator="\n"
             )

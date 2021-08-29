@@ -40,7 +40,7 @@ def read_json(filename: str):
 
        generics = read_json(join(root, "src/test/data/data.json"))
     """
-    with open(filename, "r") as fptr:
+    with open(filename, "r", encoding="utf-8") as fptr:
         return json.loads(fptr.read())
 
 
