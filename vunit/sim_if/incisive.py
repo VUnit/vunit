@@ -67,6 +67,8 @@ class IncisiveInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
             gui=args.gui,
             cdslib=args.cdslib,
             hdlvar=args.hdlvar,
+            elaborate_only=False,
+            precompiled=None,
         )
 
     @classmethod
@@ -84,9 +86,17 @@ class IncisiveInterface(SimulatorInterface):  # pylint: disable=too-many-instanc
         return False
 
     def __init__(  # pylint: disable=too-many-arguments
-        self, prefix, output_path, gui=False, log_level=None, cdslib=None, hdlvar=None
+        self,
+        prefix,
+        output_path,
+        gui=False,
+        log_level=None,
+        cdslib=None,
+        hdlvar=None,
+        elaborate_only=False,
+        precompiled=None,
     ):
-        SimulatorInterface.__init__(self, output_path, gui)
+        SimulatorInterface.__init__(self, output_path, gui, elaborate_only, precompiled)
         self._prefix = prefix
         self._libraries = []
         self._log_level = log_level
@@ -281,15 +291,15 @@ define work "{2}/libraries/work"
         cds = CDSFile.parse(self._cdslib)
         return cds
 
-    def simulate(self, output_path, test_suite_name, config, elaborate_only=False):  # pylint: disable=too-many-locals
+    def simulate(self, output_path, test_suite_name, config):  # pylint: disable=too-many-locals
         """
         Elaborates and Simulates with entity as top level using generics
         """
 
         script_path = str(Path(output_path) / self.name)
-        launch_gui = self._gui is not False and not elaborate_only
+        launch_gui = self._gui is not False and not self.elaborate_only
 
-        if elaborate_only:
+        if self.elaborate_only:
             steps = ["elaborate"]
         else:
             steps = ["elaborate", "simulate"]

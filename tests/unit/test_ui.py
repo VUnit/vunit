@@ -1273,7 +1273,7 @@ class MockSimulator(SimulatorInterface):
         return True
 
     @staticmethod
-    def simulate(output_path, test_suite_name, config, elaborate_only):  # pylint: disable=unused-argument
+    def simulate(output_path, test_suite_name, config):  # pylint: disable=unused-argument
         return True
 
 

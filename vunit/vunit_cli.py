@@ -120,6 +120,16 @@ def _create_argument_parser(description=None, for_documentation=False):
     )
 
     parser.add_argument(
+        "--precompiled",
+        type=lambda p: Path(p).resolve(),
+        default=None,
+        help="Path to precompiled artifact, This option is currently only "
+        "suppoerted for ghdl and experimentally for riviera pro. "
+        "For ghdl simulation, VHDL standard is 2008 by default, but can be "
+        "overriden with environment variable VUNIT_VHDL_STANDARD",
+    )
+
+    parser.add_argument(
         "-m",
         "--minimal",
         action="store_true",

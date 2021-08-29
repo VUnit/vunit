@@ -102,7 +102,6 @@ test_suite_done""",
             run = TestRun(
                 simulator_if=None,
                 config=None,
-                elaborate_only=False,
                 test_suite_name=None,
                 test_cases=expected,
             )
@@ -176,7 +175,6 @@ test_suite_done""",
             run = TestRun(
                 simulator_if=sim_if,
                 config=None,
-                elaborate_only=False,
                 test_suite_name=None,
                 test_cases=expected,
             )

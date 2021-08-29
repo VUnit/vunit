@@ -12,7 +12,9 @@ import unittest
 from pathlib import Path
 from os import environ
 from subprocess import call
+import shutil
 import sys
+import tempfile
 from tests.common import check_report
 from vunit import ROOT as RSTR
 from vunit.builtins import VHDL_PATH
@@ -290,6 +292,25 @@ class TestExternalRunScripts(unittest.TestCase):
 
     def test_com_vhdl_2008(self):
         self.check(str(VHDL_PATH / "com" / "run.py"))
+
+    @unittest.skipUnless(
+        simulator_is("ghdl"),
+        "Currently only ghdl is supported, riviera pro support is experimental",
+    )
+    def test_precompiled_artifact_with_example_project(self):
+        self.check(
+            str(ROOT / "examples" / "vhdl" / "array_axis_vcs" / "run.py"),
+            ["--minimal", "--elaborate"],
+        )
+        artifact_name = "tb_axis_loop-tb"
+        with tempfile.TemporaryDirectory() as tmpdir_name:
+            old_artifact_path = sorted(Path(".").glob(f"**/{artifact_name}"))[0]
+            new_artifact_path = Path(tmpdir_name) / artifact_name
+            shutil.copy(old_artifact_path, new_artifact_path)
+            self.check(
+                str(ROOT / "examples" / "vhdl" / "array_axis_vcs" / "run.py"),
+                ["--precompiled=%s" % new_artifact_path],
+            )
 
     def setUp(self):
         self.output_path = str(Path(__file__).parent / "external_run_out")

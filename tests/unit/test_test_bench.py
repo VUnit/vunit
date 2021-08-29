@@ -871,7 +871,7 @@ if run("Test_2")
         """
         Helper method to reduce boiler plate
         """
-        return test_bench.create_tests("simulator_if", elaborate_only=False)
+        return test_bench.create_tests("simulator_if")
 
 
 def get_config_of(tests, test_name):

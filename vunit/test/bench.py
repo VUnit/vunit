@@ -99,11 +99,10 @@ class TestBench(ConfigurationVisitor):
                     )
                 )
 
-    def create_tests(self, simulator_if, elaborate_only, test_list=None):
+    def create_tests(self, simulator_if, test_list=None):
         """
         Create all test cases from this test bench
         """
-
         self._check_architectures(self.design_unit)
 
         if test_list is None:
@@ -111,7 +110,7 @@ class TestBench(ConfigurationVisitor):
 
         if self._individual_tests:
             for test_case in self._test_cases:
-                test_case.create_tests(simulator_if, elaborate_only, test_list)
+                test_case.create_tests(simulator_if, test_list)
         elif self._implicit_test:
             for config in self._get_configurations_to_run():
                 test_list.add_test(
@@ -119,7 +118,6 @@ class TestBench(ConfigurationVisitor):
                         test=self._implicit_test,
                         config=config,
                         simulator_if=simulator_if,
-                        elaborate_only=elaborate_only,
                     )
                 )
         else:
@@ -129,7 +127,6 @@ class TestBench(ConfigurationVisitor):
                         tests=[test.test for test in self._test_cases],
                         config=config,
                         simulator_if=simulator_if,
-                        elaborate_only=elaborate_only,
                     )
                 )
         return test_list
@@ -379,19 +376,13 @@ class TestConfigurationVisitor(ConfigurationVisitor):
             del configs[DEFAULT_NAME]
         return configs.values()
 
-    def create_tests(self, simulator_if, elaborate_only, test_list=None):
+    def create_tests(self, simulator_if, test_list=None):
         """
         Create all tests from this test case which may be several depending on the number of configurations
         """
+
         for config in self._get_configurations_to_run():
-            test_list.add_test(
-                IndependentSimTestCase(
-                    test=self._test,
-                    config=config,
-                    simulator_if=simulator_if,
-                    elaborate_only=elaborate_only,
-                )
-            )
+            test_list.add_test(IndependentSimTestCase(test=self._test, config=config, simulator_if=simulator_if))
 
 
 _RE_VHDL_TEST_CASE = re.compile(r'(\s|\()+run\s*\(\s*"(?P<name>.*?)"\s*\)', re.IGNORECASE)
