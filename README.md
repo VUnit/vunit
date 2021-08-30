@@ -28,22 +28,22 @@
   -->
   <a title="'docs' workflow Status"
      href="https://github.com/VUnit/vunit/actions?query=workflow%3Adocs"
-  ><img alt="'docs' workflow Status" src="https://img.shields.io/github/workflow/status/VUnit/vunit/docs?longCache=true&style=flat-square&label=docs"
+  ><img alt="'docs' workflow Status" src="https://img.shields.io/github/workflow/status/VUnit/vunit/docs/master?longCache=true&style=flat-square&label=docs"
   /></a><!--
   -->
   <a title="'images' workflow Status"
      href="https://github.com/VUnit/vunit/actions?query=workflow%3Aimages"
-  ><img alt="'images' workflow Status" src="https://img.shields.io/github/workflow/status/VUnit/vunit/images?longCache=true&style=flat-square&label=imgs"
+  ><img alt="'images' workflow Status" src="https://img.shields.io/github/workflow/status/VUnit/vunit/images/master?longCache=true&style=flat-square&label=imgs"
   /></a><!--
   -->
   <a title="'push' workflow Status"
      href="https://github.com/VUnit/vunit/actions?query=workflow%3Apush"
-  ><img alt="'push' workflow Status" src="https://img.shields.io/github/workflow/status/VUnit/vunit/push?longCache=true&style=flat-square&label=push"
+  ><img alt="'push' workflow Status" src="https://img.shields.io/github/workflow/status/VUnit/vunit/push/master?longCache=true&style=flat-square&label=push"
   /></a><!--
   -->
   <a title="'coverage' workflow Status"
      href="https://github.com/VUnit/vunit/actions?query=workflow%3Acoverage"
-  ><img alt="'coverage' workflow Status" src="https://img.shields.io/github/workflow/status/VUnit/vunit/coverage?longCache=true&style=flat-square&label=coverage"
+  ><img alt="'coverage' workflow Status" src="https://img.shields.io/github/workflow/status/VUnit/vunit/coverage/master?longCache=true&style=flat-square&label=coverage"
   /></a>
 </p>
 
