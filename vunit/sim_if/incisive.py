@@ -40,24 +40,7 @@ class IncisiveInterface(  # pylint: disable=too-many-instance-attributes
 
     sim_options = [ListOfStringOption("incisive.irun_sim_flags")]
 
-    @staticmethod
-    def add_arguments(parser):
-        """
-        Add command line arguments
-        """
-        group = parser.add_argument_group(
-            "Incisive irun", description="Incisive irun-specific flags"
-        )
-        group.add_argument(
-            "--cdslib",
-            default=None,
-            help="The cds.lib file to use. If not given, VUnit maintains its own cds.lib file.",
-        )
-        group.add_argument(
-            "--hdlvar",
-            default=None,
-            help="The hdl.var file to use. If not given, VUnit does not use a hdl.var file.",
-        )
+    # NOTE: Incisive shares the command-line arguments with Xcelium
 
     @classmethod
     def from_args(cls, args, output_path, **kwargs):

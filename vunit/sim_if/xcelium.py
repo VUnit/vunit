@@ -46,7 +46,7 @@ class XceliumInterface(  # pylint: disable=too-many-instance-attributes
         Add command line arguments
         """
         group = parser.add_argument_group(
-            "Xcelium xrun", description="Xcelium xrun-specific flags"
+            "Xcelium/Incisive", description="Xcelium/Incisive specific flags"
         )
         group.add_argument(
             "--cdslib",
