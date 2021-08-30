@@ -251,7 +251,7 @@ class RivieraProInterface(VsimSimulatorMixin, SimulatorInterface):
         if file_exists(self._sim_cfg_file_name):
             return
 
-        with open(self._sim_cfg_file_name, "w", encoding="utf-8") as ofile:
+        with Path(self._sim_cfg_file_name).open("w", encoding="utf-8") as ofile:
             ofile.write('$INCLUDE = "%s"\n' % self._builtin_library_cfg)
 
     @property
@@ -423,15 +423,15 @@ proc _vunit_sim_restart {} {
 
         merge_command += " -o {%s}" % file_name.replace("\\", "/")
 
-        merge_script_name = str(Path(self._output_path) / "acdb_merge.tcl")
-        with open(merge_script_name, "w", encoding="utf-8") as fptr:
+        merge_script_name = Path(self._output_path) / "acdb_merge.tcl"
+        with merge_script_name.open("w", encoding="utf-8") as fptr:
             fptr.write(merge_command + "\n")
 
         vcover_cmd = [
             str(Path(self._prefix) / "vsim"),
             "-c",
             "-do",
-            "source {%s}; quit;" % merge_script_name.replace("\\", "/"),
+            "source {%s}; quit;" % str(merge_script_name).replace("\\", "/"),
         ]
 
         print("Merging coverage files into %s..." % file_name)

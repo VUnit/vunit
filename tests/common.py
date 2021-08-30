@@ -8,6 +8,7 @@
 Common functions re-used between test cases
 """
 
+from pathlib import Path
 from xml.etree import ElementTree
 import contextlib
 import functools
@@ -87,20 +88,18 @@ def set_env(**environ):
 
 
 @contextlib.contextmanager
-def create_tempdir(path=None):
+def create_tempdir(path: Path = None):
     """
     Create a temporary directory that is removed after the unit test
     """
 
     if path is None:
-        path = os.path.join(
-            os.path.dirname(__file__), "tempdir_%i" % random.randint(0, 2 ** 64 - 1)
-        )
+        path = Path(__file__).parent / ("tempdir_%i" % random.randint(0, 2 ** 64 - 1))
 
-    if os.path.exists(path):
+    if path.exists():
         shutil.rmtree(path)
 
-    os.makedirs(path)
+    os.makedirs(str(path))
 
     try:
         yield path
@@ -122,10 +121,7 @@ def with_tempdir(func):
         Wrapper funciton that maintains temporary directory around nested
         function
         """
-        path_name = os.path.join(
-            os.path.dirname(__file__), func.__module__ + "." + func.__name__
-        )
-
+        path_name = Path(__file__).parent / (func.__module__ + "." + func.__name__)
         with create_tempdir(path_name) as path:
             return func(*args, tempdir=path, **kwargs)
 
@@ -200,7 +196,7 @@ def create_vhdl_test_bench_file(
     """
     Create a valid VUnit test bench and writes it to file_name
     """
-    with open(file_name, "wb") as fptr:
+    with Path(file_name).open("wb") as fptr:
         fptr.write(
             get_vhdl_test_bench(
                 test_bench_name=test_bench_name,

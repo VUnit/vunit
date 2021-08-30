@@ -187,7 +187,7 @@ class ActiveHDLInterface(SimulatorInterface):
         if file_exists(self._library_cfg):
             return
 
-        with open(self._library_cfg, "w", encoding="utf-8") as ofile:
+        with Path(self._library_cfg).open("w", encoding="utf-8") as ofile:
             ofile.write(
                 '$INCLUDE = "%s"\n'
                 % str(Path(self._prefix).parent / "vlib" / "library.cfg")
@@ -199,7 +199,7 @@ class ActiveHDLInterface(SimulatorInterface):
         """
         Get mapped libraries from library.cfg file
         """
-        with open(self._library_cfg, "r", encoding="utf-8") as fptr:
+        with Path(self._library_cfg).open("r", encoding="utf-8") as fptr:
             text = fptr.read()
 
         libraries = {}
@@ -343,7 +343,7 @@ proc vunit_run {} {
         merge_command += " -o {%s}" % fix_path(file_name) + "\n"
 
         merge_script_name = str(Path(self._output_path) / "acdb_merge.tcl")
-        with open(merge_script_name, "w", encoding="utf-8") as fptr:
+        with Path(merge_script_name).open("w", encoding="utf-8") as fptr:
             fptr.write(merge_command + "\n")
 
         vcover_cmd = [

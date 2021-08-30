@@ -36,8 +36,8 @@ class CsvLogs(object):
 
     def add(self, pattern):
         # pylint: disable=missing-docstring
-        for csv_file in [str(Path(p).resolve()) for p in glob(pattern)]:
-            with open(csv_file, "r", encoding=self._encoding) as fread:
+        for csv_file in [Path(p).resolve() for p in glob(pattern)]:
+            with csv_file.open("r", encoding=self._encoding) as fread:
                 sample = fread.readline()
                 fread.seek(0)
                 if sample:
@@ -50,7 +50,7 @@ class CsvLogs(object):
 
     def write(self, output_file):
         # pylint: disable=missing-docstring
-        with open(output_file, "w", encoding=self._encoding) as fwrite:
+        with Path(output_file).open("w", encoding=self._encoding) as fwrite:
             csv_writer = DictWriter(
                 fwrite, delimiter=",", fieldnames=self._field_names, lineterminator="\n"
             )

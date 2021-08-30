@@ -211,7 +211,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             results[name] = SKIPPED
         self._add_results(test_suite, results, start_time, num_tests, output_file_name)
 
-    def _run_test_suite(
+    def _run_test_suite(  # pylint: disable=too-many-locals
         self, test_suite, write_stdout, num_tests, output_path, output_file_name
     ):
         """
@@ -228,8 +228,8 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         try:
             self._prepare_test_suite_output_path(output_path)
             output_file = wrap(
-                open(  # pylint: disable=consider-using-with
-                    output_file_name, "a+", encoding="utf-8"
+                Path(output_file_name).open(  # pylint: disable=consider-using-with
+                    "a+", encoding="utf-8"
                 ),
                 use_color=False,
             )
@@ -237,12 +237,15 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             output_file.truncate()
 
             if write_stdout:
-                self._local.output = Tee([self._stdout_ansi, output_file])
+                output_from = self._stdout_ansi
             else:
-                color_output_file = open(  # pylint: disable=consider-using-with
-                    color_output_file_name, "w", encoding="utf-8"
+                color_output_file = Path(
+                    color_output_file_name
+                ).open(  # pylint: disable=consider-using-with
+                    "w", encoding="utf-8"
                 )
-                self._local.output = Tee([color_output_file, output_file])
+                output_from = color_output_file
+            self._local.output = Tee([output_from, output_file])
 
             def read_output():
                 """
@@ -270,10 +273,9 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         finally:
             self._local.output = self._stdout
 
-            for fptr in [output_file, color_output_file]:
-                if fptr is None:
-                    continue
-
+            for fptr in (
+                ptr for ptr in [output_file, color_output_file] if ptr is not None
+            ):
                 fptr.flush()
                 fptr.close()
 
@@ -307,14 +309,12 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         Create a file mapping test name to test output folder.
         This is to allow the user to find the test output folder when it is hashed
         """
-        mapping_file_name = str(
-            Path(self._output_path) / "test_name_to_path_mapping.txt"
-        )
+        mapping_file_name = Path(self._output_path) / "test_name_to_path_mapping.txt"
 
         # Load old mapping to remember non-deleted test folders as well
         # even when re-running only a single test case
-        if Path(mapping_file_name).exists():
-            with open(mapping_file_name, "r", encoding="utf-8") as fptr:
+        if mapping_file_name.exists():
+            with mapping_file_name.open("r", encoding="utf-8") as fptr:
                 mapping = set(fptr.read().splitlines())
         else:
             mapping = set()
@@ -326,7 +326,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         # Sort by everything except hash
         mapping = sorted(mapping, key=lambda value: value[value.index(" ") :])
 
-        with open(mapping_file_name, "w", encoding="utf-8") as fptr:
+        with mapping_file_name.open("w", encoding="utf-8") as fptr:
             for value in mapping:
                 fptr.write(value + "\n")
 

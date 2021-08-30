@@ -36,11 +36,11 @@ def compile_standard_libraries(vunit_obj, output_path):
     """
     Compile Xilinx standard libraries using Vivado TCL command
     """
-    done_token = str(Path(output_path) / "all_done.txt")
+    done_token = Path(output_path) / "all_done.txt"
 
     simulator_class = SIMULATOR_FACTORY.select_simulator()
 
-    if not Path(done_token).exists():
+    if not done_token.exists():
         print(
             "Compiling standard libraries into %s ..."
             % str(Path(output_path).resolve())
@@ -71,7 +71,7 @@ def compile_standard_libraries(vunit_obj, output_path):
         if Path(path).exists():
             vunit_obj.add_external_library(library_name, path)
 
-    with open(done_token, "w") as fptr:
+    with done_token.open("w") as fptr:
         fptr.write("done")
 
 

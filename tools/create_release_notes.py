@@ -110,7 +110,7 @@ class Release(object):
             else:
                 raise
 
-        with open(file_name, "r", encoding="utf-8") as fptr:
+        with Path(file_name).open("r", encoding="utf-8") as fptr:
             self.notes = fptr.read()
 
 

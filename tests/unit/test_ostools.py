@@ -34,10 +34,10 @@ class TestOSTools(TestCase):
         Create a file in the temporary directory with contents
         Returns the absolute path to the file.
         """
-        full_file_name = str((Path(self.tmp_dir) / file_name).resolve())
-        with open(full_file_name, "w") as outfile:
+        full_file_name = (Path(self.tmp_dir) / file_name).resolve()
+        with full_file_name.open("w") as outfile:
             outfile.write(contents)
-        return full_file_name
+        return str(full_file_name)
 
     def test_run_basic_subprocess(self):
         python_script = self.make_file(

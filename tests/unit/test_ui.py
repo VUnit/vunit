@@ -583,7 +583,7 @@ Listed 2 files""".splitlines()
 
         self._run_main(ui)
 
-        with open(json_file, "r") as fptr:
+        with Path(json_file).open("r") as fptr:
             data = json.load(fptr)
 
         # Check known keys
@@ -1265,7 +1265,9 @@ end architecture;
         """
         Creata file in the temporary path with given contents
         """
-        with open(file_name, "w") as fptr:
+        if not isinstance(file_name, Path):
+            file_name = Path(file_name)
+        with file_name.open("w") as fptr:
             fptr.write(contents)
 
     @staticmethod
@@ -1273,7 +1275,9 @@ end architecture;
         """
         Create a temporary csv description file with given contents
         """
-        with open(file_name, "w") as fprt:
+        if not isinstance(file_name, Path):
+            file_name = Path(file_name)
+        with file_name.open("w") as fprt:
             fprt.write(contents)
 
 

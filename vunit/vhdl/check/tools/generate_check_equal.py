@@ -749,7 +749,10 @@ def replace_region(region_name, file_name, new_contents):
     result = ""
     inside_region = False
 
-    with open(file_name, "rb") as fptr:
+    if not isinstance(file_name, Path):
+        file_name = Path(file_name)
+
+    with file_name.open("rb") as fptr:
         contents = fptr.read().decode()
 
     previous_line = ""
@@ -776,17 +779,21 @@ def replace_region(region_name, file_name, new_contents):
 
     assert found_region
 
-    with open(file_name, "wb") as fptr:
+    with file_name.open("wb") as fptr:
         fptr.write(result.encode())
 
 
 def main():
-    check_api_file_name = str(Path(__file__).parent.parent / "src" / "check_api.vhd")
-    replace_region("check_equal", check_api_file_name, generate_api())
-
-    check_file_name = str(Path(__file__).parent.parent / "src" / "check.vhd")
-    replace_region("check_equal", check_file_name, generate_impl())
-
+    replace_region(
+        "check_equal",
+        str(Path(__file__).parent.parent / "src" / "check_api.vhd"),
+        generate_api(),
+    )
+    replace_region(
+        "check_equal",
+        str(Path(__file__).parent.parent / "src" / "check.vhd"),
+        generate_impl(),
+    )
     with (Path(__file__).parent.parent / "test" / "tb_check_equal.vhd").open(
         "wb"
     ) as fptr:

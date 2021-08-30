@@ -11,7 +11,6 @@ Interface towards Mentor Graphics ModelSim
 from pathlib import Path
 import os
 import logging
-import io
 from configparser import RawConfigParser
 from ..exceptions import CompileError
 from ..ostools import Process, file_exists
@@ -112,8 +111,8 @@ class ModelSimInterface(
         original_modelsim_ini = os.environ.get(
             "VUNIT_MODELSIM_INI", str(Path(self._prefix).parent / "modelsim.ini")
         )
-        with open(original_modelsim_ini, "rb") as fread:
-            with open(self._sim_cfg_file_name, "wb") as fwrite:
+        with Path(original_modelsim_ini).open("rb") as fread:
+            with Path(self._sim_cfg_file_name).open("wb") as fwrite:
                 fwrite.write(fread.read())
 
     def add_simulator_specific(self, project):
@@ -399,7 +398,7 @@ proc _vunit_sim_restart {} {
             + args
             + [file_name]
         )
-        with open(coverage_files, "w", encoding="utf-8") as fptr:
+        with Path(coverage_files).open("w", encoding="utf-8") as fptr:
             for coverage_file in self._coverage_files:
                 if file_exists(coverage_file):
                     fptr.write(str(coverage_file) + "\n")
@@ -442,7 +441,7 @@ def parse_modelsimini(file_name):
     :returns: A RawConfigParser object
     """
     cfg = RawConfigParser()
-    with io.open(file_name, "r", encoding="utf-8") as fptr:
+    with Path(file_name).open("r", encoding="utf-8") as fptr:
         cfg.read_file(fptr)
     return cfg
 
@@ -451,5 +450,5 @@ def write_modelsimini(cfg, file_name):
     """
     Writes a modelsim.ini file
     """
-    with io.open(file_name, "w", encoding="utf-8") as optr:
+    with Path(file_name).open("w", encoding="utf-8") as optr:
         cfg.write(optr)
