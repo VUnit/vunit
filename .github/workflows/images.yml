@@ -42,8 +42,8 @@ jobs:
         password: ${{ github.token }}
 
     - name: Docker push
-      if: github.repository == 'VUnit/vunit'
+      if: github.event_name != 'pull_request' && github.repository == 'VUnit/vunit'
       run: |
-        DIMG="vunit/dev:${{ matrix.task.tag }}"
+        DIMG="vunit/dev/${{ matrix.task.tag }}"
         docker tag "$DIMG" "ghcr.io/$DIMG"
         docker push "ghcr.io/$DIMG"

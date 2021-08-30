@@ -94,7 +94,7 @@ jobs:
         submodules: recursive
 
     - name: '🚧 Run job'
-      run: docker run --rm -tv $(pwd):/src -w /src ghcr.io/vunit/dev:${{ matrix.task.tag }} tox -e py${{ matrix.task.do }}-ghdl
+      run: docker run --rm -tv $(pwd):/src -w /src ghcr.io/vunit/dev/${{ matrix.task.tag }} tox -e py${{ matrix.task.do }}-ghdl
 
 #
 # Windows (MSYS2) with 'nightly' GHDL

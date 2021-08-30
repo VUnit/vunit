@@ -4,5 +4,5 @@ docker run --rm -t \
   -v $(pwd):/src \
   -w /src \
   -e PYTHONPATH=/src \
-  ghcr.io/vunit/dev:llvm \
+  ghcr.io/vunit/dev/llvm \
   "$@"

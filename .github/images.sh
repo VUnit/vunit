@@ -8,7 +8,7 @@ docker build \
   --build-arg LLVM_VER=9 \
   --build-arg GNAT_VER=9 \
   --target vunit \
-  -t "vunit/dev:${TAG}" \
+  -t "vunit/dev/${TAG}" \
   - <<-EOF
 $(curl -fsSL https://raw.githubusercontent.com/ghdl/docker/master/run_debian.dockerfile)
 

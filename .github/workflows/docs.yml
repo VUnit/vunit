@@ -29,7 +29,7 @@ jobs:
     - name: Build docs
       run: tox -e py38-docs -- --color
 
-    - uses: Actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v2
       with:
         name: VUnit-site
         path: .tox/py38-docs/tmp/docsbuild/
