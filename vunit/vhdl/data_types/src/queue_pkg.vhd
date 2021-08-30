@@ -344,6 +344,8 @@ package queue_pkg is
     code : string
   ) return queue_t;
 
+  alias decode_queue_t is decode[string return queue_t];
+
   procedure decode (
     constant code   : string;
     variable index  : inout positive;
@@ -351,7 +353,6 @@ package queue_pkg is
   );
 
   alias encode_queue_t is encode[queue_t return string];
-  alias decode_queue_t is decode[string return queue_t];
 
   procedure push_type (
     queue        : queue_t;
