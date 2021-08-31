@@ -12,7 +12,7 @@ context work.com_context;
 
 package body stream_master_pkg is
   impure function new_stream_master(
-    logger                     : logger_t                     := stream_master_logger;
+    logger                     : logger_t                     := null_logger;
     actor                      : actor_t                      := null_actor;
     checker                    : checker_t                    := null_checker;
     unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail

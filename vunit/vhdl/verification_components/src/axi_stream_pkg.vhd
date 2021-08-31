@@ -165,7 +165,7 @@ package axi_stream_pkg is
     drive_invalid               : boolean                       := true;
     drive_invalid_val           : std_logic                     := 'X';
     drive_invalid_val_user      : std_logic                     := '0';
-    logger                      : logger_t                      := axi_stream_logger;
+    logger                      : logger_t                      := null_logger;
     actor                       : actor_t                       := null_actor;
     checker                     : checker_t                     := null_checker;
     unexpected_msg_type_policy  : unexpected_msg_type_policy_t  := fail;
@@ -179,7 +179,7 @@ package axi_stream_pkg is
     dest_length                 : natural                       := 0;
     user_length                 : natural                       := 0;
     stall_config                : stall_config_t                := null_stall_config;
-    logger                      : logger_t                      := axi_stream_logger;
+    logger                      : logger_t                      := null_logger;
     actor                       : actor_t                       := null_actor;
     checker                     : checker_t                     := null_checker;
     unexpected_msg_type_policy  : unexpected_msg_type_policy_t  := fail;
@@ -192,7 +192,7 @@ package axi_stream_pkg is
     id_length                   : natural                       := 0;
     dest_length                 : natural                       := 0;
     user_length                 : natural                       := 0;
-    logger                      : logger_t                      := axi_stream_logger;
+    logger                      : logger_t                      := null_logger;
     actor                       : actor_t                       := null_actor;
     checker                     : checker_t                     := null_checker;
     unexpected_msg_type_policy  : unexpected_msg_type_policy_t  := fail;
@@ -204,7 +204,7 @@ package axi_stream_pkg is
     id_length                   : natural   := 0;
     dest_length                 : natural   := 0;
     user_length                 : natural   := 0;
-    logger                      : logger_t  := axi_stream_logger;
+    logger                      : logger_t  := null_logger;
     actor                       : actor_t   := null_actor;
     checker                     : checker_t := null_checker;
     unexpected_msg_type_policy  : unexpected_msg_type_policy_t := fail;
@@ -356,7 +356,7 @@ package body axi_stream_pkg is
     id_length        : natural  := 0;
     dest_length      : natural  := 0;
     user_length      : natural  := 0;
-    logger           : logger_t := axi_stream_logger;
+    logger           : logger_t;
     actor            : actor_t;
     checker          : checker_t;
     monitor          : axi_stream_monitor_t;
@@ -412,7 +412,7 @@ package body axi_stream_pkg is
     drive_invalid               : boolean                       := true;
     drive_invalid_val           : std_logic                     := 'X';
     drive_invalid_val_user      : std_logic                     := '0';
-    logger                      : logger_t                      := axi_stream_logger;
+    logger                      : logger_t                      := null_logger;
     actor                       : actor_t                       := null_actor;
     checker                     : checker_t                     := null_checker;
     unexpected_msg_type_policy : unexpected_msg_type_policy_t  := fail;
@@ -427,7 +427,6 @@ package body axi_stream_pkg is
   begin
     p_monitor          := get_valid_monitor(data_length, id_length, dest_length, user_length, logger, actor, checker, monitor, "master");
     p_protocol_checker := get_valid_protocol_checker(data_length, id_length, dest_length, user_length, logger, actor, checker, protocol_checker, "master");
-
 
     return (
       p_std_cfg                => p_std_cfg,
@@ -450,7 +449,7 @@ package body axi_stream_pkg is
     dest_length                 : natural                       := 0;
     user_length                 : natural                       := 0;
     stall_config                : stall_config_t                := null_stall_config;
-    logger                      : logger_t                      := axi_stream_logger;
+    logger                      : logger_t                      := null_logger;
     actor                       : actor_t                       := null_actor;
     checker                     : checker_t                     := null_checker;
     unexpected_msg_type_policy : unexpected_msg_type_policy_t  := fail;
@@ -483,7 +482,7 @@ package body axi_stream_pkg is
     id_length                   : natural                       := 0;
     dest_length                 : natural                       := 0;
     user_length                 : natural                       := 0;
-    logger                      : logger_t                      := axi_stream_logger;
+    logger                      : logger_t                      := null_logger;
     actor                      : actor_t                       := null_actor;
     checker                     : checker_t                     := null_checker;
     unexpected_msg_type_policy : unexpected_msg_type_policy_t  := fail;
@@ -511,7 +510,7 @@ package body axi_stream_pkg is
     id_length                   : natural   := 0;
     dest_length                 : natural   := 0;
     user_length                 : natural   := 0;
-    logger                      : logger_t  := axi_stream_logger;
+    logger                      : logger_t  := null_logger;
     actor                       : actor_t   := null_actor;
     checker                     : checker_t := null_checker;
     unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail;

@@ -29,7 +29,7 @@ package bus2memory_pkg is
     address_length             : natural;
     memory                     : memory_t;
     byte_length                : natural                      := 8;
-    logger                     : logger_t                     := bus2memory_logger;
+    logger                     : logger_t                     := null_logger;
     actor                      : actor_t                      := null_actor;
     checker                    : checker_t                    := null_checker;
     unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail
@@ -47,12 +47,15 @@ package body bus2memory_pkg is
     address_length             : natural;
     memory                     : memory_t;
     byte_length                : natural                      := 8;
-    logger                     : logger_t                     := bus2memory_logger;
+    logger                     : logger_t                     := null_logger;
     actor                      : actor_t                      := null_actor;
     checker                    : checker_t                    := null_checker;
     unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail
   ) return bus2memory_t is
-    constant p_bus_handle : bus_master_t := new_bus(data_length, address_length, byte_length, logger, actor, checker,
+    constant p_std_cfg       : std_cfg_t := create_std_cfg(
+      bus2memory_logger, bus2memory_checker, actor, logger, checker, unexpected_msg_type_policy
+    );
+    constant p_bus_handle : bus_master_t := new_bus(data_length, address_length, byte_length, get_logger(p_std_cfg), get_actor(p_std_cfg), get_checker(p_std_cfg),
       unexpected_msg_type_policy
     );
   begin

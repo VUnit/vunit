@@ -19,7 +19,7 @@ package vc_not_supporting_custom_logger_pkg is
   constant vc_not_supporting_custom_logger_checker : checker_t := new_checker(vc_not_supporting_custom_logger_logger);
 
   impure function new_vc_not_supporting_custom_logger(
-    logger : logger_t := vc_not_supporting_custom_logger_logger;
+    logger : logger_t := null_logger;
     actor : actor_t := null_actor;
     checker : checker_t := null_checker;
     unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail
@@ -33,7 +33,7 @@ end package;
 
 package body vc_not_supporting_custom_logger_pkg is
   impure function new_vc_not_supporting_custom_logger(
-    logger : logger_t := vc_not_supporting_custom_logger_logger;
+    logger : logger_t := null_logger;
     actor : actor_t := null_actor;
     checker : checker_t := null_checker;
     unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail

@@ -19,7 +19,7 @@ package body bus_master_pkg is
   impure function new_bus(data_length                : natural;
                           address_length             : natural;
                           byte_length                : natural                      := 8;
-                          logger                     : logger_t                     := bus_logger;
+                          logger                     : logger_t                     := null_logger;
                           actor                      : actor_t                      := null_actor;
                           checker                    : checker_t                    := null_checker;
                           unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail) return bus_master_t is

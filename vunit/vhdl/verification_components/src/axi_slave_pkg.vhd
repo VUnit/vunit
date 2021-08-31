@@ -45,7 +45,7 @@ package axi_slave_pkg is
                                 write_response_stall_probability : probability_t := 0.0;
                                 min_response_latency : delay_length := 0 ns;
                                 max_response_latency : delay_length := 0 ns;
-                                logger : logger_t := axi_slave_logger;
+                                logger : logger_t := null_logger;
                                 checker : checker_t := null_checker;
                                 unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail) return axi_slave_t;
 
@@ -165,7 +165,7 @@ package body axi_slave_pkg is
                                 write_response_stall_probability : probability_t := 0.0;
                                 min_response_latency : delay_length := 0 ns;
                                 max_response_latency : delay_length := 0 ns;
-                                logger : logger_t := axi_slave_logger;
+                                logger : logger_t := null_logger;
                                 checker : checker_t := null_checker;
                                 unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail) return axi_slave_t is
     constant p_std_cfg : std_cfg_t := create_std_cfg(
@@ -181,7 +181,7 @@ package body axi_slave_pkg is
             p_initial_write_response_stall_probability => write_response_stall_probability,
             p_initial_min_response_latency => min_response_latency,
             p_initial_max_response_latency => max_response_latency,
-            p_memory => to_vc_interface(memory, logger));
+            p_memory => to_vc_interface(memory, get_logger(p_std_cfg)));
   end;
 
   function get_std_cfg(axi_slave : axi_slave_t) return std_cfg_t is

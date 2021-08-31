@@ -45,7 +45,7 @@ package avalon_pkg is
     write_high_probability     : real range 0.0 to 1.0        := 1.0;
     read_high_probability      : real range 0.0 to 1.0        := 1.0;
     byte_length                : natural                      := 8;
-    logger                     : logger_t                     := avalon_logger;
+    logger                     : logger_t                     := null_logger;
     actor                      : actor_t                      := null_actor;
     checker                    : checker_t                    := null_checker;
     unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail
@@ -55,7 +55,7 @@ package avalon_pkg is
     memory                         : memory_t;
     readdatavalid_high_probability : real                         := 1.0;
     waitrequest_high_probability   : real                         := 0.0;
-    logger                         : logger_t                     := avalon_logger;
+    logger                         : logger_t                     := null_logger;
     actor                          : actor_t                      := null_actor;
     checker                        : checker_t                    := null_checker;
     unexpected_msg_type_policy     : unexpected_msg_type_policy_t := fail
@@ -79,13 +79,16 @@ package body avalon_pkg is
     write_high_probability     : real range 0.0 to 1.0        := 1.0;
     read_high_probability      : real range 0.0 to 1.0        := 1.0;
     byte_length                : natural                      := 8;
-    logger                     : logger_t                     := avalon_logger;
+    logger                     : logger_t                     := null_logger;
     actor                      : actor_t                      := null_actor;
     checker                    : checker_t                    := null_checker;
     unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail
   ) return avalon_master_t is
-    constant p_bus_handle : bus_master_t := new_bus(data_length, address_length, byte_length, logger, actor,
-                                                    checker, unexpected_msg_type_policy
+    constant p_std_cfg       : std_cfg_t := create_std_cfg(
+      avalon_logger, avalon_checker, actor, logger, checker, unexpected_msg_type_policy
+    );
+    constant p_bus_handle : bus_master_t := new_bus(data_length, address_length, byte_length, get_logger(p_std_cfg), get_actor(p_std_cfg), get_checker(p_std_cfg),
+                                                    unexpected_msg_type_policy
                                                    );
   begin
     return (p_bus_handle             => p_bus_handle,
@@ -100,7 +103,7 @@ package body avalon_pkg is
     memory                         : memory_t;
     readdatavalid_high_probability : real                         := 1.0;
     waitrequest_high_probability   : real                         := 0.0;
-    logger                         : logger_t                     := avalon_logger;
+    logger                         : logger_t                     := null_logger;
     actor                          : actor_t                      := null_actor;
     checker                        : checker_t                    := null_checker;
     unexpected_msg_type_policy     : unexpected_msg_type_policy_t := fail
@@ -113,7 +116,7 @@ package body avalon_pkg is
   begin
     return (p_std_cfg                        => p_std_cfg,
             p_ack_actor                      => new_actor(name(actor) & " read-ack"),
-            p_memory                         => to_vc_interface(memory, logger),
+            p_memory                         => to_vc_interface(memory, get_logger(p_std_cfg)),
             p_readdatavalid_high_probability => readdatavalid_high_probability,
             p_waitrequest_high_probability   => waitrequest_high_probability
            );

@@ -236,69 +236,80 @@ name for better trace logs.
 Rule 6
 ------
 
-A VC constructor shall have an ``unexpected_msg_type_policy`` parameter giving
-the user the option to specify the action taken when the VC receives an unexpected
-message type.
+A VC constructor shall have an ``unexpected_msg_type_policy`` parameter giving the
+user the option to specify the action taken when the VC receives an unexpected message type.
 
-**Rationale**: A VC actor setup to subscribe to another actor may receive messages
-not relevant for its operation. OTOH, VCs just addressed directly should only
-recieve messages it can handle.
+**Rationale**: A VC actor setup to subscribe to another actor may receive messages not
+relevant for its operation. OTOH, VCs just addressed directly should only recieve messages it can handle.
 
 Rule 7
 ------
 
 A VC constructor shall have a default value for all required parameters above.
 
-**Rationale**: Makes it easier for the user if there is no preference on what to
-use.
+**Rationale**: Makes it easier for the user if there is no preference on what to use.
 
 Rule 8
 ------
 
-The default value for the logger parameter shall not be ``default_logger``.
+The default value for the logger parameter shall be ``null_logger`` to indicate that the
+VC should assign a logger internally. The internally assigned logger shall not be ``default_logger``.
 
-**Rationale**: Using a logger more associated with the VC makes the logger output
-easier to understand.
+**Rationale**: Using a logger more associated with the VC makes the logger output easier to understand.
+Using ``null_logger`` as the default parameter value makes it possible to distinguish between a parameter
+not specified and the parameter specified with the intended default value. This can be used to detect
+when the user unintendently create two VCs of the same type using the same logger. This is allowed but
+deserves a warning if made by mistake.
 
 Rule 9
 ------
 
-The default value for the checker parameter shall not be ``default_checker``.
+The default value for the checker parameter shall be ``null_checker`` to indicate that the VC should
+assign a checker internally. The internally assigned checker shall not be ``default_checker``.
 
-**Rationale**: Using a checker more associated with the VC makes the checker
-output easier to understand.
+**Rationale**: Using a checker more associated with the VC makes the checker output easier to understand.
+Using ``null_checker`` as the default parameter value makes it possible to distinguish between a parameter
+not specified and the parameter specified with the intended default value. If no value is specified but
+a logger has been provided the VC can create a checker from the provided logger rather than using the default
+checker for that VC.
 
 Rule 10
 -------
 
-All fields in the handle returned by the constructor shall start with ``p_``.
+The default value for the actor parameter shall be ``null_actor`` to indicate that the VC should assign an
+actor internally. The internally assigned actor shall be a new actor for each VC.
 
-**Rationale**: All field shall be considered private and this is a way to
-emphasize this. Keeping them private makes updates easier without breaking
-backward compatibility.
+**Rationale**: VCs can never share actors in the same way they can share loggers and checkers. There can be
+only one VC serving messages sent to a specific actor.
 
 Rule 11
 -------
 
-The standard configuration, ``std_cfg_t``, of a VC consisting of the required
-parameters to the constructor shall be possible to get from the handle using a call to ``get_std_cfg``.
+All fields in the handle returned by the constructor shall start with ``p_``.
 
-**Rationale**: Makes it possible to reuse operations such as ``get_logger``
-between VCs.
+**Rationale**: All field shall be considered private and this is a way to emphasize this. Keeping them private
+makes updates easier without breaking backward compatibility.
 
 Rule 12
 -------
 
-A VC shall only have one generic.
+The standard configuration, ``std_cfg_t``, of a VC consisting of the required parameters to the constructor
+shall be possible to get from the handle using a call to ``get_std_cfg``.
 
-**Rationale**: Representing a VC with a single object makes it easier to handle
-in code. Since all fields of the handle are private future updates have less
-risk of breaking backward compatibility.
+**Rationale**: Makes it possible to reuse operations such as ``get_logger`` between VCs.
 
 Rule 13
 -------
 
+A VC shall only have one generic.
+
+**Rationale**: Representing a VC with a single object makes it easier to handle in code. Since all fields of
+the handle are private future updates have less risk of breaking backward compatibility.
+
+Rule 14
+-------
+
 All VCs shall support the sync interface.
 
-**Rationale**: Being able to check that a VC is idle and to add a delay between
-transactions are commonly useful operations for VC users.
+**Rationale**: Being able to check that a VC is idle and to add a delay between transactions are commonly useful
+operations for VC users.
