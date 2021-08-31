@@ -85,7 +85,7 @@ class XceliumInterface(  # pylint: disable=too-many-instance-attributes
         """
         Returns True when this simulator supports VHDL 2008 contexts
         """
-        return False
+        return True
 
     def __init__(  # pylint: disable=too-many-arguments
         self, prefix, output_path, gui=False, log_level=None, cdslib=None, hdlvar=None
@@ -182,7 +182,7 @@ define work "{2}/libraries/work"
             return "-v200x -extv200x"
 
         if vhdl_standard == VHDL.STD_2008:
-            return "-v200x -extv200x"
+            return "-v200x -extv200x -inc_v200x_pkg"
 
         if vhdl_standard == VHDL.STD_1993:
             return "-v93"
@@ -306,7 +306,7 @@ define work "{2}/libraries/work"
         cds = CDSFile.parse(self._cdslib)
         return cds
 
-    def simulate(  # pylint: disable=too-many-locals
+    def simulate(  # pylint: disable=too-many-locals, too-many-branches
         self, output_path, test_suite_name, config, elaborate_only=False
     ):
         """
@@ -362,6 +362,14 @@ define work "{2}/libraries/work"
             args += self._generic_args(config.entity_name, config.generics)
             for library in self._libraries:
                 args += ['-reflib "%s"' % library.directory]
+            args += ['-input "@set intovf_severity_level ignore"']
+            if config.sim_options.get("disable_ieee_warnings", False):
+                args += [
+                    '-input "@set pack_assert_off { std_logic_arith numeric_std }"'
+                ]
+            args += [
+                '-input "@set assert_stop_level %s"' % config.vhdl_assert_stop_level
+            ]
             if launch_gui:
                 args += ["-access +rwc"]
                 # args += ['-linedebug']
