@@ -30,7 +30,7 @@ package vc_pkg is
   --
   -- * The actor is the actor provided by the actor parameter unless it's the null_actor. In that case a new actor is created
   -- * The logger is the logger provided by the logger parameter unless it's the null_logger. In that case the default logger is used which must not be the null_logger.
-  -- * The checker is the checker provided by the checker parameter unless it's the null_checker. In that case the the default checker is used if the logger is the
+  -- * The checker is the checker provided by the checker parameter unless it's the null_checker. In that case the default checker is used if the logger is the
   --   default logger. Otherwise a new checker is created based on the provided logger. The default checker must not be the null_checker
   -- * The policy for handling unexpected messages is according to the unexpected_msg_type_policy parameter.
   impure function create_std_cfg(
@@ -56,6 +56,22 @@ end package;
 package body vc_pkg is
   constant vc_logger  : logger_t  := get_logger("vunit_lib:vc_pkg");
   constant vc_checker : checker_t := new_checker(vc_logger);
+  constant used_default_loggers : integer_vector_ptr_t := new_integer_vector_ptr;
+
+  procedure register_if_not_used(default_logger : logger_t) is
+    constant ref : integer := to_integer(default_logger);
+  begin
+    for idx in 0 to length(used_default_loggers) - 1 loop
+      if get(used_default_loggers, idx) = ref then
+        warning(default_logger, "This logger is already used by another VC. Source VC for log messages is ambiguous.");
+        report "This logger is already used by another VC. Source VC for log messages is ambiguous." severity warning;
+        return;
+      end if;
+    end loop;
+
+    resize(used_default_loggers, length(used_default_loggers) + 1);
+    set(used_default_loggers, length(used_default_loggers) - 1, ref);
+  end;
 
   impure function create_std_cfg(
     default_logger             : logger_t;
@@ -70,13 +86,23 @@ package body vc_pkg is
     check(vc_checker, default_logger /= null_logger, "A default logger must be provided");
     check(vc_checker, default_checker /= null_checker, "A default checker must be provided");
 
-    result.p_actor                      := actor when actor /= null_actor else new_actor;
-    result.p_logger                     := logger when logger /= null_logger else default_logger;
+    result.p_actor := actor when actor /= null_actor else new_actor;
+
+    if logger /= null_logger then
+      result.p_logger := logger;
+    else
+      result.p_logger := default_logger;
+      register_if_not_used(default_logger);
+    end if;
+
     result.p_unexpected_msg_type_policy := unexpected_msg_type_policy;
 
     if checker = null_checker then
-      if logger = default_logger then
+      if logger = null_logger then
         result.p_checker := default_checker;
+        if get_logger(default_checker) /= default_logger then
+          register_if_not_used(get_logger(default_checker));
+        end if;
       else
         result.p_checker := new_checker(logger);
       end if;

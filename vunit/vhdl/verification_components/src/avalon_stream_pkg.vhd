@@ -35,14 +35,14 @@ package avalon_stream_pkg is
 
   impure function new_avalon_source(data_length                : natural;
                                     valid_high_probability     : real                         := 1.0;
-                                    logger                     : logger_t                     := avalon_stream_logger;
+                                    logger                     : logger_t                     := null_logger;
                                     actor                      : actor_t                      := null_actor;
                                     checker                    : checker_t                    := null_checker;
                                     unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail
                                    ) return avalon_source_t;
   impure function new_avalon_sink(data_length                : natural;
                                   ready_high_probability     : real                         := 1.0;
-                                  logger                     : logger_t                     := avalon_stream_logger;
+                                  logger                     : logger_t                     := null_logger;
                                   actor                      : actor_t                      := null_actor;
                                   checker                    : checker_t                    := null_checker;
                                   unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail) return avalon_sink_t;
@@ -99,7 +99,7 @@ package body avalon_stream_pkg is
 
   impure function new_avalon_source(data_length                : natural;
                                     valid_high_probability     : real                         := 1.0;
-                                    logger                     : logger_t                     := avalon_stream_logger;
+                                    logger                     : logger_t                     := null_logger;
                                     actor                      : actor_t                      := null_actor;
                                     checker                    : checker_t                    := null_checker;
                                     unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail
@@ -115,7 +115,7 @@ package body avalon_stream_pkg is
 
   impure function new_avalon_sink(data_length                : natural;
                                   ready_high_probability     : real                         := 1.0;
-                                  logger                     : logger_t                     := avalon_stream_logger;
+                                  logger                     : logger_t                     := null_logger;
                                   actor                      : actor_t                      := null_actor;
                                   checker                    : checker_t                    := null_checker;
                                   unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail) return avalon_sink_t is

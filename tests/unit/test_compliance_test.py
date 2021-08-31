@@ -54,7 +54,7 @@ package vc_pkg is
   end record;
 
   impure function new_vc(
-    logger : logger_t := default_logger;
+    logger : logger_t := null_logger;
     actor : actor_t := null_actor;
     checker : checker_t := null_checker;
     unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail
@@ -248,7 +248,7 @@ end package;
     @mock.patch("vunit.vc.verification_component_interface.LOGGER.error")
     def test_failing_on_incorrect_constructor_parameters(self, error_mock):
         parameters = dict(
-            logger=("logger_t", "default_logger"),
+            logger=("logger_t", "null_logger"),
             actor=("actor_t", "null_actor"),
             checker=("checker_t", "null_checker"),
             unexpected_msg_type_policy=("unexpected_msg_type_policy_t", "fail"),
@@ -343,7 +343,7 @@ package other_vc_pkg is
   end record;
 
   impure function new_vc(
-    logger : logger_t := default_logger;
+    logger : logger_t := null_logger;
     actor : actor_t := null_actor;
     checker : checker_t := null_checker;
     unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail
@@ -373,7 +373,7 @@ package other_vc_pkg is
   end record;
 
   impure function new_vc(
-    logger : logger_t := default_logger;
+    logger : logger_t := null_logger;
     actor : actor_t := null_actor;
     checker : checker_t := null_checker;
     unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail
@@ -397,7 +397,7 @@ end package;
 
     def test_error_on_missing_default_value(self):
         parameters = dict(
-            logger=("logger_t", "default_logger"),
+            logger=("logger_t", "null_logger"),
             actor=("actor_t", "null_actor"),
             checker=("checker_t", "null_checker"),
             unexpected_msg_type_policy=("unexpected_msg_type_policy_t", "fail"),

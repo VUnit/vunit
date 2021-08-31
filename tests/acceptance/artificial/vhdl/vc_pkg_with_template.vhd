@@ -20,7 +20,7 @@ package vc_pkg_with_template is
 
   impure function new_vc(
     unspecified : boolean;
-    logger : logger_t := vc_logger;
+    logger : logger_t := null_logger;
     actor : actor_t := null_actor;
     checker : checker_t := null_checker;
     unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail
@@ -35,7 +35,7 @@ end package;
 package body vc_pkg_with_template is
   impure function new_vc(
     unspecified : boolean;
-    logger : logger_t := vc_logger;
+    logger : logger_t := null_logger;
     actor : actor_t := null_actor;
     checker : checker_t := null_checker;
     unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail

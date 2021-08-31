@@ -155,7 +155,7 @@ class VerificationComponentInterface:
         )
 
         expected_default_value = dict(
-            logger=None,
+            logger="null_logger",
             actor="null_actor",
             checker="null_checker",
             unexpected_msg_type_policy=None,

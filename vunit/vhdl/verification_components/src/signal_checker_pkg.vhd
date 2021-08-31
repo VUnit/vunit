@@ -23,7 +23,7 @@ package signal_checker_pkg is
   constant signal_checker_checker : checker_t := new_checker(signal_checker_logger);
 
   impure function new_signal_checker(
-    logger                     : logger_t                     := signal_checker_logger;
+    logger                     : logger_t                     := null_logger;
     actor                      : actor_t                      := null_actor;
     checker                    : checker_t                    := null_checker;
     unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail)
@@ -52,7 +52,7 @@ end package;
 
 package body signal_checker_pkg is
   impure function new_signal_checker(
-    logger                     : logger_t                     := signal_checker_logger;
+    logger                     : logger_t                     := null_logger;
     actor                      : actor_t                      := null_actor;
     checker                    : checker_t                    := null_checker;
     unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail)

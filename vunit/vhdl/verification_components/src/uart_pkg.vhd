@@ -56,7 +56,7 @@ package uart_pkg is
   impure function new_uart_slave(initial_baud_rate          : natural                      := default_baud_rate;
                                  idle_state                 : std_logic                    := default_idle_state;
                                  data_length                : positive                     := default_data_length;
-                                 logger                     : logger_t                     := uart_logger;
+                                 logger                     : logger_t                     := null_logger;
                                  actor                      : actor_t                      := null_actor;
                                  checker                    : checker_t                    := null_checker;
                                  unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail) return uart_slave_t;
@@ -93,7 +93,7 @@ package body uart_pkg is
   impure function new_uart_slave(initial_baud_rate          : natural                      := default_baud_rate;
                                  idle_state                 : std_logic                    := default_idle_state;
                                  data_length                : positive                     := default_data_length;
-                                 logger                     : logger_t                     := uart_logger;
+                                 logger                     : logger_t                     := null_logger;
                                  actor                      : actor_t                      := null_actor;
                                  checker                    : checker_t                    := null_checker;
                                  unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail) return uart_slave_t is

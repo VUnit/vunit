@@ -25,7 +25,7 @@ package stream_slave_pkg is
 
   -- Create a new stream slave object
   impure function new_stream_slave(
-    logger                     : logger_t                     := stream_slave_logger;
+    logger                     : logger_t                     := null_logger;
     actor                      : actor_t                      := null_actor;
     checker                    : checker_t                    := null_checker;
     unexpected_msg_type_policy : unexpected_msg_type_policy_t := fail
