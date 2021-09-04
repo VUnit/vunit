@@ -209,7 +209,11 @@ Language revision selection
 The VHDL revision can be specified through the :ref:`python_interface`
 (see :class:`vunit.ui.VUnit`).
 Alternatively, environment variable ``VUNIT_VHDL_STANDARD`` can be set to
-``1993``, ``2002``, ``2008`` or ``2019``.
+``93``|``1993``, ``02``|``2002``, ``08``|``2008`` (default) or ``19``|``2019``.
+
+.. warning:: the specification of an unsupported revision produces an ERROR.
+             Moreover, take into account that `context`` statement is not supported
+             previous 2008, so it must be replace with multiple ``use`` statements.
 
 .. _json_export:
 
