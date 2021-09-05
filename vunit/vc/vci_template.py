@@ -49,14 +49,41 @@ TB_EPILOGUE_TEMPLATE = Template(
     constant checker_logger3 : logger_t := get_logger("checker3");
     constant checker3 : checker_t := new_checker(checker_logger3);
 
-    variable handle1, handle2, handle3 : ${vc_handle_t};
-    variable std_cfg1, std_cfg2, std_cfg3 : std_cfg_t;
+    constant actor4 : actor_t := new_actor("actor4");
+    constant logger4 : logger_t := get_logger("logger4");
+    constant checker_logger4 : logger_t := get_logger("checker4");
+    constant checker4 : checker_t := new_checker(checker_logger4);
+
+    constant actor5 : actor_t := new_actor("actor5");
+    constant logger5 : logger_t := get_logger("logger5");
+    constant checker_logger5 : logger_t := get_logger("checker5");
+    constant checker5 : checker_t := new_checker(checker_logger5);
+
+    constant actor6 : actor_t := new_actor("actor6");
+    constant logger6 : logger_t := get_logger("logger6");
+    constant checker_logger6 : logger_t := get_logger("checker6");
+    constant checker6 : checker_t := new_checker(checker_logger6);
+
+    constant actor7 : actor_t := new_actor("actor7");
+    constant logger7 : logger_t := get_logger("logger7");
+    constant checker_logger7 : logger_t := get_logger("checker7");
+    constant checker7 : checker_t := new_checker(checker_logger7);
+
+${handle1}
+${handle2}
+${handle3}
+${handle4}
+${handle5}
+${handle6}
+${handle7}
+
+    variable std_cfg1, std_cfg2, std_cfg3, std_cfg4 : std_cfg_t;
+    variable std_cfg5, std_cfg6, std_cfg7 : std_cfg_t;
   begin
     test_runner_setup(runner, runner_cfg);
 
     while test_suite loop
       if run("Test standard configuration") then
-${handle1}
         std_cfg1 := get_std_cfg(handle1);
 
         check(get_actor(std_cfg1) = actor1, "Failed to configure actor with ${vc_constructor_name}");
@@ -65,16 +92,12 @@ ${handle1}
         check(unexpected_msg_type_policy(std_cfg1) = fail,
         "Failed to configure unexpected_msg_type_policy = fail with ${vc_constructor_name}");
 
-${handle2}
         std_cfg2 := get_std_cfg(handle2);
 
         check(unexpected_msg_type_policy(std_cfg2) = ignore,
         "Failed to configure unexpected_msg_type_policy = ignore with ${vc_constructor_name}");
 
       elsif run("Test handle independence") then
-${handle1}
-${handle3}
-
         std_cfg1 := get_std_cfg(handle1);
         std_cfg2 := get_std_cfg(handle2);
         check(get_actor(std_cfg1) /= get_actor(std_cfg2),
@@ -87,42 +110,37 @@ ${handle3}
         "unexpected_msg_type_policy shared between handles created by ${vc_constructor_name}");
 
       elsif run("Test default logger") then
-${handle4}
-        std_cfg1 := get_std_cfg(handle1);
-        check(get_logger(std_cfg1) /= null_logger,
+        std_cfg3 := get_std_cfg(handle3);
+        check(get_logger(std_cfg3) /= null_logger,
           "No valid default logger (null_logger) created by ${vc_constructor_name}");
-        check(get_logger(std_cfg1) /= default_logger,
+        check(get_logger(std_cfg3) /= default_logger,
           "No valid default logger (default_logger) created by ${vc_constructor_name}");
 
-${handle5}
-        std_cfg2 := get_std_cfg(handle2);
-        check(get_logger(std_cfg2) /= null_logger,
+        std_cfg4 := get_std_cfg(handle4);
+        check(get_logger(std_cfg4) /= null_logger,
           "No valid default logger (null_logger) created by ${vc_constructor_name}");
-        check(get_logger(std_cfg2) /= default_logger,
+        check(get_logger(std_cfg4) /= default_logger,
           "No valid default logger (default_logger) created by ${vc_constructor_name}");
 
       elsif run("Test default checker") then
-${handle6}
-        std_cfg1 := get_std_cfg(handle1);
-        check(get_checker(std_cfg1) /= null_checker,
+        std_cfg5 := get_std_cfg(handle5);
+        check(get_checker(std_cfg5) /= null_checker,
           "No valid default checker (null_checker) created by ${vc_constructor_name}");
-        check(get_checker(std_cfg1) /= default_checker,
+        check(get_checker(std_cfg5) /= default_checker,
           "No valid default checker (default_checker) created by ${vc_constructor_name}");
 
-${handle7}
-        std_cfg2 := get_std_cfg(handle2);
-        check(get_checker(std_cfg2) /= null_checker,
+        std_cfg6 := get_std_cfg(handle6);
+        check(get_checker(std_cfg6) /= null_checker,
           "No valid default checker (null_checker) created by ${vc_constructor_name}");
-        check(get_checker(std_cfg2) /= default_checker,
+        check(get_checker(std_cfg6) /= default_checker,
           "No valid default checker (default_checker) created by ${vc_constructor_name}");
 
-${handle8}
-        std_cfg3 := get_std_cfg(handle3);
-        check(get_checker(std_cfg3) /= null_checker,
+        std_cfg7 := get_std_cfg(handle7);
+        check(get_checker(std_cfg7) /= null_checker,
           "No valid default checker (null_checker) created by ${vc_constructor_name}");
-        check(get_checker(std_cfg3) /= default_checker,
+        check(get_checker(std_cfg7) /= default_checker,
           "No valid default checker (default_checker) created by ${vc_constructor_name}");
-        check(get_logger(get_checker(std_cfg3)) = logger3,
+        check(get_logger(get_checker(std_cfg7)) = logger6,
           "Default checker not based on logger provided to ${vc_constructor_name}");
 
       end if;
