@@ -29,7 +29,7 @@ def main():
     copyfile(str(DROOT / '..' / 'LICENSE.rst'), str(DROOT / 'license.rst'))
     get_theme(
         DROOT,
-        "https://codeload.github.com/buildthedocs/sphinx.theme/tar.gz/v0"
+        "https://codeload.github.com/buildthedocs/sphinx.theme/tar.gz/v1"
     )
     check_call(
         [
