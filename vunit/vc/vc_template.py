@@ -43,7 +43,6 @@ ARCHITECTURE_DECLARATIONS_TEMPLATE = Template(
   constant custom_checker : checker_t := new_checker(get_logger("vc_check"));
 
   impure function create_handle return ${vc_handle_t} is
-    variable handle : ${vc_handle_t};
     variable logger : logger_t := ${default_logger};
     variable actor : actor_t := ${default_actor};
     variable checker : checker_t := ${default_checker};

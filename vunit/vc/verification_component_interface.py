@@ -339,8 +339,9 @@ class VerificationComponentInterface:
             unexpected_msg_type_policy="fail",
         ):
 
-            handle_assignment = "        %s := %s(\n" % (
+            handle_assignment = "    constant %s : %s := %s(\n" % (
                 handle_name,
+                self.vc_constructor.return_type_mark,
                 self.vc_constructor.identifier,
             )
             for parameter in unspecified_parameters:
@@ -352,7 +353,7 @@ class VerificationComponentInterface:
                         "unexpected_msg_type_policy",
                     ]:
                         continue
-                    handle_assignment += "          %s => %s,\n" % (
+                    handle_assignment += "      %s => %s,\n" % (
                         identifier,
                         identifier,
                     )
@@ -363,9 +364,9 @@ class VerificationComponentInterface:
                 unexpected_msg_type_policy=unexpected_msg_type_policy,
             ).items():
                 if actual:
-                    handle_assignment += "          %s => %s,\n" % (formal, actual)
+                    handle_assignment += "      %s => %s,\n" % (formal, actual)
 
-            handle_assignment = handle_assignment[:-2] + "\n        );"
+            handle_assignment = handle_assignment[:-2] + "\n    );"
 
             return handle_assignment
 
@@ -389,40 +390,33 @@ class VerificationComponentInterface:
                 unexpected_msg_type_policy="ignore",
             ),
             handle3=create_handle_assignment(
-                "handle2",
-                actor="actor2",
-                logger="logger2",
-                checker="checker2",
-                unexpected_msg_type_policy="ignore",
+                "handle3",
+                actor="actor3",
+                checker="checker3",
+                unexpected_msg_type_policy="fail",
             ),
             handle4=create_handle_assignment(
-                "handle1",
-                actor="actor1",
-                checker="checker1",
+                "handle4",
+                actor="actor4",
+                logger="null_logger",
+                checker="checker4",
                 unexpected_msg_type_policy="fail",
             ),
             handle5=create_handle_assignment(
-                "handle2",
-                actor="actor2",
-                logger="null_logger",
-                checker="checker2",
+                "handle5",
+                actor="actor5",
                 unexpected_msg_type_policy="fail",
             ),
             handle6=create_handle_assignment(
-                "handle1",
-                actor="actor1",
-                unexpected_msg_type_policy="fail",
-            ),
-            handle7=create_handle_assignment(
-                "handle2",
-                actor="actor2",
+                "handle6",
+                actor="actor6",
                 checker="null_checker",
                 unexpected_msg_type_policy="fail",
             ),
-            handle8=create_handle_assignment(
-                "handle3",
-                actor="actor3",
-                logger="logger3",
+            handle7=create_handle_assignment(
+                "handle7",
+                actor="actor7",
+                logger="logger6",
                 unexpected_msg_type_policy="fail",
             ),
         )
