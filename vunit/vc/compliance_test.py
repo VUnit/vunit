@@ -52,7 +52,7 @@ def _create_vci_template(args):
         sys.exit(1)
 
     if not args.output_path:
-        output_dir = args.vc_path.parent / ".vc" / vci_name
+        output_dir = args.vci_path.parent / ".vc" / vci_name
         if not output_dir.exists():
             output_dir.mkdir(parents=True)
 
@@ -60,7 +60,7 @@ def _create_vci_template(args):
     elif args.output_path.is_dir():
         output_dir = args.output_path / vci_name
         if not output_dir.exists():
-            output_dir.exists(parents=True)
+            output_dir.mkdir(parents=True)
         output_path = output_dir / ("tb_%s_compliance_template.vhd" % args.vc_handle_t)
     else:
         output_path = args.output_path
