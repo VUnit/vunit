@@ -5,7 +5,7 @@
 # Copyright (c) 2014-2021, Lars Asplund lars.anders.asplund@gmail.com
 
 """
-Interface for the Cadence Incisive simulator
+Interface for the Cadence Xcelium simulator
 """
 
 from pathlib import Path
@@ -22,25 +22,42 @@ from .cds_file import CDSFile
 LOGGER = logging.getLogger(__name__)
 
 
-class IncisiveInterface(  # pylint: disable=too-many-instance-attributes
+class XceliumInterface(  # pylint: disable=too-many-instance-attributes
     SimulatorInterface
 ):
     """
-    Interface for the Cadence Incisive simulator
+    Interface for the Cadence Xcelium simulator
     """
 
-    name = "incisive"
+    name = "xcelium"
     supports_gui_flag = True
     package_users_depend_on_bodies = False
 
     compile_options = [
-        ListOfStringOption("incisive.irun_vhdl_flags"),
-        ListOfStringOption("incisive.irun_verilog_flags"),
+        ListOfStringOption("xcelium.xrun_vhdl_flags"),
+        ListOfStringOption("xcelium.xrun_verilog_flags"),
     ]
 
-    sim_options = [ListOfStringOption("incisive.irun_sim_flags")]
+    sim_options = [ListOfStringOption("xcelium.xrun_sim_flags")]
 
-    # NOTE: Incisive shares the command-line arguments with Xcelium
+    @staticmethod
+    def add_arguments(parser):
+        """
+        Add command line arguments
+        """
+        group = parser.add_argument_group(
+            "Xcelium/Incisive", description="Xcelium/Incisive specific flags"
+        )
+        group.add_argument(
+            "--cdslib",
+            default=None,
+            help="The cds.lib file to use. If not given, VUnit maintains its own cds.lib file.",
+        )
+        group.add_argument(
+            "--hdlvar",
+            default=None,
+            help="The hdl.var file to use. If not given, VUnit does not use a hdl.var file.",
+        )
 
     @classmethod
     def from_args(cls, args, output_path, **kwargs):
@@ -59,16 +76,16 @@ class IncisiveInterface(  # pylint: disable=too-many-instance-attributes
     @classmethod
     def find_prefix_from_path(cls):
         """
-        Find incisive simulator from PATH environment variable
+        Find xcelium simulator from PATH environment variable
         """
-        return cls.find_toolchain(["irun"])
+        return cls.find_toolchain(["xrun"])
 
     @staticmethod
     def supports_vhdl_contexts():
         """
         Returns True when this simulator supports VHDL 2008 contexts
         """
-        return False
+        return True
 
     def __init__(  # pylint: disable=too-many-arguments
         self, prefix, output_path, gui=False, log_level=None, cdslib=None, hdlvar=None
@@ -82,15 +99,15 @@ class IncisiveInterface(  # pylint: disable=too-many-instance-attributes
         else:
             self._cdslib = str(Path(cdslib).resolve())
         self._hdlvar = hdlvar
-        self._cds_root_irun = self.find_cds_root_irun()
+        self._cds_root_xrun = self.find_cds_root_xrun()
         self._create_cdslib()
 
-    def find_cds_root_irun(self):
+    def find_cds_root_xrun(self):
         """
-        Finds irun cds root
+        Finds xrun cds root
         """
         return subprocess.check_output(
-            [str(Path(self._prefix) / "cds_root"), "irun"]
+            [str(Path(self._prefix) / "cds_root"), "xrun"]
         ).splitlines()[0]
 
     def find_cds_root_virtuoso(self):
@@ -119,7 +136,7 @@ softinclude {0}/tools/inca/files/cds.lib
 # define basic ".../tools/dfII/etc/cdslib/basic"
 define work "{1}/libraries/work"
 """.format(
-                self._cds_root_irun, self._output_path
+                self._cds_root_xrun, self._output_path
             )
         else:
             contents = """\
@@ -129,7 +146,7 @@ softinclude {0}/tools/inca/files/cds.lib
 define basic "{1}/tools/dfII/etc/cdslib/basic"
 define work "{2}/libraries/work"
 """.format(
-                self._cds_root_irun, cds_root_virtuoso, self._output_path
+                self._cds_root_xrun, cds_root_virtuoso, self._output_path
             )
 
         write_file(self._cdslib, contents)
@@ -159,13 +176,13 @@ define work "{2}/libraries/work"
     @staticmethod
     def _vhdl_std_opt(vhdl_standard):
         """
-        Convert standard to format of irun command line flag
+        Convert standard to format of xrun command line flag
         """
         if vhdl_standard == VHDL.STD_2002:
             return "-v200x -extv200x"
 
         if vhdl_standard == VHDL.STD_2008:
-            return "-v200x -extv200x"
+            return "-v200x -extv200x -inc_v200x_pkg"
 
         if vhdl_standard == VHDL.STD_1993:
             return "-v93"
@@ -176,7 +193,7 @@ define work "{2}/libraries/work"
         """
         Returns command to compile a VHDL file
         """
-        cmd = str(Path(self._prefix) / "irun")
+        cmd = str(Path(self._prefix) / "xrun")
         args = []
         args += ["-compile"]
         args += ["-nocopyright"]
@@ -191,7 +208,7 @@ define work "{2}/libraries/work"
             '-log "%s"'
             % str(
                 Path(self._output_path)
-                / ("irun_compile_vhdl_file_%s.log" % source_file.library.name)
+                / ("xrun_compile_vhdl_file_%s.log" % source_file.library.name)
             )
         ]
         if not self._log_level == "debug":
@@ -199,14 +216,14 @@ define work "{2}/libraries/work"
         else:
             args += ["-messages"]
             args += ["-libverbose"]
-        args += source_file.compile_options.get("incisive.irun_vhdl_flags", [])
-        args += ['-nclibdirname "%s"' % str(Path(source_file.library.directory).parent)]
+        args += source_file.compile_options.get("xcelium.xrun_vhdl_flags", [])
+        args += ['-xmlibdirname "%s"' % str(Path(source_file.library.directory).parent)]
         args += ["-makelib %s" % source_file.library.directory]
         args += ['"%s"' % source_file.name]
         args += ["-endlib"]
         argsfile = str(
             Path(self._output_path)
-            / ("irun_compile_vhdl_file_%s.args" % source_file.library.name)
+            / ("xrun_compile_vhdl_file_%s.args" % source_file.library.name)
         )
         write_file(argsfile, "\n".join(args))
         return [cmd, "-f", argsfile]
@@ -215,7 +232,7 @@ define work "{2}/libraries/work"
         """
         Returns commands to compile a Verilog file
         """
-        cmd = str(Path(self._prefix) / "irun")
+        cmd = str(Path(self._prefix) / "xrun")
         args = []
         args += ["-compile"]
         args += ["-nocopyright"]
@@ -227,14 +244,14 @@ define work "{2}/libraries/work"
         # "cds.lib Invalid environment variable ''."
         args += ["-nowarn DLCVAR"]
         args += ["-work work"]
-        args += source_file.compile_options.get("incisive.irun_verilog_flags", [])
+        args += source_file.compile_options.get("xcelium.xrun_verilog_flags", [])
         args += ['-cdslib "%s"' % self._cdslib]
         args += self._hdlvar_args()
         args += [
             '-log "%s"'
             % str(
                 Path(self._output_path)
-                / ("irun_compile_verilog_file_%s.log" % source_file.library.name)
+                / ("xrun_compile_verilog_file_%s.log" % source_file.library.name)
             )
         ]
         if not self._log_level == "debug":
@@ -246,17 +263,17 @@ define work "{2}/libraries/work"
             args += ['-incdir "%s"' % include_dir]
 
         # for "disciplines.vams" etc.
-        args += ['-incdir "%s/tools/spectre/etc/ahdl/"' % self._cds_root_irun]
+        args += ['-incdir "%s/tools/spectre/etc/ahdl/"' % self._cds_root_xrun]
 
         for key, value in source_file.defines.items():
             args += ["-define %s=%s" % (key, value.replace('"', '\\"'))]
-        args += ['-nclibdirname "%s"' % str(Path(source_file.library.directory).parent)]
+        args += ['-xmlibdirname "%s"' % str(Path(source_file.library.directory).parent)]
         args += ["-makelib %s" % source_file.library.name]
         args += ['"%s"' % source_file.name]
         args += ["-endlib"]
         argsfile = str(
             Path(self._output_path)
-            / ("irun_compile_verilog_file_%s.args" % source_file.library.name)
+            / ("xrun_compile_verilog_file_%s.args" % source_file.library.name)
         )
         write_file(argsfile, "\n".join(args))
         return [cmd, "-f", argsfile]
@@ -289,7 +306,7 @@ define work "{2}/libraries/work"
         cds = CDSFile.parse(self._cdslib)
         return cds
 
-    def simulate(  # pylint: disable=too-many-locals
+    def simulate(  # pylint: disable=too-many-locals, too-many-branches
         self, output_path, test_suite_name, config, elaborate_only=False
     ):
         """
@@ -305,7 +322,7 @@ define work "{2}/libraries/work"
             steps = ["elaborate", "simulate"]
 
         for step in steps:
-            cmd = str(Path(self._prefix) / "irun")
+            cmd = str(Path(self._prefix) / "xrun")
             args = []
             if step == "elaborate":
                 args += ["-elaborate"]
@@ -321,22 +338,22 @@ define work "{2}/libraries/work"
             args += ["-nowarn DLCPTH"]  # "cds.lib Invalid path"
             args += ["-nowarn DLCVAR"]  # "cds.lib Invalid environment variable ''."
             args += [
-                "-ncerror EVBBOL"
+                "-xmerror EVBBOL"
             ]  # promote to error: "bad boolean literal in generic association"
             args += [
-                "-ncerror EVBSTR"
+                "-xmerror EVBSTR"
             ]  # promote to error: "bad string literal in generic association"
             args += [
-                "-ncerror EVBNAT"
+                "-xmerror EVBNAT"
             ]  # promote to error: "bad natural literal in generic association"
             args += ["-work work"]
             args += [
-                '-nclibdirname "%s"' % (str(Path(self._output_path) / "libraries"))
+                '-xmlibdirname "%s"' % (str(Path(self._output_path) / "libraries"))
             ]  # @TODO: ugly
-            args += config.sim_options.get("incisive.irun_sim_flags", [])
+            args += config.sim_options.get("xcelium.xrun_sim_flags", [])
             args += ['-cdslib "%s"' % self._cdslib]
             args += self._hdlvar_args()
-            args += ['-log "%s"' % str(Path(script_path) / ("irun_%s.log" % step))]
+            args += ['-log "%s"' % str(Path(script_path) / ("xrun_%s.log" % step))]
             if not self._log_level == "debug":
                 args += ["-quiet"]
             else:
@@ -345,6 +362,14 @@ define work "{2}/libraries/work"
             args += self._generic_args(config.entity_name, config.generics)
             for library in self._libraries:
                 args += ['-reflib "%s"' % library.directory]
+            args += ['-input "@set intovf_severity_level ignore"']
+            if config.sim_options.get("disable_ieee_warnings", False):
+                args += [
+                    '-input "@set pack_assert_off { std_logic_arith numeric_std }"'
+                ]
+            args += [
+                '-input "@set assert_stop_level %s"' % config.vhdl_assert_stop_level
+            ]
             if launch_gui:
                 args += ["-access +rwc"]
                 # args += ['-linedebug']
@@ -366,7 +391,7 @@ define work "{2}/libraries/work"
                         config.architecture_name,
                     )
                 ]
-            argsfile = "%s/irun_%s.args" % (script_path, step)
+            argsfile = "%s/xrun_%s.args" % (script_path, step)
             write_file(argsfile, "\n".join(args))
             if not run_command(
                 [cmd, "-f", relpath(argsfile, script_path)],
@@ -387,7 +412,7 @@ define work "{2}/libraries/work"
     @staticmethod
     def _generic_args(entity_name, generics):
         """
-        Create irun arguments for generics/parameters
+        Create xrun arguments for generics/parameters
         """
         args = []
         for name, value in generics.items():

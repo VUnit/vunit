@@ -27,7 +27,7 @@ class TestVunitArtificial(unittest.TestCase):
     """
 
     def setUp(self):
-        if simulator_is("activehdl"):
+        if simulator_is("activehdl", "incisive", "xcelium"):
             self.output_path = str(ROOT / "artificial_out")
         else:
             # Spaces in path intentional to verify that it is supported
