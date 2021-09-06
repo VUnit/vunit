@@ -24,9 +24,7 @@ def main():
     preprocessor = location_preprocessor.LocationPreprocessor()
     preprocessor.add_subprogram("print_pre_vhdl_2019_style")
     preprocessor.remove_subprogram("info")
-    vunit_lib.add_source_files(
-        root / "test" / "tb_location.vhd", preprocessors=[preprocessor]
-    )
+    vunit_lib.add_source_files(root / "test" / "tb_location.vhd", preprocessors=[preprocessor])
 
     if vhdl_2019:
         testbenches = vunit_lib.get_source_files("*tb*")

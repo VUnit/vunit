@@ -114,9 +114,7 @@ at filename1 line 3:
         )
 
     def test_describe_none_filename_location(self):
-        self.assertEqual(
-            describe_location(((None, (0, 0)), None)), "Unknown Python string"
-        )
+        self.assertEqual(describe_location(((None, (0, 0)), None)), "Unknown Python string")
 
 
 def _describe_location(*codes):
@@ -137,12 +135,8 @@ def _describe_location(*codes):
 
         location = ((filename, (start, end)), location)
 
-    with mock.patch(
-        "vunit.parsing.tokenizer.read_file", autospec=True
-    ) as mock_read_file:
-        with mock.patch(
-            "vunit.parsing.tokenizer.file_exists", autospec=True
-        ) as mock_file_exists:
+    with mock.patch("vunit.parsing.tokenizer.read_file", autospec=True) as mock_read_file:
+        with mock.patch("vunit.parsing.tokenizer.file_exists", autospec=True) as mock_file_exists:
 
             def file_exists_side_effect(filename):
                 return filename in contents

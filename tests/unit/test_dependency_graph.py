@@ -26,9 +26,7 @@ class TestDependencyGraph(unittest.TestCase):
         graph = DependencyGraph()
         self._add_nodes_and_dependencies(graph, nodes, [])
         result = graph.toposort()
-        self.assertEqual(
-            result.sort(), nodes.sort(), "Should return the node list in any order"
-        )
+        self.assertEqual(result.sort(), nodes.sort(), "Should return the node list in any order")
 
     def test_should_sort_in_topological_order_when_there_are_dependencies(self):
         nodes = ["a", "b", "c", "d", "e", "f"]

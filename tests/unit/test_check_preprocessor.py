@@ -204,7 +204,10 @@ check_relation(a ?>= b, context_msg => %s);""" % (
 
 
 def make_context_msg(left, relation, right):
-    return (
-        '"Expected %s %s %s. Left is " & to_string(%s) & ". Right is " & to_string(%s) & "."'
-        % (left.replace('"', '""'), relation, right.replace('"', '""'), left, right)
+    return '"Expected %s %s %s. Left is " & to_string(%s) & ". Right is " & to_string(%s) & "."' % (
+        left.replace('"', '""'),
+        relation,
+        right.replace('"', '""'),
+        left,
+        right,
     )

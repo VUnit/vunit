@@ -33,9 +33,7 @@ class TestList(object):
         """
         Keep only testcases matching any pattern
         """
-        self._test_suites = [
-            test for test in self._test_suites if test.keep_matches(test_filter)
-        ]
+        self._test_suites = [test for test in self._test_suites if test.keep_matches(test_filter)]
 
     @property
     def num_tests(self):

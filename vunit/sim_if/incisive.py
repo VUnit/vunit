@@ -22,9 +22,7 @@ from .cds_file import CDSFile
 LOGGER = logging.getLogger(__name__)
 
 
-class IncisiveInterface(  # pylint: disable=too-many-instance-attributes
-    SimulatorInterface
-):
+class IncisiveInterface(SimulatorInterface):  # pylint: disable=too-many-instance-attributes
     """
     Interface for the Cadence Incisive simulator
     """
@@ -45,9 +43,7 @@ class IncisiveInterface(  # pylint: disable=too-many-instance-attributes
         """
         Add command line arguments
         """
-        group = parser.add_argument_group(
-            "Incisive irun", description="Incisive irun-specific flags"
-        )
+        group = parser.add_argument_group("Incisive irun", description="Incisive irun-specific flags")
         group.add_argument(
             "--cdslib",
             default=None,
@@ -106,18 +102,14 @@ class IncisiveInterface(  # pylint: disable=too-many-instance-attributes
         """
         Finds irun cds root
         """
-        return subprocess.check_output(
-            [str(Path(self._prefix) / "cds_root"), "irun"]
-        ).splitlines()[0]
+        return subprocess.check_output([str(Path(self._prefix) / "cds_root"), "irun"]).splitlines()[0]
 
     def find_cds_root_virtuoso(self):
         """
         Finds virtuoso cds root
         """
         try:
-            return subprocess.check_output(
-                [str(Path(self._prefix) / "cds_root"), "virtuoso"]
-            ).splitlines()[0]
+            return subprocess.check_output([str(Path(self._prefix) / "cds_root"), "virtuoso"]).splitlines()[0]
         except subprocess.CalledProcessError:
             return None
 
@@ -205,11 +197,7 @@ define work "{2}/libraries/work"
         args += ['-cdslib "%s"' % self._cdslib]
         args += self._hdlvar_args()
         args += [
-            '-log "%s"'
-            % str(
-                Path(self._output_path)
-                / ("irun_compile_vhdl_file_%s.log" % source_file.library.name)
-            )
+            '-log "%s"' % str(Path(self._output_path) / ("irun_compile_vhdl_file_%s.log" % source_file.library.name))
         ]
         if not self._log_level == "debug":
             args += ["-quiet"]
@@ -221,10 +209,7 @@ define work "{2}/libraries/work"
         args += ["-makelib %s" % source_file.library.directory]
         args += ['"%s"' % source_file.name]
         args += ["-endlib"]
-        argsfile = str(
-            Path(self._output_path)
-            / ("irun_compile_vhdl_file_%s.args" % source_file.library.name)
-        )
+        argsfile = str(Path(self._output_path) / ("irun_compile_vhdl_file_%s.args" % source_file.library.name))
         write_file(argsfile, "\n".join(args))
         return [cmd, "-f", argsfile]
 
@@ -248,11 +233,7 @@ define work "{2}/libraries/work"
         args += ['-cdslib "%s"' % self._cdslib]
         args += self._hdlvar_args()
         args += [
-            '-log "%s"'
-            % str(
-                Path(self._output_path)
-                / ("irun_compile_verilog_file_%s.log" % source_file.library.name)
-            )
+            '-log "%s"' % str(Path(self._output_path) / ("irun_compile_verilog_file_%s.log" % source_file.library.name))
         ]
         if not self._log_level == "debug":
             args += ["-quiet"]
@@ -271,10 +252,7 @@ define work "{2}/libraries/work"
         args += ["-makelib %s" % source_file.library.name]
         args += ['"%s"' % source_file.name]
         args += ["-endlib"]
-        argsfile = str(
-            Path(self._output_path)
-            / ("irun_compile_verilog_file_%s.args" % source_file.library.name)
-        )
+        argsfile = str(Path(self._output_path) / ("irun_compile_verilog_file_%s.args" % source_file.library.name))
         write_file(argsfile, "\n".join(args))
         return [cmd, "-f", argsfile]
 
@@ -289,10 +267,7 @@ define work "{2}/libraries/work"
         if not file_exists(lpath):
             os.makedirs(lpath)
 
-        if (
-            library_name in mapped_libraries
-            and mapped_libraries[library_name] == library_path
-        ):
+        if library_name in mapped_libraries and mapped_libraries[library_name] == library_path:
             return
 
         cds = CDSFile.parse(self._cdslib)
@@ -306,9 +281,7 @@ define work "{2}/libraries/work"
         cds = CDSFile.parse(self._cdslib)
         return cds
 
-    def simulate(  # pylint: disable=too-many-locals
-        self, output_path, test_suite_name, config, elaborate_only=False
-    ):
+    def simulate(self, output_path, test_suite_name, config, elaborate_only=False):  # pylint: disable=too-many-locals
         """
         Elaborates and Simulates with entity as top level using generics
         """
@@ -337,19 +310,11 @@ define work "{2}/libraries/work"
             args += ["-nowarn WRMNZD"]
             args += ["-nowarn DLCPTH"]  # "cds.lib Invalid path"
             args += ["-nowarn DLCVAR"]  # "cds.lib Invalid environment variable ''."
-            args += [
-                "-ncerror EVBBOL"
-            ]  # promote to error: "bad boolean literal in generic association"
-            args += [
-                "-ncerror EVBSTR"
-            ]  # promote to error: "bad string literal in generic association"
-            args += [
-                "-ncerror EVBNAT"
-            ]  # promote to error: "bad natural literal in generic association"
+            args += ["-ncerror EVBBOL"]  # promote to error: "bad boolean literal in generic association"
+            args += ["-ncerror EVBSTR"]  # promote to error: "bad string literal in generic association"
+            args += ["-ncerror EVBNAT"]  # promote to error: "bad natural literal in generic association"
             args += ["-work work"]
-            args += [
-                '-nclibdirname "%s"' % (str(Path(self._output_path) / "libraries"))
-            ]  # @TODO: ugly
+            args += ['-nclibdirname "%s"' % (str(Path(self._output_path) / "libraries"))]  # @TODO: ugly
             args += config.sim_options.get("incisive.irun_sim_flags", [])
             args += ['-cdslib "%s"' % self._cdslib]
             args += self._hdlvar_args()

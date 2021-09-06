@@ -98,9 +98,7 @@ define foo "bar"
         """
         Check that the CDSFile object writes the 'contents to the file
         """
-        with mock.patch(
-            "vunit.sim_if.cds_file.write_file", autospec=True
-        ) as write_file:
+        with mock.patch("vunit.sim_if.cds_file.write_file", autospec=True) as write_file:
             cds.write("filename")
             self.assertEqual(len(write_file.mock_calls), 1)
             args = write_file.mock_calls[0][1]

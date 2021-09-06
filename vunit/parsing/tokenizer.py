@@ -14,9 +14,7 @@ from vunit.ostools import read_file, file_exists, simplify_path
 
 
 def Token(kind, value="", location=None):  # pylint: disable=invalid-name
-    return collections.namedtuple("Token", ["kind", "value", "location"])(
-        kind, value, location
-    )
+    return collections.namedtuple("Token", ["kind", "value", "location"])(kind, value, location)
 
 
 class TokenKind:
@@ -63,9 +61,7 @@ class Tokenizer(object):
             re.VERBOSE | re.MULTILINE,
         )
 
-    def tokenize(
-        self, code, file_name=None, previous_location=None, create_locations=False
-    ):
+    def tokenize(self, code, file_name=None, previous_location=None, create_locations=False):
         """
         Tokenize the code
         """
@@ -164,9 +160,7 @@ class TokenStream(object):
                 expected = str(kinds[0])
             else:
                 expected = "any of [%s]" % ", ".join(str(kind) for kind in kinds)
-            raise LocationException.error(
-                "Expected %s got %s" % (expected, token.kind), token.location
-            )
+            raise LocationException.error("Expected %s got %s" % (expected, token.kind), token.location)
         return token
 
     def slice(self, start, end):
@@ -212,9 +206,7 @@ def describe_location(location, first=True):
                 lineno + 1,
             )
             retval += line + "\n"
-            retval += (" " * (start - lstart)) + (
-                "~" * (min(lend - 1, end) - start + 1)
-            )
+            retval += (" " * (start - lstart)) + ("~" * (min(lend - 1, end) - start + 1))
             return retval
 
         count = lend + 1

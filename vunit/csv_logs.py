@@ -42,17 +42,13 @@ class CsvLogs(object):
                 fread.seek(0)
                 if sample:
                     dialect = Sniffer().sniff(sample)
-                    self._entries += DictReader(
-                        fread, fieldnames=self._field_names, dialect=dialect
-                    )
+                    self._entries += DictReader(fread, fieldnames=self._field_names, dialect=dialect)
 
         self._entries.sort(key=lambda dictionary: int(dictionary["#"]))
 
     def write(self, output_file):
         # pylint: disable=missing-docstring
         with Path(output_file).open("w", encoding=self._encoding) as fwrite:
-            csv_writer = DictWriter(
-                fwrite, delimiter=",", fieldnames=self._field_names, lineterminator="\n"
-            )
+            csv_writer = DictWriter(fwrite, delimiter=",", fieldnames=self._field_names, lineterminator="\n")
             csv_writer.writerow({name: name for name in self._field_names})
             csv_writer.writerows(self._entries)

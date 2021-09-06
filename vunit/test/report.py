@@ -91,9 +91,7 @@ class TestReport(object):
         args.append("F=%i" % len(failed))
         args.append("T=%i" % total_tests)
 
-        self._printer.write(
-            " (%s) %s (%.1f seconds)\n" % (" ".join(args), result.name, result.time)
-        )
+        self._printer.write(" (%s) %s (%.1f seconds)\n" % (" ".join(args), result.name, result.time))
 
     def all_ok(self):
         """
@@ -122,9 +120,7 @@ class TestReport(object):
 
         prefix = "==== Summary "
         max_len = max(len(test.name) for test in all_tests)
-        self._printer.write(
-            "%s%s\n" % (prefix, "=" * (max(max_len - len(prefix) + 25, 0)))
-        )
+        self._printer.write("%s%s\n" % (prefix, "=" * (max(max_len - len(prefix) + 25, 0))))
         for test_result in all_tests:
             test_result.print_status(self._printer, padding=max_len)
 
@@ -283,9 +279,7 @@ class TestResult(object):
 
         my_padding = max(padding - len(self.name), 0)
 
-        printer.write(
-            "%s (%.1f seconds)\n" % (self.name + (" " * my_padding), self.time)
-        )
+        printer.write("%s (%.1f seconds)\n" % (self.name + (" " * my_padding), self.time))
 
     def to_xml(self, xunit_xml_format):
         """

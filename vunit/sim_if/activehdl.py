@@ -58,9 +58,7 @@ class ActiveHDLInterface(SimulatorInterface):
         """
         Returns True when this simulator supports VHDL package generics
         """
-        proc = Process(
-            [str(Path(cls.find_prefix()) / "vcom"), "-version"], env=cls.get_env()
-        )
+        proc = Process([str(Path(cls.find_prefix()) / "vcom"), "-version"], env=cls.get_env())
         consumer = VersionConsumer()
         proc.consume_output(consumer)
         if consumer.version is not None:
@@ -188,10 +186,7 @@ class ActiveHDLInterface(SimulatorInterface):
             return
 
         with Path(self._library_cfg).open("w", encoding="utf-8") as ofile:
-            ofile.write(
-                '$INCLUDE = "%s"\n'
-                % str(Path(self._prefix).parent / "vlib" / "library.cfg")
-            )
+            ofile.write('$INCLUDE = "%s"\n' % str(Path(self._prefix).parent / "vlib" / "library.cfg"))
 
     _library_re = re.compile(r'([a-zA-Z_]+)\s=\s"(.*)"')
 
@@ -209,9 +204,7 @@ class ActiveHDLInterface(SimulatorInterface):
                 continue
             key = match.group(1)
             value = match.group(2)
-            libraries[key] = str(
-                (Path(self._library_cfg).parent / Path(value).parent).resolve()
-            )
+            libraries[key] = str((Path(self._library_cfg).parent / Path(value).parent).resolve())
         return libraries
 
     def _vsim_extra_args(self, config):
@@ -219,14 +212,10 @@ class ActiveHDLInterface(SimulatorInterface):
         Determine vsim_extra_args
         """
         vsim_extra_args = []
-        vsim_extra_args = config.sim_options.get(
-            "activehdl.vsim_flags", vsim_extra_args
-        )
+        vsim_extra_args = config.sim_options.get("activehdl.vsim_flags", vsim_extra_args)
 
         if self._gui:
-            vsim_extra_args = config.sim_options.get(
-                "activehdl.vsim_flags.gui", vsim_extra_args
-            )
+            vsim_extra_args = config.sim_options.get("activehdl.vsim_flags.gui", vsim_extra_args)
 
         return " ".join(vsim_extra_args)
 
@@ -235,20 +224,12 @@ class ActiveHDLInterface(SimulatorInterface):
         Create the vunit_load TCL function that runs the vsim command and loads the design
         """
         set_generic_str = "\n    ".join(
-            (
-                "set vunit_generic_%s {%s}" % (name, value)
-                for name, value in config.generics.items()
-            )
+            ("set vunit_generic_%s {%s}" % (name, value) for name, value in config.generics.items())
         )
         set_generic_name_str = " ".join(
-            (
-                "-g/%s/%s=${vunit_generic_%s}" % (config.entity_name, name, name)
-                for name in config.generics
-            )
+            ("-g/%s/%s=${vunit_generic_%s}" % (config.entity_name, name, name) for name in config.generics)
         )
-        pli_str = " ".join(
-            '-pli "%s"' % fix_path(name) for name in config.sim_options.get("pli", [])
-        )
+        pli_str = " ".join('-pli "%s"' % fix_path(name) for name in config.sim_options.get("pli", []))
 
         vsim_flags = [
             pli_str,
@@ -401,9 +382,7 @@ proc vunit_run {} {
         if init_file is not None:
             tcl += 'source "%s"\n' % fix_path(str(Path(init_file).resolve()))
 
-        tcl += (
-            'puts "VUnit help: Design already loaded. Use run -all to run the test."\n'
-        )
+        tcl += 'puts "VUnit help: Design already loaded. Use run -all to run the test."\n'
 
         return tcl
 
@@ -442,9 +421,7 @@ proc vunit_run {} {
         gui_file_name = script_path / "gui.tcl"
 
         write_file(common_file_name, self._create_common_script(config, output_path))
-        write_file(
-            gui_file_name, self._create_gui_script(str(common_file_name), config)
-        )
+        write_file(gui_file_name, self._create_gui_script(str(common_file_name), config))
         write_file(
             str(batch_file_name),
             self._create_batch_script(str(common_file_name), elaborate_only),
@@ -455,9 +432,7 @@ proc vunit_run {} {
             renew_path(gui_path)
             return self._run_batch_file(str(gui_file_name), gui=True, cwd=gui_path)
 
-        return self._run_batch_file(
-            str(batch_file_name), gui=False, cwd=str(Path(self._library_cfg).parent)
-        )
+        return self._run_batch_file(str(batch_file_name), gui=False, cwd=str(Path(self._library_cfg).parent))
 
 
 @total_ordering
@@ -507,9 +482,7 @@ class VersionConsumer(object):
     def __init__(self):
         self.version = None
 
-    _version_re = re.compile(
-        r"(?P<major>\d+)\.(?P<minor>\d+)(?P<minor_letter>[a-zA-Z]?)\.\d+\.\d+"
-    )
+    _version_re = re.compile(r"(?P<major>\d+)\.(?P<minor>\d+)(?P<minor_letter>[a-zA-Z]?)\.\d+\.\d+")
 
     def __call__(self, line):
         match = self._version_re.search(line)

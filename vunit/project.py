@@ -138,9 +138,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 library,
                 vhdl_parser=self._vhdl_parser,
                 database=self._database,
-                vhdl_standard=library.vhdl_standard
-                if vhdl_standard is None
-                else vhdl_standard,
+                vhdl_standard=library.vhdl_standard if vhdl_standard is None else vhdl_standard,
                 no_parse=no_parse,
             )
         elif file_type in VERILOG_FILE_TYPES:
@@ -212,9 +210,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
             except KeyError:
                 if ref.library not in self._builtin_libraries:
 
-                    LOGGER.warning(
-                        "%s: failed to find library '%s'", source_file.name, ref.library
-                    )
+                    LOGGER.warning("%s: failed to find library '%s'", source_file.name, ref.library)
                 continue
 
             if ref.is_entity_reference() and ref.design_unit in library.modules:
@@ -348,9 +344,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
             is_new = dependency_graph.add_dependency(start, end)
 
             if is_new:
-                LOGGER.debug(
-                    "Adding dependency: %s depends on %s", end.name, start.name
-                )
+                LOGGER.debug("Adding dependency: %s depends on %s", end.name, start.name)
 
         def add_dependencies(dependency_function, files):
             """
@@ -365,29 +359,19 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         for source_file in self._source_files_in_order:
             dependency_graph.add_node(source_file)
 
-        vhdl_files = [
-            source_file
-            for source_file in self._source_files_in_order
-            if source_file.file_type == "vhdl"
-        ]
+        vhdl_files = [source_file for source_file in self._source_files_in_order if source_file.file_type == "vhdl"]
 
-        depend_on_package_bodies = (
-            self._depend_on_package_body or implementation_dependencies
-        )
+        depend_on_package_bodies = self._depend_on_package_body or implementation_dependencies
         add_dependencies(
             lambda source_file: self._find_other_vhdl_design_unit_dependencies(
                 source_file, depend_on_package_bodies, implementation_dependencies
             ),
             vhdl_files,
         )
-        add_dependencies(
-            self._find_primary_secondary_design_unit_dependencies, vhdl_files
-        )
+        add_dependencies(self._find_primary_secondary_design_unit_dependencies, vhdl_files)
 
         verilog_files = [
-            source_file
-            for source_file in self._source_files_in_order
-            if source_file.file_type in VERILOG_FILE_TYPES
+            source_file for source_file in self._source_files_in_order if source_file.file_type in VERILOG_FILE_TYPES
         ]
 
         add_dependencies(self._find_verilog_package_dependencies, verilog_files)
@@ -426,9 +410,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 timestamps[source_file] = ostools.get_modification_time(hash_file_name)
         return timestamps
 
-    def get_files_in_compile_order(
-        self, incremental=True, dependency_graph=None, files=None
-    ):
+    def get_files_in_compile_order(self, incremental=True, dependency_graph=None, files=None):
         """
         Get a list of all files in compile order
         param: incremental: Only return files that need recompile if True
@@ -440,9 +422,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         files_to_recompile = self._get_files_to_recompile(
             files or self.get_source_files_in_order(), dependency_graph, incremental
         )
-        return self._get_affected_files_in_compile_order(
-            files_to_recompile, dependency_graph.get_dependent
-        )
+        return self._get_affected_files_in_compile_order(files_to_recompile, dependency_graph.get_dependent)
 
     def _get_files_to_recompile(self, files, dependency_graph, incremental):
         """
@@ -454,15 +434,11 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         timestamps = self._get_compile_timestamps(files)
         result_list = []
         for source_file in files:
-            if (not incremental) or self._needs_recompile(
-                dependency_graph, source_file, timestamps
-            ):
+            if (not incremental) or self._needs_recompile(dependency_graph, source_file, timestamps):
                 result_list.append(source_file)
         return result_list
 
-    def get_dependencies_in_compile_order(
-        self, target_files=None, implementation_dependencies=False
-    ):
+    def get_dependencies_in_compile_order(self, target_files=None, implementation_dependencies=False):
         """
         Get a list of dependencies of target files including the
         target files.
@@ -473,9 +449,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
             target_files = self._source_files_in_order
 
         dependency_graph = self.create_dependency_graph(implementation_dependencies)
-        return self._get_affected_files_in_compile_order(
-            set(target_files), dependency_graph.get_dependencies
-        )
+        return self._get_affected_files_in_compile_order(set(target_files), dependency_graph.get_dependencies)
 
     def _get_affected_files_in_compile_order(self, target_files, get_depend_func):
         """
@@ -502,16 +476,12 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         ###
         # Now the file set is known, but it has to be evaluated which files
         # realy have to be compiled according to their timestamp.
-        max_file_set_to_be_compiled = self.get_files_in_compile_order(
-            incremental=True, files=dependency_files
-        )
+        max_file_set_to_be_compiled = self.get_files_in_compile_order(incremental=True, files=dependency_files)
 
         # get_files_in_compile_order returns more files than actually are in the
         # list of dependent files. So the list is filtered for only the files
         # that are required
-        min_file_set_to_be_compiled = [
-            f for f in max_file_set_to_be_compiled if f in dependency_files
-        ]
+        min_file_set_to_be_compiled = [f for f in max_file_set_to_be_compiled if f in dependency_files]
         return min_file_set_to_be_compiled
 
     def _get_affected_files(self, target_files, get_depend_func):
@@ -597,9 +567,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
                 )
                 return True
 
-        LOGGER.debug(
-            "%s has same hash file and must not be recompiled", source_file.name
-        )
+        LOGGER.debug("%s has same hash file and must not be recompiled", source_file.name)
 
         return False
 
@@ -609,12 +577,7 @@ class Project(object):  # pylint: disable=too-many-instance-attributes
         """
         library = self.get_library(source_file.library.name)
         prefix = hash_string(str(Path(source_file.name).parent))
-        return str(
-            Path(library.directory)
-            / prefix
-            / Path(source_file.name).name
-            / ".vunit_hash"
-        )
+        return str(Path(library.directory) / prefix / Path(source_file.name).name / ".vunit_hash")
 
     def update(self, source_file):
         """

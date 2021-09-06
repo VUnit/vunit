@@ -152,9 +152,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
                         print("Starting %s" % test_name)
                     print("Output file: %s" % output_file_name)
 
-                self._run_test_suite(
-                    test_suite, write_stdout, num_tests, output_path, output_file_name
-                )
+                self._run_test_suite(test_suite, write_stdout, num_tests, output_path, output_file_name)
 
             except StopIteration:
                 return
@@ -177,9 +175,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         Ensure no bad characters and no long path names.
         """
         output_path = str(Path(self._output_path).resolve())
-        safe_name = (
-            "".join(char if _is_legal(char) else "_" for char in test_suite_name) + "_"
-        )
+        safe_name = "".join(char if _is_legal(char) else "_" for char in test_suite_name) + "_"
         hash_name = hash_string(test_suite_name)
 
         if "VUNIT_SHORT_TEST_OUTPUT_PATHS" in os.environ:
@@ -188,22 +184,13 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             max_path = 260
             margin = int(os.environ.get("VUNIT_TEST_OUTPUT_PATH_MARGIN", "100"))
             prefix_len = len(output_path)
-            full_name = (
-                safe_name[
-                    : min(
-                        max_path - margin - prefix_len - len(hash_name), len(safe_name)
-                    )
-                ]
-                + hash_name
-            )
+            full_name = safe_name[: min(max_path - margin - prefix_len - len(hash_name), len(safe_name))] + hash_name
         else:
             full_name = safe_name + hash_name
 
         return str(Path(output_path) / full_name)
 
-    def _add_skipped_tests(
-        self, test_suite, results, start_time, num_tests, output_file_name
-    ):
+    def _add_skipped_tests(self, test_suite, results, start_time, num_tests, output_file_name):
         """
         Add skipped tests
         """
@@ -228,9 +215,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         try:
             self._prepare_test_suite_output_path(output_path)
             output_file = wrap(
-                Path(output_file_name).open(  # pylint: disable=consider-using-with
-                    "a+", encoding="utf-8"
-                ),
+                Path(output_file_name).open("a+", encoding="utf-8"),  # pylint: disable=consider-using-with
                 use_color=False,
             )
             output_file.seek(0)
@@ -239,9 +224,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             if write_stdout:
                 output_from = self._stdout_ansi
             else:
-                color_output_file = Path(
-                    color_output_file_name
-                ).open(  # pylint: disable=consider-using-with
+                color_output_file = Path(color_output_file_name).open(  # pylint: disable=consider-using-with
                     "w", encoding="utf-8"
                 )
                 output_from = color_output_file
@@ -260,9 +243,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
             results = test_suite.run(output_path=output_path, read_output=read_output)
         except KeyboardInterrupt as exk:
-            self._add_skipped_tests(
-                test_suite, results, start_time, num_tests, output_file_name
-            )
+            self._add_skipped_tests(test_suite, results, start_time, num_tests, output_file_name)
             raise KeyboardInterrupt from exk
         except:  # pylint: disable=bare-except
             if self._dont_catch_exceptions:
@@ -273,9 +254,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
         finally:
             self._local.output = self._stdout
 
-            for fptr in (
-                ptr for ptr in [output_file, color_output_file] if ptr is not None
-            ):
+            for fptr in (ptr for ptr in [output_file, color_output_file] if ptr is not None):
                 fptr.flush()
                 fptr.close()
 
@@ -283,16 +262,10 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
 
         with self._stdout_lock():
 
-            if (
-                (color_output_file is not None)
-                and (any_not_passed or self._is_verbose)
-                and not self._is_quiet
-            ):
+            if (color_output_file is not None) and (any_not_passed or self._is_verbose) and not self._is_quiet:
                 self._print_output(color_output_file_name)
 
-            self._add_results(
-                test_suite, results, start_time, num_tests, output_file_name
-            )
+            self._add_results(test_suite, results, start_time, num_tests, output_file_name)
 
             if self._fail_fast and any_not_passed:
                 self._abort = True
@@ -338,9 +311,7 @@ class TestRunner(object):  # pylint: disable=too-many-instance-attributes
             for line in fread.readlines():
                 self._stdout_ansi.write(line)
 
-    def _add_results(
-        self, test_suite, results, start_time, num_tests, output_file_name
-    ):
+    def _add_results(self, test_suite, results, start_time, num_tests, output_file_name):
         """
         Add results to test report
         """

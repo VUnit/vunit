@@ -42,9 +42,7 @@ def check_report(report_file, tests=None):
 
     for status, name in tests:
         if report[name] != status:
-            raise AssertionError(
-                "Wrong status of %s got %s expected %s" % (name, report[name], status)
-            )
+            raise AssertionError("Wrong status of %s got %s expected %s" % (name, report[name], status))
 
     num_tests = int(root.attrib["tests"])
     assert num_tests == len(tests)
@@ -128,9 +126,7 @@ def with_tempdir(func):
     return new_function
 
 
-def get_vhdl_test_bench(
-    test_bench_name, tests=None, same_sim=False, test_attributes=None
-):
+def get_vhdl_test_bench(test_bench_name, tests=None, same_sim=False, test_attributes=None):
     """
     Create a valid VUnit test bench
 
@@ -190,9 +186,7 @@ end architecture;
     return contents
 
 
-def create_vhdl_test_bench_file(
-    test_bench_name, file_name, tests=None, same_sim=False, test_attributes=None
-):
+def create_vhdl_test_bench_file(test_bench_name, file_name, tests=None, same_sim=False, test_attributes=None):
     """
     Create a valid VUnit test bench and writes it to file_name
     """

@@ -111,8 +111,7 @@ def tb_filter(design_unit):
 
     elif has_runner_cfg and not has_tb_name:
         LOGGER.warning(
-            "%s %s has runner_cfg %s but the file name and the %s name does not match regex %s\n"
-            "in file %s",
+            "%s %s has runner_cfg %s but the file name and the %s name does not match regex %s\n" "in file %s",
             design_unit_type,
             design_unit.name,
             generic_type,

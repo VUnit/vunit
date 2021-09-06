@@ -89,27 +89,19 @@ class TestVunitArtificial(unittest.TestCase):
 
     @unittest.skipUnless(simulator_is("modelsim"), "Only modelsim supports verilog")
     def test_run_selected_tests_in_same_sim_test_bench_verilog(self):
-        self._test_run_selected_tests_in_same_sim_test_bench(
-            self.artificial_run_verilog
-        )
+        self._test_run_selected_tests_in_same_sim_test_bench(self.artificial_run_verilog)
 
     def _test_run_selected_tests_in_same_sim_test_bench(self, run_file):
         """
         Run selected "same_sim" test in isolation
         """
-        self.check(
-            run_file, exit_code=0, clean=True, args=["*same_sim_some_fail*Test 1*"]
-        )
+        self.check(run_file, exit_code=0, clean=True, args=["*same_sim_some_fail*Test 1*"])
         check_report(self.report_file, [("passed", "lib.tb_same_sim_some_fail.Test 1")])
 
-        self.check(
-            run_file, exit_code=1, clean=False, args=["*same_sim_some_fail*Test 2*"]
-        )
+        self.check(run_file, exit_code=1, clean=False, args=["*same_sim_some_fail*Test 2*"])
         check_report(self.report_file, [("failed", "lib.tb_same_sim_some_fail.Test 2")])
 
-        self.check(
-            run_file, exit_code=0, clean=False, args=["*same_sim_some_fail*Test 3*"]
-        )
+        self.check(run_file, exit_code=0, clean=False, args=["*same_sim_some_fail*Test 3*"])
         check_report(self.report_file, [("passed", "lib.tb_same_sim_some_fail.Test 3")])
 
         self.check(
@@ -181,9 +173,7 @@ class TestVunitArtificial(unittest.TestCase):
 
     def test_exit_0_flag(self):
         self.check(self.artificial_run_vhdl, exit_code=1, args=["lib.tb_fail.all"])
-        self.check(
-            self.artificial_run_vhdl, exit_code=0, args=["--exit-0", "lib.tb_fail.all"]
-        )
+        self.check(self.artificial_run_vhdl, exit_code=0, args=["--exit-0", "lib.tb_fail.all"])
 
 
 EXPECTED_REPORT = (

@@ -65,9 +65,7 @@ exit(1)
         )
         process = Process([sys.executable, python_script])
         output = []
-        self.assertRaises(
-            Process.NonZeroExitCode, process.consume_output, output.append
-        )
+        self.assertRaises(Process.NonZeroExitCode, process.consume_output, output.append)
         self.assertEqual(output, ["error"])
 
     def test_parses_stderr(self):

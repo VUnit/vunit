@@ -24,8 +24,6 @@ VU.add_verification_components()
 
 SRC_PATH = Path(__file__).parent / "src"
 
-VU.add_library("axi_dma_lib").add_source_files(
-    [SRC_PATH / "*.vhd", SRC_PATH / "test" / "*.vhd"]
-)
+VU.add_library("axi_dma_lib").add_source_files([SRC_PATH / "*.vhd", SRC_PATH / "test" / "*.vhd"])
 
 VU.main()

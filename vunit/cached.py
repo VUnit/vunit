@@ -24,9 +24,7 @@ def cached(key, function, file_name, encoding, database=None, newline=None):
         return function(content)
 
     function_key = ("%s(%s, newline=%s)" % (key, file_name, newline)).encode()
-    content, content_hash = _file_content_hash(
-        file_name, encoding, database, newline=newline
-    )
+    content, content_hash = _file_content_hash(file_name, encoding, database, newline=newline)
 
     if function_key not in database:
         # We do not have a cached version of this computation

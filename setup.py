@@ -37,9 +37,7 @@ def find_all_files(directory, endings=None):
 DATA_FILES = []
 DATA_FILES += find_all_files("vunit", endings=[".tcl"])
 DATA_FILES += find_all_files(str(Path("vunit") / "vhdl"))
-DATA_FILES += find_all_files(
-    str(Path("vunit") / "verilog"), endings=[".v", ".sv", ".svh"]
-)
+DATA_FILES += find_all_files(str(Path("vunit") / "verilog"), endings=[".v", ".sv", ".svh"])
 DATA_FILES = [os.path.relpath(file_name, "vunit") for file_name in DATA_FILES]
 
 setup(
